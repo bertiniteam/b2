@@ -80,7 +80,10 @@ find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
 
-
+find_package(MPI COMPONENTS CXX)
+if(MPI_CXX_FOUND)
+    message(STATUS "MPI found: ${MPI_CXX_COMPILER}")
+endif()
 
 if (PROJECT_IS_TOP_LEVEL)
     find_package(bertini2 REQUIRED)
@@ -138,6 +141,7 @@ set(PYBERTINI_HEADERS
     include/detail.hpp
     include/logging.hpp
     include/info.hpp
+    include/parallel_export.hpp
 )
 
 set(PYBERTINI_SOURCES
@@ -145,8 +149,15 @@ set(PYBERTINI_SOURCES
     src/logging.cpp
     src/detail.cpp
     src/containers.cpp
+    # tracker: coordinator + config split into separate TU for build-time parallelism
     src/tracker_export.cpp
+    src/tracker_config_export.cpp
+    # endgame: coordinator + per-tracker-family split
     src/endgame_export.cpp
+    src/endgame_config_export.cpp
+    src/endgame_double_export.cpp
+    src/endgame_mp_export.cpp
+    src/endgame_amp_export.cpp
     src/random_export.cpp
     src/mpfr_export.cpp
     src/node_export.cpp
@@ -159,9 +170,21 @@ set(PYBERTINI_SOURCES
     src/generic_observer.cpp
     src/tracker_observers.cpp
     src/endgame_observers.cpp
+    # zero_dim: coordinator + configs + per-tracker-family split
     src/zero_dim_export.cpp
+    src/zero_dim_configs_export.cpp
+    src/zero_dim_double_export.cpp
+    src/zero_dim_mp_export.cpp
+    src/zero_dim_amp_export.cpp
+    # NID: coordinator + datatypes + per-tracker-family split
+    src/numerical_irreducible_decomposition_export.cpp
+    src/nid_datatypes_export.cpp
+    src/nid_double_export.cpp
+    src/nid_mp_export.cpp
+    src/nid_amp_export.cpp
     src/bertini_python.cpp
     src/info.cpp
+    src/parallel_export.cpp
 )
 
 
@@ -213,9 +236,36 @@ target_link_libraries(_pybertini PUBLIC eigenpy::eigenpy)
 target_link_libraries(_pybertini PUBLIC ${Boost_LIBRARIES})
 target_link_boost_python(_pybertini PUBLIC)
 
+if(MPI_CXX_FOUND)
+    target_link_libraries(_pybertini PUBLIC MPI::MPI_CXX)
+    target_compile_definitions(_pybertini PUBLIC BERTINI2_HAVE_MPI)
+endif()
+
 if(NOT WIN32)
   target_compile_options(_pybertini PRIVATE "-Wno-conversion")
 endif()
+
+# lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj)
+# from the static bertini2 archive unless every object is forced in. CMake 3.24+
+# LINK_LIBRARY:WHOLE_ARCHIVE places the archive in the linker input list with the
+# appropriate /WHOLEARCHIVE: flag (vs. target_link_options which puts it in options only).
+# Strip the normal bertini2 link entry first to avoid the archive appearing twice.
+# /FORCE:MULTIPLE handles Boost.Serialization duplicate template instantiations.
+if(MSVC AND NOT PROJECT_IS_TOP_LEVEL)
+  get_target_property(_ll _pybertini LINK_LIBRARIES)
+  if(_ll)
+    list(REMOVE_ITEM _ll bertini2)
+    set_target_properties(_pybertini PROPERTIES LINK_LIBRARIES "${_ll}")
+  endif()
+  target_link_options(_pybertini PRIVATE /FORCE:MULTIPLE)
+  target_link_libraries(_pybertini PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2>")
+endif()
+
+# Precompile the common root header shared by all 24 python_bindings source files.
+# python_common.hpp pulls in Boost.Python (~50 headers), Boost.Operators, Eigen,
+# and Bertini's multiprecision headers. Without PCH every TU re-parses that stack
+# from scratch, causing peak-RAM spikes during parallel builds and inflating log output.
+target_precompile_headers(_pybertini PRIVATE "include/python_common.hpp")
 
 cmake_print_variables(SKBUILD)
 if(${SKBUILD})

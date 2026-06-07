@@ -68,20 +68,63 @@ Fixed Multiple Precision  Endgames
 
 """
 
-import bertini._pybertini.endgame
+import bertini._pybertini.endgame as _pybe
 
-from bertini._pybertini.endgame import *
+from bertini._pybertini.endgame import config, observers
 
-__all__ = ['AMPCauchyEG',
- 'AMPPSEG',
- 'FixedDoubleCauchyEG',
- 'FixedDoublePSEG',
- 'FixedMultipleCauchyEG',
- 'FixedMultiplePSEG',
- '__doc__',
- '__loader__',
- '__name__',
- '__package__',
- '__spec__',
- 'config',
- 'observers']
+
+class _EndgameBase:
+    """Thin wrapper that stores the endgame boundary time at construction.
+
+    The C++ Run() re-precisions the stored boundary time to match whatever
+    precision the incoming point is at, so callers never need to manage that.
+    """
+
+    def __init__(self, cpp_class, tracker, boundary_time):
+        object.__setattr__(self, '_eg', cpp_class(tracker))
+        self._eg.set_boundary_time(boundary_time)
+
+    def run(self, point):
+        return self._eg.run(point)
+
+    def __getattr__(self, name):
+        if name == '_eg':
+            raise AttributeError('_eg not initialized')
+        return getattr(self._eg, name)
+
+
+class AMPCauchyEG(_EndgameBase):
+    def __init__(self, tracker, boundary_time):
+        super().__init__(_pybe.AMPCauchyEG, tracker, boundary_time)
+
+class AMPPSEG(_EndgameBase):
+    def __init__(self, tracker, boundary_time):
+        super().__init__(_pybe.AMPPSEG, tracker, boundary_time)
+
+class FixedDoubleCauchyEG(_EndgameBase):
+    def __init__(self, tracker, boundary_time):
+        super().__init__(_pybe.FixedDoubleCauchyEG, tracker, boundary_time)
+
+class FixedDoublePSEG(_EndgameBase):
+    def __init__(self, tracker, boundary_time):
+        super().__init__(_pybe.FixedDoublePSEG, tracker, boundary_time)
+
+class FixedMultipleCauchyEG(_EndgameBase):
+    def __init__(self, tracker, boundary_time):
+        super().__init__(_pybe.FixedMultipleCauchyEG, tracker, boundary_time)
+
+class FixedMultiplePSEG(_EndgameBase):
+    def __init__(self, tracker, boundary_time):
+        super().__init__(_pybe.FixedMultiplePSEG, tracker, boundary_time)
+
+
+__all__ = [
+    'AMPCauchyEG',
+    'AMPPSEG',
+    'FixedDoubleCauchyEG',
+    'FixedDoublePSEG',
+    'FixedMultipleCauchyEG',
+    'FixedMultiplePSEG',
+    'config',
+    'observers',
+]

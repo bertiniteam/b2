@@ -25,8 +25,8 @@
 
 #include "bertini2/system/system.hpp"
 
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 using Nd = std::shared_ptr<bertini::node::Node>;
 
 BOOST_CLASS_EXPORT(bertini::System)
@@ -83,12 +83,18 @@ namespace bertini
 		swap(a.space_derivatives_,b.space_derivatives_);
 		swap(a.time_derivatives_,b.time_derivatives_);
 
-		swap(a.assume_uniform_precision_,b.assume_uniform_precision_);
 		swap(a.eval_method_,b.eval_method_);
 
 		swap(a.precision_,b.precision_);
 		swap(a.is_patched_,b.is_patched_);
 		swap(a.patch_,b.patch_);
+	}
+
+	// construct from a list of functions, auto-discovering the variables
+	System::System(std::vector<Fn> const& functions) : System()
+	{
+		AddFunctions(functions);
+		AddVariableGroup( node::GatherVariables(functions) );
 	}
 
 	// the copy constructor
@@ -111,7 +117,6 @@ namespace bertini
 
 		is_differentiated_ = other.is_differentiated_;
 
-		assume_uniform_precision_ = other.assume_uniform_precision_;
 		eval_method_ = other.eval_method_;
 
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
@@ -237,9 +242,6 @@ namespace bertini
 
 	void System::precision(unsigned new_precision) const
 	{
-		if (this->assume_uniform_precision_ && new_precision == this->precision_)
-			return;
-
 		for (const auto& iter : functions_) {
 			iter->precision(new_precision);
 		}
@@ -261,12 +263,12 @@ namespace bertini
 			iter->precision(new_precision);
 		}
 
-		if (is_differentiated_)
+		switch (eval_method_)
 		{
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
+			case EvalMethod::FunctionTree:{
 
+				if (is_differentiated_)
+				{
 					switch (deriv_method_){
 						case DerivMethod::JacobianNode:{
 							for (const auto& iter : jacobian_)
@@ -281,15 +283,19 @@ namespace bertini
 							break;
 						}
 					}
-					break;
 				}
-				case EvalMethod::SLP:
-				{
-					this->slp_.precision(new_precision);
-					break;					
-				}
+				break;
 			}
-			
+			case EvalMethod::SLP:
+			{
+				// the SLP exists (and is used for plain Eval) regardless of whether
+				// the system has been differentiated, so its precision must be kept
+				// in sync unconditionally.  previously this was gated behind
+				// is_differentiated_, leaving a never-differentiated system's SLP at
+				// its compile-time precision forever.
+				this->slp_.precision(new_precision);
+				break;
+			}
 		}
 
 		if (have_path_variable_)
@@ -430,9 +436,16 @@ namespace bertini
 			throw std::runtime_error("trying to homogenize a non-polynomial system.");
 
 		bool already_had_homvars = NumHomVariables()!=0;
-		
+
 		if (already_had_homvars && NumHomVariables()!=NumVariableGroups())
 			throw std::runtime_error("size mismatch on number of homogenizing variables and number of variable groups");
+
+		// idempotency: homogenizing an already-homogenized system must be a no-op.
+		// without this, a second call re-homogenizes each function with respect to
+		// the group INCLUDING its homogenizing variable, inflating degrees (observed
+		// 2026-06-06: degrees (2,1) -> (3,2), turning a 2-path TD into a 6-path one).
+		if (already_had_homvars && IsHomogeneous())
+			return;
 
 		if (!already_had_homvars)
 		{
@@ -589,6 +602,28 @@ namespace bertini
 		have_ordering_ = false;
 		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Affine);
+	}
+
+
+
+
+	void System::SetVariableGroups(std::vector<VariableGroup> const& groups)
+	{
+		// clear the existing variable structure, but preserve the path variable.
+		ungrouped_variables_.clear();
+		variable_groups_.clear();
+		hom_variable_groups_.clear();
+		homogenizing_variables_.clear();
+		time_order_of_variable_groups_.clear();
+
+		// install the supplied groups as affine variable groups.  AddVariableGroup
+		// takes care of the FIFO time-ordering entries and resets the relevant flags.
+		for (auto const& g : groups)
+			AddVariableGroup(g);
+
+		is_differentiated_ = false;
+		have_ordering_ = false;
+		is_patched_ = false;
 	}
 
 
@@ -934,21 +969,21 @@ namespace bertini
 	{
 		static_assert(Eigen::NumTraits<NumT>::IsComplex,"NumT must be a complex type");
 		
-		using RT = typename Eigen::NumTraits<NumT>::Real;
-		using CT = NumT;
+		using RealT = typename Eigen::NumTraits<NumT>::Real;
+		using ComplexT = NumT;
 
-		RT bound(0);
+		RealT bound(0);
 
 		for (unsigned ii=0; ii < num_evaluations; ii++)
 		{	
-			Vec<CT> randy = RandomOfUnits<CT>(NumVariables());
-			Vec<CT> f_vals;
+			Vec<ComplexT> randy = RandomOfUnits<ComplexT>(NumVariables());
+			Vec<ComplexT> f_vals;
 			if (HavePathVariable())
-				f_vals = Eval(randy, RandomUnit<CT>());
+				f_vals = Eval(randy, RandomUnit<ComplexT>());
 			else
 				f_vals = Eval(randy);
 			
-			Mat<CT> dh_dx = Jacobian<CT>();
+			Mat<ComplexT> dh_dx = Jacobian<ComplexT>();
 			
 			bound = max(f_vals.array().abs().maxCoeff(),
 						 dh_dx.array().abs().maxCoeff(), bound);
@@ -1066,6 +1101,88 @@ namespace bertini
 
 		is_differentiated_ = false;
 		have_ordering_ = false;
+	}
+
+
+
+	bool System::RemoveVariable(Var const& v)
+	{
+		// remove the n-th time-ordering entry of the given group type, keeping the
+		// FIFO ordering consistent with the variable-group containers.
+		auto remove_nth_time_order = [this](VariableGroupType t, size_t n)
+		{
+			size_t count = 0;
+			for (auto it = time_order_of_variable_groups_.begin(); it != time_order_of_variable_groups_.end(); ++it)
+			{
+				if (*it == t)
+				{
+					if (count == n)
+					{
+						time_order_of_variable_groups_.erase(it);
+						return;
+					}
+					++count;
+				}
+			}
+		};
+
+		auto did_remove = [this]()
+		{
+			is_differentiated_ = false;
+			have_ordering_ = false;
+			is_patched_ = false;
+		};
+
+		// search the affine variable groups
+		for (size_t gi = 0; gi < variable_groups_.size(); ++gi)
+		{
+			auto& group = variable_groups_[gi];
+			auto it = std::find(group.begin(), group.end(), v);
+			if (it != group.end())
+			{
+				group.erase(it);
+				if (group.empty())
+				{
+					variable_groups_.erase(variable_groups_.begin() + gi);
+					remove_nth_time_order(VariableGroupType::Affine, gi);
+				}
+				did_remove();
+				return true;
+			}
+		}
+
+		// search the homogeneous / projective variable groups
+		for (size_t gi = 0; gi < hom_variable_groups_.size(); ++gi)
+		{
+			auto& group = hom_variable_groups_[gi];
+			auto it = std::find(group.begin(), group.end(), v);
+			if (it != group.end())
+			{
+				group.erase(it);
+				if (group.empty())
+				{
+					hom_variable_groups_.erase(hom_variable_groups_.begin() + gi);
+					remove_nth_time_order(VariableGroupType::Homogeneous, gi);
+				}
+				did_remove();
+				return true;
+			}
+		}
+
+		// search the ungrouped variables (each is its own ungrouped time-order entry)
+		{
+			auto it = std::find(ungrouped_variables_.begin(), ungrouped_variables_.end(), v);
+			if (it != ungrouped_variables_.end())
+			{
+				size_t idx = static_cast<size_t>(std::distance(ungrouped_variables_.begin(), it));
+				ungrouped_variables_.erase(it);
+				remove_nth_time_order(VariableGroupType::Ungrouped, idx);
+				did_remove();
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 
@@ -1326,8 +1443,16 @@ namespace bertini
 			if (this->patch_ != rhs.patch_)
 				throw std::runtime_error("System+=System cannot combine two patched systems whose patches differ.");
 
+		// make NEW Function wrappers rather than calling SetRoot on the existing
+		// ones: the existing Function nodes are shared_ptrs, SHARED with whatever
+		// system this one was (shallowly) copied from.  mutating them in place
+		// rewrites that system's functions too — e.g. forming the homotopy
+		// (1-t)*target + gamma*t*start used to corrupt both the target and the
+		// start system (observed 2026-06-06).
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
-			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->EntryNode() + (*iter)->EntryNode());
+			*iter = node::Function::Make(
+				(*(rhs.functions_.begin()+(iter-functions_.begin())))->EntryNode() + (*iter)->EntryNode(),
+				(*iter)->name());
 
 		is_differentiated_ = false;
 		return *this;
@@ -1341,9 +1466,10 @@ namespace bertini
 
 	System& System::operator*=(std::shared_ptr<node::Node> const& N)
 	{
+		// new wrappers, not SetRoot — see comment in operator+= above.
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
 		{
-			(*iter)->SetRoot( N * (*iter)->EntryNode());
+			*iter = node::Function::Make( N * (*iter)->EntryNode(), (*iter)->name());
 		}
 		is_differentiated_ = false;
 		return *this;
@@ -1452,6 +1578,21 @@ namespace bertini
 			ia >> sys_clone;
 		}
 
+		// Rebuild evaluation machinery from the deserialized expression tree rather
+		// than trusting the archived copy: the serialized SLP does not survive the
+		// round trip faithfully (its time-derivative outputs read stale memory,
+		// observed 2026-06-06; root cause in SLP serialization not yet identified).
+		// Differentiate() re-derives the derivative trees and recompiles the SLP
+		// from the clone's own (verified-exact) tree.
+		if (sys_clone.GetEvalMethod() == EvalMethod::SLP)
+			sys_clone.Differentiate();
+
+		// Normalize precision across all parts of the clone.  The source system can
+		// carry internally-inconsistent precision state (e.g. precision_ says 30 but
+		// the SLP is still at its compile-time precision); precision() propagates to
+		// every node, derivative, and the SLP.
+		sys_clone.precision(sys_clone.precision());
+
 		return sys_clone;
 	}
 
@@ -1460,5 +1601,116 @@ namespace bertini
 	{
 		sys.Simplify();
 	}
+
+
+	void System::ResetFunctions() const
+	{
+		// TODO: it has the unfortunate side effect of resetting constant functions, too.
+		switch (eval_method_){
+		case EvalMethod::FunctionTree:
+			for (const auto& iter : functions_)
+				iter->Reset();
+			break;
+		case EvalMethod::SLP:
+			break;
+		}
+	}
+
+	void System::ResetJacobian() const
+	{
+		switch (eval_method_)
+		{
+			case EvalMethod::FunctionTree:{
+				switch (deriv_method_){
+					case DerivMethod::JacobianNode:
+						for (const auto& iter : jacobian_)
+							iter->Reset();
+						break;
+					case DerivMethod::Derivatives:
+						for (const auto& iter : space_derivatives_)
+							iter->Reset();
+						break;
+				}
+				break;
+			}
+			case EvalMethod::SLP:
+				break;
+		}
+	}
+
+	void System::ResetTimeDerivatives() const
+	{
+		switch (eval_method_)
+		{
+			case EvalMethod::FunctionTree:{
+				switch (deriv_method_){
+					case DerivMethod::JacobianNode:
+						for (const auto& iter : jacobian_)
+							iter->Reset();
+						break;
+					case DerivMethod::Derivatives:
+						for (const auto& iter : time_derivatives_)
+							iter->Reset();
+						break;
+				}
+				break;
+			}
+			case EvalMethod::SLP:
+				break;
+		}
+	}
+
+	void System::Reset() const
+	{
+		ResetFunctions();
+		ResetJacobian();
+		ResetTimeDerivatives();
+	}
+
+	const System::Var& System::GetPathVariable() const
+	{
+		if (this->HavePathVariable())
+			return this->path_variable_;
+		throw std::runtime_error("trying to get path variable for a system which doesn't have a path variable defined");
+	}
+
+
+	// Explicit instantiation definitions — paired with extern template declarations in system.hpp.
+
+	template void System::EvalInPlace<dbl>(Vec<dbl>&) const;
+	template void System::EvalInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+
+	template Vec<dbl> System::Eval<dbl>() const;
+	template Vec<mpfr_complex> System::Eval<mpfr_complex>() const;
+
+	template void System::JacobianInPlace<dbl>(Mat<dbl>&) const;
+	template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&) const;
+
+	template Mat<dbl> System::Jacobian<dbl>() const;
+	template Mat<mpfr_complex> System::Jacobian<mpfr_complex>() const;
+
+	template Mat<dbl> System::Jacobian<dbl>(const Vec<dbl>&) const;
+	template Mat<mpfr_complex> System::Jacobian<mpfr_complex>(const Vec<mpfr_complex>&) const;
+
+	template void System::JacobianInPlace<dbl>(Mat<dbl>&, const Vec<dbl>&) const;
+	template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&, const Vec<mpfr_complex>&) const;
+
+	template void System::TimeDerivativeInPlace<dbl>(Vec<dbl>&) const;
+	template void System::TimeDerivativeInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+
+	template Vec<dbl> System::TimeDerivative<dbl>() const;
+	template Vec<mpfr_complex> System::TimeDerivative<mpfr_complex>() const;
+
+	template void System::SetVariables<dbl>(const Vec<dbl>&) const;
+	template void System::SetVariables<mpfr_complex>(const Vec<mpfr_complex>&) const;
+
+	template void System::SetPathVariable<dbl>(dbl const&) const;
+	template void System::SetPathVariable<mpfr_complex>(mpfr_complex const&) const;
+
+	template void System::SetAndReset<dbl>(Vec<dbl> const&, dbl const&) const;
+	template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&, mpfr_complex const&) const;
+
+	template void System::SetAndReset<dbl>(Vec<dbl> const&) const;
+	template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&) const;
 
 }

@@ -48,11 +48,11 @@ class FixedPrecEndgame : public virtual EndgamePrecPolicyBase<TrackerT>
 {
 public:
 	using TrackerType = TrackerT;
-	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
-	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
+	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
 
-	using BCT = BaseComplexType;
-	using BRT = BaseRealType;
+	using BCT = BaseComplexT;
+	using BRT = BaseRealT;
 
 	template<typename... T>
 	static
@@ -76,7 +76,7 @@ public:
 
 	SuccessCode RefineSampleImpl(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, double tol, unsigned max_iterations) const
 	{
-		using RT = mpfr_float;
+		using RealT = mpfr_float;
 		using std::max;
 		auto& TR = this->GetTracker();
 

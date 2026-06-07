@@ -28,16 +28,48 @@
 
 
 
-import bertini._pybertini
-import bertini._pybertini.function_tree
-
-# from bertini._pybertini import function_tree
+from bertini._pybertini import function_tree as _pybft
 from bertini._pybertini.container import VariableGroup
 
 from bertini._pybertini.function_tree import *
 
+del AbstractNode
+
+# Override C++ submodule references with their Python wrappers (which have abstracts removed).
+# Can't use 'from . import symbol, root' here: the star import already put the C++ submodules
+# under those names, and Python skips the subpackage import when the name is already defined.
+import importlib as _importlib
+symbol = _importlib.import_module('bertini.function_tree.symbol')
+root = _importlib.import_module('bertini.function_tree.root')
+del _importlib
+
+from bertini._pybertini.function_tree.operator import Sqrt as _Sqrt
+
+def sqrt(x):
+    """Symbolic square-root operator."""
+    return _Sqrt(x)
+
 
 VariableGroup.__str__ = lambda vg: '[{}]'.format( ','.join([str(v) for v in vg]) )
 
-__all__ = dir(bertini._pybertini.function_tree)
+
+def variables(base, indices, fmt='{base}{index}'):
+    """Make a list of integer-indexed Variables.
+
+    base    -- name prefix, e.g. 'x'
+    indices -- an int n (shorthand for range(n)) or any iterable of ints
+    fmt     -- str.format template using {base} and {index};
+               default '{base}{index}' gives x0, x1, x2, ...
+
+    Returns a list[Variable].  Wrap in a VariableGroup if desired:
+        pb.VariableGroup(pb.variables('x', 5))
+    """
+    from bertini._pybertini.function_tree.symbol import Variable
+    if isinstance(indices, int):
+        indices = range(indices)
+    return [Variable(fmt.format(base=base, index=i)) for i in indices]
+
+
+_ABSTRACT = {'AbstractNode'}
+__all__ = [n for n in dir(_pybft) if n not in _ABSTRACT] + ['variables', 'sqrt']
 

@@ -48,6 +48,7 @@ namespace tracking{
 	enum class PrecisionType //E.2.1
 	{
 		Fixed,
+		FixedMultiple,
 		Adaptive
 	};
 	
@@ -108,7 +109,7 @@ namespace tracking{
 
 	struct FixedPrecisionConfig
 	{
-		using RealType = double;
+		using RealT = double;
 
 		/**
 		\brief Construct a ready-to-go set of fixed precision settings from a system.
@@ -273,8 +274,8 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<DoublePrecisionTracker>
 	{
-		using BaseComplexType = dbl;
-		using BaseRealType = double;
+		using BaseComplexT = dbl;
+		using BaseRealT = double;
 		using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
 		using PrecisionConfig = FixedPrecisionConfig;
 		enum {
@@ -294,8 +295,8 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<MultiplePrecisionTracker>
 	{
-		using BaseComplexType = mpfr_complex;
-		using BaseRealType = mpfr_float;
+		using BaseComplexT = mpfr_complex;
+		using BaseRealT = mpfr_float;
 		using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 		using PrecisionConfig = FixedPrecisionConfig;
 
@@ -318,8 +319,8 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<AMPTracker>
 	{
-		using BaseComplexType = mpfr_complex;
-		using BaseRealType = mpfr_float;
+		using BaseComplexT = mpfr_complex;
+		using BaseRealT = mpfr_float;
 		using EventEmitterType = AMPTracker;
 		using PrecisionConfig = AdaptiveMultiplePrecisionConfig;
 
@@ -343,8 +344,8 @@ namespace tracking{
 	template<class D>
 	struct TrackerTraits<FixedPrecisionTracker<D> > : public TrackerTraits<D>
 	{ 
-		using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
-		using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+		using BaseComplexT = typename TrackerTraits<D>::BaseComplexT;
+		using BaseRealT = typename TrackerTraits<D>::BaseRealT;
 		using EventEmitterType = typename TrackerTraits<D>::EventEmitterType;
 		using PrecisionConfig = typename TrackerTraits<D>::PrecisionConfig;
 

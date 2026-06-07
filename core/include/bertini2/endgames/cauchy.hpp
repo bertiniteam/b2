@@ -61,8 +61,8 @@ Below we demonstrate a basic usage of the CauchyEndgame class to find the singul
 The pattern is as described above: create an instance of the class, feeding it the system to be used, and the endgame boundary time and other variable values at the endgame boundary.
 \code{.cpp}
 using namespace bertini::tracking;
-using RealT = tracking::TrackerTraits<TrackerType>::BaseRealType; // Real types
-using ComplexT = tracking::TrackerTraits<TrackerType>::BaseComplexType; Complex types
+using RealT = tracking::TrackerTraits<TrackerType>::BaseRealT; // Real types
+using ComplexT = tracking::TrackerTraits<TrackerType>::BaseComplexT; Complex types
 
 // 1. Define the polynomial system that we wish to solve.
 System target_sys;
@@ -175,8 +175,8 @@ public:
 	using FinalEGT = CauchyEndgame<PrecT>;
 	using TrackerType = typename PrecT::TrackerType;
 
-	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
-	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
+	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
 
 	using EmitterType = CauchyEndgame<PrecT>;
 
@@ -190,8 +190,8 @@ protected:
 	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
 	using TupleOfSamps = typename BaseEGT::TupleOfSamps;
 
-	using BCT = BaseComplexType;
-	using BRT = BaseRealType;
+	using BCT = BaseComplexT;
+	using BRT = BaseRealT;
 
 	using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;
 	using ConfigsAsTuple = typename Configs::ToTuple;
@@ -226,50 +226,50 @@ public:
 	/**
 	\brief Function that clears all samples and times from data members for the Cauchy endgame
 	*/
-	template<typename CT>
+	template<typename ComplexT>
 	void ClearTimesAndSamples()
 	{
-		std::get<TimeCont<CT> >(pseg_times_).clear();
-		std::get<TimeCont<CT> >(cauchy_times_).clear();
-		std::get<SampCont<CT> >(pseg_samples_).clear();
-		std::get<SampCont<CT> >(cauchy_samples_).clear();}
+		std::get<TimeCont<ComplexT> >(pseg_times_).clear();
+		std::get<TimeCont<ComplexT> >(cauchy_times_).clear();
+		std::get<SampCont<ComplexT> >(pseg_samples_).clear();
+		std::get<SampCont<ComplexT> >(cauchy_samples_).clear();}
 	/**
 	\brief Setter for the time values for the power series approximation of the Cauchy endgame.
 	*/
-	template<typename CT>
-	void SetPSEGTimes(TimeCont<CT> pseg_times_to_set)
-	{ std::get<TimeCont<CT> >(pseg_times_) = pseg_times_to_set;}
+	template<typename ComplexT>
+	void SetPSEGTimes(TimeCont<ComplexT> pseg_times_to_set)
+	{ std::get<TimeCont<ComplexT> >(pseg_times_) = pseg_times_to_set;}
 
 	/**
 	\brief Getter for the time values for the power series approximation of the Cauchy endgame.
 	*/
-	template<typename CT>
-	TimeCont<CT>& GetPSEGTimes() {return std::get<TimeCont<CT> >(pseg_times_);}
-	template<typename CT>
-	const TimeCont<CT>& GetPSEGTimes() const {return std::get<TimeCont<CT> >(pseg_times_);}
+	template<typename ComplexT>
+	TimeCont<ComplexT>& GetPSEGTimes() {return std::get<TimeCont<ComplexT> >(pseg_times_);}
+	template<typename ComplexT>
+	const TimeCont<ComplexT>& GetPSEGTimes() const {return std::get<TimeCont<ComplexT> >(pseg_times_);}
 
 	/**
 	\brief Setter for the space values for the power series approximation of the Cauchy endgame.
 	*/
-	template<typename CT>
-	void SetPSEGSamples(SampCont<CT> const& pseg_samples_to_set) { std::get<SampCont<CT> >(pseg_samples_) = pseg_samples_to_set;}
+	template<typename ComplexT>
+	void SetPSEGSamples(SampCont<ComplexT> const& pseg_samples_to_set) { std::get<SampCont<ComplexT> >(pseg_samples_) = pseg_samples_to_set;}
 
 	/**
 	\brief Getter for the space values for the power series approximation of the Cauchy endgame.
 
 	Available in const and non-const flavors
 	*/
-	template<typename CT>
-	SampCont<CT>& GetPSEGSamples() {return std::get<SampCont<CT> >(pseg_samples_);}
-	template<typename CT>
-	const SampCont<CT>& GetPSEGSamples() const {return std::get<SampCont<CT> >(pseg_samples_);}
+	template<typename ComplexT>
+	SampCont<ComplexT>& GetPSEGSamples() {return std::get<SampCont<ComplexT> >(pseg_samples_);}
+	template<typename ComplexT>
+	const SampCont<ComplexT>& GetPSEGSamples() const {return std::get<SampCont<ComplexT> >(pseg_samples_);}
 	/**
 	\brief Setter for the space values for the Cauchy endgame.
 	*/
-	template<typename CT>
-	void SetCauchySamples(SampCont<CT> const& cauchy_samples_to_set)
+	template<typename ComplexT>
+	void SetCauchySamples(SampCont<ComplexT> const& cauchy_samples_to_set)
 	{
-		std::get<SampCont<CT> >(cauchy_samples_) = cauchy_samples_to_set;
+		std::get<SampCont<ComplexT> >(cauchy_samples_) = cauchy_samples_to_set;
 	}
 
 	/**
@@ -277,36 +277,36 @@ public:
 
 	Available in const and non-const flavors
 	*/
-	template<typename CT>
-	SampCont<CT>& GetCauchySamples()
+	template<typename ComplexT>
+	SampCont<ComplexT>& GetCauchySamples()
 	{
-		return std::get<SampCont<CT> >(cauchy_samples_);
+		return std::get<SampCont<ComplexT> >(cauchy_samples_);
 	}
-	template<typename CT>
-	const SampCont<CT>& GetCauchySamples() const { return std::get<SampCont<CT> >(cauchy_samples_); }
+	template<typename ComplexT>
+	const SampCont<ComplexT>& GetCauchySamples() const { return std::get<SampCont<ComplexT> >(cauchy_samples_); }
 
 
 	/**
 	\brief Setter for the time values for the Cauchy endgame.
 	*/
-	template<typename CT>
-	void SetCauchyTimes(TimeCont<CT> const& cauchy_times_to_set)
+	template<typename ComplexT>
+	void SetCauchyTimes(TimeCont<ComplexT> const& cauchy_times_to_set)
 	{
-		std::get<TimeCont<CT> >(cauchy_times_) = cauchy_times_to_set;
+		std::get<TimeCont<ComplexT> >(cauchy_times_) = cauchy_times_to_set;
 	}
 
 	/**
 	\brief Getter for the time values for the Cauchy endgame.
 	*/
-	template<typename CT>
-	TimeCont<CT>& GetCauchyTimes()
+	template<typename ComplexT>
+	TimeCont<ComplexT>& GetCauchyTimes()
 	{
-		return std::get<TimeCont<CT> >(cauchy_times_);
+		return std::get<TimeCont<ComplexT> >(cauchy_times_);
 	}
-	template<typename CT>
-	const TimeCont<CT>& GetCauchyTimes() const
+	template<typename ComplexT>
+	const TimeCont<ComplexT>& GetCauchyTimes() const
 	{
-		return std::get<TimeCont<CT> >(cauchy_times_);
+		return std::get<TimeCont<ComplexT> >(cauchy_times_);
 	}
 
 
@@ -368,23 +368,23 @@ public:
 
 
 		##Details:
-	\tparam CT The complex number type.
+	\tparam ComplexT The complex number type.
 				Depeding on the number of samples points, we make a polgon around the origin with that many vertices. This function should be called the same number of times
 				as paths converging to the solution we are approximating.
 	*/
-	template<typename CT>
-	SuccessCode CircleTrack(CT const& target_time)
+	template<typename ComplexT>
+	SuccessCode CircleTrack(ComplexT const& target_time)
 	{
 		using bertini::Precision;
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		using std::acos;
 
 		ValidateConfigs();
 
-		auto& circle_times = std::get<TimeCont<CT> >(cauchy_times_);
-		auto& circle_samples = std::get<SampCont<CT> >(cauchy_samples_);
+		auto& circle_times = std::get<TimeCont<ComplexT> >(cauchy_times_);
+		auto& circle_samples = std::get<SampCont<ComplexT> >(cauchy_samples_);
 
-		CT starting_time = circle_times.back();  // take a COPY here, so won't invalidate it later
+		ComplexT starting_time = circle_times.back();  // take a COPY here, so won't invalidate it later
 
 		// the initial sample has already been added to the sample repo... so don't do that here, please
 
@@ -392,8 +392,8 @@ public:
 
 		for (unsigned ii = 0; ii < this->EndgameSettings().num_sample_points; ++ii)
 		{
-			const Vec<CT>& current_sample = circle_samples.back();
-			const CT& current_time = circle_times.back();
+			const Vec<ComplexT>& current_sample = circle_samples.back();
+			const ComplexT& current_time = circle_times.back();
 
 #ifndef BERTINI_DISABLE_PRECISION_CHECKS
 			if (Precision(current_time)!=Precision(current_sample)){
@@ -412,14 +412,14 @@ public:
 
 			//Generalized since we could have a nonzero target time.
 			using std::arg;
-			RT radius = abs(starting_time - target_time), angle = arg(starting_time - target_time); // generalized for nonzero target_time.
+			RealT radius = abs(starting_time - target_time), angle = arg(starting_time - target_time); // generalized for nonzero target_time.
 
-			auto next_sample = Vec<CT>(num_vars);
-			CT next_time = (ii==this->EndgameSettings().num_sample_points-1)
+			auto next_sample = Vec<ComplexT>(num_vars);
+			ComplexT next_time = (ii==this->EndgameSettings().num_sample_points-1)
 								?
 							  starting_time
 								:
-							  polar(radius, (ii+1)*2*acos(static_cast<RT>(-1)) / (this->EndgameSettings().num_sample_points) + angle) + target_time;
+							  polar(radius, (ii+1)*2*acos(static_cast<RealT>(-1)) / (this->EndgameSettings().num_sample_points) + angle) + target_time;
 			// If we are tracking to a nonzero target time we need to shift our values to track to. This is a step that may not be needed if target_time = 0
 							  ;
 
@@ -455,18 +455,18 @@ public:
 
 	}//end CircleTrack
 
-	template<typename CT>
-	void AddToCauchyData(CT const& time, Vec<CT> const& sample)
+	template<typename ComplexT>
+	void AddToCauchyData(ComplexT const& time, Vec<ComplexT> const& sample)
 	{
-		std::get<TimeCont<CT>>(cauchy_times_).push_back(time);
-		std::get<SampCont<CT>>(cauchy_samples_).push_back(sample);
+		std::get<TimeCont<ComplexT>>(cauchy_times_).push_back(time);
+		std::get<SampCont<ComplexT>>(cauchy_samples_).push_back(sample);
 	}
 
-	template<typename CT>
-	void AddToPSData(CT const& time, Vec<CT> const& sample)
+	template<typename ComplexT>
+	void AddToPSData(ComplexT const& time, Vec<ComplexT> const& sample)
 	{
-		std::get<TimeCont<CT>>(pseg_times_).push_back(time);
-		std::get<SampCont<CT>>(pseg_samples_).push_back(sample);
+		std::get<TimeCont<ComplexT>>(pseg_times_).push_back(time);
+		std::get<SampCont<ComplexT>>(pseg_samples_).push_back(sample);
 	}
 
 	/**
@@ -483,32 +483,34 @@ public:
 
 
 		##Details:
-				\tparam CT The complex number type.
+				\tparam ComplexT The complex number type.
 				Consult page 53 of \cite bertinibook, for the reasoning behind this heuristic.
 	*/
-	template<typename CT>
-	auto ComputeCOverK() const -> typename Eigen::NumTraits<CT>::Real
+	template<typename ComplexT>
+	auto ComputeCOverK() const -> typename Eigen::NumTraits<ComplexT>::Real
 	{//Obtain samples for computing C over K.
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		using std::abs;
 		using std::log;
 
-		const auto& pseg_samples = std::get<SampCont<CT> >(pseg_samples_);
+		const auto& pseg_samples = std::get<SampCont<ComplexT> >(pseg_samples_);
 
 		assert(pseg_samples.size()>=3);
-		const Vec<CT> & sample0 = pseg_samples[0];
-		const Vec<CT> & sample1 = pseg_samples[1];
-		const Vec<CT> & sample2 = pseg_samples[2];
+		const Vec<ComplexT> & sample0 = pseg_samples[0];
+		const Vec<ComplexT> & sample1 = pseg_samples[1];
+		const Vec<ComplexT> & sample2 = pseg_samples[2];
 
-		Vec<CT> rand_vector = Vec<CT>::Random(sample0.size()); //should be a row vector for ease in multiplying.
+		Vec<ComplexT> rand_vector(sample0.size());
+		for (int ii = 0; ii < (int)sample0.size(); ++ii)
+			rand_vector(ii) = RandomUnit<ComplexT>();
 
 
 		// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
 		// //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type.
-		RT estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).template lpNorm<Eigen::Infinity>())/(((sample1 - sample0).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()))));
-		estimate = abs(log(RT(this->EndgameSettings().sample_factor)))/estimate;
+		RealT estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).template lpNorm<Eigen::Infinity>())/(((sample1 - sample0).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()))));
+		estimate = abs(log(RealT(this->EndgameSettings().sample_factor)))/estimate;
 		if (estimate < 1)
-		  	return RT(1);
+		  	return RealT(1);
 		else
 			return estimate;
 
@@ -526,22 +528,22 @@ public:
 				false: if our ratios are not withing tolerances set by the user or by default.
 
 		##Details:
-				\tparam CT The complex number type.
+				\tparam ComplexT The complex number type.
 
 	*/
-	template<typename CT>
-	bool CheckForCOverKStabilization(TimeCont<CT> const& c_over_k_array) const
+	template<typename ComplexT>
+	bool CheckForCOverKStabilization(TimeCont<ComplexT> const& c_over_k_array) const
 	{
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		using std::abs;
 
 		assert(c_over_k_array.size()>=GetCauchySettings().num_needed_for_stabilization);
 		for(unsigned ii = 1; ii < GetCauchySettings().num_needed_for_stabilization ; ++ii)
 		{
-			RT a = abs(c_over_k_array[ii-1]);
-			RT b = abs(c_over_k_array[ii]);
+			RealT a = abs(c_over_k_array[ii-1]);
+			RealT b = abs(c_over_k_array[ii]);
 
-			typename Eigen::NumTraits<CT>::Real divide = a;
+			typename Eigen::NumTraits<ComplexT>::Real divide = a;
 
 			if(a < b)
 				divide = a/b;
@@ -561,8 +563,8 @@ public:
 
 	Output: An mpfr_float representing a tolerance threshold for declaring a loop to be closed.
 	Details: Used in Bertini 1 as a heuristic for computing separatedness of roots. Decided to not be used since assumptions for this tolerance are not usually met.
-	template<typename CT>
-	mpfr_float FindToleranceForClosedLoop(CT x_time, Vec<CT> x_sample)
+	template<typename ComplexT>
+	mpfr_float FindToleranceForClosedLoop(ComplexT x_time, Vec<ComplexT> x_sample)
 	{
 		auto degree_max = std::max(this->GetTracker().AMP_config_.degree_bound,mpfr_float("2.0"));
 		auto K = this->GetTracker().AMP_config_.coefficient_bound;
@@ -584,7 +586,7 @@ public:
 		}
 		M = degree_max * (degree_max - 1) * N;
 		auto jacobian_at_current_time = this->GetSystem().Jacobian(x_sample,x_time);
-		auto minimum_singular_value = Eigen::JacobiSVD< Mat<CT> >(jacobian_at_current_time).singularValues()(this->GetSystem().NumVariables() - 1 );
+		auto minimum_singular_value = Eigen::JacobiSVD< Mat<ComplexT> >(jacobian_at_current_time).singularValues()(this->GetSystem().NumVariables() - 1 );
 		auto norm_of_sample = x_sample.norm();
 		L = pow(norm_of_sample,degree_max - 2);
 		auto tol = K * L * M;
@@ -618,14 +620,14 @@ public:
 				false: if we have not closed the loop
 
 		##Details:
-				\tparam CT The complex number type
+				\tparam ComplexT The complex number type
 	*/
-	template<typename CT>
+	template<typename ComplexT>
 	bool CheckClosedLoop()
 	{
-		using RT = typename Eigen::NumTraits<CT>::Real;
-		auto& times = std::get<TimeCont<CT> >(cauchy_times_);
-		auto& samples = std::get<SampCont<CT> >(cauchy_samples_);
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
+		auto& times = std::get<TimeCont<ComplexT> >(cauchy_times_);
+		auto& samples = std::get<SampCont<ComplexT> >(cauchy_samples_);
 
 		if((samples.front() - samples.back()).template lpNorm<Eigen::Infinity>() < this->GetTracker().TrackingTolerance())
 		{
@@ -667,25 +669,25 @@ public:
 
 
 		##Details:
-				\tparam CT The complex number type.
+				\tparam ComplexT The complex number type.
 				It is important to know if we are within the endgame operating zone. This function allows us to have a check that
 				heuristcially will tell us if we are.
 	*/
-	template<typename CT>
-	bool RatioEGOperatingZoneTest(CT const& target_time) const
+	template<typename ComplexT>
+	bool RatioEGOperatingZoneTest(ComplexT const& target_time) const
 	{
-		using RT = typename Eigen::NumTraits<CT>::Real;
-		RT min(1e300);
-		RT max(0);
-		auto& times = std::get<TimeCont<CT> >(cauchy_times_);
-		auto& samples = std::get<SampCont<CT> >(cauchy_samples_);
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
+		RealT min(1e300);
+		RealT max(0);
+		auto& times = std::get<TimeCont<ComplexT> >(cauchy_times_);
+		auto& samples = std::get<SampCont<ComplexT> >(cauchy_samples_);
 		if(norm(times.front() - target_time) < GetCauchySettings().ratio_cutoff_time)
 		{
 			return true;
 		}
 		else
 		{
-			RT norm;
+			RealT norm;
 			for(unsigned int ii=0; ii < this->EndgameSettings().num_sample_points; ++ii)
 			{
 				norm = samples[ii].template lpNorm<Eigen::Infinity>();
@@ -735,10 +737,10 @@ public:
 			tracked to an appropriate time.
 
 		##Details:
-				\tparam CT The complex number type.
+				\tparam ComplexT The complex number type.
 	*/
-	template<typename CT>
-	SuccessCode InitialCauchyLoops(CT const& target_time)
+	template<typename ComplexT>
+	SuccessCode InitialCauchyLoops(ComplexT const& target_time)
 	{
 		using std::max;
 		// auto fail_safe_max_cycle_number = max(GetCauchySettings().fail_safe_maximum_cycle_number,this->CycleNumber());
@@ -750,7 +752,7 @@ public:
 		while (loop_hasnt_closed)
 		{
 			this->CycleNumber(0);
-			ClearAndSeedCauchyData<CT>();
+			ClearAndSeedCauchyData<ComplexT>();
 
 			// track around a circle once.  we'll use it to measure whether we believe we are in the eg operating zone, based on the ratio of norms of sample points around the circle
 			auto tracking_success = CircleTrack(target_time);
@@ -759,11 +761,11 @@ public:
 				return tracking_success;
 
 			// find the ratio of the maximum and minimum coordinate wise for the loop.
-			if (RatioEGOperatingZoneTest<CT>(target_time))
+			if (RatioEGOperatingZoneTest<ComplexT>(target_time))
 			{ // then we believe we are in the EG operating zone, since the path is relatively flat.  i still disbelieve this is a good test (dab 20160310)
 				while (true)
 				{
-					if (CheckClosedLoop<CT>())
+					if (CheckClosedLoop<ComplexT>())
 					{//error is small enough, exit the loop with success.
 						NotifyObservers(ClosedLoop<EmitterType>(*this));
 						initial_cauchy_loop_success = SuccessCode::Success;
@@ -786,7 +788,7 @@ public:
 			}//end if (RatioEGOperatingZoneTest())
 			else
 			{
-				auto advance_success = AdvanceTime<CT>(target_time);
+				auto advance_success = AdvanceTime<ComplexT>(target_time);
 				if (advance_success!=SuccessCode::Success)
 					return advance_success;
 			}
@@ -797,11 +799,11 @@ public:
 
 
 
-	template <typename CT>
-	void RotateOntoPS(CT const& next_time, Vec<CT> const& next_sample)
+	template <typename ComplexT>
+	void RotateOntoPS(ComplexT const& next_time, Vec<ComplexT> const& next_sample)
 	{
-		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
-		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
+		auto& ps_times = std::get<TimeCont<ComplexT> >(pseg_times_);
+		auto& ps_samples = std::get<SampCont<ComplexT> >(pseg_samples_);
 
 		ps_times.pop_front();
 		ps_samples.pop_front();
@@ -810,13 +812,13 @@ public:
 		ps_samples.push_back(next_sample);
 	}
 
-	template <typename CT>
+	template <typename ComplexT>
 	void ClearAndSeedCauchyData()
 	{
-		auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
-		auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
-		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
-		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
+		auto& cau_times = std::get<TimeCont<ComplexT> >(cauchy_times_);
+		auto& cau_samples = std::get<SampCont<ComplexT> >(cauchy_samples_);
+		auto& ps_times = std::get<TimeCont<ComplexT> >(pseg_times_);
+		auto& ps_samples = std::get<SampCont<ComplexT> >(pseg_samples_);
 
 		cau_times.clear();
 		cau_samples.clear();
@@ -840,7 +842,7 @@ public:
 
 
 		##Details:
-	\tparam CT The complex number type.
+	\tparam ComplexT The complex number type.
 
 	This function is in charge of finding the very first approximation of the origin. It does this by first computing some initial samples
 	like what is done in the Power Series Endgame. We continue to track forward in this manner until we have stabilization of the cycle number being approximated.
@@ -848,15 +850,15 @@ public:
 	Once we have stabilization we then perform InitialCauchyLoops while getting the accurate cycle number, and check the norms of the samples and make sure we are ready
 	to approximate.
 	*/
-	template<typename CT>
-	SuccessCode InitialApproximation(CT const& start_time, Vec<CT> const& start_point,
-	                                            CT const& target_time, Vec<CT> & approximation)
+	template<typename ComplexT>
+	SuccessCode InitialApproximation(ComplexT const& start_time, Vec<ComplexT> const& start_point,
+	                                            ComplexT const& target_time, Vec<ComplexT> & approximation)
 	{
 		auto init_success = GetIntoEGZone(start_time, start_point, target_time);
 		if (init_success!= SuccessCode::Success)
 			return init_success;
 
-		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
+		auto cauchy_loop_success = InitialCauchyLoops<ComplexT>(target_time);
 		if (cauchy_loop_success != SuccessCode::Success)
 			return cauchy_loop_success;
 
@@ -866,44 +868,44 @@ public:
 
 
 
-	template<typename CT>
-	SuccessCode GetIntoEGZone(CT const& start_time, Vec<CT> const& start_point, CT const& target_time)
+	template<typename ComplexT>
+	SuccessCode GetIntoEGZone(ComplexT const& start_time, Vec<ComplexT> const& start_point, ComplexT const& target_time)
 	{
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
 		//initialize array holding c_over_k estimates
-		std::deque<RT> c_over_k;
+		std::deque<RealT> c_over_k;
 
-		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
-		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
+		auto& ps_times = std::get<TimeCont<ComplexT> >(pseg_times_);
+		auto& ps_samples = std::get<SampCont<ComplexT> >(pseg_samples_);
 
 		//Compute initial samples for pseg
 		auto initial_sample_success = this->ComputeInitialSamples(start_time, target_time, start_point, ps_times, ps_samples);
 		if (initial_sample_success!=SuccessCode::Success)
 			return initial_sample_success;
 
-		c_over_k.push_back(ComputeCOverK<CT>());
+		c_over_k.push_back(ComputeCOverK<ComplexT>());
 
 
 		//track until for more c_over_k estimates or until we reach a cutoff time.
 		for (unsigned ii = 0; ii < GetCauchySettings().num_needed_for_stabilization; ++ii)
 		{
-			auto advance_success = AdvanceTime<CT>(target_time);
+			auto advance_success = AdvanceTime<ComplexT>(target_time);
 			if (advance_success!=SuccessCode::Success)
 				return advance_success;
-			c_over_k.push_back(ComputeCOverK<CT>());
+			c_over_k.push_back(ComputeCOverK<ComplexT>());
 		}//end while
 
 
 		//have we stabilized yet?
 		while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()-target_time) > GetCauchySettings().cycle_cutoff_time)
 		{
-			auto advance_success = AdvanceTime<CT>(target_time);
+			auto advance_success = AdvanceTime<ComplexT>(target_time);
 			if (advance_success!=SuccessCode::Success)
 				return advance_success;
 
 			c_over_k.pop_front();
-			c_over_k.push_back(ComputeCOverK<CT>());
+			c_over_k.push_back(ComputeCOverK<ComplexT>());
 
 		}//end while
 
@@ -922,17 +924,17 @@ public:
 			SuccessCode deeming if we were suceessful, or if we encountered an error.
 
 		##Details:
-	\tparam CT The complex number type.
+	\tparam ComplexT The complex number type.
 				We can compute the Cauchy Integral Formula in this particular instance by computing the mean of the samples we have collected around the origin.
 
 				/todo i believe this function works incorrectly when the target time is not 0.  hence, the target time needs to be passed in.
 	*/
-	template<typename CT>
-	SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<CT>& result)
+	template<typename ComplexT>
+	SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<ComplexT>& result)
 	{
-		using RT = typename Eigen::NumTraits<CT>::Real;
-		auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
-		auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
+		auto& cau_times = std::get<TimeCont<ComplexT> >(cauchy_times_);
+		auto& cau_samples = std::get<SampCont<ComplexT> >(cauchy_samples_);
 
 		if (cau_samples.size() != this->CycleNumber() * this->EndgameSettings().num_sample_points+1)
 		{
@@ -951,11 +953,11 @@ public:
 
 
 		auto total_num_pts = this->CycleNumber() * this->EndgameSettings().num_sample_points;
-		this->template RefineAllSamples<CT>(cau_samples, cau_times);
+		this->template RefineAllSamples<ComplexT>(cau_samples, cau_times);
 
 		Precision(result, Precision(cau_samples.back()));
 
-		result = Vec<CT>::Zero(this->GetSystem().NumVariables());
+		result = Vec<ComplexT>::Zero(this->GetSystem().NumVariables());
 		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
 			result += cau_samples[ii];
 		result /= this->CycleNumber() * this->EndgameSettings().num_sample_points;
@@ -977,17 +979,17 @@ public:
 		##Details:
 
 			the starting time and point for this routine are the most recent power series samples.
-	\tparam CT The complex number type.
+	\tparam ComplexT The complex number type.
 				This function populates the deque cauchy_samples and cauchy_times. These are data members of the class and are not passed in. This function will continue to
 				call CircleTrack until we have closed the loop.
 
 	*/
-	template<typename CT>
-	SuccessCode ComputeCauchySamples(CT const& target_time)
+	template<typename ComplexT>
+	SuccessCode ComputeCauchySamples(ComplexT const& target_time)
 	{
 		using bertini::Precision;
 
-		ClearAndSeedCauchyData<CT>();
+		ClearAndSeedCauchyData<ComplexT>();
 		this->CycleNumber(0);
 
 
@@ -1001,7 +1003,7 @@ public:
 			{
 				return tracking_success;
 			}
-			else if(CheckClosedLoop<CT>())
+			else if(CheckClosedLoop<ComplexT>())
 			{
 				return SuccessCode::Success;
 			}
@@ -1018,25 +1020,25 @@ public:
 
 	If the distance between next and target is too small, dies (returns not success).
 	*/
-	template<typename CT>
-	SuccessCode AdvanceTime(CT const& target_time)
+	template<typename ComplexT>
+	SuccessCode AdvanceTime(ComplexT const& target_time)
 	{
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
-		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
-		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
+		auto& ps_times = std::get<TimeCont<ComplexT> >(pseg_times_);
+		auto& ps_samples = std::get<SampCont<ComplexT> >(pseg_samples_);
 
 		auto& current_time = ps_times.back();
 		auto& current_sample = ps_samples.back();
 
 		//Generalized next_time in case if we are not trying to converge to the t = 0.
-		CT next_time = (target_time-current_time) * static_cast<RT>(this->EndgameSettings().sample_factor)+current_time;
+		ComplexT next_time = (target_time-current_time) * static_cast<RealT>(this->EndgameSettings().sample_factor)+current_time;
 
 		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time)//we are too close to t = 0 but we do not have the correct tolerance - so we exit
 			return SuccessCode::MinTrackTimeReached;
 
 		// advance in time
-		Vec<CT> next_sample;
+		Vec<ComplexT> next_sample;
 		auto time_advance_success = this->GetTracker().TrackPath(next_sample,current_time, next_time, current_sample);
 		if (time_advance_success != SuccessCode::Success)
 		{
@@ -1065,15 +1067,15 @@ public:
 			SuccessCode: reporting if we were successful in the endgame or if we encountered an error
 
 		##Details:
-	\tparam CT The complex number type.
+	\tparam ComplexT The complex number type.
 				This function runs the entire Cauchy Endgame. We first take our endgame boundary time value and sample to find a first approximation of the origin. This is done by
 					using the idea for the power series endgame. We check for stabilization of the cycle number, and check to see when the ratios of the maximum and minimum norm of samples collected
 					by CircleTrack are withing a tolerance. When both of these conditions are met we do a Hermite interpolation.
 					At this point we can start tracking in to the origin while using CircleTrack to compute samples and calculating their mean to get an approximation of the origin using the Cauchy
 					Integral Formula.
 	*/
-	template<typename CT>
-	SuccessCode RunImpl(CT const& start_time, Vec<CT> const& start_point, CT const& target_time)
+	template<typename ComplexT>
+	SuccessCode RunImpl(ComplexT const& start_time, Vec<ComplexT> const& start_point, ComplexT const& target_time)
 	{
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{
@@ -1089,14 +1091,14 @@ public:
 			throw std::runtime_error(ss.str());
 		}
 
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
-		Vec<CT>& latest_approx = this->final_approximation_;
-		Vec<CT>& prev_approx = this->previous_approximation_;
+		Vec<ComplexT>& latest_approx = this->final_approximation_;
+		Vec<ComplexT>& prev_approx = this->previous_approximation_;
 		NumErrorT& approx_error = this->approximate_error_;
 
 
-		ClearTimesAndSamples<CT>(); //clear times and samples before we begin.
+		ClearTimesAndSamples<ComplexT>(); //clear times and samples before we begin.
 		this->CycleNumber(0);
 		prev_approx = start_point;
 
@@ -1104,12 +1106,12 @@ public:
 		if (init_success!= SuccessCode::Success)
 			return init_success;
 
-		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
+		auto cauchy_loop_success = InitialCauchyLoops<ComplexT>(target_time);
 		if (cauchy_loop_success != SuccessCode::Success)
 			return cauchy_loop_success;
 
 
-		RT norm_of_dehom_prev, norm_of_dehom_latest;
+		RealT norm_of_dehom_prev, norm_of_dehom_latest;
 
 		if(this->SecuritySettings().level <= 0)
 			norm_of_dehom_prev = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();
@@ -1118,7 +1120,7 @@ public:
 		{
 			//Compute a cauchy approximation.  Uses the previously computed samples,
 			//either from InitialCauchyLoops, or ComputeCauchySamples
-			auto extrapolation_success = ComputeCauchyApproximationOfXAtT0<CT>(latest_approx);
+			auto extrapolation_success = ComputeCauchyApproximationOfXAtT0<ComplexT>(latest_approx);
 			if (extrapolation_success!=SuccessCode::Success)
 				return extrapolation_success;
 
@@ -1146,7 +1148,7 @@ public:
 			prev_approx = latest_approx;
 			norm_of_dehom_prev = norm_of_dehom_latest;
 
-			auto advance_success = AdvanceTime<CT>(target_time);
+			auto advance_success = AdvanceTime<ComplexT>(target_time);
 			if (advance_success != SuccessCode::Success)
 				return advance_success;
 

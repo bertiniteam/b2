@@ -93,7 +93,7 @@ namespace bertini {
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 
-		using CT = typename ObservedT::BaseComplexType;
+		using ComplexT = typename ObservedT::BaseComplexT;
 		/**
 		\brief The constructor for a CircleAdvanced Event.
 
@@ -102,8 +102,8 @@ namespace bertini {
 		\param next The precision after changing.
 		*/
 		CircleAdvanced(const ObservedT & obs, 
-		               Vec<CT> const& new_point,
-		               CT const& new_time) : EndgameEvent<ObservedT>(obs),
+		               Vec<ComplexT> const& new_point,
+		               ComplexT const& new_time) : EndgameEvent<ObservedT>(obs),
 													new_point_(new_point),
 													new_time_(new_time)
 		{}
@@ -117,8 +117,8 @@ namespace bertini {
 		const auto& NewTime() const {return new_time_;}
 
 	private:
-		const Vec<CT>& new_point_;
-		const CT& new_time_;
+		const Vec<ComplexT>& new_point_;
+		const ComplexT& new_time_;
 	};
 
 

@@ -134,18 +134,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::Tolerances"))
+					);
 					
 					
 					
@@ -282,18 +274,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::ZeroDim"))
+					);
 					
 					
 					
@@ -372,18 +356,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::MidPath"))
+					);
 					
 					
 					
@@ -456,18 +432,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::AutoRetrack"))
+					);
 					
 					
 					
@@ -562,18 +530,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::Sharpening"))
+					);
 					
 					
 					
@@ -702,18 +662,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::Regeneration"))
+					);
 					
 					
 					
@@ -814,18 +766,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::PostProcessing"))
+					);
 					
 					
 					
@@ -899,18 +843,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::classic::AlgoChoice"))
+					);
 					
 					
 					
@@ -928,7 +864,62 @@ namespace bertini {
 
 
 
+		template<typename Iterator, typename Skipper>
+			struct ConfigSettingParser<Iterator, algorithm::classic::EndgameChoiceConfig, Skipper> : qi::grammar<Iterator, algorithm::classic::EndgameChoiceConfig(), Skipper>
+			{
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::classic::EndgameChoiceConfig")
+				{
+					namespace phx = boost::phoenix;
+					using qi::_1;
+					using qi::_2;
+					using qi::_3;
+					using qi::_4;
+					using qi::_val;
+					using qi::char_;
+					using boost::spirit::ascii::no_case;
+
+					// Bertini1: endgamenum: 1=PSEG, 2=Cauchy (default)
+					endgamechoice_.add("1", algorithm::classic::EndgameChoice::PowerSeries);
+					endgamechoice_.add("2", algorithm::classic::EndgameChoice::Cauchy);
+
+					std::string setting_name = "endgamenum";
+
+					// enum_rule_ parses the setting and returns the EndgameChoice enum value
+					enum_rule_.name("endgamechoice_");
+					enum_rule_ = *(char_ - (no_case[setting_name] >> ':')) >> (no_case[setting_name] >> ':') >> endgamechoice_[_val = _1] >> ';';
+
+					root_rule_.name("config::classic::EndgameChoiceConfig");
+
+					root_rule_ = enum_rule_[phx::bind([](algorithm::classic::EndgameChoiceConfig& cfg,
+					                                     algorithm::classic::EndgameChoice c){
+					                                       cfg.endgame = c;
+					                                  }, _val, _1)]
+					           >> -no_setting_
+					           | no_setting_; // no endgamenum → default (Cauchy)
+
+					no_setting_.name("no_setting_");
+					no_setting_ = *(char_ - no_case[setting_name]);
+
+					no_decl_.name("no_decl_");
+					no_decl_ = *(char_);
+
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::classic::EndgameChoiceConfig"))
+					);
+				}
+
+			private:
+				qi::rule<Iterator, algorithm::classic::EndgameChoiceConfig(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::classic::EndgameChoice(), ascii::space_type > enum_rule_;
+				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_;
+
+				qi::symbols<char, algorithm::classic::EndgameChoice> endgamechoice_;
+
+			}; //re: EndgameChoiceConfig
+
+
 		} // re: namespace classic
-		
+
 	}// re: namespace parsing
 }// re: namespace bertini

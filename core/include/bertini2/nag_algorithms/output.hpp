@@ -80,9 +80,10 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
-			if (zd.FinalSolutionMetadata()[ii].endgame_success == SuccessCode::NeverStarted)
+			// only successful endgames have a final approximation to report
+			if (zd.FinalSolutionMetadata()[ii].endgame_success != SuccessCode::Success)
 				continue;
-			
+
 			EndPointMDFull(ii, out, zd);
 			EndPoint(ii, out, zd,"\n\n");
 		}
@@ -103,7 +104,8 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		NumVariables(out, zd,"\n\n");
 		for (decltype(zd.FinalSolutions().size()) ii{0}; ii<n; ++ii)
 		{
-			if (zd.FinalSolutionMetadata()[ii].endgame_success == SuccessCode::NeverStarted)
+			// only successful endgames have a final approximation to report
+			if (zd.FinalSolutionMetadata()[ii].endgame_success != SuccessCode::Success)
 				continue;
 			EndPointMDRaw(ii,out,zd,"\n\n");
 		}
@@ -229,7 +231,7 @@ struct NonsingularSolutions
 	static
 	auto Extract(AlgoT const& alg)
 	{
-		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
+		using BCT = typename AlgoTraits<AlgoT>::BaseComplexT;
 
 		const auto& sys = alg.TargetSystem();
 
@@ -261,7 +263,7 @@ struct AllSolutions
 	static
 	auto Extract(AlgoT const& alg)
 	{
-		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
+		using BCT = typename AlgoTraits<AlgoT>::BaseComplexT;
 
 		const auto& sys = alg.TargetSystem();
 

@@ -37,6 +37,17 @@ using SolnCont = std::vector<T>;
 
 namespace classic{
 
+enum class EndgameChoice
+{
+	PowerSeries = 1,
+	Cauchy = 2
+};
+
+struct EndgameChoiceConfig
+{
+	EndgameChoice endgame = EndgameChoice::Cauchy;
+};
+
 enum class AlgoChoice
 {
 	EvalFunctions = -4,
@@ -143,6 +154,17 @@ struct ZeroDimConfig
 struct MetaConfig
 {
 	classic::AlgoChoice tracktype = classic::AlgoChoice::ZeroDim;
+};
+
+/**
+Global RNG seed for reproducible runs.  random_seed == 0 (the default) draws from
+std::random_device and reports the effective seed so the run can be reproduced.
+Set via `randomseed: N;` in the classic Bertini input file or bertini.set_random_seed(N)
+in Python.  Must be applied before system construction (gamma, patch, TD-constants).
+*/
+struct RandomConfig
+{
+	unsigned long random_seed = 0;
 };
 
 

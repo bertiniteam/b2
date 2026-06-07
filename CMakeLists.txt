@@ -105,6 +105,16 @@ include("${JRL_CMAKE_MODULES}/base.cmake")
 compute_project_args(PROJECT_ARGS LANGUAGES CXX)
 project(${PROJECT_NAME} ${PROJECT_ARGS})
 
+option(USE_CCACHE "Use ccache to speed up rebuilds if available" ON)
+if(USE_CCACHE)
+  find_program(CCACHE_PROGRAM ccache)
+  if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_C_COMPILER_LAUNCHER   "${CCACHE_PROGRAM}")
+    message(STATUS "ccache enabled: ${CCACHE_PROGRAM}")
+  endif()
+endif()
+
 include("${JRL_CMAKE_MODULES}/boost.cmake")
 
 if(BUILD_PYTHON_BINDINGS)
@@ -199,8 +209,6 @@ endif(WIN32)
 #endif()
 
 #target_link_boost_python(${PROJECT_NAME} PUBLIC)
-
-#set_property(TARGET bertini2_exe PROPERTY OUTPUT_NAME bertini2)
 
 add_subdirectory(core)
 

@@ -102,6 +102,71 @@ header h1 {
   font-size: 0.95rem;
 }
 
+.breadcrumb {
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.breadcrumb a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.prose {
+  margin-bottom: 3rem;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+  margin: 2rem 0 0.5rem;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 0.3rem;
+}
+
+.prose h3 {
+  font-size: 1.125rem;
+  margin: 1.5rem 0 0.4rem;
+}
+
+.prose p {
+  margin: 0.6rem 0;
+  color: var(--fg);
+}
+
+.prose pre {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 0.75rem 0 1rem;
+}
+
+.prose code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+  font-size: 0.875em;
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+}
+
+p code, li code, dd code, dt code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+  font-size: 0.875em;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+}
+
 footer {
   text-align: center;
   color: var(--muted);

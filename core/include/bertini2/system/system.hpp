@@ -111,7 +111,21 @@ namespace bertini {
 		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(DefaultPrecision()), is_patched_(false)
 		{}
 
-		/** 
+		/**
+		\brief Construct a system from a list of functions.
+
+		The functions are added to the system, the variables appearing in them are
+		automatically discovered (see node::GatherVariables), and those variables are
+		placed into a single affine variable group (ordered alphabetically by name).
+		This is a convenience for programmatically building a system without having to
+		assemble the variable group by hand.
+
+		\param functions The functions which define the system.
+		*/
+		explicit
+		System(std::vector<Fn> const& functions);
+
+		/**
 		\brief The copy operator, creates a system from a string using the Bertini parser for Bertini classic syntax.
 		*/
 		explicit
@@ -170,97 +184,19 @@ namespace bertini {
 		/**
 		\brief Force re-evaluation of the system next eval of functions. If something has changed in the system, call this.
 		*/
-		void ResetFunctions() const
-		{
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			switch (eval_method_){
-			case EvalMethod::FunctionTree:
-				for (const auto& iter : functions_) 
-					iter->Reset();
-				break;
-			case EvalMethod::SLP:
-				// nothing
-				break;
-			}	
-			
-		}
+		void ResetFunctions() const;
 
 		/**
 		\brief Force re-evaluation of the system next eval of Jacobians. If something has changed in the system, call this.
 		*/
-		void ResetJacobian() const
-		{
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
+		void ResetJacobian() const;
 
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:
-						{
-							for (const auto& iter : jacobian_) 
-								iter->Reset();
-							break;
-						}
-						case DerivMethod::Derivatives:
-						{
-							for (const auto& iter : space_derivatives_) 
-								iter->Reset();
-							break;
-						}
-					}
-
-					break;
-				}
-				case EvalMethod::SLP:
-				{
-					// nothing to do, it's not a resetting kind of thing.
-					break;					
-				}
-
-			}
-		}
-
-		void ResetTimeDerivatives() const
-		{
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
-					
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:
-						{
-							for (const auto& iter : jacobian_) 
-								iter->Reset();
-							break;
-						}
-						case DerivMethod::Derivatives:
-						{
-							for (const auto& iter : time_derivatives_) 
-								iter->Reset();
-							break;
-						}
-					}
-
-					break;
-				}
-				case EvalMethod::SLP:
-				{
-					// nothing to do, it's not a resetting kind of thing.
-					break;					
-				}
-
-			}
-		}
+		void ResetTimeDerivatives() const;
 
 		/**
 		\brief A complete reset of the system, so that all of functions, space derivatives, and time derivatives will all be re-evaluated.
 		*/
-		void Reset() const
-		{
-			ResetFunctions();
-			ResetJacobian();
-			ResetTimeDerivatives();
-		}
+		void Reset() const;
 		/**
 		 \brief Evaluate the system using the previously set variable (and time) values, in place.
 
@@ -1092,8 +1028,21 @@ namespace bertini {
 
 
 		/**
+		 \brief Replace the entire variable-group structure of the system.
+
+		 Clears all existing affine, homogeneous, and ungrouped variables (and any
+		 homogenizing variables introduced by a prior Homogenize), then installs the
+		 supplied groups as the system's affine variable groups, in order.  The path
+		 variable, if any, is preserved.
+
+		 \param groups The affine variable groups to install.
+		 */
+		void SetVariableGroups(std::vector<VariableGroup> const& groups);
+
+
+		/**
 		 Add a homogeneous (projective) variable group to the system.  The system must be homogeneous with respect to this group, though this is not verified at the time of this call.
-		 
+
 		 \param v The variable group to add.
 		 */
 		void AddHomVariableGroup(VariableGroup const& v);
@@ -1232,12 +1181,7 @@ namespace bertini {
 		*/
 		bool HavePathVariable() const;
 
-		auto& GetPathVariable() const{
-			if (this->HavePathVariable())
-				return this->path_variable_;
-			else
-				throw std::runtime_error("trying to get path variable for a system which doesn't have a path variable defined");
-		}
+		const Var& GetPathVariable() const;
 
 		/**
 		 Order the variables, by the order in which the groups were added.
@@ -1493,6 +1437,44 @@ namespace bertini {
 
 
 		/**
+		 \brief Remove a variable from the system's variable structure.
+
+		 Erases the variable from whichever affine/homogeneous group it belongs to, or
+		 from the ungrouped variables.  If removing it empties an affine or homogeneous
+		 group, that group (and its place in the variable ordering) is removed as well.
+		 The variable node itself is left intact and is still referenced by any
+		 functions which use it; after this call it is simply no longer one of the
+		 system's variables (so it is not solved for, and the system does not
+		 differentiate with respect to it).
+
+		 \param v The variable to remove.
+		 \return true if the variable was found and removed, false otherwise.
+		*/
+		bool RemoveVariable(Var const& v);
+
+
+		/**
+		 \brief Turn a variable into a constant with a fixed value.
+
+		 Removes the variable from the system's variable structure (see RemoveVariable)
+		 and pins its value, so that the functions which use it evaluate as if it were a
+		 constant equal to \p value.
+
+		 \tparam T The numeric type of the value (dbl or mpfr_complex).
+		 \param v The variable to fix.
+		 \param value The constant value to assign to it.
+		 \return true if the variable was found and fixed, false otherwise.
+		*/
+		template<typename T>
+		bool FixVariable(Var const& v, T const& value)
+		{
+			bool removed = this->RemoveVariable(v);
+			v->set_current_value(value);
+			return removed;
+		}
+
+
+		/**
 		 \brief Copy the entire structure of variables from within one system to another.
 
 		  This copies everything -- ungrouped variables, variable groups, homogenizing variables, the path variable, the ordering of the variables.
@@ -1503,33 +1485,11 @@ namespace bertini {
 		*/ 
 		void CopyVariableStructure(System const& other);
 		
-		/**
-		\brief One of a family of functions indicating whether we can assume the system will always have uniform precision.
-
-		\see PleaseAssumeUniformPrecision AssumeUniformPrecision IsAssumingUniformPrecision
-		*/
-		void DontAssumeUniformPrecision()
-		{
-			AssumeUniformPrecision(false);
-		}
-
-		void PleaseAssumeUniformPrecision()
-		{
-			AssumeUniformPrecision(true);
-		}
-
-		void AssumeUniformPrecision(bool val)
-		{
-			assume_uniform_precision_ = false;
-		}
-
-		/** 
-		\brief yon getter for the obvious thing it gets
-		*/
-		auto IsAssumingUniformPrecision() const
-		{
-			return assume_uniform_precision_;
-		}
+		// The Please/Dont AssumeUniformPrecision family was removed: the setter had
+		// ignored its argument (always storing false) for ages, so the early-out in
+		// System::precision() it was meant to enable was dead code, and skipping the
+		// propagation is unsound anyway (e.g. the SLP can be at a different precision
+		// than precision_ claims).  precision() now always propagates.
 
 		inline
 		void PleaseAutoSimplify()
@@ -1781,7 +1741,6 @@ namespace bertini {
 
 		mutable unsigned precision_; ///< the current working precision of the system 
 
-		bool assume_uniform_precision_ = false; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
 
 		EvalMethod eval_method_ = DefaultEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
 		DerivMethod deriv_method_ = DefaultDerivMethod(); ///< an enum class value, indicating which method of evaluation should be used.
@@ -1817,9 +1776,6 @@ namespace bertini {
 
 			ar & patch_;
 			ar & is_patched_;
-
-
-			ar & assume_uniform_precision_;
 
 			ar & eval_method_;
 			ar & deriv_method_;
@@ -1895,6 +1851,48 @@ namespace bertini {
 	\brief Free form function for simplifying systems.
 	*/
 	void Simplify(System & sys);
+
+	// Explicit instantiation declarations for the two concrete numeric types.
+	// Definitions live in core/src/system/system.cpp.
+	// Suppresses re-instantiation of the heavy Eval/Jacobian/Set template bodies
+	// (with their eval_method_/deriv_method_ switch trees) in every including TU.
+
+	extern template void System::EvalInPlace<dbl>(Vec<dbl>&) const;
+	extern template void System::EvalInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+
+	extern template Vec<dbl> System::Eval<dbl>() const;
+	extern template Vec<mpfr_complex> System::Eval<mpfr_complex>() const;
+
+	extern template void System::JacobianInPlace<dbl>(Mat<dbl>&) const;
+	extern template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&) const;
+
+	extern template Mat<dbl> System::Jacobian<dbl>() const;
+	extern template Mat<mpfr_complex> System::Jacobian<mpfr_complex>() const;
+
+	extern template Mat<dbl> System::Jacobian<dbl>(const Vec<dbl>&) const;
+	extern template Mat<mpfr_complex> System::Jacobian<mpfr_complex>(const Vec<mpfr_complex>&) const;
+
+	extern template void System::JacobianInPlace<dbl>(Mat<dbl>&, const Vec<dbl>&) const;
+	extern template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&, const Vec<mpfr_complex>&) const;
+
+	extern template void System::TimeDerivativeInPlace<dbl>(Vec<dbl>&) const;
+	extern template void System::TimeDerivativeInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+
+	extern template Vec<dbl> System::TimeDerivative<dbl>() const;
+	extern template Vec<mpfr_complex> System::TimeDerivative<mpfr_complex>() const;
+
+	extern template void System::SetVariables<dbl>(const Vec<dbl>&) const;
+	extern template void System::SetVariables<mpfr_complex>(const Vec<mpfr_complex>&) const;
+
+	extern template void System::SetPathVariable<dbl>(dbl const&) const;
+	extern template void System::SetPathVariable<mpfr_complex>(mpfr_complex const&) const;
+
+	extern template void System::SetAndReset<dbl>(Vec<dbl> const&, dbl const&) const;
+	extern template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&, mpfr_complex const&) const;
+
+	extern template void System::SetAndReset<dbl>(Vec<dbl> const&) const;
+	extern template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&) const;
+
 }
 
 

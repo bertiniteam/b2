@@ -316,5 +316,131 @@ public:
 			{ }
 
 		};
+
+
+
+
+		/**
+		\brief A base class for system management for algorithms which operate on a single system.
+
+		In contrast to SysMgmtPolicy, some algorithms -- notably the NumericalIrreducibleDecomposition algorithm -- do not form a homotopy from a start system, and so only need to manage a single target system.  This base provides just the target-system get/set.
+
+		\see SysMgmtPolicy
+		*/
+		template< typename D, typename SystemType, typename StoredSystemType>
+		struct SingleSysMgmtPolicy
+		{
+			using SystemT = SystemType;
+			using StoredSystemT = StoredSystemType;
+
+private:
+			const D& AsDerived() const
+			{
+				return static_cast<const D&>(*this);
+			}
+
+			D& AsDerived()
+			{
+				return static_cast<D&>(*this);
+			}
+
+public:
+			/**
+			A getter for the system to be operated on.
+			*/
+			const SystemT& TargetSystem() const
+			{
+				return AsDerived().target_system_;
+			}
+
+			/**
+			A setter for the system to be operated on.
+			*/
+			void TargetSystem(StoredSystemT const& sys)
+			{
+				AsDerived().target_system_ = sys;
+			}
+		};
+
+
+
+
+		/**
+		\brief A single-system management policy which clones the supplied target.
+
+		The single-system analog of CloneGiven: makes a clone of the supplied system at construct time, so the algorithm may homogenize/patch it without disturbing the user's original.  No start system or homotopy is formed.
+
+		Reusable by any algorithm which operates on a single system with no homotopy-from-start-system (e.g. NumericalIrreducibleDecomposition).
+
+		\see CloneGiven, SingleSysMgmtPolicy
+		*/
+		template<typename SystemType>
+		struct CloneTarget : public SingleSysMgmtPolicy<CloneTarget<SystemType>, SystemType, SystemType>
+		{
+			using SMP = SingleSysMgmtPolicy<CloneTarget<SystemType>, SystemType, SystemType>;
+			friend SMP;
+
+			using StoredSystemT = typename SMP::StoredSystemT;
+
+			using SMP::TargetSystem;
+
+			using SystemT = SystemType;
+
+private:
+			StoredSystemT target_system_;
+
+public:
+			/**
+			Forward the system on to the stored (cloned) target.
+			*/
+			CloneTarget(SystemType const& target) : target_system_(AtConstruct(target))
+			{}
+
+
+			static
+			StoredSystemT AtConstruct(SystemType const& sys)
+			{
+				return Clone(sys);
+			}
+
+
+			template<typename T>
+			static
+			T AtSet(T const& sys)
+			{
+				return sys;
+			}
+
+
+			/**
+			Homogenize and patch the target system.
+			*/
+			static
+			void PrepareTarget(SystemType & target)
+			{
+				target.Homogenize(); // work over projective coordinates
+				target.AutoPatch(); // then patch if needed
+			}
+
+
+			/**
+			\brief Sets up the (single) system to be operated on.
+
+			Homogenizes and patches the target.  No start system or homotopy is formed.
+			*/
+			void SystemSetup()
+			{
+				PrepareTarget(TargetSystem());
+			}
+
+
+			/**
+			A non-const getter for the system to be operated on.
+			*/
+			SystemT& TargetSystem()
+			{
+				return target_system_;
+			}
+		};
 	} // ns policy
 } // ns bertini

@@ -36,7 +36,7 @@ container types, coming from C++
 
 """
 
-import bertini._pybertini.container
+from bertini._pybertini import container as _pybcont
 
 from bertini._pybertini.container import *
 

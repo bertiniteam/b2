@@ -52,7 +52,7 @@ struct GoryDetailLogger : public Observer<EndgameT>
 {BOOST_TYPE_INDEX_REGISTER_CLASS
 
 using EmitterT = EndgameT;
-using BCT = typename EndgameT::BaseComplexType;
+using BCT = typename EndgameT::BaseComplexT;
 
 virtual ~GoryDetailLogger() = default;
 

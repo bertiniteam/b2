@@ -62,23 +62,27 @@ if sys.platform == "win32":
 
 # put stuff in the bertini namespace
 
-import bertini.function_tree as function_tree
+from . import function_tree
+from .function_tree import sin, cos, tan, asin, acos, atan, exp, log, sqrt
 
-import bertini.system as system
-import bertini.tracking as tracking
-import bertini.endgame as endgame
-import bertini.parse as parse
-import bertini.container as container
-import bertini.logging as logging
-import bertini.nag_algorithm as nag_algorithm
-import bertini.random as random
+from . import system
+from . import tracking
+from . import endgame
+from . import parse
+from . import container
+from . import logging
+from . import nag_algorithm
+from . import random
+from . import parallel
 
-from bertini._pybertini import info
+from ._pybertini import info
 
-import bertini.multiprec as multiprec
+from . import multiprec
 
 # some convenience assignments
 Variable = function_tree.symbol.Variable
+variables = function_tree.variables
+gather_variables = function_tree.gather_variables
 VariableGroup = function_tree.VariableGroup
 System = system.System
 default_precision = multiprec.default_precision
@@ -87,9 +91,10 @@ default_precision = multiprec.default_precision
 
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
-__all__ = ['Variable','VariableGroup','system','System',
+__all__ = ['Variable','variables','gather_variables','VariableGroup','system','System',
            'nag_algorithm','container','default_precision',
-           'tracking','endgame','logging','function_tree','parse','multiprec','random']
+           'tracking','endgame','logging','function_tree','parse','multiprec','random','parallel',
+           'sin','cos','tan','asin','acos','atan','exp','log','sqrt']
 
 
 

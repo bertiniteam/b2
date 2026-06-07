@@ -1375,6 +1375,117 @@ BOOST_AUTO_TEST_CASE(clone_system_new_variables_evaluation)
 	BOOST_CHECK_EQUAL(f_clone2,f2);
 }
 
+
+
+/**
+\class bertini::node
+\test \b gather_variables_alphabetical GatherVariables returns the distinct
+variables of a set of functions, de-duplicated and sorted alphabetically by name.
+*/
+BOOST_AUTO_TEST_CASE(gather_variables_alphabetical)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+
+	// note: declared out of alphabetical order, x used twice
+	auto f1 = bertini::node::Function::Make(pow(z,2) + y*x);
+	auto f2 = bertini::node::Function::Make(x - y);
+
+	auto found = bertini::node::GatherVariables(std::vector<std::shared_ptr<bertini::node::Function>>{f1, f2});
+
+	BOOST_CHECK_EQUAL(found.size(), 3);
+	BOOST_CHECK_EQUAL(found[0]->name(), "x");
+	BOOST_CHECK_EQUAL(found[1]->name(), "y");
+	BOOST_CHECK_EQUAL(found[2]->name(), "z");
+}
+
+
+/**
+\class bertini::System
+\test \b system_construct_from_functions Constructing a System from a list of
+functions auto-discovers the variables into a single affine variable group.
+*/
+BOOST_AUTO_TEST_CASE(system_construct_from_functions)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+
+	auto f1 = bertini::node::Function::Make(x*y*z);
+	auto f2 = bertini::node::Function::Make(x + y + z);
+
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Function>>{f1, f2});
+
+	BOOST_CHECK_EQUAL(sys.NumTotalFunctions(), 2);
+	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 1);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 3);
+
+	auto const& ordering = sys.Variables();
+	BOOST_CHECK_EQUAL(ordering[0]->name(), "x");
+	BOOST_CHECK_EQUAL(ordering[1]->name(), "y");
+	BOOST_CHECK_EQUAL(ordering[2]->name(), "z");
+}
+
+
+/**
+\class bertini::System
+\test \b system_set_variable_groups SetVariableGroups replaces the whole
+variable-group structure with the supplied affine groups.
+*/
+BOOST_AUTO_TEST_CASE(system_set_variable_groups)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+
+	auto f1 = bertini::node::Function::Make(x*y*z);
+
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Function>>{f1});
+	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 1);
+
+	bertini::VariableGroup g1{x};
+	bertini::VariableGroup g2{y, z};
+	sys.SetVariableGroups(std::vector<bertini::VariableGroup>{g1, g2});
+
+	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 2);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 3);
+}
+
+
+/**
+\class bertini::System
+\test \b system_fix_variable FixVariable removes a variable from the solve set
+and pins its value, so the functions evaluate as if it were a constant.
+*/
+BOOST_AUTO_TEST_CASE(system_fix_variable)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+
+	auto f = bertini::node::Function::Make(x + y);
+
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Function>>{f});
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2);
+
+	bool fixed = sys.FixVariable(y, dbl(3.0));
+	BOOST_CHECK(fixed);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 1);
+
+	auto const& ordering = sys.Variables();
+	BOOST_CHECK_EQUAL(ordering.size(), 1);
+	BOOST_CHECK_EQUAL(ordering[0]->name(), "x");
+
+	Vec<dbl> values(1);
+	values << dbl(2.0);
+	auto result = sys.Eval(values);   // x + y == 2 + 3 == 5
+	BOOST_CHECK_EQUAL(result(0), dbl(5.0));
+
+	// fixing a variable not present returns false
+	Var w = Variable::Make("w");
+	BOOST_CHECK(!sys.FixVariable(w, dbl(1.0)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

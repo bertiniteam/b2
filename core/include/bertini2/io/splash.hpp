@@ -38,6 +38,10 @@
 
 #include "boost/version.hpp"
 
+#ifdef BERTINI2_HAVE_MPI
+#include <mpi.h>
+#endif
+
 #include <sstream>
 
 #define BERTINI2_PACKAGE_URL "https://github.com/bertiniteam/b2"
@@ -165,7 +169,20 @@ std::string MPFRVersion()
     return mpfr_get_version();
 }
 
-inline 
+inline
+std::string MPIVersion()
+{
+#ifdef BERTINI2_HAVE_MPI
+    char buf[MPI_MAX_LIBRARY_VERSION_STRING];
+    int len = 0;
+    MPI_Get_library_version(buf, &len);
+    return std::string(buf, len);
+#else
+    return "not available (serial build)";
+#endif
+}
+
+inline
 std::string BoostHeaderVersion()
 {
 	std::stringstream ss;
@@ -184,7 +201,8 @@ std::string DependencyVersions()
     ss << "Compiled against Boost headers " << BoostHeaderVersion() << "\n";
     ss << "Compiled against Eigen " << EigenHeaderVersion() << "\n";
     ss << "Linked against GMP " << GMPVersion() << "\n";
-    ss << "Linked against MPFR " << MPFRVersion() << "\n\n";
+    ss << "Linked against MPFR " << MPFRVersion() << "\n";
+    ss << "MPI: " << MPIVersion() << "\n\n";
     return ss.str();
 }
 

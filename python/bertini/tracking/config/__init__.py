@@ -32,8 +32,11 @@
 """
 Tracking-specific configs
 """
-import bertini._pybertini.tracking.config
+from bertini._pybertini.tracking import config as _pybtrkcfg
 from bertini._pybertini.tracking.config import *
 
-__all__ = dir(bertini._pybertini.tracking.config)
+from ...config import enhance_all
+enhance_all(_pybtrkcfg)
+
+__all__ = dir(_pybtrkcfg)
 

@@ -140,11 +140,11 @@ namespace bertini{
 					>
 		{
 			using NeededTypes = typename TrackerTraits< D >::NeededTypes;
-			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
-			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+			using BaseComplexT = typename TrackerTraits<D>::BaseComplexT;
+			using BaseRealT = typename TrackerTraits<D>::BaseRealT;
 
-			using CT = BaseComplexType;
-			using RT = BaseRealType;
+			using ComplexT = BaseComplexT;
+			using RealT = BaseRealT;
 
 
 		public:
@@ -153,10 +153,10 @@ namespace bertini{
 			using Newton = NewtonConfig;
 			using PrecConf = typename TrackerTraits< D >::PrecisionConfig;
 
-			Tracker(System const& sys) : tracked_system_(std::ref(sys))
+			Tracker(System const& sys) : tracked_system_(std::ref(sys)),
+				predictor_(predict::DefaultPredictor(), sys),
+				corrector_(sys)
 			{
-				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), tracked_system_);
-				corrector_ = std::make_shared< correct::NewtonCorrector >(tracked_system_);
 				SetPredictor(predict::DefaultPredictor());
 			}
 
@@ -175,7 +175,7 @@ namespace bertini{
 						NewtonConfig const& newton)
 			{
 				SetPredictor(new_predictor_choice);
-				corrector_->Settings(newton);
+				corrector_.Settings(newton);
 
 				SetTrackingTolerance(tracking_tolerance);
 
@@ -184,7 +184,7 @@ namespace bertini{
 				this->template Set<SteppingConfig>(stepping);
 				this->template Set<NewtonConfig>(newton);
 
-				current_stepsize_ = BaseRealType(stepping.initial_step_size);
+				current_stepsize_ = BaseRealT(stepping.initial_step_size);
 			}
 
 
@@ -229,9 +229,9 @@ namespace bertini{
 
 			The is the fundamental method for the tracker.  First, you create and set up the tracker, telling it what system you will solve, and the settings to use.  Then, you actually do the tracking.
 			*/
-			SuccessCode TrackPath(Vec<CT> & solution_at_endtime,
-									CT const& start_time, CT const& endtime,
-									Vec<CT> const& start_point
+			SuccessCode TrackPath(Vec<ComplexT> & solution_at_endtime,
+									ComplexT const& start_time, ComplexT const& endtime,
+									Vec<ComplexT> const& start_point
 									) const
 			{
 				if (start_point.size()!=GetSystem().NumVariables())
@@ -247,7 +247,7 @@ namespace bertini{
 				}
 
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
-				while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<CT>::epsilon()))
+				while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<ComplexT>::epsilon()))
 				{
 					SuccessCode pre_iteration_code = PreIterationCheck();
 					if (pre_iteration_code!=SuccessCode::Success)
@@ -343,8 +343,8 @@ namespace bertini{
 			*/
 			void SetPredictor(Predictor new_predictor_choice)
 			{
-				predictor_->PredictorMethod(new_predictor_choice);
-				predictor_order_ = predictor_->Order();
+				predictor_.PredictorMethod(new_predictor_choice);
+				predictor_order_ = predictor_.Order();
 			}
 
 
@@ -353,7 +353,7 @@ namespace bertini{
 			*/
 			Predictor GetPredictor() const
 			{
-				return predictor_->PredictorMethod();
+				return predictor_.PredictorMethod();
 			}
 
 
@@ -363,8 +363,8 @@ namespace bertini{
 			void SetSystem(const System & new_sys)
 			{
 				tracked_system_ = std::ref(new_sys);
-				predictor_->ChangeSystem(tracked_system_);
-				corrector_->ChangeSystem(tracked_system_);
+				predictor_.ChangeSystem(tracked_system_);
+				corrector_.ChangeSystem(tracked_system_);
 			}
 
 			/**
@@ -390,7 +390,7 @@ namespace bertini{
 
 			\param new_stepsize The new value.
 			*/
-			void SetStepSize(RT const& new_stepsize) const
+			void SetStepSize(RealT const& new_stepsize) const
 			{
 				current_stepsize_ = new_stepsize;
 			}
@@ -434,7 +434,7 @@ namespace bertini{
 			\param start_point The point from which to start tracking.
 			*/
 			virtual
-			SuccessCode TrackerLoopInitialization(CT const& start_time, CT const& end_time, Vec<CT> const& start_point) const = 0;
+			SuccessCode TrackerLoopInitialization(ComplexT const& start_time, ComplexT const& end_time, Vec<ComplexT> const& start_point) const = 0;
 
 
 			/**
@@ -459,7 +459,7 @@ namespace bertini{
 			\param solution_at_endtime The output variable into which to copy the final solution.
 			*/
 			virtual
-			void CopyFinalSolution(Vec<CT> & solution_at_endtime) const = 0;
+			void CopyFinalSolution(Vec<ComplexT> & solution_at_endtime) const = 0;
 
 			// virtual
 			// void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const = 0;
@@ -471,10 +471,10 @@ namespace bertini{
 
 
 
-			template <typename ComplexType>
+			template <typename ComplexT>
 			SuccessCode CheckGoingToInfinity() const
 			{
-				if (GetSystem().DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
+				if (GetSystem().DehomogenizePoint(std::get<Vec<ComplexT> >(current_space_)).norm() > path_truncation_threshold_)
 					return SuccessCode::GoingToInfinity;
 				else
 					return SuccessCode::Success;
@@ -570,10 +570,18 @@ namespace bertini{
 
 
 			// configuration for tracking
-			std::shared_ptr<predict::ExplicitRKPredictor > predictor_; // The predictor to use while tracking
+			//
+			// predictor and corrector are held BY VALUE so that copying a tracker
+			// deep-copies them.  (They were previously shared_ptr, which made every
+			// tracker copy share one predictor/corrector with its source — unusable
+			// from multiple threads.)  Both hold only work buffers and settings; they
+			// store no reference to the System, so plain memberwise copy is correct.
+			// They are mutable for the same reason as the state members above: they
+			// hold scratch space mutated during the logically-const TrackPath.
+			mutable predict::ExplicitRKPredictor predictor_; // The predictor to use while tracking
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
-			std::shared_ptr<correct::NewtonCorrector> corrector_;
+			mutable correct::NewtonCorrector corrector_;
 
 
 
@@ -582,21 +590,20 @@ namespace bertini{
 			NumErrorT tracking_tolerance_ = 1e-5; ///< The tracking tolerance.
 			NumErrorT path_truncation_threshold_ = 1e5; ///< The threshold for path truncation.
 
-			mutable CT endtime_; ///< The time we are tracking to.
-			mutable CT current_time_; ///< The current time.
-			mutable CT delta_t_; ///< The current delta_t.
-			mutable RT current_stepsize_; ///< The current stepsize.
+			mutable ComplexT endtime_; ///< The time we are tracking to.
+			mutable ComplexT current_time_; ///< The current time.
+			mutable ComplexT delta_t_; ///< The current delta_t.
+			mutable RealT current_stepsize_; ///< The current stepsize.
 
 
 			// permanent temporaries
-			mutable RT next_stepsize_; /// The next stepsize
+			mutable RealT next_stepsize_; /// The next stepsize
 			mutable SuccessCode step_success_code_; ///< The code for step success.
 
 
 
 			mutable unsigned num_steps_since_last_condition_number_computation_; ///< How many steps have passed since the most recent condition number estimate.
 			mutable unsigned num_successful_steps_since_stepsize_increase_; ///< How many successful steps have been taken since increased stepsize.
-			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.
 
 			using TupOfVec = typename NeededTypes::ToTupleOfVec;
 			using TupOfReal = typename NeededTypes::ToTupleOfReal;
@@ -667,7 +674,7 @@ namespace bertini{
 			}
 
 
-			virtual Vec<CT> CurrentPoint() const = 0;
+			virtual Vec<ComplexT> CurrentPoint() const = 0;
 
 
 			virtual unsigned CurrentPrecision() const = 0;

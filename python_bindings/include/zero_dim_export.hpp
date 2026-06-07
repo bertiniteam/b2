@@ -35,9 +35,14 @@
 #pragma once
 
 #include "python_common.hpp"
+#include "configured_visitor.hpp"
 
 #include <bertini2/endgames.hpp>
 #include <bertini2/nag_algorithms/zero_dim_solve.hpp>
+
+#ifdef BERTINI2_HAVE_MPI
+#include <mpi.h>
+#endif
 
 
 
@@ -53,26 +58,61 @@ namespace bertini{
 
 void ExportZeroDim();
 
-
-
-// some sub-functions to help
-void ExportZDAlgorithms();
+// sub-functions (defined in zero_dim_{configs,double,mp,amp}_export.cpp)
 void ExportZDConfigs();
-void ExposeZDMetaData();
+void ExportZDDouble();
+void ExportZDMP();
+void ExportZDAMP();
+
+
+// Template helpers — in header so zero_dim_configs_export.cpp can instantiate them.
+template<typename NumT>
+void ExposeSolutionMetaData(std::string const& class_name){
+	using namespace bertini::algorithm;
+	using MDT = SolutionMetaData<NumT>;
+	class_<MDT>(class_name.c_str(),init<>())
+	.def_readwrite("path_index",&MDT::path_index)
+	.def_readwrite("solution_index",&MDT::solution_index)
+	.def_readwrite("precision_changed",&MDT::precision_changed)
+	.def_readwrite("time_of_first_prec_increase",&MDT::time_of_first_prec_increase)
+	.def_readwrite("max_precision_used",&MDT::max_precision_used)
+	.def_readwrite("pre_endgame_success",&MDT::pre_endgame_success)
+	.def_readwrite("condition_number",&MDT::condition_number)
+	.def_readwrite("newton_residual",&MDT::newton_residual)
+	.def_readwrite("final_time_used",&MDT::final_time_used)
+	.def_readwrite("accuracy_estimate",&MDT::accuracy_estimate)
+	.def_readwrite("accuracy_estimate_user_coords",&MDT::accuracy_estimate_user_coords)
+	.def_readwrite("cycle_num",&MDT::cycle_num)
+	.def_readwrite("endgame_success",&MDT::endgame_success, "this is a SuccessCode.  0 means Success.  Anything other than 0 means something happened.")
+	.def_readwrite("function_residual",&MDT::function_residual)
+	.def_readwrite("multiplicity",&MDT::multiplicity)
+	.def_readwrite("is_real",&MDT::is_real)
+	.def_readwrite("is_finite",&MDT::is_finite)
+	.def_readwrite("is_singular",&MDT::is_singular)
+	;
+}
+
+template<typename NumT>
+void ExposeEndgameBoundaryMetaData(std::string const& class_name){
+	using namespace bertini::algorithm;
+	using MDT = EGBoundaryMetaData<NumT>;
+	class_<MDT>(class_name.c_str(),init<>())
+	.def_readwrite("path_point",&MDT::path_point)
+	.def_readwrite("success_code",&MDT::success_code)
+	.def_readwrite("last_used_stepsize",&MDT::last_used_stepsize)
+	;
+}
 
 
 template<typename AlgoT>
 class ZDVisitor: public def_visitor<ZDVisitor<AlgoT> >
 {
-
-
-
 	friend class ::boost::python::def_visitor_access;
-		
+
 	public:
 		template<class PyClass>
 		void visit(PyClass& cl) const;
-		
+
 	private:
 
 		using MutableTrackerGetter = typename AlgoT::TrackerT& (AlgoT::*)();
@@ -81,22 +121,53 @@ class ZDVisitor: public def_visitor<ZDVisitor<AlgoT> >
 			return &AlgoT::GetTracker;
 		};
 
-
-
-
 		using MutableEndgameGetter = typename AlgoT::EndgameT& (AlgoT::*)();
 		static MutableEndgameGetter GetEndgameMutable()
 		{
 			return &AlgoT::GetEndgame;
 		};
-
-
-		// pattern:
-		// returned type.  name.  argument types.
-
-		// typename AlgoT::TrackerT& (*GetTrackerMutable)() = &AlgoT::GetTracker;
-
 };
+
+
+// Visitor body — template member function must be in header so each split TU can instantiate it.
+template<typename AlgoT>
+template<class PyClass>
+void ZDVisitor<AlgoT>::visit(PyClass& cl) const
+{
+	cl
+	.def(ConfiguredVisitor<AlgoT>())
+	.def("solve",
+		+[](AlgoT& self, boost::python::object comm) -> void {
+#ifdef BERTINI2_HAVE_MPI
+			if (comm.is_none()) {
+				self.Run();
+			} else {
+				MPI_Fint f = boost::python::extract<MPI_Fint>(comm.attr("py2f")());
+				self.RunParallel(MPI_Comm_f2c(f));
+			}
+#else
+			self.Solve();
+#endif
+		},
+		(boost::python::arg("communicator") = boost::python::object()),
+		"Run the zero-dim algorithm. Pass an mpi4py communicator for parallel execution.")
+	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
+	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
+	.def("solutions", &AlgoT::FinalSolutions, return_internal_reference<>(), "get the solutions at the target time")
+	.def("solution_metadata", &AlgoT::FinalSolutionMetadata, return_internal_reference<>(), "get the metadata for the solutions at the target time")
+	.def("endgame_boundary_data", &AlgoT::EndgameBoundaryData, return_internal_reference<>(), "get the data for the state at the endgame boundary (when we switch from regular tracking to endgame tracking")
+	;
+}
+
+
+// Helper template — defined here so all split TUs can use it without duplication.
+template<typename TrackerT, typename EndgameT, typename SystemT, typename StartSystemT>
+void ExportZeroDimSpecific(std::string const& class_name){
+	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, SystemT, StartSystemT>;
+	class_<ZeroDimT, std::shared_ptr<ZeroDimT> >(class_name.c_str(), init<SystemT>())
+	.def(ZDVisitor<ZeroDimT>())
+	;
+}
 
 
 

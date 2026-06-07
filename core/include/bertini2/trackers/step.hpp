@@ -45,20 +45,20 @@ namespace bertini {
 		/**
 	
 
-		\tparam ComplexType The type of number being used in the algorithm
+		\tparam ComplexT The type of number being used in the algorithm
 
 		*/
-		template <typename ComplexType, typename RealType>
+		template <typename ComplexT, typename RealT>
 		SuccessCode Step(Predictor predictor_choice,
-		                    Vec<ComplexType> & next_space, ComplexType & next_time,
+		                    Vec<ComplexT> & next_space, ComplexT & next_time,
 				               System & sys,
-				               Vec<ComplexType> const& current_space, ComplexType current_time, 
-				               ComplexType const& delta_t,
-				               RealType & condition_number_estimate,
+				               Vec<ComplexT> const& current_space, ComplexT current_time, 
+				               ComplexT const& delta_t,
+				               RealT & condition_number_estimate,
 				               unsigned & num_steps_since_last_condition_number_computation, 
 				               unsigned frequency_of_CN_estimation, PrecisionType prec_type, 
-				               RealType const& tracking_tolerance,
-				               RealType const& path_truncation_threshold,
+				               RealT const& tracking_tolerance,
+				               RealT const& path_truncation_threshold,
 				               unsigned min_num_newton_iterations,
 				               unsigned max_num_newton_iterations,
 				               AdaptiveMultiplePrecisionConfig const& AMP_config)

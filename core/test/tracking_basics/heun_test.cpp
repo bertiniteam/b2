@@ -59,8 +59,8 @@ using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
 
 
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 
 
 BOOST_AUTO_TEST_CASE(circle_line_heun_double)

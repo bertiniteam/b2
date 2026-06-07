@@ -52,8 +52,8 @@ using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
 
 
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 
 using bertini::DefaultPrecision;
 BOOST_AUTO_TEST_CASE(minstepsize)
@@ -943,6 +943,177 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 			num_occurences++;
 	}
 	BOOST_CHECK_EQUAL(num_occurences,1);
+}
+
+
+BOOST_AUTO_TEST_CASE(AMP_tracker_track_circle_line_RKF45)
+{
+	// Regression test: RKF45 + AMPTracker used to throw MinimizeTrackingCost
+	// because AdjustAMPStepSuccess capped max_precision at current_precision_,
+	// collapsing the scan window to a single value that failed criterion B.
+	DefaultPrecision(30);
+	using namespace bertini::tracking;
+
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	System sys;
+	VariableGroup v{x, y};
+	sys.AddVariableGroup(v);
+	sys.AddPathVariable(t);
+	sys.AddFunction(t * (pow(x, 2) - 1) + (1 - t) * (pow(x, 2) + pow(y, 2) - 4));
+	sys.AddFunction(t * (y - 1) + (1 - t) * (2 * x + 5 * y));
+
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
+
+	tracker.Setup(Predictor::RKF45,
+	              1e-5,
+	              1e5,
+	              stepping_preferences,
+	              newton_preferences);
+	tracker.PrecisionSetup(AMP);
+
+	mpfr t_start(1);
+	mpfr t_end(0);
+
+	Vec<mpfr> start_point(2);
+	start_point << mpfr(1), mpfr(1);
+
+	Vec<mpfr> end_point;
+	bertini::SuccessCode tracking_success;
+	tracking_success = tracker.TrackPath(end_point, t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success == bertini::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(), 2);
+}
+
+
+BOOST_AUTO_TEST_CASE(arithmetic_cost_double_precision_is_one)
+{
+	using namespace bertini::tracking;
+	BOOST_CHECK_EQUAL(ArithmeticCost(bertini::DoublePrecision()), 1.0);
+}
+
+BOOST_AUTO_TEST_CASE(arithmetic_cost_increases_with_precision)
+{
+	using namespace bertini::tracking;
+	BOOST_CHECK_GT(ArithmeticCost(30), 1.0);
+	BOOST_CHECK_GT(ArithmeticCost(100), ArithmeticCost(30));
+}
+
+// StepsizeSatisfyingCriterionB(p, digits_B=50, newton=2, predictor=0) = 10^(-(50-p)*2).
+// At p<=40 this is <= 1e-20, well below min_stepsize=1e-5, so those precisions are
+// skipped.  Only p=50 survives (stepsize=1), so that must be the result.
+BOOST_AUTO_TEST_CASE(minimize_tracking_cost_skips_precision_below_min_stepsize)
+{
+	DefaultPrecision(50);
+	using namespace bertini::tracking;
+
+	unsigned new_precision = 0;
+	mpfr_float new_stepsize("0");
+	mpfr_float min_stepsize("1e-5");
+	mpfr_float max_stepsize("1");
+
+	MinimizeTrackingCost(new_precision, new_stepsize,
+	                     bertini::DoublePrecision(), min_stepsize,
+	                     50u, max_stepsize,
+	                     50u, 2u, 0u);
+
+	BOOST_CHECK_EQUAL(new_precision, 50u);
+	BOOST_CHECK(new_stepsize >= min_stepsize);
+}
+
+// With min_stepsize=2, max_precision=30, digits_B=30, newton=2:
+// criterion B gives at most stepsize=1 (at p=30), which is < 2, so nothing passes.
+BOOST_AUTO_TEST_CASE(minimize_tracking_cost_throws_when_no_precision_satisfies_min_stepsize)
+{
+	DefaultPrecision(30);
+	using namespace bertini::tracking;
+
+	unsigned new_precision = 0;
+	mpfr_float new_stepsize("0");
+	mpfr_float min_stepsize("2");
+	mpfr_float max_stepsize("10");
+
+	BOOST_CHECK_THROW(
+	    MinimizeTrackingCost(new_precision, new_stepsize,
+	                         bertini::DoublePrecision(), min_stepsize,
+	                         30u, max_stepsize,
+	                         30u, 2u, 0u),
+	    std::runtime_error
+	);
+}
+
+BOOST_AUTO_TEST_CASE(set_start_precision_overrides_to_higher_precision)
+{
+	DefaultPrecision(16);
+	using namespace bertini::tracking;
+
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	System sys;
+	VariableGroup v{y};
+	sys.AddFunction(y - t);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
+	bertini::tracking::AMPTracker tracker(sys);
+
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
+	tracker.Setup(Predictor::Euler, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(AMP);
+	tracker.SetStartPrecision(30);
+
+	Vec<mpfr> y_start(1);
+	y_start << mpfr(1);
+	mpfr t_start(1), t_end(0);
+	Vec<mpfr> y_end;
+
+	auto code = tracker.TrackPath(y_end, t_start, t_end, y_start);
+	BOOST_CHECK(code == bertini::SuccessCode::Success);
+	BOOST_CHECK(abs(y_end(0) - mpfr(0)) < 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(set_start_precision_clear_restores_default_behavior)
+{
+	DefaultPrecision(30);
+	using namespace bertini::tracking;
+
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	System sys;
+	VariableGroup v{y};
+	sys.AddFunction(y - t);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
+	bertini::tracking::AMPTracker tracker(sys);
+
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
+	tracker.Setup(Predictor::Euler, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(AMP);
+	tracker.SetStartPrecision(50);
+	tracker.SetStartPrecision(); // clear override
+
+	Vec<mpfr> y_start(1);
+	y_start << mpfr(1);
+	mpfr t_start(1), t_end(0);
+	Vec<mpfr> y_end;
+
+	auto code = tracker.TrackPath(y_end, t_start, t_end, y_start);
+	BOOST_CHECK(code == bertini::SuccessCode::Success);
+	BOOST_CHECK(abs(y_end(0) - mpfr(0)) < 1e-5);
 }
 
 

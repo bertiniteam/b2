@@ -8,8 +8,8 @@ using Variable = bertini::node::Variable;
 
 using bertini::Operation;
 using SLP = bertini::StraightLineProgram;
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 using dbl = bertini::dbl;
 
 BOOST_AUTO_TEST_SUITE(SLP_tests)

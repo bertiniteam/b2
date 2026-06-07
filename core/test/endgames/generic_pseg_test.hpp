@@ -52,14 +52,14 @@ using mpq_rational = bertini::mpq_rational;
 using bertini::Precision;
 using bertini::DefaultPrecision;
 
-template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
-template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename NumT> using Vec = Eigen::Matrix<NumT, Eigen::Dynamic, 1>;
+template<typename NumT> using Mat = Eigen::Matrix<NumT, Eigen::Dynamic, Eigen::Dynamic>;
 
 
 using PrecisionConfig = bertini::tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
-using BRT = bertini::tracking::TrackerTraits<TrackerType>::BaseRealType;
-using BCT = bertini::tracking::TrackerTraits<TrackerType>::BaseComplexType;
+using BRT = bertini::tracking::TrackerTraits<TrackerType>::BaseRealT;
+using BCT = bertini::tracking::TrackerTraits<TrackerType>::BaseComplexT;
 
 template<typename ...T>
 BCT ComplexFromString(T... s)
@@ -773,12 +773,13 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
-	my_endgame.Run(current_time,current_space);
+	my_endgame.SetBoundaryTime(current_time);
+	my_endgame.Run(current_space);
 
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);
 
-}//end pseg mp for power series class 
+}//end pseg mp for power series class
 
 
 /**
@@ -832,7 +833,9 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
 	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
-	my_endgame.Run(current_time,current_space,target_time);
+	my_endgame.SetBoundaryTime(current_time);
+	my_endgame.SetTargetTime(target_time);
+	my_endgame.Run(current_space);
 
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);
@@ -901,7 +904,8 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
-	my_endgame.Run(t_endgame_boundary,eg_boundary_point);
+	my_endgame.SetBoundaryTime(t_endgame_boundary);
+	my_endgame.Run(eg_boundary_point);
 
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),1);
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct_root).norm() < 1e-11);
@@ -963,8 +967,8 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
-
-	my_endgame.Run(current_time,current_space);
+	my_endgame.SetBoundaryTime(current_time);
+	my_endgame.Run(current_space);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-10);//my_endgame.GetTrackToleranceDuringEndgame());
 
@@ -1081,7 +1085,8 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	for (const auto& s : current_space_values)
 	{
 		DefaultPrecision(ambient_precision);
-		SuccessCode endgame_success = my_endgame.Run(endgame_time,s);
+		my_endgame.SetBoundaryTime(endgame_time);
+		SuccessCode endgame_success = my_endgame.Run(s);
 		if(endgame_success == SuccessCode::Success){
 			BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);// my_endgame.GetTrackToleranceDuringEndgame());
 			num_paths_converging++;
@@ -1206,8 +1211,8 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	unsigned num_successful_occurences = 0;
 	for (auto const& s : endgame_boundary_solutions)
 	{
-		Precision(t_endgame_boundary, Precision(s));
-		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
+		my_endgame.SetBoundaryTime(t_endgame_boundary);
+		SuccessCode endgame_success = my_endgame.Run(s);
 		if(endgame_success == SuccessCode::Success)
 		{
 			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
@@ -1278,9 +1283,9 @@ BOOST_AUTO_TEST_CASE(parabola)
 					stepping_settings, newton_settings);
 
 	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(t_endgame_boundary);
 
-
-	auto endgame_success = my_endgame.Run(t_endgame_boundary,soln_at_EG_bdry);
+	auto endgame_success = my_endgame.Run(soln_at_EG_bdry);
 	BOOST_CHECK(endgame_success==SuccessCode::Success);
 
 	auto endgame_solution = my_endgame.FinalApproximation<BCT>();
@@ -1341,8 +1346,10 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_nonzero_target_time)
 	bertini::endgame::SecurityConfig security_settings;
 	bertini::endgame::PowerSeriesConfig power_series_settings;
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings, security_settings);
+	my_endgame.SetBoundaryTime(start_time);
+	my_endgame.SetTargetTime(target_time);
 
-	auto endgame_success = my_endgame.Run(start_time,start_sample,target_time);
+	auto endgame_success = my_endgame.Run(start_sample);
 	BOOST_CHECK(endgame_success == SuccessCode::Success);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_to_check_against).norm() < 1e-10);

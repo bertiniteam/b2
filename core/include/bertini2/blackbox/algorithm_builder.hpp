@@ -34,9 +34,12 @@
 #pragma once
 
 #include "bertini2/io/file_utilities.hpp"
+#include "bertini2/nag_algorithms/common/algorithm_base.hpp"
 
 namespace bertini {
 namespace blackbox {
+
+using algorithm::AnyAlgorithm;
 
 
 /**
@@ -46,17 +49,23 @@ This class is inspired by the SimBuilder class from Hythem Sidky's SAPHRON packa
 */
 class AlgoBuilder
 {
-	
+
 public:
 	AlgoBuilder() = default;
 
 	/**
-	\brief Method for constructing an algorithm from a bertini classic input file
+	\brief Construct an algorithm from pre-split CONFIG and INPUT strings.
+
+	Call SplitIntoConfigAndInput before this.  Splitting is done outside
+	so that the caller can broadcast the strings over MPI before invoking
+	ClassicBuild on all ranks.
+
+	\returns 0 on success, nonzero on failure.
 	*/
-	int ClassicBuild(boost::filesystem::path const& input_file);
+	int ClassicBuild(std::string const& config_str, std::string const& input_str);
 
 	/**
-	\brief Returns a non-owning pointer to the built algorithm
+	\brief Returns a non-owning pointer to the built algorithm (nullptr if not yet built).
 	*/
 	AnyAlgorithm* GetAlg()
 	{

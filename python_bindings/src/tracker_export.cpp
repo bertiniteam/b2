@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
@@ -26,135 +26,20 @@
 //  Summer 2016, Spring 2018
 //
 //
-//  python/tracker_export.cpp:  source file for exposing trackers to python.
+//  python/tracker_export.cpp:  Tracker class registrations.
+//  Visitor method bodies live in tracker_export.hpp (template definitions).
+//  Config/enum registration lives in tracker_config_export.cpp.
 
 #include "tracker_export.hpp"
 
 namespace bertini{
 	namespace python{
 
-		template<typename TrackerT>
-		template<class PyClass>
-		void TrackerVisitor<TrackerT>::visit(PyClass& cl) const
-		{
-			cl
-			.def("setup", &TrackerT::Setup, (arg("predictor"), arg("tolerance"), arg("truncation"), arg("stepping"),arg("newton")), "Set values for the internal configuration of the tracker.  tolerance and truncation are both real doubles.  predictor is a valid value for predictor choice.  stepping and newton are the config structs from bertini.tracking.config.")
-
-			.def("track_path", &track_path_wrap, 
-				 (arg("self"),arg("result"), "start_time", "end_time", "start_point"), 
-				 "The main function of the tracker, once its set up.  The first argument is the output.  Feed it, in (result, start_time, end_time, start_point")
-
-			.def("get_system",&TrackerT::GetSystem,return_internal_reference<>(), "Gets an internal reference to the tracked system.")
-
-			.def("predictor",get_predictor_,(arg("self")), "Query the current predictor method used by the tracker.")
-			.def("predictor",set_predictor_,(arg("self"), arg("predictor")), "Set the predictor method used by the tracker.")
-
-			.def("set_stepsize", &TrackerT::SetStepSize, (arg("self"), arg("stepsize")),"Set the stepsize for the tracker")
-
-			.def("reinitialize_initial_step_size", &TrackerT::ReinitializeInitialStepSize, (arg("self"), arg("val")), "Set whether the tracker should re-set the stepsize to the configured-initial stepsize when it starts tracking.  Feed it a bool")
-			.def("num_total_steps_taken", &TrackerT::NumTotalStepsTaken, (arg("self")),"Ask how many steps have been taken so far, including failures")
-
-			.def("tracking_tolerance", &TrackerT::TrackingTolerance, (arg("self")), "Get.  A step is labeled as a failure if newton correcting doesn't yield a residual less than this tolerance.  A real number, the smaller the slower tracking, generally speaking")
-			.def("tracking_tolerance", &TrackerT::SetTrackingTolerance, (arg("self"), arg("tol")), "Set the tracking tolerance for the tracker")
-
-			.def("infinite_truncation_tolerance", &TrackerT::SetInfiniteTruncationTolerance, (arg("self"), arg("tol")) ,"Set the path truncation tolerance for infinite paths for the tracker")
-			.def("infinite_truncation_tolerance", &TrackerT::InfiniteTruncationTolerance, (arg("self")), "Get the path truncation tolerance for infinite paths for the tracker")
-
-			.def("infinite_truncation", &TrackerT::SetInfiniteTruncation, (arg("self"), arg("val")), "Decide whether the tracker should truncate infinite paths.  See also infinite_truncation_tolerance")
-			.def("infinite_truncation", &TrackerT::InfiniteTruncation, (arg("self")), "Get the bool for whether the tracker should truncate infinite paths.  See also infinite_truncation_tolerance")
-
-			.def("get_stepping",&TrackerT::template Get<tracking::SteppingConfig>,return_internal_reference<>(), (arg("self")), "Get the tracker's internal configuration for things that control stepping behaviour")
-			.def("get_newton",&TrackerT::template Get<tracking::NewtonConfig>,return_internal_reference<>(), (arg("self")), "Get the tracker's internal configuration for Newton correction")
-			.def("set_stepping",&TrackerT::template Set<tracking::SteppingConfig>, (arg("self"), arg("config")), "Set the tracker's internal configuration for things that control stepping behaviour")
-			.def("set_newton",&TrackerT::template Set<tracking::NewtonConfig>, (arg("self"), arg("config")), "Set the tracker's internal configuration for Newton correction")
-
-			.def("current_point", &TrackerT::CurrentPoint, (arg("self")), "what is the current point?")
-			.def("current_time", &TrackerT::CurrentTime, (arg("self")), "what is the current time?")
-			.def("current_precision", &TrackerT::CurrentPrecision, (arg("self")), "what is the current working precision?")
-
-			.def(ObservableVisitor<TrackerT>());
-			;
-		}
-
-
-		template<typename TrackerT>
-		template<class PyClass>
-		void AMPTrackerVisitor<TrackerT>::visit(PyClass& cl) const
-		{
-			cl
-			.def("precision_setup", &TrackerT::PrecisionSetup)
-			.def("precision_preservation", &TrackerT::PrecisionPreservation, "Turn on or off the preservation of precision.  That is, if this is on (true), then the precision of the final point will be the precision of the start point.  Generally, you want to let precision drift, methinks.")
-
-			.def("refine", return_Refine3_ptr<dbl>(), 
-				(arg("self"), arg("result"), arg("start_point"), arg("time")), 
-				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-			.def("refine", return_Refine3_ptr<mpfr_complex>(), 
-				(arg("self"), arg("result"), arg("start_point"), arg("time")), 
-				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-			.def("refine", return_Refine4_ptr<dbl>(), 
-				(arg("self"), arg("result"), arg("start_point"), arg("time"), arg("tolerance"), arg("max_iterations")), 
-				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-			.def("refine", return_Refine4_ptr<mpfr_complex>(), 
-				(arg("self"), arg("result"), arg("start_point"), arg("time"), arg("tolerance"), arg("max_iterations")), 
-				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-			;
-		}
-
-		
-		
-		template<typename TrackerT>
-		template<class PyClass>
-		void FixedDoubleTrackerVisitor<TrackerT>::visit(PyClass& cl) const
-		{
-			cl
-			.def("refine", return_Refine3_ptr<dbl>(), 
-				(arg("self"), arg("result"), arg("start_point"), arg("time")), 
-				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-
-			.def("refine", return_Refine4_ptr<dbl>(), 
-				(arg("self"), arg("result"), arg("start_point"), arg("time"), arg("tolerance"), arg("max_iterations")), 
-				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-			;
-		}
-
-		
-		template<typename TrackerT>
-		template<class PyClass>
-		void FixedMultipleTrackerVisitor<TrackerT>::visit(PyClass& cl) const
-		{
-			cl
-			.def("refine", return_Refine3_ptr<mpfr_complex>(), 
-				(arg("self"), arg("result"), arg("start_point"), arg("time")), 
-				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-
-			.def("refine", return_Refine4_ptr<mpfr_complex>(), 
-				(arg("self"), arg("result"), arg("start_point"), arg("time"), arg("tolerance"), arg("max_iterations")), 
-				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-			;
-		}
-
-
-		template<typename T>
-		template<class PyClass>
-		void SteppingVisitor<T>::visit(PyClass& cl) const
-		{
-			cl
-			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size,"The initial stepsize when tracking is started.  See also tracking.AMPTracker.reinitialize_initial_step_size")
-			.def_readwrite("max_step_size", &tracking::SteppingConfig::max_step_size,"The maximum allowed stepsize during tracking.  See also min_num_steps")
-			.def_readwrite("min_step_size", &tracking::SteppingConfig::min_step_size,"The minimum stepsize the tracker is allowed to take.  See also max_step_size")
-			.def_readwrite("step_size_success_factor", &tracking::SteppingConfig::step_size_success_factor,"The scale factor for stepsize, after some consecutive steps.  See also consecutive_successful_steps_before_stepsize_increase")
-			.def_readwrite("step_size_fail_factor", &tracking::SteppingConfig::step_size_fail_factor, "The scale factor for stepsize, after a fail happens.  See also step_size_success_factor")
-			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &tracking::SteppingConfig::consecutive_successful_steps_before_stepsize_increase,"This number of successful steps have to taken consecutively, and then the stepsize is permitted to increase")
-			.def_readwrite("min_num_steps", &tracking::SteppingConfig::min_num_steps, "The minimum number of steps the tracker can take between now and then.  This is useful if you are tracking closely between times, and want to guarantee some number of steps are taken.  Then again, this could be wasteful, too.")
-			.def_readwrite("max_num_steps", &tracking::SteppingConfig::max_num_steps, "The maximum number of steps.  Tracking will die if it tries to take more than this number, sad day.")
-			.def_readwrite("frequency_of_CN_estimation", &tracking::SteppingConfig::frequency_of_CN_estimation, "How frequently the condition number should be updated.  Less frequently is faster (estimation requires an additional linear solve), but may cause precision adjustment to lag behind.")
-			;
-		}
-
-		
+		// ExportConfigSettings is defined in tracker_config_export.cpp.
+		void ExportConfigSettings();
 
 		void ExportTrackers()
-		{	
+		{
 			scope current_scope;
 			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
 			new_submodule_name.append(".tracking");
@@ -197,103 +82,6 @@ namespace bertini{
 			.def(TrackerVisitor<MultiplePrecisionTracker>())
 			.def(FixedMultipleTrackerVisitor<MultiplePrecisionTracker>())
 			;
-
 		}
-		
-		
-		
-		void ExportConfigSettings()
-		{
-			using namespace bertini::tracking;
-
-			enum_<Predictor>("Predictor")
-				.value("Constant", Predictor::Constant)
-				.value("Euler", Predictor::Euler)
-				.value("Heun", Predictor::Heun)
-				.value("RK4", Predictor::RK4)
-				.value("HeunEuler", Predictor::HeunEuler)
-				.value("RKNorsett34", Predictor::RKNorsett34)
-				.value("RKF45", Predictor::RKF45)
-				.value("RKCashKarp45", Predictor::RKCashKarp45)
-				.value("RKDormandPrince56", Predictor::RKDormandPrince56)
-				.value("RKVerner67", Predictor::RKVerner67)
-				;
-
-			enum_<SuccessCode>("SuccessCode")
-				.value("Success", SuccessCode::Success)
-				.value("HigherPrecisionNecessary", SuccessCode::HigherPrecisionNecessary)
-				.value("ReduceStepSize", SuccessCode::ReduceStepSize)
-				.value("GoingToInfinity", SuccessCode::GoingToInfinity)
-				.value("FailedToConverge", SuccessCode::FailedToConverge)
-				.value("MatrixSolveFailure", SuccessCode::MatrixSolveFailure)
-				.value("MatrixSolveFailureFirstPartOfPrediction", SuccessCode::MatrixSolveFailureFirstPartOfPrediction)
-				.value("MaxNumStepsTaken", SuccessCode::MaxNumStepsTaken)
-				.value("MaxPrecisionReached", SuccessCode::MaxPrecisionReached)
-				.value("MinStepSizeReached", SuccessCode::MinStepSizeReached)
-				.value("Failure", SuccessCode::Failure)
-				.value("SingularStartPoint", SuccessCode::SingularStartPoint)
-				.value("ExternallyTerminated", SuccessCode::ExternallyTerminated)
-				.value("MinTrackTimeReached", SuccessCode::MinTrackTimeReached)
-				.value("SecurityMaxNormReached", SuccessCode::SecurityMaxNormReached)
-				.value("CycleNumTooHigh", SuccessCode::CycleNumTooHigh)
-				;
-			
-			{ // enter a scope for config types
-				scope current_scope;
-				std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-				new_submodule_name.append(".config");
-				object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-				current_scope.attr("config") = new_submodule;
-
-				scope new_submodule_scope = new_submodule;
-
-
-				// class_<config::Tolerances<double>>("Tolerances_d",init<>())
-				// 	.def(TolerancesVisitor<double>());
-
-				// class_<config::Tolerances<mpfr_float>>("Tolerances_mp",init<>())
-				// 	.def(TolerancesVisitor<mpfr_float>());
-
-				class_<SteppingConfig, std::shared_ptr<SteppingConfig> >("SteppingConfig", init<>())
-					.def(SteppingVisitor<double>())
-					;
-				
-				
-				class_<NewtonConfig, std::shared_ptr<NewtonConfig> >("NewtonConfig", init<>())
-					.def_readwrite("max_num_newton_iterations", &NewtonConfig::max_num_newton_iterations)
-					.def_readwrite("min_num_newton_iterations", &NewtonConfig::min_num_newton_iterations)
-					;
-				
-				
-				class_<FixedPrecisionConfig, std::shared_ptr<FixedPrecisionConfig> >("FixedPrecisionConfig", init<System const&>());
-
-
-				
-				
-				class_<AdaptiveMultiplePrecisionConfig, std::shared_ptr<AdaptiveMultiplePrecisionConfig> >("AMPConfig", init<>())
-					.def(init<System const&>())
-					.def("set_amp_config_from", &AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom)
-					.def("set_phi_psi_from_bounds", &AdaptiveMultiplePrecisionConfig::SetPhiPsiFromBounds)
-					.def("set_bounds_and_epsilon_from", &AdaptiveMultiplePrecisionConfig::SetBoundsAndEpsilonFrom)
-					.def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
-					.def_readwrite("degree_bound", &AdaptiveMultiplePrecisionConfig::degree_bound)
-					.def_readwrite("epsilon", &AdaptiveMultiplePrecisionConfig::epsilon)
-					.def_readwrite("phi", &AdaptiveMultiplePrecisionConfig::Phi)
-					.def_readwrite("psi", &AdaptiveMultiplePrecisionConfig::Psi)
-					.def_readwrite("safety_digits_1", &AdaptiveMultiplePrecisionConfig::safety_digits_1)
-					.def_readwrite("safety_digits_2", &AdaptiveMultiplePrecisionConfig::safety_digits_2)
-					.def_readwrite("maximum_precision", &AdaptiveMultiplePrecisionConfig::maximum_precision)
-					.def_readwrite("consecutive_successful_steps_before_precision_decrease", &AdaptiveMultiplePrecisionConfig::consecutive_successful_steps_before_precision_decrease)
-					.def_readwrite("max_num_precision_decreases", &AdaptiveMultiplePrecisionConfig::max_num_precision_decreases)
-					.def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
-					;
-				
-				def("amp_config_from", &AMPConfigFrom, "make an AMPConfig from a System with generated settings for system-specific things, and default settings otherwise (such as safety digits).");
-			}
-			
-		}
-
-
 
 }} // namespaces
-

@@ -32,8 +32,8 @@
 """
 Observers built to watch a fixed-multiple precision tracker
 """
-import bertini._pybertini.tracking.observers.multiple
+from bertini._pybertini.tracking.observers import multiple as _pybmultiple
 from bertini._pybertini.tracking.observers.multiple import *
 
-__all__ = dir(bertini._pybertini.tracking.observers.multiple)
+__all__ = dir(_pybmultiple)
 

@@ -35,10 +35,15 @@ nag_algorithms
 """
 
 
-import bertini._pybertini.nag_algorithms
+from bertini._pybertini import nag_algorithms as _pybnalag
 from bertini._pybertini.nag_algorithms import *
 
-__all__ = dir(bertini._pybertini.nag_algorithms)
+# config structs gain update()/repr/to_dict/...; algorithm classes gain configure().
+from ..config import enhance_all, enhance_owners
+enhance_all(_pybnalag)
+enhance_owners(_pybnalag)
+
+__all__ = dir(_pybnalag)
 
 
 # DoublePrecisionTotalDegree = bertini._pybertini.nag_algorithms.ZeroDimCauchyDoublePrecisionTotalDegree

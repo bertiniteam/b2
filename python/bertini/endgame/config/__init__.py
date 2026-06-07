@@ -34,8 +34,10 @@ Configs for endgames
 
 """
 
-import bertini._pybertini.endgame.config
-
+from bertini._pybertini.endgame import config as _pybegcfg
 from bertini._pybertini.endgame.config import *
 
-__all__ = dir(bertini._pybertini.endgame.config)
+from ...config import enhance_all
+enhance_all(_pybegcfg)
+
+__all__ = dir(_pybegcfg)

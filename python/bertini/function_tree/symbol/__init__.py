@@ -28,10 +28,11 @@
 
 
 
-import bertini._pybertini
-import bertini._pybertini.function_tree.symbol
-
+from bertini._pybertini.function_tree import symbol as _pybsym
 from bertini._pybertini.function_tree.symbol import *
 
-__all__ = dir(bertini._pybertini.function_tree.symbol)
+del AbstractSymbol, AbstractNamedSymbol, AbstractNumber
+
+_ABSTRACT = {'AbstractSymbol', 'AbstractNamedSymbol', 'AbstractNumber'}
+__all__ = [n for n in dir(_pybsym) if n not in _ABSTRACT]
 

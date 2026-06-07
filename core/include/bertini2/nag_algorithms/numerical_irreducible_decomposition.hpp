@@ -30,7 +30,21 @@
 
 #pragma once
 
+#include "bertini2/num_traits.hpp"
+
+#include "bertini2/detail/visitable.hpp"
+#include "bertini2/tracking.hpp"
+
+#include "bertini2/detail/configured.hpp"
+#include "bertini2/detail/observable.hpp"
+
+#include "bertini2/nag_algorithms/common/algorithm_base.hpp"
+#include "bertini2/nag_algorithms/common/config.hpp"
+#include "bertini2/nag_algorithms/common/policies.hpp"
+
 #include "bertini2/nag_datatypes/numerical_irreducible_decomposition.hpp"
+
+#include <stdexcept>
 
 
 namespace bertini {
@@ -38,19 +52,205 @@ namespace bertini {
 	namespace algorithm {
 
 
-		template <typename ComplexT>
-		struct NumericalIrreducibleDecomposition
-		{
+/**
+forward declare of the NumericalIrreducibleDecomposition algorithm.
 
-			static 
-			nag_datatype::NumericalIrreducibleDecomposition<ComplexT> RegenerativeCascade()
-			{
+Unlike ZeroDim, NID has no start system -- the regenerative cascade is a
+fundamentally different way of solving a polynomial system -- so it is managed by
+a single-system management policy, and carries no StartSystem template parameter.
+*/
+template<	typename TrackerType, typename EndgameType,
+			typename SystemType = System,
+			template<typename> class SystemManagementP = policy::CloneTarget >
+struct NumericalIrreducibleDecomposition;
 
-			}
+
+
+/**
+specify the traits for the algorithm.  this is why we need the forward declare.
+
+The NeededConfigs typelist is what drives the (reusable) Python config interface:
+the ConfiguredVisitor reflects over exactly these types.
+*/
+template<	typename TrackerType, typename EndgameType,
+			typename SystemType,
+			template<typename> class SystemManagementP >
+struct AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType, SystemManagementP> >
+{
+	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
+
+	using NeededConfigs = detail::TypeList<
+								RegenerationConfig,
+								TolerancesConfig,
+								SharpeningConfig,
+								PostProcessingConfig
+								>;
+};
 
 
 
-			
-		};
+struct AnyNID : public virtual AnyAlgorithm
+{
+	virtual ~AnyNID() = default;
+};
+
+
+
+/**
+\brief The Numerical Irreducible Decomposition algorithm.
+
+\note This is framework scaffolding.  The regenerative cascade itself is not yet
+implemented; the compute entry points (Run, Solve, RegenerativeCascade) currently
+throw.  The class is fully wired for configuration (via detail::Configured and the
+NeededConfigs typelist) and observation, and exposes a Tracker and Endgame, so it
+slots into the existing Python config interface with no extra plumbing.
+*/
+template<	typename TrackerType, typename EndgameType,
+			typename SystemType,
+			template<typename> class SystemManagementP >
+struct NumericalIrreducibleDecomposition :
+					public virtual AnyNID,
+					public Observable,
+					public SystemManagementP<SystemType>,
+					public detail::Configured<
+						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType, SystemManagementP> >::NeededConfigs>
+{
+	// these usings are for getters in python
+	using TrackerT = TrackerType;
+	using EndgameT = EndgameType;
+	using SystemT  = SystemType;
+
+
+/// a bunch of using statements to reduce typing.
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
+	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
+
+	using SystemManagementPolicy = SystemManagementP<SystemType>;
+
+	using Config = detail::Configured<
+						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType, SystemManagementP> >::NeededConfigs>;
+	using Config::Get;
+
+
+	using Regeneration   = RegenerationConfig;
+	using Tolerances     = TolerancesConfig;
+	using Sharpening     = SharpeningConfig;
+	using PostProcessing = PostProcessingConfig;
+
+	using ResultT = nag_datatype::NumericalIrreducibleDecomposition<BaseComplexT>;
+
+	using SystemManagementPolicy::TargetSystem;
+
+
+/// constructors
+
+	/**
+	Construct a NumericalIrreducibleDecomposition algorithm object from the system to be decomposed.
+	*/
+	NumericalIrreducibleDecomposition(SystemType const& target)
+	 : SystemManagementPolicy(target), tracker_(TargetSystem()), endgame_(tracker_)
+	{
+		DefaultSetup();
 	}
-}
+
+	virtual ~NumericalIrreducibleDecomposition() = default;
+
+
+/// the main functions
+
+	/**
+	\brief Main Run() function provided for calling from the blackbox mode.
+	*/
+	void Run() override
+	{
+		Solve();
+	}
+
+	/**
+	\brief Perform the numerical irreducible decomposition.
+
+	\note Not yet implemented -- this is framework scaffolding.
+	*/
+	void Solve()
+	{
+		throw std::runtime_error("NumericalIrreducibleDecomposition is not yet implemented");
+	}
+
+	/**
+	\brief Run the regenerative cascade.
+
+	\note Not yet implemented -- this is framework scaffolding.
+	*/
+	ResultT RegenerativeCascade()
+	{
+		throw std::runtime_error("NumericalIrreducibleDecomposition::RegenerativeCascade is not yet implemented");
+	}
+
+	/**
+	\brief Get the most recently computed decomposition.
+	*/
+	const ResultT& GetDecomposition() const
+	{
+		return decomposition_;
+	}
+
+
+/// tracker / endgame access
+
+	const TrackerType& GetTracker() const
+	{
+		return tracker_;
+	}
+
+	TrackerType& GetTracker()
+	{
+		return tracker_;
+	}
+
+	const EndgameType& GetEndgame() const
+	{
+		return endgame_;
+	}
+
+	EndgameType& GetEndgame()
+	{
+		return endgame_;
+	}
+
+
+/// setup functions
+
+	void DefaultSetup()
+	{
+		DefaultSettingsSetup();
+		DefaultSystemSetup();
+	}
+
+	/**
+	Fills the configs from default values.
+	*/
+	void DefaultSettingsSetup()
+	{
+		this->template Set<Regeneration>(Regeneration());
+		this->template Set<Tolerances>(Tolerances());
+		this->template Set<Sharpening>(Sharpening());
+		this->template Set<PostProcessing>(PostProcessing());
+	}
+
+	void DefaultSystemSetup()
+	{
+		SystemManagementPolicy::SystemSetup();
+	}
+
+
+private:
+	TrackerType tracker_;
+	EndgameType endgame_;
+	ResultT decomposition_;
+};
+
+
+	} // ns algorithm
+
+} // ns bertini

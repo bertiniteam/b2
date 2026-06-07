@@ -107,6 +107,7 @@ namespace bertini{
 			// .def("set_implicit_parameters", &SystemBaseT::template SetImplicitParameters<mpfr>,"Doesn't do anything.  Sets the values of algebraically constrained parameters")
 			
 			.def("add_variable_group", &SystemBaseT::AddVariableGroup, (arg("self"), arg("group")), "Add a (affine) variable group to the System")
+			.def("set_variable_groups", &System::SetVariableGroups, (arg("self"), arg("groups")), "Replace the entire variable-group structure of the System with the given list of (affine) variable groups.  Clears existing groups but preserves the path variable.")
 			.def("add_hom_variable_group", &SystemBaseT::AddHomVariableGroup, (arg("self"), arg("group")), "Add a projective or homogeneous variable group to the System")
 			// .def("add_ungrouped_variable", &SystemBaseT::AddUngroupedVariable,"Add an ungrouped variable to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_ungrouped_variables", &SystemBaseT::AddUngroupedVariables,"Add some ungrouped variables to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
@@ -134,6 +135,9 @@ namespace bertini{
 			.def("reorder_functions_by_degree_decreasing", &SystemBaseT::ReorderFunctionsByDegreeDecreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("reorder_functions_by_degree_increasing", &SystemBaseT::ReorderFunctionsByDegreeIncreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("clear_variables", &SystemBaseT::ClearVariables, (arg("self")), "Remove the variable structure from the system")
+			.def("remove_variable", &System::RemoveVariable, (arg("self"), arg("variable")), "Remove a variable from the system's variable structure, so it is no longer solved for.  The variable node is left intact and still referenced by any functions using it.  Returns True if it was found and removed.")
+			.def("fix_variable", &System::template FixVariable<dbl>, (arg("self"), arg("variable"), arg("value")), "Turn a variable into a constant with the given (double-precision) value.  Removes it from the variable structure and pins its value.  Returns True if found and fixed.")
+			.def("fix_variable", &System::template FixVariable<mpfr>, (arg("self"), arg("variable"), arg("value")), "Turn a variable into a constant with the given (multiple-precision) value.  Removes it from the variable structure and pins its value.  Returns True if found and fixed.")
 			.def("copy_variable_structure", &SystemBaseT::CopyVariableStructure, (arg("self"), arg("other")), "Copy the variable structure from another System")
 			
 			.def("auto_patch",&SystemBaseT::AutoPatch, (arg("self")),"Apply a patch to the system, given its current variable group structure.")
@@ -206,6 +210,7 @@ namespace bertini{
 			
 			// System class
 		class_<System, std::shared_ptr<System> >("System", "The type in Bertini for systems of simultaneous equations.  Add functions and variable groups via member functions.", init<>())
+			.def(init< std::vector<std::shared_ptr<node::Function>> >((arg("functions")), "Construct a System from a list of functions.  The variables are auto-discovered from the functions and placed into a single affine variable group, ordered alphabetically by name."))
 			.def(SystemVisitor<System>())
 			;
 

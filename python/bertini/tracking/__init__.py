@@ -33,12 +33,16 @@
 """
 Tracking-specific things -- trackers, configs
 """
-import bertini._pybertini.tracking
+from bertini._pybertini import tracking as _pybtracking
 from bertini._pybertini.tracking import *
 
-__all__ = dir(bertini._pybertini.tracking)
+# trackers gain configure()/config_names() built on their type-list config interface.
+from ..config import enhance_owners
+enhance_owners(_pybtracking)
+
+__all__ = dir(_pybtracking)
 
 
-AMPTracker.observers = dir(bertini._pybertini.tracking.observers.amp)
-DoublePrecisionTracker.observers = dir(bertini._pybertini.tracking.observers.double)
-MultiplePrecisionTracker.observers =  dir(bertini._pybertini.tracking.observers.multiple)
+AMPTracker.observers = dir(_pybtracking.observers.amp)
+DoublePrecisionTracker.observers = dir(_pybtracking.observers.double)
+MultiplePrecisionTracker.observers = dir(_pybtracking.observers.multiple)
