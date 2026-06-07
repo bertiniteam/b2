@@ -248,7 +248,7 @@ endif()
 # python_common.hpp pulls in Boost.Python (~50 headers), Boost.Operators, Eigen,
 # and Bertini's multiprecision headers. Without PCH every TU re-parses that stack
 # from scratch, causing peak-RAM spikes during parallel builds and inflating log output.
-target_precompile_headers(_pybertini PRIVATE "python_common.hpp")
+target_precompile_headers(_pybertini PRIVATE "include/python_common.hpp")
 
 cmake_print_variables(SKBUILD)
 if(${SKBUILD})
