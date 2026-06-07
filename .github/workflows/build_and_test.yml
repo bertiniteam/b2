@@ -195,7 +195,7 @@ jobs:
   build_macos_ubuntu_wheels:
     name: ${{ matrix.os }} Python-${{ matrix.python-version }} wheels
     needs: [set_matrix, test_cpp_unix]
-    if: ${{ !failure() }}
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -321,7 +321,7 @@ jobs:
   build_windows_wheels:
     name: Windows Python-${{ matrix.python-version }} wheels
     needs: [set_matrix, test_cpp_windows]
-    if: ${{ inputs.minimal != true && !failure() }}
+    if: ${{ inputs.minimal != true && !failure() && !cancelled() }}
     runs-on: windows-latest
     env:
       CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
