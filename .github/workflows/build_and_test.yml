@@ -3,8 +3,7 @@ name: Build and test wheels 🐍
 on:
   push:
     branches:
-      - develop
-      - main
+      - '**'
     paths-ignore:
       - 'python/docs/**'
       - 'doc_resources/**'
@@ -46,7 +45,7 @@ on:
         default: false
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
