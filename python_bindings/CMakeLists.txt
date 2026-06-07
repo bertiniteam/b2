@@ -229,17 +229,19 @@ if(NOT WIN32)
 endif()
 
 # lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj)
-# from the static bertini2 archive unless every object is forced in. The archive must
-# appear only once (via /WHOLEARCHIVE), so strip the normal bertini2 link entry first
-# and re-add only its INTERFACE deps to avoid duplicate-symbol link failures.
+# from the static bertini2 archive unless every object is forced in. CMake 3.24+
+# LINK_LIBRARY:WHOLE_ARCHIVE places the archive in the linker input list with the
+# appropriate /WHOLEARCHIVE: flag (vs. target_link_options which puts it in options only).
+# Strip the normal bertini2 link entry first to avoid the archive appearing twice.
+# /FORCE:MULTIPLE handles Boost.Serialization duplicate template instantiations.
 if(MSVC AND NOT PROJECT_IS_TOP_LEVEL)
   get_target_property(_ll _pybertini LINK_LIBRARIES)
   if(_ll)
     list(REMOVE_ITEM _ll bertini2)
     set_target_properties(_pybertini PROPERTIES LINK_LIBRARIES "${_ll}")
   endif()
-  target_link_options(_pybertini PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2> /FORCE:MULTIPLE)
-  target_link_libraries(_pybertini PRIVATE $<TARGET_PROPERTY:bertini2,INTERFACE_LINK_LIBRARIES>)
+  target_link_options(_pybertini PRIVATE /FORCE:MULTIPLE)
+  target_link_libraries(_pybertini PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2>")
 endif()
 
 cmake_print_variables(SKBUILD)

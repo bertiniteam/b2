@@ -787,13 +787,15 @@ endif (ENABLE_UNIT_TESTING)
 
 # lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj,
 # which holds all ExplicitRKPredictor Butcher-tableau statics) unless every object in
-# the archive is forced in. /WHOLEARCHIVE does exactly that.
+# the archive is forced in. CMake 3.24+ LINK_LIBRARY:WHOLE_ARCHIVE places the archive
+# in the linker's input list (not just options) with the appropriate /WHOLEARCHIVE: flag.
 #
-# The archive must appear ONLY via /WHOLEARCHIVE — having it in the normal link list
-# too (from target_link_libraries above) produces hundreds of duplicate
-# Boost.Serialization symbols that lld-link rejects. We therefore strip the normal
-# "bertini2" entry and re-add only its INTERFACE deps (gmp, mpfr, boost, MPI, etc.)
-# so the test executables still see all transitive link dependencies.
+# We strip the normal "bertini2" link entry first to avoid having the archive appear
+# twice. $<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2> re-adds it and propagates transitive
+# interface deps (gmp, mpfr, boost, MPI, etc.) automatically.
+# /FORCE:MULTIPLE: Boost.Serialization void_cast_register and oserializer templates are
+# instantiated in multiple TUs within bertini2 itself; /WHOLEARCHIVE exposes all copies
+# and /FORCE:MULTIPLE picks the first (same as weak/COMDAT on Linux/macOS).
 if(MSVC AND ENABLE_UNIT_TESTING)
   foreach(_t test_classes test_blackbox test_classic test_endgames test_generating
               test_nag_algorithms test_nag_datatypes test_pool test_settings
@@ -804,13 +806,8 @@ if(MSVC AND ENABLE_UNIT_TESTING)
         list(REMOVE_ITEM _ll bertini2)
         set_target_properties(${_t} PROPERTIES LINK_LIBRARIES "${_ll}")
       endif()
-      # /FORCE:MULTIPLE: Boost.Serialization void_cast_register and oserializer
-      # templates are instantiated in multiple TUs within bertini2 itself.
-      # /WHOLEARCHIVE exposes all copies; /FORCE:MULTIPLE picks the first and
-      # discards the rest (same as what a normal link would silently do via
-      # weak/COMDAT symbols on Linux/macOS).
-      target_link_options(${_t} PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2> /FORCE:MULTIPLE)
-      target_link_libraries(${_t} $<TARGET_PROPERTY:bertini2,INTERFACE_LINK_LIBRARIES>)
+      target_link_options(${_t} PRIVATE /FORCE:MULTIPLE)
+      target_link_libraries(${_t} "$<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2>")
     endif()
   endforeach()
 endif()
