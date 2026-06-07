@@ -244,6 +244,12 @@ if(MSVC AND NOT PROJECT_IS_TOP_LEVEL)
   target_link_libraries(_pybertini PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2>")
 endif()
 
+# Precompile the common root header shared by all 24 python_bindings source files.
+# python_common.hpp pulls in Boost.Python (~50 headers), Boost.Operators, Eigen,
+# and Bertini's multiprecision headers. Without PCH every TU re-parses that stack
+# from scratch, causing peak-RAM spikes during parallel builds and inflating log output.
+target_precompile_headers(_pybertini PRIVATE "python_common.hpp")
+
 cmake_print_variables(SKBUILD)
 if(${SKBUILD})
     # see https://stackoverflow.com/questions/1242904/finding-python-site-packages-directory-with-cmake

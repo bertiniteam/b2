@@ -460,6 +460,16 @@ if(MSVC)
   target_link_options(bertini2_exe PRIVATE /NOIMPLIB)
 endif()
 
+# Precompile the four blackbox headers that collectively cover all exe source files.
+# algorithm_builder.hpp is the heaviest (pulls in full tracking + NAG algorithm
+# machinery); the others are lighter but still include significant Bertini subsystems.
+target_precompile_headers(bertini2_exe PRIVATE
+    <bertini2/blackbox/argc_argv.hpp>
+    <bertini2/blackbox/main_mode_switch.hpp>
+    <bertini2/blackbox/algorithm_builder.hpp>
+    <bertini2/parallel.hpp>
+)
+
 # todo: this should be made a devmode thing
 #target_compile_options(bertini2 PRIVATE -Wall -Wextra)
 
