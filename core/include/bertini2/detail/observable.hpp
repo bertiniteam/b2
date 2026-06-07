@@ -105,15 +105,21 @@ namespace bertini{
 		/**
 		\brief Sends an event to observers that subscribed to its exact dynamic type,
 		then to all catch-all (untyped) observers.
+
+		Snapshots each observer list before iterating so that an observer calling
+		RemoveObserver(*this) inside Observe() does not invalidate the loop iterator.
 		*/
 		void NotifyObservers(AnyEvent const& e) const
 		{
 			auto it = typed_watchers_.find(std::type_index(typeid(e)));
 			if (it != typed_watchers_.end())
-				for (auto& obs : it->second)
+			{
+				ObserverList snapshot = it->second;
+				for (auto& obs : snapshot)
 					obs.get().Observe(e);
-
-			for (auto& obs : untyped_watchers_)
+			}
+			ObserverList untyped_snapshot = untyped_watchers_;
+			for (auto& obs : untyped_snapshot)
 				obs.get().Observe(e);
 		}
 
@@ -121,10 +127,13 @@ namespace bertini{
 		{
 			auto it = typed_watchers_.find(std::type_index(typeid(e)));
 			if (it != typed_watchers_.end())
-				for (auto& obs : it->second)
+			{
+				ObserverList snapshot = it->second;
+				for (auto& obs : snapshot)
 					obs.get().Observe(e);
-
-			for (auto& obs : untyped_watchers_)
+			}
+			ObserverList untyped_snapshot = untyped_watchers_;
+			for (auto& obs : untyped_snapshot)
 				obs.get().Observe(e);
 		}
 
