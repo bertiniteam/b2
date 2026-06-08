@@ -52,7 +52,7 @@ void Differential::print(std::ostream & target) const
 }
 
 
-std::shared_ptr<Node> Differential::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> Differential::Differentiate(std::shared_ptr<Variable> const& /*v*/) const
 {
 	throw std::runtime_error("differentiating a differential is not correctly implemented yet");
 	return Integer::Make(0);
@@ -61,12 +61,12 @@ std::shared_ptr<Node> Differential::Differentiate(std::shared_ptr<Variable> cons
 /**
 Compute the degree with respect to a single variable.   For differentials, the degree is 0.
 */
-int Differential::Degree(std::shared_ptr<Variable> const& v) const
+int Differential::Degree(std::shared_ptr<Variable> const& /*v*/) const
 {
 	return 0;
 }
 
-int Differential::Degree(VariableGroup const& vars) const
+int Differential::Degree(VariableGroup const& /*vars*/) const
 {
 	return 0;
 }
@@ -76,12 +76,12 @@ std::vector<int> Differential::MultiDegree(VariableGroup const& vars) const
 	return std::vector<int>(vars.size(),0);
 }
 
-void Differential::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
+void Differential::Homogenize(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/)
 {
 	
 }
 
-bool Differential::IsHomogeneous(std::shared_ptr<Variable> const& v) const
+bool Differential::IsHomogeneous(std::shared_ptr<Variable> const& /*v*/) const
 {
 	return true;
 }
@@ -89,7 +89,7 @@ bool Differential::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 /**
 Check for homogeneity, with respect to a variable group.
 */
-bool Differential::IsHomogeneous(VariableGroup const& vars) const
+bool Differential::IsHomogeneous(VariableGroup const& /*vars*/) const
 {
 	return true;
 }

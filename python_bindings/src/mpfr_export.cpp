@@ -267,7 +267,7 @@ namespace bertini{
 			def("polar",pooolar, "construct from polar form");
 			// def("norm",&T::norm);
 
-			T (*conjjj)(const T&) = &boost::multiprecision::conj;
+			T (*conjjj)(const T&) = +[](const T& x) -> T { return boost::multiprecision::conj(x); };
 			def("conj",conjjj, "complex conjugate");
 
 			mpfr_float (*aaaarg)(const T&) = &boost::multiprecision::arg;
@@ -401,12 +401,20 @@ namespace bertini{
 			.def(GreatLessVisitor<T,int>())
 			.def(GreatLessVisitor<T,double>())
 
+			.def(EqualitySelfVisitor<T>())
+			.def(EqualityVisitor<T, int>())
+			.def(EqualityVisitor<T, mpz_int>())
+
 			.def(RealFreeVisitor<T>())
 			;
 
 
 			eigenpy::registerNewType<T>();
-			eigenpy::registerCommonUfunc<T>();
+			eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
+			eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
+			// guarded loops (real type — orderings included); eigenpy's registerCommonUfunc
+			// loops read input slots unguarded and crash on never-written np.zeros/np.empty slots.
+			eigenpy::registerGuardedUfunct<T, true>();
 
 			// you can convert from integer types with no fear
 			eigenpy::registerCast<long,T>(true);
@@ -482,10 +490,16 @@ namespace bertini{
 			.def(TranscendentalVisitor<T>())
 
 			.def(PrecisionVisitor<T>())
+
+			.def(EqualitySelfVisitor<T>())
+			.def(EqualityVisitor<T, mpfr_float>())
+			.def(EqualityVisitor<T, int>())
 			;
 
 
 			eigenpy::registerNewType<T>();
+			eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
+			eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
 			eigenpy::registerUfunct_without_comparitors<T>();
 
 

@@ -405,7 +405,7 @@ namespace bertini{
 			}
 
 
-			const unsigned GetCurrentPrecision() const
+			unsigned GetCurrentPrecision() const
 			{
 				return current_precision_;
 			}
@@ -498,7 +498,7 @@ namespace bertini{
 				if (reinitialize_stepsize_)
 				{
 					mpfr_float segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
-					SetStepSize(min(NumTraits<mpfr_float>::FromRational(Get<Stepping>().initial_step_size, current_precision_),segment_length));
+					SetStepSize(min(mpfr_float(Get<Stepping>().initial_step_size, current_precision_),segment_length));
 				}
 
 				// populate the current space value with the start point, in appropriate precision
@@ -612,14 +612,14 @@ namespace bertini{
 				// the current precision is the precision of the output solution point.
 				if (current_precision_==DoublePrecision())
 				{
-					unsigned num_vars = GetSystem().NumVariables();
+					unsigned num_vars = static_cast<unsigned>(GetSystem().NumVariables());
 					solution_at_endtime.resize(num_vars);
 					for (unsigned ii=0; ii<num_vars; ii++)
 						solution_at_endtime(ii) = mpfr_complex(std::get<Vec<dbl> >(current_space_)(ii));
 				}
 				else
 				{
-					unsigned num_vars = GetSystem().NumVariables();
+					unsigned num_vars = static_cast<unsigned>(GetSystem().NumVariables());
 					solution_at_endtime.resize(num_vars);
 					for (unsigned ii=0; ii<num_vars; ii++)
 					{
@@ -810,8 +810,8 @@ namespace bertini{
 			SuccessCode AdjustAMPStepSuccess() const
 			{
 				// TODO: think about why we consider reducing the stepsize?  this is despite documentation stating that it can only increase
-				mpfr_float min_stepsize = current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_fail_factor, current_precision_);
-				mpfr_float max_stepsize = min( current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_success_factor, current_precision_),  NumTraits<mpfr_float>::FromRational(Get<Stepping>().max_step_size, current_precision_));
+				mpfr_float min_stepsize = current_stepsize_ * mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_);
+				mpfr_float max_stepsize = min( current_stepsize_ * mpfr_float(Get<Stepping>().step_size_success_factor, current_precision_),  mpfr_float(Get<Stepping>().max_step_size, current_precision_));
 
 
 				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexT>();
@@ -915,7 +915,6 @@ namespace bertini{
 			template<typename ComplexT>
 			SuccessCode AMPCriterionError() const
 			{
-				using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
 				unsigned min_next_precision; // sure, i could use a trigraph here, but it'd be terrible
 				if (current_precision_==DoublePrecision())
@@ -925,14 +924,14 @@ namespace bertini{
 
 
 				mpfr_float min_stepsize = MinStepSizeForPrecision(current_precision_, abs(current_time_ - endtime_));
-				mpfr_float max_stepsize = current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_fail_factor,current_precision_);  // Stepsize decreases.
+				mpfr_float max_stepsize = current_stepsize_ * mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_);  // Stepsize decreases.
 
 				if (min_stepsize > max_stepsize)
 				{
 					// stepsizes are incompatible, must increase precision
 					next_precision_ = min_next_precision;
 					// decrease stepsize somewhat less than the fail factor
-					next_stepsize_ = max(current_stepsize_ * (1+NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_fail_factor,current_precision_))/2, min_stepsize);
+					next_stepsize_ = max(current_stepsize_ * (1+mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_))/2, min_stepsize);
 				}
 				else
 				{
@@ -945,9 +944,8 @@ namespace bertini{
 					                             digits_final_
 					                             );
 
-						unsigned a = ceil(digits_B - (predictor_order_+1)* -log10(max_stepsize)/Get<NewtonConfig>().max_num_newton_iterations).convert_to<unsigned>();
-
-					unsigned max_precision = max(min_precision, a);
+					// NOTE: a previously-computed local `max_precision = max(min_precision, ceil(digits_B - (predictor_order_+1)*-log10(max_stepsize)/max_newton_its))`
+					// was never used; the maximum precision passed below comes from the precision config.
 
 					try {
 						MinimizeTrackingCost(next_precision_, next_stepsize_,

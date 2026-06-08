@@ -135,7 +135,8 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, bertini::endgame::EndgameConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::EndgameConfig(), Skipper>
 			{
 				using T = double;
-				using R = mpq_rational;
+				using R = mpq_rational; // exact decimal-to-rational, no floating-point precision to go stale
+
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "EndgameConfig")
 				{
@@ -152,16 +153,16 @@ namespace bertini {
 					using boost::spirit::lexeme;
 					using boost::spirit::as_string;
 					using boost::spirit::ascii::no_case;
-					
-					
-					
+
+
+
 					std::string samplefactor_name = "samplefactor";
 					std::string numpoints_name = "numsamplepoints";
 					std::string mintrack_name = "nbhdradius";
-					
-					
+
+
 					root_rule_.name("config::Endgame");
-					
+
 					root_rule_ = ((sample_factor_[phx::bind( [this](bertini::endgame::EndgameConfig & S, R num)
 															{
 																S.sample_factor = num;
@@ -174,18 +175,18 @@ namespace bertini {
 															  {
 																  S.num_sample_points = num;
 															  }, _val, _1 )])
-								  
+
 								  >> -no_setting_)
 					| no_setting_;
-					
-					
+
+
 					all_names_ = (no_case[samplefactor_name] >> ':') | (no_case[numpoints_name] >> ':')| (no_case[mintrack_name] >> ':');
-					
+
 					sample_factor_.name("sample_factor_");
 					sample_factor_ = *(char_ - all_names_) >> (no_case[samplefactor_name] >> ':')
-					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string str)
+					>> mpfr_rules.rational[phx::bind( [](R & num, std::string const& str)
 														   {
-															   num = bertini::NumTraits<double>::FromString(str);
+															   num = bertini::NumTraits<R>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					min_track_.name("min_track_");

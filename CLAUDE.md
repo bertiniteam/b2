@@ -120,13 +120,9 @@ The project has three layers, built in order:
 
 ### Linux wheel test coverage
 
-Linux wheels are built inside a `manylinux_2_28` container (AlmaLinux 8). That container ships **MPFR 3.1.6**, which is incompatible with the `mpfr_complex` numpy dtype: freshly `malloc`'d array slots may have garbage non-null `_mpfr_d` pointers, causing `MPFR_ASSERTN` → SIGABRT/SIGSEGV in multiple test files. The full pytest suite therefore runs only on **macOS and Windows host runners**. Linux CI uses a basic import smoke test only:
+Linux wheels are built inside a `manylinux_2_34` container (AlmaLinux 9, MPFR 4.1; set via `CIBW_MANYLINUX_X86_64_IMAGE`). The **full pytest suite runs on all three platforms** — on Linux it runs *inside* that container via `CIBW_TEST_COMMAND_LINUX`, and on macOS/Windows via the host-runner test jobs.
 
-```yaml
-CIBW_TEST_COMMAND_LINUX: "python -c 'import bertini; print(bertini.__version__)'"
-```
-
-See `docs/adr/0003-manylinux-no-full-pytest.md` for the full diagnosis and the recipe to restore full Linux testing once the `setitem` specialization in `python_bindings/include/eigenpy_interaction.hpp` is implemented.
+This was not always so: for a while Linux ran an import smoke test only, because the suite was SIGABRT/SIGSEGV-crashing — a crash *misattributed* to the older `manylinux_2_28` container's MPFR 3.1.6. The real cause is a **version-independent** bug (uninitialized `mpfr`/`mpc` numpy slots), now fixed in the bindings. Do **not** try to fix Linux test crashes by bumping MPFR or the manylinux image (that was tried and does not work) or by building MPFR from source (specifically out of bounds). See `docs/adr/0006-eigenpy-uninitialized-numpy-slot-guards.md` for the fix and `docs/adr/0003-manylinux-no-full-pytest.md` for the (now reversed) smoke-test stopgap and its history.
 
 ## Python Bindings — Known Pitfalls
 

@@ -33,6 +33,7 @@
 
 #include "bertini2/detail/typelist.hpp"
 #include "bertini2/common/config.hpp"
+#include "bertini2/mpfr_extensions.hpp"
 
 
 namespace bertini{ namespace endgame{
@@ -107,7 +108,7 @@ namespace bertini{ namespace endgame{
 		unsigned num_sample_points = 3; //NumSamplePoints default = 2
 		T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
 
-		mpq_rational sample_factor = mpq_rational(1,2); //SampleFactor
+		mpq_rational sample_factor{1, 2}; //SampleFactor — mpq_rational: exact, no floating-point precision to go stale
 		
 		unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
 

@@ -1,103 +1,74 @@
-# ADR-0003: Linux wheel CI uses import smoke test only; full pytest runs on macOS/Windows
+# ADR-0003: Linux wheel CI temporarily ran an import smoke test only (now reversed)
 
-**Status:** Accepted  
-**Date:** 2026-06-07
+**Status:** Reversed 2026-06-08 — full Linux pytest restored and **confirmed green** on
+x86_64 (run 27144247164: full suite `219 passed` inside the manylinux_2_34 container, all
+platforms × py 3.10–3.14). The blocking crashes were fixed per ADR-0006 (uninitialized
+slots / `dotfunc`) and ADR-0008 (writable-Ref corruption of `track_path`'s `end_time`).
+Originally Accepted 2026-06-07.
 
-## Context
+> **Read this first (the short version).** For a period, the Linux wheel job ran only
+> an `import bertini` smoke test instead of the full pytest suite, because the suite
+> was crashing (SIGABRT/SIGSEGV) in CI. The crash was **first blamed on the container's
+> old MPFR (3.1.6)**, but that was a **misdiagnosis**: the real cause is a
+> version-independent bug — uninitialized `mpfr`/`mpc` numpy slots — now fixed in the
+> bindings (**ADR-0006**). The crash reproduces on MPFR 4.x and even locally. The
+> stopgap below has therefore been reversed; the full suite runs again.
 
-The `manylinux_2_28` Docker image (used by cibuildwheel for PyPI-compatible Linux
-wheels) is based on AlmaLinux 8 and ships:
+## What actually happened (timeline)
 
-```
-mpfr-devel-3.1.6-1.el8.x86_64
-```
+1. **Original image:** `manylinux_2_28` (AlmaLinux 8, MPFR **3.1.6**). The full pytest
+   suite SIGABRTed here. Because MPFR 3.1.6 has always-on `MPFR_ASSERTN`, the crash
+   fired reliably, and it was *attributed* to MPFR 3.1.6.
+2. **Stopgap (this ADR's original decision):** replace the Linux pytest run with an
+   import smoke test so the build could go green, with the full suite still covered on
+   macOS and Windows host runners.
+3. **Image bumps that did NOT fix it:** the image was moved to `manylinux_2_34`
+   (AlmaLinux 9, MPFR 4.1), then briefly `2_39`, and MPFR was even built from source —
+   all in an attempt to "fix the SIGABRT" by getting a newer MPFR. None of it worked,
+   because the bug is not MPFR-version dependent. Building MPFR from source was reverted
+   (see commit `48afd397`); the image settled on **`manylinux_2_34`**, which is what CI
+   uses today (`CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34`).
+4. **Real fix:** the uninitialized-slot bug was found and fixed in the eigenpy bindings
+   — see **ADR-0006**. It is version-agnostic.
+5. **Reversal (this ADR):** the full pytest suite was restored as
+   `CIBW_TEST_COMMAND_LINUX` (with `CIBW_TEST_REQUIRES_LINUX: "pytest numpy"`), so it
+   now runs inside the `manylinux_2_34` container — the in-container proof of the
+   ADR-0006 fix.
 
-from the AlmaLinux 8 yum repos. This is MPFR **3.1.6**. The conda-based local and
-CI macOS/Windows environments use MPFR **4.x**.
+> **Note on the merge artifact:** for a while `build_and_test.yml` and this ADR said
+> "manylinux_2_28 / MPFR 3.1.6" while the live image was already `manylinux_2_34`. That
+> contradiction came from a merge that combined the feature branch's `2_34` image with
+> develop's smoke-test comments (written when the image was still `2_28`). Corrected
+> 2026-06-08.
 
-### The crash mechanism
+## Root cause (summary; full mechanism in ADR-0006)
 
-Numpy allocates array backing memory via `malloc`, which does not zero-initialize.
-In the cibuildwheel multi-version build environment (where multiple Python versions
-build concurrently), `malloc` frequently returns non-zero memory.
+An all-zero `mpfr_t`/`mpc_t` is Boost.Multiprecision's *uninitialized sentinel*, not a
+valid zero. numpy zero-fills fresh user-dtype buffers (`NPY_NEEDS_INIT`), so any code
+that **reads** a never-written slot and hands it to libmpfr/libmpc crashes (SIGSEGV);
+and when the zero-fill guarantee is violated by malloc-dirty memory, a **write** onto a
+garbage non-null `_mpfr_d` defeats BMP's null check and aborts (SIGABRT via
+`MPFR_ASSERTN`). The MPFR version only affected *how reliably* the SIGABRT fired, not
+whether the bug existed. ADR-0006 documents the three guards (getitem heal, setitem
+zero-init, guarded ufunc/cast loops).
 
-When a numpy array of `mpfr_complex` is constructed (`np.array([mpfr_complex(0)] * n)`),
-eigenpy's default `setitem` does:
+## Decision (reversed)
 
-```cpp
-T& dest = *static_cast<T*>(dest_ptr);  // raw numpy slot — may have garbage _mpfr_d
-dest = src;                              // Boost.Multiprecision operator=
-```
-
-`mpc_complex_imp::operator=` protects against uninitialized destinations by checking:
-
-```cpp
-if (m_data[0].re[0]._mpfr_d == nullptr)
-    mpc_init2(m_data, ...);   // safe path: initialize before use
-```
-
-The null check is the only guard. If `_mpfr_d` is non-null garbage (from malloc
-returning non-zero memory), the check passes, `mpc_init2` is skipped, and `mpc_set`
-is called on garbage → MPFR's internal `MPFR_ASSERTN` fires → `abort()` (SIGABRT).
-
-MPFR 3.1.6 has always-on `MPFR_ASSERTN`. MPFR 4.x may behave differently or the
-local allocator may happen to return zeros more reliably; local tests pass.
-
-Multiple test files are affected: `amptracking_test.py`, `cauchy_endgame_test.py`,
-and likely others that construct numpy arrays of `mpfr_complex`.
-
-The problem is in CI only. Installed wheels work correctly for users who have MPFR 4.x.
-The manylinux wheel bundles the code; users bring their own MPFR at runtime.
-
-### What was tried
-
-1. Skipping `amptracking_test.py` — the next file (`cauchy_endgame_test.py`) crashed.
-2. Skipping both — the scope of affected files was unknown and growing.
-
-### The proper fix (not yet implemented)
-
-Add a `setitem` specialization in `python_bindings/include/eigenpy_interaction.hpp`
-for `mpfr_complex` that zero-initializes the destination slot before copy-assigning:
-
-```cpp
-std::memset(dest_ptr, 0, sizeof(NumT));
-// Now _mpfr_d == nullptr, so operator= will call mpc_init2 before mpc_set.
-dest = src;
-```
-
-This mirrors the existing `getitem` specialization which already handles uninitialized
-slots via lazy-init. The cost is a potential memory leak for slots that were previously
-initialized (old mpfr allocation not freed before memset), which is acceptable in tests.
-
-## Decision
-
-Replace the full pytest suite in `CIBW_TEST_COMMAND_LINUX` with a basic import smoke
-test:
+Run the full suite on Linux again:
 
 ```yaml
-CIBW_TEST_COMMAND_LINUX: "python -c 'import bertini; print(bertini.__version__)'"
+CIBW_TEST_REQUIRES_LINUX: "pytest numpy"
+CIBW_TEST_COMMAND_LINUX: "cd {project} && python -m pytest python/test/ -q"
 ```
-
-Remove `CIBW_TEST_REQUIRES_LINUX: "pytest numpy"`.
-
-The full Python test suite (140+ tests) continues to run on:
-- **macOS host runners** via the `test_wheels_linux_macos` job (MPFR 4.x via Homebrew)
-- **Windows host runners** via `test_windows_wheels` (MPFR 4.x via conda)
-
-The smoke test verifies that the wheel installs and the extension module loads without
-crashing — sufficient to catch packaging and linking regressions.
 
 ## Consequences
 
-- **Linux CI passes.** The MPFR 3.1.6 / malloc crash no longer blocks the build.
-- **Reduced coverage in manylinux.** Python test regressions that only manifest with
-  MPFR 3.1.6 will not be caught by CI. This is a real gap, but MPFR 3.1.6 is EOL
-  and not used by any target user environment.
-- **Full coverage maintained.** macOS and Windows run the complete pytest suite.
-- **Reversible.** When the `setitem` specialization is implemented (see above), restore:
-  ```yaml
-  CIBW_TEST_REQUIRES_LINUX: "pytest numpy"
-  CIBW_TEST_COMMAND_LINUX: "cd {project} && python -m pytest python/test/ -q"
-  ```
-- **Do not run pytest in manylinux** until the `setitem` specialization is in place.
-  Partial ignores are not a solution — the affected test file list is not bounded.
+- **Full Linux coverage restored**, inside `manylinux_2_34` — the harshest realistic
+  proof of the ADR-0006 fix (a real wheel, a real container, a real `import`).
+- **Fallback if it regresses:** revert to the smoke test —
+  `CIBW_TEST_COMMAND_LINUX: "python -c 'import bertini; print(bertini.__version__)'"`
+  and drop `CIBW_TEST_REQUIRES_LINUX`. This is a last resort: a green smoke test would
+  again hide real Python regressions on Linux.
+- **Do not "fix" Linux test crashes by bumping MPFR or the manylinux image.** That was
+  tried and does not address the root cause; the bindings guards (ADR-0006) do. Building
+  MPFR from source in CI is specifically out of bounds.

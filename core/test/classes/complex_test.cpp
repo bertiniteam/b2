@@ -499,7 +499,6 @@ BOOST_AUTO_TEST_CASE(complex_argument)
 
 BOOST_AUTO_TEST_CASE(complex_make_random_50)
 {
-	using mpfr_float = bertini::mpfr_float;
 	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);  
 	
 	bertini::mpfr_complex z = bertini::multiprecision::rand();
@@ -510,7 +509,6 @@ BOOST_AUTO_TEST_CASE(complex_make_random_50)
 
 BOOST_AUTO_TEST_CASE(complex_make_random_100)
 {
-	using mpfr_float = bertini::mpfr_float;
 	DefaultPrecision(100);  
 	bertini::mpfr_complex z = bertini::multiprecision::rand();
 }

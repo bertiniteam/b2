@@ -92,9 +92,6 @@ namespace bertini {
 		static
 		HeldType Make(Ts&& ...ts )
 		{
-			ObjT* obj = new ObjT(ts...);
-
-			// held_data_.push_back(PointerPolicy::DefaultConstructed());
 			auto thing = std::shared_ptr<ObjT>(new ObjT(ts...));
 			held_data_.push_back(thing);
 			return held_data_.back();

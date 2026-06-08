@@ -191,7 +191,7 @@ std::shared_ptr<Node> SumOperator::Differentiate(std::shared_ptr<Variable> const
 {
 	unsigned int counter = 0;
 	std::shared_ptr<Node> ret_sum = Zero();
-	for (int ii = 0; ii < operands_.size(); ++ii)
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
 	{
 		auto converted = std::dynamic_pointer_cast<Number>(operands_[ii]);
 		if (converted)
@@ -381,7 +381,7 @@ dbl SumOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) con
 void SumOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
 	evaluation_value = dbl(0);
-	for(int ii = 0; ii < operands_.size(); ++ii)
+	for(size_t ii = 0; ii < operands_.size(); ++ii)
 	{
 		if(signs_[ii])
 		{
@@ -416,7 +416,7 @@ void SumOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<V
 		evaluation_value = -temp_mp_;
 	}
 
-	for(int ii = 1; ii < operands_.size(); ++ii)
+	for(size_t ii = 1; ii < operands_.size(); ++ii)
 	{
 		if(signs_[ii])
 		{
@@ -546,7 +546,7 @@ unsigned MultOperator::EliminateZeros()
 
 	if (have_a_zero) // if there is a single zero, the whole thing should collapse.
 	{
-		unsigned num_eliminated = operands_.size()-1;
+		unsigned num_eliminated = static_cast<unsigned>(operands_.size()-1);
 		operands_.clear(); mult_or_div_.clear();
 		AddOperand(Integer::Make(0), true);
 		return num_eliminated;
@@ -719,7 +719,7 @@ std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> cons
 	
 	unsigned term_counter {0};
 	// this loop implements the generic product rule, perhaps inefficiently.
-	for (int ii = 0; ii < operands_.size(); ++ii)
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
 	{
 		auto local_derivative = operands_[ii]->Differentiate(v);
 		
@@ -733,7 +733,7 @@ std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> cons
 		
 		// create the product of the remaining terms
 		auto term_ii = MultOperator::Make(local_derivative);
-		for (int jj = 0; jj < operands_.size(); ++jj)
+		for (size_t jj = 0; jj < operands_.size(); ++jj)
 		{
 			if(jj != ii)
 				term_ii->AddOperand(operands_[jj],mult_or_div_[jj]);
@@ -874,7 +874,7 @@ dbl MultOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) co
 void MultOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
 	evaluation_value = dbl(1);
-	for(int ii = 0; ii < operands_.size(); ++ii)
+	for(size_t ii = 0; ii < operands_.size(); ++ii)
 	{
 		if(mult_or_div_[ii])
 		{
@@ -908,7 +908,7 @@ void MultOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<
 		evaluation_value = static_cast<mpfr_float>(1)/temp_mp_;
 	}
 
-	for(int ii = 1; ii < operands_.size(); ++ii)
+	for(size_t ii = 1; ii < operands_.size(); ++ii)
 	{
 		operands_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 		if(mult_or_div_[ii])
@@ -988,7 +988,7 @@ int PowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 				if (base_deg<0)
 					return -1;
 				else
-					return base_deg*std::round(real(exp_val));
+					return base_deg*static_cast<int>(std::round(real(exp_val)));
 			}
 			
 		}

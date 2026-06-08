@@ -264,6 +264,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 {
+	bertini::SetGlobalSeed(1u); // deterministic random TotalDegree values; see ADR-0003
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
@@ -341,6 +342,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 {
+	bertini::SetGlobalSeed(1u); // deterministic random TotalDegree values; see ADR-0003
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::System sys;
@@ -384,6 +386,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 // this one differs from the above only in that the target system was homogenized and patched
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 {
+	bertini::SetGlobalSeed(1u); // deterministic random TotalDegree values; see ADR-0003
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::System sys;
@@ -410,14 +413,23 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 	// evaluate the start system at that point.
 	//
 	// the function values must be near 0
+	const auto& vs = TD.RandomValues();
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		auto start = TD.StartPoint<dbl>(ii);
 		auto function_values = TD.Eval(start);
 
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
-			BOOST_CHECK(abs(function_values(jj)) <
-				1000*relaxed_threshold_clearance_d);
+		{
+			// Scale-relative residual.  A start point is an exact root of x^d - r, so the
+			// residual of natural function jj scales with |r_jj|; comparing raw |f| against
+			// a fixed absolute threshold is scale-naive and flakes when a random r happens
+			// to be large.  Rows with jj >= vs.size() are patch/homogenization equations of
+			// O(1) scale, so a unit scale (absolute floor) is correct for them.
+			double scale = (jj < vs.size()) ? abs(vs[jj]->Eval<dbl>()) : 1.0;
+			if (scale < 1.0) scale = 1.0;
+			BOOST_CHECK(abs(function_values(jj)) < scale*1000*relaxed_threshold_clearance_d);
+		}
 	}
 
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
@@ -428,7 +440,10 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 		{
-			BOOST_CHECK(abs(function_values(jj)) < threshold_clearance_mp);
+			// scale-relative, as in the double-precision loop above
+			mpfr_float scale = (jj < vs.size()) ? abs(vs[jj]->Eval<mpfr>()) : mpfr_float(1);
+			if (scale < 1) scale = mpfr_float(1);
+			BOOST_CHECK(abs(function_values(jj)) < scale*threshold_clearance_mp);
 		}
 	}
 
@@ -539,6 +554,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 {
+	bertini::SetGlobalSeed(1u); // deterministic random TotalDegree values; see ADR-0003
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 

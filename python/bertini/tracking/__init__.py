@@ -36,13 +36,59 @@ Tracking-specific things -- trackers, configs
 from bertini._pybertini import tracking as _pybtracking
 from bertini._pybertini.tracking import *
 
-# trackers gain configure()/config_names() built on their type-list config interface.
-from ..config import enhance_owners
+# trackers gain configure()/config_names() built on their type-list config interface;
+# configs gain update()/to_dict()/from_dict()/repr/eq.
+from ..config import enhance_owners, enhance_all
 enhance_owners(_pybtracking)
+enhance_all(_pybtracking)
 
 __all__ = dir(_pybtracking)
 
 
-AMPTracker.observers = dir(_pybtracking.observers.amp)
-DoublePrecisionTracker.observers = dir(_pybtracking.observers.double)
-MultiplePrecisionTracker.observers = dir(_pybtracking.observers.multiple)
+_obs_amp = _pybtracking.observers.amp
+_obs_dbl = _pybtracking.observers.double
+_obs_mul = _pybtracking.observers.multiple
+
+AMPTracker.observers = _obs_amp
+DoublePrecisionTracker.observers = _obs_dbl
+MultiplePrecisionTracker.observers = _obs_mul
+
+
+def _make_callback_observer(AbstractClass):
+    class CallbackObserver(AbstractClass):
+        """Observer that routes events to registered Python callables.
+
+        Usage::
+
+            obs = CallbackObserver()
+            obs.on(observers.amp.TrackingStarted, lambda e: print("tracking started"))
+            obs.on(observers.amp.PrecisionChanged,
+                   lambda e: print(e.previous(), "->", e.next()))
+            tracker.add_observer(obs)
+            tracker.track_path(...)
+            tracker.remove_observer(obs)
+        """
+        def __init__(self):
+            super().__init__()
+            self._callbacks = {}
+
+        def on(self, event_type, callback):
+            """Register *callback* to be called when an event of *event_type* arrives.
+
+            Returns self for chaining.
+            """
+            self._callbacks.setdefault(event_type, []).append(callback)
+            return self
+
+        def Observe(self, event):
+            for event_type, callbacks in self._callbacks.items():
+                if isinstance(event, event_type):
+                    for cb in callbacks:
+                        cb(event)
+
+    return CallbackObserver
+
+
+_obs_amp.CallbackObserver = _make_callback_observer(_obs_amp.Abstract)
+_obs_dbl.CallbackObserver = _make_callback_observer(_obs_dbl.Abstract)
+_obs_mul.CallbackObserver = _make_callback_observer(_obs_mul.Abstract)

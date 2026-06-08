@@ -231,7 +231,7 @@ namespace bertini {
 			{
 
 			private:
-					using T = double;
+					using T = mpq_rational; // exact rational: no MPFR precision state to go stale
 					using R = mpq_rational;
 
 			public:
@@ -294,23 +294,23 @@ namespace bertini {
 					
 					max_step_size_.name("max_step_size_");
 					max_step_size_ = *(char_ - all_names_) >> (no_case[maxstep_name] >> ':')
-					>> mpfr_rules.rational[phx::bind( [this](T & num, std::string const& str)
+					>> mpfr_rules.rational[phx::bind( [](T & num, std::string const& str)
 														   {
-															   num = bertini::NumTraits<T>::FromString(str);
+															   num = bertini::NumTraits<R>::FromString(str);
 														   }, _val, _1 )] >> ';';
-					
+
 					stepsize_success_.name("stepsize_success_");
 					stepsize_success_ = *(char_ - all_names_) >> (no_case[stepsuccess_name] >> ':')
-					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string const& str)
+					>> mpfr_rules.rational[phx::bind( [](R & num, std::string const& str)
 														   {
-															num = bertini::NumTraits<double>::FromString(str);
+															   num = bertini::NumTraits<R>::FromString(str);
 														   }, _val, _1 )] >> ';';
-					
+
 					stepsize_fail_.name("stepsize_fail_");
 					stepsize_fail_ = *(char_ - all_names_) >> (no_case[stepfail_name] >> ':')
-					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string const& str)
+					>> mpfr_rules.rational[phx::bind( [](R & num, std::string const& str)
 														   {
-															   num = bertini::NumTraits<double>::FromString(str);
+															   num = bertini::NumTraits<R>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					steps_increase_.name("steps_increase_");

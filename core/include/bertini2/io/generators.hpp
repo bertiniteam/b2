@@ -79,7 +79,7 @@ namespace bertini{
 		struct BertiniNumPolicy : public karma::real_policies<Num>
 		{
 		    // we want the numbers always to be in scientific format
-		    static int floatfield(Num n) { return std::ios_base::scientific; }
+		    static int floatfield(Num /*n*/) { return std::ios_base::scientific; }
 
 		    static unsigned int precision(Num) {
 		        return std::numeric_limits<Num>::max_digits10;
@@ -90,7 +90,7 @@ namespace bertini{
 		struct BertiniNumPolicy<mpfr_float>  : public karma::real_policies<mpfr_float>
 		{
 		    // we want the numbers always to be in scientific format
-		    static int floatfield(mpfr_float n) { return std::ios_base::scientific; }
+		    static int floatfield(mpfr_float /*n*/) { return std::ios_base::scientific; }
 
 		    static unsigned int precision(mpfr_float const& x) {
 		        return x.precision();

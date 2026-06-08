@@ -6,10 +6,8 @@ import bertini.system.start_system as ss
 from bertini.function_tree.symbol import Rational
 
 from bertini.endgame import *
-from bertini.endgame.config import *
 
 from bertini.tracking import *
-from bertini.tracking.config import *
 
 from bertini.multiprec import Float as mpfr_float
 from bertini.multiprec import Complex as mpfr_complex

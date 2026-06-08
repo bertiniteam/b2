@@ -241,7 +241,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<NaryOperator>(*this);
 			ar & signs_;
 		}
@@ -341,7 +341,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 	};
@@ -507,7 +507,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<NaryOperator>(*this);
 			ar & mult_or_div_;
 		}
@@ -657,7 +657,7 @@ namespace node{
 		
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Operator>(*this);
 			ar & base_;
 			ar & exponent_;
@@ -757,7 +757,7 @@ namespace node{
 		/**
 		 Constructor, passing in the Node you want as the base, and the integer you want for the power.
 		 */
-		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p) : exponent_(p), UnaryOperator(N)
+		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p) : UnaryOperator(N), exponent_(p)
 		{}
 
 		
@@ -799,7 +799,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 			ar & exponent_;
 		}
@@ -886,7 +886,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 	};
@@ -962,7 +962,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 	};
@@ -1028,7 +1028,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 	};
@@ -1185,22 +1185,22 @@ namespace node{
 		return SumOperator::Make(lhs,true,rhs,false);
 	}
 	
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_float rhs)
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Float::Make(rhs), false);
 	}
-	
-	inline std::shared_ptr<Node> operator-(mpfr_float lhs,  std::shared_ptr<Node> rhs)
+
+	inline std::shared_ptr<Node> operator-(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Float::Make(lhs), true, rhs, false);
 	}
 
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_complex rhs)
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Float::Make(rhs), false);
 	}
-	
-	inline std::shared_ptr<Node> operator-(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
+
+	inline std::shared_ptr<Node> operator-(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Float::Make(lhs), true, rhs, false);
 	}
@@ -1247,22 +1247,22 @@ namespace node{
 	}
 	
 	
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_float rhs)
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
 	{
 		return MultOperator::Make(lhs,Float::Make(rhs));
 	}
 
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_complex rhs)
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
 	{
 		return MultOperator::Make(lhs,Float::Make(rhs));
 	}
 	
-	inline std::shared_ptr<Node> operator*(mpfr_float lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator*(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Float::Make(lhs), rhs);
 	}
 
-	inline std::shared_ptr<Node> operator*(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator*(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Float::Make(lhs), rhs);
 	}

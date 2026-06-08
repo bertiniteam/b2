@@ -312,7 +312,7 @@ public:
 				return std::ref(sys);
 			}
 
-			void SystemSetup(std::string const& path_variable_name) const
+			void SystemSetup(std::string const& /*path_variable_name*/) const
 			{ }
 
 		};

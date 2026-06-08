@@ -93,18 +93,37 @@ def config_key(cls):
 # config-class enhancement
 # ---------------------------------------------------------------------------
 
+def _coerced_setattr(obj, key, value):
+    """setattr, retrying strings as multiprecision Floats.
+
+    Strings are the blessed noise-free way to express numeric settings
+    (e.g. max_step_size="0.05"); plain Python floats stay rejected by policy,
+    since 0.05 the double is not 1/20.  Coercion is retry-on-failure so any
+    genuinely string-valued field is unaffected.
+    """
+    try:
+        setattr(obj, key, value)
+    except TypeError:
+        if not isinstance(value, str):
+            raise
+        from .multiprec import Float
+        setattr(obj, key, Float(value))
+
+
 def _make_update(fields):
     def update(self, **kwargs):
         """Set one or more fields at once; returns self so calls can chain.
 
-        Raises AttributeError on an unknown/misspelled field name.
+        Numeric fields accept strings (e.g. max_step_size="0.05"), which are
+        converted exactly to multiprecision values.  Raises AttributeError on
+        an unknown/misspelled field name.
         """
         for key, value in kwargs.items():
             if key not in fields:
                 raise AttributeError(
                     "{0} has no config field {1!r}; valid fields: {2}".format(
                         type(self).__name__, key, list(fields)))
-            setattr(self, key, value)
+            _coerced_setattr(self, key, value)
         return self
     return update
 

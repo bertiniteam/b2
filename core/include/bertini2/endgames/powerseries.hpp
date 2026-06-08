@@ -221,18 +221,22 @@ protected:
 	template<typename ComplexT>
 	void AssertSizesTimeSpace() const
 	{
+#ifndef NDEBUG
 		const auto num_sample_points = this->EndgameSettings().num_sample_points;
 		assert(std::get<SampCont<ComplexT> >(samples_).size()==std::get<TimeCont<ComplexT> >(times_).size() && "must have same number of samples in times and spaces");
 		assert(std::get<SampCont<ComplexT> >(samples_).size()>=num_sample_points && "must have sufficient number of samples");
+#endif
 	}
 
 	template<typename ComplexT>
 	void AssertSizesTimeSpaceDeriv() const
 	{
+#ifndef NDEBUG
 		const auto num_sample_points = this->EndgameSettings().num_sample_points;
 		assert(std::get<SampCont<ComplexT> >(samples_).size()==std::get<TimeCont<ComplexT> >(times_).size() && "must have same number of samples in times and spaces");
 		assert(std::get<SampCont<ComplexT> >(samples_).size()==std::get<SampCont<ComplexT> >(derivatives_).size() && "must have same number of samples in derivatives and spaces");
 		assert(std::get<SampCont<ComplexT> >(samples_).size()>=num_sample_points && "must have sufficient number of samples");
+#endif
 	}
 
 public:
@@ -297,7 +301,7 @@ public:
 
 	explicit PowerSeriesEndgame(TrackerType const& tr, 
 	                            const ConfigsAsTuple& settings )
-      : BaseEGT(tr, settings), EndgamePrecPolicyBase<TrackerType>(tr)
+      : EndgamePrecPolicyBase<TrackerType>(tr), BaseEGT(tr, settings)
    	{}
 
     template< typename... Ts >
@@ -384,7 +388,6 @@ public:
 
 		const auto& samples = std::get<SampCont<ComplexT> >(samples_);
 		const auto& times   = std::get<TimeCont<ComplexT> >(times_);
-		const auto& derivatives = std::get<SampCont<ComplexT> >(derivatives_);
 
 		AssertSizesTimeSpaceDeriv<ComplexT>();
 		
@@ -407,7 +410,6 @@ public:
 		TimeCont<ComplexT> s_times(num_pts);
 		SampCont<ComplexT> s_derivatives(num_pts);
 
-		auto offset = samples.size() - num_pts - 1; // -1 here to shift away from the back of the container
 		for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 		{			
 			using std::pow;
@@ -492,7 +494,7 @@ public:
 		RealT c = static_cast<RealT>(cycle_num);
 		RealT one_over_c = 1/c;
 
-		unsigned offset_t, offset_d;
+		size_t offset_t, offset_d;
 		if (shift_from == ContStart::Back)
 		{
 			offset_t = times.size()-num_pts;
@@ -575,7 +577,6 @@ public:
 		
 		auto& samples = std::get<SampCont<ComplexT> >(samples_);
 		auto& times   = std::get<TimeCont<ComplexT> >(times_);
-		auto& derivatives  = std::get<SampCont<ComplexT> >(derivatives_);
 
 		AssertSizesTimeSpaceDeriv<ComplexT>();
 
@@ -646,7 +647,7 @@ public:
 	template<typename ComplexT>
 	SuccessCode RunImpl(const ComplexT & start_time, const Vec<ComplexT> & start_point, ComplexT const& target_time)
 	{
-		if (start_point.size()!=this->GetSystem().NumVariables())
+		if (start_point.size()!=static_cast<Eigen::Index>(this->GetSystem().NumVariables()))
 		{
 			std::stringstream err_msg;
 			err_msg << "number of variables in start point for PSEG, " << start_point.size() << ", must match the number of variables in the system, " << this->GetSystem().NumVariables();
@@ -664,12 +665,11 @@ public:
 		// unpack some references for easy use
 		auto& samples = std::get<SampCont<ComplexT> >(samples_);
 		auto& times   = std::get<TimeCont<ComplexT> >(times_);
-		auto& derivatives  = std::get<SampCont<ComplexT> >(derivatives_);
 		Vec<ComplexT>& latest_approx = this->final_approximation_;
 		Vec<ComplexT>& prev_approx = this->previous_approximation_;
 
 		// this is for estimating a ... norm?
-		SetRandVec<ComplexT>(start_point.size());	 	
+		SetRandVec<ComplexT>(static_cast<int>(start_point.size()));
 		
 		
 		auto initial_sample_success = this->ComputeInitialSamples(start_time, target_time, start_point, times, samples);
@@ -691,8 +691,8 @@ public:
 	 	if (extrapolation_code != SuccessCode::Success)
 	 		return extrapolation_code;
 
-	 	RealT norm_of_dehom_of_latest_approx;
-	 	RealT norm_of_dehom_of_prev_approx;
+	 	RealT norm_of_dehom_of_latest_approx(0); // initialized to 0 so the security check never reads indeterminate values
+	 	RealT norm_of_dehom_of_prev_approx(0);
 	 	if (this->SecuritySettings().level <= 0)
 	 	 	norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();
 

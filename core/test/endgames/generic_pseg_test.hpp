@@ -294,13 +294,13 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.SetRandVec<BCT>(samples.back().size());
+	my_endgame.SetRandVec<BCT>(static_cast<int>(samples.back().size()));
 	my_endgame.ComputeBoundOnCycleNumber<BCT>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
 
-	auto first_upper_bound = my_endgame.UpperBoundOnCycleNumber();
+	[[maybe_unused]] auto first_upper_bound = my_endgame.UpperBoundOnCycleNumber();
 
 	//Setting up a new sample for approximation.
 	time = ComplexFromString(".0125"); //.025/2 = .0125
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 
 	my_endgame.ComputeAllDerivatives<BCT>();
 
-	my_endgame.SetRandVec<BCT>(samples.back().size());
+	my_endgame.SetRandVec<BCT>(static_cast<int>(samples.back().size()));
 	my_endgame.ComputeCycleNumber<BCT>(BCT(0));
 
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 
 	Vec<BCT> first_approx;
 	Vec<BCT> approx_1(1);
-	my_endgame.SetRandVec<BCT>(samples.back().size());
+	my_endgame.SetRandVec<BCT>(static_cast<int>(samples.back().size()));
 
 	my_endgame.ComputeAllDerivatives<BCT>();
 
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 	
 	tracker.PrecisionSetup(precision_config);
 
-	BCT sample_factor = ComplexFromString(".5");
+	[[maybe_unused]] BCT sample_factor = ComplexFromString(".5");
 	BCT origin = BCT(0);
 	Vec<BCT> x_origin(1);
 	x_origin << BCT(1);
@@ -1017,6 +1017,10 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
+	// Deterministic RNG: the endgame's internal random draws otherwise seed from
+	// std::random_device, flaking this marginal case run-to-run.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
+
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
@@ -1116,6 +1120,8 @@ values we have.
 BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
 	using namespace bertini::tracking;
+	// Deterministic RNG: random TotalDegree start system + endgame draws.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
 	DefaultPrecision(ambient_precision);
 
 	Var x = Variable::Make("x");

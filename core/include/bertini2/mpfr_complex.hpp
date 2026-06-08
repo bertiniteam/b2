@@ -64,8 +64,9 @@ using bmp::backends::mpc_complex_backend;
 #endif
 
 	inline auto DefaultPrecisionPolicy(){
-		return bmp::variable_precision_options::preserve_source_precision;
+		return bmp::variable_precision_options::preserve_related_precision;
 	}
+
 
 
 
@@ -144,6 +145,22 @@ using bmp::backends::mpc_complex_backend;
 		// with the static default. See commit 3111255b for original context.
 		mpfr_float::thread_default_precision(prec);
 		mpfr_complex::thread_default_precision(prec);
+#ifdef BMP_EXPRESSION_TEMPLATES
+		// With ET on, the default global policy for mpc_complex_backend is preserve_related_precision
+		// and for mpfr_float_backend it is preserve_target_precision. Both differ from what we want.
+		// Setting preserve_related_precision per-thread mirrors the mpc_complex_backend global default
+		// and ensures copy/construction semantics match the et_off behavior. Specifically:
+		//   - mpc_complex copy ctor uses preserve_related_precision() (>= 3) to preserve source precision
+		//   - assign_components_set_precision uses preserve_component_precision() (>= 2) to resize
+		//     a complex from real components at higher-than-default precision
+		//   - mpc_complex = mpfr_float uses preserve_component_precision() (>= 2) to resize
+		// preserve_related_precision satisfies all three thresholds.
+		// For mpfr_float, preserve_related_precision also enables source-precision-preserving copies.
+		mpfr_float::thread_default_variable_precision_options(
+			bmp::variable_precision_options::preserve_related_precision);
+		mpfr_complex::thread_default_variable_precision_options(
+			bmp::variable_precision_options::preserve_related_precision);
+#endif
 	}
 
 	// Sets thread-local precision only — does NOT write the global default_precision.

@@ -35,7 +35,7 @@ import bertini
 from bertini import System, VariableGroup
 from bertini.function_tree.symbol import Variable
 from bertini.tracking import DoublePrecisionTracker, MultiplePrecisionTracker, Predictor, SuccessCode
-from bertini.tracking.config import SteppingConfig, NewtonConfig, amp_config_from
+from bertini.tracking import SteppingConfig, NewtonConfig, amp_config_from
 
 import bertini.multiprec as mp
 from bertini.multiprec import Complex as mpfr_complex

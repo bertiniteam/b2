@@ -426,7 +426,7 @@ namespace bertini {
 		#endif
 
 			// this loop won't test entry (0,0).  it's tested separately after.
-		for (unsigned int ii = LU.rows()-1; ii > 0; ii--)
+		for (Eigen::Index ii = LU.rows()-1; ii > 0; ii--)
 		{
 			if (IsSmallValue(LU(ii,ii)))
 			{
@@ -520,7 +520,7 @@ namespace bertini {
 	inline
 	Vec<NumberType> RandomOfUnits(unsigned int size)
 	{
-		return Vec<NumberType>(size).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });
+		return Vec<NumberType>(size).unaryExpr([](NumberType const&) { return RandomUnit<NumberType>(); });
 	}
 
 }

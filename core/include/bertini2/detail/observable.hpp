@@ -37,6 +37,9 @@
 #include "bertini2/detail/observer.hpp"
 #include "bertini2/detail/events.hpp"
 
+#include <typeindex>
+#include <unordered_map>
+
 namespace bertini{
 
 	/**
@@ -58,19 +61,37 @@ namespace bertini{
 		a fresh copy notifies nobody until observers are explicitly added to it.
 		Copy-assignment likewise leaves the target's own watchers untouched.
 		*/
-		Observable(Observable const&) : current_watchers_() {}
+		Observable(Observable const&) : typed_watchers_(), untyped_watchers_() {}
 		Observable& operator=(Observable const&) { return *this; }
 
 
 		/**
 		\brief Add an observer, to observe this observable.
+
+		Observers that override SubscribedEventTypes() with a non-empty list are
+		registered in a type-indexed map so NotifyObservers only calls them for
+		events they declared interest in.  Observers returning an empty list (the
+		default) are placed in a catch-all list and receive every event.
 		*/
 		void AddObserver(AnyObserver& new_observer) const
 		{
-			if (find_if(begin(current_watchers_), end(current_watchers_), [&](const auto& held_obs)
-			                              { return &held_obs.get() == &new_observer; })==end(current_watchers_))
-				
-				current_watchers_.push_back(std::ref(new_observer));
+			auto types = new_observer.SubscribedEventTypes();
+			if (types.empty())
+			{
+				if (find_if(begin(untyped_watchers_), end(untyped_watchers_), [&](const auto& held_obs)
+				            { return &held_obs.get() == &new_observer; }) == end(untyped_watchers_))
+					untyped_watchers_.push_back(std::ref(new_observer));
+			}
+			else
+			{
+				for (auto& ti : types)
+				{
+					auto& bucket = typed_watchers_[ti];
+					if (find_if(begin(bucket), end(bucket), [&](const auto& held_obs)
+					            { return &held_obs.get() == &new_observer; }) == end(bucket))
+						bucket.push_back(std::ref(new_observer));
+				}
+			}
 		}
 
 		/**
@@ -78,47 +99,61 @@ namespace bertini{
 		*/
 		void RemoveObserver(AnyObserver& observer) const
 		{
+			auto erase_from = [&](auto& container) {
+				auto new_end = std::remove_if(container.begin(), container.end(),
+				                              [&](const auto& held_obs)
+				                              { return &held_obs.get() == &observer; });
+				container.erase(new_end, container.end());
+			};
 
-			auto new_end = std::remove_if(current_watchers_.begin(), current_watchers_.end(),
-			                              [&](const auto& held_obs)
-			                              { return &held_obs.get() == &observer; });
-
-			current_watchers_.erase(new_end, current_watchers_.end());
-
-
-			// current_watchers_.erase(std::remove(current_watchers_.begin(), current_watchers_.end(), std::ref(observer)), current_watchers_.end());
+			erase_from(untyped_watchers_);
+			for (auto& [ti, bucket] : typed_watchers_)
+				erase_from(bucket);
 		}
 
 	protected:
 
 		/**
-		\brief Sends an Event (more particularly, AnyEvent) to all watching observers of this object.
+		\brief Sends an event to observers that subscribed to its exact dynamic type,
+		then to all catch-all (untyped) observers.
 
-		This function could potentially be improved by filtering on the observer's desired event types, if known at compile time.  This could potentially be a performance bottleneck (hopefully not!) since filtering can use `dynamic_cast`ing.  One hopes this cost is overwhelmed by things like linear algebra and system evaluation.
-
-		\param e The event to emit.  Its type should be derived from AnyEvent.
+		Snapshots each observer list before iterating so that an observer calling
+		RemoveObserver(*this) inside Observe() does not invalidate the loop iterator.
 		*/
 		void NotifyObservers(AnyEvent const& e) const
 		{
-
-			for (auto& obs : current_watchers_)
+			auto it = typed_watchers_.find(std::type_index(typeid(e)));
+			if (it != typed_watchers_.end())
+			{
+				ObserverList snapshot = it->second;
+				for (auto& obs : snapshot)
+					obs.get().Observe(e);
+			}
+			ObserverList untyped_snapshot = untyped_watchers_;
+			for (auto& obs : untyped_snapshot)
 				obs.get().Observe(e);
-
 		}
 
-		void NotifyObservers(AnyEvent & e) const
+		void NotifyObservers(AnyEvent& e) const
 		{
-
-			for (auto& obs : current_watchers_)
+			auto it = typed_watchers_.find(std::type_index(typeid(e)));
+			if (it != typed_watchers_.end())
+			{
+				ObserverList snapshot = it->second;
+				for (auto& obs : snapshot)
+					obs.get().Observe(e);
+			}
+			ObserverList untyped_snapshot = untyped_watchers_;
+			for (auto& obs : untyped_snapshot)
 				obs.get().Observe(e);
 		}
-
 
 	private:
 
-		using ObserverContainer = std::vector<std::reference_wrapper<AnyObserver>>;
+		using ObserverList = std::vector<std::reference_wrapper<AnyObserver>>;
 
-		mutable ObserverContainer current_watchers_;
+		mutable std::unordered_map<std::type_index, ObserverList> typed_watchers_;
+		mutable ObserverList untyped_watchers_;
 	};
 
 } // namespace bertini

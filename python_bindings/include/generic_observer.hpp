@@ -40,7 +40,13 @@ template<typename ObsT>
 struct ObserverWrapper : ObsT, wrapper<ObsT>
 {
 
-	void Observe(AnyEvent const& e) { this->get_override("Observe")(e);}
+	// Use boost::ref so Boost.Python's to_python_indirect path is taken,
+	// which uses RTTI to find the most-derived registered event type and
+	// enables isinstance() checks in Python.  The const_cast is safe: events
+	// are short-lived temporaries and Python only reads them during the call.
+	void Observe(AnyEvent const& e) {
+		this->get_override("Observe")(boost::ref(const_cast<AnyEvent&>(e)));
+	}
 	
 }; // re: ObserverWrapper
 

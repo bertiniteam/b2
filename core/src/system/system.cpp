@@ -367,7 +367,7 @@ namespace bertini
 	{
 		auto num_functions = NumNaturalFunctions();
 		jacobian_.resize(num_functions);
-		for (int ii = 0; ii < num_functions; ++ii)
+		for (size_t ii = 0; ii < num_functions; ++ii)
 			jacobian_[ii] = Jacobian::Make(functions_[ii]->Differentiate());
 
 		is_differentiated_ = true;
@@ -381,15 +381,15 @@ namespace bertini
 
 		space_derivatives_.resize(num_functions*num_vars);
 		// again, computing these in column major, so staying with one variable at a time.
-		for (int jj = 0; jj < num_vars; ++jj)
-			for (int ii = 0; ii < num_functions; ++ii)
+		for (size_t jj = 0; jj < num_vars; ++jj)
+			for (size_t ii = 0; ii < num_functions; ++ii)
 				space_derivatives_[ii+jj*num_functions] = Function::Make(functions_[ii]->Differentiate(vars[jj]));
 
 		if (HavePathVariable())
 		{
 			const auto& t = path_variable_;
 			time_derivatives_.resize(num_functions);
-				for (int ii = 0; ii < num_functions; ++ii)
+				for (size_t ii = 0; ii < num_functions; ++ii)
 					time_derivatives_[ii] = Function::Make(functions_[ii]->Differentiate(t));
 		}
 
@@ -660,8 +660,7 @@ namespace bertini
 		is_differentiated_ = false;
 		have_ordering_ = false;
 		is_patched_ = false;
-		for (const auto& iter : v)
-			time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
+		time_order_of_variable_groups_.insert(time_order_of_variable_groups_.end(), v.size(), VariableGroupType::Ungrouped);
 	}
 
 
@@ -912,13 +911,13 @@ namespace bertini
 
 		std::vector<unsigned> s;
 
-		unsigned hom_group_counter(0), affine_group_counter(0), patch_counter(0);
+		unsigned hom_group_counter(0), affine_group_counter(0);
 		for (auto curr_grouptype : time_order_of_variable_groups_)
 		{
 			if (curr_grouptype==VariableGroupType::Homogeneous)
-				s.push_back(hom_variable_groups_[hom_group_counter++].size());
+				s.push_back(static_cast<unsigned>(hom_variable_groups_[hom_group_counter++].size()));
 			else if (curr_grouptype==VariableGroupType::Affine)
-				s.push_back(variable_groups_[affine_group_counter++].size() + static_cast<int>(have_homvars));
+				s.push_back(static_cast<unsigned>(variable_groups_[affine_group_counter++].size() + (have_homvars ? 1 : 0)));
 		}
 		return s;
 	}
@@ -976,7 +975,7 @@ namespace bertini
 
 		for (unsigned ii=0; ii < num_evaluations; ii++)
 		{	
-			Vec<ComplexT> randy = RandomOfUnits<ComplexT>(NumVariables());
+			Vec<ComplexT> randy = RandomOfUnits<ComplexT>(static_cast<unsigned>(NumVariables()));
 			Vec<ComplexT> f_vals;
 			if (HavePathVariable())
 				f_vals = Eval(randy, RandomUnit<ComplexT>());
@@ -1355,15 +1354,15 @@ namespace bertini
 					case DerivMethod::Derivatives:{
 						out << "using the Derivatives method of differentiation:" << std::endl;
 
-						for (int jj = 0; jj < s.NumVariables(); ++jj)
-							for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
+						for (size_t jj = 0; jj < s.NumVariables(); ++jj)
+							for (size_t ii = 0; ii < s.NumNaturalFunctions(); ++ii)
 							{
 								const auto& d = s.space_derivatives_[ii+jj*s.NumNaturalFunctions()];
 								out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
 							}
 
 						if (s.HavePathVariable())
-							for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
+							for (size_t ii = 0; ii < s.NumNaturalFunctions(); ++ii)
 							{
 								const auto& d = s.time_derivatives_[ii];
 								out << "jac_time_der(" << ii << ") = " << d << "\n";

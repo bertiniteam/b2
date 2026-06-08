@@ -235,7 +235,7 @@ public:
 	}
 
 	explicit EndgameBase(TrackerType const& tr, const ConfigsAsTuple& settings ) :
-      	Configured( settings ), PrecT(tr), EndgamePrecPolicyBase<TrackerType>(tr)
+      	EndgamePrecPolicyBase<TrackerType>(tr), Configured( settings ), PrecT(tr)
    	{}
 
 
@@ -368,8 +368,8 @@ public:
 
 		auto num_vars = this->GetSystem().NumVariables();
 		//start at 1, because the input point is the 0th element.
-		for(int ii=1; ii < this->template Get<EndgameConfig>().num_sample_points; ++ii)
-		{ 
+		for(unsigned ii=1; ii < this->template Get<EndgameConfig>().num_sample_points; ++ii)
+		{
 			times.emplace_back((times[ii-1] + target_time) * RealT(this->template Get<EndgameConfig>().sample_factor)); // next time is a point between the previous time and target time.
 			samples.emplace_back(Vec<ComplexT>(num_vars));											   // sample_factor gives us some point between the two, usually the midpoint.		
 

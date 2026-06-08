@@ -5,28 +5,42 @@
 🛤 Tracking configs
 ---------------------------
 
-* :class:`bertini.tracking.config.SteppingConfig`
-* :class:`bertini.tracking.config.NewtonConfig`
-* :class:`bertini.tracking.config.AMPConfig`
-* :class:`bertini.tracking.config.FixedPrecisionConfig`
+* :class:`bertini.tracking.SteppingConfig`
+* :class:`bertini.tracking.NewtonConfig`
+* :class:`bertini.tracking.AMPConfig`
+* :class:`bertini.tracking.FixedPrecisionConfig`
 
-.. autoclass:: bertini.tracking.config.SteppingConfig
+.. autoclass:: bertini.tracking.SteppingConfig
 	:noindex:
 
-.. autoclass:: bertini.tracking.config.NewtonConfig
+.. autoclass:: bertini.tracking.NewtonConfig
 	:noindex:
 
-.. autoclass:: bertini.tracking.config.AMPConfig
+.. autoclass:: bertini.tracking.AMPConfig
 	:noindex:
 
-.. autoclass:: bertini.tracking.config.FixedPrecisionConfig
+.. autoclass:: bertini.tracking.FixedPrecisionConfig
 	:noindex:
 
 
 🎮 Endgame configs
 -------------------------
 
-.. autoclass:: bertini.endgame.config.Endgame
+* :class:`bertini.endgame.EndgameConfig`
+* :class:`bertini.endgame.SecurityConfig`
+* :class:`bertini.endgame.PowerSeriesConfig`
+* :class:`bertini.endgame.CauchyConfig`
+
+.. autoclass:: bertini.endgame.EndgameConfig
+	:noindex:
+
+.. autoclass:: bertini.endgame.SecurityConfig
+	:noindex:
+
+.. autoclass:: bertini.endgame.PowerSeriesConfig
+	:noindex:
+
+.. autoclass:: bertini.endgame.CauchyConfig
 	:noindex:
 
 Algorithm configs

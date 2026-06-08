@@ -41,6 +41,12 @@
 
 #include <bertini2/trackers/tracker.hpp>
 
+#include <cstdlib>
+#include <stdexcept>
+#include <string>
+#include <iostream>
+#include <type_traits>
+
 namespace bertini{
 	namespace python{
 
@@ -69,19 +75,57 @@ namespace bertini{
 			void (TrackerT::*set_predictor_)(Predictor)= &TrackerT::SetPredictor;
 			Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::GetPredictor;
 			
-			// start_time and end_time are intentionally taken by value, not by const&.
-			// eigenpy's from-python converter for the writable Eigen::Ref<Vec<ComplexT>>
-			// 'result' argument corrupts the boost.python converter storage of an adjacent
-			// scalar mpc_complex const& argument, leaving start_time/end_time as garbage
-			// (invalid mpfr limb pointers -> MPFR set_prec assertion on first use).
-			// Passing the scalars by value forces an independent copy that side-steps the
-			// clobbered converter storage. See git history for the full diagnosis.
+			// The output vector is taken as a numpy array (boost::python::object), NOT as a
+			// writable Eigen::Ref<Vec<ComplexT>>.  eigenpy's from-python converter for a
+			// writable Eigen::Ref overruns its rvalue-converter storage and corrupts an
+			// ADJACENT argument's converter slot (ADR-0001) — an ABI/layout-sensitive bug that
+			// fires on the x86_64 manylinux build but not on aarch64.  Both narrower
+			// mitigations failed there, as confirmed by BERTINI_DIAG in CI: passing the scalar
+			// times by value (ADR-0001) still left end_time at precision 0 (-> mpc_set_prec(0)
+			// -> SIGABRT), and taking the scalars as boost::python::object merely relocated the
+			// clobber onto the tracker handle 'self' (-> SIGSEGV).  The robust fix is to remove
+			// the writable Ref entirely (as ADR-0002 did for the endgame bindings): track into
+			// a local vector and write it back element-wise through the (hardened) numpy
+			// setitem.  With no writable-Ref converter present, the by-value scalar times are
+			// no longer corrupted.
 			static
-			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<ComplexT>> result, ComplexT start_time, ComplexT end_time, Vec<ComplexT> const& start_point)
+			SuccessCode track_path_wrap(TrackerT const& self, boost::python::object result_obj, ComplexT start_time, ComplexT end_time, Vec<ComplexT> const& start_point)
 			{
+				// Invariant backstop for multiprecision trackers: no mpc value entering the
+				// tracker may carry precision 0.  Refuse loudly rather than abort in libmpfr.
+				// (No precision concept for the fixed-double tracker, hence the constexpr gate.)
+				if constexpr (std::is_same_v<ComplexT, bertini::mpfr_complex>)
+				{
+					if (std::getenv("BERTINI_DIAG") != nullptr)
+					{
+						std::cerr << "[DIAG] track_path_wrap: start_point.size=" << start_point.size()
+						          << " NumVariables=" << self.GetSystem().NumVariables() << std::endl;
+						std::cerr << "[DIAG] start_time.precision=" << bertini::Precision(start_time)
+						          << " end_time.precision=" << bertini::Precision(end_time) << std::endl;
+						std::cerr.flush();
+					}
+
+					auto require_precision = [](char const* what, ComplexT const& z)
+					{
+						if (bertini::Precision(z) == 0)
+							throw std::runtime_error(std::string("track_path: ") + what +
+								" arrived with precision 0 (invalid/uninitialized); refusing to track from an invalid value");
+					};
+					require_precision("start_time", start_time);
+					require_precision("end_time", end_time);
+					for (Eigen::Index i = 0; i < start_point.size(); ++i)
+						if (bertini::Precision(start_point(i)) == 0)
+							throw std::runtime_error("track_path: start point coordinate "
+								+ std::to_string(i) + " arrived with precision 0 (invalid/uninitialized)");
+				}
+
 				Vec<ComplexT> temp_result(self.GetSystem().NumVariables());
 				auto code = self.TrackPath(temp_result, start_time, end_time, start_point);
-				result = temp_result;
+
+				// Write the result back into the caller's numpy array in place, element-wise,
+				// through the registered to-python + hardened numpy setitem path.
+				for (Eigen::Index i = 0; i < temp_result.size(); ++i)
+					result_obj[i] = temp_result(i);
 				return code;
 			}
 
@@ -244,7 +288,7 @@ namespace bertini{
 		void TrackerVisitor<TrackerT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("setup", &TrackerT::Setup, (arg("predictor"), arg("tolerance"), arg("truncation"), arg("stepping"),arg("newton")), "Set values for the internal configuration of the tracker.  tolerance and truncation are both real doubles.  predictor is a valid value for predictor choice.  stepping and newton are the config structs from bertini.tracking.config.")
+			.def("setup", &TrackerT::Setup, (arg("predictor"), arg("tolerance"), arg("truncation"), arg("stepping"),arg("newton")), "Set values for the internal configuration of the tracker.  tolerance and truncation are both real doubles.  predictor is a valid value for predictor choice.  stepping and newton are the config structs from bertini.tracking.")
 
 			.def("track_path", &track_path_wrap,
 				 (arg("self"),arg("result"), "start_time", "end_time", "start_point"),
@@ -347,12 +391,28 @@ namespace bertini{
 		template<class PyClass>
 		void SteppingVisitor<T>::visit(PyClass& cl) const
 		{
+			// initial_step_size, max_step_size, step_size_success_factor, step_size_fail_factor are
+			// stored as mpq_rational (no MPFR precision state) but exposed to Python as mpfr_float
+			// so the existing string/Float setter API is unchanged.  The round-trip is exact:
+			// every mpfr_float has an exact rational representation, and converting back recovers it.
 			cl
-			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size,"The initial stepsize when tracking is started.  See also tracking.AMPTracker.reinitialize_initial_step_size")
-			.def_readwrite("max_step_size", &tracking::SteppingConfig::max_step_size,"The maximum allowed stepsize during tracking.  See also min_num_steps")
+			.add_property("initial_step_size",
+				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.initial_step_size); },
+				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.initial_step_size = mpq_rational(v); },
+				"The initial stepsize when tracking is started.  See also tracking.AMPTracker.reinitialize_initial_step_size")
+			.add_property("max_step_size",
+				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.max_step_size); },
+				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.max_step_size = mpq_rational(v); },
+				"The maximum allowed stepsize during tracking.  See also min_num_steps")
 			.def_readwrite("min_step_size", &tracking::SteppingConfig::min_step_size,"The minimum stepsize the tracker is allowed to take.  See also max_step_size")
-			.def_readwrite("step_size_success_factor", &tracking::SteppingConfig::step_size_success_factor,"The scale factor for stepsize, after some consecutive steps.  See also consecutive_successful_steps_before_stepsize_increase")
-			.def_readwrite("step_size_fail_factor", &tracking::SteppingConfig::step_size_fail_factor, "The scale factor for stepsize, after a fail happens.  See also step_size_success_factor")
+			.add_property("step_size_success_factor",
+				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.step_size_success_factor); },
+				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.step_size_success_factor = mpq_rational(v); },
+				"The scale factor for stepsize, after some consecutive steps.  See also consecutive_successful_steps_before_stepsize_increase")
+			.add_property("step_size_fail_factor",
+				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.step_size_fail_factor); },
+				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.step_size_fail_factor = mpq_rational(v); },
+				"The scale factor for stepsize, after a fail happens.  See also step_size_success_factor")
 			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &tracking::SteppingConfig::consecutive_successful_steps_before_stepsize_increase,"This number of successful steps have to taken consecutively, and then the stepsize is permitted to increase")
 			.def_readwrite("min_num_steps", &tracking::SteppingConfig::min_num_steps, "The minimum number of steps the tracker can take between now and then.  This is useful if you are tracking closely between times, and want to guarantee some number of steps are taken.  Then again, this could be wasteful, too.")
 			.def_readwrite("max_num_steps", &tracking::SteppingConfig::max_num_steps, "The maximum number of steps.  Tracking will die if it tries to take more than this number, sad day.")

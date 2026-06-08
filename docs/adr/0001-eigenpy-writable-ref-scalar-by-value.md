@@ -1,7 +1,14 @@
 # ADR-0001: Pass scalar mpc_complex args by value when adjacent to writable Eigen::Ref
 
-**Status:** Accepted  
+**Status:** Superseded by [ADR-0008](0008-track-path-result-numpy-object-not-writable-ref.md) (2026-06-08)
 **Date:** 2026-06-04
+
+> **Superseded.** The "pass adjacent scalars by value" mitigation below proved
+> **insufficient on the x86_64 manylinux build**: `end_time` (a by-value scalar) still
+> arrived with precision 0, SIGABRT-ing in `mpc_set_prec` inside the tracker. The writable
+> `Eigen::Ref` converter is the corruptor regardless of how the adjacent scalar is passed.
+> ADR-0008 removes the writable Ref entirely (output taken as a numpy object + element-wise
+> writeback). Keep this ADR for the mechanism description; follow ADR-0008 for the rule.
 
 ## Context
 

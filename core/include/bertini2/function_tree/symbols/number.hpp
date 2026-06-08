@@ -81,7 +81,7 @@ namespace node{
 		The degree of a number is always 0.  It's a number.
 		*/
 		inline
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		int Degree(std::shared_ptr<Variable> const& /*v*/ = nullptr) const override
 		{
 			return 0;
 		}
@@ -92,7 +92,7 @@ namespace node{
 		The degree of a number is always 0.  It's a number.
 		*/
 		inline
-		int Degree(VariableGroup const& vars) const override
+		int Degree(VariableGroup const& /*vars*/) const override
 		{
 			return 0;
 		}
@@ -114,7 +114,7 @@ namespace node{
 
 		Homogenization of a number is a trivial operation.  Don't do anything.
 		*/
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+		void Homogenize(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) override
 		{
 			
 		}
@@ -124,7 +124,7 @@ namespace node{
 
 		Numbers are always homogeneous
 		*/
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		bool IsHomogeneous(std::shared_ptr<Variable> const& /*v*/ = nullptr) const override
 		{
 			return true;
 		}
@@ -132,7 +132,7 @@ namespace node{
 		/**
 		Check for homogeneity, with respect to a variable group.
 		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
+		bool IsHomogeneous(VariableGroup const& /*vars*/) const override
 		{
 			return true;
 		}
@@ -156,7 +156,7 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Symbol>(*this);
 		}
 
@@ -227,7 +227,7 @@ namespace node{
 		Integer() = default;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Number>(*this);
 			ar & true_value_;
 		}
@@ -303,7 +303,7 @@ namespace node{
 		friend class boost::serialization::access;
 		Float() = default;
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Number>(*this);
 			ar & const_cast<mpfr_complex &>(highest_precision_value_);
 		}
@@ -412,7 +412,7 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Number>(*this);
 			ar & const_cast<mpq_rational &>(true_value_real_);
 			ar & const_cast<mpq_rational &>(true_value_imag_);

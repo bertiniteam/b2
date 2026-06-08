@@ -794,9 +794,6 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 				GetTracker().SetTrackingTolerance(this->template Get<Tolerances>().newton_before_endgame);
 
-				auto t_start = this->template Get<ZeroDimConf>().start_time;
-				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
-
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
 					TrackSinglePathBeforeEG(static_cast<SolnIndT>(ii));
@@ -1203,8 +1200,8 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 						if ( (solutions_post_endgame_[ii] - solutions_post_endgame_[jj]).norm() < this->template Get<PostProcessing>().same_point_tolerance)
 						{
-							multiplicity_indices[ii].push_back(jj);
-							multiplicity_indices[jj].push_back(ii);
+							multiplicity_indices[ii].push_back(static_cast<int>(jj));
+							multiplicity_indices[jj].push_back(static_cast<int>(ii));
 							++solution_final_metadata_[ii].multiplicity;
 							++solution_final_metadata_[jj].multiplicity;
 						}

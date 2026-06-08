@@ -75,14 +75,15 @@ namespace tracking{
 
 	struct SteppingConfig
 	{
-		using T = mpq_rational;
+		// mpq_rational: exact rationals with no MPFR precision state — safe in DefaultConstruct<T>::value statics.
+		// mpfr_float fields here would be initialized at BMP's startup precision (20) and contaminate
+		// tracker arithmetic when target precision < 20 via preserve_related_precision.
+		mpq_rational initial_step_size{1, 10}; ///< The length of the first time step when calling TrackPath.  StepInitSize
+		mpq_rational max_step_size{1, 10};     ///<  The largest allowed step size.  MaxStepSize
+		double       min_step_size = 1e-100;   ///< The minimum allowed step size (threshold only, double precision is sufficient).  MinStepSize
 
-		T initial_step_size = T(1)/T(10); ///< The length of the first time step when calling TrackPath.  You can turn it resetting, so subsequent calls use the same stepsize, too.  You make a call to the Tracker itself.
-		T max_step_size = T(1)/T(10); ///<  The largest allowed step size.  MaxStepSize
-		T min_step_size = T(1)/T(1e100); ///< The mimum allowed step size.  MinStepSize
-
-		T step_size_success_factor = T(2); ///< Factor by which to dilate the time step when triggered.  StepSuccessFactor
-		T step_size_fail_factor = T(1)/T(2); ///< Factor by which to contract the time step when triggered.  StepFailFactor
+		mpq_rational step_size_success_factor{2, 1}; ///< Factor by which to dilate the time step when triggered.  StepSuccessFactor
+		mpq_rational step_size_fail_factor{1, 2};    ///< Factor by which to contract the time step when triggered.  StepFailFactor
 
 		unsigned consecutive_successful_steps_before_stepsize_increase = 5; ///< What it says.  If you can come up with a better name, please suggest it.  StepsForIncrease
 
@@ -115,7 +116,7 @@ namespace tracking{
 		\brief Construct a ready-to-go set of fixed precision settings from a system.
 		*/
 		explicit
-		FixedPrecisionConfig(System const& sys) 
+		FixedPrecisionConfig(System const& /*sys*/) 
 		{ }
 
 		FixedPrecisionConfig() = default;
@@ -123,7 +124,7 @@ namespace tracking{
 
 
 	inline
-	std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig const& fpc)
+	std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig const& /*fpc*/)
 	{
 		return out;
 	}

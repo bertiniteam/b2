@@ -234,7 +234,7 @@ namespace bertini{
 									Vec<ComplexT> const& start_point
 									) const
 			{
-				if (start_point.size()!=GetSystem().NumVariables())
+				if (start_point.size()!=static_cast<Eigen::Index>(GetSystem().NumVariables()))
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
 
@@ -245,6 +245,8 @@ namespace bertini{
 					PostTrackCleanup();
 					return initialization_code;
 				}
+
+				NotifyObservers(TrackingStarted<typename TrackerTraits<D>::EventEmitterType>(static_cast<typename TrackerTraits<D>::EventEmitterType const&>(*this)));
 
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
 				while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<ComplexT>::epsilon()))
@@ -262,7 +264,6 @@ namespace bertini{
 						delta_t_ = endtime_-current_time_;
 					else
 						delta_t_ = current_stepsize_ * (endtime_ - current_time_)/abs(endtime_ - current_time_);
-
 
 					step_success_code_ = TrackerIteration();
 
@@ -655,7 +656,7 @@ namespace bertini{
 
 			unsigned NumVariables() const
 			{
-				return GetSystem().NumVariables();
+				return static_cast<unsigned>(GetSystem().NumVariables());
 			}
 
 			auto CurrentTime() const

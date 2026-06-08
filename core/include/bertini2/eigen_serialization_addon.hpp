@@ -27,7 +27,7 @@
 
 friend class boost::serialization::access;
 template<class Archive>
-void save(Archive & ar, const unsigned int version) const {
+void save(Archive & ar, const unsigned int /*version*/) const {
   derived().eval();
   const Eigen::Index rows = derived().rows(), cols = derived().cols();
   ar & rows;
@@ -38,7 +38,7 @@ void save(Archive & ar, const unsigned int version) const {
 }
 
 template<class Archive>
-void load(Archive & ar, const unsigned int version) {
+void load(Archive & ar, const unsigned int /*version*/) {
   Eigen::Index rows, cols;
   ar & rows;
   ar & cols;

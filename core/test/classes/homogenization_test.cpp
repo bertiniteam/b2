@@ -771,7 +771,7 @@ BOOST_AUTO_TEST_CASE(linprod_hom_diff_eval)
     VariableGroup v0{x,z,y};
     VariableGroup v1{w};
     int num_factors = 3;
-    int num_variables = v0.size();
+    int num_variables = static_cast<int>(v0.size());
     Mat<dbl> coeff_dbl(num_factors,num_variables+1);
     Mat<mpfr> coeff_mpfr(num_factors,num_variables+1);
     
@@ -787,7 +787,7 @@ BOOST_AUTO_TEST_CASE(linprod_hom_diff_eval)
     std::shared_ptr<bertini::node::Node> linprod1 = bertini::node::LinearProduct::Make(v0, coeff_mpfr);
     
     num_factors = 1;
-    num_variables = v1.size();
+    num_variables = static_cast<int>(v1.size());
     coeff_dbl = Mat<dbl>(num_factors,num_variables+1);
     coeff_mpfr = Mat<mpfr>(num_factors,num_variables+1);
     

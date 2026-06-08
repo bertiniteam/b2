@@ -104,8 +104,8 @@ namespace bertini{
 				 */
 				void ChangeSystem(const System& S)
 				{
-					numTotalFunctions_ = S.NumTotalFunctions();
-					numVariables_ = S.NumVariables();
+					numTotalFunctions_ = static_cast<unsigned>(S.NumTotalFunctions());
+					numVariables_ = static_cast<unsigned>(S.NumVariables());
 					std::get< Mat<dbl> >(J_temp_).resize(numTotalFunctions_, numVariables_);
 					std::get< Mat<mpfr_complex> >(J_temp_).resize(numTotalFunctions_, numVariables_);
 					std::get< Vec<dbl> >(f_temp_).resize(numTotalFunctions_);

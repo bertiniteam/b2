@@ -857,7 +857,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 
 std::vector<Vec<mpfr> > track_total_degree(bertini::tracking::AMPTracker const& tracker, bertini::start_system::TotalDegree const& TD)
 {
-	auto initial_precision = DefaultPrecision();
+	[[maybe_unused]] auto initial_precision = DefaultPrecision();
 	using namespace bertini::tracking;
 	mpfr t_start(1), t_end(0);
 	std::vector<Vec<mpfr> > solutions;

@@ -152,7 +152,7 @@ We associate a system with a tracker when we make it.  You cannot make a tracker
 	tr.tracking_tolerance(1e-5) # track the path to 5 digits or so
 
 	# adjust some stepping settings
-	stepping = bertini.tracking.config.SteppingConfig()
+	stepping = bertini.tracking.SteppingConfig()
 	stepping.max_step_size = bertini.multiprec.Rational(1,13)
 
 	#then, set the config into the tracker.
@@ -234,7 +234,7 @@ Now that we've tracked a single path, you might want to loop over all start poin
 	tr.tracking_tolerance(1e-5) # track the path to 5 digits or so
 	tr.infinite_truncation_tolerance(1e5)
 	tr.predictor(bertini.tracking.Predictor.RK4)
-	stepping = bertini.tracking.config.SteppingConfig()
+	stepping = bertini.tracking.SteppingConfig()
 	stepping.max_step_size = bertini.multiprec.Rational(1,13)
 
 	# set the config into the tracker

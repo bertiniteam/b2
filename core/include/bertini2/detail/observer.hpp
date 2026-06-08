@@ -36,7 +36,9 @@
 #define BERTINI_DETAIL_OBSERVER_HPP
 
 #include <tuple>
+#include <typeindex>
 #include <utility>
+#include <vector>
 
 #include <boost/fusion/adapted/std_tuple.hpp>
 
@@ -66,6 +68,17 @@ namespace bertini{
 		\param e The event which was emitted by the observed object.
 		*/
 		virtual void Observe(AnyEvent const& e) = 0;
+
+		/**
+		\brief Declares which event types this observer wants to receive.
+
+		Return a non-empty vector to opt into type-indexed dispatch: the observable will
+		only call Observe() for events whose dynamic type exactly matches one of the
+		returned type_index values.  Return an empty vector (the default) to receive
+		every event — this is the correct choice for observers that handle many or all
+		event types, and is the automatic behavior for Python-defined observers.
+		*/
+		virtual std::vector<std::type_index> SubscribedEventTypes() const { return {}; }
 	};
 
 

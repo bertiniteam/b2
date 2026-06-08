@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RK4_d)
 	dbl(0.731436941908745436117221142349986);
 	
 	Vec<dbl> RK4_prediction_result;
-	double next_time;
+	[[maybe_unused]] double next_time;
 	
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKF45_d)
 	double predicted_error = 7.17724133646795598396247354053062e-8;
 	
 	Vec<dbl> RKF45_prediction_result;
-	double next_time;
+	[[maybe_unused]] double next_time;
 	
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
@@ -945,7 +945,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_d)
 	double predicted_error = 4.51352044466211707817977052519894e-9;
 	
 	Vec<dbl> RKCK45_prediction_result;
-	double next_time;
+	[[maybe_unused]] double next_time;
 	
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
@@ -1563,7 +1563,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKDP56_d)
 	double predicted_error = 3.85904197101299548102733617445410e-9;
 	
 	Vec<dbl> RKDP56_prediction_result;
-	double next_time;
+	[[maybe_unused]] double next_time;
 	
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
@@ -1900,7 +1900,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_d)
 	double predicted_error = 1.42794733055750714441060080061e-8;
 	
 	Vec<dbl> RKV67_prediction_result;
-	double next_time;
+	[[maybe_unused]] double next_time;
 	
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;

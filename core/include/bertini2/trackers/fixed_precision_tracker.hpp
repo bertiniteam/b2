@@ -143,7 +143,7 @@ namespace bertini{
 
 				// the current precision is the precision of the output solution point.
 
-				unsigned num_vars = this->GetSystem().NumVariables();
+				unsigned num_vars = static_cast<unsigned>(this->GetSystem().NumVariables());
 				solution_at_endtime.resize(num_vars);
 				for (unsigned ii=0; ii<num_vars; ii++)
 				{
@@ -540,6 +540,20 @@ namespace bertini{
 
 
 				this->NotifyObservers(Initializing<EmitterType,BaseComplexT>(*this,start_time, end_time, start_point));
+
+				// Reset precision of all persistent members before assignment so that
+				// BMP preserve_related_precision doesn't propagate stale high precision
+				// from a previous TrackPath call into the new one.
+				this->current_time_.precision(precision_);
+				this->endtime_.precision(precision_);
+				this->delta_t_.precision(precision_);
+				this->current_stepsize_.precision(precision_);
+				this->next_stepsize_.precision(precision_);
+				Precision(std::get<Vec<BaseComplexT>>(this->current_space_), precision_);
+				Precision(std::get<Vec<BaseComplexT>>(this->temporary_space_), precision_);
+				Precision(std::get<Vec<BaseComplexT>>(this->tentative_space_), precision_);
+				this->predictor_.ChangePrecision(precision_);
+				this->corrector_.ChangePrecision(precision_);
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;

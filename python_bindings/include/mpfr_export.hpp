@@ -80,7 +80,7 @@ namespace bertini{
 			static std::string __str__(const object& obj)
 			{
 				std::ostringstream oss;
-				const T& self=extract<T>(obj)();
+				T self=extract<T>(obj)();
 				std::stringstream ss;
 				ss << self;
 				return ss.str();
@@ -89,7 +89,7 @@ namespace bertini{
 			static std::string __repr__(const object& obj)
 			{
 				std::ostringstream oss;
-				const T& self=extract<T>(obj)();
+				T self=extract<T>(obj)();
 				std::stringstream ss;
 				ss << self.str(0,std::ios::scientific);
 				return ss.str();
@@ -326,7 +326,7 @@ namespace bertini{
 			static std::string __str__(const object& obj)
 			{
 				std::ostringstream oss;
-				const T& self=extract<T>(obj)();
+				T self=extract<T>(obj)();
 				std::stringstream ss;
 				ss << self;
 				return ss.str();
@@ -335,7 +335,7 @@ namespace bertini{
 			static std::string __repr__(const object& obj)
 			{
 				std::ostringstream oss;
-				const T& self=extract<T>(obj)();
+				T self=extract<T>(obj)();
 				std::stringstream ss;
 				ss << "(" << real(self).str(0,std::ios::scientific) << ", " << imag(self).str(0,std::ios::scientific) << ")";
 				return ss.str();

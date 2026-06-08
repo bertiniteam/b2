@@ -41,9 +41,7 @@ from bertini.function_tree.symbol import *
 from bertini.function_tree.root import *
 from bertini.function_tree import *
 from bertini.tracking import *
-from bertini.tracking.config import *
 from bertini.endgame import *
-from bertini.endgame.config import *
 
 import bertini.system.start_system as ss
 import bertini.multiprec as mp
