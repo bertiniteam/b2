@@ -137,3 +137,133 @@ class TestCastsFromUnwrittenSlots:
         a[0] = mpfr_complex(1)
         assert a[0] == mpfr_complex(1)
         assert a[1] == mpfr_complex(0)
+
+
+class TestDotProductOnUnwrittenSlots:
+    """np.dot/np.inner use the dtype's ``dotfunc`` ArrFuncs slot.
+
+    Unlike ``@`` (matmul), which routes through the *guarded* matrix-multiply
+    ufunc, ``dotfunc`` was left unguarded: it maps the operands as Eigen vectors
+    and calls ``.dot()`` directly.  On a fresh (never-written) array every slot
+    is the all-zero ``_mpfr_prec == 0`` sentinel, so the dot's internal
+    ``mpfr_init2`` sees precision 0 and aborts the interpreter
+    (``init2.c:53: MPFR assertion failed``).  A hardened ``dotfunc`` must treat
+    unwritten slots as exact zero.  Before the guard these tests SIGABRT.
+    """
+
+    def test_dot_of_unwritten_zeros(self, dtype):
+        a = np.zeros(5, dtype=dtype)
+        assert np.dot(a, a) == dtype(0)
+
+    def test_dot_of_unwritten_empty(self, dtype):
+        a = np.empty(5, dtype=dtype)
+        assert np.dot(a, a) == dtype(0)
+
+    def test_inner_of_unwritten_arrays(self, dtype):
+        a = np.empty(4, dtype=dtype)
+        assert np.inner(a, a) == dtype(0)
+
+    def test_dot_mixing_written_and_unwritten(self, dtype):
+        written = np.array([dtype(1), dtype(2), dtype(3)])
+        unwritten = np.zeros(3, dtype=dtype)
+        assert np.dot(written, unwritten) == dtype(0)
+        assert np.dot(unwritten, written) == dtype(0)
+
+    def test_dot_partially_written(self, dtype):
+        a = np.empty(3, dtype=dtype)
+        a[0] = dtype(2)
+        a[1] = dtype(3)
+        # a[2] never written -> sentinel; must contribute zero, not crash
+        b = np.array([dtype(5), dtype(7), dtype(11)])
+        assert np.dot(a, b) == dtype(2 * 5 + 3 * 7)
+
+    def test_dot_of_written_arrays_is_correct(self, dtype):
+        # the guard must not corrupt genuine values
+        a = np.array([dtype(1), dtype(2), dtype(3)])
+        b = np.array([dtype(4), dtype(5), dtype(6)])
+        assert np.dot(a, b) == dtype(1 * 4 + 2 * 5 + 3 * 6)
+
+
+class TestFillWithScalarOnUnwrittenArrays:
+    """np.full and scalar broadcast-assignment use ``fillwithscalar``, which
+    writes a scalar into freshly-allocated (possibly dirty) destination slots."""
+
+    def test_full_with_zero(self, dtype):
+        a = np.full(5, dtype(0), dtype=dtype)
+        assert a[0] == dtype(0)
+        assert a[4] == dtype(0)
+
+    def test_full_with_value(self, dtype):
+        a = np.full(6, dtype(7), dtype=dtype)
+        assert (a == dtype(7)).all()
+
+    def test_broadcast_scalar_assignment_into_empty(self, dtype):
+        a = np.empty(5, dtype=dtype)
+        a[:] = dtype(3)
+        assert (a == dtype(3)).all()
+
+    def test_partial_slice_scalar_assignment(self, dtype):
+        a = np.empty(5, dtype=dtype)
+        a[1:4] = dtype(9)
+        assert a[1] == dtype(9)
+        assert a[3] == dtype(9)
+        # untouched slots heal to zero on read
+        assert a[0] == dtype(0)
+        assert a[4] == dtype(0)
+
+
+class TestCopySlotsOnUnwrittenArrays:
+    """.copy()/.astype()/ascontiguousarray/reshape-copy exercise the
+    ``copyswap`` and ``copyswapn`` slots, which read source slots and write
+    destination slots."""
+
+    def test_copy_of_all_unwritten(self, dtype):
+        a = np.empty(5, dtype=dtype)
+        b = a.copy()
+        assert b[0] == dtype(0)
+        assert b[4] == dtype(0)
+
+    def test_astype_self(self, dtype):
+        a = np.zeros(4, dtype=dtype)
+        b = a.astype(dtype)
+        assert b[2] == dtype(0)
+
+    def test_ascontiguousarray_of_empty(self, dtype):
+        a = np.empty(4, dtype=dtype)
+        b = np.ascontiguousarray(a)
+        assert b[1] == dtype(0)
+
+    def test_strided_copy_of_unwritten(self, dtype):
+        a = np.zeros(6, dtype=dtype)
+        b = a[::2].copy()
+        assert b.shape == (3,)
+        assert b[0] == dtype(0)
+
+    def test_reshape_then_copy(self, dtype):
+        a = np.zeros(6, dtype=dtype)
+        b = a.reshape(2, 3).copy()
+        assert b[1, 2] == dtype(0)
+
+
+class TestNonzeroOnUnwrittenArrays:
+    """np.nonzero/np.count_nonzero and scalar truthiness use the ``nonzero``
+    slot, which reads each element to compare against zero."""
+
+    def test_count_nonzero_all_unwritten(self, dtype):
+        a = np.zeros(5, dtype=dtype)
+        assert np.count_nonzero(a) == 0
+
+    def test_nonzero_indices_all_unwritten(self, dtype):
+        a = np.empty(5, dtype=dtype)
+        (idx,) = np.nonzero(a)
+        assert idx.size == 0
+
+    def test_count_nonzero_mixed(self, dtype):
+        a = np.zeros(5, dtype=dtype)
+        a[1] = dtype(4)
+        a[3] = dtype(5)
+        assert np.count_nonzero(a) == 2
+
+    def test_scalar_truthiness_does_not_crash(self, dtype):
+        a = np.empty(3, dtype=dtype)
+        bool(a[0])  # reading an unwritten slot for truthiness must not crash

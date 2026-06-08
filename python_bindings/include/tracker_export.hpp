@@ -41,6 +41,12 @@
 
 #include <bertini2/trackers/tracker.hpp>
 
+#include <cstdlib>
+#include <stdexcept>
+#include <string>
+#include <iostream>
+#include <type_traits>
+
 namespace bertini{
 	namespace python{
 
@@ -79,6 +85,49 @@ namespace bertini{
 			static
 			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<ComplexT>> result, ComplexT start_time, ComplexT end_time, Vec<ComplexT> const& start_point)
 			{
+				// Invariant guard for multiprecision trackers: a start-point coordinate must
+				// carry a valid (nonzero) working precision.  eigenpy's *bulk* numpy->Eigen
+				// converter (mat = Map(buffer)) bypasses our hardened per-element getitem and,
+				// on the x86_64 manylinux build, has been observed to deliver precision-0
+				// coordinates.  Those drive mpc_set_prec(0) deep inside
+				// AMPTracker::TrackerLoopInitialization -> MPFR_ASSERTN -> SIGABRT.  A
+				// precision-0 mpc has no usable value, so we refuse to proceed rather than
+				// abort or silently track from garbage.  (No precision concept for the
+				// fixed-double tracker, hence the constexpr gate.)
+				if constexpr (std::is_same_v<ComplexT, bertini::mpfr_complex>)
+				{
+					const bool diag = std::getenv("BERTINI_DIAG") != nullptr;
+					if (diag)
+					{
+						std::cerr << "[DIAG] track_path_wrap: start_point.size=" << start_point.size()
+						          << " NumVariables=" << self.GetSystem().NumVariables() << std::endl;
+						for (Eigen::Index i = 0; i < start_point.size(); ++i)
+						{
+							const unsigned p = bertini::Precision(start_point(i));
+							std::cerr << "[DIAG]   start_point(" << i << ").precision=" << p;
+							if (p > 0) std::cerr << " value=" << start_point(i);
+							std::cerr << std::endl;
+						}
+						std::cerr << "[DIAG] start_time.precision=" << bertini::Precision(start_time)
+						          << " end_time.precision=" << bertini::Precision(end_time) << std::endl;
+						std::cerr << "[DIAG] mpfr_complex::thread_default_precision="
+						          << bertini::mpfr_complex::thread_default_precision()
+						          << " mpfr_float::thread_default_precision="
+						          << bertini::mpfr_float::thread_default_precision()
+						          << " DefaultPrecision()=" << bertini::DefaultPrecision() << std::endl;
+						std::cerr.flush();
+					}
+
+					for (Eigen::Index i = 0; i < start_point.size(); ++i)
+					{
+						if (bertini::Precision(start_point(i)) == 0)
+							throw std::runtime_error(
+								"track_path: start point coordinate " + std::to_string(i)
+								+ " arrived with precision 0 (invalid/uninitialized) from the numpy->Eigen"
+								  " conversion; refusing to track from an invalid value");
+					}
+				}
+
 				Vec<ComplexT> temp_result(self.GetSystem().NumVariables());
 				auto code = self.TrackPath(temp_result, start_time, end_time, start_point);
 				result = temp_result;

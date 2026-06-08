@@ -295,6 +295,37 @@ namespace eigenpy
 			}
 		}
 
+		// guarded numpy dot/inner (the PyArray_ArrFuncs `dotfunc` slot).
+		//
+		// eigenpy's SpecialMethods<T>::dotfunc maps both operands as Eigen vectors
+		// and calls v0.dot(v1), reading every slot unguarded.  np.dot / np.inner /
+		// 1-D '@' on a never-written np.zeros/np.empty array therefore feed an
+		// all-zero sentinel (mpfr/mpc _mpfr_d == 0) straight into libmpfr and abort
+		// (MPFR_ASSERTN — observed both as init2.c "p>=1" and mpfr_abort_prec_max).
+		// numpy zero-fills NEEDS_INIT buffers, so dot operands are always either a
+		// valid value or the all-zero sentinel (never malloc-dirty), so reading
+		// through value_or_zero is sufficient.  Mirrors guarded_matrix_multiply:
+		// accumulate at the ambient default precision and write through operator=
+		// into the (zero-filled) scalar output slot.
+		template <typename T>
+		void guarded_dotfunc(void *ip0_, npy_intp is0, void *ip1_, npy_intp is1,
+		                     void *op, npy_intp n, void * /*arr*/)
+		{
+			const T zero(0);
+			T acc(0);
+			char *p0 = static_cast<char*>(ip0_);
+			char *p1 = static_cast<char*>(ip1_);
+			for (npy_intp i = 0; i < n; ++i)
+			{
+				T const& x = value_or_zero(*reinterpret_cast<T const*>(p0), zero);
+				T const& y = value_or_zero(*reinterpret_cast<T const*>(p1), zero);
+				acc += x * y;
+				p0 += is0;
+				p1 += is1;
+			}
+			*reinterpret_cast<T*>(op) = acc;
+		}
+
 	} // namespace internal
 
 
@@ -334,6 +365,17 @@ namespace eigenpy
 		PyArray_ArrFuncs *funcs = PyDataType_GetArrFuncs(descr);
 		internal::zeroinit_setitem<NumT>::original = funcs->setitem;
 		funcs->setitem = &internal::zeroinit_setitem<NumT>::run;
+	}
+
+	// Install the guarded numpy dot/inner loop for an MPFR-backed dtype, replacing
+	// eigenpy's unguarded SpecialMethods<NumT>::dotfunc.  Call immediately after
+	// eigenpy::registerNewType<NumT>().  See internal::guarded_dotfunc.
+	template <typename NumT>
+	void HardenDotfunc()
+	{
+		PyArray_Descr *descr = Register::getPyArrayDescr<NumT>();
+		PyArray_ArrFuncs *funcs = PyDataType_GetArrFuncs(descr);
+		funcs->dotfunc = reinterpret_cast<PyArray_DotFunc*>(&internal::guarded_dotfunc<NumT>);
 	}
 
 	// register a single guarded loop on the named numpy ufunc, mirroring the

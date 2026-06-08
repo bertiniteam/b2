@@ -411,6 +411,7 @@ namespace bertini{
 
 			eigenpy::registerNewType<T>();
 			eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
+			eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
 			// guarded loops (real type — orderings included); eigenpy's registerCommonUfunc
 			// loops read input slots unguarded and crash on never-written np.zeros/np.empty slots.
 			eigenpy::registerGuardedUfunct<T, true>();
@@ -498,6 +499,7 @@ namespace bertini{
 
 			eigenpy::registerNewType<T>();
 			eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
+			eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
 			eigenpy::registerUfunct_without_comparitors<T>();
 
 
