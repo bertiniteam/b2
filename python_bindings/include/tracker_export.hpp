@@ -75,29 +75,38 @@ namespace bertini{
 			void (TrackerT::*set_predictor_)(Predictor)= &TrackerT::SetPredictor;
 			Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::GetPredictor;
 			
-			// start_time and end_time are intentionally taken by value, not by const&.
-			// eigenpy's from-python converter for the writable Eigen::Ref<Vec<ComplexT>>
-			// 'result' argument corrupts the boost.python converter storage of an adjacent
-			// scalar mpc_complex const& argument, leaving start_time/end_time as garbage
-			// (invalid mpfr limb pointers -> MPFR set_prec assertion on first use).
-			// Passing the scalars by value forces an independent copy that side-steps the
-			// clobbered converter storage. See git history for the full diagnosis.
+			// start_time and end_time are taken as boost::python::object and converted
+			// INSIDE track_path_wrap, not as eigenpy-marshalled arguments.  eigenpy's
+			// from-python converter for the writable Eigen::Ref<Vec<ComplexT>> 'result'
+			// argument corrupts the converter storage of adjacent mpc scalar arguments
+			// (ADR-0001), leaving a time as garbage (invalid mpfr limb pointer / precision 0
+			// -> MPFR set_prec assertion on first use).  ADR-0001's earlier "pass scalars by
+			// value" mitigation was INSUFFICIENT on the x86_64 manylinux build (end_time
+			// still arrived precision 0; confirmed via BERTINI_DIAG in CI).  Deferring the
+			// scalar conversion out of the argument-marshalling phase removes the overlap.
 			static
-			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<ComplexT>> result, ComplexT start_time, ComplexT end_time, Vec<ComplexT> const& start_point)
+			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<ComplexT>> result, boost::python::object start_time_obj, boost::python::object end_time_obj, Vec<ComplexT> const& start_point)
 			{
-				// Invariant guard for multiprecision trackers: a start-point coordinate must
-				// carry a valid (nonzero) working precision.  eigenpy's *bulk* numpy->Eigen
-				// converter (mat = Map(buffer)) bypasses our hardened per-element getitem and,
-				// on the x86_64 manylinux build, has been observed to deliver precision-0
-				// coordinates.  Those drive mpc_set_prec(0) deep inside
-				// AMPTracker::TrackerLoopInitialization -> MPFR_ASSERTN -> SIGABRT.  A
-				// precision-0 mpc has no usable value, so we refuse to proceed rather than
-				// abort or silently track from garbage.  (No precision concept for the
+				// Extract the scalar start/end times AFTER eigenpy has marshalled the
+				// writable Eigen::Ref 'result'.  eigenpy's writable-Ref from-python converter
+				// corrupts the converter storage of adjacent mpc scalar arguments (ADR-0001).
+				// ADR-0001's "pass the scalars by value" mitigation proved INSUFFICIENT on the
+				// x86_64 manylinux build: end_time still arrived with precision 0 (a garbage
+				// mpc), driving mpc_set_prec(0) -> MPFR_ASSERTN -> SIGABRT inside
+				// AMPTracker::TrackerLoopInitialization (confirmed via BERTINI_DIAG in CI).
+				// Taking the times as boost::python::object defers their conversion out of the
+				// argument-marshalling phase entirely, so the Ref converter has no scalar
+				// converter storage to clobber; we convert them here, after marshalling.
+				ComplexT start_time = boost::python::extract<ComplexT>(start_time_obj)();
+				ComplexT end_time   = boost::python::extract<ComplexT>(end_time_obj)();
+
+				// Invariant for multiprecision trackers: every mpc value entering the tracker
+				// must carry a valid (nonzero) precision.  Refuse loudly rather than let a
+				// precision-0 value reach libmpfr and abort.  (No precision concept for the
 				// fixed-double tracker, hence the constexpr gate.)
 				if constexpr (std::is_same_v<ComplexT, bertini::mpfr_complex>)
 				{
-					const bool diag = std::getenv("BERTINI_DIAG") != nullptr;
-					if (diag)
+					if (std::getenv("BERTINI_DIAG") != nullptr)
 					{
 						std::cerr << "[DIAG] track_path_wrap: start_point.size=" << start_point.size()
 						          << " NumVariables=" << self.GetSystem().NumVariables() << std::endl;
@@ -110,22 +119,27 @@ namespace bertini{
 						}
 						std::cerr << "[DIAG] start_time.precision=" << bertini::Precision(start_time)
 						          << " end_time.precision=" << bertini::Precision(end_time) << std::endl;
-						std::cerr << "[DIAG] mpfr_complex::thread_default_precision="
-						          << bertini::mpfr_complex::thread_default_precision()
-						          << " mpfr_float::thread_default_precision="
+						std::cerr << "[DIAG] thread_default_precision(c/f)="
+						          << bertini::mpfr_complex::thread_default_precision() << "/"
 						          << bertini::mpfr_float::thread_default_precision()
 						          << " DefaultPrecision()=" << bertini::DefaultPrecision() << std::endl;
 						std::cerr.flush();
 					}
 
-					for (Eigen::Index i = 0; i < start_point.size(); ++i)
+					auto require_precision = [](char const* what, ComplexT const& z, long idx)
 					{
-						if (bertini::Precision(start_point(i)) == 0)
-							throw std::runtime_error(
-								"track_path: start point coordinate " + std::to_string(i)
-								+ " arrived with precision 0 (invalid/uninitialized) from the numpy->Eigen"
-								  " conversion; refusing to track from an invalid value");
-					}
+						if (bertini::Precision(z) == 0)
+						{
+							std::string msg = std::string("track_path: ") + what;
+							if (idx >= 0) msg += " coordinate " + std::to_string(idx);
+							msg += " arrived with precision 0 (invalid/uninitialized); refusing to track from an invalid value";
+							throw std::runtime_error(msg);
+						}
+					};
+					require_precision("start_time", start_time, -1);
+					require_precision("end_time", end_time, -1);
+					for (Eigen::Index i = 0; i < start_point.size(); ++i)
+						require_precision("start point", start_point(i), static_cast<long>(i));
 				}
 
 				Vec<ComplexT> temp_result(self.GetSystem().NumVariables());
