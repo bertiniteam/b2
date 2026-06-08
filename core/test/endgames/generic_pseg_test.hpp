@@ -1017,6 +1017,10 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
+	// Deterministic RNG: the endgame's internal random draws otherwise seed from
+	// std::random_device, flaking this marginal case run-to-run.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
+
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
@@ -1116,6 +1120,8 @@ values we have.
 BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
 	using namespace bertini::tracking;
+	// Deterministic RNG: random TotalDegree start system + endgame draws.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
 	DefaultPrecision(ambient_precision);
 
 	Var x = Variable::Make("x");

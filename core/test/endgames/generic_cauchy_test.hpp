@@ -1706,8 +1706,11 @@ the endgame.
 */
 BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
-	
-	
+	// Deterministic RNG: the random TotalDegree start system below (and the
+	// endgame's internal random draws) otherwise seed from std::random_device,
+	// which makes this marginal double-precision case flake run-to-run and
+	// across platforms.  Seed it so the test is reproducible.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
 
 	DefaultPrecision(ambient_precision);
 
@@ -1881,6 +1884,9 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
+	// Deterministic RNG: random TotalDegree start system + endgame draws.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
+
 	DefaultPrecision(ambient_precision);
 
 	Var x = Variable::Make("x");
