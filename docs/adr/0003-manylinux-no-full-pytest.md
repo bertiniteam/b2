@@ -1,13 +1,16 @@
 # ADR-0003: Linux wheel CI uses import smoke test only; full pytest runs on macOS/Windows
 
-**Status:** Accepted — pending reversal once ADR-0006 is proven in CI
+**Status:** Reversed 2026-06-08 (full Linux pytest restored) — pending green CI confirmation
 **Date:** 2026-06-07
 **Update (2026-06-08):** The underlying cause (uninitialized mpfr/mpc numpy slots)
 was fixed on the bindings side — see **ADR-0006**. The crash also reproduces
 locally, not only in the manylinux container, which broadens this ADR's original
-"CI-only" framing. The decision below (Linux smoke-test-only) remains in force
-until full Linux pytest is restored and proven green in a manylinux CI run; the
-restore recipe is in the Consequences section.
+"CI-only" framing. **The decision below has now been reversed:** the full Linux
+pytest suite was restored in `build_and_test.yml` (`CIBW_TEST_REQUIRES_LINUX` +
+`CIBW_TEST_COMMAND_LINUX` run `pytest python/test/`), so the suite once again runs
+inside the manylinux MPFR 3.1.6 container — the harshest test of the ADR-0006 fix.
+If that in-container run flakes or fails, revert to the smoke test below (kept here
+as the documented fallback).
 
 ## Context
 

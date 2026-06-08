@@ -311,13 +311,14 @@ jobs:
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
           CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=2"
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib"
-          # Full pytest suite cannot run in the manylinux_2_28 container: it ships
-          # MPFR 3.1.6 (AlmaLinux 8 yum), which is incompatible with the mpfr_complex
-          # numpy dtype - garbage non-null _mpfr_d pointers in freshly malloc'd slots
-          # cause SIGABRT/segfault in multiple test files (AMP tracker, Cauchy EG, ...).
-          # Linux wheels are verified by a basic import smoke test here; the full
-          # Python test suite runs on macOS and Windows host runners.
-          CIBW_TEST_COMMAND_LINUX: "python -c 'import bertini; print(bertini.__version__)'"
+          # Full pytest suite, restored 2026-06-08 now that the uninitialized-slot
+          # crash is fixed in the bindings (see ADR-0006, ADR-0003).  This runs in the
+          # manylinux_2_28 container (MPFR 3.1.6 from AlmaLinux 8 yum) - precisely the
+          # environment whose garbage non-null _mpfr_d pointers in freshly malloc'd
+          # numpy slots used to SIGABRT/segfault - so it is the definitive proof of the
+          # fix.  If this flakes or fails, revert to the smoke test per ADR-0003.
+          CIBW_TEST_REQUIRES_LINUX: "pytest numpy"
+          CIBW_TEST_COMMAND_LINUX: "cd {project} && python -m pytest python/test/ -q"
 
       - uses: actions/upload-artifact@v5
         with:
