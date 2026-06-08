@@ -75,76 +75,57 @@ namespace bertini{
 			void (TrackerT::*set_predictor_)(Predictor)= &TrackerT::SetPredictor;
 			Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::GetPredictor;
 			
-			// start_time and end_time are taken as boost::python::object and converted
-			// INSIDE track_path_wrap, not as eigenpy-marshalled arguments.  eigenpy's
-			// from-python converter for the writable Eigen::Ref<Vec<ComplexT>> 'result'
-			// argument corrupts the converter storage of adjacent mpc scalar arguments
-			// (ADR-0001), leaving a time as garbage (invalid mpfr limb pointer / precision 0
-			// -> MPFR set_prec assertion on first use).  ADR-0001's earlier "pass scalars by
-			// value" mitigation was INSUFFICIENT on the x86_64 manylinux build (end_time
-			// still arrived precision 0; confirmed via BERTINI_DIAG in CI).  Deferring the
-			// scalar conversion out of the argument-marshalling phase removes the overlap.
+			// The output vector is taken as a numpy array (boost::python::object), NOT as a
+			// writable Eigen::Ref<Vec<ComplexT>>.  eigenpy's from-python converter for a
+			// writable Eigen::Ref overruns its rvalue-converter storage and corrupts an
+			// ADJACENT argument's converter slot (ADR-0001) — an ABI/layout-sensitive bug that
+			// fires on the x86_64 manylinux build but not on aarch64.  Both narrower
+			// mitigations failed there, as confirmed by BERTINI_DIAG in CI: passing the scalar
+			// times by value (ADR-0001) still left end_time at precision 0 (-> mpc_set_prec(0)
+			// -> SIGABRT), and taking the scalars as boost::python::object merely relocated the
+			// clobber onto the tracker handle 'self' (-> SIGSEGV).  The robust fix is to remove
+			// the writable Ref entirely (as ADR-0002 did for the endgame bindings): track into
+			// a local vector and write it back element-wise through the (hardened) numpy
+			// setitem.  With no writable-Ref converter present, the by-value scalar times are
+			// no longer corrupted.
 			static
-			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<ComplexT>> result, boost::python::object start_time_obj, boost::python::object end_time_obj, Vec<ComplexT> const& start_point)
+			SuccessCode track_path_wrap(TrackerT const& self, boost::python::object result_obj, ComplexT start_time, ComplexT end_time, Vec<ComplexT> const& start_point)
 			{
-				// Extract the scalar start/end times AFTER eigenpy has marshalled the
-				// writable Eigen::Ref 'result'.  eigenpy's writable-Ref from-python converter
-				// corrupts the converter storage of adjacent mpc scalar arguments (ADR-0001).
-				// ADR-0001's "pass the scalars by value" mitigation proved INSUFFICIENT on the
-				// x86_64 manylinux build: end_time still arrived with precision 0 (a garbage
-				// mpc), driving mpc_set_prec(0) -> MPFR_ASSERTN -> SIGABRT inside
-				// AMPTracker::TrackerLoopInitialization (confirmed via BERTINI_DIAG in CI).
-				// Taking the times as boost::python::object defers their conversion out of the
-				// argument-marshalling phase entirely, so the Ref converter has no scalar
-				// converter storage to clobber; we convert them here, after marshalling.
-				ComplexT start_time = boost::python::extract<ComplexT>(start_time_obj)();
-				ComplexT end_time   = boost::python::extract<ComplexT>(end_time_obj)();
-
-				// Invariant for multiprecision trackers: every mpc value entering the tracker
-				// must carry a valid (nonzero) precision.  Refuse loudly rather than let a
-				// precision-0 value reach libmpfr and abort.  (No precision concept for the
-				// fixed-double tracker, hence the constexpr gate.)
+				// Invariant backstop for multiprecision trackers: no mpc value entering the
+				// tracker may carry precision 0.  Refuse loudly rather than abort in libmpfr.
+				// (No precision concept for the fixed-double tracker, hence the constexpr gate.)
 				if constexpr (std::is_same_v<ComplexT, bertini::mpfr_complex>)
 				{
 					if (std::getenv("BERTINI_DIAG") != nullptr)
 					{
 						std::cerr << "[DIAG] track_path_wrap: start_point.size=" << start_point.size()
 						          << " NumVariables=" << self.GetSystem().NumVariables() << std::endl;
-						for (Eigen::Index i = 0; i < start_point.size(); ++i)
-						{
-							const unsigned p = bertini::Precision(start_point(i));
-							std::cerr << "[DIAG]   start_point(" << i << ").precision=" << p;
-							if (p > 0) std::cerr << " value=" << start_point(i);
-							std::cerr << std::endl;
-						}
 						std::cerr << "[DIAG] start_time.precision=" << bertini::Precision(start_time)
 						          << " end_time.precision=" << bertini::Precision(end_time) << std::endl;
-						std::cerr << "[DIAG] thread_default_precision(c/f)="
-						          << bertini::mpfr_complex::thread_default_precision() << "/"
-						          << bertini::mpfr_float::thread_default_precision()
-						          << " DefaultPrecision()=" << bertini::DefaultPrecision() << std::endl;
 						std::cerr.flush();
 					}
 
-					auto require_precision = [](char const* what, ComplexT const& z, long idx)
+					auto require_precision = [](char const* what, ComplexT const& z)
 					{
 						if (bertini::Precision(z) == 0)
-						{
-							std::string msg = std::string("track_path: ") + what;
-							if (idx >= 0) msg += " coordinate " + std::to_string(idx);
-							msg += " arrived with precision 0 (invalid/uninitialized); refusing to track from an invalid value";
-							throw std::runtime_error(msg);
-						}
+							throw std::runtime_error(std::string("track_path: ") + what +
+								" arrived with precision 0 (invalid/uninitialized); refusing to track from an invalid value");
 					};
-					require_precision("start_time", start_time, -1);
-					require_precision("end_time", end_time, -1);
+					require_precision("start_time", start_time);
+					require_precision("end_time", end_time);
 					for (Eigen::Index i = 0; i < start_point.size(); ++i)
-						require_precision("start point", start_point(i), static_cast<long>(i));
+						if (bertini::Precision(start_point(i)) == 0)
+							throw std::runtime_error("track_path: start point coordinate "
+								+ std::to_string(i) + " arrived with precision 0 (invalid/uninitialized)");
 				}
 
 				Vec<ComplexT> temp_result(self.GetSystem().NumVariables());
 				auto code = self.TrackPath(temp_result, start_time, end_time, start_point);
-				result = temp_result;
+
+				// Write the result back into the caller's numpy array in place, element-wise,
+				// through the registered to-python + hardened numpy setitem path.
+				for (Eigen::Index i = 0; i < temp_result.size(); ++i)
+					result_obj[i] = temp_result(i);
 				return code;
 			}
 
