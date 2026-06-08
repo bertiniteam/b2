@@ -1762,7 +1762,16 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 		SuccessCode tracking_success;
 
 		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
-		BOOST_CHECK(tracking_success==SuccessCode::Success);
+		// Tracking from t=1 to the endgame boundary must succeed for every path.
+		// REQUIRE (not CHECK) so that a tracking failure reports cleanly right here
+		// instead of leaving `result` empty and throwing a cryptic
+		// "dehomogenizing point with incorrect number of coordinates" from
+		// DehomogenizePoint below.
+		BOOST_REQUIRE_MESSAGE(tracking_success==SuccessCode::Success,
+			"tracking path " << ii << " to the endgame boundary failed with code "
+			<< static_cast<int>(tracking_success));
+		BOOST_REQUIRE_EQUAL(result.size(),
+			static_cast<Eigen::Index>(final_griewank_osborn_system.NumVariables()));
 
 		griewank_homogenized_solutions.push_back(result);
 		griewank_solutions.push_back(final_griewank_osborn_system.DehomogenizePoint(result));
@@ -1787,6 +1796,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	unsigned num_fails = 0;
 
 	unsigned num_infinite_solutions = 0;
+	unsigned num_converged_at_origin = 0;
 	for (auto& s : griewank_homogenized_solutions) //current_space_values)
 	{
 		auto init_prec = Precision(s(0));
@@ -1802,6 +1812,24 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 		if(endgame_success == SuccessCode::Success)
 		{
 			num_paths_converging++;
+
+			// Post-solve tolerance check: griewank-osborne has exactly one finite
+			// solution, the origin (multiplicity 3).  Any path the endgame reports
+			// as converged must land on the origin to tolerance (unless it is a
+			// diverging path, caught below by the security max_norm).  This guards
+			// against the endgame returning Success on a point that is not actually
+			// a solution.  Observed distance-to-origin is ~1e-12 across all
+			// instantiations (double, fixed-multiple, AMP); 1e-9 leaves margin
+			// against run-to-run variation while still catching a non-solution.
+			Vec<BCT> dehomogenized_final = griewank_osborn_sys.DehomogenizePoint(my_endgame.FinalApproximation<BCT>());
+			auto final_norm = dehomogenized_final.template lpNorm<Eigen::Infinity>();
+			if (final_norm <= security_settings.max_norm) // a finite (non-diverging) converged solution
+			{
+				auto dist_to_origin = (dehomogenized_final - correct).template lpNorm<Eigen::Infinity>();
+				BOOST_CHECK_MESSAGE(dist_to_origin < 1e-9,
+					"griewank converged finite path did not meet tolerance at the origin; distance = " << dist_to_origin);
+				++num_converged_at_origin;
+			}
 		}
 		else if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
 		{
@@ -1816,6 +1844,8 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	}
 	BOOST_CHECK(num_paths_converging>=3);
 	BOOST_CHECK(num_paths_diverging<=3);
+	// the three converged paths must actually be the (multiplicity-3) origin, to tolerance
+	BOOST_CHECK(num_converged_at_origin>=3);
 }//end compute griewank osborne
 
 
@@ -1909,7 +1939,14 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 		SuccessCode tracking_success;
 
 		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
-		BOOST_CHECK(tracking_success==SuccessCode::Success);
+		// REQUIRE success and a full-size result before dehomogenizing, so a tracking
+		// failure reports cleanly here instead of throwing a cryptic
+		// "dehomogenizing point with incorrect number of coordinates" on an empty result.
+		BOOST_REQUIRE_MESSAGE(tracking_success==SuccessCode::Success,
+			"tracking path " << ii << " to the endgame boundary failed with code "
+			<< static_cast<int>(tracking_success));
+		BOOST_REQUIRE_EQUAL(result.size(),
+			static_cast<Eigen::Index>(final_system.NumVariables()));
 
 		homogenized_solutions.push_back(result);
 		solutions.push_back(final_system.DehomogenizePoint(result));
