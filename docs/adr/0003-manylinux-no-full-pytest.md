@@ -1,6 +1,9 @@
 # ADR-0003: Linux wheel CI temporarily ran an import smoke test only (now reversed)
 
-**Status:** Reversed 2026-06-08 — full Linux pytest restored, pending green CI confirmation.
+**Status:** Reversed 2026-06-08 — full Linux pytest restored and **confirmed green** on
+x86_64 (run 27144247164: full suite `219 passed` inside the manylinux_2_34 container, all
+platforms × py 3.10–3.14). The blocking crashes were fixed per ADR-0006 (uninitialized
+slots / `dotfunc`) and ADR-0008 (writable-Ref corruption of `track_path`'s `end_time`).
 Originally Accepted 2026-06-07.
 
 > **Read this first (the short version).** For a period, the Linux wheel job ran only

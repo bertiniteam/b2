@@ -66,6 +66,16 @@ detects the zeroed-`_mpfr_d` sentinel:
    instantiating `op_greater` etc. for `mpfr_complex` is a hard compile error
    (no ordering on complex).
 
+4. **Guarded `dotfunc` (added 2026-06-08).** `np.dot` / `np.inner` / 1-D `@` do **not**
+   go through the `matmul` ufunc — numpy dispatches them to the dtype's
+   `PyArray_ArrFuncs::dotfunc` slot, which eigenpy implements by `Eigen::Map`-ing both
+   operands and calling `v0.dot(v1)` — reading every slot unguarded. On a fresh
+   `np.zeros`/`np.empty` mpfr/mpc array this aborts in libmpfr (observed both as
+   `init2.c` "p>=1" and `mpfr_abort_prec_max`). `internal::guarded_dotfunc<T>` accumulates
+   through `value_or_zero` (mirroring the matmul guard) and is installed by patching the
+   dtype's `dotfunc` function pointer — `eigenpy::HardenDotfunc<T>()`, called right after
+   `HardenSetitem<T>()` in `mpfr_export.cpp` for both types.
+
 Regression tests live in
 `python/test/classes/numpy_uninitialized_slots_test.py`.
 
@@ -89,7 +99,16 @@ Regression tests live in
 - **Resolves the ADR-0003 blocker.** This is the fix ADR-0003 was waiting for
   before full Linux pytest can be restored in CI. See ADR-0003.
 
-- **Related but distinct from ADR-0001.** ADR-0001 is about eigenpy's *writable
-  `Eigen::Ref` + adjacent `const&` scalar* converter corruption. This ADR is
-  about *uninitialized dtype slots*. Both are eigenpy-interaction hazards with
-  workarounds on our side, not upstream.
+- **Remaining unguarded slots (known gap).** eigenpy also installs `copyswap`,
+  `copyswapn`, `fill`, `fillwithscalar`, and `nonzero`, which still read raw slots.
+  Empirically (aarch64) only the *arithmetic* ones crash on the all-zero sentinel —
+  `dotfunc` (now guarded) and `fill` (`data[1]-data[0]`); the assignment/comparison ones
+  (`copyswap`/`copyswapn`/`fillwithscalar`/`nonzero`) tolerate it because BMP's
+  `operator=`/compare handle a null `_mpfr_d`. They remain exposed to genuinely *dirty*
+  (non-zero garbage) memory. Closing all five with one shared `value_or_zero` helper is
+  tracked follow-up work; harden them to make the invariant uniform.
+
+- **Related but distinct from ADR-0001 / ADR-0008.** Those are about eigenpy's *writable
+  `Eigen::Ref`* converter corrupting an *adjacent argument's* storage. This ADR is about
+  *uninitialized dtype slots*. Both are eigenpy-interaction hazards with workarounds on our
+  side, not upstream.
