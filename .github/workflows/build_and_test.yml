@@ -311,12 +311,14 @@ jobs:
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
           CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=2"
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib"
-          # Full pytest suite, restored 2026-06-08 now that the uninitialized-slot
-          # crash is fixed in the bindings (see ADR-0006, ADR-0003).  This runs in the
-          # manylinux_2_28 container (MPFR 3.1.6 from AlmaLinux 8 yum) - precisely the
-          # environment whose garbage non-null _mpfr_d pointers in freshly malloc'd
-          # numpy slots used to SIGABRT/segfault - so it is the definitive proof of the
-          # fix.  If this flakes or fails, revert to the smoke test per ADR-0003.
+          # Full pytest suite, restored 2026-06-08 now that the uninitialized-numpy-slot
+          # crash is fixed in the bindings (see ADR-0006).  The build image is
+          # manylinux_2_34 (AlmaLinux 9, MPFR 4.1; set via CIBW_MANYLINUX_X86_64_IMAGE
+          # above).  The crash was NEVER MPFR-version specific - it is the all-zero
+          # mpfr/mpc "uninitialized sentinel" bug, which reproduces on any MPFR version
+          # (and locally); the older blame on "MPFR 3.1.6" was a misdiagnosis.  Running
+          # the full suite here is the in-container proof of the fix.  If it flakes or
+          # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
           CIBW_TEST_REQUIRES_LINUX: "pytest numpy"
           CIBW_TEST_COMMAND_LINUX: "cd {project} && python -m pytest python/test/ -q"
 
@@ -393,10 +395,10 @@ jobs:
 
   test_wheels_linux_macos:
     name: Test wheels on ${{ matrix.os }} / py${{ matrix.python-version }}
-    # Linux wheels get only a basic import smoke test in the manylinux container
-    # (MPFR 3.1.6 from AlmaLinux 8 yum is incompatible with the mpfr_complex numpy
-    # dtype - multiple test files SIGABRT/segfault). Full Python test suite runs on
-    # macOS host runners here, and on Windows via the test_windows_wheels job.
+    # ubuntu-latest is excluded below: Linux wheels run the full pytest suite *inside*
+    # the manylinux_2_34 container via CIBW_TEST_COMMAND_LINUX (see
+    # build_macos_ubuntu_wheels).  This host-runner job therefore covers macOS only;
+    # Windows is covered by test_wheels_windows.
     if: ${{ inputs.minimal != true }}
     needs: [set_matrix, build_macos_ubuntu_wheels]
     runs-on: ${{ matrix.os }}

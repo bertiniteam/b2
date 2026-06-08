@@ -27,8 +27,9 @@ Two distinct failure modes were observed:
    it is not specific to any container or MPFR version.
 
 2. **Write onto malloc-dirty memory → SIGABRT.** When the `NPY_NEEDS_INIT`
-   zero-fill guarantee is violated (observed in the `manylinux_2_28` build
-   container, see ADR-0003), a slot can contain garbage with a non-null
+   zero-fill guarantee is violated (first observed in the then-current
+   `manylinux_2_28` build container — the image is now `manylinux_2_34`; see
+   ADR-0003), a slot can contain garbage with a non-null
    `_mpfr_d`. That defeats BMP's null check on the write path: `mpc_set` runs on
    garbage limbs and MPFR's `MPFR_ASSERTN` calls `abort()`.
 
