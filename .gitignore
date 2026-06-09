@@ -122,4 +122,4 @@ bertini2_tests_*.log
 /failed_paths
 
 # Compiled benchmark binaries (keep the .cpp sources)
-/benchmarks/arithmetic_cost
+/tuning/arithmetic_cost
