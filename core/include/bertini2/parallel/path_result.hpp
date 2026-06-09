@@ -70,6 +70,8 @@ struct PathBeforeEGResult
 	bool          precision_changed      = false;
 	ComplexT      time_of_first_prec_increase;
 	unsigned      max_precision_used     = 0;
+	// The precision the tracker was using at the endgame boundary; see EGBoundaryMetaData.
+	unsigned      boundary_precision     = DoublePrecision();
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned const)
@@ -81,6 +83,7 @@ struct PathBeforeEGResult
 		ar & precision_changed;
 		ar & time_of_first_prec_increase;
 		ar & max_precision_used;
+		ar & boundary_precision;
 	}
 };
 
