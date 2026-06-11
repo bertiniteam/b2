@@ -112,3 +112,13 @@ Regression tests live in
   `Eigen::Ref`* converter corrupting an *adjacent argument's* storage. This ADR is about
   *uninitialized dtype slots*. Both are eigenpy-interaction hazards with workarounds on our
   side, not upstream.
+
+- **A third pathology in the same family (fixed 2026-06-11, PR #8):** because
+  Float/Complex are numpy-registered dtypes, `float()`/`complex()` on the bound
+  scalars with no `__float__`/`__complex__` fell into the numpy user-dtype dispatch,
+  which re-invoked `PyNumber_Float` — unbounded recursion → C-stack overflow SIGSEGV
+  (same family as the `Float.__eq__` recursion of 2026-06-06). The bound scalar
+  classes now define `__float__`/`__complex__` explicitly (and a TypeError-raising
+  `__float__` on Complex, since the slot-less fallback is exactly the crashing path).
+  Rule of thumb: numpy-registered scalar types must define every numeric-conversion
+  dunder a Python consumer could trigger; absence means recursion, not a TypeError.
