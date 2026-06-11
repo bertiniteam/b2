@@ -388,3 +388,31 @@ def test_change_prec_complex(cvals):
     t = t**(-2)
     assert mp.abs(t.real - mp.Float("0.16560329111110602501494676510297183141930819429")) <= tol
     assert mp.abs(t.imag - mp.Float("0.028838165251841866149715852522538399390278791818")) <= tol
+
+
+# --- conversion to python builtins ---
+# regression: without __float__/__complex__ on the bound scalar types, CPython's
+# conversion fell into the numpy user-dtype dispatch and recursed until the C
+# stack overflowed (SIGSEGV).  values chosen exactly representable in binary.
+
+def test_float_of_Float():
+    assert float(mp.Float("2.5")) == 2.5
+
+
+def test_complex_of_Float():
+    assert complex(mp.Float("-0.25")) == -0.25 + 0j
+
+
+def test_complex_of_Complex():
+    assert complex(mp.Complex("2.5", "-0.25")) == complex(2.5, -0.25)
+
+
+def test_float_of_Complex_raises():
+    with pytest.raises(TypeError):
+        float(mp.Complex("2.5", "-0.25"))
+
+
+def test_complex_of_numpy_element():
+    import numpy as np
+    a = np.zeros((2,), dtype=mp.Complex)
+    assert complex(a[0]) == 0j

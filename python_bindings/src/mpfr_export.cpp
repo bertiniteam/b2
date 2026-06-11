@@ -384,6 +384,10 @@ namespace bertini{
 
 			.def(init<mpz_int>((arg("self"),arg("val")),"Construct an variable-precision float from an arbitrary-precision integer."))
 
+			// without an explicit __float__, CPython's float()/complex() fall into the
+			// numpy user-dtype dispatch and recurse until the C stack overflows (SIGSEGV)
+			.def("__float__", +[](T const& x) { return x.convert_to<double>(); }, (arg("self")), "convert to a python float.  truncates to double precision, losing digits beyond the 16th -- for full precision, use strings.")
+
 			.def(RealStrVisitor<T>())
 			.def(PrecisionVisitor<T>())
 
@@ -472,6 +476,12 @@ namespace bertini{
 
 			.def(init<mpz_int>((arg("self"),arg("real")),"Construct variable-precision complex number from an arbitrary-precision integer, with 0 imaginary part"))
 			.def(init<mpz_int, mpz_int>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a pair of arbitrary-precision integers"))
+
+			// without an explicit __complex__, CPython's complex() falls into the
+			// numpy user-dtype dispatch and recurses until the C stack overflows (SIGSEGV)
+			.def("__complex__", +[](T const& z) { return std::complex<double>(z.real().convert_to<double>(), z.imag().convert_to<double>()); }, (arg("self")), "convert to a python complex.  truncates to double precision, losing digits beyond the 16th -- for full precision, use strings.")
+			// raise the TypeError ourselves; the slot-less fallback path crashes the same way
+			.def("__float__", +[](T const&) -> double { PyErr_SetString(PyExc_TypeError, "can't convert Complex to float; use complex(), or .real/.imag"); boost::python::throw_error_already_set(); return 0.0; }, (arg("self")), "raises TypeError, as for python complex")
 
 			.def(ComplexVisitor<T>())
 
