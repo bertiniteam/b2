@@ -177,6 +177,138 @@ namespace{
 	}
 }
 
+
+std::shared_ptr<Node> SimplifiedNegate(std::shared_ptr<Node> const& n)
+{
+	if (n->IsLiteralZero())
+		return n;
+	return NegateOperator::Make(n);
+}
+
+
+std::shared_ptr<Node> SimplifiedSum(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms)
+{
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> remaining;
+	remaining.reserve(terms.size());
+	for (auto const& t : terms)
+		if (!t.first->IsLiteralZero())
+			remaining.push_back(t);
+
+	if (remaining.empty())
+		return Zero();
+	if (remaining.size() == 1)
+		return remaining[0].second ? remaining[0].first : SimplifiedNegate(remaining[0].first);
+
+	auto result = SumOperator::Make(remaining[0].first, remaining[0].second);
+	for (size_t ii = 1; ii < remaining.size(); ++ii)
+		result->AddOperand(remaining[ii].first, remaining[ii].second);
+	return result;
+}
+
+
+namespace{
+	// flatten nested Mult factors into one list so constants can meet and fold
+	// (3*(2*x) -> {3,2,x} -> 6*x).  reads the nested node's operands; never
+	// modifies it.  a divided nested Mult inverts its flags: x/(a/b) = x/a*b.
+	void FlattenFactor(std::vector<std::pair<std::shared_ptr<Node>, bool>>& out,
+	                   std::shared_ptr<Node> const& n, bool mult)
+	{
+		if (auto as_mult = std::dynamic_pointer_cast<MultOperator>(n))
+		{
+			auto const& ops = as_mult->Operands();
+			auto const& flags = as_mult->GetMultOrDiv();
+			for (size_t ii = 0; ii < ops.size(); ++ii)
+				FlattenFactor(out, ops[ii], mult ? flags[ii] : !flags[ii]);
+			return;
+		}
+		out.emplace_back(n, mult);
+	}
+}
+
+std::shared_ptr<Node> SimplifiedMult(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& factors_in)
+{
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> factors;
+	factors.reserve(factors_in.size());
+	for (auto const& f : factors_in)
+		FlattenFactor(factors, f.first, f.second);
+
+	mpq_rational constant(1);
+	bool have_constant = false;
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> remaining;
+	remaining.reserve(factors.size());
+
+	for (auto const& f : factors)
+	{
+		auto const& n = f.first;
+		const bool mult = f.second;
+
+		if (n->IsLiteralZero())
+		{
+			if (mult)
+				return Zero();
+			remaining.push_back(f);  // division by a literal zero stays visible
+			continue;
+		}
+		if (n->IsLiteralOne())
+			continue;
+
+		// fold exact constants together; Floats are deliberately NOT folded
+		if (auto as_int = std::dynamic_pointer_cast<Integer>(n))
+		{
+			mpq_rational val(as_int->GetValue());
+			if (mult)
+				constant *= val;
+			else
+				constant /= val;
+			have_constant = true;
+			continue;
+		}
+		if (auto as_rat = std::dynamic_pointer_cast<Rational>(n))
+		{
+			if (as_rat->GetValueImag() == 0)
+			{
+				if (mult)
+					constant *= as_rat->GetValueReal();
+				else
+					constant /= as_rat->GetValueReal();
+				have_constant = true;
+				continue;
+			}
+		}
+		remaining.push_back(f);
+	}
+
+	std::shared_ptr<Node> constant_node = nullptr;
+	if (have_constant && constant != 1)
+	{
+		if (denominator(constant) == 1)
+			constant_node = Integer::Make(numerator(constant));
+		else
+			constant_node = Rational::Make(constant, mpq_rational(0));
+	}
+
+	if (remaining.empty())
+		return constant_node ? constant_node : std::shared_ptr<Node>(One());
+
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> finals;
+	if (constant_node)
+		finals.emplace_back(constant_node, true);  // canonical order: constant first
+	finals.insert(finals.end(), remaining.begin(), remaining.end());
+
+	if (finals.size() == 1 && finals[0].second)
+		return finals[0].first;
+
+	// MultOperator has no (node, bool) constructor; for a leading divisor,
+	// deliberately materialize the canonical '1/...' form
+	if (!finals[0].second)
+		finals.insert(finals.begin(), {One(), true});
+
+	auto result = MultOperator::Make(finals[0].first);
+	for (size_t ii = 1; ii < finals.size(); ++ii)
+		result->AddOperand(finals[ii].first, finals[ii].second);
+	return result;
+}
+
 void SumOperator::print(std::ostream & target) const
 {
 	for (size_t ii = 0; ii < operands_.size(); ++ii)
@@ -205,29 +337,16 @@ void SumOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> SumOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	unsigned int counter = 0;
-	std::shared_ptr<Node> ret_sum = Zero();
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> terms;
+	terms.reserve(operands_.size());
 	for (size_t ii = 0; ii < operands_.size(); ++ii)
 	{
-		auto converted = std::dynamic_pointer_cast<Number>(operands_[ii]);
-		if (converted)
-			continue;
-		
-		auto temp_node = operands_[ii]->Differentiate(v);
-		converted = std::dynamic_pointer_cast<Number>(temp_node);
-		if (converted)
-			if (converted->Eval<dbl>()==dbl(0.0))
-				continue;
-		
-		counter++;
-		if (counter==1)
-			ret_sum = SumOperator::Make(temp_node,signs_[ii]);
-		else
-			std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddOperand(temp_node,signs_[ii]);
-		
+		if (std::dynamic_pointer_cast<Number>(operands_[ii]))
+			continue;  // constants differentiate to 0; don't even build it
+
+		terms.emplace_back(operands_[ii]->Differentiate(v), signs_[ii]);
 	}
-	
-		return ret_sum;
+	return SimplifiedSum(terms);
 }
 
 int SumOperator::Degree(std::shared_ptr<Variable> const& v) const
@@ -488,7 +607,7 @@ void NegateOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> NegateOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return NegateOperator::Make(operand_->Differentiate(v));
+	return SimplifiedNegate(operand_->Differentiate(v));
 }
 
 dbl NegateOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -730,49 +849,31 @@ void MultOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	std::shared_ptr<Node> ret_sum = node::Zero();
-	
-	unsigned term_counter {0};
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> sum_terms;
 	// this loop implements the generic product rule, perhaps inefficiently.
 	for (size_t ii = 0; ii < operands_.size(); ++ii)
 	{
 		auto local_derivative = operands_[ii]->Differentiate(v);
-		
-		// if the derivative of the current term is 0, then stop 
-		auto is_it_a_number = std::dynamic_pointer_cast<Float>(local_derivative);
-		if (is_it_a_number)
-			if (is_it_a_number->Eval<dbl>()==dbl(0.0))
-				continue;
-		
-		// no, the term's derivative is not 0.  
-		
-		// create the product of the remaining terms
-		auto term_ii = MultOperator::Make(local_derivative);
+		if (local_derivative->IsLiteralZero())
+			continue;
+
+		// the product of the derivative with the remaining factors
+		std::vector<std::pair<std::shared_ptr<Node>, bool>> factors;
+		factors.reserve(operands_.size() + 1);
+		factors.emplace_back(local_derivative, true);
 		for (size_t jj = 0; jj < operands_.size(); ++jj)
-		{
-			if(jj != ii)
-				term_ii->AddOperand(operands_[jj],mult_or_div_[jj]);
-		}
-		
-		// and then either 1. multiply it against the current derivative, or 2. invoke the quotient rule.
-		if (is_it_a_number)
-			if (is_it_a_number->Eval<dbl>()==dbl(1.0))
-				continue;
-		
-		// if the derivative of the term under consideration is equal to 1, no need to go on.  already have the product we need.
-		
+			if (jj != ii)
+				factors.emplace_back(operands_[jj], mult_or_div_[jj]);
+
 		// if is division, need this for the quotient rule
 		if ( !(mult_or_div_[ii]) )
-			term_ii->AddOperand(pow(operands_[ii],2),false); // draw a line and square below
-		
-		term_counter++;
-		if (term_counter==1)
-			ret_sum = SumOperator::Make(term_ii,mult_or_div_[ii]);
-		else
-			std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddOperand(term_ii,mult_or_div_[ii]);
+			factors.emplace_back(pow(operands_[ii],2), false); // draw a line and square below
+
+		// a divided factor's term enters subtracted (quotient rule)
+		sum_terms.emplace_back(SimplifiedMult(factors), mult_or_div_[ii]);
 	} // re: for ii
-	
-	return ret_sum;
+
+	return SimplifiedSum(sum_terms);
 }
 
 int MultOperator::Degree(std::shared_ptr<Variable> const& v) const
@@ -972,12 +1073,12 @@ void PowerOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> PowerOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	
 	auto exp_minus_one = exponent_-1;
-	auto ret_mult = MultOperator::Make(base_->Differentiate(v));
-	ret_mult->AddOperand(exponent_);
-	ret_mult->AddOperand(PowerOperator::Make(base_, exp_minus_one));
-	return ret_mult;
+	return SimplifiedMult({
+		{base_->Differentiate(v), true},
+		{exponent_, true},
+		{PowerOperator::Make(base_, exp_minus_one), true}
+	});
 }
 
 
@@ -1170,16 +1271,13 @@ std::shared_ptr<Node> IntegerPowerOperator::Differentiate(std::shared_ptr<Variab
 		return Integer::Make(0);
 	else if (exponent_==1)
 		return operand_->Differentiate(v);
-	else if (exponent_==2){
-		auto M = MultOperator::Make(Integer::Make(2), operand_);
-		M->AddOperand(operand_->Differentiate(v));
-		return M;
-	}
 	else{
-		auto M = MultOperator::Make(Integer::Make(exponent_),
-												IntegerPowerOperator::Make(operand_, exponent_-1) );
-		M->AddOperand(operand_->Differentiate(v));
-		return M;
+		std::shared_ptr<Node> power_part = (exponent_==2) ? operand_ : std::shared_ptr<Node>(IntegerPowerOperator::Make(operand_, exponent_-1));
+		return SimplifiedMult({
+			{Integer::Make(exponent_), true},
+			{power_part, true},
+			{operand_->Differentiate(v), true}
+		});
 	}
 }
 
@@ -1231,10 +1329,11 @@ void SqrtOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> SqrtOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	auto ret_mult = MultOperator::Make(PowerOperator::Make(operand_, Rational::Make(mpq_rational(-1,2),0)));
-	ret_mult->AddOperand(operand_->Differentiate(v));
-	ret_mult->AddOperand(Rational::Make(mpq_rational(1,2),0));
-	return ret_mult;
+	return SimplifiedMult({
+		{Rational::Make(mpq_rational(1,2),0), true},
+		{PowerOperator::Make(operand_, Rational::Make(mpq_rational(-1,2),0)), true},
+		{operand_->Differentiate(v), true}
+	});
 }
 
 int SqrtOperator::Degree(std::shared_ptr<Variable> const& v) const
@@ -1314,7 +1413,10 @@ void ExpOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> ExpOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return exp(operand_)*operand_->Differentiate(v);
+	return SimplifiedMult({
+		{exp(operand_), true},
+		{operand_->Differentiate(v), true}
+	});
 }
 
 
@@ -1389,7 +1491,10 @@ void LogOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> LogOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return MultOperator::Make(operand_,false,operand_->Differentiate(v),true);
+	return SimplifiedMult({
+		{operand_->Differentiate(v), true},
+		{operand_, false}
+	});
 }
 
 

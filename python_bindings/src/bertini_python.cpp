@@ -115,6 +115,11 @@ namespace bertini
 					static_cast<bertini::VariableGroup(*)(std::vector<std::shared_ptr<bertini::node::Function>> const&)>(&bertini::node::GatherVariables),
 					(boost::python::arg("functions")),
 					"Return the distinct variables appearing in a list of functions, ordered alphabetically by name.");
+
+				boost::python::def("gather_variables",
+					+[](std::shared_ptr<bertini::node::Node> const& n) { return bertini::node::GatherVariables(n); },
+					(boost::python::arg("node")),
+					"Return the distinct variables appearing in an expression, ordered alphabetically by name.");
 			}
 
 			ExportAllSystems();

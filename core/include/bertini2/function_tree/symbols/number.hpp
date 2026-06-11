@@ -191,6 +191,24 @@ namespace node{
 			return true_value_ < 0 ? PrecNegate : PrecAtom;
 		}
 
+		/**
+		\brief Get the literal value this node represents.
+		*/
+		mpz_int const& GetValue() const
+		{
+			return true_value_;
+		}
+
+		bool IsLiteralZero() const override
+		{
+			return true_value_ == 0;
+		}
+
+		bool IsLiteralOne() const override
+		{
+			return true_value_ == 1;
+		}
+
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<Integer> Make(Ts&& ...ts){ 
@@ -274,6 +292,24 @@ namespace node{
 			if (highest_precision_value_.imag() == 0 && highest_precision_value_.real() < 0)
 				return PrecNegate;
 			return PrecAtom;
+		}
+
+		/**
+		\brief Get the literal value this node represents, at its stored (highest) precision.
+		*/
+		mpfr_complex const& GetValue() const
+		{
+			return highest_precision_value_;
+		}
+
+		bool IsLiteralZero() const override
+		{
+			return highest_precision_value_.real() == 0 && highest_precision_value_.imag() == 0;
+		}
+
+		bool IsLiteralOne() const override
+		{
+			return highest_precision_value_.real() == 1 && highest_precision_value_.imag() == 0;
 		}
 
 
@@ -388,6 +424,32 @@ namespace node{
 					return PrecMult;
 			}
 			return PrecAtom;
+		}
+
+		/**
+		\brief Get the real part of the literal value this node represents.
+		*/
+		mpq_rational const& GetValueReal() const
+		{
+			return true_value_real_;
+		}
+
+		/**
+		\brief Get the imaginary part of the literal value this node represents.
+		*/
+		mpq_rational const& GetValueImag() const
+		{
+			return true_value_imag_;
+		}
+
+		bool IsLiteralZero() const override
+		{
+			return true_value_real_ == 0 && true_value_imag_ == 0;
+		}
+
+		bool IsLiteralOne() const override
+		{
+			return true_value_real_ == 1 && true_value_imag_ == 0;
 		}
 
 

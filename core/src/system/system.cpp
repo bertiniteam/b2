@@ -50,7 +50,12 @@ namespace bertini
 
 	bool DefaultAutoSimplify()
 	{
-		return true;
+		// differentiation now emits already-simplified trees, so the post-hoc
+		// Simplify pass is redundant -- and it mutates IN PLACE, including
+		// subtrees the derivative shares with the user's original functions.
+		// holding f must never observe f changing because the system was
+		// differentiated.  Simplify()/AutoSimplify(true) remain explicit opt-ins.
+		return false;
 	}
 
 	void swap(System & a, System & b)

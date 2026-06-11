@@ -117,18 +117,25 @@ def test_hessian_of_absent_variable_is_zero(xy_integer_point, tol_mp):
     assert mp.abs(f.differentiate(z).differentiate(z).eval_mp()) <= tol_mp
 
 
-def test_hessian_degree_is_structural_upper_bound(xy_integer_point):
-    # derivative trees are not simplified (EliminateZeros is not exposed to
-    # python), so degree() counts zero-coefficient terms and reports a
-    # structural UPPER BOUND on the true degree -- for fxx of x^3*y it is
-    # currently 3, though fxx = 6xy has degree 2.  this test documents that
-    # contract; the true values are pinned by the entry tests above.
+def test_hessian_degrees_exact(xy_integer_point):
+    # differentiation emits already-simplified trees, so degree() on second
+    # derivatives is exact -- this is algebra, not an upper bound.
     x, y = xy_integer_point
     f = x**3 * y  # total degree 4
-    fxx = f.differentiate(x).differentiate(x)  # = 6xy, true degree 2
-    assert fxx.degree() >= 2
-    assert fxx.degree() <= f.degree()  # differentiation never raises degree
+
+    fxx = f.differentiate(x).differentiate(x)  # 6xy
+    assert fxx.degree() == 2
+    assert fxx.degree(x) == 1
+    assert fxx.degree(y) == 1
     assert fxx.is_polynomial()
+
+    fxy = f.differentiate(x).differentiate(y)  # 3x^2
+    assert fxy.degree() == 2
+    assert fxy.degree(x) == 2
+    assert fxy.degree(y) == 0
+
+    fyy = f.differentiate(y).differentiate(y)  # 0
+    assert fyy.degree() == 0
 
 
 # --- mixed partials commute (the trees differ; the values must not) ---

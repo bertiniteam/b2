@@ -180,3 +180,21 @@ def test_trancendental(diffvars, tol_mp):
     #
     assert mp.abs(df.eval_mp(z).real / mpfr_float("-2.1642907643013779167501866500194314960002972412e-14")-1) <= tol_mp
     assert mp.abs(df.eval_mp(z).imag / mpfr_float("2.1105887207247540399884720817624768568595288922e-14")-1) <= tol_mp
+
+
+# --- derivatives come out already simplified ---
+# differentiation builds trees through the Simplified* factories: literal
+# zeros/ones never appear, exact Integer/Rational constants fold (no Floats),
+# nested products flatten.  these exact-form assertions are the contract.
+
+def test_derivative_trees_are_simplified():
+    x = Variable('x')
+    y = Variable('y')
+    assert str((x * y).differentiate(x)) == 'y'
+    assert str((x + y).differentiate(x)) == '1'
+    assert str((x**3).differentiate(x)) == '3*x^2'
+    assert str(sin(x).differentiate(x)) == 'cos(x)'
+    assert str(cos(x).differentiate(x)) == '-sin(x)'
+    assert str(log(x).differentiate(x)) == '1/x'
+    assert str((x**3 * y).differentiate(x).differentiate(x)) == '6*x*y'
+    assert str((x / y).differentiate(y)) == '-x/y^2'

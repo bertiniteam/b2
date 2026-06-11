@@ -258,6 +258,29 @@ public:
 	{
 		return PrecAtom;
 	}
+
+	/**
+	\brief Is this node the literal constant 0?
+
+	Exact check on stored literal values (Integer/Float/Rational override);
+	false for everything else, including non-literal expressions that happen
+	to evaluate to zero.  Used by differentiation to build already-simplified
+	trees without evaluating anything.
+	*/
+	virtual bool IsLiteralZero() const
+	{
+		return false;
+	}
+
+	/**
+	\brief Is this node the literal constant 1?
+
+	\see IsLiteralZero
+	*/
+	virtual bool IsLiteralOne() const
+	{
+		return false;
+	}
 	
 
 	/**
