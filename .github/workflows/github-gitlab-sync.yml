@@ -1,12 +1,22 @@
-name: Sync to MPI GitLab
-on: 
+name: Sync to GitLab mirror
+on:
   push
+
+# Any repo (upstream or fork) that configures the three GITLAB_* secrets gets
+# mirrored to its own GitLab target; repos without the secrets skip silently.
+# This replaces the old hardcoded `if: github.repository == 'bertiniteam/b2'`,
+# which prevented forks from syncing even when their secrets were set.
+# Note: the `secrets` context is not available in job-level `if`, hence the
+# env indirection.
+
 jobs:
   sync:
-    if: github.repository == 'bertiniteam/b2' #only on official 
     runs-on: ubuntu-latest
+    env:
+      GITLAB_CONFIGURED: ${{ secrets.GITLAB_URL != '' }}
     steps:
     - name: Sync to GitLab
+      if: env.GITLAB_CONFIGURED == 'true'
       # You may pin to the exact commit or the version.
       # uses: kujov/gitlab-sync@b19399d43e81ac88acb6eefd5588e6ebde3d7d88
       uses: kujov/gitlab-sync@2.2.1
@@ -18,5 +28,4 @@ jobs:
         # Your GitLab Personal Access Token with required permissions
         gitlab_pat: ${{ secrets.GITLAB_PAT }}
         # Whether to force push to GitLab. Defaults to false.
-        
-        force_push: true # optional, default is false
+        force_push: true

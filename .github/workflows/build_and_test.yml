@@ -2,8 +2,13 @@ name: Build and test wheels 🐍
 
 on:
   push:
+    # feature branches get their CI from the pull_request trigger; running the
+    # push event there too just produced a cancelled twin whose never-started
+    # jobs render as 0s "failures" with raw ${{ matrix.os }} names in the PR
+    # checks list.  use workflow_dispatch for a branch without an open PR.
     branches:
-      - '**'
+      - develop
+      - main
     paths-ignore:
       - 'python/docs/**'
       - 'doc_resources/**'
@@ -11,6 +16,7 @@ on:
       - '**/*.md'
       - '**/*.html'
       - '.github/workflows/build_docs.yml'
+  workflow_dispatch:
   pull_request:
     paths-ignore:
       - 'python/docs/**'
