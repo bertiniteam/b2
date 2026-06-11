@@ -79,3 +79,86 @@ def test_power_series_endgame_variant():
     solver.solve()
     solns = solver.solutions()
     assert len(solns) == 2
+
+
+# --- coordinate representations of solutions ---
+# solutions() returns USER coordinates by default (the variables you wrote);
+# solutions(user_coords=False) is the explicit opt-out giving the solver's
+# internal representation: homogenized, lying on the target system's patch.
+# see ADR-0013.
+
+import numpy as np
+
+INV_SQRT2 = 1 / np.sqrt(2)
+KNOWN_SOLUTIONS = (
+    np.array([complex(INV_SQRT2), complex(-INV_SQRT2)]),
+    np.array([complex(-INV_SQRT2), complex(INV_SQRT2)]),
+)
+
+
+def _as_complex(pt):
+    return np.array([complex(pt[i]) for i in range(len(pt))])
+
+
+def _distance_to_known(pt):
+    return min(np.linalg.norm(_as_complex(pt) - k) for k in KNOWN_SOLUTIONS)
+
+
+@pytest.fixture
+def solved():
+    """the circle/line system, its variables, and a solved solver."""
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_function(x**2 + y**2 - 1)
+    sys.add_function(x + y)
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    solver = ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
+    solver.solve()
+    return sys, solver
+
+
+def test_solutions_are_in_user_coordinates_by_default(solved):
+    _, solver = solved
+    sols = solver.solutions()
+    assert len(sols) == 2
+    for s in sols:
+        assert len(s) == 2  # the user's variables, not [h, x, y]
+        assert _distance_to_known(s) < 1e-8
+
+
+def test_solutions_internal_coords_are_explicit_optout(solved):
+    _, solver = solved
+    internal = solver.solutions(user_coords=False)
+    assert len(internal) == 2
+    ts = solver.target_system()
+    user = solver.solutions()
+    for i in range(2):
+        assert len(internal[i]) == 3  # [hom_var, x, y]
+        dehomed = ts.dehomogenize_point(internal[i])
+        assert np.linalg.norm(_as_complex(dehomed) - _as_complex(user[i])) < 1e-25
+
+
+def test_homogenize_point_reenters_internal_coordinates(solved):
+    """the lift: user coords -> homogenized, on the target system's patch."""
+    _, solver = solved
+    ts = solver.target_system()
+    user = solver.solutions()
+    internal = solver.solutions(user_coords=False)
+    for i in range(2):
+        lifted = ts.homogenize_point(user[i])
+        assert len(lifted) == 3
+        # projectively the same point, on the same patch -> numerically equal
+        assert np.linalg.norm(_as_complex(lifted) - _as_complex(internal[i])) < 1e-8
+        # already on the patch: rescaling is the identity
+        rescaled = ts.rescale_point_to_fit_patch(lifted)
+        assert np.linalg.norm(_as_complex(rescaled) - _as_complex(lifted)) < 1e-25
+
+
+def test_variable_orderings_label_the_representations(solved):
+    sys, solver = solved
+    user_names = [v.name for v in sys.variable_ordering()]
+    assert user_names == ['x', 'y']
+
+    internal_names = [v.name for v in solver.target_system().variable_ordering()]
+    assert len(internal_names) == 3
+    assert internal_names[1:] == ['x', 'y']  # leading entry is the homogenizing variable

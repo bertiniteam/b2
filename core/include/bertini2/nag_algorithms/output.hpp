@@ -75,7 +75,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		NumVariables(out, zd);
 		Variables(out, zd,"\n\n");
 
-		const auto& s = zd.FinalSolutions();
+		const auto& s = zd.SolutionsInternalCoords();
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
@@ -99,9 +99,9 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	static 
 	void RawData(OutT & out, ZDT const& zd)
 	{
-		const auto n = zd.FinalSolutions().size();
+		const auto n = zd.SolutionsInternalCoords().size();
 		NumVariables(out, zd,"\n\n");
-		for (decltype(zd.FinalSolutions().size()) ii{0}; ii<n; ++ii)
+		for (decltype(zd.SolutionsInternalCoords().size()) ii{0}; ii<n; ++ii)
 		{
 			// only successful endgames have a final approximation to report
 			if (zd.FinalSolutionMetadata()[ii].endgame_success != SuccessCode::Success)
@@ -160,7 +160,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	static
 	void EndPoint(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
 	{	
-		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.FinalSolutions()[ind]);
+		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.SolutionsInternalCoords()[ind]);
 		out << additional;
 	}
 
@@ -168,9 +168,9 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	static
 	void EndPointDehom(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
 	{	
-		DefaultPrecision(Precision(zd.FinalSolutions()[ind]));
+		DefaultPrecision(Precision(zd.SolutionsInternalCoords()[ind]));
 
-		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.TargetSystem().DehomogenizePoint(zd.FinalSolutions()[ind]));
+		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.SolutionsUserCoords()[ind]);
 		out << additional;
 	}
 
@@ -202,7 +202,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	static
 	void EndPointMDRaw(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
-		const auto& pt = zd.FinalSolutions()[ind];
+		const auto& pt = zd.SolutionsInternalCoords()[ind];
 		const auto& data = zd.FinalSolutionMetadata()[ind];
 		out << data.path_index << '\n'
 			<< Precision(pt) << '\n';
@@ -232,11 +232,9 @@ struct NonsingularSolutions
 	{
 		using BCT = typename AlgoTraits<AlgoT>::BaseComplexT;
 
-		const auto& sys = alg.TargetSystem();
-
 		SampCont<BCT> solns;
 
-		const auto& s = alg.FinalSolutions();
+		const auto& s = alg.SolutionsUserCoords();
 		const auto& m = alg.FinalSolutionMetadata();
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
@@ -245,8 +243,8 @@ struct NonsingularSolutions
 			if (d.endgame_success == SuccessCode::Success &&
 				d.multiplicity==1)
 			{
-				solns.push_back(sys.DehomogenizePoint(s[ii]));
-			}	
+				solns.push_back(s[ii]);
+			}
 		}
 
 		return solns;
@@ -264,16 +262,13 @@ struct AllSolutions
 	{
 		using BCT = typename AlgoTraits<AlgoT>::BaseComplexT;
 
-		const auto& sys = alg.TargetSystem();
-
 		SampCont<BCT> solns;
 
-		const auto& s = alg.FinalSolutions();
-		const auto& m = alg.FinalSolutionMetadata();
+		const auto& s = alg.SolutionsUserCoords();
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
-			solns.push_back(sys.DehomogenizePoint(s[ii]));
+			solns.push_back(s[ii]);
 		}
 
 		return solns;

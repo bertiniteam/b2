@@ -153,7 +153,17 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		"Run the zero-dim algorithm. Pass an mpi4py communicator for parallel execution.")
 	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
 	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
-	.def("solutions", &AlgoT::FinalSolutions, return_internal_reference<>(), "get the solutions at the target time")
+	.def("solutions",
+		+[](AlgoT const& self, bool user_coords) -> decltype(self.SolutionsInternalCoords()) {
+			return user_coords ? self.SolutionsUserCoords() : self.SolutionsInternalCoords();
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		return_internal_reference<>(),
+		"get the computed solutions.  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.")
+	.def("target_system",
+		+[](AlgoT& self) -> decltype(self.TargetSystem()) { return self.TargetSystem(); },
+		return_internal_reference<>(),
+		"get the prepared target system: the homogenized, auto-patched clone of the system you supplied.  its patch is the one internal-coordinate solutions lie on; use its dehomogenize_point/homogenize_point/variable_ordering to move between representations.")
 	.def("solution_metadata", &AlgoT::FinalSolutionMetadata, return_internal_reference<>(), "get the metadata for the solutions at the target time")
 	.def("endgame_boundary_data", &AlgoT::EndgameBoundaryData, return_internal_reference<>(), "get the data for the state at the endgame boundary (when we switch from regular tracking to endgame tracking")
 	;

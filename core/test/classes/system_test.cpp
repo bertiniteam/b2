@@ -989,6 +989,104 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 
 /**
 \class bertini::System
+\test \b system_homogenize_point_unhomogenized_is_identity HomogenizePoint on an unhomogenized, unpatched system returns the point unchanged.
+*/
+BOOST_AUTO_TEST_CASE(system_homogenize_point_unhomogenized_is_identity)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+
+	Vec<dbl> p(2);
+	p << dbl(3,4), dbl(4,5);
+
+	auto h = sys.HomogenizePoint(p);
+
+	BOOST_CHECK_EQUAL(h.size(),2);
+	BOOST_CHECK(abs(h(0) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(1) - p(1)) < threshold_clearance_d);
+}
+
+
+/**
+\class bertini::System
+\test \b system_homogenize_point_FIFO_one_aff_group HomogenizePoint inserts the homogenizing coordinate with value 1, and dehomogenization inverts it.
+*/
+BOOST_AUTO_TEST_CASE(system_homogenize_point_FIFO_one_aff_group)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+
+	sys.Homogenize();
+
+	Vec<dbl> p(2);
+	p << dbl(3,4), dbl(4,5);
+
+	auto h = sys.HomogenizePoint(p);
+
+	BOOST_CHECK_EQUAL(h.size(),3);
+	BOOST_CHECK(abs(h(0) - dbl(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(1) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(2) - p(1)) < threshold_clearance_d);
+
+	auto p_again = sys.DehomogenizePoint(h);
+	BOOST_CHECK_EQUAL(p_again.size(),2);
+	BOOST_CHECK(abs(p_again(0) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(p_again(1) - p(1)) < threshold_clearance_d);
+}
+
+
+/**
+\class bertini::System
+\test \b system_homogenize_point_FIFO_mixed_groups HomogenizePoint handles affine groups, hom groups, and dehomogenization inverts it, with multiple group types in play.
+*/
+BOOST_AUTO_TEST_CASE(system_homogenize_point_FIFO_mixed_groups)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	Var z = Variable::Make("z"), w = Variable::Make("w");
+	Var h1 = Variable::Make("h1"), h2 = Variable::Make("h2");
+	VariableGroup vars{x, y};
+	VariableGroup vars2{h1,h2};
+	VariableGroup vars3{z, w};
+	sys.AddVariableGroup(vars);
+	sys.AddHomVariableGroup(vars2);
+	sys.AddVariableGroup(vars3);
+
+	sys.Homogenize();
+
+	Vec<dbl> p(6);
+	p << dbl(3,4), dbl(4,5),
+		 dbl(10,11), dbl(11,12),
+		 dbl(6,7), dbl(7,8);
+
+	auto h = sys.HomogenizePoint(p);
+
+	BOOST_CHECK_EQUAL(h.size(),8);
+	// [hom0, x, y, hom-group passthrough, hom1, z, w]
+	BOOST_CHECK(abs(h(0) - dbl(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(1) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(2) - p(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(3) - p(2)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(4) - p(3)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(5) - dbl(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(6) - p(4)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(7) - p(5)) < threshold_clearance_d);
+
+	auto p_again = sys.DehomogenizePoint(h);
+	BOOST_CHECK_EQUAL(p_again.size(),6);
+	for (int ii = 0; ii < 6; ++ii)
+		BOOST_CHECK(abs(p_again(ii) - p(ii)) < threshold_clearance_d);
+}
+
+
+
+
+/**
+\class bertini::System
 \test \b system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars Test the dehomogenization of a point using the first-in-first-out variable ordering which is standard in Bertini 1.
 */
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
@@ -1146,6 +1244,53 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 	mpfr_float coefficient_bound = sys.CoefficientBound<mpfr>();
 	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
 	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
+}
+
+
+// NOTE: this test calls AutoPatch, whose coefficients come from the RandomMp
+// generator, which is deterministic-per-run but NOT reseedable (SetGlobalSeed
+// does not touch it).  Any AutoPatch call shifts that stream for every later
+// test in this binary, and system_estimate_coeff_bound_homogenized_quartic's
+// <10 threshold is sensitive to the draws.  Hence this test sits AFTER it.
+// The durable fix is making RandomMp seedable -- tracked RNG work.
+/**
+\class bertini::System
+\test \b system_homogenize_point_lands_on_patch On a patched system, HomogenizePoint produces a point ON the patch (rescaling it again is the identity), and dehomogenizing recovers the user point.
+*/
+BOOST_AUTO_TEST_CASE(system_homogenize_point_lands_on_patch)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	Vec<dbl> p(2);
+	p << dbl(3,4), dbl(4,5);
+
+	auto h = sys.HomogenizePoint(p);
+	BOOST_CHECK_EQUAL(h.size(),3);
+
+	// already on the patch: rescaling is the identity
+	auto h_rescaled = sys.RescalePointToFitPatch(h);
+	for (int ii = 0; ii < 3; ++ii)
+		BOOST_CHECK(abs(h_rescaled(ii) - h(ii)) < threshold_clearance_d);
+
+	// projectively the same point: dehomogenizing recovers the user coordinates
+	auto p_again = sys.DehomogenizePoint(h);
+	BOOST_CHECK(abs(p_again(0) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(p_again(1) - p(1)) < threshold_clearance_d);
+
+	// and the round trip from an on-patch internal point is exact:
+	// Hom(Dehom(s)) == s for s on the patch
+	Vec<dbl> v(3);
+	v << dbl(2,3), dbl(3,4), dbl(4,5);
+	auto s = sys.RescalePointToFitPatch(v);
+	auto s_again = sys.HomogenizePoint(sys.DehomogenizePoint(s));
+	for (int ii = 0; ii < 3; ++ii)
+		BOOST_CHECK(abs(s_again(ii) - s(ii)) < threshold_clearance_d);
 }
 
 /**
