@@ -209,9 +209,9 @@ namespace node{
 			return true_value_ == 1;
 		}
 
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Integer> Make(Ts&& ...ts){ 
+		template<typename... Ts>
+		static
+		std::shared_ptr<Integer> Make(Ts&& ...ts){
 			return std::shared_ptr<Integer>( new Integer(ts...) );
 		}
 
@@ -312,14 +312,11 @@ namespace node{
 			return highest_precision_value_.real() == 1 && highest_precision_value_.imag() == 0;
 		}
 
-
 		template<typename... Ts>
 		static
 		std::shared_ptr<Float> Make(Ts&& ...ts){
 			return std::shared_ptr<Float>( new Float(ts...) );
 		}
-
-
 
 	private:
 
@@ -454,13 +451,11 @@ namespace node{
 
 
 
-
 		template<typename... Ts>
 		static
 		std::shared_ptr<Rational> Make(Ts&& ...ts){
 			return std::shared_ptr<Rational>( new Rational(ts...) );
 		}
-
 
 	private:
 
