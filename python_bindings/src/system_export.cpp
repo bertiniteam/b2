@@ -156,6 +156,11 @@ namespace bertini{
 			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<dbl>,(arg("self"), arg("point")), "Dehomogenize a vector of doubles (complex), using the variable structure in this System")
 			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<mpfr>,(arg("self"), arg("point")), "Dehomogenize a vector of mpfr's (complex), using the variable structure in this System")
 
+			.def("homogenize_point",&SystemBaseT::template HomogenizePoint<dbl>,(arg("self"), arg("point")), "Take a point in user (dehomogenized) coordinates to this system's internal coordinates: inserts the homogenizing coordinate for each affine variable group, then rescales onto the system's patch if patched.  Inverse of dehomogenize_point.")
+			.def("homogenize_point",&SystemBaseT::template HomogenizePoint<mpfr>,(arg("self"), arg("point")), "Take a point in user (dehomogenized) coordinates to this system's internal coordinates: inserts the homogenizing coordinate for each affine variable group, then rescales onto the system's patch if patched.  Inverse of dehomogenize_point.")
+
+			.def("variable_ordering",&SystemBaseT::VariableOrdering,(arg("self")), "The ordering of variables saying what each coordinate of a point in THIS system's coordinates means.  On your original system these are your variables; on a solver's target_system() the homogenizing variables appear too.")
+
 			.def(self_ns::str(self_ns::self))//, "String representation of the system"
 			.def(self_ns::repr(self_ns::self))//, "Round-trippable representation of the system.  Probably not functional"
 			.def(self += self)

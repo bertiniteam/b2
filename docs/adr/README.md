@@ -30,3 +30,4 @@ Each ADR follows the template:
 | [0010](0010-function-tree-single-inheritance-capability-classes.md) | function_tree uses single inheritance; cross-cutting traits are capability classes | Core / function_tree |
 | [0011](0011-differentiation-simplified-construction-no-mutation.md) | Differentiation emits already-simplified trees; held functions are never mutated | Core / function_tree |
 | [0012](0012-precedence-aware-printing-reparse-invariant.md) | Precedence-aware printing; printed trees must re-parse to the same values | Core / function_tree |
+| [0013](0013-solutions-in-user-coordinates.md) | Solutions reported in user coordinates by default; internal coords explicit; HomogenizePoint lift | Core / API |
