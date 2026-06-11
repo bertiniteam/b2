@@ -179,11 +179,17 @@ namespace node{
 		Integer(Integer const&) = default;
 
 		~Integer() = default;
-		
+
 
 
 
 		void print(std::ostream & target) const override;
+
+		// negative literals print with a leading '-', so parenthesize like a Negate
+		unsigned Precedence() const override
+		{
+			return true_value_ < 0 ? PrecNegate : PrecAtom;
+		}
 
 		template<typename... Ts> 
 		static 
@@ -261,10 +267,19 @@ namespace node{
 
 		void print(std::ostream & target) const override;
 
+		// real-valued floats print bare (no complex pair); negative ones get
+		// a leading '-', so parenthesize like a Negate.  pairs self-delimit.
+		unsigned Precedence() const override
+		{
+			if (highest_precision_value_.imag() == 0 && highest_precision_value_.real() < 0)
+				return PrecNegate;
+			return PrecAtom;
+		}
 
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Float> Make(Ts&& ...ts){ 
+
+		template<typename... Ts>
+		static
+		std::shared_ptr<Float> Make(Ts&& ...ts){
 			return std::shared_ptr<Float>( new Float(ts...) );
 		}
 
@@ -359,13 +374,28 @@ namespace node{
 
 		void print(std::ostream & target) const override;
 
+		// real-valued rationals print bare (no complex pair).  the bare form is
+		// textually an expression: a leading '-' parenthesizes like a Negate, and
+		// 'p/q' contains a division, so it binds like a Mult (x/(1/3), not x/1/3).
+		// complex pairs self-delimit.
+		unsigned Precedence() const override
+		{
+			if (true_value_imag_ == 0)
+			{
+				if (true_value_real_ < 0)
+					return PrecNegate;
+				if (denominator(true_value_real_) != 1)
+					return PrecMult;
+			}
+			return PrecAtom;
+		}
 
 
 
-		
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Rational> Make(Ts&& ...ts){ 
+
+		template<typename... Ts>
+		static
+		std::shared_ptr<Rational> Make(Ts&& ...ts){
 			return std::shared_ptr<Rational>( new Rational(ts...) );
 		}
 

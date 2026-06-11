@@ -96,7 +96,12 @@ void Integer::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Varia
 
 void Float::print(std::ostream & target) const
 {
-	target << highest_precision_value_;
+	// real-valued floats print bare; the complex pair form is reserved for
+	// genuinely complex values
+	if (highest_precision_value_.imag() == 0)
+		target << highest_precision_value_.real();
+	else
+		target << highest_precision_value_;
 }
 
 // Return value of constant
@@ -130,7 +135,12 @@ void Float::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variabl
 
 void Rational::print(std::ostream & target) const
 {
-	target << "(" << true_value_real_ << "," << true_value_imag_ << ")";
+	// real-valued rationals print bare (parseable as a rational literal); the
+	// complex pair form is reserved for genuinely complex values
+	if (true_value_imag_ == 0)
+		target << true_value_real_;
+	else
+		target << "(" << true_value_real_ << "," << true_value_imag_ << ")";
 }
 
 // Return value of constant

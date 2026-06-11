@@ -156,6 +156,11 @@ namespace node{
 		 Method for printing to output stream
 		 */
 		void print(std::ostream & target) const override;
+
+		unsigned Precedence() const override
+		{
+			return PrecSum;
+		}
 		
 		
 		
@@ -302,6 +307,11 @@ namespace node{
 		 Print to an arbitrary ostream.
 		 */
 		void print(std::ostream & target) const override;
+
+		unsigned Precedence() const override
+		{
+			return PrecNegate;
+		}
 		
 		
 		/**
@@ -438,6 +448,11 @@ namespace node{
 		 overridden method for printing to an output stream
 		 */
 		void print(std::ostream & target) const override;
+
+		unsigned Precedence() const override
+		{
+			return PrecMult;
+		}
 		
 		/**
 		 Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
@@ -581,13 +596,18 @@ namespace node{
 		}
 		
 		void Reset() const override;
-		
-		
-		
+
+
+
 		void print(std::ostream & target) const override;
-		
-		
-		
+
+		unsigned Precedence() const override
+		{
+			return PrecPower;
+		}
+
+
+
 		/**
 		 Differentiates with the power rule.
 		 */
@@ -698,6 +718,11 @@ namespace node{
 		 polymorphic method for printing to an arbitrary stream.
 		 */
 		void print(std::ostream & target) const override;
+
+		unsigned Precedence() const override
+		{
+			return PrecPower;
+		}
 		
 		
 		/**

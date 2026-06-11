@@ -164,26 +164,42 @@ unsigned SumOperator::ReduceDepth()
 	return num_eliminated;
 }
 
+namespace{
+	// print an operand, wrapping in parentheses only when its precedence is
+	// too low for the position it occupies
+	void PrintOperand(std::ostream& target, std::shared_ptr<Node> const& n, bool needs_parens)
+	{
+		if (needs_parens)
+			target << "(";
+		n->print(target);
+		if (needs_parens)
+			target << ")";
+	}
+}
+
 void SumOperator::print(std::ostream & target) const
 {
-	target << "(";
-	for (auto iter = operands_.begin(); iter!= operands_.end(); iter++) {
-		if (iter==operands_.begin()) {
-			// on the first iteration, no need to put a + if a +
-			if ( !(*(signs_.begin()+(iter-operands_.begin()))) )
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+	{
+		const bool plus = signs_[ii];
+		if (ii == 0)
+		{
+			if (!plus)
 				target << "-";
 		}
 		else
-		{
-			if ( !(*(signs_.begin()+(iter-operands_.begin()))) )
-				target << "-";
-			else
-				target << "+";
-		}
-		(*iter)->print(target);
-		
+			target << (plus ? "+" : "-");
+
+		const auto prec = operands_[ii]->Precedence();
+		// after '-', wrap sums (grouping) and anything printing a leading '-'
+		// (avoids "--"); after '+' or in the lead, wrap only leading-'-' printers
+		bool needs_parens;
+		if (ii == 0)
+			needs_parens = plus ? false : (prec <= PrecNegate);
+		else
+			needs_parens = plus ? (prec == PrecNegate) : (prec <= PrecNegate);
+		PrintOperand(target, operands_[ii], needs_parens);
 	}
-	target << ")";
 }
 
 
@@ -466,9 +482,8 @@ unsigned NegateOperator::EliminateOnes()
 
 void NegateOperator::print(std::ostream & target) const
 {
-	target << "-(";
-	operand_->print(target);
-	target << ")";
+	target << "-";
+	PrintOperand(target, operand_, operand_->Precedence() <= PrecNegate);
 }
 
 std::shared_ptr<Node> NegateOperator::Differentiate(std::shared_ptr<Variable> const& v) const
@@ -691,23 +706,23 @@ unsigned MultOperator::ReduceDepth()
 
 void MultOperator::print(std::ostream & target) const
 {
-	target << "(";
-	for (auto iter = operands_.begin(); iter!= operands_.end(); iter++) {
-		if (iter==operands_.begin())
-			if (! *mult_or_div_.begin()  )
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+	{
+		const bool mult = mult_or_div_[ii];
+		if (ii == 0)
+		{
+			if (!mult)
 				target << "1/";
-		(*iter)->print(target);
-		if (iter!=(operands_.end()-1)){
-			if (*(mult_or_div_.begin() + (iter-operands_.begin())+1)) { // TODO i think this +1 is wrong... dab
-				target << "*";
-			}
-			else{
-				target << "/";
-			}
-			
 		}
+		else
+			target << (mult ? "*" : "/");
+
+		const auto prec = operands_[ii]->Precedence();
+		// multiplied positions: wrap below-mult precedence (sums, leading-'-'
+		// printers); divided positions: also wrap other mults (grouping)
+		const bool needs_parens = mult ? (prec < PrecMult) : (prec <= PrecMult);
+		PrintOperand(target, operands_[ii], needs_parens);
 	}
-	target << ")";
 }
 
 
@@ -947,7 +962,11 @@ void PowerOperator::Reset() const
 
 void PowerOperator::print(std::ostream & target) const
 {
-	target << "(" << *base_ << ")^(" << *exponent_ << ")";
+	// '^' is right-associative and binds tightest, so wrap anything that is
+	// not an atom -- including other powers, to keep x^y^z unambiguous
+	PrintOperand(target, base_, base_->Precedence() <= PrecPower);
+	target << "^";
+	PrintOperand(target, exponent_, exponent_->Precedence() <= PrecPower);
 }
 
 
@@ -1136,9 +1155,11 @@ unsigned IntegerPowerOperator::EliminateOnes()
 
 void IntegerPowerOperator::print(std::ostream & target) const
 {
-	target << "(";
-	operand_->print(target);
-	target << "^" << exponent() << ")";
+	PrintOperand(target, operand_, operand_->Precedence() <= PrecPower);
+	if (exponent() < 0)
+		target << "^(" << exponent() << ")";
+	else
+		target << "^" << exponent();
 }
 
 
