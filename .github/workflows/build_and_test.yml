@@ -5,9 +5,8 @@ on:
     # feature branches get their CI from the pull_request trigger; running the
     # push event there too just produced a cancelled twin whose never-started
     # jobs render as 0s "failures" with raw matrix-template names in the PR
-    # checks list.  use workflow_dispatch for a branch without an open PR.
-    # (do NOT write a dollar-brace expression in this comment: the workflow
-    # validator evaluates expressions even in comments and rejects the file.)
+    # checks list.  for a branch without an open PR, use the workflow_dispatch
+    # trigger defined below.
     branches:
       - develop
       - main
@@ -18,7 +17,6 @@ on:
       - '**/*.md'
       - '**/*.html'
       - '.github/workflows/build_docs.yml'
-  workflow_dispatch:
   pull_request:
     paths-ignore:
       - 'python/docs/**'
