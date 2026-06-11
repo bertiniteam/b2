@@ -185,10 +185,18 @@ namespace node{
 
 		void print(std::ostream & target) const override;
 
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Integer> Make(Ts&& ...ts){ 
+		template<typename... Ts>
+		static
+		std::shared_ptr<Integer> Make(Ts&& ...ts){
 			return std::shared_ptr<Integer>( new Integer(ts...) );
+		}
+
+		/**
+		\brief Get the literal value this node represents.
+		*/
+		mpz_int const& GetValue() const
+		{
+			return true_value_;
 		}
 
 	private:
@@ -262,13 +270,19 @@ namespace node{
 		void print(std::ostream & target) const override;
 
 
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Float> Make(Ts&& ...ts){ 
+		template<typename... Ts>
+		static
+		std::shared_ptr<Float> Make(Ts&& ...ts){
 			return std::shared_ptr<Float>( new Float(ts...) );
 		}
 
-
+		/**
+		\brief Get the literal value this node represents, at its stored (highest) precision.
+		*/
+		mpfr_complex const& GetValue() const
+		{
+			return highest_precision_value_;
+		}
 
 	private:
 
@@ -363,12 +377,27 @@ namespace node{
 
 
 		
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Rational> Make(Ts&& ...ts){ 
+		template<typename... Ts>
+		static
+		std::shared_ptr<Rational> Make(Ts&& ...ts){
 			return std::shared_ptr<Rational>( new Rational(ts...) );
 		}
 
+		/**
+		\brief Get the real part of the literal value this node represents.
+		*/
+		mpq_rational const& GetValueReal() const
+		{
+			return true_value_real_;
+		}
+
+		/**
+		\brief Get the imaginary part of the literal value this node represents.
+		*/
+		mpq_rational const& GetValueImag() const
+		{
+			return true_value_imag_;
+		}
 
 	private:
 

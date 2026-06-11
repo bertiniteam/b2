@@ -89,6 +89,14 @@ namespace bertini{
 			.def("add_operand", &NodeBaseT::AddOperand )
 			.def("first_operand", &NodeBaseT::FirstOperand )
 			.def("num_operands", &NodeBaseT::NumOperands )
+			.def("operand", +[](NodeBaseT const& n, std::size_t index) -> std::shared_ptr<Node> {
+					if (index >= n.NumOperands())
+					{
+						PyErr_SetString(PyExc_IndexError, "operand index out of range");
+						throw_error_already_set();
+					}
+					return n.Operands()[index];
+				}, (arg("self"), arg("index")), "get the operand at the given index; see num_operands")
 			;
 		}
 
@@ -108,11 +116,13 @@ namespace bertini{
 		void PowerOpVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("set_exponent", &PowerOperator::SetExponent)
-			.def("set_base", &PowerOperator::SetBase)
+			.def("set_exponent", &NodeBaseT::SetExponent)
+			.def("set_base", &NodeBaseT::SetBase)
+			.def("get_exponent", &NodeBaseT::GetExponent, (arg("self")), "get the exponent node")
+			.def("get_base", &NodeBaseT::GetBase, (arg("self")), "get the base node")
 			;
 		}
-		
+
 		template<typename NodeBaseT>
 		template<class PyClass>
 		void IntPowOpVisitor<NodeBaseT>::visit(PyClass& cl) const
@@ -153,6 +163,14 @@ namespace bertini{
 			.def("__init__", make_constructor(&SumOperator::template Make<const Nodeptr&, const Nodeptr &> ))
 			.def("__init__", make_constructor(&SumOperator::template Make<const Nodeptr&, bool const&, const Nodeptr&, bool const&> ))
 			.def(SumMultOpVisitor<SumOperator>())
+			.def("sign", +[](SumOperator const& n, std::size_t index) -> bool {
+					if (index >= n.GetSigns().size())
+					{
+						PyErr_SetString(PyExc_IndexError, "operand index out of range");
+						throw_error_already_set();
+					}
+					return n.GetSigns()[index];
+				}, (arg("self"), arg("index")), "the sign of the operand at the given index: True if added, False if subtracted")
 			;
 
 
@@ -166,6 +184,14 @@ namespace bertini{
 			.def("__init__", make_constructor(&MultOperator::template Make<const Nodeptr&, const Nodeptr &>))
 			.def("__init__", make_constructor(&MultOperator::template Make<const Nodeptr&, bool const&, const Nodeptr&, bool const&>))
 			.def(SumMultOpVisitor<MultOperator>())
+			.def("mult_or_div", +[](MultOperator const& n, std::size_t index) -> bool {
+					if (index >= n.GetMultOrDiv().size())
+					{
+						PyErr_SetString(PyExc_IndexError, "operand index out of range");
+						throw_error_already_set();
+					}
+					return n.GetMultOrDiv()[index];
+				}, (arg("self"), arg("index")), "the operation for the operand at the given index: True if multiplied, False if divided")
 			;
 			
 			// PowerOperator class
@@ -177,7 +203,7 @@ namespace bertini{
 			// IntegerPowerOperator class
 			class_<IntegerPowerOperator, bases<UnaryOperator>, std::shared_ptr<IntegerPowerOperator> >("IntegerPower", no_init )
 			.def("__init__", make_constructor(&IntegerPowerOperator::template Make<const Nodeptr&, int const&>))
-			.def(PowerOpVisitor<IntegerPowerOperator>())
+			.def(IntPowOpVisitor<IntegerPowerOperator>())
 			;
 
 			// SqrtOperator class

@@ -50,7 +50,10 @@ namespace bertini{
 		void HandleVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("root", &Handle::EntryNode,return_value_policy<reference_existing_object>())
+			// return the shared_ptr by value: Boost.Python's automatic downcast to the
+			// most-derived registered node type only happens for by-value shared_ptrs;
+			// the old reference_existing_object form produced an unusable AbstractNode
+			.def("root", +[](Handle const& h) { return h.EntryNode(); }, (arg("self")), "the defining root node of this handle")
 			.def("root", &Handle::SetRoot)
 			.def("ensure_not_empy", &Handle::EnsureNotEmpty)
 			;

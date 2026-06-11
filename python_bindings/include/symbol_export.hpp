@@ -74,7 +74,7 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 			
 		private:
-			std::string (NodeBaseT::*getname)() const = &NodeBaseT::name;
+			const std::string& (NodeBaseT::*getname)() const = &NodeBaseT::name;
 			void (NodeBaseT::*setname)(const std::string &) = &NodeBaseT::name;
 
 		};
