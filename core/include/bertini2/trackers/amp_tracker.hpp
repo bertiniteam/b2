@@ -102,7 +102,7 @@ namespace bertini{
 		 Calibrated by benchmarking three operations representative of path tracking
 		 (dot product / SLP evaluation, dense matvec, LU factorization+solve) using
 		 GNU MPC (\c mpfr_complex) vs \c std::complex<double> on modern hardware.
-		 See \c benchmarks/arithmetic_cost.cpp for the methodology and compile instructions.
+		 See \c tuning/arithmetic_cost.cpp for the methodology and compile instructions.
 
 		 The paper \cite AMP2 reports \f$C(P) = 10.35 + 0.04 P_\mathrm{bits}\f$ (measured on
 		 a 2009 Opteron 250).  Converting to decimal digits gives \f$10.35 + 0.13 P\f$, which

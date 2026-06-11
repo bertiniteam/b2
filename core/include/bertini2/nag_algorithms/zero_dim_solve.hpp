@@ -211,18 +211,26 @@ struct EGBoundaryMetaData
 	Vec<ComplexT> path_point;
 	SuccessCode success_code = SuccessCode::NeverStarted;
 	RealT last_used_stepsize;
+	// The precision the tracker was actually using when it reached the endgame boundary.
+	// Carried explicitly (rather than inferred from Precision(path_point)) because the
+	// path_point is always stored as the tracker's BaseComplexT (multiprecision for AMP);
+	// a path that tracked in double gets widened on output, so its mantissa precision no
+	// longer reflects the precision that was in use.  The endgame should resume at this
+	// precision.  See zero_dim_solve TrackSinglePathDuringEG.
+	unsigned precision = DoublePrecision();
 
 	EGBoundaryMetaData() = default;
 	EGBoundaryMetaData(EGBoundaryMetaData const&) = default;
-	EGBoundaryMetaData(Vec<ComplexT> const& pt, SuccessCode const& code, RealT const& ss) :
-		path_point(pt), success_code(code), last_used_stepsize(ss)
+	EGBoundaryMetaData(Vec<ComplexT> const& pt, SuccessCode const& code, RealT const& ss, unsigned prec) :
+		path_point(pt), success_code(code), last_used_stepsize(ss), precision(prec)
 	{}
-	
+
 	bool operator==(const EGBoundaryMetaData<ComplexT> & other){
-		bool result = 
+		bool result =
 			this->path_point == other.path_point
 			&& this->success_code == other.success_code
 			&& this->last_used_stepsize == other.last_used_stepsize
+			&& this->precision == other.precision
 		;
 
 		return result;
@@ -235,6 +243,7 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 	out << "path_point = " << meta.path_point << std::endl;
 	out << "success_code = " << meta.success_code << std::endl;
 	out << "last_used_stepsize = " << meta.last_used_stepsize << std::endl;
+	out << "precision = " << meta.precision << std::endl;
 	return out;
 }
 
@@ -826,10 +835,26 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
 				auto start_point = StartSystem().template StartPoint<BaseComplexT>(soln_ind);
 
+				// Begin tracking at the intended ambient precision rather than the start
+				// point's incidental precision.  Total-degree start points are generated at
+				// LowestMultiplePrecision (the generator's arithmetic widens past the requested
+				// digits, see issue #308), so without this the AMP tracker would start every
+				// well-conditioned path in multiprecision and never drop to double.
+				if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					GetTracker().SetStartPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
+
 				Vec<BaseComplexT> result;
 				auto tracking_success = GetTracker().TrackPath(result, t_start, t_endgame_boundary, start_point);
 
-				solutions_at_endgame_boundary_[soln_ind] = EGBoundaryMetaDataT({ result, tracking_success, GetTracker().CurrentStepsize() });
+				solutions_at_endgame_boundary_[soln_ind] = EGBoundaryMetaDataT({ result, tracking_success, GetTracker().CurrentStepsize(), GetTracker().CurrentPrecision() });
+
+				// Clear the start-precision override so it does not leak into the endgame,
+				// which shares this tracker instance (endgame_(tracker_)) for its sample
+				// circles and must be free to begin those at the sample points' precision.
+				if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+				{
+					GetTracker().SetStartPrecision(std::nullopt);
+				}
 
 					smd.pre_endgame_success = tracking_success;
 
@@ -925,12 +950,23 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 					start_point = StartSystem().template StartPoint<BaseComplexT>(soln_ind);
 				}
 
+				// Begin tracking at the intended ambient precision rather than the start
+				// point's incidental precision (see TrackSinglePathBeforeEG / issue #308).
+				if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					state.tracker.SetStartPrecision(initial_prec);
+
 				Vec<BaseComplexT> result;
 				auto tracking_success = state.tracker.TrackPath(result, t_start, t_endgame_boundary, start_point);
 
 				// Each soln_ind is unique per thread — no locking needed.
 				solutions_at_endgame_boundary_[soln_ind] =
-					EGBoundaryMetaDataT({ result, tracking_success, state.tracker.CurrentStepsize() });
+					EGBoundaryMetaDataT({ result, tracking_success, state.tracker.CurrentStepsize(), state.tracker.CurrentPrecision() });
+
+				// Clear the start-precision override so it does not leak into the endgame
+				// (which shares this tracker instance for its sample circles).
+				if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					state.tracker.SetStartPrecision(std::nullopt);
+
 				smd.pre_endgame_success = tracking_success;
 
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
@@ -974,7 +1010,10 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				state.tracker.SetStepSize(solutions_at_endgame_boundary_[soln_ind].last_used_stepsize);
 				state.tracker.ReinitializeInitialStepSize(false);
 
-				auto start_prec = Precision(bdry_point);
+				// Resume the endgame at the precision the path was actually using at the
+				// boundary, rather than inferring it from the (always-multiprecision) point's
+				// mantissa, which is unreliable for paths that tracked in double.
+				auto start_prec = solutions_at_endgame_boundary_[soln_ind].precision;
 
 				SetThreadPrecision(start_prec);
 
@@ -1111,7 +1150,10 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				GetTracker().SetStepSize(solutions_at_endgame_boundary_[soln_ind].last_used_stepsize);
 				GetTracker().ReinitializeInitialStepSize(false);
 
-				auto start_prec = Precision(bdry_point);
+				// Resume the endgame at the precision the path was actually using at the
+				// boundary, rather than inferring it from the (always-multiprecision) point's
+				// mantissa, which is unreliable for paths that tracked in double.
+				auto start_prec = solutions_at_endgame_boundary_[soln_ind].precision;
 
 				DefaultPrecision(start_prec);
 
@@ -1223,6 +1265,7 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				r.pre_endgame_success  = solutions_at_endgame_boundary_[idx].success_code;
 				r.boundary_point       = solutions_at_endgame_boundary_[idx].path_point;
 				r.boundary_stepsize    = solutions_at_endgame_boundary_[idx].last_used_stepsize;
+				r.boundary_precision   = solutions_at_endgame_boundary_[idx].precision;
 				r.precision_changed    = solution_final_metadata_[idx].precision_changed;
 				r.time_of_first_prec_increase = solution_final_metadata_[idx].time_of_first_prec_increase;
 				r.max_precision_used   = solution_final_metadata_[idx].max_precision_used;
@@ -1233,7 +1276,7 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			{
 				auto idx = static_cast<SolnIndT>(r.path_index);
 				solutions_at_endgame_boundary_[idx] =
-					EGBoundaryMetaDataT{r.boundary_point, r.pre_endgame_success, r.boundary_stepsize};
+					EGBoundaryMetaDataT{r.boundary_point, r.pre_endgame_success, r.boundary_stepsize, r.boundary_precision};
 				auto& smd = solution_final_metadata_[idx];
 				smd.path_index             = idx;
 				smd.solution_index         = idx;

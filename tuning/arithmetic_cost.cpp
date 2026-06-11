@@ -45,11 +45,11 @@
  *       -I/home/helper/micromamba/envs/b2-ubuntu/include \
  *       -L/home/helper/micromamba/envs/b2-ubuntu/lib \
  *       -Wl,-rpath,/home/helper/micromamba/envs/b2-ubuntu/lib \
- *       benchmarks/arithmetic_cost.cpp -o benchmarks/arithmetic_cost \
+ *       tuning/arithmetic_cost.cpp -o tuning/arithmetic_cost \
  *       -lmpfr -lgmp -lmpc
  *
  * Run:
- *   ./benchmarks/arithmetic_cost
+ *   ./tuning/arithmetic_cost
  */
 
 #include <boost/multiprecision/mpc.hpp>
