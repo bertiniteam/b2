@@ -41,6 +41,7 @@ del AbstractNode
 import importlib as _importlib
 symbol = _importlib.import_module('bertini.function_tree.symbol')
 root = _importlib.import_module('bertini.function_tree.root')
+operator = _importlib.import_module('bertini.function_tree.operator')
 del _importlib
 
 from bertini._pybertini.function_tree.operator import Sqrt as _Sqrt

@@ -129,6 +129,24 @@ namespace detail{
 
 	};
 }
+
+/**
+\brief Operator precedence classes, used to decide parenthesization when printing.
+
+Higher binds tighter.  A child is wrapped in parentheses only when its
+precedence is too low for the position it is printed in; leaves and
+self-delimiting nodes (function calls like sin(...), complex pairs) are
+atoms and never wrapped.  Negative literal constants report PrecNegate so
+they parenthesize exactly where a Negate node would.
+*/
+enum PrintPrecedence : unsigned {
+	PrecSum = 10,
+	PrecNegate = 15,
+	PrecMult = 20,
+	PrecPower = 30,
+	PrecAtom = 100
+};
+
 /**
 An interface for all nodes in a function tree, and for a function object as well.  Almost all
  methods that will be called on a node must be declared in this class.  The main evaluation method is
@@ -228,6 +246,41 @@ public:
 	Virtual method for printing Nodes to arbitrary output streams.
 	*/
 	virtual void print(std::ostream& target) const = 0;
+
+	/**
+	\brief The printing precedence of this node, deciding parenthesization.
+
+	Defaults to PrecAtom: leaves and self-delimiting nodes are never wrapped.
+	Operator nodes override this; printing parents wrap a child only when its
+	precedence is too low for the position it occupies.
+	*/
+	virtual unsigned Precedence() const
+	{
+		return PrecAtom;
+	}
+
+	/**
+	\brief Is this node the literal constant 0?
+
+	Exact check on stored literal values (Integer/Float/Rational override);
+	false for everything else, including non-literal expressions that happen
+	to evaluate to zero.  Used by differentiation to build already-simplified
+	trees without evaluating anything.
+	*/
+	virtual bool IsLiteralZero() const
+	{
+		return false;
+	}
+
+	/**
+	\brief Is this node the literal constant 1?
+
+	\see IsLiteralZero
+	*/
+	virtual bool IsLiteralOne() const
+	{
+		return false;
+	}
 	
 
 	/**

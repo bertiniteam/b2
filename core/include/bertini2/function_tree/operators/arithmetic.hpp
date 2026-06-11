@@ -156,6 +156,11 @@ namespace node{
 		 Method for printing to output stream
 		 */
 		void print(std::ostream & target) const override;
+
+		unsigned Precedence() const override
+		{
+			return PrecSum;
+		}
 		
 		
 		
@@ -302,6 +307,11 @@ namespace node{
 		 Print to an arbitrary ostream.
 		 */
 		void print(std::ostream & target) const override;
+
+		unsigned Precedence() const override
+		{
+			return PrecNegate;
+		}
 		
 		
 		/**
@@ -438,6 +448,11 @@ namespace node{
 		 overridden method for printing to an output stream
 		 */
 		void print(std::ostream & target) const override;
+
+		unsigned Precedence() const override
+		{
+			return PrecMult;
+		}
 		
 		/**
 		 Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
@@ -581,13 +596,18 @@ namespace node{
 		}
 		
 		void Reset() const override;
-		
-		
-		
+
+
+
 		void print(std::ostream & target) const override;
-		
-		
-		
+
+		unsigned Precedence() const override
+		{
+			return PrecPower;
+		}
+
+
+
 		/**
 		 Differentiates with the power rule.
 		 */
@@ -698,6 +718,11 @@ namespace node{
 		 polymorphic method for printing to an arbitrary stream.
 		 */
 		void print(std::ostream & target) const override;
+
+		unsigned Precedence() const override
+		{
+			return PrecPower;
+		}
 		
 		
 		/**
@@ -1079,6 +1104,43 @@ namespace node{
 
 
 
+
+
+
+	///////////////////
+	//
+	//     SIMPLIFIED-CONSTRUCTION FACTORIES
+	//
+	/////////////////////
+
+	/**
+	\brief Negation that never builds junk: -0 stays 0.
+
+	Builds a fresh node; never modifies the input.
+	*/
+	std::shared_ptr<Node> SimplifiedNegate(std::shared_ptr<Node> const& n);
+
+	/**
+	\brief Build a sum from (term, add_or_sub) pairs, omitting literal zeros.
+
+	Empty after pruning -> Integer 0; a single added term is returned unwrapped;
+	a single subtracted term is negated.  Builds fresh nodes; the term nodes are
+	shared, never modified.  Used by differentiation so derivative trees come out
+	already simplified.
+	*/
+	std::shared_ptr<Node> SimplifiedSum(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms);
+
+	/**
+	\brief Build a product from (factor, mult_or_div) pairs, simplified.
+
+	A multiplied literal zero collapses the whole product to 0; literal ones are
+	dropped; literal Integer/Rational constants (real-valued) are folded together
+	exactly (no Float folding -- precision semantics stay untouched).  A literal
+	zero DIVISOR is left in place, keeping the division by zero visible.  A single
+	surviving multiplied factor is returned unwrapped.  Builds fresh nodes; the
+	factor nodes are shared, never modified.
+	*/
+	std::shared_ptr<Node> SimplifiedMult(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& factors);
 
 
 

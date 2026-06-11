@@ -46,7 +46,9 @@ namespace bertini{
 		void NamedSymbolVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{			
 			cl
-			.add_property("name", getname, setname)
+			.add_property("name",
+				make_function(getname, return_value_policy<copy_const_reference>()),
+				setname)
 			;
 		}
 
@@ -85,7 +87,9 @@ namespace bertini{
 		void DifferentialVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("get_variable", &NodeBaseT::GetVariable,return_value_policy<reference_existing_object>())
+			// shared_ptr<Variable const> has no registered python class; cast away const
+			// and return by value so the conversion (and downcast) machinery applies
+			.def("get_variable", +[](NodeBaseT const& d) { return std::const_pointer_cast<Variable>(d.GetVariable()); }, (arg("self")), "the variable this differential is with respect to")
 			;
 		}
 
@@ -109,6 +113,7 @@ namespace bertini{
 			
 			// NamedSymbol class
 			class_<NamedSymbol, boost::noncopyable, bases<Symbol>, std::shared_ptr<NamedSymbol> >("AbstractNamedSymbol", no_init)
+			.def(NamedSymbolVisitor<NamedSymbol>())
 			;
 			
 			// Number class
@@ -121,6 +126,7 @@ namespace bertini{
 			.def("__init__", make_constructor(&Float::template Make<std::string const&>))
 			.def("__init__", make_constructor(&Float::template Make<std::string const&, std::string const&>))
 			.def("__init__", make_constructor(&Float::template Make<mpfr_complex const&>))
+			.def("value", &Float::GetValue, return_value_policy<copy_const_reference>(), "the literal value this node represents, at its stored (highest) precision")
 			;
 			
 			
@@ -141,6 +147,7 @@ namespace bertini{
 			.def("__init__", make_constructor(&Integer::template Make<int const&>))
 			.def("__init__", make_constructor(&Integer::template Make<mpz_int const&>))
 			.def("__init__", make_constructor(&Integer::template Make<std::string const&>))
+			.def("value", &Integer::GetValue, return_value_policy<copy_const_reference>(), "the literal value this node represents")
 			;
 
 			
@@ -152,6 +159,8 @@ namespace bertini{
 			.def("__init__", make_constructor(&Rational::template Make<std::string const&, std::string const&>))
 			.def("__init__", make_constructor(&Rational::template Make<mpq_rational const&, mpq_rational const&>))
 			.def(RationalVisitor<Rational>())
+			.def("value_real", &Rational::GetValueReal, return_value_policy<copy_const_reference>(), "the real part of the literal value this node represents")
+			.def("value_imag", &Rational::GetValueImag, return_value_policy<copy_const_reference>(), "the imaginary part of the literal value this node represents")
 			;
 
 			

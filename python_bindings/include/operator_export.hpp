@@ -141,9 +141,9 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 			
 		private:
-			std::string (NodeBaseT::*getexp)() const = &NodeBaseT::exponent;
-			void (NodeBaseT::*setexp)(const std::string &) = &NodeBaseT::set_exponent;
-			
+			int (NodeBaseT::*getexp)() const = &NodeBaseT::exponent;
+			void (NodeBaseT::*setexp)(int) = &NodeBaseT::set_exponent;
+
 		};
 
 		

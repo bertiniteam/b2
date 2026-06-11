@@ -179,15 +179,39 @@ namespace node{
 		Integer(Integer const&) = default;
 
 		~Integer() = default;
-		
+
 
 
 
 		void print(std::ostream & target) const override;
 
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Integer> Make(Ts&& ...ts){ 
+		// negative literals print with a leading '-', so parenthesize like a Negate
+		unsigned Precedence() const override
+		{
+			return true_value_ < 0 ? PrecNegate : PrecAtom;
+		}
+
+		/**
+		\brief Get the literal value this node represents.
+		*/
+		mpz_int const& GetValue() const
+		{
+			return true_value_;
+		}
+
+		bool IsLiteralZero() const override
+		{
+			return true_value_ == 0;
+		}
+
+		bool IsLiteralOne() const override
+		{
+			return true_value_ == 1;
+		}
+
+		template<typename... Ts>
+		static
+		std::shared_ptr<Integer> Make(Ts&& ...ts){
 			return std::shared_ptr<Integer>( new Integer(ts...) );
 		}
 
@@ -261,14 +285,38 @@ namespace node{
 
 		void print(std::ostream & target) const override;
 
-
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Float> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Float>( new Float(ts...) );
+		// real-valued floats print bare (no complex pair); negative ones get
+		// a leading '-', so parenthesize like a Negate.  pairs self-delimit.
+		unsigned Precedence() const override
+		{
+			if (highest_precision_value_.imag() == 0 && highest_precision_value_.real() < 0)
+				return PrecNegate;
+			return PrecAtom;
 		}
 
+		/**
+		\brief Get the literal value this node represents, at its stored (highest) precision.
+		*/
+		mpfr_complex const& GetValue() const
+		{
+			return highest_precision_value_;
+		}
 
+		bool IsLiteralZero() const override
+		{
+			return highest_precision_value_.real() == 0 && highest_precision_value_.imag() == 0;
+		}
+
+		bool IsLiteralOne() const override
+		{
+			return highest_precision_value_.real() == 1 && highest_precision_value_.imag() == 0;
+		}
+
+		template<typename... Ts>
+		static
+		std::shared_ptr<Float> Make(Ts&& ...ts){
+			return std::shared_ptr<Float>( new Float(ts...) );
+		}
 
 	private:
 
@@ -359,16 +407,55 @@ namespace node{
 
 		void print(std::ostream & target) const override;
 
-
-
-
-		
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Rational> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Rational>( new Rational(ts...) );
+		// real-valued rationals print bare (no complex pair).  the bare form is
+		// textually an expression: a leading '-' parenthesizes like a Negate, and
+		// 'p/q' contains a division, so it binds like a Mult (x/(1/3), not x/1/3).
+		// complex pairs self-delimit.
+		unsigned Precedence() const override
+		{
+			if (true_value_imag_ == 0)
+			{
+				if (true_value_real_ < 0)
+					return PrecNegate;
+				if (denominator(true_value_real_) != 1)
+					return PrecMult;
+			}
+			return PrecAtom;
 		}
 
+		/**
+		\brief Get the real part of the literal value this node represents.
+		*/
+		mpq_rational const& GetValueReal() const
+		{
+			return true_value_real_;
+		}
+
+		/**
+		\brief Get the imaginary part of the literal value this node represents.
+		*/
+		mpq_rational const& GetValueImag() const
+		{
+			return true_value_imag_;
+		}
+
+		bool IsLiteralZero() const override
+		{
+			return true_value_real_ == 0 && true_value_imag_ == 0;
+		}
+
+		bool IsLiteralOne() const override
+		{
+			return true_value_real_ == 1 && true_value_imag_ == 0;
+		}
+
+
+
+		template<typename... Ts>
+		static
+		std::shared_ptr<Rational> Make(Ts&& ...ts){
+			return std::shared_ptr<Rational>( new Rational(ts...) );
+		}
 
 	private:
 

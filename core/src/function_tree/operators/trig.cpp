@@ -62,7 +62,10 @@ namespace node{
 	
 	std::shared_ptr<Node> SinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return cos(operand_) * operand_->Differentiate(v);
+		return SimplifiedMult({
+			{cos(operand_), true},
+			{operand_->Differentiate(v), true}
+		});
 	}
 
 	// Specific implementation of FreshEval for negate.
@@ -107,7 +110,10 @@ namespace node{
 
 	std::shared_ptr<Node> ArcSinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return operand_->Differentiate(v)/sqrt(1-pow(operand_,2));
+		return SimplifiedMult({
+			{operand_->Differentiate(v), true},
+			{sqrt(1-pow(operand_,2)), false}
+		});
 	}
 
 
@@ -153,7 +159,10 @@ namespace node{
 	
 	std::shared_ptr<Node> CosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return -sin(operand_) * operand_->Differentiate(v);
+		return SimplifiedNegate(SimplifiedMult({
+			{sin(operand_), true},
+			{operand_->Differentiate(v), true}
+		}));
 	}
 
 	dbl CosOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -199,7 +208,10 @@ namespace node{
 
 	std::shared_ptr<Node> ArcCosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return -operand_->Differentiate(v)/sqrt(1-pow(operand_,2));
+		return SimplifiedNegate(SimplifiedMult({
+			{operand_->Differentiate(v), true},
+			{sqrt(1-pow(operand_,2)), false}
+		}));
 	}
 
 	// Specific implementation of FreshEval for negate.
@@ -245,7 +257,10 @@ namespace node{
 
 	std::shared_ptr<Node> TanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return operand_->Differentiate(v) /  pow(cos(operand_),2);
+		return SimplifiedMult({
+			{operand_->Differentiate(v), true},
+			{pow(cos(operand_),2), false}
+		});
 	}
 
 	dbl TanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -291,7 +306,10 @@ namespace node{
 
 	std::shared_ptr<Node> ArcTanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return operand_->Differentiate(v) / (1 + pow(operand_,2));
+		return SimplifiedMult({
+			{operand_->Differentiate(v), true},
+			{1 + pow(operand_,2), false}
+		});
 	}
 
 	dbl ArcTanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
