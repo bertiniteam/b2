@@ -63,23 +63,28 @@ namespace node{
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
 		*/
-		class Pi : public virtual Number, public virtual NamedSymbol, public virtual EnableSharedFromThisVirtual<Pi>
+		class Pi : public Number, public Named
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 
 			virtual ~Pi() = default;
 
-			template<typename... Ts> 
-			static 
-			std::shared_ptr<Pi> Make(Ts&& ...ts){ 
+			template<typename... Ts>
+			static
+			std::shared_ptr<Pi> Make(Ts&& ...ts){
 				return std::shared_ptr<Pi>( new Pi(ts...) );
+			}
+
+			void print(std::ostream & target) const override
+			{
+				target << name();
 			}
 
 
 		private:
 
-			Pi() : NamedSymbol("pi")
+			Pi() : Named("pi")
 			{}
 
 			// Return value of constant
@@ -98,7 +103,7 @@ namespace node{
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<Number>(*this);
-				ar & boost::serialization::base_object<NamedSymbol>(*this);
+				ar & boost::serialization::base_object<Named>(*this);
 			}
 		};
 
@@ -109,26 +114,31 @@ namespace node{
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
 		*/
-		class E : public virtual Number, public virtual NamedSymbol, public virtual EnableSharedFromThisVirtual<E>
+		class E : public Number, public Named
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
-			
+
 
 
 			virtual ~E() = default;
 
 
-			template<typename... Ts> 
-			static 
-			std::shared_ptr<E> Make(Ts&& ...ts){ 
+			template<typename... Ts>
+			static
+			std::shared_ptr<E> Make(Ts&& ...ts){
 				return std::shared_ptr<E>( new E(ts...) );
+			}
+
+			void print(std::ostream & target) const override
+			{
+				target << name();
 			}
 
 
 		private:
 
-			E() : NamedSymbol("e")
+			E() : Named("e")
 			{}
 
 			
@@ -148,7 +158,7 @@ namespace node{
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<Number>(*this);
-				ar & boost::serialization::base_object<NamedSymbol>(*this);
+				ar & boost::serialization::base_object<Named>(*this);
 			}
 
 		};

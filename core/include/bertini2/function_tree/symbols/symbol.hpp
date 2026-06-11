@@ -53,7 +53,7 @@ namespace node {
 
 	This class is an interface for all non-operators.
 	*/
-	class Symbol : public virtual Node
+	class Symbol : public Node
 	{
 		
 	public:
@@ -80,11 +80,53 @@ namespace node {
 	
 	
 	/**
+	\brief Capability class for things which have a name.
+
+	Deliberately NOT a Node: classes that need a name alongside a different
+	primary base (e.g. special_number::Pi, which is a Number) inherit this
+	without creating a diamond in the Node hierarchy.
+	*/
+	class Named
+	{
+	public:
+		const std::string& name() const
+		{
+			return name_;
+		}
+
+		void name(const std::string& new_name)
+		{
+			name_ = new_name;
+		}
+
+	protected:
+		~Named() = default;  // not polymorphic; never delete through Named*
+
+		Named() = default;
+
+		explicit Named(std::string new_name) : name_(std::move(new_name))
+		{}
+
+		std::string name_;
+
+	private:
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned /*version*/) {
+			ar & name_;
+		}
+	};
+
+
+
+
+	/**
 	\brief Symbols which have names are named symbols.
-	
+
 	Symbols which have names are named symbols.
 	*/
-	class NamedSymbol : public virtual Symbol
+	class NamedSymbol : public Symbol
 	{
 
 	public:

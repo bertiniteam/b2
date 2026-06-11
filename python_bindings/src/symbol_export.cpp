@@ -131,14 +131,18 @@ namespace bertini{
 			
 			
 			// Pi class
-			class_<special_number::Pi, bases<NamedSymbol>, std::shared_ptr<special_number::Pi> >("Pi", no_init)
+			// no longer a NamedSymbol in C++ (it's a Number + the Named capability),
+			// so .name is bound directly rather than inherited from AbstractNamedSymbol
+			class_<special_number::Pi, bases<Number>, std::shared_ptr<special_number::Pi> >("Pi", no_init)
 			.def("__init__", make_constructor(&special_number::Pi::template Make<>))
+			.def(NamedSymbolVisitor<special_number::Pi>())
 			;
 
 
 			// E class
-			class_<special_number::E, bases<NamedSymbol>, std::shared_ptr<special_number::E> >("E", no_init)
+			class_<special_number::E, bases<Number>, std::shared_ptr<special_number::E> >("E", no_init)
 			.def("__init__", make_constructor(&special_number::E::template Make<>))
+			.def(NamedSymbolVisitor<special_number::E>())
 			;
 
 			
