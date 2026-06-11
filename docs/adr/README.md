@@ -26,3 +26,7 @@ Each ADR follows the template:
 | [0006](0006-eigenpy-uninitialized-numpy-slot-guards.md) | Guard numpy mpfr/mpc dtypes against uninitialized slots | Python bindings / numerics |
 | [0007](0007-rational-config-constants-default-construct-precision-trap.md) | Rational config constants, and the DefaultConstruct static-precision trap | Numerics / config |
 | [0008](0008-track-path-result-numpy-object-not-writable-ref.md) | Take writable-Ref binding outputs as numpy objects (supersedes 0001) | Python bindings |
+| [0009](0009-amp-endgame-internal-double-state.md) | AMP endgame needs internal double-precision state, mirroring the tracker _(proposed; implementation deferred)_ | Numerics / performance |
+| [0010](0010-function-tree-single-inheritance-capability-classes.md) | function_tree uses single inheritance; cross-cutting traits are capability classes | Core / function_tree |
+| [0011](0011-differentiation-simplified-construction-no-mutation.md) | Differentiation emits already-simplified trees; held functions are never mutated | Core / function_tree |
+| [0012](0012-precedence-aware-printing-reparse-invariant.md) | Precedence-aware printing; printed trees must re-parse to the same values | Core / function_tree |
