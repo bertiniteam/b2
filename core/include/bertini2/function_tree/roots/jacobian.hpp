@@ -61,7 +61,7 @@ namespace node{
 
 		 This class defines a Jacobian tree.  It stores the entry node for a particular functions tree.
 		 */
-		class Jacobian : public virtual Handle, public virtual EnableSharedFromThisVirtual<Jacobian>
+		class Jacobian : public Handle
 		{
 			friend detail::FreshEvalSelector<dbl>;
 			friend detail::FreshEvalSelector<mpfr_complex>;

@@ -54,7 +54,7 @@ namespace node{
 
 	This class is an interface for all operators in the Bertini2 function tree.
 	*/
-	class Operator : public virtual Node
+	class Operator : public Node
 	{
 		
 	public:
@@ -80,7 +80,7 @@ namespace node{
 	This class is an interface for all unary operators, such as negation.
 	The sole child is stored in a shared_ptr.
 	*/
-	class UnaryOperator : public virtual Operator
+	class UnaryOperator : public Operator
 	{
 	public:
 		
@@ -165,7 +165,7 @@ namespace node{
 	Operands of the operator are stored in a vector and methods to add and access operands are available
 	in this interface.
 	*/
-	class NaryOperator : public virtual Operator
+	class NaryOperator : public Operator
 	{
 	public:
 		

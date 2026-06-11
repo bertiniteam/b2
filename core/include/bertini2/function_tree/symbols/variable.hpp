@@ -55,7 +55,7 @@ namespace node{
 
 	When differentiated, produces a differential referring to it.
 	*/
-	class Variable : public virtual NamedSymbol, public virtual EnableSharedFromThisVirtual<Variable>
+	class Variable : public NamedSymbol
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()

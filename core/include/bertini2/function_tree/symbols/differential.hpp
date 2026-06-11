@@ -58,7 +58,7 @@ namespace node{
 
 	This class represents differentials.  These are produced in the course of differentiation of a non-constant expression tree.
 	*/
-	class Differential : public virtual NamedSymbol, public virtual EnableSharedFromThisVirtual<Differential>
+	class Differential : public NamedSymbol
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
