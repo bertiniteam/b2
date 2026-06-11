@@ -363,6 +363,8 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				using Phase2T      = parallel::Phase2Task<BaseComplexT>;
 				using DuringResult = parallel::PathDuringEGResult<BaseComplexT>;
 
+				solutions_user_coords_fresh_ = false;
+
 				PreSolveChecks();
 				PreSolveSetup();
 
@@ -727,6 +729,8 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			*/
 			void Solve()
 			{
+				solutions_user_coords_fresh_ = false;
+
 				PreSolveChecks();
 
 				PreSolveSetup();
@@ -744,9 +748,41 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 
 			/**
-			\brief Get the final computed solutions
+			\brief Get the computed solutions, in the coordinates of the user's
+			original variables.
+
+			The stored internal solutions are dehomogenized through the target
+			system, once, lazily, into a cache; repeated calls return the cached
+			container by const reference.  Assumes post-solve serial access, like
+			the other accessors here.
+
+			\see SolutionsInternalCoords
 			*/
-			const auto& FinalSolutions() const
+			const auto& SolutionsUserCoords() const
+			{
+				if (!solutions_user_coords_fresh_)
+				{
+					solutions_user_coords_.clear();
+					solutions_user_coords_.reserve(solutions_post_endgame_.size());
+					for (const auto& s : solutions_post_endgame_)
+						solutions_user_coords_.push_back(this->TargetSystem().DehomogenizePoint(s));
+					solutions_user_coords_fresh_ = true;
+				}
+				return solutions_user_coords_;
+			}
+
+			/**
+			\brief Get the computed solutions in the solver's internal coordinates:
+			homogenized, and lying on the target system's patch.
+
+			These are the coordinates for continuing work -- start points for further
+			tracking re-using the target system's patch, refinement, etc.  Take a
+			user-coordinates point back to this representation with
+			System::HomogenizePoint on the target system.
+
+			\see SolutionsUserCoords
+			*/
+			const auto& SolutionsInternalCoords() const
 			{
 				return solutions_post_endgame_;
 			}
@@ -1355,6 +1391,8 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			/// computed data
 			SolnCont< EGBoundaryMetaDataT > solutions_at_endgame_boundary_; // the BaseRealT is the last used stepsize
 			SolnCont<Vec<BaseComplexT> > solutions_post_endgame_;
+			mutable SolnCont<Vec<BaseComplexT> > solutions_user_coords_; ///< lazy cache for SolutionsUserCoords; serial post-solve access assumed
+			mutable bool solutions_user_coords_fresh_ = false;
 			SolnCont<SolutionMetaDataT> solution_final_metadata_;
 
 

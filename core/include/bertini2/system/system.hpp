@@ -1250,6 +1250,48 @@ namespace bertini {
 			}
 
 
+		/**
+		\brief Take a point in user (dehomogenized) coordinates into this system's internal coordinates.
+
+		Two steps: (1) insert the homogenizing coordinate, with value 1, for each affine
+		variable group, per the FIFO variable ordering; (2) if the system is patched,
+		rescale the result onto the patch.  The result is the projectively-identical
+		point expressed in the coordinates the solver works in -- suitable for
+		comparison with internal-coordinate solutions, or as a start point for further
+		tracking re-using this system's patch.
+
+		This is the inverse of DehomogenizePoint: DehomogenizePoint(HomogenizePoint(p)) == p.
+		On an unhomogenized, unpatched system this is the identity.
+
+		\tparam T the number-type.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+
+		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the number of natural variables of the system.
+		*/
+		template<typename T>
+		Vec<T> HomogenizePoint(Vec<T> const& x) const
+			{
+
+				if (x.size()!=static_cast<Eigen::Index>(NumNaturalVariables())){
+					std::stringstream message;
+					message << "homogenizing point with incorrect number of coordinates. input has ";
+					message << x.size();
+					message << " but system expects ";
+					message << NumNaturalVariables();
+					throw std::runtime_error(message.str());
+				}
+
+				if (!have_ordering_)
+					ConstructOrdering();
+
+				auto x_homogenized = HomogenizePointFIFO(x);
+
+				if (IsPatched())
+					RescalePointToFitPatchInPlace(x_homogenized);
+
+				return x_homogenized;
+			}
+
+
 
 
 		/**
@@ -1677,6 +1719,7 @@ namespace bertini {
 					{
 						for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
 							x_dehomogenized(dehom_index++) = x(hom_index++);
+						hom_group_counter++; // was missing; mattered only for multiple hom groups of differing sizes
 						break;
 					}
 					case VariableGroupType::Ungrouped:
@@ -1693,6 +1736,65 @@ namespace bertini {
 			}
 
 			return x_dehomogenized;
+		}
+
+
+		/**
+		\brief FIFO-ordering implementation of HomogenizePoint's first step: insert
+		the homogenizing coordinate, with value 1, at each affine group's slot.
+		Homogeneous groups and ungrouped variables pass through.  Patch rescaling is
+		the caller's job.
+		*/
+		template<typename T>
+		Vec<T> HomogenizePointFIFO(Vec<T> const& x) const
+		{
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(homogenizing_variables_.size()==0 || homogenizing_variables_.size()==NumVariableGroups() && "must have either 0 homogenizing variables, or the number of homogenizing variables must match the number of affine variable groups.");
+			#endif
+
+			bool is_homogenized = homogenizing_variables_.size()!=0;
+			if (!is_homogenized)
+				return x;
+
+			Vec<T> x_homogenized(NumVariables());
+
+			unsigned affine_group_counter = 0;
+			unsigned hom_group_counter = 0;
+
+			unsigned dehom_index = 0; // index into x, the user-coordinates point
+			unsigned hom_index = 0; // index into x_homogenized, the point we are computing
+
+			for (auto& iter : time_order_of_variable_groups_)
+			{
+				switch (iter){
+					case VariableGroupType::Affine:
+					{
+						x_homogenized(hom_index++) = T(1);
+						for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+							x_homogenized(hom_index++) = x(dehom_index++);
+						affine_group_counter++;
+						break;
+					}
+					case VariableGroupType::Homogeneous:
+					{
+						for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
+							x_homogenized(hom_index++) = x(dehom_index++);
+						hom_group_counter++;
+						break;
+					}
+					case VariableGroupType::Ungrouped:
+					{
+						x_homogenized(hom_index++) = x(dehom_index++);
+						break;
+					}
+					default:
+					{
+						throw std::runtime_error("unacceptable VariableGroupType in HomogenizePointFIFO");
+					}
+				}
+			}
+
+			return x_homogenized;
 		}
 
 		void DifferentiateUsingDerivatives() const;
