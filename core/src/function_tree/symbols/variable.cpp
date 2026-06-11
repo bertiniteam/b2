@@ -94,7 +94,7 @@ template void Variable::SetToRandUnit<mpfr_complex>();
 std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v) const
 {
 	if (v==nullptr)
-		return Differential::Make(shared_from_this(), name());
+		return Differential::Make(std::static_pointer_cast<Variable const>(shared_from_this()), name());
 	else
 		return v.get() == this ? Integer::Make(1) : Integer::Make(0);
 }

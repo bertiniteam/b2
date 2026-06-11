@@ -52,7 +52,7 @@ namespace node{
 
 	Abstract class for trigonometric Operator types.
 	*/
-	class TrigOperator: public virtual UnaryOperator
+	class TrigOperator: public UnaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -91,7 +91,7 @@ namespace node{
 	This class represents the sine function.  FreshEval method
 	is defined for sine and takes the sine of the child node.
 	*/
-	class SinOperator : public virtual TrigOperator, public virtual EnableSharedFromThisVirtual<SinOperator>
+	class SinOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -106,7 +106,7 @@ namespace node{
 		}
 
 	private:
-		SinOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
+		SinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 		
 	public:
@@ -154,7 +154,7 @@ namespace node{
 	This class represents the inverse sine function.  FreshEval method
 	is defined for arcsine and takes the sine of the child node.
 	*/
-	class ArcSinOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<ArcSinOperator>
+	class ArcSinOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -169,7 +169,7 @@ namespace node{
 		}
 
 	private:
-		ArcSinOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
+		ArcSinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 
 	public:
@@ -221,7 +221,7 @@ namespace node{
 	This class represents the cosine function.  FreshEval method
 	is defined for cosine and takes the cosine of the child node.
 	*/
-	class CosOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<CosOperator>
+	class CosOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -236,7 +236,7 @@ namespace node{
 		}
 
 	private:
-		CosOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
+		CosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 		
 	public:
@@ -287,7 +287,7 @@ namespace node{
 	This class represents the inverse cosine function.  FreshEval method
 	is defined for arccosine and takes the arccosine of the child node.
 	*/
-	class ArcCosOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<ArcCosOperator>
+	class ArcCosOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -302,7 +302,7 @@ namespace node{
 		}
 
 	private:
-		ArcCosOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
+		ArcCosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 	public:
 		
@@ -359,7 +359,7 @@ namespace node{
 	This class represents the tangent function.  FreshEval method
 	is defined for tangent and takes the tangent of the child node.
 	*/
-	class TanOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<TanOperator>
+	class TanOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -374,7 +374,7 @@ namespace node{
 		}
 
 	private:
-		TanOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
+		TanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 	public:
 		
@@ -422,7 +422,7 @@ namespace node{
 	This class represents the inverse tangent function.  FreshEval method
 	is defined for arctangent and takes the arc tangent of the child node.
 	*/
-	class ArcTanOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<ArcTanOperator>
+	class ArcTanOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -437,7 +437,7 @@ namespace node{
 		}
 
 	private:
-		ArcTanOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
+		ArcTanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 	public:
 		

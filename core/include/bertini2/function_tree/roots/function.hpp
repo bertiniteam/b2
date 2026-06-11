@@ -56,7 +56,7 @@ namespace node{
 	
 
 
-	class Handle : public virtual NamedSymbol
+	class Handle : public NamedSymbol
 	{
 		BERTINI_DEFAULT_VISITABLE()
 
@@ -214,7 +214,7 @@ namespace node{
 
 	This class defines a function.  It stores the entry node for a particular functions tree.
 	 */
-	class Function : public virtual Handle, public virtual EnableSharedFromThisVirtual<Function>
+	class Function : public Handle
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()

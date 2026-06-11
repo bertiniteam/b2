@@ -76,7 +76,7 @@ namespace node{
 	in a single vector, and a vector of bools is used to determine the sign of each term.  FreshEval method
 	is defined for summation and difference.
 	*/
-	class SumOperator : public virtual NaryOperator, public virtual EnableSharedFromThisVirtual<SumOperator>
+	class SumOperator : public NaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -282,7 +282,7 @@ namespace node{
 	 This class represents the negation Operator.  FreshEval method
 	 is defined for negation and multiplies the value by -1.
 	 */
-	class NegateOperator : public virtual UnaryOperator, public virtual EnableSharedFromThisVirtual<NegateOperator>
+	class NegateOperator : public UnaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -378,7 +378,7 @@ namespace node{
 	This class represents the Operator for multiplication and division.  All children are factors and are stored
 	in a vector.  FreshEval method is defined for multiplication.
 	*/
-	class MultOperator : public virtual NaryOperator, public virtual EnableSharedFromThisVirtual<MultOperator>
+	class MultOperator : public NaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -550,7 +550,7 @@ namespace node{
 	 
 	 \see IntegerPowerOperator
 	 */
-	class PowerOperator : public virtual Operator, public virtual EnableSharedFromThisVirtual<PowerOperator>
+	class PowerOperator : public Operator
 	{
 		
 	public:
@@ -706,7 +706,7 @@ namespace node{
 	 operand_, and an extra variable(exponent_) stores the exponent.  FreshEval is
 	 defined as the exponention operation.
 	 */
-	class IntegerPowerOperator : public virtual UnaryOperator, public virtual EnableSharedFromThisVirtual<IntegerPowerOperator>
+	class IntegerPowerOperator : public UnaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -856,7 +856,7 @@ namespace node{
 	 This class represents the square root function.  FreshEval method
 	 is defined for square root and takes the square root of the child node.
 	 */
-	class SqrtOperator : public  virtual UnaryOperator, public virtual EnableSharedFromThisVirtual<SqrtOperator>
+	class SqrtOperator : public UnaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -932,7 +932,7 @@ namespace node{
 	This class represents the exponential function.  FreshEval method
 	is defined for exponential and takes the exponential of the child node.
 	*/
-	class ExpOperator : public  virtual UnaryOperator, public virtual EnableSharedFromThisVirtual<ExpOperator>
+	class ExpOperator : public UnaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -998,7 +998,7 @@ namespace node{
 
 	This class represents the natural logarithm function.
 	*/
-	class LogOperator : public  virtual UnaryOperator, public virtual EnableSharedFromThisVirtual<LogOperator>
+	class LogOperator : public UnaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()

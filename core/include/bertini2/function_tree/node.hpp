@@ -156,7 +156,7 @@ An interface for all nodes in a function tree, and for a function object as well
 
  \brief Abstract base class for the Bertini hybrid-precision (double-multiple) expression tree. 
  */
-class Node : public virtual VisitableBase<>, public std::enable_shared_from_this<Node>
+class Node : public VisitableBase<>, public std::enable_shared_from_this<Node>
 {
 	friend detail::FreshEvalSelector<dbl>;
 	friend detail::FreshEvalSelector<mpfr_complex>;
@@ -449,43 +449,6 @@ private:
 		N->print(out);
 		return out;
 	}
-
-
-
-	// inherit from this to get a nice method of producing shared pointers to specific type, solving the diamond problem
-	//
-	// T is a derived type
-	//
-	// I adapted from:
-	// https://stackoverflow.com/questions/16082785/use-of-enable-shared-from-this-with-multiple-inheritance
-	//
-	template<typename T>
-	struct EnableSharedFromThisVirtual: public virtual Node
-	{
-
-	public:
-
-	    std::shared_ptr<T> shared_from_this() {
-	       return std::dynamic_pointer_cast<T>(Node::shared_from_this());
-	    }
-
-	    std::shared_ptr<const T> shared_from_this() const{
-	       return std::dynamic_pointer_cast<const T>(Node::shared_from_this());
-	    }
-
-
-
-		template <class ThisT>
-		std::shared_ptr<ThisT> downcast_shared_from_this(){
-			return std::dynamic_pointer_cast<ThisT>(Node::shared_from_this());
-		}
-
-		template <class ThisT>
-		std::shared_ptr<const ThisT> downcast_shared_from_this() const{
-			return std::dynamic_pointer_cast<const ThisT>(Node::shared_from_this());
-		}
-
-	};
 
 
 
