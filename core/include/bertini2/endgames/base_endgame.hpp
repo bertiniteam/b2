@@ -210,13 +210,11 @@ public:
 		return this->RefineSampleImpl(result, current_sample, current_time, tol, max_iterations);
 	}
 
-	void ChangePrecision(unsigned p)
-	{
-		AsFlavor().ChangePrecision(p);
-		PrecT::ChangePrecision(p);
-		ChangePrecision(this->final_approximation_,p);
-		ChangePrecision(this->previous_approximation_,p);
-	}
+	// note: a ChangePrecision(unsigned) lived here until 2026-06-12; it called
+	// flavor-level ChangePrecision methods that have never existed, so it could
+	// not compile -- it just was never instantiated until explicit template
+	// instantiation (ADR-0014) forced every member.  zero callers; deleted.
+	// precision changes go through the PrecT policy (see prec_base.hpp).
 
 
 	/**
@@ -265,7 +263,15 @@ public:
 	\brief Setter for the final tolerance.
 	*/
 	inline
-	void SetFinalTolerance(BRT const& ft){this->template Get<EndgameConfig>().final_tolerance = ft;}
+	void SetFinalTolerance(NumErrorT const& ft)
+	{
+		// pre-ETI this member was never instantiated, hiding two defects: Get<>
+		// returns const& (assignment through it cannot compile), and the old
+		// BRT parameter type didn't match final_tolerance's storage (NumErrorT)
+		auto settings = this->template Get<EndgameConfig>();
+		settings.final_tolerance = ft;
+		this->Set(settings);
+	}
 
 
 

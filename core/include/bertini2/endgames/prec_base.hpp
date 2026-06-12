@@ -84,7 +84,8 @@ public:
 
 	void ChangePrecision(unsigned p)
 	{
-		tracker_.ChangePrecision(p);
+		// .get(): tracker_ is a reference_wrapper (never instantiated pre-ETI)
+		tracker_.get().ChangePrecision(p);
 	}
 	
 private:
