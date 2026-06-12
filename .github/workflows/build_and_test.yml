@@ -103,11 +103,22 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget libgmp-dev libmpfr-dev libmpc-dev libeigen3-dev libtool openmpi-bin libopenmpi-dev
+          sudo apt-get install -y wget libgmp-dev libmpfr-dev libmpc-dev libeigen3-dev libtool openmpi-bin libopenmpi-dev ccache
 
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install gmp mpfr libmpc eigen@3 open-mpi
+        run: brew install gmp mpfr libmpc eigen@3 open-mpi ccache
+
+      # compiler cache: makes recompiles of unchanged C++ near-free.  the key is
+      # deliberately loose (always save fresh, restore newest) -- ccache does its
+      # own invalidation; do not key on file hashes.
+      - name: Cache ccache
+        uses: actions/cache@v5
+        with:
+          path: .ccache
+          key: ccache-cpp-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: |
+            ccache-cpp-${{ matrix.os }}-
 
       - name: Build Boost base (Linux)
         if: runner.os == 'Linux'
@@ -132,6 +143,8 @@ jobs:
           ./b2 install -j2 hardcode-dll-paths=true dll-path=/tmp/boost-base/lib
 
       - name: Configure
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
           cmake -B build \
             -DCMAKE_PREFIX_PATH=/tmp/boost-base \
@@ -139,10 +152,21 @@ jobs:
             -DENABLE_UNIT_TESTING=ON \
             -DINSTALL_DOCUMENTATION=OFF \
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON \
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+          CCACHE_MAXSIZE: 400M
         run: cmake --build build --parallel 2
+
+      - name: ccache stats
+        if: always()
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+        run: ccache -s || true
 
       - name: Test
         working-directory: build
@@ -233,6 +257,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cibw-${{ matrix.python-version }}-
             ${{ runner.os }}-cibw-
+      # compiler cache for the bertini2 compile itself (deps are built by their
+      # own build systems and are out of ccache's cmake-launcher reach).  the key
+      # is deliberately loose -- always save fresh, restore newest; ccache does
+      # its own invalidation.  on Linux the cache lives in the repo dir because
+      # that is what cibuildwheel mounts into the container (as /project).
+      - name: Cache ccache (bertini2 compile)
+        uses: actions/cache@v5
+        with:
+          path: .ccache
+          key: ccache-wheels-${{ runner.os }}-${{ matrix.python-version }}-${{ github.sha }}
+          restore-keys: |
+            ccache-wheels-${{ runner.os }}-${{ matrix.python-version }}-
+            ccache-wheels-${{ runner.os }}-
       - name: Set CIBW_BUILD for this Python version
         shell: bash
         run: |
@@ -261,6 +298,8 @@ jobs:
           # all wheels would then bundle, breaking import on the other CPython versions.
           CIBW_BEFORE_ALL_LINUX: >
             yum install -y wget gmp-devel mpfr-devel libmpc-devel libtool &&
+            { yum install -y ccache || { yum install -y epel-release && yum install -y ccache; }; } &&
+            ccache --version &&
             cd /tmp &&
             { [ -f eigen-3.4.0.tar.gz ] || wget -q https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz ; } &&
             rm -rf eigen-3.4.0 && tar xzf eigen-3.4.0.tar.gz &&
@@ -273,7 +312,7 @@ jobs:
           # Install only the Python-version-independent libs from brew here; download
           # Boost & eigenpy sources to /tmp for the per-Python build in BEFORE_BUILD.
           CIBW_BEFORE_ALL_MACOS: >
-            brew install gmp mpfr libmpc eigen@3 &&
+            brew install gmp mpfr libmpc eigen@3 ccache &&
             cd /tmp &&
             { [ -f eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ] || curl -fsSL -o eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz https://github.com/stack-of-tasks/eigenpy/releases/download/v${{ env.EIGENPY_VERSION }}/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ; }
 
@@ -322,8 +361,8 @@ jobs:
             cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF &&
             make -j2 install
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
-          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=2"
-          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib"
+          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=2 CCACHE_DIR=/project/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           # Full pytest suite, restored 2026-06-08 now that the uninitialized-numpy-slot
           # crash is fixed in the bindings (see ADR-0006).  The build image is
           # manylinux_2_34 (AlmaLinux 9, MPFR 4.1; set via CIBW_MANYLINUX_X86_64_IMAGE
@@ -334,6 +373,13 @@ jobs:
           # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
           CIBW_TEST_REQUIRES_LINUX: "pytest numpy sympy"
           CIBW_TEST_COMMAND_LINUX: "cd {project} && python -m pytest python/test/ -q"
+
+      - name: ccache size (cold run = grows from nothing; warm run = hits)
+        if: always()
+        shell: bash
+        run: |
+          du -sh .ccache 2>/dev/null || echo "no .ccache directory was produced"
+          if command -v ccache >/dev/null; then CCACHE_DIR=$PWD/.ccache ccache -s || true; fi
 
       - uses: actions/upload-artifact@v5
         with:
