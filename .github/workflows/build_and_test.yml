@@ -270,6 +270,11 @@ jobs:
           restore-keys: |
             ccache-wheels-${{ runner.os }}-${{ matrix.python-version }}-
             ccache-wheels-${{ runner.os }}-
+      # pre-create as the runner user so docker's volume mount doesn't create it
+      # root-owned on the host
+      - name: Ensure ccache dir exists
+        shell: bash
+        run: mkdir -p .ccache
       - name: Set CIBW_BUILD for this Python version
         shell: bash
         run: |
@@ -291,6 +296,10 @@ jobs:
           CIBW_BUILD: ${{ env.CIBW_BUILD }}
           CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
+          # cibuildwheel COPIES the project into the container (no bind mount), so
+          # a cache written under /project is discarded.  mount the host ccache dir
+          # explicitly; ignored on macOS (host build, no container).
+          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume=${{ github.workspace }}/.ccache:/ccache-host"
           # Install system deps + download (but DO NOT build) Boost & eigenpy sources
           # once per container. Boost.Python is ABI-locked to a single CPython version,
           # so it must be rebuilt per target Python in BEFORE_BUILD — building it here
@@ -361,7 +370,7 @@ jobs:
             cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF &&
             make -j2 install
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
-          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=2 CCACHE_DIR=/project/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
+          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=2 CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           # Full pytest suite, restored 2026-06-08 now that the uninitialized-numpy-slot
           # crash is fixed in the bindings (see ADR-0006).  The build image is
