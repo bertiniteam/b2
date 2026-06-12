@@ -379,12 +379,22 @@ set(tracking_source_files
     src/tracking/explicit_predictors.cpp
 )
 
+# explicit template instantiation TUs: the one home for the heavy
+# endgame/zerodim instantiations (see ADR-0014); consumers get extern
+# declarations from the umbrella headers and just link.
+set(eti_source_files
+    src/eti/endgames_eti.cpp
+    src/eti/zero_dim_eti.cpp
+    src/eti/zero_dim_blackbox_eti.cpp
+)
+
 set(BERTINI2_LIBRARY_SOURCES
     ${basics_sources}
     ${function_tree_sources}
     ${parallel_sources}
     ${system_source_files}
     ${tracking_source_files}
+    ${eti_source_files}
 )
 
 set(BERTINI2_EXE_SOURCES

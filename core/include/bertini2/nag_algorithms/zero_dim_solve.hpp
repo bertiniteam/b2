@@ -1499,3 +1499,38 @@ ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>
 
 } // ns algorithm
 } // ns bertini
+
+
+// Explicit instantiation declarations — suppress re-instantiation of the six
+// production ZeroDim types in every including TU.  Definitions live in
+// core/src/eti/zero_dim_eti.cpp; see ADR-0014.  Other combos (different start
+// systems, RefToGiven policy) simply instantiate implicitly as before.
+#include "bertini2/endgames.hpp"
+#include "bertini2/system/start_systems.hpp"
+
+namespace bertini{ namespace algorithm{
+
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System, start_system::TotalDegree>;
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System, start_system::TotalDegree>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System, start_system::TotalDegree>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System, start_system::TotalDegree>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System, start_system::TotalDegree>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System, start_system::TotalDegree>;
+
+// the blackbox switch ladder additionally reaches MHomogeneous (CloneGiven) and
+// User (RefToGiven) starts; definitions in core/src/eti/zero_dim_blackbox_eti.cpp
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System, start_system::MHomogeneous>;
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System, start_system::MHomogeneous>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System, start_system::MHomogeneous>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System, start_system::MHomogeneous>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System, start_system::MHomogeneous>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System, start_system::MHomogeneous>;
+
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System, start_system::User, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System, start_system::User, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System, start_system::User, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System, start_system::User, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System, start_system::User, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System, start_system::User, policy::RefToGiven>;
+
+}} // namespaces

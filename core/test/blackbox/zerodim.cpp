@@ -53,8 +53,35 @@ BOOST_AUTO_TEST_CASE(make_zero_dim_nondefaults)
 	my_runtime_type_options.endgame = bertini::blackbox::type::Endgame::Cauchy;
 	auto zd_ptr = blackbox::MakeZeroDim(my_runtime_type_options, sys);
 
-	
+
 	// zd_ptr->DefaultSetup();
+}
+
+
+BOOST_AUTO_TEST_CASE(make_zero_dim_honors_endgame_choice)
+{
+	// regression: ZeroDimSpecifyShouldClone hardcoded the Cauchy endgame,
+	// ignoring its EndgameType parameter -- selecting PowerSeries silently
+	// built a Cauchy ZeroDim.  pin the dynamic types.
+	using namespace bertini::tracking;
+	using namespace bertini::endgame;
+	auto sys = system::Precon::GriewankOsborn();
+
+	blackbox::ZeroDimRT rt;
+	rt.tracker = blackbox::type::Tracker::Adaptive;
+
+	using PSEGZD   = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::PSEG,   System, start_system::TotalDegree>;
+	using CauchyZD = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::Cauchy, System, start_system::TotalDegree>;
+
+	rt.endgame = blackbox::type::Endgame::PowerSeries;
+	auto zd_pseg = blackbox::MakeZeroDim(rt, sys);
+	BOOST_CHECK(dynamic_cast<PSEGZD*>(zd_pseg.get()) != nullptr);
+	BOOST_CHECK(dynamic_cast<CauchyZD*>(zd_pseg.get()) == nullptr);
+
+	rt.endgame = blackbox::type::Endgame::Cauchy;
+	auto zd_cauchy = blackbox::MakeZeroDim(rt, sys);
+	BOOST_CHECK(dynamic_cast<CauchyZD*>(zd_cauchy.get()) != nullptr);
+	BOOST_CHECK(dynamic_cast<PSEGZD*>(zd_cauchy.get()) == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // end the zerodim sub-suite

@@ -68,15 +68,17 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyComplete(ConstTs const& ...
 template <typename StartType, typename TrackerType, typename EndgameType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyShouldClone(std::true_type, ConstTs const& ...ts)
 {
-	return ZeroDimSpecifyComplete<StartType, TrackerType, 
-			typename endgame::EndgameSelector<TrackerType>::Cauchy, policy::CloneGiven>(ts...);
+	// honor EndgameType!  until 2026-06-12 this hardcoded the Cauchy endgame,
+	// so selecting PowerSeries through the blackbox silently ran Cauchy.
+	return ZeroDimSpecifyComplete<StartType, TrackerType,
+			EndgameType, policy::CloneGiven>(ts...);
 }
 
 template <typename StartType, typename TrackerType, typename EndgameType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyShouldClone(std::false_type, ConstTs const& ...ts)
 {
-	return ZeroDimSpecifyComplete<StartType, TrackerType, 
-			typename endgame::EndgameSelector<TrackerType>::Cauchy, policy::RefToGiven>(ts...);
+	return ZeroDimSpecifyComplete<StartType, TrackerType,
+			EndgameType, policy::RefToGiven>(ts...);
 }
 
 
