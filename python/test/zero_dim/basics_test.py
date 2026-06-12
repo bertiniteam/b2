@@ -88,6 +88,7 @@ def test_power_series_endgame_variant():
 # see ADR-0013.
 
 import numpy as np
+from bertini import multiprec as mp
 
 INV_SQRT2 = 1 / np.sqrt(2)
 KNOWN_SOLUTIONS = (
@@ -135,7 +136,12 @@ def test_solutions_internal_coords_are_explicit_optout(solved):
     for i in range(2):
         assert len(internal[i]) == 3  # [hom_var, x, y]
         dehomed = ts.dehomogenize_point(internal[i])
-        assert np.linalg.norm(_as_complex(dehomed) - _as_complex(user[i])) < 1e-25
+        # compare in mpfr (a float64 round-trip puts an ~1e-16 ulp floor on
+        # the difference; x86_64 CI caught this).  the AMP solver may emit
+        # precision-16 values, so the identity holds at the value's own
+        # working precision -- hence 1e-12, not the ambient 30 digits.
+        for j in range(2):
+            assert mp.abs(dehomed[j] - user[i][j]) < mp.Float('1e-12')
 
 
 def test_homogenize_point_reenters_internal_coordinates(solved):
@@ -149,9 +155,11 @@ def test_homogenize_point_reenters_internal_coordinates(solved):
         assert len(lifted) == 3
         # projectively the same point, on the same patch -> numerically equal
         assert np.linalg.norm(_as_complex(lifted) - _as_complex(internal[i])) < 1e-8
-        # already on the patch: rescaling is the identity
+        # already on the patch: rescaling is the identity -- compare in mpfr
+        # at the value's own working precision (see note in the previous test)
         rescaled = ts.rescale_point_to_fit_patch(lifted)
-        assert np.linalg.norm(_as_complex(rescaled) - _as_complex(lifted)) < 1e-25
+        for j in range(3):
+            assert mp.abs(rescaled[j] - lifted[j]) < mp.Float('1e-12')
 
 
 def test_variable_orderings_label_the_representations(solved):
