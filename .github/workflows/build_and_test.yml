@@ -332,7 +332,7 @@ jobs:
           # (and locally); the older blame on "MPFR 3.1.6" was a misdiagnosis.  Running
           # the full suite here is the in-container proof of the fix.  If it flakes or
           # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
-          CIBW_TEST_REQUIRES_LINUX: "pytest numpy"
+          CIBW_TEST_REQUIRES_LINUX: "pytest numpy sympy"
           CIBW_TEST_COMMAND_LINUX: "cd {project} && python -m pytest python/test/ -q"
 
       - uses: actions/upload-artifact@v5
@@ -443,7 +443,7 @@ jobs:
 
       - name: Run Python tests
         run: |
-          pip install pytest
+          pip install pytest sympy
           python -m pytest python/test/ -v
 
   test_wheels_windows:
@@ -480,5 +480,5 @@ jobs:
           conda install -y python=${{ matrix.python-version }} --update-deps
           $py = "C:\Miniconda\envs\b2-windows\python.exe"
           & $py -m pip install --no-index --find-links dist/ bertini2
-          & $py -m pip install pytest
+          & $py -m pip install pytest sympy
           & $py -m pytest python/test/ -v
