@@ -109,6 +109,12 @@ namespace bertini{
 			.def("add_variable_group", &SystemBaseT::AddVariableGroup, (arg("self"), arg("group")), "Add a (affine) variable group to the System")
 			.def("set_variable_groups", &System::SetVariableGroups, (arg("self"), arg("groups")), "Replace the entire variable-group structure of the System with the given list of (affine) variable groups.  Clears existing groups but preserves the path variable.")
 			.def("add_hom_variable_group", &SystemBaseT::AddHomVariableGroup, (arg("self"), arg("group")), "Add a projective or homogeneous variable group to the System")
+			.def("add_linear_forms_block",
+				+[](SystemBaseT& self, std::size_t num_vars, bertini::Mat<mpfr> const& coefficients) {
+					self.AddBlock(bertini::blocks::LinearFormsBlock(num_vars, coefficients));
+				},
+				(arg("self"), arg("num_vars"), arg("coefficients")),
+				"Add a block of affine linear forms f(x) = M [x;1] to the System, evaluated as a single matrix-vector product rather than as scalar expressions.  coefficients is an mpfr_complex matrix with one row per function and num_vars+1 columns; the trailing column carries each form's constant term.")
 			// .def("add_ungrouped_variable", &SystemBaseT::AddUngroupedVariable,"Add an ungrouped variable to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_ungrouped_variables", &SystemBaseT::AddUngroupedVariables,"Add some ungrouped variables to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_implicit_parameter", &SystemBaseT::AddImplicitParameter)

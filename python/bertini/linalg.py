@@ -68,7 +68,7 @@ _MP_VALUE_TYPES = tuple(
 )
 
 __all__ = ['variable_vector', 'variable_matrix', 'coefficient', 'as_coefficients',
-           'add_functions']
+           'add_functions', 'add_linear_forms']
 
 
 def variable_vector(name, n, start=0):
@@ -167,3 +167,61 @@ def add_functions(system, expressions, basename=None):
         else:
             system.add_function(e, f'{basename}{i}')
     return int(flat.size)
+
+
+def _exact_to_mpfr(value):
+    """Convert a single exact value to a multiprec.Complex (refusing Python floats).
+
+    Mirrors :func:`coefficient`'s exact-only rule, but produces a multiprecision *value*
+    (for a coefficient matrix) rather than a function-tree node.
+    """
+    if _MP_VALUE_TYPES and isinstance(value, _MP_VALUE_TYPES):
+        return _mp.Complex(value)
+    if isinstance(value, bool):
+        raise TypeError("a bool is not a valid coefficient")
+    if isinstance(value, (int, np.integer)):
+        return _mp.Complex(str(int(value)))
+    if isinstance(value, Fraction):
+        return _mp.Complex(str(value.numerator)) / _mp.Complex(str(value.denominator))
+    if isinstance(value, str):
+        if '/' in value:
+            num, den = value.split('/')
+            return _mp.Complex(num) / _mp.Complex(den)
+        return _mp.Complex(value)
+    if isinstance(value, (float, complex, np.floating, np.complexfloating)):
+        raise TypeError(
+            f"refusing to use the Python {type(value).__name__} {value!r} as a coefficient: "
+            "a floating-point literal would cap the precision of the block.  Pass an exact "
+            "value -- an int, a fractions.Fraction, an exact string, or a bertini.multiprec "
+            "value."
+        )
+    raise TypeError(f"cannot use {type(value).__name__} as a coefficient")
+
+
+def add_linear_forms(system, coefficients):
+    """Add an affine-linear-forms block f(x) = M [x;1] to ``system``.
+
+    This is the efficient, first-class form of a stack of linear forms: instead of expanding
+    each row into a scalar function-tree expression, the whole block is evaluated as one
+    matrix-vector product (the C++ LinearFormsBlock).
+
+    ``coefficients`` is an (m x num_vars+1) array/list of EXACT values -- one row per
+    function, the trailing column being each form's constant term.  Entries are converted to
+    an mpfr_complex coefficient matrix at the current default precision (set
+    :func:`bertini.default_precision` higher beforehand if you want the block's master to
+    carry more digits for adaptive-precision tracking).  Python floats are refused.
+
+    Returns ``system`` for chaining.
+    """
+    rows = [list(r) for r in coefficients]
+    if not rows:
+        raise ValueError("coefficients must have at least one row")
+    ncol = len(rows[0])
+    M = np.empty((len(rows), ncol), dtype=_mp.Complex)
+    for i, row in enumerate(rows):
+        if len(row) != ncol:
+            raise ValueError("coefficient matrix is ragged (rows of differing length)")
+        for j, entry in enumerate(row):
+            M[i, j] = _exact_to_mpfr(entry)
+    system.add_linear_forms_block(ncol - 1, M)
+    return system

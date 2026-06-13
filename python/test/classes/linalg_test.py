@@ -86,3 +86,36 @@ def test_add_functions_accepts_a_single_expression():
     sys = pb.System()
     assert bla.add_functions(sys, np.array([3, 4]) @ x - 1) == 1
     assert sys.num_functions() == 1
+
+
+# --- the C++ LinearFormsBlock, driven from Python via add_linear_forms ---
+
+def test_add_linear_forms_block_evaluates():
+    # f0 = 2x + 3y + 1,  f1 = x - y + 4  (augmented rows; trailing column is the constant)
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    bla.add_linear_forms(sys, [[2, 3, 1], [1, -1, 4]])
+    assert sys.num_functions() == 2
+
+    v = sys.eval(np.array([mp.Complex('1'), mp.Complex('1')], dtype=mp.Complex))
+    assert abs(complex(v[0]) - 6) < 1e-10
+    assert abs(complex(v[1]) - 4) < 1e-10
+
+
+def test_add_linear_forms_accepts_exact_nonintegers():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    # 5/2 x + 1 y + 0   evaluated at (2, 1) = 5 + 1 = 6
+    bla.add_linear_forms(sys, [['5/2', '1', '0']])
+    v = sys.eval(np.array([mp.Complex('2'), mp.Complex('1')], dtype=mp.Complex))
+    assert abs(complex(v[0]) - 6) < 1e-10
+
+
+def test_add_linear_forms_refuses_floats():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    with pytest.raises(TypeError):
+        bla.add_linear_forms(sys, [[2.5, 1, 0]])
