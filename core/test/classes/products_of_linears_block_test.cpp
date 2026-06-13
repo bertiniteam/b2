@@ -35,14 +35,14 @@ static_assert(bertini::blocks::is_block_v<ProductsOfLinearsBlock>,
 //   df1/dx = 1,               df1/dy = 0
 static ProductsOfLinearsBlock MakeTestBlock()
 {
-	Mat<mpfr_complex> f0(2, 3);
+	bertini::Mat<mpfr_complex> f0(2, 3);
 	f0 << mpfr_complex(2), mpfr_complex(3),  mpfr_complex(1),
 	      mpfr_complex(1), mpfr_complex(-1), mpfr_complex(4);
 
-	Mat<mpfr_complex> f1(1, 3);
+	bertini::Mat<mpfr_complex> f1(1, 3);
 	f1 << mpfr_complex(1), mpfr_complex(0), mpfr_complex(1);
 
-	std::vector<Mat<mpfr_complex>> factors{f0, f1};
+	std::vector<bertini::Mat<mpfr_complex>> factors{f0, f1};
 	return ProductsOfLinearsBlock(2, std::move(factors));
 }
 
@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(eval_double)
 	DefaultPrecision(30);
 	auto block = MakeTestBlock();
 
-	Vec<dbl> x(2); x << dbl(1), dbl(1);
-	Vec<dbl> result(2);
+	bertini::Vec<dbl> x(2); x << dbl(1), dbl(1);
+	bertini::Vec<dbl> result(2);
 	block.EvalInPlace<dbl>(result, x, dbl(0));
 
 	BOOST_CHECK_CLOSE(result(0).real(), 24.0, 1e-11);
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(jacobian_double)
 	DefaultPrecision(30);
 	auto block = MakeTestBlock();
 
-	Vec<dbl> x(2); x << dbl(1), dbl(1);
-	Mat<dbl> J(2, 2);
+	bertini::Vec<dbl> x(2); x << dbl(1), dbl(1);
+	bertini::Mat<dbl> J(2, 2);
 	block.JacobianInPlace<dbl>(J, x, dbl(0));
 
 	BOOST_CHECK_CLOSE(J(0, 0).real(), 14.0, 1e-11);
@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(eval_mpfr)
 	auto block = MakeTestBlock();
 	block.Precision(30);
 
-	Vec<mpfr_complex> x(2); x << mpfr_complex(1), mpfr_complex(1);
-	Vec<mpfr_complex> result(2);
+	bertini::Vec<mpfr_complex> x(2); x << mpfr_complex(1), mpfr_complex(1);
+	bertini::Vec<mpfr_complex> result(2);
 	block.EvalInPlace<mpfr_complex>(result, x, mpfr_complex(0));
 
 	BOOST_CHECK(abs(result(0) - mpfr_complex(24)) < mpfr_float("1e-25"));
@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE(jacobian_mpfr)
 	auto block = MakeTestBlock();
 	block.Precision(30);
 
-	Vec<mpfr_complex> x(2); x << mpfr_complex(1), mpfr_complex(1);
-	Mat<mpfr_complex> J(2, 2);
+	bertini::Vec<mpfr_complex> x(2); x << mpfr_complex(1), mpfr_complex(1);
+	bertini::Mat<mpfr_complex> J(2, 2);
 	block.JacobianInPlace<mpfr_complex>(J, x, mpfr_complex(0));
 
 	BOOST_CHECK(abs(J(0, 0) - mpfr_complex(14)) < mpfr_float("1e-25"));
