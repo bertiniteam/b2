@@ -68,7 +68,7 @@ _MP_VALUE_TYPES = tuple(
 )
 
 __all__ = ['variable_vector', 'variable_matrix', 'coefficient', 'as_coefficients',
-           'add_functions', 'add_linear_forms']
+           'add_functions', 'add_linear_forms', 'add_linear']
 
 
 def variable_vector(name, n, start=0):
@@ -224,4 +224,69 @@ def add_linear_forms(system, coefficients):
         for j, entry in enumerate(row):
             M[i, j] = _exact_to_mpfr(entry)
     system.add_linear_forms_block(ncol - 1, M)
+    return system
+
+
+def add_linear(system, A, x, b=None):
+    """Add the linear conditions ``A @ x + b == 0`` to ``system`` as a LinearFormsBlock.
+
+    This is the "auto-target" for constant-coefficient linear forms: instead of expanding
+    each row of ``A @ x`` into a scalar function-tree expression, the whole stack is added
+    as one block evaluated by a single matrix-vector product.
+
+    Parameters
+    ----------
+    system : the System to add to.  Its variable groups must already be set -- the block is
+        built over the system's current variable ordering.
+    A : an exact (m x n) coefficient matrix (array/list of lists).
+    x : a length-n vector of the system's variables (numpy object array of Variable, e.g.
+        from :func:`variable_vector`).  Each x[j] must already belong to a variable group of
+        ``system``.
+    b : optional length-m exact constant vector (default all zero).
+
+    Coefficients must be exact (see :func:`coefficient`); Python floats are refused.
+
+    .. note::
+
+       The block is fixed to the system's *current* variables.  ``System.Homogenize`` does
+       not yet rewrite evaluation blocks, so a linear-forms block does not survive the
+       homogenization the zero-dim solver performs -- use ``add_linear`` for systems you
+       evaluate directly.  (Making blocks homogenization-aware is a follow-up; the MHom
+       products block sidesteps this by being built after homogenization.)
+
+    Returns ``system`` for chaining.
+    """
+    rows = [list(r) for r in A]
+    if not rows:
+        raise ValueError("A must have at least one row")
+    m = len(rows)
+    n = len(rows[0])
+    xs = list(x)
+    if len(xs) != n:
+        raise ValueError(f"A has {n} columns but x has {len(xs)} variables")
+    if b is not None:
+        b = list(b)
+        if len(b) != m:
+            raise ValueError(f"b has length {len(b)} but A has {m} rows")
+
+    ordering = list(system.variable_ordering())
+    col_of = {v.name: i for i, v in enumerate(ordering)}
+    num_vars = len(ordering)
+
+    M = np.zeros((m, num_vars + 1), dtype=_mp.Complex)
+    for i in range(m):
+        if len(rows[i]) != n:
+            raise ValueError("A is ragged (rows of differing length)")
+        for j in range(n):
+            name = xs[j].name
+            if name not in col_of:
+                raise ValueError(
+                    f"variable {name!r} is not in the system's variable ordering; "
+                    "add its variable group before calling add_linear"
+                )
+            M[i, col_of[name]] = _exact_to_mpfr(rows[i][j])
+        if b is not None:
+            M[i, num_vars] = _exact_to_mpfr(b[i])
+
+    system.add_linear_forms_block(num_vars, M)
     return system

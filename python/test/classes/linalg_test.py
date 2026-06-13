@@ -119,3 +119,40 @@ def test_add_linear_forms_refuses_floats():
     sys.add_variable_group(pb.VariableGroup([x, y]))
     with pytest.raises(TypeError):
         bla.add_linear_forms(sys, [[2.5, 1, 0]])
+
+
+# --- add_linear: the auto-target (A @ x + b = 0 as a LinearFormsBlock) ---
+
+def test_add_linear_matches_scalar_expansion():
+    # Build the SAME linear system two ways on systems with identical variable structure,
+    # and check they evaluate identically: scalar function-tree expansion vs LinearFormsBlock.
+    A = [[2, 3], [1, -1], [0, 4]]
+    b = [1, 4, -2]
+
+    # scalar version: add_functions(A @ x + b)
+    xs = bla.variable_vector('x', 2)
+    sys_scalar = pb.System()
+    sys_scalar.add_variable_group(pb.VariableGroup(list(xs)))
+    bla.add_functions(sys_scalar, np.array(A) @ xs + np.array(b))
+
+    # block version: add_linear(A, x, b)
+    xb = bla.variable_vector('x', 2)
+    sys_block = pb.System()
+    sys_block.add_variable_group(pb.VariableGroup(list(xb)))
+    bla.add_linear(sys_block, A, xb, b)
+
+    pt = np.array([mp.Complex('2'), mp.Complex('-1')], dtype=mp.Complex)
+    v_scalar = sys_scalar.eval(pt)
+    v_block = sys_block.eval(pt)
+
+    assert len(v_scalar) == len(v_block) == 3
+    for i in range(3):
+        assert abs(complex(v_scalar[i]) - complex(v_block[i])) < 1e-10
+
+
+def test_add_linear_refuses_floats():
+    xs = bla.variable_vector('x', 2)
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup(list(xs)))
+    with pytest.raises(TypeError):
+        bla.add_linear(sys, [[2.5, 1]], xs)
