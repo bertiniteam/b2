@@ -16,6 +16,7 @@ import bertini as pb
 from bertini.nag_algorithm import (
     ZeroDimCauchyDoublePrecisionMHomogeneous,
     ZeroDimPowerSeriesDoublePrecisionMHomogeneous,
+    ZeroDimCauchyAdaptivePrecisionMHomogeneous,
 )
 
 # Compare success codes by integer value: the enhance machinery's config __eq__ can be
@@ -60,6 +61,7 @@ def _solve_with_retry(solver_cls, attempts=40):
 @pytest.mark.parametrize("solver_cls", [
     ZeroDimCauchyDoublePrecisionMHomogeneous,
     ZeroDimPowerSeriesDoublePrecisionMHomogeneous,
+    ZeroDimCauchyAdaptivePrecisionMHomogeneous,  # adaptive: handles the harder MHom paths
 ])
 def test_mhom_solves_two_variable_group_system(solver_cls):
     good = _solve_with_retry(solver_cls)

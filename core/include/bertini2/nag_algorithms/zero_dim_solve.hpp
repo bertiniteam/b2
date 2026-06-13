@@ -540,7 +540,16 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				if (TargetSystem().HavePathVariable())
 					throw std::runtime_error("unable to perform zero dim solve on target system -- has path variable, use user homotopy instead.");
 
-				if (TargetSystem().NumVariables() > TargetSystem().NumTotalFunctions())
+				// A square zero-dim system needs one equation per dimension.  Each projective
+				// (homogeneous) variable group of size k spans P^{k-1}: its k coordinates carry
+				// only k-1 dimensions because scale is free, so it needs one fewer equation than
+				// it has variables.  Subtract that free scale per projective group before
+				// comparing -- otherwise a genuinely square multiprojective system (e.g. the
+				// eigenvalue problem (A - lam I)x = 0 with x projective, lam affine) is wrongly
+				// rejected.  Affine-only systems have no hom variable groups, so this is a no-op
+				// for them.  (Patches, which would also enter NumTotalFunctions, are added later
+				// during system preparation; this check runs on the as-supplied system.)
+				if (TargetSystem().NumVariables() - TargetSystem().NumHomVariableGroups() > TargetSystem().NumTotalFunctions())
 					throw std::runtime_error("unable to perform zero dim solve on target system -- underconstrained, so has no zero dimensional solutions.");
 
 				if (!TargetSystem().IsPolynomial())

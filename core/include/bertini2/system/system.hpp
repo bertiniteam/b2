@@ -222,6 +222,7 @@ namespace bertini {
 				if (IsPatched())
 					patch_.EvalInPlace(function_values,
 					                   std::get<Vec<T> >(current_variable_values_));
+				CoerceBlockOutputPrecision(function_values);
 				return;
 			}
 
@@ -431,6 +432,7 @@ namespace bertini {
 				JacobianBlocksInPlace<T>(J);
 				if (IsPatched())
 					patch_.JacobianInPlace(J, std::get<Vec<T> >(current_variable_values_));
+				CoerceBlockOutputPrecision(J);
 				return;
 			}
 
@@ -730,6 +732,7 @@ namespace bertini {
 				if (IsPatched())
 					for (size_t ii = 0; ii < NumTotalVariableGroups(); ++ii)
 						ds_dt(ii + NumNaturalFunctions()) = T(0);
+				CoerceBlockOutputPrecision(ds_dt);
 				return;
 			}
 
@@ -1866,6 +1869,30 @@ namespace bertini {
 			if (have_path_variable_)
 				return path_variable_->template Eval<T>();
 			return T(0);
+		}
+
+		/// \brief Force a block-path evaluation result to the system's working precision.
+		///
+		/// A block evaluates correctly at its working precision, but the *result* container
+		/// (function values / Jacobian / time derivative) is allocated by the caller, often at
+		/// whatever the ambient DefaultPrecision happens to be, and Eigen's coefficient-wise
+		/// assignment into it preserves the destination entry's precision.  So writing a
+		/// 20-digit block value into a result entry that was allocated at, say,
+		/// MaxPrecisionAllowed leaves a 20-digit value carried at 1000-digit precision.  The
+		/// adaptive tracker then propagates that over-precise value as the path point and the
+		/// next System::SetVariables throws (point precision != system precision).  Coercing the
+		/// whole result to precision_ here makes a block-composed System honor the contract that
+		/// its evaluations come out at its working precision, exactly as the SLP path does.
+		/// No-op for double (which carries no precision).
+		template <typename Derived>
+		void CoerceBlockOutputPrecision(Eigen::MatrixBase<Derived>& result) const
+		{
+			using Scalar = typename Derived::Scalar;
+			if constexpr (!std::is_same<Scalar, dbl>::value)
+			{
+				using bertini::Precision;
+				Precision(result, precision_);
+			}
 		}
 
 		/// \brief Evaluate the blocks' function values into the leading (natural) rows.
