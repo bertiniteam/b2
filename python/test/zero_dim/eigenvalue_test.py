@@ -19,29 +19,26 @@ import numpy as np
 import pytest
 
 import bertini as pb
+from bertini import linalg as bla
 from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionMHomogeneous
 
 OK = int(pb.tracking.SuccessCode.Success)
 
 
 def _eigen_system(A, c):
-    """Build (A - lam I)x = 0, c.x - 1 = 0 with {x} and {lam} as variable groups."""
+    """Build (A - lam I)x = 0, c.x - 1 = 0 with {x} and {lam} as variable groups.
+
+    Written with the linear-algebra layer: x is a vector of variables, so the n eigen-
+    equations are the single vector expression ``A @ x - lam*x``.
+    """
     n = A.shape[0]
-    xs = [pb.Variable(f'x{i}') for i in range(n)]
+    x = bla.variable_vector('x', n)
     lam = pb.Variable('lam')
     sys = pb.System()
-    for i in range(n):
-        expr = -lam * xs[i]
-        for j in range(n):
-            if A[i, j]:
-                expr = expr + int(A[i, j]) * xs[j]
-        sys.add_function(expr)            # row i of (A - lam I) x
-    norm = -1
-    for j in range(n):
-        norm = norm + int(c[j]) * xs[j]
-    sys.add_function(norm)                # c . x - 1  (fixes eigenvector scale)
-    sys.add_variable_group(pb.VariableGroup(xs))     # eigenvector group
-    sys.add_variable_group(pb.VariableGroup([lam]))  # eigenvalue group
+    bla.add_functions(sys, A @ x - lam * x)          # the rows of (A - lam I) x
+    sys.add_function(c @ x - 1)                       # c . x - 1  (fixes eigenvector scale)
+    sys.add_variable_group(pb.VariableGroup(list(x)))    # eigenvector group
+    sys.add_variable_group(pb.VariableGroup([lam]))      # eigenvalue group
     return sys, lam
 
 

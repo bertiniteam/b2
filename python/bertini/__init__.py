@@ -79,6 +79,8 @@ from ._pybertini import info
 
 from . import multiprec
 
+from . import linalg
+
 # some convenience assignments
 Variable = function_tree.symbol.Variable
 variables = function_tree.variables
@@ -94,6 +96,7 @@ default_precision = multiprec.default_precision
 __all__ = ['Variable','variables','gather_variables','VariableGroup','system','System',
            'nag_algorithm','container','default_precision',
            'tracking','endgame','logging','function_tree','parse','multiprec','random','parallel',
+           'linalg',
            'sin','cos','tan','asin','acos','atan','exp','log','sqrt']
 
 
