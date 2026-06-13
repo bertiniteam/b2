@@ -15,9 +15,6 @@
 //
 // Copyright(C) Bertini2 Development Team
 
-// individual authors of this file include:
-// silviana amethyst, university of wisconsin eau claire
-
 #include <boost/test/unit_test.hpp>
 
 #include "bertini2/system/blocks/block.hpp"
