@@ -121,14 +121,19 @@ public:
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
 	{
 		const auto& W = Working<T>();
+		// aug = [vars ; 1].  The trailing 1 lets each coefficient row carry its constant
+		// term in its last column, so a linear factor is just the dot product (row . aug).
 		const Vec<T> aug = Augment<T>(vars);
 
+		// Function i is a product of linear factors.  W[i] is its k x (n+1) coefficient
+		// matrix, one row per factor, so W[i] * aug evaluates all k factors at once and the
+		// function value is their product.
 		for (size_t i = 0; i < W.size(); ++i)
 		{
-			const Vec<T> fvals = W[i] * aug;
+			const Vec<T> fvals = W[i] * aug;          // the k factor values L_0 .. L_{k-1}
 			T val(1);
 			for (Eigen::Index r = 0; r < fvals.size(); ++r)
-				val *= fvals(r);
+				val *= fvals(r);                      // f_i = prod_r L_r
 			result(static_cast<Eigen::Index>(i)) = val;
 		}
 	}
@@ -144,31 +149,45 @@ public:
 	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& /*path_value*/) const
 	{
 		const auto& W = Working<T>();
-		const Vec<T> aug = Augment<T>(vars);
+		const Vec<T> aug = Augment<T>(vars);          // [vars ; 1]; see EvalInPlace
 
+		// Function i is f_i = prod_r L_r, where L_r = (row r of M) . aug is the r-th linear
+		// factor's value.  By the product rule, the partial derivative w.r.t. variable c is
+		//
+		//     d f_i / d x_c = sum_r (d L_r / d x_c) * prod_{s != r} L_s
+		//                   = sum_r      M(r,c)     * weight_r,
+		//
+		// since d L_r / d x_c is just the coefficient M(r,c) of x_c in factor r, and
+		// weight_r := prod_{s != r} L_s is the product of every factor value except r's.
 		for (size_t i = 0; i < W.size(); ++i)
 		{
-			const Mat<T>& M = W[i];
+			const Mat<T>& M = W[i];                   // k x (n+1): rows are factors, last col is constant
 			const Eigen::Index k = M.rows();
 
-			if (k == 0)
+			if (k == 0)                               // a 0-factor product is the constant 1; derivative 0
 			{
 				J.row(static_cast<Eigen::Index>(i)).setZero();
 				continue;
 			}
 
-			const Vec<T> fvals = M * aug;
+			const Vec<T> fvals = M * aug;             // the factor values L_0 .. L_{k-1}
 
-			// weight_r = product of all factor values except r, via prefix/suffix products
+			// weight_r = prod_{s != r} L_s, computed in O(k) and WITHOUT division -- so it
+			// stays correct even when some factor value L_s is zero (dividing the total
+			// product by L_r would not).  We split the "all but r" product into the factors
+			// before r and the factors after r, each built by a running accumulator:
+			//   forward pass:  weight_r <- prod_{s < r} L_s            (the prefix product)
+			//   backward pass: weight_r <- weight_r * prod_{s > r} L_s (times the suffix product)
 			Vec<T> weight(k);
 			{
 				T acc(1);
-				for (Eigen::Index r = 0; r < k; ++r) { weight(r) = acc; acc *= fvals(r); }
+				for (Eigen::Index r = 0; r < k; ++r) { weight(r) = acc; acc *= fvals(r); }      // prefix
 				acc = T(1);
-				for (Eigen::Index r = k - 1; r >= 0; --r) { weight(r) *= acc; acc *= fvals(r); }
+				for (Eigen::Index r = k - 1; r >= 0; --r) { weight(r) *= acc; acc *= fvals(r); } // suffix
 			}
 
-			// d f_i / d x_c = sum_r M(r,c) * weight_r, for variable columns only (drop the constant col)
+			// Row i of the Jacobian is (sum_r M(r,c) * weight_r) over the variable columns
+			// c only; M.leftCols(num_vars_) drops the trailing constant column (not a variable).
 			J.row(static_cast<Eigen::Index>(i)) = weight.transpose() * M.leftCols(static_cast<Eigen::Index>(num_vars_));
 		}
 	}
