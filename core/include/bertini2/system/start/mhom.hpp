@@ -126,6 +126,7 @@ namespace bertini
 			std::vector< VariableGroup > var_groups_;
 			Mat<std::shared_ptr<node::LinearProduct>> linprod_matrix_; ///< All the linear products for each entry in the degree matrix.
 			std::vector< std::vector<size_t> > variable_cols_; ///< The columns associated with each variable.  The first index is the variable group, the second index is the particular variable in the group.
+			size_t num_hom_groups_ = 0; ///< how many of the leading entries of var_groups_ are projective (homogeneous) groups; the rest are affine.  A projective group of size k spans P^{k-1}: dimension k-1, so it takes k-1 functions and its start-point component is a homogeneous vector.
 
 			mutable Vec<mpfr_complex> temp_v_mp_;
 

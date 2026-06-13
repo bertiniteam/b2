@@ -45,7 +45,13 @@ namespace bertini
 		MHomogeneous::MHomogeneous(System const& s)
 		{
 
-			if (s.NumTotalFunctions() != s.NumVariables())
+			// A square multiprojective system has one equation per dimension.  Each
+			// projective (homogeneous) variable group of size k spans P^{k-1}: its k
+			// coordinates carry only k-1 dimensions (scale is free), so subtract one per hom
+			// group.  This equals the old NumTotalFunctions()==NumVariables() for affine
+			// systems and for homogenized+patched systems, but is also correct for raw systems
+			// that carry projective variable groups.
+			if (s.NumNaturalFunctions() != s.NumNaturalVariables() - s.NumHomVariableGroups())
 				throw std::runtime_error("attempting to construct multi homogeneous start system from non-square target system");
 
 			if (s.HavePathVariable())
@@ -224,8 +230,9 @@ namespace bertini
 			degree_matrix_ = Mat<int>::Zero(target_system.NumNaturalFunctions(),target_system.NumTotalVariableGroups());
 
 			var_groups_ = target_system.HomVariableGroups();
+			num_hom_groups_ = var_groups_.size();   // the leading var_groups_ entries are projective
 			auto affine_var_groups = target_system.VariableGroups();
-			//This concatenates the affine variable groups to the hom variable groups. 
+			//This concatenates the affine variable groups to the hom variable groups.
 			var_groups_.insert(var_groups_.end(), affine_var_groups.begin(), affine_var_groups.end());
 
 			int col_count = 0;
@@ -307,7 +314,11 @@ namespace bertini
 			// group), whose linear solve is singular and yields NaN start points.
 			for(size_t ii = 0; ii < target_system.NumTotalVariableGroups(); ++ii)
 			{
-				variable_group_counter[ii] = static_cast<int>(var_groups_[ii].size());
+				// A projective (homogeneous) group of size k spans P^{k-1}, so it takes only
+				// k-1 functions; an affine group of size m takes m.  The leading num_hom_groups_
+				// entries of var_groups_ are the projective ones.
+				const int dim = static_cast<int>(var_groups_[ii].size()) - (ii < num_hom_groups_ ? 1 : 0);
+				variable_group_counter[ii] = dim;
 			}
 			// std::cout << "variable_group_counter is " << std::endl;
 			// std::cout << variable_group_counter << std::endl;		
@@ -456,26 +467,43 @@ namespace bertini
 			
 			
 			
-			// Create a linear system to solve.
+			// Create the linear system whose solution is this start point, in natural
+			// coordinates.  Each function assigned by the partition contributes its chosen
+			// linear factor = 0:
+			//   affine group (m vars):   m factors -> m rows; the factor's trailing coeff is
+			//                            its constant, so it moves to the right-hand side.
+			//   projective group (k coords): k-1 factors -> k-1 rows; these are homogeneous
+			//                            (trailing coeff 0), so the per-group block is k-1 by
+			//                            k -- one short of square.  We pin one coordinate of
+			//                            each projective group to 1 (an affine-chart normaliza-
+			//                            tion) to pick a representative; HomogenizePoint then
+			//                            rescales it onto the patch.  Adding one such row per
+			//                            projective group makes A exactly square.
 			size_t num_grouped_variables = NumNaturalVariables() - NumUngroupedVariables();
-			Mat<T> A(partition.size(), num_grouped_variables);
-			Vec<T> v(num_grouped_variables);
-			Vec<T> b(partition.size());
-			
+			Mat<T> A = Mat<T>::Zero(static_cast<Eigen::Index>(num_grouped_variables),
+			                        static_cast<Eigen::Index>(num_grouped_variables));
+			Vec<T> b = Vec<T>::Zero(static_cast<Eigen::Index>(num_grouped_variables));
+
 			for(int ii = 0; ii < partition.size(); ++ii)
 			{
-				v.setZero();
 				std::vector<size_t> cols = variable_cols_[partition[ii]];
 				auto coeff = linprod_matrix_(ii,partition[ii])->GetCoeffs<T>(subscript[ii]);
 				for(size_t jj = 0; jj < cols.size(); ++jj)
 				{
-					v(cols[jj]) = coeff[jj];
+					A(ii, static_cast<Eigen::Index>(cols[jj])) = coeff[jj];
 				}
-				
-				A.row(ii) = v;
-				b(ii) = -coeff[cols.size()];
+				b(ii) = -coeff[cols.size()];   // affine: the constant term; projective: 0
 			}
-			
+
+			// normalization row per projective group: pin its last coordinate to 1.
+			Eigen::Index extra = static_cast<Eigen::Index>(partition.size());
+			for (size_t g = 0; g < num_hom_groups_; ++g)
+			{
+				A(extra, static_cast<Eigen::Index>(variable_cols_[g].back())) = T(1);
+				b(extra) = T(1);
+				++extra;
+			}
+
 			Vec<T> affine_solution = A.partialPivLu().solve(b);
 
 			// The linear solve gives the start point in affine (dehomogenized) coordinates;

@@ -70,18 +70,24 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_small_example)
 	*/
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
+	// second projective coordinate of each homogeneous group: a hom group of size k is
+	// P^{k-1}, so a size-1 group is the degenerate P^0.  Use size-2 groups (P^1, dimension
+	// 1) so each group absorbs one function -- the degree matrix, partitions, and start-
+	// point count are exactly as for the original (capacity = dimension = size - 1 = 1).
+	auto x1 = Variable::Make("x1");
+	auto y1 = Variable::Make("y1");
 
 	System sys;
 
-	VariableGroup v1{x};
-	VariableGroup v2{y};
+	VariableGroup v1{x, x1};
+	VariableGroup v2{y, y1};
 
 	sys.AddHomVariableGroup(v1);
 	sys.AddHomVariableGroup(v2);
 
 	sys.AddFunction(x*y);
 	sys.AddFunction(pow(x,2)*pow(y,2));
-	
+
 	auto mhom_start_system = bertini::start_system::MHomogeneous(sys);
 
 	Vec<int> partition_1(2);
@@ -241,13 +247,20 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_larger_example)
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	auto z = Variable::Make("z");
+	// second projective coordinate of each homogeneous group (see the small example above):
+	// a hom group of size k is P^{k-1}, so use size-2 groups (P^1, dimension 1).  Degree
+	// matrix, partitions, and start-point count are exactly as for size-1 groups under the
+	// correct convention (capacity = dimension = size - 1 = 1).
+	auto x1 = Variable::Make("x1");
+	auto y1 = Variable::Make("y1");
+	auto z1 = Variable::Make("z1");
 
 
 	System sys;
 
-	VariableGroup v1{x};
-	VariableGroup v2{y};
-	VariableGroup v3{z};
+	VariableGroup v1{x, x1};
+	VariableGroup v2{y, y1};
+	VariableGroup v3{z, z1};
 
 	sys.AddHomVariableGroup(v1);
 	sys.AddHomVariableGroup(v2);
