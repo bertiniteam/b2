@@ -695,6 +695,7 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/slice_test.cpp
 		test/classes/m_hom_start_system.cpp
 		test/classes/products_of_linears_block_test.cpp
+		test/classes/blend_block_test.cpp
 		test/classes/class_test.cpp
 	)
 
