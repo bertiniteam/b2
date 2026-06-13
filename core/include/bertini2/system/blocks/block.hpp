@@ -59,6 +59,7 @@ detection trait below + static_assert), not via a C++20 concept.
 #include "bertini2/eigen_extensions.hpp"
 
 #include "bertini2/system/blocks/products_of_linears_block.hpp"
+#include "bertini2/system/blocks/linear_forms_block.hpp"
 #include "bertini2/system/blocks/blend_block.hpp"
 
 namespace bertini {
@@ -93,6 +94,8 @@ inline constexpr bool is_block_v = is_block<B>::value;
 // As blocks are added, extend this static_assert list (and, later, the Block variant).
 static_assert(is_block_v<ProductsOfLinearsBlock>,
               "ProductsOfLinearsBlock must satisfy the evaluation-block contract");
+static_assert(is_block_v<LinearFormsBlock>,
+              "LinearFormsBlock must satisfy the evaluation-block contract");
 
 } // namespace blocks
 
@@ -103,6 +106,6 @@ class System;
 
 /// The closed set of evaluation blocks a System can be composed of.  Grows as block
 /// types are added (eventually a PolynomialBlock so the polynomial part is uniform too).
-using Block = std::variant<blocks::ProductsOfLinearsBlock, blocks::BlendBlock<System>>;
+using Block = std::variant<blocks::ProductsOfLinearsBlock, blocks::LinearFormsBlock, blocks::BlendBlock<System>>;
 
 } // namespace bertini
