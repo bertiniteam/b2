@@ -52,6 +52,7 @@
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system/patch.hpp"
 
+#include "bertini2/system/eval_method.hpp"
 #include "bertini2/system/straight_line_program.hpp"
 #include "bertini2/system/blocks/block.hpp"
 
@@ -63,28 +64,8 @@
 
 namespace bertini {
 
-	
-	enum class EvalMethod
-	{
-		FunctionTree, // using virtual methods and recursion
-		SLP // using straight line programs
-		    // now!  20230714, Eindhoven, Netherlands
-	};
-
-	enum class DerivMethod
-	{
-		JacobianNode, // using Jacobian nodes, which are either 1 or 0 when evaluated based on the variable of differentiation
-		Derivatives // classic differentiation, using more space in memory but not requiring a variable of differentation when evaluatiing
-	};
-
-
-	/**
-	\brief Gets the default evaluation method for Jacobians.  One might be faster...
-	*/
-	EvalMethod DefaultEvalMethod();
-
-	DerivMethod DefaultDerivMethod();
-
+	// EvalMethod / DerivMethod and their defaults now live in bertini2/system/eval_method.hpp
+	// (included above) so the evaluation blocks can see them.
 
 	/**
 	\brief Get the default value for whether a system should autosimplify.
@@ -762,7 +743,7 @@ namespace bertini {
 
 				case EvalMethod::SLP:
 				{
-					this->slp_.GetTimeDerivInPlace(ds_dt); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
+					this->slp_.GetTimeDerivInPlace<T>(ds_dt); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
 					break;					
 				}
 			}

@@ -354,7 +354,7 @@ namespace bertini {
 
 		 */
 		template<typename NumT>
-		void GetFuncValsInPlace(Vec<NumT> & result) const{
+		void GetFuncValsInPlace(Eigen::Ref<Vec<NumT>> result) const{
 			if (!is_evaluated_)
 				this->EvalFunctions<NumT>();
 
@@ -378,7 +378,7 @@ namespace bertini {
 		 */
 
 		template<typename NumT>
-		void GetJacobianInPlace(Mat<NumT> & result) const{
+		void GetJacobianInPlace(Eigen::Ref<Mat<NumT>> result) const{
 			if (!is_evaluated_)
 				this->EvalJacobian<NumT>();
 
@@ -404,7 +404,7 @@ namespace bertini {
 		 */
 
 		template<typename NumT>
-		void GetTimeDerivInPlace(Vec<NumT> & result) const{
+		void GetTimeDerivInPlace(Eigen::Ref<Vec<NumT>> result) const{
 			if (!is_evaluated_)
 				this->EvalTimeDeriv<NumT>();
 
@@ -425,7 +425,7 @@ namespace bertini {
 		template<typename NumT>
 		Vec<NumT> GetFuncVals() const{
 			Vec<NumT> return_me(this->NumFunctions());
-			GetFuncValsInPlace(return_me);
+			GetFuncValsInPlace<NumT>(return_me);
 			return return_me;
 		}
 		/**
@@ -437,7 +437,7 @@ namespace bertini {
 		template<typename NumT>
 		Mat<NumT> GetJacobian() const{
 			Mat<NumT> return_me(this->NumFunctions(), this->NumVariables());
-			GetJacobianInPlace(return_me);
+			GetJacobianInPlace<NumT>(return_me);
 			return return_me;
 		}
 		/**
@@ -449,7 +449,7 @@ namespace bertini {
 		template<typename NumT>
 		Vec<NumT> GetTimeDeriv() const{
 			Vec<NumT> return_me(this->NumFunctions());
-			GetTimeDerivInPlace(return_me);
+			GetTimeDerivInPlace<NumT>(return_me);
 			return return_me;
 		}
 
@@ -691,7 +691,11 @@ namespace bertini {
 
 		public:
 
-			SLP Compile(System const& sys);
+			// Compile from any source exposing the variable-ordering / functions / derivatives /
+			// path-variable accessors -- both System and blocks::PolynomialBlock qualify.
+			// Definition + explicit instantiations live in straight_line_program.cpp.
+			template <typename SourceT>
+			SLP Compile(SourceT const& source);
 
 
 			// IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
