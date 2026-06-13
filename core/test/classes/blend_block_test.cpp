@@ -17,45 +17,45 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "bertini2/system/system.hpp"
 #include "bertini2/system/blocks/block.hpp"
 #include "bertini2/system/blocks/blend_block.hpp"
-#include "bertini2/system/blocks/products_of_linears_block.hpp"
 
 BOOST_AUTO_TEST_SUITE(blend_block_suite)
 
 using namespace bertini;
 using bertini::blocks::BlendBlock;
-using bertini::blocks::ProductsOfLinearsBlock;
 using bertini::DefaultPrecision;
 
-using Blend = BlendBlock<ProductsOfLinearsBlock>;
+using Blend = BlendBlock<System>;
 
 static_assert(bertini::blocks::is_block_v<Blend>,
-              "BlendBlock<ProductsOfLinearsBlock> must satisfy the block contract");
+              "BlendBlock<System> must satisfy the block contract");
 
-// A: f = x + 2y + 1     B: g = x + y - 5     (each one function, two variables)
+// A: f = x + 2y     B: f = x*y     (variable group {x,y}, one function each, no patch)
 // H = (1-t)*A + t*B
-// at (x,y)=(1,1):  A = 4,  B = -3
-//   t = 1/2:  H = 0.5*4 + 0.5*(-3) = 0.5
-//   dH/dt = -A + B = -7
-//   dH/dx = 0.5*[1,2] + 0.5*[1,1] = [1, 1.5]
+// at (x,y)=(1,1):  A = 3,  B = 1
+//   t = 1/2:  H = 0.5*3 + 0.5*1 = 2
+//   dH/dt = -A + B = -2
+//   dH/dx = 0.5*[1,2] + 0.5*[y,x]=0.5*[1,1] = [1, 1.5]
 static Blend MakeTestBlend()
 {
-	bertini::Mat<mpfr_complex> a(1, 3);
-	a << mpfr_complex(1), mpfr_complex(2), mpfr_complex(1);
-	ProductsOfLinearsBlock A(2, std::vector<bertini::Mat<mpfr_complex>>{a});
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
 
-	bertini::Mat<mpfr_complex> b(1, 3);
-	b << mpfr_complex(1), mpfr_complex(1), mpfr_complex(-5);
-	ProductsOfLinearsBlock B(2, std::vector<bertini::Mat<mpfr_complex>>{b});
+	auto A = std::make_shared<System>();
+	A->AddVariableGroup(VariableGroup{x, y});
+	A->AddFunction(x + 2 * y);
+
+	auto B = std::make_shared<System>();
+	B->AddVariableGroup(VariableGroup{x, y});
+	B->AddFunction(x * y);
 
 	auto t = node::Variable::Make("t");
-	std::shared_ptr<node::Node> c0 = node::Integer::Make(1) - t; // 1 - t
-	std::shared_ptr<node::Node> c1 = t;                          // t
+	std::vector<std::shared_ptr<node::Node>> coeffs{node::Integer::Make(1) - t, t};
+	std::vector<std::shared_ptr<const System>> ops{A, B};
 
-	return Blend(t,
-	             std::vector<std::shared_ptr<node::Node>>{c0, c1},
-	             std::vector<ProductsOfLinearsBlock>{A, B});
+	return Blend(t, coeffs, ops);
 }
 
 BOOST_AUTO_TEST_CASE(shape)
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(eval_double)
 	bertini::Vec<dbl> result(1);
 	blend.EvalInPlace<dbl>(result, x, dbl(0.5));
 
-	BOOST_CHECK_CLOSE(result(0).real(), 0.5, 1e-11);
+	BOOST_CHECK_CLOSE(result(0).real(), 2.0, 1e-11);
 	BOOST_CHECK_SMALL(result(0).imag(), 1e-11);
 }
 
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(time_derivative_double)
 	bertini::Vec<dbl> dHdt(1);
 	blend.TimeDerivInPlace<dbl>(dHdt, x, dbl(0.5));
 
-	BOOST_CHECK_CLOSE(dHdt(0).real(), -7.0, 1e-11);
+	BOOST_CHECK_CLOSE(dHdt(0).real(), -2.0, 1e-11);
 }
 
 BOOST_AUTO_TEST_CASE(eval_and_time_derivative_mpfr)
@@ -115,11 +115,11 @@ BOOST_AUTO_TEST_CASE(eval_and_time_derivative_mpfr)
 
 	bertini::Vec<mpfr_complex> result(1);
 	blend.EvalInPlace<mpfr_complex>(result, x, t);
-	BOOST_CHECK(abs(result(0) - mpfr_complex(1) / mpfr_complex(2)) < mpfr_float("1e-25"));
+	BOOST_CHECK(abs(result(0) - mpfr_complex(2)) < mpfr_float("1e-25"));
 
 	bertini::Vec<mpfr_complex> dHdt(1);
 	blend.TimeDerivInPlace<mpfr_complex>(dHdt, x, t);
-	BOOST_CHECK(abs(dHdt(0) - mpfr_complex(-7)) < mpfr_float("1e-25"));
+	BOOST_CHECK(abs(dHdt(0) - mpfr_complex(-2)) < mpfr_float("1e-25"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

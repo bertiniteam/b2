@@ -59,6 +59,7 @@ detection trait below + static_assert), not via a C++20 concept.
 #include "bertini2/eigen_extensions.hpp"
 
 #include "bertini2/system/blocks/products_of_linears_block.hpp"
+#include "bertini2/system/blocks/blend_block.hpp"
 
 namespace bertini {
 namespace blocks {
@@ -95,9 +96,13 @@ static_assert(is_block_v<ProductsOfLinearsBlock>,
 
 } // namespace blocks
 
+// Forward declaration: BlendBlock holds its operands by shared_ptr<const System>, and a
+// System contains Blocks -- the template parameter keeps System a dependent name so the
+// recursive type closes without System being complete here.
+class System;
+
 /// The closed set of evaluation blocks a System can be composed of.  Grows as block
-/// types are added (e.g. BlendBlock once the System-operand indirection is in place,
-/// and eventually a PolynomialBlock so the polynomial part is uniform too).
-using Block = std::variant<blocks::ProductsOfLinearsBlock>;
+/// types are added (eventually a PolynomialBlock so the polynomial part is uniform too).
+using Block = std::variant<blocks::ProductsOfLinearsBlock, blocks::BlendBlock<System>>;
 
 } // namespace bertini
