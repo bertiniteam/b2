@@ -61,6 +61,10 @@ follow-up (block-operand Clone semantics).
 #include <memory>
 #include <cassert>
 
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/split_member.hpp>
+
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/function_tree.hpp"
@@ -199,6 +203,38 @@ private:
 	std::vector<Nd> derivative_coefficients_;
 	std::vector<OperandPtr> operands_;
 	mutable unsigned precision_;
+
+	friend class boost::serialization::access;
+
+	// Operands are shared_ptr<const SystemT>; serialize them as non-const pointers so we
+	// never ask boost to deserialize into a const object (const-ness is a local concern).
+	template <typename Archive>
+	void save(Archive& ar, const unsigned /*version*/) const
+	{
+		ar & precision_;
+		ar & path_variable_;
+		ar & coefficients_;
+		ar & derivative_coefficients_;
+		std::vector<std::shared_ptr<SystemT>> ops;
+		ops.reserve(operands_.size());
+		for (auto const& o : operands_)
+			ops.push_back(std::const_pointer_cast<SystemT>(o));
+		ar & ops;
+	}
+
+	template <typename Archive>
+	void load(Archive& ar, const unsigned /*version*/)
+	{
+		ar & precision_;
+		ar & path_variable_;
+		ar & coefficients_;
+		ar & derivative_coefficients_;
+		std::vector<std::shared_ptr<SystemT>> ops;
+		ar & ops;
+		operands_.assign(ops.begin(), ops.end());
+	}
+
+	BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 } // namespace blocks

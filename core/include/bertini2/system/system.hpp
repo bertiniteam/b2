@@ -41,6 +41,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
+#include <boost/serialization/std_variant.hpp>
 #include <boost/type_index.hpp>
 
 #include "bertini2/mpfr_complex.hpp"
@@ -2019,6 +2020,8 @@ namespace bertini {
 
 			ar & patch_;
 			ar & is_patched_;
+
+			ar & blocks_;   // evaluation blocks (variant of products-of-linears / linear-forms / blend)
 
 			ar & eval_method_;
 			ar & deriv_method_;

@@ -15,16 +15,24 @@
 //
 // Copyright(C) Bertini2 Development Team
 
+#include <sstream>
+
 #include <boost/test/unit_test.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 #include "bertini2/system/system.hpp"
 #include "bertini2/system/blocks/products_of_linears_block.hpp"
+#include "bertini2/system/blocks/linear_forms_block.hpp"
+#include "bertini2/system/blocks/blend_block.hpp"
 
 BOOST_AUTO_TEST_SUITE(system_blocks_suite)
 
 using namespace bertini;
 using Var = std::shared_ptr<node::Variable>;
 using bertini::blocks::ProductsOfLinearsBlock;
+using bertini::blocks::LinearFormsBlock;
+using bertini::blocks::BlendBlock;
 using bertini::DefaultPrecision;
 
 // A block-composed System with one affine variable group {x,y} (unhomogenized, no
@@ -91,6 +99,94 @@ BOOST_AUTO_TEST_CASE(eval_mpfr)
 	auto v = sys.Eval(x);
 
 	BOOST_CHECK(abs(v(0) - mpfr_complex(24)) < mpfr_float("1e-25"));
+}
+
+// round-trip a System through a boost text archive, returning the deserialized copy.
+static System RoundTrip(System const& sys)
+{
+	std::stringstream ss;
+	{
+		boost::archive::text_oarchive oa(ss);
+		oa << sys;
+	}
+	System out;
+	{
+		boost::archive::text_iarchive ia(ss);
+		ia >> out;
+	}
+	return out;
+}
+
+BOOST_AUTO_TEST_CASE(serialize_products_of_linears_block)
+{
+	DefaultPrecision(30);
+	auto sys = MakeBlockSystem();
+	bertini::Vec<dbl> x(2); x << dbl(1), dbl(1);
+	auto before = sys.Eval(x);
+
+	auto sys2 = RoundTrip(sys);
+	BOOST_REQUIRE(sys2.HasBlocks());
+	auto after = sys2.Eval(x);
+
+	BOOST_CHECK_EQUAL(after.size(), before.size());
+	BOOST_CHECK_CLOSE(after(0).real(), before(0).real(), 1e-11);  // 24
+}
+
+BOOST_AUTO_TEST_CASE(serialize_linear_forms_block)
+{
+	DefaultPrecision(30);
+	System sys;
+	Var x = node::Variable::Make("x"), y = node::Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x, y});
+	// f0 = 2x + 3y + 1, f1 = x - y + 4   (augmented rows)
+	bertini::Mat<mpfr_complex> M(2, 3);
+	M << mpfr_complex(2), mpfr_complex(3),  mpfr_complex(1),
+	     mpfr_complex(1), mpfr_complex(-1), mpfr_complex(4);
+	sys.AddBlock(LinearFormsBlock(2, M));
+
+	bertini::Vec<dbl> p(2); p << dbl(1), dbl(1);
+	auto before = sys.Eval(p);          // [6, 4]
+
+	auto sys2 = RoundTrip(sys);
+	BOOST_REQUIRE(sys2.HasBlocks());
+	auto after = sys2.Eval(p);
+
+	BOOST_REQUIRE_EQUAL(after.size(), 2);
+	BOOST_CHECK_CLOSE(after(0).real(), before(0).real(), 1e-11);
+	BOOST_CHECK_CLOSE(after(1).real(), before(1).real(), 1e-11);
+}
+
+BOOST_AUTO_TEST_CASE(serialize_blend_block)
+{
+	DefaultPrecision(30);
+	// H(x,t) = (1-t)(x-2) + t(x-5) = x - 2 - 3t, blending two single-function systems.
+	auto t = node::Variable::Make("t");
+	auto x = node::Variable::Make("x");
+
+	auto target = std::make_shared<System>();
+	target->AddVariableGroup(VariableGroup{x});
+	target->AddFunction(x - node::Integer::Make(2));
+
+	auto start = std::make_shared<System>();
+	start->AddVariableGroup(VariableGroup{x});
+	start->AddFunction(x - node::Integer::Make(5));
+
+	System H;
+	H.AddVariableGroup(VariableGroup{x});
+	H.AddPathVariable(t);
+	std::vector<std::shared_ptr<node::Node>> coeffs{ node::Integer::Make(1) - t, t };
+	std::vector<std::shared_ptr<const System>> operands{ target, start };
+	H.AddBlock(BlendBlock<System>(t, std::move(coeffs), std::move(operands)));
+
+	bertini::Vec<dbl> p(1); p << dbl(1);
+	auto before = H.Eval(p, dbl(0));        // x - 2 - 0 = -1
+
+	auto H2 = RoundTrip(H);
+	BOOST_REQUIRE(H2.HasBlocks());
+	auto after = H2.Eval(p, dbl(0));
+
+	BOOST_REQUIRE_EQUAL(after.size(), 1);
+	BOOST_CHECK_CLOSE(after(0).real(), before(0).real(), 1e-9);  // -1
 }
 
 BOOST_AUTO_TEST_SUITE_END()

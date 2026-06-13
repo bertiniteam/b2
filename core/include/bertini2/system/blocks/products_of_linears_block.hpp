@@ -44,6 +44,8 @@ an mpfr master plus per-type working copies, with Precision() recasting the mpfr
 #include <vector>
 #include <tuple>
 
+#include <boost/serialization/vector.hpp>
+
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 
@@ -246,6 +248,18 @@ private:
 	std::vector<Mat<mpfr_complex>> factors_highest_precision_; ///< master coefficients, one matrix per function
 	mutable std::tuple<std::vector<Mat<dbl>>, std::vector<Mat<mpfr_complex>>> factors_working_;
 	mutable unsigned precision_;
+
+	friend class boost::serialization::access;
+
+	template <typename Archive>
+	void serialize(Archive& ar, const unsigned /*version*/)
+	{
+		ar & num_vars_;
+		ar & precision_;
+		ar & factors_highest_precision_;
+		ar & std::get<0>(factors_working_);
+		ar & std::get<1>(factors_working_);
+	}
 };
 
 } // namespace blocks

@@ -191,6 +191,18 @@ private:
 	Mat<mpfr_complex> coefficients_highest_precision_; ///< master: rows = functions, cols = num_vars+1
 	mutable std::tuple<Mat<dbl>, Mat<mpfr_complex>> coefficients_working_;
 	mutable unsigned precision_;
+
+	friend class boost::serialization::access;
+
+	template <typename Archive>
+	void serialize(Archive& ar, const unsigned /*version*/)
+	{
+		ar & num_vars_;
+		ar & precision_;
+		ar & coefficients_highest_precision_;
+		ar & std::get<0>(coefficients_working_);
+		ar & std::get<1>(coefficients_working_);
+	}
 };
 
 } // namespace blocks
