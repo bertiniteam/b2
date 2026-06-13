@@ -25,6 +25,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "bertini2/system/start_systems.hpp"
+#include "bertini2/system/blocks/block.hpp"
+#include "bertini2/system/blocks/blend_block.hpp"
 
 using System = bertini::System;
 
@@ -138,6 +140,84 @@ BOOST_AUTO_TEST_CASE(block_eval_matches_linear_product_tree_eval)
 	BOOST_CHECK_EQUAL(v_block.size(), v_tree.size());
 	for (Eigen::Index i = 0; i < v_block.size(); ++i)
 		BOOST_CHECK(std::abs(v_block(i) - v_tree(i)) < 1e-10);
+}
+
+
+// Each generated start point must be an actual root of the (homogenized + patched)
+// start system: evaluating the start system there is ~0.  This validates both the
+// start-point linear solve and its homogenization onto the patch (the part the solve
+// flow needs).
+BOOST_AUTO_TEST_CASE(start_points_are_roots_of_the_start_system)
+{
+	DefaultPrecision(30);
+	bertini::SetGlobalSeed(1u);
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddVariableGroup(VariableGroup{y});
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x + y);
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	auto mhom = MHomogeneous(sys);
+
+	// Partition capacity respects each group's declared dimension even after homogenization
+	// (VariableGroupSizes() would count the homogenizing variable and double it): the
+	// m-homogeneous Bezout number here is 2, not 4.
+	BOOST_CHECK_EQUAL(mhom.NumStartPoints(), 2ull);
+
+	const auto n = mhom.NumStartPoints();
+	for (unsigned long long i = 0; i < n; ++i)
+	{
+		auto sp = mhom.StartPoint<dbl>(i);
+		BOOST_CHECK_EQUAL(static_cast<size_t>(sp.size()), mhom.NumVariables());
+		auto v = mhom.Eval(sp);
+		for (Eigen::Index j = 0; j < v.size(); ++j)
+			BOOST_CHECK(std::abs(v(j)) < 1e-10);   // each start point is a root, on the patch
+	}
+
+	// The blend homotopy (built as FormHomotopy does) is correct: zero at the start points
+	// at t=1, and its Jacobian and dH/dt agree with finite differences.
+	auto t = Variable::Make("t");
+	auto gamma = bertini::node::Rational::Make(bertini::node::Rational::Rand());
+	System H = sys;                 // target's variable structure + patch
+	H.AddPathVariable(t);
+	std::vector<std::shared_ptr<bertini::node::Node>> coeffs{ 1 - t, gamma * t };
+	std::vector<std::shared_ptr<const System>> operands{
+		std::make_shared<System>(sys),
+		std::make_shared<System>(mhom) };
+	H.AddBlock(bertini::blocks::BlendBlock<System>(t, coeffs, operands));
+
+	for (unsigned long long i = 0; i < n; ++i)
+	{
+		auto Hval = H.Eval(mhom.StartPoint<dbl>(i), dbl(1));
+		for (Eigen::Index j = 0; j < Hval.size(); ++j)
+			BOOST_CHECK(std::abs(Hval(j)) < 1e-9);
+	}
+
+	bertini::Vec<dbl> xq(H.NumVariables());
+	for (Eigen::Index k = 0; k < xq.size(); ++k)
+		xq(k) = dbl(0.37 * (k + 1) + 0.11, -0.19 * k + 0.07);
+	const dbl tv(0.42, -0.13);
+	const dbl hstep(1e-6, 0);
+
+	auto J = H.Jacobian(xq, tv);
+	auto f0 = H.Eval(xq, tv);
+	for (Eigen::Index c = 0; c < xq.size(); ++c)
+	{
+		auto xp = xq; xp(c) += hstep;
+		auto fp = H.Eval(xp, tv);
+		for (Eigen::Index r = 0; r < f0.size(); ++r)
+			BOOST_CHECK(std::abs((fp(r) - f0(r)) / hstep - J(r, c)) < 1e-5);
+	}
+
+	auto dHdt = H.TimeDerivative(xq, tv);
+	auto fpt = H.Eval(xq, tv + hstep);
+	for (Eigen::Index r = 0; r < f0.size(); ++r)
+		BOOST_CHECK(std::abs((fpt(r) - f0(r)) / hstep - dHdt(r)) < 1e-5);
 }
 
 

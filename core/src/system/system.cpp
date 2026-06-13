@@ -139,6 +139,8 @@ namespace bertini
 		functions_ = other .functions_;
 		explicit_parameters_  = other .explicit_parameters_;
 
+		blocks_ = other.blocks_;
+
 		// // now to do the members which are not simply copied
 		// constant_subfunctions_.resize(other.constant_subfunctions_.size());
 		// for (unsigned ii = 0; ii < constant_subfunctions_.size(); ++ii)

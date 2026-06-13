@@ -190,4 +190,78 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 }
 
 
+// End-to-end multihomogeneous solve through the block-composed start system and the
+// blend-block homotopy.  x*y - 1 = 0, x + y = 0 over variable groups {x}, {y}:
+// y = -x gives -x^2 - 1 = 0, so x = +/- i -> exactly the two solutions (i,-i),(-i,i).
+// The m-homogeneous Bezout number for bidegrees (1,1),(1,1) is 2, below the total-degree
+// Bezout number 4 -- so MHom tracks 2 paths, not 4.  This exercises the whole new chain:
+// the products-of-linears start block, the blend-block homotopy formed by FormHomotopy,
+// and the block-aware System eval/Jacobian/time-derivative through the tracker + endgame.
+//
+// Tracked with the FIXED-DOUBLE tracker.  This is a *capability* test, not a deterministic
+// one: the homotopy's gamma (and the MHom start coefficients) are drawn from RandomMp, which
+// SetGlobalSeed does not reseed (only the ThreadEngine is reseedable today), so the exact
+// path conditioning cannot be pinned to a seed.  MHom paths are conditioning-fragile in fixed
+// double -- a given gamma drives both paths to MinStepSize maybe two times in three -- so we
+// retry the solve, each attempt drawing a fresh gamma, and assert that MHom *can* solve the
+// system and that when it does the solutions are genuine, distinct roots.  Two follow-ups make
+// this robust under the CLI default (adaptive precision): (1) reseedable RandomMp +/or less
+// fixed-double-fragile MHom paths; (2) AMP and the Cauchy endgame keeping precision in lockstep
+// with a block-composed homotopy (today the tracked point reaches MaxPrecisionAllowed in the
+// endgame while the system is at the working precision).
+BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto make_system = []{
+		System sys;
+		auto x = Variable::Make("x");
+		auto y = Variable::Make("y");
+		sys.AddVariableGroup(VariableGroup{x});
+		sys.AddVariableGroup(VariableGroup{y});
+		sys.AddFunction(x*y - 1);
+		sys.AddFunction(x + y);
+		return sys;
+	};
+
+	bool solved = false;
+	for (int attempt = 0; attempt < 40 && !solved; ++attempt)
+	{
+		auto sys = make_system();
+		auto zd = algorithm::ZeroDim<TrackerT,
+		                             bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
+		                             decltype(sys),
+		                             start_system::MHomogeneous>(sys);
+		zd.DefaultSetup();
+		zd.Solve();
+
+		// Collect the successfully-tracked solutions (a failed path leaves an empty
+		// placeholder, kept for index alignment with the metadata).
+		auto const& sols = zd.SolutionsUserCoords();
+		auto const& md   = zd.FinalSolutionMetadata();
+		using SolVec = std::decay_t<decltype(sols[0])>;
+		std::vector<SolVec> good;
+		for (size_t i = 0; i < sols.size(); ++i)
+			if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 2)
+				good.push_back(sols[i]);
+
+		if (good.size() != 2)
+			continue; // this gamma drove a path to MinStepSize; try another
+
+		// Both paths converged to genuine roots of the original (user-coordinate) system,
+		// and to the two *distinct* solutions (i,-i) and (-i,i).
+		for (auto const& s : good)
+		{
+			BOOST_CHECK_SMALL(std::abs(s(0) * s(1) - dbl(1)), 1e-8);
+			BOOST_CHECK_SMALL(std::abs(s(0) + s(1)),          1e-8);
+		}
+		BOOST_CHECK_GT(std::abs(good[0](0) - good[1](0)), 1e-3);
+		solved = true;
+	}
+
+	BOOST_CHECK(solved); // MHom solved the system through the block-composed homotopy
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

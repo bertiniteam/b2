@@ -112,6 +112,16 @@ public:
 	{
 		for (auto const& op : operands_)
 			op->precision(new_precision);
+		// The coefficient nodes (and the shared path variable) must move too, or a blend
+		// of a low-precision operand value with a high-precision coefficient yields a
+		// high-precision result that the tracker then carries as the path point, mismatching
+		// the system's working precision.
+		if (path_variable_)
+			path_variable_->precision(new_precision);
+		for (auto const& c : coefficients_)
+			c->precision(new_precision);
+		for (auto const& c : derivative_coefficients_)
+			c->precision(new_precision);
 		precision_ = new_precision;
 	}
 
@@ -119,6 +129,7 @@ public:
 	template <typename T>
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& path_value) const
 	{
+		SyncPrecision(vars);
 		result.setZero();
 		const Eigen::Index k = static_cast<Eigen::Index>(NumFunctions());
 		for (size_t i = 0; i < operands_.size(); ++i)
@@ -132,6 +143,7 @@ public:
 	template <typename T>
 	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& path_value) const
 	{
+		SyncPrecision(vars);
 		J.setZero();
 		const Eigen::Index k = static_cast<Eigen::Index>(NumFunctions());
 		for (size_t i = 0; i < operands_.size(); ++i)
@@ -145,6 +157,7 @@ public:
 	template <typename T>
 	void TimeDerivInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& path_value) const
 	{
+		SyncPrecision(vars);
 		result.setZero();
 		const Eigen::Index k = static_cast<Eigen::Index>(NumFunctions());
 		for (size_t i = 0; i < operands_.size(); ++i)
@@ -155,6 +168,23 @@ public:
 	}
 
 private:
+	/// Bring the operand systems to the precision of the evaluation point, so their
+	/// SetVariables precision checks pass as the adaptive tracker changes precision.
+	/// (No-op for double.)
+	template <typename T>
+	void SyncPrecision(Vec<T> const& vars) const
+	{
+		if constexpr (!std::is_same<T, dbl>::value)
+		{
+			if (vars.size() > 0)
+			{
+				const unsigned p = bertini::Precision(vars(0));
+				if (p != precision_)
+					Precision(p);
+			}
+		}
+	}
+
 	/// Evaluate a coefficient (or derivative) node at the given path-variable value.
 	template <typename T>
 	T EvalNode(Nd const& n, T const& path_value) const

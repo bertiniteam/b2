@@ -298,16 +298,17 @@ namespace bertini
 			Vec<int> current_partition = -1*Vec<int>::Ones(target_system.NumNaturalFunctions());
 			Vec<int> variable_group_counter = Vec<int>::Zero(target_system.NumTotalVariableGroups());
 
-			auto size_of_each_var_gp = target_system.VariableGroupSizes(); //K
-			
-
-
-
-
+			// Capacity per group = the number of functions that group may be assigned, which
+			// is the group's declared dimension.  Use var_groups_ (the groups as concatenated
+			// for the degree matrix in CreateDegreeMatrix: hom groups then affine groups),
+			// NOT target_system.VariableGroupSizes(): once the target is homogenized the
+			// latter counts the added homogenizing variable, doubling the capacity and
+			// admitting invalid over-filled partitions (e.g. both functions in one size-1
+			// group), whose linear solve is singular and yields NaN start points.
 			for(size_t ii = 0; ii < target_system.NumTotalVariableGroups(); ++ii)
 			{
-				variable_group_counter[ii] = size_of_each_var_gp[ii];
-			}			    
+				variable_group_counter[ii] = static_cast<int>(var_groups_[ii].size());
+			}
 			// std::cout << "variable_group_counter is " << std::endl;
 			// std::cout << variable_group_counter << std::endl;		
 			  while (row > -1)  // Algorithm will move up and down rows, kicking out to row=-1 at end
@@ -475,17 +476,21 @@ namespace bertini
 				b(ii) = -coeff[cols.size()];
 			}
 			
-			start_point = A.partialPivLu().solve(b);
-			
-			
-			var_groups_[0][0]->set_current_value(start_point(0));
-			var_groups_[0][1]->set_current_value(start_point(1));
-			
-			std::shared_ptr<node::Node> f = Function(0);
-			// !!! superfluous line?
-			
-			
+			Vec<T> affine_solution = A.partialPivLu().solve(b);
 
+			// The linear solve gives the start point in affine (dehomogenized) coordinates;
+			// lift it onto the homogenized + patched coordinate system the homotopy is
+			// tracked in (HomogenizePoint inserts the homogenizing coordinates per affine
+			// group and rescales onto the patch, and is a no-op if not homogenized).
+			start_point = this->HomogenizePoint(affine_solution);
+
+			// Return the point at the current working precision.  The linear-factor
+			// coefficients and the patch are stored at MaxPrecisionAllowed, which would
+			// otherwise leak into the start point and mismatch the tracker's working
+			// precision (the adaptive tracker begins at the ambient precision).
+			if constexpr (!std::is_same<T, dbl>::value)
+				for (Eigen::Index i = 0; i < start_point.size(); ++i)
+					start_point(i).precision(DefaultPrecision());
 		}
 		
 		

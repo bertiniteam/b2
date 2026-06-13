@@ -197,10 +197,29 @@ public:
 			static
 			void FormHomotopy(SystemType & homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
 			{
-				auto t = node::Variable::Make(path_variable_name); 
+				auto t = node::Variable::Make(path_variable_name);
+				auto gamma = node::Rational::Make(node::Rational::Rand());
 
-				homotopy = (1-t)*target + node::Rational::Make(node::Rational::Rand())*t*start;
-				homotopy.AddPathVariable(t);
+				if (start.HasBlocks())
+				{
+					// A block-backed start system (e.g. the MHom products-of-linears start)
+					// cannot be fused into a node-arithmetic homotopy, so combine the two
+					// systems with a blend block: H = (1-t)*target + gamma*t*start, evaluated
+					// by blending whole Systems.  The homotopy carries target's variable
+					// structure and patch; the blend contributes the natural rows.
+					homotopy = target;
+					homotopy.AddPathVariable(t);
+					std::vector<std::shared_ptr<node::Node>> coeffs{ 1 - t, gamma * t };
+					std::vector<std::shared_ptr<const System>> operands{
+						std::make_shared<System>(target),
+						std::make_shared<System>(start) };
+					homotopy.AddBlock(blocks::BlendBlock<System>(t, std::move(coeffs), std::move(operands)));
+				}
+				else
+				{
+					homotopy = (1-t)*target + gamma*t*start;
+					homotopy.AddPathVariable(t);
+				}
 			}
 
 			/**

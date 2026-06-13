@@ -765,7 +765,16 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 					solutions_user_coords_.clear();
 					solutions_user_coords_.reserve(solutions_post_endgame_.size());
 					for (const auto& s : solutions_post_endgame_)
-						solutions_user_coords_.push_back(this->TargetSystem().DehomogenizePoint(s));
+					{
+						// A path that failed before or during the endgame leaves its endpoint
+						// slot default-constructed (zero coordinates); keep index alignment with
+						// FinalSolutionMetadata (output filters on it) by emitting an empty
+						// placeholder rather than trying to dehomogenize an unset point.
+						if (s.size() == 0)
+							solutions_user_coords_.emplace_back();
+						else
+							solutions_user_coords_.push_back(this->TargetSystem().DehomogenizePoint(s));
+					}
 					solutions_user_coords_fresh_ = true;
 				}
 				return solutions_user_coords_;
