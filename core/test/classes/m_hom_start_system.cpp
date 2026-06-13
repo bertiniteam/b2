@@ -101,6 +101,46 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_small_example)
 }
 
 
+// The MHom start system now evaluates via a ProductsOfLinearsBlock (task #4).  Validate
+// that block evaluation reproduces the LinearProduct function-tree evaluation exactly:
+// eval through the block, then drop the block and tree-evaluate the retained
+// LinearProduct functions, and compare at a generic point.  This exercises the real
+// (homogenized + patched) flow, including placing each factor's constant into its
+// homogenizing-variable column.
+BOOST_AUTO_TEST_CASE(block_eval_matches_linear_product_tree_eval)
+{
+	DefaultPrecision(30);
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddVariableGroup(VariableGroup{y});
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x + y);
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	auto mhom = MHomogeneous(sys);
+	BOOST_CHECK(mhom.HasBlocks());
+
+	const Eigen::Index n = static_cast<Eigen::Index>(mhom.NumVariables());
+	Vec<dbl> p(n);
+	for (Eigen::Index i = 0; i < n; ++i)
+		p(i) = dbl(0.3 * static_cast<double>(i + 1) + 0.1, 0.2 * static_cast<double>(i) - 0.05);
+
+	auto v_block = mhom.Eval(p);          // via the products-of-linears block
+
+	mhom.ClearBlocks();
+	mhom.SetEvalMethod(bertini::EvalMethod::FunctionTree); // tree-eval the LinearProducts (no SLP)
+	auto v_tree = mhom.Eval(p);           // reference
+
+	BOOST_CHECK_EQUAL(v_block.size(), v_tree.size());
+	for (Eigen::Index i = 0; i < v_block.size(); ++i)
+		BOOST_CHECK(std::abs(v_block(i) - v_tree(i)) < 1e-10);
+}
+
+
 BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_larger_example)
 {
 

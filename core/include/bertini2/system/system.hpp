@@ -1194,6 +1194,10 @@ namespace bertini {
 		/// \brief Whether this system is evaluated from blocks rather than the function tree.
 		bool HasBlocks() const { return !blocks_.empty(); }
 
+		/// \brief Remove all evaluation blocks (the system reverts to its function-tree
+		/// functions).  Mainly for testing the block path against the function-tree path.
+		void ClearBlocks() { blocks_.clear(); }
+
 
 
 

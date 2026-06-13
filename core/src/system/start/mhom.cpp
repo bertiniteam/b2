@@ -26,6 +26,10 @@
 
 #include "bertini2/system/start/mhom.hpp"
 
+#include "bertini2/system/blocks/block.hpp"
+
+#include <map>
+
 
 BOOST_CLASS_EXPORT(bertini::start_system::MHomogeneous);
 
@@ -95,6 +99,76 @@ namespace bertini
 
 			 if (s.IsPatched())
 			 	CopyPatches(s);
+
+			// Build a products-of-linears evaluation block from the (now homogenized)
+			// linear factors, so the start system evaluates via the block instead of the
+			// LinearProduct function tree -- which the SLP compiler cannot handle, and which
+			// is what blocked MHom from being usable in a (SLP-compiled) homotopy.  The
+			// LinearProducts are kept for GenerateStartPoint; retiring them is task #6.
+			//
+			// Each function is the product of its linear factors; we assemble, per function,
+			// an augmented coefficient matrix (one row per factor, length NumVariables()+1)
+			// placing each factor's coefficients by VARIABLE IDENTITY into the start system's
+			// full variable ordering.  The factor's last coefficient multiplies the linear
+			// product's "hom variable": a real homogenizing variable when the system is
+			// homogeneous (so it goes in that variable's column), else the literal 1 (so it
+			// is the augmented constant in the trailing column).  Coefficients are extracted
+			// at highest precision so the block's master is precision-faithful.
+			{
+				auto const saved_prec = DefaultPrecision();
+				DefaultPrecision(MaxPrecisionAllowed());
+				this->precision(MaxPrecisionAllowed());   // lift the linear-factor coeffs to highest precision
+
+				const VariableGroup& vars = this->Variables();
+				std::map<node::Node const*, Eigen::Index> col_of;
+				for (Eigen::Index c = 0; c < static_cast<Eigen::Index>(vars.size()); ++c)
+					col_of[vars[c].get()] = c;
+				const Eigen::Index n = static_cast<Eigen::Index>(this->NumVariables());
+
+				std::vector<Mat<mpfr_complex>> per_function;
+				per_function.reserve(static_cast<size_t>(degree_matrix_.rows()));
+
+				for (Eigen::Index ii = 0; ii < degree_matrix_.rows(); ++ii)
+				{
+					std::vector<Vec<mpfr_complex>> rows;
+					for (Eigen::Index g = 0; g < degree_matrix_.cols(); ++g)
+					{
+						const int d = degree_matrix_(ii, g);
+						if (d == 0)
+							continue;
+
+						auto lp = linprod_matrix_(ii, g);
+						VariableGroup gvars;
+						lp->GetVariables(gvars);
+						std::shared_ptr<node::Node> hom;
+						lp->GetHomVariable(hom);
+						auto hom_var = std::dynamic_pointer_cast<node::Variable>(hom);
+
+						for (int f = 0; f < d; ++f)
+						{
+							Vec<mpfr_complex> c = lp->GetCoeffs<mpfr_complex>(static_cast<size_t>(f));
+							Vec<mpfr_complex> row = Vec<mpfr_complex>::Zero(n + 1);
+							for (size_t k = 0; k < gvars.size(); ++k)
+								row(col_of.at(gvars[k].get())) = c(static_cast<Eigen::Index>(k));
+							if (hom_var && col_of.count(hom_var.get()))
+								row(col_of.at(hom_var.get())) = c(static_cast<Eigen::Index>(gvars.size()));
+							else
+								row(n) = c(static_cast<Eigen::Index>(gvars.size()));   // augmented constant
+							rows.push_back(std::move(row));
+						}
+					}
+
+					Mat<mpfr_complex> M(static_cast<Eigen::Index>(rows.size()), n + 1);
+					for (size_t r = 0; r < rows.size(); ++r)
+						M.row(static_cast<Eigen::Index>(r)) = rows[r].transpose();
+					per_function.push_back(std::move(M));
+				}
+
+				this->AddBlock(blocks::ProductsOfLinearsBlock(static_cast<size_t>(n), std::move(per_function)));
+
+				DefaultPrecision(saved_prec);
+				this->precision(saved_prec);
+			}
 
 		}// M-Hom constructor
 
