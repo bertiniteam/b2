@@ -86,4 +86,94 @@ BOOST_AUTO_TEST_CASE(make_zero_dim_honors_endgame_choice)
 
 BOOST_AUTO_TEST_SUITE_END() // end the zerodim sub-suite
 
+
+// The CLI infers the start system from the variable-group structure (classic
+// Bertini behavior), rather than reading a setting: a single affine variable
+// group -> total degree; multiple groups or any homogeneous group -> mhom.
+BOOST_AUTO_TEST_SUITE(start_system_inference)
+
+using namespace bertini;
+using Var = std::shared_ptr<bertini::node::Variable>;
+
+BOOST_AUTO_TEST_CASE(single_affine_group_infers_total_degree)
+{
+	Var x = node::Variable::Make("x");
+	Var y = node::Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*x + y*y - 1);
+	sys.AddFunction(x + y);
+
+	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::TotalDegree);
+}
+
+BOOST_AUTO_TEST_CASE(two_affine_groups_infer_mhom)
+{
+	Var x = node::Variable::Make("x");
+	Var y = node::Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddVariableGroup(VariableGroup{y});
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x - y);
+
+	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::MHom);
+}
+
+BOOST_AUTO_TEST_CASE(homogeneous_group_infers_mhom)
+{
+	// a single homogeneous variable group is projective, not total-degree
+	Var x = node::Variable::Make("x");
+	Var y = node::Variable::Make("y");
+	System sys;
+	sys.AddHomVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*x + y*y);
+
+	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::MHom);
+}
+
+BOOST_AUTO_TEST_CASE(griewank_osborn_single_group_infers_total_degree)
+{
+	auto sys = system::Precon::GriewankOsborn();
+	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::TotalDegree);
+}
+
+// DISABLED pending the block-composed MHom start system (plan
+// typed-wondering-sutherland, tasks #4-#8).  Today MakeZeroDim for an MHom
+// target throws "unknown visitor: LinearProduct" because the start system is
+// built from LinearProduct nodes the SLP compiler can't compile.  Once the MHom
+// start is rebuilt on ProductsOfLinearsBlock, re-enable this and extend it from
+// "constructs" to "actually solves".
+BOOST_AUTO_TEST_CASE(inferred_mhom_builds_an_mhomogeneous_zerodim,
+                     * boost::unit_test::disabled())
+{
+	// end to end: a two-variable-group system, inferred to MHom, must build a
+	// ZeroDim backed by the MHomogeneous start system (not total degree).
+	using namespace bertini::tracking;
+	using namespace bertini::endgame;
+
+	Var x = node::Variable::Make("x");
+	Var y = node::Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddVariableGroup(VariableGroup{y});
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x - y);
+
+	blackbox::ZeroDimRT rt;
+	rt.start = blackbox::InferStartType(sys);
+	rt.tracker = blackbox::type::Tracker::Adaptive;
+	rt.endgame = blackbox::type::Endgame::Cauchy;
+	BOOST_CHECK(rt.start == blackbox::type::Start::MHom);
+
+	using MHomZD = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::Cauchy, System, start_system::MHomogeneous>;
+	using TotDegZD = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::Cauchy, System, start_system::TotalDegree>;
+
+	auto zd = blackbox::MakeZeroDim(rt, sys);
+	BOOST_CHECK(dynamic_cast<MHomZD*>(zd.get()) != nullptr);
+	BOOST_CHECK(dynamic_cast<TotDegZD*>(zd.get()) == nullptr);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // end the start_system_inference sub-suite
+
 BOOST_AUTO_TEST_SUITE_END() // end the blackbox suite
