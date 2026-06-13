@@ -1228,6 +1228,11 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 {
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
+	// AutoPatch coefficients come from RandomMp; seeding makes this test's draws
+	// (and hence the <10 threshold below) deterministic regardless of which other
+	// tests ran first.  RandomMp now honors SetGlobalSeed (it shares ThreadEngine).
+	bertini::SetGlobalSeed(1u);
+
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
@@ -1247,12 +1252,6 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 }
 
 
-// NOTE: this test calls AutoPatch, whose coefficients come from the RandomMp
-// generator, which is deterministic-per-run but NOT reseedable (SetGlobalSeed
-// does not touch it).  Any AutoPatch call shifts that stream for every later
-// test in this binary, and system_estimate_coeff_bound_homogenized_quartic's
-// <10 threshold is sensitive to the draws.  Hence this test sits AFTER it.
-// The durable fix is making RandomMp seedable -- tracked RNG work.
 /**
 \class bertini::System
 \test \b system_homogenize_point_lands_on_patch On a patched system, HomogenizePoint produces a point ON the patch (rescaling it again is the identity), and dehomogenizing recovers the user point.

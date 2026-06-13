@@ -27,6 +27,7 @@
 #include <boost/multiprecision/mpfr.hpp>
 
 #include <iostream>
+#include <vector>
 
 #include "bertini2/double_extensions.hpp"
 #include "bertini2/num_traits.hpp"
@@ -293,6 +294,42 @@ BOOST_AUTO_TEST_CASE(RandomMP_nondefault_precision_100)
 
 	BOOST_CHECK_EQUAL(a.precision(), 500);
 	BOOST_CHECK_EQUAL(100, DefaultPrecision());
+}
+
+// The multiprecision RandomMp generator now draws from the single per-thread
+// engine (ThreadEngine) shared by every random type, so SetGlobalSeed controls
+// it.  Before this it used a private, unseedable independent_bits_engine.  These
+// tests pin that contract: same seed -> identical mp draws; different seed ->
+// different draws.
+BOOST_AUTO_TEST_CASE(RandomMP_honors_global_seed)
+{
+	using namespace bertini;
+	DefaultPrecision(50);
+
+	auto draw_five = []{
+		std::vector<mpfr_float> v;
+		for (int ii = 0; ii < 5; ++ii)
+			v.push_back(RandomMp(50));
+		return v;
+	};
+
+	SetGlobalSeed(1234u);
+	auto first = draw_five();
+
+	SetGlobalSeed(1234u);
+	auto second = draw_five();
+
+	for (int ii = 0; ii < 5; ++ii)
+		BOOST_CHECK_EQUAL(first[ii], second[ii]);
+
+	SetGlobalSeed(5678u);
+	auto third = draw_five();
+
+	bool any_different = false;
+	for (int ii = 0; ii < 5; ++ii)
+		if (third[ii] != first[ii])
+			any_different = true;
+	BOOST_CHECK(any_different);
 }
 
 BOOST_AUTO_TEST_CASE(max_et_on)

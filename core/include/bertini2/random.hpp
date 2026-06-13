@@ -44,8 +44,10 @@ namespace bertini
 {
 
 	/**
-	Returns this thread's canonical mt19937 engine.  All tracking-phase random
-	draws route through here so that ReseedThisThread() controls them uniformly.
+	Returns this thread's canonical mt19937 engine.  Every random draw of every
+	type routes through here — integer/rational (RandomInt/RandomRat), double
+	(rand_complex/RandReal), and multiprecision (RandomMp and everything built on
+	it) — so SetGlobalSeed()/ReseedThisThread() control them all uniformly.
 	*/
 	std::mt19937& ThreadEngine();
 
@@ -104,15 +106,19 @@ namespace bertini
 	 */
 	template <unsigned int length_in_digits>
 	mpfr_float RandomMp()
-	{	
+	{
 
 		using namespace boost::multiprecision;
    		using namespace boost::random;
 
    		static thread_local uniform_real_distribution<number<mpfr_float_backend<length_in_digits>, et_on> > distribution(0,1);
-   		static thread_local independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> bit_generator;
 
-		mpfr_float a{distribution(bit_generator)};
+		// Draw from the single per-thread engine shared by every random type
+		// (RandomInt/RandomRat, the double-typed draws, and now the multiprecision
+		// ones), so SetGlobalSeed()/ReseedThisThread() control them all uniformly.
+		// The distribution fills the full mp mantissa from the 32-bit engine via
+		// generate_canonical.
+		mpfr_float a{distribution(ThreadEngine())};
 		return a;
 	}
 	
