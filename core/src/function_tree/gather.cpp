@@ -85,17 +85,6 @@ namespace node {
 				return;
 			}
 
-			// LinearProduct stores its variables internally
-			if (auto lp = std::dynamic_pointer_cast<const LinearProduct>(n))
-			{
-				VariableGroup lp_vars;
-				lp->GetVariables(lp_vars);
-				for (auto const& v : lp_vars)
-					if (v && seen_vars.insert(v.get()).second)
-						ordered.push_back(v);
-				return;
-			}
-
 			// numbers, special numbers, differentials, etc. are leaves with no
 			// solve-variables to contribute.
 		}

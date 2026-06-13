@@ -27,6 +27,7 @@
 #include "bertini2/system/start/mhom.hpp"
 
 #include "bertini2/system/blocks/block.hpp"
+#include "bertini2/random.hpp"
 
 #include <map>
 
@@ -69,61 +70,62 @@ namespace bertini
 			CopyVariableStructure(s);
 			
 			
-			linprod_matrix_ = Mat<std::shared_ptr<node::LinearProduct>>(degree_matrix_.rows(), degree_matrix_.cols());
-			std::shared_ptr<node::Node> func;
-			for (int ii = 0; ii < degree_matrix_.rows(); ++ii)
-			{
-				func = Integer::Make(1);
-				
-				for (size_t jj = 0; jj < s.NumHomVariableGroups(); ++jj)
-				{
-					if(degree_matrix_(ii,jj) != 0)
-					{
-						// Fill the linear product matrix
-						linprod_matrix_(ii,jj) = LinearProduct::Make(var_groups_[jj], degree_matrix_(ii,jj), true);
-						
-						func *= linprod_matrix_(ii,jj);
-					}
-				}
-				for (size_t jj = s.NumHomVariableGroups(); jj < static_cast<size_t>(degree_matrix_.cols()); ++jj)
-				{
-					if(degree_matrix_(ii,jj) != 0)
-					{
-						// Fill the linear product matrix
-						linprod_matrix_(ii,jj) = LinearProduct::Make(var_groups_[jj], degree_matrix_(ii,jj));
-						
-						func *= linprod_matrix_(ii,jj);
-					}
-				}
-				
-				AddFunction(func);
-			}
-
-
-			 if (s.IsHomogeneous())
-			 	Homogenize();
-
-			 if (s.IsPatched())
-			 	CopyPatches(s);
-
-			// Build a products-of-linears evaluation block from the (now homogenized)
-			// linear factors, so the start system evaluates via the block instead of the
-			// LinearProduct function tree -- which the SLP compiler cannot handle, and which
-			// is what blocked MHom from being usable in a (SLP-compiled) homotopy.  The
-			// LinearProducts are kept for GenerateStartPoint; retiring them is task #6.
-			//
-			// Each function is the product of its linear factors; we assemble, per function,
-			// an augmented coefficient matrix (one row per factor, length NumVariables()+1)
-			// placing each factor's coefficients by VARIABLE IDENTITY into the start system's
-			// full variable ordering.  The factor's last coefficient multiplies the linear
-			// product's "hom variable": a real homogenizing variable when the system is
-			// homogeneous (so it goes in that variable's column), else the literal 1 (so it
-			// is the augmented constant in the trailing column).  Coefficients are extracted
-			// at highest precision so the block's master is precision-faithful.
+			// Generate the random linear-factor coefficients directly (no node::LinearProduct).
+			// linear_coeffs_(ii,jj) holds degree_matrix_(ii,jj) factors over group jj's
+			// variables; each factor is a row of (group_size + 1) coefficients, the trailing
+			// one being the constant.  Projective groups (the leading var_groups_, indices <
+			// NumHomVariableGroups) have homogeneous factors, so their constant is 0.  We
+			// generate at MaxPrecisionAllowed so the block's master is precision-faithful.
 			{
 				auto const saved_prec = DefaultPrecision();
 				DefaultPrecision(MaxPrecisionAllowed());
-				this->precision(MaxPrecisionAllowed());   // lift the linear-factor coeffs to highest precision
+
+				linear_coeffs_ = Mat<Mat<mpfr_complex>>(degree_matrix_.rows(), degree_matrix_.cols());
+				for (Eigen::Index ii = 0; ii < degree_matrix_.rows(); ++ii)
+					for (Eigen::Index jj = 0; jj < degree_matrix_.cols(); ++jj)
+					{
+						const int d = degree_matrix_(ii, jj);
+						if (d == 0)
+							continue;
+						const Eigen::Index gsize = static_cast<Eigen::Index>(var_groups_[jj].size());
+						const bool projective = (static_cast<size_t>(jj) < s.NumHomVariableGroups());
+						Mat<mpfr_complex> C(d, gsize + 1);
+						for (Eigen::Index f = 0; f < d; ++f)
+						{
+							for (Eigen::Index k = 0; k < gsize; ++k)
+								C(f, k) = mpfr_complex(mpfr_float(RandomRat()), mpfr_float(RandomRat()));
+							C(f, gsize) = projective ? mpfr_complex(0)
+							                         : mpfr_complex(mpfr_float(RandomRat()), mpfr_float(RandomRat()));
+						}
+						linear_coeffs_(ii, jj) = std::move(C);
+					}
+
+				DefaultPrecision(saved_prec);
+			}
+
+			// Homogenize the variable structure (adds a homogenizing variable per affine
+			// group; projective groups already carry their own) and copy the target's patch.
+			// There are no node functions to homogenize -- the start system evaluates through
+			// the products-of-linears block built below.
+			if (s.IsHomogeneous())
+				Homogenize();
+
+			if (s.IsPatched())
+				CopyPatches(s);
+
+			// Build the products-of-linears evaluation block from linear_coeffs_, so the start
+			// system evaluates via the block (the SLP compiler cannot compile linear-product
+			// node trees, which is what blocked MHom in a homotopy).  Per function we assemble
+			// an augmented coefficient matrix (one row per factor, length NumVariables()+1),
+			// placing each factor's coefficients by VARIABLE IDENTITY into the full variable
+			// ordering.  A factor's constant multiplies the group's homogenizing variable when
+			// the system is homogeneous (so it goes in that variable's column), else it is the
+			// augmented constant in the trailing column.  Built at MaxPrecisionAllowed so the
+			// block's master is precision-faithful.
+			{
+				auto const saved_prec = DefaultPrecision();
+				DefaultPrecision(MaxPrecisionAllowed());
+				this->precision(MaxPrecisionAllowed());
 
 				const VariableGroup& vars = this->Variables();
 				std::map<node::Node const*, Eigen::Index> col_of;
@@ -143,23 +145,25 @@ namespace bertini
 						if (d == 0)
 							continue;
 
-						auto lp = linprod_matrix_(ii, g);
-						VariableGroup gvars;
-						lp->GetVariables(gvars);
-						std::shared_ptr<node::Node> hom;
-						lp->GetHomVariable(hom);
-						auto hom_var = std::dynamic_pointer_cast<node::Variable>(hom);
+						const Mat<mpfr_complex>& C = linear_coeffs_(ii, g);
+						const VariableGroup& gvars = var_groups_[static_cast<size_t>(g)];
+						// the homogenizing variable of an affine group, if the system is
+						// homogenized; projective groups (g < num_hom_groups_) have none.
+						std::shared_ptr<node::Variable> hom_var;
+						if (static_cast<size_t>(g) >= num_hom_groups_ &&
+						    !this->HomogenizingVariables().empty())
+							hom_var = this->HomogenizingVariables()[static_cast<size_t>(g) - num_hom_groups_];
 
-						for (int f = 0; f < d; ++f)
+						for (Eigen::Index f = 0; f < d; ++f)
 						{
-							Vec<mpfr_complex> c = lp->GetCoeffs<mpfr_complex>(static_cast<size_t>(f));
 							Vec<mpfr_complex> row = Vec<mpfr_complex>::Zero(n + 1);
 							for (size_t k = 0; k < gvars.size(); ++k)
-								row(col_of.at(gvars[k].get())) = c(static_cast<Eigen::Index>(k));
+								row(col_of.at(gvars[k].get())) = C(f, static_cast<Eigen::Index>(k));
+							const mpfr_complex& constant = C(f, static_cast<Eigen::Index>(gvars.size()));
 							if (hom_var && col_of.count(hom_var.get()))
-								row(col_of.at(hom_var.get())) = c(static_cast<Eigen::Index>(gvars.size()));
+								row(col_of.at(hom_var.get())) = constant;
 							else
-								row(n) = c(static_cast<Eigen::Index>(gvars.size()));   // augmented constant
+								row(n) = constant;   // augmented constant (0 for projective groups)
 							rows.push_back(std::move(row));
 						}
 					}
@@ -484,15 +488,22 @@ namespace bertini
 			                        static_cast<Eigen::Index>(num_grouped_variables));
 			Vec<T> b = Vec<T>::Zero(static_cast<Eigen::Index>(num_grouped_variables));
 
+			// coefficients come from linear_coeffs_ (mpfr master); cast each to the working
+			// type T (a no-op widen for mpfr, a narrowing for dbl).
+			auto as_T = [](mpfr_complex const& z) -> T {
+				if constexpr (std::is_same<T, dbl>::value) return dbl(z);
+				else return z;
+			};
 			for(int ii = 0; ii < partition.size(); ++ii)
 			{
 				std::vector<size_t> cols = variable_cols_[partition[ii]];
-				auto coeff = linprod_matrix_(ii,partition[ii])->GetCoeffs<T>(subscript[ii]);
+				const Mat<mpfr_complex>& C = linear_coeffs_(ii, partition[ii]);
+				const Eigen::Index f = static_cast<Eigen::Index>(subscript[ii]);
 				for(size_t jj = 0; jj < cols.size(); ++jj)
 				{
-					A(ii, static_cast<Eigen::Index>(cols[jj])) = coeff[jj];
+					A(ii, static_cast<Eigen::Index>(cols[jj])) = as_T(C(f, static_cast<Eigen::Index>(jj)));
 				}
-				b(ii) = -coeff[cols.size()];   // affine: the constant term; projective: 0
+				b(ii) = -as_T(C(f, static_cast<Eigen::Index>(cols.size())));   // affine: the constant term; projective: 0
 			}
 
 			// normalization row per projective group: pin its last coordinate to 1.

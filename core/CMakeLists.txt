@@ -155,7 +155,6 @@ set(function_tree_headers
     include/bertini2/function_tree/symbols/differential.hpp
     include/bertini2/function_tree/symbols/special_number.hpp
     include/bertini2/function_tree/symbols/number.hpp
-    include/bertini2/function_tree/symbols/linear_product.hpp
     include/bertini2/function_tree/roots/function.hpp
     include/bertini2/function_tree/roots/jacobian.hpp
     include/bertini2/function_tree/operators/arithmetic.hpp
@@ -190,7 +189,6 @@ set(functiontree_symbols_HEADERS
 	include/bertini2/function_tree/symbols/differential.hpp
 	include/bertini2/function_tree/symbols/special_number.hpp
 	include/bertini2/function_tree/symbols/number.hpp
-    include/bertini2/function_tree/symbols/linear_product.hpp
 )
 
 set(functiontree_roots_HEADERS
@@ -348,7 +346,6 @@ set(function_tree_sources
     src/function_tree/simplify.cpp
     src/function_tree/operators/arithmetic.cpp
     src/function_tree/operators/trig.cpp
-    src/function_tree/linear_product.cpp
     src/function_tree/operators/operator.cpp
     src/function_tree/symbols/special_number.cpp
     src/function_tree/symbols/differential.cpp

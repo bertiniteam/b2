@@ -863,6 +863,12 @@ namespace bertini {
 		size_t NumHomVariables() const;
 
 		/**
+		 Get the homogenizing variables, one per affine variable group (in group order), or
+		 an empty container if the system is not homogenized.
+		 */
+		VariableGroup const& HomogenizingVariables() const { return homogenizing_variables_; }
+
+		/**
 		Get the total number of variable groups in the system, including both affine and homogenous.  Ignores the ungrouped variables, because they are not in any group.
 		*/
 		size_t NumTotalVariableGroups() const;
