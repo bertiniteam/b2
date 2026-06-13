@@ -52,6 +52,7 @@
 #include "bertini2/system/patch.hpp"
 
 #include "bertini2/system/straight_line_program.hpp"
+#include "bertini2/system/blocks/block.hpp"
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -213,6 +214,15 @@ namespace bertini {
 				std::stringstream ss;
 				ss << "trying to evaluate system in-place, but number length of vector into which to write the values (" << function_values.size() << ") doesn't match number of system user-defined functions plus patches ( " << NumNaturalFunctions() << "+" << NumPatches() << ") = " << NumTotalFunctions() << ").  Use System.NumTotalFunctions() to make the container for in-place evaluation";
 				throw std::runtime_error(ss.str());
+			}
+
+			if (HasBlocks())
+			{
+				EvalBlocksInPlace<T>(function_values);
+				if (IsPatched())
+					patch_.EvalInPlace(function_values,
+					                   std::get<Vec<T> >(current_variable_values_));
+				return;
 			}
 
 			switch (eval_method_){
@@ -415,6 +425,14 @@ namespace bertini {
 			}
 			
 			const auto& vars = Variables();
+
+			if (HasBlocks())
+			{
+				JacobianBlocksInPlace<T>(J);
+				if (IsPatched())
+					patch_.JacobianInPlace(J, std::get<Vec<T> >(current_variable_values_));
+				return;
+			}
 
 			if (!is_differentiated_)
 				Differentiate();
@@ -706,6 +724,14 @@ namespace bertini {
 			if (!HavePathVariable())
 				throw std::runtime_error("computing time derivative of system with no path variable defined");
 
+			if (HasBlocks())
+			{
+				TimeDerivBlocksInPlace<T>(ds_dt);
+				if (IsPatched())
+					for (size_t ii = 0; ii < NumTotalVariableGroups(); ++ii)
+						ds_dt(ii + NumNaturalFunctions()) = T(0);
+				return;
+			}
 
 			if (!is_differentiated_)
 				Differentiate();
@@ -916,6 +942,12 @@ namespace bertini {
 					throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");
 			#endif
 
+			if (HasBlocks())
+			{
+				std::get<Vec<T> >(current_variable_values_) = new_values;
+				return;
+			}
+
 			if (!is_differentiated_)
 				Differentiate();
 
@@ -956,6 +988,12 @@ namespace bertini {
 		{
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
+
+			if (HasBlocks())
+			{
+				path_variable_->set_current_value(new_value);
+				return;
+			}
 
 			if (!is_differentiated_)
 				Differentiate();
@@ -1143,6 +1181,18 @@ namespace bertini {
 		 \param F The functions to add.
 		 */
 		void AddFunctions(std::vector<Fn> const& F);
+
+		/**
+		\brief Append an evaluation block (products-of-linears, blend, ...).
+
+		A block-composed system evaluates its blocks (in the order added) instead of the
+		function-tree / SLP functions; blocks contribute the leading "natural" rows, with
+		any patch appended after, exactly as for a classic system.
+		*/
+		void AddBlock(Block b) { blocks_.push_back(std::move(b)); }
+
+		/// \brief Whether this system is evaluated from blocks rather than the function tree.
+		bool HasBlocks() const { return !blocks_.empty(); }
 
 
 
@@ -1805,6 +1855,62 @@ namespace bertini {
 		*/
 		void ConstructOrdering() const;
 
+		/// \brief The current path-variable value as type T (zero if no path variable).
+		template <typename T>
+		T CurrentPathValue() const
+		{
+			if (have_path_variable_)
+				return path_variable_->template Eval<T>();
+			return T(0);
+		}
+
+		/// \brief Evaluate the blocks' function values into the leading (natural) rows.
+		template <typename T>
+		void EvalBlocksInPlace(Vec<T>& function_values) const
+		{
+			const auto& vars = std::get<Vec<T> >(current_variable_values_);
+			const T t = CurrentPathValue<T>();
+			Eigen::Index row = 0;
+			for (auto const& blk : blocks_)
+				std::visit([&](auto const& b){
+					const Eigen::Index n = static_cast<Eigen::Index>(b.NumFunctions());
+					b.template EvalInPlace<T>(function_values.segment(row, n), vars, t);
+					row += n;
+				}, blk);
+		}
+
+		/// \brief Evaluate the blocks' Jacobian into the leading rows of J.
+		template <typename T>
+		void JacobianBlocksInPlace(Mat<T>& J) const
+		{
+			const auto& vars = std::get<Vec<T> >(current_variable_values_);
+			const T t = CurrentPathValue<T>();
+			Eigen::Index row = 0;
+			for (auto const& blk : blocks_)
+				std::visit([&](auto const& b){
+					const Eigen::Index n = static_cast<Eigen::Index>(b.NumFunctions());
+					Mat<T> jb(n, J.cols());                 // blocks write into a contiguous target
+					b.template JacobianInPlace<T>(jb, vars, t);
+					J.block(row, 0, n, J.cols()) = jb;
+					row += n;
+				}, blk);
+		}
+
+		/// \brief Evaluate the blocks' time-derivative into the leading rows.
+		template <typename T>
+		void TimeDerivBlocksInPlace(Vec<T>& ds_dt) const
+		{
+			const auto& vars = std::get<Vec<T> >(current_variable_values_);
+			const T t = CurrentPathValue<T>();
+			Eigen::Index row = 0;
+			for (auto const& blk : blocks_)
+				std::visit([&](auto const& b){
+					const Eigen::Index n = static_cast<Eigen::Index>(b.NumFunctions());
+					b.template TimeDerivInPlace<T>(ds_dt.segment(row, n), vars, t);
+					row += n;
+				}, blk);
+		}
+
 
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
@@ -1835,6 +1941,8 @@ namespace bertini {
 		mutable bool is_differentiated_ = false; ///< indicator for whether the jacobian tree has been populated.
 
 		mutable StraightLineProgram slp_; ///< The straight line program.  Is mutable since  it's a has-a, not is-a relationship.
+
+		std::vector<Block> blocks_; ///< Evaluation blocks (products-of-linears, blend, ...).  When non-empty, the system evaluates these instead of the function-tree / SLP functions.  (The polynomial path stays for classic systems until it too becomes a block.)
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 

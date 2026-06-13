@@ -174,6 +174,13 @@ namespace bertini
 
 	size_t System::NumNaturalFunctions() const
 	{
+		if (!blocks_.empty())
+		{
+			size_t n = 0;
+			for (auto const& blk : blocks_)
+				n += std::visit([](auto const& b){ return b.NumFunctions(); }, blk);
+			return n;
+		}
 		return functions_.size();
 	}
 
@@ -268,6 +275,12 @@ namespace bertini
 			iter->precision(new_precision);
 		}
 
+		if (!blocks_.empty())
+		{
+			for (auto const& blk : blocks_)
+				std::visit([&](auto const& b){ b.Precision(new_precision); }, blk);
+		}
+		else
 		switch (eval_method_)
 		{
 			case EvalMethod::FunctionTree:{
@@ -333,6 +346,8 @@ namespace bertini
 
 	void System::Differentiate() const
 	{
+		if (!blocks_.empty()) { is_differentiated_ = true; return; }
+
 		switch (deriv_method_){
 			case DerivMethod::JacobianNode:
 			{
