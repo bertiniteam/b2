@@ -9,6 +9,8 @@ namespace bertini{
 			using TrackerT = bertini::tracking::AMPTracker;
 			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesAdaptivePrecisionTotalDegree");
 			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyAdaptivePrecisionTotalDegree");
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::MHomogeneous>("ZeroDimPowerSeriesAdaptivePrecisionMHomogeneous");
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::MHomogeneous>("ZeroDimCauchyAdaptivePrecisionMHomogeneous");
 		}
 
 }} // namespaces
