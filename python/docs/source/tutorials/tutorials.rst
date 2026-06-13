@@ -9,7 +9,9 @@
    :caption: Available tutorials
 
 
+   all_solutions
    evaluation_cyclic
    tracking_nonsingular
    manual_endgame_usage
+   eigenvalues_by_homotopy
 
