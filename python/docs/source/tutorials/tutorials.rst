@@ -14,4 +14,5 @@
    tracking_nonsingular
    manual_endgame_usage
    eigenvalues_by_homotopy
+   parameter_homotopy
 

@@ -115,8 +115,36 @@ def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endga
     return _UserHomotopySolver(solver, homotopy, target, user_start)
 
 
+def coefficient_parameter_homotopy(target, generic, path_variable='t'):
+    """Build a parameter homotopy interpolating two systems of the same shape.
+
+    Returns H = (1 - t) * target + t * generic with ``t`` added as its path variable, so at t=1
+    it is ``generic`` (whose solutions are your start points) and at t=0 it is ``target``.  Pair
+    it with :func:`user_homotopy`: solve ``generic`` once, then reuse its solutions to move to
+    ``target`` (and to any number of further targets that share ``generic``)::
+
+        gen_solver = nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(generic)
+        gen_solver.solve()
+        H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
+        solver = nag_algorithm.user_homotopy(H, gen_solver.solutions(), target)
+        solver.solve()
+
+    ``target`` and ``generic`` must be built over the SAME variable objects (the interpolation
+    combines their function trees).
+
+    For robustness the generic system's coefficients should be *generic* (random complex), so the
+    straight-line parameter path avoids the (measure-zero) singular locus.
+    """
+    from bertini._pybertini.function_tree.symbol import Variable as _Variable
+    t = _Variable(path_variable)
+    H = (1 - t) * target + t * generic
+    H.add_path_variable(t)
+    return H
+
+
 __all__ = dir(_pybnalag)
 __all__.append('user_homotopy')
+__all__.append('coefficient_parameter_homotopy')
 
 
 # DoublePrecisionTotalDegree = bertini._pybertini.nag_algorithms.ZeroDimCauchyDoublePrecisionTotalDegree

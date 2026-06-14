@@ -52,3 +52,18 @@ def test_user_homotopy_rejects_bad_precision():
     import pytest
     with pytest.raises(ValueError):
         pb.nag_algorithm.user_homotopy(H, [], target, precision='quadruple')
+
+
+def test_coefficient_parameter_homotopy_helper():
+    # the coefficient_parameter_homotopy helper builds (1-t)*target + t*generic for you.
+    x = pb.Variable('x')
+    generic = pb.System(); generic.add_variable_group(pb.VariableGroup([x])); generic.add_function(x * x - 4)
+    target = pb.System(); target.add_variable_group(pb.VariableGroup([x])); target.add_function(x * x - 9)
+
+    gen_solver = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(generic)
+    gen_solver.solve()
+
+    H = pb.nag_algorithm.coefficient_parameter_homotopy(target, generic)
+    solver = pb.nag_algorithm.user_homotopy(H, gen_solver.solutions(), target)
+    solver.solve()
+    assert _roots_real(solver.solutions()) == [-3.0, 3.0]
