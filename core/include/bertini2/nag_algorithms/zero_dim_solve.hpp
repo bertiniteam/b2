@@ -365,6 +365,23 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 				solutions_user_coords_fresh_ = false;
 
+				// Each rank built its homotopy independently in the constructor -- with its OWN
+				// random patch, start-system coefficients, and gamma -- so a given path index
+				// would mean a different path on each worker, and the manager would gather a
+				// scrambled, mostly-wrong solution set (observed: cyclic-5 returned ~17 distinct
+				// solutions instead of 70).  Make every rank agree on ONE homotopy: broadcast the
+				// manager's RNG seed and re-form the (randomized) start system + homotopy from it.
+				// The per-path tracking RNG is already deterministic in the path index
+				// (ReseedThisThread), so this is sufficient for identical results on every rank.
+				{
+					unsigned long seed = parallel::IsManager() ? GetGlobalSeed() : 0ul;
+					MPI_Bcast(&seed, 1, MPI_UNSIGNED_LONG, 0, comm);
+					SetGlobalSeed(seed);
+					SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
+					num_start_points_ = StartSystem().NumStartPoints();
+					GetTracker().SetSystem(Homotopy());
+				}
+
 				PreSolveChecks();
 				PreSolveSetup();
 
