@@ -305,6 +305,51 @@ BOOST_AUTO_TEST_CASE(read_tolerances)
 
 
 
+BOOST_AUTO_TEST_CASE(read_postprocessing)
+{
+	using namespace bertini::parsing::classic;
+	using namespace bertini::tracking;
+	bertini::DefaultPrecision(30);
+
+	double tol = 1e-15;
+
+	// all four PostProcessing settings present, in scrambled order, with noise between them.
+	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n EndpointSameThreshold: 25; \n CondNumThreshold : 1e6 ; \n ImagThreshold: 1.5e-6;\n EndpointFiniteThreshold : 1e4 ; % a comment\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+
+	std::string configStr = inputfile.Config();
+
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+
+	algorithm::PostProcessingConfig pp;
+	ConfigSettingParser<std::string::const_iterator, algorithm::PostProcessingConfig> parser;
+	bool parsed = phrase_parse(iter, end, parser, boost::spirit::ascii::space, pp);
+
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(abs(pp.real_threshold - 1.5e-6) < tol);
+	BOOST_CHECK(abs(pp.endpoint_finite_threshold - 1e4) < tol);
+	BOOST_CHECK(abs(pp.same_point_tolerance_multiplier - 25) < tol);
+	BOOST_CHECK(abs(pp.condition_number_threshold - 1e6) < tol);
+
+
+	// CondNumThreshold omitted -> its Bertini-1 default (1e8) must survive.
+	SplitInputFile inputfile2 = ParseInputFile("Config \n ImagThreshold: 1e-7; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+
+	std::string configStr2 = inputfile2.Config();
+
+	std::string::const_iterator iter2 = configStr2.begin();
+	std::string::const_iterator end2 = configStr2.end();
+
+	algorithm::PostProcessingConfig pp2;
+	bool parsed2 = phrase_parse(iter2, end2, parser, boost::spirit::ascii::space, pp2);
+
+	BOOST_CHECK(parsed2 && iter2 == end2);
+	BOOST_CHECK(abs(pp2.real_threshold - 1e-7) < tol);
+	BOOST_CHECK(abs(pp2.condition_number_threshold - 1e8) < tol); // default, not set in input
+}
+
+
+
 BOOST_AUTO_TEST_CASE(read_stepping)
 {
 	using namespace bertini::parsing::classic;
