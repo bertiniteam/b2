@@ -92,6 +92,7 @@ jobs:
     if: ${{ inputs.minimal != true }}
     needs: [set_matrix]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30   # backstop against a hang; healthy runs are ~7 min
     strategy:
       fail-fast: false
       matrix:
@@ -173,12 +174,13 @@ jobs:
         env:
           LD_LIBRARY_PATH: /tmp/boost-base/lib:/tmp/boost-base/lib64
           DYLD_LIBRARY_PATH: /tmp/boost-base/lib
-        run: ctest --output-on-failure --parallel $(nproc 2>/dev/null || sysctl -n hw.ncpu)
+        run: ctest --output-on-failure --timeout 600 --parallel $(nproc 2>/dev/null || sysctl -n hw.ncpu)
 
   test_cpp_windows:
     name: C++ tests on Windows
     if: ${{ inputs.minimal != true }}
     runs-on: windows-latest
+    timeout-minutes: 40   # backstop against a hang; the clang-cl build+test is ~22 min
     env:
       CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
     steps:
@@ -233,7 +235,7 @@ jobs:
       - name: Test
         shell: pwsh
         working-directory: build
-        run: ctest --output-on-failure --parallel
+        run: ctest --output-on-failure --timeout 600 --parallel
 
   build_macos_ubuntu_wheels:
     name: ${{ matrix.os }} Python-${{ matrix.python-version }} wheels
@@ -387,7 +389,7 @@ jobs:
           # (and locally); the older blame on "MPFR 3.1.6" was a misdiagnosis.  Running
           # the full suite here is the in-container proof of the fix.  If it flakes or
           # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
-          CIBW_TEST_REQUIRES_LINUX: "pytest numpy sympy"
+          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy"
           CIBW_TEST_COMMAND_LINUX: "cd {project} && python -m pytest python/test/ -q"
 
       - name: ccache size (cold run = grows from nothing; warm run = hits)
@@ -484,6 +486,7 @@ jobs:
     if: ${{ inputs.minimal != true }}
     needs: [set_matrix, build_macos_ubuntu_wheels]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 25   # backstop against a hang; healthy test runs are well under a minute
     strategy:
       fail-fast: false
       matrix:
@@ -512,7 +515,7 @@ jobs:
 
       - name: Run Python tests
         run: |
-          pip install pytest sympy
+          pip install pytest pytest-timeout sympy
           python -m pytest python/test/ -v
 
   test_wheels_windows:
@@ -520,6 +523,7 @@ jobs:
     if: ${{ inputs.minimal != true }}
     needs: [build_windows_wheels]
     runs-on: windows-latest
+    timeout-minutes: 25   # backstop against a hang; healthy runs are ~6 min (was 6h before the fix)
     strategy:
       fail-fast: false
       matrix:
@@ -549,5 +553,5 @@ jobs:
           conda install -y python=${{ matrix.python-version }} --update-deps
           $py = "C:\Miniconda\envs\b2-windows\python.exe"
           & $py -m pip install --no-index --find-links dist/ bertini2
-          & $py -m pip install pytest sympy
+          & $py -m pip install pytest pytest-timeout sympy
           & $py -m pytest python/test/ -v

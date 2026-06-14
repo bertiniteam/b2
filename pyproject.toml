@@ -40,3 +40,10 @@ testpaths = ["python/test"]
 pythonpath = ["python/test"]
 # Exclude MPI tests from default pytest run (run with mpirun -n N explicitly)
 norecursedirs = ["python/test/parallel"]
+# Safety net (pytest-timeout): no single test may hang the suite.  A homotopy solve on a
+# pathological random gamma can, very rarely, send a path grinding for a long time -- on Windows
+# CI this once hung a job for 6 hours.  A per-test cap turns that into a fast, debuggable failure
+# (with a stack dump) instead.  method=thread so it also bounds a grind stuck inside the C++
+# extension (a signal cannot interrupt that).  Generous (180s) so it never trips a legitimate test.
+timeout = 180
+timeout_method = "thread"
