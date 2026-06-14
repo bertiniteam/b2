@@ -88,6 +88,34 @@ public:
 	std::vector<int> Degrees() const { return std::vector<int>(NumFunctions(), 1); }
 	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
 
+	/// Linear forms are polynomial.
+	bool IsPolynomial(VariableGroup const&) const { return true; }
+	/// An affine form a.x + b is inhomogeneous (it carries a constant); once homogenized the
+	/// constant has become a homogenizing-variable coefficient, so it is degree-1 homogeneous.
+	bool IsHomogeneous(VariableGroup const&) const { return homogeneous_; }
+
+	/// Homogenize: fold the constant column onto the homogenizing variable.  An augmented form
+	/// a.x + b (last column = constant) becomes the homogeneous a.x + b*h, where the
+	/// homogenizing variable h is prepended to the variable ordering -- so its column is the
+	/// old constant column.  The block then evaluates M*[vars] directly (no augmenting 1).
+	/// Currently supports a single affine variable group (the dominant bertini.linalg case);
+	/// a second call (a second affine group) throws.
+	void Homogenize(VariableGroup const& /*group*/, std::shared_ptr<node::Variable> const& /*hom_var*/)
+	{
+		if (homogeneous_)
+			throw std::runtime_error("LinearFormsBlock::Homogenize: block is already homogenized "
+				"(multiple affine variable groups are not yet supported for linear-forms blocks)");
+		const auto& M = coefficients_highest_precision_;
+		Mat<mpfr_complex> Mh(M.rows(), M.cols());                                   // same #cols: n+1
+		Mh.col(0) = M.col(static_cast<Eigen::Index>(num_vars_));                    // constant -> h column (front)
+		Mh.rightCols(static_cast<Eigen::Index>(num_vars_)) =
+			M.leftCols(static_cast<Eigen::Index>(num_vars_));                       // original variable columns
+		coefficients_highest_precision_ = Mh;
+		num_vars_ += 1;          // h is now a real variable; all n+1 columns are variable columns
+		homogeneous_ = true;
+		BuildWorking();
+	}
+
 	/// Number of variables the block expects in the input vector.
 	size_t NumVariables() const { return num_vars_; }
 
@@ -129,9 +157,13 @@ public:
 	template <typename T>
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
 	{
-		// f(x) = W * [x ; 1].  The trailing 1 lets each row carry its constant term in its
-		// last column, so the whole stack of linear forms is a single matrix-vector product.
-		result.noalias() = Working<T>() * Augment<T>(vars);
+		// affine: f(x) = W * [x ; 1] (the trailing 1 carries each row's constant in the last
+		// column).  homogeneous (post-Homogenize): every column is a variable column, so it is
+		// just W * vars (the old constant is now the homogenizing variable's coefficient).
+		if (homogeneous_)
+			result.noalias() = Working<T>() * vars;
+		else
+			result.noalias() = Working<T>() * Augment<T>(vars);
 	}
 
 	/**
@@ -146,8 +178,11 @@ public:
 	template <typename T>
 	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& /*vars*/, T const& /*path_value*/) const
 	{
-		// drop the trailing constant column; the remaining columns are d f / d x.
-		J = Working<T>().leftCols(static_cast<Eigen::Index>(num_vars_));
+		// homogeneous: every column is d f / d x.  affine: drop the trailing constant column.
+		if (homogeneous_)
+			J = Working<T>();
+		else
+			J = Working<T>().leftCols(static_cast<Eigen::Index>(num_vars_));
 	}
 
 	/**
@@ -195,7 +230,8 @@ private:
 	}
 
 	size_t num_vars_;
-	Mat<mpfr_complex> coefficients_highest_precision_; ///< master: rows = functions, cols = num_vars+1
+	bool homogeneous_ = false; ///< false: augmented affine (M*[x;1]); true: post-Homogenize (M*x)
+	Mat<mpfr_complex> coefficients_highest_precision_; ///< master: rows = functions, cols = num_vars (homogeneous) or num_vars+1 (affine)
 	mutable std::tuple<Mat<dbl>, Mat<mpfr_complex>> coefficients_working_;
 	mutable unsigned precision_;
 
@@ -205,6 +241,7 @@ private:
 	void serialize(Archive& ar, const unsigned /*version*/)
 	{
 		ar & num_vars_;
+		ar & homogeneous_;
 		ar & precision_;
 		ar & coefficients_highest_precision_;
 		ar & std::get<0>(coefficients_working_);

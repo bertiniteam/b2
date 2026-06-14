@@ -129,6 +129,21 @@ public:
 		return d;
 	}
 
+	// A blend is the coupling homotopy, built from already-prepared (homogenized) operands; its
+	// operands are shared_ptr<const System> and cannot be mutated, so Homogenize is a no-op.  It
+	// is homogeneous/polynomial iff all its operands are.
+	void Homogenize(VariableGroup const&, std::shared_ptr<node::Variable> const&) {}
+	bool IsHomogeneous(VariableGroup const&) const
+	{
+		for (auto const& op : operands_) if (!op->IsHomogeneous()) return false;
+		return true;
+	}
+	bool IsPolynomial(VariableGroup const&) const
+	{
+		for (auto const& op : operands_) if (!op->IsPolynomial()) return false;
+		return true;
+	}
+
 	bool DependsOnPathVariable() const { return true; }
 
 	bool HasConstantJacobian() const { return false; }

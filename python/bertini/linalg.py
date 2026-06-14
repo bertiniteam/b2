@@ -246,13 +246,9 @@ def add_linear(system, A, x, b=None):
 
     Coefficients must be exact (see :func:`coefficient`); Python floats are refused.
 
-    .. note::
-
-       The block is fixed to the system's *current* variables.  ``System.Homogenize`` does
-       not yet rewrite evaluation blocks, so a linear-forms block does not survive the
-       homogenization the zero-dim solver performs -- use ``add_linear`` for systems you
-       evaluate directly.  (Making blocks homogenization-aware is a follow-up; the MHom
-       products block sidesteps this by being built after homogenization.)
+    The resulting linear-forms block is homogenization-aware, so it survives the
+    homogenization the zero-dim solver performs: a system mixing polynomial functions with an
+    ``add_linear`` block solves end to end (currently for a single affine variable group).
 
     Returns ``system`` for chaining.
     """

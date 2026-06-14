@@ -315,14 +315,10 @@ namespace bertini
 		//    * not partially homogenized, in the sense that some groups have been homogenized, and others haven't
 		//    
 		//
-		for (const auto& curr_function : PolyBlock().Functions())
-		{	
-			for (const auto& curr_var_gp : hom_variable_groups_)
-			{
-				if (!curr_function->IsHomogeneous(curr_var_gp))
+		for (const auto& curr_var_gp : hom_variable_groups_)
+			for (auto const& b : blocks_)
+				if (!std::visit([&](auto const& blk){ return blk.IsHomogeneous(curr_var_gp); }, b))
 					throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
-			}
-		}
 
 		if (!IsPolynomial())
 			throw std::runtime_error("trying to homogenize a non-polynomial system.");
@@ -367,16 +363,17 @@ namespace bertini
 
 				PushFront(temp_group, hom_var);
 
-				// temp_group.push_front(hom_var);
-				for (const auto& curr_function : PolyBlock().Functions())
-					curr_function->Homogenize(temp_group, hom_var);
+				// every block homogenizes itself w.r.t. this group: the polynomial block walks
+				// its trees, structured blocks fold the constant onto the homogenizing variable.
+				for (auto& b : blocks_)
+					std::visit([&](auto& blk){ blk.Homogenize(temp_group, hom_var); }, b);
 			}
 			else
 			{
 				Var hom_var = Variable::Make(converter.str());
 				homogenizing_variables_[group_counter] = hom_var;
-				for (const auto& curr_function : PolyBlock().Functions())
-					curr_function->Homogenize(*curr_var_gp, hom_var);
+				for (auto& b : blocks_)
+					std::visit([&](auto& blk){ blk.Homogenize(*curr_var_gp, hom_var); }, b);
 			}
 
 			group_counter++;
@@ -406,28 +403,29 @@ namespace bertini
 		if (NumHomVariables()!=NumVariableGroups())
 			return false;
 
-		for (const auto& iter : PolyFunctions())
+		auto all_blocks_homogeneous = [&](VariableGroup const& tempvars) -> bool {
+			for (auto const& b : blocks_)
+				if (!std::visit([&](auto const& blk){ return blk.IsHomogeneous(tempvars); }, b))
+					return false;
+			return true;
+		};
+
+		auto counter = 0;
+		for (const auto& vars : variable_groups_)
 		{
-			auto counter = 0;
-			for (const auto& vars : variable_groups_)
-			{
-				auto tempvars = vars;
-				if (have_homvars)
-					PushFront(tempvars, homogenizing_variables_[counter]);
-				counter++;
-
-				if (!iter->IsHomogeneous(tempvars))
-					return false;
-			}
-
-			for (const auto& vars : hom_variable_groups_)
-				if (!iter->IsHomogeneous(vars))
-					return false;
-
-			if (NumUngroupedVariables()>0)
-				if (!iter->IsHomogeneous(ungrouped_variables_))
-					return false;
+			auto tempvars = vars;
+			if (have_homvars)
+				PushFront(tempvars, homogenizing_variables_[counter]);
+			counter++;
+			if (!all_blocks_homogeneous(tempvars))
+				return false;
 		}
+		for (const auto& vars : hom_variable_groups_)
+			if (!all_blocks_homogeneous(vars))
+				return false;
+		if (NumUngroupedVariables()>0)
+			if (!all_blocks_homogeneous(ungrouped_variables_))
+				return false;
 		return true;
 	}
 
@@ -446,27 +444,26 @@ namespace bertini
 		if (have_homvars && NumHomVariables()!=NumVariableGroups())
 			throw std::runtime_error("trying to check polynomiality on a partially-formed system.  mismatch between number of homogenizing variables, and number of variable groups");
 
+		auto all_blocks_polynomial = [&](VariableGroup const& tempvars) -> bool {
+			for (auto const& b : blocks_)
+				if (!std::visit([&](auto const& blk){ return blk.IsPolynomial(tempvars); }, b))
+					return false;
+			return true;
+		};
 
-		for (const auto& iter : PolyFunctions())
+		auto counter = 0;
+		for (const auto& vars : variable_groups_)
 		{
-			auto counter = 0;
-			for (const auto& vars : variable_groups_)
-			{
-				auto tempvars = vars;
-				if (have_homvars)
-					PushFront(tempvars,homogenizing_variables_[counter]);
-
-				counter++;
-
-				if (!iter->IsPolynomial(tempvars))
-					return false;
-
-			}
-			for (const auto& vars : hom_variable_groups_)
-				if (!iter->IsPolynomial(vars))
-					return false;
-
+			auto tempvars = vars;
+			if (have_homvars)
+				PushFront(tempvars,homogenizing_variables_[counter]);
+			counter++;
+			if (!all_blocks_polynomial(tempvars))
+				return false;
 		}
+		for (const auto& vars : hom_variable_groups_)
+			if (!all_blocks_polynomial(vars))
+				return false;
 		return true;
 	}
 

@@ -92,6 +92,13 @@ public:
 	}
 	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
 
+	// The products-of-linears block is the m-homogeneous start system, constructed already
+	// homogenized (each factor carries its group's homogenizing variable).  So Homogenize is a
+	// no-op and it reports homogeneous + polynomial.
+	void Homogenize(VariableGroup const&, std::shared_ptr<node::Variable> const&) {}
+	bool IsHomogeneous(VariableGroup const&) const { return true; }
+	bool IsPolynomial(VariableGroup const&) const { return true; }
+
 	/// Number of variables the block expects in the input vector.
 	size_t NumVariables() const { return num_vars_; }
 

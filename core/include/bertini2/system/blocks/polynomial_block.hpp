@@ -109,6 +109,23 @@ public:
 		return d;
 	}
 
+	/// Homogenize each function tree in place with respect to the group + its homogenizing var.
+	void Homogenize(VariableGroup const& group, Var const& hom_var)
+	{
+		for (auto const& f : functions_) f->Homogenize(group, hom_var);
+		Invalidate();
+	}
+	bool IsHomogeneous(VariableGroup const& vars) const
+	{
+		for (auto const& f : functions_) if (!f->IsHomogeneous(vars)) return false;
+		return true;
+	}
+	bool IsPolynomial(VariableGroup const& vars) const
+	{
+		for (auto const& f : functions_) if (!f->IsPolynomial(vars)) return false;
+		return true;
+	}
+
 	/// Reset the cached values in the function / derivative trees (function-tree eval path).
 	void Reset() const
 	{
