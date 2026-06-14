@@ -84,6 +84,10 @@ public:
 	/// Number of functions (rows the block contributes to the system).
 	size_t NumFunctions() const { return static_cast<size_t>(coefficients_highest_precision_.rows()); }
 
+	/// Linear forms are degree 1.
+	std::vector<int> Degrees() const { return std::vector<int>(NumFunctions(), 1); }
+	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
+
 	/// Number of variables the block expects in the input vector.
 	size_t NumVariables() const { return num_vars_; }
 

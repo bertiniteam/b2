@@ -888,6 +888,8 @@ namespace bertini
     int System::DegreeBound() const
     {
     	auto degs = Degrees(Variables());
+    	if (degs.empty())
+    		return 0;   // a system with no functions has no degree bound
     	return *std::max_element(degs.begin(), degs.end());
     }
 
@@ -895,8 +897,11 @@ namespace bertini
 	std::vector<int> System::Degrees() const
 	{
 		std::vector<int> degs;
-		for (const auto& iter : PolyFunctions())
-			degs.push_back(iter->Degree());
+		for (auto const& b : blocks_)
+		{
+			auto d = std::visit([](auto const& blk){ return blk.Degrees(); }, b);
+			degs.insert(degs.end(), d.begin(), d.end());
+		}
 		return degs;
 	}
 
@@ -904,10 +909,13 @@ namespace bertini
 	std::vector<int> System::Degrees(VariableGroup const& vars) const
 	{
 		std::vector<int> degs;
-		for (const auto& iter : PolyFunctions())
-			degs.push_back(iter->Degree(vars));
-		return degs;
+		for (auto const& b : blocks_)
+		{
+			auto d = std::visit([&](auto const& blk){ return blk.Degrees(vars); }, b);
+			degs.insert(degs.end(), d.begin(), d.end());
 		}
+		return degs;
+	}
 
 
 	void System::ReorderFunctionsByDegreeDecreasing()

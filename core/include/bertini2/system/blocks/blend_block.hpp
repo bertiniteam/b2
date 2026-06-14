@@ -106,6 +106,29 @@ public:
 		return operands_.empty() ? 0 : operands_.front()->NumNaturalFunctions();
 	}
 
+	/// The blend c_0(t)f_0 + c_1(t)f_1 + ... has, per function, the max degree of its operands
+	/// in the space variables (the t-coefficients are constant in space).
+	std::vector<int> Degrees() const
+	{
+		std::vector<int> d(NumFunctions(), 0);
+		for (auto const& op : operands_)
+		{
+			auto od = op->Degrees();
+			for (size_t i = 0; i < d.size() && i < od.size(); ++i) d[i] = std::max(d[i], od[i]);
+		}
+		return d;
+	}
+	std::vector<int> Degrees(VariableGroup const& vars) const
+	{
+		std::vector<int> d(NumFunctions(), 0);
+		for (auto const& op : operands_)
+		{
+			auto od = op->Degrees(vars);
+			for (size_t i = 0; i < d.size() && i < od.size(); ++i) d[i] = std::max(d[i], od[i]);
+		}
+		return d;
+	}
+
 	bool DependsOnPathVariable() const { return true; }
 
 	bool HasConstantJacobian() const { return false; }

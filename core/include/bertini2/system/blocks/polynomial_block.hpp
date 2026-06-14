@@ -95,6 +95,20 @@ public:
 	bool IsDifferentiated() const { return is_differentiated_; }
 	void Invalidate() const { is_differentiated_ = false; }
 
+	/// Per-function degrees (total, and with respect to a variable group).
+	std::vector<int> Degrees() const
+	{
+		std::vector<int> d; d.reserve(functions_.size());
+		for (auto const& f : functions_) d.push_back(f->Degree());
+		return d;
+	}
+	std::vector<int> Degrees(VariableGroup const& vars) const
+	{
+		std::vector<int> d; d.reserve(functions_.size());
+		for (auto const& f : functions_) d.push_back(f->Degree(vars));
+		return d;
+	}
+
 	/// Reset the cached values in the function / derivative trees (function-tree eval path).
 	void Reset() const
 	{

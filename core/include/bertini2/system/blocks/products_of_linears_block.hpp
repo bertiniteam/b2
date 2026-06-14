@@ -83,6 +83,15 @@ public:
 	/// Number of functions (rows the block contributes to the system).
 	size_t NumFunctions() const { return factors_highest_precision_.size(); }
 
+	/// Each function is a product of its linear factors, so its degree is the factor count.
+	std::vector<int> Degrees() const
+	{
+		std::vector<int> d; d.reserve(factors_highest_precision_.size());
+		for (auto const& M : factors_highest_precision_) d.push_back(static_cast<int>(M.rows()));
+		return d;
+	}
+	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
+
 	/// Number of variables the block expects in the input vector.
 	size_t NumVariables() const { return num_vars_; }
 
