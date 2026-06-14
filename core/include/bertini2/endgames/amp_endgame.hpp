@@ -109,7 +109,7 @@ public:
 		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 		    refinement_success==SuccessCode::FailedToConverge)
 		{
-			
+			++bertini::probe::endgame_refine_escalations; // PROBE: temporary escalation instrumentation
 
 			using bertini::Precision;
 

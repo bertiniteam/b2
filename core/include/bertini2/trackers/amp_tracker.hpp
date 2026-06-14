@@ -40,6 +40,7 @@
 #pragma once
 
 #include "bertini2/trackers/base_tracker.hpp"
+#include "bertini2/detail/escalation_probe.hpp" // PROBE: temporary escalation instrumentation
 
 
 namespace bertini{
@@ -1001,8 +1002,10 @@ namespace bertini{
 			*/
 			template<typename ComplexT>
 			unsigned DigitsB() const
-			{	
-				return unsigned(B_RHS<ComplexT>());
+			{
+				unsigned d = unsigned(B_RHS<ComplexT>());
+				bertini::probe::note_digits_b(d); // PROBE: temporary escalation instrumentation
+				return d;
 			}
 
 
@@ -1377,6 +1380,11 @@ namespace bertini{
 			{
 				if (new_precision==current_precision_) // no op
 					return SuccessCode::Success;
+
+				if (new_precision > current_precision_) // PROBE: temporary escalation instrumentation
+					++bertini::probe::tracker_precision_increases;
+				bertini::probe::note_precision(new_precision);
+				bertini::probe::trace_precision_change("ChangePrecision", current_precision_, new_precision);
 
 				NotifyObservers(PrecisionChanged<EmitterType>(*this,current_precision_,new_precision));
 				

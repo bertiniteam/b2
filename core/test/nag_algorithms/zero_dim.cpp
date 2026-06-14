@@ -32,6 +32,10 @@
 #include "bertini2/system/start_systems.hpp"
 #include <boost/test/unit_test.hpp>
 #include "bertini2/nag_algorithms/output.hpp"
+#include "bertini2/detail/escalation_probe.hpp" // PROBE: temporary escalation instrumentation
+#include <chrono>
+#include <iostream>
+#include <iomanip>
 
 
 using Variable = bertini::node::Variable;
@@ -319,6 +323,84 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 	}
 	BOOST_CHECK_GT(std::abs(dbl(good[0](0)) - dbl(good[1](0))), 1e-3); // the two distinct roots
 #endif
+}
+
+
+// PROBE (temporary, branch perf/amp-block-precision-escalation): sweep many gammas and report,
+// per gamma, WHERE precision escalations originate.  Confirms "bad gamma" is really over-escalation.
+// Run with:  ./build/core/test_nag_algorithms --run_test=zero_dim/amp_escalation_probe --log_level=message
+BOOST_AUTO_TEST_CASE(amp_escalation_probe)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	std::cout << "\n seed |  good | maxPrec | maxDigB | trkInc | egRefine | corrTrkHPN | corrRefHPN |    ms\n";
+	std::cout << "------+-------+---------+---------+--------+----------+------------+------------+--------\n";
+
+	unsigned seed_lo = 1, seed_hi = 25;
+	if (const char* one = std::getenv("BERTINI_PROBE_SEED")) { seed_lo = seed_hi = static_cast<unsigned>(std::atoi(one)); }
+	const bool use_double = (std::getenv("BERTINI_PROBE_DOUBLE") != nullptr); // fixed double tracker instead of AMP
+
+	for (unsigned seed = seed_lo; seed <= seed_hi; ++seed)
+	{
+		SetGlobalSeed(seed);           // different gamma + MHom start coefficients per seed
+		bertini::probe::reset();
+
+		System sys;
+		auto x = Variable::Make("x");
+		auto y = Variable::Make("y");
+		sys.AddVariableGroup(VariableGroup{x});
+		sys.AddVariableGroup(VariableGroup{y});
+		sys.AddFunction(x*y - 1);
+		sys.AddFunction(x + y);
+
+		unsigned good = 0;
+		long long ms = 0;
+		if (use_double)
+		{
+			auto zd = algorithm::ZeroDim<DoublePrecisionTracker,
+			                             bertini::endgame::EndgameSelector<DoublePrecisionTracker>::Cauchy,
+			                             decltype(sys),
+			                             start_system::MHomogeneous>(sys);
+			zd.DefaultSetup();
+			auto t0 = std::chrono::steady_clock::now();
+			zd.Solve();
+			auto t1 = std::chrono::steady_clock::now();
+			ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+			auto const& sols = zd.SolutionsUserCoords();
+			auto const& md   = zd.FinalSolutionMetadata();
+			for (size_t i = 0; i < sols.size(); ++i)
+				if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 2) ++good;
+		}
+		else
+		{
+			auto zd = algorithm::ZeroDim<AMPTracker,
+			                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+			                             decltype(sys),
+			                             start_system::MHomogeneous>(sys);
+			zd.DefaultSetup();
+			auto t0 = std::chrono::steady_clock::now();
+			zd.Solve();
+			auto t1 = std::chrono::steady_clock::now();
+			ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+			auto const& sols = zd.SolutionsUserCoords();
+			auto const& md   = zd.FinalSolutionMetadata();
+			for (size_t i = 0; i < sols.size(); ++i)
+				if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 2) ++good;
+		}
+
+		std::cout << std::setw(5) << seed << " | "
+		          << std::setw(5) << good << " | "
+		          << std::setw(7) << bertini::probe::max_precision_seen.load() << " | "
+		          << std::setw(7) << bertini::probe::max_digits_b.load() << " | "
+		          << std::setw(6) << bertini::probe::tracker_precision_increases.load() << " | "
+		          << std::setw(8) << bertini::probe::endgame_refine_escalations.load() << " | "
+		          << std::setw(10) << bertini::probe::corrector_track_hpn.load() << " | "
+		          << std::setw(10) << bertini::probe::corrector_refine_hpn.load() << " | "
+		          << std::setw(6) << ms << std::endl; // flush per row so a grinding gamma can't hide prior rows
+	}
+	std::cout << std::flush;
+	BOOST_CHECK(true); // probe prints; correctness asserted by the sibling tests
 }
 
 
