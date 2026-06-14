@@ -39,6 +39,9 @@
 
 #include <bertini2/endgames.hpp>
 #include <bertini2/nag_algorithms/zero_dim_solve.hpp>
+#include <bertini2/system/start_systems.hpp>
+
+#include <boost/python/stl_iterator.hpp>
 
 #ifdef BERTINI2_HAVE_MPI
 #include <mpi.h>
@@ -175,6 +178,52 @@ template<typename TrackerT, typename EndgameT, typename SystemT, typename StartS
 void ExportZeroDimSpecific(std::string const& class_name){
 	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, SystemT, StartSystemT>;
 	class_<ZeroDimT, std::shared_ptr<ZeroDimT> >(class_name.c_str(), init<SystemT>())
+	.def(ZDVisitor<ZeroDimT>())
+	;
+}
+
+
+// --- user-homotopy ZeroDim: run a homotopy YOU built from a list of start points YOU have ---
+//
+// This is the SAME ZeroDim template (same Solve / pre-endgame / midpath / endgame /
+// post-processing), instantiated with start_system::User (start points come from the supplied
+// list) and policy::RefToGiven (the homotopy is taken as-is, not formed).  Nothing about the
+// solve loop is re-implemented here -- this only registers the class + a constructor.
+
+// Build a start_system::User from a target system + a Python list of start-point vectors
+// (each element an mpfr_complex vector via eigenpy).  The returned User references `target`, and
+// RefToGiven references all three systems, so the friendly Python wrapper keeps them all alive.
+inline std::shared_ptr<start_system::User>
+MakeUserStartSystem(System const& target, boost::python::list const& start_points)
+{
+	SampCont<mpfr_complex> solns{
+		boost::python::stl_input_iterator<Vec<mpfr_complex>>(start_points),
+		boost::python::stl_input_iterator<Vec<mpfr_complex>>() };
+	return std::make_shared<start_system::User>(target, solns);
+}
+
+// Register the User start system once (it is not tracker-specific).
+inline void ExportUserStartSystem(){
+	class_<start_system::User, std::shared_ptr<start_system::User>, boost::noncopyable>(
+		"UserStartSystem",
+		"A start system that is simply a list of start points you already have (e.g. solutions "
+		"from an earlier solve), to be tracked through a homotopy you constructed.  Built for you "
+		"by nag_algorithm.user_homotopy(...).",
+		no_init)
+		.def("__init__", make_constructor(&MakeUserStartSystem),
+			"UserStartSystem(target_system, start_points): start_points is a list of vectors.")
+		.def("num_start_points", &start_system::User::NumStartPoints)
+		;
+}
+
+// Bind one ZeroDim<...,User,RefToGiven> variant.  Ctor takes (target, start, homotopy) by
+// reference (RefToGiven); the Python wrapper retains all three so the references stay valid.
+template<typename TrackerT, typename EndgameT>
+void ExportZeroDimUserHomotopy(std::string const& class_name){
+	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System, start_system::User, policy::RefToGiven>;
+	class_<ZeroDimT, std::shared_ptr<ZeroDimT> >(class_name.c_str(),
+		init<System const&, start_system::User const&, System const&>(
+			(boost::python::arg("target"), boost::python::arg("start"), boost::python::arg("homotopy"))))
 	.def(ZDVisitor<ZeroDimT>())
 	;
 }

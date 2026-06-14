@@ -43,7 +43,80 @@ from ..config import enhance_all, enhance_owners
 enhance_all(_pybnalag)
 enhance_owners(_pybnalag)
 
+
+# --- user homotopy: run the zero-dim solver on a homotopy YOU built, from start points YOU have ---
+
+_USER_HOMOTOPY_CLASSES = {
+    ('double',   'cauchy'):      'ZeroDimCauchyDoublePrecisionUserHomotopy',
+    ('double',   'powerseries'): 'ZeroDimPowerSeriesDoublePrecisionUserHomotopy',
+    ('multiple', 'cauchy'):      'ZeroDimCauchyFixedMultiplePrecisionUserHomotopy',
+    ('multiple', 'powerseries'): 'ZeroDimPowerSeriesFixedMultiplePrecisionUserHomotopy',
+    ('adaptive', 'cauchy'):      'ZeroDimCauchyAdaptivePrecisionUserHomotopy',
+    ('adaptive', 'powerseries'): 'ZeroDimPowerSeriesAdaptivePrecisionUserHomotopy',
+}
+
+
+class _UserHomotopySolver:
+    """A thin holder around a user-homotopy ZeroDim solver.
+
+    The underlying solver keeps *references* to the homotopy, the target system, and the start
+    system, so this holder retains all three to keep them alive, and forwards every attribute
+    and method (``solve``, ``solutions``, ``solution_metadata``, ``get_tracker``, ...) to the
+    wrapped solver.
+    """
+
+    def __init__(self, solver, *kept_alive):
+        object.__setattr__(self, '_solver', solver)
+        object.__setattr__(self, '_kept_alive', kept_alive)
+
+    def __getattr__(self, name):
+        return getattr(object.__getattribute__(self, '_solver'), name)
+
+
+def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endgame='cauchy'):
+    """Run the zero-dim solver on a homotopy you constructed, from a list of start points you
+    already have (e.g. the solutions of an earlier solve) -- the parameter-homotopy workflow.
+
+    This reuses the entire zero-dim pipeline (pre-endgame tracking, the midpath check, the
+    endgame, post-processing); it differs from the ``...TotalDegree`` / ``...MHomogeneous``
+    entries only in that the homotopy and the start points are supplied, not generated.
+
+    Parameters
+    ----------
+    homotopy : System
+        The homotopy to track, with a path variable; tracked from the start time (default 1)
+        down to 0.  Its t=1 slice must vanish at the given ``start_points``.
+    start_points : iterable of vectors
+        The start points (at the start time).  An earlier solve's ``solutions()`` works directly
+        when the variable coordinates line up (e.g. an affine homotopy).
+    target : System
+        The system the solutions satisfy at t=0 -- used for dehomogenize / residual and for the
+        solver's consistency check.  It must NOT have a path variable.
+    precision : {'adaptive', 'double', 'multiple'}
+        'adaptive' (default) is the robust path.
+    endgame : {'cauchy', 'powerseries'}
+
+    Returns a solver: call ``.solve()`` then ``.solutions()`` as for any zero-dim solver.
+    """
+    prec = {'double': 'double', 'multiple': 'multiple', 'fixed_multiple': 'multiple',
+            'adaptive': 'adaptive'}.get(precision, precision)
+    eg = {'cauchy': 'cauchy', 'powerseries': 'powerseries',
+          'power_series': 'powerseries'}.get(endgame, endgame)
+    try:
+        cls_name = _USER_HOMOTOPY_CLASSES[(prec, eg)]
+    except KeyError:
+        raise ValueError(
+            "user_homotopy: unknown (precision, endgame) = ({!r}, {!r}); "
+            "precision in {{'adaptive','double','multiple'}}, endgame in {{'cauchy','powerseries'}}"
+            .format(precision, endgame))
+    solver_cls = getattr(_pybnalag, cls_name)
+    user_start = _pybnalag.UserStartSystem(target, list(start_points))
+    solver = solver_cls(target, user_start, homotopy)
+    return _UserHomotopySolver(solver, homotopy, target, user_start)
+
+
 __all__ = dir(_pybnalag)
+__all__.append('user_homotopy')
 
 
 # DoublePrecisionTotalDegree = bertini._pybertini.nag_algorithms.ZeroDimCauchyDoublePrecisionTotalDegree
