@@ -35,3 +35,4 @@ Each ADR follows the template:
 | [0015](0015-solution-metadata-classification-bertini1.md) | Solution metadata classification (finite/real/singular) matches Bertini 1; post-processing config corrected | Core / nag_algorithms |
 | [0016](0016-distributed-zerodim-broadcast-homotopy-seed.md) | Distributed ZeroDim broadcasts the homotopy seed so all ranks form the identical homotopy | MPI / nag_algorithms |
 | [0017](0017-flakiness-is-tolerances-not-seeding.md) | Solve flakiness is a tolerance problem, not a seeding problem | Numerics / tracking |
+| [0018](0018-bound-every-test-with-a-timeout.md) | Bound every test with a timeout; pin seeds and skip known platform grinds | CI / testing |
