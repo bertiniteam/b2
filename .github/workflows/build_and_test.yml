@@ -210,6 +210,13 @@ jobs:
           $env:CMAKE_GENERATOR_TOOLSET = ''
           $env:CMAKE_PREFIX_PATH = "$env:CONDA_PREFIX\Library"
 
+          # The GitHub Windows runner now ships Visual Studio 2026 (MSVC 14.51), whose STL
+          # <yvals_core.h> hard-asserts (STL1000) that the compiler is Clang >= 20; the conda
+          # clang-cl is older.  The only errors are that version gate -- the C++17 code compiles
+          # fine -- so we opt out of the gate.  (Proper fix: ship a clang >= 20 toolchain.)
+          $env:CXXFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
+          $env:CFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
+
           $boostHeader = "$env:CONDA_PREFIX\Library\include\boost\archive\archive_exception.hpp"
           (Get-Content $boostHeader).Replace('public virtual std::exception', 'public std::exception') | Set-Content $boostHeader
 
@@ -442,6 +449,13 @@ jobs:
           $env:CMAKE_GENERATOR_PLATFORM = ''
           $env:CMAKE_GENERATOR_TOOLSET = ''
           $env:CMAKE_PREFIX_PATH = "$env:CONDA_PREFIX\Library"
+
+          # The GitHub Windows runner now ships Visual Studio 2026 (MSVC 14.51), whose STL
+          # <yvals_core.h> hard-asserts (STL1000) that the compiler is Clang >= 20; the conda
+          # clang-cl is older.  The only errors are that version gate -- the C++17 code compiles
+          # fine -- so we opt out of the gate.  (Proper fix: ship a clang >= 20 toolchain.)
+          $env:CXXFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
+          $env:CFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
 
           $boostHeader = "$env:CONDA_PREFIX\Library\include\boost\archive\archive_exception.hpp"
           (Get-Content $boostHeader).Replace('public virtual std::exception', 'public std::exception') | Set-Content $boostHeader
