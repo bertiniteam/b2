@@ -225,14 +225,13 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 		return sys;
 	};
 
+	// AMP is the robust MHom path (precision escalates through the hard sections) and normally
+	// solves on the first gamma; a tiny retry budget just absorbs a rare unlucky draw without the
+	// 40x retry storm that made CI balloon (do NOT raise this back up).
 	bool solved = false;
-	for (int attempt = 0; attempt < 40 && !solved; ++attempt)
+	for (int attempt = 0; attempt < 5 && !solved; ++attempt)
 	{
 		auto sys = make_system();
-		// MHom in *fixed double* is conditioning-fragile -- most gammas drive a path to
-		// MinStepSize, and on some runners none of the retries land a clean solve.  AMP is the
-		// robust MHom path (precision escalates through the hard sections), so the end-to-end
-		// "MHom solves via the block-composed homotopy" check uses it.
 		auto zd = algorithm::ZeroDim<AMPTracker,
 		                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
 		                             decltype(sys),

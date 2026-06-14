@@ -3,11 +3,12 @@
 Exercises the products-of-linears MHom start system + blend-block homotopy through
 the bound ZeroDim solver -- the Python side of the block-composed System work.
 
-The fixed-double tracker is conditioning-fragile for MHom paths (a given random gamma
-drives both paths to MinStepSize maybe two times in three), and RandomMp -- which feeds
-the gamma and the MHom start coefficients -- is not yet reseedable, so the solve is not
-seed-deterministic.  These are therefore *capability* tests: retry over gamma draws and
-assert that MHom can solve, and that when it does the solutions are genuine roots.
+The fixed-double tracker is conditioning-fragile for MHom paths (a given random gamma drives
+both paths to MinStepSize maybe two times in three), and RandomMp -- which feeds the gamma and
+the MHom start coefficients -- is not yet reseedable.  So *adaptive precision* (AMP) is the path
+we require to solve; the fixed-double bindings only get a cheap "it runs" smoke.  We deliberately
+do NOT retry over many gamma draws here: a 40x retry loop ran ~40 full solves per variant and
+made the Windows CI run balloon.
 """
 
 import pytest
@@ -40,6 +41,12 @@ def _two_group_system():
     return sys
 
 
+def _solve(solver_cls):
+    solver = solver_cls(_two_group_system())
+    solver.solve()
+    return solver
+
+
 def _successful_roots(solver):
     """User-coordinate solutions of paths that reached the endgame successfully."""
     sols = solver.solutions()
@@ -48,32 +55,15 @@ def _successful_roots(solver):
             if int(md[i].endgame_success) == OK and len(sols[i]) == 2]
 
 
-def _solve_with_retry(solver_cls, attempts=40):
-    for _ in range(attempts):
-        solver = solver_cls(_two_group_system())
-        solver.solve()
-        good = _successful_roots(solver)
+def test_mhom_solves_adaptive_precision():
+    """AMP is the robust MHom path -- require it to solve.  A tiny budget (3) absorbs the rare
+    unlucky gamma without the retry storms that made fixed-double MHom dominate CI."""
+    good = []
+    for _ in range(3):
+        good = _successful_roots(_solve(ZeroDimCauchyAdaptivePrecisionMHomogeneous))
         if len(good) == 2:
-            return good
-    return None
-
-
-# Fixed-double MHom is conditioning-fragile: on some platforms (seen on the Windows CI runner)
-# the gamma lottery never lands a clean 2-path solve within the retry budget, while on others it
-# usually does.  Mark those two best-effort (non-strict xfail: XPASS where they get lucky, XFAIL
-# where they don't -- green either way).  AMP is the robust MHom path and must solve.
-_fragile = pytest.mark.xfail(reason="fixed-double MHom is conditioning-fragile; AMP is the robust path",
-                             strict=False)
-
-
-@pytest.mark.parametrize("solver_cls", [
-    pytest.param(ZeroDimCauchyDoublePrecisionMHomogeneous, marks=_fragile),
-    pytest.param(ZeroDimPowerSeriesDoublePrecisionMHomogeneous, marks=_fragile),
-    ZeroDimCauchyAdaptivePrecisionMHomogeneous,  # adaptive: handles the harder MHom paths
-])
-def test_mhom_solves_two_variable_group_system(solver_cls):
-    good = _solve_with_retry(solver_cls)
-    assert good is not None, "MHom did not solve in the retry budget"
+            break
+    assert len(good) == 2, "adaptive-precision MHom did not solve"
 
     # both paths converged to genuine roots, and to the two *distinct* solutions
     for s in good:
@@ -81,3 +71,15 @@ def test_mhom_solves_two_variable_group_system(solver_cls):
         assert abs(xv * yv - 1) < 1e-7
         assert abs(xv + yv) < 1e-7
     assert abs(complex(good[0][0]) - complex(good[1][0])) > 1e-3
+
+
+@pytest.mark.parametrize("solver_cls", [
+    ZeroDimCauchyDoublePrecisionMHomogeneous,
+    ZeroDimPowerSeriesDoublePrecisionMHomogeneous,
+])
+def test_fixed_double_mhom_runs(solver_cls):
+    """Fixed-double MHom is conditioning-fragile, so we do NOT assert it finds the roots -- that's
+    AMP's job above.  This is a cheap binding/run smoke: a single solve (no gamma retries),
+    asserting only that it tracked the expected number of MHom paths without crashing."""
+    solver = _solve(solver_cls)
+    assert len(solver.solutions()) == 2  # the m-homogeneous Bezout number: two paths attempted
