@@ -32,3 +32,6 @@ Each ADR follows the template:
 | [0012](0012-precedence-aware-printing-reparse-invariant.md) | Precedence-aware printing; printed trees must re-parse to the same values | Core / function_tree |
 | [0013](0013-solutions-in-user-coordinates.md) | Solutions reported in user coordinates by default; internal coords explicit; HomogenizePoint lift | Core / API |
 | [0014](0014-explicit-template-instantiation-closed-universe.md) | Explicit template instantiation of the endgame/ZeroDim universe | Build / core |
+| [0015](0015-solution-metadata-classification-bertini1.md) | Solution metadata classification (finite/real/singular) matches Bertini 1; post-processing config corrected | Core / nag_algorithms |
+| [0016](0016-distributed-zerodim-broadcast-homotopy-seed.md) | Distributed ZeroDim broadcasts the homotopy seed so all ranks form the identical homotopy | MPI / nag_algorithms |
+| [0017](0017-flakiness-is-tolerances-not-seeding.md) | Solve flakiness is a tolerance problem, not a seeding problem | Numerics / tracking |
