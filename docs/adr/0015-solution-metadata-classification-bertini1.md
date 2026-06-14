@@ -74,6 +74,10 @@ test must stay a fixed factor looser than the accuracy you tracked to, even when
 - Tests: `core/test/nag_algorithms/zero_dim.cpp` (`zero_dim_solution_metadata`
   suite) and `python/test/zero_dim/metadata_test.py` cover the classifications, that
   each threshold is actually applied, the config round-trip, and the B1 defaults
-  (which guards against the inverted-default regression).
-- Follow-up: the classic-input parser does not yet read `CondNumThreshold` (the
-  field default is used).
+  (which guards against the inverted-default regression). The classic-input parser
+  is covered by `read_postprocessing` in `core/test/settings/settings_test.cpp`,
+  which also checks the `CondNumThreshold` default survives when the setting is
+  omitted.
+- All four PostProcessing settings (`ImagThreshold`, `EndpointFiniteThreshold`,
+  `EndpointSameThreshold`, `CondNumThreshold`) are read by the classic-input parser
+  (`io/parsing/settings_parsers/algorithm.hpp`).
