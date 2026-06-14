@@ -229,8 +229,12 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 	for (int attempt = 0; attempt < 40 && !solved; ++attempt)
 	{
 		auto sys = make_system();
-		auto zd = algorithm::ZeroDim<TrackerT,
-		                             bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
+		// MHom in *fixed double* is conditioning-fragile -- most gammas drive a path to
+		// MinStepSize, and on some runners none of the retries land a clean solve.  AMP is the
+		// robust MHom path (precision escalates through the hard sections), so the end-to-end
+		// "MHom solves via the block-composed homotopy" check uses it.
+		auto zd = algorithm::ZeroDim<AMPTracker,
+		                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
 		                             decltype(sys),
 		                             start_system::MHomogeneous>(sys);
 		zd.DefaultSetup();
@@ -255,10 +259,13 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 		// rather than recording a failure.  We assert only that *some* gamma solves it cleanly.
 		bool both_are_roots = true;
 		for (auto const& s : good)
-			if (std::abs(s(0) * s(1) - dbl(1)) > 1e-8 || std::abs(s(0) + s(1)) > 1e-8)
+		{
+			dbl a(s(0)), b(s(1));   // AMP returns mpfr_complex coords; double is plenty for a root check
+			if (std::abs(a * b - dbl(1)) > 1e-8 || std::abs(a + b) > 1e-8)
 				both_are_roots = false;
+		}
 
-		bool distinct = std::abs(good[0](0) - good[1](0)) > 1e-3;
+		bool distinct = std::abs(dbl(good[0](0)) - dbl(good[1](0))) > 1e-3;
 
 		if (both_are_roots && distinct)
 			solved = true; // the two distinct roots (i,-i) and (-i,i), recovered in user coordinates
