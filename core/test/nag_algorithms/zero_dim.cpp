@@ -344,3 +344,191 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
+
+// Solution-metadata classification (is_finite / is_real / is_singular / multiplicity) and the
+// PostProcessing config knobs that drive it.  These pin the Bertini-1 behaviour: an endpoint is
+// at infinity if the infinity norm of its dehomogenized coordinates exceeds
+// endpoint_finite_threshold; real if the imaginary parts are below real_threshold; singular if it
+// is a multiple endpoint or its condition number exceeds condition_number_threshold; and two
+// endpoints are the same when their dehomogenized coordinates agree to
+// final_tolerance * same_point_tolerance_multiplier (infinity norm).
+BOOST_AUTO_TEST_SUITE(zero_dim_solution_metadata)
+
+using TrackerT = bertini::tracking::DoublePrecisionTracker;
+using PostProcessing = bertini::algorithm::PostProcessingConfig;
+
+// tally the classification flags over the successfully-tracked endpoints
+struct Counts { int success = 0, finite = 0, real = 0, singular = 0; };
+template<typename MDVec>
+Counts Tally(MDVec const& md)
+{
+	Counts c;
+	for (auto const& m : md)
+	{
+		if (m.endgame_success != bertini::SuccessCode::Success) continue;
+		++c.success;
+		if (m.is_finite)   ++c.finite;
+		if (m.is_real)     ++c.real;
+		if (m.is_singular) ++c.singular;
+	}
+	return c;
+}
+
+// x^2 - 1 -> roots +/-1: two finite, real, nonsingular solutions.
+BOOST_AUTO_TEST_CASE(finite_real_nonsingular)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x - 1);
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto c = Tally(zd.FinalSolutionMetadata());
+	BOOST_CHECK_EQUAL(c.success, 2);
+	BOOST_CHECK_EQUAL(c.finite, 2);
+	BOOST_CHECK_EQUAL(c.real, 2);
+	BOOST_CHECK_EQUAL(c.singular, 0);
+	for (auto const& m : zd.FinalSolutionMetadata())
+		if (m.endgame_success == SuccessCode::Success)
+			BOOST_CHECK_EQUAL(m.multiplicity, 1);
+}
+
+
+// x^2 + 1 -> roots +/-i: two finite, NON-real, nonsingular solutions.
+BOOST_AUTO_TEST_CASE(finite_complex_not_real)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x + 1);
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto c = Tally(zd.FinalSolutionMetadata());
+	BOOST_CHECK_EQUAL(c.success, 2);
+	BOOST_CHECK_EQUAL(c.finite, 2);
+	BOOST_CHECK_EQUAL(c.real, 0);     // +/- i are not real
+	BOOST_CHECK_EQUAL(c.singular, 0);
+}
+
+
+// x^2 = 0 -> a double root at 0: singular (multiplicity 2, and ill-conditioned), finite, real.
+BOOST_AUTO_TEST_CASE(singular_double_root)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x);
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto const& md = zd.FinalSolutionMetadata();
+	auto c = Tally(md);
+	BOOST_CHECK(c.success >= 1);                 // the endgame should reach the singular endpoint
+	BOOST_CHECK_EQUAL(c.singular, c.success);    // every successful endpoint here is singular
+	BOOST_CHECK_EQUAL(c.finite, c.success);      // ... and finite (at 0)
+	if (c.success == 2)                          // both paths clustered -> multiplicity 2
+		for (auto const& m : md)
+			if (m.endgame_success == SuccessCode::Success)
+				BOOST_CHECK_EQUAL(m.multiplicity, 2);
+}
+
+
+// endpoint_finite_threshold is actually applied: lower it below the solutions' norm and the
+// finite roots get classified as at infinity.
+BOOST_AUTO_TEST_CASE(endpoint_finite_threshold_is_applied)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x - 1);                    // roots +/-1, infinity norm 1
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	auto pp = zd.Get<PostProcessing>();
+	pp.endpoint_finite_threshold = 0.5;          // 1 > 0.5 -> "at infinity"
+	zd.Set(pp);
+	zd.Solve();
+
+	auto c = Tally(zd.FinalSolutionMetadata());
+	BOOST_CHECK_EQUAL(c.success, 2);
+	BOOST_CHECK_EQUAL(c.finite, 0);              // the lowered threshold reclassifies both as infinite
+}
+
+
+// condition_number_threshold is actually applied: lower it below the (well-conditioned) roots'
+// condition number and they get classified as singular.
+BOOST_AUTO_TEST_CASE(condition_number_threshold_is_applied)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x - 1);                    // simple, well-conditioned roots
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	auto pp = zd.Get<PostProcessing>();
+	pp.condition_number_threshold = 1e-3;        // any condition number exceeds this
+	zd.Set(pp);
+	zd.Solve();
+
+	auto c = Tally(zd.FinalSolutionMetadata());
+	BOOST_CHECK_EQUAL(c.success, 2);
+	BOOST_CHECK_EQUAL(c.singular, 2);            // reclassified singular purely by the lowered threshold
+}
+
+
+// the PostProcessing config round-trips through Get/Set.
+BOOST_AUTO_TEST_CASE(postprocessing_config_roundtrip)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x - 1);
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+
+	auto pp = zd.Get<PostProcessing>();
+	pp.endpoint_finite_threshold       = 12345.0;
+	pp.same_point_tolerance_multiplier = 7.0;
+	pp.condition_number_threshold      = 99.0;
+	pp.real_threshold                  = 1e-3;
+	zd.Set(pp);
+
+	auto pp2 = zd.Get<PostProcessing>();
+	BOOST_CHECK_CLOSE(pp2.endpoint_finite_threshold,       12345.0, 1e-10);
+	BOOST_CHECK_CLOSE(pp2.same_point_tolerance_multiplier, 7.0,     1e-10);
+	BOOST_CHECK_CLOSE(pp2.condition_number_threshold,      99.0,    1e-10);
+	BOOST_CHECK_CLOSE(pp2.real_threshold,                  1e-3,    1e-10);
+}
+
+
+// the PostProcessing defaults match Bertini 1 (guards against the inverted endpoint-finite default
+// that used to ship, 1e-5 instead of 1e5).
+BOOST_AUTO_TEST_CASE(postprocessing_config_defaults_match_bertini1)
+{
+	bertini::algorithm::PostProcessingConfig pp;
+	BOOST_CHECK_CLOSE(pp.endpoint_finite_threshold,       1e5,  1e-8);
+	BOOST_CHECK_CLOSE(pp.same_point_tolerance_multiplier, 10.0, 1e-8);
+	BOOST_CHECK_CLOSE(pp.condition_number_threshold,      1e8,  1e-8);
+	BOOST_CHECK_CLOSE(pp.real_threshold,                  1e-8, 1e-8);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()

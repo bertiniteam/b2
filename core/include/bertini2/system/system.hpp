@@ -1190,6 +1190,26 @@ namespace bertini {
 
 
 		/**
+		\brief The infinity norm of a point after dehomogenization.
+
+		This is the single canonical "how big is this point, in user coordinates" measurement.
+		An endpoint going to infinity has its dehomogenized coordinates blow up, so this is what
+		the endgames test against `Security::max_norm` to detect divergence, and what the
+		zero-dim solver tests against `endpoint_finite_threshold` to classify finite/infinite
+		endpoints.  Routing both through here keeps those decisions consistent: never compare the
+		raw internal (homogenized, on-patch) coordinates, which carry the homogenizing variable
+		and patch scaling.
+
+		\tparam T the number-type of the point.  Returns the associated real magnitude type.
+		*/
+		template<typename T>
+		auto InfinityNormOfDehomogenized(Vec<T> const& x) const
+		{
+			return DehomogenizePoint(x).template lpNorm<Eigen::Infinity>();
+		}
+
+
+		/**
 		\brief Take a point in user (dehomogenized) coordinates into this system's internal coordinates.
 
 		Two steps: (1) insert the homogenizing coordinate, with value 1, for each affine

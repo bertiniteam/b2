@@ -74,24 +74,51 @@ void ExposeSolutionMetaData(std::string const& class_name){
 	using namespace bertini::algorithm;
 	using MDT = SolutionMetaData<NumT>;
 	class_<MDT>(class_name.c_str(),init<>())
-	.def_readwrite("path_index",&MDT::path_index)
-	.def_readwrite("solution_index",&MDT::solution_index)
-	.def_readwrite("precision_changed",&MDT::precision_changed)
-	.def_readwrite("time_of_first_prec_increase",&MDT::time_of_first_prec_increase)
-	.def_readwrite("max_precision_used",&MDT::max_precision_used)
-	.def_readwrite("pre_endgame_success",&MDT::pre_endgame_success)
-	.def_readwrite("condition_number",&MDT::condition_number)
-	.def_readwrite("newton_residual",&MDT::newton_residual)
-	.def_readwrite("final_time_used",&MDT::final_time_used)
-	.def_readwrite("accuracy_estimate",&MDT::accuracy_estimate)
-	.def_readwrite("accuracy_estimate_user_coords",&MDT::accuracy_estimate_user_coords)
-	.def_readwrite("cycle_num",&MDT::cycle_num)
-	.def_readwrite("endgame_success",&MDT::endgame_success, "this is a SuccessCode.  0 means Success.  Anything other than 0 means something happened.")
-	.def_readwrite("function_residual",&MDT::function_residual)
-	.def_readwrite("multiplicity",&MDT::multiplicity)
-	.def_readwrite("is_real",&MDT::is_real)
-	.def_readwrite("is_finite",&MDT::is_finite)
-	.def_readwrite("is_singular",&MDT::is_singular)
+	.def_readwrite("path_index",&MDT::path_index,
+		"Index of the start path that produced this solution.")
+	.def_readwrite("solution_index",&MDT::solution_index,
+		"Index of this solution in the solution list.")
+	.def_readwrite("precision_changed",&MDT::precision_changed,
+		"Whether precision was increased while tracking this path (adaptive precision only).")
+	.def_readwrite("time_of_first_prec_increase",&MDT::time_of_first_prec_increase,
+		"The time value at which precision first increased on this path (adaptive precision only).")
+	.def_readwrite("max_precision_used",&MDT::max_precision_used,
+		"The highest precision (in digits) used while tracking this path (adaptive precision only).")
+	.def_readwrite("pre_endgame_success",&MDT::pre_endgame_success,
+		"The SuccessCode from tracking this path up to the endgame boundary. 0 means Success.")
+	.def_readwrite("condition_number",&MDT::condition_number,
+		"The latest estimate of the condition number (spectral norm) near the endpoint. Used, "
+		"together with multiplicity, to classify the endpoint as singular.")
+	.def_readwrite("newton_residual",&MDT::newton_residual,
+		"The latest Newton step norm near the endpoint.")
+	.def_readwrite("final_time_used",&MDT::final_time_used,
+		"The final time value tracked to.")
+	.def_readwrite("accuracy_estimate",&MDT::accuracy_estimate,
+		"Accuracy estimate from the endgame, the difference between successive extrapolations.")
+	.def_readwrite("accuracy_estimate_user_coords",&MDT::accuracy_estimate_user_coords,
+		"Accuracy estimate in natural (dehomogenized) coordinates.")
+	.def_readwrite("cycle_num",&MDT::cycle_num,
+		"The cycle number used by the endgame's extrapolation.")
+	.def_readwrite("endgame_success",&MDT::endgame_success,
+		"The SuccessCode from the endgame. 0 means Success; anything else means the path did not "
+		"converge to a finite solution (e.g. GoingToInfinity, SecurityMaxNormReached).")
+	.def_readwrite("function_residual",&MDT::function_residual,
+		"Infinity norm of the target system evaluated at the endpoint.")
+	.def_readwrite("multiplicity",&MDT::multiplicity,
+		"How many paths ended at this same point (1 for a simple solution). Computed by comparing "
+		"dehomogenized endpoints with the infinity norm against final_tolerance * "
+		"same_point_tolerance_multiplier.")
+	.def_readwrite("is_real",&MDT::is_real,
+		"Whether the (dehomogenized) endpoint is real, i.e. the infinity norm of its coordinates' "
+		"imaginary parts is below PostProcessingConfig.real_threshold. Only meaningful for finite, "
+		"successful endpoints.")
+	.def_readwrite("is_finite",&MDT::is_finite,
+		"Whether the endpoint is finite (not at infinity): the infinity norm of its dehomogenized "
+		"coordinates is at most PostProcessingConfig.endpoint_finite_threshold. False also for paths "
+		"the endgame flagged as diverging.")
+	.def_readwrite("is_singular",&MDT::is_singular,
+		"Whether the endpoint is singular: multiplicity > 1, or the condition-number estimate exceeds "
+		"PostProcessingConfig.condition_number_threshold. Only meaningful for successful endpoints.")
 	;
 }
 

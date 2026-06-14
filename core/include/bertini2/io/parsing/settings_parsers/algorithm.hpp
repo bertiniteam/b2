@@ -727,7 +727,7 @@ namespace bertini {
 															 }, _val, _1 )]
 								   ^ same_point_[phx::bind( [this](algorithm::PostProcessingConfig & S, T num)
 															 {
-																 S.same_point_tolerance = num;
+																 S.same_point_tolerance_multiplier = num;
 															 }, _val, _1 )]
 								   )
 								  >> -no_setting_) | no_setting_;
