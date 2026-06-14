@@ -156,3 +156,60 @@ def test_add_linear_refuses_floats():
     sys.add_variable_group(pb.VariableGroup(list(xs)))
     with pytest.raises(TypeError):
         bla.add_linear(sys, [[2.5, 1]], xs)
+
+
+# --- degrees of the linear-algebra evaluation paths ---------------------------------------
+# After the polynomial-path fold, System.degrees() asks the blocks.  These pin the degree of
+# each linear-algebra construction, with the eigenvalue distinction (bilinear vs linear) front
+# and centre.  list(...) also confirms the returned std::vector<int> converts cleanly.
+
+def test_degrees_add_linear_is_one():
+    # A @ x = 0 as a LinearFormsBlock -- each row is degree 1.
+    x = bla.variable_vector('x', 2)
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup(list(x)))
+    bla.add_linear(sys, np.array([[2, 1], [0, 3]]), x)
+    assert list(sys.degrees()) == [1, 1]
+
+
+def test_degrees_add_linear_forms_is_one():
+    # the augmented-matrix entry point -- also a LinearFormsBlock, degree 1.
+    x = bla.variable_vector('x', 2)
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup(list(x)))
+    bla.add_linear_forms(sys, [[2, 1, -1], [0, 3, 4]])   # rows are (num_vars + 1) wide
+    assert list(sys.degrees()) == [1, 1]
+
+
+def test_degrees_scalar_linear_via_add_functions_is_one():
+    # A @ x - 1 expanded to scalar function-tree rows is still degree 1 (polynomial block).
+    x = bla.variable_vector('x', 2)
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup(list(x)))
+    bla.add_functions(sys, np.array([[2, 1], [0, 3]]) @ x - 1)
+    assert list(sys.degrees()) == [1, 1]
+
+
+def test_degrees_eigenvalue_bilinear_is_two():
+    # (A - lambda I) x has a lambda*x term -> each row is degree 2.  This is the distinction
+    # that makes the eigenvalue problem genuinely nonlinear (vs a constant-coefficient solve).
+    x = bla.variable_vector('x', 2)
+    lam = pb.Variable('lam')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup(list(x)))
+    sys.add_variable_group(pb.VariableGroup([lam]))
+    bla.add_functions(sys, np.array([[2, 1], [1, 3]]) @ x - lam * x)
+    assert list(sys.degrees()) == [2, 2]
+
+
+def test_degrees_eigenvalue_with_normalization_is_mixed():
+    # the full eigenvalue formulation: two bilinear rows (degree 2) plus a constant-coefficient
+    # normalization carried as a LinearFormsBlock (degree 1) -> {2, 2, 1}, in block order.
+    x = bla.variable_vector('x', 2)
+    lam = pb.Variable('lam')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup(list(x)))
+    sys.add_variable_group(pb.VariableGroup([lam]))
+    bla.add_functions(sys, np.array([[2, 1], [1, 3]]) @ x - lam * x)   # degree-2 rows
+    bla.add_linear(sys, np.array([[1, 1]]), x)                         # degree-1 normalization
+    assert list(sys.degrees()) == [2, 2, 1]
