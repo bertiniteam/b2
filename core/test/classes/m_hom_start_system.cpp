@@ -150,6 +150,7 @@ BOOST_AUTO_TEST_CASE(start_points_are_roots_of_the_start_system)
 	auto t = Variable::Make("t");
 	auto gamma = bertini::node::Rational::Make(bertini::node::Rational::Rand());
 	System H = sys;                 // target's variable structure + patch
+	H.ClearFunctions();             // the blend supplies the rows; don't also eval target's own functions
 	H.AddPathVariable(t);
 	std::vector<std::shared_ptr<bertini::node::Node>> coeffs{ 1 - t, gamma * t };
 	std::vector<std::shared_ptr<const System>> operands{

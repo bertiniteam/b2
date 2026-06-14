@@ -110,6 +110,9 @@ public:
 
 	bool HasConstantJacobian() const { return false; }
 
+	/// Analytic block: nothing symbolic to differentiate.
+	void Differentiate() const {}
+
 	unsigned Precision() const { return precision_; }
 
 	void Precision(unsigned new_precision) const

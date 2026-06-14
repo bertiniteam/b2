@@ -92,6 +92,9 @@ public:
 	/// The Jacobian is not constant (it depends on x), unlike a slice.
 	bool HasConstantJacobian() const { return false; }
 
+	/// Analytic block: nothing symbolic to differentiate.
+	void Differentiate() const {}
+
 	unsigned Precision() const { return precision_; }
 
 	/// Set the working precision; recasts the mpfr working coefficients from the master.

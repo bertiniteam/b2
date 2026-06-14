@@ -200,14 +200,17 @@ public:
 				auto t = node::Variable::Make(path_variable_name);
 				auto gamma = node::Rational::Make(node::Rational::Rand());
 
-				if (start.HasBlocks())
+				if (start.HasStructuredBlocks())
 				{
 					// A block-backed start system (e.g. the MHom products-of-linears start)
 					// cannot be fused into a node-arithmetic homotopy, so combine the two
 					// systems with a blend block: H = (1-t)*target + gamma*t*start, evaluated
 					// by blending whole Systems.  The homotopy carries target's variable
-					// structure and patch; the blend contributes the natural rows.
+					// structure and patch; the blend contributes the natural rows.  ClearFunctions
+					// drops target's own polynomial block so its functions aren't evaluated a
+					// second time alongside the blend (the blend already references target).
 					homotopy = target;
+					homotopy.ClearFunctions();
 					homotopy.AddPathVariable(t);
 					std::vector<std::shared_ptr<node::Node>> coeffs{ 1 - t, gamma * t };
 					std::vector<std::shared_ptr<const System>> operands{

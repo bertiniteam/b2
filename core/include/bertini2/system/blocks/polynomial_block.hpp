@@ -68,8 +68,9 @@ public:
 	PolynomialBlock() : precision_(DefaultPrecision()) {}
 
 	// ---- construction (System forwards AddFunction / AddSubFunction here) ----
-	void AddFunction(Fn const& f)    { functions_.push_back(f);   Invalidate(); }
+	void AddFunction(Fn const& f)    { functions_.push_back(f);    Invalidate(); }
 	void AddSubFunction(Fn const& f) { subfunctions_.push_back(f); Invalidate(); }
+	void AddConstant(Fn const& f)    { constant_subfunctions_.push_back(f); Invalidate(); }
 
 	/// The variable ordering + path variable the function trees are evaluated against; the
 	/// owning System keeps these in sync (they change as variable groups are added / the
@@ -93,6 +94,17 @@ public:
 
 	bool IsDifferentiated() const { return is_differentiated_; }
 	void Invalidate() const { is_differentiated_ = false; }
+
+	/// Reset the cached values in the function / derivative trees (function-tree eval path).
+	void Reset() const
+	{
+		for (auto const& f : functions_)             f->Reset();
+		for (auto const& f : subfunctions_)          f->Reset();
+		for (auto const& f : constant_subfunctions_) f->Reset();
+		for (auto const& n : jacobian_)          n->Reset();
+		for (auto const& n : space_derivatives_) n->Reset();
+		for (auto const& n : time_derivatives_)  n->Reset();
+	}
 
 	// ---- block contract: metadata ----
 	size_t NumFunctions() const { return functions_.size(); }

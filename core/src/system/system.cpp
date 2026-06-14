@@ -78,17 +78,9 @@ namespace bertini
 		swap(a.implicit_parameters_,b.implicit_parameters_);
 		swap(a.explicit_parameters_,b.explicit_parameters_);
 
-		swap(a.constant_subfunctions_,b.constant_subfunctions_);
-		swap(a.subfunctions_,b.subfunctions_);
-		swap(a.functions_,b.functions_);
-
+		// the polynomial path (functions / derivatives / SLP / eval+deriv method) lives in blocks_
+		swap(a.blocks_,b.blocks_);
 		swap(a.is_differentiated_,b.is_differentiated_);
-		swap(a.jacobian_,b.jacobian_);
-
-		swap(a.space_derivatives_,b.space_derivatives_);
-		swap(a.time_derivatives_,b.time_derivatives_);
-
-		swap(a.eval_method_,b.eval_method_);
 
 		swap(a.precision_,b.precision_);
 		swap(a.is_patched_,b.is_patched_);
@@ -116,13 +108,7 @@ namespace bertini
 		patch_ = other.patch_;
 		is_patched_ = other.is_patched_;
 
-		jacobian_ = other.jacobian_;
-		space_derivatives_ = other.space_derivatives_;
-		time_derivatives_ = other.time_derivatives_;
-
 		is_differentiated_ = other.is_differentiated_;
-
-		eval_method_ = other.eval_method_;
 
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
 
@@ -134,11 +120,9 @@ namespace bertini
 		precision_ = other.precision_;
 
 
-		constant_subfunctions_ = other.constant_subfunctions_;
-		subfunctions_ = other .subfunctions_;
-		functions_ = other .functions_;
 		explicit_parameters_  = other .explicit_parameters_;
 
+		// the polynomial path (functions / subfunctions / derivatives / SLP) lives in blocks_
 		blocks_ = other.blocks_;
 
 		// // now to do the members which are not simply copied
@@ -176,14 +160,10 @@ namespace bertini
 
 	size_t System::NumNaturalFunctions() const
 	{
-		if (!blocks_.empty())
-		{
-			size_t n = 0;
-			for (auto const& blk : blocks_)
-				n += std::visit([](auto const& b){ return b.NumFunctions(); }, blk);
-			return n;
-		}
-		return functions_.size();
+		size_t n = 0;
+		for (auto const& blk : blocks_)
+			n += std::visit([](auto const& b){ return b.NumFunctions(); }, blk);
+		return n;
 	}
 
 
@@ -234,7 +214,7 @@ namespace bertini
 
 	size_t System::NumConstants() const
 	{
-		return constant_subfunctions_.size();
+		return PolyBlockPtr() ? PolyBlockPtr()->NumConstants() : 0;
 	}
 
 	size_t System::NumParameters() const
@@ -256,14 +236,6 @@ namespace bertini
 
 	void System::precision(unsigned new_precision) const
 	{
-		for (const auto& iter : functions_) {
-			iter->precision(new_precision);
-		}
-
-		for (const auto& iter : subfunctions_) {
-			iter->precision(new_precision);
-		}
-
 		for (const auto& iter : explicit_parameters_) {
 			iter->precision(new_precision);
 		}
@@ -273,50 +245,9 @@ namespace bertini
 			iter->precision(new_precision);
 		}
 
-		for (const auto& iter : constant_subfunctions_) {
-			iter->precision(new_precision);
-		}
-
-		if (!blocks_.empty())
-		{
-			for (auto const& blk : blocks_)
-				std::visit([&](auto const& b){ b.Precision(new_precision); }, blk);
-		}
-		else
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:{
-
-				if (is_differentiated_)
-				{
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:{
-							for (const auto& iter : jacobian_)
-								iter->precision(new_precision);
-							break;
-						}
-						case DerivMethod::Derivatives:{
-							for (const auto& iter : space_derivatives_)
-								iter->precision(new_precision);
-							for (const auto& iter : time_derivatives_)
-								iter->precision(new_precision);
-							break;
-						}
-					}
-				}
-				break;
-			}
-			case EvalMethod::SLP:
-			{
-				// the SLP exists (and is used for plain Eval) regardless of whether
-				// the system has been differentiated, so its precision must be kept
-				// in sync unconditionally.  previously this was gated behind
-				// is_differentiated_, leaving a never-differentiated system's SLP at
-				// its compile-time precision forever.
-				this->slp_.precision(new_precision);
-				break;
-			}
-		}
+		// each block precisions its own functions / subfunctions / derivatives / SLP
+		for (auto const& blk : blocks_)
+			std::visit([&](auto const& b){ b.Precision(new_precision); }, blk);
 
 		if (have_path_variable_)
 			path_variable_->precision(new_precision);
@@ -348,90 +279,29 @@ namespace bertini
 
 	void System::Differentiate() const
 	{
-		if (!blocks_.empty()) { is_differentiated_ = true; return; }
-
-		switch (deriv_method_){
-			case DerivMethod::JacobianNode:
-			{
-				DifferentiateUsingJacobianNode();
-				break;
-			}
-			case DerivMethod::Derivatives:
-			{
-				DifferentiateUsingDerivatives();
-				break;
-			}
-		}
-
-
-		if (auto_simplify_)
-			this->SimplifyDerivatives();
-
-
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:{
-				break;
-			}
-			case EvalMethod::SLP:
-			{	
-				SLPCompiler compiler;
-				this->slp_ = compiler.Compile(*this);
-				break;
-			}
-		}
-		
-
-
-	}
-
-	void System::DifferentiateUsingJacobianNode() const
-	{
-		auto num_functions = NumNaturalFunctions();
-		jacobian_.resize(num_functions);
-		for (size_t ii = 0; ii < num_functions; ++ii)
-			jacobian_[ii] = Jacobian::Make(functions_[ii]->Differentiate());
-
-		is_differentiated_ = true;
-	}
-
-	void System::DifferentiateUsingDerivatives() const
-	{
-		const auto& vars = this->Variables();
-		const auto num_vars = NumVariables();
-		const auto num_functions = NumNaturalFunctions();
-
-		space_derivatives_.resize(num_functions*num_vars);
-		// again, computing these in column major, so staying with one variable at a time.
-		for (size_t jj = 0; jj < num_vars; ++jj)
-			for (size_t ii = 0; ii < num_functions; ++ii)
-				space_derivatives_[ii+jj*num_functions] = Function::Make(functions_[ii]->Differentiate(vars[jj]));
-
-		if (HavePathVariable())
-		{
-			const auto& t = path_variable_;
-			time_derivatives_.resize(num_functions);
-				for (size_t ii = 0; ii < num_functions; ++ii)
-					time_derivatives_[ii] = Function::Make(functions_[ii]->Differentiate(t));
-		}
-
+		// push the System's variable ordering / path variable / auto-simplify into the
+		// polynomial block, then let each block differentiate itself (the polynomial block
+		// builds its derivatives + compiles its SLP; structured blocks are analytic no-ops).
+		SyncPolyBlock();
+		for (auto const& blk : blocks_)
+			std::visit([](auto const& b){ b.Differentiate(); }, blk);
 		is_differentiated_ = true;
 	}
 
 	std::vector< Nd > System::GetSpaceDerivatives() const
 	{
-		if ( (deriv_method_==DerivMethod::JacobianNode) || (!is_differentiated_) )
-			DifferentiateUsingDerivatives();
-
-		return space_derivatives_;
+		SyncPolyBlock();
+		if (auto* p = PolyBlockPtr())
+			return p->GetSpaceDerivatives();
+		return {};
 	}
 
 	std::vector< Nd > System::GetTimeDerivatives() const
 	{
-		if ( (deriv_method_==DerivMethod::JacobianNode) || (!is_differentiated_) )
-			DifferentiateUsingDerivatives();
-		
-		return time_derivatives_;
+		SyncPolyBlock();
+		if (auto* p = PolyBlockPtr())
+			return p->GetTimeDerivatives();
+		return {};
 	}
 
 	void System::Homogenize()
@@ -445,7 +315,7 @@ namespace bertini
 		//    * not partially homogenized, in the sense that some groups have been homogenized, and others haven't
 		//    
 		//
-		for (const auto& curr_function : functions_)
+		for (const auto& curr_function : PolyBlock().Functions())
 		{	
 			for (const auto& curr_var_gp : hom_variable_groups_)
 			{
@@ -498,21 +368,21 @@ namespace bertini
 				PushFront(temp_group, hom_var);
 
 				// temp_group.push_front(hom_var);
-				for (const auto& curr_function : functions_)
+				for (const auto& curr_function : PolyBlock().Functions())
 					curr_function->Homogenize(temp_group, hom_var);
 			}
 			else
 			{
 				Var hom_var = Variable::Make(converter.str());
 				homogenizing_variables_[group_counter] = hom_var;
-				for (const auto& curr_function : functions_)
+				for (const auto& curr_function : PolyBlock().Functions())
 					curr_function->Homogenize(*curr_var_gp, hom_var);
 			}
 
 			group_counter++;
 		}
 
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 
 		#ifndef BERTINI_DISABLE_ASSERTS
@@ -536,7 +406,7 @@ namespace bertini
 		if (NumHomVariables()!=NumVariableGroups())
 			return false;
 
-		for (const auto& iter : functions_)
+		for (const auto& iter : PolyFunctions())
 		{
 			auto counter = 0;
 			for (const auto& vars : variable_groups_)
@@ -577,7 +447,7 @@ namespace bertini
 			throw std::runtime_error("trying to check polynomiality on a partially-formed system.  mismatch between number of homogenizing variables, and number of variable groups");
 
 
-		for (const auto& iter : functions_)
+		for (const auto& iter : PolyFunctions())
 		{
 			auto counter = 0;
 			for (const auto& vars : variable_groups_)
@@ -620,7 +490,7 @@ namespace bertini
 	void System::AddVariableGroup(VariableGroup const& v)
 	{
 		variable_groups_.push_back(v);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Affine);
@@ -643,7 +513,7 @@ namespace bertini
 		for (auto const& g : groups)
 			AddVariableGroup(g);
 
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 		is_patched_ = false;
 	}
@@ -654,7 +524,7 @@ namespace bertini
 	void System::AddHomVariableGroup(VariableGroup const& v)
 	{
 		hom_variable_groups_.push_back(v);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Homogeneous);
@@ -667,7 +537,7 @@ namespace bertini
 	void System::AddUngroupedVariable(Var const& v)
 	{
 		ungrouped_variables_.push_back(v);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
@@ -679,7 +549,7 @@ namespace bertini
 	void System::AddUngroupedVariables(VariableGroup const& v)
 	{
 		ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 		is_patched_ = false;
 		time_order_of_variable_groups_.insert(time_order_of_variable_groups_.end(), v.size(), VariableGroupType::Ungrouped);
@@ -691,7 +561,7 @@ namespace bertini
 	void System::AddImplicitParameter(Var const& v)
 	{
 		implicit_parameters_.push_back(v);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 	}
 
 
@@ -700,7 +570,7 @@ namespace bertini
 	void System::AddImplicitParameters(VariableGroup const& v)
 	{
 		implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 	}
 
 
@@ -714,7 +584,7 @@ namespace bertini
 	void System::AddParameter(Fn const& F)
 	{
 		explicit_parameters_.push_back(F);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 	}
 
 
@@ -722,7 +592,7 @@ namespace bertini
 	void System::AddParameters(std::vector<Fn> const& v)
 	{
 		explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 	}
 
 
@@ -731,16 +601,16 @@ namespace bertini
 
 	void System::AddSubfunction(Fn const& F)
 	{
-		subfunctions_.push_back(F);
-		is_differentiated_ = false;
+		PolyBlock().AddSubFunction(F);
+		InvalidateDifferentiation();
 	}
 
 
 
 	void System::AddSubfunctions(std::vector<Fn> const& v)
 	{
-		subfunctions_.insert( subfunctions_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		for (auto const& f : v) PolyBlock().AddSubFunction(f);
+		InvalidateDifferentiation();
 	}
 
 
@@ -749,24 +619,24 @@ namespace bertini
 
 	void System::AddFunction(Fn const& F)
 	{
-		functions_.push_back(F);
-		is_differentiated_ = false;
+		PolyBlock().AddFunction(F);
+		InvalidateDifferentiation();
 	}
 
 
 
 	void System::AddFunction(Nd const& N, std::string const& name)
 	{
-		functions_.push_back(Function::Make(N, name));
-		is_differentiated_ = false;
+		PolyBlock().AddFunction(Function::Make(N, name));
+		InvalidateDifferentiation();
 	}
 
 
 
 	void System::AddFunctions(std::vector<Fn> const& v)
 	{
-		functions_.insert( functions_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		for (auto const& f : v) PolyBlock().AddFunction(f);
+		InvalidateDifferentiation();
 	}
 
 
@@ -776,15 +646,15 @@ namespace bertini
 
 	void System::AddConstant(Fn const& F)
 	{
-		constant_subfunctions_.push_back(F);
-		is_differentiated_ = false;
+		PolyBlock().AddConstant(F);
+		InvalidateDifferentiation();
 	}
 
 
 	void System::AddConstants(std::vector<Fn> const& v)
 	{
-		constant_subfunctions_.insert( constant_subfunctions_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		for (auto const& f : v) PolyBlock().AddConstant(f);
+		InvalidateDifferentiation();
 	}
 
 
@@ -795,7 +665,7 @@ namespace bertini
 	void System::AddPathVariable(Var const& v)
 	{
 		path_variable_ = v;
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_path_variable_ = true;
 	}
 
@@ -1025,7 +895,7 @@ namespace bertini
 	std::vector<int> System::Degrees() const
 	{
 		std::vector<int> degs;
-		for (const auto& iter : functions_)
+		for (const auto& iter : PolyFunctions())
 			degs.push_back(iter->Degree());
 		return degs;
 	}
@@ -1034,7 +904,7 @@ namespace bertini
 	std::vector<int> System::Degrees(VariableGroup const& vars) const
 	{
 		std::vector<int> degs;
-		for (const auto& iter : functions_)
+		for (const auto& iter : PolyFunctions())
 			degs.push_back(iter->Degree(vars));
 		return degs;
 		}
@@ -1058,12 +928,12 @@ namespace bertini
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
-			re_ordered_functions[ind] = functions_[iter];
+			re_ordered_functions[ind] = PolyBlock().Functions()[iter];
 			ind++;
 		}
 
-		swap(functions_, re_ordered_functions);
-		is_differentiated_ = false;
+		swap(PolyBlock().Functions(), re_ordered_functions);
+		InvalidateDifferentiation();
 	}
 
 
@@ -1086,12 +956,12 @@ namespace bertini
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
-			re_ordered_functions[ind] = functions_[iter];
+			re_ordered_functions[ind] = PolyBlock().Functions()[iter];
 			ind++;
 		}
 
-		swap(functions_, re_ordered_functions);
-		is_differentiated_ = false;
+		swap(PolyBlock().Functions(), re_ordered_functions);
+		InvalidateDifferentiation();
 	}
 
 
@@ -1120,7 +990,7 @@ namespace bertini
 		path_variable_.reset();
 		have_path_variable_ = false;
 
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 	}
 
@@ -1149,7 +1019,7 @@ namespace bertini
 
 		auto did_remove = [this]()
 		{
-			is_differentiated_ = false;
+			InvalidateDifferentiation();
 			have_ordering_ = false;
 			is_patched_ = false;
 		};
@@ -1211,73 +1081,22 @@ namespace bertini
 	void System::SimplifyFunctions()
 	{
 		using bertini::Simplify;
-		for (auto& iter : this->functions_)
-			Simplify(iter);
+		if (auto* p = PolyBlockPtr())
+			p->SimplifyFunctions();
 
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 	}
 
 
 
 	void System::SimplifyDerivatives() const
 	{
-		using bertini::Simplify;
-
-		auto num_vars = this->NumVariables();
-		std::vector<dbl> old_vals(num_vars);  dbl old_path_var_val;
-
-		auto vars = this->Variables();
-		for (unsigned ii=0; ii<num_vars; ++ii)
+		SyncPolyBlock();
+		if (auto* p = PolyBlockPtr())
 		{
-			old_vals[ii] = vars[ii]->Eval<dbl>();
-			vars[ii]->SetToRandUnit<dbl>();
+			if (!p->IsDifferentiated()) p->Differentiate();
+			p->SimplifyDerivatives();
 		}
-
-		if (HavePathVariable())
-		{
-			old_path_var_val = path_variable_->Eval<dbl>();
-			path_variable_->SetToRandUnit<dbl>();
-		}
-
-
-		for (const auto& n : jacobian_)
-			n->Reset();
-		for (const auto& n : space_derivatives_)
-			n->Reset();
-		for (const auto& n : time_derivatives_)
-			n->Reset();
-
-
-
-		switch (deriv_method_){
-			case DerivMethod::JacobianNode:{
-				for (auto& iter : this->jacobian_)
-					Simplify(iter);
-				break;
-			}
-			case DerivMethod::Derivatives:{
-				for (auto& iter : this->space_derivatives_)
-					Simplify(iter);
-				for (auto& iter : this->time_derivatives_)
-					Simplify(iter);
-				break;
-			}
-		}
-
-		
-		for (unsigned ii=0; ii<num_vars; ++ii)
-			vars[ii]->set_current_value<dbl>(old_vals[ii]);
-		if (HavePathVariable())
-			path_variable_->set_current_value(old_path_var_val);
-
-
-		for (const auto& n : jacobian_)
-			n->Reset();
-		for (const auto& n : space_derivatives_)
-			n->Reset();
-		for (const auto& n : time_derivatives_)
-			n->Reset();
-
 	}
 
 
@@ -1335,7 +1154,7 @@ namespace bertini
 
 
 		out << s.NumNaturalFunctions() << " functions:\n";
-		for (const auto& iter : s.functions_) 
+		for (const auto& iter : s.GetNaturalFunctions()) 
 			out << (iter)->name() << " = " << *iter << "\n";
 		out << "\n";
 
@@ -1350,7 +1169,7 @@ namespace bertini
 
 		if (s.NumConstants()) {
 			out << s.NumConstants() << " constants:\n";
-			for (const auto& iter : s.constant_subfunctions_)
+			for (const auto& iter : s.PolyBlockPtr()->ConstantSubfunctions())
 				out << (iter)->name() << " = " << *iter << "\n";
 			out << "\n";
 		}
@@ -1361,51 +1180,9 @@ namespace bertini
 			out << "no path variable defined\n";
 
 		if (s.is_differentiated_)
-		{
-			out << "system is differentiated; jacobian:\n";
-
-				switch (s.deriv_method_){
-					case DerivMethod::JacobianNode:{
-						out << "using the JacobianNode method of differentiation:" << std::endl;
-
-						for (const auto& iter : s.jacobian_)
-							out << (iter)->name() << " = " << *iter << "\n";
-						break;
-					}
-
-					case DerivMethod::Derivatives:{
-						out << "using the Derivatives method of differentiation:" << std::endl;
-
-						for (size_t jj = 0; jj < s.NumVariables(); ++jj)
-							for (size_t ii = 0; ii < s.NumNaturalFunctions(); ++ii)
-							{
-								const auto& d = s.space_derivatives_[ii+jj*s.NumNaturalFunctions()];
-								out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
-							}
-
-						if (s.HavePathVariable())
-							for (size_t ii = 0; ii < s.NumNaturalFunctions(); ++ii)
-							{
-								const auto& d = s.time_derivatives_[ii];
-								out << "jac_time_der(" << ii << ") = " << d << "\n";
-							}
-						break;
-					}
-				} // switch on deriv method
-
-
-
-				if (s.eval_method_ == EvalMethod::SLP)
-				{
-					out << "since using SLP for evaluation, here's the SLP:" << std::endl;
-					out << s.slp_;				
-				}
-
-			out << "\n";
-		}
-		else{
+			out << "system is differentiated.\n";
+		else
 			out << "system not differentiated\n";
-		}
 
 		if (s.IsPatched())
 		{
@@ -1470,12 +1247,14 @@ namespace bertini
 		// rewrites that system's functions too — e.g. forming the homotopy
 		// (1-t)*target + gamma*t*start used to corrupt both the target and the
 		// start system (observed 2026-06-06).
-		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
-			*iter = node::Function::Make(
-				(*(rhs.functions_.begin()+(iter-functions_.begin())))->EntryNode() + (*iter)->EntryNode(),
-				(*iter)->name());
+		{
+			auto& lhsf = PolyBlock().Functions();
+			auto const& rhsf = rhs.PolyFunctions();
+			for (size_t ii = 0; ii < lhsf.size(); ++ii)
+				lhsf[ii] = node::Function::Make(rhsf[ii]->EntryNode() + lhsf[ii]->EntryNode(), lhsf[ii]->name());
+		}
 
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		return *this;
 	}
 
@@ -1488,11 +1267,11 @@ namespace bertini
 	System& System::operator*=(std::shared_ptr<node::Node> const& N)
 	{
 		// new wrappers, not SetRoot — see comment in operator+= above.
-		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
+		for (auto& f : PolyBlock().Functions())
 		{
-			*iter = node::Function::Make( N * (*iter)->EntryNode(), (*iter)->name());
+			f = node::Function::Make( N * f->EntryNode(), f->name());
 		}
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		return *this;
 	}
 
@@ -1626,59 +1405,17 @@ namespace bertini
 
 	void System::ResetFunctions() const
 	{
-		// TODO: it has the unfortunate side effect of resetting constant functions, too.
-		switch (eval_method_){
-		case EvalMethod::FunctionTree:
-			for (const auto& iter : functions_)
-				iter->Reset();
-			break;
-		case EvalMethod::SLP:
-			break;
-		}
+		if (auto* p = PolyBlockPtr()) p->Reset();
 	}
 
 	void System::ResetJacobian() const
 	{
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:{
-				switch (deriv_method_){
-					case DerivMethod::JacobianNode:
-						for (const auto& iter : jacobian_)
-							iter->Reset();
-						break;
-					case DerivMethod::Derivatives:
-						for (const auto& iter : space_derivatives_)
-							iter->Reset();
-						break;
-				}
-				break;
-			}
-			case EvalMethod::SLP:
-				break;
-		}
+		if (auto* p = PolyBlockPtr()) p->Reset();
 	}
 
 	void System::ResetTimeDerivatives() const
 	{
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:{
-				switch (deriv_method_){
-					case DerivMethod::JacobianNode:
-						for (const auto& iter : jacobian_)
-							iter->Reset();
-						break;
-					case DerivMethod::Derivatives:
-						for (const auto& iter : time_derivatives_)
-							iter->Reset();
-						break;
-				}
-				break;
-			}
-			case EvalMethod::SLP:
-				break;
-		}
+		if (auto* p = PolyBlockPtr()) p->Reset();
 	}
 
 	void System::Reset() const

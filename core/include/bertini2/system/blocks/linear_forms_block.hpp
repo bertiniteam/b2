@@ -93,6 +93,9 @@ public:
 	/// The Jacobian is the (constant) coefficient matrix, independent of x and t.
 	bool HasConstantJacobian() const { return true; }
 
+	/// Analytic block: nothing symbolic to differentiate.
+	void Differentiate() const {}
+
 	unsigned Precision() const { return precision_; }
 
 	/// Set the working precision; recasts the mpfr working coefficients from the master.
