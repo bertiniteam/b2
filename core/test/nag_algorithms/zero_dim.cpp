@@ -190,6 +190,75 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 }
 
 
+// Run ZeroDim from a USER-CONSTRUCTED homotopy and a GIVEN list of start points -- the
+// parameter-homotopy workflow.  Crucially this reuses the ENTIRE ZeroDim solve pipeline
+// (pre-endgame tracking, the midpath check, the endgame, post-processing) UNCHANGED: it is the
+// same ZeroDim class template, merely instantiated with start_system::User (start points come
+// from the supplied list, not generated) and policy::RefToGiven (the homotopy is taken as-is,
+// not formed by homogenizing + coupling a start system).
+//
+// Parameter homotopy H(x,t) = x^2 - (9 - 5 t).  At t = 1 the roots are +/-2 (the given start
+// points); at t = 0 they are +/-3 (the target x^2 - 9).  Tracking the two start points down to
+// t = 0 must recover +/-3 -- i.e. ZeroDim moved the t=1 solutions to the t=0 parameter.
+BOOST_AUTO_TEST_CASE(user_homotopy_parameter_homotopy_solves)
+{
+	using namespace bertini;
+	using namespace tracking;
+	using mpfr = bertini::mpfr_complex;
+
+	auto x = Variable::Make("x");
+	auto t = Variable::Make("t");
+
+	// the homotopy H(x,t) = x^2 - (9 - 5 t), with t as its path variable
+	System H;
+	H.AddVariableGroup(VariableGroup{x});
+	H.AddFunction(x*x - (9 - 5*t));
+	H.AddPathVariable(t);
+
+	// the target system (H at t = 0): x^2 - 9, used for dehomogenize / residual in post-processing
+	System target;
+	target.AddVariableGroup(VariableGroup{x});
+	target.AddFunction(x*x - 9);
+
+	// the GIVEN start points: the t = 1 solutions +/- 2 (as if computed by an earlier solve)
+	SampCont<mpfr> start_points;
+	{
+		Vec<mpfr> p(1); p(0) = mpfr(2);  start_points.push_back(p);
+		Vec<mpfr> q(1); q(0) = mpfr(-2); start_points.push_back(q);
+	}
+
+	auto user_start = start_system::User(target, start_points);
+
+	auto zd = algorithm::ZeroDim<
+				AMPTracker,
+				bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+				System,
+				start_system::User,
+				policy::RefToGiven>
+			(target, user_start, H); // (target, start, homotopy) -- references, so all three
+
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto const& sols = zd.SolutionsUserCoords();
+	auto const& md   = zd.FinalSolutionMetadata();
+	std::vector<dbl> ends;
+	for (size_t i = 0; i < sols.size(); ++i)
+		if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 1)
+			ends.push_back(dbl(sols[i](0)));
+
+	BOOST_CHECK_EQUAL(ends.size(), 2u);
+	bool has_pos = false, has_neg = false;
+	for (auto const& e : ends)
+	{
+		if (std::abs(e - dbl(3,0))  < 1e-7) has_pos = true;
+		if (std::abs(e - dbl(-3,0)) < 1e-7) has_neg = true;
+	}
+	BOOST_CHECK(has_pos); // tracked +2 -> +3
+	BOOST_CHECK(has_neg); // tracked -2 -> -3
+}
+
+
 // End-to-end multihomogeneous solve through the block-composed start system and the
 // blend-block homotopy.  x*y - 1 = 0, x + y = 0 over variable groups {x}, {y}:
 // y = -x gives -x^2 - 1 = 0, so x = +/- i -> exactly the two solutions (i,-i),(-i,i).
