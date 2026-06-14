@@ -15,7 +15,7 @@ For such a family you should solve **once**, at a generic parameter, and then **
 solutions as the start points of a *parameter homotopy* that slides the coefficients to whatever
 value you actually care about -- as many times as you like, each move tracking just the solutions
 you already have.  This is bertini's "evaluate as little as possible" in action, and it is
-embarrassingly parallel across the parameter values.
+pleasantly parallel across the parameter values.
 
 The tools are :func:`bertini.nag_algorithm.coefficient_parameter_homotopy` (builds the homotopy)
 and :func:`bertini.nag_algorithm.user_homotopy` (runs the full zero-dim pipeline -- pre-endgame

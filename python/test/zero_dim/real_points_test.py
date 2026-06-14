@@ -35,13 +35,11 @@ def test_real_point_on_every_trott_component():
     solver = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
     solver.solve()
 
-    reals = []
-    for s in solver.solutions():
-        if len(s) != 2:
-            continue
-        a, b = complex(s[0]), complex(s[1])
-        if abs(a.imag) < 1e-7 and abs(b.imag) < 1e-7:
-            reals.append((a.real, b.real))
+    # keep the real solutions by the solver's own classification (is_real applies the configured
+    # real_threshold) rather than a hand-picked epsilon
+    sols, meta = solver.solutions(), solver.solution_metadata()
+    reals = [(complex(s[0]).real, complex(s[1]).real)
+             for s, m in zip(sols, meta) if m.is_real]
 
     # two critical points (nearest + farthest) on each of the four ovals
     assert len(reals) == 8

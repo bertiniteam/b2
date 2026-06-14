@@ -61,18 +61,16 @@ floats that would silently cap precision::
     crit_system.add_function(parallel)
 
 Both equations are degree 4, so the total-degree solve tracks :math:`4 \times 4 = 16` paths.  We
-solve, then keep the solutions whose coordinates are real::
+solve, then keep the real solutions -- and we let the *solver* decide what "real" means: each
+endpoint's metadata carries an ``is_real`` flag, set when the imaginary parts fall under the
+configured ``real_threshold``, so there is no hand-picked epsilon in the tutorial::
 
     solver = nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(crit_system)
     solver.solve()
 
-    crit = []
-    for s in solver.solutions():
-        if len(s) != 2:
-            continue                       # a failed path leaves an empty placeholder
-        a, b = complex(s[0]), complex(s[1])
-        if abs(a.imag) < 1e-7 and abs(b.imag) < 1e-7:
-            crit.append((a.real, b.real))
+    sols, meta = solver.solutions(), solver.solution_metadata()
+    crit = [(complex(s[0]).real, complex(s[1]).real)
+            for s, m in zip(sols, meta) if m.is_real]
 
     assert len(crit) == 8                  # two per oval (nearest + farthest), all four ovals hit
 

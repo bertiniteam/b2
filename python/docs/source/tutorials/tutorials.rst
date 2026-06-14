@@ -16,4 +16,5 @@
    eigenvalues_by_homotopy
    parameter_homotopy
    real_points
+   solving_at_scale
 
