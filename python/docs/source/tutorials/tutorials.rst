@@ -15,4 +15,5 @@
    manual_endgame_usage
    eigenvalues_by_homotopy
    parameter_homotopy
+   real_points
 
