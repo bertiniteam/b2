@@ -528,8 +528,11 @@ BOOST_AUTO_TEST_CASE(seed_determinism_probe)
 	// one solve of the 2x2 MHom at a given seed; returns (gamma, maxPrec, good).  threshold pinned
 	// to 10 so a spiking seed produces the bounded spike (not the threshold-5 oscillation grind).
 	auto solve_once = [](unsigned seed) {
+		// NB: the cache clear is now inside ZeroDim::Solve() (the fix), so the probe exercises the real
+		// production path -- 53-after-21 should equal 53-first without the probe doing anything special.
 		std::cout << "[determinism]   (entry DefaultPrecision=" << DefaultPrecision()
-		          << " ThreadPrecision=" << ThreadPrecision() << ")\n";
+		          << " ThreadPrecision=" << ThreadPrecision()
+		          << " mpfr_emin=" << mpfr_get_emin() << " mpfr_emax=" << mpfr_get_emax() << ")\n";
 		SetGlobalSeed(seed);
 		System sys;
 		auto x = Variable::Make("x");
@@ -575,10 +578,7 @@ BOOST_AUTO_TEST_CASE(seed_determinism_probe)
 
 	std::cout << "\n[determinism] does SetGlobalSeed(53) fully reset? (same seed, repeated in one process)\n";
 	show("53 (1st)        ", solve_once(53));
-	show("53 (2nd)        ", solve_once(53));
-	solve_once(7); // perturb with a different seed
-	show("53 (after 7)    ", solve_once(53));
-	solve_once(21);
+	solve_once(21);                              // a SPIKING seed (the perturber)
 	show("53 (after 21)   ", solve_once(53));
 	DefaultPrecision(30);
 	BOOST_CHECK(true);

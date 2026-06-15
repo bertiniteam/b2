@@ -363,6 +363,8 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				using Phase2T      = parallel::Phase2Task<BaseComplexT>;
 				using DuringResult = parallel::PathDuringEGResult<BaseComplexT>;
 
+				mpfr_free_cache(); // reproducibility: clear this rank's mpfr constant cache (see Solve())
+
 				solutions_user_coords_fresh_ = false;
 
 				// Each rank built its homotopy independently in the constructor -- with its OWN
@@ -755,6 +757,17 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			*/
 			void Solve()
 			{
+				// Reproducibility: clear this thread's mpfr constant cache (pi, etc.) at the solve
+				// boundary.  mpfr caches transcendental constants at the precision last requested; the
+				// Cauchy endgame needs pi (roots of unity), so a high-precision solve leaves pi cached
+				// at high precision.  A subsequent lower-precision solve would otherwise reuse that
+				// cached value rounded down -- differing by ~1 ULP from a freshly-computed
+				// low-precision pi -- making a solve's behaviour depend on what ran before it in the
+				// process (non-reproducible).  Clearing here makes each solve independent of history.
+				// Cheap (one constant recompute per solve); thread-local (each worker thread clears its
+				// own when it starts a solve).
+				mpfr_free_cache();
+
 				solutions_user_coords_fresh_ = false;
 
 				PreSolveChecks();
