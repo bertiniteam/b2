@@ -404,6 +404,82 @@ BOOST_AUTO_TEST_CASE(amp_escalation_probe)
 }
 
 
+// The decisive block-vs-function-tree check on the ACTUAL problematic homotopy: take the seed-6
+// MHom blend homotopy (a BlendBlock of the homogenized target's polynomial block and the
+// products-of-linears start), build its pure-function-tree twin via ExpandToFunctionTree(), and
+// assert the two evaluate and (crucially) DIFFERENTIATE identically -- across random points and
+// near t->0 (the endgame region), in double and mpfr.  If the block Jacobian were wrong (inflating
+// ||J^{-1}|| and hence DigitsB), this is where it would show.  Together with the faithful
+// ||J^{-1}|| estimate (amp_jacobian_estimate) and DegreeBound=2 (so Phi is tiny), agreement here
+// means the DigitsB escalation reflects a GENUINE near-singular pass for that gamma, not a bug in
+// the block representation.
+BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	SetGlobalSeed(6); // the gamma that escalated to 140 digits in the probe
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddVariableGroup(VariableGroup{y});
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x + y);
+
+	auto zd = algorithm::ZeroDim<AMPTracker,
+	                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+	                             decltype(sys),
+	                             start_system::MHomogeneous>(sys);
+	zd.DefaultSetup();
+
+	System const& H = zd.Homotopy();          // the block-composed blend homotopy
+	System He = H.ExpandToFunctionTree();      // its pure-function-tree twin
+
+	BOOST_CHECK_EQUAL(H.NumVariables(), He.NumVariables());
+	BOOST_CHECK_EQUAL(H.NumTotalFunctions(), He.NumTotalFunctions());
+	BOOST_CHECK_EQUAL(H.DegreeBound(), He.DegreeBound()); // drives Phi/Psi; must match
+
+	auto compare = [](auto const& A, auto const& B, double tol)
+	{
+		BOOST_REQUIRE_EQUAL(A.rows(), B.rows());
+		BOOST_REQUIRE_EQUAL(A.cols(), B.cols());
+		for (Eigen::Index i = 0; i < A.rows(); ++i)
+			for (Eigen::Index j = 0; j < A.cols(); ++j)
+			{
+				double err   = static_cast<double>(abs(A(i,j) - B(i,j)));
+				double scale = 1.0 + static_cast<double>(abs(A(i,j)));
+				BOOST_CHECK_SMALL(err / scale, tol);
+			}
+	};
+
+	const int n = static_cast<int>(H.NumVariables());
+
+	// double, including t very close to 0 (endgame region, where the spike lives)
+	for (int trial = 0; trial < 10; ++trial)
+	{
+		Vec<dbl> p = Vec<dbl>::Random(n);
+		dbl t = (trial < 5) ? dbl(0.4, -0.3) * dbl(trial + 1)
+		                    : dbl(std::pow(10.0, -(trial - 1)), 0.0); // 1e-4 .. 1e-8
+		compare(H.Eval(p, t),     He.Eval(p, t),     1e-11);
+		compare(H.Jacobian(p, t), He.Jacobian(p, t), 1e-11);
+	}
+
+	// mpfr at 80 digits
+	DefaultPrecision(80);
+	H.precision(80);
+	He.precision(80);
+	for (int trial = 0; trial < 5; ++trial)
+	{
+		Vec<mpfr_complex> p = RandomOfUnits<mpfr_complex>(n);
+		mpfr_complex t = RandomOfUnits<mpfr_complex>(1)(0);
+		compare(H.Eval(p, t),     He.Eval(p, t),     1e-70);
+		compare(H.Jacobian(p, t), He.Jacobian(p, t), 1e-70);
+	}
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
