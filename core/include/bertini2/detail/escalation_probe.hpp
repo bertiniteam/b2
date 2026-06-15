@@ -33,6 +33,7 @@ inline std::atomic<std::int64_t> tracker_precision_increases{0}; ///< ChangePrec
 inline std::atomic<std::int64_t> endgame_refine_escalations{0};  ///< amp_endgame RefineSampleImpl escalation branch
 inline std::atomic<std::int64_t> corrector_track_hpn{0};         ///< HigherPrecisionNecessary from the tracking corrector
 inline std::atomic<std::int64_t> corrector_refine_hpn{0};        ///< HigherPrecisionNecessary from the refine corrector
+inline std::atomic<std::int64_t> predictor_hpn{0};               ///< HigherPrecisionNecessary from the predictor
 inline std::atomic<unsigned>     max_precision_seen{0};          ///< high-water working precision
 inline std::atomic<unsigned>     max_digits_b{0};                ///< high-water DigitsB (the value that forces min_precision up)
 inline std::atomic<unsigned>     max_startpoint_log10_affnorm{0}; ///< high-water log10||affine_solution|| in MHom start-point generation
@@ -44,6 +45,7 @@ inline void reset()
 	endgame_refine_escalations  = 0;
 	corrector_track_hpn         = 0;
 	corrector_refine_hpn        = 0;
+	predictor_hpn               = 0;
 	max_precision_seen          = 0;
 	max_digits_b                = 0;
 	max_startpoint_log10_affnorm = 0;

@@ -172,7 +172,7 @@ namespace tracking{
 		int safety_digits_2 = 1; ///< User-chosen setting for the number of safety digits used during Criterion C.
 		unsigned int maximum_precision = 300; ///< User-chosed setting for the maximum allowable precision.  Paths will die if their precision is requested to be set higher than this threshold.
 		
-		unsigned consecutive_successful_steps_before_precision_decrease = 10;
+		unsigned consecutive_successful_steps_before_precision_decrease = 5; ///< Bertini 1's StepsForIncrease (default 5): consecutive successful steps before precision may be lowered.  Was 10 (a B2 deviation); restored to 5 to match B1.
 
 		unsigned max_num_precision_decreases = 10; ///< The maximum number of times precision can be lowered during tracking of a segment of path.
 		

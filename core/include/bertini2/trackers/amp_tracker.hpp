@@ -691,7 +691,11 @@ namespace bertini{
 					return predictor_code;
 				}	
 				else if (predictor_code==SuccessCode::HigherPrecisionNecessary)
-				{	
+				{
+					++bertini::probe::predictor_hpn; // PROBE
+					if (bertini::probe::trace_enabled())
+						std::fprintf(stderr, "  [amp] PREDICTOR HigherPrecisionNecessary at prec=%u |t|=%.3e\n",
+						             current_precision_, double(abs(current_time_))), std::fflush(stderr);
 					NotifyObservers(PredictorHigherPrecisionNecessary<EmitterType>(*this));
 					auto adj_code = AMPCriterionError<ComplexT>();
 					if (adj_code != SuccessCode::Success)
@@ -822,9 +826,11 @@ namespace bertini{
 					max_stepsize = current_stepsize_; // disallow stepsize changing
 
 
-				if ( (num_successful_steps_since_precision_decrease_ < Get<PrecConf>().consecutive_successful_steps_before_precision_decrease)
+				const bool decrease_disallowed =
+				    (num_successful_steps_since_precision_decrease_ < Get<PrecConf>().consecutive_successful_steps_before_precision_decrease)
 				    ||
-				    (num_precision_decreases_ >= Get<PrecConf>().max_num_precision_decreases))
+				    (num_precision_decreases_ >= Get<PrecConf>().max_num_precision_decreases);
+				if (decrease_disallowed)
 					min_precision = max(min_precision, current_precision_); // disallow precision changing
 
 
@@ -838,6 +844,13 @@ namespace bertini{
 				} catch (std::runtime_error const&) {
 					return SuccessCode::FailedToSelectPrecisionAndStepsize;
 				}
+
+				if (bertini::probe::trace_enabled() && current_precision_ > 40) // PROBE: why precision won't relax
+					std::fprintf(stderr, "  [amp] StepSuccess prec=%u condNum=%.2e digitsB=%u successesSinceDecrease=%u(/%u) numDecreases=%u(/%u) decreaseDisallowed=%d -> next_prec=%u\n",
+					             current_precision_, double(this->condition_number_estimate_), DigitsB<ComplexT>(),
+					             num_successful_steps_since_precision_decrease_, Get<PrecConf>().consecutive_successful_steps_before_precision_decrease,
+					             num_precision_decreases_, Get<PrecConf>().max_num_precision_decreases,
+					             int(decrease_disallowed), next_precision_), std::fflush(stderr);
 
 
 				if ( (next_stepsize_ > current_stepsize_) || (next_precision_ < current_precision_) )
@@ -958,6 +971,11 @@ namespace bertini{
 					} catch (std::runtime_error const&) {
 						return SuccessCode::FailedToSelectPrecisionAndStepsize;
 					}
+
+					if (bertini::probe::trace_enabled() && next_precision_ > 40) // PROBE: the jump
+						std::fprintf(stderr, "  [amp] AMPCriterionError JUMP prec %u -> %u : digits_B=%u digits_C=%u min_prec=%u |t|=%.3e\n",
+						             current_precision_, next_precision_, digits_B, DigitsC<ComplexT>(), min_precision,
+						             double(abs(current_time_))), std::fflush(stderr);
 				}
 
 				UpdatePrecisionAndStepsize();

@@ -588,6 +588,7 @@ BOOST_AUTO_TEST_CASE(mhom_condition_number_trajectory)
 	std::cout << "[trajectory] per-cause for this seed:"
 	          << " trackerPrecIncreases=" << bertini::probe::tracker_precision_increases.load()
 	          << " endgameRefineEscalations=" << bertini::probe::endgame_refine_escalations.load()
+	          << " predictorHPN=" << bertini::probe::predictor_hpn.load()
 	          << " corrTrackHPN=" << bertini::probe::corrector_track_hpn.load()
 	          << " corrRefineHPN=" << bertini::probe::corrector_refine_hpn.load()
 	          << " maxDigitsB=" << bertini::probe::max_digits_b.load() << "\n";
