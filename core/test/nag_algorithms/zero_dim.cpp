@@ -696,7 +696,11 @@ BOOST_AUTO_TEST_CASE(mhom_condition_number_trajectory)
 	std::cout << "[trajectory] max log10(condNum) = " << std::log10(std::max(max_cond,1.0))
 	          << " at |t| = " << std::scientific << abst_at_max << " (step " << step_at_max << "/" << spike.rows.size() << ")"
 	          << " ; max precision = " << max_prec << " ; precision at path end = " << prec_at_end
-	          << (prec_at_end < max_prec ? "  (RECOVERED)" : "  (did NOT recover)") << "\n" << std::flush;
+	          << (prec_at_end < max_prec ? "  (RECOVERED)" : "  (did NOT recover)") << "\n";
+	std::cout << "[trajectory] DigitsB breakdown high-water: max log10(norm_J_inverse)="
+	          << bertini::probe::max_log10_normJinv.load() << "  max log10(size_proportion)="
+	          << bertini::probe::max_log10_sizeprop.load() << "  maxDigitsB=" << bertini::probe::max_digits_b.load()
+	          << "\n" << std::flush;
 
 	DefaultPrecision(30); // restore for subsequent tests
 

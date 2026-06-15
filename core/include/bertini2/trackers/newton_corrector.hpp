@@ -317,7 +317,11 @@ namespace bertini{
 							// the spikes, fixed does not).  A single fixed direction also makes the
 							// condition estimates comparable across steps, is cheaper, and keeps tracking
 							// deterministic / parallel-bit-identical.
-							Vec<ComplexT> const& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
+							Vec<ComplexT>& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
+							// PROBE A/B (temporary): BERTINI_REGEN_PROBE restores the old per-call regen.
+							static const bool regen = (std::getenv("BERTINI_REGEN_PROBE") != nullptr);
+							if (regen)
+								for (int ri = 0; ri < (int)rand_ref.size(); ++ri) rand_ref(ri) = RandomUnit<ComplexT>();
 							Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
 							solve_ref = LU_ref.solve(rand_ref);
 							norm_J_inverse = NumErrorT(solve_ref.norm());

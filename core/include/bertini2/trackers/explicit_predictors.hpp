@@ -713,7 +713,8 @@ namespace bertini{
 
 					norm_J = NumErrorT(dhdxref.norm());
 					norm_J_inverse = NumErrorT(solve_ref.norm());
-					
+
+
 					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
 					{
 						condition_number_estimate = NumErrorT(norm_J * norm_J_inverse);

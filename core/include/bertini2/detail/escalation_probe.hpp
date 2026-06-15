@@ -42,6 +42,8 @@ inline std::atomic<unsigned>     max_precision_seen{0};          ///< high-water
 inline std::atomic<unsigned>     max_digits_b{0};                ///< high-water DigitsB (the value that forces min_precision up)
 inline std::atomic<unsigned>     max_startpoint_log10_affnorm{0}; ///< high-water log10||affine_solution|| in MHom start-point generation
 inline std::atomic<unsigned>     max_startpoint_log10_Acond{0};   ///< high-water log10 cond(A) of the start-point linear system (trace-gated)
+inline std::atomic<unsigned>     max_log10_normJinv{0};           ///< high-water log10 of norm_J_inverse_ fed to DigitsB
+inline std::atomic<unsigned>     max_log10_sizeprop{0};           ///< high-water log10 of size_proportion_ fed to DigitsB
 
 inline void reset()
 {
@@ -54,6 +56,8 @@ inline void reset()
 	max_digits_b                = 0;
 	max_startpoint_log10_affnorm = 0;
 	max_startpoint_log10_Acond   = 0;
+	max_log10_normJinv           = 0;
+	max_log10_sizeprop           = 0;
 	trace_budget                 = 800; // cap [amp] trace lines per reset (per seed)
 }
 
@@ -61,6 +65,12 @@ inline void note_max(std::atomic<unsigned>& slot, unsigned v)
 {
 	unsigned cur = slot.load();
 	while (v > cur && !slot.compare_exchange_weak(cur, v)) { /* retry */ }
+}
+
+// record log10 of a positive value into a high-water unsigned slot (for the DigitsB breakdown).
+inline void note_log10(std::atomic<unsigned>& slot, double v)
+{
+	if (v > 1.0) note_max(slot, static_cast<unsigned>(std::log10(v)));
 }
 
 inline void note_precision(unsigned p) { note_max(max_precision_seen, p); }

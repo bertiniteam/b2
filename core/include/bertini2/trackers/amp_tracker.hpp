@@ -991,12 +991,15 @@ namespace bertini{
 			*/
 			template<typename ComplexT>
 			NumErrorT B_RHS() const
-			{	
-				return max(amp::CriterionBRHS(this->norm_J_, 
-				           					  this->norm_J_inverse_, 
-				           					  Get<NewtonConfig>().max_num_newton_iterations, 
-				           					  tracking_tolerance_, 
-				           					  this->size_proportion_, 
+			{
+				// PROBE: record which input to DigitsB is large (norm_J_inverse vs size_proportion)
+				bertini::probe::note_log10(bertini::probe::max_log10_normJinv, double(this->norm_J_inverse_));
+				bertini::probe::note_log10(bertini::probe::max_log10_sizeprop, double(this->size_proportion_));
+				return max(amp::CriterionBRHS(this->norm_J_,
+				           					  this->norm_J_inverse_,
+				           					  Get<NewtonConfig>().max_num_newton_iterations,
+				           					  tracking_tolerance_,
+				           					  this->size_proportion_,
 				           					  Get<PrecConf>()), NumErrorT(0));
 			}
 
