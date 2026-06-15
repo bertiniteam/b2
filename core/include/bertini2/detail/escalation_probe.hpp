@@ -19,6 +19,10 @@ inline bool trace_enabled()
 	return e;
 }
 
+// hard cap on emitted [amp] trace lines, so a grind can't produce a 10M-line file.  reset() refills.
+inline std::atomic<int> trace_budget{0};
+inline bool trace_ok() { return trace_enabled() && trace_budget.fetch_sub(1) > 0; }
+
 inline void trace_precision_change(const char* where, unsigned from, unsigned to)
 {
 	if (trace_enabled())
@@ -50,6 +54,7 @@ inline void reset()
 	max_digits_b                = 0;
 	max_startpoint_log10_affnorm = 0;
 	max_startpoint_log10_Acond   = 0;
+	trace_budget                 = 800; // cap [amp] trace lines per reset (per seed)
 }
 
 inline void note_max(std::atomic<unsigned>& slot, unsigned v)

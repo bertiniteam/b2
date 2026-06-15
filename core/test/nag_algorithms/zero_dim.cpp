@@ -550,6 +550,15 @@ BOOST_AUTO_TEST_CASE(mhom_condition_number_trajectory)
 		                             start_system::MHomogeneous>(sys);
 		zd.DefaultSetup();
 
+		// Recover the original spike scenario for testing: pin the precision-decrease threshold to
+		// its old value of 10 (the default is now 5).  This reproduces the clean seed-53 spike
+		// (jump to 290, ~242 endgame steps, then recovers) rather than the threshold-5 oscillation.
+		{
+			auto amp = zd.GetTracker().template Get<tracking::AdaptiveMultiplePrecisionConfig>();
+			amp.consecutive_successful_steps_before_precision_decrease = 10;
+			zd.GetTracker().Set(amp);
+		}
+
 		dbl gamma(0,0);
 		{
 			System const& H = zd.Homotopy();
