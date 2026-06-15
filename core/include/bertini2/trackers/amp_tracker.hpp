@@ -40,7 +40,6 @@
 #pragma once
 
 #include "bertini2/trackers/base_tracker.hpp"
-#include "bertini2/detail/escalation_probe.hpp" // PROBE: temporary escalation instrumentation
 
 
 namespace bertini{
@@ -729,10 +728,6 @@ namespace bertini{
 				}	
 				else if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{
-					++bertini::probe::predictor_hpn; // PROBE
-					if (bertini::probe::trace_ok())
-						std::fprintf(stderr, "  [amp] PREDICTOR HigherPrecisionNecessary at prec=%u |t|=%.3e\n",
-						             current_precision_, double(abs(current_time_))), std::fflush(stderr);
 					NotifyObservers(PredictorHigherPrecisionNecessary<EmitterType>(*this));
 					auto adj_code = AMPCriterionError<ComplexT>();
 					if (adj_code != SuccessCode::Success)
@@ -1039,10 +1034,6 @@ namespace bertini{
 						return SuccessCode::FailedToSelectPrecisionAndStepsize;
 					}
 
-					if (next_precision_ > 40 && bertini::probe::trace_ok()) // PROBE: the jump
-						std::fprintf(stderr, "  [amp] AMPCriterionError JUMP prec %u -> %u : digits_B=%u digits_C=%u min_prec=%u |t|=%.3e\n",
-						             current_precision_, next_precision_, digits_B, DigitsC<ComplexT>(), min_precision,
-						             double(abs(current_time_))), std::fflush(stderr);
 				}
 
 				UpdatePrecisionAndStepsize();
@@ -1059,9 +1050,6 @@ namespace bertini{
 			template<typename ComplexT>
 			NumErrorT B_RHS() const
 			{
-				// PROBE: record which input to DigitsB is large (norm_J_inverse vs size_proportion)
-				bertini::probe::note_log10(bertini::probe::max_log10_normJinv, double(this->norm_J_inverse_));
-				bertini::probe::note_log10(bertini::probe::max_log10_sizeprop, double(this->size_proportion_));
 				return max(amp::CriterionBRHS(this->norm_J_,
 				           					  this->norm_J_inverse_,
 				           					  Get<NewtonConfig>().max_num_newton_iterations,
@@ -1092,7 +1080,6 @@ namespace bertini{
 			unsigned DigitsB() const
 			{
 				unsigned d = unsigned(B_RHS<ComplexT>());
-				bertini::probe::note_digits_b(d); // PROBE: temporary escalation instrumentation
 				return d;
 			}
 
@@ -1443,10 +1430,6 @@ namespace bertini{
 				if (new_precision==current_precision_) // no op
 					return SuccessCode::Success;
 
-				if (new_precision > current_precision_) // PROBE: temporary escalation instrumentation
-					++bertini::probe::tracker_precision_increases;
-				bertini::probe::note_precision(new_precision);
-				bertini::probe::trace_precision_change("ChangePrecision", current_precision_, new_precision);
 
 				NotifyObservers(PrecisionChanged<EmitterType>(*this,current_precision_,new_precision));
 				

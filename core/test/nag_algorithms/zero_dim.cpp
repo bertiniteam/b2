@@ -32,7 +32,6 @@
 #include "bertini2/system/start_systems.hpp"
 #include <boost/test/unit_test.hpp>
 #include "bertini2/nag_algorithms/output.hpp"
-#include "bertini2/detail/escalation_probe.hpp" // PROBE: temporary escalation instrumentation
 #include "bertini2/trackers/observers.hpp"
 #include "bertini2/trackers/events.hpp"
 #include <chrono>
@@ -276,17 +275,8 @@ BOOST_AUTO_TEST_CASE(user_homotopy_parameter_homotopy_solves)
 //
 // Deterministic: SetGlobalSeed pins the homotopy gamma and the MHom start coefficients (RandomMp is
 // reseedable now), so this is a single, reproducible solve -- no gamma-retry loop.
-//
-// Skipped on Windows: there, AMP + the blend-block homotopy + the Cauchy endgame do not keep
-// precision in lockstep (the tracked point reaches MaxPrecisionAllowed in the endgame while the
-// system is at the working precision), so a path can grind for hours instead of converging -- this
-// once hung Windows CI.  Tracked as the block-precision follow-up; the AMP MHom path itself is
-// covered on Windows by the eigenvalue test.
 BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 {
-#ifdef _WIN32
-	BOOST_TEST_MESSAGE("mhom_solves_two_variable_group_system skipped on Windows (block-precision grind)");
-#else
 	using namespace bertini;
 	using namespace tracking;
 
@@ -325,89 +315,9 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 		BOOST_CHECK_SMALL(std::abs(a + b), 1e-8);
 	}
 	BOOST_CHECK_GT(std::abs(dbl(good[0](0)) - dbl(good[1](0))), 1e-3); // the two distinct roots
-#endif
 }
 
 
-// PROBE (temporary, branch perf/amp-block-precision-escalation): sweep many gammas and report,
-// per gamma, WHERE precision escalations originate.  Confirms "bad gamma" is really over-escalation.
-// Run with:  ./build/core/test_nag_algorithms --run_test=zero_dim/amp_escalation_probe --log_level=message
-BOOST_AUTO_TEST_CASE(amp_escalation_probe)
-{
-	// PROBE (branch perf/amp-block-precision-escalation): diagnostic sweep, slow and can hit grinding
-	// seeds -- not part of the default suite.  Run with BERTINI_RUN_PROBES=1.
-	if (!std::getenv("BERTINI_RUN_PROBES")) { BOOST_CHECK(true); return; }
-	using namespace bertini;
-	using namespace tracking;
-
-	std::cout << "\n seed |  good | maxPrec | maxDigB | trkInc | egRefine | corrTrkHPN | corrRefHPN |    ms\n";
-	std::cout << "------+-------+---------+---------+--------+----------+------------+------------+--------\n";
-
-	unsigned seed_lo = 1, seed_hi = 25;
-	if (const char* one = std::getenv("BERTINI_PROBE_SEED")) { seed_lo = seed_hi = static_cast<unsigned>(std::atoi(one)); }
-	const bool use_double = (std::getenv("BERTINI_PROBE_DOUBLE") != nullptr); // fixed double tracker instead of AMP
-
-	for (unsigned seed = seed_lo; seed <= seed_hi; ++seed)
-	{
-		SetGlobalSeed(seed);           // different gamma + MHom start coefficients per seed
-		bertini::probe::reset();
-
-		System sys;
-		auto x = Variable::Make("x");
-		auto y = Variable::Make("y");
-		sys.AddVariableGroup(VariableGroup{x});
-		sys.AddVariableGroup(VariableGroup{y});
-		sys.AddFunction(x*y - 1);
-		sys.AddFunction(x + y);
-
-		unsigned good = 0;
-		long long ms = 0;
-		if (use_double)
-		{
-			auto zd = algorithm::ZeroDim<DoublePrecisionTracker,
-			                             bertini::endgame::EndgameSelector<DoublePrecisionTracker>::Cauchy,
-			                             decltype(sys),
-			                             start_system::MHomogeneous>(sys);
-			zd.DefaultSetup();
-			auto t0 = std::chrono::steady_clock::now();
-			zd.Solve();
-			auto t1 = std::chrono::steady_clock::now();
-			ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-			auto const& sols = zd.SolutionsUserCoords();
-			auto const& md   = zd.FinalSolutionMetadata();
-			for (size_t i = 0; i < sols.size(); ++i)
-				if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 2) ++good;
-		}
-		else
-		{
-			auto zd = algorithm::ZeroDim<AMPTracker,
-			                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
-			                             decltype(sys),
-			                             start_system::MHomogeneous>(sys);
-			zd.DefaultSetup();
-			auto t0 = std::chrono::steady_clock::now();
-			zd.Solve();
-			auto t1 = std::chrono::steady_clock::now();
-			ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-			auto const& sols = zd.SolutionsUserCoords();
-			auto const& md   = zd.FinalSolutionMetadata();
-			for (size_t i = 0; i < sols.size(); ++i)
-				if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 2) ++good;
-		}
-
-		std::cout << std::setw(5) << seed << " | "
-		          << std::setw(5) << good << " | "
-		          << std::setw(7) << bertini::probe::max_precision_seen.load() << " | "
-		          << std::setw(7) << bertini::probe::max_digits_b.load() << " | "
-		          << std::setw(6) << bertini::probe::tracker_precision_increases.load() << " | "
-		          << std::setw(8) << bertini::probe::endgame_refine_escalations.load() << " | "
-		          << std::setw(10) << bertini::probe::corrector_track_hpn.load() << " | "
-		          << std::setw(10) << bertini::probe::corrector_refine_hpn.load() << " | "
-		          << std::setw(6) << ms << std::endl; // flush per row so a grinding gamma can't hide prior rows
-	}
-	std::cout << std::flush;
-	BOOST_CHECK(true); // probe prints; correctness asserted by the sibling tests
-}
 
 
 // The decisive block-vs-function-tree check on the ACTUAL problematic homotopy: take the seed-6
@@ -491,207 +401,10 @@ BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
 // condition number (||J|| * ||J^{-1}||) spikes then RECOVERS along the actual seed-6 path, and at
 // what |t| (mid-path vs the t->0 endgame region).
 template <class TrackerT>
-class CondNumTrajectory : public bertini::Observer<TrackerT>
-{ BOOST_TYPE_INDEX_REGISTER_CLASS
-	using EmitterT = typename bertini::tracking::TrackerTraits<TrackerT>::EventEmitterType;
-
-	std::vector<std::type_index> SubscribedEventTypes() const override
-	{ return { typeid(bertini::tracking::SuccessfulStep<EmitterT>) }; }
-
-	void Observe(bertini::AnyEvent const& e) override
-	{
-		auto p = dynamic_cast<const bertini::tracking::SuccessfulStep<EmitterT>*>(&e);
-		if (p)
-		{
-			auto const& tr = p->Get();
-			rows.emplace_back(static_cast<double>(abs(tr.CurrentTime())),
-			                  tr.CurrentPrecision(),
-			                  static_cast<double>(tr.LatestConditionNumber()));
-		}
-	}
-public:
-	std::vector<std::tuple<double, unsigned, double>> rows; // (|t|, precision, condition number)
-	virtual ~CondNumTrajectory() = default;
-};
 
 
-// Determinism probe: for fixed seeds, does the SAME run produce the SAME gamma and the SAME
-// max precision?  Run the binary twice and diff -- if gamma differs the SETUP draws are
-// non-deterministic; if gamma matches but maxPrec differs the SOLVE draws are non-deterministic.
-BOOST_AUTO_TEST_CASE(seed_determinism_probe)
-{
-	// PROBE: diagnostic; slow.  Run with BERTINI_RUN_PROBES=1.
-	if (!std::getenv("BERTINI_RUN_PROBES")) { BOOST_CHECK(true); return; }
-	using namespace bertini;
-	using namespace tracking;
-
-	// one solve of the 2x2 MHom at a given seed; returns (gamma, maxPrec, good).  threshold pinned
-	// to 10 so a spiking seed produces the bounded spike (not the threshold-5 oscillation grind).
-	auto solve_once = [](unsigned seed) {
-		// NB: the cache clear is now inside ZeroDim::Solve() (the fix), so the probe exercises the real
-		// production path -- 53-after-21 should equal 53-first without the probe doing anything special.
-		std::cout << "[determinism]   (entry DefaultPrecision=" << DefaultPrecision()
-		          << " ThreadPrecision=" << ThreadPrecision()
-		          << " mpfr_emin=" << mpfr_get_emin() << " mpfr_emax=" << mpfr_get_emax() << ")\n";
-		SetGlobalSeed(seed);
-		System sys;
-		auto x = Variable::Make("x");
-		auto y = Variable::Make("y");
-		sys.AddVariableGroup(VariableGroup{x});
-		sys.AddVariableGroup(VariableGroup{y});
-		sys.AddFunction(x*y - 1);
-		sys.AddFunction(x + y);
-		auto zd = algorithm::ZeroDim<AMPTracker,
-		                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
-		                             decltype(sys), start_system::MHomogeneous>(sys);
-		zd.DefaultSetup();
-		bertini::probe::reset();
-		dbl gamma(0,0);
-		{
-			System const& H = zd.Homotopy();
-			auto const& start = zd.StartSystem();
-			Vec<dbl> xr = Vec<dbl>::Random(static_cast<int>(H.NumVariables()));
-			gamma = H.Eval(xr, dbl(1.0))(0) / start.Eval(xr)(0);
-			// print the start points (history-dependence here = start-point generation is non-det)
-			auto const& ss = zd.StartSystem();
-			for (unsigned long long i = 0; i < ss.NumStartPoints(); ++i)
-			{
-				auto sp = ss.template StartPoint<dbl>(i);
-				std::cout << "[determinism]      sp[" << i << "] = " << std::setprecision(8) << sp.transpose() << "\n";
-			}
-		}
-		zd.Solve();
-		auto const& md = zd.FinalSolutionMetadata();
-		unsigned good = 0; for (auto const& m : md) if (m.endgame_success == SuccessCode::Success) ++good;
-		return std::make_tuple(gamma, bertini::probe::max_precision_seen.load(), good);
-	};
-
-	auto show = [&](const char* label, std::tuple<dbl,unsigned,unsigned> r){
-		std::cout << "[determinism] " << label << " gamma=" << std::setprecision(10) << std::get<0>(r)
-		          << " maxPrec=" << std::get<1>(r) << " good=" << std::get<2>(r) << std::endl;
-	};
-
-	std::cout << "\n[determinism] does SetGlobalSeed(53) fully reset? (same seed, repeated in one process)\n";
-	show("53 (1st)        ", solve_once(53));
-	solve_once(21);                              // a SPIKING seed (the perturber)
-	show("53 (after 21)   ", solve_once(53));
-	DefaultPrecision(30);
-	BOOST_CHECK(true);
-}
 
 
-// #3 from the AMP-escalation investigation: along the actual seed-6 MHom path, log the condition
-// number / precision vs |t|, to confirm whether ||J^{-1}|| spikes then RECOVERS (a transient
-// near-singular pass) and where.  Also recovers and prints gamma to confirm it is genuinely
-// complex.  Information-gathering only -- no assertions about the trajectory shape.
-BOOST_AUTO_TEST_CASE(mhom_condition_number_trajectory)
-{
-	// PROBE: diagnostic sweep, slow and can hit grinding seeds.  Run with BERTINI_RUN_PROBES=1.
-	if (!std::getenv("BERTINI_RUN_PROBES")) { BOOST_CHECK(true); return; }
-	using namespace bertini;
-	using namespace tracking;
-
-	// Sweep seeds until we CATCH a genuinely spiking path (max precision pushed well above the
-	// baseline), then dump that path's condition-number/precision trajectory -- so we can see
-	// whether ||J^{-1}|| spikes then RECOVERS, and at what |t|.  (Necessary because SetGlobalSeed
-	// does not fully reset RNG, so a fixed seed is not reproducible across call contexts.)
-	auto build = []() {
-		System sys;
-		auto x = Variable::Make("x");
-		auto y = Variable::Make("y");
-		sys.AddVariableGroup(VariableGroup{x});
-		sys.AddVariableGroup(VariableGroup{y});
-		sys.AddFunction(x*y - 1);
-		sys.AddFunction(x + y);
-		return sys;
-	};
-
-	CondNumTrajectory<AMPTracker> spike;   // trajectory of the first spiking seed found
-	unsigned spike_seed = 0; dbl spike_gamma(0,0);
-
-	for (unsigned seed = 1; seed <= 60 && spike_seed == 0; ++seed)
-	{
-		SetGlobalSeed(seed);
-		bertini::probe::reset();
-		System sys = build();
-		auto zd = algorithm::ZeroDim<AMPTracker,
-		                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
-		                             decltype(sys),
-		                             start_system::MHomogeneous>(sys);
-		zd.DefaultSetup();
-
-		dbl gamma(0,0);
-		{
-			System const& H = zd.Homotopy();
-			auto const& start = zd.StartSystem();
-			Vec<dbl> xr = Vec<dbl>::Random(static_cast<int>(H.NumVariables()));
-			Vec<dbl> Hv = H.Eval(xr, dbl(1.0));
-			Vec<dbl> Sv = start.Eval(xr);
-			gamma = Hv(0) / Sv(0);
-		}
-
-		CondNumTrajectory<AMPTracker> traj;
-		zd.GetTracker().AddObserver(traj);
-		zd.Solve();
-		zd.GetTracker().RemoveObserver(traj);
-
-		if (bertini::probe::max_precision_seen.load() > 80) // a genuine escalation
-		{
-			spike = std::move(traj);
-			spike_seed = seed;
-			spike_gamma = gamma;
-		}
-	}
-
-	if (spike_seed == 0)
-	{
-		std::cout << "\n[trajectory] no spiking seed found in 1..60 in this context (max precision stayed low).\n" << std::flush;
-		BOOST_CHECK(true);
-		return;
-	}
-
-	std::cout << "\n[trajectory] spiking seed = " << spike_seed
-	          << " ; gamma = " << spike_gamma << " (|Im|=" << std::abs(spike_gamma.imag())
-	          << ", |gamma|=" << std::abs(spike_gamma) << ")\n";
-	// probe counters still hold the spiking seed's values (loop exited on finding it): WHERE did
-	// the escalation originate?
-	std::cout << "[trajectory] per-cause for this seed:"
-	          << " trackerPrecIncreases=" << bertini::probe::tracker_precision_increases.load()
-	          << " endgameRefineEscalations=" << bertini::probe::endgame_refine_escalations.load()
-	          << " predictorHPN=" << bertini::probe::predictor_hpn.load()
-	          << " corrTrackHPN=" << bertini::probe::corrector_track_hpn.load()
-	          << " corrRefineHPN=" << bertini::probe::corrector_refine_hpn.load()
-	          << " maxDigitsB=" << bertini::probe::max_digits_b.load() << "\n";
-	std::cout << "   step |        |t|        | prec | log10(condNum)\n";
-	std::cout << "  ------+-------------------+------+----------------\n";
-	double max_cond = 0.0; double abst_at_max = 0.0; unsigned max_prec = 0; size_t step_at_max = 0;
-	for (size_t i = 0; i < spike.rows.size(); ++i)
-	{
-		double abst = std::get<0>(spike.rows[i]);
-		unsigned prec = std::get<1>(spike.rows[i]);
-		double cond = std::get<2>(spike.rows[i]);
-		double lc = (cond > 0) ? std::log10(cond) : 0.0;
-		if (cond > max_cond) { max_cond = cond; abst_at_max = abst; step_at_max = i; }
-		if (prec > max_prec) max_prec = prec;
-		std::cout << std::setw(7) << i << " | " << std::setw(17) << std::scientific << std::setprecision(6) << abst
-		          << " | " << std::setw(4) << prec << " | " << std::setw(14) << std::fixed << std::setprecision(3) << lc
-		          << std::endl;
-	}
-	// did precision recover after the peak?
-	unsigned prec_at_end = spike.rows.empty() ? 0 : std::get<1>(spike.rows.back());
-	std::cout << "[trajectory] max log10(condNum) = " << std::log10(std::max(max_cond,1.0))
-	          << " at |t| = " << std::scientific << abst_at_max << " (step " << step_at_max << "/" << spike.rows.size() << ")"
-	          << " ; max precision = " << max_prec << " ; precision at path end = " << prec_at_end
-	          << (prec_at_end < max_prec ? "  (RECOVERED)" : "  (did NOT recover)") << "\n";
-	std::cout << "[trajectory] DigitsB breakdown high-water: max log10(norm_J_inverse)="
-	          << bertini::probe::max_log10_normJinv.load() << "  max log10(size_proportion)="
-	          << bertini::probe::max_log10_sizeprop.load() << "  maxDigitsB=" << bertini::probe::max_digits_b.load()
-	          << "\n" << std::flush;
-
-	DefaultPrecision(30); // restore for subsequent tests
-
-	BOOST_CHECK(true); // diagnostic; no trajectory-shape assertion
-}
 
 
 BOOST_AUTO_TEST_SUITE_END()

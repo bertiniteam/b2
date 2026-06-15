@@ -8,8 +8,6 @@ same every run: the tests pass or fail deterministically, with no gamma-retry lo
 40x retry-until-success loop, and then a smaller one, ballooned Windows CI.)
 """
 
-import sys
-
 import pytest
 
 import bertini as pb
@@ -56,13 +54,6 @@ def _successful_roots(solver):
             if int(md[i].endgame_success) == OK and len(sols[i]) == 2]
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="On Windows (clang-cl) AMP, the blend-block homotopy, and the Cauchy endgame do not keep "
-           "precision in lockstep for this system, so a path can grind toward MaxPrecisionAllowed "
-           "instead of converging (it once hung Windows CI for 6h).  Tracked as the block-precision "
-           "follow-up; the AMP MHom path itself is covered on Windows by eigenvalue_test.",
-)
 def test_mhom_solves_adaptive_precision():
     """AMP is the robust MHom path; with a fixed seed it solves this system deterministically."""
     good = _successful_roots(_solve(ZeroDimCauchyAdaptivePrecisionMHomogeneous))

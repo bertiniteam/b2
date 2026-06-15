@@ -12,7 +12,6 @@
 #include "bertini2/trackers/amp_criteria.hpp"
 #include "bertini2/trackers/config.hpp"
 #include "bertini2/system/system.hpp"
-#include "bertini2/detail/escalation_probe.hpp" // PROBE: temporary escalation instrumentation
 
 
 namespace bertini{
@@ -237,10 +236,10 @@ namespace bertini{
 						NumErrorT norm_J_inverse(solve_ref.norm());
 
 						if (!amp::CriterionB<ComplexT>(NumErrorT(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, NumErrorT(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
-							{ ++bertini::probe::corrector_track_hpn; return SuccessCode::HigherPrecisionNecessary; } // PROBE
+							return SuccessCode::HigherPrecisionNecessary;
 
 						if (!amp::CriterionC<ComplexT>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
-							{ ++bertini::probe::corrector_track_hpn; return SuccessCode::HigherPrecisionNecessary; } // PROBE
+							return SuccessCode::HigherPrecisionNecessary;
 					}
 
 					return SuccessCode::FailedToConverge;
@@ -318,10 +317,6 @@ namespace bertini{
 							// condition estimates comparable across steps, is cheaper, and keeps tracking
 							// deterministic / parallel-bit-identical.
 							Vec<ComplexT>& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
-							// PROBE A/B (temporary): BERTINI_REGEN_PROBE restores the old per-call regen.
-							static const bool regen = (std::getenv("BERTINI_REGEN_PROBE") != nullptr);
-							if (regen)
-								for (int ri = 0; ri < (int)rand_ref.size(); ++ri) rand_ref(ri) = RandomUnit<ComplexT>();
 							Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
 							solve_ref = LU_ref.solve(rand_ref);
 							norm_J_inverse = NumErrorT(solve_ref.norm());
@@ -332,10 +327,10 @@ namespace bertini{
 							return SuccessCode::Success;
 						
 						if (!amp::CriterionB<ComplexT>(norm_J, norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, norm_delta_z, AMP_config))
-							{ ++bertini::probe::corrector_refine_hpn; return SuccessCode::HigherPrecisionNecessary; } // PROBE
+							return SuccessCode::HigherPrecisionNecessary;
 
 						if (!amp::CriterionC<ComplexT>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
-							{ ++bertini::probe::corrector_refine_hpn; return SuccessCode::HigherPrecisionNecessary; } // PROBE
+							return SuccessCode::HigherPrecisionNecessary;
 					}
 
 					return SuccessCode::FailedToConverge;

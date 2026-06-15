@@ -28,7 +28,6 @@
 
 #include "bertini2/system/blocks/block.hpp"
 #include "bertini2/random.hpp"
-#include "bertini2/detail/escalation_probe.hpp" // PROBE: start-point conditioning instrumentation
 
 #include <Eigen/SVD>
 #include <map>
@@ -519,21 +518,6 @@ namespace bertini
 
 			Vec<T> affine_solution = A.partialPivLu().solve(b);
 
-			// PROBE (branch perf/amp-block-precision-escalation): the pin-last-coordinate chart can
-			// be a poor representative (start point with last coord ~0), making A ill-conditioned and
-			// blowing up affine_solution -- record both so we can see how robust the workaround is.
-			bertini::probe::note_startpoint_affnorm(static_cast<double>(affine_solution.norm()));
-			if (bertini::probe::trace_enabled() && num_hom_groups_ > 0)
-			{
-				Mat<dbl> Ad(A.rows(), A.cols());
-				for (Eigen::Index r = 0; r < A.rows(); ++r)
-					for (Eigen::Index c = 0; c < A.cols(); ++c)
-						Ad(r, c) = dbl(A(r, c));
-				Eigen::JacobiSVD<Mat<dbl>> svd(Ad);
-				double smax = static_cast<double>(svd.singularValues()(0));
-				double smin = static_cast<double>(svd.singularValues()(svd.singularValues().size() - 1));
-				if (smin > 0) bertini::probe::note_startpoint_Acond(smax / smin);
-			}
 
 			// The linear solve gives the start point in affine (dehomogenized) coordinates;
 			// lift it onto the homogenized + patched coordinate system the homotopy is
