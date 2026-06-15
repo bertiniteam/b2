@@ -57,7 +57,13 @@ namespace bertini{
 			inline
 			Predictor DefaultPredictor()
 			{
-				return Predictor::Euler;
+				// RKF45 (Runge-Kutta-Fehlberg 4(5)): order-4 prediction with an embedded error
+				// estimate.  Was Euler (order 1) -- an ODR clash with the RKF45 definition in
+				// explicit_predictors.hpp, and atrocious for performance (tiny steps), and it forced
+				// SetSizeProportion onto the no-error-estimate fallback maxCoeff(K)/|delta_t|^p, which
+				// blows up at small steps and spuriously inflates AMP precision.  RKF45 has an error
+				// estimate, so size_proportion = err_est/|delta_t|^(p+1) stays bounded.
+				return Predictor::RKF45;
 			}
 			
 			

@@ -2012,6 +2012,95 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_mp)
 }
 
 
+// --- size_proportion / error_estimate behaviour (AMP precision-escalation work) -------------------
+// The default predictor was Euler (no error estimate); its size_proportion fallback
+// maxCoeff(K)/|delta_t|^p blows up as the step shrinks (~1/|delta_t|), spuriously inflating AMP
+// precision (DigitsB).  RKF45 has an embedded error estimate, so size_proportion =
+// err_est/|delta_t|^(p+1) is a bounded, stable "a" coefficient.  These tests pin that and guard the
+// default.  (Previously size_proportion / error_estimate were computed in tests but never asserted.)
+
+namespace {
+	// build the smooth test homotopy + a generic on-path point used by the size_proportion tests.
+	struct PredFixture {
+		bertini::System sys;
+		Vec<dbl> current_space{2};
+		dbl current_time{0.9};
+		bertini::tracking::AdaptiveMultiplePrecisionConfig AMP;
+		PredFixture() {
+			Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+			sys.AddVariableGroup(VariableGroup{x,y});
+			sys.AddPathVariable(t);
+			sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+			sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
+			current_space << dbl(2.3,0.2), dbl(1.1,1.87);
+			AMP = bertini::tracking::AMPConfigFrom(sys);
+			AMP.coefficient_bound = 5;
+		}
+	};
+}
+
+BOOST_AUTO_TEST_CASE(default_predictor_is_rkf45)
+{
+	// guards the decision to default to an error-estimate predictor (was Euler, atrocious for
+	// performance and the cause of the size_proportion blow-up).
+	BOOST_CHECK(bertini::tracking::predict::DefaultPredictor() == bertini::tracking::Predictor::RKF45);
+}
+
+BOOST_AUTO_TEST_CASE(rkf45_size_proportion_stays_bounded_as_step_shrinks)
+{
+	PredFixture f;
+	auto predictor = std::make_shared<ExplicitRKPredictor>(bertini::tracking::Predictor::RKF45, f.sys);
+
+	double tracking_tolerance(1e-5), cn(0); unsigned nsc(1), freq(1);
+	Vec<dbl> result; double err_est(0), size_prop(0), nJ(0), nJinv(0);
+
+	double sp_max = 0.0, sp_min = 1e300;
+	for (double h : {-0.1, -0.05, -0.025, -0.0125}) // step shrinks 8x; err_est stays above roundoff
+	{
+		auto code = predictor->Predict(result, err_est, size_prop, nJ, nJinv, f.sys,
+		                               f.current_space, f.current_time, dbl(h),
+		                               cn, nsc, freq, tracking_tolerance, f.AMP);
+		BOOST_REQUIRE(code == bertini::SuccessCode::Success);
+		BOOST_REQUIRE(size_prop > 0.0);
+		sp_max = std::max(sp_max, size_prop);
+		sp_min = std::min(sp_min, size_prop);
+	}
+	// RKF45's size_proportion ~ constant: it stays within a small factor as the step shrinks 8x.
+	// Euler's fallback maxCoeff(K)/|delta_t| would vary by ~8x over the same range (and unboundedly
+	// as the step keeps shrinking) -- which is what spuriously escalated precision.
+	BOOST_CHECK_LT(sp_max / sp_min, 5.0);
+}
+
+BOOST_AUTO_TEST_CASE(rkf45_error_estimate_has_order_p_plus_1)
+{
+	PredFixture f;
+	auto predictor = std::make_shared<ExplicitRKPredictor>(bertini::tracking::Predictor::RKF45, f.sys);
+	const unsigned p = bertini::tracking::predict::Order(bertini::tracking::Predictor::RKF45); // 4
+
+	double tracking_tolerance(1e-5), cn(0); unsigned nsc(1), freq(1);
+	Vec<dbl> result; double size_prop(0), nJ(0), nJinv(0);
+
+	auto err_at = [&](double h) {
+		double err_est(0);
+		auto code = predictor->Predict(result, err_est, size_prop, nJ, nJinv, f.sys,
+		                               f.current_space, f.current_time, dbl(h),
+		                               cn, nsc, freq, tracking_tolerance, f.AMP);
+		BOOST_REQUIRE(code == bertini::SuccessCode::Success);
+		return err_est;
+	};
+
+	// error_estimate ~ C * h^(p+1): halving the step divides the estimate by 2^(p+1).
+	const double expected_ratio = std::pow(2.0, double(p + 1)); // 2^5 = 32 for RKF45
+	for (double h : {-0.1, -0.05, -0.025}) // above the roundoff floor in double
+	{
+		double ratio = err_at(h) / err_at(h / 2.0);
+		// within 2x of the asymptotic ratio (higher-order terms perturb it a little)
+		BOOST_CHECK_GT(ratio, expected_ratio / 2.0);
+		BOOST_CHECK_LT(ratio, expected_ratio * 2.0);
+	}
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
