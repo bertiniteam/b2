@@ -310,8 +310,11 @@ namespace bertini{
 						norm_delta_z = NumErrorT(step_ref.template lpNorm<Eigen::Infinity>());
 						norm_J = NumErrorT(J_temp_ref.norm());
 						{
-							Vec<ComplexT>& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
-							for (int ri = 0; ri < (int)rand_ref.size(); ++ri) rand_ref(ri) = RandomUnit<ComplexT>();
+							// Reuse the FIXED probe vector generated once at setup (do NOT regenerate
+							// per call): tracking must draw no randomness (determinism + parallel
+							// bit-identicality), it's cheaper, and a fixed probe direction makes the
+							// ||J^{-1}|| estimates comparable across steps.
+							Vec<ComplexT> const& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
 							Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
 							solve_ref = LU_ref.solve(rand_ref);
 							norm_J_inverse = NumErrorT(solve_ref.norm());

@@ -48,9 +48,30 @@ inline uint64_t splitmix64(uint64_t x)
 
 std::atomic<unsigned long> g_global_seed{0};
 
+// Domain tags for stream derivation.  Distinct domains (and distinct indices within a domain)
+// produce distinct engine states, so no two streams ever coincide and no path/worker stream can
+// reproduce the setup stream.  (Setup = the stream that generates gamma / start coefficients / patch.)
+constexpr uint64_t kDomainSetup  = 0x5e7400000000ULL; // "setup"  -- SetGlobalSeed
+constexpr uint64_t kDomainPath   = 0x9a7400000000ULL; // "path"   -- per-path tracking streams
+constexpr uint64_t kDomainWorker = 0x107ce000000ULL;  // "worker" -- per-rank child seeds (MPI)
+
+// Seed the engine from the FULL (master, domain, index) tuple via std::seed_seq.  Using the whole
+// 64-bit words (not a uint32_t truncation) means distinct tuples set distinct mt19937 states, so
+// streams cannot collide modulo 2^32 (the old bug).
+inline void SeedEngine(std::mt19937& eng, uint64_t master, uint64_t domain, uint64_t index)
+{
+	std::seed_seq seq{
+		static_cast<uint32_t>(master),        static_cast<uint32_t>(master >> 32),
+		static_cast<uint32_t>(domain),        static_cast<uint32_t>(domain >> 32),
+		static_cast<uint32_t>(index),         static_cast<uint32_t>(index >> 32)
+	};
+	eng.seed(seq);
+}
+
 } // anon namespace
 
-// one mt19937 per thread — seeded from entropy on first use
+// one mt19937 per thread — seeded from entropy on first use (overwritten deterministically by
+// SetGlobalSeed / ReseedThisThread before any draw in a seeded run).
 thread_local std::mt19937 g_thread_engine{std::random_device{}()};
 
 std::mt19937& ThreadEngine() { return g_thread_engine; }
@@ -77,13 +98,27 @@ void SetGlobalSeed(unsigned long seed)
 		if (seed == 0) seed = 1;
 	}
 	g_global_seed.store(seed, std::memory_order_relaxed);
-	g_thread_engine.seed(static_cast<uint32_t>(splitmix64(static_cast<uint64_t>(seed))));
+	// the setup stream: domain = setup, index = 0.  Path/worker streams use other domains, so none
+	// of them can ever reproduce this stream (the old ReseedThisThread(0) == SetGlobalSeed collision).
+	SeedEngine(g_thread_engine, static_cast<uint64_t>(seed), kDomainSetup, 0);
 }
 
 void ReseedThisThread(uint64_t stream_key)
 {
-	uint64_t mixed = splitmix64(static_cast<uint64_t>(GetGlobalSeed()) ^ stream_key);
-	g_thread_engine.seed(static_cast<uint32_t>(mixed));
+	// per-path / per-thread stream: domain = path, index = stream_key.  Deterministic from the global
+	// seed and distinct for every stream_key (and distinct from the setup stream).
+	SeedEngine(g_thread_engine, static_cast<uint64_t>(GetGlobalSeed()), kDomainPath, stream_key);
+}
+
+// Derive a distinct, deterministic child seed for a worker rank, from the master seed.  The manager
+// computes these and hands one to each worker, which then calls SetGlobalSeed(child) -- so every
+// process has its own non-overlapping deterministic stream, all reproducible from the one user seed.
+unsigned long DerivedWorkerSeed(uint64_t worker_index)
+{
+	uint64_t s = static_cast<uint64_t>(GetGlobalSeed());
+	uint64_t h = splitmix64(s ^ kDomainWorker ^ splitmix64(worker_index));
+	if (h == 0) h = 1; // SetGlobalSeed treats 0 as "draw from entropy"; avoid that
+	return static_cast<unsigned long>(h);
 }
 
 

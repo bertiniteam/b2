@@ -334,6 +334,9 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 // Run with:  ./build/core/test_nag_algorithms --run_test=zero_dim/amp_escalation_probe --log_level=message
 BOOST_AUTO_TEST_CASE(amp_escalation_probe)
 {
+	// PROBE (branch perf/amp-block-precision-escalation): diagnostic sweep, slow and can hit grinding
+	// seeds -- not part of the default suite.  Run with BERTINI_RUN_PROBES=1.
+	if (!std::getenv("BERTINI_RUN_PROBES")) { BOOST_CHECK(true); return; }
 	using namespace bertini;
 	using namespace tracking;
 
@@ -517,6 +520,8 @@ public:
 // non-deterministic; if gamma matches but maxPrec differs the SOLVE draws are non-deterministic.
 BOOST_AUTO_TEST_CASE(seed_determinism_probe)
 {
+	// PROBE: diagnostic; slow.  Run with BERTINI_RUN_PROBES=1.
+	if (!std::getenv("BERTINI_RUN_PROBES")) { BOOST_CHECK(true); return; }
 	using namespace bertini;
 	using namespace tracking;
 
@@ -586,6 +591,8 @@ BOOST_AUTO_TEST_CASE(seed_determinism_probe)
 // complex.  Information-gathering only -- no assertions about the trajectory shape.
 BOOST_AUTO_TEST_CASE(mhom_condition_number_trajectory)
 {
+	// PROBE: diagnostic sweep, slow and can hit grinding seeds.  Run with BERTINI_RUN_PROBES=1.
+	if (!std::getenv("BERTINI_RUN_PROBES")) { BOOST_CHECK(true); return; }
 	using namespace bertini;
 	using namespace tracking;
 

@@ -73,6 +73,14 @@ namespace bertini
 	*/
 	void ReseedThisThread(uint64_t stream_key);
 
+	/**
+	Derive a distinct, deterministic child seed for a worker rank from the global (master) seed.
+	The MPI manager computes one per worker and hands it over; the worker calls SetGlobalSeed(child),
+	giving every process its own non-overlapping deterministic stream -- all reproducible from the one
+	user seed, and no two processes ever generate the same random value.
+	*/
+	unsigned long DerivedWorkerSeed(uint64_t worker_index);
+
 
 	/**
 	Generate a random integer number between -10^digits and 10^digits
