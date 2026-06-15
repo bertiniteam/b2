@@ -27,6 +27,9 @@
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/system/blocks/block.hpp"
 #include "bertini2/system/blocks/blend_block.hpp"
+#include "bertini2/detail/escalation_probe.hpp" // PROBE: start-point conditioning instrumentation
+#include <iostream>
+#include <iomanip>
 
 using System = bertini::System;
 
@@ -185,6 +188,100 @@ BOOST_AUTO_TEST_CASE(start_points_are_roots_of_the_start_system)
 	auto fpt = H.Eval(xq, tv + hstep);
 	for (Eigen::Index r = 0; r < f0.size(); ++r)
 		BOOST_CHECK(std::abs((fpt(r) - f0(r)) / hstep - dHdt(r)) < 1e-5);
+}
+
+
+// PROBE (branch perf/amp-block-precision-escalation): exercise the PROJECTIVE-group start-point
+// path -- the affine-chart "pin the last coordinate to 1" normalization workaround (mhom.cpp
+// GenerateStartPointT).  For each seed, every projective start point should be an exact root of the
+// start system and be well-scaled.  If the pinned chart is a poor representative (a start point
+// whose last coordinate is ~0), the linear solve is ill-conditioned -> the start point loses
+// accuracy in double and/or comes out poorly scaled -> the homotopy path starts ill-conditioned.
+// Information-gathering: prints residuals/scales across seeds; only asserts the count is sane.
+BOOST_AUTO_TEST_CASE(projective_start_points_diagnostic)
+{
+	using bertini::SetGlobalSeed;
+
+	// builder for an m-projective system: `groups` P^(size-1) groups, each pair coupled by a
+	// multilinear equation, so the start system has several start points per seed.
+	auto run = [](const char* label, int num_groups, int group_size, unsigned seeds)
+	{
+		std::cout << "\n[projective MHom start points] " << label
+		          << " (" << num_groups << " x P^" << (group_size-1)
+		          << ", pin-last-coord normalization), per seed:\n";
+		std::cout << " seed | #sp | max|startEval|(dbl) | max|sp|(dbl) | log10||affSol|| | log10 cond(A) | max|startEval|(mpfr80)\n";
+		std::cout << "------+-----+--------------------+--------------+-----------------+---------------+-----------------------\n";
+
+		for (unsigned seed = 1; seed <= seeds; ++seed)
+		{
+			DefaultPrecision(30);
+			SetGlobalSeed(seed);
+			bertini::probe::reset();
+
+			System sys;
+			std::vector<VariableGroup> groups;
+			for (int g = 0; g < num_groups; ++g)
+			{
+				VariableGroup vg;
+				for (int k = 0; k < group_size; ++k)
+					vg.push_back(Variable::Make("x_" + std::to_string(g) + "_" + std::to_string(k)));
+				sys.AddHomVariableGroup(vg);
+				groups.push_back(vg);
+			}
+			// num_groups*(group_size-1) equations, each a difference of two MULTILINEAR monomials
+			// (one factor from EVERY group), so each equation is homogeneous of degree 1 in every
+			// group -- the multidegree matrix is all-ones and AutoPatch accepts it.
+			const int num_eqns = num_groups * (group_size - 1);
+			for (int e = 0; e < num_eqns; ++e)
+			{
+				std::shared_ptr<bertini::node::Node> termA = groups[0][(e + 0) % group_size];
+				std::shared_ptr<bertini::node::Node> termB = groups[0][(e + 1) % group_size];
+				for (int g = 1; g < num_groups; ++g)
+				{
+					termA = termA * groups[g][(e + g) % group_size];
+					termB = termB * groups[g][(e + g + 1) % group_size];
+				}
+				sys.AddFunction(termA - termB);
+			}
+			sys.AutoPatch();
+
+			auto mhom = MHomogeneous(sys);
+			auto n = mhom.NumStartPoints();
+
+			double max_res_d = 0.0, max_norm_d = 0.0;
+			for (unsigned long long i = 0; i < n; ++i)
+			{
+				auto sp = mhom.StartPoint<dbl>(i);
+				auto v  = mhom.Eval(sp);
+				max_res_d  = std::max(max_res_d,  static_cast<double>(v.array().abs().maxCoeff()));
+				max_norm_d = std::max(max_norm_d, static_cast<double>(sp.norm()));
+			}
+
+			DefaultPrecision(80);
+			mhom.precision(80);
+			double max_res_mp = 0.0;
+			for (unsigned long long i = 0; i < n; ++i)
+			{
+				auto sp = mhom.StartPoint<mpfr>(i);
+				auto v  = mhom.Eval(sp);
+				max_res_mp = std::max(max_res_mp, static_cast<double>(v.array().abs().maxCoeff()));
+			}
+
+			std::cout << std::setw(5) << seed << " | " << std::setw(3) << n << " | "
+			          << std::setw(18) << std::scientific << std::setprecision(2) << max_res_d << " | "
+			          << std::setw(12) << max_norm_d << " | "
+			          << std::setw(15) << bertini::probe::max_startpoint_log10_affnorm.load() << " | "
+			          << std::setw(13) << bertini::probe::max_startpoint_log10_Acond.load() << " | "
+			          << std::setw(21) << max_res_mp << std::endl;
+
+			BOOST_CHECK_GT(n, 0ull);
+		}
+	};
+
+	run("small", 2, 2, 12);   // 2 x P^1
+	run("wider", 2, 4, 12);   // 2 x P^3  -- bigger groups stress the pinned chart
+	run("deep",  3, 3, 12);   // 3 x P^2  -- more groups, more start points
+	DefaultPrecision(30);
 }
 
 

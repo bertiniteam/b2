@@ -33,9 +33,12 @@
 #include <boost/test/unit_test.hpp>
 #include "bertini2/nag_algorithms/output.hpp"
 #include "bertini2/detail/escalation_probe.hpp" // PROBE: temporary escalation instrumentation
+#include "bertini2/trackers/observers.hpp"
+#include "bertini2/trackers/events.hpp"
 #include <chrono>
 #include <iostream>
 #include <iomanip>
+#include <typeindex>
 
 
 using Variable = bertini::node::Variable;
@@ -477,6 +480,102 @@ BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
 		compare(H.Eval(p, t),     He.Eval(p, t),     1e-70);
 		compare(H.Jacobian(p, t), He.Jacobian(p, t), 1e-70);
 	}
+}
+
+
+// PROBE observer (branch perf/amp-block-precision-escalation): record, per successful step, the
+// |t|, working precision, and the tracker's condition-number estimate -- so we can SEE whether the
+// condition number (||J|| * ||J^{-1}||) spikes then RECOVERS along the actual seed-6 path, and at
+// what |t| (mid-path vs the t->0 endgame region).
+template <class TrackerT>
+class CondNumTrajectory : public bertini::Observer<TrackerT>
+{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	using EmitterT = typename bertini::tracking::TrackerTraits<TrackerT>::EventEmitterType;
+
+	std::vector<std::type_index> SubscribedEventTypes() const override
+	{ return { typeid(bertini::tracking::SuccessfulStep<EmitterT>) }; }
+
+	void Observe(bertini::AnyEvent const& e) override
+	{
+		auto p = dynamic_cast<const bertini::tracking::SuccessfulStep<EmitterT>*>(&e);
+		if (p)
+		{
+			auto const& tr = p->Get();
+			rows.emplace_back(static_cast<double>(abs(tr.CurrentTime())),
+			                  tr.CurrentPrecision(),
+			                  static_cast<double>(tr.LatestConditionNumber()));
+		}
+	}
+public:
+	std::vector<std::tuple<double, unsigned, double>> rows; // (|t|, precision, condition number)
+	virtual ~CondNumTrajectory() = default;
+};
+
+
+// #3 from the AMP-escalation investigation: along the actual seed-6 MHom path, log the condition
+// number / precision vs |t|, to confirm whether ||J^{-1}|| spikes then RECOVERS (a transient
+// near-singular pass) and where.  Also recovers and prints gamma to confirm it is genuinely
+// complex.  Information-gathering only -- no assertions about the trajectory shape.
+BOOST_AUTO_TEST_CASE(mhom_condition_number_trajectory)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	SetGlobalSeed(6);
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddVariableGroup(VariableGroup{y});
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x + y);
+
+	auto zd = algorithm::ZeroDim<AMPTracker,
+	                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+	                             decltype(sys),
+	                             start_system::MHomogeneous>(sys);
+	zd.DefaultSetup();
+
+	// recover gamma: at t=1, H_natural = gamma * start_natural, so the ratio of any nonzero
+	// natural component is gamma.  Confirms gamma is a genuine (nonzero-imaginary) complex number.
+	{
+		System const& H = zd.Homotopy();
+		auto const& start = zd.StartSystem();
+		Vec<dbl> xr = Vec<dbl>::Random(static_cast<int>(H.NumVariables()));
+		Vec<dbl> Hv = H.Eval(xr, dbl(1.0));
+		Vec<dbl> Sv = start.Eval(xr);
+		dbl gamma = Hv(0) / Sv(0);
+		std::cout << "\n[seed 6] recovered gamma = " << gamma
+		          << "   (|Im| = " << std::abs(gamma.imag()) << ")\n";
+	}
+
+	CondNumTrajectory<AMPTracker> traj;
+	zd.GetTracker().AddObserver(traj);
+	zd.Solve();
+	zd.GetTracker().RemoveObserver(traj);
+
+	std::cout << "[seed 6] " << traj.rows.size() << " successful steps; trajectory (every step):\n";
+	std::cout << "   step |        |t|        | prec | log10(condNum)\n";
+	std::cout << "  ------+-------------------+------+----------------\n";
+	double max_cond = 0.0; double abst_at_max = 0.0; unsigned max_prec = 0;
+	for (size_t i = 0; i < traj.rows.size(); ++i)
+	{
+		double abst = std::get<0>(traj.rows[i]);
+		unsigned prec = std::get<1>(traj.rows[i]);
+		double cond = std::get<2>(traj.rows[i]);
+		double lc = (cond > 0) ? std::log10(cond) : 0.0;
+		if (cond > max_cond) { max_cond = cond; abst_at_max = abst; }
+		if (prec > max_prec) max_prec = prec;
+		std::cout << std::setw(7) << i << " | " << std::setw(17) << std::scientific << std::setprecision(6) << abst
+		          << " | " << std::setw(4) << prec << " | " << std::setw(14) << std::fixed << std::setprecision(3) << lc
+		          << std::endl;
+	}
+	std::cout << "[seed 6] max log10(condNum) = " << std::log10(std::max(max_cond,1.0))
+	          << " at |t| = " << std::scientific << abst_at_max
+	          << " ; max precision = " << max_prec << "\n" << std::flush;
+
+	BOOST_CHECK(true); // diagnostic; no trajectory-shape assertion
 }
 
 
