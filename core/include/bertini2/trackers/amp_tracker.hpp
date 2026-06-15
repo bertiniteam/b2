@@ -176,10 +176,47 @@ namespace bertini{
 		inline
 		unsigned MinDigitsForStepsizeInterval(mpfr_float const& min_stepsize, mpfr_float const& max_stepsize, mpfr_float const& time_to_go)
 		{
-			return max(MinDigitsForLogOfStepsize(-log10(min_stepsize),time_to_go),   
+			return max(MinDigitsForLogOfStepsize(-log10(min_stepsize),time_to_go),
 				       MinDigitsForLogOfStepsize(-log10(max_stepsize),time_to_go));
 		}
-		
+
+		/**
+		 \brief Bertini 1's precision-decrease hysteresis margin (from B1's \c AMP2_update).
+
+		 The number of EXTRA digits a criterion must clear below the current precision before it is
+		 allowed to actually lower the working precision.  This prevents precision thrashing and
+		 replaces a consecutive-successful-steps counter with a stateless, precision-derived margin.
+
+		 B1 uses <tt>(currPrec_bits/32)*2</tt> ~ 2 digits per 32-bit precision packet (~20% slack).  In
+		 b2 precision is carried in decimal digits with packet size \c PrecisionIncrement(), so the
+		 faithful analog is <tt>(digits/PrecisionIncrement())*2</tt>.  Double precision gets no margin.
+		*/
+		inline
+		unsigned ExtraDigitsBeforePrecisionDecrease(unsigned current_precision)
+		{
+			if (current_precision <= DoublePrecision())
+				return 0;
+			return (current_precision / PrecisionIncrement()) * 2;
+		}
+
+		/**
+		 \brief Apply B1's precision-decrease hysteresis to one digits requirement (B1 \c AMP2_update).
+
+		 If \p digits_required would permit precision to drop below the current precision, demand \p extra
+		 additional digits before allowing the drop, and never raise the requirement above \p current_digits
+		 (a requirement that suggests a decrease must not be turned into a request for an increase).
+		*/
+		inline
+		void ApplyPrecisionDecreaseMargin(int & digits_required, unsigned current_digits, unsigned extra)
+		{
+			if (digits_required < static_cast<int>(current_digits))
+			{
+				digits_required += static_cast<int>(extra);
+				if (digits_required > static_cast<int>(current_digits))
+					digits_required = static_cast<int>(current_digits);
+			}
+		}
+
 
 		/**
 		 \brief Compute precision and stepsize minimizing the ArithmeticCost() of tracking.
@@ -536,7 +573,7 @@ namespace bertini{
 				num_precision_decreases_ = 0;
 				num_successful_steps_since_stepsize_increase_ = 0;
 				num_successful_steps_since_precision_decrease_ = 0;
-				// initialize to the frequency so guaranteed to compute it the first try 	
+				// initialize to the frequency so guaranteed to compute it the first try
 				num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
 			}
 
@@ -814,53 +851,76 @@ namespace bertini{
 			template <typename ComplexT>
 			SuccessCode AdjustAMPStepSuccess() const
 			{
-				// TODO: think about why we consider reducing the stepsize?  this is despite documentation stating that it can only increase
+				// This mirrors Bertini 1's AMP2_update: pick the cost-minimizing (precision, stepsize)
+				// after a successful step.  Faithful-to-B1 points, two of which were previously wrong:
+				//  (1) The rule-B precision requirement CREDITS THE STEP.  digits_B is the right-hand side
+				//      of  P + (p+1)*xi/N > digits_B  (xi = -log10(stepsize)); the floor is therefore
+				//      digits_B - (p+1)*(-log10(min_stepsize))/N, crediting the smallest allowed step, NOT
+				//      the raw digits_B.  Without this credit a tiny step (large size_proportion in the
+				//      roundoff regime) spuriously forced precision up.  B1: digits_B2 = ceil(P0 - eta_minSS/N).
+				//  (2) Precision decrease (and stepsize increase) is gated by BOTH B1's StepsForIncrease
+				//      consecutive-successful-steps counter AND the digits-margin hysteresis
+				//      (ExtraDigitsBeforePrecisionDecrease).  The single StepsForIncrease setting
+				//      (SteppingConfig::consecutive_successful_steps_before_stepsize_increase) governs both
+				//      gates -- the old, duplicate AMP-config precision-decrease setting was removed.
 				mpfr_float min_stepsize = current_stepsize_ * mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_);
 				mpfr_float max_stepsize = min( current_stepsize_ * mpfr_float(Get<Stepping>().step_size_success_factor, current_precision_),  mpfr_float(Get<Stepping>().max_step_size, current_precision_));
 
+				const unsigned steps_for_increase = Get<Stepping>().consecutive_successful_steps_before_stepsize_increase; // B1 StepsForIncrease
 
-				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexT>();
+				if (num_successful_steps_since_stepsize_increase_ < steps_for_increase)
+					max_stepsize = current_stepsize_; // not enough successes in a row: disallow stepsize increase
+
+				const unsigned N = Get<NewtonConfig>().max_num_newton_iterations;
+				const unsigned curr_digits = current_precision_;
+				const unsigned extra = ExtraDigitsBeforePrecisionDecrease(curr_digits);
+
+				// rule B, step-credited (credit the smallest allowed step = the most credit)
+				int digits_B = static_cast<int>(ceil( double(B_RHS<ComplexT>())
+				                   - (predictor_order_ + 1.0) * double(-log10(min_stepsize)) / N ));
+				int digits_C = static_cast<int>(DigitsC<ComplexT>());
+				int digits_stepsize = static_cast<int>(MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)));
+
+				// each requirement may only lower precision if it clears the hysteresis margin
+				ApplyPrecisionDecreaseMargin(digits_B, curr_digits, extra);
+				ApplyPrecisionDecreaseMargin(digits_C, curr_digits, extra);
+				ApplyPrecisionDecreaseMargin(digits_stepsize, curr_digits, extra);
+
+				int min_digits = std::max({ static_cast<int>(digits_tracking_tolerance_),
+				                            static_cast<int>(digits_final_),
+				                            digits_B, digits_C, digits_stepsize,
+				                            static_cast<int>(DoublePrecision()) });
+				unsigned min_precision = static_cast<unsigned>(min_digits); // >= DoublePrecision(), so non-negative
+
+				// StepsForIncrease gate + safety cap: precision may only be lowered after enough successful
+				// steps in a row and while under the decrease budget; otherwise hold the current precision.
+				const bool decrease_allowed =
+				    (num_successful_steps_since_precision_decrease_ >= steps_for_increase)
+				    &&
+				    (num_precision_decreases_ < Get<PrecConf>().max_num_precision_decreases);
+				if (!decrease_allowed)
+					min_precision = max(min_precision, current_precision_);
+
 				unsigned max_precision = Get<PrecConf>().maximum_precision;
-
-				if (num_successful_steps_since_stepsize_increase_ < Get<Stepping>().consecutive_successful_steps_before_stepsize_increase)
-					max_stepsize = current_stepsize_; // disallow stepsize changing
-
-
-				const bool decrease_disallowed =
-				    (num_successful_steps_since_precision_decrease_ < Get<PrecConf>().consecutive_successful_steps_before_precision_decrease)
-				    ||
-				    (num_precision_decreases_ >= Get<PrecConf>().max_num_precision_decreases);
-				if (decrease_disallowed)
-					min_precision = max(min_precision, current_precision_); // disallow precision changing
-
 
 				try {
 					MinimizeTrackingCost(next_precision_, next_stepsize_,
 								min_precision, min_stepsize,
 								max_precision, max_stepsize,
-								DigitsB<ComplexT>(),
-								Get<NewtonConfig>().max_num_newton_iterations,
+								DigitsB<ComplexT>(), // RAW digits_B (=P0) for the stepsize relation, per B1 minimize_cost
+								N,
 								predictor_order_);
 				} catch (std::runtime_error const&) {
 					return SuccessCode::FailedToSelectPrecisionAndStepsize;
 				}
 
-				if (current_precision_ > 40 && bertini::probe::trace_ok()) // PROBE: why precision won't relax
-					std::fprintf(stderr, "  [amp] StepSuccess prec=%u condNum=%.2e digitsB=%u successesSinceDecrease=%u(/%u) numDecreases=%u(/%u) decreaseDisallowed=%d -> next_prec=%u\n",
-					             current_precision_, double(this->condition_number_estimate_), DigitsB<ComplexT>(),
-					             num_successful_steps_since_precision_decrease_, Get<PrecConf>().consecutive_successful_steps_before_precision_decrease,
-					             num_precision_decreases_, Get<PrecConf>().max_num_precision_decreases,
-					             int(decrease_disallowed), next_precision_), std::fflush(stderr);
-
-
 				if ( (next_stepsize_ > current_stepsize_) || (next_precision_ < current_precision_) )
 					num_successful_steps_since_stepsize_increase_ = 0;
 				else
 					++num_successful_steps_since_stepsize_increase_;
-				
 
 				if (next_precision_ < current_precision_)
-				{ 
+				{
 					++num_precision_decreases_;
 					num_successful_steps_since_precision_decrease_ = 0;
 				}
@@ -949,24 +1009,31 @@ namespace bertini{
 				}
 				else
 				{
-					unsigned digits_B = DigitsB<ComplexT>();
+					unsigned digits_B = DigitsB<ComplexT>(); // RAW digits_B (=P0); the stepsize relation in MinimizeTrackingCost needs it raw
+
+					// rule-B precision floor CREDITS THE STEP (B1 AMP2_update: digits_B2 = ceil(P0 - eta_minSS/N)):
+					// floor = digits_B - (p+1)*(-log10(min_stepsize))/N, crediting the smallest allowed step.
+					// This keeps a small step (large size_proportion in the roundoff regime) from forcing
+					// precision up by itself; genuine ill-conditioning still escalates via D / rules A,C.
+					const unsigned N = Get<NewtonConfig>().max_num_newton_iterations;
+					int digits_B_credited = static_cast<int>(ceil( double(digits_B)
+					                            - (predictor_order_ + 1.0) * double(-log10(min_stepsize)) / N ));
+					if (digits_B_credited < 0)
+						digits_B_credited = 0;
 
 					unsigned min_precision = max(min_next_precision,
-					                             digits_B,
+					                             static_cast<unsigned>(digits_B_credited),
 					                             DigitsC<ComplexT>(),
 					                             MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)),
 					                             digits_final_
 					                             );
-
-					// NOTE: a previously-computed local `max_precision = max(min_precision, ceil(digits_B - (predictor_order_+1)*-log10(max_stepsize)/max_newton_its))`
-					// was never used; the maximum precision passed below comes from the precision config.
 
 					try {
 						MinimizeTrackingCost(next_precision_, next_stepsize_,
 								min_precision, min_stepsize,
 								Get<PrecConf>().maximum_precision, max_stepsize,
 								digits_B,
-								Get<NewtonConfig>().max_num_newton_iterations,
+								N,
 								predictor_order_);
 					} catch (std::runtime_error const&) {
 						return SuccessCode::FailedToSelectPrecisionAndStepsize;
@@ -1070,36 +1137,10 @@ namespace bertini{
 
 
 
-			/**
-			\brief Get the minimum required precision based on current state.
-
-			The current state determining the minimum required precision is:
-
-			* the norm of the Jacobian,
-			* the norm of the inverse of the Jacobian,
-			* the size_proportion, related to stepsize and predictor order,
-			* the norm of the current solution. 
-			* the tracking tolerance.
-
-			The min digits needed is the maximum of 
-
-			* Criterion B, 
-			* Criterion C, and 
-			* the digits required by the tracking tolerance.
-
-			\tparam ComplexT The complex number type.
-			\tparam RealT The real number type.
-			*/
-			template <typename ComplexT>
-			unsigned MinRequiredPrecision_BCTol() const
-			{
-				return max(DigitsB<ComplexT>(), 
-				           DigitsC<ComplexT>(), 
-				           digits_tracking_tolerance_, 
-				           DoublePrecision()); 
-			}
-
-
+			// (MinRequiredPrecision_BCTol was removed: it returned the UNCREDITED rule-B floor
+			//  max(DigitsB, DigitsC, tol, double), which is what spuriously escalated precision on
+			//  small steps.  AdjustAMPStepSuccess now computes the step-credited, margin-gated floor
+			//  directly, faithful to Bertini 1's AMP2_update.)
 
 
 
@@ -1126,8 +1167,8 @@ namespace bertini{
 			void OnStepFail() const override
 			{
 				Tracker::IncrementBaseCountersFail();
-				num_successful_steps_since_precision_decrease_ = 0;
 				num_successful_steps_since_stepsize_increase_ = 0;
+				num_successful_steps_since_precision_decrease_ = 0;
 				NotifyObservers(FailedStep<EmitterType>(*this));
 			}
 
@@ -1727,7 +1768,7 @@ namespace bertini{
 			mutable unsigned next_precision_; ///< The next precision
 			mutable unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
 			mutable unsigned initial_precision_; ///< The precision at the start of tracking.
-			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.
+			mutable unsigned num_successful_steps_since_precision_decrease_; ///< Consecutive successful steps since precision last decreased; gated by B1's StepsForIncrease.
 
 			mutable mpfr_complex endtime_highest_precision_;
 
