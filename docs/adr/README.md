@@ -36,3 +36,4 @@ Each ADR follows the template:
 | [0016](0016-distributed-zerodim-broadcast-homotopy-seed.md) | Distributed ZeroDim broadcasts the homotopy seed so all ranks form the identical homotopy | MPI / nag_algorithms |
 | [0017](0017-flakiness-is-tolerances-not-seeding.md) | Solve flakiness is a tolerance problem, not a seeding problem | Numerics / tracking |
 | [0018](0018-bound-every-test-with-a-timeout.md) | Bound every test with a timeout; pin seeds and skip known platform grinds | CI / testing |
+| [0019](0019-omit-debug-info-from-release-builds.md) | Omit debug info (-g) from Release builds; per-TU peak RSS caps build parallelism | Build / core |

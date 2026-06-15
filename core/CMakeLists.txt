@@ -48,7 +48,9 @@ else ()
 
         # and things for release here
         $<$<CONFIG:Release>:-O3>
-        $<$<CONFIG:Release>:-g>
+        # (debug info intentionally omitted from Release: CI strips it from
+        # wheels anyway, and -g bloats objects ~3-4x, exhausting disk on
+        # constrained build hosts.)
         # using O2 or O3 cuts runtime by over half.
 	)
 endif ()
