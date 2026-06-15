@@ -2101,6 +2101,35 @@ BOOST_AUTO_TEST_CASE(rkf45_error_estimate_has_order_p_plus_1)
 }
 
 
+BOOST_AUTO_TEST_CASE(euler_size_proportion_stays_bounded_as_step_shrinks)
+{
+	// Regression for the non-error-estimate (Euler) size_proportion bug: AMP2 (Eqs 9-10) gives
+	// a = ||d||/|s| = ||K|| ~ maxCoeff(|K|), an O(1) step-independent constant.  The old fallback
+	// maxCoeff(K)/|delta_t|^p over-divided by the step, so $a$ grew ~1/|delta_t| as the step shrank
+	// and spuriously escalated AMP precision.  The corrected formula must stay (nearly) constant.
+	PredFixture f;
+	auto predictor = std::make_shared<ExplicitRKPredictor>(bertini::tracking::Predictor::Euler, f.sys);
+
+	double tracking_tolerance(1e-5), cn(0); unsigned nsc(1), freq(1);
+	Vec<dbl> result; double size_prop(0), nJ(0), nJinv(0);
+
+	double sp_max = 0.0, sp_min = 1e300;
+	for (double h : {-0.1, -0.05, -0.025, -0.0125}) // step shrinks 8x
+	{
+		// Euler has no error estimate, so use the size_proportion-only Predict overload.
+		auto code = predictor->Predict(result, size_prop, nJ, nJinv, f.sys,
+		                               f.current_space, f.current_time, dbl(h),
+		                               cn, nsc, freq, tracking_tolerance, f.AMP);
+		BOOST_REQUIRE(code == bertini::SuccessCode::Success);
+		BOOST_REQUIRE(size_prop > 0.0);
+		sp_max = std::max(sp_max, size_prop);
+		sp_min = std::min(sp_min, size_prop);
+	}
+	// ||K|| (the tangent magnitude) barely moves over a smooth path as the step shrinks 8x; the
+	// buggy maxCoeff(K)/|delta_t| would vary by ~8x over the same range (and unboundedly as h->0).
+	BOOST_CHECK_LT(sp_max / sp_min, 2.0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

@@ -789,9 +789,20 @@ namespace bertini{
 					}
 					else
 					{
+						// No embedded error estimate (e.g. Euler, RK4).  AMP2 (bhswAMP2, Eqs 9-10)
+						// derives the size proportion $a$ from the prediction step itself, written as
+						// the initial Newton residual: ||d|| = a|s|.  The predicted step in z is
+						// delta_t*(sum_i b_i K_i), so ||d|| = |delta_t|*||K|| and therefore
+						//     a = ||d|| / |s| = ||K|| ~ maxCoeff(|K|),
+						// with NO further division by |delta_t|.  The previous
+						// maxCoeff(K)/|delta_t|^p over-divided by the step: it inflated $a$ like
+						// 1/|delta_t|^p as the step shrank, spuriously escalating AMP precision
+						// (DigitsB) on small steps.  $a$ is meant to be an O(1), step-independent
+						// proportionality constant -- see SetSizeProportion's error-estimate branch,
+						// which divides err_est by |delta_t|^(p+1) for exactly the same reason
+						// (AMP3 / bhsODEAMP Eq. 6).
 						Mat<ComplexT>& Kref = std::get< Mat<ComplexT> >(K_);
-						using std::pow;
-						size_proportion = NumErrorT(Kref.array().abs().maxCoeff()/(pow(abs(delta_t), p_)));
+						size_proportion = NumErrorT(Kref.array().abs().maxCoeff());
 						return SuccessCode::Success;
 					}
 				};
