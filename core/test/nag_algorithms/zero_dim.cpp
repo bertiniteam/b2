@@ -512,6 +512,74 @@ public:
 };
 
 
+// Determinism probe: for fixed seeds, does the SAME run produce the SAME gamma and the SAME
+// max precision?  Run the binary twice and diff -- if gamma differs the SETUP draws are
+// non-deterministic; if gamma matches but maxPrec differs the SOLVE draws are non-deterministic.
+BOOST_AUTO_TEST_CASE(seed_determinism_probe)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	// one solve of the 2x2 MHom at a given seed; returns (gamma, maxPrec, good).  threshold pinned
+	// to 10 so a spiking seed produces the bounded spike (not the threshold-5 oscillation grind).
+	auto solve_once = [](unsigned seed) {
+		std::cout << "[determinism]   (entry DefaultPrecision=" << DefaultPrecision()
+		          << " ThreadPrecision=" << ThreadPrecision() << ")\n";
+		SetGlobalSeed(seed);
+		System sys;
+		auto x = Variable::Make("x");
+		auto y = Variable::Make("y");
+		sys.AddVariableGroup(VariableGroup{x});
+		sys.AddVariableGroup(VariableGroup{y});
+		sys.AddFunction(x*y - 1);
+		sys.AddFunction(x + y);
+		auto zd = algorithm::ZeroDim<AMPTracker,
+		                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+		                             decltype(sys), start_system::MHomogeneous>(sys);
+		zd.DefaultSetup();
+		{
+			auto amp = zd.GetTracker().template Get<tracking::AdaptiveMultiplePrecisionConfig>();
+			amp.consecutive_successful_steps_before_precision_decrease = 10;
+			zd.GetTracker().Set(amp);
+		}
+		bertini::probe::reset();
+		dbl gamma(0,0);
+		{
+			System const& H = zd.Homotopy();
+			auto const& start = zd.StartSystem();
+			Vec<dbl> xr = Vec<dbl>::Random(static_cast<int>(H.NumVariables()));
+			gamma = H.Eval(xr, dbl(1.0))(0) / start.Eval(xr)(0);
+			// print the start points (history-dependence here = start-point generation is non-det)
+			auto const& ss = zd.StartSystem();
+			for (unsigned long long i = 0; i < ss.NumStartPoints(); ++i)
+			{
+				auto sp = ss.template StartPoint<dbl>(i);
+				std::cout << "[determinism]      sp[" << i << "] = " << std::setprecision(8) << sp.transpose() << "\n";
+			}
+		}
+		zd.Solve();
+		auto const& md = zd.FinalSolutionMetadata();
+		unsigned good = 0; for (auto const& m : md) if (m.endgame_success == SuccessCode::Success) ++good;
+		return std::make_tuple(gamma, bertini::probe::max_precision_seen.load(), good);
+	};
+
+	auto show = [&](const char* label, std::tuple<dbl,unsigned,unsigned> r){
+		std::cout << "[determinism] " << label << " gamma=" << std::setprecision(10) << std::get<0>(r)
+		          << " maxPrec=" << std::get<1>(r) << " good=" << std::get<2>(r) << std::endl;
+	};
+
+	std::cout << "\n[determinism] does SetGlobalSeed(53) fully reset? (same seed, repeated in one process)\n";
+	show("53 (1st)        ", solve_once(53));
+	show("53 (2nd)        ", solve_once(53));
+	solve_once(7); // perturb with a different seed
+	show("53 (after 7)    ", solve_once(53));
+	solve_once(21);
+	show("53 (after 21)   ", solve_once(53));
+	DefaultPrecision(30);
+	BOOST_CHECK(true);
+}
+
+
 // #3 from the AMP-escalation investigation: along the actual seed-6 MHom path, log the condition
 // number / precision vs |t|, to confirm whether ||J^{-1}|| spikes then RECOVERS (a transient
 // near-singular pass) and where.  Also recovers and prints gamma to confirm it is genuinely
