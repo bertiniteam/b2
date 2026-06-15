@@ -102,6 +102,11 @@ public:
 	/// Number of variables the block expects in the input vector.
 	size_t NumVariables() const { return num_vars_; }
 
+	/// The master (highest-precision) coefficient matrices, one per function; matrix i is
+	/// (#factors_i) x (num_vars+1), the last column being the constant/augmenting term.  Exposed
+	/// so the function-tree expansion (System::ExpandToFunctionTree) can rebuild f_i = prod_r L_r.
+	std::vector<Mat<mpfr_complex>> const& Factors() const { return factors_highest_precision_; }
+
 	/// Products of linears do not depend on the path variable.
 	bool DependsOnPathVariable() const { return false; }
 

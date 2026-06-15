@@ -915,6 +915,117 @@ namespace bertini
 	}
 
 
+	//
+	//  ExpandToFunctionTree -- build the pure function-tree twin of a block-composed system.
+	//  A verification / interop oracle (see the header).  Scoped to the current block types.
+	//
+	namespace {
+
+		// Build the function-tree node for a single linear form  sum_c M(r,c)*var_c + M(r,n),
+		// where row r of M holds the (augmented) coefficients and `vars` are the ordered variable
+		// nodes (column c <-> vars[c]); the last column is the constant / augmenting term.  Zero
+		// coefficients are skipped to keep the tree compact (and exact: a skipped term is +0).
+		Nd LinearFormNode(Mat<mpfr_complex> const& M, Eigen::Index r,
+		                  VariableGroup const& vars, size_t num_vars)
+		{
+			Nd form = node::Float::Make(M(r, static_cast<Eigen::Index>(num_vars))); // constant term
+			for (size_t c = 0; c < num_vars; ++c)
+			{
+				mpfr_complex const& coeff = M(r, static_cast<Eigen::Index>(c));
+				if (coeff.real() == 0 && coeff.imag() == 0)
+					continue;
+				form = form + node::Float::Make(coeff) * vars[c];
+			}
+			return form;
+		}
+
+	} // anonymous namespace
+
+
+	std::vector<Nd> System::NaturalFunctionsAsNodes() const
+	{
+		using namespace bertini::node;
+		std::vector<Nd> out;
+
+		auto const& vars = Variables(); // ordered variable nodes; block column c <-> vars[c]
+
+		for (auto const& blk : blocks_)
+		{
+			std::visit([&](auto const& b)
+			{
+				using B = std::decay_t<decltype(b)>;
+
+				if constexpr (std::is_same_v<B, blocks::PolynomialBlock>)
+				{
+					// already function-tree: take each Function's inner expression node.
+					for (auto const& f : b.Functions())
+						out.push_back(f->EntryNode());
+				}
+				else if constexpr (std::is_same_v<B, blocks::ProductsOfLinearsBlock>)
+				{
+					// f_i = prod_r ( row r of factor-matrix i . [vars ; 1] )
+					const size_t n = b.NumVariables();
+					if (static_cast<size_t>(vars.size()) != n)
+						throw std::runtime_error("ExpandToFunctionTree: products-of-linears variable count mismatch");
+					for (auto const& M : b.Factors())
+					{
+						Nd prod = nullptr;
+						for (Eigen::Index r = 0; r < M.rows(); ++r)
+						{
+							Nd factor = LinearFormNode(M, r, vars, n);
+							prod = prod ? (prod * factor) : factor;
+						}
+						out.push_back(prod ? prod : Nd(Integer::Make(1))); // empty product == 1
+					}
+				}
+				else if constexpr (std::is_same_v<B, blocks::BlendBlock<System>>)
+				{
+					// H = sum_i c_i(t) * operand_i, each operand expanded to nodes (recursion).
+					auto const& coeffs   = b.Coefficients();
+					auto const& operands = b.Operands();
+					const size_t k = b.NumFunctions();
+					std::vector<Nd> blended(k, nullptr);
+					for (size_t i = 0; i < operands.size(); ++i)
+					{
+						std::vector<Nd> fi = operands[i]->NaturalFunctionsAsNodes();
+						if (fi.size() < k)
+							throw std::runtime_error("ExpandToFunctionTree: blend operand has too few functions");
+						for (size_t j = 0; j < k; ++j)
+						{
+							Nd term = coeffs[i] * fi[j];
+							blended[j] = blended[j] ? (blended[j] + term) : term;
+						}
+					}
+					for (auto& f : blended)
+						out.push_back(f ? f : Nd(Integer::Make(0)));
+				}
+				else // LinearFormsBlock and any future block
+				{
+					throw std::runtime_error("ExpandToFunctionTree: block type not yet supported");
+				}
+			}, blk);
+		}
+
+		return out;
+	}
+
+
+	System System::ExpandToFunctionTree() const
+	{
+		// expand THIS system's blocks to nodes first (reads the current block structure)...
+		std::vector<Nd> nodes = NaturalFunctionsAsNodes();
+
+		// ...then build the twin from a copy (same variables / groups / hom vars / path variable /
+		// patch / ordering), with all blocks replaced by one PolynomialBlock of those nodes.
+		System result = *this;
+		result.ClearBlocks();
+		for (auto const& f : nodes)
+			result.AddFunction(f);
+		result.InvalidateDifferentiation();
+		return result;
+	}
+
+
 	void System::ReorderFunctionsByDegreeDecreasing()
 	{
 		auto degs = Degrees(Variables());

@@ -1083,6 +1083,22 @@ namespace bertini {
 		/// functions).  Mainly for testing the block path against the function-tree path.
 		void ClearBlocks() { blocks_.clear(); }
 
+		/// \brief Build an equivalent **pure function-tree** System: every block's functions
+		/// expressed as function-tree nodes, gathered into a single PolynomialBlock, with the
+		/// same variables, path variable, and patch (the patch is reused, not re-expressed).
+		///
+		/// This is a verification / interop oracle — the block path exists for performance and
+		/// precision control, so this is NOT a replacement for block evaluation.  It lets the
+		/// block-composed evaluation be cross-checked against the function-tree path
+		/// (eval / Jacobian must agree).  Scoped to the current block types; a block that cannot
+		/// be expanded throws.
+		System ExpandToFunctionTree() const;
+
+		/// \brief The system's natural (pre-patch) functions as function-tree expression nodes,
+		/// expanding any structured block.  Used by ExpandToFunctionTree and, recursively, by
+		/// BlendBlock expansion (a blend is sum_i c_i(t) * operand_i, each operand expanded).
+		std::vector<Nd> NaturalFunctionsAsNodes() const;
+
 
 
 

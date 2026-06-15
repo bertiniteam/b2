@@ -106,6 +106,13 @@ public:
 		return operands_.empty() ? 0 : operands_.front()->NumNaturalFunctions();
 	}
 
+	/// Accessors for the function-tree expansion (System::ExpandToFunctionTree): the blend is
+	/// H = sum_i coefficients_[i](t) * operands_[i], so the expansion needs the coefficient nodes,
+	/// the operand systems (each itself expanded), and the shared path variable.
+	std::vector<Nd> const& Coefficients() const { return coefficients_; }
+	std::vector<OperandPtr> const& Operands() const { return operands_; }
+	Var const& PathVariable() const { return path_variable_; }
+
 	/// The blend c_0(t)f_0 + c_1(t)f_1 + ... has, per function, the max degree of its operands
 	/// in the space variables (the t-coefficients are constant in space).
 	std::vector<int> Degrees() const

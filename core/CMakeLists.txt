@@ -812,6 +812,7 @@ if (ENABLE_UNIT_TESTING)
 		test/tracking_basics/amp_criteria_test.cpp
 		test/tracking_basics/amp_tracker_test.cpp
 		test/tracking_basics/path_observers.cpp
+		test/tracking_basics/expand_to_function_tree_test.cpp
 	)
 
 	add_executable(test_tracking_basics ${B2_TRACKING_BASICS_TEST})
