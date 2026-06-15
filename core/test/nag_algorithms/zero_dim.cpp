@@ -521,59 +521,99 @@ BOOST_AUTO_TEST_CASE(mhom_condition_number_trajectory)
 	using namespace bertini;
 	using namespace tracking;
 
-	SetGlobalSeed(6);
+	// Sweep seeds until we CATCH a genuinely spiking path (max precision pushed well above the
+	// baseline), then dump that path's condition-number/precision trajectory -- so we can see
+	// whether ||J^{-1}|| spikes then RECOVERS, and at what |t|.  (Necessary because SetGlobalSeed
+	// does not fully reset RNG, so a fixed seed is not reproducible across call contexts.)
+	auto build = []() {
+		System sys;
+		auto x = Variable::Make("x");
+		auto y = Variable::Make("y");
+		sys.AddVariableGroup(VariableGroup{x});
+		sys.AddVariableGroup(VariableGroup{y});
+		sys.AddFunction(x*y - 1);
+		sys.AddFunction(x + y);
+		return sys;
+	};
 
-	System sys;
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	sys.AddVariableGroup(VariableGroup{x});
-	sys.AddVariableGroup(VariableGroup{y});
-	sys.AddFunction(x*y - 1);
-	sys.AddFunction(x + y);
+	CondNumTrajectory<AMPTracker> spike;   // trajectory of the first spiking seed found
+	unsigned spike_seed = 0; dbl spike_gamma(0,0);
 
-	auto zd = algorithm::ZeroDim<AMPTracker,
-	                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
-	                             decltype(sys),
-	                             start_system::MHomogeneous>(sys);
-	zd.DefaultSetup();
-
-	// recover gamma: at t=1, H_natural = gamma * start_natural, so the ratio of any nonzero
-	// natural component is gamma.  Confirms gamma is a genuine (nonzero-imaginary) complex number.
+	for (unsigned seed = 1; seed <= 60 && spike_seed == 0; ++seed)
 	{
-		System const& H = zd.Homotopy();
-		auto const& start = zd.StartSystem();
-		Vec<dbl> xr = Vec<dbl>::Random(static_cast<int>(H.NumVariables()));
-		Vec<dbl> Hv = H.Eval(xr, dbl(1.0));
-		Vec<dbl> Sv = start.Eval(xr);
-		dbl gamma = Hv(0) / Sv(0);
-		std::cout << "\n[seed 6] recovered gamma = " << gamma
-		          << "   (|Im| = " << std::abs(gamma.imag()) << ")\n";
+		SetGlobalSeed(seed);
+		bertini::probe::reset();
+		System sys = build();
+		auto zd = algorithm::ZeroDim<AMPTracker,
+		                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+		                             decltype(sys),
+		                             start_system::MHomogeneous>(sys);
+		zd.DefaultSetup();
+
+		dbl gamma(0,0);
+		{
+			System const& H = zd.Homotopy();
+			auto const& start = zd.StartSystem();
+			Vec<dbl> xr = Vec<dbl>::Random(static_cast<int>(H.NumVariables()));
+			Vec<dbl> Hv = H.Eval(xr, dbl(1.0));
+			Vec<dbl> Sv = start.Eval(xr);
+			gamma = Hv(0) / Sv(0);
+		}
+
+		CondNumTrajectory<AMPTracker> traj;
+		zd.GetTracker().AddObserver(traj);
+		zd.Solve();
+		zd.GetTracker().RemoveObserver(traj);
+
+		if (bertini::probe::max_precision_seen.load() > 80) // a genuine escalation
+		{
+			spike = std::move(traj);
+			spike_seed = seed;
+			spike_gamma = gamma;
+		}
 	}
 
-	CondNumTrajectory<AMPTracker> traj;
-	zd.GetTracker().AddObserver(traj);
-	zd.Solve();
-	zd.GetTracker().RemoveObserver(traj);
+	if (spike_seed == 0)
+	{
+		std::cout << "\n[trajectory] no spiking seed found in 1..60 in this context (max precision stayed low).\n" << std::flush;
+		BOOST_CHECK(true);
+		return;
+	}
 
-	std::cout << "[seed 6] " << traj.rows.size() << " successful steps; trajectory (every step):\n";
+	std::cout << "\n[trajectory] spiking seed = " << spike_seed
+	          << " ; gamma = " << spike_gamma << " (|Im|=" << std::abs(spike_gamma.imag())
+	          << ", |gamma|=" << std::abs(spike_gamma) << ")\n";
+	// probe counters still hold the spiking seed's values (loop exited on finding it): WHERE did
+	// the escalation originate?
+	std::cout << "[trajectory] per-cause for this seed:"
+	          << " trackerPrecIncreases=" << bertini::probe::tracker_precision_increases.load()
+	          << " endgameRefineEscalations=" << bertini::probe::endgame_refine_escalations.load()
+	          << " corrTrackHPN=" << bertini::probe::corrector_track_hpn.load()
+	          << " corrRefineHPN=" << bertini::probe::corrector_refine_hpn.load()
+	          << " maxDigitsB=" << bertini::probe::max_digits_b.load() << "\n";
 	std::cout << "   step |        |t|        | prec | log10(condNum)\n";
 	std::cout << "  ------+-------------------+------+----------------\n";
-	double max_cond = 0.0; double abst_at_max = 0.0; unsigned max_prec = 0;
-	for (size_t i = 0; i < traj.rows.size(); ++i)
+	double max_cond = 0.0; double abst_at_max = 0.0; unsigned max_prec = 0; size_t step_at_max = 0;
+	for (size_t i = 0; i < spike.rows.size(); ++i)
 	{
-		double abst = std::get<0>(traj.rows[i]);
-		unsigned prec = std::get<1>(traj.rows[i]);
-		double cond = std::get<2>(traj.rows[i]);
+		double abst = std::get<0>(spike.rows[i]);
+		unsigned prec = std::get<1>(spike.rows[i]);
+		double cond = std::get<2>(spike.rows[i]);
 		double lc = (cond > 0) ? std::log10(cond) : 0.0;
-		if (cond > max_cond) { max_cond = cond; abst_at_max = abst; }
+		if (cond > max_cond) { max_cond = cond; abst_at_max = abst; step_at_max = i; }
 		if (prec > max_prec) max_prec = prec;
 		std::cout << std::setw(7) << i << " | " << std::setw(17) << std::scientific << std::setprecision(6) << abst
 		          << " | " << std::setw(4) << prec << " | " << std::setw(14) << std::fixed << std::setprecision(3) << lc
 		          << std::endl;
 	}
-	std::cout << "[seed 6] max log10(condNum) = " << std::log10(std::max(max_cond,1.0))
-	          << " at |t| = " << std::scientific << abst_at_max
-	          << " ; max precision = " << max_prec << "\n" << std::flush;
+	// did precision recover after the peak?
+	unsigned prec_at_end = spike.rows.empty() ? 0 : std::get<1>(spike.rows.back());
+	std::cout << "[trajectory] max log10(condNum) = " << std::log10(std::max(max_cond,1.0))
+	          << " at |t| = " << std::scientific << abst_at_max << " (step " << step_at_max << "/" << spike.rows.size() << ")"
+	          << " ; max precision = " << max_prec << " ; precision at path end = " << prec_at_end
+	          << (prec_at_end < max_prec ? "  (RECOVERED)" : "  (did NOT recover)") << "\n" << std::flush;
+
+	DefaultPrecision(30); // restore for subsequent tests
 
 	BOOST_CHECK(true); // diagnostic; no trajectory-shape assertion
 }
