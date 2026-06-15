@@ -311,9 +311,12 @@ namespace bertini{
 						norm_J = NumErrorT(J_temp_ref.norm());
 						{
 							// Reuse the FIXED probe vector generated once at setup (do NOT regenerate
-							// per call): tracking must draw no randomness (determinism + parallel
-							// bit-identicality), it's cheaper, and a fixed probe direction makes the
-							// ||J^{-1}|| estimates comparable across steps.
+							// per call): a fresh random probe direction every Newton step occasionally
+							// produced an inflated ||J^{-1}|| estimate -> spurious HigherPrecisionNecessary
+							// -> precision escalation/grind (confirmed by A/B: regenerating reintroduces
+							// the spikes, fixed does not).  A single fixed direction also makes the
+							// condition estimates comparable across steps, is cheaper, and keeps tracking
+							// deterministic / parallel-bit-identical.
 							Vec<ComplexT> const& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
 							Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
 							solve_ref = LU_ref.solve(rand_ref);
