@@ -40,6 +40,15 @@ plus the non-templated metadata / precision surface:
     unsigned Precision() const;
     void     Precision(unsigned) const;
 
+and the structural surface the owning System routes through every block (degrees +
+homogenization), so a block can be homogenized and degree-counted uniformly:
+
+    std::vector<int> Degrees() const;
+    std::vector<int> Degrees(VariableGroup const&) const;
+    bool IsHomogeneous(VariableGroup const&) const;
+    bool IsPolynomial(VariableGroup const&) const;
+    void Homogenize(VariableGroup const&, std::shared_ptr<node::Variable> const&); // non-const
+
 `seg`/`blk` are caller-provided sub-ranges of the system's storage (the block writes its
 own rows; the caller owns segmentation, the patch, etc.).  `vars` is the full system
 variable vector; `t` is the path-variable value (ignored by blocks that don't depend on
@@ -81,6 +90,15 @@ struct is_block<B, std::void_t<
 	decltype(std::declval<const B&>().NumFunctions()),
 	decltype(std::declval<const B&>().DependsOnPathVariable()),
 	decltype(std::declval<const B&>().Precision()),
+	decltype(std::declval<const B&>().Precision(0u)),                 // the precision setter
+	decltype(std::declval<const B&>().Degrees()),
+	decltype(std::declval<const B&>().Degrees(std::declval<VariableGroup const&>())),
+	decltype(std::declval<const B&>().IsHomogeneous(std::declval<VariableGroup const&>())),
+	decltype(std::declval<const B&>().IsPolynomial(std::declval<VariableGroup const&>())),
+	// Homogenize mutates (e.g. LinearFormsBlock folds its constant column onto the hom var), so
+	// it is detected on a non-const B&.
+	decltype(std::declval<B&>().Homogenize(
+		std::declval<VariableGroup const&>(), std::declval<std::shared_ptr<node::Variable> const&>())),
 	decltype(std::declval<const B&>().template EvalInPlace<dbl>(
 		std::declval<Eigen::Ref<Vec<dbl>>>(), std::declval<Vec<dbl> const&>(), std::declval<dbl const&>())),
 	decltype(std::declval<const B&>().template JacobianInPlace<dbl>(
