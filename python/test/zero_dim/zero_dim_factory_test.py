@@ -77,3 +77,34 @@ def test_precision_is_an_alias_for_mptype():
 def test_user_startsystem_points_at_user_homotopy():
     with pytest.raises(ValueError, match='user_homotopy'):
         ZeroDim(_system(), startsystem='user')
+
+
+def _two_affine_group_system():
+    # x*y - 1, x + y over groups {x}, {y}: a multihomogeneous system (total degree would throw).
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x]))
+    sys.add_variable_group(pb.VariableGroup([y]))
+    sys.add_function(x * y - 1)
+    sys.add_function(x + y)
+    return sys
+
+
+def _projective_system():
+    x0, x1 = pb.Variable('x0'), pb.Variable('x1')
+    sys = pb.System()
+    sys.add_hom_variable_group(pb.VariableGroup([x0, x1]))
+    sys.add_function(x0 * x0 - x1 * x1)
+    return sys
+
+
+def test_startsystem_inferred_from_variable_groups():
+    # default startsystem='infer' mirrors the C++ blackbox InferStartType: a single affine group is
+    # total degree; two-or-more groups, or any projective group, is multihomogeneous.  This matters
+    # because total degree THROWS ("more than one affine variable group") on a multi-group system.
+    assert isinstance(ZeroDim(_system()),
+                      _n.ZeroDimCauchyFixedMultiplePrecisionTotalDegree)
+    assert isinstance(ZeroDim(_two_affine_group_system()),
+                      _n.ZeroDimCauchyFixedMultiplePrecisionMHomogeneous)
+    assert isinstance(ZeroDim(_projective_system()),
+                      _n.ZeroDimCauchyFixedMultiplePrecisionMHomogeneous)

@@ -73,13 +73,27 @@ def _zd_select(value, table, kind):
     return frag
 
 
-def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='totaldegree',
+def _infer_start_system(system):
+    """Pick the start system from the system's variable-group structure.
+
+    Mirrors the C++ blackbox ``InferStartType`` (core/.../blackbox/switches_zerodim.hpp): a single
+    affine variable group with no homogeneous/projective groups is the 1-homogeneous (total-degree)
+    case; anything else -- two or more variable groups, or any homogeneous group -- is
+    multihomogeneous, and total degree would be the wrong (over-counting) start system there.
+    """
+    if system.num_variable_groups() == 1 and system.num_hom_variable_groups() == 0:
+        return 'totaldegree'
+    return 'mhom'
+
+
+def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='infer',
             precision=None):
     """Construct a zero-dim solver by name, with friendly defaults.
 
-    ``ZeroDim(system)`` is the Cauchy endgame, multiple precision, total-degree start system --
-    i.e. ``ZeroDimCauchyFixedMultiplePrecisionTotalDegree(system)`` -- without typing that out.
-    Select the other 17 combinations with strings::
+    ``ZeroDim(system)`` is the Cauchy endgame in multiple precision with the start system **inferred
+    from the system's variable-group structure** -- total degree for a single affine group,
+    multihomogeneous otherwise -- so a multi-group (e.g. eigenvalue) system gets MHom automatically
+    rather than an over-counting total-degree start.  Override any piece with a string::
 
         ZeroDim(system, endgame='cauchy', mptype='amp', startsystem='mhom')
 
@@ -89,16 +103,16 @@ def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='totalde
     endgame : ``'cauchy'`` (default) or ``'powerseries'``.
     mptype : the precision -- ``'double'``, ``'multiple'`` (default), or ``'adaptive'`` (``'amp'``).
     precision : an alias for ``mptype``; if given (not ``None``) it overrides ``mptype``.
-    startsystem : ``'totaldegree'`` (default) or ``'mhom'``.  To run from a homotopy you built
-        yourself with given start points, use :func:`user_homotopy` / :func:`blend_homotopy`
+    startsystem : ``'infer'`` (default -- choose from the variable-group structure, matching the
+        C++ blackbox), or force it with ``'totaldegree'`` / ``'mhom'``.  To run from a homotopy you
+        built yourself with given start points, use :func:`user_homotopy` / :func:`blend_homotopy`
         instead (their construction needs the homotopy and start points, not just a system).
 
     Returns a solver; call ``.solve()`` then ``.solutions()`` as for any zero-dim solver.
 
     Examples
     --------
-    The default is the Cauchy endgame in multiple precision with a total-degree start system;
-    strings pick the rest::
+    The default infers the start system; strings pick the rest::
 
         >>> import bertini
         >>> from bertini.nag_algorithm import ZeroDim
@@ -116,13 +130,16 @@ def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='totalde
     """
     if precision is not None:
         mptype = precision
+    start_key = str(startsystem).strip().lower().replace('-', '_').replace('_', '')
     # user-homotopy can't be built from a system alone -- point at the right entry point.
-    if str(startsystem).strip().lower().replace('-', '_').replace('_', '') in ('user', 'userhomotopy'):
+    if start_key in ('user', 'userhomotopy'):
         raise ValueError(
             "ZeroDim does not build the user-homotopy solver (its construction needs a homotopy "
             "and start points, not just a system); build the homotopy with "
             "nag_algorithm.blend_homotopy / coefficient_parameter_homotopy and solve it with "
             "nag_algorithm.user_homotopy(homotopy, start_points, target).")
+    if start_key == 'infer':
+        startsystem = _infer_start_system(system)
     cls_name = ('ZeroDim'
                 + _zd_select(endgame, _ZD_ENDGAMES, 'endgame')
                 + _zd_select(mptype, _ZD_PRECISIONS, 'mptype')
