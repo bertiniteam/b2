@@ -153,7 +153,7 @@ We associate a system with a tracker when we make it.  You cannot make a tracker
 
 	# adjust some stepping settings
 	stepping = bertini.tracking.SteppingConfig()
-	stepping.max_step_size = bertini.multiprec.Rational(1,13)
+	stepping.max_step_size = bertini.multiprec.Float(1)/bertini.multiprec.Float(13)
 
 	#then, set the config into the tracker.
 	tr.set_stepping(stepping)
@@ -163,7 +163,7 @@ Once we feel comfortable with the configs (of which there are many, see the book
 
 ::
 
-	result = np.zeros((1,), dtype=bertini.multiprec.Complex)
+	result = np.zeros((2,), dtype=bertini.multiprec.Complex)
 	tr.track_path(result,bertini.multiprec.Complex(1),bertini.multiprec.Complex(0), td.start_point_mp(0))
 
 Logging to inspect the path that was tracked
@@ -235,7 +235,7 @@ Now that we've tracked a single path, you might want to loop over all start poin
 	tr.infinite_truncation_tolerance(1e5)
 	tr.predictor(bertini.tracking.Predictor.RK4)
 	stepping = bertini.tracking.SteppingConfig()
-	stepping.max_step_size = bertini.multiprec.Rational(1,13)
+	stepping.max_step_size = bertini.multiprec.Float(1)/bertini.multiprec.Float(13)
 
 	# set the config into the tracker
 	tr.set_stepping(stepping)
@@ -244,13 +244,13 @@ Now that we've tracked a single path, you might want to loop over all start poin
 	expected_code = bertini.tracking.SuccessCode.Success
 	codes = []
 	for ii in range(td.num_start_points()):
-		results.append(np.zeros((1,),dtype=bertini.multiprec.Complex))
+		results.append(np.zeros((2,),dtype=bertini.multiprec.Complex))
 		codes.append(tr.track_path(result=results[-1], start_time=bertini.multiprec.Complex(1), end_time=bertini.multiprec.Complex(0), start_point=td.start_point_mp(ii)))
 
 	#tr.remove_observer(g)
 
-	print(results)
-	print("were all paths tracked successfully?", codes == [expected_code]*2)
+	# the tracked endpoints are now in the list ``results``
+	print(codes == [expected_code]*2)
 
 .. testoutput:: tracking_nonsingular_main
 
