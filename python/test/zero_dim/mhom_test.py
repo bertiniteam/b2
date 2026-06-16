@@ -71,14 +71,17 @@ def test_mhom_solves_adaptive_precision():
     ZeroDimCauchyDoublePrecisionMHomogeneous,
     ZeroDimPowerSeriesDoublePrecisionMHomogeneous,
 ])
-def test_fixed_double_mhom_runs(solver_cls):
-    """Fixed-double MHom is conditioning-fragile, so we do NOT assert it finds the roots -- that's
-    AMP's job above.  A cheap binding/run smoke with a fixed seed: an unlucky gamma can make the
-    fixed-double tracker give up (it raises), which is fine for a smoke test (the binding ran), so
-    we accept either a clean attempt of the two MHom paths or a tracking failure.  Fixed precision
-    is step-bounded, so it cannot grind."""
-    try:
-        solver = _solve(solver_cls)
-    except RuntimeError:
-        return  # fixed-double tracking gave up on this gamma; the binding still ran fine
-    assert len(solver.solutions()) == 2  # the m-homogeneous Bezout number: two paths attempted
+def test_fixed_double_mhom_solves(solver_cls):
+    """Fixed-double MHom solves this system at the fixed seed -- both paths reach the two genuine
+    roots.  This used to only smoke-test that the binding ran, tolerating a tracking RuntimeError;
+    that tolerance was masking the uninitialized patch-Jacobian bug (garbage Jacobian -> diverging
+    corrector -> the tracker giving up).  With the patch Jacobian fixed, fixed double tracks
+    cleanly -- so we assert the roots, no guard."""
+    good = _successful_roots(_solve(solver_cls))
+    assert len(good) == 2, "fixed-double MHom did not solve"
+
+    for s in good:
+        xv, yv = complex(s[0]), complex(s[1])
+        assert abs(xv * yv - 1) < 1e-7
+        assert abs(xv + yv) < 1e-7
+    assert abs(complex(good[0][0]) - complex(good[1][0])) > 1e-3
