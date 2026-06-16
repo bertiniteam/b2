@@ -57,12 +57,15 @@ VariableGroup.__str__ = lambda vg: '[{}]'.format( ','.join([str(v) for v in vg])
 def variables(base, indices, fmt='{base}{index}'):
     """Make a list of integer-indexed Variables.
 
-    base    -- name prefix, e.g. 'x'
-    indices -- an int n (shorthand for range(n)) or any iterable of ints
-    fmt     -- str.format template using {base} and {index};
-               default '{base}{index}' gives x0, x1, x2, ...
+    ::
 
-    Returns a list[Variable].  Wrap in a VariableGroup if desired:
+        base    -- name prefix, e.g. 'x'
+        indices -- an int n (shorthand for range(n)) or any iterable of ints
+        fmt     -- str.format template using {base} and {index};
+                   default '{base}{index}' gives x0, x1, x2, ...
+
+    Returns a ``list[Variable]``.  Wrap in a VariableGroup if desired::
+
         pb.VariableGroup(pb.variables('x', 5))
     """
     from bertini._pybertini.function_tree.symbol import Variable

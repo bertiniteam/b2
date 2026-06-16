@@ -109,7 +109,6 @@ public:
 		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 		    refinement_success==SuccessCode::FailedToConverge)
 		{
-			
 
 			using bertini::Precision;
 

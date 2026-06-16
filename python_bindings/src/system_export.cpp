@@ -35,6 +35,7 @@
 //  python/system_export.cpp:  Source file for exposing systems to python, including start systems.
 
 #include <stdio.h>
+#include <boost/python/stl_iterator.hpp>
 #include "system_export.hpp"
 
 
@@ -109,6 +110,21 @@ namespace bertini{
 			.def("add_variable_group", &SystemBaseT::AddVariableGroup, (arg("self"), arg("group")), "Add a (affine) variable group to the System")
 			.def("set_variable_groups", &System::SetVariableGroups, (arg("self"), arg("groups")), "Replace the entire variable-group structure of the System with the given list of (affine) variable groups.  Clears existing groups but preserves the path variable.")
 			.def("add_hom_variable_group", &SystemBaseT::AddHomVariableGroup, (arg("self"), arg("group")), "Add a projective or homogeneous variable group to the System")
+			.def("add_linear_forms_block",
+				+[](SystemBaseT& self, std::size_t num_vars, bertini::Mat<mpfr> const& coefficients) {
+					self.AddBlock(bertini::blocks::LinearFormsBlock(num_vars, coefficients));
+				},
+				(arg("self"), arg("num_vars"), arg("coefficients")),
+				"Add a block of affine linear forms f(x) = M [x;1] to the System, evaluated as a single matrix-vector product rather than as scalar expressions.  coefficients is an mpfr_complex matrix with one row per function and num_vars+1 columns; the trailing column carries each form's constant term.")
+			.def("add_products_of_linears_block",
+				+[](SystemBaseT& self, std::size_t num_vars, boost::python::list const& factors) {
+					std::vector<bertini::Mat<mpfr>> v{
+						boost::python::stl_input_iterator<bertini::Mat<mpfr>>(factors),
+						boost::python::stl_input_iterator<bertini::Mat<mpfr>>() };
+					self.AddBlock(bertini::blocks::ProductsOfLinearsBlock(num_vars, std::move(v)));
+				},
+				(arg("self"), arg("num_vars"), arg("factors")),
+				"Add a block of products-of-linear-forms f_i(x) = prod_r ( c_{i,r} . [x;1] ) to the System, evaluated as matrix-multiplies-then-row-products rather than as scalar expressions.  factors is a list with one entry per function; entry i is an mpfr_complex matrix with one row per linear factor and num_vars+1 columns (the trailing column carries each factor's constant term).  Each function's degree is its number of factors.")
 			// .def("add_ungrouped_variable", &SystemBaseT::AddUngroupedVariable,"Add an ungrouped variable to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_ungrouped_variables", &SystemBaseT::AddUngroupedVariables,"Add some ungrouped variables to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_implicit_parameter", &SystemBaseT::AddImplicitParameter)
@@ -222,6 +238,9 @@ namespace bertini{
 			// free functions
 			def("concatenate", &Concatenate,(arg("self"), arg("other")), "concatenate two Systems to produce a new one.  Appends the second onto what was the first.");
 			def("clone", &Clone,(arg("self")), "Make a complete clone of a System.  Includes all functions, variables, etc.  Truly and genuinely distinct.");
+			def("make_homotopy", &MakeHomotopy,
+				(arg("target"), arg("start"), arg("path_variable")="t", arg("gamma")=std::shared_ptr<node::Node>()),
+				"Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start, with the path variable added.  At t=1 the homotopy is gamma*start (so start's solutions are its roots) and at t=0 it is target.  When start carries a structured block (e.g. a products-of-linears start system) the two systems are combined with a blend block; otherwise node arithmetic is used.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.");
 
 			
 

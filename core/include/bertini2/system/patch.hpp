@@ -376,6 +376,16 @@ namespace bertini {
 			const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
 
 			unsigned offset(static_cast<unsigned>(jacobian.rows() - NumVariableGroups())); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
+
+			// A patch row is sparse -- one block of coefficients per variable group, zero elsewhere.
+			// Zero the rows the patch owns before writing those coefficients, so the patch FULLY
+			// defines its own rows and the caller need not pre-zero the matrix.  The block-composed
+			// Jacobian path allocates J uninitialized and assigns only the block (function) rows;
+			// without this the patch rows' off-coefficient entries are read uninitialized -- benign
+			// (zeroed pages) on Linux/macOS, but garbage on Windows, where a degree-2 homotopy's
+			// Jacobian "evaluated" to ~1e252 and wrecked the AMP condition-number estimate.
+			jacobian.block(offset, 0, NumVariableGroups(), jacobian.cols()).setZero();
+
 			unsigned counter(0);
 			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
 				for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)

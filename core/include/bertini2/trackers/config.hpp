@@ -171,8 +171,13 @@ namespace tracking{
 		int safety_digits_1 = 1; ///< User-chosen setting for the number of safety digits used during Criteria A & B.
 		int safety_digits_2 = 1; ///< User-chosen setting for the number of safety digits used during Criterion C.
 		unsigned int maximum_precision = 300; ///< User-chosed setting for the maximum allowable precision.  Paths will die if their precision is requested to be set higher than this threshold.
-		
-		unsigned consecutive_successful_steps_before_precision_decrease = 10;
+
+		// Note: a single setting -- Bertini 1's StepsForIncrease, i.e.
+		// SteppingConfig::consecutive_successful_steps_before_stepsize_increase -- gates BOTH stepsize
+		// increase AND precision decrease (the required number of consecutive successful steps).
+		// Precision decrease is additionally subject to B1's digits-margin hysteresis (see
+		// ExtraDigitsBeforePrecisionDecrease in amp_tracker.hpp).  The old, duplicate AMP-config setting
+		// `consecutive_successful_steps_before_precision_decrease` (a B2 deviation) was removed.
 
 		unsigned max_num_precision_decreases = 10; ///< The maximum number of times precision can be lowered during tracking of a segment of path.
 		
@@ -232,7 +237,7 @@ namespace tracking{
 		out << "Psi: " << AMP.Psi << "\n";
 		out << "safety_digits_1: " << AMP.safety_digits_1 << "\n";
 		out << "safety_digits_2: " << AMP.safety_digits_2 << "\n";
-		out << "consecutive_successful_steps_before_precision_decrease" << AMP.consecutive_successful_steps_before_precision_decrease << "\n";
+		out << "max_num_precision_decreases: " << AMP.max_num_precision_decreases << "\n";
 		return out;
 	}
 

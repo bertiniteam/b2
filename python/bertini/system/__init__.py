@@ -51,6 +51,45 @@ from bertini._pybertini import system as _pybsys
 
 from bertini._pybertini.system import *
 
+# --- unified builder: System.add(*objects) ---
+# One fluent verb instead of remembering add_function / add_variable_group: dispatch each
+# argument by type.  Returns self for chaining.  Additive -- the explicit methods still work.
+import numpy as _np
+from bertini._pybertini.function_tree import AbstractNode as _AbstractNode
+from bertini._pybertini.container import VariableGroup as _VariableGroup
+
+
+def _system_add(self, *objects):
+    """Add functions and/or variable groups to the System, dispatched by type.
+
+    Each argument may be:
+      * a function-tree expression (e.g. ``x**2 + y - 1``, or a lone ``Variable``) -> added
+        as a function;
+      * a :class:`~bertini.container.VariableGroup` -> added as an affine variable group;
+      * a numpy array / list / tuple of the above -> each element is added (so
+        ``sys.add(A @ x - lam*x)``, ``sys.add([f, g])``, and ``sys.add(grp, f, g)`` work).
+
+    Projective groups still use :meth:`add_hom_variable_group`; structured blocks use
+    :func:`bertini.linalg.add_linear`.  Returns ``self`` for chaining.
+    """
+    for obj in objects:
+        if isinstance(obj, _AbstractNode):
+            self.add_function(obj)
+        elif isinstance(obj, _VariableGroup):
+            self.add_variable_group(obj)
+        elif isinstance(obj, (_np.ndarray, list, tuple)):
+            for elt in (obj.ravel() if isinstance(obj, _np.ndarray) else obj):
+                self.add(elt)
+        else:
+            raise TypeError(
+                f"System.add does not know how to add a {type(obj).__name__}; pass a "
+                "function-tree expression, a VariableGroup, or an array/list of those"
+            )
+    return self
+
+
+System.add = _system_add
+
 # Override C++ submodule reference with the Python wrapper (which has AbstractStartSystem removed).
 # Can't use 'from . import start_system': the star import already set that name to the C++ submodule.
 import importlib as _importlib

@@ -52,6 +52,28 @@ struct ZeroDimRT
 };
 
 
+/**
+\brief Infer which start system to use from the target system's variable-group structure.
+
+This replicates classic Bertini, which chooses the start system from how the user
+groups the variables rather than from a dedicated setting:
+
+- a single affine variable group, with no homogeneous variable groups -> total degree
+  (the 1-homogeneous Bezout start system);
+- anything else with grouping -- two or more variable groups, or one or more
+  homogeneous variable groups -- -> multihomogeneous, using that partition.
+
+User-defined homotopies are not inferred here; they come with their own start system.
+*/
+inline type::Start InferStartType(System const& sys)
+{
+	if (sys.NumVariableGroups() == 1 && sys.NumHomVariableGroups() == 0)
+		return type::Start::TotalDegree;
+	else
+		return type::Start::MHom;
+}
+
+
 template <typename StartType, typename TrackerType, typename EndgameType, template<typename,typename> class SystemManagementPol, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyComplete(ConstTs const& ...ts)
 {

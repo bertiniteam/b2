@@ -197,10 +197,12 @@ public:
 			static
 			void FormHomotopy(SystemType & homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
 			{
-				auto t = node::Variable::Make(path_variable_name); 
-
-				homotopy = (1-t)*target + node::Rational::Make(node::Rational::Rand())*t*start;
-				homotopy.AddPathVariable(t);
+				// MakeHomotopy builds H = (1-t)*target + gamma*t*start with a random gamma,
+				// choosing a blend block when the start system carries structured blocks (e.g.
+				// the MHom products-of-linears start) and node arithmetic otherwise.  The same
+				// construction is exposed to Python as system.make_homotopy so a user-authored
+				// start system can be turned into a trackable homotopy.
+				homotopy = MakeHomotopy(target, start, path_variable_name);
 			}
 
 			/**

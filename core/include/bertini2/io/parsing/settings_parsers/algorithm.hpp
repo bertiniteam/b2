@@ -712,6 +712,7 @@ namespace bertini {
 					std::string real_thresh_name = "imagthreshold";
 					std::string endpoint_finite_name = "endpointfinitethreshold";
 					std::string same_point_name = "endpointsamethreshold";
+					std::string cond_num_name = "condnumthreshold";
 
 
 
@@ -727,14 +728,19 @@ namespace bertini {
 															 }, _val, _1 )]
 								   ^ same_point_[phx::bind( [this](algorithm::PostProcessingConfig & S, T num)
 															 {
-																 S.same_point_tolerance = num;
+																 S.same_point_tolerance_multiplier = num;
+															 }, _val, _1 )]
+								   ^ cond_num_[phx::bind( [this](algorithm::PostProcessingConfig & S, T num)
+															 {
+																 S.condition_number_threshold = num;
 															 }, _val, _1 )]
 								   )
 								  >> -no_setting_) | no_setting_;
-					
+
 					all_names_ = (no_case[real_thresh_name] >> ':') |
 								 (no_case[endpoint_finite_name] >> ':') |
-								 (no_case[same_point_name] >> ':')
+								 (no_case[same_point_name] >> ':') |
+								 (no_case[cond_num_name] >> ':')
 								 ;
 					
 
@@ -753,6 +759,10 @@ namespace bertini {
 
 					same_point_.name("same_point_");
 					same_point_ = *(char_ - all_names_) >> (no_case[same_point_name] >> ':')
+					>> mpfr_rules.number_string_[phx::bind( str_to_T, _val, _1 )] >> ';';
+
+					cond_num_.name("cond_num_");
+					cond_num_ = *(char_ - all_names_) >> (no_case[cond_num_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( str_to_T, _val, _1 )] >> ';';
 
 
@@ -779,13 +789,13 @@ namespace bertini {
 			private:
 				qi::rule<Iterator, algorithm::PostProcessingConfig(), ascii::space_type > root_rule_;
 
-				qi::rule<Iterator, T(), ascii::space_type > real_threshold_, endpoint_finite_, same_point_;
+				qi::rule<Iterator, T(), ascii::space_type > real_threshold_, endpoint_finite_, same_point_, cond_num_;
 
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 				rules::LongNum<Iterator> mpfr_rules;
-				
-				
-				
+
+
+
 			}; //re: PostProcessing
 
 

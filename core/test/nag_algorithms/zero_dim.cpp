@@ -32,6 +32,12 @@
 #include "bertini2/system/start_systems.hpp"
 #include <boost/test/unit_test.hpp>
 #include "bertini2/nag_algorithms/output.hpp"
+#include "bertini2/trackers/observers.hpp"
+#include "bertini2/trackers/events.hpp"
+#include <chrono>
+#include <iostream>
+#include <iomanip>
+#include <typeindex>
 
 
 using Variable = bertini::node::Variable;
@@ -187,6 +193,405 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 	zd.Solve();
 
 	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
+}
+
+
+// Run ZeroDim from a USER-CONSTRUCTED homotopy and a GIVEN list of start points -- the
+// parameter-homotopy workflow.  Crucially this reuses the ENTIRE ZeroDim solve pipeline
+// (pre-endgame tracking, the midpath check, the endgame, post-processing) UNCHANGED: it is the
+// same ZeroDim class template, merely instantiated with start_system::User (start points come
+// from the supplied list, not generated) and policy::RefToGiven (the homotopy is taken as-is,
+// not formed by homogenizing + coupling a start system).
+//
+// Parameter homotopy H(x,t) = x^2 - (9 - 5 t).  At t = 1 the roots are +/-2 (the given start
+// points); at t = 0 they are +/-3 (the target x^2 - 9).  Tracking the two start points down to
+// t = 0 must recover +/-3 -- i.e. ZeroDim moved the t=1 solutions to the t=0 parameter.
+BOOST_AUTO_TEST_CASE(user_homotopy_parameter_homotopy_solves)
+{
+	using namespace bertini;
+	using namespace tracking;
+	using mpfr = bertini::mpfr_complex;
+
+	auto x = Variable::Make("x");
+	auto t = Variable::Make("t");
+
+	// the homotopy H(x,t) = x^2 - (9 - 5 t), with t as its path variable
+	System H;
+	H.AddVariableGroup(VariableGroup{x});
+	H.AddFunction(x*x - (9 - 5*t));
+	H.AddPathVariable(t);
+
+	// the target system (H at t = 0): x^2 - 9, used for dehomogenize / residual in post-processing
+	System target;
+	target.AddVariableGroup(VariableGroup{x});
+	target.AddFunction(x*x - 9);
+
+	// the GIVEN start points: the t = 1 solutions +/- 2 (as if computed by an earlier solve)
+	SampCont<mpfr> start_points;
+	{
+		Vec<mpfr> p(1); p(0) = mpfr(2);  start_points.push_back(p);
+		Vec<mpfr> q(1); q(0) = mpfr(-2); start_points.push_back(q);
+	}
+
+	auto user_start = start_system::User(target, start_points);
+
+	auto zd = algorithm::ZeroDim<
+				AMPTracker,
+				bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+				System,
+				start_system::User,
+				policy::RefToGiven>
+			(target, user_start, H); // (target, start, homotopy) -- references, so all three
+
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto const& sols = zd.SolutionsUserCoords();
+	auto const& md   = zd.FinalSolutionMetadata();
+	std::vector<dbl> ends;
+	for (size_t i = 0; i < sols.size(); ++i)
+		if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 1)
+			ends.push_back(dbl(sols[i](0)));
+
+	BOOST_CHECK_EQUAL(ends.size(), 2u);
+	bool has_pos = false, has_neg = false;
+	for (auto const& e : ends)
+	{
+		if (std::abs(e - dbl(3,0))  < 1e-7) has_pos = true;
+		if (std::abs(e - dbl(-3,0)) < 1e-7) has_neg = true;
+	}
+	BOOST_CHECK(has_pos); // tracked +2 -> +3
+	BOOST_CHECK(has_neg); // tracked -2 -> -3
+}
+
+
+// End-to-end multihomogeneous solve through the block-composed start system and the
+// blend-block homotopy.  x*y - 1 = 0, x + y = 0 over variable groups {x}, {y}:
+// y = -x gives -x^2 - 1 = 0, so x = +/- i -> exactly the two solutions (i,-i),(-i,i).
+// The m-homogeneous Bezout number for bidegrees (1,1),(1,1) is 2, below the total-degree
+// Bezout number 4 -- so MHom tracks 2 paths, not 4.  This exercises the whole new chain:
+// the products-of-linears start block, the blend-block homotopy formed by FormHomotopy,
+// and the block-aware System eval/Jacobian/time-derivative through the AMP tracker + Cauchy endgame.
+//
+// Deterministic: SetGlobalSeed pins the homotopy gamma and the MHom start coefficients (RandomMp is
+// reseedable now), so this is a single, reproducible solve -- no gamma-retry loop.
+BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	SetGlobalSeed(1); // reproducible homotopy gamma + MHom start coefficients
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddVariableGroup(VariableGroup{y});
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x + y);
+
+	auto zd = algorithm::ZeroDim<AMPTracker,
+	                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+	                             decltype(sys),
+	                             start_system::MHomogeneous>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	// Collect the successfully-tracked solutions (a failed path leaves an empty placeholder).
+	auto const& sols = zd.SolutionsUserCoords();
+	auto const& md   = zd.FinalSolutionMetadata();
+	using SolVec = std::decay_t<decltype(sols[0])>;
+	std::vector<SolVec> good;
+	for (size_t i = 0; i < sols.size(); ++i)
+		if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 2)
+			good.push_back(sols[i]);
+
+	BOOST_REQUIRE_EQUAL(good.size(), 2u); // both MHom paths solved (the m-homogeneous Bezout number)
+
+	for (auto const& s : good)   // AMP returns mpfr_complex coords; double is plenty for a root check
+	{
+		dbl a(s(0)), b(s(1));
+		BOOST_CHECK_SMALL(std::abs(a * b - dbl(1)), 1e-8);
+		BOOST_CHECK_SMALL(std::abs(a + b), 1e-8);
+	}
+	BOOST_CHECK_GT(std::abs(dbl(good[0](0)) - dbl(good[1](0))), 1e-3); // the two distinct roots
+}
+
+
+
+
+// The decisive block-vs-function-tree check on the ACTUAL problematic homotopy: take the seed-6
+// MHom blend homotopy (a BlendBlock of the homogenized target's polynomial block and the
+// products-of-linears start), build its pure-function-tree twin via ExpandToFunctionTree(), and
+// assert the two evaluate and (crucially) DIFFERENTIATE identically -- across random points and
+// near t->0 (the endgame region), in double and mpfr.  If the block Jacobian were wrong (inflating
+// ||J^{-1}|| and hence DigitsB), this is where it would show.  Together with the faithful
+// ||J^{-1}|| estimate (amp_jacobian_estimate) and DegreeBound=2 (so Phi is tiny), agreement here
+// means the DigitsB escalation reflects a GENUINE near-singular pass for that gamma, not a bug in
+// the block representation.
+BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	SetGlobalSeed(6); // the gamma that escalated to 140 digits in the probe
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddVariableGroup(VariableGroup{y});
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x + y);
+
+	auto zd = algorithm::ZeroDim<AMPTracker,
+	                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+	                             decltype(sys),
+	                             start_system::MHomogeneous>(sys);
+	zd.DefaultSetup();
+
+	System const& H = zd.Homotopy();          // the block-composed blend homotopy
+	System He = H.ExpandToFunctionTree();      // its pure-function-tree twin
+
+	BOOST_CHECK_EQUAL(H.NumVariables(), He.NumVariables());
+	BOOST_CHECK_EQUAL(H.NumTotalFunctions(), He.NumTotalFunctions());
+	BOOST_CHECK_EQUAL(H.DegreeBound(), He.DegreeBound()); // drives Phi/Psi; must match
+
+	auto compare = [](auto const& A, auto const& B, double tol)
+	{
+		BOOST_REQUIRE_EQUAL(A.rows(), B.rows());
+		BOOST_REQUIRE_EQUAL(A.cols(), B.cols());
+		for (Eigen::Index i = 0; i < A.rows(); ++i)
+			for (Eigen::Index j = 0; j < A.cols(); ++j)
+			{
+				double err   = static_cast<double>(abs(A(i,j) - B(i,j)));
+				double scale = 1.0 + static_cast<double>(abs(A(i,j)));
+				BOOST_CHECK_SMALL(err / scale, tol);
+			}
+	};
+
+	const int n = static_cast<int>(H.NumVariables());
+
+	// double, including t very close to 0 (endgame region, where the spike lives)
+	for (int trial = 0; trial < 10; ++trial)
+	{
+		Vec<dbl> p = Vec<dbl>::Random(n);
+		dbl t = (trial < 5) ? dbl(0.4, -0.3) * dbl(trial + 1)
+		                    : dbl(std::pow(10.0, -(trial - 1)), 0.0); // 1e-4 .. 1e-8
+		compare(H.Eval(p, t),     He.Eval(p, t),     1e-11);
+		compare(H.Jacobian(p, t), He.Jacobian(p, t), 1e-11);
+	}
+
+	// mpfr at 80 digits
+	DefaultPrecision(80);
+	H.precision(80);
+	He.precision(80);
+	for (int trial = 0; trial < 5; ++trial)
+	{
+		Vec<mpfr_complex> p = RandomOfUnits<mpfr_complex>(n);
+		mpfr_complex t = RandomOfUnits<mpfr_complex>(1)(0);
+		compare(H.Eval(p, t),     He.Eval(p, t),     1e-70);
+		compare(H.Jacobian(p, t), He.Jacobian(p, t), 1e-70);
+	}
+}
+
+
+// PROBE observer (branch perf/amp-block-precision-escalation): record, per successful step, the
+// |t|, working precision, and the tracker's condition-number estimate -- so we can SEE whether the
+// condition number (||J|| * ||J^{-1}||) spikes then RECOVERS along the actual seed-6 path, and at
+// what |t| (mid-path vs the t->0 endgame region).
+template <class TrackerT>
+
+
+
+
+
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+
+// Solution-metadata classification (is_finite / is_real / is_singular / multiplicity) and the
+// PostProcessing config knobs that drive it.  These pin the Bertini-1 behaviour: an endpoint is
+// at infinity if the infinity norm of its dehomogenized coordinates exceeds
+// endpoint_finite_threshold; real if the imaginary parts are below real_threshold; singular if it
+// is a multiple endpoint or its condition number exceeds condition_number_threshold; and two
+// endpoints are the same when their dehomogenized coordinates agree to
+// final_tolerance * same_point_tolerance_multiplier (infinity norm).
+BOOST_AUTO_TEST_SUITE(zero_dim_solution_metadata)
+
+using TrackerT = bertini::tracking::DoublePrecisionTracker;
+using PostProcessing = bertini::algorithm::PostProcessingConfig;
+
+// tally the classification flags over the successfully-tracked endpoints
+struct Counts { int success = 0, finite = 0, real = 0, singular = 0; };
+template<typename MDVec>
+Counts Tally(MDVec const& md)
+{
+	Counts c;
+	for (auto const& m : md)
+	{
+		if (m.endgame_success != bertini::SuccessCode::Success) continue;
+		++c.success;
+		if (m.is_finite)   ++c.finite;
+		if (m.is_real)     ++c.real;
+		if (m.is_singular) ++c.singular;
+	}
+	return c;
+}
+
+// x^2 - 1 -> roots +/-1: two finite, real, nonsingular solutions.
+BOOST_AUTO_TEST_CASE(finite_real_nonsingular)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x - 1);
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto c = Tally(zd.FinalSolutionMetadata());
+	BOOST_CHECK_EQUAL(c.success, 2);
+	BOOST_CHECK_EQUAL(c.finite, 2);
+	BOOST_CHECK_EQUAL(c.real, 2);
+	BOOST_CHECK_EQUAL(c.singular, 0);
+	for (auto const& m : zd.FinalSolutionMetadata())
+		if (m.endgame_success == SuccessCode::Success)
+			BOOST_CHECK_EQUAL(m.multiplicity, 1);
+}
+
+
+// x^2 + 1 -> roots +/-i: two finite, NON-real, nonsingular solutions.
+BOOST_AUTO_TEST_CASE(finite_complex_not_real)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x + 1);
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto c = Tally(zd.FinalSolutionMetadata());
+	BOOST_CHECK_EQUAL(c.success, 2);
+	BOOST_CHECK_EQUAL(c.finite, 2);
+	BOOST_CHECK_EQUAL(c.real, 0);     // +/- i are not real
+	BOOST_CHECK_EQUAL(c.singular, 0);
+}
+
+
+// x^2 = 0 -> a double root at 0: singular (multiplicity 2, and ill-conditioned), finite, real.
+BOOST_AUTO_TEST_CASE(singular_double_root)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x);
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto const& md = zd.FinalSolutionMetadata();
+	auto c = Tally(md);
+	BOOST_CHECK(c.success >= 1);                 // the endgame should reach the singular endpoint
+	BOOST_CHECK_EQUAL(c.singular, c.success);    // every successful endpoint here is singular
+	BOOST_CHECK_EQUAL(c.finite, c.success);      // ... and finite (at 0)
+	if (c.success == 2)                          // both paths clustered -> multiplicity 2
+		for (auto const& m : md)
+			if (m.endgame_success == SuccessCode::Success)
+				BOOST_CHECK_EQUAL(m.multiplicity, 2);
+}
+
+
+// endpoint_finite_threshold is actually applied: lower it below the solutions' norm and the
+// finite roots get classified as at infinity.
+BOOST_AUTO_TEST_CASE(endpoint_finite_threshold_is_applied)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x - 1);                    // roots +/-1, infinity norm 1
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	auto pp = zd.Get<PostProcessing>();
+	pp.endpoint_finite_threshold = 0.5;          // 1 > 0.5 -> "at infinity"
+	zd.Set(pp);
+	zd.Solve();
+
+	auto c = Tally(zd.FinalSolutionMetadata());
+	BOOST_CHECK_EQUAL(c.success, 2);
+	BOOST_CHECK_EQUAL(c.finite, 0);              // the lowered threshold reclassifies both as infinite
+}
+
+
+// condition_number_threshold is actually applied: lower it below the (well-conditioned) roots'
+// condition number and they get classified as singular.
+BOOST_AUTO_TEST_CASE(condition_number_threshold_is_applied)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x - 1);                    // simple, well-conditioned roots
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	auto pp = zd.Get<PostProcessing>();
+	pp.condition_number_threshold = 1e-3;        // any condition number exceeds this
+	zd.Set(pp);
+	zd.Solve();
+
+	auto c = Tally(zd.FinalSolutionMetadata());
+	BOOST_CHECK_EQUAL(c.success, 2);
+	BOOST_CHECK_EQUAL(c.singular, 2);            // reclassified singular purely by the lowered threshold
+}
+
+
+// the PostProcessing config round-trips through Get/Set.
+BOOST_AUTO_TEST_CASE(postprocessing_config_roundtrip)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x - 1);
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+
+	auto pp = zd.Get<PostProcessing>();
+	pp.endpoint_finite_threshold       = 12345.0;
+	pp.same_point_tolerance_multiplier = 7.0;
+	pp.condition_number_threshold      = 99.0;
+	pp.real_threshold                  = 1e-3;
+	zd.Set(pp);
+
+	auto pp2 = zd.Get<PostProcessing>();
+	BOOST_CHECK_CLOSE(pp2.endpoint_finite_threshold,       12345.0, 1e-10);
+	BOOST_CHECK_CLOSE(pp2.same_point_tolerance_multiplier, 7.0,     1e-10);
+	BOOST_CHECK_CLOSE(pp2.condition_number_threshold,      99.0,    1e-10);
+	BOOST_CHECK_CLOSE(pp2.real_threshold,                  1e-3,    1e-10);
+}
+
+
+// the PostProcessing defaults match Bertini 1 (guards against the inverted endpoint-finite default
+// that used to ship, 1e-5 instead of 1e5).
+BOOST_AUTO_TEST_CASE(postprocessing_config_defaults_match_bertini1)
+{
+	bertini::algorithm::PostProcessingConfig pp;
+	BOOST_CHECK_CLOSE(pp.endpoint_finite_threshold,       1e5,  1e-8);
+	BOOST_CHECK_CLOSE(pp.same_point_tolerance_multiplier, 10.0, 1e-8);
+	BOOST_CHECK_CLOSE(pp.condition_number_threshold,      1e8,  1e-8);
+	BOOST_CHECK_CLOSE(pp.real_threshold,                  1e-8, 1e-8);
 }
 
 

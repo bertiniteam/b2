@@ -1115,7 +1115,7 @@ public:
 		RealT norm_of_dehom_prev(0), norm_of_dehom_latest(0);
 
 		if(this->SecuritySettings().level <= 0)
-			norm_of_dehom_prev = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();
+			norm_of_dehom_prev = this->GetSystem().InfinityNormOfDehomogenized(prev_approx);
 
 		do
 		{
@@ -1136,7 +1136,7 @@ public:
 
 			if (this->SecuritySettings().level)
 			{//we are too large, break out of loop to return error.
-				norm_of_dehom_latest = this->GetSystem().DehomogenizePoint(latest_approx).template lpNorm<Eigen::Infinity>();
+				norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(latest_approx);
 
 				if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&
 					norm_of_dehom_latest > this->SecuritySettings().max_norm  )

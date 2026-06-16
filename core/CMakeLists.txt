@@ -48,7 +48,9 @@ else ()
 
         # and things for release here
         $<$<CONFIG:Release>:-O3>
-        $<$<CONFIG:Release>:-g>
+        # (debug info intentionally omitted from Release: CI strips it from
+        # wheels anyway, and -g bloats objects ~3-4x, exhausting disk on
+        # constrained build hosts.)
         # using O2 or O3 cuts runtime by over half.
 	)
 endif ()
@@ -155,7 +157,6 @@ set(function_tree_headers
     include/bertini2/function_tree/symbols/differential.hpp
     include/bertini2/function_tree/symbols/special_number.hpp
     include/bertini2/function_tree/symbols/number.hpp
-    include/bertini2/function_tree/symbols/linear_product.hpp
     include/bertini2/function_tree/roots/function.hpp
     include/bertini2/function_tree/roots/jacobian.hpp
     include/bertini2/function_tree/operators/arithmetic.hpp
@@ -190,7 +191,6 @@ set(functiontree_symbols_HEADERS
 	include/bertini2/function_tree/symbols/differential.hpp
 	include/bertini2/function_tree/symbols/special_number.hpp
 	include/bertini2/function_tree/symbols/number.hpp
-    include/bertini2/function_tree/symbols/linear_product.hpp
 )
 
 set(functiontree_roots_HEADERS
@@ -348,7 +348,6 @@ set(function_tree_sources
     src/function_tree/simplify.cpp
     src/function_tree/operators/arithmetic.cpp
     src/function_tree/operators/trig.cpp
-    src/function_tree/linear_product.cpp
     src/function_tree/operators/operator.cpp
     src/function_tree/symbols/special_number.cpp
     src/function_tree/symbols/differential.cpp
@@ -694,6 +693,11 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/patch_test.cpp
 		test/classes/slice_test.cpp
 		test/classes/m_hom_start_system.cpp
+		test/classes/products_of_linears_block_test.cpp
+		test/classes/linear_forms_block_test.cpp
+		test/classes/blend_block_test.cpp
+		test/classes/system_blocks_test.cpp
+		test/classes/degrees_test.cpp
 		test/classes/class_test.cpp
 	)
 
@@ -810,6 +814,8 @@ if (ENABLE_UNIT_TESTING)
 		test/tracking_basics/amp_criteria_test.cpp
 		test/tracking_basics/amp_tracker_test.cpp
 		test/tracking_basics/path_observers.cpp
+		test/tracking_basics/expand_to_function_tree_test.cpp
+		test/tracking_basics/amp_jacobian_estimate_test.cpp
 	)
 
 	add_executable(test_tracking_basics ${B2_TRACKING_BASICS_TEST})

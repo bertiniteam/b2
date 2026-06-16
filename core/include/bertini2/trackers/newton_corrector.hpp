@@ -237,19 +237,19 @@ namespace bertini{
 
 						if (!amp::CriterionB<ComplexT>(NumErrorT(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, NumErrorT(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
-						
+
 						if (!amp::CriterionC<ComplexT>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 					}
-					
+
 					return SuccessCode::FailedToConverge;
 				}
 
-				
-				
-				
-				
-				
+
+
+
+
+
 				/**
 				 \brief Run Newton's method in multiple precision.
 				 
@@ -309,8 +309,14 @@ namespace bertini{
 						norm_delta_z = NumErrorT(step_ref.template lpNorm<Eigen::Infinity>());
 						norm_J = NumErrorT(J_temp_ref.norm());
 						{
+							// Reuse the FIXED probe vector generated once at setup (do NOT regenerate
+							// per call): a fresh random probe direction every Newton step occasionally
+							// produced an inflated ||J^{-1}|| estimate -> spurious HigherPrecisionNecessary
+							// -> precision escalation/grind (confirmed by A/B: regenerating reintroduces
+							// the spikes, fixed does not).  A single fixed direction also makes the
+							// condition estimates comparable across steps, is cheaper, and keeps tracking
+							// deterministic / parallel-bit-identical.
 							Vec<ComplexT>& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
-							for (int ri = 0; ri < (int)rand_ref.size(); ++ri) rand_ref(ri) = RandomUnit<ComplexT>();
 							Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
 							solve_ref = LU_ref.solve(rand_ref);
 							norm_J_inverse = NumErrorT(solve_ref.norm());
@@ -322,15 +328,15 @@ namespace bertini{
 						
 						if (!amp::CriterionB<ComplexT>(norm_J, norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, norm_delta_z, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
-						
+
 						if (!amp::CriterionC<ComplexT>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 					}
-					
+
 					return SuccessCode::FailedToConverge;
 				}
 
-				
+
 			private:
 
 				///////////////////////////

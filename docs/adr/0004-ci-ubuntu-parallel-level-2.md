@@ -76,3 +76,19 @@ shared-host memory pressure that 4-parallel caused.
 - **The 4-parallel failures were SIGTERM (exit 143), not SIGKILL (exit 137).** If
   future failures show exit 137, that is the OOM killer — a different problem with
   a different fix (further TU splitting or 1-parallel).
+
+## Update (2026-06-16): raised to 4 on Linux
+
+The two conditions this ADR named for going above 2 have both been met:
+
+1. **Per-TU peak memory dropped.** ADR-0019 removed `-g` from Release builds, cutting the
+   heaviest TU from ~6.5 GB to ~4.0 GB.
+2. **Runner RAM increased.** GitHub's standard Linux runners are now 4-core / 16 GB (they were
+   ~7 GB when this ADR was written).
+
+So `CMAKE_BUILD_PARALLEL_LEVEL` is raised **2 → 4** for the Linux wheel build
+(`CIBW_ENVIRONMENT_LINUX`) and the Linux C++ test build (`cmake --build --parallel`, made
+OS-conditional via `runner.os == 'Linux'`).  4 = the full core count; worst-case concurrent
+memory is bounded by the few heavy TUs (~4 GB each, and they rarely align), and ccache keeps most
+rebuilds compile-free.  **macOS stays at 2** (3-core / 7 GB runner).  If a *cold* Linux build shows
+exit 137 (OOM killer), drop Linux back to 3 (one heavy-TU slot of headroom).

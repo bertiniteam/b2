@@ -62,9 +62,6 @@ namespace bertini {
 		class NegateOperator;
 		class SqrtOperator;
 
-		class LinearProduct;
-		class DiffLinear;
-
 	}
 
 	namespace node{
@@ -108,7 +105,6 @@ namespace bertini {
 			ar.template register_type<bertini::node::LogOperator>();
 			ar.template register_type<bertini::node::NegateOperator>();
 			ar.template register_type<bertini::node::SqrtOperator>();
-			ar.template register_type<bertini::node::LinearProduct>();
 			// ar.template register_type<bertini::node::TrigOperator>(); // abstract type
 			ar.template register_type<bertini::node::SinOperator>();
 			ar.template register_type<bertini::node::ArcSinOperator>();

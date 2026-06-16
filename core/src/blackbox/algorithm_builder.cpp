@@ -83,9 +83,11 @@ int AlgoBuilder::ClassicBuild(std::string const& config_str, std::string const& 
 	                              ? type::Endgame::PowerSeries
 	                              : type::Endgame::Cauchy;
 
-	// Default to total-degree start system.
-	// TODO: user homotopy and MHom start require additional input-file fields.
-	type::Start start_type = type::Start::TotalDegree;
+	// Infer the start system from the variable-group structure, the way classic
+	// Bertini does: a single affine variable group -> total degree; multiple
+	// variable groups or any homogeneous variable group -> multihomogeneous.
+	// (User-defined homotopies still need a dedicated input section.)
+	type::Start start_type = InferStartType(sys);
 
 	ZeroDimRT rt{start_type, tracker_type, endgame_type};
 

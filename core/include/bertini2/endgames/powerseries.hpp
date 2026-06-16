@@ -694,7 +694,7 @@ public:
 	 	RealT norm_of_dehom_of_latest_approx(0); // initialized to 0 so the security check never reads indeterminate values
 	 	RealT norm_of_dehom_of_prev_approx(0);
 	 	if (this->SecuritySettings().level <= 0)
-	 	 	norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();
+	 	 	norm_of_dehom_of_prev_approx = this->GetSystem().InfinityNormOfDehomogenized(prev_approx);
 
 
 	 	NumErrorT& approx_error = this->approximate_error_;
@@ -726,7 +726,7 @@ public:
 
 	 		if(this->SecuritySettings().level <= 0)
 	 		{
-	 			norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).template lpNorm<Eigen::Infinity>();
+	 			norm_of_dehom_of_latest_approx = this->GetSystem().InfinityNormOfDehomogenized(latest_approx);
 		 		if(norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm && norm_of_dehom_of_prev_approx > this->SecuritySettings().max_norm)
 		 		{
 		 			NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));

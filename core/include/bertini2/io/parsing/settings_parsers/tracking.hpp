@@ -510,7 +510,6 @@ namespace bertini {
 					std::string safety_one_name = "ampsafetydigits1";
 					std::string safety_two_name = "ampsafetydigits2";
 					std::string max_prec_name = "ampmaxprec";
-					std::string consec_steps_prec_dec_name = "maxstepsprecisiondecrease";
 					std::string max_num_prec_decs_name = "maxnumprecdecreases";
 
 					root_rule_.name("config::AMP");
@@ -547,10 +546,6 @@ namespace bertini {
 															 {
 																 S.maximum_precision = num;
 															 }, _val, _1 )]
-								   ^ consec_steps_prec_dec_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, unsigned num)
-															 {
-																 S.consecutive_successful_steps_before_precision_decrease = num;
-															 }, _val, _1 )]
 								   ^ max_num_prec_decs_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, unsigned num)
 															 {
 																 S.max_num_precision_decreases = num;
@@ -566,7 +561,6 @@ namespace bertini {
 								 (no_case[safety_one_name] >> ':') |
 								 (no_case[safety_two_name] >> ':') |
 								 (no_case[max_prec_name] >> ':') |
-								 (no_case[consec_steps_prec_dec_name] >> ':') |
 								 (no_case[max_num_prec_decs_name] >> ':')
 								 ;
 					
@@ -607,9 +601,6 @@ namespace bertini {
 					max_prec_.name("max_prec_");
 					max_prec_ = *(char_ - all_names_) >> (no_case[max_prec_name] >> ':') >> qi::uint_[_val=_1] >> ';';
 
-					consec_steps_prec_dec_.name("consec_steps_prec_dec_");
-					consec_steps_prec_dec_ = *(char_ - all_names_) >> (no_case[consec_steps_prec_dec_name] >> ':') >> qi::uint_[_val=_1] >> ';';
-
 					max_num_prec_decs_.name("max_num_prec_decs_");
 					max_num_prec_decs_ = *(char_ - all_names_) >> (no_case[max_num_prec_decs_name] >> ':') >> qi::uint_[_val=_1] >> ';';
 
@@ -638,7 +629,7 @@ namespace bertini {
 
 				qi::rule<Iterator, double(), ascii::space_type > degree_bound_, coefficient_bound_, lin_solve_error_bnd_, jac_eval_err_bnd_, func_eval_err_bnd_;
 				qi::rule<Iterator, int(), ascii::space_type > safety_one_, safety_two_;
-				qi::rule<Iterator, unsigned int(), ascii::space_type > max_prec_, consec_steps_prec_dec_, max_num_prec_decs_;
+				qi::rule<Iterator, unsigned int(), ascii::space_type > max_prec_, max_num_prec_decs_;
 
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 				rules::LongNum<Iterator> mpfr_rules;

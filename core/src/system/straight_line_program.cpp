@@ -25,6 +25,7 @@
 
 #include "bertini2/system/straight_line_program.hpp"
 #include "bertini2/system/system.hpp"
+#include "bertini2/system/blocks/polynomial_block.hpp"
 
 
 
@@ -750,7 +751,8 @@ namespace bertini{
 
 
 
-	SLP SLPCompiler::Compile(System const& sys){
+	template <typename SourceT>
+	SLP SLPCompiler::Compile(SourceT const& sys){
 		this->Clear();
 
 		// ThreadPrecision (thread-local), not DefaultPrecision (global): SLPs are
@@ -891,6 +893,11 @@ namespace bertini{
 
 		return slp_under_construction_;
 	}
+
+	// Explicit instantiations: compile from a whole System (classic / slp_test path) and from a
+	// PolynomialBlock (the fold -- the block compiles its own SLP in PolynomialBlock::Differentiate).
+	template SLP SLPCompiler::Compile<System>(System const&);
+	template SLP SLPCompiler::Compile<blocks::PolynomialBlock>(blocks::PolynomialBlock const&);
 
 	void SLPCompiler::Clear(){
 		next_available_complex_ = 0;

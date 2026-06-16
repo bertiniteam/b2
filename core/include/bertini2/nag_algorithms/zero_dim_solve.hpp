@@ -143,9 +143,9 @@ struct SolutionMetaData
 	NumErrorT function_residual; 	// the latest function residual
 
 	int multiplicity = 1; 		// multiplicity
-	bool is_real;       		// real flag:  0 - not real, 1 - real
-	bool is_finite;     		// finite flag: -1 - no finite/infinite distinction, 0 - infinite, 1 - finite
-	bool is_singular;       		// singular flag: 0 - non-sigular, 1 - singular
+	bool is_real = false;       		// real flag: whether the (dehomogenized) endpoint is real
+	bool is_finite = false;     		// finite flag: whether the endpoint is finite (not at infinity)
+	bool is_singular = false;       		// singular flag: whether the endpoint is singular (multiple, or ill-conditioned)
 
 	bool operator==(const SolutionMetaData<ComplexT> & other){ 
 		bool result = 
@@ -363,7 +363,26 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				using Phase2T      = parallel::Phase2Task<BaseComplexT>;
 				using DuringResult = parallel::PathDuringEGResult<BaseComplexT>;
 
+				mpfr_free_cache(); // reproducibility: clear this rank's mpfr constant cache (see Solve())
+
 				solutions_user_coords_fresh_ = false;
+
+				// Each rank built its homotopy independently in the constructor -- with its OWN
+				// random patch, start-system coefficients, and gamma -- so a given path index
+				// would mean a different path on each worker, and the manager would gather a
+				// scrambled, mostly-wrong solution set (observed: cyclic-5 returned ~17 distinct
+				// solutions instead of 70).  Make every rank agree on ONE homotopy: broadcast the
+				// manager's RNG seed and re-form the (randomized) start system + homotopy from it.
+				// The per-path tracking RNG is already deterministic in the path index
+				// (ReseedThisThread), so this is sufficient for identical results on every rank.
+				{
+					unsigned long seed = parallel::IsManager() ? GetGlobalSeed() : 0ul;
+					MPI_Bcast(&seed, 1, MPI_UNSIGNED_LONG, 0, comm);
+					SetGlobalSeed(seed);
+					SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
+					num_start_points_ = StartSystem().NumStartPoints();
+					GetTracker().SetSystem(Homotopy());
+				}
 
 				PreSolveChecks();
 				PreSolveSetup();
@@ -540,7 +559,16 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				if (TargetSystem().HavePathVariable())
 					throw std::runtime_error("unable to perform zero dim solve on target system -- has path variable, use user homotopy instead.");
 
-				if (TargetSystem().NumVariables() > TargetSystem().NumTotalFunctions())
+				// A square zero-dim system needs one equation per dimension.  Each projective
+				// (homogeneous) variable group of size k spans P^{k-1}: its k coordinates carry
+				// only k-1 dimensions because scale is free, so it needs one fewer equation than
+				// it has variables.  Subtract that free scale per projective group before
+				// comparing -- otherwise a genuinely square multiprojective system (e.g. the
+				// eigenvalue problem (A - lam I)x = 0 with x projective, lam affine) is wrongly
+				// rejected.  Affine-only systems have no hom variable groups, so this is a no-op
+				// for them.  (Patches, which would also enter NumTotalFunctions, are added later
+				// during system preparation; this check runs on the as-supplied system.)
+				if (TargetSystem().NumVariables() - TargetSystem().NumHomVariableGroups() > TargetSystem().NumTotalFunctions())
 					throw std::runtime_error("unable to perform zero dim solve on target system -- underconstrained, so has no zero dimensional solutions.");
 
 				if (!TargetSystem().IsPolynomial())
@@ -729,6 +757,17 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			*/
 			void Solve()
 			{
+				// Reproducibility: clear this thread's mpfr constant cache (pi, etc.) at the solve
+				// boundary.  mpfr caches transcendental constants at the precision last requested; the
+				// Cauchy endgame needs pi (roots of unity), so a high-precision solve leaves pi cached
+				// at high precision.  A subsequent lower-precision solve would otherwise reuse that
+				// cached value rounded down -- differing by ~1 ULP from a freshly-computed
+				// low-precision pi -- making a solve's behaviour depend on what ran before it in the
+				// process (non-reproducible).  Clearing here makes each solve independent of history.
+				// Cheap (one constant recompute per solve); thread-local (each worker thread clears its
+				// own when it starts a solve).
+				mpfr_free_cache();
+
 				solutions_user_coords_fresh_ = false;
 
 				PreSolveChecks();
@@ -765,7 +804,16 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 					solutions_user_coords_.clear();
 					solutions_user_coords_.reserve(solutions_post_endgame_.size());
 					for (const auto& s : solutions_post_endgame_)
-						solutions_user_coords_.push_back(this->TargetSystem().DehomogenizePoint(s));
+					{
+						// A path that failed before or during the endgame leaves its endpoint
+						// slot default-constructed (zero coordinates); keep index alignment with
+						// FinalSolutionMetadata (output filters on it) by emitting an empty
+						// placeholder rather than trying to dehomogenize an unset point.
+						if (s.size() == 0)
+							solutions_user_coords_.emplace_back();
+						else
+							solutions_user_coords_.push_back(this->TargetSystem().DehomogenizePoint(s));
+					}
 					solutions_user_coords_fresh_ = true;
 				}
 				return solutions_user_coords_;
@@ -1259,31 +1307,118 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			*/
 			void ComputePostTrackMetadata()
 			{
+				ClassifyFiniteAndReal();
 				ComputeMultiplicities();
+				ClassifySingular();
 			}
 
-			void ComputeMultiplicities()
+			/**
+			\brief Classify each successful endpoint as finite/infinite, and (when finite) real.
+
+			Uses the same dehomogenize-then-infinity-norm measurement the endgames use for their
+			`Security::max_norm` divergence test (`System::InfinityNormOfDehomogenized`), compared
+			against `endpoint_finite_threshold` -- so the metadata can never contradict the
+			endgame's own verdict.  Endpoints the endgame already flagged as diverging
+			(`GoingToInfinity` / `SecurityMaxNormReached`) are taken as infinite without
+			recomputation.  A finite endpoint is real if the infinity norm of the imaginary parts
+			of its dehomogenized coordinates is below `real_threshold`.
+			*/
+			void ClassifyFiniteAndReal()
 			{
-				std::vector<std::vector<int>> multiplicity_indices(num_start_points_);
+				using std::abs; using std::imag;
+				const auto& post = this->template Get<PostProcessing>();
 
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
-					if (solution_final_metadata_[ii].endgame_success!=SuccessCode::Success)
-						continue;
+					auto& smd = solution_final_metadata_[ii];
 
+					if (smd.endgame_success==SuccessCode::GoingToInfinity ||
+					    smd.endgame_success==SuccessCode::SecurityMaxNormReached)
+					{
+						smd.is_finite = false; // the endgame already decided this path diverges
+						continue;
+					}
+					if (smd.endgame_success!=SuccessCode::Success)
+						continue;              // failed otherwise: leave defaults (not finite/real/singular)
+
+					auto user_pt = this->TargetSystem().DehomogenizePoint(solutions_post_endgame_[ii]);
+
+					smd.is_finite =
+						static_cast<NumErrorT>(user_pt.template lpNorm<Eigen::Infinity>()) <= post.endpoint_finite_threshold;
+
+					if (smd.is_finite)
+					{
+						NumErrorT max_imag{0};
+						for (Eigen::Index k{0}; k < user_pt.size(); ++k)
+						{
+							NumErrorT a = static_cast<NumErrorT>(abs(imag(user_pt(k))));
+							if (a > max_imag) max_imag = a;
+						}
+						smd.is_real = max_imag < post.real_threshold;
+					}
+				}
+			}
+
+			/**
+			\brief Cluster identical endpoints to compute multiplicities.
+
+			Two endpoints are the same point when the infinity norm of the difference of their
+			*dehomogenized* coordinates is below `final_tolerance * same_point_tolerance_multiplier`.
+			Comparing dehomogenized (user) coordinates -- not the internal homogenized, on-patch
+			coordinates, which carry the homogenizing variable and patch scaling -- is essential;
+			the infinity norm matches the convergence norm the endgames use.  Only finite,
+			successful endpoints are clustered (an at-infinity endpoint has no meaningful
+			dehomogenized coordinates to compare).
+			*/
+			void ComputeMultiplicities()
+			{
+				const NumErrorT same_tol =
+					this->template Get<Tolerances>().final_tolerance *
+					this->template Get<PostProcessing>().same_point_tolerance_multiplier;
+
+				std::vector<Vec<BaseComplexT>> user_pts(num_start_points_);
+				std::vector<char> eligible(num_start_points_, 0);
+				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+				{
+					auto const& smd = solution_final_metadata_[ii];
+					if (smd.endgame_success==SuccessCode::Success && smd.is_finite)
+					{
+						user_pts[ii] = this->TargetSystem().DehomogenizePoint(solutions_post_endgame_[ii]);
+						eligible[ii] = 1;
+					}
+				}
+
+				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+				{
+					if (!eligible[ii]) continue;
 					for (decltype(num_start_points_) jj{ii+1}; jj < num_start_points_; ++jj)
 					{
-						if (solution_final_metadata_[jj].endgame_success!=SuccessCode::Success)
-							continue;
-
-						if ( (solutions_post_endgame_[ii] - solutions_post_endgame_[jj]).norm() < this->template Get<PostProcessing>().same_point_tolerance)
+						if (!eligible[jj]) continue;
+						if ( static_cast<NumErrorT>((user_pts[ii] - user_pts[jj]).template lpNorm<Eigen::Infinity>()) < same_tol )
 						{
-							multiplicity_indices[ii].push_back(static_cast<int>(jj));
-							multiplicity_indices[jj].push_back(static_cast<int>(ii));
 							++solution_final_metadata_[ii].multiplicity;
 							++solution_final_metadata_[jj].multiplicity;
 						}
 					}
+				}
+			}
+
+			/**
+			\brief Classify each successful endpoint as singular or not.
+
+			Matching Bertini 1: an endpoint is singular if it is the endpoint of multiple paths
+			(multiplicity > 1), or if the approximation of its condition number (spectral norm, as
+			estimated by the tracker) exceeds `condition_number_threshold`.
+			*/
+			void ClassifySingular()
+			{
+				const NumErrorT cond_threshold = this->template Get<PostProcessing>().condition_number_threshold;
+				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+				{
+					auto& smd = solution_final_metadata_[ii];
+					if (smd.endgame_success!=SuccessCode::Success)
+						continue;
+					smd.is_singular = (smd.multiplicity > 1) || (smd.condition_number > cond_threshold);
 				}
 			}
 
