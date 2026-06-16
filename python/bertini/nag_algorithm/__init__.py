@@ -94,6 +94,25 @@ def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='totalde
         instead (their construction needs the homotopy and start points, not just a system).
 
     Returns a solver; call ``.solve()`` then ``.solutions()`` as for any zero-dim solver.
+
+    Examples
+    --------
+    The default is the Cauchy endgame in multiple precision with a total-degree start system;
+    strings pick the rest::
+
+        >>> import bertini
+        >>> from bertini.nag_algorithm import ZeroDim
+        >>> x = bertini.Variable('x')
+        >>> sys = bertini.System()
+        >>> sys.add_variable_group(bertini.VariableGroup([x]))
+        >>> sys.add_function(x * x - 1)
+        >>> type(ZeroDim(sys)).__name__
+        'ZeroDimCauchyFixedMultiplePrecisionTotalDegree'
+        >>> type(ZeroDim(sys, mptype='amp', startsystem='mhom')).__name__
+        'ZeroDimCauchyAdaptivePrecisionMHomogeneous'
+        >>> solver = ZeroDim(sys, mptype='adaptive')   # robust path
+        >>> solver.solve()                             # doctest: +SKIP
+        >>> solver.solutions()                         # doctest: +SKIP
     """
     if precision is not None:
         mptype = precision
