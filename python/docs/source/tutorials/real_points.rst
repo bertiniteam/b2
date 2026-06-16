@@ -15,7 +15,7 @@ farthest) point to :math:`p`, so the critical set contains **at least one real p
 component** -- and those are honest solutions of a square polynomial system we can solve.
 
 The critical-point system
-========================
+=========================
 
 On a plane curve :math:`f(x,y)=0`, a point is distance-critical exactly when the line to
 :math:`p` meets the curve at right angles -- i.e. the gradient :math:`\nabla f` is parallel to
@@ -34,7 +34,7 @@ components:
    144\,(x^4 + y^4) - 225\,(x^2 + y^2) + 350\, x^2 y^2 + 81 = 0 .
 
 Building and solving it
-=====================
+=======================
 
 We let bertini differentiate :math:`f` for us, and keep every coefficient exact -- the random
 point's coordinates are exact rationals, since :mod:`bertini.linalg` (rightly) refuses python
@@ -78,7 +78,7 @@ Eight real critical points appear -- the nearest and farthest point of each of t
 so every connected component of the curve is witnessed by a real point.
 
 Plotting the curve, the point, and the distances
-==============================================
+================================================
 
 Plot the curve as an implicit contour, mark :math:`p` and the real critical points, and draw a
 segment from :math:`p` to each one so the distances are visible::

@@ -43,7 +43,7 @@ Take a fixed unit circle intersected with a horizontal line whose height is the 
         return sys
 
 Solve once, ab initio
-====================
+=====================
 
 Pick a generic member and solve it the usual way (a total-degree start system).  Its two
 solutions are the start points we will reuse forever after::
@@ -54,7 +54,7 @@ solutions are the start points we will reuse forever after::
     start_points = first.solutions()                   # (+/- sqrt(3)/2, 1/2)
 
 Move the parameter -- without solving again
-==========================================
+===========================================
 
 To reach another member, build the parameter homotopy from that member back to the generic one
 and track the start points through it::
@@ -88,7 +88,7 @@ total-degree solve.  Across a large sweep that is the difference between trackin
 paths per parameter and tracking the full Bézout count every time.
 
 Choosing the generic member
-==========================
+===========================
 
 A parameter homotopy works because the *singular* parameter values -- where solutions collide or
 run off to infinity -- form a measure-zero set, so a straight-line path between two generic
