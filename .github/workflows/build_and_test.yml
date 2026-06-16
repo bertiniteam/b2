@@ -59,6 +59,9 @@ concurrency:
 # (eigenpy >= 3.13 requires Python >= 3.10, so the wheel matrix drops 3.9).
 env:
   EIGENPY_VERSION: "3.13.0"
+  # Opt JavaScript actions into Node 24 (Node 20 is being removed from the runners).
+  # Silences the conda-incubator/setup-miniconda@v3 (and other node20 action) deprecation.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   set_matrix:
@@ -161,7 +164,9 @@ jobs:
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
           CCACHE_MAXSIZE: 400M
-        run: cmake --build build --parallel 2
+        # Linux runners are 4-core/16 GB and the heaviest TU peaks ~4 GB (ADR-0019), so the full
+        # 4-way build fits; the 3-core/7 GB macOS runner stays at 2.  See ADR-0004.
+        run: cmake --build build --parallel ${{ runner.os == 'Linux' && 4 || 2 }}
 
       - name: ccache stats
         if: always()
@@ -199,7 +204,7 @@ jobs:
         with:
           activate-environment: b2-windows
           environment-file: environment-win.yml
-          auto-activate-base: false
+          auto-activate: false
           channel-priority: strict
 
       - name: Configure and build C++ tests
@@ -379,7 +384,7 @@ jobs:
             cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF &&
             make -j2 install
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
-          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=2 CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
+          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=4 CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           # Full pytest suite, restored 2026-06-08 now that the uninitialized-numpy-slot
           # crash is fixed in the bindings (see ADR-0006).  The build image is
@@ -436,7 +441,7 @@ jobs:
           activate-environment: b2-windows
           environment-file: environment-win.yml
           python-version: ${{ matrix.python-version }}
-          auto-activate-base: false
+          auto-activate: false
           channel-priority: strict
 
       - name: Build Windows
@@ -537,7 +542,7 @@ jobs:
           activate-environment: b2-windows
           environment-file: environment-win.yml
           python-version: ${{ matrix.python-version }}
-          auto-activate-base: false
+          auto-activate: false
           channel-priority: strict
 
       - name: Download wheels artifact
