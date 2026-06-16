@@ -197,6 +197,33 @@ def test_add_products_of_linears_refuses_floats():
         linalg.add_products_of_linears(sys, [[[2.5, 0, 1], [1, 0, -1]]])
 
 
+def test_add_products_of_linears_survives_clone():
+    # System pickling isn't exposed to Python, but bertini.system.clone is the deep-copy
+    # round-trip (the C++ boost-archive round-trip is covered by system_blocks_test).  A
+    # products-of-linears block must survive it: coefficients copied, and the copy independent.
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    linalg.add_products_of_linears(sys, [
+        [[1, 0, 1], [1, 0, -1]],   # (x + 1)(x - 1) = x^2 - 1
+        [[2, 3, 1]],               # 2x + 3y + 1
+    ])
+
+    clone = pb.system.clone(sys)
+    assert list(clone.degrees()) == [2, 1]
+
+    pt = np.array([mp.Complex('2'), mp.Complex('1')], dtype=mp.Complex)
+    v0, v1 = sys.eval(pt), clone.eval(pt)
+    assert len(v0) == len(v1) == 2
+    for a, b in zip(v0, v1):
+        assert abs(complex(a) - complex(b)) < 1e-12
+
+    # independence: changing the original after cloning does not touch the clone.
+    sys.add_function(x + y)
+    assert sys.num_functions() == 3
+    assert clone.num_functions() == 2
+
+
 # --- degrees of the linear-algebra evaluation paths ---------------------------------------
 # After the polynomial-path fold, System.degrees() asks the blocks.  These pin the degree of
 # each linear-algebra construction, with the eigenvalue distinction (bilinear vs linear) front
