@@ -64,3 +64,16 @@ def test_factory_returns_a_real_solver():
     solver = ZeroDim(_system(), mptype='amp')
     solver.solve()
     assert len(solver.solutions()) == 2
+
+
+def test_precision_is_an_alias_for_mptype():
+    assert isinstance(ZeroDim(_system(), precision='amp'),
+                      _n.ZeroDimCauchyAdaptivePrecisionTotalDegree)
+    # precision overrides mptype when both are given
+    assert isinstance(ZeroDim(_system(), mptype='double', precision='adaptive'),
+                      _n.ZeroDimCauchyAdaptivePrecisionTotalDegree)
+
+
+def test_user_startsystem_points_at_user_homotopy():
+    with pytest.raises(ValueError, match='user_homotopy'):
+        ZeroDim(_system(), startsystem='user')

@@ -93,3 +93,28 @@ def test_metadata_splits_real_and_complex():
     assert not any(m.is_singular for m in md)
     assert sum(1 for m in md if m.is_real) == 2             # the (+/- sqrt y1, y1) real pair
     assert sum(1 for m in md if not m.is_real) == 2         # the purely-imaginary-x pair
+
+
+def test_coefficient_parameter_homotopy_does_not_drop_a_structured_start():
+    # The footgun (ADR-0020): System node arithmetic only combines the polynomial block, so a
+    # products-of-linears start would be silently dropped.  coefficient_parameter_homotopy must
+    # instead blend, so that H at t=1 IS the start system and vanishes at the start points.  We
+    # check this by direct evaluation rather than by tracking: the no-gamma-trick real path is
+    # conditioning-fragile for this hand-picked example (which is exactly why blend_homotopy's
+    # off-axis gamma exists), so a track here would be flaky -- but the homotopy is still correct.
+    T, S = _target(), _start()
+    H = nag_algorithm.coefficient_parameter_homotopy(T, S)
+    assert H.have_path_variable()
+    assert H.num_functions() == 2
+
+    # H|t=1 = 1 * S, so it must vanish at every start point (it would not if S were dropped).
+    H.set_path_variable(complex(1))
+    for a, b in itertools.product([1, -1], [1, 2]):
+        H.set_variables(np.array([complex(a), complex(b)]))
+        assert max(abs(complex(v)) for v in H.eval()) < 1e-10
+
+    # H|t=0 = T, so it must vanish at the target's known roots.
+    H.set_path_variable(complex(0))
+    for root in _known_solutions():
+        H.set_variables(np.array([complex(root[0]), complex(root[1])]))
+        assert max(abs(complex(v)) for v in H.eval()) < 1e-9

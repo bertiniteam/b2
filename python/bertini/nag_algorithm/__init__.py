@@ -73,7 +73,8 @@ def _zd_select(value, table, kind):
     return frag
 
 
-def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='totaldegree'):
+def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='totaldegree',
+            precision=None):
     """Construct a zero-dim solver by name, with friendly defaults.
 
     ``ZeroDim(system)`` is the Cauchy endgame, multiple precision, total-degree start system --
@@ -87,12 +88,22 @@ def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='totalde
     system : the polynomial :class:`~bertini.System` to solve.
     endgame : ``'cauchy'`` (default) or ``'powerseries'``.
     mptype : the precision -- ``'double'``, ``'multiple'`` (default), or ``'adaptive'`` (``'amp'``).
+    precision : an alias for ``mptype``; if given (not ``None``) it overrides ``mptype``.
     startsystem : ``'totaldegree'`` (default) or ``'mhom'``.  To run from a homotopy you built
         yourself with given start points, use :func:`user_homotopy` / :func:`blend_homotopy`
         instead (their construction needs the homotopy and start points, not just a system).
 
     Returns a solver; call ``.solve()`` then ``.solutions()`` as for any zero-dim solver.
     """
+    if precision is not None:
+        mptype = precision
+    # user-homotopy can't be built from a system alone -- point at the right entry point.
+    if str(startsystem).strip().lower().replace('-', '_').replace('_', '') in ('user', 'userhomotopy'):
+        raise ValueError(
+            "ZeroDim does not build the user-homotopy solver (its construction needs a homotopy "
+            "and start points, not just a system); build the homotopy with "
+            "nag_algorithm.blend_homotopy / coefficient_parameter_homotopy and solve it with "
+            "nag_algorithm.user_homotopy(homotopy, start_points, target).")
     cls_name = ('ZeroDim'
                 + _zd_select(endgame, _ZD_ENDGAMES, 'endgame')
                 + _zd_select(mptype, _ZD_PRECISIONS, 'mptype')
@@ -179,7 +190,7 @@ def coefficient_parameter_homotopy(target, generic, path_variable='t'):
     it with :func:`user_homotopy`: solve ``generic`` once, then reuse its solutions to move to
     ``target`` (and to any number of further targets that share ``generic``)::
 
-        gen_solver = nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(generic)
+        gen_solver = nag_algorithm.ZeroDim(generic, mptype='adaptive')
         gen_solver.solve()
         H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
         solver = nag_algorithm.user_homotopy(H, gen_solver.solutions(), target)
@@ -189,13 +200,18 @@ def coefficient_parameter_homotopy(target, generic, path_variable='t'):
     combines their function trees).
 
     For robustness the generic system's coefficients should be *generic* (random complex), so the
-    straight-line parameter path avoids the (measure-zero) singular locus.
+    straight-line parameter path avoids the (measure-zero) singular locus.  This is the
+    no-gamma-trick member of the family; if ``generic`` is *structured* (e.g. a products-of-linears
+    start), it cannot be fused by System node arithmetic, so it is combined with a blend block --
+    the same machinery as :func:`blend_homotopy`, but with the start coefficient fixed at 1.
     """
-    from bertini._pybertini.function_tree.symbol import Variable as _Variable
-    t = _Variable(path_variable)
-    H = (1 - t) * target + t * generic
-    H.add_path_variable(t)
-    return H
+    # H = (1-t)*target + 1*t*generic.  Delegating to make_homotopy with gamma = the constant 1
+    # (a) keeps the (1-t)/t semantics (no gamma trick) and (b) lets a structured-block ``generic``
+    # be blended rather than SILENTLY DROPPED by System node arithmetic, which only combines the
+    # polynomial block (see ADR-0020).
+    from bertini.function_tree.symbol import Integer
+    from bertini._pybertini import system as _system
+    return _system.make_homotopy(target, generic, path_variable, Integer(1))
 
 
 def blend_homotopy(target, start, *, path_variable='t', gamma=None):
