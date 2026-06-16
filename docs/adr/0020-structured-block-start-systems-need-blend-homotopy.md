@@ -60,5 +60,11 @@ for two *polynomial* systems of the same shape.
   user path (via `blend_homotopy`), so they cannot drift apart.
 - `γ` is optional: omit it for a random rational (genericity), or pass an exact node
   (`linalg.coefficient(...)`) off the real axis for a reproducible straight-line path.
-- Follow-up worth noting: `coefficient_parameter_homotopy` could detect a structured start and
-  delegate to `MakeHomotopy` rather than silently mis-combining; left as a future hardening.
+- `coefficient_parameter_homotopy` (the no-gamma-trick interpolation) now also delegates to
+  `MakeHomotopy` -- with `γ` fixed at the constant `1` -- so a structured-block `generic` is
+  blended rather than silently dropped by node arithmetic. It keeps its `(1-t)/t` semantics; it
+  is no longer a footgun. (Use `blend_homotopy` when you want a real off-axis gamma.)
+- Authoring scope (validated): a user-authored products-of-linears start solves end to end for a
+  single affine group and for multiple affine groups; projective (homogeneous) factors construct
+  and evaluate. The block is evaluated as authored (its `Homogenize` is a no-op), so for a
+  projective group you write homogeneous factors (constant column 0).
