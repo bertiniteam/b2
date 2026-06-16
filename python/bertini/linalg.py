@@ -68,7 +68,7 @@ _MP_VALUE_TYPES = tuple(
 )
 
 __all__ = ['variable_vector', 'variable_matrix', 'coefficient', 'as_coefficients',
-           'add_functions', 'add_linear_forms', 'add_linear']
+           'add_functions', 'add_linear_forms', 'add_linear', 'add_products_of_linears']
 
 
 def variable_vector(name, n, start=0):
@@ -285,4 +285,50 @@ def add_linear(system, A, x, b=None):
             M[i, num_vars] = _exact_to_mpfr(b[i])
 
     system.add_linear_forms_block(num_vars, M)
+    return system
+
+
+def add_products_of_linears(system, factors):
+    """Add a products-of-linear-forms block to ``system``: f_i(x) = prod_r ( c_{i,r} . [x;1] ).
+
+    This is the first-class C++ ``ProductsOfLinearsBlock`` -- the same evaluation block the
+    multihomogeneous start system uses -- evaluated as matrix-multiplies-then-row-products rather
+    than as expanded scalar function-tree expressions.  It is the natural way to author your own
+    start system as a product of linears: each factor ``c.[x;1] = 0`` is a hyperplane, so the start
+    solutions are exact intersections of one hyperplane per function.
+
+    Distinct from :func:`add_linear_forms`: a single ``c.[x;1]`` is one degree-1 linear form (a
+    ``LinearFormsBlock``); a *product* of k such factors is one function of **degree k**.
+
+    Parameters
+    ----------
+    system : the System to add to.
+    factors : a list with one entry per function.  Entry i is an exact (k_i x (num_vars+1)) matrix
+        (array/list of lists): one row per linear factor, the trailing column being that factor's
+        constant term.  Different functions may have different numbers of factors, but every matrix
+        must have the same number of columns (num_vars+1).
+
+    Coefficients must be exact (see :func:`coefficient`); Python floats are refused.
+
+    Returns ``system`` for chaining.
+    """
+    mats = []
+    ncol = None
+    for fi, factor_matrix in enumerate(factors):
+        rows = [list(r) for r in factor_matrix]
+        if not rows:
+            raise ValueError(f"function {fi} has no linear factors")
+        if ncol is None:
+            ncol = len(rows[0])
+        M = np.empty((len(rows), ncol), dtype=_mp.Complex)
+        for i, row in enumerate(rows):
+            if len(row) != ncol:
+                raise ValueError("products-of-linears coefficient matrices are ragged: every factor "
+                                 "row across every function must have num_vars+1 columns")
+            for j, entry in enumerate(row):
+                M[i, j] = _exact_to_mpfr(entry)
+        mats.append(M)
+    if ncol is None:
+        raise ValueError("factors must contain at least one function")
+    system.add_products_of_linears_block(ncol - 1, mats)
     return system

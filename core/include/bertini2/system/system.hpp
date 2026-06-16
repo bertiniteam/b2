@@ -2035,6 +2035,24 @@ namespace bertini {
 
 
 	/**
+	\brief Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start.
+
+	The path variable `t` (named `path_variable_name`) is added to the returned homotopy, tracked
+	from t=1 (where H is gamma*start, so its roots are start's solutions) down to t=0 (where H is
+	target).  When `start` carries a structured evaluation block (e.g. a products-of-linears start
+	system) it cannot be fused by node arithmetic, so the two systems are combined with a
+	BlendBlock that evaluates whole Systems; otherwise the node-arithmetic combination is used.
+	This is the same construction the zero-dim solver's CloneGiven policy uses internally; it is
+	exposed so a user-authored start system can be turned into a trackable homotopy for the
+	user-homotopy solve path.
+
+	\param gamma The gamma coefficient (a node).  If null, a random rational gamma is generated.
+	*/
+	System MakeHomotopy(System const& target, System const& start,
+	                    std::string const& path_variable_name = "t",
+	                    std::shared_ptr<node::Node> const& gamma = nullptr);
+
+	/**
 	\brief Do a deep clone of the system.  This includes the entire structure, variables, etc.  everything.
 	*/
 	System Clone(System const& sys);

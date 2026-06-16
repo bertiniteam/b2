@@ -1429,6 +1429,42 @@ namespace bertini
 	}
 
 
+	System MakeHomotopy(System const& target, System const& start,
+	                    std::string const& path_variable_name,
+	                    std::shared_ptr<node::Node> const& gamma)
+	{
+		auto t = node::Variable::Make(path_variable_name);
+		auto g = gamma ? gamma
+		               : std::static_pointer_cast<node::Node>(node::Rational::Make(node::Rational::Rand()));
+
+		System homotopy;
+		if (start.HasStructuredBlocks())
+		{
+			// A block-backed start system (e.g. a products-of-linears start) cannot be fused
+			// into a node-arithmetic homotopy, so combine the two systems with a blend block:
+			// H = (1-t)*target + gamma*t*start, evaluated by blending whole Systems.  The
+			// homotopy carries target's variable structure and patch; the blend contributes the
+			// natural rows.  ClearFunctions drops target's own polynomial block so its functions
+			// aren't evaluated a second time alongside the blend (the blend already references
+			// target).  Mirrors policy::CloneGiven::FormHomotopy.
+			homotopy = target;
+			homotopy.ClearFunctions();
+			homotopy.AddPathVariable(t);
+			std::vector<std::shared_ptr<node::Node>> coeffs{ 1 - t, g * t };
+			std::vector<std::shared_ptr<const System>> operands{
+				std::make_shared<System>(target),
+				std::make_shared<System>(start) };
+			homotopy.AddBlock(blocks::BlendBlock<System>(t, std::move(coeffs), std::move(operands)));
+		}
+		else
+		{
+			homotopy = (1-t)*target + g*t*start;
+			homotopy.AddPathVariable(t);
+		}
+		return homotopy;
+	}
+
+
 	System Clone(System const& sys)
 	{
 

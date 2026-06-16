@@ -142,9 +142,39 @@ def coefficient_parameter_homotopy(target, generic, path_variable='t'):
     return H
 
 
+def blend_homotopy(target, start, *, path_variable='t', gamma=None):
+    """Form the gamma-trick homotopy H = (1-t)*target + gamma*t*start for a start system you built.
+
+    Unlike :func:`coefficient_parameter_homotopy` (node arithmetic, for two polynomial systems of the
+    same shape), this also works when ``start`` carries a *structured evaluation block* -- e.g. a
+    products-of-linears start system built with :func:`bertini.linalg.add_products_of_linears`.  Such
+    a block cannot be fused by node arithmetic, so the two systems are combined with a blend block
+    that evaluates whole Systems; this is the same construction the zero-dim solver uses internally
+    for its generated (total-degree / multihomogeneous) start systems.
+
+    Parameters
+    ----------
+    target : System
+        The system whose solutions you want, reached at t=0.
+    start : System
+        A start system you authored, whose (known) solutions are the start points.  At t=1 the
+        homotopy is ``gamma*start``, so those solutions are its roots.
+    path_variable : str
+        Name of the path variable t added to the homotopy (default ``'t'``).
+    gamma : node or None
+        The gamma coefficient.  ``None`` (default) draws a random rational gamma.  Pass an exact
+        node (e.g. from :func:`bertini.linalg.coefficient`) off the real axis for a reproducible path.
+
+    Returns the homotopy System; pair it with :func:`user_homotopy` and your start points to solve.
+    """
+    from bertini._pybertini import system as _system
+    return _system.make_homotopy(target, start, path_variable, gamma)
+
+
 __all__ = dir(_pybnalag)
 __all__.append('user_homotopy')
 __all__.append('coefficient_parameter_homotopy')
+__all__.append('blend_homotopy')
 
 
 # DoublePrecisionTotalDegree = bertini._pybertini.nag_algorithms.ZeroDimCauchyDoublePrecisionTotalDegree

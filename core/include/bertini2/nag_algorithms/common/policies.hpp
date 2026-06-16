@@ -197,32 +197,12 @@ public:
 			static
 			void FormHomotopy(SystemType & homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
 			{
-				auto t = node::Variable::Make(path_variable_name);
-				auto gamma = node::Rational::Make(node::Rational::Rand());
-
-				if (start.HasStructuredBlocks())
-				{
-					// A block-backed start system (e.g. the MHom products-of-linears start)
-					// cannot be fused into a node-arithmetic homotopy, so combine the two
-					// systems with a blend block: H = (1-t)*target + gamma*t*start, evaluated
-					// by blending whole Systems.  The homotopy carries target's variable
-					// structure and patch; the blend contributes the natural rows.  ClearFunctions
-					// drops target's own polynomial block so its functions aren't evaluated a
-					// second time alongside the blend (the blend already references target).
-					homotopy = target;
-					homotopy.ClearFunctions();
-					homotopy.AddPathVariable(t);
-					std::vector<std::shared_ptr<node::Node>> coeffs{ 1 - t, gamma * t };
-					std::vector<std::shared_ptr<const System>> operands{
-						std::make_shared<System>(target),
-						std::make_shared<System>(start) };
-					homotopy.AddBlock(blocks::BlendBlock<System>(t, std::move(coeffs), std::move(operands)));
-				}
-				else
-				{
-					homotopy = (1-t)*target + gamma*t*start;
-					homotopy.AddPathVariable(t);
-				}
+				// MakeHomotopy builds H = (1-t)*target + gamma*t*start with a random gamma,
+				// choosing a blend block when the start system carries structured blocks (e.g.
+				// the MHom products-of-linears start) and node arithmetic otherwise.  The same
+				// construction is exposed to Python as system.make_homotopy so a user-authored
+				// start system can be turned into a trackable homotopy.
+				homotopy = MakeHomotopy(target, start, path_variable_name);
 			}
 
 			/**

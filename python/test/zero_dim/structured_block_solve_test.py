@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg as bla
+from bertini import linalg
 
 
 def _roots_xy(solutions):
@@ -26,7 +26,7 @@ def test_circle_intersect_line_via_add_linear_solves():
     sys = pb.System()
     sys.add(pb.VariableGroup([x, y]))
     sys.add(x * x + y * y - 1)                                   # polynomial block, degree 2
-    bla.add_linear(sys, np.array([[2, 1]]), np.array([x, y]), [-1])  # linear-forms block: 2x+y-1
+    linalg.add_linear(sys, np.array([[2, 1]]), np.array([x, y]), [-1])  # linear-forms block: 2x+y-1
 
     assert list(sys.degrees()) == [2, 1]
 
@@ -47,7 +47,7 @@ def test_circle_intersect_line_via_add_linear_forms_solves():
     sys = pb.System()
     sys.add(pb.VariableGroup([x, y]))
     sys.add(x * x + y * y - 1)
-    bla.add_linear_forms(sys, [[2, 1, -1]])
+    linalg.add_linear_forms(sys, [[2, 1, -1]])
 
     zd = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
     zd.solve()

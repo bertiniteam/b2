@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg as bla
+from bertini import linalg
 from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionMHomogeneous
 
 OK = int(pb.tracking.SuccessCode.Success)
@@ -29,10 +29,10 @@ OK = int(pb.tracking.SuccessCode.Success)
 def _eigen_system_affine(A, c):
     """(A - lam I)x = 0, c.x - 1 = 0 with x and lam as AFFINE variable groups."""
     n = A.shape[0]
-    x = bla.variable_vector('x', n)
+    x = linalg.variable_vector('x', n)
     lam = pb.Variable('lam')
     sys = pb.System()
-    bla.add_functions(sys, A @ x - lam * x)          # the rows of (A - lam I) x
+    linalg.add_functions(sys, A @ x - lam * x)          # the rows of (A - lam I) x
     sys.add_function(c @ x - 1)                       # fix the eigenvector scale
     sys.add_variable_group(pb.VariableGroup(list(x)))
     sys.add_variable_group(pb.VariableGroup([lam]))
@@ -42,10 +42,10 @@ def _eigen_system_affine(A, c):
 def _eigen_system_projective(A):
     """(A - lam I)x = 0 with x a PROJECTIVE group and lam affine -- no normalization."""
     n = A.shape[0]
-    x = bla.variable_vector('x', n)
+    x = linalg.variable_vector('x', n)
     lam = pb.Variable('lam')
     sys = pb.System()
-    bla.add_functions(sys, A @ x - lam * x)
+    linalg.add_functions(sys, A @ x - lam * x)
     sys.add_hom_variable_group(pb.VariableGroup(list(x)))   # eigenvector in P^{n-1}
     sys.add_variable_group(pb.VariableGroup([lam]))
     return sys

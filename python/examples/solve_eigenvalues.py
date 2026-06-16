@@ -26,7 +26,7 @@ import numpy as np
 from mpi4py import MPI
 
 import bertini as pb
-from bertini import linalg as bla
+from bertini import linalg
 from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionMHomogeneous
 
 OK = int(pb.tracking.SuccessCode.Success)
@@ -50,10 +50,10 @@ def eigen_system(A):
     no normalization equation, and the multihomogeneous Bezout number is exactly ``n``.
     """
     n = A.shape[0]
-    x = bla.variable_vector('x', n)
+    x = linalg.variable_vector('x', n)
     lam = pb.Variable('lam')
     sys = pb.System()
-    bla.add_functions(sys, A @ x - lam * x)                  # the rows of (A - lam I) x
+    linalg.add_functions(sys, A @ x - lam * x)                  # the rows of (A - lam I) x
     sys.add_hom_variable_group(pb.VariableGroup(list(x)))    # eigenvector in P^{n-1}
     sys.add_variable_group(pb.VariableGroup([lam]))
     return sys
