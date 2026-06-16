@@ -38,3 +38,4 @@ Each ADR follows the template:
 | [0018](0018-bound-every-test-with-a-timeout.md) | Bound every test with a timeout; pin seeds and skip known platform grinds | CI / testing |
 | [0019](0019-omit-debug-info-from-release-builds.md) | Omit debug info (-g) from Release builds; per-TU peak RSS caps build parallelism | Build / core |
 | [0020](0020-structured-block-start-systems-need-blend-homotopy.md) | A structured-block start system must be coupled into a homotopy via a blend (MakeHomotopy / blend_homotopy), not System node arithmetic | Core / nag_algorithms |
+| [0021](0021-block-evaluations-fully-define-their-own-rows.md) | A block (and the patch) must fully define its own output rows; System allocates result buffers uninitialized | Core / system |
