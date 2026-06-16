@@ -122,6 +122,41 @@ BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec16)
 }
 
 
+// A patch row is sparse (one coefficient block per variable group, zero elsewhere), so
+// JacobianInPlace must FULLY define the rows it owns -- including zeroing the off-coefficient
+// entries -- rather than relying on the caller to hand it a zeroed matrix.  The block-composed
+// System::Jacobian path allocates J uninitialized and assigns only the function (block) rows, so a
+// patch that left its off-coefficient entries untouched read uninitialized memory there: benign
+// (zeroed pages) on Linux/macOS, but garbage on Windows, where a degree-2 homotopy's Jacobian
+// "evaluated" to ~1e252 and wrecked the AMP condition-number estimate.  Hand it a fully-poisoned
+// buffer and require every owned entry to be correct.
+BOOST_AUTO_TEST_CASE(patch_jacobian_fully_defines_its_rows_into_a_dirty_buffer)
+{
+	std::vector<unsigned> s{2,3};
+
+	Patch p(s);
+	p.Precision(16);
+
+	Vec<dbl> v(5);
+	v << dbl(1),  dbl(1),  dbl(1),  dbl(1),  dbl(1);
+
+	Mat<dbl> J = Mat<dbl>::Constant(2, 5, dbl(1e300)); // poison every entry
+
+	p.JacobianInPlace(J, v);
+
+	// off-coefficient entries of each patch row must be overwritten with zero, not left poisoned
+	BOOST_CHECK_EQUAL(J(0,2), dbl(0));
+	BOOST_CHECK_EQUAL(J(0,3), dbl(0));
+	BOOST_CHECK_EQUAL(J(0,4), dbl(0));
+	BOOST_CHECK_EQUAL(J(1,0), dbl(0));
+	BOOST_CHECK_EQUAL(J(1,1), dbl(0));
+
+	// the coefficient entries are still written (no longer the poison value)
+	BOOST_CHECK_NE(J(0,0), dbl(1e300));
+	BOOST_CHECK_NE(J(1,2), dbl(1e300));
+}
+
+
 
 BOOST_AUTO_TEST_CASE(patch_eval_two_variable_groups_prec30)
 {
