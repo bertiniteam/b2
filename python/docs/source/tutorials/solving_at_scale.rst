@@ -105,9 +105,19 @@ Two things to notice.  First, the **whole** distributed machinery is the single
 the answer*.  Second, the check is real and uses the solver's *own* classification rather than a
 hand-rolled cutoff: it counts the endpoints the library marks **finite** (``is_finite``, which
 applies the configured ``endpoint_finite_threshold``) and confirms the number of *distinct* such
-solutions equals the mathematically known cyclic-:math:`n` value.  (Counting *distinct* points
-matters: the total-degree homotopy can occasionally send two paths to the same solution, a harmless
-duplicate -- so we divide by each point's ``multiplicity``, the deterministic, meaningful count.)
+solutions equals the mathematically known cyclic-:math:`n` value.  We count *distinct* points by
+summing :math:`1/\text{multiplicity}` over the finite endpoints, so a genuine **multiple root** --
+several paths converging to one true solution of higher multiplicity -- is counted once, as it
+should be.  That is the only reason two endpoints should ever coincide.
+
+.. note::
+
+   Two *distinct* paths landing on the **same** point is a different matter entirely.  Because the
+   homotopy's :math:`\gamma` is random, distinct paths meeting is a probability-0 event: if it
+   happens it is a **path crossing** -- a sign the tracker under-resolved the paths -- not a benign
+   duplicate.  The solver checks for exactly this at the endgame boundary and re-tracks the
+   offending paths; with the default predictor and tolerances it essentially never triggers.  The
+   :doc:`crossed_paths` tutorial provokes one on purpose and shows what to do about it.
 
 .. _correctness-across-ranks:
 

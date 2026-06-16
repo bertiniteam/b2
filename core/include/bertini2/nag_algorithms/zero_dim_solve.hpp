@@ -46,6 +46,7 @@
 #include "bertini2/parallel.hpp"
 #include <chrono>
 #include <mutex>
+#include <iostream>
 
 
 namespace bertini {
@@ -244,6 +245,38 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 	out << "success_code = " << meta.success_code << std::endl;
 	out << "last_used_stepsize = " << meta.last_used_stepsize << std::endl;
 	out << "precision = " << meta.precision << std::endl;
+	return out;
+}
+
+/**
+\brief Summary of what the midpath (path-crossing) check found at the endgame boundary, and what the
+algorithm did about it.
+
+Two distinct paths landing on the same point at the endgame boundary is a probability-0 event: it
+signals a path crossing (under-resolved tracking), not a benign coincidence.  The zero-dim algorithm
+detects these at the boundary using a relaxed same-point tolerance and re-tracks the offending paths
+with tightened settings (see ZeroDim::EGBoundaryAction).  This struct records the outcome so a caller
+can tell whether a solve hit crossings and whether they were resolved.
+
+\see ZeroDim::EndgameBoundaryMetadata
+*/
+struct MidpathCheckReport
+{
+	bool passed = true;                                    ///< Did the final midpath check pass (no crossings remained)?
+	unsigned num_crossings_detected = 0;                   ///< Number of crossed paths found on the *first* check, before any re-tracking.
+	unsigned num_resolve_attempts = 0;                     ///< How many re-track attempts were actually performed.
+	std::vector<unsigned long long> crossed_path_indices;  ///< Indices of the paths flagged as crossed on the first check.
+};
+
+inline
+std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
+	out << "passed = " << std::boolalpha << r.passed << std::endl;
+	out << "num_crossings_detected = " << r.num_crossings_detected << std::endl;
+	out << "num_resolve_attempts = " << r.num_resolve_attempts << std::endl;
+	out << "crossed_path_indices = [";
+	for (size_t i = 0; i < r.crossed_path_indices.size(); ++i)
+		out << (i ? ", " : "") << r.crossed_path_indices[i];
+	out << "]" << std::endl;
 	return out;
 }
 
@@ -846,9 +879,21 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			/**
 			\brief Get the solutions as computed at the endgame boundary
 			*/
-			const auto& EndgameBoundaryData() const
+			const auto& EndgameBoundarySolutions() const
 			{
 				return solutions_at_endgame_boundary_;
+			}
+
+			/**
+			\brief Get the report from the midpath (path-crossing) check performed at the endgame
+			boundary: how many crossings were detected, which paths, how many re-track attempts were
+			made, and whether the check ultimately passed.
+
+			\see MidpathCheckReport
+			*/
+			const MidpathCheckReport& EndgameBoundaryMetadata() const
+			{
+				return midpath_report_;
 			}
 
 		private:
@@ -1161,21 +1206,51 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 			void EGBoundaryAction()
 			{
+				// Detect path crossings: two distinct paths landing on the same point at the endgame
+				// boundary is a probability-0 event, so it signals under-resolved tracking.
 				auto midcheckpassed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
 
+				// Record the *first*-check findings (before any re-tracking) into the report.
+				midpath_report_ = MidpathCheckReport{};
+				midpath_report_.passed = midcheckpassed;
+				for (auto const& v : midpath_.GetCrossedPaths())
+					midpath_report_.crossed_path_indices.push_back(v.index());
+				midpath_report_.num_crossings_detected =
+					static_cast<unsigned>(midpath_report_.crossed_path_indices.size());
+
+				// max_num_crossed_path_resolve_attempts == 0 means "detect and report, but do not
+				// re-track" -- the conservative, give-up-after-detection mode.  The loop below
+				// naturally performs zero iterations in that case (and is bounded in all cases, so
+				// it always terminates).
+				const auto max_attempts = this->template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts;
 				unsigned num_resolve_attempts = 0;
-				while (!midcheckpassed && num_resolve_attempts < this->template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts)
+				while (!midcheckpassed && num_resolve_attempts < max_attempts)
 				{
 					MidpathResolve();
 					midcheckpassed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
 					num_resolve_attempts++;
 				}
+
+				midpath_report_.num_resolve_attempts = num_resolve_attempts;
+				midpath_report_.passed = midcheckpassed;
+
+				// Unresolved crossings are kept tracking (they still go through the endgame, so we
+				// never lose more answers than Bertini 1 would) but are made observable: the report
+				// carries passed==false and the offending indices, and we warn here.  A caller can
+				// inspect EndgameBoundaryMetadata() and re-solve with a better predictor / tighter
+				// tolerance (the defaults are tuned precisely so this does not happen).
+				if (!midcheckpassed)
+					std::cerr << "warning: " << midpath_report_.num_crossings_detected
+					          << " path crossing(s) detected at the endgame boundary remained unresolved "
+					          << "after " << num_resolve_attempts << " re-track attempt(s); "
+					          << "the affected solutions may be wrong.  Consider a higher-order predictor "
+					          << "or a tighter tracking tolerance.  See EndgameBoundaryMetadata()." << std::endl;
 			}
 
 
 			void MidpathResolve()
 			{
-				ShrinkMidpathTolerance();
+				EscalateRetrackSettings();
 
 				for(auto const& v : midpath_.GetCrossedPaths())
 				{
@@ -1190,10 +1265,31 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			}
 
 
-			void ShrinkMidpathTolerance()
+			/**
+			\brief Apply one step of escalation to the tracker before re-tracking crossed paths.
+
+			Two remedies are applied: (1) tighten the tracking tolerance, and (2) raise the ODE
+			predictor to the default (RKF45) if a low-order predictor is in use -- a too-low-order
+			predictor (notably Euler) is the most common cause of spurious boundary crossings, and
+			no amount of tolerance-tightening on a first-order predictor is as effective as moving to
+			a higher-order one.  The predictor bump is idempotent (once at RKF45's order it is a
+			no-op).
+
+			\note Future work: this single step wants to become a *configurable, ordered remedy list*
+			(tighten tolerance, more Newton iterations, bump predictor, shrink min step size, ...),
+			applied in sequence until exhausted.  That strategy abstraction is intentionally deferred;
+			for now the escalation is a fixed, minimal two-remedy step.  Termination is guaranteed
+			regardless, because EGBoundaryAction bounds the number of attempts.
+			*/
+			void EscalateRetrackSettings()
 			{
 				midpath_retrack_tolerance_ *= this->template Get<AutoRetrack>().midpath_decrease_tolerance_factor;
 				GetTracker().SetTrackingTolerance(midpath_retrack_tolerance_);
+
+				const auto default_predictor = tracking::predict::DefaultPredictor();
+				if (tracking::predict::Order(GetTracker().GetPredictor())
+				    < tracking::predict::Order(default_predictor))
+					GetTracker().SetPredictor(default_predictor);
 			}
 
 
@@ -1508,6 +1604,7 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 			unsigned long long num_start_points_;
 			NumErrorT midpath_retrack_tolerance_;
+			MidpathCheckReport midpath_report_; ///< populated by EGBoundaryAction; exposed via EndgameBoundaryMetadata()
 
 
 			/// observers used during tracking

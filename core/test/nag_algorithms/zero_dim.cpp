@@ -411,6 +411,155 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 
+// Path-crossing (midpath) detection and the EGBoundaryAction re-track machinery.
+//
+// Two distinct paths landing on the same point at the endgame boundary is a probability-0 event:
+// it signals a path crossing (under-resolved tracking), which the algorithm is supposed to detect
+// and re-track.  These tests guard the two historical defects in that machinery:
+//   * Bug 1: MidpathChecker computed `same_start` with an inverted comparison, so a genuine
+//     crossing (distinct starts, coincident boundary points) was flagged rerun==false and never
+//     re-tracked.
+//   * Bug 2: MidpathChecker::Check did not reset its pass flag / crossed-path list between calls,
+//     so the resolve loop never saw a clean pass and operated on stale data.
+// The first three cases are deterministic (hand-built boundary + start data) so they always pass
+// once the logic is correct, independent of tracker numerics.  The end-to-end "provoke a spurious
+// crossing and watch it get resolved" scenario is exercised in the Python suite on the cyclic
+// system (see python/test/zero_dim/crossed_paths_test.py), where a cyclic builder exists and the
+// phenomenon is documented (ADR-0017); the C++ wiring case below just confirms a clean solve
+// reports no crossings and the new accessors work.
+BOOST_AUTO_TEST_SUITE(crossed_paths)
+
+using bertini::dbl_complex;
+using bertini::Vec;
+using bertini::SuccessCode;
+using MidPathConfig = bertini::algorithm::MidPathConfig;
+using BoundaryMD = bertini::algorithm::EGBoundaryMetaData<dbl_complex>;
+using Checker = bertini::algorithm::MidpathChecker<double, dbl_complex, BoundaryMD>;
+
+namespace {
+	// Minimal stand-in providing just the StartPoint<ComplexT>(index) interface MidpathChecker
+	// needs, so the test controls both the boundary points and the start points.
+	struct MockStartSystem
+	{
+		std::vector<Vec<dbl_complex>> pts;
+
+		template<typename ComplexT>
+		Vec<ComplexT> StartPoint(unsigned long long i) const
+		{
+			return pts[i].template cast<ComplexT>();
+		}
+	};
+
+	Vec<dbl_complex> Pt(dbl_complex a, dbl_complex b)
+	{
+		Vec<dbl_complex> v(2);
+		v << a, b;
+		return v;
+	}
+
+	BoundaryMD MakeBoundaryPoint(Vec<dbl_complex> const& p)
+	{
+		return BoundaryMD(p, SuccessCode::Success, 0.01, 16);
+	}
+}
+
+
+// Bug 1: two coincident boundary points from DISTINCT start points is a genuine crossing -- it must
+// be detected (Check fails) and both involved paths must be flagged for re-tracking (rerun==true).
+BOOST_AUTO_TEST_CASE(distinct_starts_coincident_endpoints_are_rerun)
+{
+	Checker mp{MidPathConfig()};
+
+	// paths 0 and 1 land on (essentially) the same boundary point; path 2 is elsewhere.
+	auto p = Pt(1.0, 1.0);
+	auto p_nudged = Pt(1.0 + 1e-9, 1.0 - 1e-9);
+	auto p_far = Pt(5.0, 5.0);
+	Checker::BoundaryData boundary{MakeBoundaryPoint(p), MakeBoundaryPoint(p_nudged), MakeBoundaryPoint(p_far)};
+
+	MockStartSystem starts{{Pt(1.0, 0.0), Pt(2.0, 0.0), Pt(3.0, 0.0)}}; // all distinct
+
+	bool passed = mp.Check(boundary, starts);
+
+	BOOST_CHECK(!passed);
+	auto crossed = mp.GetCrossedPaths();
+	BOOST_REQUIRE_EQUAL(crossed.size(), 2u); // paths 0 and 1
+	for (auto const& c : crossed)
+	{
+		BOOST_CHECK(c.index() == 0 || c.index() == 1);
+		BOOST_CHECK(c.rerun()); // distinct starts -> genuine crossing -> must re-track
+	}
+}
+
+
+// Two coincident boundary points that began at the SAME start point are not a crossing to re-track:
+// the crossing is still detected (Check fails) but rerun must be false.
+BOOST_AUTO_TEST_CASE(same_start_coincident_endpoints_are_not_rerun)
+{
+	Checker mp{MidPathConfig()};
+
+	auto p = Pt(1.0, 1.0);
+	auto p_nudged = Pt(1.0 + 1e-9, 1.0 - 1e-9);
+	auto p_far = Pt(5.0, 5.0);
+	Checker::BoundaryData boundary{MakeBoundaryPoint(p), MakeBoundaryPoint(p_nudged), MakeBoundaryPoint(p_far)};
+
+	// paths 0 and 1 share a start point.
+	MockStartSystem starts{{Pt(1.0, 0.0), Pt(1.0, 0.0), Pt(3.0, 0.0)}};
+
+	bool passed = mp.Check(boundary, starts);
+
+	BOOST_CHECK(!passed);
+	auto crossed = mp.GetCrossedPaths();
+	BOOST_REQUIRE_EQUAL(crossed.size(), 2u);
+	for (auto const& c : crossed)
+		BOOST_CHECK(!c.rerun()); // same start -> not a re-trackable crossing
+}
+
+
+// Bug 2: Check must reset its state each call.  A first call that finds a crossing must not leave
+// the checker permanently "failed": a subsequent call on clean data must pass and report no
+// crossings.
+BOOST_AUTO_TEST_CASE(check_resets_state_between_calls)
+{
+	Checker mp{MidPathConfig()};
+
+	auto p = Pt(1.0, 1.0);
+	auto p_nudged = Pt(1.0 + 1e-9, 1.0 - 1e-9);
+	auto p_far = Pt(5.0, 5.0);
+	MockStartSystem starts{{Pt(1.0, 0.0), Pt(2.0, 0.0), Pt(3.0, 0.0)}};
+
+	Checker::BoundaryData crossing{MakeBoundaryPoint(p), MakeBoundaryPoint(p_nudged), MakeBoundaryPoint(p_far)};
+	BOOST_CHECK(!mp.Check(crossing, starts));
+	BOOST_CHECK(!mp.GetCrossedPaths().empty());
+
+	// now feed clean (all-distinct) data: must pass, and the stale crossing list must be gone.
+	Checker::BoundaryData clean{MakeBoundaryPoint(Pt(1.0, 1.0)), MakeBoundaryPoint(Pt(5.0, 5.0)), MakeBoundaryPoint(Pt(9.0, 9.0))};
+	BOOST_CHECK(mp.Check(clean, starts));
+	BOOST_CHECK(mp.GetCrossedPaths().empty());
+}
+
+
+// Wiring: a clean solve populates the midpath report (no crossings) and the boundary accessors work.
+BOOST_AUTO_TEST_CASE(clean_solve_reports_no_crossings)
+{
+	using namespace bertini;
+	using TrackerT = tracking::DoublePrecisionTracker;
+
+	auto sys = system::Precon::GriewankOsborn();
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto const& report = zd.EndgameBoundaryMetadata();
+	BOOST_CHECK(report.passed);
+	BOOST_CHECK_EQUAL(report.num_crossings_detected, 0u);
+	BOOST_CHECK_EQUAL(report.num_resolve_attempts, 0u);
+	BOOST_CHECK(zd.EndgameBoundarySolutions().size() > 0u);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+
 // Solution-metadata classification (is_finite / is_real / is_singular / multiplicity) and the
 // PostProcessing config knobs that drive it.  These pin the Bertini-1 behaviour: an endpoint is
 // at infinity if the infinity norm of its dehomogenized coordinates exceeds
