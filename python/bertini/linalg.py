@@ -96,6 +96,23 @@ def coefficient(value):
     ``fractions.Fraction``, exact strings (``'2.5'`` or ``'3/4'``), and bertini
     multiprecision values.  Raises ``TypeError`` for Python ``float`` / ``complex`` (and
     numpy floating types) -- see the module docstring for why.
+
+    Examples
+    --------
+    There are four ways to spell an *exact* non-integer coefficient (a Python ``float`` is not one
+    of them -- it would silently cap precision)::
+
+        >>> from fractions import Fraction
+        >>> from bertini import linalg, multiprec
+        >>> _ = linalg.coefficient('2.5')                       # exact decimal string
+        >>> _ = linalg.coefficient('3/4')                       # exact rational string
+        >>> _ = linalg.coefficient(Fraction(3, 4))              # a fractions.Fraction
+        >>> _ = linalg.coefficient(multiprec.Complex('0.1'))    # a full-precision multiprec value
+
+    A Python ``float`` is refused: ``linalg.coefficient(0.1)`` raises ``TypeError`` (0.1 is not
+    exactly 1/10 in binary, so it would inject only ~16 correct digits).  An exact *complex*
+    coefficient (e.g. an off-axis gamma) is a ``multiprec.Complex`` with real and imaginary parts:
+    ``linalg.coefficient(multiprec.Complex('0.6', '0.8'))``.
     """
     if isinstance(value, _AbstractNode):
         return value
@@ -251,6 +268,21 @@ def add_linear(system, A, x, b=None):
     ``add_linear`` block solves end to end (currently for a single affine variable group).
 
     Returns ``system`` for chaining.
+
+    Examples
+    --------
+    The unit circle meeting the line ``2x + y = 1`` -- a polynomial function plus one
+    constant-coefficient linear condition (a degree-1 block)::
+
+        >>> import numpy as np, bertini
+        >>> from bertini import linalg
+        >>> x, y = bertini.Variable('x'), bertini.Variable('y')
+        >>> S = bertini.System()
+        >>> S.add_variable_group(bertini.VariableGroup([x, y]))
+        >>> S.add_function(x*x + y*y - 1)
+        >>> _ = linalg.add_linear(S, np.array([[2, 1]]), np.array([x, y]), [-1])  # 2x + y - 1
+        >>> list(S.degrees())
+        [2, 1]
     """
     rows = [list(r) for r in A]
     if not rows:
@@ -316,6 +348,32 @@ def add_products_of_linears(system, factors):
     block is evaluated as authored (it does not re-homogenize).
 
     Returns ``system`` for chaining.
+
+    Examples
+    --------
+    Two functions, each a product of two linear forms.  A product's degree is its number of
+    factors, so these are degree 2::
+
+        >>> import bertini
+        >>> from bertini import linalg
+        >>> x, y = bertini.Variable('x'), bertini.Variable('y')
+        >>> S = bertini.System()
+        >>> S.add_variable_group(bertini.VariableGroup([x, y]))
+        >>> _ = linalg.add_products_of_linears(S, [
+        ...     [[1, 0, -1], [1, 0, 1]],     # (x - 1)(x + 1)
+        ...     [[0, 1, -1], [0, 1, -2]],    # (y - 1)(y - 2)
+        ... ])
+        >>> list(S.degrees())
+        [2, 2]
+
+    The start solutions are then the obvious hyperplane intersections -- here x in {1, -1} times
+    y in {1, 2}.
+
+    A non-integer coefficient must be given *exactly* -- a Python ``float`` like ``1.5`` is refused
+    (its ~16 digits would cap the arbitrary-precision tree).  Give it instead as an exact decimal or
+    rational string (``'1.5'``, ``'3/2'``), a :class:`fractions.Fraction` (``Fraction(3, 2)``), or a
+    :mod:`bertini.multiprec` value (``bertini.multiprec.Complex('1.5')`` /
+    ``bertini.multiprec.Float('0.1')``, which carry full working precision).  See :func:`coefficient`.
     """
     mats = []
     ncol = None
