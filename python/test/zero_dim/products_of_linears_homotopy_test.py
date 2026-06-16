@@ -118,3 +118,37 @@ def test_coefficient_parameter_homotopy_does_not_drop_a_structured_start():
     for root in _known_solutions():
         H.set_variables(np.array([complex(root[0]), complex(root[1])]))
         assert max(abs(complex(v)) for v in H.eval()) < 1e-9
+
+
+def test_multi_affine_group_products_of_linears_solves():
+    # Authoring is not limited to a single affine variable group.  Two affine groups {x}, {y};
+    # target { x^2 + y - 2, x + y^2 - 2 }; start a product of linears per function.  Solves
+    # end to end through the blend homotopy, recovering all four roots.
+    x, y = pb.Variable('x'), pb.Variable('y')
+    T = pb.System()
+    T.add_variable_group(pb.VariableGroup([x]))
+    T.add_variable_group(pb.VariableGroup([y]))
+    T.add_function(x * x + y - 2)
+    T.add_function(x + y * y - 2)
+
+    S = pb.System()
+    S.add_variable_group(pb.VariableGroup([x]))
+    S.add_variable_group(pb.VariableGroup([y]))
+    linalg.add_products_of_linears(S, [
+        [[1, 0, '-1'], [1, 0, '1']],   # (x - 1)(x + 1)
+        [[0, 1, '-1'], [0, 1, '1']],   # (y - 1)(y + 1)
+    ])
+
+    start_points = [np.array([mp.Complex(str(a)), mp.Complex(str(b))])
+                    for a, b in itertools.product([1, -1], [1, -1])]
+    H = nag_algorithm.blend_homotopy(T, S, gamma=linalg.coefficient(_GAMMA))
+    solver = nag_algorithm.user_homotopy(H, start_points, T)
+    solver.solve()
+    sols = solver.solutions()
+
+    assert len(sols) == 4
+    phi, psi = (1 + math.sqrt(5)) / 2, (1 - math.sqrt(5)) / 2
+    known = [np.array([1, 1]), np.array([-2, -2]), np.array([phi, psi]), np.array([psi, phi])]
+    computed = [np.array([complex(v) for v in p]) for p in sols]
+    for root in known:
+        assert min(np.max(np.abs(c - root)) for c in computed) < 1e-8

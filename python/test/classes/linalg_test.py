@@ -224,6 +224,18 @@ def test_add_products_of_linears_survives_clone():
     assert clone.num_functions() == 2
 
 
+def test_add_products_of_linears_projective_homogeneous_forms():
+    # Authoring works for a projective (homogeneous) variable group too: use homogeneous linear
+    # factors (constant column zero).  (x0 - x1)(x0 + x1) -> 0 at (1,1), 8 at (3,1).
+    x0, x1 = pb.Variable('x0'), pb.Variable('x1')
+    sys = pb.System()
+    sys.add_hom_variable_group(pb.VariableGroup([x0, x1]))
+    linalg.add_products_of_linears(sys, [[[1, -1, 0], [1, 1, 0]]])
+    assert list(sys.degrees()) == [2]
+    assert abs(complex(sys.eval(np.array([mp.Complex('1'), mp.Complex('1')], dtype=mp.Complex))[0])) < 1e-12
+    assert abs(complex(sys.eval(np.array([mp.Complex('3'), mp.Complex('1')], dtype=mp.Complex))[0]) - 8) < 1e-10
+
+
 # --- degrees of the linear-algebra evaluation paths ---------------------------------------
 # After the polynomial-path fold, System.degrees() asks the blocks.  These pin the degree of
 # each linear-algebra construction, with the eigenvalue distinction (bilinear vs linear) front

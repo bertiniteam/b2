@@ -310,6 +310,11 @@ def add_products_of_linears(system, factors):
 
     Coefficients must be exact (see :func:`coefficient`); Python floats are refused.
 
+    Works across multiple variable groups: the coefficient columns follow the system's variable
+    ordering and the trailing column is the affine constant.  For a *projective* (homogeneous)
+    variable group, write homogeneous factors -- give the constant column as ``0`` -- since the
+    block is evaluated as authored (it does not re-homogenize).
+
     Returns ``system`` for chaining.
     """
     mats = []
