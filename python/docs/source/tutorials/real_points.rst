@@ -65,7 +65,7 @@ solve, then keep the real solutions -- and we let the *solver* decide what "real
 endpoint's metadata carries an ``is_real`` flag, set when the imaginary parts fall under the
 configured ``real_threshold``, so there is no hand-picked epsilon in the tutorial::
 
-    solver = nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(crit_system)
+    solver = nag_algorithm.ZeroDim(crit_system, mptype='adaptive')
     solver.solve()
 
     sols, meta = solver.solutions(), solver.solution_metadata()

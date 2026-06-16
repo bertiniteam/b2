@@ -32,7 +32,7 @@ We need ``numpy`` for the matrix and the cross-check, ``bertini`` for the solve,
     import numpy as np
     import bertini as bertini
     from bertini import linalg
-    from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionMHomogeneous
+    from bertini.nag_algorithm import ZeroDim
 
 Pick a small symmetric matrix (real, distinct eigenvalues make the check easy to read)::
 
@@ -105,7 +105,7 @@ eigenvector)::
     OK = int(bertini.tracking.SuccessCode.Success)
 
     def eigenvalues_of(system):
-        solver = ZeroDimCauchyAdaptivePrecisionMHomogeneous(system)
+        solver = ZeroDim(system, mptype='adaptive', startsystem='mhom')
         solver.solve()
         sols = solver.solutions()
         meta = solver.solution_metadata()

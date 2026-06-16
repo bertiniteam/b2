@@ -49,7 +49,7 @@ Pick a generic member and solve it the usual way (a total-degree start system). 
 solutions are the start points we will reuse forever after::
 
     generic = member(1)                                # the line y = 1/2
-    first = nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(generic)
+    first = nag_algorithm.ZeroDim(generic, mptype='adaptive')
     first.solve()
     start_points = first.solutions()                   # (+/- sqrt(3)/2, 1/2)
 

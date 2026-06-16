@@ -44,6 +44,62 @@ enhance_all(_pybnalag)
 enhance_owners(_pybnalag)
 
 
+# --- ZeroDim: a friendly factory over the 18 bound ZeroDim<endgame x precision x start> classes ---
+
+# Each bound class is named ZeroDim<Endgame><Precision>Precision<StartSystem>; rather than type
+# ZeroDimCauchyFixedMultiplePrecisionTotalDegree, select the pieces by string.
+_ZD_ENDGAMES = {
+    'cauchy': 'Cauchy',
+    'powerseries': 'PowerSeries', 'power_series': 'PowerSeries', 'pseg': 'PowerSeries',
+}
+_ZD_PRECISIONS = {
+    'double': 'DoublePrecision', 'dbl': 'DoublePrecision', 'fixed_double': 'DoublePrecision',
+    'multiple': 'FixedMultiplePrecision', 'mp': 'FixedMultiplePrecision',
+    'fixed_multiple': 'FixedMultiplePrecision', 'multiprecision': 'FixedMultiplePrecision',
+    'adaptive': 'AdaptivePrecision', 'amp': 'AdaptivePrecision',
+}
+_ZD_START_SYSTEMS = {
+    'totaldegree': 'TotalDegree', 'total_degree': 'TotalDegree', 'td': 'TotalDegree',
+    'mhom': 'MHomogeneous', 'mhomogeneous': 'MHomogeneous', 'multihomogeneous': 'MHomogeneous',
+}
+
+
+def _zd_select(value, table, kind):
+    key = str(value).strip().lower().replace('-', '_')
+    frag = table.get(key) or table.get(key.replace('_', ''))
+    if frag is None:
+        raise ValueError("ZeroDim: unknown {} {!r}; choose from {}"
+                         .format(kind, value, sorted({k for k in table})))
+    return frag
+
+
+def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='totaldegree'):
+    """Construct a zero-dim solver by name, with friendly defaults.
+
+    ``ZeroDim(system)`` is the Cauchy endgame, multiple precision, total-degree start system --
+    i.e. ``ZeroDimCauchyFixedMultiplePrecisionTotalDegree(system)`` -- without typing that out.
+    Select the other 17 combinations with strings::
+
+        ZeroDim(system, endgame='cauchy', mptype='amp', startsystem='mhom')
+
+    Parameters
+    ----------
+    system : the polynomial :class:`~bertini.System` to solve.
+    endgame : ``'cauchy'`` (default) or ``'powerseries'``.
+    mptype : the precision -- ``'double'``, ``'multiple'`` (default), or ``'adaptive'`` (``'amp'``).
+    startsystem : ``'totaldegree'`` (default) or ``'mhom'``.  To run from a homotopy you built
+        yourself with given start points, use :func:`user_homotopy` / :func:`blend_homotopy`
+        instead (their construction needs the homotopy and start points, not just a system).
+
+    Returns a solver; call ``.solve()`` then ``.solutions()`` as for any zero-dim solver.
+    """
+    cls_name = ('ZeroDim'
+                + _zd_select(endgame, _ZD_ENDGAMES, 'endgame')
+                + _zd_select(mptype, _ZD_PRECISIONS, 'mptype')
+                + _zd_select(startsystem, _ZD_START_SYSTEMS, 'startsystem'))
+    return getattr(_pybnalag, cls_name)(system)
+
+
 # --- user homotopy: run the zero-dim solver on a homotopy YOU built, from start points YOU have ---
 
 _USER_HOMOTOPY_CLASSES = {
@@ -172,6 +228,7 @@ def blend_homotopy(target, start, *, path_variable='t', gamma=None):
 
 
 __all__ = dir(_pybnalag)
+__all__.append('ZeroDim')
 __all__.append('user_homotopy')
 __all__.append('coefficient_parameter_homotopy')
 __all__.append('blend_homotopy')
