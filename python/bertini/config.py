@@ -162,7 +162,7 @@ def _make_eq(fields):
     return __eq__
 
 
-def enhance_config_class(cls):
+def _enhance_config_class(cls):
     """Add update/to_dict/from_dict/repr/eq to a bound config class (idempotent)."""
     if getattr(cls, "_b2_config_enhanced", False):
         return cls
@@ -193,13 +193,13 @@ def _looks_like_config(cls):
             and len(writable_fields(cls)) > 0)
 
 
-def enhance_all(module):
+def _enhance_all(module):
     """Enhance every config-like class found in a bound module."""
     for name in dir(module):
         obj = getattr(module, name)
         try:
             if _looks_like_config(obj):
-                enhance_config_class(obj)
+                _enhance_config_class(obj)
         except Exception:
             # never let one odd member break importing the package
             pass
@@ -261,7 +261,7 @@ def config_names(self):
     return sorted({config_key(c) for c in self.config_types() if c is not None})
 
 
-def enhance_owner_class(cls):
+def _enhance_owner_class(cls):
     """Attach configure()/config_names() to a tracker/algorithm class (idempotent)."""
     if getattr(cls, "_b2_owner_enhanced", False):
         return cls
@@ -271,12 +271,12 @@ def enhance_owner_class(cls):
     return cls
 
 
-def enhance_owners(module):
+def _enhance_owners(module):
     """Attach owner helpers to every config-owning class in a bound module."""
     for name in dir(module):
         obj = getattr(module, name)
         try:
             if isinstance(obj, type) and _is_owner(obj):
-                enhance_owner_class(obj)
+                _enhance_owner_class(obj)
         except Exception:
             pass

@@ -29,10 +29,13 @@ This page acts to point you to more specific places in the documentation.  Table
    tracking
    endgame
    parse
+   sympy_bridge
    containers
    logging
    parallel
-   
+   random
+   config_module
+
 
 🎱 Things you probably don't need
 ----------------------------------------
