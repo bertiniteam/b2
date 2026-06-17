@@ -254,21 +254,30 @@ def add_linear(system, A, x, b=None):
 
     Parameters
     ----------
-    system : the System to add to.  Its variable groups must already be set -- the block is
+    system
+        the System to add to.  Its variable groups must already be set -- the block is
         built over the system's current variable ordering.
-    A : an exact (m x n) coefficient matrix (array/list of lists).
-    x : a length-n vector of the system's variables (numpy object array of Variable, e.g.
+    A
+        an exact (m x n) coefficient matrix (array/list of lists).
+    x
+        a length-n vector of the system's variables (numpy object array of Variable, e.g.
         from :func:`variable_vector`).  Each x[j] must already belong to a variable group of
         ``system``.
-    b : optional length-m exact constant vector (default all zero).
+    b
+        optional length-m exact constant vector (default all zero).
 
+    Returns
+    -------
+    System
+        ``system``, for chaining.
+
+    Notes
+    -----
     Coefficients must be exact (see :func:`coefficient`); Python floats are refused.
 
     The resulting linear-forms block is homogenization-aware, so it survives the
     homogenization the zero-dim solver performs: a system mixing polynomial functions with an
     ``add_linear`` block solves end to end (currently for a single affine variable group).
-
-    Returns ``system`` for chaining.
 
     Examples
     --------
@@ -335,20 +344,27 @@ def add_products_of_linears(system, factors):
 
     Parameters
     ----------
-    system : the System to add to.
-    factors : a list with one entry per function.  Entry i is an exact (k_i x (num_vars+1)) matrix
+    system
+        the System to add to.
+    factors
+        a list with one entry per function.  Entry i is an exact (k_i x (num_vars+1)) matrix
         (array/list of lists): one row per linear factor, the trailing column being that factor's
         constant term.  Different functions may have different numbers of factors, but every matrix
         must have the same number of columns (num_vars+1).
 
+    Returns
+    -------
+    System
+        ``system``, for chaining.
+
+    Notes
+    -----
     Coefficients must be exact (see :func:`coefficient`); Python floats are refused.
 
     Works across multiple variable groups: the coefficient columns follow the system's variable
     ordering and the trailing column is the affine constant.  For a *projective* (homogeneous)
     variable group, write homogeneous factors -- give the constant column as ``0`` -- since the
     block is evaluated as authored (it does not re-homogenize).
-
-    Returns ``system`` for chaining.
 
     Examples
     --------

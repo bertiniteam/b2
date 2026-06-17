@@ -79,8 +79,8 @@ from bertini._pybertini.endgame import (
 )
 
 # configs gain update()/to_dict()/from_dict()/repr/eq
-from ..config import enhance_all
-enhance_all(_pybe)
+from ..config import _enhance_all
+_enhance_all(_pybe)
 
 
 class _EndgameBase:

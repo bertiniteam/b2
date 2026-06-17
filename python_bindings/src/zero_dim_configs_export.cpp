@@ -86,6 +86,9 @@ namespace bertini{
 				"The time value the homotopy tracks to (where the solutions of interest live).")
 			.def_readwrite("endgame_boundary", &ZeroDimConfig<dbl_complex>::endgame_boundary,
 				"The time value at which tracking stops and the endgame takes over.")
+			.def_readwrite("max_num_crossed_path_resolve_attempts", &ZeroDimConfig<dbl_complex>::max_num_crossed_path_resolve_attempts,
+				"How many times to re-track crossed paths (with tightened settings) at the endgame "
+				"boundary before giving up. 0 = detect and report only, do not re-track. Default 2.")
 			;
 
 			class_<ZeroDimConfig<mpfr_complex>>("ZeroDimConfigMultiprec", init<>())
@@ -95,6 +98,9 @@ namespace bertini{
 				"The time value the homotopy tracks to (where the solutions of interest live).")
 			.def_readwrite("endgame_boundary", &ZeroDimConfig<mpfr_complex>::endgame_boundary,
 				"The time value at which tracking stops and the endgame takes over.")
+			.def_readwrite("max_num_crossed_path_resolve_attempts", &ZeroDimConfig<mpfr_complex>::max_num_crossed_path_resolve_attempts,
+				"How many times to re-track crossed paths (with tightened settings) at the endgame "
+				"boundary before giving up. 0 = detect and report only, do not re-track. Default 2.")
 			;
 
 			// metadata types
@@ -111,6 +117,24 @@ namespace bertini{
 
 			ExposeEndgameBoundaryMetaData<mpfr_complex>("EndgameBoundaryMetaDataMultiPrec");
 			ExposeEndgameBoundaryMetaData<dbl_complex>("EndgameBoundaryMetaDataDoublePrec");
+
+			// Report from the path-crossing (midpath) check at the endgame boundary.
+			class_<MidpathCheckReport>("MidpathCheckReport", init<>())
+			.def_readonly("passed", &MidpathCheckReport::passed,
+				"Did the final midpath check pass (no path crossings remained)?  False means one or "
+				"more crossings were left unresolved and the affected solutions may be wrong.")
+			.def_readonly("num_crossings_detected", &MidpathCheckReport::num_crossings_detected,
+				"Number of crossed paths found on the FIRST check, before any re-tracking.")
+			.def_readonly("num_resolve_attempts", &MidpathCheckReport::num_resolve_attempts,
+				"How many re-track attempts were actually performed.")
+			.add_property("crossed_path_indices",
+				+[](MidpathCheckReport const& r){
+					boost::python::list out;
+					for (auto i : r.crossed_path_indices) out.append(i);
+					return out;
+				},
+				"Indices of the paths flagged as crossed on the first check.")
+			;
 		}
 
 }} // namespaces

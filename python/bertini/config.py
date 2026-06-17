@@ -44,6 +44,7 @@ newly added algorithm and its configs get the whole interface for free:
     owner's own ``config_types()`` so they always reflect what the owner accepts.
 """
 
+import copyreg
 import re
 
 
@@ -162,8 +163,21 @@ def _make_eq(fields):
     return __eq__
 
 
-def enhance_config_class(cls):
-    """Add update/to_dict/from_dict/repr/eq to a bound config class (idempotent)."""
+def _reconstruct_enhanced(cls, mapping):
+    """Pickle reconstructor for enhanced config/metadata classes: rebuild from a field dict."""
+    return cls.from_dict(mapping)
+
+
+def _make_reduce():
+    def __reduce__(self):
+        # Pickle via the (to_dict / from_dict) round-trip.  Works for any enhanced class; the field
+        # values must themselves be picklable (numbers, including multiprec.Complex/Float).
+        return (_reconstruct_enhanced, (type(self), self.to_dict()))
+    return __reduce__
+
+
+def _enhance_config_class(cls):
+    """Add update/to_dict/from_dict/repr/eq/pickle to a bound config class (idempotent)."""
     if getattr(cls, "_b2_config_enhanced", False):
         return cls
     fields = writable_fields(cls)
@@ -174,6 +188,9 @@ def enhance_config_class(cls):
     try:
         cls.__repr__ = _make_repr(fields)
         cls.__eq__ = _make_eq(fields)
+        # Make the class picklable (copy.copy/deepcopy too) via to_dict/from_dict, overriding the
+        # Boost.Python "pickling not enabled" default.
+        cls.__reduce__ = _make_reduce()
     except (TypeError, AttributeError):
         # some bound types may refuse dunder assignment; the rest still apply
         pass
@@ -190,16 +207,53 @@ def _is_owner(cls):
 def _looks_like_config(cls):
     return (isinstance(cls, type)
             and not _is_owner(cls)
+            and not _is_bound_enum(cls)
             and len(writable_fields(cls)) > 0)
 
 
-def enhance_all(module):
-    """Enhance every config-like class found in a bound module."""
+def _is_bound_enum(cls):
+    """True for a Boost.Python enum class.
+
+    Boost.Python enums subclass ``int``, so ``writable_fields`` would otherwise mistake int's
+    read-only ``real``/``imag``/``numerator``/``denominator`` descriptors (and the enum's own
+    ``name``) for writable config fields and wrongly "enhance" the enum -- corrupting its repr and
+    its pickling.  No genuine config struct subclasses int, so this is a safe, precise exclusion.
+    """
+    return isinstance(cls, type) and issubclass(cls, int) and cls not in (int, bool)
+
+
+# ---------------------------------------------------------------------------
+# enum pickling
+# ---------------------------------------------------------------------------
+
+def _reconstruct_enum(cls, value):
+    """Pickle reconstructor for a Boost.Python enum value: rebuild the member from its int value."""
+    return cls(value)
+
+
+def _reduce_enum(member):
+    return (_reconstruct_enum, (type(member), int(member)))
+
+
+def _enable_enum_pickling(cls):
+    """Make a Boost.Python enum picklable (its built-in ``__reduce_ex__`` is broken).
+
+    Registered via ``copyreg`` so the pickler reconstructs the member from its int value; this also
+    lets structs that *contain* enum fields (e.g. ``SolutionMetaData.endgame_success``) round-trip.
+    """
+    copyreg.pickle(cls, _reduce_enum)
+    return cls
+
+
+def _enhance_all(module):
+    """Enhance every config-like class found in a bound module; make bound enums picklable."""
     for name in dir(module):
         obj = getattr(module, name)
         try:
-            if _looks_like_config(obj):
-                enhance_config_class(obj)
+            if _is_bound_enum(obj):
+                _enable_enum_pickling(obj)
+            elif _looks_like_config(obj):
+                _enhance_config_class(obj)
         except Exception:
             # never let one odd member break importing the package
             pass
@@ -261,7 +315,7 @@ def config_names(self):
     return sorted({config_key(c) for c in self.config_types() if c is not None})
 
 
-def enhance_owner_class(cls):
+def _enhance_owner_class(cls):
     """Attach configure()/config_names() to a tracker/algorithm class (idempotent)."""
     if getattr(cls, "_b2_owner_enhanced", False):
         return cls
@@ -271,12 +325,12 @@ def enhance_owner_class(cls):
     return cls
 
 
-def enhance_owners(module):
+def _enhance_owners(module):
     """Attach owner helpers to every config-owning class in a bound module."""
     for name in dir(module):
         obj = getattr(module, name)
         try:
             if isinstance(obj, type) and _is_owner(obj):
-                enhance_owner_class(obj)
+                _enhance_owner_class(obj)
         except Exception:
             pass

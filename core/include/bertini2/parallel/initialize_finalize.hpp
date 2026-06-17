@@ -35,7 +35,7 @@
 #include "bertini2/io/splash.hpp"
 
 #ifdef BERTINI2_HAVE_MPI
-#include <mpi.h>
+#include "bertini2/parallel/mpi_include.hpp"
 #endif
 
 namespace bertini{

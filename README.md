@@ -1,13 +1,15 @@
 
 # Quick links
 
+- [Documentation](https://bertini2.org)
+- [`bertini2` PyPI package](https://pypi.org/project/bertini2/)
 - [Wiki](https://github.com/bertiniteam/b2/wiki)
 
 ---
 
 # Overview
 
-The solution of arbitrary polynomial systems is an area of active research, and has many applications in math, science and engineering.  This software, Bertini 2, is a complete re-implementation of [Bertini 1](https://bertini.nd.edu) from C into C++/Python.
+The solution of arbitrary polynomial systems is an area of active research, and has many applications in math, science and engineering.  This software, Bertini 2, is a re-implementation of [Bertini 1](https://bertini.nd.edu) from C into C++/Python.
 
 The theoretical basis for the solution of polynomials with Bertini is a theorem which bounds the number of solutions a system may have. It sits together with the numerical computational tool of "homotopy continuation". the act of "continuing" from one system into another through a "homotopy", as depicted in the below diagram:
 
@@ -18,29 +20,30 @@ The theoretical basis for the solution of polynomials with Bertini is a theorem 
 
 # Current capabilites
 
-Bertini 2 currently has implemented the foundations of Numerical Algebraic Geometry.  Development is ongoing, and here's what we have so far:
+Bertini 2 has already implemented most of the foundations of Numerical Algebraic Geometry.  Development is ongoing, and here's what we have so far:
 
-- C++ functions and types, with Python bindings.
-- Through Python, runtime scriptable construction of systems and interactivity with their zero-dimensional solutions.
-- Construction of multivariate polynomial and non-polynomial systems.
-- Evaluation of systems and their Jacobians in double and arbitrary multiple precision, using two different methods.
+- A blackbox that implements tracktype 0 (zerodim solving) for the total degree and mhom start systems.  User homotopy not yet exposed
+- Through Python bindings, runtime scriptable construction of systems and interactivity with their zero-dimensional solutions.
+- Python construction of multivariate polynomial and non-polynomial systems, including from linear algebra operations via numpy and Bertini 2's variables and extended numeric types.  
+- Evaluation of systems and their Jacobians in double and arbitrary multiple precision.
 - Construction of the Total Degree and Multihomogeneous start systems.
 - Construction of homotopies (they're just systems with path variables defined).
 - Tracking of a start point x_0, corresponding to a particular time $t_0 \in \mathbb{C}^n$ in a homotopy $H$, from $t_0$ to $t_1$.
 - Running of the Power Series and Cauchy endgames, in double, multiple, and adaptive precision.
 
-Development is ongoing, and we want your help!
+See the published docs for latest the officially released documentation (which will always lag behind the doc from the dev version).
 
 ---
 
 # Missing functionality
 
-* Parallel solving
+✨ In-progress!!!  
+
 * Numerical irreducible decomposition
 * Membership testing
 * and other algorithms
 
-Users wanting a more developed implementation are recommended to use [Bertini 1](https://bertini.nd.edu) or [homotopycontinuation.jl](https://www.juliahomotopycontinuation.org/), or one of the other packages implementing the theory.  
+Users wanting a more stable implementation are recommended to use [Bertini 1](https://bertini.nd.edu) or [homotopycontinuation.jl](https://www.juliahomotopycontinuation.org/), or one of the other packages implementing the theory.  
 
 ---
 
@@ -55,12 +58,12 @@ The Python package `bertini2` provides pre-built wheels for Linux, macOS, and Wi
 pip install bertini2
 ```
 
-Once it's installed, you `import bertini`
+Once it's installed, you `import bertini` (not `import bertini2`!)
 
-* Linux: Python 3.9-3.14
-* MacOS (Apple Silicon): Python 3.9-3.14
-* MacOS (Intel): not supported
-* Windows: Python 3.9-3.14
+* Linux: Python 3.10-3.14
+* MacOS (Apple Silicon): Python 3.10-3.14
+* MacOS (Intel): not currently supported
+* Windows: Python 3.10-3.14
 
 
 ## Building from source

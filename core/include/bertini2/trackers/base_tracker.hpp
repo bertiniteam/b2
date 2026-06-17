@@ -219,6 +219,21 @@ namespace bertini{
 
 
 			/**
+			\brief (Re)draw the random probe direction used for condition-number estimation.
+
+			Call this once, from the algorithm, at the start of tracking a point -- after any per-path
+			RNG reseed and before TrackPath -- so the direction is fixed for that whole point's track
+			(pre-endgame tracking and the endgame both) and is reproducible across runs/ranks.  Do NOT
+			call it per TrackPath: the endgame issues many TrackPath calls per point, and refreshing
+			the direction mid-track perturbs condition estimates and churns the RNG.
+			*/
+			void RefreshConditionDirection()
+			{
+				corrector_.RefreshRandomDirection();
+			}
+
+
+			/**
 			\brief Track a start point through time, from a start time to a target time.
 
 			\param[out] solution_at_endtime The value of the solution at the end time.

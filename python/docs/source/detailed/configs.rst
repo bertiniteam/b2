@@ -46,3 +46,28 @@
 Algorithm configs
 ---------------------------
 
+* :class:`AutoRetrackConfig`
+* :class:`MidPathConfig`
+* :class:`PostProcessingConfig`
+* :class:`RegenerationConfig`
+* :class:`SharpeningConfig`
+* :class:`TolerancesConfig`
+
+.. autoclass:: bertini.nag_algorithm.AutoRetrackConfig
+	:noindex:
+	
+.. autoclass:: bertini.nag_algorithm.MidPathConfig
+	:noindex:
+	
+.. autoclass:: bertini.nag_algorithm.PostProcessingConfig
+	:noindex:
+	
+.. autoclass:: bertini.nag_algorithm.RegenerationConfig
+	:noindex:
+	
+.. autoclass:: bertini.nag_algorithm.SharpeningConfig
+	:noindex:
+	
+.. autoclass:: bertini.nag_algorithm.TolerancesConfig
+	:noindex:
+	

@@ -6,13 +6,10 @@
 
 .. toctree::
    :maxdepth: 1
-   :caption: Available tutorials
+   :caption: Available tutorials.
 
 
    all_solutions
-   evaluation_cyclic
-   tracking_nonsingular
-   manual_endgame_usage
    eigenvalues_by_homotopy
    parameter_homotopy
    user_product_of_linears
@@ -20,4 +17,7 @@
    moving_slice
    real_points
    solving_at_scale
-
+   crossed_paths
+   evaluation_cyclic
+   tracking_nonsingular
+   manual_endgame_usage

@@ -20,6 +20,8 @@ This page acts to point you to more specific places in the documentation.  Table
    :maxdepth: 2
 
    top_level
+   nag_algorithm
+   linalg
    multiprec
    function_tree
    system
@@ -27,9 +29,13 @@ This page acts to point you to more specific places in the documentation.  Table
    tracking
    endgame
    parse
+   sympy_bridge
    containers
    logging
-   
+   parallel
+   random
+   config_module
+
 
 🎱 Things you probably don't need
 ----------------------------------------

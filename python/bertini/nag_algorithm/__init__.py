@@ -39,9 +39,9 @@ from bertini._pybertini import nag_algorithms as _pybnalag
 from bertini._pybertini.nag_algorithms import *
 
 # config structs gain update()/repr/to_dict/...; algorithm classes gain configure().
-from ..config import enhance_all, enhance_owners
-enhance_all(_pybnalag)
-enhance_owners(_pybnalag)
+from ..config import _enhance_all, _enhance_owners
+_enhance_all(_pybnalag)
+_enhance_owners(_pybnalag)
 
 
 # --- ZeroDim: a friendly factory over the 18 bound ZeroDim<endgame x precision x start> classes ---
@@ -273,7 +273,10 @@ def blend_homotopy(target, start, *, path_variable='t', gamma=None):
         The gamma coefficient.  ``None`` (default) draws a random rational gamma.  Pass an exact
         node (e.g. from :func:`bertini.linalg.coefficient`) off the real axis for a reproducible path.
 
-    Returns the homotopy System; pair it with :func:`user_homotopy` and your start points to solve.
+    Returns
+    -------
+    System
+        The homotopy; pair it with :func:`user_homotopy` and your start points to solve.
     """
     from bertini._pybertini import system as _system
     return _system.make_homotopy(target, start, path_variable, gamma)

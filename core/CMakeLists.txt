@@ -456,7 +456,13 @@ target_link_libraries(bertini2 PUBLIC Eigen3::Eigen)
 target_link_libraries(bertini2 PUBLIC ${Boost_LIBRARIES})
 
 if(ENABLE_MPI)
-    target_compile_definitions(bertini2 PUBLIC BERTINI2_HAVE_MPI)
+    # We use only the MPI C API.  Including <mpi.h> from C++ otherwise pulls in the deprecated
+    # MPI C++ bindings (the MPI:: namespace / mpicxx.h), which MPICH compiles in by default and
+    # which fail to build under modern C++ (clang especially) -- so the project compiled with
+    # OpenMPI but not MPICH.  These macros tell both implementations to skip the C++ bindings.
+    # PUBLIC + on the compile command line, so they are defined before any <mpi.h> include, and
+    # propagate to everything linking bertini2 (python bindings, blackbox).
+    target_compile_definitions(bertini2 PUBLIC BERTINI2_HAVE_MPI MPICH_SKIP_MPICXX OMPI_SKIP_MPICXX)
     target_link_libraries(bertini2 PUBLIC MPI::MPI_CXX)
     message(STATUS "bertini2 built with plain C MPI support (no Boost.MPI)")
 endif()

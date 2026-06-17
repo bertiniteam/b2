@@ -2,6 +2,9 @@
 *********************************************************
 
 
+.. note::
+
+    This tutorial is useful to those who want very detailed control of running pieces of various algorithms in Bertini 2.  If you just want to be able to solve a system, this tutorial is probably not for you.
 
 Background
 ==============
@@ -20,7 +23,7 @@ An endgame is a computational tool that one does in the final stage of a path tr
 #. Power series (PSEG) -- uses `Hermite interpolation <https://en.wikipedia.org/wiki/Hermite_interpolation>`_ across a sequence of geometrically-spaced points (in time) to extrapolate to a target time :cite:`morgan1992power`. 
 #. Cauchy (CauchyEG)-- uses `Cauchy's integral formula <https://en.wikipedia.org/wiki/Cauchy's_integral_formula>`_ in a sequence of circles about the root you are computing.  
 
-Both try to compute the cycle number :math:`c` for the root.  In PSEG, :math:`c` is used as the degree of a Hermite interpolant used to extrapolate to 0.  In CauchyEG,  it is used for the number of cycles to walk before doing a trapezoid-rule integral.
+Both try to compute the cycle number :math:`c` for the root.  In PSEG, :math:`c` is used as the degree of a Hermite interpolant used to extrapolate to 0.  In CauchyEG,  it is used for the number of cycles to walk before returning to the same point, computing a trapezoid-rule integral along the way.
 
 Each is provided in the three precision modes, double, fixed multiple, and adaptive.  Since we are using the :class:`~bertini.tracking.AMPTracker` in this tutorial, we will of course use the adaptive endgame.  I really like the Cauchy endgame, so we're in the land of the :class:`~bertini.endgame.AMPCauchyEG`.
 
@@ -32,30 +35,24 @@ Example
 Form a system
 ~~~~~~~~~~~~~~~~
 
-The Griewank-Osborne system has one multiplicity-three singular solution at the origin :cite:`griewank1983analysis`.  It comes pre-built for us as part of Bertini2's C++ core, and is accessible by peeking into the `precon` module.  
-
-.. todo::
-
-	expose the precon namespace.  it's a 1-hour task, and danielle 😈 should do it.
-
-Let's build it from scratch, for the practice.
+The Griewank-Osborne system has one multiplicity-three singular solution at the origin :cite:`griewank1983analysis`.  Let's build it from scratch, for the practice.
 
 :: 
 
-	import bertini
+    import bertini
 
-	gw = bertini.System()
+    gw = bertini.System()
 
-	x = bertini.Variable("x")
-	y = bertini.Variable("y")
+    x = bertini.Variable("x")
+    y = bertini.Variable("y")
 
-	vg = bertini.VariableGroup()
-	vg.append(x)
-	vg.append(y)
-	gw.add_variable_group(vg)
+    vg = bertini.VariableGroup()
+    vg.append(x)
+    vg.append(y)
+    gw.add_variable_group(vg)
 
-	gw.add_function(bertini.multiprec.Rational(29,16)*x**3 - 2*x*y)
-	gw.add_function(y - x**2)
+    gw.add_function(bertini.multiprec.Rational(29,16)*x**3 - 2*x*y)
+    gw.add_function(y - x**2)
 
 
 Form a start system and homotopy 
@@ -65,11 +62,11 @@ Next, we make the total degree start system for `gw`, and couple it using the ga
 
 ::
 
-	t = bertini.Variable('t')
-	td = bertini.system.start_system.TotalDegree(gw)
-	gamma = bertini.function_tree.symbol.Rational.rand()
-	hom = (1-t)*gw + t*gamma*td
-	hom.add_path_variable(t)
+    t = bertini.Variable('t')
+    td = bertini.system.start_system.TotalDegree(gw)
+    gamma = bertini.function_tree.symbol.Rational.rand()
+    hom = (1-t)*gw + t*gamma*td
+    hom.add_path_variable(t)
 
 
 
@@ -80,17 +77,17 @@ Make a tracker.  I use adaptive precision a lot, so we'll roll with that.  There
 
 ::
 
-	tr = bertini.tracking.AMPTracker(hom)
+    tr = bertini.tracking.AMPTracker(hom)
 
-	start_time = bertini.multiprec.Complex("1")
-	eg_boundary = bertini.multiprec.Complex("0.1")
+    start_time = bertini.multiprec.Complex("1")
+    eg_boundary = bertini.multiprec.Complex("0.1")
 
-	midpath_points = [None]*td.num_start_points()
-	for ii in range(td.num_start_points()):
-		midpath_points[ii] = bertini.multiprec.Vector()
-		code = tr.track_path(result=midpath_points[ii], start_time=start_time, end_time=eg_boundary, start_point=td.start_point_mp(ii))
-		if code != bertini.tracking.SuccessCode.Success:
-			print('uh oh, tracking a path before the endgame boundary failed, successcode ' + code)
+    midpath_points = [None]*td.num_start_points()
+    for ii in range(td.num_start_points()):
+        midpath_points[ii] = bertini.multiprec.Vector()
+        code = tr.track_path(result=midpath_points[ii], start_time=start_time, end_time=eg_boundary, start_point=td.start_point_mp(ii))
+        if code != bertini.tracking.SuccessCode.Success:
+            print('uh oh, tracking a path before the endgame boundary failed, successcode ' + code)
 
 
 
@@ -103,46 +100,44 @@ To make an endgame, we need to feed it the tracker that is used to run.  There a
 
 ::
 
-	eg = bertini.endgame.AMPCauchyEG(tr)
+    eg = bertini.endgame.AMPCauchyEG(tr)
 
-	# make an observer to be able to see what's going on inside
-	ob = bertini.endgame.observers.amp_cauchy.GoryDetailLogger()
+    # make an observer to be able to see what's going on inside
+    ob = bertini.endgame.observers.amp_cauchy.GoryDetailLogger()
 
-	eg.add_observer(ob)
+    eg.add_observer(ob)
 
 Since the endgame hasn't been run yet things are empty and default::
 
-	assert(eg.cycle_number()==0)
-	assert(eg.final_approximation()==np.array([]))
+    assert(eg.cycle_number()==0)
+    assert(eg.final_approximation()==np.array([]))
 
-The endgames are used by invoking ``run``, feeding it the point we are tracking on, the time we are at, and the time we want to track to. ::
-
-	final_points = []
+The endgames are used by invoking ``run``, feeding it the point we are tracking on, the time we are at, and the time we want to track to. 
 
 
-	target_time = bertini.multiprec.Complex(0)
-	codes = []
-	for ii in range(td.num_start_points()):
-		eg_boundary.precision( midpath_points[ii][0].precision())
-		target_time.precision( midpath_points[ii][0].precision())
-		print('before {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
-		codes.append(eg.run(start_time=eg_boundary, target_time=target_time, start_point=midpath_points[ii]))
-		print('path {} -- code {}'.format(ii,codes[-1]))
-		print(eg.final_approximation())
-		# final_points.append(copy.deep_copy(eg.final_approximation()))
-		print('after {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
+::
 
-.. todo::
+    final_points = []
 
-	the endgame returns its `final_approximation` by reference, so capturing its value into a list makes many references to this internal variable, not copies of the point.  so, one should take deepcopy's of the vector, but they are not currently pickleable due to the complex multiprecision class.  an issue has been filed (#148) and this issue will be solved shortly (danielle, 20180227)
+
+    target_time = bertini.multiprec.Complex(0)
+    codes = []
+    for ii in range(td.num_start_points()):
+        eg_boundary.precision( midpath_points[ii][0].precision())
+        target_time.precision( midpath_points[ii][0].precision())
+        print('before {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
+        codes.append(eg.run(start_time=eg_boundary, target_time=target_time, start_point=midpath_points[ii]))
+        print('path {} -- code {}'.format(ii,codes[-1]))
+        print(eg.final_approximation())
+        # final_points.append(copy.deep_copy(eg.final_approximation()))
+        print('after {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
+
 
 Conclusion
 ============
 
 
 Using a singular endgame, we can compute singular endpoints of homotopy paths.  What an age to live in!  🌌
-
-
 
 
 

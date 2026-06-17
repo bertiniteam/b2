@@ -46,7 +46,7 @@ via Phase2Task<ComplexT>::sentinel().
 #include "bertini2/parallel/path_result.hpp"
 #include "bertini2/parallel/mpi_utils.hpp"
 
-#include <mpi.h>
+#include "bertini2/parallel/mpi_include.hpp"
 
 #include <functional>
 #include <limits>

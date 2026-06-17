@@ -5,14 +5,16 @@
 
    import bertini
 
-Most numerical solvers find *a* solution near where you start them.  Bertini finds **all
+Most numerical solvers find *a* solution near where you start them.  Bertini can compute **all
 isolated complex solutions** of a polynomial system -- including the complex ones a
-real-valued solver can never see -- and it knows in advance how many to expect.
+real-valued solver can never see -- and it knows in advance an upper bound on how many to expect.
 
 A system with no real solutions
 ===============================
 
-Take the unit circle and the hyperbola :math:`xy = 1`::
+Take the unit circle and the hyperbola :math:`xy = 1`
+
+::
 
     import numpy as np
     import bertini as bertini

@@ -112,10 +112,26 @@ namespace bertini{
 					std::get< Vec<mpfr_complex> >(f_temp_).resize(numTotalFunctions_);
 					std::get< Vec<dbl> >(step_temp_).resize(numTotalFunctions_);
 					std::get< Vec<mpfr_complex> >(step_temp_).resize(numTotalFunctions_);
-					std::get< Vec<dbl> >(rand_temp_) = RandomOfUnits<dbl>(numVariables_);
-					std::get< Vec<mpfr_complex> >(rand_temp_) = RandomOfUnits<mpfr_complex>(numVariables_);
 					std::get< Vec<dbl> >(solve_temp_).resize(numVariables_);
 					std::get< Vec<mpfr_complex> >(solve_temp_).resize(numVariables_);
+					RefreshRandomDirection();
+				}
+
+				/**
+				 \brief (Re)draw the random probe direction used to estimate ||J^{-1}|| (the condition
+				 number) from this thread's RNG engine.
+
+				 The tracker calls this once at the start of a path track (see Tracker::TrackPath's
+				 caller / the per-path reseed point), so the direction is held fixed for the ENTIRE
+				 track of that point -- every Newton step and the endgame's sample-circle sub-tracks
+				 -- and, given a per-path RNG reseed, is reproducible regardless of how paths were
+				 distributed across workers.  It is NOT redrawn per Newton step or per TrackPath, which
+				 would both perturb condition estimates and (in the endgame) churn the RNG mid-track.
+				 */
+				void RefreshRandomDirection()
+				{
+					std::get< Vec<dbl> >(rand_temp_) = RandomOfUnits<dbl>(numVariables_);
+					std::get< Vec<mpfr_complex> >(rand_temp_) = RandomOfUnits<mpfr_complex>(numVariables_);
 				}
 
 				
