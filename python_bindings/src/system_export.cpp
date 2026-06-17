@@ -86,7 +86,7 @@ namespace bertini{
 			.def("eval_jacobian", return_Jac2_ptr<dbl>(), (arg("self")) , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
 			.def("eval_jacobian", return_Jac2_ptr<mpfr>(), (arg("self")) , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
 
-			.def("homogenize", &SystemBaseT::Homogenize, (arg("self")),"Homogenize the system, adding new homogenizing variables if necessary.  This may change your polynomials; that is, it has side effects.")
+			.def("homogenize", static_cast<void (SystemBaseT::*)()>(&SystemBaseT::Homogenize), (arg("self")),"Homogenize the system, adding new homogenizing variables if necessary.  This may change your polynomials; that is, it has side effects.")
 			.def("is_homogeneous", &SystemBaseT::IsHomogeneous, (arg("self")), "Determines whether all polynomials in the system have the same degree.  Non-polynomial functions are not homogeneous.")
 			.def("is_polynomial", &SystemBaseT::IsPolynomial, (arg("self")), "Determines whether all polynomials are polynomial.  Transcendental functions, e.g., are non-polynomial.  Returns a bool.")
 			
@@ -148,6 +148,18 @@ namespace bertini{
 			.def("hom_variable_groups", &SystemBaseT::HomVariableGroups, (arg("self")), "Get the list of projective / homogeneous variable_groups from the system")
 			.def("degrees", sysDeg1, (arg("self")), "Get a list of the degrees of the functions in the system, with respect to all variables in all groups (and in fact overall)")
 			.def("degrees", sysDeg2, (arg("self"), arg("group")), "Get a list of the degrees of the functions in the system, with respect to a variable_group passed in to this function.  Negative numbers indicate non-polynomial")
+			.def("randomize",
+				+[](SystemBaseT const& self) { return self.Randomize(); },
+				(arg("self")),
+				"Randomize an overdetermined system (N functions, n variables, N>n) down to a square one, returning a NEW system; this one is left untouched.  The square result has n generic combinations of the original functions, whose isolated solutions still contain this system's -- solve it, then discard the extraneous solutions by re-evaluating this system.  For a single affine variable group the functions are sorted by descending degree and R=[I|C], giving the optimal total-degree path count.")
+			.def("randomize",
+				+[](SystemBaseT const& self, bertini::Mat<mpfr> const& R) { return self.Randomize(R); },
+				(arg("self"), arg("matrix")),
+				"Randomize using a supplied coefficient matrix R (one row per randomized function, one column per natural function of this system); the functions are kept in their current order.  Returns a NEW system.")
+			.def("randomization_matrix",
+				+[](SystemBaseT const& self) { return self.RandomizationMatrix(); },
+				(arg("self")),
+				"The randomization matrix R (n x N, mpfr_complex) of a system produced by randomize().  Raises if the system has no randomization block.")
 			.def("reorder_functions_by_degree_decreasing", &SystemBaseT::ReorderFunctionsByDegreeDecreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("reorder_functions_by_degree_increasing", &SystemBaseT::ReorderFunctionsByDegreeIncreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("clear_variables", &SystemBaseT::ClearVariables, (arg("self")), "Remove the variable structure from the system")

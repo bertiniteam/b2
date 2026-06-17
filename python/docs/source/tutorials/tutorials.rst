@@ -16,6 +16,7 @@
    eigenvalues_by_homotopy
    parameter_homotopy
    user_product_of_linears
+   randomize
    real_points
    solving_at_scale
 

@@ -388,6 +388,46 @@ namespace bertini
 	}
 
 
+	void System::Homogenize(VariableGroup const& provided_hom_vars)
+	{
+		// Like Homogenize(), but adopt the supplied homogenizing variables (one per affine variable
+		// group, in group order) instead of minting fresh ones.  Mirrors Homogenize()'s
+		// fresh-system branch exactly; the only difference is where the hom var comes from.
+		for (const auto& curr_var_gp : hom_variable_groups_)
+			for (auto const& b : blocks_)
+				if (!std::visit([&](auto const& blk){ return blk.IsHomogeneous(curr_var_gp); }, b))
+					throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
+
+		if (!IsPolynomial())
+			throw std::runtime_error("trying to homogenize a non-polynomial system.");
+
+		if (NumHomVariables()!=0)
+			throw std::runtime_error("Homogenize(provided homogenizing variables): system is already homogenized.");
+
+		if (provided_hom_vars.size()!=NumVariableGroups())
+			throw std::runtime_error("Homogenize(provided homogenizing variables): need exactly one homogenizing variable per affine variable group.");
+
+		homogenizing_variables_.resize(NumVariableGroups());
+
+		auto group_counter = 0;
+		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
+		{
+			Var hom_var = provided_hom_vars[group_counter];
+			homogenizing_variables_[group_counter] = hom_var;
+			for (auto& b : blocks_)
+				std::visit([&](auto& blk){ blk.Homogenize(*curr_var_gp, hom_var); }, b);
+			group_counter++;
+		}
+
+		InvalidateDifferentiation();
+		have_ordering_ = false;
+
+		#ifndef BERTINI_DISABLE_ASSERTS
+		assert(homogenizing_variables_.size() == variable_groups_.size());
+		#endif
+	}
+
+
 
 
 	bool System::IsHomogeneous() const
@@ -999,6 +1039,40 @@ namespace bertini
 					for (auto& f : blended)
 						out.push_back(f ? f : Nd(Integer::Make(0)));
 				}
+				else if constexpr (std::is_same_v<B, blocks::RandomizationBlock<System>>)
+				{
+					// g_i = sum_j c_ij * f_j * prod_g h_g^{(D_{i,g} - d_{j,g})}, the operand functions
+					// expanded recursively and the homogenizing-variable powers folded back in (so the
+					// expansion matches the block's homogenized evaluation).
+					std::vector<Nd> fj = b.Operand()->NaturalFunctionsAsNodes();      // N nodes
+					auto const& R   = b.RandomizationMatrix();                        // n x N
+					auto const& tgt = b.TargetMultidegrees();
+					auto const& omd = b.OperandMultidegrees();
+					auto const& homvars = b.HomVars();
+					const bool hom = b.IsHomogenized();
+					const size_t n = b.NumFunctions();
+					const size_t N = fj.size();
+					for (size_t i = 0; i < n; ++i)
+					{
+						Nd gi = nullptr;
+						for (size_t j = 0; j < N; ++j)
+						{
+							mpfr_complex const& c = R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
+							if (c.real() == 0 && c.imag() == 0)
+								continue;
+							Nd term = Float::Make(c) * fj[j];
+							if (hom)
+								for (size_t g = 0; g < homvars.size(); ++g)
+								{
+									const int e = tgt[i][g] - omd[j][g];
+									if (e > 0)
+										term = term * pow(homvars[g], e);
+								}
+							gi = gi ? (gi + term) : term;
+						}
+						out.push_back(gi ? gi : Nd(Integer::Make(0)));
+					}
+				}
 				else // LinearFormsBlock and any future block
 				{
 					throw std::runtime_error("ExpandToFunctionTree: block type not yet supported");
@@ -1023,6 +1097,132 @@ namespace bertini
 			result.AddFunction(f);
 		result.InvalidateDifferentiation();
 		return result;
+	}
+
+
+	//
+	//  Randomize -- square up an overdetermined system (see the header).  Construction (degrees,
+	//  sorting, the coefficient matrix) happens here, on a copy, where System is complete; the
+	//  RandomizationBlock just stores the finished matrix and multidegrees and evaluates.
+	//
+	namespace {
+
+		// operand->Degrees(group_g)[j] gathered into operand_multidegrees[j][g].
+		std::vector<std::vector<int>> OperandMultidegrees(System const& operand)
+		{
+			auto groups = operand.VariableGroups();
+			const size_t G = groups.size();
+			const size_t N = operand.NumNaturalFunctions();
+			std::vector<std::vector<int>> md(N, std::vector<int>(G, 0));
+			for (size_t g = 0; g < G; ++g)
+			{
+				auto dg = operand.Degrees(groups[g]);            // length N: degree of each function in group g
+				for (size_t j = 0; j < N && j < dg.size(); ++j)
+					md[j][g] = dg[j];
+			}
+			return md;
+		}
+
+	} // anonymous namespace
+
+
+	System System::AssembleRandomized(std::shared_ptr<System> operand, Mat<mpfr_complex> coefficients) const
+	{
+		const size_t G = operand->NumVariableGroups();
+		const size_t N = operand->NumNaturalFunctions();
+		const size_t n = static_cast<size_t>(coefficients.rows());
+
+		if (static_cast<size_t>(coefficients.cols()) != N)
+			throw std::runtime_error("Randomize: coefficient matrix column count must equal the number of natural functions.");
+
+		auto operand_md = OperandMultidegrees(*operand);
+
+		// Row i's target multidegree is, per group, the largest degree among the functions actually
+		// combined into it (those with a nonzero coefficient).  This makes every h-power deficit
+		// D_{i,g} - d_{j,g} >= 0, and -- with the descending sort the auto path uses -- equal to the
+		// row's own leading-function degree, so the path count is minimal.
+		std::vector<std::vector<int>> target_md(n, std::vector<int>(G, 0));
+		for (size_t i = 0; i < n; ++i)
+			for (size_t j = 0; j < N; ++j)
+			{
+				mpfr_complex const& c = coefficients(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
+				if (c.real() == 0 && c.imag() == 0)
+					continue;
+				for (size_t g = 0; g < G; ++g)
+					target_md[i][g] = std::max(target_md[i][g], operand_md[j][g]);
+			}
+
+		blocks::RandomizationBlock<System> block(operand, std::move(coefficients),
+		                                         std::move(target_md), std::move(operand_md), G);
+
+		System result = *this;          // share variables / groups / path variable / ordering
+		result.ClearBlocks();           // drop this system's own functions...
+		result.AddBlock(std::move(block));  // ...the randomized rows come from the block
+		result.InvalidateDifferentiation();
+		return result;
+	}
+
+
+	System System::Randomize() const
+	{
+		const size_t G = NumVariableGroups();
+		const size_t N = NumNaturalFunctions();
+		const size_t n = NumVariables() - NumHomVariableGroups();
+
+		if (N < n)
+			throw std::runtime_error("Randomize: system is underdetermined (fewer functions than variables), so it has no isolated solutions to capture.");
+
+		auto operand = std::make_shared<System>(*this);
+
+		Mat<mpfr_complex> R(static_cast<Eigen::Index>(n), static_cast<Eigen::Index>(N));
+
+		if (G == 1)
+		{
+			// single affine group: sort the operand's functions by descending degree, then R = [I | C].
+			// The identity block makes g_i carry f_i with coefficient 1 (degree d_i); the random tail
+			// C folds the lower-degree functions in, padded by hom-var powers.  deg g_i = d_i, so the
+			// total-degree path count is the product of the n largest degrees -- optimal.
+			operand->ReorderFunctionsByDegreeDecreasing();
+			for (size_t i = 0; i < n; ++i)
+				for (size_t j = 0; j < N; ++j)
+				{
+					if (j < n)
+						R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) =
+							(i == j) ? mpfr_complex(1) : mpfr_complex(0);
+					else
+						R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) =
+							bertini::multiprecision::RandomComplex(DefaultPrecision());
+				}
+		}
+		else
+		{
+			// several variable groups: multidegrees are only partially ordered, so use a dense random
+			// R with a common (componentwise-max) target multidegree -- correct, and optimal when the
+			// functions share a multidegree.
+			for (Eigen::Index r = 0; r < R.rows(); ++r)
+				for (Eigen::Index c = 0; c < R.cols(); ++c)
+					R(r, c) = bertini::multiprecision::RandomComplex(DefaultPrecision());
+		}
+
+		return AssembleRandomized(operand, std::move(R));
+	}
+
+
+	System System::Randomize(Mat<mpfr_complex> const& R) const
+	{
+		if (static_cast<size_t>(R.cols()) != NumNaturalFunctions())
+			throw std::runtime_error("Randomize: supplied matrix must have one column per natural function of the system.");
+		auto operand = std::make_shared<System>(*this);  // functions kept in their current order
+		return AssembleRandomized(operand, R);
+	}
+
+
+	Mat<mpfr_complex> System::RandomizationMatrix() const
+	{
+		for (auto const& b : blocks_)
+			if (auto const* rb = std::get_if<blocks::RandomizationBlock<System>>(&b))
+				return rb->RandomizationMatrix();
+		throw std::runtime_error("RandomizationMatrix: this system has no randomization block (it was not produced by Randomize()).");
 	}
 
 
@@ -1438,17 +1638,19 @@ namespace bertini
 		               : std::static_pointer_cast<node::Node>(node::Rational::Make(node::Rational::Rand()));
 
 		System homotopy;
-		if (start.HasStructuredBlocks())
+		if (start.HasStructuredBlocks() || target.HasStructuredBlocks())
 		{
-			// A block-backed start system (e.g. a products-of-linears start) cannot be fused
-			// into a node-arithmetic homotopy, so combine the two systems with a blend block:
-			// H = (1-t)*target + gamma*t*start, evaluated by blending whole Systems.  The
-			// homotopy carries target's variable structure and patch; the blend contributes the
-			// natural rows.  ClearFunctions drops target's own polynomial block so its functions
-			// aren't evaluated a second time alongside the blend (the blend already references
-			// target).  Mirrors policy::CloneGiven::FormHomotopy.
+			// A block-backed system (e.g. a products-of-linears start, or a randomized target)
+			// cannot be fused into a node-arithmetic homotopy: operator+ / operator* only combine
+			// the PolynomialBlock functions and silently ignore structured blocks.  So whenever
+			// EITHER side carries a structured block, combine the two systems with a blend block:
+			// H = (1-t)*target + gamma*t*start, evaluated by blending whole Systems.  The homotopy
+			// carries target's variable structure and patch; the blend contributes the natural
+			// rows.  ClearBlocks drops the shell's own function blocks (a structured target's rows
+			// live in a structured block, not a PolynomialBlock, so ClearFunctions would leave them
+			// to be evaluated a second time alongside the blend).  Mirrors policy::CloneGiven::FormHomotopy.
 			homotopy = target;
-			homotopy.ClearFunctions();
+			homotopy.ClearBlocks();
 			homotopy.AddPathVariable(t);
 			std::vector<std::shared_ptr<node::Node>> coeffs{ 1 - t, g * t };
 			std::vector<std::shared_ptr<const System>> operands{

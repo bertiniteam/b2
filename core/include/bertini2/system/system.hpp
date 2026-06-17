@@ -687,6 +687,18 @@ namespace bertini {
 		void Homogenize();
 
 		/**
+		Homogenize the system reusing externally-supplied homogenizing variables -- one per affine
+		variable group, in group order -- instead of minting fresh ones.  Used by
+		`RandomizationBlock` so a wrapped operand system shares the owning system's homogenizing
+		variables (the h-power deficit factors and the operand's functions must live in the same
+		homogeneous coordinates).  Otherwise behaves exactly like `Homogenize()` on a fresh system.
+
+		\throws std::runtime_error if the system is non-polynomial, already homogenized, or the
+		number of supplied homogenizing variables does not equal the number of affine variable groups.
+		*/
+		void Homogenize(VariableGroup const& provided_hom_vars);
+
+		/**
 		Checks whether a system is homogeneous, overall.  This means with respect to each variable group (including homogenizing variable if defined), homogeneous variable group, and ungrouped variables, if defined.
 
 		\throws std::runtime_error, if the number of homogenizing variables does not match the number of variable_groups.
@@ -1048,6 +1060,11 @@ namespace bertini {
 		*/
 		void AddBlock(Block b) { blocks_.push_back(std::move(b)); }
 
+		/// Read-only access to the system's evaluation blocks (in evaluation order).  For
+		/// introspection / testing -- e.g. reading a RandomizationBlock's matrix; the variant
+		/// itself stays out of the Python surface.
+		std::vector<Block> const& Blocks() const { return blocks_; }
+
 		/// Remove the polynomial block (the System's natural functions), leaving any structured
 		/// blocks and the variable structure / patch intact.  Used to turn a copy of a System
 		/// into a homotopy shell whose rows come from a blend block rather than its own
@@ -1098,6 +1115,46 @@ namespace bertini {
 		/// expanding any structured block.  Used by ExpandToFunctionTree and, recursively, by
 		/// BlendBlock expansion (a blend is sum_i c_i(t) * operand_i, each operand expanded).
 		std::vector<Nd> NaturalFunctionsAsNodes() const;
+
+
+		/**
+		\brief Randomize an overdetermined system down to a square one, returning a NEW system.
+
+		An overdetermined system (N natural functions, n variables, N > n) is replaced by n generic
+		combinations whose isolated solutions still contain this system's -- the standard squaring-up
+		so the isolated solutions can be found by homotopy continuation (solve the square result,
+		then discard the extraneous solutions by re-evaluating this system).
+
+		The returned system carries a single `RandomizationBlock` wrapping a copy of this system; the
+		combination is `g_i = sum_j R_ij f_j` (the block applies the homogenizing-variable powers
+		needed when the functions differ in degree).  **This system is not mutated** -- any internal
+		degree sorting happens on the copy.
+
+		Auto form: for a single affine variable group the functions are sorted by descending degree
+		and `R = [I | C]` (C random), giving the optimal total-degree path count (the product of the
+		n largest degrees); for several variable groups a dense random `R` is used with a common
+		target multidegree.
+
+		\throws std::runtime_error if the system is underdetermined (fewer functions than variables).
+		*/
+		System Randomize() const;
+
+		/**
+		\brief Randomize using a caller-supplied (exact) coefficient matrix R, leaving the functions
+		in their current order.  R has one row per desired randomized function and one column per
+		natural function of this system.  Returns a NEW system; this one is not mutated.
+
+		\throws std::runtime_error if R's column count does not equal this system's natural-function count.
+		*/
+		System Randomize(Mat<mpfr_complex> const& R) const;
+
+		/**
+		\brief The randomization matrix R of a system produced by Randomize() (its first
+		RandomizationBlock's n x N coefficient matrix).
+
+		\throws std::runtime_error if this system carries no randomization block.
+		*/
+		Mat<mpfr_complex> RandomizationMatrix() const;
 
 
 
@@ -1641,6 +1698,11 @@ namespace bertini {
 		*/
 		friend const System operator*(Nd const&  N, System const& s);
 	private:
+
+		/// Shared back end of the Randomize overloads: given the overdetermined operand (already a
+		/// copy, sorted or not) and a finished coefficient matrix, compute the per-row target
+		/// multidegrees, build the RandomizationBlock, and return a new system carrying it.
+		System AssembleRandomized(std::shared_ptr<System> operand, Mat<mpfr_complex> coefficients) const;
 
 		/**
 		\brief Get the sizes according to the FIFO ordering.
