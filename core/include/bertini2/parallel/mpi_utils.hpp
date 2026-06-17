@@ -35,7 +35,7 @@ that would arise with MPI_ANY_SOURCE.
 
 #ifdef BERTINI2_HAVE_MPI
 
-#include <mpi.h>
+#include "bertini2/parallel/mpi_include.hpp"
 
 #include <sstream>
 #include <string>

@@ -44,7 +44,7 @@
 #include <boost/python/stl_iterator.hpp>
 
 #ifdef BERTINI2_HAVE_MPI
-#include <mpi.h>
+#include "bertini2/parallel/mpi_include.hpp"
 #endif
 
 

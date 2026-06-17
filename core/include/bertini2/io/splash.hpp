@@ -39,7 +39,7 @@
 #include "boost/version.hpp"
 
 #ifdef BERTINI2_HAVE_MPI
-#include <mpi.h>
+#include "bertini2/parallel/mpi_include.hpp"
 #endif
 
 #include <sstream>
