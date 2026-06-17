@@ -20,6 +20,8 @@ This page acts to point you to more specific places in the documentation.  Table
    :maxdepth: 2
 
    top_level
+   nag_algorithm
+   linalg
    multiprec
    function_tree
    system
@@ -29,6 +31,7 @@ This page acts to point you to more specific places in the documentation.  Table
    parse
    containers
    logging
+   parallel
    
 
 🎱 Things you probably don't need
