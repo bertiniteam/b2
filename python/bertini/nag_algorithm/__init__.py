@@ -279,10 +279,38 @@ def blend_homotopy(target, start, *, path_variable='t', gamma=None):
     return _system.make_homotopy(target, start, path_variable, gamma)
 
 
+def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma=None):
+    """Form a homotopy that moves ONLY the moving rows, leaving the fixed system evaluated once.
+
+    The regeneration / moving-slice homotopy:
+
+        H = [ fixed's blocks ;  (1-t)*end_moving + gamma*t*start_moving ]
+
+    ``fixed`` holds the equations that do not move -- the polynomial system and any *static* linear
+    slices -- and stays as its own evaluation block(s); ``start_moving`` and ``end_moving`` hold just
+    the rows that move (a linear slice that slides, or a products-of-linears that deforms into a
+    polynomial), agreeing in function count and sharing ``fixed``'s variable structure.  Only the
+    moving rows carry the path variable: the fixed blocks are evaluated once per point and contribute
+    zero to ``dH/dt`` as the moving rows slide -- the fixed system is never re-evaluated or scaled by
+    the path coefficient.
+
+    At t=1 the moving rows are ``gamma*start_moving`` (so the start points are the roots of ``fixed``
+    together with ``start_moving``); at t=0 they are ``end_moving``.  The fixed rows come first, then
+    the moving rows; build the matching ``target`` for :func:`user_homotopy` as ``fixed`` concatenated
+    with ``end_moving`` (e.g. via ``bertini.system.concatenate``).  ``gamma=None`` draws a random
+    rational gamma.
+
+    Returns the homotopy System; pair it with :func:`user_homotopy` and your start points to solve.
+    """
+    from bertini._pybertini import system as _system
+    return _system.make_moving_homotopy(fixed, start_moving, end_moving, path_variable, gamma)
+
+
 __all__ = dir(_pybnalag)
 __all__.append('ZeroDim')
 __all__.append('user_homotopy')
 __all__.append('coefficient_parameter_homotopy')
+__all__.append('moving_homotopy')
 __all__.append('blend_homotopy')
 
 

@@ -1073,7 +1073,37 @@ namespace bertini
 						out.push_back(gi ? gi : Nd(Integer::Make(0)));
 					}
 				}
-				else // LinearFormsBlock and any future block
+				else if constexpr (std::is_same_v<B, blocks::LinearFormsBlock>)
+				{
+					// each row is one affine linear form  sum_c M(r,c)*vars[c] (+ constant).  Affine:
+					// the trailing column is the constant.  Homogeneous (post-Homogenize): every column
+					// is a variable column (the old constant is now the homogenizing-variable coeff).
+					auto const& M = b.Coefficients();
+					const size_t n = b.NumVariables();
+					if (static_cast<size_t>(vars.size()) != n)
+						throw std::runtime_error("ExpandToFunctionTree: linear-forms variable count mismatch");
+					for (Eigen::Index r = 0; r < M.rows(); ++r)
+					{
+						if (b.IsHomogenized())
+						{
+							Nd form = nullptr;
+							for (size_t c = 0; c < n; ++c)
+							{
+								mpfr_complex const& coeff = M(r, static_cast<Eigen::Index>(c));
+								if (coeff.real() == 0 && coeff.imag() == 0)
+									continue;
+								Nd term = node::Float::Make(coeff) * vars[c];
+								form = form ? (form + term) : term;
+							}
+							out.push_back(form ? form : Nd(Integer::Make(0)));
+						}
+						else
+						{
+							out.push_back(LinearFormNode(M, r, vars, n));   // augmented: last col is the constant
+						}
+					}
+				}
+				else // any future block
 				{
 					throw std::runtime_error("ExpandToFunctionTree: block type not yet supported");
 				}
@@ -1663,6 +1693,38 @@ namespace bertini
 			homotopy = (1-t)*target + g*t*start;
 			homotopy.AddPathVariable(t);
 		}
+		return homotopy;
+	}
+
+
+	System MakeMovingHomotopy(System const& fixed, System const& start_moving, System const& end_moving,
+	                          std::string const& path_variable_name,
+	                          std::shared_ptr<node::Node> const& gamma)
+	{
+		if (start_moving.NumNaturalFunctions() != end_moving.NumNaturalFunctions())
+			throw std::runtime_error("MakeMovingHomotopy: start_moving and end_moving must have the same number of functions (they are the two endpoints of the moving rows).");
+		if (fixed.NumVariables() != start_moving.NumVariables() || fixed.NumVariables() != end_moving.NumVariables())
+			throw std::runtime_error("MakeMovingHomotopy: fixed, start_moving and end_moving must share the same variable structure.");
+		if (start_moving.HavePathVariable() || end_moving.HavePathVariable() || fixed.HavePathVariable())
+			throw std::runtime_error("MakeMovingHomotopy: the fixed and moving systems must not already have a path variable.");
+
+		auto t = node::Variable::Make(path_variable_name);
+		auto g = gamma ? gamma
+		               : std::static_pointer_cast<node::Node>(node::Rational::Make(node::Rational::Rand()));
+
+		// Keep the fixed system's blocks as sibling blocks (do NOT clear them): they are autonomous,
+		// so they are evaluated once per point and contribute nothing to dH/dt as the moving rows
+		// slide.  Append a single blend block that moves only the moving rows:
+		//   moving = (1-t)*end_moving + gamma*t*start_moving   (t=1 -> gamma*start, t=0 -> end).
+		// Mirrors MakeHomotopy's blend branch, but blends only the moving operands instead of whole
+		// systems, so the fixed equations are never duplicated or scaled.
+		System homotopy = fixed;
+		homotopy.AddPathVariable(t);
+		std::vector<std::shared_ptr<node::Node>> coeffs{ 1 - t, g * t };
+		std::vector<std::shared_ptr<const System>> operands{
+			std::make_shared<System>(end_moving),
+			std::make_shared<System>(start_moving) };
+		homotopy.AddBlock(blocks::BlendBlock<System>(t, std::move(coeffs), std::move(operands)));
 		return homotopy;
 	}
 

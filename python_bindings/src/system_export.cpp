@@ -86,6 +86,13 @@ namespace bertini{
 			.def("eval_jacobian", return_Jac2_ptr<dbl>(), (arg("self")) , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
 			.def("eval_jacobian", return_Jac2_ptr<mpfr>(), (arg("self")) , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
 
+			.def("eval_time_derivative",
+				+[](SystemBaseT const& self, bertini::Vec<mpfr> const& v, mpfr const& t) { return self.TimeDerivative(v, t); },
+				(arg("self"), arg("space"), arg("time")), "Evaluate dH/dt (the time derivative) in multiple precision at the given space and time values.  Rows of t-independent blocks are zero.")
+			.def("eval_time_derivative",
+				+[](SystemBaseT const& self, bertini::Vec<dbl> const& v, dbl const& t) { return self.TimeDerivative(v, t); },
+				(arg("self"), arg("space"), arg("time")), "Evaluate dH/dt (the time derivative) in double precision at the given space and time values.  Rows of t-independent blocks are zero.")
+
 			.def("homogenize", static_cast<void (SystemBaseT::*)()>(&SystemBaseT::Homogenize), (arg("self")),"Homogenize the system, adding new homogenizing variables if necessary.  This may change your polynomials; that is, it has side effects.")
 			.def("is_homogeneous", &SystemBaseT::IsHomogeneous, (arg("self")), "Determines whether all polynomials in the system have the same degree.  Non-polynomial functions are not homogeneous.")
 			.def("is_polynomial", &SystemBaseT::IsPolynomial, (arg("self")), "Determines whether all polynomials are polynomial.  Transcendental functions, e.g., are non-polynomial.  Returns a bool.")
@@ -253,6 +260,9 @@ namespace bertini{
 			def("make_homotopy", &MakeHomotopy,
 				(arg("target"), arg("start"), arg("path_variable")="t", arg("gamma")=std::shared_ptr<node::Node>()),
 				"Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start, with the path variable added.  At t=1 the homotopy is gamma*start (so start's solutions are its roots) and at t=0 it is target.  When start carries a structured block (e.g. a products-of-linears start system) the two systems are combined with a blend block; otherwise node arithmetic is used.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.");
+			def("make_moving_homotopy", &MakeMovingHomotopy,
+				(arg("fixed"), arg("start_moving"), arg("end_moving"), arg("path_variable")="t", arg("gamma")=std::shared_ptr<node::Node>()),
+				"Form a homotopy that moves ONLY the moving rows, leaving the fixed system evaluated once.  H = [ fixed's blocks ; (1-t)*end_moving + gamma*t*start_moving ]: the fixed equations (polynomial system + any static slices) stay as their own blocks (evaluated once, contributing zero to dH/dt) while only the moving rows slide.  At t=1 the moving rows are gamma*start_moving, at t=0 they are end_moving.  start_moving and end_moving hold just the moving rows and share fixed's variable structure.  The fixed rows come first, then the moving rows; build the matching target as fixed concatenated with end_moving.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.");
 
 			
 

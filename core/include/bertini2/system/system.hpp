@@ -2115,6 +2115,32 @@ namespace bertini {
 	                    std::shared_ptr<node::Node> const& gamma = nullptr);
 
 	/**
+	\brief Form a homotopy that moves ONLY some rows, leaving the rest fixed and evaluated once.
+
+	The "regeneration" homotopy: `fixed` holds the equations that do not move (the polynomial system
+	and any static linear slices); `start_moving` and `end_moving` are systems holding just the rows
+	that move, agreeing in function count and variable structure.  The result is
+
+	    H = [ fixed's blocks (unchanged) ;  (1-t)*end_moving + gamma*t*start_moving ]
+
+	with the moving rows produced by a single `BlendBlock` over `end_moving`/`start_moving` and the
+	fixed rows kept as their own sibling blocks.  Because the fixed blocks are autonomous, they are
+	evaluated exactly once per point and contribute zero to `dH/dt` -- the fixed system is never
+	re-evaluated or scaled by the path coefficient as the moving rows slide.  At t=1 the moving rows
+	are `gamma*start_moving` (so the start points are roots of `fixed` together with `start_moving`),
+	at t=0 they are `end_moving`.
+
+	The fixed rows come first, then the moving rows; build the matching target (for the user-homotopy
+	pipeline) as `fixed` concatenated with `end_moving`, and the start points as the roots of `fixed`
+	together with `start_moving`.
+
+	\param gamma The gamma coefficient (a node).  If null, a random rational gamma is generated.
+	*/
+	System MakeMovingHomotopy(System const& fixed, System const& start_moving, System const& end_moving,
+	                          std::string const& path_variable_name = "t",
+	                          std::shared_ptr<node::Node> const& gamma = nullptr);
+
+	/**
 	\brief Do a deep clone of the system.  This includes the entire structure, variables, etc.  everything.
 	*/
 	System Clone(System const& sys);

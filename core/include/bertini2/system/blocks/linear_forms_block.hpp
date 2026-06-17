@@ -119,6 +119,13 @@ public:
 	/// Number of variables the block expects in the input vector.
 	size_t NumVariables() const { return num_vars_; }
 
+	/// The master coefficient matrix (one row per form).  Affine: num_vars+1 columns, the last being
+	/// the constant term.  Homogeneous (post-Homogenize): num_vars columns, all variable columns.
+	/// Exposed for the function-tree expansion (System::NaturalFunctionsAsNodes).
+	Mat<mpfr_complex> const& Coefficients() const { return coefficients_highest_precision_; }
+	/// Whether Homogenize has folded the constant column onto a homogenizing variable.
+	bool IsHomogenized() const { return homogeneous_; }
+
 	/// Linear forms do not depend on the path variable.
 	bool DependsOnPathVariable() const { return false; }
 
