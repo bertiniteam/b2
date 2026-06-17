@@ -26,6 +26,8 @@
 
 #include "bertini2/function_tree/symbols/special_number.hpp"
 
+#include <boost/math/constants/constants.hpp>
+
 
 
 
@@ -34,26 +36,33 @@ namespace bertini{
 		namespace special_number{
 using ::pow;
 
-// Return value of constant
+// Return value of constant.
+//
+// pi is computed from the authoritative source -- Boost.Math's `pi` constant, which for the mpfr
+// backend defers to MPFR's `mpfr_const_pi` (correctly rounded to the working precision, and cached)
+// -- rather than `acos(-1)`, whose result is not guaranteed correctly rounded and varies with the
+// inverse-cosine implementation.  This keeps pi identical across ranks/runs at a given precision,
+// which matters because the Cauchy endgame's roots of unity and the total-degree start points are
+// built from pi.  See https://github.com/bertiniteam/b2/issues/156.
 dbl Pi::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	return acos(-1.0);
+	return boost::math::constants::pi<double>();
 }
 
 void Pi::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	evaluation_value = acos(-1.0);
+	evaluation_value = boost::math::constants::pi<double>();
 }
 
 
 mpfr_complex Pi::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	return mpfr_complex(mpfr_float(acos(mpfr_float(-1))));
+	return mpfr_complex(boost::math::constants::pi<mpfr_float>());
 }
 
 void Pi::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	evaluation_value = mpfr_complex(mpfr_float(acos(mpfr_float(-1))));
+	evaluation_value = mpfr_complex(boost::math::constants::pi<mpfr_float>());
 }
 
 
