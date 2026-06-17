@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 
-// Path-crossing (midpath) detection and the EGBoundaryAction re-track machinery.
+// Path-crossing (midpath) detection and the re-track machinery (RunMidpathResolution).
 //
 // Two distinct paths landing on the same point at the endgame boundary is a probability-0 event:
 // it signals a path crossing (under-resolved tracking), which the algorithm is supposed to detect

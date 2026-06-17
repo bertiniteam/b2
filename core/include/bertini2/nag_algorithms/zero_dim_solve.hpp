@@ -392,9 +392,7 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			*/
 			void RunParallel(MPI_Comm comm)
 			{
-				using BeforeResult = parallel::PathBeforeEGResult<BaseComplexT>;
-				using Phase2T      = parallel::Phase2Task<BaseComplexT>;
-				using DuringResult = parallel::PathDuringEGResult<BaseComplexT>;
+				using Result = parallel::FullPathResult<BaseComplexT>;
 
 				mpfr_free_cache(); // reproducibility: clear this rank's mpfr constant cache (see Solve())
 
@@ -420,155 +418,122 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				PreSolveChecks();
 				PreSolveSetup();
 
+				const int n_threads = parallel::WorkerThreadCount();
+
+				// One round = dispatch a set of path indices, each executed as a WHOLE path
+				// (pre-endgame + endgame) by a worker.  Round 0 is every path; later rounds re-run
+				// only the crossed paths with escalated settings -- the re-track is path-independent,
+				// so it rides the same demand-driven worker pool (no idle-manager bottleneck).
 				if (parallel::IsManager())
 				{
-					// ---- Phase 1: before endgame ----
-					std::queue<SolnIndT> phase1_queue;
-					for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
-						phase1_queue.push(static_cast<SolnIndT>(ii));
-
-					parallel::RunManagerLoop<SolnIndT, BeforeResult>(comm, phase1_queue,
-						[this](BeforeResult const& r){ StoreBeforeEGResult(r); });
-
-					// Midpath check + possible re-tracks run locally on rank 0.
-					// Workers are idle here. This is acceptable for Phase 1 since
-					// midpath crossings are rare; a future optimization could
-					// redistribute re-track work.
-					EGBoundaryAction();
-
-					// ---- Phase 2: during endgame (successful paths only) ----
-					std::queue<Phase2T> phase2_queue;
-					for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+					auto run_round = [&](std::queue<SolnIndT>& q)
 					{
-						if (solution_final_metadata_[ii].pre_endgame_success == SuccessCode::Success)
-						{
-							auto idx = static_cast<SolnIndT>(ii);
-							Phase2T task;
-							task.path_index        = idx;
-							task.boundary_point    = solutions_at_endgame_boundary_[idx].path_point;
-							task.boundary_stepsize = solutions_at_endgame_boundary_[idx].last_used_stepsize;
-							phase2_queue.push(std::move(task));
-						}
-					}
+						parallel::RunManagerLoop<SolnIndT, Result>(comm, q,
+							[this](Result const& r){ StoreFullPathResult(r); });
+					};
 
-					parallel::RunManagerLoop<Phase2T, DuringResult>(comm, phase2_queue,
-						[this](DuringResult const& r){ StoreDuringEGResult(r); });
+					std::queue<SolnIndT> queue;
+					for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+						queue.push(static_cast<SolnIndT>(ii));
+					run_round(queue);
+
+					// Midpath/crossing check on the collected boundary points, then bounded parallel
+					// resolve rounds.  A continue/stop flag is broadcast to the workers each round so
+					// they know whether to run again (and escalate their settings first).
+					auto passed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
+					midpath_report_ = MidpathCheckReport{};
+					midpath_report_.passed = passed;
+					for (auto const& v : midpath_.GetCrossedPaths())
+						midpath_report_.crossed_path_indices.push_back(v.index());
+					midpath_report_.num_crossings_detected =
+						static_cast<unsigned>(midpath_report_.crossed_path_indices.size());
+
+					const auto max_attempts = this->template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts;
+					unsigned num_resolve_attempts = 0;
+					while (true)
+					{
+						int keep_going = (!passed && num_resolve_attempts < max_attempts) ? 1 : 0;
+						MPI_Bcast(&keep_going, 1, MPI_INT, 0, comm);
+						if (!keep_going)
+							break;
+
+						std::queue<SolnIndT> redo;
+						for (auto const& v : midpath_.GetCrossedPaths())
+							if (v.rerun())
+								redo.push(static_cast<SolnIndT>(v.index()));
+						run_round(redo);
+
+						passed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
+						++num_resolve_attempts;
+					}
+					midpath_report_.num_resolve_attempts = num_resolve_attempts;
+					midpath_report_.passed = passed;
+					if (!passed)
+						std::cerr << "warning: " << midpath_report_.num_crossings_detected
+						          << " path crossing(s) detected at the endgame boundary remained unresolved "
+						          << "after " << num_resolve_attempts << " re-track attempt(s); "
+						          << "the affected solutions may be wrong.  Consider a higher-order predictor "
+						          << "or a tighter tracking tolerance.  See EndgameBoundaryMetadata()." << std::endl;
 
 					PostEGAction();
 				}
-				else
+				else // worker
 				{
-					const int n_threads = parallel::WorkerThreadCount();
-
-					// ---- Phase 1 worker ----
-					if (n_threads <= 1)
+					auto run_worker_round = [&]()
 					{
-						parallel::RunWorkerLoop<SolnIndT, BeforeResult>(comm,
-							[this](SolnIndT const& idx)
+						if (n_threads <= 1)
+						{
+							// Single-threaded worker: execute whole paths on the rank's member
+							// tracker/endgame directly.
+							parallel::RunWorkerLoop<SolnIndT, Result>(comm,
+								[this](SolnIndT const& idx){ ExecuteOnePath(MemberDuringEGContext(), idx); },
+								[this](SolnIndT const& idx) -> Result { return PackFullPathResult(idx); });
+						}
+						else
+						{
+							// Threaded worker: each thread owns a self-contained PathThreadState clone
+							// so concurrent whole-path execution shares no mutable state.  Cloned per
+							// round so it inherits any escalation (predictor bump) applied to the rank's
+							// member tracker between rounds.
+							auto state_factory = [this]() -> std::unique_ptr<PathThreadState>
 							{
-								TrackSinglePathBeforeEG(idx);
-							},
-							[this](SolnIndT const& idx) -> BeforeResult
+								// Clone(), not copy: System copies are SHALLOW (shared expression-tree
+								// nodes whose value caches mutate on Eval); Clone() deep-copies the tree.
+								// Trackers/Endgames have no default ctor, so aggregate-init via new.
+								std::unique_ptr<PathThreadState> s(
+									new PathThreadState{ Clone(GetTracker().GetSystem()), Clone(TargetSystem()),
+									                     GetTracker(), GetEndgame(), {}, {} });
+								s->tracker.SetSystem(s->sys);
+								s->endgame.SetTracker(s->tracker);
+								SetThreadPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
+								return s;
+							};
+
+							auto track_fn = [this](std::unique_ptr<PathThreadState>& state, SolnIndT const& idx) -> Result
 							{
-								return PackBeforeEGResult(idx);
-							});
-					}
-					else
+								ExecuteOnePath(state->Context(), idx);
+								return PackFullPathResult(idx);
+							};
+
+							parallel::RunWorkerLoopThreaded<SolnIndT, Result>(
+								comm, state_factory, track_fn, n_threads);
+						}
+					}; // run_worker_round
+
+					while (true)
 					{
-						// Thread-safe Phase 1: each thread owns a System copy, a Tracker
-						// copy pointed at that System, and its own pair of precision
-						// observers (so observer-derived metadata matches serial runs).
-						// The state is heap-allocated (unique_ptr) so the System address
-						// is stable after the factory returns — the tracker's
-						// reference_wrapper never dangles.
-						auto state_factory = [this]() -> std::unique_ptr<Phase1ThreadState>
-						{
-							// Clone(), not the copy constructor: System copies are SHALLOW
-							// (shared_ptr expression-tree nodes), and node value caches are
-							// mutated on every Eval.  Clone() deep-copies the whole tree, so
-							// each thread evaluates its own.
-							//
-							// Trackers have no default constructor (require a System at
-							// construction), so aggregate-initialize via new rather than
-							// make_unique.
-							std::unique_ptr<Phase1ThreadState> s(
-								new Phase1ThreadState{ Clone(GetTracker().GetSystem()), GetTracker(), {}, {} });
-							// Tracker copies are fully independent (value-semantic predictor,
-							// corrector, and an empty observer list); just repoint the copy
-							// at its own System clone.
-							s->tracker.SetSystem(s->sys);
-							// Same precision the serial flow sets via DefaultPrecision()
-							// in TrackBeforeEG — but thread-local, from the config (the
-							// global default is not reliable on worker ranks).
-							SetThreadPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
-							return s;
-						};
+						run_worker_round();
 
-						auto track_fn = [this](std::unique_ptr<Phase1ThreadState>& state, SolnIndT const& idx) -> BeforeResult
-						{
-							TrackSinglePathBeforeEGWith(*state, idx);
-							return PackBeforeEGResult(idx);
-						};
+						int keep_going = 0;
+						MPI_Bcast(&keep_going, 1, MPI_INT, 0, comm);
+						if (!keep_going)
+							break;
 
-						parallel::RunWorkerLoopThreaded<SolnIndT, BeforeResult>(
-							comm, state_factory, track_fn, n_threads);
-					}
-
-					// ---- Phase 2 worker (endgame) ----
-					if (n_threads <= 1)
-					{
-						// Serial flow sets this before its endgame loop (TrackDuringEG);
-						// mirror it here so worker tolerances match serial runs.
-						GetTracker().SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
-
-						parallel::RunWorkerLoop<Phase2T, DuringResult>(comm,
-							[this](Phase2T const& task)
-							{
-								auto idx = static_cast<SolnIndT>(task.path_index);
-								// Install boundary data so TrackSinglePathDuringEG can read it.
-								solutions_at_endgame_boundary_[idx].path_point         = task.boundary_point;
-								solutions_at_endgame_boundary_[idx].last_used_stepsize = task.boundary_stepsize;
-								solutions_at_endgame_boundary_[idx].success_code       = SuccessCode::Success;
-								TrackSinglePathDuringEG(idx);
-							},
-							[this](Phase2T const& task) -> DuringResult
-							{
-								return PackDuringEGResult(static_cast<SolnIndT>(task.path_index));
-							});
-					}
-					else
-					{
-						// Thread-safe Phase 2: each thread owns copies of the homotopy
-						// (for its tracker), the target system (for residual evaluation,
-						// which mutates System precision state), the tracker, the endgame
-						// (rebound to the thread's tracker), and precision observers.
-						auto state_factory = [this]() -> std::unique_ptr<Phase2ThreadState>
-						{
-							// Clone(), not copy: see the Phase 1 factory above.
-							std::unique_ptr<Phase2ThreadState> s(
-								new Phase2ThreadState{ Clone(GetTracker().GetSystem()), Clone(TargetSystem()),
-								                       GetTracker(), GetEndgame(), {}, {} });
-							s->tracker.SetSystem(s->sys);
-							s->tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
-							s->endgame.SetTracker(s->tracker);
-							SetThreadPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
-							return s;
-						};
-
-						auto track_fn = [this](std::unique_ptr<Phase2ThreadState>& state, Phase2T const& task) -> DuringResult
-						{
-							auto idx = static_cast<SolnIndT>(task.path_index);
-							// Each idx is assigned to exactly one thread — element-wise
-							// writes into these pre-sized vectors race with nobody.
-							solutions_at_endgame_boundary_[idx].path_point         = task.boundary_point;
-							solutions_at_endgame_boundary_[idx].last_used_stepsize = task.boundary_stepsize;
-							solutions_at_endgame_boundary_[idx].success_code       = SuccessCode::Success;
-							TrackSinglePathDuringEGWith(*state, idx);
-							return PackDuringEGResult(idx);
-						};
-
-						parallel::RunWorkerLoopThreaded<Phase2T, DuringResult>(
-							comm, state_factory, track_fn, n_threads);
+						// Match the escalation the serial RunMidpathResolution applies between
+						// re-track passes: tighten midpath_retrack_tolerance_ (read by ExecuteOnePath)
+						// and bump a low-order predictor on this rank's member tracker, so the next
+						// round's thread clones inherit it.
+						EscalateRetrackSettings();
 					}
 				}
 			}
@@ -923,27 +888,6 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			}
 
 			/**
-			\brief Track from the start point in time, from each start point of the start system, to the endgame boundary.
-
-			Results are accumulated into an internally stored variable, solutions_at_endgame_boundary_.
-
-			The point at the endgame boundary, as well as the success flag, and the stepsize, are all stored.
-			*/
-			void TrackBeforeEG()
-			{
-				DefaultPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
-
-				GetTracker().SetTrackingTolerance(this->template Get<Tolerances>().newton_before_endgame);
-
-				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
-				{
-					TrackSinglePathBeforeEG(static_cast<SolnIndT>(ii));
-				}
-			}
-
-
-
-			/**
 			Reference-bundle over the tracker/endgame/systems/observers a single path needs.
 			Lets one set of per-path execution bodies (ExecuteBeforeEG / ExecuteDuringEG) serve
 			both the serial flow (members) and the distributed worker (thread-owned clones), so
@@ -1059,131 +1003,29 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				}
 			}
 
-			/**
-			 /brief Track a single path before we reach the endgame boundary (serial flow).
-			*/
-			void TrackSinglePathBeforeEG(SolnIndT soln_ind)
-			{
-				ExecuteBeforeEG(MemberBeforeEGContext(), soln_ind);
-			}
-
 #ifdef BERTINI2_HAVE_MPI
 			/**
-			Self-contained per-thread tracking state for Phase 1 (before-EG) work on a
-			threaded MPI worker rank.  Each std::thread owns one of these: a System copy,
-			a Tracker copy repointed at that System, and its own precision observers so
-			observer-derived metadata is collected exactly as in serial runs.
+			Self-contained per-thread state for executing one WHOLE path on a threaded MPI worker.
+			Each std::thread owns one: a homotopy copy (tracked by `tracker`), a target-system copy
+			(residual evaluation mutates System precision state), a Tracker and Endgame, and its own
+			precision observers so observer-derived metadata matches serial runs.  Build a
+			DuringEGContext from it to drive ExecuteOnePath.
 			*/
-			struct Phase1ThreadState
-			{
-				System          sys;
-				TrackerType     tracker;
-				tracking::FirstPrecisionRecorder<TrackerType>  first_prec_rec;
-				tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec;
-			};
-
-			/**
-			Per-thread state for Phase 2 (endgame).  Additionally owns a target-system
-			copy (residual evaluation mutates System precision state) and an Endgame copy
-			rebound to the thread's tracker.
-			*/
-			struct Phase2ThreadState
+			struct PathThreadState
 			{
 				System          sys;         // homotopy, tracked by `tracker`
 				System          target_sys;  // for function residuals / dehomogenization
 				TrackerType     tracker;
-				EndgameT        endgame;
+				EndgameType     endgame;
 				tracking::FirstPrecisionRecorder<TrackerType>  first_prec_rec;
 				tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec;
+
+				DuringEGContext Context()
+				{
+					return DuringEGContext{ target_sys, tracker, endgame, first_prec_rec, min_max_prec };
+				}
 			};
-
-			/**
-			\brief Track one path to the endgame boundary using thread-owned state.
-
-			Like TrackSinglePathBeforeEG but uses the caller's tracker and observers
-			(from a Phase1ThreadState) instead of the shared members.  Intended for use
-			from std::thread workers.  Precision changes are thread-local only.
-			*/
-			void TrackSinglePathBeforeEGWith(
-				Phase1ThreadState& state,
-				SolnIndT soln_ind)
-			{
-				ExecuteBeforeEG(BeforeEGContext{ state.tracker, state.first_prec_rec, state.min_max_prec }, soln_ind);
-			}
-
-			/**
-			\brief Run the endgame on one path using thread-owned state.
-
-			Like TrackSinglePathDuringEG but uses the caller's tracker, endgame, target
-			system, and observers (from a Phase2ThreadState) instead of the shared
-			members.  Precision changes are thread-local only.
-			*/
-			void TrackSinglePathDuringEGWith(Phase2ThreadState& state, SolnIndT soln_ind)
-			{
-				ExecuteDuringEG(DuringEGContext{ state.target_sys, state.tracker, state.endgame, state.first_prec_rec, state.min_max_prec }, soln_ind);
-			}
 #endif // BERTINI2_HAVE_MPI
-
-			void EGBoundaryAction()
-			{
-				// Detect path crossings: two distinct paths landing on the same point at the endgame
-				// boundary is a probability-0 event, so it signals under-resolved tracking.
-				auto midcheckpassed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
-
-				// Record the *first*-check findings (before any re-tracking) into the report.
-				midpath_report_ = MidpathCheckReport{};
-				midpath_report_.passed = midcheckpassed;
-				for (auto const& v : midpath_.GetCrossedPaths())
-					midpath_report_.crossed_path_indices.push_back(v.index());
-				midpath_report_.num_crossings_detected =
-					static_cast<unsigned>(midpath_report_.crossed_path_indices.size());
-
-				// max_num_crossed_path_resolve_attempts == 0 means "detect and report, but do not
-				// re-track" -- the conservative, give-up-after-detection mode.  The loop below
-				// naturally performs zero iterations in that case (and is bounded in all cases, so
-				// it always terminates).
-				const auto max_attempts = this->template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts;
-				unsigned num_resolve_attempts = 0;
-				while (!midcheckpassed && num_resolve_attempts < max_attempts)
-				{
-					MidpathResolve();
-					midcheckpassed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
-					num_resolve_attempts++;
-				}
-
-				midpath_report_.num_resolve_attempts = num_resolve_attempts;
-				midpath_report_.passed = midcheckpassed;
-
-				// Unresolved crossings are kept tracking (they still go through the endgame, so we
-				// never lose more answers than Bertini 1 would) but are made observable: the report
-				// carries passed==false and the offending indices, and we warn here.  A caller can
-				// inspect EndgameBoundaryMetadata() and re-solve with a better predictor / tighter
-				// tolerance (the defaults are tuned precisely so this does not happen).
-				if (!midcheckpassed)
-					std::cerr << "warning: " << midpath_report_.num_crossings_detected
-					          << " path crossing(s) detected at the endgame boundary remained unresolved "
-					          << "after " << num_resolve_attempts << " re-track attempt(s); "
-					          << "the affected solutions may be wrong.  Consider a higher-order predictor "
-					          << "or a tighter tracking tolerance.  See EndgameBoundaryMetadata()." << std::endl;
-			}
-
-
-			void MidpathResolve()
-			{
-				EscalateRetrackSettings();
-
-				for(auto const& v : midpath_.GetCrossedPaths())
-				{
-					if(v.rerun())
-					{
-						unsigned long long index = v.index();
-						auto soln_ind = static_cast<SolnIndT>(index);
-						TrackSinglePathBeforeEG(soln_ind);
-					}
-				}
-
-			}
-
 
 			/**
 			\brief Apply one step of escalation to the tracker before re-tracking crossed paths.
@@ -1212,23 +1054,6 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 					GetTracker().SetPredictor(default_predictor);
 			}
 
-
-
-			void TrackDuringEG()
-			{
-
-				GetTracker().SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
-
-				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
-				{
-					auto soln_ind = static_cast<SolnIndT>(ii);
-
-					if (solution_final_metadata_[soln_ind].pre_endgame_success != SuccessCode::Success)
-						continue;
-
-					TrackSinglePathDuringEG(soln_ind);
-				}
-			}
 
 
 			/**
@@ -1384,12 +1209,6 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				smd.cycle_num = ctx.endgame.CycleNumber();
 			}
 
-			void TrackSinglePathDuringEG(SolnIndT soln_ind)
-			{
-				ExecuteDuringEG(MemberDuringEGContext(), soln_ind);
-			}
-
-
 
 			void PostEGAction()
 			{
@@ -1527,41 +1346,19 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 		///////
 
 #ifdef BERTINI2_HAVE_MPI
-			parallel::PathBeforeEGResult<BaseComplexT> PackBeforeEGResult(SolnIndT idx) const
+			// Pack everything a worker computed for one whole path into the single result message.
+			parallel::FullPathResult<BaseComplexT> PackFullPathResult(SolnIndT idx) const
 			{
-				parallel::PathBeforeEGResult<BaseComplexT> r;
-				r.path_index           = idx;
-				r.pre_endgame_success  = solutions_at_endgame_boundary_[idx].success_code;
-				r.boundary_point       = solutions_at_endgame_boundary_[idx].path_point;
-				r.boundary_stepsize    = solutions_at_endgame_boundary_[idx].last_used_stepsize;
-				r.boundary_precision   = solutions_at_endgame_boundary_[idx].precision;
-				r.precision_changed    = solution_final_metadata_[idx].precision_changed;
-				r.time_of_first_prec_increase = solution_final_metadata_[idx].time_of_first_prec_increase;
-				r.max_precision_used   = solution_final_metadata_[idx].max_precision_used;
-				return r;
-			}
+				parallel::FullPathResult<BaseComplexT> r;
+				r.path_index          = idx;
+				r.pre_endgame_success = solutions_at_endgame_boundary_[idx].success_code;
+				r.boundary_point      = solutions_at_endgame_boundary_[idx].path_point;
+				r.boundary_stepsize   = solutions_at_endgame_boundary_[idx].last_used_stepsize;
+				r.boundary_precision  = solutions_at_endgame_boundary_[idx].precision;
 
-			void StoreBeforeEGResult(parallel::PathBeforeEGResult<BaseComplexT> const& r)
-			{
-				auto idx = static_cast<SolnIndT>(r.path_index);
-				solutions_at_endgame_boundary_[idx] =
-					EGBoundaryMetaDataT{r.boundary_point, r.pre_endgame_success, r.boundary_stepsize, r.boundary_precision};
-				auto& smd = solution_final_metadata_[idx];
-				smd.path_index             = idx;
-				smd.solution_index         = idx;
-				smd.pre_endgame_success    = r.pre_endgame_success;
-				smd.precision_changed      = r.precision_changed;
-				smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
-				smd.max_precision_used     = r.max_precision_used;
-			}
-
-			parallel::PathDuringEGResult<BaseComplexT> PackDuringEGResult(SolnIndT idx) const
-			{
-				parallel::PathDuringEGResult<BaseComplexT> r;
-				r.path_index        = idx;
-				r.final_solution    = solutions_post_endgame_[idx];
-				auto const& smd     = solution_final_metadata_[idx];
+				auto const& smd = solution_final_metadata_[idx];
 				r.endgame_success   = smd.endgame_success;
+				r.final_solution    = solutions_post_endgame_[idx];
 				r.function_residual = smd.function_residual;
 				r.condition_number  = smd.condition_number;
 				r.newton_residual   = smd.newton_residual;
@@ -1575,27 +1372,30 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				return r;
 			}
 
-			void StoreDuringEGResult(parallel::PathDuringEGResult<BaseComplexT> const& r)
+			// Install a whole-path result on the manager.  Overwrites cleanly, so re-dispatching a
+			// crossed path in a later resolve round simply replaces its earlier (crossed) result.
+			void StoreFullPathResult(parallel::FullPathResult<BaseComplexT> const& r)
 			{
 				auto idx = static_cast<SolnIndT>(r.path_index);
+				solutions_at_endgame_boundary_[idx] =
+					EGBoundaryMetaDataT{ r.boundary_point, r.pre_endgame_success, r.boundary_stepsize, r.boundary_precision };
 				solutions_post_endgame_[idx] = r.final_solution;
+
 				auto& smd = solution_final_metadata_[idx];
-				smd.endgame_success   = r.endgame_success;
-				smd.function_residual = r.function_residual;
-				smd.condition_number  = r.condition_number;
-				smd.newton_residual   = r.newton_residual;
-				smd.final_time_used   = r.final_time_used;
-				smd.accuracy_estimate = r.accuracy_estimate;
+				smd.path_index          = idx;
+				smd.solution_index      = idx;
+				smd.pre_endgame_success = r.pre_endgame_success;
+				smd.endgame_success     = r.endgame_success;
+				smd.function_residual   = r.function_residual;
+				smd.condition_number    = r.condition_number;
+				smd.newton_residual     = r.newton_residual;
+				smd.final_time_used     = r.final_time_used;
+				smd.accuracy_estimate   = r.accuracy_estimate;
 				smd.accuracy_estimate_user_coords = r.accuracy_estimate_user_coords;
-				smd.cycle_num         = r.cycle_num;
-				// Phase 2 may have further increased precision; take the maximum.
-				if (r.precision_changed && !smd.precision_changed)
-				{
-					smd.precision_changed = true;
-					smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
-				}
-				using std::max;
-				smd.max_precision_used = max(smd.max_precision_used, r.max_precision_used);
+				smd.cycle_num           = r.cycle_num;
+				smd.precision_changed   = r.precision_changed;
+				smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
+				smd.max_precision_used  = r.max_precision_used;
 			}
 #endif // BERTINI2_HAVE_MPI
 
