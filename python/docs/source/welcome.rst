@@ -21,6 +21,28 @@ The definitive resource for Bertini 1 is the book :cite:`bertinibook`.  While th
 
 Consider checking out the :ref:`🔦 Tutorials <tutorials>`.
 
+📥 Installation
+----------------
+
+Easiest is to install from `pip`:
+
+:: 
+
+    pip install bertini2
+
+Note that the import in Python does NOT use the 2, as silviana didn't want to have that appear everywhere in the code.  So it's just 
+
+:: 
+
+    import bertini
+
+and then do wahtever with the library.
+
+.. note::
+   
+   You can find more complete instructions, including instructions around MPI parallelism, in `the Wiki <https://github.com/bertiniteam/b2/wiki/Installation>`_.
+
+
 
 ⛲️ Source code
 ---------------------------
