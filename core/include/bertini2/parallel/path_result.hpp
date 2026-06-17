@@ -51,12 +51,46 @@ constexpr int TAG_CAPACITY  = 3;  // worker -> manager: int, max tasks in flight
 
 
 /**
+\brief Work item for the speculative-full-path model: a path index plus its start point.
+
+Rank 0 computes start points authoritatively and ships them to workers, so a worker never derives
+its own (that, with authoritative pi, is what keeps start points -- and hence whole tracks --
+identical across serial and distributed runs).
+*/
+template<typename ComplexT>
+struct StartPointTask
+{
+	using SolnIndT = std::size_t;
+
+	SolnIndT      path_index = std::numeric_limits<SolnIndT>::max();  // max = sentinel
+	Vec<ComplexT> start_point;
+
+	bool is_sentinel() const
+	{
+		return path_index == std::numeric_limits<SolnIndT>::max();
+	}
+
+	static StartPointTask sentinel()
+	{
+		return StartPointTask{};  // default path_index == max
+	}
+
+	template<class Archive>
+	void serialize(Archive& ar, unsigned const)
+	{
+		ar & path_index;
+		ar & start_point;
+	}
+};
+
+
+/**
 \brief Result of executing one WHOLE path: start -> endgame boundary -> target.
 
 The single result type for the speculative-full-path model.  A worker carries a path through both
 the pre-endgame tracking and the endgame, so this bundles the boundary data (needed for the manager's
-midpath/crossing check) together with the final solution and all endgame metadata.  The task that
-produces it is just the path index (SolnIndT), so no separate task struct is needed.
+midpath/crossing check) together with the final solution and all endgame metadata.  The work item
+that produces it is a StartPointTask (path index + rank 0's start point).
 */
 template<typename ComplexT>
 struct FullPathResult
@@ -113,8 +147,8 @@ struct FullPathResult
 
 namespace detail {
 
-// Sentinel detection and factory for the work-item type.  The task in the unified model is just
-// the path index (std::size_t); the max value marks "no more work".
+// Sentinel detection and factory for the work-item type.  The work item is a StartPointTask whose
+// max path_index marks "no more work".  (The plain-size_t overloads remain for any other caller.)
 
 inline bool is_sentinel(std::size_t v)
 {
@@ -124,6 +158,18 @@ inline bool is_sentinel(std::size_t v)
 inline std::size_t make_sentinel(std::size_t)
 {
 	return std::numeric_limits<std::size_t>::max();
+}
+
+template<typename ComplexT>
+bool is_sentinel(StartPointTask<ComplexT> const& t)
+{
+	return t.is_sentinel();
+}
+
+template<typename ComplexT>
+StartPointTask<ComplexT> make_sentinel(StartPointTask<ComplexT> const&)
+{
+	return StartPointTask<ComplexT>::sentinel();
 }
 
 } // namespace detail

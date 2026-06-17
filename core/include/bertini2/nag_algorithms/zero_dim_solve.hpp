@@ -393,6 +393,7 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			void RunParallel(MPI_Comm comm)
 			{
 				using Result = parallel::FullPathResult<BaseComplexT>;
+				using Task   = parallel::StartPointTask<BaseComplexT>;
 
 				mpfr_free_cache(); // reproducibility: clear this rank's mpfr constant cache (see Solve())
 
@@ -439,15 +440,21 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				// so it rides the same demand-driven worker pool (no idle-manager bottleneck).
 				if (parallel::IsManager())
 				{
-					auto run_round = [&](std::queue<SolnIndT>& q)
+					// Rank 0 computes every start point once, authoritatively, and ships each to the
+					// worker that tracks it.  Cached so re-track rounds reuse the identical points.
+					std::vector<Vec<BaseComplexT>> start_points(num_start_points_);
+					for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+						start_points[ii] = ComputeStartPoint(static_cast<SolnIndT>(ii));
+
+					auto run_round = [&](std::queue<Task>& q)
 					{
-						parallel::RunManagerLoop<SolnIndT, Result>(comm, q,
+						parallel::RunManagerLoop<Task, Result>(comm, q,
 							[this](Result const& r){ StoreFullPathResult(r); });
 					};
 
-					std::queue<SolnIndT> queue;
+					std::queue<Task> queue;
 					for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
-						queue.push(static_cast<SolnIndT>(ii));
+						queue.push(Task{ static_cast<SolnIndT>(ii), start_points[ii] });
 					run_round(queue);
 
 					// Midpath/crossing check on the collected boundary points, then bounded parallel
@@ -470,10 +477,13 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 						if (!keep_going)
 							break;
 
-						std::queue<SolnIndT> redo;
+						std::queue<Task> redo;
 						for (auto const& v : midpath_.GetCrossedPaths())
 							if (v.rerun())
-								redo.push(static_cast<SolnIndT>(v.index()));
+							{
+								auto idx = static_cast<SolnIndT>(v.index());
+								redo.push(Task{ idx, start_points[idx] });
+							}
 						run_round(redo);
 
 						passed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
@@ -497,10 +507,10 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 						if (n_threads <= 1)
 						{
 							// Single-threaded worker: execute whole paths on the rank's member
-							// tracker/endgame directly.
-							parallel::RunWorkerLoop<SolnIndT, Result>(comm,
-								[this](SolnIndT const& idx){ ExecuteOnePath(MemberDuringEGContext(), idx); },
-								[this](SolnIndT const& idx) -> Result { return PackFullPathResult(idx); });
+							// tracker/endgame directly, from rank 0's authoritative start point.
+							parallel::RunWorkerLoop<Task, Result>(comm,
+								[this](Task const& task){ ExecuteOnePath(MemberDuringEGContext(), static_cast<SolnIndT>(task.path_index), task.start_point); },
+								[this](Task const& task) -> Result { return PackFullPathResult(static_cast<SolnIndT>(task.path_index)); });
 						}
 						else
 						{
@@ -522,13 +532,14 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 								return s;
 							};
 
-							auto track_fn = [this](std::unique_ptr<PathThreadState>& state, SolnIndT const& idx) -> Result
+							auto track_fn = [this](std::unique_ptr<PathThreadState>& state, Task const& task) -> Result
 							{
-								ExecuteOnePath(state->Context(), idx);
+								auto idx = static_cast<SolnIndT>(task.path_index);
+								ExecuteOnePath(state->Context(), idx, task.start_point);
 								return PackFullPathResult(idx);
 							};
 
-							parallel::RunWorkerLoopThreaded<SolnIndT, Result>(
+							parallel::RunWorkerLoopThreaded<Task, Result>(
 								comm, state_factory, track_fn, n_threads);
 						}
 					}; // run_worker_round
@@ -633,6 +644,23 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			const auto& MidpathRetrackTol() const
 			{
 				return midpath_retrack_tolerance_;
+			}
+
+			/**
+			\brief Set the precision at which start points are computed.
+
+			Defaults to the initial ambient precision.  Set this to carry a higher precision forward
+			(e.g. when one solve's output seeds the next).  Once set, PreSolveSetup will not override it.
+			*/
+			void SetStartPointPrecision(unsigned p)
+			{
+				start_point_precision_ = p;
+				start_point_precision_set_by_user_ = true;
+			}
+
+			unsigned StartPointPrecision() const
+			{
+				return start_point_precision_;
 			}
 
 
@@ -788,11 +816,15 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				// Speculative-full-path model: carry every path all the way through (pre-endgame +
 				// endgame) as one unit, then detect crossings from the collected boundary points and
 				// re-run any crossed path in full.  This is the same shape the distributed solve uses
-				// (one worker per whole path), so serial and distributed share the per-path primitive.
+				// (one worker per whole path), so serial and distributed share the per-path primitive
+				// -- including computing the start point via the same ComputeStartPoint.
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
-					ExecuteOnePath(MemberDuringEGContext(), static_cast<SolnIndT>(ii));
+				{
+					auto idx = static_cast<SolnIndT>(ii);
+					ExecuteOnePath(MemberDuringEGContext(), idx, ComputeStartPoint(idx));
+				}
 
-				RunMidpathResolution([this](SolnIndT idx){ ExecuteOnePath(MemberDuringEGContext(), idx); });
+				RunMidpathResolution([this](SolnIndT idx){ ExecuteOnePath(MemberDuringEGContext(), idx, ComputeStartPoint(idx)); });
 
 				PostEGAction();
 			}
@@ -898,6 +930,12 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				solutions_post_endgame_.resize(num_as_size_t);
 
 				SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);
+
+				// Default the start-point precision to the initial ambient precision.  A caller can
+				// override it via SetStartPointPrecision (e.g. to carry a higher precision forward
+				// from a previous solve whose output feeds this one).
+				if (!start_point_precision_set_by_user_)
+					start_point_precision_ = this->template Get<ZeroDimConf>().initial_ambient_precision;
 			}
 
 			/**
@@ -934,6 +972,24 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			}
 
 			/**
+			\brief Compute the start point for one path, authoritatively.
+
+			The single source of a start point.  The serial flow calls this directly; in a distributed
+			solve rank 0 calls it and ships the result to the worker (the worker never derives its own),
+			so start points are identical across serial and distributed runs.  Computed at
+			start_point_precision_ (defaults to the initial ambient precision; settable so a chained
+			solve can carry precision forward).  StartPoint() mutates the shared start system's
+			expression-tree value caches, so generation is serialized.
+			*/
+			Vec<BaseComplexT> ComputeStartPoint(SolnIndT soln_ind)
+			{
+				SetThreadPrecision(start_point_precision_);
+				static std::mutex start_point_mutex;
+				std::lock_guard<std::mutex> lock(start_point_mutex);
+				return StartSystem().template StartPoint<BaseComplexT>(soln_ind);
+			}
+
+			/**
 			\brief Track one path from the start time to the endgame boundary, against `ctx`.
 
 			The single before-endgame body, shared by the serial flow and the distributed worker.
@@ -941,7 +997,7 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			and concurrently on worker threads alike.  Writes the boundary point + the pre-endgame
 			portion of the metadata.
 			*/
-			void ExecuteBeforeEG(BeforeEGContext ctx, SolnIndT soln_ind)
+			void ExecuteBeforeEG(BeforeEGContext ctx, SolnIndT soln_ind, Vec<BaseComplexT> const& start_point)
 			{
 				ReseedThisThread(static_cast<uint64_t>(soln_ind));
 
@@ -962,15 +1018,11 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				auto t_start            = this->template Get<ZeroDimConf>().start_time;
 				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
 
-				// The start system is shared; StartPoint() mutates expression-tree value caches, so
-				// generation is serialized.  Trivial cost next to tracking.  Generated AFTER
-				// SetThreadPrecision so the point has the precision a serial run would give it.
-				Vec<BaseComplexT> start_point;
-				{
-					static std::mutex start_point_mutex;
-					std::lock_guard<std::mutex> lock(start_point_mutex);
-					start_point = StartSystem().template StartPoint<BaseComplexT>(soln_ind);
-				}
+				// The start point is supplied by the caller (computed once, authoritatively, via
+				// ComputeStartPoint) rather than regenerated here.  In a distributed solve rank 0
+				// computes it and sends it with the task, so a worker never derives its own -- that,
+				// plus authoritative pi (issue #156), is what makes the start point identical across
+				// serial and distributed runs.
 
 				// Reset to the configured initial step size for this fresh path.  In the
 				// speculative-full-path model a path's endgame runs immediately before the next
@@ -1079,10 +1131,10 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			on the first pass, tightened on re-track passes by EscalateRetrackSettings); the endgame
 			uses newton_during_endgame.
 			*/
-			void ExecuteOnePath(DuringEGContext ctx, SolnIndT soln_ind)
+			void ExecuteOnePath(DuringEGContext ctx, SolnIndT soln_ind, Vec<BaseComplexT> const& start_point)
 			{
 				ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
-				ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind);
+				ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind, start_point);
 
 				if (solution_final_metadata_[soln_ind].pre_endgame_success != SuccessCode::Success)
 					return;
@@ -1420,6 +1472,8 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			unsigned long long num_start_points_;
 			NumErrorT midpath_retrack_tolerance_;
 			MidpathCheckReport midpath_report_; ///< populated by EGBoundaryAction; exposed via EndgameBoundaryMetadata()
+			unsigned start_point_precision_ = DoublePrecision(); ///< precision at which start points are computed; defaults to initial ambient precision (see PreSolveSetup)
+			bool start_point_precision_set_by_user_ = false;
 
 
 			/// observers used during tracking
