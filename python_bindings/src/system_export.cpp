@@ -35,7 +35,10 @@
 //  python/system_export.cpp:  Source file for exposing systems to python, including start systems.
 
 #include <stdio.h>
+#include <sstream>
 #include <boost/python/stl_iterator.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include "system_export.hpp"
 
 
@@ -226,6 +229,44 @@ namespace bertini{
 				Simplify(sys);
 			};
 
+		// Pickle support for System, backed by the same Boost text-archive serialization that
+		// bertini::Clone and the MPI system-broadcast use.  setstate applies the same
+		// post-deserialize fixups as Clone: rebuild the SLP's derivatives (the archived SLP's
+		// derivative outputs do not round-trip faithfully) and normalize precision across the tree.
+		// This makes copy.copy / copy.deepcopy work and lets Systems cross process boundaries
+		// (multiprocessing).  As with clone, the result's variables are distinct node objects from
+		// the original's.
+		struct SystemPickleSuite : boost::python::pickle_suite
+		{
+			static boost::python::tuple getinitargs(System const&)
+			{
+				return boost::python::make_tuple();
+			}
+
+			static boost::python::object getstate(System const& sys)
+			{
+				std::ostringstream oss;
+				{
+					boost::archive::text_oarchive oa(oss);
+					oa << sys;
+				}
+				return boost::python::str(oss.str());
+			}
+
+			static void setstate(System& sys, boost::python::object state)
+			{
+				std::string s = boost::python::extract<std::string>(state)();
+				std::istringstream iss(s);
+				{
+					boost::archive::text_iarchive ia(iss);
+					ia >> sys;
+				}
+				if (sys.GetEvalMethod() == EvalMethod::SLP)
+					sys.Differentiate();
+				sys.precision(sys.precision());
+			}
+		};
+
 		void ExportSystem()
 		{
 			
@@ -233,6 +274,7 @@ namespace bertini{
 		class_<System, std::shared_ptr<System> >("System", "The type in Bertini for systems of simultaneous equations.  Add functions and variable groups via member functions.", init<>())
 			.def(init< std::vector<std::shared_ptr<node::Function>> >((arg("functions")), "Construct a System from a list of functions.  The variables are auto-discovered from the functions and placed into a single affine variable group, ordered alphabetically by name."))
 			.def(SystemVisitor<System>())
+			.def_pickle(SystemPickleSuite())
 			;
 
 			// free functions

@@ -39,6 +39,10 @@
 
 #include "mpfr_export.hpp"
 
+#include <sstream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+
 
 
 namespace bertini{
@@ -375,11 +379,37 @@ namespace bertini{
 
 
 
+		// Pickle support backed by Boost.Serialization (defined for the mpfr backends in
+		// mpfr_extensions.hpp).  Captures value AND precision exactly, so the multiprecision numbers
+		// round-trip faithfully through pickle / copy / deepcopy.
+		template<typename T>
+		struct BoostArchivePickle : boost::python::pickle_suite
+		{
+			static boost::python::object getstate(T const& v)
+			{
+				std::ostringstream oss;
+				{
+					boost::archive::text_oarchive oa(oss);
+					oa << v;
+				}
+				return boost::python::str(oss.str());
+			}
+
+			static void setstate(T& v, boost::python::object state)
+			{
+				std::string s = boost::python::extract<std::string>(state)();
+				std::istringstream iss(s);
+				boost::archive::text_iarchive ia(iss);
+				ia >> v;
+			}
+		};
+
 		void ExposeFloat()
 		{
 			using T = mpfr_float;
 
 			class_<T>("Float", init<>("Default Construct a variable-precision float"))
+			.def_pickle(BoostArchivePickle<T>())
 			.def(init<std::string>((arg("self"),arg("val")),"Construct a variable-precision float from a string.  The best way."))
 			.def(init<long int>((arg("self"),arg("val")),"Construct a variable-precision float from a regular old integer."))
 			.def(init<T>((arg("self"),arg("val")),"Construct a variable-precision float from another."))
@@ -465,6 +495,7 @@ namespace bertini{
 			using T = bertini::mpfr_complex;
 
 			class_<T>("Complex", init<>())
+			.def_pickle(BoostArchivePickle<T>())
 			.def(init<double>((arg("self"),arg("real")),"Construct variable-precision complex number from a double, with 0 imaginary part. do this with caution, as 0.1 is not what you think it is -- there's noise at the end.")) // this should probably be made an explicit constructor rather than implicit
 			.def(init<mpfr_float>((arg("self"),arg("real")),"Construct variable-precision complex number from a variable-precision float, with 0 imaginary part"))
 			.def(init<std::string>((arg("self"),arg("real")),"Construct variable-precision complex number from a string, with 0 imaginary part"))
