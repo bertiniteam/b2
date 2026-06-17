@@ -1015,6 +1015,15 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				// SetThreadPrecision: writes thread-local only, safe from concurrent threads.
 				SetThreadPrecision(initial_prec);
 
+				// Draw the condition-number probe direction ONCE here, for the whole track of this
+				// point (pre-endgame AND endgame).  We have just reseeded this thread's RNG to a value
+				// determined solely by the path index, so the probe is deterministic per path and
+				// identical whether the path is tracked in a serial loop or on a distributed worker --
+				// regardless of how the paths were split across ranks.  It is NOT refreshed for the
+				// endgame (which would churn the RNG across its sample-circle sub-tracks), so the same
+				// direction persists start to finish.
+				ctx.tracker.RefreshConditionDirection();
+
 				auto t_start            = this->template Get<ZeroDimConf>().start_time;
 				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
 
