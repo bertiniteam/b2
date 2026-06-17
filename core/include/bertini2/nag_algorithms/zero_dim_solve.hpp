@@ -807,11 +807,14 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 
 				PreSolveSetup();
 
-				TrackBeforeEG();
+				// Speculative-full-path model: carry every path all the way through (pre-endgame +
+				// endgame) as one unit, then detect crossings from the collected boundary points and
+				// re-run any crossed path in full.  This is the same shape the distributed solve uses
+				// (one worker per whole path), so serial and distributed share the per-path primitive.
+				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+					ExecuteOnePath(MemberDuringEGContext(), static_cast<SolnIndT>(ii));
 
-				EGBoundaryAction();
-
-				TrackDuringEG();
+				RunMidpathResolution([this](SolnIndT idx){ ExecuteOnePath(MemberDuringEGContext(), idx); });
 
 				PostEGAction();
 			}
@@ -1011,6 +1014,13 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 					std::lock_guard<std::mutex> lock(start_point_mutex);
 					start_point = StartSystem().template StartPoint<BaseComplexT>(soln_ind);
 				}
+
+				// Reset to the configured initial step size for this fresh path.  In the
+				// speculative-full-path model a path's endgame runs immediately before the next
+				// path's pre-endgame tracking on the same tracker, and the endgame leaves
+				// ReinitializeInitialStepSize(false) with a tiny step; without restoring it here the
+				// next path would crawl from the start time with that tiny step (effectively a hang).
+				ctx.tracker.ReinitializeInitialStepSize(true);
 
 				// Begin tracking at the intended ambient precision rather than the start point's
 				// incidental precision.  Total-degree start points are generated at
@@ -1218,6 +1228,74 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 
 					TrackSinglePathDuringEG(soln_ind);
 				}
+			}
+
+
+			/**
+			\brief Execute one whole path: start -> endgame boundary -> target, against `ctx`.
+
+			The unit of work in the speculative-full-path model: a single worker/thread carries a
+			path through both the pre-endgame tracking and the endgame, so the boundary state never
+			leaves the executing context (no serialize-the-handoff, hence no precision-transfer gap).
+			The pre-endgame tracking tolerance is `midpath_retrack_tolerance_` (== newton_before_endgame
+			on the first pass, tightened on re-track passes by EscalateRetrackSettings); the endgame
+			uses newton_during_endgame.
+			*/
+			void ExecuteOnePath(DuringEGContext ctx, SolnIndT soln_ind)
+			{
+				ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
+				ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind);
+
+				if (solution_final_metadata_[soln_ind].pre_endgame_success != SuccessCode::Success)
+					return;
+
+				ctx.tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
+				ExecuteDuringEG(ctx, soln_ind);
+			}
+
+
+			/**
+			\brief Detect path crossings from the collected boundary points and, for each crossed
+			path, re-run it via `redo_one` (a full-path redo) with escalated settings.
+
+			Shared by the serial flow and the distributed manager.  Populates midpath_report_.
+			Bounded by max_num_crossed_path_resolve_attempts (0 = detect-and-report only), so it always
+			terminates.  Unresolved crossings stay tracked but observable (report.passed == false +
+			warning).
+			*/
+			template<typename RedoOne>
+			void RunMidpathResolution(RedoOne&& redo_one)
+			{
+				auto passed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
+
+				midpath_report_ = MidpathCheckReport{};
+				midpath_report_.passed = passed;
+				for (auto const& v : midpath_.GetCrossedPaths())
+					midpath_report_.crossed_path_indices.push_back(v.index());
+				midpath_report_.num_crossings_detected =
+					static_cast<unsigned>(midpath_report_.crossed_path_indices.size());
+
+				const auto max_attempts = this->template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts;
+				unsigned num_resolve_attempts = 0;
+				while (!passed && num_resolve_attempts < max_attempts)
+				{
+					EscalateRetrackSettings();
+					for (auto const& v : midpath_.GetCrossedPaths())
+						if (v.rerun())
+							redo_one(static_cast<SolnIndT>(v.index()));
+					passed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
+					++num_resolve_attempts;
+				}
+
+				midpath_report_.num_resolve_attempts = num_resolve_attempts;
+				midpath_report_.passed = passed;
+
+				if (!passed)
+					std::cerr << "warning: " << midpath_report_.num_crossings_detected
+					          << " path crossing(s) detected at the endgame boundary remained unresolved "
+					          << "after " << num_resolve_attempts << " re-track attempt(s); "
+					          << "the affected solutions may be wrong.  Consider a higher-order predictor "
+					          << "or a tighter tracking tolerance.  See EndgameBoundaryMetadata()." << std::endl;
 			}
 
 

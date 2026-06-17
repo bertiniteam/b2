@@ -171,6 +171,67 @@ struct PathDuringEGResult
 	}
 };
 
+/**
+\brief Result of executing one WHOLE path: start -> endgame boundary -> target.
+
+The single result type for the speculative-full-path model.  A worker carries a path through both
+the pre-endgame tracking and the endgame, so this bundles the boundary data (needed for the manager's
+midpath/crossing check) together with the final solution and all endgame metadata.  The task that
+produces it is just the path index (SolnIndT), so no separate task struct is needed.
+*/
+template<typename ComplexT>
+struct FullPathResult
+{
+	using SolnIndT = std::size_t;
+	using RealT    = typename NumTraits<ComplexT>::Real;
+
+	SolnIndT      path_index             = 0;
+
+	// boundary (pre-endgame) data
+	SuccessCode   pre_endgame_success    = SuccessCode::NeverStarted;
+	Vec<ComplexT> boundary_point;
+	RealT         boundary_stepsize      = RealT(0);
+	unsigned      boundary_precision     = DoublePrecision();
+
+	// endgame data
+	SuccessCode   endgame_success        = SuccessCode::NeverStarted;
+	Vec<ComplexT> final_solution;
+	double        function_residual              = 0;
+	double        condition_number               = 0;
+	double        newton_residual                = 0;
+	ComplexT      final_time_used;
+	double        accuracy_estimate              = 0;
+	double        accuracy_estimate_user_coords  = 0;
+	unsigned      cycle_num                      = 0;
+
+	// precision metadata (spans the whole path)
+	bool          precision_changed              = false;
+	ComplexT      time_of_first_prec_increase;
+	unsigned      max_precision_used             = 0;
+
+	template<class Archive>
+	void serialize(Archive& ar, unsigned const)
+	{
+		ar & path_index;
+		ar & pre_endgame_success;
+		ar & boundary_point;
+		ar & boundary_stepsize;
+		ar & boundary_precision;
+		ar & endgame_success;
+		ar & final_solution;
+		ar & function_residual;
+		ar & condition_number;
+		ar & newton_residual;
+		ar & final_time_used;
+		ar & accuracy_estimate;
+		ar & accuracy_estimate_user_coords;
+		ar & cycle_num;
+		ar & precision_changed;
+		ar & time_of_first_prec_increase;
+		ar & max_precision_used;
+	}
+};
+
 namespace detail {
 
 // Sentinel detection and factory — overloaded for each task type so manager
