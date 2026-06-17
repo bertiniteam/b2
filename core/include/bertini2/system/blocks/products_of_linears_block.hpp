@@ -48,6 +48,7 @@ an mpfr master plus per-type working copies, with Precision() recasting the mpfr
 
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
+#include "bertini2/system/blocks/describe.hpp"
 
 namespace bertini {
 namespace blocks {
@@ -106,6 +107,35 @@ public:
 	/// (#factors_i) x (num_vars+1), the last column being the constant/augmenting term.  Exposed
 	/// so the function-tree expansion (System::ExpandToFunctionTree) can rebuild f_i = prod_r L_r.
 	std::vector<Mat<mpfr_complex>> const& Factors() const { return factors_highest_precision_; }
+
+	/// Human-facing description: terse shows `prod of k linear forms`; verbose shows the actual
+	/// product of affine factors `(x - 1) * (x + 1)`.
+	void Describe(std::ostream& out, size_t& row, VariableGroup const& vars, bool verbose) const
+	{
+		for (auto const& M : factors_highest_precision_)
+		{
+			out << "  f_" << row++ << " = ";
+			const Eigen::Index k = M.rows();
+			if (!verbose)
+			{
+				out << "prod of " << k << " linear form" << (k == 1 ? "" : "s");
+			}
+			else if (k == 0)
+			{
+				out << "1";
+			}
+			else
+			{
+				for (Eigen::Index r = 0; r < k; ++r)
+				{
+					out << (r ? " * " : "") << "(";
+					describe_detail::PrintLinearFormVerbose(out, M, r, vars, num_vars_, false);
+					out << ")";
+				}
+			}
+			out << "\n";
+		}
+	}
 
 	/// Products of linears do not depend on the path variable.
 	bool DependsOnPathVariable() const { return false; }

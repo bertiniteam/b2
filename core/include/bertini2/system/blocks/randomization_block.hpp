@@ -68,6 +68,7 @@ block operand is a shared follow-up with BlendBlock).
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/function_tree.hpp"
+#include "bertini2/system/blocks/describe.hpp"
 
 namespace bertini {
 namespace blocks {
@@ -187,6 +188,36 @@ public:
 	std::vector<Var> const& HomVars() const { return hom_vars_; }
 	std::vector<std::vector<int>> const& TargetMultidegrees() const { return target_multidegrees_; }
 	std::vector<std::vector<int>> const& OperandMultidegrees() const { return operand_multidegrees_; }
+
+	/// Human-facing description: terse shows `f_a..f_b = R . g  (R: nxN)` then the underlying
+	/// functions `g_j` indented (they are the interesting part); verbose additionally prints R's
+	/// entries.
+	void Describe(std::ostream& out, size_t& row, VariableGroup const& /*vars*/, bool verbose) const
+	{
+		const size_t n = NumFunctions();
+		const size_t N = static_cast<size_t>(coefficients_highest_precision_.cols());
+		out << "  ";
+		describe_detail::PrintRowLabel(out, row, n);
+		out << " = R . g   (R: " << n << "x" << N << " randomization matrix)\n";
+		row += n;
+		auto g = operand_->NaturalFunctionsAsNodes();
+		for (size_t j = 0; j < g.size(); ++j)
+			out << "      g_" << j << " = " << g[j] << "\n";
+		if (verbose)
+		{
+			out << "    R =\n";
+			for (Eigen::Index i = 0; i < coefficients_highest_precision_.rows(); ++i)
+			{
+				out << "      [ ";
+				for (Eigen::Index j = 0; j < coefficients_highest_precision_.cols(); ++j)
+				{
+					if (j) out << ", ";
+					describe_detail::PrintCoeff(out, coefficients_highest_precision_(i, j));
+				}
+				out << " ]\n";
+			}
+		}
+	}
 
 	unsigned Precision() const { return precision_; }
 

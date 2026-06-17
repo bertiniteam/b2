@@ -1469,79 +1469,81 @@ namespace bertini
 	//
 	////////////////////
 
+	void System::Describe(std::ostream& out, bool verbose) const
+	{
+		// --- variables ---
+		out << NumVariableGroups() << (NumVariableGroups() == 1 ? " variable group:\n" : " variable groups:\n");
+		{
+			auto counter = 0;
+			for (const auto& grp : variable_groups_)
+			{
+				out << "  group " << counter++ << ": ";
+				for (auto const& v : grp) out << *v << " ";
+				out << "\n";
+			}
+		}
+		if (!hom_variable_groups_.empty())
+		{
+			out << NumHomVariableGroups() << " projective variable groups:\n";
+			auto counter = 0;
+			for (const auto& grp : hom_variable_groups_)
+			{
+				out << "  group " << counter++ << ": ";
+				for (auto const& v : grp) out << *v << " ";
+				out << "\n";
+			}
+		}
+		if (NumHomVariables() != 0)
+		{
+			out << "  homogenizing variables: ";
+			for (const auto& v : homogenizing_variables_) out << *v << " ";
+			out << "\n";
+		}
+		if (!ungrouped_variables_.empty())
+		{
+			out << "  ungrouped variables: ";
+			for (const auto& v : ungrouped_variables_) out << *v << " ";
+			out << "\n";
+		}
+
+		// --- functions, block by block ---
+		out << "\n" << NumNaturalFunctions() << (NumNaturalFunctions() == 1 ? " function:\n" : " functions:\n");
+		VariableGroup vars;
+		try { vars = VariableOrdering(); } catch (...) { /* unordered/malformed: print without var names */ }
+		size_t row = 0;
+		for (auto const& blk : blocks_)
+			std::visit([&](auto const& b){ b.Describe(out, row, vars, verbose); }, blk);
+
+		// --- parameters / constants (only when present) ---
+		if (NumParameters())
+		{
+			out << "\n" << NumParameters() << " explicit parameters:\n";
+			for (const auto& p : explicit_parameters_)
+				out << "  " << p->name() << " = " << p->EntryNode() << "\n";
+		}
+		if (NumConstants())
+		{
+			out << "\n" << NumConstants() << " constants:\n";
+			for (const auto& c : PolyBlockPtr()->ConstantSubfunctions())
+				out << "  " << c->name() << " = " << c->EntryNode() << "\n";
+		}
+
+		// --- path variable / patch (only the informative bits) ---
+		if (path_variable_)
+			out << "\npath variable: " << path_variable_->name() << "\n";
+		if (IsPatched())
+		{
+			if (verbose)
+				out << "\n" << patch_;
+			else
+				out << "\npatched (" << NumPatches() << (NumPatches() == 1 ? " patch)\n" : " patches)\n");
+		}
+	}
+
+
 	std::ostream& operator<<(std::ostream& out, const bertini::System & s)
 	{
-
-
-		out << s.NumVariableGroups() << " variable groups, containing these variables:\n";
-		auto counter = 0;
-		for (const auto& iter : s.variable_groups_)
-		{
-			out << "group " << counter << ": "<< "\n";
-			for (auto jter : iter)
-				out << *jter << " ";
-
-
-			out << "\n";
-			counter++;
-		}
-		out << "\n";
-
-		out << s.NumHomVariables() << " homogenizing variables:\n";
-		for (const auto& iter : s.homogenizing_variables_)
-			out << (*iter) << " ";
-		out << "\n\n";
-
-
-		out << s.ungrouped_variables_.size() << " ungrouped variables:\n";
-		for (const auto& v :s.ungrouped_variables_)
-			out << (*v) << " ";
-		out << "\n\n";
-
-
-		out << s.NumNaturalFunctions() << " functions:\n";
-		for (const auto& iter : s.GetNaturalFunctions()) 
-			out << (iter)->name() << " = " << *iter << "\n";
-		out << "\n";
-
-
-		if (s.NumParameters()) {
-			out << s.NumParameters() << " explicit parameters:\n";
-			for (const auto& iter : s.explicit_parameters_)
-				out << (iter)->name() << " = " << *iter << "\n";
-			out << "\n";
-		}
-
-
-		if (s.NumConstants()) {
-			out << s.NumConstants() << " constants:\n";
-			for (const auto& iter : s.PolyBlockPtr()->ConstantSubfunctions())
-				out << (iter)->name() << " = " << *iter << "\n";
-			out << "\n";
-		}
-
-		if (s.path_variable_)
-			out << "path variable defined.  named " << s.path_variable_->name() << "\n";
-		else 
-			out << "no path variable defined\n";
-
-		if (s.is_differentiated_)
-			out << "system is differentiated.\n";
-		else
-			out << "system not differentiated\n";
-
-		if (s.IsPatched())
-		{
-			out << s.patch_;
-		}
-		else{
-			out << "system not patched\n";
-		}
-
-		out << "\ncurrent variable values:\n";
-		out << std::get< Vec<dbl> > (s.current_variable_values_) << "\n";
-		out << std::get< Vec<mpfr_complex> > (s.current_variable_values_) << "\n";
-
+		s.Describe(out, /*verbose=*/false);
 		return out;
 	}
 

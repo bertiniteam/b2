@@ -1503,6 +1503,16 @@ namespace bertini {
 			patch_.RescalePointToFitInPlace(x);
 		}
 		/**
+		\brief Human-facing description of the system, block by block.
+
+		Each block describes the rows it owns (labelled `f_k` in function-vector order).  `verbose ==
+		false` (the default, used by `operator<<` / Python `str`) shows placeholder symbols for the
+		structured blocks' matrices/coefficients; `verbose == true` reveals the actual numbers and the
+		underlying functions of randomization / blend blocks.  This is for reading, not re-parsing.
+		*/
+		void Describe(std::ostream& out, bool verbose = false) const;
+
+		/**
 		 \brief Overloaded operator for printing to an arbirtary out stream.
 		 */
 		friend std::ostream& operator <<(std::ostream& out, const System & s);

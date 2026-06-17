@@ -196,8 +196,12 @@ namespace bertini{
 
 			.def("variable_ordering",&SystemBaseT::VariableOrdering,(arg("self")), "The ordering of variables saying what each coordinate of a point in THIS system's coordinates means.  On your original system these are your variables; on a solver's target_system() the homogenizing variables appear too.")
 
-			.def(self_ns::str(self_ns::self))//, "String representation of the system"
-			.def(self_ns::repr(self_ns::self))//, "Round-trippable representation of the system.  Probably not functional"
+			.def("describe",
+				+[](SystemBaseT const& self, bool verbose) { std::ostringstream ss; self.Describe(ss, verbose); return ss.str(); },
+				(arg("self"), arg("verbose") = false),
+				"A human-facing description of the system, block by block (the same as str(system) when verbose=False).  verbose=True reveals the actual coefficients/matrices and the underlying functions of randomization / blend blocks.  For reading, not re-parsing.")
+			.def(self_ns::str(self_ns::self))//, "String representation of the system (terse; structured blocks shown with placeholder symbols)
+			.def(self_ns::repr(self_ns::self))//, "String representation of the system
 			.def(self += self)
 			.def(self + self) 
 			.def(self *= std::shared_ptr<node::Node>())//, "'Scalar-multiply' a system"
