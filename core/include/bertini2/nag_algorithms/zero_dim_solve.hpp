@@ -399,18 +399,31 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				solutions_user_coords_fresh_ = false;
 
 				// Each rank built its homotopy independently in the constructor -- with its OWN
-				// random patch, start-system coefficients, and gamma -- so a given path index
-				// would mean a different path on each worker, and the manager would gather a
-				// scrambled, mostly-wrong solution set (observed: cyclic-5 returned ~17 distinct
-				// solutions instead of 70).  Make every rank agree on ONE homotopy: broadcast the
-				// manager's RNG seed and re-form the (randomized) start system + homotopy from it.
-				// The per-path tracking RNG is already deterministic in the path index
-				// (ReseedThisThread), so this is sufficient for identical results on every rank.
+				// random patch, start-system coefficients, and gamma -- so a given path index would
+				// mean a different path on each worker, and the manager would gather a scrambled,
+				// mostly-wrong solution set.  Make rank 0 the single authoritative source: broadcast
+				// its actual target system, start system, and homotopy to every rank.  These are all
+				// exact (rational coefficients + integer/rational patch), so serialization carries
+				// them bit-for-bit -- there is no per-rank re-derivation that could drift, and the
+				// distributed homotopy is identical to rank 0's serial one.  We also broadcast rank
+				// 0's RNG seed so any randomness drawn later (e.g. in the endgame) is consistent; the
+				// per-path tracking RNG is already deterministic in the path index (ReseedThisThread).
 				{
 					unsigned long seed = parallel::IsManager() ? GetGlobalSeed() : 0ul;
 					MPI_Bcast(&seed, 1, MPI_UNSIGNED_LONG, 0, comm);
 					SetGlobalSeed(seed);
-					SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
+
+					// When this policy owns its systems (CloneGiven), install rank 0's authoritative
+					// systems on every rank.  For RefToGiven the user manages the systems and is
+					// responsible for their consistency across ranks, so we leave them untouched
+					// (matching the old no-op SystemSetup for that policy).
+					if constexpr (SystemManagementPolicy::OwnsSystems)
+					{
+						parallel::mpi_broadcast_serialized(comm, TargetSystem(), 0);
+						parallel::mpi_broadcast_serialized(comm, StartSystem(), 0);
+						parallel::mpi_broadcast_serialized(comm, Homotopy(),    0);
+					}
+
 					num_start_points_ = StartSystem().NumStartPoints();
 					GetTracker().SetSystem(Homotopy());
 				}

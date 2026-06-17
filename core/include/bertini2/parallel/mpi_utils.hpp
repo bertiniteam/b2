@@ -130,6 +130,39 @@ inline void mpi_broadcast_string(MPI_Comm comm, std::string& s, int root)
 }
 
 
+/**
+\brief Broadcast a Boost-serializable object from \p root to all ranks in \p comm.
+
+\p root serializes \p obj and broadcasts the bytes; every other rank deserializes into \p obj
+(overwriting it).  Used to make \p root the single authoritative source of an object (e.g. the
+homotopy / start system) rather than having each rank re-derive its own copy.
+*/
+template<typename T>
+void mpi_broadcast_serialized(MPI_Comm comm, T& obj, int root)
+{
+	int rank = 0;
+	MPI_Comm_rank(comm, &rank);
+
+	std::string s;
+	if (rank == root)
+	{
+		std::ostringstream oss;
+		boost::archive::binary_oarchive oa(oss);
+		oa << obj;
+		s = oss.str();
+	}
+
+	mpi_broadcast_string(comm, s, root);
+
+	if (rank != root)
+	{
+		std::istringstream iss(s);
+		boost::archive::binary_iarchive ia(iss);
+		ia >> obj;
+	}
+}
+
+
 } // namespace parallel
 } // namespace bertini
 
