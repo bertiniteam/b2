@@ -145,7 +145,12 @@ public:
 
 			using SystemT = SystemType;
 			using StartSystemT = StartSystemType;
-			
+
+			// This policy owns (deep-copies) its systems, so in a distributed solve rank 0's
+			// systems can be broadcast and installed authoritatively on every rank.  RefToGiven,
+			// which only holds references to user-managed systems, sets this false.
+			static constexpr bool OwnsSystems = true;
+
 private:
 			StoredSystemT target_system_;
 			StoredStartSystemT start_system_;
@@ -275,6 +280,10 @@ public:
 			using SMP::TargetSystem;
 			using SMP::StartSystem;
 			using SMP::Homotopy;
+
+			// The user owns these systems (we only hold references); a distributed solve must not
+			// overwrite them, so it does not broadcast/install rank 0's systems here.  See CloneGiven.
+			static constexpr bool OwnsSystems = false;
 
 
 private:

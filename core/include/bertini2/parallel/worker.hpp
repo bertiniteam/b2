@@ -40,7 +40,7 @@ Each tracking thread owns its state (System copy + Tracker copy) built by state_
 #include "bertini2/parallel/mpi_utils.hpp"
 #include "bertini2/parallel/thread_pool.hpp"
 
-#include <mpi.h>
+#include "bertini2/parallel/mpi_include.hpp"
 
 #include <chrono>
 #include <cstdlib>   // std::getenv

@@ -15,7 +15,7 @@
    user_product_of_linears
    real_points
    solving_at_scale
+   crossed_paths
    evaluation_cyclic
    tracking_nonsingular
    manual_endgame_usage
-

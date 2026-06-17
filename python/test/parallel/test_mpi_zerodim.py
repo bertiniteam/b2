@@ -25,13 +25,19 @@ Tests are skipped automatically if mpi4py is not available.
 Run with: mpirun -n <N> python -m pytest python/test/parallel/test_mpi_zerodim.py -v
 """
 
+import numpy as np
 import pytest
 
 pytest.importorskip("mpi4py")
 
 from mpi4py import MPI
 import bertini as pb
-from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionTotalDegree
+from bertini.nag_algorithm import (
+    ZeroDimCauchyAdaptivePrecisionTotalDegree,
+    ZeroDimCauchyDoublePrecisionTotalDegree,
+)
+
+OK = int(pb.tracking.SuccessCode.Success)
 
 
 @pytest.fixture
@@ -43,6 +49,23 @@ def circle_intersection_solver():
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
     return ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
+
+
+def _cyclic_system(n):
+    x = [pb.Variable('x{}'.format(i)) for i in range(n)]
+    w = x + x
+    sys = pb.System()
+    for length in range(1, n):
+        sys.add_function(np.sum([np.prod(w[start:start + length]) for start in range(n)]))
+    sys.add_function(np.prod(x) - 1)
+    sys.add_variable_group(pb.VariableGroup(x))
+    return sys
+
+
+def _distinct_finite(solver):
+    finite = [m for m in solver.solution_metadata()
+              if int(m.endgame_success) == OK and m.is_finite]
+    return round(sum(1.0 / m.multiplicity for m in finite))
 
 
 def test_parallel_rank_size():
@@ -94,3 +117,44 @@ def test_serial_solve_works(circle_intersection_solver):
     if pb.parallel.is_manager():
         solns = solver.solutions()
         assert len(solns) == 2
+
+
+# Acceptance tests for the unified speculative-full-path model: a distributed solve must produce the
+# SAME correct answer as serial.  cyclic-5 has 70 distinct finite solutions; under `mpirun -n N` the
+# whole-path workers must recover exactly that count.  The adaptive-precision case is the one the old
+# two-phase model got wrong (the endgame resumed at double precision because Phase2 dropped the
+# boundary precision across the worker->manager->worker handoff) -- the whole-path model carries the
+# boundary precision in-memory, so it can no longer be lost.  Runs under plain pytest (serial) too,
+# where it confirms serial agrees.
+CYCLIC5_FINITE = 70
+
+
+def _solve_cyclic5(solver_cls):
+    pb.random.set_random_seed(2)
+    solver = solver_cls(_cyclic_system(5))
+    tol = solver.get_config(pb.nag_algorithm.TolerancesConfig)
+    tol.newton_before_endgame = 1e-7
+    tol.newton_during_endgame = 1e-8
+    solver.set_config(tol)
+    comm = MPI.COMM_WORLD
+    if comm.Get_size() > 1:
+        solver.solve(communicator=comm)
+    else:
+        solver.solve()
+    return solver
+
+
+def test_distributed_cyclic5_double_matches_known_count():
+    solver = _solve_cyclic5(ZeroDimCauchyDoublePrecisionTotalDegree)
+    if pb.parallel.is_manager():
+        assert len(solver.solutions()) == 120
+        assert _distinct_finite(solver) == CYCLIC5_FINITE
+
+
+def test_distributed_cyclic5_adaptive_matches_known_count():
+    # Guards the endgame-boundary precision-transfer fix: adaptive-precision distributed solve must
+    # recover all 70 finite solutions, not a precision-degraded subset.
+    solver = _solve_cyclic5(ZeroDimCauchyAdaptivePrecisionTotalDegree)
+    if pb.parallel.is_manager():
+        assert len(solver.solutions()) == 120
+        assert _distinct_finite(solver) == CYCLIC5_FINITE

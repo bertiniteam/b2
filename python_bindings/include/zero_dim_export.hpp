@@ -44,7 +44,7 @@
 #include <boost/python/stl_iterator.hpp>
 
 #ifdef BERTINI2_HAVE_MPI
-#include <mpi.h>
+#include "bertini2/parallel/mpi_include.hpp"
 #endif
 
 
@@ -195,7 +195,8 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		return_internal_reference<>(),
 		"get the prepared target system: the homogenized, auto-patched clone of the system you supplied.  its patch is the one internal-coordinate solutions lie on; use its dehomogenize_point/homogenize_point/variable_ordering to move between representations.")
 	.def("solution_metadata", &AlgoT::FinalSolutionMetadata, return_internal_reference<>(), "get the metadata for the solutions at the target time")
-	.def("endgame_boundary_data", &AlgoT::EndgameBoundaryData, return_internal_reference<>(), "get the data for the state at the endgame boundary (when we switch from regular tracking to endgame tracking")
+	.def("endgame_boundary_solutions", &AlgoT::EndgameBoundarySolutions, return_internal_reference<>(), "get the solutions (per-path point data) at the endgame boundary, where regular tracking switches to the endgame")
+	.def("endgame_boundary_metadata", &AlgoT::EndgameBoundaryMetadata, return_internal_reference<>(), "get the MidpathCheckReport from the path-crossing check at the endgame boundary: how many crossings were detected, which paths, how many re-track attempts were made, and whether the check ultimately passed")
 	;
 }
 

@@ -24,6 +24,8 @@
 
 #include "bertini2/system/start/total_degree.hpp"
 
+#include <boost/math/constants/constants.hpp>
+
 
 BOOST_CLASS_EXPORT(bertini::start_system::TotalDegree);
 
@@ -80,7 +82,8 @@ namespace bertini {
 				offset = 1;
 			}
 
-			auto two_i_pi = std::acos(-1.0) * dbl(0,2);
+			// authoritative pi (see issue #156 / special_number.cpp), not acos(-1)
+			auto two_i_pi = boost::math::constants::pi<double>() * dbl(0,2);
 
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
 				start_point(ii+offset) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), 1.0 / static_cast<double>(degrees_[ii]));
@@ -109,7 +112,8 @@ namespace bertini {
 // TODO: this code should be cleaned up after issue 308 is solved -- namely, the two precision adjustment calls should be removed.  They're only necessary because prec16 / ulonglog = prec19.
 
 			auto one = mpfr_float(1);
-			mpfr_complex two_i_pi = mpfr_complex(0,2) * acos( mpfr_float(-1) );
+			// authoritative pi (see issue #156 / special_number.cpp), not acos(-1)
+			mpfr_complex two_i_pi = mpfr_complex(0,2) * boost::math::constants::pi<mpfr_float>();
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
 			{
 				mpfr_complex a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
