@@ -155,6 +155,80 @@ sub-tracks kept separate), attach a ``bertini.tracking.observers.<precision>.Pat
 to ``solver.get_tracker()`` directly; each of its series is tagged with a ``start_time`` so you can
 tell main tracks from endgame loops.
 
+A 3-D system, coloured by condition number
+==========================================
+
+Nothing about this is special to one variable.  Let's solve the **cyclic-3** system in three
+variables and plot the paths in :math:`(\operatorname{Re} x, \operatorname{Re} y,
+\operatorname{Re} z)` space -- and this time colour each path by its **condition number**, the
+diagnostic ``PathDataCollector`` records at every step.  The condition number climbs as a path
+approaches a solution (and especially in the endgame), so the colouring shows where the tracking
+got hard::
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as mcolors
+    from mpl_toolkits.mplot3d.art3d import Line3DCollection
+    import bertini
+    from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
+
+    x, y, z = bertini.Variable('x'), bertini.Variable('y'), bertini.Variable('z')
+    sys = bertini.System()
+    sys.add_variable_group(bertini.VariableGroup([x, y, z]))
+    sys.add_function(x + y + z)
+    sys.add_function(x*y + y*z + z*x)
+    sys.add_function(x*y*z - 1)
+
+    solver = ZeroDim(sys, mptype='adaptive')
+    A = SolutionPathCollector()
+    solver.add_observer(A)
+    solver.solve()
+
+    COND = A.series[0].DIAGNOSTIC_COLUMNS.index("condition_number")
+
+Each ``path.diagnostics()`` is a float array whose columns are named by
+``PathDataCollector.DIAGNOSTIC_COLUMNS`` (``abs_t``, ``condition_number``, ``precision``,
+``stepsize``) -- so the condition number is just one column.  We draw each path as a 3-D line
+whose colour varies along it (a ``Line3DCollection`` with a shared log-scaled colour norm)::
+
+    tracks, all_cond = [], []
+    for path in A.series:
+        aff  = path.points()[:, 1:] / path.points()[:, 0:1]   # dehomogenize -> 3 affine coords
+        real = aff.real                                        # (n, 3): Re(x), Re(y), Re(z)
+        cond = path.diagnostics()[:, COND]
+        tracks.append((real, cond)); all_cond.append(cond)
+
+    norm = mcolors.LogNorm(vmin=max(min(c.min() for c in all_cond), 1.0),
+                           vmax=max(c.max() for c in all_cond))
+
+    fig = plt.figure(figsize=(7, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    for real, cond in tracks:
+        segs = np.stack([real[:-1], real[1:]], axis=1)         # consecutive points -> segments
+        lc = Line3DCollection(segs, cmap='viridis', norm=norm)
+        lc.set_array(0.5 * (cond[:-1] + cond[1:]))             # colour each segment by condition number
+        lc.set_linewidth(2)
+        ax.add_collection3d(lc)
+        last = lc
+
+    sols = solver.solutions()
+    ax.scatter([complex(s[0]).real for s in sols],
+               [complex(s[1]).real for s in sols],
+               [complex(s[2]).real for s in sols], c='k', marker='*', s=120, depthshade=False)
+    ax.set_xlabel('Re(x)'); ax.set_ylabel('Re(y)'); ax.set_zlabel('Re(z)')
+    ax.set_box_aspect((1, 1, 1))                               # 1:1:1 data aspect ratio
+    fig.colorbar(last, ax=ax, shrink=0.6, pad=0.1, label='condition number (log)')
+    plt.show()
+
+.. figure:: cyclic3_paths.png
+   :align: center
+   :width: 80%
+
+   The six cyclic-3 homotopy paths in :math:`(\operatorname{Re} x, \operatorname{Re} y,
+   \operatorname{Re} z)`, each coloured by its condition number on a log scale (stars: solutions).
+   The warm end of the scale appears as the paths crowd in near the solutions, where the Jacobian
+   is worst-conditioned.
+
 From here you can collect anything the tracker exposes: plot the condition number along each path
 to see where tracking got hard, colour by precision to watch adaptive precision kick in, or feed
 ``as_dataframe()`` straight into your favourite analysis tools.
