@@ -1,6 +1,6 @@
 [project]
 name = "bertini2"
-version = "3.0.0.dev1" 
+version = "3.0.0.dev2" 
 requires-python = ">= 3.10"
 readme = "README.md"
 dependencies = ["numpy"]
