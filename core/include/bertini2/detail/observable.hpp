@@ -72,8 +72,69 @@ namespace bertini{
 		registered in a type-indexed map so NotifyObservers only calls them for
 		events they declared interest in.  Observers returning an empty list (the
 		default) are placed in a catch-all list and receive every event.
+
+		Safe to call from inside an observer's Observe() (i.e. during a
+		notification): the add is deferred and applied once the current
+		notification loop finishes.  This is what lets a "meta-observer" attach
+		new observers in response to events.
 		*/
 		void AddObserver(AnyObserver& new_observer) const
+		{
+			if (dispatch_depth_ > 0)
+				pending_ops_.push_back({&new_observer, PendingOp::Add});
+			else
+				AddObserverImpl(new_observer);
+		}
+
+		/**
+		\brief Remove an observer from this observable.
+
+		Like AddObserver, this is safe to call during a notification: the removal
+		is deferred until the current notification loop finishes.
+		*/
+		void RemoveObserver(AnyObserver& observer) const
+		{
+			if (dispatch_depth_ > 0)
+				pending_ops_.push_back({&observer, PendingOp::Remove});
+			else
+				RemoveObserverImpl(observer);
+		}
+
+	protected:
+
+		/**
+		\brief Sends an event to observers that subscribed to its exact dynamic type,
+		then to all catch-all (untyped) observers.
+
+		Mutations of the observer lists are deferred for the duration of a
+		notification (see AddObserver/RemoveObserver), so iterating the live lists
+		here is safe even when an observer subscribes/unsubscribes mid-dispatch.
+		An observer that returns ObserveResult::Unsubscribe is dropped once the
+		(possibly nested) notification completes.  The depth counter keeps this
+		correct under re-entrant emission.
+		*/
+		void NotifyObservers(AnyEvent const& e) const
+		{
+			DispatchEvent(e);
+		}
+
+		void NotifyObservers(AnyEvent& e) const
+		{
+			DispatchEvent(e);
+		}
+
+	private:
+
+		using ObserverList = std::vector<std::reference_wrapper<AnyObserver>>;
+
+		struct PendingOp
+		{
+			enum Kind { Add, Remove };
+			AnyObserver* observer;
+			Kind kind;
+		};
+
+		void AddObserverImpl(AnyObserver& new_observer) const
 		{
 			auto types = new_observer.SubscribedEventTypes();
 			if (types.empty())
@@ -94,10 +155,7 @@ namespace bertini{
 			}
 		}
 
-		/**
-		\brief Remove an observer from this observable.
-		*/
-		void RemoveObserver(AnyObserver& observer) const
+		void RemoveObserverImpl(AnyObserver& observer) const
 		{
 			auto erase_from = [&](auto& container) {
 				auto new_end = std::remove_if(container.begin(), container.end(),
@@ -111,49 +169,46 @@ namespace bertini{
 				erase_from(bucket);
 		}
 
-	protected:
-
-		/**
-		\brief Sends an event to observers that subscribed to its exact dynamic type,
-		then to all catch-all (untyped) observers.
-
-		Snapshots each observer list before iterating so that an observer calling
-		RemoveObserver(*this) inside Observe() does not invalidate the loop iterator.
-		*/
-		void NotifyObservers(AnyEvent const& e) const
+		void DrainPendingOps() const
 		{
+			// Apply in request order so that, within one notification, a remove
+			// followed by a re-add (or vice versa) lands on the intended state.
+			for (auto const& op : pending_ops_)
+			{
+				if (op.kind == PendingOp::Add)
+					AddObserverImpl(*op.observer);
+				else
+					RemoveObserverImpl(*op.observer);
+			}
+			pending_ops_.clear();
+		}
+
+		void DispatchEvent(AnyEvent const& e) const
+		{
+			++dispatch_depth_;
+
 			auto it = typed_watchers_.find(std::type_index(typeid(e)));
 			if (it != typed_watchers_.end())
 			{
-				ObserverList snapshot = it->second;
-				for (auto& obs : snapshot)
-					obs.get().Observe(e);
+				for (auto& obs : it->second)
+					if (obs.get().Observe(e) == ObserveResult::Unsubscribe)
+						pending_ops_.push_back({&obs.get(), PendingOp::Remove});
 			}
-			ObserverList untyped_snapshot = untyped_watchers_;
-			for (auto& obs : untyped_snapshot)
-				obs.get().Observe(e);
+
+			for (auto& obs : untyped_watchers_)
+				if (obs.get().Observe(e) == ObserveResult::Unsubscribe)
+					pending_ops_.push_back({&obs.get(), PendingOp::Remove});
+
+			--dispatch_depth_;
+			if (dispatch_depth_ == 0)
+				DrainPendingOps();
 		}
-
-		void NotifyObservers(AnyEvent& e) const
-		{
-			auto it = typed_watchers_.find(std::type_index(typeid(e)));
-			if (it != typed_watchers_.end())
-			{
-				ObserverList snapshot = it->second;
-				for (auto& obs : snapshot)
-					obs.get().Observe(e);
-			}
-			ObserverList untyped_snapshot = untyped_watchers_;
-			for (auto& obs : untyped_snapshot)
-				obs.get().Observe(e);
-		}
-
-	private:
-
-		using ObserverList = std::vector<std::reference_wrapper<AnyObserver>>;
 
 		mutable std::unordered_map<std::type_index, ObserverList> typed_watchers_;
 		mutable ObserverList untyped_watchers_;
+
+		mutable unsigned dispatch_depth_ = 0;
+		mutable std::vector<PendingOp> pending_ops_;
 	};
 
 } // namespace bertini

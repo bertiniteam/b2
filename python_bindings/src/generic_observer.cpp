@@ -39,6 +39,13 @@ void ExportObserver()
 {
 	class_<AnyEvent, boost::noncopyable>("AnyEvent", no_init);
 
+	enum_<ObserveResult>("ObserveResult",
+		"What an observer may return from Observe(): KeepObserving (the default if "
+		"you return None) or Unsubscribe to ask the observable to drop this observer.")
+		.value("KeepObserving", ObserveResult::KeepObserving)
+		.value("Unsubscribe",   ObserveResult::Unsubscribe)
+	;
+
 	class_<ObserverWrapper<AnyObserver>, boost::noncopyable>("AnyAbstractObserver",  init< >())
 	;
 }

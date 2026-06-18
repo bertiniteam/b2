@@ -56,7 +56,7 @@ using BCT = typename EndgameT::BaseComplexT;
 
 virtual ~GoryDetailLogger() = default;
 
-virtual void Observe(AnyEvent const& e) override
+virtual ObserveResult Observe(AnyEvent const& e) override
 {
 	if(auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
 	{
@@ -104,6 +104,8 @@ virtual void Observe(AnyEvent const& e) override
 	{
 		BOOST_LOG_TRIVIAL(severity_level::debug) << "unprogrammed response for event of type " << boost::typeindex::type_id_runtime(e).pretty_name();
 	}
+
+	return ObserveResult::KeepObserving;
 }
 
 }; // gory detail

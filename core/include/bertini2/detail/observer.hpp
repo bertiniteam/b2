@@ -51,6 +51,19 @@ namespace bertini{
 
 
 	/**
+	\brief The result an observer returns from Observe(), telling the observable
+	whether to keep sending it events.
+
+	Returning `Unsubscribe` is the clean, dispatch-safe way for an observer to
+	stop receiving events: the observable removes it *after* the current
+	notification loop finishes (no mid-iteration mutation of the observer list).
+	This replaces the old pattern of calling `RemoveObserver(*this)` from inside
+	`Observe()`.
+	*/
+	enum class ObserveResult { KeepObserving, Unsubscribe };
+
+
+	/**
 	\brief Strawman base class for Observer objects.
 
 	\see Observer
@@ -62,12 +75,15 @@ namespace bertini{
 
 		/**
 		\brief Observe the observable object being observed.  This is probably in response to NotifyObservers.
-	
+
 		This virtual function must be overridden by actual observers, defining how they observe the observable they are observing, probably filtering events and doing something specific for different ones.
 
 		\param e The event which was emitted by the observed object.
+		\return `ObserveResult::KeepObserving` to keep receiving events, or
+		        `ObserveResult::Unsubscribe` to ask the observable to drop this
+		        observer once the current notification finishes.
 		*/
-		virtual void Observe(AnyEvent const& e) = 0;
+		virtual ObserveResult Observe(AnyEvent const& e) = 0;
 
 		/**
 		\brief Declares which event types this observer wants to receive.
@@ -120,13 +136,22 @@ namespace bertini{
 		/**
 		\brief Observe override which calls the overrides for the types you glued together.
 
+		The bundle keeps observing as long as at least one of its children still
+		wants events; it asks to unsubscribe only once every glued-in observer has
+		returned Unsubscribe.
+
 		\param e The emitted event which caused observation.
 		*/
-		void Observe(AnyEvent const& e) override
-		{	
+		ObserveResult Observe(AnyEvent const& e) override
+		{
 		    using namespace boost::fusion;
-		    auto f = [&e](auto &obs) { obs.Observe(e); };
+		    bool keep = false;
+		    auto f = [&e,&keep](auto &obs) {
+		        if (obs.Observe(e) == ObserveResult::KeepObserving)
+		            keep = true;
+		    };
 		    for_each(observers_, f);
+		    return keep ? ObserveResult::KeepObserving : ObserveResult::Unsubscribe;
 		}
 
 		std::tuple<ObserverTypes<ObservedT>...> observers_;

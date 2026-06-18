@@ -186,6 +186,25 @@ def test_tracker_step_diagnostics_accessors(amp_tracker):
     assert len(point) == s.num_variables()
 
 
+def test_observer_self_unsubscribe_via_return(amp_tracker):
+    """A python observer can drop itself by returning ObserveResult.Unsubscribe;
+    it then receives no further events for the rest of the path."""
+    tracker, s = amp_tracker
+
+    counts = {"n": 0}
+
+    class OneShot(t.observers.amp.Abstract):
+        def Observe(self, event):
+            counts["n"] += 1
+            return t.ObserveResult.Unsubscribe
+
+    obs = OneShot()
+    tracker.add_observer(obs)
+    _run_amp(tracker, s)
+    # dropped after the first event, so it saw exactly one
+    assert counts["n"] == 1
+
+
 def test_remove_observer_stops_callbacks(amp_tracker):
     """Removing an observer before track_path means no callbacks fire."""
     tracker, s = amp_tracker

@@ -45,6 +45,10 @@ _enhance_all(_pybtracking)
 __all__ = dir(_pybtracking)
 
 
+# What an observer may return from Observe() to control its own subscription.
+# Returning None (the usual case) means KeepObserving.
+from bertini._pybertini.detail import ObserveResult
+
 _obs_amp = _pybtracking.observers.amp
 _obs_dbl = _pybtracking.observers.double
 _obs_mul = _pybtracking.observers.multiple

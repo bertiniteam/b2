@@ -55,7 +55,7 @@ namespace bertini {
 				return { typeid(TrackingStarted<EmitterT>), typeid(PrecisionChanged<EmitterT>) };
 			}
 
-			virtual void Observe(AnyEvent const& e) override
+			virtual ObserveResult Observe(AnyEvent const& e) override
 			{
 				if(auto p = dynamic_cast<const TrackingStarted<EmitterT>*>(&e))
 				{
@@ -64,17 +64,18 @@ namespace bertini {
 				}
 				else if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
 				{
-					auto& t = p->Get();
 					auto next = p->Next();
 					if (next > p->Previous())
 					{
 						precision_increased_ = true;
 						next_precision_ = next;
-						time_of_first_increase_ = t.CurrentTime();
-						t.RemoveObserver(*this);
+						time_of_first_increase_ = p->Get().CurrentTime();
+						// done: ask to be dropped instead of mutating the list mid-dispatch.
+						return ObserveResult::Unsubscribe;
 					}
 
 				}
+				return ObserveResult::KeepObserving;
 			}
 
 
@@ -124,7 +125,7 @@ namespace bertini {
 				return { typeid(TrackingStarted<EmitterT>), typeid(PrecisionChanged<EmitterT>) };
 			}
 
-			virtual void Observe(AnyEvent const& e) override
+			virtual ObserveResult Observe(AnyEvent const& e) override
 			{
 				if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
 				{
@@ -139,6 +140,7 @@ namespace bertini {
 					min_precision_ = p->Get().CurrentPrecision();
 					max_precision_ = p->Get().CurrentPrecision();
 				}
+				return ObserveResult::KeepObserving;
 			}
 
 
@@ -177,13 +179,14 @@ namespace bertini {
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
-			virtual void Observe(AnyEvent const& e) override
+			virtual ObserveResult Observe(AnyEvent const& e) override
 			{
 				const TrackingEvent<EmitterT>* p = dynamic_cast<const TrackingEvent<EmitterT>*>(&e);
 				if (p)
 				{
 					precisions_.push_back(p->Get().CurrentPrecision());
 				}
+				return ObserveResult::KeepObserving;
 			}
 
 
@@ -214,13 +217,14 @@ namespace bertini {
 				return { typeid(EventT<EmitterT>) };
 			}
 
-			virtual void Observe(AnyEvent const& e) override
+			virtual ObserveResult Observe(AnyEvent const& e) override
 			{
 				const EventT<EmitterT>* p = dynamic_cast<const EventT<EmitterT>*>(&e);
 				if (p)
 				{
 					path_.push_back(p->Get().CurrentPoint());
 				}
+				return ObserveResult::KeepObserving;
 			}
 
 
@@ -247,7 +251,7 @@ namespace bertini {
 
 			virtual ~GoryDetailLogger() = default;
 
-			virtual void Observe(AnyEvent const& e) override
+			virtual ObserveResult Observe(AnyEvent const& e) override
 			{
 
 
@@ -347,6 +351,8 @@ namespace bertini {
 
 				else
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "unlogged event, of type: " << boost::typeindex::type_id_runtime(e).pretty_name();
+
+				return ObserveResult::KeepObserving;
 			}
 
 		};
@@ -365,10 +371,11 @@ namespace bertini {
 				return { typeid(FailedStep<EmitterT>) };
 			}
 
-			virtual void Observe(AnyEvent const& e) override
+			virtual ObserveResult Observe(AnyEvent const& e) override
 			{
 				if (auto p = dynamic_cast<const FailedStep<EmitterT>*>(&e))
 					std::cout << "observed step failure" << std::endl;
+				return ObserveResult::KeepObserving;
 			}
 
 			virtual ~StepFailScreenPrinter() = default;
