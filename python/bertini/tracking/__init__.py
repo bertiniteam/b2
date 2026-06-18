@@ -58,15 +58,17 @@ DoublePrecisionTracker.observers = _obs_dbl
 MultiplePrecisionTracker.observers = _obs_mul
 
 
-def _make_callback_observer(AbstractClass):
-    class CallbackObserver(AbstractClass):
+def _make_callback_observer(obs_mod):
+    class CallbackObserver(obs_mod.CustomObserver):
         """Observer that routes events to registered Python callables.
 
-        Usage::
+        The event type passed to :meth:`on` may be an event class, a tuple of
+        classes, or simply the event's **name as a string** (resolved against this
+        observer's own precision)::
 
             obs = CallbackObserver()
-            obs.on(observers.amp.TrackingStarted, lambda e: print("tracking started"))
-            obs.on(observers.amp.PrecisionChanged,
+            obs.on("TrackingStarted", lambda e: print("tracking started"))
+            obs.on("PrecisionChanged",
                    lambda e: print(e.previous(), "->", e.next()))
             tracker.add_observer(obs)
             tracker.track_path(...)
@@ -77,10 +79,13 @@ def _make_callback_observer(AbstractClass):
             self._callbacks = {}
 
         def on(self, event_type, callback):
-            """Register *callback* to be called when an event of *event_type* arrives.
+            """Register *callback* for events of *event_type*.
 
-            Returns self for chaining.
+            *event_type* may be an event class, a tuple of classes, or the event
+            name as a string.  Returns self for chaining.
             """
+            if isinstance(event_type, str):
+                event_type = getattr(obs_mod, event_type)
             self._callbacks.setdefault(event_type, []).append(callback)
             return self
 
@@ -93,9 +98,30 @@ def _make_callback_observer(AbstractClass):
     return CallbackObserver
 
 
-_obs_amp.CallbackObserver = _make_callback_observer(_obs_amp.CustomObserver)
-_obs_dbl.CallbackObserver = _make_callback_observer(_obs_dbl.CustomObserver)
-_obs_mul.CallbackObserver = _make_callback_observer(_obs_mul.CustomObserver)
+_obs_amp.CallbackObserver = _make_callback_observer(_obs_amp)
+_obs_dbl.CallbackObserver = _make_callback_observer(_obs_dbl)
+_obs_mul.CallbackObserver = _make_callback_observer(_obs_mul)
+
+
+# Precision-agnostic event handles.  Tracker events are templated on the emitter,
+# so each precision has its own SuccessfulStep/TrackingStarted/... class.  This
+# bundles each event name into a tuple of the three precision variants, which works
+# directly with isinstance() and with CallbackObserver.on() -- so user code can say
+# `events.SuccessfulStep` once instead of picking observers.amp/double/multiple.
+from types import SimpleNamespace as _SimpleNamespace
+from bertini._pybertini.detail import AnyEvent as _AnyEvent
+
+def _build_events(*modules):
+    ev = _SimpleNamespace()
+    base = modules[0]
+    names = [n for n in dir(base)
+             if isinstance(getattr(base, n), type)
+             and issubclass(getattr(base, n), _AnyEvent)]
+    for n in names:
+        setattr(ev, n, tuple(getattr(m, n) for m in modules if hasattr(m, n)))
+    return ev
+
+events = _build_events(_obs_amp, _obs_dbl, _obs_mul)
 
 
 def _make_path_observers(obs_mod):

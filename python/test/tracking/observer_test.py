@@ -219,6 +219,36 @@ def test_wrong_kind_observer_rejected_with_type_error(amp_tracker):
         tracker.add_observer(wrong)
 
 
+def test_precision_agnostic_events_handle(amp_tracker):
+    """bertini.tracking.events.<Name> is a precision-agnostic handle that works
+    with both isinstance and CallbackObserver.on, so user code needn't reach into
+    observers.amp/double/multiple."""
+    from bertini.tracking import events
+    # it bundles the three precision variants
+    assert isinstance(events.SuccessfulStep, tuple)
+    assert t.observers.amp.SuccessfulStep in events.SuccessfulStep
+
+    tracker, s = amp_tracker
+    seen = []
+    obs = t.observers.amp.CallbackObserver()
+    obs.on(events.SuccessfulStep, lambda e: seen.append("step"))
+    tracker.add_observer(obs)
+    _run_amp(tracker, s)
+    assert "step" in seen
+
+
+def test_callback_on_accepts_event_name_string(amp_tracker):
+    """CallbackObserver.on accepts the event's name as a string."""
+    tracker, s = amp_tracker
+    fired = []
+    obs = t.observers.amp.CallbackObserver()
+    obs.on("TrackingStarted", lambda e: fired.append("started"))
+    obs.on("TrackingEnded",   lambda e: fired.append("ended"))
+    tracker.add_observer(obs)
+    _run_amp(tracker, s)
+    assert "started" in fired and "ended" in fired
+
+
 def test_observer_self_unsubscribe_via_return(amp_tracker):
     """A python observer can drop itself by returning ObserveResult.Unsubscribe;
     it then receives no further events for the rest of the path."""
