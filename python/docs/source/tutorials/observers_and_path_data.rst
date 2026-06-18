@@ -136,7 +136,8 @@ path in the complex plane::
     sols = [complex(s[0]) for s in solver.solutions()]
     ax.scatter([s.real for s in sols], [s.imag for s in sols],
                c='k', marker='*', s=140, zorder=5, label='solutions')
-    ax.set_aspect('equal'); ax.set_xlabel('Re(z)'); ax.set_ylabel('Im(z)')
+    ax.set_aspect(1.0)             # 1:1 data aspect ratio
+    ax.set_xlabel('Re(z)'); ax.set_ylabel('Im(z)')
     ax.legend(loc='upper right', fontsize=8)
     plt.show()
 
