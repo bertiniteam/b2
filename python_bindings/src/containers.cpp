@@ -35,6 +35,8 @@
 
 #include "containers_export.hpp"
 
+#include <boost/python/iterator.hpp>
+
 namespace bertini{
 	namespace python{
 
@@ -47,6 +49,11 @@ void ListVisitor<T>::visit(PyClass& cl) const
 	.def(vector_indexing_suite< T , true >())
 	// By default indexed elements are returned by proxy. This can be
     // disabled by supplying *true* in the NoProxy template parameter.
+
+	// vector_indexing_suite only provides the __getitem__/__len__ sequence protocol; add a real
+	// __iter__ so `for s in solver.solutions(): ...` (and any other list container) iterates
+	// directly rather than relying on the index-fallback.
+	.def("__iter__", boost::python::iterator<T>())
 
 	.def("__str__", &ListVisitor::__str__)
 	.def("__repr__", &ListVisitor::__repr__)

@@ -68,7 +68,8 @@ _MP_VALUE_TYPES = tuple(
 )
 
 __all__ = ['variable_vector', 'variable_matrix', 'coefficient', 'as_coefficients',
-           'add_functions', 'add_linear_forms', 'add_linear', 'add_products_of_linears']
+           'add_functions', 'add_linear_forms', 'add_linear', 'add_products_of_linears',
+           'randomize']
 
 
 def variable_vector(name, n, start=0):
@@ -411,3 +412,61 @@ def add_products_of_linears(system, factors):
         raise ValueError("factors must contain at least one function")
     system.add_products_of_linears_block(ncol - 1, mats)
     return system
+
+
+def randomize(system, matrix=None):
+    """Randomize an overdetermined ``System`` down to a square one, returning a NEW system.
+
+    An overdetermined system (N functions, n variables, N > n) cannot be fed to a total-degree
+    start system, which needs a square system.  Randomization replaces the N functions with n
+    generic combinations whose isolated solutions still contain the original's; you then solve
+    the square result and discard the extraneous solutions by re-evaluating the original system.
+
+    The original ``system`` is **not** mutated.
+
+    Parameters
+    ----------
+    system : the overdetermined System to randomize.
+    matrix : optional exact coefficient matrix R (array/list of lists), one row per randomized
+        function and one column per natural function of ``system``.  When ``None`` (the default)
+        bertini builds a generic R for you -- for a single affine variable group it sorts the
+        functions by descending degree and uses ``R = [I | C]`` (random ``C``), giving the optimal
+        total-degree path count (the product of the n largest degrees); for several variable groups
+        it uses a dense random R.  When supplied, R is used verbatim and the functions are kept in
+        their current order.  Coefficients must be exact (see :func:`coefficient`); Python floats
+        are refused.
+
+    Returns
+    -------
+    A new square ``System`` carrying a single randomization block.
+
+    Examples
+    --------
+    Three quadrics in two variables (overdetermined), squared up to two functions::
+
+        >>> import bertini
+        >>> from bertini import linalg
+        >>> x, y = bertini.Variable('x'), bertini.Variable('y')
+        >>> S = bertini.System()
+        >>> S.add_variable_group(bertini.VariableGroup([x, y]))
+        >>> S.add_function(x*x + y*y - 1)
+        >>> S.add_function(x*y)
+        >>> S.add_function(x*x + y*y - x - y)
+        >>> R = linalg.randomize(S)
+        >>> R.num_functions(), S.num_functions()
+        (2, 3)
+    """
+    if matrix is None:
+        return system.randomize()
+
+    rows = [list(r) for r in matrix]
+    if not rows:
+        raise ValueError("randomization matrix must have at least one row")
+    ncol = len(rows[0])
+    M = np.empty((len(rows), ncol), dtype=_mp.Complex)
+    for i, row in enumerate(rows):
+        if len(row) != ncol:
+            raise ValueError("randomization matrix is ragged (rows of differing length)")
+        for j, entry in enumerate(row):
+            M[i, j] = _exact_to_mpfr(entry)
+    return system.randomize(M)

@@ -89,7 +89,14 @@ namespace bertini{
 			.def("eval_jacobian", return_Jac2_ptr<dbl>(), (arg("self")) , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
 			.def("eval_jacobian", return_Jac2_ptr<mpfr>(), (arg("self")) , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
 
-			.def("homogenize", &SystemBaseT::Homogenize, (arg("self")),"Homogenize the system, adding new homogenizing variables if necessary.  This may change your polynomials; that is, it has side effects.")
+			.def("eval_time_derivative",
+				+[](SystemBaseT const& self, bertini::Vec<mpfr> const& v, mpfr const& t) { return self.TimeDerivative(v, t); },
+				(arg("self"), arg("space"), arg("time")), "Evaluate dH/dt (the time derivative) in multiple precision at the given space and time values.  Rows of t-independent blocks are zero.")
+			.def("eval_time_derivative",
+				+[](SystemBaseT const& self, bertini::Vec<dbl> const& v, dbl const& t) { return self.TimeDerivative(v, t); },
+				(arg("self"), arg("space"), arg("time")), "Evaluate dH/dt (the time derivative) in double precision at the given space and time values.  Rows of t-independent blocks are zero.")
+
+			.def("homogenize", static_cast<void (SystemBaseT::*)()>(&SystemBaseT::Homogenize), (arg("self")),"Homogenize the system, adding new homogenizing variables if necessary.  This may change your polynomials; that is, it has side effects.")
 			.def("is_homogeneous", &SystemBaseT::IsHomogeneous, (arg("self")), "Determines whether all polynomials in the system have the same degree.  Non-polynomial functions are not homogeneous.")
 			.def("is_polynomial", &SystemBaseT::IsPolynomial, (arg("self")), "Determines whether all polynomials are polynomial.  Transcendental functions, e.g., are non-polynomial.  Returns a bool.")
 			
@@ -151,6 +158,18 @@ namespace bertini{
 			.def("hom_variable_groups", &SystemBaseT::HomVariableGroups, (arg("self")), "Get the list of projective / homogeneous variable_groups from the system")
 			.def("degrees", sysDeg1, (arg("self")), "Get a list of the degrees of the functions in the system, with respect to all variables in all groups (and in fact overall)")
 			.def("degrees", sysDeg2, (arg("self"), arg("group")), "Get a list of the degrees of the functions in the system, with respect to a variable_group passed in to this function.  Negative numbers indicate non-polynomial")
+			.def("randomize",
+				+[](SystemBaseT const& self) { return self.Randomize(); },
+				(arg("self")),
+				"Randomize an overdetermined system (N functions, n variables, N>n) down to a square one, returning a NEW system; this one is left untouched.  The square result has n generic combinations of the original functions, whose isolated solutions still contain this system's -- solve it, then discard the extraneous solutions by re-evaluating this system.  For a single affine variable group the functions are sorted by descending degree and R=[I|C], giving the optimal total-degree path count.")
+			.def("randomize",
+				+[](SystemBaseT const& self, bertini::Mat<mpfr> const& R) { return self.Randomize(R); },
+				(arg("self"), arg("matrix")),
+				"Randomize using a supplied coefficient matrix R (one row per randomized function, one column per natural function of this system); the functions are kept in their current order.  Returns a NEW system.")
+			.def("randomization_matrix",
+				+[](SystemBaseT const& self) { return self.RandomizationMatrix(); },
+				(arg("self")),
+				"The randomization matrix R (n x N, mpfr_complex) of a system produced by randomize().  Raises if the system has no randomization block.")
 			.def("reorder_functions_by_degree_decreasing", &SystemBaseT::ReorderFunctionsByDegreeDecreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("reorder_functions_by_degree_increasing", &SystemBaseT::ReorderFunctionsByDegreeIncreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("clear_variables", &SystemBaseT::ClearVariables, (arg("self")), "Remove the variable structure from the system")
@@ -180,8 +199,12 @@ namespace bertini{
 
 			.def("variable_ordering",&SystemBaseT::VariableOrdering,(arg("self")), "The ordering of variables saying what each coordinate of a point in THIS system's coordinates means.  On your original system these are your variables; on a solver's target_system() the homogenizing variables appear too.")
 
-			.def(self_ns::str(self_ns::self))//, "String representation of the system"
-			.def(self_ns::repr(self_ns::self))//, "Round-trippable representation of the system.  Probably not functional"
+			.def("describe",
+				+[](SystemBaseT const& self, bool verbose) { std::ostringstream ss; self.Describe(ss, verbose); return ss.str(); },
+				(arg("self"), arg("verbose") = false),
+				"A human-facing description of the system, block by block (the same as str(system) when verbose=False).  verbose=True reveals the actual coefficients/matrices and the underlying functions of randomization / blend blocks.  For reading, not re-parsing.")
+			.def(self_ns::str(self_ns::self))//, "String representation of the system (terse; structured blocks shown with placeholder symbols)
+			.def(self_ns::repr(self_ns::self))//, "String representation of the system
 			.def(self += self)
 			.def(self + self) 
 			.def(self *= std::shared_ptr<node::Node>())//, "'Scalar-multiply' a system"
@@ -283,6 +306,9 @@ namespace bertini{
 			def("make_homotopy", &MakeHomotopy,
 				(arg("target"), arg("start"), arg("path_variable")="t", arg("gamma")=std::shared_ptr<node::Node>()),
 				"Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start, with the path variable added.  At t=1 the homotopy is gamma*start (so start's solutions are its roots) and at t=0 it is target.  When start carries a structured block (e.g. a products-of-linears start system) the two systems are combined with a blend block; otherwise node arithmetic is used.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.");
+			def("make_moving_homotopy", &MakeMovingHomotopy,
+				(arg("fixed"), arg("start_moving"), arg("end_moving"), arg("path_variable")="t", arg("gamma")=std::shared_ptr<node::Node>()),
+				"Form a homotopy that moves ONLY the moving rows, leaving the fixed system evaluated once.  H = [ fixed's blocks ; (1-t)*end_moving + gamma*t*start_moving ]: the fixed equations (polynomial system + any static slices) stay as their own blocks (evaluated once, contributing zero to dH/dt) while only the moving rows slide.  At t=1 the moving rows are gamma*start_moving, at t=0 they are end_moving.  start_moving and end_moving hold just the moving rows and share fixed's variable structure.  The fixed rows come first, then the moving rows; build the matching target as fixed concatenated with end_moving.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.");
 
 			
 

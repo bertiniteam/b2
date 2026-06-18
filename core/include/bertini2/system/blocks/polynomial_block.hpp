@@ -141,6 +141,14 @@ public:
 	size_t NumFunctions() const { return functions_.size(); }
 	bool DependsOnPathVariable() const { return static_cast<bool>(path_variable_); }
 
+	/// Human-facing description: one line per function, `f_k = <expression>`.  Polynomials are the
+	/// content, so terse and verbose are the same (the expression is shown either way).
+	void Describe(std::ostream& out, size_t& row, VariableGroup const& /*vars*/, bool /*verbose*/) const
+	{
+		for (auto const& f : functions_)
+			out << "  f_" << row++ << " = " << f->EntryNode() << "\n";
+	}
+
 	unsigned Precision() const { return precision_; }
 	void Precision(unsigned new_precision) const
 	{

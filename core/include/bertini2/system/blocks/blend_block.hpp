@@ -68,6 +68,7 @@ follow-up (block-operand Clone semantics).
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/function_tree.hpp"
+#include "bertini2/system/blocks/describe.hpp"
 
 namespace bertini {
 namespace blocks {
@@ -112,6 +113,31 @@ public:
 	std::vector<Nd> const& Coefficients() const { return coefficients_; }
 	std::vector<OperandPtr> const& Operands() const { return operands_; }
 	Var const& PathVariable() const { return path_variable_; }
+
+	/// Human-facing description: terse shows the blend `f_a..f_b = c_0(t)*A + c_1(t)*B`, with the
+	/// coefficient nodes shown symbolically and the operands labelled A, B, ...; verbose lists each
+	/// operand's functions indented.
+	void Describe(std::ostream& out, size_t& row, VariableGroup const& /*vars*/, bool verbose) const
+	{
+		const size_t k = NumFunctions();
+		out << "  ";
+		describe_detail::PrintRowLabel(out, row, k);
+		out << " = ";
+		for (size_t i = 0; i < coefficients_.size(); ++i)
+			out << (i ? " + " : "") << "(" << coefficients_[i] << ")*"
+			    << static_cast<char>('A' + (i < 26 ? i : 25));
+		out << "   (blend of " << operands_.size() << " systems)\n";
+		row += k;
+		if (verbose)
+			for (size_t i = 0; i < operands_.size(); ++i)
+			{
+				const char label = static_cast<char>('A' + (i < 26 ? i : 25));
+				out << "    " << label << ":\n";
+				auto f = operands_[i]->NaturalFunctionsAsNodes();
+				for (size_t j = 0; j < f.size(); ++j)
+					out << "      " << label << "_" << j << " = " << f[j] << "\n";
+			}
+	}
 
 	/// The blend c_0(t)f_0 + c_1(t)f_1 + ... has, per function, the max degree of its operands
 	/// in the space variables (the t-coefficients are constant in space).

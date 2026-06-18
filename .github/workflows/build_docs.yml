@@ -115,6 +115,13 @@ jobs:
       - name: Install bertini from built wheel
         run: pip install --no-index --find-links dist/ bertini2
 
+      - name: Run tutorial doctests (Sphinx)
+        # Execute the `.. testcode::` / `>>>` blocks in the docs against the installed wheel, so
+        # the tutorials are verified code, not just prose.  Fails the build if any doctest fails.
+        working-directory: python/docs
+        run: |
+          sphinx-build -b doctest --keep-going source ../../build/docs/doctest
+
       - name: Build Python docs (Sphinx)
         working-directory: python/docs
         env:

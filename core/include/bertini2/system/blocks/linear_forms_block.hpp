@@ -51,6 +51,7 @@ mpfr copy.
 
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
+#include "bertini2/system/blocks/describe.hpp"
 
 namespace bertini {
 namespace blocks {
@@ -118,6 +119,31 @@ public:
 
 	/// Number of variables the block expects in the input vector.
 	size_t NumVariables() const { return num_vars_; }
+
+	/// The master coefficient matrix (one row per form).  Affine: num_vars+1 columns, the last being
+	/// the constant term.  Homogeneous (post-Homogenize): num_vars columns, all variable columns.
+	/// Exposed for the function-tree expansion (System::NaturalFunctionsAsNodes).
+	Mat<mpfr_complex> const& Coefficients() const { return coefficients_highest_precision_; }
+	/// Whether Homogenize has folded the constant column onto a homogenizing variable.
+	bool IsHomogenized() const { return homogeneous_; }
+
+	/// Human-facing description: terse shows the placeholder `c.[x, y, 1]` (a linear form whose
+	/// coefficients are hidden); verbose shows the actual affine combination `2*x + 1*y - 1`.
+	void Describe(std::ostream& out, size_t& row, VariableGroup const& vars, bool verbose) const
+	{
+		for (Eigen::Index r = 0; r < coefficients_highest_precision_.rows(); ++r)
+		{
+			out << "  f_" << row++ << " = ";
+			if (verbose)
+				describe_detail::PrintLinearFormVerbose(out, coefficients_highest_precision_, r, vars, num_vars_, homogeneous_);
+			else
+			{
+				out << "c.";
+				describe_detail::PrintAugmentedVars(out, vars, num_vars_, homogeneous_);
+			}
+			out << "\n";
+		}
+	}
 
 	/// Linear forms do not depend on the path variable.
 	bool DependsOnPathVariable() const { return false; }

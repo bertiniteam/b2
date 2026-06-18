@@ -702,6 +702,9 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/products_of_linears_block_test.cpp
 		test/classes/linear_forms_block_test.cpp
 		test/classes/blend_block_test.cpp
+		test/classes/randomization_block_test.cpp
+		test/classes/moving_homotopy_test.cpp
+		test/classes/system_printing_test.cpp
 		test/classes/system_blocks_test.cpp
 		test/classes/degrees_test.cpp
 		test/classes/class_test.cpp

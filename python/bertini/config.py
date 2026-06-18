@@ -176,6 +176,24 @@ def _make_reduce():
     return __reduce__
 
 
+def _make_copy():
+    # copy.copy / copy.deepcopy rebuild through the same to_dict/from_dict round-trip as pickle.
+    # Defining __deepcopy__ explicitly is load-bearing: the generic copy.deepcopy fallback would
+    # deep-copy the to_dict() mapping's *values* (the multiprecision scalars), which aliases/corrupts
+    # them on some interpreters (observed: Python 3.10 collapses the mpq_rational fields).  The field
+    # values are immutable scalars re-fetched from the getters, so rebuilding from them -- without
+    # deep-copying the scalars at all -- is both correct and portable.
+    def __copy__(self):
+        return type(self).from_dict(self.to_dict())
+
+    def __deepcopy__(self, memo):
+        new = type(self).from_dict(self.to_dict())
+        memo[id(self)] = new
+        return new
+
+    return __copy__, __deepcopy__
+
+
 def _enhance_config_class(cls):
     """Add update/to_dict/from_dict/repr/eq/pickle to a bound config class (idempotent)."""
     if getattr(cls, "_b2_config_enhanced", False):
@@ -191,6 +209,7 @@ def _enhance_config_class(cls):
         # Make the class picklable (copy.copy/deepcopy too) via to_dict/from_dict, overriding the
         # Boost.Python "pickling not enabled" default.
         cls.__reduce__ = _make_reduce()
+        cls.__copy__, cls.__deepcopy__ = _make_copy()
     except (TypeError, AttributeError):
         # some bound types may refuse dunder assignment; the rest still apply
         pass

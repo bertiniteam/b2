@@ -13,6 +13,8 @@
    eigenvalues_by_homotopy
    parameter_homotopy
    user_product_of_linears
+   randomize
+   moving_slice
    real_points
    solving_at_scale
    crossed_paths

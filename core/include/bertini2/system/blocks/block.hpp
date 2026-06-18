@@ -71,6 +71,7 @@ detection trait below + static_assert), not via a C++20 concept.
 #include "bertini2/system/blocks/products_of_linears_block.hpp"
 #include "bertini2/system/blocks/linear_forms_block.hpp"
 #include "bertini2/system/blocks/blend_block.hpp"
+#include "bertini2/system/blocks/randomization_block.hpp"
 
 namespace bertini {
 namespace blocks {
@@ -120,13 +121,16 @@ static_assert(is_block_v<LinearFormsBlock>,
 
 } // namespace blocks
 
-// Forward declaration: BlendBlock holds its operands by shared_ptr<const System>, and a
-// System contains Blocks -- the template parameter keeps System a dependent name so the
-// recursive type closes without System being complete here.
+// Forward declaration: BlendBlock and RandomizationBlock hold their operands by
+// shared_ptr<System>, and a System contains Blocks -- the template parameter keeps System a
+// dependent name so the recursive type closes without System being complete here.  (For the
+// same reason these two block types are absent from the is_block_v static_assert list above:
+// detecting the contract instantiates their templated eval entry points, which need System
+// complete; that check happens structurally at the std::visit site instead.)
 class System;
 
 /// The closed set of evaluation blocks a System can be composed of.  Grows as block
 /// types are added (eventually a PolynomialBlock so the polynomial part is uniform too).
-using Block = std::variant<blocks::PolynomialBlock, blocks::ProductsOfLinearsBlock, blocks::LinearFormsBlock, blocks::BlendBlock<System>>;
+using Block = std::variant<blocks::PolynomialBlock, blocks::ProductsOfLinearsBlock, blocks::LinearFormsBlock, blocks::BlendBlock<System>, blocks::RandomizationBlock<System>>;
 
 } // namespace bertini
