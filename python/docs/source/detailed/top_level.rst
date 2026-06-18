@@ -1,16 +1,6 @@
 🔝 bertini
 ==================
 
-Namespaces
--------------
-
-* :py:mod:`~bertini.multiprec`
-* :py:mod:`~bertini.system`
-* :py:mod:`~bertini.function_tree`
-* :py:mod:`~bertini.tracking`
-* :py:mod:`~bertini.endgame`
-
-
 
 Convenience
 ------------

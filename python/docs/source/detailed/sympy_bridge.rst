@@ -6,9 +6,6 @@ Exact two-way conversion between sympy expressions/systems and bertini function 
 :func:`~bertini.sympy_bridge.system_from_sympy`).
 
 
-Auto-generated docs
---------------------
-
 .. automodule:: bertini.sympy_bridge
    :members:
    :undoc-members:

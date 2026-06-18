@@ -6,9 +6,6 @@ Random-number utilities: seed the global RNG for reproducible solves
 complex/real values.
 
 
-Auto-generated docs
---------------------
-
 .. automodule:: bertini.random
    :members:
    :undoc-members:
