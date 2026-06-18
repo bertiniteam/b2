@@ -134,6 +134,57 @@ def _circle_meets_line():
     return sys
 
 
+def test_zerodim_lifecycle_events():
+    """A nag observer attached to the ZeroDim itself sees AlgorithmStarted once,
+    AlgorithmComplete once, and a PathBeginning/PathComplete per path. event.solver()
+    resolves (via RTTI) to the concrete solver with its full API."""
+    from bertini._pybertini import nag_algorithms as nag
+
+    sys = _circle_meets_line()
+    solver = ZeroDim(sys, mptype='amp')
+
+    started = []
+    completed = []
+    begins = []
+    ends = []
+    solver_nsol = []
+
+    class Lifecycle(nag.observers.CustomObserver):
+        def Observe(self, e):
+            if isinstance(e, nag.observers.AlgorithmStarted):
+                started.append(1)
+            elif isinstance(e, nag.observers.AlgorithmComplete):
+                completed.append(1)
+                solver_nsol.append(len(e.solver().solutions()))   # concrete solver API
+            elif isinstance(e, nag.observers.PathBeginning):
+                begins.append(e.path_index())
+            elif isinstance(e, nag.observers.PathComplete):
+                ends.append(e.path_index())
+
+    solver.add_observer(Lifecycle())   # attached to the ZeroDim, co-owned (no ref kept)
+    solver.solve()
+
+    assert len(started) == 1
+    assert len(completed) == 1
+    assert len(begins) == 2 and len(ends) == 2     # two total-degree paths
+    assert sorted(begins) == [0, 1]
+    assert solver_nsol == [2]                       # e.solver() gave the real solver
+
+
+def test_nag_observer_rejected_on_tracker_and_vice_versa():
+    """The attach guard distinguishes observables: a nag observer can't attach to a
+    tracker, and a tracker observer can't attach to the solver."""
+    from bertini._pybertini import nag_algorithms as nag
+
+    sys = _circle_meets_line()
+    solver = ZeroDim(sys, mptype='amp')
+
+    with pytest.raises(TypeError):
+        solver.get_tracker().add_observer(nag.observers.CustomObserver())
+    with pytest.raises(TypeError):
+        solver.add_observer(tk.observers.amp.CustomObserver())
+
+
 def test_zerodim_solve_collects_all_paths():
     sys = _circle_meets_line()
     solver = ZeroDim(sys, mptype='amp')
