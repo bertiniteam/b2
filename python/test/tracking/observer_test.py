@@ -145,6 +145,47 @@ def test_callback_observer_tracker_accessor(amp_tracker):
     assert isinstance(tracker_refs[0], t.AMPTracker)
 
 
+def test_tracker_step_diagnostics_accessors(amp_tracker):
+    """During a SuccessfulStep, the tracker exposes the step diagnostics the
+    path-visualization observers need: condition number, stepsize, delta_t,
+    norm of step, error estimate (in addition to point/time/precision)."""
+    tracker, s = amp_tracker
+
+    rows = []
+    obs = t.observers.amp.CallbackObserver()
+
+    def grab(e):
+        trk = e.tracker()
+        rows.append((
+            trk.current_time(),
+            trk.current_point(),
+            trk.current_precision(),
+            trk.current_stepsize(),
+            trk.delta_t(),
+            trk.latest_condition_number(),
+            trk.latest_norm_of_step(),
+            trk.latest_error_estimate(),
+        ))
+
+    obs.on(t.observers.amp.SuccessfulStep, grab)
+
+    tracker.add_observer(obs)
+    _run_amp(tracker, s)
+    tracker.remove_observer(obs)
+
+    assert len(rows) >= 1
+    time, point, prec, stepsize, dt, cond, norm_step, err = rows[-1]
+    # everything must cast cleanly to plain python numbers for plotting
+    assert complex(time) == complex(time)            # not NaN
+    assert int(prec) > 0
+    assert float(stepsize) > 0.0
+    assert complex(dt) == complex(dt)
+    assert float(cond) > 0.0
+    assert float(norm_step) >= 0.0
+    assert float(err) >= 0.0
+    assert len(point) == s.num_variables()
+
+
 def test_remove_observer_stops_callbacks(amp_tracker):
     """Removing an observer before track_path means no callbacks fire."""
     tracker, s = amp_tracker
