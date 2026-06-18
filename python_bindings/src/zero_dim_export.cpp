@@ -76,8 +76,8 @@ namespace bertini{
 			class_<AlgorithmStarted<AZ>,  bases<AlgorithmEvent<AZ>>, boost::noncopyable>("AlgorithmStarted",  no_init);
 			class_<AlgorithmComplete<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("AlgorithmComplete", no_init);
 
-			class_<PathBeginning<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathBeginning", no_init)
-				.def("path_index", &PathBeginning<AZ>::PathIndex, "index of the solution path that is starting");
+			class_<PathStarted<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathStarted", no_init)
+				.def("path_index", &PathStarted<AZ>::PathIndex, "index of the solution path that is starting");
 			class_<PathComplete<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathComplete", no_init)
 				.def("path_index", &PathComplete<AZ>::PathIndex, "index of the solution path that finished");
 		}

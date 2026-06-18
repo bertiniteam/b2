@@ -136,7 +136,7 @@ def _circle_meets_line():
 
 def test_zerodim_lifecycle_events():
     """A nag observer attached to the ZeroDim itself sees AlgorithmStarted once,
-    AlgorithmComplete once, and a PathBeginning/PathComplete per path. event.solver()
+    AlgorithmComplete once, and a PathStarted/PathComplete per path. event.solver()
     resolves (via RTTI) to the concrete solver with its full API."""
     from bertini._pybertini import nag_algorithms as nag
 
@@ -156,7 +156,7 @@ def test_zerodim_lifecycle_events():
             elif isinstance(e, nag.observers.AlgorithmComplete):
                 completed.append(1)
                 solver_nsol.append(len(e.solver().solutions()))   # concrete solver API
-            elif isinstance(e, nag.observers.PathBeginning):
+            elif isinstance(e, nag.observers.PathStarted):
                 begins.append(e.path_index())
             elif isinstance(e, nag.observers.PathComplete):
                 ends.append(e.path_index())

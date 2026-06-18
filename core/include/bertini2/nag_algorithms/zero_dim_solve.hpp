@@ -1155,7 +1155,7 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			*/
 			void ExecuteOnePath(DuringEGContext ctx, SolnIndT soln_ind, Vec<BaseComplexT> const& start_point)
 			{
-				this->NotifyObservers(PathBeginning<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
+				this->NotifyObservers(PathStarted<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
 
 				ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
 				ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind, start_point);

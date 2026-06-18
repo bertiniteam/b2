@@ -315,7 +315,7 @@ def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma
 
 # --- SolutionPathCollector: collect every solution path of a whole solve, for plotting ---
 #
-# A two-level meta-observer.  Attach one to a ZeroDim solver; on each PathBeginning it spins
+# A two-level meta-observer.  Attach one to a ZeroDim solver; on each PathStarted it spins
 # up a fresh tracking PathDataCollector, attaches it to the solver's tracker, and on the
 # matching PathComplete harvests it into .series and detaches it.  Because the solver reuses
 # one tracker for a path's main homotopy track AND its endgame sub-tracks, the per-path
@@ -341,7 +341,7 @@ class SolutionPathCollector(_pybnalag.observers.CustomObserver):
 
     def Observe(self, event):
         obs = _pybnalag.observers
-        if isinstance(event, obs.PathBeginning):
+        if isinstance(event, obs.PathStarted):
             tracker = event.solver().get_tracker()
             # tracker.observers is the precision-appropriate module (set in bertini.tracking)
             collector = tracker.observers.PathDataCollector()

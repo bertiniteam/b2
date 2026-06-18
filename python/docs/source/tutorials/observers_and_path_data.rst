@@ -86,13 +86,13 @@ path are we on" is known only to the *solver*.  The elegant fix is an observer t
 to the solver's events, attaches and detaches *other* observers: a meta-observer.
 
 That is exactly :class:`bertini.nag_algorithm.SolutionPathCollector`.  You attach it to the
-**solver**.  The solver emits ``PathBeginning``/``PathComplete`` around each path; on
-``PathBeginning`` the meta-observer spins up a fresh ``PathDataCollector`` and attaches it to the
+**solver**.  The solver emits ``PathStarted``/``PathComplete`` around each path; on
+``PathStarted`` the meta-observer spins up a fresh ``PathDataCollector`` and attaches it to the
 solver's tracker, and on ``PathComplete`` it harvests that collector into ``.series`` and detaches
 it.  Each path gets its own collector with its own empty buffer -- per-path isolation for free.
 
 Because the solver reuses its one tracker for a path's main homotopy track **and** that path's
-endgame sub-tracks, the collector that is attached for the whole ``PathBeginning``-to-
+endgame sub-tracks, the collector that is attached for the whole ``PathStarted``-to-
 ``PathComplete`` window captures the *entire* journey to :math:`t \to 0`, endgame included --
 without any filtering.  (The attach and detach happen *from inside* ``Observe``; the observable
 defers those changes until the current notification finishes, which is what makes it safe.)

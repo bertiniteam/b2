@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(postprocessing_config_defaults_match_bertini1)
 }
 
 
-// Observe a whole zero-dim solve: AlgorithmStarted once, a PathBeginning/PathComplete
+// Observe a whole zero-dim solve: AlgorithmStarted once, a PathStarted/PathComplete
 // pair per path, AlgorithmComplete once.  The observer attaches to the ZeroDim itself
 // (the AnyZeroDim emitter), not to the tracker.
 namespace {
@@ -758,7 +758,7 @@ struct ZeroDimLifecycleCounter : public bertini::Observer<bertini::algorithm::An
 		using namespace bertini::algorithm;
 		if (dynamic_cast<const AlgorithmStarted<AnyZeroDim>*>(&e))        ++started;
 		else if (dynamic_cast<const AlgorithmComplete<AnyZeroDim>*>(&e))  ++completed;
-		else if (dynamic_cast<const PathBeginning<AnyZeroDim>*>(&e))      ++path_begin;
+		else if (dynamic_cast<const PathStarted<AnyZeroDim>*>(&e))      ++path_begin;
 		else if (dynamic_cast<const PathComplete<AnyZeroDim>*>(&e))       ++path_end;
 		return bertini::ObserveResult::KeepObserving;
 	}

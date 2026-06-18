@@ -65,18 +65,18 @@ namespace bertini {
 		observer can group them together as one complete solution path.
 		*/
 		template<class ObservedT>
-		class PathBeginning : public AlgorithmEvent<ObservedT>
+		class PathStarted : public AlgorithmEvent<ObservedT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
 			using HeldT = typename AlgorithmEvent<ObservedT>::HeldT;
-			PathBeginning(HeldT obs, std::size_t path_index)
+			PathStarted(HeldT obs, std::size_t path_index)
 				: AlgorithmEvent<ObservedT>(obs), path_index_(path_index)
 			{}
 
 			std::size_t PathIndex() const { return path_index_; }
 
-			virtual ~PathBeginning() = default;
-			PathBeginning() = delete;
+			virtual ~PathStarted() = default;
+			PathStarted() = delete;
 		private:
 			std::size_t path_index_;
 		};
