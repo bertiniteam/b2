@@ -146,8 +146,12 @@ namespace bertini{
 		{
 		    using namespace boost::fusion;
 		    bool keep = false;
+		    // Route through the AnyObserver interface: a glued-in observer may be a
+		    // TypedObserver, whose typed Observe(ConcreteEvent const&) overloads hide
+		    // the untyped Observe(AnyEvent const&) for ordinary name lookup.  The
+		    // virtual call reaches the right dispatcher in every case.
 		    auto f = [&e,&keep](auto &obs) {
-		        if (obs.Observe(e) == ObserveResult::KeepObserving)
+		        if (static_cast<AnyObserver&>(obs).Observe(e) == ObserveResult::KeepObserving)
 		            keep = true;
 		    };
 		    for_each(observers_, f);
@@ -156,6 +160,68 @@ namespace bertini{
 
 		std::tuple<ObserverTypes<ObservedT>...> observers_;
 		virtual ~MultiObserver() = default;
+	};
+
+
+	/**
+	\brief CRTP base that turns an observer into a set of typed Observe() overloads.
+
+	Instead of writing one `Observe(AnyEvent const&)` body full of `dynamic_cast`s
+	(and a matching hand-written `SubscribedEventTypes()`), derive from this and
+	provide one `ObserveResult OnEvent(ConcreteEvent const&)` overload per event you
+	care about.  This helper:
+	  - implements `SubscribedEventTypes()` from `ConcreteEvents...`, so the
+	    observable routes only those exact event types here; and
+	  - implements the single `Observe(AnyEvent const&)` virtual once, doing the
+	    one downcast centrally and dispatching to the matching `OnEvent` overload on
+	    `Derived`.
+
+	The per-event handler is named `OnEvent` (not an `Observe` overload) so it does
+	not hide the `Observe(AnyEvent const&)` virtual -- keeping `Observe` the single
+	dispatch entry point and avoiding -Woverloaded-virtual noise.
+
+	The downcast stays a `dynamic_cast` (so the dispatch semantics are identical to
+	the old hand-written observers), but it now lives in exactly one place rather
+	than being copy-pasted into every observer body.
+
+	\tparam Derived The concrete observer (CRTP).
+	\tparam ObservedT The observed type (so this is still an Observer<ObservedT>).
+	\tparam ConcreteEvents The exact event types to subscribe to, e.g.
+	        `TrackingStarted<EmitterT>`.  `Derived` must provide an
+	        `ObserveResult OnEvent(E const&)` overload for each one.
+	*/
+	template<class Derived, class ObservedT, class... ConcreteEvents>
+	class TypedObserver : public Observer<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+		std::vector<std::type_index> SubscribedEventTypes() const override
+		{
+			return { std::type_index(typeid(ConcreteEvents))... };
+		}
+
+		ObserveResult Observe(AnyEvent const& e) override
+		{
+			ObserveResult result = ObserveResult::KeepObserving;
+			bool matched = false;
+			// try each subscribed type; the first whose dynamic type matches wins.
+			(TryDispatch<ConcreteEvents>(e, result, matched), ...);
+			return result;
+		}
+
+		virtual ~TypedObserver() = default;
+
+	private:
+		template<class Ev>
+		void TryDispatch(AnyEvent const& e, ObserveResult& result, bool& matched)
+		{
+			if (matched)
+				return;
+			if (auto p = dynamic_cast<const Ev*>(&e))
+			{
+				matched = true;
+				result = static_cast<Derived*>(this)->OnEvent(*p);
+			}
+		}
 	};
 
 

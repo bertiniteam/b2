@@ -45,43 +45,36 @@ namespace bertini {
 
 
 		template<class TrackerT>
-		class FirstPrecisionRecorder : public Observer<TrackerT>
+		class FirstPrecisionRecorder
+			: public TypedObserver< FirstPrecisionRecorder<TrackerT>, TrackerT,
+			        TrackingStarted<typename TrackerTraits<TrackerT>::EventEmitterType>,
+			        PrecisionChanged<typename TrackerTraits<TrackerT>::EventEmitterType> >
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
-			std::vector<std::type_index> SubscribedEventTypes() const override
-			{
-				return { typeid(TrackingStarted<EmitterT>), typeid(PrecisionChanged<EmitterT>) };
-			}
+		public:
 
-			virtual ObserveResult Observe(AnyEvent const& e) override
+			ObserveResult OnEvent(TrackingStarted<EmitterT> const& e)
 			{
-				if(auto p = dynamic_cast<const TrackingStarted<EmitterT>*>(&e))
-				{
-					precision_increased_ = false;
-					starting_precision_ = p->Get().CurrentPrecision();
-				}
-				else if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
-				{
-					auto next = p->Next();
-					if (next > p->Previous())
-					{
-						precision_increased_ = true;
-						next_precision_ = next;
-						time_of_first_increase_ = p->Get().CurrentTime();
-						// done: ask to be dropped instead of mutating the list mid-dispatch.
-						return ObserveResult::Unsubscribe;
-					}
-
-				}
+				precision_increased_ = false;
+				starting_precision_ = e.Get().CurrentPrecision();
 				return ObserveResult::KeepObserving;
 			}
 
-
-
-
-		public:
+			ObserveResult OnEvent(PrecisionChanged<EmitterT> const& e)
+			{
+				auto next = e.Next();
+				if (next > e.Previous())
+				{
+					precision_increased_ = true;
+					next_precision_ = next;
+					time_of_first_increase_ = e.Get().CurrentTime();
+					// done: ask to be dropped instead of mutating the list mid-dispatch.
+					return ObserveResult::Unsubscribe;
+				}
+				return ObserveResult::KeepObserving;
+			}
 
 			unsigned  StartPrecision() const
 			{
@@ -115,38 +108,32 @@ namespace bertini {
 
 
 		template<class TrackerT>
-		class MinMaxPrecisionRecorder : public Observer<TrackerT>
+		class MinMaxPrecisionRecorder
+			: public TypedObserver< MinMaxPrecisionRecorder<TrackerT>, TrackerT,
+			        TrackingStarted<typename TrackerTraits<TrackerT>::EventEmitterType>,
+			        PrecisionChanged<typename TrackerTraits<TrackerT>::EventEmitterType> >
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
-			std::vector<std::type_index> SubscribedEventTypes() const override
-			{
-				return { typeid(TrackingStarted<EmitterT>), typeid(PrecisionChanged<EmitterT>) };
-			}
+		public:
 
-			virtual ObserveResult Observe(AnyEvent const& e) override
+			ObserveResult OnEvent(TrackingStarted<EmitterT> const& e)
 			{
-				if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
-				{
-					auto next_precision = p->Next();
-					if (next_precision < min_precision_)
-						min_precision_ = next_precision;
-					if (next_precision > max_precision_)
-						max_precision_ = next_precision;
-				}
-				else if(auto p = dynamic_cast<const TrackingStarted<EmitterT>*>(&e))
-				{
-					min_precision_ = p->Get().CurrentPrecision();
-					max_precision_ = p->Get().CurrentPrecision();
-				}
+				min_precision_ = e.Get().CurrentPrecision();
+				max_precision_ = e.Get().CurrentPrecision();
 				return ObserveResult::KeepObserving;
 			}
 
-
-
-
-		public:
+			ObserveResult OnEvent(PrecisionChanged<EmitterT> const& e)
+			{
+				auto next_precision = e.Next();
+				if (next_precision < min_precision_)
+					min_precision_ = next_precision;
+				if (next_precision > max_precision_)
+					max_precision_ = next_precision;
+				return ObserveResult::KeepObserving;
+			}
 
 			unsigned MinPrecision() const
 			{
@@ -207,28 +194,21 @@ namespace bertini {
 		PathAccumulator<AMPTracker> path_accumulator;
 		*/
 		template<class TrackerT, template<class> class EventT = SuccessfulStep>
-		class AMPPathAccumulator : public Observer<TrackerT>
+		class AMPPathAccumulator
+			: public TypedObserver< AMPPathAccumulator<TrackerT,EventT>, TrackerT,
+			        EventT<typename TrackerTraits<TrackerT>::EventEmitterType> >
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
-			std::vector<std::type_index> SubscribedEventTypes() const override
-			{
-				return { typeid(EventT<EmitterT>) };
-			}
+		public:
 
-			virtual ObserveResult Observe(AnyEvent const& e) override
+			ObserveResult OnEvent(EventT<EmitterT> const& e)
 			{
-				const EventT<EmitterT>* p = dynamic_cast<const EventT<EmitterT>*>(&e);
-				if (p)
-				{
-					path_.push_back(p->Get().CurrentPoint());
-				}
+				path_.push_back(e.Get().CurrentPoint());
 				return ObserveResult::KeepObserving;
 			}
 
-
-		public:
 			const std::vector<Vec<mpfr_complex> >& Path() const
 			{
 				return path_;
@@ -360,21 +340,17 @@ namespace bertini {
 
 
 		template<class TrackerT>
-		class StepFailScreenPrinter : public Observer<TrackerT>
+		class StepFailScreenPrinter
+			: public TypedObserver< StepFailScreenPrinter<TrackerT>, TrackerT,
+			        FailedStep<typename TrackerTraits<TrackerT>::EventEmitterType> >
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
-			std::vector<std::type_index> SubscribedEventTypes() const override
+			ObserveResult OnEvent(FailedStep<EmitterT> const& e)
 			{
-				return { typeid(FailedStep<EmitterT>) };
-			}
-
-			virtual ObserveResult Observe(AnyEvent const& e) override
-			{
-				if (auto p = dynamic_cast<const FailedStep<EmitterT>*>(&e))
-					std::cout << "observed step failure" << std::endl;
+				std::cout << "observed step failure" << std::endl;
 				return ObserveResult::KeepObserving;
 			}
 
