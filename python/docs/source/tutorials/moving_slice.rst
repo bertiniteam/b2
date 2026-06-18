@@ -1,5 +1,5 @@
-🛷 Move a slice, hold the system fixed (regeneration)
-*********************************************************
+🛷 Move a slice, hold the system fixed 
+****************************************
 
 .. testsetup:: *
 
