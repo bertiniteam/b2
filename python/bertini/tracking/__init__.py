@@ -96,3 +96,149 @@ def _make_callback_observer(AbstractClass):
 _obs_amp.CallbackObserver = _make_callback_observer(_obs_amp.Abstract)
 _obs_dbl.CallbackObserver = _make_callback_observer(_obs_dbl.Abstract)
 _obs_mul.CallbackObserver = _make_callback_observer(_obs_mul.Abstract)
+
+
+def _make_path_observers(obs_mod):
+    """Build the path-collecting observers for one precision's observer module.
+
+    Returns ``(PathDataCollector, PathCollectionObserver)``.  ``obs_mod`` is e.g.
+    ``bertini.tracking.observers.amp`` and supplies ``.Abstract`` plus the event
+    classes ``SuccessfulStep`` / ``TrackingStarted`` / ``TrackingEnded``.
+    """
+
+    class PathDataCollector(obs_mod.Abstract):
+        """Collects one tracked path into a time series, for plotting.
+
+        Attach to a tracker; on every successful step it records the time, the
+        space point, and a few step diagnostics.  Because an adaptive-precision
+        tracker hands back arbitrary-precision (mpfr) numbers -- which do not pack
+        into a single numpy array -- every value is cast to a plain python
+        ``complex``/``float`` as it is collected (double precision is plenty for a
+        picture).  The collected data is offered as several typed numpy arrays
+        (or, optionally, a pandas DataFrame)::
+
+            b = PathDataCollector()
+            tracker.add_observer(b)
+            tracker.track_path(...)
+            tracker.remove_observer(b)
+            t   = b.times()          # complex, shape (n_steps,)
+            z   = b.points()         # complex, shape (n_steps, n_vars)
+            dgn = b.diagnostics()    # float,   shape (n_steps, 4): |t|, cond, prec, stepsize
+        """
+
+        #: column order of the float array returned by :meth:`diagnostics`.
+        DIAGNOSTIC_COLUMNS = ("abs_t", "condition_number", "precision", "stepsize")
+
+        def __init__(self):
+            super().__init__()
+            #: the time this track started at, if known (set by PathCollectionObserver
+            #: from the TrackingStarted event).  Lets you tell a main homotopy path
+            #: (starts at the global start time) from an endgame sub-track (starts
+            #: near the endgame boundary), since a solver reuses one tracker for both.
+            self.start_time = None
+            self._t = []        # list[complex]
+            self._points = []   # list[list[complex]]
+            self._diag = []     # list[[abs_t, cond, prec, stepsize]]
+
+        def Observe(self, event):
+            if not isinstance(event, obs_mod.SuccessfulStep):
+                return
+            trk = event.tracker()
+            tval = complex(trk.current_time())
+            self._t.append(tval)
+            self._points.append([complex(z) for z in trk.current_point()])
+            self._diag.append([
+                abs(tval),
+                float(trk.latest_condition_number()),
+                float(trk.current_precision()),
+                float(trk.current_stepsize()),
+            ])
+
+        def __len__(self):
+            return len(self._t)
+
+        def times(self):
+            import numpy as np
+            return np.array(self._t, dtype=complex)
+
+        def points(self):
+            import numpy as np
+            return np.array(self._points, dtype=complex)
+
+        def diagnostics(self):
+            import numpy as np
+            return np.array(self._diag, dtype=float).reshape(-1, len(self.DIAGNOSTIC_COLUMNS))
+
+        def as_dataframe(self):
+            """Return the whole path as a pandas DataFrame with named columns.
+
+            Requires pandas (``pip install pandas``).  Columns: ``t`` (complex),
+            one ``z{i}`` (complex) per variable, then the diagnostic columns.
+            """
+            try:
+                import pandas as pd
+            except ImportError as e:  # pragma: no cover - exercised only without pandas
+                raise ImportError(
+                    "PathDataCollector.as_dataframe() needs pandas; "
+                    "install it, or use times()/points()/diagnostics() instead."
+                ) from e
+            import numpy as np
+            data = {"t": self.times()}
+            pts = self.points()
+            for i in range(pts.shape[1] if pts.size else 0):
+                data["z{}".format(i)] = pts[:, i]
+            diag = self.diagnostics()
+            for j, name in enumerate(self.DIAGNOSTIC_COLUMNS):
+                data[name] = diag[:, j] if diag.size else np.empty(0)
+            return pd.DataFrame(data)
+
+    class PathCollectionObserver(obs_mod.Abstract):
+        """A meta-observer: collects *every* path of a multi-path run.
+
+        Attach one of these to a tracker (e.g. ``zd.get_tracker()``) before a
+        solve.  Each time the tracker starts a path it spins up a fresh
+        :class:`PathDataCollector`, attaches it, and -- when the path ends --
+        harvests it into :attr:`series` and detaches it.  Attaching/detaching
+        happens from inside ``Observe`` and relies on the observable deferring
+        those mutations until the current notification finishes.
+
+        After the run, :attr:`series` is a list of finished ``PathDataCollector``
+        objects, one per path, in the order the tracker ran them::
+
+            a = PathCollectionObserver()
+            zd.get_tracker().add_observer(a)
+            zd.solve()
+            for path in a.series:
+                t, z = path.times(), path.points()
+                ...
+        """
+
+        def __init__(self):
+            super().__init__()
+            self.series = []      # list[PathDataCollector], one finished path each
+            self._active = None
+            self._tracker = None
+
+        def Observe(self, event):
+            if isinstance(event, obs_mod.TrackingStarted):
+                trk = event.tracker()
+                collector = PathDataCollector()
+                collector.start_time = complex(trk.current_time())
+                self._active = collector
+                self._tracker = trk
+                trk.add_observer(collector)        # deferred; starts on the next event
+            elif isinstance(event, obs_mod.TrackingEnded):
+                if self._active is not None:
+                    self._tracker.remove_observer(self._active)   # deferred
+                    self.series.append(self._active)
+                    self._active = None
+                    self._tracker = None
+
+        def __len__(self):
+            return len(self.series)
+
+    return PathDataCollector, PathCollectionObserver
+
+
+for _m in (_obs_amp, _obs_dbl, _obs_mul):
+    _m.PathDataCollector, _m.PathCollectionObserver = _make_path_observers(_m)
