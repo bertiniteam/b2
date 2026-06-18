@@ -65,8 +65,8 @@ intersections with it, :math:`(\pm 1, 0)`; at :math:`t=0` the slice is the diago
 The circle never moved; only the slice did. The two start points slid along the circle to the two
 diagonal intersections.
 
-A static slice and a moving slice (the regeneration shape)
-==========================================================
+A static slice and a moving slice
+=====================================
 
 Now in three variables, the genuinely regeneration-flavored case: a fixed unit **sphere** (a
 surface) cut to dimension zero by **two** slices -- a **static** one ``z = 0`` and a **moving** one
