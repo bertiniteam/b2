@@ -78,7 +78,10 @@ def _find_crossing_seed():
                 "the detection/resolve logic is still covered by the deterministic C++ tests")
 
 
-@pytest.mark.timeout(360)  # several cyclic-5 Euler solves; loose Euler tracking is slow
+@pytest.mark.timeout(900)  # several cyclic-5 Euler solves; loose Euler tracking is slow, and the
+                           # manylinux test container is markedly slower per-core than 360s allowed
+                           # (it timed out there while passing on macOS) -- this is a safety net
+                           # against a true hang, not a performance assertion.
 def test_crossing_is_detected_then_resolved():
     """Report-only loses a solution to the crossing; re-tracking recovers it."""
     seed, report_only, distinct_unresolved = _find_crossing_seed()
