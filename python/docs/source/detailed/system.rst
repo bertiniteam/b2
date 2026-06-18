@@ -2,10 +2,6 @@
 ==========================
 
 
-Notes
---------
-
-Auto-generated docs
---------------------
-
 .. automodule:: bertini.system
+	:members:
+	:undoc-members:

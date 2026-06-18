@@ -1,11 +1,9 @@
 🚦 bertini.system.start_system
 ==================================
 
+Todo: the other start systems are missing!!!
 
-Notes
---------
-
-Auto-generated docs
---------------------
 
 .. automodule:: bertini.system.start_system
+	:members:
+	:undoc-members:
