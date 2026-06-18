@@ -744,4 +744,63 @@ BOOST_AUTO_TEST_CASE(postprocessing_config_defaults_match_bertini1)
 }
 
 
+// Observe a whole zero-dim solve: AlgorithmStarted once, a PathBeginning/PathComplete
+// pair per path, AlgorithmComplete once.  The observer attaches to the ZeroDim itself
+// (the AnyZeroDim emitter), not to the tracker.
+namespace {
+
+struct ZeroDimLifecycleCounter : public bertini::Observer<bertini::algorithm::AnyZeroDim>
+{
+	int started = 0, completed = 0, path_begin = 0, path_end = 0;
+
+	bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+	{
+		using namespace bertini::algorithm;
+		if (dynamic_cast<const AlgorithmStarted<AnyZeroDim>*>(&e))        ++started;
+		else if (dynamic_cast<const AlgorithmComplete<AnyZeroDim>*>(&e))  ++completed;
+		else if (dynamic_cast<const PathBeginning<AnyZeroDim>*>(&e))      ++path_begin;
+		else if (dynamic_cast<const PathComplete<AnyZeroDim>*>(&e))       ++path_end;
+		return bertini::ObserveResult::KeepObserving;
+	}
+};
+
+} // anon namespace
+
+BOOST_AUTO_TEST_CASE(zerodim_emits_lifecycle_events)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto sys = system::Precon::GriewankOsborn();
+	auto zd = algorithm::ZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
+	                             decltype(sys), start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+
+	ZeroDimLifecycleCounter counter;
+	zd.AddObserver(counter);   // attaches to the ZeroDim (accepts an AnyZeroDim observer)
+
+	zd.Solve();
+
+	BOOST_CHECK_EQUAL(counter.started,   1);
+	BOOST_CHECK_EQUAL(counter.completed, 1);
+	BOOST_CHECK_GT(counter.path_begin, 0);
+	BOOST_CHECK_EQUAL(counter.path_begin, counter.path_end);  // every path that began also completed
+}
+
+
+BOOST_AUTO_TEST_CASE(zerodim_rejects_a_tracker_observer)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto sys = system::Precon::GriewankOsborn();
+	auto zd = algorithm::ZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
+	                             decltype(sys), start_system::TotalDegree>(sys);
+
+	// a tracker observer is for a tracker, not the ZeroDim -> rejected
+	GoryDetailLogger<TrackerT> tracker_observer;
+	BOOST_CHECK_THROW(zd.AddObserver(tracker_observer), bertini::IncompatibleObserver);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
