@@ -93,20 +93,20 @@ def _make_callback_observer(AbstractClass):
     return CallbackObserver
 
 
-_obs_amp.CallbackObserver = _make_callback_observer(_obs_amp.Abstract)
-_obs_dbl.CallbackObserver = _make_callback_observer(_obs_dbl.Abstract)
-_obs_mul.CallbackObserver = _make_callback_observer(_obs_mul.Abstract)
+_obs_amp.CallbackObserver = _make_callback_observer(_obs_amp.CustomObserver)
+_obs_dbl.CallbackObserver = _make_callback_observer(_obs_dbl.CustomObserver)
+_obs_mul.CallbackObserver = _make_callback_observer(_obs_mul.CustomObserver)
 
 
 def _make_path_observers(obs_mod):
     """Build the path-collecting observers for one precision's observer module.
 
     Returns ``(PathDataCollector, PathCollectionObserver)``.  ``obs_mod`` is e.g.
-    ``bertini.tracking.observers.amp`` and supplies ``.Abstract`` plus the event
+    ``bertini.tracking.observers.amp`` and supplies ``.CustomObserver`` plus the event
     classes ``SuccessfulStep`` / ``TrackingStarted`` / ``TrackingEnded``.
     """
 
-    class PathDataCollector(obs_mod.Abstract):
+    class PathDataCollector(obs_mod.CustomObserver):
         """Collects one tracked path into a time series, for plotting.
 
         Attach to a tracker; on every successful step it records the time, the
@@ -192,7 +192,7 @@ def _make_path_observers(obs_mod):
                 data[name] = diag[:, j] if diag.size else np.empty(0)
             return pd.DataFrame(data)
 
-    class PathCollectionObserver(obs_mod.Abstract):
+    class PathCollectionObserver(obs_mod.CustomObserver):
         """A meta-observer: collects *every* path of a multi-path run.
 
         Attach one of these to a tracker (e.g. ``zd.get_tracker()``) before a

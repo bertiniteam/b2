@@ -15,15 +15,15 @@ numpy arrays, and plots them.
 Writing an observer in Python
 =============================
 
-Subclass the precision-appropriate ``Abstract`` base (``amp`` for adaptive precision, ``double``
-or ``multiple`` for fixed) and override ``Observe``.  Events arrive as objects you discriminate
-with :func:`isinstance`; every tracking event can hand you the live tracker via ``event.tracker()``,
-from which you can read the current state of the path::
+Subclass the precision-appropriate ``CustomObserver`` base (``amp`` for adaptive precision,
+``double`` or ``multiple`` for fixed) and override ``Observe``.  Events arrive as objects you
+discriminate with :func:`isinstance`; every tracking event can hand you the live tracker via
+``event.tracker()``, from which you can read the current state of the path::
 
     import bertini
     import bertini.tracking as tracking
 
-    class StepPrinter(tracking.observers.amp.Abstract):
+    class StepPrinter(tracking.observers.amp.CustomObserver):
         def Observe(self, event):
             if isinstance(event, tracking.observers.amp.SuccessfulStep):
                 trk = event.tracker()

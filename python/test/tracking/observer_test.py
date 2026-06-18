@@ -88,7 +88,7 @@ def test_callback_observer_isinstance(amp_tracker):
 
     seen_types = []
 
-    class TypeCheckObserver(t.observers.amp.Abstract):
+    class TypeCheckObserver(t.observers.amp.CustomObserver):
         def Observe(self, event):
             if isinstance(event, t.observers.amp.TrackingStarted):
                 seen_types.append("started")
@@ -198,7 +198,7 @@ def test_observer_outlives_python_reference(amp_tracker):
     tracker, s = amp_tracker
     hits = {"n": 0}
 
-    class Counter(t.observers.amp.Abstract):
+    class Counter(t.observers.amp.CustomObserver):
         def Observe(self, e):
             hits["n"] += 1
 
@@ -226,7 +226,7 @@ def test_observer_self_unsubscribe_via_return(amp_tracker):
 
     counts = {"n": 0}
 
-    class OneShot(t.observers.amp.Abstract):
+    class OneShot(t.observers.amp.CustomObserver):
         def Observe(self, event):
             counts["n"] += 1
             return t.ObserveResult.Unsubscribe
@@ -295,7 +295,7 @@ def test_double_tracker_isinstance(double_tracker):
 
     seen = []
 
-    class Obs(t.observers.double.Abstract):
+    class Obs(t.observers.double.CustomObserver):
         def Observe(self, event):
             if isinstance(event, t.observers.double.TrackingStarted):
                 seen.append("started")

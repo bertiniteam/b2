@@ -81,7 +81,7 @@ void ExportSpecificObservers(std::string scope_name)
 	scope_C.attr(scope_name.c_str()) = submodule_C;
 	scope new_submodule_scope_C = submodule_C;
 
-	class_<ObserverWrapper<Observer<TrackerT>>, std::shared_ptr<ObserverWrapper<Observer<TrackerT>>>, bases<AnyObserver>, boost::noncopyable>("Abstract", init< >())
+	class_<ObserverWrapper<Observer<TrackerT>>, std::shared_ptr<ObserverWrapper<Observer<TrackerT>>>, bases<AnyObserver>, boost::noncopyable>("CustomObserver", init< >())
 	;
 
 	class_< FirstPrecisionRecorder<TrackerT>, bases<Observer<TrackerT>> >("FirstPrecisionRecorder", init< >())
