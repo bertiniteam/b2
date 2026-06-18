@@ -80,26 +80,29 @@ DataFrame (a ``t`` column, one ``z0``, ``z1``, ... per variable, then the diagno
 The meta-observer: every path of a whole solve
 ==============================================
 
-A zero-dimensional solve tracks *many* paths, reusing **one** tracker for all of them.  We could
-watch them with a single observer that resets its buffer each time a path starts -- a single
-observer is free to handle many event types.  But there is a tidier way that doubles as a fun
-design exercise: an observer that, in response to events, attaches and detaches *other*
-observers.
+A zero-dimensional solve tracks *many* paths, reusing **one** tracker for all of them.  We want
+one ``PathDataCollector`` per solution path -- but a collector watches a tracker, while "which
+path are we on" is known only to the *solver*.  The elegant fix is an observer that, in response
+to the solver's events, attaches and detaches *other* observers: a meta-observer.
 
-``PathCollectionObserver`` is exactly that meta-observer.  On every ``TrackingStarted`` it spins
-up a fresh ``PathDataCollector``, attaches it, and on ``TrackingEnded`` it harvests that
-collector into ``.series`` and detaches it.  Each path therefore gets its own collector with its
-own empty buffer -- per-path isolation for free, no boundary bookkeeping.  Attaching and
-detaching happen *from inside* ``Observe`` (mid-notification); the observable defers those changes
-until the current notification finishes, which is what makes this safe.
+That is exactly :class:`bertini.nag_algorithm.SolutionPathCollector`.  You attach it to the
+**solver**.  The solver emits ``PathBeginning``/``PathComplete`` around each path; on
+``PathBeginning`` the meta-observer spins up a fresh ``PathDataCollector`` and attaches it to the
+solver's tracker, and on ``PathComplete`` it harvests that collector into ``.series`` and detaches
+it.  Each path gets its own collector with its own empty buffer -- per-path isolation for free.
+
+Because the solver reuses its one tracker for a path's main homotopy track **and** that path's
+endgame sub-tracks, the collector that is attached for the whole ``PathBeginning``-to-
+``PathComplete`` window captures the *entire* journey to :math:`t \to 0`, endgame included --
+without any filtering.  (The attach and detach happen *from inside* ``Observe``; the observable
+defers those changes until the current notification finishes, which is what makes it safe.)
 
 We will solve a degree-six univariate polynomial -- a total-degree homotopy with six paths::
 
     import numpy as np
     import matplotlib.pyplot as plt
     import bertini
-    from bertini.nag_algorithm import ZeroDim
-    import bertini.tracking as tracking
+    from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
 
     z = bertini.Variable('z')
     sys = bertini.System()
@@ -108,18 +111,11 @@ We will solve a degree-six univariate polynomial -- a total-degree homotopy with
 
     solver = ZeroDim(sys, mptype='adaptive')
 
-    A = tracking.observers.amp.PathCollectionObserver()
-    solver.get_tracker().add_observer(A)
+    A = SolutionPathCollector()
+    solver.add_observer(A)
     solver.solve()
 
-After the solve, ``A.series`` holds one finished collector per *track*.  There is a subtlety
-worth knowing: the solver reuses its tracker for the endgame too, so ``A.series`` also contains
-many short endgame sub-tracks.  Each collector is tagged with its track's ``start_time``, so the
-*main* homotopy paths -- the ones that begin at the global start time :math:`|t| = 1` -- are
-trivial to pick out::
-
-    main_paths = [b for b in A.series if abs(b.start_time) > 0.5]
-    assert len(main_paths) == 6
+    assert len(A.series) == 6          # one PathDataCollector per solution path
 
 Plotting the paths
 ==================
@@ -130,11 +126,11 @@ path in the complex plane::
 
     fig, ax = plt.subplots(figsize=(6, 6))
     cmap = plt.get_cmap('turbo')
-    for i, path in enumerate(main_paths):
+    for i, path in enumerate(A.series):
         pts  = path.points()
         zaff = pts[:, 1] / pts[:, 0]                 # dehomogenize to affine z
-        color = cmap(i / max(len(main_paths) - 1, 1))
-        ax.plot(zaff.real, zaff.imag, '-', color=color, lw=1.5)
+        color = cmap(i / max(len(A.series) - 1, 1))
+        ax.plot(zaff.real, zaff.imag, '-', color=color, lw=1.3)
         ax.plot(zaff.real[0], zaff.imag[0], 'o', color=color, ms=6, mfc='white')  # start, t near 1
 
     sols = [complex(s[0]) for s in solver.solutions()]
@@ -150,8 +146,13 @@ path in the complex plane::
 
    The six homotopy paths of :math:`z^6 - 2z^2 + 2 = 0`.  Open circles are where each path is
    first sampled (near the start time :math:`t=1`); stars are the computed solutions
-   (:math:`t \to 0`).  Each curve stops at the endgame boundary, where the Cauchy endgame takes
-   over to finish the path -- which is why a small gap remains between each curve and its star.
+   (:math:`t \to 0`).  Each path runs all the way to its solution -- the endgame sub-tracks,
+   captured alongside the main track, carry it the last of the way in.
+
+If instead you want the bare tracker-level building block (one series per *track*, with endgame
+sub-tracks kept separate), attach a ``bertini.tracking.observers.<precision>.PathCollectionObserver``
+to ``solver.get_tracker()`` directly; each of its series is tagged with a ``start_time`` so you can
+tell main tracks from endgame loops.
 
 From here you can collect anything the tracker exposes: plot the condition number along each path
 to see where tracking got hard, colour by precision to watch adaptive precision kick in, or feed

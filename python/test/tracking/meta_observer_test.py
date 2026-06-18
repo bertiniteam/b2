@@ -185,6 +185,55 @@ def test_nag_observer_rejected_on_tracker_and_vice_versa():
         solver.add_observer(tk.observers.amp.CustomObserver())
 
 
+def test_solution_path_collector_one_series_per_solution_path():
+    """The two-level meta-observer: attached to the SOLVER, it yields exactly one
+    collector per solution path, each capturing the whole journey (main homotopy
+    track AND endgame sub-tracks), with no start-time filtering."""
+    from bertini.nag_algorithm import SolutionPathCollector
+
+    sys = _circle_meets_line()
+    solver = ZeroDim(sys, mptype='amp')
+
+    a = SolutionPathCollector()
+    solver.add_observer(a)
+    solver.solve()
+
+    assert len(solver.solutions()) == 2
+    assert len(a.series) == 2                       # exactly one per solution path
+    for path in a.series:
+        assert len(path) > 0
+        assert hasattr(path, "path_index")
+        # the tracked point lives in the homogenized space the start system uses
+        assert path.points().shape[1] >= sys.num_variables()
+
+    # the collected indices are the two total-degree paths
+    assert sorted(p.path_index for p in a.series) == [0, 1]
+
+
+def test_solution_path_collector_captures_more_than_the_main_track():
+    """A SolutionPathCollector series (whole path incl. endgame) has at least as many
+    steps as the bare main homotopy track alone -- it picks up the endgame sub-tracks
+    that the tracker-level start-time filter discards."""
+    from bertini.nag_algorithm import SolutionPathCollector
+
+    sys = _circle_meets_line()
+
+    solver = ZeroDim(sys, mptype='amp')
+    a = SolutionPathCollector()
+    solver.add_observer(a)
+    solver.solve()
+    whole_path_steps = sum(len(p) for p in a.series)
+
+    # tracker-level collector keeps only the main tracks (|t| start > 0.5)
+    solver2 = ZeroDim(sys, mptype='amp')
+    b = tk.observers.amp.PathCollectionObserver()
+    solver2.get_tracker().add_observer(b)
+    solver2.solve()
+    main_only_steps = sum(len(s) for s in b.series if abs(s.start_time) > 0.5)
+
+    assert whole_path_steps >= main_only_steps > 0
+
+
 def test_zerodim_solve_collects_all_paths():
     sys = _circle_meets_line()
     solver = ZeroDim(sys, mptype='amp')

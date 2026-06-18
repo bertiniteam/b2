@@ -38,6 +38,10 @@ nag_algorithms
 from bertini._pybertini import nag_algorithms as _pybnalag
 from bertini._pybertini.nag_algorithms import *
 
+# Ensure tracker classes have gained their .observers attribute (and PathDataCollector),
+# which SolutionPathCollector relies on.  No cycle: bertini.tracking does not import this.
+from .. import tracking as _tracking
+
 # config structs gain update()/repr/to_dict/...; algorithm classes gain configure().
 from ..config import _enhance_all, _enhance_owners
 _enhance_all(_pybnalag)
@@ -309,12 +313,59 @@ def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma
     return _system.make_moving_homotopy(fixed, start_moving, end_moving, path_variable, gamma)
 
 
+# --- SolutionPathCollector: collect every solution path of a whole solve, for plotting ---
+#
+# A two-level meta-observer.  Attach one to a ZeroDim solver; on each PathBeginning it spins
+# up a fresh tracking PathDataCollector, attaches it to the solver's tracker, and on the
+# matching PathComplete harvests it into .series and detaches it.  Because the solver reuses
+# one tracker for a path's main homotopy track AND its endgame sub-tracks, the per-path
+# collector captures the *whole* journey to t -> 0 -- one clean series per solution path,
+# endgame included (no start-time filtering needed).
+class SolutionPathCollector(_pybnalag.observers.CustomObserver):
+    """Collects each solution path of a ZeroDim solve into its own time series.
+
+    Usage::
+
+        a = SolutionPathCollector()
+        solver.add_observer(a)
+        solver.solve()
+        for path in a.series:          # one tracking.PathDataCollector per solution path
+            t, z = path.times(), path.points()
+            ...
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.series = []        # finished PathDataCollector per solution path, in completion order
+        self._active = {}       # path_index -> (tracker, collector)
+
+    def Observe(self, event):
+        obs = _pybnalag.observers
+        if isinstance(event, obs.PathBeginning):
+            tracker = event.solver().get_tracker()
+            # tracker.observers is the precision-appropriate module (set in bertini.tracking)
+            collector = tracker.observers.PathDataCollector()
+            collector.path_index = event.path_index()
+            tracker.add_observer(collector)
+            self._active[event.path_index()] = (tracker, collector)
+        elif isinstance(event, obs.PathComplete):
+            entry = self._active.pop(event.path_index(), None)
+            if entry is not None:
+                tracker, collector = entry
+                tracker.remove_observer(collector)
+                self.series.append(collector)
+
+
+_pybnalag.observers.SolutionPathCollector = SolutionPathCollector
+
+
 __all__ = dir(_pybnalag)
 __all__.append('ZeroDim')
 __all__.append('user_homotopy')
 __all__.append('coefficient_parameter_homotopy')
 __all__.append('moving_homotopy')
 __all__.append('blend_homotopy')
+__all__.append('SolutionPathCollector')
 
 
 # DoublePrecisionTotalDegree = bertini._pybertini.nag_algorithms.ZeroDimCauchyDoublePrecisionTotalDegree
