@@ -104,6 +104,8 @@ We will solve a degree-six univariate polynomial -- a total-degree homotopy with
     import bertini
     from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
 
+    bertini.random.set_random_seed(2)   # so you get exactly this picture
+
     z = bertini.Variable('z')
     sys = bertini.System()
     sys.add_variable_group(bertini.VariableGroup([z]))
@@ -136,12 +138,12 @@ path in the complex plane::
     sols = [complex(s[0]) for s in solver.solutions()]
     ax.scatter([s.real for s in sols], [s.imag for s in sols],
                c='k', marker='*', s=140, zorder=5, label='solutions')
-    ax.set_aspect(1.0)             # 1:1 data aspect ratio
+    ax.set_aspect(1.0); ax.set_box_aspect(1)     # 1:1 data scaling, square box
     ax.set_xlabel('Re(z)'); ax.set_ylabel('Im(z)')
     ax.legend(loc='upper right', fontsize=8)
     plt.show()
 
-.. figure:: observers_and_path_data.png
+.. figure:: observers_and_path_data.svg
    :align: center
    :width: 70%
 
@@ -171,6 +173,8 @@ got hard::
     from mpl_toolkits.mplot3d.art3d import Line3DCollection
     import bertini
     from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
+
+    bertini.random.set_random_seed(3)
 
     x, y, z = bertini.Variable('x'), bertini.Variable('y'), bertini.Variable('z')
     sys = bertini.System()
@@ -220,7 +224,7 @@ whose colour varies along it (a ``Line3DCollection`` with a shared log-scaled co
     fig.colorbar(last, ax=ax, shrink=0.6, pad=0.1, label='condition number (log)')
     plt.show()
 
-.. figure:: cyclic3_paths.png
+.. figure:: cyclic3_paths.svg
    :align: center
    :width: 80%
 
@@ -228,6 +232,78 @@ whose colour varies along it (a ``Line3DCollection`` with a shared log-scaled co
    \operatorname{Re} z)`, each coloured by its condition number on a log scale (stars: solutions).
    The warm end of the scale appears as the paths crowd in near the solutions, where the Jacobian
    is worst-conditioned.
+
+Watching the Cauchy endgame at a singular solution
+==================================================
+
+When a path ends at a **singular** solution, ordinary tracking stalls and the **Cauchy endgame**
+takes over: it tracks the path around circles in :math:`t` near :math:`t=0` and averages, which is
+how it pins down a multiple root.  Because our per-path collector keeps recording through the
+endgame, we can *watch* those loops.  The classic stress test is the **Griewank-Osborn** system,
+whose only solution is a triple point at the origin::
+
+    from fractions import Fraction
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as mcolors
+    from matplotlib.collections import LineCollection
+    import bertini
+    from bertini import linalg
+    from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
+
+    bertini.random.set_random_seed(1)
+
+    x, y = bertini.Variable('x'), bertini.Variable('y')
+    sys = bertini.System()
+    sys.add_variable_group(bertini.VariableGroup([x, y]))
+    sys.add_function(linalg.coefficient(Fraction(29, 16)) * x**3 - 2*x*y)  # exact rational coeff
+    sys.add_function(y - x**2)
+
+    solver = ZeroDim(sys, mptype='adaptive')
+    A = SolutionPathCollector()
+    solver.add_observer(A)
+    solver.solve()
+
+    # let the solver classify which paths ended at a singular solution
+    singular_idx = {int(m.path_index) for m in solver.solution_metadata() if m.is_singular}
+    singular = [p for p in A.series if p.path_index in singular_idx]
+
+The catch the plot has to deal with: each Cauchy loop is **geometrically smaller** than the last
+(its radius :math:`\sim |t|^{1/c}`), so on a linear zoom they collapse onto the solution and you
+see nothing.  Plot the :math:`x`-coordinate on a **log-radial** scale instead -- map
+:math:`x \mapsto (\log_{10}|x| - \log_{10}|x|_{\min})\, e^{i\arg x}` -- and the shrinking loops
+open out into an even spiral winding into the centre::
+
+    path = max(singular, key=len)                 # one representative singular path
+    aff  = path.points()[:, 1:] / path.points()[:, 0:1]
+    xv   = aff[:, 0]
+    t    = np.abs(path.times())
+    eg   = t < 0.1                                 # the endgame portion (small |t|)
+    xv, t = xv[eg], t[eg]
+
+    r    = np.log10(np.abs(xv)) - np.log10(np.abs(xv).min()) + 0.1   # log-radial coordinate
+    disp = r * np.exp(1j * np.angle(xv))
+
+    fig, ax = plt.subplots(figsize=(6, 6))
+    pts  = np.column_stack([disp.real, disp.imag])
+    segs = np.stack([pts[:-1], pts[1:]], axis=1)
+    lc = LineCollection(segs, cmap='plasma', norm=mcolors.LogNorm(t.min(), t.max()))
+    lc.set_array(0.5 * (t[:-1] + t[1:]))
+    ax.add_collection(lc)
+    ax.scatter([0], [0], c='k', marker='*', s=160, zorder=5)  # the singular solution, at the centre
+    R = -(np.log10(np.abs(xv).min())) + 0.3
+    ax.set_xlim(-R, R); ax.set_ylim(-R, R); ax.set_aspect(1.0)
+    fig.colorbar(lc, ax=ax, label='|t|  (log)')
+    plt.show()
+
+.. figure:: griewank_osborn_endgame.svg
+   :align: center
+   :width: 70%
+
+   The Cauchy endgame at the singular solution of Griewank-Osborn, on a log-radial scale (so the
+   geometrically-shrinking loops stay visible).  As :math:`|t|\to 0` (dark) the path winds inward
+   toward the triple root at the centre -- the loops the endgame integrates around to resolve the
+   singular endpoint.
 
 From here you can collect anything the tracker exposes: plot the condition number along each path
 to see where tracking got hard, colour by precision to watch adaptive precision kick in, or feed
