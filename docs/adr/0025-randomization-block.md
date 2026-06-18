@@ -1,4 +1,4 @@
-# ADR-0022: Randomization of overdetermined systems is a first-class block
+# ADR-0025: Randomization of overdetermined systems is a first-class block
 
 **Status:** Accepted
 **Date:** 2026-06-17

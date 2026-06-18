@@ -1,4 +1,4 @@
-# ADR-0023: Moving homotopies blend only the moving rows; fixed equations stay sibling blocks
+# ADR-0026: Moving homotopies blend only the moving rows; fixed equations stay sibling blocks
 
 **Status:** Accepted
 **Date:** 2026-06-17
