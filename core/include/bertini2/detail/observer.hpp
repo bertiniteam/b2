@@ -95,6 +95,16 @@ namespace bertini{
 		event types, and is the automatic behavior for Python-defined observers.
 		*/
 		virtual std::vector<std::type_index> SubscribedEventTypes() const { return {}; }
+
+		/**
+		\brief The type this observer expects to observe.
+
+		Used by Observable::AddObserver to reject attaching an observer to an
+		incompatible observable (which would otherwise silently never fire).
+		The default is `typeid(void)`, a wildcard meaning "attach me anywhere";
+		Observer<ObservedT> reports `typeid(ObservedT)`.
+		*/
+		virtual std::type_index ObservedKind() const { return typeid(void); }
 	};
 
 
@@ -112,7 +122,7 @@ namespace bertini{
 	public:
 		virtual ~Observer() = default;
 
-		
+		std::type_index ObservedKind() const override { return typeid(ObservedT); }
 	};
 
 

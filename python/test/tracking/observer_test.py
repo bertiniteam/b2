@@ -191,6 +191,34 @@ def test_tracker_step_diagnostics_accessors(amp_tracker):
     assert isinstance(float(err), float)
 
 
+def test_observer_outlives_python_reference(amp_tracker):
+    """Attach an observer and keep NO python reference to it. The observable
+    co-owns it (shared_ptr), so it must stay alive, keep firing, and never
+    dangle/crash -- "attach it and forget it"."""
+    tracker, s = amp_tracker
+    hits = {"n": 0}
+
+    class Counter(t.observers.amp.Abstract):
+        def Observe(self, e):
+            hits["n"] += 1
+
+    tracker.add_observer(Counter())   # temporary: no python reference survives
+    import gc
+    gc.collect()                       # nothing should reclaim the attached observer
+
+    _run_amp(tracker, s)
+    assert hits["n"] > 0
+
+
+def test_wrong_kind_observer_rejected_with_type_error(amp_tracker):
+    """Attaching an observer built for a different observable raises TypeError
+    rather than silently never firing."""
+    tracker, s = amp_tracker
+    wrong = t.observers.double.CallbackObserver()   # observes a double tracker, not amp
+    with pytest.raises(TypeError):
+        tracker.add_observer(wrong)
+
+
 def test_observer_self_unsubscribe_via_return(amp_tracker):
     """A python observer can drop itself by returning ObserveResult.Unsubscribe;
     it then receives no further events for the rest of the path."""

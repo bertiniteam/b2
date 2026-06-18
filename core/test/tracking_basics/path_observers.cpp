@@ -27,6 +27,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <memory>
+
 #include "bertini2/trackers/amp_tracker.hpp"
 #include "bertini2/trackers/observers.hpp"
 
@@ -354,6 +356,62 @@ BOOST_AUTO_TEST_CASE(meta_observer_attaches_child_mid_dispatch)
 	// the child was attached during TrackingStarted and saw the events that
 	// followed (steps, precision changes, ...) up to and including TrackingEnded.
 	BOOST_CHECK_GT(meta.child.count, 0);
+}
+
+
+// an observer that declares it observes some unrelated type
+struct ForeignThing {};
+
+
+BOOST_AUTO_TEST_CASE(incompatible_observer_is_rejected)
+{
+	DefaultPrecision(16);
+	using namespace bertini::tracking;
+
+	System sys;
+	BuildSquareRootSystem(sys);
+	AMPTracker tracker(sys);
+
+	// an observer whose ObservedKind() is not the tracker (nor the wildcard)
+	CountingObserver<ForeignThing> wrong;
+	BOOST_CHECK_THROW(tracker.AddObserver(wrong), bertini::IncompatibleObserver);
+
+	// the right kind attaches fine
+	CountingObserver<AMPTracker> right;
+	BOOST_CHECK_NO_THROW(tracker.AddObserver(right));
+}
+
+
+BOOST_AUTO_TEST_CASE(owning_observer_outlives_caller_reference)
+{
+	DefaultPrecision(16);
+	using namespace bertini::tracking;
+
+	System sys;
+	BuildSquareRootSystem(sys);
+	AMPTracker tracker(sys);
+	tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+	tracker.PrecisionSetup(AMPConfigFrom(sys));
+
+	auto obs = std::make_shared<CountingObserver<AMPTracker>>();
+	std::weak_ptr<CountingObserver<AMPTracker>> weak = obs;
+
+	tracker.AddObserver(std::static_pointer_cast<bertini::AnyObserver>(obs));
+
+	// caller forgets its reference: the tracker co-owns the observer, so it must
+	// stay alive and keep observing -- "attach it and forget it", no dangling.
+	obs.reset();
+	BOOST_CHECK(!weak.expired());
+
+	Vec<mpfr> start_point(2);
+	start_point << mpfr(1), mpfr(1);
+	Vec<mpfr> end_point;
+	BOOST_CHECK_NO_THROW(tracker.TrackPath(end_point, mpfr(1), mpfr(0), start_point));
+	BOOST_CHECK_GT(weak.lock()->count, 0);
+
+	// detaching releases the tracker's ownership -> the observer is destroyed
+	tracker.RemoveObserver(*weak.lock());
+	BOOST_CHECK(weak.expired());
 }
 
 

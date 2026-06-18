@@ -30,6 +30,8 @@
 
 
 #include "generic_observer.hpp"
+#include <bertini2/detail/observable.hpp>
+#include <boost/python/exception_translator.hpp>
 
 namespace bertini{
 	namespace python{
@@ -37,6 +39,10 @@ namespace bertini{
 
 void ExportObserver()
 {
+	// Attaching an observer to an observable it cannot observe raises TypeError.
+	register_exception_translator<bertini::IncompatibleObserver>(
+		[](bertini::IncompatibleObserver const& e){ PyErr_SetString(PyExc_TypeError, e.what()); });
+
 	class_<AnyEvent, boost::noncopyable>("AnyEvent", no_init);
 
 	enum_<ObserveResult>("ObserveResult",
@@ -46,7 +52,9 @@ void ExportObserver()
 		.value("Unsubscribe",   ObserveResult::Unsubscribe)
 	;
 
-	class_<ObserverWrapper<AnyObserver>, boost::noncopyable>("AnyAbstractObserver",  init< >())
+	// shared_ptr holder: when a python observer is attached, the observable can
+	// co-own it (weak_ptr), so dropping the python reference doesn't dangle.
+	class_<ObserverWrapper<AnyObserver>, std::shared_ptr<ObserverWrapper<AnyObserver>>, boost::noncopyable>("AnyAbstractObserver",  init< >())
 	;
 }
 

@@ -37,14 +37,32 @@
 #include "bertini2/detail/observer.hpp"
 #include "bertini2/detail/events.hpp"
 
+#include <algorithm>
+#include <memory>
+#include <stdexcept>
 #include <typeindex>
+#include <typeinfo>
 #include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <boost/core/demangle.hpp>
 
 namespace bertini{
 
 	/**
+	\brief Thrown when an observer is attached to an observable it cannot observe.
+
+	The Python bindings translate this to a TypeError.
+	*/
+	struct IncompatibleObserver : public std::runtime_error
+	{
+		using std::runtime_error::runtime_error;
+	};
+
+	/**
 	\brief An abstract observable type, maintaining a list of observers, who can be notified in case of Events.
-	
+
 	Some known observable types are Tracker and Endgame.
 	*/
 	class Observable
@@ -61,12 +79,18 @@ namespace bertini{
 		a fresh copy notifies nobody until observers are explicitly added to it.
 		Copy-assignment likewise leaves the target's own watchers untouched.
 		*/
-		Observable(Observable const&) : typed_watchers_(), untyped_watchers_() {}
+		Observable(Observable const&) {}
 		Observable& operator=(Observable const&) { return *this; }
 
 
 		/**
-		\brief Add an observer, to observe this observable.
+		\brief Add an observer (non-owning) to observe this observable.
+
+		Stores only a raw reference: the caller is responsible for keeping the
+		observer alive while it is attached.  This is the right overload for
+		stack-allocated C++ observers added and removed within a scope.  For an
+		observer whose lifetime you would rather have tracked, see the
+		shared_ptr overload.
 
 		Observers that override SubscribedEventTypes() with a non-empty list are
 		registered in a type-indexed map so NotifyObservers only calls them for
@@ -77,13 +101,37 @@ namespace bertini{
 		notification): the add is deferred and applied once the current
 		notification loop finishes.  This is what lets a "meta-observer" attach
 		new observers in response to events.
+
+		\throws IncompatibleObserver if the observer's ObservedKind() is not one
+		        this observable can be observed as.
 		*/
 		void AddObserver(AnyObserver& new_observer) const
 		{
-			if (dispatch_depth_ > 0)
-				pending_ops_.push_back({&new_observer, PendingOp::Add});
-			else
-				AddObserverImpl(new_observer);
+			RejectIfIncompatible(new_observer);
+			Watcher w;
+			w.raw = &new_observer;        // non-owning: owned stays null
+			EnqueueOrApplyAdd(std::move(w));
+		}
+
+		/**
+		\brief Add an observer whose lifetime is co-owned by this observable.
+
+		The observable keeps a shared_ptr, so the observer stays alive (and keeps
+		receiving events) for as long as it is attached, even after the caller
+		drops their own reference — "attach it and forget it", with no dangling.
+		It is released when RemoveObserver is called or this observable is
+		destroyed.  (Stack-allocated C++ observers can't be shared_ptr-owned; use
+		the reference overload for those.)
+
+		\throws IncompatibleObserver if incompatible (see the reference overload).
+		*/
+		void AddObserver(std::shared_ptr<AnyObserver> const& new_observer) const
+		{
+			RejectIfIncompatible(*new_observer);
+			Watcher w;
+			w.owned = new_observer;          // owning: keeps the observer alive
+			w.raw   = new_observer.get();
+			EnqueueOrApplyAdd(std::move(w));
 		}
 
 		/**
@@ -95,9 +143,29 @@ namespace bertini{
 		void RemoveObserver(AnyObserver& observer) const
 		{
 			if (dispatch_depth_ > 0)
-				pending_ops_.push_back({&observer, PendingOp::Remove});
+			{
+				PendingOp op;
+				op.kind = PendingOp::Remove;
+				op.watcher.raw = &observer;
+				pending_ops_.push_back(std::move(op));
+			}
 			else
-				RemoveObserverImpl(observer);
+				RemoveWatcher(&observer);
+		}
+
+		/**
+		\brief Whether this observable may be observed as the given type.
+
+		Drives the compatibility check in AddObserver.  The default accepts the
+		wildcard `typeid(void)` and this observable's own dynamic type.  An
+		observable that emits its events templated on a base type (so a single
+		observer type serves many concrete observables) should also accept that
+		base type — e.g. ZeroDim accepts AnyZeroDim.
+		*/
+		virtual bool ObservableIsA(std::type_index t) const
+		{
+			return t == std::type_index(typeid(void))
+			    || t == std::type_index(typeid(*this));
 		}
 
 	protected:
@@ -125,45 +193,80 @@ namespace bertini{
 
 	private:
 
-		using ObserverList = std::vector<std::reference_wrapper<AnyObserver>>;
+		/**
+		One entry in an observer list.  Either non-owning (`owned` is null; the
+		caller guarantees the observer's lifetime) or owning (`owned` co-owns the
+		observer, keeping it alive while attached).  `raw` is always the identity
+		used for dedup and removal, and the pointer dispatched through.
+		*/
+		struct Watcher
+		{
+			std::shared_ptr<AnyObserver> owned;   // non-null iff owning
+			AnyObserver* raw = nullptr;           // identity + the pointer events go to
+		};
+
+		using ObserverList = std::vector<Watcher>;
 
 		struct PendingOp
 		{
-			enum Kind { Add, Remove };
-			AnyObserver* observer;
-			Kind kind;
+			enum Kind { Add, Remove } kind;
+			Watcher watcher;   // Add: the watcher (carries `owned` for owning adds); Remove: identity in .raw
 		};
 
-		void AddObserverImpl(AnyObserver& new_observer) const
+		void RejectIfIncompatible(AnyObserver const& obs) const
 		{
-			auto types = new_observer.SubscribedEventTypes();
+			if (!ObservableIsA(obs.ObservedKind()))
+				throw IncompatibleObserver(
+					"this observable (" + boost::core::demangle(typeid(*this).name())
+					+ ") does not accept an observer for "
+					+ boost::core::demangle(obs.ObservedKind().name()));
+		}
+
+		void EnqueueOrApplyAdd(Watcher w) const
+		{
+			if (dispatch_depth_ > 0)
+			{
+				PendingOp op;
+				op.kind = PendingOp::Add;
+				op.watcher = std::move(w);   // carries `owned`, so the observer stays alive until drained
+				pending_ops_.push_back(std::move(op));
+			}
+			else
+				AddWatcher(std::move(w));
+		}
+
+		void AddWatcher(Watcher const& w) const
+		{
+			auto present_in = [&](ObserverList const& c) {
+				return std::find_if(c.begin(), c.end(),
+				                    [&](Watcher const& x){ return x.raw == w.raw; }) != c.end();
+			};
+
+			auto types = w.raw->SubscribedEventTypes();
 			if (types.empty())
 			{
-				if (find_if(begin(untyped_watchers_), end(untyped_watchers_), [&](const auto& held_obs)
-				            { return &held_obs.get() == &new_observer; }) == end(untyped_watchers_))
-					untyped_watchers_.push_back(std::ref(new_observer));
+				if (!present_in(untyped_watchers_))
+					untyped_watchers_.push_back(w);
 			}
 			else
 			{
 				for (auto& ti : types)
 				{
 					auto& bucket = typed_watchers_[ti];
-					if (find_if(begin(bucket), end(bucket), [&](const auto& held_obs)
-					            { return &held_obs.get() == &new_observer; }) == end(bucket))
-						bucket.push_back(std::ref(new_observer));
+					if (std::find_if(bucket.begin(), bucket.end(),
+					                 [&](Watcher const& x){ return x.raw == w.raw; }) == bucket.end())
+						bucket.push_back(w);
 				}
 			}
 		}
 
-		void RemoveObserverImpl(AnyObserver& observer) const
+		void RemoveWatcher(AnyObserver* who) const
 		{
-			auto erase_from = [&](auto& container) {
-				auto new_end = std::remove_if(container.begin(), container.end(),
-				                              [&](const auto& held_obs)
-				                              { return &held_obs.get() == &observer; });
-				container.erase(new_end, container.end());
+			auto erase_from = [&](ObserverList& c) {
+				c.erase(std::remove_if(c.begin(), c.end(),
+				                       [&](Watcher const& x){ return x.raw == who; }),
+				        c.end());
 			};
-
 			erase_from(untyped_watchers_);
 			for (auto& [ti, bucket] : typed_watchers_)
 				erase_from(bucket);
@@ -173,12 +276,12 @@ namespace bertini{
 		{
 			// Apply in request order so that, within one notification, a remove
 			// followed by a re-add (or vice versa) lands on the intended state.
-			for (auto const& op : pending_ops_)
+			for (auto& op : pending_ops_)
 			{
 				if (op.kind == PendingOp::Add)
-					AddObserverImpl(*op.observer);
+					AddWatcher(op.watcher);
 				else
-					RemoveObserverImpl(*op.observer);
+					RemoveWatcher(op.watcher.raw);
 			}
 			pending_ops_.clear();
 		}
@@ -187,17 +290,25 @@ namespace bertini{
 		{
 			++dispatch_depth_;
 
+			auto run = [&](ObserverList& bucket) {
+				for (auto& w : bucket)
+				{
+					// w.raw stays valid for the whole call: owning entries hold a
+					// shared_ptr, non-owning ones are the caller's responsibility.
+					if (w.raw->Observe(e) == ObserveResult::Unsubscribe)
+					{
+						PendingOp op;
+						op.kind = PendingOp::Remove;
+						op.watcher.raw = w.raw;
+						pending_ops_.push_back(std::move(op));
+					}
+				}
+			};
+
 			auto it = typed_watchers_.find(std::type_index(typeid(e)));
 			if (it != typed_watchers_.end())
-			{
-				for (auto& obs : it->second)
-					if (obs.get().Observe(e) == ObserveResult::Unsubscribe)
-						pending_ops_.push_back({&obs.get(), PendingOp::Remove});
-			}
-
-			for (auto& obs : untyped_watchers_)
-				if (obs.get().Observe(e) == ObserveResult::Unsubscribe)
-					pending_ops_.push_back({&obs.get(), PendingOp::Remove});
+				run(it->second);
+			run(untyped_watchers_);
 
 			--dispatch_depth_;
 			if (dispatch_depth_ == 0)
