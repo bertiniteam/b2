@@ -17,6 +17,11 @@ from pathlib import Path
 
 import pytest
 
+# Every one of these example scripts does `from mpi4py import MPI` at import time (they are
+# MPI-aware, run serially when launched without mpirun).  The CI test environments do not install
+# mpi4py, so skip the whole module there rather than fail.
+pytest.importorskip("mpi4py")
+
 # python/test/docs/this_file.py -> parents[2] == the `python/` dir, which holds `examples/`.
 PYTHON_DIR = Path(__file__).resolve().parents[2]
 EXAMPLES = PYTHON_DIR / "examples"
