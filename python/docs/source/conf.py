@@ -77,6 +77,16 @@ extensions = ['sphinx.ext.autodoc',
 
 autosectionlabel_prefix_document = True
 
+# Run before every `sphinx -b doctest` group, in every document.  Forces a headless
+# matplotlib backend (so plotting code blocks render no windows) and silences the
+# resulting "non-interactive" warning, so tutorials that plot stay testable & quiet.
+doctest_global_setup = '''
+import warnings
+import matplotlib
+matplotlib.use("Agg")
+warnings.filterwarnings("ignore", message="FigureCanvasAgg is non-interactive")
+'''
+
 bibtex_bibfiles = ['../../../doc_resources/bertini2.bib']
 
 #    'sphinx.ext.autosectionlabel_prefix_document',
