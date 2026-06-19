@@ -18,7 +18,9 @@ Writing an observer in Python
 Subclass the precision-appropriate ``CustomObserver`` base (``amp`` for adaptive precision,
 ``double`` or ``multiple`` for fixed) and override ``Observe``.  Events arrive as objects you
 discriminate with :func:`isinstance`; every tracking event can hand you the live tracker via
-``event.tracker()``, from which you can read the current state of the path::
+``event.tracker()``, from which you can read the current state of the path:
+
+.. testcode::
 
     import bertini
     import bertini.tracking as tracking
@@ -35,18 +37,48 @@ The tracker exposes the whole per-step state: ``current_time()``, ``current_poin
 ``current_precision()``, ``current_stepsize()``, ``delta_t()``, ``latest_condition_number()``,
 ``latest_norm_of_step()`` and ``latest_error_estimate()``.
 
-Attach it to a tracker, run, and detach::
+Attach it to a tracker, run, and detach.  Here is a small adaptive-precision tracker on the
+one-variable homotopy :math:`y - t` (whose single path runs from :math:`y=1` at :math:`t=1` to
+:math:`y=0` at :math:`t=0`) to watch:
 
-    tracker.add_observer(StepPrinter())
-    tracker.track_path(...)
+.. testcode::
+
+    import numpy as np
+    from bertini.multiprec import Complex
+
+    y, t = bertini.Variable('y'), bertini.Variable('t')
+    sys = bertini.System()
+    sys.add_function(y - t)
+    sys.add_path_variable(t)
+    sys.add_variable_group(bertini.VariableGroup([y]))
+
+    tracker = tracking.AMPTracker(sys)
+    tracker.setup(tracking.Predictor.Euler, 1e-5, 1e5,
+                  tracking.SteppingConfig(), tracking.NewtonConfig())
+    tracker.precision_setup(tracking.amp_config_from(sys))
+
+    printer = StepPrinter()
+    tracker.add_observer(printer)
+    end = np.zeros(sys.num_variables(), dtype=Complex)
+    tracker.track_path(end, Complex(1), Complex(0), np.array([Complex(1)]))
+    tracker.remove_observer(printer)
+
+.. testoutput::
+   :options: +ELLIPSIS
+
+   t = ...
+   ...
 
 For the common "call this function when that event happens" case there is a ready-made
-``CallbackObserver`` so you do not even write a class::
+``CallbackObserver`` so you do not even write a class:
+
+.. testcode::
 
     obs = tracking.observers.amp.CallbackObserver()
     obs.on(tracking.observers.amp.PrecisionChanged,
            lambda e: print(e.previous(), "->", e.next()))
     tracker.add_observer(obs)
+    tracker.remove_observer(obs)
 
 .. note::
 
@@ -63,16 +95,21 @@ To *plot* a path we need its data as arrays.  ``PathDataCollector`` is an observ
 successful step, records the time, the space point, and a few diagnostics.  Adaptive precision
 hands back arbitrary-precision (mpfr) numbers, which do not all fit in one numpy array, so each
 value is cast to a plain python ``complex``/``float`` as it is collected (double precision is
-plenty for a picture).  The result is offered as several typed arrays::
+plenty for a picture).  The result is offered as several typed arrays:
+
+.. testcode::
 
     b = tracking.observers.amp.PathDataCollector()
     tracker.add_observer(b)
-    tracker.track_path(...)
+    end = np.zeros(sys.num_variables(), dtype=Complex)
+    tracker.track_path(end, Complex(1), Complex(0), np.array([Complex(1)]))
     tracker.remove_observer(b)
 
-    t   = b.times()          # complex,  shape (n_steps,)
-    z   = b.points()         # complex,  shape (n_steps, n_vars)
+    ts  = b.times()          # complex,  shape (n_steps,)
+    zs  = b.points()         # complex,  shape (n_steps, n_vars)
     dgn = b.diagnostics()    # float,    shape (n_steps, 4): |t|, condition number, precision, stepsize
+
+    assert len(ts) > 0 and zs.shape[1] == sys.num_variables()
 
 If you have pandas installed, ``b.as_dataframe()`` returns the whole path as a labelled
 DataFrame (a ``t`` column, one ``z0``, ``z1``, ... per variable, then the diagnostic columns).
@@ -97,7 +134,9 @@ endgame sub-tracks, the collector that is attached for the whole ``PathStarted``
 without any filtering.  (The attach and detach happen *from inside* ``Observe``; the observable
 defers those changes until the current notification finishes, which is what makes it safe.)
 
-We will solve a degree-six univariate polynomial -- a total-degree homotopy with six paths::
+We will solve a degree-six univariate polynomial -- a total-degree homotopy with six paths:
+
+.. testcode::
 
     import numpy as np
     import matplotlib.pyplot as plt
@@ -124,7 +163,9 @@ Plotting the paths
 
 Each tracked point lives in the homogenized coordinates the start system works in (column 0 is
 the homogenizing coordinate), so we divide it out to get the affine :math:`z`, then draw each
-path in the complex plane::
+path in the complex plane:
+
+.. testcode::
 
     fig, ax = plt.subplots(figsize=(6, 6))
     cmap = plt.get_cmap('turbo')
@@ -170,7 +211,9 @@ nothing about "paths", it just records every successful step.  **A watches the s
 when a path starts and ends, but not the per-step detail.  So A spawns one B per path, and when
 the path finishes, B hands its haul back to A.
 
-**B** -- a tracker observer that records each step and, on request, reports back to its parent::
+**B** -- a tracker observer that records each step and, on request, reports back to its parent:
+
+.. testcode::
 
     import numpy as np
     import bertini
@@ -197,7 +240,9 @@ the path finishes, B hands its haul back to A.
                                 np.array(self._times, dtype=complex),
                                 np.array(self._points, dtype=complex))
 
-**A** -- a solver observer that attaches a fresh ``PathRecorder`` per path and collects its report::
+**A** -- a solver observer that attaches a fresh ``PathRecorder`` per path and collects its report:
+
+.. testcode::
 
     class MyPathCollector(nag_observers.CustomObserver):
         def __init__(self):
@@ -219,7 +264,9 @@ the path finishes, B hands its haul back to A.
         def receive(self, path_index, times, points):    # B calls this
             self.paths[path_index] = (times, points)
 
-Attach **A** to the solver and run -- one entry in ``A.paths`` per solution path::
+Attach **A** to the solver and run -- one entry in ``A.paths`` per solution path:
+
+.. testcode::
 
     bertini.random.set_random_seed(2)
     z = bertini.Variable('z')
@@ -252,7 +299,9 @@ variables and plot the paths in :math:`(\operatorname{Re} x, \operatorname{Re} y
 \operatorname{Re} z)` space -- and this time colour each path by its **condition number**, the
 diagnostic ``PathDataCollector`` records at every step.  The condition number climbs as a path
 approaches a solution (and especially in the endgame), so the colouring shows where the tracking
-got hard::
+got hard:
+
+.. testcode::
 
     import numpy as np
     import matplotlib.pyplot as plt
@@ -280,7 +329,9 @@ got hard::
 Each ``path.diagnostics()`` is a float array whose columns are named by
 ``PathDataCollector.DIAGNOSTIC_COLUMNS`` (``abs_t``, ``condition_number``, ``precision``,
 ``stepsize``) -- so the condition number is just one column.  We draw each path as a 3-D line
-whose colour varies along it (a ``Line3DCollection`` with a shared log-scaled colour norm)::
+whose colour varies along it (a ``Line3DCollection`` with a shared log-scaled colour norm):
+
+.. testcode::
 
     tracks, all_cond = [], []
     for path in A.series:
@@ -327,7 +378,9 @@ When a path ends at a **singular** solution, ordinary tracking stalls and the **
 takes over: it tracks the path around circles in :math:`t` near :math:`t=0` and averages, which is
 how it pins down a multiple root.  Because our per-path collector keeps recording through the
 endgame, we can *watch* those loops.  The classic stress test is the **Griewank-Osborn** system,
-whose only solution is a triple point at the origin::
+whose only solution is a triple point at the origin:
+
+.. testcode::
 
     from fractions import Fraction
     import numpy as np
@@ -359,7 +412,9 @@ The catch the plot has to deal with: each Cauchy loop is **geometrically smaller
 (its radius :math:`\sim |t|^{1/c}`), so on a linear zoom they collapse onto the solution and you
 see nothing.  Plot the :math:`x`-coordinate on a **log-radial** scale instead -- map
 :math:`x \mapsto (\log_{10}|x| - \log_{10}|x|_{\min})\, e^{i\arg x}` -- and the shrinking loops
-open out into an even spiral winding into the centre::
+open out into an even spiral winding into the centre:
+
+.. testcode::
 
     path = max(singular, key=len)                 # one representative singular path
     aff  = path.points()[:, 1:] / path.points()[:, 0:1]
