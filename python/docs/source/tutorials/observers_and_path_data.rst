@@ -157,6 +157,93 @@ sub-tracks kept separate), attach a ``bertini.tracking.observers.<precision>.Pat
 to ``solver.get_tracker()`` directly; each of its series is tagged with a ``start_time`` so you can
 tell main tracks from endgame loops.
 
+Build it yourself: one observer that attaches another
+=====================================================
+
+``SolutionPathCollector`` is handy to have ready-made, but the pattern behind it -- a parent
+observer **A** that, in response to events, attaches a worker observer **B** and has **B report
+its findings back to A** -- is worth being able to build yourself.  It is the whole point of the
+refactor: observers composing observers at run time.  Let's reconstruct it from scratch.
+
+The division of labour matches the two observables in play.  **B watches the tracker**: it knows
+nothing about "paths", it just records every successful step.  **A watches the solver**: it knows
+when a path starts and ends, but not the per-step detail.  So A spawns one B per path, and when
+the path finishes, B hands its haul back to A.
+
+**B** -- a tracker observer that records each step and, on request, reports back to its parent::
+
+    import numpy as np
+    import bertini
+    import bertini.tracking as tracking
+    from bertini.nag_algorithm import ZeroDim, observers as nag_observers
+
+    class PathRecorder(tracking.observers.amp.CustomObserver):
+        def __init__(self, parent, path_index):
+            super().__init__()
+            self.parent     = parent          # the observer we report back to
+            self.path_index = path_index
+            self._times     = []
+            self._points    = []
+
+        def Observe(self, event):
+            if isinstance(event, tracking.observers.amp.SuccessfulStep):
+                trk = event.tracker()
+                # copy out *now* -- the event and tracker state are valid only during this call
+                self._times.append(complex(trk.current_time()))
+                self._points.append([complex(z) for z in trk.current_point()])
+
+        def report(self):
+            self.parent.receive(self.path_index,
+                                np.array(self._times, dtype=complex),
+                                np.array(self._points, dtype=complex))
+
+**A** -- a solver observer that attaches a fresh ``PathRecorder`` per path and collects its report::
+
+    class MyPathCollector(nag_observers.CustomObserver):
+        def __init__(self):
+            super().__init__()
+            self.paths   = {}     # path_index -> (times, points), filled in by B.report()
+            self._active = {}     # path_index -> (tracker, live recorder)
+
+        def Observe(self, event):
+            if isinstance(event, nag_observers.PathStarted):
+                tracker = event.solver().get_tracker()
+                b = PathRecorder(self, event.path_index())
+                tracker.add_observer(b)                  # attach B ...
+                self._active[event.path_index()] = (tracker, b)
+            elif isinstance(event, nag_observers.PathComplete):
+                tracker, b = self._active.pop(event.path_index())
+                tracker.remove_observer(b)               # ... and detach it when the path is done
+                b.report()                               # B hands its data back to A
+
+        def receive(self, path_index, times, points):    # B calls this
+            self.paths[path_index] = (times, points)
+
+Attach **A** to the solver and run -- one entry in ``A.paths`` per solution path::
+
+    bertini.random.set_random_seed(2)
+    z = bertini.Variable('z')
+    sys = bertini.System()
+    sys.add_variable_group(bertini.VariableGroup([z]))
+    sys.add_function(z**6 - 2*z**2 + 2)
+
+    solver = ZeroDim(sys, mptype='adaptive')
+    A = MyPathCollector()
+    solver.add_observer(A)
+    solver.solve()
+
+    assert len(A.paths) == 6                  # same six paths SolutionPathCollector would give you
+
+The subtle part is that A's ``add_observer``/``remove_observer`` calls happen *from inside* B's
+sibling notification -- A is mutating the tracker's observer list while the solver is mid-dispatch.
+That is exactly the case the observer subsystem is built to handle: an observable defers any
+attach/detach requested during a notification until the current one finishes, so neither call
+disturbs the dispatch in flight.  Attach-and-forget, compose freely.
+
+This hand-built ``MyPathCollector`` is essentially ``SolutionPathCollector`` -- the real one just
+reuses the ready-made ``PathDataCollector`` for B (so you get diagnostics and ``as_dataframe()``
+too) and harvests the collector object itself instead of a plain tuple.
+
 A 3-D system, coloured by condition number
 ==========================================
 
