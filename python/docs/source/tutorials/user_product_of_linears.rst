@@ -27,7 +27,9 @@ A target you can check by hand
 ==============================
 
 Take a unit circle meeting a parabola -- two quadratics in two variables, so Bézout says four
-solutions::
+solutions:
+
+.. testcode::
 
     import numpy as np
     import bertini
@@ -51,7 +53,9 @@ A start system you can write down
 
 For a target of degrees :math:`(2, 2)` we need a start system of the same degrees with solutions
 we already know.  Make each start function a product of **two** linear forms, chosen so the
-factors are coordinate-aligned::
+factors are coordinate-aligned:
+
+.. testcode::
 
     start = bertini.System()
     start.add_variable_group(bertini.VariableGroup([x, y]))
@@ -83,7 +87,9 @@ Start points are intersections of hyperplanes
 Because :math:`s_0` vanishes when :math:`x = \pm 1` and :math:`s_1` vanishes when
 :math:`y \in \{1, 2\}`, a start solution picks one factor (one hyperplane) from each function and
 solves the resulting linear system.  Here that is just the grid :math:`x \in \{1, -1\}` times
-:math:`y \in \{1, 2\}` -- four points, written down by hand::
+:math:`y \in \{1, 2\}` -- four points, written down by hand:
+
+.. testcode::
 
     import itertools
     start_points = [np.array([multiprec.Complex(str(a)), multiprec.Complex(str(b))])
@@ -99,7 +105,9 @@ Now couple the start system to the target with the gamma-trick straight-line hom
 :math:`H = (1-t)\,\text{target} + \gamma\,t\,\text{start}`.  Because the start system carries a
 structured evaluation block (the product of linears), it cannot be fused by ordinary node
 arithmetic; :func:`~bertini.nag_algorithm.blend_homotopy` combines the two whole systems with a
-blend block instead::
+blend block instead:
+
+.. testcode::
 
     gamma = linalg.coefficient(multiprec.Complex('0.6', '0.8'))   # exact, off the real axis
     H = nag_algorithm.blend_homotopy(target, start, gamma=gamma)
@@ -122,7 +130,9 @@ Check against the known answers
 
 Guard against an empty result, then measure the **distance** from each known root to the nearest
 computed solution, with an infinity-norm so the check is faithful to scale rather than a
-scale-naive residual::
+scale-naive residual:
+
+.. testcode::
 
     assert len(solutions) == 4
 
@@ -142,7 +152,9 @@ Classify the endpoints
 
 Rather than hand-rolling cutoffs, ask the solver's metadata which endpoints are finite, real, or
 singular.  Two of our four solutions are real (the :math:`(\pm\sqrt{y_1}, y_1)` pair); the other
-two have purely imaginary :math:`x`::
+two have purely imaginary :math:`x`:
+
+.. testcode::
 
     md = solver.solution_metadata()
     assert all(m.is_finite for m in md)
