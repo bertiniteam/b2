@@ -44,8 +44,25 @@ struct ObserverWrapper : ObsT, wrapper<ObsT>
 	// which uses RTTI to find the most-derived registered event type and
 	// enables isinstance() checks in Python.  The const_cast is safe: events
 	// are short-lived temporaries and Python only reads them during the call.
-	void Observe(AnyEvent const& e) {
-		this->get_override("Observe")(boost::ref(const_cast<AnyEvent&>(e)));
+	//
+	// Lifetime contract (see AnyEvent in detail/events.hpp): the python `event`
+	// object handed to Observe() is only valid for the duration of the call.
+	// A python observer must read what it needs and copy the values out (e.g.
+	// into numpy/lists) before returning; it must NOT stash the event object,
+	// `event.tracker()`, or anything they return for use after Observe() ends.
+	//
+	// Return-value translation: python observers conventionally return None
+	// (their Observe() just does side effects), which we map to KeepObserving so
+	// existing observers keep working.  An observer that wants to self-detach can
+	// `return bertini.ObserveResult.Unsubscribe`.
+	ObserveResult Observe(AnyEvent const& e) override {
+		object result = this->get_override("Observe")(boost::ref(const_cast<AnyEvent&>(e)));
+		if (result.is_none())
+			return ObserveResult::KeepObserving;
+		extract<ObserveResult> as_result(result);
+		if (as_result.check())
+			return as_result();
+		return ObserveResult::KeepObserving;
 	}
 	
 }; // re: ObserverWrapper

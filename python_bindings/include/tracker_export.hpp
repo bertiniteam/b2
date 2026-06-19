@@ -322,6 +322,12 @@ namespace bertini{
 			.def("current_time", &TrackerT::CurrentTime, (arg("self")), "what is the current time?")
 			.def("current_precision", &TrackerT::CurrentPrecision, (arg("self")), "what is the current working precision?")
 
+			.def("current_stepsize", &TrackerT::CurrentStepsize, (arg("self")), "what is the current stepsize?  a real number.")
+			.def("delta_t", &TrackerT::DeltaT, (arg("self")), "what is the current delta_t, the time increment of the latest step?  a complex number.")
+			.def("latest_condition_number", &TrackerT::LatestConditionNumber, (arg("self")), "the most recent estimate of the condition number of the Jacobian.  a real number.")
+			.def("latest_norm_of_step", &TrackerT::LatestNormOfStep, (arg("self")), "the norm of the change in space resulting from the most recent step.  a real number.")
+			.def("latest_error_estimate", &TrackerT::LatestErrorEstimate, (arg("self")), "the most recent estimate of the error of a step.  a real number.")
+
 			// generic, type-list-driven config interface (get_config/set_config/config_types).
 			// the get_stepping/set_stepping/get_newton/set_newton above remain as convenience aliases.
 			.def(ConfiguredVisitor<TrackerT>())

@@ -42,6 +42,7 @@
 
 #include "bertini2/nag_algorithms/common/algorithm_base.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
+#include "bertini2/nag_algorithms/events.hpp"
 #include "bertini2/nag_algorithms/common/policies.hpp"
 #include "bertini2/parallel.hpp"
 #include <chrono>
@@ -298,6 +299,14 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			using EndgameT          = EndgameType;
 			using SystemT           = SystemType;
 			using StartSystemT       = StartSystemType;
+
+			// This algorithm emits its lifecycle events on the AnyZeroDim base, so a
+			// single observer type can watch any templated ZeroDim.  Accept observers
+			// declared for AnyZeroDim (in addition to the exact concrete type).
+			bool ObservableIsA(std::type_index t) const override
+			{
+				return Observable::ObservableIsA(t) || t == std::type_index(typeid(AnyZeroDim));
+			}
 
 
 
@@ -813,6 +822,8 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 
 				PreSolveSetup();
 
+				this->NotifyObservers(AlgorithmStarted<AnyZeroDim>(*this));
+
 				// Speculative-full-path model: carry every path all the way through (pre-endgame +
 				// endgame) as one unit, then detect crossings from the collected boundary points and
 				// re-run any crossed path in full.  This is the same shape the distributed solve uses
@@ -827,6 +838,8 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 				RunMidpathResolution([this](SolnIndT idx){ ExecuteOnePath(MemberDuringEGContext(), idx, ComputeStartPoint(idx)); });
 
 				PostEGAction();
+
+				this->NotifyObservers(AlgorithmComplete<AnyZeroDim>(*this));
 			}
 
 
@@ -1142,14 +1155,21 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			*/
 			void ExecuteOnePath(DuringEGContext ctx, SolnIndT soln_ind, Vec<BaseComplexT> const& start_point)
 			{
+				this->NotifyObservers(PathStarted<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
+
 				ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
 				ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind, start_point);
 
 				if (solution_final_metadata_[soln_ind].pre_endgame_success != SuccessCode::Success)
+				{
+					this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
 					return;
+				}
 
 				ctx.tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
 				ExecuteDuringEG(ctx, soln_ind);
+
+				this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
 			}
 
 

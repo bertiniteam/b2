@@ -36,9 +36,12 @@
 
 #include "python_common.hpp"
 #include "configured_visitor.hpp"
+#include "generic_observable.hpp"
+#include "generic_observer.hpp"
 
 #include <bertini2/endgames.hpp>
 #include <bertini2/nag_algorithms/zero_dim_solve.hpp>
+#include <bertini2/nag_algorithms/events.hpp>
 #include <bertini2/system/start_systems.hpp>
 
 #include <boost/python/stl_iterator.hpp>
@@ -60,6 +63,10 @@ namespace bertini{
 
 
 void ExportZeroDim();
+
+// Registers AnyZeroDim + the nag observers submodule (CustomObserver + lifecycle
+// events). Must run before the ZeroDim classes (which declare bases<AnyZeroDim>).
+void ExportNagObservers();
 
 // sub-functions (defined in zero_dim_{configs,double,mp,amp}_export.cpp)
 void ExportZDConfigs();
@@ -166,6 +173,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 {
 	cl
 	.def(ConfiguredVisitor<AlgoT>())
+	.def(ObservableVisitor<AlgoT>())
 	.def("solve",
 		+[](AlgoT& self, boost::python::object comm) -> void {
 #ifdef BERTINI2_HAVE_MPI
@@ -205,7 +213,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 template<typename TrackerT, typename EndgameT, typename SystemT, typename StartSystemT>
 void ExportZeroDimSpecific(std::string const& class_name){
 	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, SystemT, StartSystemT>;
-	class_<ZeroDimT, std::shared_ptr<ZeroDimT> >(class_name.c_str(), init<SystemT>())
+	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(), init<SystemT>())
 	.def(ZDVisitor<ZeroDimT>())
 	;
 }
@@ -249,7 +257,7 @@ inline void ExportUserStartSystem(){
 template<typename TrackerT, typename EndgameT>
 void ExportZeroDimUserHomotopy(std::string const& class_name){
 	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System, start_system::User, policy::RefToGiven>;
-	class_<ZeroDimT, std::shared_ptr<ZeroDimT> >(class_name.c_str(),
+	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(),
 		init<System const&, start_system::User const&, System const&>(
 			(boost::python::arg("target"), boost::python::arg("start"), boost::python::arg("homotopy"))))
 	.def(ZDVisitor<ZeroDimT>())
