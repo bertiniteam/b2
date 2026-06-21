@@ -85,6 +85,7 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 		unsigned ReduceDepth() override;
 		unsigned ReduceSubSums();
 		unsigned ReduceSubMults();
@@ -302,6 +303,7 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 
 		/**
 		 Print to an arbitrary ostream.
@@ -385,6 +387,7 @@ namespace node{
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 		unsigned ReduceDepth() override;
 		unsigned ReduceSubSums();
 		unsigned ReduceSubMults();
@@ -558,6 +561,7 @@ namespace node{
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
 		static 
@@ -713,6 +717,7 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 		
 		/**
 		 polymorphic method for printing to an arbitrary stream.
@@ -875,6 +880,7 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 		
 		void print(std::ostream & target) const override;
 		
@@ -939,6 +945,7 @@ namespace node{
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
 		static 
@@ -1005,6 +1012,7 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
 		static 

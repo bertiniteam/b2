@@ -98,6 +98,7 @@ namespace node{
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
 		static 
@@ -161,6 +162,7 @@ namespace node{
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 		
 		template<typename... Ts> 
 		static 
@@ -228,6 +230,7 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
 		static 
@@ -294,6 +297,7 @@ namespace node{
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 		
 		template<typename... Ts> 
 		static 
@@ -366,6 +370,7 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 		
 		template<typename... Ts> 
 		static 
@@ -429,6 +434,7 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 		
 		template<typename... Ts> 
 		static 

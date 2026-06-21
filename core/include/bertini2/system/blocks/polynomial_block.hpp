@@ -255,8 +255,12 @@ public:
 	void SimplifyFunctions() const
 	{
 		using bertini::Simplify;
+		// functional (non-mutating) simplify: rebind each function to its simplified form.
+		// (Handle::Simplified() currently returns self -- a Function is an opaque boundary --
+		// so this is inert for top-level Function wrappers, as it has always been; the
+		// machinery is now functional and ready for when that changes.)
 		for (auto& f : functions_)
-			Simplify(f);
+			f = std::static_pointer_cast<node::Function>(Simplify(f));
 		Invalidate();
 	}
 
@@ -282,8 +286,8 @@ public:
 		for (auto const& n : space_derivatives_) n->Reset();
 		for (auto const& n : time_derivatives_)  n->Reset();
 
-		for (auto& n : space_derivatives_) Simplify(n);
-		for (auto& n : time_derivatives_)  Simplify(n);
+		for (auto& n : space_derivatives_) n = Simplify(n);
+		for (auto& n : time_derivatives_)  n = Simplify(n);
 
 		for (size_t ii = 0; ii < num_vars; ++ii)
 			variables_[ii]->template set_current_value<dbl>(old_vals[ii]);

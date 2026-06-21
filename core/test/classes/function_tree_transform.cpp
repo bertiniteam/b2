@@ -788,13 +788,10 @@ dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
 dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
 x->set_current_value(a); y->set_current_value(b);
 
-	auto num_rounds = bertini::Simplify(r);
+	auto rs = bertini::Simplify(r);  // functional: r is untouched, rs is simplified
 
-	BOOST_CHECK(num_rounds >= 2);
-
-
-	r->Reset();
-	auto result = r->Eval<dbl>();
+	rs->Reset();
+	auto result = rs->Eval<dbl>();
 	BOOST_CHECK_EQUAL(result, a+a);
 }
 
@@ -805,13 +802,12 @@ BOOST_AUTO_TEST_CASE(complicated)
 
 	auto n = (((((2*x*1)*y)+(0*(pow(x,2))))/2)-(0*((pow(x,2))*y)/(pow(2,2))));
 
-	auto num_rounds = bertini::Simplify(n);
+	auto ns = bertini::Simplify(n);
 
 	auto a = x->Eval<dbl>();
 	auto b = y->Eval<dbl>();
 
-	BOOST_CHECK(num_rounds >= 2);
-	BOOST_CHECK_SMALL(abs(n->Eval<dbl>() - a*b), threshold_clearance_d);
+	BOOST_CHECK_SMALL(abs(ns->Eval<dbl>() - a*b), threshold_clearance_d);
 }
 
 
@@ -824,14 +820,14 @@ BOOST_AUTO_TEST_CASE(complicated2)
 
 	auto dfdx = f->Differentiate(x);
 
-	bertini::Simplify(dfdx);
+	auto dfdxs = bertini::Simplify(dfdx);
 
-	dfdx->Reset();
+	dfdxs->Reset();
 
 auto xval = x->Eval<dbl>();
 auto tval = t->Eval<dbl>();
 
-	BOOST_CHECK_SMALL(abs(dfdx->Eval<dbl>()- 2.*(xval+tval-1.)), 1e-15);
+	BOOST_CHECK_SMALL(abs(dfdxs->Eval<dbl>()- 2.*(xval+tval-1.)), 1e-15);
 }
 
 
@@ -849,11 +845,11 @@ BOOST_AUTO_TEST_CASE(complicated3)
 
 	auto init_val = f->Eval<dbl>();
 
-	bertini::Simplify(f);
+	auto fs = bertini::Simplify(f);
 
-	f->Reset();
+	fs->Reset();
 
-	BOOST_CHECK_EQUAL(init_val, f->Eval<dbl>());
+	BOOST_CHECK_EQUAL(init_val, fs->Eval<dbl>());
 
 }
 
@@ -877,10 +873,10 @@ BOOST_AUTO_TEST_CASE(complicated4)
 	auto f_val_init = f->Eval<dbl>();
 	[[maybe_unused]] auto actual_val = 3.*pow((h - a),2)*(T - 1.);
 
-	bertini::Simplify(f);
+	auto fs = bertini::Simplify(f);
 
-	f->Reset();
-	auto f_val_after = f->Eval<dbl>();
+	fs->Reset();
+	auto f_val_after = fs->Eval<dbl>();
 	BOOST_CHECK_EQUAL(f_val_init,f_val_after);
 }
 
@@ -899,9 +895,9 @@ BOOST_AUTO_TEST_CASE(yet_more_complicated)
 
 	auto init_val = f->Eval<dbl>();
 
-	bertini::Simplify(f);
-f->Reset();
-	BOOST_CHECK_EQUAL(init_val, f->Eval<dbl>());
+	auto fs = bertini::Simplify(f);
+fs->Reset();
+	BOOST_CHECK_EQUAL(init_val, fs->Eval<dbl>());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // simplify

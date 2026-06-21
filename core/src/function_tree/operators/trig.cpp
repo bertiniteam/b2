@@ -334,5 +334,13 @@ namespace node{
 		operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
 		evaluation_value = atan(evaluation_value);
 	}
-} // re: namespace node	
+
+	// ---- functional Simplified(): rebuild same op type from the simplified operand ----
+	std::shared_ptr<Node> SinOperator::Simplified()    const { return SinOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> ArcSinOperator::Simplified() const { return ArcSinOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> CosOperator::Simplified()    const { return CosOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> ArcCosOperator::Simplified() const { return ArcCosOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> TanOperator::Simplified()    const { return TanOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> ArcTanOperator::Simplified() const { return ArcTanOperator::Make(operand_->Simplified()); }
+} // re: namespace node
 } // re: bertini namespace

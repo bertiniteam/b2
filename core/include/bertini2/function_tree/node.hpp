@@ -243,6 +243,20 @@ public:
 	virtual unsigned ReduceDepth();
 
 	/**
+	\brief Functionally simplify this tree, returning a NEW simplified tree.
+
+	Non-mutating successor to the in-place EliminateZeros / EliminateOnes / ReduceDepth
+	machinery (ADR-0011, issue 251).  The input tree is never modified; a fresh simplified
+	tree is returned, built through the SimplifiedSum / SimplifiedMult / SimplifiedNegate
+	factories so that literal zeros/ones vanish and exact constants fold.  The default
+	(leaves, and any node with nothing to simplify) returns the node unchanged -- structural
+	sharing preserved.
+
+	\return A simplified tree (possibly the same node, if nothing simplified).
+	*/
+	virtual std::shared_ptr<Node> Simplified() const;
+
+	/**
 	Virtual method for printing Nodes to arbitrary output streams.
 	*/
 	virtual void print(std::ostream& target) const = 0;

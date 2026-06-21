@@ -66,6 +66,13 @@ namespace node{
 		return 0;
 	}
 
+	// Default: nothing to simplify -- return this node unchanged (sharing preserved).
+	// Operators override to recurse + reassemble through the Simplified* factories.
+	std::shared_ptr<Node> Node::Simplified() const
+	{
+		return std::const_pointer_cast<Node>(shared_from_this());
+	}
+
 
 	template<typename T>
 	void Node::EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const

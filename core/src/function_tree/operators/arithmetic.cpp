@@ -309,6 +309,66 @@ std::shared_ptr<Node> SimplifiedMult(std::vector<std::pair<std::shared_ptr<Node>
 	return result;
 }
 
+// ---- functional Simplified() (non-mutating successors to Eliminate*/ReduceDepth) ----
+// Each recurses on children (which return fresh simplified subtrees, sharing what they
+// didn't change) and re-assembles through the Simplified* factories, so literal zeros/ones
+// vanish, exact constants fold, and nested same-type operators flatten.
+
+std::shared_ptr<Node> SumOperator::Simplified() const
+{
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> terms;
+	terms.reserve(operands_.size());
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+		terms.emplace_back(operands_[ii]->Simplified(), signs_[ii]);
+	return SimplifiedSum(terms);
+}
+
+std::shared_ptr<Node> MultOperator::Simplified() const
+{
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> factors;
+	factors.reserve(operands_.size());
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+		factors.emplace_back(operands_[ii]->Simplified(), mult_or_div_[ii]);
+	return SimplifiedMult(factors);
+}
+
+std::shared_ptr<Node> NegateOperator::Simplified() const
+{
+	return SimplifiedNegate(operand_->Simplified());
+}
+
+std::shared_ptr<Node> PowerOperator::Simplified() const
+{
+	auto base_s = base_->Simplified();
+	auto exp_s  = exponent_->Simplified();
+	if (exp_s->IsLiteralZero()) return Integer::Make(1);   // x^0 -> 1
+	if (exp_s->IsLiteralOne())  return base_s;             // x^1 -> x
+	return PowerOperator::Make(base_s, exp_s);
+}
+
+std::shared_ptr<Node> IntegerPowerOperator::Simplified() const
+{
+	if (exponent_ == 0) return Integer::Make(1);           // x^0 -> 1
+	auto op_s = operand_->Simplified();
+	if (exponent_ == 1) return op_s;                       // x^1 -> x
+	return IntegerPowerOperator::Make(op_s, exponent_);
+}
+
+std::shared_ptr<Node> SqrtOperator::Simplified() const
+{
+	return SqrtOperator::Make(operand_->Simplified());
+}
+
+std::shared_ptr<Node> ExpOperator::Simplified() const
+{
+	return ExpOperator::Make(operand_->Simplified());
+}
+
+std::shared_ptr<Node> LogOperator::Simplified() const
+{
+	return LogOperator::Make(operand_->Simplified());
+}
+
 void SumOperator::print(std::ostream & target) const
 {
 	for (size_t ii = 0; ii < operands_.size(); ++ii)
