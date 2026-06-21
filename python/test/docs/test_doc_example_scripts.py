@@ -28,11 +28,14 @@ EXAMPLES = PYTHON_DIR / "examples"
 
 
 def _run(script, *args, timeout=170):
-    """Run an example script serially, importing *this* worktree's bertini, and require success."""
+    """Run an example script serially, importing the same bertini this test process does."""
     env = dict(os.environ)
-    # Prepend this worktree's python dir so the subprocess imports the bertini we are testing,
-    # not whatever a shared environment's site-packages might point at.
-    env["PYTHONPATH"] = os.pathsep.join([str(PYTHON_DIR), env.get("PYTHONPATH", "")])
+    # Resolve `bertini` in the subprocess exactly as this test process resolves it -- whether that
+    # is an installed wheel (the CI wheel-test envs, where the compiled bertini._pybertini lives
+    # only in site-packages, NOT in the source python/ tree) or a source checkout on PYTHONPATH
+    # (local dev).  Propagate our own import path; do NOT hard-code the source python/ dir, which
+    # would shadow an installed wheel with a _pybertini-less source package.
+    env["PYTHONPATH"] = os.pathsep.join(p for p in sys.path if p)
     proc = subprocess.run(
         [sys.executable, str(EXAMPLES / script), *args],
         capture_output=True, text=True, timeout=timeout, env=env,
