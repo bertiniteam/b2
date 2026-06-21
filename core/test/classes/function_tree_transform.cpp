@@ -27,6 +27,7 @@
 */
 
 #include <iostream>
+#include <sstream>
 
 #include <cstdlib>
 #include <cmath>
@@ -52,6 +53,9 @@ using dbl = bertini::dbl;
 
 auto MakeZero(){return Nd(Integer::Make(0));}
 auto MakeOne(){return Nd(Integer::Make(1));}
+
+// the printed form of a simplified expression
+inline std::string SimplifiedForm(Nd const& n){ std::ostringstream o; bertini::Simplify(n)->print(o); return o.str(); }
 
 BOOST_AUTO_TEST_SUITE(function_tree)
 
@@ -95,6 +99,54 @@ BOOST_AUTO_TEST_CASE(sums_of_zeros_are_zero)
 	BOOST_CHECK_EQUAL(bertini::Simplify(zero+zero)->Eval<dbl>(), 0.);
 	BOOST_CHECK_EQUAL(bertini::Simplify(zero+0)->Eval<dbl>(), 0.);
 	BOOST_CHECK_EQUAL(bertini::Simplify(0+zero)->Eval<dbl>(), 0.);
+}
+
+// ---- like factors combine into powers, like terms into coefficients ----
+// Identical subexpressions are one interned node, so "structurally equal" is pointer identity:
+// grouping factors/terms is a hash on the operand pointer.
+
+BOOST_AUTO_TEST_CASE(like_factors_combine_into_powers)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	BOOST_CHECK_EQUAL(SimplifiedForm(x*x), "x^2");
+	BOOST_CHECK_EQUAL(SimplifiedForm(x*x*x), "x^3");
+	BOOST_CHECK_EQUAL(SimplifiedForm(pow(x,2)*pow(x,3)), "x^5");   // x^a * x^b -> x^(a+b)
+	BOOST_CHECK_EQUAL(SimplifiedForm((x+y)*(x+y)), "(x+y)^2");     // any repeated base, not just vars
+}
+
+BOOST_AUTO_TEST_CASE(divided_like_factors_lower_the_exponent)
+{
+	auto x = Variable::Make("x");
+	BOOST_CHECK_EQUAL(SimplifiedForm(x*x/x), "x");                 // x^2 / x -> x
+	BOOST_CHECK_EQUAL(bertini::Simplify(x/x)->Eval<dbl>(), 1.);    // x / x -> 1
+}
+
+BOOST_AUTO_TEST_CASE(like_terms_combine_into_coefficients)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	BOOST_CHECK_EQUAL(SimplifiedForm(x+x), "2*x");
+	BOOST_CHECK_EQUAL(SimplifiedForm(x+x+x), "3*x");
+	BOOST_CHECK_EQUAL(SimplifiedForm(Integer::Make(3)*x + Integer::Make(2)*x), "5*x");
+	BOOST_CHECK_EQUAL(SimplifiedForm(x*y + x*y), "2*x*y");
+}
+
+BOOST_AUTO_TEST_CASE(opposite_like_terms_cancel)
+{
+	auto x = Variable::Make("x");
+	BOOST_CHECK_EQUAL(bertini::Simplify(x - x)->Eval<dbl>(), 0.);
+	BOOST_CHECK_EQUAL(SimplifiedForm(Integer::Make(3)*x - x), "2*x");
+}
+
+BOOST_AUTO_TEST_CASE(combining_preserves_value)
+{
+	auto x = Variable::Make("x");
+	x->set_current_value(dbl(2.0, 0.0));
+	Nd f = x*x*x + x*x*x;                 // 2*x^3 = 16 at x=2
+	auto s = bertini::Simplify(f);
+	s->Reset();
+	BOOST_CHECK_EQUAL(s->Eval<dbl>(), dbl(16.0, 0.0));
 }
 
 BOOST_AUTO_TEST_CASE(zero_terms_drop_keeping_value)

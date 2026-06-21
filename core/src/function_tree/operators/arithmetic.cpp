@@ -26,6 +26,10 @@
 
 #include "bertini2/function_tree/operators/arithmetic.hpp"
 
+#include <map>
+#include <vector>
+#include <cstdlib>
+
 
 
 
@@ -65,20 +69,118 @@ std::shared_ptr<Node> SimplifiedNegate(std::shared_ptr<Node> const& n)
 }
 
 
+namespace{
+	// split a term into (rational coefficient, core).  the core is the term with a leading
+	// constant factor stripped, so 3*x*y and 2*x*y share the core x*y and combine to 5*x*y.  a
+	// null core means the term was a pure exact constant (whose value is the coefficient).
+	std::pair<mpq_rational, std::shared_ptr<Node>> SplitTerm(std::shared_ptr<Node> const& t)
+	{
+		if (auto as_int = std::dynamic_pointer_cast<Integer>(t))
+			return { mpq_rational(as_int->GetValue()), nullptr };
+		if (auto as_rat = std::dynamic_pointer_cast<Rational>(t))
+			if (as_rat->GetValueImag() == 0)
+				return { as_rat->GetValueReal(), nullptr };
+
+		if (auto as_mult = std::dynamic_pointer_cast<MultOperator>(t))
+		{
+			auto const& ops = as_mult->Operands();
+			auto const& flags = as_mult->GetMultOrDiv();
+			if (!ops.empty() && flags[0])    // canonical order puts a constant coefficient first
+			{
+				mpq_rational coeff(1);
+				bool have = false;
+				if (auto as_int = std::dynamic_pointer_cast<Integer>(ops[0]))
+				{
+					coeff = as_int->GetValue();
+					have = true;
+				}
+				else if (auto as_rat = std::dynamic_pointer_cast<Rational>(ops[0]))
+				{
+					if (as_rat->GetValueImag() == 0)
+					{
+						coeff = as_rat->GetValueReal();
+						have = true;
+					}
+				}
+				if (have)
+				{
+					std::vector<std::pair<std::shared_ptr<Node>, bool>> rest;
+					for (std::size_t ii = 1; ii < ops.size(); ++ii)
+						rest.emplace_back(ops[ii], flags[ii]);
+					std::shared_ptr<Node> core = (rest.size() == 1 && rest[0].second)
+						? rest[0].first
+						: std::static_pointer_cast<Node>(MultOperator::Make(rest));
+					return { coeff, core };
+				}
+			}
+		}
+		return { mpq_rational(1), t };
+	}
+
+	std::shared_ptr<Node> RationalToNode(mpq_rational const& v)
+	{
+		if (denominator(v) == 1)
+			return std::static_pointer_cast<Node>(Integer::Make(numerator(v)));
+		return std::static_pointer_cast<Node>(Rational::Make(v, mpq_rational(0)));
+	}
+}
+
 std::shared_ptr<Node> SimplifiedSum(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms)
 {
-	std::vector<std::pair<std::shared_ptr<Node>, bool>> remaining;
-	remaining.reserve(terms.size());
+	// combine like terms: group by core identity (the term sans constant coefficient) and sum the
+	// signed coefficients, so x+x -> 2*x, 3*x+2*x -> 5*x, x-x -> 0; pure constants fold together.
+	mpq_rational constant_sum(0);
+	std::vector<std::shared_ptr<Node>> cores;            // representative core, first-seen order
+	std::map<Node const*, std::size_t> core_index;
+	std::vector<mpq_rational> coeffs;
 	for (auto const& t : terms)
-		if (!t.first->IsLiteralZero())
-			remaining.push_back(t);
+	{
+		if (t.first->IsLiteralZero())
+			continue;
+		auto split = SplitTerm(t.first);
+		mpq_rational coeff = t.second ? split.first : -split.first;
+		if (!split.second)               // a pure constant term
+		{
+			constant_sum += coeff;
+			continue;
+		}
+		auto it = core_index.find(split.second.get());
+		if (it == core_index.end())
+		{
+			core_index.emplace(split.second.get(), cores.size());
+			cores.push_back(split.second);
+			coeffs.push_back(coeff);
+		}
+		else
+			coeffs[it->second] += coeff;
+	}
 
-	if (remaining.empty())
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> out;
+	out.reserve(cores.size() + 1);
+	for (std::size_t ii = 0; ii < cores.size(); ++ii)
+	{
+		mpq_rational c = coeffs[ii];
+		if (c == 0)                      // x - x -> 0 (the term cancels)
+			continue;
+		const bool positive = c > 0;
+		mpq_rational mag = positive ? c : -c;
+		std::shared_ptr<Node> term = (mag == 1)
+			? cores[ii]
+			: SimplifiedMult({ {RationalToNode(mag), true}, {cores[ii], true} });
+		out.emplace_back(term, positive);
+	}
+	if (constant_sum != 0)
+	{
+		const bool positive = constant_sum > 0;
+		out.emplace_back(RationalToNode(positive ? constant_sum : -constant_sum), positive);
+	}
+
+	if (out.empty())
 		return Zero();
-	if (remaining.size() == 1)
-		return remaining[0].second ? remaining[0].first : SimplifiedNegate(remaining[0].first);
+	if (out.size() == 1)
+		return out[0].second ? out[0].first : SimplifiedNegate(out[0].first);
 
-	return SumOperator::Make(remaining);  // build the complete sum, then intern once
+	return SumOperator::Make(out);
 }
 
 
@@ -154,6 +256,55 @@ std::shared_ptr<Node> SimplifiedMult(std::vector<std::pair<std::shared_ptr<Node>
 		remaining.push_back(f);
 	}
 
+	// combine like factors into powers: x*x -> x^2, x^a * x^b -> x^(a+b); because identical
+	// subexpressions are one interned node, this also folds e.g. (x+y)*(x+y) -> (x+y)^2.  group
+	// the non-constant factors by base identity (pointer), summing exponents (division counts
+	// negative), then re-emit one power per base.
+	std::vector<std::shared_ptr<Node>> bases;            // representative base, first-seen order
+	std::map<Node const*, std::size_t> base_index;
+	std::vector<long> exponents;
+	for (auto const& f : remaining)
+	{
+		std::shared_ptr<Node> base;
+		long e;
+		if (auto as_pow = std::dynamic_pointer_cast<IntegerPowerOperator>(f.first))
+		{
+			base = as_pow->Operand();
+			e = as_pow->exponent();
+		}
+		else
+		{
+			base = f.first;
+			e = 1;
+		}
+		if (!f.second)                  // a divided factor lowers the exponent
+			e = -e;
+
+		auto it = base_index.find(base.get());
+		if (it == base_index.end())
+		{
+			base_index.emplace(base.get(), bases.size());
+			bases.push_back(base);
+			exponents.push_back(e);
+		}
+		else
+			exponents[it->second] += e;
+	}
+
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> combined;
+	combined.reserve(bases.size());
+	for (std::size_t ii = 0; ii < bases.size(); ++ii)
+	{
+		const long e = exponents[ii];
+		if (e == 0)                     // x/x -> 1 (the factor drops out)
+			continue;
+		const long mag = std::labs(e);
+		std::shared_ptr<Node> factor = (mag == 1)
+			? bases[ii]
+			: std::static_pointer_cast<Node>(IntegerPowerOperator::Make(bases[ii], static_cast<int>(mag)));
+		combined.emplace_back(factor, e > 0);
+	}
+
 	std::shared_ptr<Node> constant_node = nullptr;
 	if (have_constant && constant != 1)
 	{
@@ -163,13 +314,13 @@ std::shared_ptr<Node> SimplifiedMult(std::vector<std::pair<std::shared_ptr<Node>
 			constant_node = Rational::Make(constant, mpq_rational(0));
 	}
 
-	if (remaining.empty())
+	if (combined.empty())
 		return constant_node ? constant_node : std::shared_ptr<Node>(One());
 
 	std::vector<std::pair<std::shared_ptr<Node>, bool>> finals;
 	if (constant_node)
 		finals.emplace_back(constant_node, true);  // canonical order: constant first
-	finals.insert(finals.end(), remaining.begin(), remaining.end());
+	finals.insert(finals.end(), combined.begin(), combined.end());
 
 	if (finals.size() == 1 && finals[0].second)
 		return finals[0].first;
