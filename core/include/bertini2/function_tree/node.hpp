@@ -212,35 +212,6 @@ public:
 	///////// PUBLIC PURE METHODS /////////////////
 
 
-	/**
-	\brief A transform function, which eliminates nodes from the tree
-
-	A better implementation of this would use a generic Transform.  If you know how to do this, please rewrite the Nodes so they can transform to our whim, and submit a PR.
-
-	\return The number of nodes eliminated
-
-	\see EliminateZeros
-	*/
-	virtual unsigned EliminateOnes() = 0;
-	
-	/**
-	\brief A transform function, which eliminates nodes from the tree
-
-	A better implementation of this would use a generic Transform.  If you know how to do this, please rewrite the Nodes so they can transform to our whim, and submit a PR.
-
-	\return The number of nodes eliminated
-
-	\see EliminateOnes
-	*/
-	virtual unsigned EliminateZeros() = 0;
-
-
-	/**
-	\brief A mutating function which finds ways to reduce the depth of the tree
-
-	\note The default implementation is empty, and does literally nothing.
-	*/
-	virtual unsigned ReduceDepth();
 
 	/**
 	\brief Functionally simplify this tree, returning a NEW simplified tree.

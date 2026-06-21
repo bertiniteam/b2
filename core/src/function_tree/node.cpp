@@ -61,11 +61,6 @@ BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::ExpOperator)
 namespace bertini{
 namespace node{
 
-	unsigned Node::ReduceDepth()
-	{
-		return 0;
-	}
-
 	// Default: nothing to simplify -- return this node unchanged (sharing preserved).
 	// Operators override to recurse + reassemble through the Simplified* factories.
 	std::shared_ptr<Node> Node::Simplified() const

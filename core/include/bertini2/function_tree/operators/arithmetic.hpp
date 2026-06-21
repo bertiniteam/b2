@@ -83,12 +83,7 @@ namespace node{
 
 		virtual ~SumOperator() = default;
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
-		unsigned ReduceDepth() override;
-		unsigned ReduceSubSums();
-		unsigned ReduceSubMults();
 
 		template<typename... Ts> 
 		static 
@@ -301,8 +296,6 @@ namespace node{
 		
 	public:
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 
 		/**
@@ -385,12 +378,7 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
-		unsigned ReduceDepth() override;
-		unsigned ReduceSubSums();
-		unsigned ReduceSubMults();
 
 
 		template<typename... Ts> 
@@ -559,8 +547,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
@@ -715,8 +701,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 		
 		/**
@@ -878,8 +862,6 @@ namespace node{
 
 	public:
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 		
 		void print(std::ostream & target) const override;
@@ -943,8 +925,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
@@ -1010,8 +990,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 

@@ -68,676 +68,117 @@ BOOST_AUTO_TEST_SUITE(transform)
                                                                   
 
 
-BOOST_AUTO_TEST_SUITE(eliminate_zeros)
+BOOST_AUTO_TEST_SUITE(simplified)
 
-    
-// ______ 
-// \  ___)
-//  \ \.
-//   > >  
-//  / /__ 
-// /_____)
-       
+// Node::Simplified() is the non-mutating successor to the old in-place
+// EliminateZeros / EliminateOnes / ReduceDepth machinery: it returns a NEW simplified
+// tree and never touches its input.  Only *literal* zeros/ones are folded (per ADR-0011);
+// an expression that merely happens to evaluate to zero is deliberately left alone.
 
-                                                                      
-BOOST_AUTO_TEST_SUITE(sum)
-
-BOOST_AUTO_TEST_CASE(cant_eliminate_self)
+// ---- literal zeros vanish / collapse ----
+BOOST_AUTO_TEST_CASE(leaf_zero_is_unchanged)
 {
 	auto zero = MakeZero();
-	auto num_eliminated = zero->EliminateZeros();
-	BOOST_CHECK_EQUAL(num_eliminated, 0);
-	BOOST_CHECK_EQUAL(zero->Eval<dbl>(), 0.);
+	BOOST_CHECK_EQUAL(zero->Simplified()->Eval<dbl>(), 0.);
 }
 
-BOOST_AUTO_TEST_CASE(cant_eliminate_self2)
-{
-	auto zero = MakeZero();
-	auto n = zero;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK_EQUAL(num_eliminated, 0);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
-}
-
-
-
-BOOST_AUTO_TEST_CASE(level_one_signs_preserved)
+BOOST_AUTO_TEST_CASE(zeros_drop_from_sum_signs_preserved)
 {
 	auto zero = MakeZero();
 	auto n = 2 + zero - 1 + zero - 2;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated > 0);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), -1.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(n)->Eval<dbl>(), -1.);
 }
 
-
-BOOST_AUTO_TEST_CASE(level_one)
+BOOST_AUTO_TEST_CASE(sums_of_zeros_are_zero)
 {
 	auto zero = MakeZero();
-	auto n = zero+zero;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(zero+zero)->Eval<dbl>(), 0.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(zero+0)->Eval<dbl>(), 0.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(0+zero)->Eval<dbl>(), 0.);
 }
 
-
-BOOST_AUTO_TEST_CASE(level_one2)
-{
-	auto zero = MakeZero();
-	auto n = zero+0;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
-}
-
-
-BOOST_AUTO_TEST_CASE(level_one3)
-{
-	auto zero = MakeZero();
-	auto n = 0+zero;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
-}
-
-
-
-
-
-
-BOOST_AUTO_TEST_CASE(level_one_more_complicated)
+BOOST_AUTO_TEST_CASE(zero_terms_drop_keeping_value)
 {
 	auto x = Variable::Make("x");
 	auto zero = MakeZero();
-
-
-	auto n = pow(x,2) + zero*2;
-
 	x->set_current_value(dbl(2.0));
-
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 4.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(pow(x,2) + zero*2)->Eval<dbl>(), 4.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(pow(x,2) + x*zero*2*(x*x*x))->Eval<dbl>(), 4.);
 }
 
-
-
-BOOST_AUTO_TEST_CASE(level_one_more_complicated2)
+BOOST_AUTO_TEST_CASE(zero_term_drops_in_deeper_sum)
 {
 	auto x = Variable::Make("x");
 	auto zero = MakeZero();
-
-
-	auto n = pow(x,2) + x*zero*2*(x*x*x);
-
-	x->set_current_value(dbl(2.0));
-
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 4.);
-}
-
-BOOST_AUTO_TEST_CASE(level_two)
-{
-	auto x = Variable::Make("x");
-	auto zero = MakeZero();
-
-
 	auto n = (x + sqrt(x) + zero) + x*2*(x*x*x);
-
 	x->set_current_value(dbl(2.0));
-
-	auto num_eliminated = n->EliminateZeros();
-
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 35.414213562373095048801688724209698078569671875377);
+	BOOST_CHECK_EQUAL(bertini::Simplify(n)->Eval<dbl>(),
+		35.414213562373095048801688724209698078569671875377);
 }
 
-BOOST_AUTO_TEST_CASE(level_two_variable_set_to_zero_eliminated)
-{
-	auto x = Variable::Make("x");
-	auto zero = MakeZero();
-
-
-	auto n = (x + sqrt(x) + zero) + x*2*(x*x*x);
-
-	auto as_op = std::dynamic_pointer_cast<bertini::node::NaryOperator>(n);
-
-
-	x->set_current_value(dbl(0));
-
-	[[maybe_unused]] auto num_eliminated = n->EliminateZeros();
-
-	x->set_current_value(dbl(2.0));
-
-	BOOST_CHECK_EQUAL(as_op->NumOperands(), 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.0);
-}
-
-
-BOOST_AUTO_TEST_SUITE_END() // eliminate zeros :: sum
-
-
-
-//  _______ 
-// (   _   )
-//  | | | | 
-//  | | | | 
-//  | | | | 
-//  |_| |_| 
-
-
-BOOST_AUTO_TEST_SUITE(product)
-
-
-BOOST_AUTO_TEST_CASE(level_one)
+BOOST_AUTO_TEST_CASE(literal_zero_collapses_product)
 {
 	auto zero = MakeZero();
-	auto n = 1*zero;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(1*zero)->Eval<dbl>(), 0.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(zero*zero)->Eval<dbl>(), 0.);
 }
 
-
-BOOST_AUTO_TEST_CASE(level_one2)
-{
-	auto zero = MakeZero();
-	auto n = 1*zero;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
-}
-
-BOOST_AUTO_TEST_CASE(level_one3)
-{
-	auto zero = MakeZero();
-	auto n = zero*zero;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
-}
-
-BOOST_AUTO_TEST_SUITE_END() // eliminate zeros :: product
-
-
-BOOST_AUTO_TEST_SUITE_END() // eliminate zeros
-
-
-
-
-
-
-
-//         _   _         _                                                          
-//        | | (_)       (_)                 _                                       
-//  _____ | |  _  ____   _  ____   _____  _| |_  _____     ___   ____   _____   ___ 
-// | ___ || | | ||    \ | ||  _ \ (____ |(_   _)| ___ |   / _ \ |  _ \ | ___ | /___)
-// | ____|| | | || | | || || | | |/ ___ |  | |_ | ____|  | |_| || | | || ____||___ |
-// |_____) \_)|_||_|_|_||_||_| |_|\_____|   \__)|_____)   \___/ |_| |_||_____)(___/ 
-
-
-
-
-BOOST_AUTO_TEST_SUITE(eliminate_ones)
-
-
-//                                                                   _ 
-//                                                                  ( )
-//    _     ___     __    ___     ______     _ _    _ __    _      _| |
-//  /'_`\ /' _ `\ /'__`\/',__)   (______)   ( '_`\ ( '__) /'_`\  /'_` |
-// ( (_) )| ( ) |(  ___/\__, \              | (_) )| |   ( (_) )( (_| |
-// `\___/'(_) (_)`\____)(____/              | ,__/'(_)   `\___/'`\__,_)
-//                                          | |                        
-//                                          (_)                        
-
-
-BOOST_AUTO_TEST_SUITE(product)
-
-BOOST_AUTO_TEST_CASE(cant_eliminate_self)
+// ---- literal ones drop from products ----
+BOOST_AUTO_TEST_CASE(leaf_one_is_unchanged)
 {
 	auto one = MakeOne();
-	auto num_eliminated = one->EliminateOnes();
-	BOOST_CHECK_EQUAL(num_eliminated, 0);
-	BOOST_CHECK_EQUAL(one->Eval<dbl>(), 1.);
+	BOOST_CHECK_EQUAL(one->Simplified()->Eval<dbl>(), 1.);
 }
 
-BOOST_AUTO_TEST_CASE(cant_eliminate_self2)
-{
-	auto one = MakeOne();
-	auto n = one;
-	auto num_eliminated = n->EliminateOnes();
-	BOOST_CHECK_EQUAL(num_eliminated, 0);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 1.);
-}
-
-
-
-
-BOOST_AUTO_TEST_CASE(level_one)
-{
-	auto one = MakeOne();
-	auto n = one*one;
-	auto num_eliminated = n->EliminateOnes();
-	BOOST_CHECK(num_eliminated > 0);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 1.);
-}
-
-
-BOOST_AUTO_TEST_CASE(level_one2)
+BOOST_AUTO_TEST_CASE(ones_drop_from_product)
 {
 	auto x = Variable::Make("x");
 	auto one = MakeOne();
-	auto n = x*one;
-	auto num_eliminated = n->EliminateOnes();
 	x->set_current_value(2.);
-	BOOST_CHECK(num_eliminated > 0);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 2.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(one*one)->Eval<dbl>(), 1.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(x*one)->Eval<dbl>(), 2.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(one*x)->Eval<dbl>(), 2.);
 }
 
-
-BOOST_AUTO_TEST_CASE(level_one3)
-{
-	auto x = Variable::Make("x");
-	auto one = MakeOne();
-	auto n = one*x;
-	auto num_eliminated = n->EliminateOnes();
-	x->set_current_value(2.);
-	BOOST_CHECK(num_eliminated > 0);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 2.);
-}
-
-
-BOOST_AUTO_TEST_CASE(level_one4)
+BOOST_AUTO_TEST_CASE(ones_fold_through_division_chains)
 {
 	auto x = Variable::Make("x");
 	auto one = Integer::Make(1);
 	auto two = Integer::Make(2);
-	auto n = (two*one/two)*x;
-	auto num_eliminated = n->EliminateOnes();
 	x->set_current_value(2.);
-	BOOST_CHECK(num_eliminated > 0);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 2.);
+	BOOST_CHECK_EQUAL(bertini::Simplify((two*one/two)*x)->Eval<dbl>(), 2.);
+	BOOST_CHECK_EQUAL(bertini::Simplify(one*one/one*one/one*one*x)->Eval<dbl>(), 2.);
+	BOOST_CHECK_EQUAL(bertini::Simplify((one*one*2) * (one*x*one))->Eval<dbl>(), 4.);
 }
 
-
-BOOST_AUTO_TEST_CASE(level_one5)
+// ---- nested singletons unwrap to the variable itself ----
+BOOST_AUTO_TEST_CASE(nested_singleton_mults_unwrap_to_the_variable)
 {
 	auto x = Variable::Make("x");
-	auto one = Integer::Make(1);
-	auto n = one*one/one*one/one*one*x;
-	auto num_eliminated = n->EliminateOnes();
-	x->set_current_value(2.);
-	BOOST_CHECK(num_eliminated > 0);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 2.);
+	Nd n = MultOperator::Make(x);
+	for (int i = 0; i < 4; ++i) n = MultOperator::Make(n);
+	auto s = bertini::Simplify(n);
+	BOOST_CHECK(std::dynamic_pointer_cast<bertini::node::Variable>(s));  // unwrapped
+	x->set_current_value(5.);
+	BOOST_CHECK_EQUAL(s->Eval<dbl>(), 5.);
 }
 
-
-BOOST_AUTO_TEST_CASE(level_two)
+// ---- the load-bearing contract: Simplified() does NOT mutate its input ----
+BOOST_AUTO_TEST_CASE(simplify_does_not_mutate_input)
 {
 	auto x = Variable::Make("x");
-	auto one = Integer::Make(1);
-	auto n = (one*one*2) * (one*x*one);
-	x->set_current_value(2.);
-
-	auto num_eliminated = n->EliminateOnes();
-	
-	BOOST_CHECK(num_eliminated > 0);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 4.);
+	auto zero = MakeZero();
+	auto n = std::dynamic_pointer_cast<bertini::node::NaryOperator>((x + zero) + x);
+	BOOST_REQUIRE(n);
+	auto before = n->NumOperands();
+	auto s = bertini::Simplify(n);
+	BOOST_CHECK_EQUAL(n->NumOperands(), before);   // input untouched
+	BOOST_CHECK(s != n);                            // a fresh tree was returned
+	x->set_current_value(3.);
+	BOOST_CHECK_EQUAL(s->Eval<dbl>(), 6.);          // value preserved (x + x)
 }
 
-
-BOOST_AUTO_TEST_SUITE_END() // predict
-BOOST_AUTO_TEST_SUITE_END() // eliminate ones
-
-
-
-
-
-
-
-
-
-//                                                        _..._                        
-//                            _______                  .-'_..._''.                     
-//               __.....__    \  ___ `'.             .' .'      '.\     __.....__      
-//           .-''         '.   ' |--.\  \           / .'            .-''         '.    
-// .-,.--.  /     .-''"'-.  `. | |    \  '         . '             /     .-''"'-.  `.  
-// |  .-. |/     /________\   \| |     |  '        | |            /     /________\   \.
-// | |  | ||                  || |     |  | _    _ | |            |                  | 
-// | |  | |\    .-------------'| |     ' .'| '  / |. '            \    .-------------' 
-// | |  '-  \    '-.____...---.| |___.' /'.' | .' | \ '.          .\    '-.____...---. 
-// | |       `.             .'/_______.'/ /  | /  |  '. `._____.-'/ `.             .'  
-// | |         `''-...... -'  \_______|/ |   `'.  |    `-.______ /    `''-...... -'    
-// |_|                                   '   .'|  '/            `                      
-//                                        `-'  `--'                                    
-
-
-
-BOOST_AUTO_TEST_SUITE(reduce_depth)
-
-
-
-
-//                   _                                                            
-//                  ( )                                                           
-//  _ __    __     _| | _   _    ___    __      ______      ___  _   _   ___ ___  
-// ( '__) /'__`\ /'_` |( ) ( ) /'___) /'__`\   (______)   /',__)( ) ( )/' _ ` _ `\.
-// | |   (  ___/( (_| || (_) |( (___ (  ___/              \__, \| (_) || ( ) ( ) |
-// (_)   `\____)`\__,_)`\___/'`\____)`\____)              (____/`\___/'(_) (_) (_)
-
-BOOST_AUTO_TEST_SUITE(sum)
-
-BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-	Nd m = SumOperator::Make(x, true);
-	Nd n = SumOperator::Make(y, true);
-
-	auto p = m+n;
-
-	unsigned num_eliminated = p->ReduceDepth();
-
-	BOOST_CHECK(num_eliminated > 0);
-
-	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
-	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
-
-	x->set_current_value(a); y->set_current_value(b);
-	p->Reset();
-	auto result = p->Eval<dbl>();
-	BOOST_CHECK_EQUAL(result, a+b);
-}
-
-
-BOOST_AUTO_TEST_CASE(double_sum_signs_distribute)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-	Nd m = SumOperator::Make(x, true);
-	Nd n = SumOperator::Make(y, true);
-
-	auto p = m+n;
-	auto q = m-n;
-
-	auto r = p+q;
-
-	{
-		unsigned num_eliminated = r->ReduceDepth();
-		BOOST_CHECK(num_eliminated > 0);
-		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
-		BOOST_CHECK_EQUAL(R->NumOperands(), 4);
-
-		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
-		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
-
-		x->set_current_value(a); y->set_current_value(b);
-		r->Reset();
-		auto result = r->Eval<dbl>();
-		BOOST_CHECK_EQUAL(result, (a+b) + (a-b));
-	}
-
-	{
-		unsigned num_eliminated = r->ReduceDepth();
-		BOOST_CHECK(num_eliminated > 0);
-		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
-		BOOST_CHECK_EQUAL(R->NumOperands(), 4);
-
-		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
-		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
-
-		x->set_current_value(a); y->set_current_value(b);
-		r->Reset();
-		auto result = r->Eval<dbl>();
-		BOOST_CHECK_EQUAL(result, (a+b) + (a-b));
-	}
-
-}
-
-BOOST_AUTO_TEST_CASE(double_sum_signs_distribute2)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-	Nd m = SumOperator::Make(x, true);
-	Nd n = SumOperator::Make(y, true);
-
-	auto p = m+n;
-	auto q = m-n;
-
-	auto r = p-q;
-
-	{
-		unsigned num_eliminated = r->ReduceDepth();
-		BOOST_CHECK(num_eliminated > 0);
-		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
-		BOOST_CHECK_EQUAL(R->NumOperands(), 4);
-
-		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
-		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
-
-		x->set_current_value(a); y->set_current_value(b);
-		r->Reset();
-		auto result = r->Eval<dbl>();
-		BOOST_CHECK_EQUAL(result, (a+b) - (a-b));
-	}
-
-	{
-		unsigned num_eliminated = r->ReduceDepth();
-		BOOST_CHECK(num_eliminated > 0);
-		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
-		BOOST_CHECK_EQUAL(R->NumOperands(), 4);
-
-		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
-		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
-
-		x->set_current_value(a); y->set_current_value(b);
-		r->Reset();
-		auto result = r->Eval<dbl>();
-		BOOST_CHECK_EQUAL(result, (a+b) - (a-b));
-	}
-
-}
-
-
-BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-	Nd m = MultOperator::Make(x);
-	Nd n = MultOperator::Make(y);
-
-	auto p = m+n;
-
-	unsigned num_eliminated = p->ReduceDepth();
-
-	BOOST_CHECK(num_eliminated > 0);
-
-	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
-	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
-
-	x->set_current_value(a); y->set_current_value(b);
-	p->Reset();
-	auto result = p->Eval<dbl>();
-	BOOST_CHECK_EQUAL(result, a+b);
-}
-
-
-
-
-BOOST_AUTO_TEST_CASE(eliminates_mult_single_regular)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-	Nd m = MultOperator::Make(x);
-
-	auto p = m+y;
-
-	unsigned num_eliminated = p->ReduceDepth();
-
-	BOOST_CHECK(num_eliminated > 0);
-
-	auto a = x->Eval<dbl>();
-	auto b = y->Eval<dbl>();
-	p->Reset();
-	auto result = p->Eval<dbl>();
-	BOOST_CHECK_EQUAL(result, a+b);
-}
-
-BOOST_AUTO_TEST_CASE(eliminates_mult_single_regular2)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-	Nd m = MultOperator::Make(x);
-	Nd n = MultOperator::Make(y);
-
-	auto p = x+n;
-
-	unsigned num_eliminated = p->ReduceDepth();
-
-	BOOST_CHECK(num_eliminated > 0);
-
-	auto a = x->Eval<dbl>();
-	auto b = y->Eval<dbl>();
-	p->Reset();
-	auto result = p->Eval<dbl>();
-	BOOST_CHECK_EQUAL(result, a+b);
-}
-
-BOOST_AUTO_TEST_SUITE_END() // sum
-
-
-
-//  _______ 
-// (   _   )
-//  | | | | 
-//  | | | | 
-//  | | | | 
-//  |_| |_| 
-
-BOOST_AUTO_TEST_SUITE(prod)
-
-BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-	Nd m = SumOperator::Make(x, true);
-	Nd n = SumOperator::Make(y, true);
-
-	auto p = m*n;
-
-	unsigned num_eliminated = p->ReduceDepth();
-
-	BOOST_CHECK(num_eliminated > 0);
-
-	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
-	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
-
-	x->set_current_value(a); y->set_current_value(b);
-	p->Reset();
-	auto result = p->Eval<dbl>();
-	BOOST_CHECK_EQUAL(result, a*b);
-}
-
-
-BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-	Nd m = MultOperator::Make(x);
-	Nd n = MultOperator::Make(y);
-
-	auto p = m*n;
-
-	unsigned num_eliminated = p->ReduceDepth();
-
-	BOOST_CHECK(num_eliminated > 0);
-
-	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
-	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
-
-	x->set_current_value(a); y->set_current_value(b);
-	p->Reset();
-	auto result = p->Eval<dbl>();
-	BOOST_CHECK_EQUAL(result, a*b);
-}
-
-
-
-BOOST_AUTO_TEST_CASE(distributive)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-
-	auto m = x*y;
-	auto n = x/y;
-
-	auto p = m/n; // should reduce to y*y
-
-	unsigned num_eliminated = p->ReduceDepth();
-
-	BOOST_CHECK(num_eliminated > 0);
-
-	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
-	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
-
-	x->set_current_value(a); y->set_current_value(b);
-	p->Reset();
-	auto result = p->Eval<dbl>();
-	BOOST_CHECK_SMALL(abs(result - b*b), 1e-13);
-}
-
-
-BOOST_AUTO_TEST_CASE(a_nested_one)
-{
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-
-	auto n = ((((((2*x)*1)*y))/2));
-	while(n->ReduceDepth())
-		; //deliberately empty statement
-
-	auto as_op = std::dynamic_pointer_cast<bertini::node::MultOperator>(n);
-	BOOST_CHECK_EQUAL(as_op->NumOperands(), 5);
-
-	auto a = x->Eval<dbl>();
-	auto b = y->Eval<dbl>();
-
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), a*b);
-}
-
-
-BOOST_AUTO_TEST_CASE(many_nested_singletons)
-{
-	auto x = Variable::Make("x");
-
-	Nd n1 = MultOperator::Make(x);
-	Nd n2 = MultOperator::Make(n1);
-	Nd n3 = MultOperator::Make(n2);
-	Nd n4 = MultOperator::Make(n3);
-	Nd n5 = MultOperator::Make(n4);
-
-	while(n5->ReduceDepth())
-		; //deliberately empty statement
-
-	auto as_op = std::dynamic_pointer_cast<bertini::node::MultOperator>(n5);
-	BOOST_CHECK_EQUAL(as_op->NumOperands(), 1);
-
-	BOOST_CHECK_EQUAL(as_op->FirstOperand(), x);
-}
-
-BOOST_AUTO_TEST_SUITE_END() // prod
-
-BOOST_AUTO_TEST_SUITE_END() // reduce_depth
+BOOST_AUTO_TEST_SUITE_END() // simplified
 
 
 

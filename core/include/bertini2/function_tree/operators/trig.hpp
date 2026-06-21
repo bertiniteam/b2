@@ -96,8 +96,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
@@ -160,8 +158,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 		
 		template<typename... Ts> 
@@ -228,8 +224,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
@@ -295,8 +289,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 		
 		template<typename... Ts> 
@@ -368,8 +360,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 		
 		template<typename... Ts> 
@@ -432,8 +422,6 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
 		std::shared_ptr<Node> Simplified() const override;
 		
 		template<typename... Ts> 
