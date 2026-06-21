@@ -57,6 +57,12 @@ def test_solve_eigenvalues_runs():
     _run("solve_eigenvalues.py", "--size", "5")
 
 
+@pytest.mark.skipif(
+    not os.environ.get("BERTINI_RUN_SLOW_DOC_EXAMPLES"),
+    reason="crossed_paths.py runs two full cyclic-5 solves (~30s locally, minutes on slow CI -- "
+           "it deliberately under-resolves paths); set BERTINI_RUN_SLOW_DOC_EXAMPLES=1 to run it. "
+           "The cyclic/eigenvalue tests above already cover 'the example scripts run'.",
+)
 def test_crossed_paths_runs():
     # No size knob: it always provokes a crossing on cyclic-5 and shows the re-track repair.
-    _run("crossed_paths.py")
+    _run("crossed_paths.py", timeout=600)
