@@ -67,7 +67,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<Differential> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Differential>( new Differential(ts...) );
+			return std::static_pointer_cast<Differential>(Intern(std::shared_ptr<Node>( new Differential(ts...) )));
 		}
 
 

@@ -73,7 +73,7 @@ namespace node{
 			template<typename... Ts>
 			static
 			std::shared_ptr<Pi> Make(Ts&& ...ts){
-				return std::shared_ptr<Pi>( new Pi(ts...) );
+				return std::static_pointer_cast<Pi>(Intern(std::shared_ptr<Node>( new Pi(ts...) )));
 			}
 
 			void print(std::ostream & target) const override
@@ -127,7 +127,7 @@ namespace node{
 			template<typename... Ts>
 			static
 			std::shared_ptr<E> Make(Ts&& ...ts){
-				return std::shared_ptr<E>( new E(ts...) );
+				return std::static_pointer_cast<E>(Intern(std::shared_ptr<Node>( new E(ts...) )));
 			}
 
 			void print(std::ostream & target) const override

@@ -72,7 +72,7 @@ namespace node{
 			template<typename... Ts> 
 			static 
 			std::shared_ptr<Jacobian> Make(Ts&& ...ts){ 
-				return std::shared_ptr<Jacobian>( new Jacobian(ts...) );
+				return std::static_pointer_cast<Jacobian>(Intern(std::shared_ptr<Node>( new Jacobian(ts...) )));
 			}
 
 		private:

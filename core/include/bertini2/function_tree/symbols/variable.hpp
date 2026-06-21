@@ -64,7 +64,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<Variable> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Variable>( new Variable(ts...) );
+			return std::static_pointer_cast<Variable>(Intern(std::shared_ptr<Node>( new Variable(ts...) )));
 		}
 
 	private:

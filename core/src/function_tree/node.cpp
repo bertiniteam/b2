@@ -26,6 +26,11 @@
 
 #include "bertini2/function_tree.hpp"
 
+#include <unordered_map>
+#include <vector>
+#include <mutex>
+#include <algorithm>
+
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Variable)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Differential)
 
@@ -138,6 +143,46 @@ namespace node{
 	{
 		std::get<std::pair<dbl,bool> >(current_value_).second = false;
 		std::get<std::pair<mpfr_complex,bool> >(current_value_).second = false;
+	}
+
+	// ---- hash-consing intern table (Rung 3) ----
+	namespace {
+		// Process-global table: structural hash -> live nodes, held weakly so it self-cleans
+		// (a node dies when its last external shared_ptr drops; its weak_ptr is pruned on the
+		// next touch of that bucket).  Lazy-init function-local statics avoid SIOF.
+		std::unordered_map<std::size_t, std::vector<std::weak_ptr<Node>>>& InternBuckets()
+		{
+			static std::unordered_map<std::size_t, std::vector<std::weak_ptr<Node>>> buckets;
+			return buckets;
+		}
+		std::mutex& InternMutex()
+		{
+			static std::mutex m;
+			return m;
+		}
+	}
+
+	std::shared_ptr<Node> Intern(std::shared_ptr<Node> const& candidate)
+	{
+		std::lock_guard<std::mutex> lock(InternMutex());
+		auto& bucket = InternBuckets()[candidate->Hash()];
+
+		std::shared_ptr<Node> found;
+		// scan for a live, structurally-equal node; prune any expired weak_ptrs as we go
+		bucket.erase(
+			std::remove_if(bucket.begin(), bucket.end(),
+				[&](std::weak_ptr<Node> const& wp) {
+					auto sp = wp.lock();
+					if (!sp) return true;                          // dead -> prune
+					if (!found && sp->IsSame(*candidate)) found = sp;
+					return false;
+				}),
+			bucket.end());
+
+		if (found)
+			return found;                                          // hit: discard the candidate
+		bucket.push_back(candidate);                               // miss: register and keep
+		return candidate;
 	}
 } // namespace node
 } // namespace bertini

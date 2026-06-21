@@ -121,22 +121,19 @@ BOOST_AUTO_TEST_CASE(mult_vs_divide_differ)
 	BOOST_CHECK(!a->IsSame(*b));
 }
 
-BOOST_AUTO_TEST_CASE(shallow_distinct_inner_subtrees_are_not_same)
+BOOST_AUTO_TEST_CASE(interning_collapses_equal_subtrees)
 {
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	auto z = Variable::Make("z");
-	// (x+y)*z built twice, but each (x+y) is a fresh object -> outer products are NOT same
-	// (shallow / pointer comparison of operands; interning in Rung 3 will collapse these).
+	// With hash-consing (Rung 3), the inner (x+y) is itself interned, so building (x+y)*z
+	// twice returns the SAME interned object -- you can no longer make distinct-but-equal
+	// subtrees.  (That is the whole point of hash-consing.)
 	Nd a = (x + y) * z;
 	Nd b = (x + y) * z;
-	BOOST_CHECK(!a->IsSame(*b));
-	// but reusing the *same* inner object makes them same:
-	Nd inner = x + y;
-	Nd c = inner * z;
-	Nd d = inner * z;
-	BOOST_CHECK(c->IsSame(*d));
-	BOOST_CHECK_EQUAL(c->Hash(), d->Hash());
+	BOOST_CHECK(a->IsSame(*b));
+	BOOST_CHECK_EQUAL(a.get(), b.get());   // literally the same node
+	BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
 }
 
 BOOST_AUTO_TEST_CASE(transcendentals_distinguished_by_type)
@@ -162,28 +159,24 @@ BOOST_AUTO_TEST_CASE(integer_power_folds_exponent)
 	BOOST_CHECK(!a->IsSame(*c));        // different integer exponent
 }
 
-// ---- hash is structural (recursive) and precision-independent ----
+// ---- interning unifies whole trees; hash is stable across precision ----
 
-BOOST_AUTO_TEST_CASE(hash_is_structural_and_ignores_working_precision)
+BOOST_AUTO_TEST_CASE(interning_unifies_whole_trees_and_hash_ignores_precision)
 {
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
-	// two structurally-identical trees over the SAME leaves, but with their inner (x+y)
-	// built as separate objects, and set to different working precisions.
+	// two identical builds -> the same interned node (constants Integer(3) and the operators
+	// all hash-cons), so there is no longer any distinct-but-equal pair to compare.
 	Nd f1 = (x + y) * x + Integer::Make(3) * y;
 	Nd f2 = (x + y) * x + Integer::Make(3) * y;
-	f1->precision(100);
-	f2->precision(50);
-
-	// Hash() is recursive over child hashes, so structurally-equal trees hash equal even
-	// though their inner subtrees are distinct objects -- and the working precision does
-	// not participate.
+	BOOST_CHECK(f1->IsSame(*f2));
+	BOOST_CHECK_EQUAL(f1.get(), f2.get());
 	BOOST_CHECK_EQUAL(f1->Hash(), f2->Hash());
 
-	// IsSame() is shallow (operands by pointer): the distinct inner (x+y) objects make these
-	// NOT the same.  (A hash collision without IsSame is exactly the case the intern table
-	// resolves with IsSame; pre-interning it is expected here.)
-	BOOST_CHECK(!f1->IsSame(*f2));
+	// the structural hash does not depend on the mutable working precision
+	auto h = f1->Hash();
+	f1->precision(100);
+	BOOST_CHECK_EQUAL(f1->Hash(), h);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // structural_hash

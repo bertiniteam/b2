@@ -78,10 +78,7 @@ std::shared_ptr<Node> SimplifiedSum(std::vector<std::pair<std::shared_ptr<Node>,
 	if (remaining.size() == 1)
 		return remaining[0].second ? remaining[0].first : SimplifiedNegate(remaining[0].first);
 
-	auto result = SumOperator::Make(remaining[0].first, remaining[0].second);
-	for (size_t ii = 1; ii < remaining.size(); ++ii)
-		result->AddOperand(remaining[ii].first, remaining[ii].second);
-	return result;
+	return SumOperator::Make(remaining);  // build the complete sum, then intern once
 }
 
 
@@ -177,15 +174,11 @@ std::shared_ptr<Node> SimplifiedMult(std::vector<std::pair<std::shared_ptr<Node>
 	if (finals.size() == 1 && finals[0].second)
 		return finals[0].first;
 
-	// MultOperator has no (node, bool) constructor; for a leading divisor,
-	// deliberately materialize the canonical '1/...' form
+	// for a leading divisor, materialize the canonical '1/...' form
 	if (!finals[0].second)
 		finals.insert(finals.begin(), {One(), true});
 
-	auto result = MultOperator::Make(finals[0].first);
-	for (size_t ii = 1; ii < finals.size(); ++ii)
-		result->AddOperand(finals[ii].first, finals[ii].second);
-	return result;
+	return MultOperator::Make(finals);  // build the complete product, then intern once
 }
 
 // ---- functional Simplified() (non-mutating successors to Eliminate*/ReduceDepth) ----
@@ -369,10 +362,11 @@ std::shared_ptr<Node> SumOperator::Homogenized(VariableGroup const& vars, std::s
 				new_ops[ii]);
 	}
 
-	auto result = SumOperator::Make(new_ops[0], signs_[0]);
-	for (size_t ii = 1; ii < new_ops.size(); ++ii)
-		result->AddOperand(new_ops[ii], signs_[ii]);
-	return result;
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> terms;
+	terms.reserve(new_ops.size());
+	for (size_t ii = 0; ii < new_ops.size(); ++ii)
+		terms.emplace_back(new_ops[ii], signs_[ii]);
+	return SumOperator::Make(terms);  // complete sum, interned once
 }
 
 
@@ -717,17 +711,13 @@ std::shared_ptr<Node> MultOperator::Homogenized(VariableGroup const& vars, std::
 	for (auto const& op : operands_)
 		ops.push_back(op->Homogenized(vars, homvar));
 
-	std::shared_ptr<MultOperator> result;
-	if (mult_or_div_[0])
-		result = MultOperator::Make(ops[0]);
-	else  // a leading divisor: materialize the canonical 1/... form
-	{
-		result = MultOperator::Make(One());
-		result->AddOperand(ops[0], false);
-	}
-	for (size_t ii = 1; ii < ops.size(); ++ii)
-		result->AddOperand(ops[ii], mult_or_div_[ii]);
-	return result;
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> factors;
+	factors.reserve(ops.size() + 1);
+	if (!mult_or_div_[0])
+		factors.emplace_back(One(), true);   // leading divisor -> canonical 1/...
+	for (size_t ii = 0; ii < ops.size(); ++ii)
+		factors.emplace_back(ops[ii], mult_or_div_[ii]);
+	return MultOperator::Make(factors);  // complete product, interned once
 }
 
 

@@ -102,7 +102,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<SinOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<SinOperator>( new SinOperator(ts...) );
+			return std::static_pointer_cast<SinOperator>(Intern(std::shared_ptr<Node>( new SinOperator(ts...) )));
 		}
 
 	private:
@@ -165,7 +165,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ArcSinOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<ArcSinOperator>( new ArcSinOperator(ts...) );
+			return std::static_pointer_cast<ArcSinOperator>(Intern(std::shared_ptr<Node>( new ArcSinOperator(ts...) )));
 		}
 
 	private:
@@ -232,7 +232,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<CosOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<CosOperator>( new CosOperator(ts...) );
+			return std::static_pointer_cast<CosOperator>(Intern(std::shared_ptr<Node>( new CosOperator(ts...) )));
 		}
 
 	private:
@@ -298,7 +298,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ArcCosOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<ArcCosOperator>( new ArcCosOperator(ts...) );
+			return std::static_pointer_cast<ArcCosOperator>(Intern(std::shared_ptr<Node>( new ArcCosOperator(ts...) )));
 		}
 
 	private:
@@ -370,7 +370,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<TanOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<TanOperator>( new TanOperator(ts...) );
+			return std::static_pointer_cast<TanOperator>(Intern(std::shared_ptr<Node>( new TanOperator(ts...) )));
 		}
 
 	private:
@@ -433,7 +433,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ArcTanOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<ArcTanOperator>( new ArcTanOperator(ts...) );
+			return std::static_pointer_cast<ArcTanOperator>(Intern(std::shared_ptr<Node>( new ArcTanOperator(ts...) )));
 		}
 
 	private:

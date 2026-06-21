@@ -215,7 +215,7 @@ namespace node{
 		template<typename... Ts>
 		static
 		std::shared_ptr<Integer> Make(Ts&& ...ts){
-			return std::shared_ptr<Integer>( new Integer(ts...) );
+			return std::static_pointer_cast<Integer>(Intern(std::shared_ptr<Node>( new Integer(ts...) )));
 		}
 
 	private:
@@ -333,7 +333,7 @@ namespace node{
 		template<typename... Ts>
 		static
 		std::shared_ptr<Float> Make(Ts&& ...ts){
-			return std::shared_ptr<Float>( new Float(ts...) );
+			return std::static_pointer_cast<Float>(Intern(std::shared_ptr<Node>( new Float(ts...) )));
 		}
 
 	private:
@@ -485,7 +485,7 @@ namespace node{
 		template<typename... Ts>
 		static
 		std::shared_ptr<Rational> Make(Ts&& ...ts){
-			return std::shared_ptr<Rational>( new Rational(ts...) );
+			return std::static_pointer_cast<Rational>(Intern(std::shared_ptr<Node>( new Rational(ts...) )));
 		}
 
 	private:

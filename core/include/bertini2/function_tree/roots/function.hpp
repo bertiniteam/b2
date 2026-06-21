@@ -222,7 +222,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<Function> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Function>( new Function(ts...) );
+			return std::static_pointer_cast<Function>(Intern(std::shared_ptr<Node>( new Function(ts...) )));
 		}
 
 		template<typename... Ts> 

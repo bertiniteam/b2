@@ -88,7 +88,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<SumOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<SumOperator>( new SumOperator(ts...) );
+			return std::static_pointer_cast<SumOperator>(Intern(std::shared_ptr<Node>( new SumOperator(ts...) )));
 		}
 
 	private:
@@ -108,6 +108,15 @@ namespace node{
 		{
 			AddOperand(left, add_or_sub_left);
 			AddOperand(right, add_or_sub_right);
+		}
+
+		// Build a complete sum from a full (term, sign) list.  The node is fully constructed
+		// before Make() interns it -- so callers never AddOperand AFTER Make (which, post-Rung-3,
+		// could mutate a shared interned node).
+		explicit SumOperator(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms)
+		{
+			for (auto const& t : terms)
+				AddOperand(t.first, t.second);
 		}
 		
 	public:
@@ -288,7 +297,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<NegateOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<NegateOperator>( new NegateOperator(ts...) );
+			return std::static_pointer_cast<NegateOperator>(Intern(std::shared_ptr<Node>( new NegateOperator(ts...) )));
 		}
 
 	private:
@@ -387,7 +396,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<MultOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<MultOperator>( new MultOperator(ts...) );
+			return std::static_pointer_cast<MultOperator>(Intern(std::shared_ptr<Node>( new MultOperator(ts...) )));
 		}
 
 	private:
@@ -413,7 +422,15 @@ namespace node{
 			AddOperand(left, mult_or_div_left);
 			AddOperand(right, mult_or_div_right);
 		}
-		
+
+		// Build a complete product from a full (factor, mult-or-div) list -- fully constructed
+		// before Make() interns it, so no post-Make AddOperand on a shared interned node.
+		explicit MultOperator(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& factors)
+		{
+			for (auto const& f : factors)
+				AddOperand(f.first, f.second);
+		}
+
 	public:
 		
 		virtual ~MultOperator() = default;
@@ -557,7 +574,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<PowerOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<PowerOperator>( new PowerOperator(ts...) );
+			return std::static_pointer_cast<PowerOperator>(Intern(std::shared_ptr<Node>( new PowerOperator(ts...) )));
 		}
 
 
@@ -774,7 +791,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<IntegerPowerOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<IntegerPowerOperator>( new IntegerPowerOperator(ts...) );
+			return std::static_pointer_cast<IntegerPowerOperator>(Intern(std::shared_ptr<Node>( new IntegerPowerOperator(ts...) )));
 		}
 
 	private:
@@ -863,7 +880,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<SqrtOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<SqrtOperator>( new SqrtOperator(ts...) );
+			return std::static_pointer_cast<SqrtOperator>(Intern(std::shared_ptr<Node>( new SqrtOperator(ts...) )));
 		}
 
 	private:
@@ -942,7 +959,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ExpOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<ExpOperator>( new ExpOperator(ts...) );
+			return std::static_pointer_cast<ExpOperator>(Intern(std::shared_ptr<Node>( new ExpOperator(ts...) )));
 		}
 
 	private:
@@ -1008,7 +1025,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<LogOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<LogOperator>( new LogOperator(ts...) );
+			return std::static_pointer_cast<LogOperator>(Intern(std::shared_ptr<Node>( new LogOperator(ts...) )));
 		}
 
 	private:
