@@ -243,10 +243,19 @@ std::shared_ptr<Node> LogOperator::Simplified() const
 
 void SumOperator::print(std::ostream & target) const
 {
+	// Print a positive term first.  Canonical ordering (Rung 3c) sorts by degree, which can put
+	// a subtracted term ahead of a constant ("1-t" -> operands t,1), and leading with that minus
+	// reads as an extra negation ("-t+1").  Leading with a '+' term gives the natural, fewer-ops
+	// form ("1-t", "x-(y+z)").  (Print order only; the canonical operand order is unchanged.  An
+	// all-negative sum still leads with '-', e.g. "-x-y".)
+	size_t lead = 0;
 	for (size_t ii = 0; ii < operands_.size(); ++ii)
+		if (signs_[ii]) { lead = ii; break; }
+
+	auto print_one = [&](size_t ii, bool is_lead)
 	{
 		const bool plus = signs_[ii];
-		if (ii == 0)
+		if (is_lead)
 		{
 			if (!plus)
 				target << "-";
@@ -258,12 +267,17 @@ void SumOperator::print(std::ostream & target) const
 		// after '-', wrap sums (grouping) and anything printing a leading '-'
 		// (avoids "--"); after '+' or in the lead, wrap only leading-'-' printers
 		bool needs_parens;
-		if (ii == 0)
+		if (is_lead)
 			needs_parens = plus ? false : (prec <= PrecNegate);
 		else
 			needs_parens = plus ? (prec == PrecNegate) : (prec <= PrecNegate);
 		PrintOperand(target, operands_[ii], needs_parens);
-	}
+	};
+
+	print_one(lead, true);
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+		if (ii != lead)
+			print_one(ii, false);
 }
 
 

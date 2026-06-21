@@ -97,13 +97,14 @@ BOOST_AUTO_TEST_CASE(sums_over_shared_children_are_same)
 	BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
 }
 
-BOOST_AUTO_TEST_CASE(order_sensitive_sum)
+BOOST_AUTO_TEST_CASE(commutative_sum_canonicalizes_to_same)
 {
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	Nd a = x + y;
-	Nd b = y + x;       // different operand order -> NOT the same (order-sensitive)
-	BOOST_CHECK(!a->IsSame(*b));
+	Nd b = y + x;       // canonical operand ordering (Rung 3c, on by default) -> same node
+	BOOST_CHECK(a->IsSame(*b));
+	BOOST_CHECK_EQUAL(a.get(), b.get());
 }
 
 BOOST_AUTO_TEST_CASE(sum_vs_difference_differ_by_signs)

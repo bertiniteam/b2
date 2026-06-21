@@ -66,7 +66,8 @@ def test_mult_binds_tighter_than_sum(xyz):
     x, y, z = xyz
     assert str(x * y + z) == 'x*y+z'
     assert str((x + y) * z) == '(x+y)*z'
-    assert str(x * (y + z)) == 'x*(y+z)'
+    # canonical ordering sorts the graded factor (y+z) ahead of the degree-1 x
+    assert str(x * (y + z)) == '(y+z)*x'
 
 
 def test_division_groups(xyz):

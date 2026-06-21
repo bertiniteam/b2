@@ -318,7 +318,9 @@ BOOST_AUTO_TEST_CASE(complicated4)
 
 	fs->Reset();
 	auto f_val_after = fs->Eval<dbl>();
-	BOOST_CHECK_EQUAL(f_val_init,f_val_after);
+	// canonical operand ordering (Rung 3c) reorders sums/products, so simplify preserves the
+	// value only up to reorder rounding -- compare with a tolerance, not exact equality.
+	BOOST_CHECK_SMALL(std::abs(f_val_init - f_val_after), 1e-12);
 }
 
 //((0*((x-(HOM_VAR_0*1))^3))+((3*((x-(HOM_VAR_0*1))^2)*(-((1*1)+(0*HOM_VAR_0))))*(1-t)))

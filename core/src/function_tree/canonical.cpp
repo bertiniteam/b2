@@ -33,15 +33,21 @@ namespace bertini {
 namespace node {
 
 namespace {
-	// session-global canonicalization settings (default OFF -- enabling it by default is a
-	// deliberate, churn-bearing follow-up step).
+	// session-global canonicalization settings.  Canonicalization is ON by default (decision
+	// #6): every Sum/Mult normalizes operand order so structurally-equal expressions dedup.
 	MonomialOrder& TheOrder()        { static MonomialOrder o = MonomialOrder::GrevLex; return o; }
-	bool&          TheEnabledFlag()  { static bool on = false; return on; }
+	bool&          TheEnabledFlag()  { static bool on = true; return on; }
 
 	bool AllNonNegative(std::vector<int> const& v)
 	{
 		for (int e : v) if (e < 0) return false;
 		return true;
+	}
+
+	// a constant factor: a polynomial monomial of total degree zero (no variables).
+	bool IsConstantKey(std::vector<int> const& v)
+	{
+		return AllNonNegative(v) && std::accumulate(v.begin(), v.end(), 0) == 0;
 	}
 
 	// Does monomial 'a' sort BEFORE monomial 'b' (i.e. is it the "greater" / leading one,
@@ -130,6 +136,15 @@ void CanonicalizeNaryOperands(std::vector<std::shared_ptr<Node>>& operands,
 			// divisor is never first; the +/- sign of a Sum term does not affect ordering.
 			if (multiplicands_first && flags[i] != flags[j])
 				return flags[i];
+			// within a product, a constant coefficient sorts first, so monomials read the
+			// conventional way: "3*x^2", not "x^2*3".  (Sums keep degree order: the constant
+			// term stays last, e.g. "x^2+2*x*y-1".)
+			if (multiplicands_first)
+			{
+				const bool ci = IsConstantKey(keys[i]);
+				const bool cj = IsConstantKey(keys[j]);
+				if (ci != cj) return ci;
+			}
 			if (MonomialGreater(keys[i], keys[j], order)) return true;
 			if (MonomialGreater(keys[j], keys[i], order)) return false;
 			return prints[i] < prints[j];   // deterministic, content-based tie-break

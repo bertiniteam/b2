@@ -159,6 +159,9 @@ def test_system_eval_mp(precision):
     # tolerance scales with the working precision, replacing the old hard-coded 1e-27.
     tol = mpfr_float(10) ** (-(precision - 3))
     s = pb.parse.system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
+    # variables are canonical-by-name and shared across tests, so they may carry a neighbor's
+    # precision; set the system (and thus its variables) to this test's precision explicitly.
+    s.precision(precision)
     exact_real = (mpfr_float('-32.841085'), mpfr_float('-62.9317230'))
     exact_imag = (mpfr_float('-26.66705'), mpfr_float('-196.39641065'))
     v = np.array((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')))
@@ -206,6 +209,8 @@ def test_system_Jac_double(variables, fg):
 def test_system_Jac_mp(precision):
     tol = mpfr_float(10) ** (-(precision - 3))
     s = pb.parse.system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
+    # shared canonical variables may carry a neighbor's precision; pin this test's precision.
+    s.precision(precision)
     exact_real = ((mpfr_float('-9.32'), mpfr_float('3.5'), mpfr_float('0')),
                   (mpfr_float('-71.082170'), mpfr_float('3.8979'), mpfr_float('-3.5')))
     exact_imag = ((mpfr_float('.0765'), mpfr_float('2.89'), mpfr_float('0')),

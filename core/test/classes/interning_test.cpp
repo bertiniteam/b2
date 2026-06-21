@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(equal_operator_trees_are_one_object)
 	auto y = Variable::Make("y");
 	BOOST_CHECK_EQUAL((x*y + y).get(), (x*y + y).get());            // whole tree shares
 	BOOST_CHECK_EQUAL((x*y).get(), (x*y).get());                   // inner subexpr shares
-	BOOST_CHECK(( x + y).get() != (y + x).get());                  // order-sensitive: distinct
+	BOOST_CHECK_EQUAL((x + y).get(), (y + x).get());               // canonicalized: same node
 }
 
 BOOST_AUTO_TEST_CASE(variables_are_canonical_by_name)
@@ -185,13 +185,17 @@ struct CanonGuard
 	}
 };
 
-BOOST_AUTO_TEST_CASE(off_by_default_preserves_authored_order)
+BOOST_AUTO_TEST_CASE(disabling_canonicalization_preserves_authored_order)
 {
-	// canonicalization is OFF by default, so x+y and y+x are distinct interned nodes
+	// canonicalization is ON by default; turn it off and the authored operand order is kept,
+	// so x+y and y+x become distinct interned nodes again.
+	bool prev = bertini::node::CanonicalizeByDefault();
+	bertini::node::SetCanonicalizeByDefault(false);
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	Nd a = x + y, b = y + x;
 	BOOST_CHECK(a.get() != b.get());
+	bertini::node::SetCanonicalizeByDefault(prev);
 }
 
 BOOST_AUTO_TEST_CASE(commutative_sum_dedups_when_enabled)
@@ -245,8 +249,8 @@ BOOST_AUTO_TEST_CASE(all_three_orders_are_selectable_and_dedup)
 BOOST_AUTO_TEST_CASE(guard_restores_global_canonicalization_state)
 {
 	// the canonicalization setting is session-global; confirm the preceding tests' guards
-	// left it back at the default (off, GrevLex) so it cannot leak into other suites.
-	BOOST_CHECK(!bertini::node::CanonicalizeByDefault());
+	// left it back at the default (on, GrevLex) so they cannot leak into other suites.
+	BOOST_CHECK(bertini::node::CanonicalizeByDefault());
 	BOOST_CHECK(bertini::node::CurrentMonomialOrder() == bertini::node::MonomialOrder::GrevLex);
 }
 
