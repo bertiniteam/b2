@@ -56,14 +56,14 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)
 	Var x = Variable::Make("x");
 	Var h = Variable::Make("h");
 
-	auto f1 = x;
+	std::shared_ptr<bertini::node::Node> f1 = x;  // widened to Node for functional Homogenized()
 	
 	BOOST_CHECK(f1->IsHomogeneous());
 
 	VariableGroup vars;
 	vars.push_back(x);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 0);
 	BOOST_CHECK(f1->IsHomogeneous());
 	BOOST_CHECK( f1->IsHomogeneous(x));
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_1)
 	VariableGroup vars;
 	vars.push_back(x);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 1);
 
 	BOOST_CHECK(f1->IsHomogeneous());
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_1_minus_t_x_plus_t_1_minus_x)
 	VariableGroup vars;
 	vars.push_back(x);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 1);
 	BOOST_CHECK(!f1->IsHomogeneous());
 
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_t)
 	VariableGroup vars;
 	vars.push_back(x);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 1);
 	BOOST_CHECK(!f1->IsHomogeneous());
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x_minus_y_t)
 	vars.push_back(x);
 	vars.push_back(y);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 0);
 	BOOST_CHECK(!f1->IsHomogeneous());
 
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_sphere)
 	vars.push_back(y);
 	vars.push_back(z);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 2);
 	BOOST_CHECK(f1->IsHomogeneous());
 
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadric)
 	vars.push_back(y);
 	vars.push_back(z);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 2);
 	BOOST_CHECK(f1->IsHomogeneous());
 
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic)
 	VariableGroup vars;
 	vars.push_back(x);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 2);
 	BOOST_CHECK(f1->IsHomogeneous());
 
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant)
 	VariableGroup vars;
 	vars.push_back(x);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 1);
 	BOOST_CHECK(f1->IsHomogeneous());
 
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 	VariableGroup vars;
 	vars.push_back(y);
 
-	f1->Homogenize(vars,h);
+	f1 = f1->Homogenized(vars,h);  // functional: rebind to the homogenized copy
 	BOOST_CHECK_EQUAL(f1->Degree(h), 0);
 	BOOST_CHECK(!f1->IsHomogeneous());
 
