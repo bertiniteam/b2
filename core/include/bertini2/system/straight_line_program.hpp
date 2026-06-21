@@ -458,6 +458,11 @@ namespace bertini {
 
 		inline unsigned NumVariables() const{ return static_cast<unsigned>(number_of_.Variables);}
 
+		/// Number of memory slots: one per distinct value the program holds (inputs, constants,
+		/// and one per compiled subexpression).  Shared subexpressions get a single slot, so this
+		/// is a measure of the compiled (CSE'd) size of the program.
+		inline size_t NumMemorySlots() const{ return std::get<std::vector<dbl_complex>>(memory_).size(); }
+
 
 		/**
 		\brief Get the current precision of the SLP.

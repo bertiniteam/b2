@@ -4,6 +4,9 @@
 #include "bertini2/io/parsing/system_parsers.hpp"
 #include "bertini2/system/start_systems.hpp"
 
+#include <set>
+#include <iostream>
+
 using Variable = bertini::node::Variable;
 
 using bertini::Operation;
@@ -298,3 +301,103 @@ BOOST_AUTO_TEST_CASE(evaluate_three_variable_system)
 
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
+// ---- common-subexpression elimination via hash-consing ----
+//
+// The SLP compiler keys a node->result-slot map by node pointer and compiles each node only
+// once.  Because identical subexpressions are hash-consed to a single shared node, the
+// compiled program tracks the *DAG* of distinct subexpressions, not the fully-expanded
+// expression tree -- so repeated/shared structure is computed once.
+
+BOOST_AUTO_TEST_SUITE(SLP_cse)
+
+namespace {
+	using Node = bertini::node::Node;
+	using NaryOperator = bertini::node::NaryOperator;
+	using Nd = std::shared_ptr<Node>;
+
+	// nodes in the fully-expanded expression TREE: a shared subnode is counted once per place
+	// it appears -- the work a naive, non-CSE tree-walk evaluator would do.
+	std::size_t ExpandedTreeNodes(Nd const& n)
+	{
+		if (auto nary = std::dynamic_pointer_cast<NaryOperator const>(n))
+		{
+			std::size_t c = 1;
+			for (auto const& op : nary->Operands())
+				c += ExpandedTreeNodes(op);
+			return c;
+		}
+		return 1;
+	}
+
+	// DISTINCT nodes (the DAG): what hash-consing + the SLP compiler actually share.
+	void CollectDistinct(Nd const& n, std::set<Node const*>& seen)
+	{
+		if (!seen.insert(n.get()).second)
+			return;
+		if (auto nary = std::dynamic_pointer_cast<NaryOperator const>(n))
+			for (auto const& op : nary->Operands())
+				CollectDistinct(op, seen);
+	}
+	std::size_t DistinctNodes(Nd const& n)
+	{
+		std::set<Node const*> seen;
+		CollectDistinct(n, seen);
+		return seen.size();
+	}
+
+	std::size_t SlpSlots(bertini::System const& s)
+	{
+		bertini::StraightLineProgram slp(s);
+		return slp.NumMemorySlots();
+	}
+}
+
+BOOST_AUTO_TEST_CASE(hash_consing_unifies_independently_built_subexpressions)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	// (x+y) built twice, independently, then added: hash-consing makes them one node, so the
+	// DAG has a single (x+y) even though the expanded tree repeats it.
+	Nd f = (x + y) + (x + y);
+	BOOST_CHECK_EQUAL(DistinctNodes(f), 4u);      // x, y, (x+y), the outer sum
+	BOOST_CHECK_EQUAL(ExpandedTreeNodes(f), 7u);  // outer + 2*(sum + x + y)
+}
+
+BOOST_AUTO_TEST_CASE(cse_benchmark_squaring_chain)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+
+	std::cout << "\nCSE_TABLE_BEGIN\n";
+	std::cout << "| K | expanded tree nodes | distinct nodes (DAG) | SLP slots (fns+Jac) | reduction (tree/DAG) |\n";
+	std::cout << "|--:|--------------------:|---------------------:|--------------------:|---------------------:|\n";
+
+	for (int K = 1; K <= 16; ++K)
+	{
+		Nd e = x + y;
+		for (int i = 0; i < K; ++i)
+			e = e * e;          // e*e reuses the same node; the DAG grows by one per level
+
+		const auto expanded = ExpandedTreeNodes(e);
+		const auto distinct = DistinctNodes(e);
+
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup{x, y});
+		sys.AddFunction(e);
+		const auto slots = SlpSlots(sys);
+
+		std::cout << "| " << K << " | " << expanded << " | " << distinct
+		          << " | " << slots << " | " << (expanded / distinct) << "x |\n";
+
+		// the same function is a linear DAG but an exponential tree: hash-consing collapses it
+		BOOST_CHECK_EQUAL(distinct, static_cast<std::size_t>(K + 3));   // x, y, (x+y), e_1..e_K
+		BOOST_CHECK_EQUAL(expanded, (std::size_t{1} << (K + 2)) - 1);   // a binary tree
+		if (K >= 8)
+			BOOST_CHECK_LT(slots, expanded);   // the compiled program stays DAG-sized
+	}
+	std::cout << "CSE_TABLE_END\n" << std::endl;
+}
+
+BOOST_AUTO_TEST_SUITE_END() // SLP_cse
