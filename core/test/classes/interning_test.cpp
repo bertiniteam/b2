@@ -29,6 +29,7 @@ single-operand sum).
 
 #include <cstdlib>
 #include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/canonical.hpp"
 #include <boost/test/unit_test.hpp>
 
 using Nd = std::shared_ptr<bertini::node::Node>;
@@ -158,3 +159,95 @@ BOOST_AUTO_TEST_CASE(simplify_leaves_a_held_shared_node_untouched)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // interning
+
+
+// ---- Rung 3c: canonical operand ordering (reorder-only) ----
+
+BOOST_AUTO_TEST_SUITE(canonicalization)
+
+// enable canonicalization (with a chosen monomial order) for the duration of a test, then
+// restore the global state -- the setting is session-global, so it must not leak.
+struct CanonGuard
+{
+	bool prev_on;
+	bertini::node::MonomialOrder prev_order;
+	explicit CanonGuard(bertini::node::MonomialOrder o = bertini::node::MonomialOrder::GrevLex)
+		: prev_on(bertini::node::CanonicalizeByDefault()),
+		  prev_order(bertini::node::CurrentMonomialOrder())
+	{
+		bertini::node::SetMonomialOrder(o);
+		bertini::node::SetCanonicalizeByDefault(true);
+	}
+	~CanonGuard()
+	{
+		bertini::node::SetCanonicalizeByDefault(prev_on);
+		bertini::node::SetMonomialOrder(prev_order);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(off_by_default_preserves_authored_order)
+{
+	// canonicalization is OFF by default, so x+y and y+x are distinct interned nodes
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd a = x + y, b = y + x;
+	BOOST_CHECK(a.get() != b.get());
+}
+
+BOOST_AUTO_TEST_CASE(commutative_sum_dedups_when_enabled)
+{
+	CanonGuard g;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd a = x + y;
+	Nd b = y + x;
+	BOOST_CHECK_EQUAL(a.get(), b.get());          // canonicalized to one node
+	x->set_current_value(dbl(2.0, 0.0));
+	y->set_current_value(dbl(5.0, 0.0));
+	a->Reset();
+	BOOST_CHECK_EQUAL(a->Eval<dbl>(), dbl(7.0, 0.0));
+}
+
+BOOST_AUTO_TEST_CASE(commutative_product_dedups_when_enabled)
+{
+	CanonGuard g;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	BOOST_CHECK_EQUAL((x*y).get(), (y*x).get());
+}
+
+BOOST_AUTO_TEST_CASE(division_stays_correct_under_canonicalization)
+{
+	CanonGuard g;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd q = y / x;                                 // a divisor must not become the leading factor
+	x->set_current_value(dbl(2.0, 0.0));
+	y->set_current_value(dbl(6.0, 0.0));
+	q->Reset();
+	BOOST_CHECK_EQUAL(q->Eval<dbl>(), dbl(3.0, 0.0));    // 6/2
+	BOOST_CHECK((x/y).get() != (y/x).get());            // x/y and y/x stay distinct
+}
+
+BOOST_AUTO_TEST_CASE(all_three_orders_are_selectable_and_dedup)
+{
+	for (auto ord : { bertini::node::MonomialOrder::Lex,
+	                  bertini::node::MonomialOrder::RevLex,
+	                  bertini::node::MonomialOrder::GrevLex })
+	{
+		CanonGuard g(ord);
+		auto x = Variable::Make("x");
+		auto y = Variable::Make("y");
+		BOOST_CHECK_EQUAL((x + y).get(), (y + x).get());
+	}
+}
+
+BOOST_AUTO_TEST_CASE(guard_restores_global_canonicalization_state)
+{
+	// the canonicalization setting is session-global; confirm the preceding tests' guards
+	// left it back at the default (off, GrevLex) so it cannot leak into other suites.
+	BOOST_CHECK(!bertini::node::CanonicalizeByDefault());
+	BOOST_CHECK(bertini::node::CurrentMonomialOrder() == bertini::node::MonomialOrder::GrevLex);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // canonicalization

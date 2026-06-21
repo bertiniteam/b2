@@ -56,6 +56,7 @@
 #include "bertini2/function_tree/symbols/differential.hpp"
 
 #include "bertini2/function_tree/forward_declares.hpp"
+#include "bertini2/function_tree/canonical.hpp"
 
 #include <cmath>
 
@@ -101,13 +102,15 @@ namespace node{
 		{
 			AddOperand(left);
 			AddOperand(right);
+			CanonicalizeNaryOperands(operands_, signs_, false);
 		}
-		
-		
+
+
 		SumOperator(const std::shared_ptr<Node> & left, bool add_or_sub_left, const std::shared_ptr<Node> & right, bool add_or_sub_right)
 		{
 			AddOperand(left, add_or_sub_left);
 			AddOperand(right, add_or_sub_right);
+			CanonicalizeNaryOperands(operands_, signs_, false);
 		}
 
 		// Build a complete sum from a full (term, sign) list.  The node is fully constructed
@@ -117,6 +120,7 @@ namespace node{
 		{
 			for (auto const& t : terms)
 				AddOperand(t.first, t.second);
+			CanonicalizeNaryOperands(operands_, signs_, false);
 		}
 		
 	public:
@@ -414,13 +418,15 @@ namespace node{
 		{
 			AddOperand(left);
 			AddOperand(right);
+			CanonicalizeNaryOperands(operands_, mult_or_div_, true);
 		}
-		
-		
+
+
 		MultOperator(const std::shared_ptr<Node> & left, bool mult_or_div_left, const std::shared_ptr<Node> & right, bool mult_or_div_right)
 		{
 			AddOperand(left, mult_or_div_left);
 			AddOperand(right, mult_or_div_right);
+			CanonicalizeNaryOperands(operands_, mult_or_div_, true);
 		}
 
 		// Build a complete product from a full (factor, mult-or-div) list -- fully constructed
@@ -429,6 +435,7 @@ namespace node{
 		{
 			for (auto const& f : factors)
 				AddOperand(f.first, f.second);
+			CanonicalizeNaryOperands(operands_, mult_or_div_, true);
 		}
 
 	public:

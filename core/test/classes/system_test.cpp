@@ -447,6 +447,14 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 	auto y = Variable::Make("y");
 	auto z = Variable::Make("z");
 
+	// Variables are canonical-by-name (Rung 3b) and therefore SHARED across tests, so this
+	// test must set its own evaluation point instead of reading whatever a prior test left
+	// on x/y/z.  Modest magnitudes keep the high-degree SLP-vs-analytic rounding comfortably
+	// inside the 1e-15 tolerance below.
+	x->set_current_value(dbl(0.5,  0.25));
+	y->set_current_value(dbl(0.4, -0.30));
+	z->set_current_value(dbl(0.6,  0.20));
+
 	System sys;
 
 	sys.AddVariableGroup(VariableGroup{x, y, z});

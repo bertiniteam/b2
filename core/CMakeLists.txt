@@ -346,6 +346,7 @@ set(function_tree_sources
     src/function_tree/node.cpp
     src/function_tree/gather.cpp
     src/function_tree/simplify.cpp
+    src/function_tree/canonical.cpp
     src/function_tree/operators/arithmetic.cpp
     src/function_tree/operators/trig.cpp
     src/function_tree/operators/operator.cpp
