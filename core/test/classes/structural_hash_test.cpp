@@ -71,11 +71,11 @@ BOOST_AUTO_TEST_CASE(equal_rationals_are_same)
 	BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
 }
 
-// ---- variables are identity (until interned by name in Rung 3) ----
+// ---- variables are identity (until interned by name) ----
 
 BOOST_AUTO_TEST_CASE(same_name_variables_are_the_same)
 {
-	// Rung 3b: variables are canonical by name -- two Make("x") are the SAME node.
+	// variables are canonical by name -- two Make("x") are the SAME node.
 	auto x1 = Variable::Make("x");
 	auto x2 = Variable::Make("x");
 	BOOST_CHECK(x1->IsSame(*x2));
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(commutative_sum_canonicalizes_to_same)
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	Nd a = x + y;
-	Nd b = y + x;       // canonical operand ordering (Rung 3c, on by default) -> same node
+	Nd b = y + x;       // canonical operand ordering (on by default) -> same node
 	BOOST_CHECK(a->IsSame(*b));
 	BOOST_CHECK_EQUAL(a.get(), b.get());
 }
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(interning_collapses_equal_subtrees)
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	auto z = Variable::Make("z");
-	// With hash-consing (Rung 3), the inner (x+y) is itself interned, so building (x+y)*z
+	// With hash-consing, the inner (x+y) is itself interned, so building (x+y)*z
 	// twice returns the SAME interned object -- you can no longer make distinct-but-equal
 	// subtrees.  (That is the whole point of hash-consing.)
 	Nd a = (x + y) * z;

@@ -243,7 +243,7 @@ std::shared_ptr<Node> LogOperator::Simplified() const
 
 void SumOperator::print(std::ostream & target) const
 {
-	// Print a positive term first.  Canonical ordering (Rung 3c) sorts by degree, which can put
+	// Print a positive term first.  Canonical ordering sorts by degree, which can put
 	// a subtracted term ahead of a constant ("1-t" -> operands t,1), and leading with that minus
 	// reads as an extra negation ("-t+1").  Leading with a '+' term gives the natural, fewer-ops
 	// form ("1-t", "x-(y+z)").  (Print order only; the canonical operand order is unchanged.  An
@@ -960,7 +960,7 @@ std::shared_ptr<Node> LogOperator::Homogenized(VariableGroup const& vars, std::s
 	return LogOperator::Make(operand_->Homogenized(vars, homvar));
 }
 
-// ---- structural hash / equality (Rung 2) ----
+// ---- structural hash / equality ----
 // Order-sensitive; operands folded in by Hash() for the hash, compared by pointer for IsSame.
 
 std::size_t SumOperator::HashImpl() const

@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(complicated4)
 
 	fs->Reset();
 	auto f_val_after = fs->Eval<dbl>();
-	// canonical operand ordering (Rung 3c) reorders sums/products, so simplify preserves the
+	// canonical operand ordering reorders sums/products, so simplify preserves the
 	// value only up to reorder rounding -- compare with a tolerance, not exact equality.
 	BOOST_CHECK_SMALL(std::abs(f_val_init - f_val_after), 1e-12);
 }

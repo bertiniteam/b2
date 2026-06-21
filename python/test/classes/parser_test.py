@@ -62,7 +62,7 @@ def _f_eval(expr, vals):
 
 
 # Regression: a leading unary '-' used to negate the ENTIRE following expression ("-y+x"
-# parsed as "-(y+x)") instead of just its operand.  This surfaced once Rung-3c canonical
+# parsed as "-(y+x)") instead of just its operand.  This surfaced once canonical
 # ordering let a printed sum lead with a subtracted term, breaking print->parse round-trips.
 def test_leading_unary_minus_negates_only_its_operand():
     vals = np.array((complex(2, 0), complex(5, 0), complex(3, 0)))  # x=2, y=5, z=3

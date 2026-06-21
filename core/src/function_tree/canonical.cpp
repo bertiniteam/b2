@@ -33,8 +33,8 @@ namespace bertini {
 namespace node {
 
 namespace {
-	// session-global canonicalization settings.  Canonicalization is ON by default (decision
-	// #6): every Sum/Mult normalizes operand order so structurally-equal expressions dedup.
+	// session-global canonicalization settings.  Canonicalization is ON by default: every Sum/Mult normalizes operand
+	// order, so structurally-equal expressions dedup to one interned node.
 	MonomialOrder& TheOrder()        { static MonomialOrder o = MonomialOrder::GrevLex; return o; }
 	bool&          TheEnabledFlag()  { static bool on = true; return on; }
 

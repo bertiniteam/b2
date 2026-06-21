@@ -22,7 +22,7 @@
 /**
 \file canonical.hpp
 
-\brief Canonical ordering of commutative-operator operands (Rung 3c, reorder-only).
+\brief Canonical ordering of commutative-operator operands (reorder-only).
 
 When canonicalization is enabled, the operands of a Sum / Mult are sorted into a
 deterministic, content-based canonical order BEFORE the node is interned, so that
@@ -32,8 +32,8 @@ The order is a pluggable monomial order -- Lex / RevLex / GrevLex -- on the oper
 exponent vectors (via Node::MultiDegree), built on the global variable order BY NAME
 (node::GatherVariables already returns variables sorted alphabetically).  Non-polynomial
 operands sort after the polynomial ones, with a printed-form tie-break to stay total.
-This is reorder-only ("(A)"): operands are sorted but never combined (no like-term folding;
-that "(B)" full polynomial normal form is future work).
+This sorts operands but never combines them (no like-term folding; a full polynomial normal
+form is future work).
 
 Nothing here changes Node::Hash()/IsSame(): canonicalization is a normalization applied at
 construction, and the existing order-sensitive predicates then see the normalized order.

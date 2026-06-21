@@ -80,7 +80,7 @@ namespace node{
 		return std::const_pointer_cast<Node>(shared_from_this());
 	}
 
-	// ---- structural hash / equality (Rung 2: predicate layer for hash-consing) ----
+	// ---- structural hash / equality (predicate layer for hash-consing) ----
 
 	std::size_t Node::Hash() const
 	{
@@ -145,7 +145,7 @@ namespace node{
 		std::get<std::pair<mpfr_complex,bool> >(current_value_).second = false;
 	}
 
-	// ---- hash-consing intern table (Rung 3) ----
+	// ---- hash-consing intern table ----
 	namespace {
 		// Process-global table: structural hash -> live nodes, held weakly so it self-cleans
 		// (a node dies when its last external shared_ptr drops; its weak_ptr is pruned on the

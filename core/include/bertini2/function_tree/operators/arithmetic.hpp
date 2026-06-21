@@ -114,7 +114,7 @@ namespace node{
 		}
 
 		// Build a complete sum from a full (term, sign) list.  The node is fully constructed
-		// before Make() interns it -- so callers never AddOperand AFTER Make (which, post-Rung-3,
+		// before Make() interns it -- so callers never AddOperand AFTER Make (which, with interning,
 		// could mutate a shared interned node).
 		explicit SumOperator(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms)
 		{

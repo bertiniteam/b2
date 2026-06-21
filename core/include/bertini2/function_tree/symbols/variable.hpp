@@ -75,7 +75,7 @@ namespace node{
 		
 		virtual ~Variable() = default;
 
-		// Rung 3b: variables are canonical BY NAME -- Make("x") interns to a single shared x,
+		// variables are canonical BY NAME -- Make("x") interns to a single shared x,
 		// so system1's x IS system2's x.  (Value/eval-state lives on that shared node until C2
 		// moves it into a per-thread eval context.)
 		std::size_t HashImpl() const override
