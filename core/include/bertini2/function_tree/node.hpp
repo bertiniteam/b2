@@ -493,8 +493,8 @@ private:
 	The intern table is a process-global, weak (self-cleaning) map keyed by Node::Hash() and
 	disambiguated by Node::IsSame().  Every Make() routes its just-constructed node through here,
 	so structurally-equal subtrees collapse to a single shared object (hash-consing).  On a hit
-	the just-built candidate is discarded.  Nodes whose IsSame() is identity (e.g. Variable in
-	Rung 3a, Function, Pi, E) never match, so they pass through unchanged -- no special-casing.
+	the just-built candidate is discarded.  Nodes whose IsSame() is identity (e.g. Variable,
+	Function, Pi, E) never match, so they pass through unchanged -- no special-casing.
 
 	Thread note: guarded by a mutex, contended only during single-threaded authoring;
 	deserialization (Clone) constructs nodes WITHOUT going through Make/Intern, so per-thread
