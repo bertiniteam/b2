@@ -68,6 +68,13 @@ namespace node{
 		return std::const_pointer_cast<Node>(shared_from_this());
 	}
 
+	// Default: nothing to homogenize (leaves) -- return this node unchanged.  Operators that
+	// can carry degree-deficient summands (and their ancestors) override to rebuild functionally.
+	std::shared_ptr<Node> Node::Homogenized(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) const
+	{
+		return std::const_pointer_cast<Node>(shared_from_this());
+	}
+
 
 	template<typename T>
 	void Node::EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const

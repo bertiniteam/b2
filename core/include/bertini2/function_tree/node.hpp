@@ -303,12 +303,20 @@ public:
 	virtual int Degree(VariableGroup const& vars) const = 0;
 
 	/**
-	Homogenize a tree, inputting a variable group holding the non-homogeneous variables, and the new homogenizing variable.  The homvar may be an element of the variable group, that's perfectly ok.
-	
+	Homogenize a tree, returning a NEW homogenized tree (functional / non-mutating).  Input a
+	variable group holding the non-homogeneous variables, and the new homogenizing variable.
+	The homvar may be an element of the variable group, that's perfectly ok.
+
+	The input tree is never modified; degree-deficient summands are padded with powers of homvar
+	in a freshly-built tree (so a throw on a non-polynomial term can't leave a half-homogenized
+	tree behind).  The default (leaves, and anything with nothing to homogenize) returns the node
+	unchanged -- shared variables are preserved, so set_current_value still drives the result.
+
 	\param homvar The homogenizing variable, which is multiplied against terms with degree deficiency with repect to other terms.
 	\param vars A group of variables, with respect to which you wish to homogenize.
+	\return A homogenized tree (possibly the same node, if nothing changed).
 	*/
-	virtual void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) = 0;
+	virtual std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const;
 
 	/**
 	Check for homogeneity, absolutely with respect to all variables, including path variables and all other variable types, or with respect to a single varaible, if passed. 

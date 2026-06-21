@@ -143,10 +143,6 @@ std::vector<int> Variable::MultiDegree(VariableGroup const& vars) const
 }
 
 
-void Variable::Homogenize(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/)
-{
-	
-}
 
 bool Variable::IsHomogeneous(std::shared_ptr<Variable> const& /*v*/) const
 {

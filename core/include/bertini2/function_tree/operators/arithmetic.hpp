@@ -187,7 +187,7 @@ namespace node{
 		/**
 		 Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
 		 */
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -297,6 +297,7 @@ namespace node{
 	public:
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		/**
 		 Print to an arbitrary ostream.
@@ -464,7 +465,7 @@ namespace node{
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -617,7 +618,7 @@ namespace node{
 		
 
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -702,6 +703,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		/**
 		 polymorphic method for printing to an arbitrary stream.
@@ -863,6 +865,7 @@ namespace node{
 	public:
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		void print(std::ostream & target) const override;
 		
@@ -926,6 +929,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		template<typename... Ts> 
 		static 
@@ -991,6 +995,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		template<typename... Ts> 
 		static 

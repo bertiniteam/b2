@@ -82,11 +82,6 @@ std::vector<int> UnaryOperator::MultiDegree(VariableGroup const& vars) const
 	return deg;
 }
 
-void UnaryOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
-{
-	operand_->Homogenize(vars, homvar);
-}
-
 
 bool UnaryOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 {

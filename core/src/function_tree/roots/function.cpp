@@ -160,9 +160,14 @@ std::vector<int> Handle::MultiDegree(VariableGroup const& vars) const
 }
 
 
-void Handle::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
+std::shared_ptr<Node> Handle::Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const
 {
-	entry_node_->Homogenize(vars, homvar);
+	auto homogenized_entry = entry_node_->Homogenized(vars, homvar);
+	if (homogenized_entry == entry_node_)
+		return std::const_pointer_cast<Node>(shared_from_this());  // unchanged -- share
+	// functional: a fresh Function wrapping the homogenized entry; the original is untouched,
+	// so a user (or another System) holding this function never observes it change.
+	return Function::Make(homogenized_entry, name());
 }
 
 bool Handle::IsHomogeneous(std::shared_ptr<Variable> const& v) const

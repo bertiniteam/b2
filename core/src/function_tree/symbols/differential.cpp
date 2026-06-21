@@ -76,10 +76,6 @@ std::vector<int> Differential::MultiDegree(VariableGroup const& vars) const
 	return std::vector<int>(vars.size(),0);
 }
 
-void Differential::Homogenize(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/)
-{
-	
-}
 
 bool Differential::IsHomogeneous(std::shared_ptr<Variable> const& /*v*/) const
 {

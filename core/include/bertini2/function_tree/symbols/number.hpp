@@ -109,15 +109,6 @@ namespace node{
 			return std::vector<int>(vars.size(), 0);
 		}
 
-		/**
-		\brief Homogenize this node.
-
-		Homogenization of a number is a trivial operation.  Don't do anything.
-		*/
-		void Homogenize(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) override
-		{
-			
-		}
 
 		/**
 		\brief Is this node homogeneous?

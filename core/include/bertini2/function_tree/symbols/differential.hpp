@@ -108,8 +108,6 @@ namespace node{
 		
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
-		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		/**

@@ -472,17 +472,19 @@ def test_Homogenize(op):
     vars = VariableGroup()
     vars.append(y); vars.append(x); vars.append(z)
     #
-    f.homogenize(vars, h)
-    assert f.degree(h) == 2
-    assert f.is_homogeneous()
+    g = f.homogenized(vars, h)   # functional: returns a homogenized copy
+    assert g.degree(h) == 2
+    assert g.is_homogeneous()
     #
-    assert not f.is_homogeneous(x)
-    assert not f.is_homogeneous(y)
-    assert not f.is_homogeneous(z)
-    assert not f.is_homogeneous(h)
+    assert not g.is_homogeneous(x)
+    assert not g.is_homogeneous(y)
+    assert not g.is_homogeneous(z)
+    assert not g.is_homogeneous(h)
     #
     vars.append(h)
-    assert f.is_homogeneous(vars)
+    assert g.is_homogeneous(vars)
+    # the original is untouched (non-mutating homogenization)
+    assert not f.is_homogeneous()
 
 
 # ---------------------------------------------------------------------------- homogenization
@@ -543,18 +545,19 @@ def test_homogenize_x_minus_1():
 
     f = x - Integer(1)
     assert not f.is_homogeneous()
-    f.homogenize(vg, h)
-    assert f.is_homogeneous()
+    g = f.homogenized(vg, h)        # x - h
+    assert g.is_homogeneous()
+    assert not f.is_homogeneous()   # original untouched
 
-    # Evaluate: at (x=2, h=1) → x - h = 2 - 1 = 1
+    # Evaluate g: at (x=2, h=1) → x - h = 2 - 1 = 1
     x.set_current_value(complex(2, 0))
     h.set_current_value(complex(1, 0))
-    assert abs(f.eval_d() - complex(1, 0)) < 1e-14
+    assert abs(g.eval_d() - complex(1, 0)) < 1e-14
 
     # At (x=3, h=2) → 3 - 2 = 1
     x.set_current_value(complex(3, 0))
     h.set_current_value(complex(2, 0))
-    assert abs(f.eval_d() - complex(1, 0)) < 1e-14
+    assert abs(g.eval_d() - complex(1, 0)) < 1e-14
 
 
 def test_homogenize_leaves_already_homogeneous_unchanged():
@@ -567,8 +570,8 @@ def test_homogenize_leaves_already_homogeneous_unchanged():
 
     f = x  # degree 1, already homogeneous
     assert f.is_homogeneous()
-    f.homogenize(vg, h)
-    assert f.is_homogeneous()
+    g = f.homogenized(vg, h)  # nothing to pad; returns an equivalent (homogeneous) tree
+    assert g.is_homogeneous()
 
 
 def test_forbid_doubles(op):

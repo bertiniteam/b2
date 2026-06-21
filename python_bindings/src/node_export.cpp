@@ -62,7 +62,7 @@ namespace bertini{
 			
 			std::vector<int> MultiDegree(VariableGroup const& vars) const {return this->get_override("MultiDegree")(vars); }
 			
-			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) { this->get_override("Homogenize")(vars, homvar); }
+			std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const { return this->get_override("Homogenized")(vars, homvar); }
 			
 			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const {return this->get_override("IsHomogeneous")(v); }
 			bool IsHomogeneous(VariableGroup const& vars) const {return this->get_override("IsHomogeneous")(vars); }
@@ -97,7 +97,7 @@ namespace bertini{
 			.def("differentiate", Diff0, (arg("self")),"differentiate a node.  is with respect to all variables.  you get a Jacobian back, which represents derivatives wrt all variables simultaneously.")
 			.def("differentiate", Diff1, (arg("self")),"differentiate a node with respect to one variable.  You get a regular old Node in a Function Tree back.")
 			.def("multidegree", &NodeBaseT::MultiDegree, (arg("self"),arg("vars")),"Compute an integer vector containing the degrees with respect to the variables in `vars`.  Negative entries indicate non-polynomiality")
-			.def("homogenize", &NodeBaseT::Homogenize, (arg("self"),arg("vars"), arg("homvar")), "Homogenize this function tree with respect to the variables in `vars` using the homogenizing variables `homvar`.  Essentially, multiply all terms downward so they have the same degree, using `homvar` to make up the degree defficiency.")
+			.def("homogenized", &NodeBaseT::Homogenized, (arg("self"),arg("vars"), arg("homvar")), "Return a NEW homogenized copy of this function tree (non-mutating) with respect to the variables in `vars` using the homogenizing variable `homvar`.  Degree-deficient terms are padded with powers of `homvar` so all terms share the same degree.  The original tree is left untouched.")
 			.def("is_homogeneous", IsHom0,(arg("self")), "test if this Node is homogeneous with respect to all Variables.")
 			.def("is_homogeneous", IsHom1,(arg("self"),arg("var")), "test if this Node is homogeneous with respect to Variable `var`.")
 			.def("is_homogeneous", IsHom2,(arg("self"),arg("vars")), "test if this Node is homogeneous with respect to the Variables in `vars`.")

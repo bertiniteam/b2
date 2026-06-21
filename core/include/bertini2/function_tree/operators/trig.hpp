@@ -97,6 +97,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		template<typename... Ts> 
 		static 
@@ -159,6 +160,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		template<typename... Ts> 
 		static 
@@ -225,6 +227,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		template<typename... Ts> 
 		static 
@@ -290,6 +293,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		template<typename... Ts> 
 		static 
@@ -361,6 +365,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		template<typename... Ts> 
 		static 
@@ -423,6 +428,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		template<typename... Ts> 
 		static 

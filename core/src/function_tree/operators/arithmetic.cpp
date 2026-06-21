@@ -335,56 +335,44 @@ std::vector<int> SumOperator::MultiDegree(VariableGroup const& vars) const
 	return deg;
 }
 
-void SumOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
+std::shared_ptr<Node> SumOperator::Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const
 {
-	
-	
-	
-	// first homogenize each summand.
-	for (auto iter: operands_)
-	{
-		iter->Homogenize(vars, homvar);
-	}
-	
-	// then, homogenize this sum.
-	
-	// compute the highest degree among all summands.
+	// homogenize each summand functionally (fresh subtrees), measure degrees, then pad
+	// degree-deficient summands with powers of homvar -- all into a freshly-built sum.
+	// the input is never touched, and the throw below happens before anything is built,
+	// so a non-polynomial term can't leave a half-homogenized tree behind.
+	std::vector<std::shared_ptr<Node>> new_ops;
+	new_ops.reserve(operands_.size());
+	for (auto const& op : operands_)
+		new_ops.push_back(op->Homogenized(vars, homvar));
+
 	int maxdegree = 0;
 	std::vector<int> term_degrees;
-	// first homogenize each summand.
-	for (auto iter: operands_)
+	term_degrees.reserve(new_ops.size());
+	for (auto const& op : new_ops)
 	{
-		auto local_degree = iter->Degree(vars);
-		if (local_degree<0)
+		auto local_degree = op->Degree(vars);
+		if (local_degree < 0)
 			throw std::runtime_error("asking for homogenization on non-polynomial node");
-		// TODO: this throw would leave the tree in a partially homogenized state.  this is scary.
-		
 		term_degrees.push_back(local_degree);
 		maxdegree = std::max(maxdegree, local_degree);
 	}
-	
-	for (auto iter = operands_.begin(); iter!=operands_.end(); iter++)
+
+	for (size_t ii = 0; ii < new_ops.size(); ++ii)
 	{
-		auto degree_deficiency = maxdegree - *(term_degrees.begin() + (iter-operands_.begin()));
-		if ( degree_deficiency > 0)
-		{
-
-			// hold the operand temporarily.
-			if (degree_deficiency==1)
-			{
-				std::shared_ptr<Node> M = MultOperator::Make(homvar,std::dynamic_pointer_cast<Node>(*iter));
-				swap(*iter,M);
-			}
-			else{
-				std::shared_ptr<Node> P = IntegerPowerOperator::Make(std::dynamic_pointer_cast<Node>(homvar),degree_deficiency);
-				std::shared_ptr<Node> M = MultOperator::Make(P,std::dynamic_pointer_cast<Node>(*iter));
-				swap(*iter,M);
-			}
-			
-
-		}
+		auto degree_deficiency = maxdegree - term_degrees[ii];
+		if (degree_deficiency == 1)
+			new_ops[ii] = MultOperator::Make(homvar, new_ops[ii]);
+		else if (degree_deficiency > 1)
+			new_ops[ii] = MultOperator::Make(
+				IntegerPowerOperator::Make(std::static_pointer_cast<Node>(homvar), degree_deficiency),
+				new_ops[ii]);
 	}
-	
+
+	auto result = SumOperator::Make(new_ops[0], signs_[0]);
+	for (size_t ii = 1; ii < new_ops.size(); ++ii)
+		result->AddOperand(new_ops[ii], signs_[ii]);
+	return result;
 }
 
 
@@ -721,12 +709,25 @@ std::vector<int> MultOperator::MultiDegree(VariableGroup const& vars) const
 
 
 
-void MultOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
+std::shared_ptr<Node> MultOperator::Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const
 {
-	for (auto iter: operands_)
+	// product of homogenized factors, preserving the multiply/divide flags (no simplification).
+	std::vector<std::shared_ptr<Node>> ops;
+	ops.reserve(operands_.size());
+	for (auto const& op : operands_)
+		ops.push_back(op->Homogenized(vars, homvar));
+
+	std::shared_ptr<MultOperator> result;
+	if (mult_or_div_[0])
+		result = MultOperator::Make(ops[0]);
+	else  // a leading divisor: materialize the canonical 1/... form
 	{
-		iter->Homogenize(vars, homvar);
+		result = MultOperator::Make(One());
+		result->AddOperand(ops[0], false);
 	}
+	for (size_t ii = 1; ii < ops.size(); ++ii)
+		result->AddOperand(ops[ii], mult_or_div_[ii]);
+	return result;
 }
 
 
@@ -921,16 +922,38 @@ std::vector<int> PowerOperator::MultiDegree(VariableGroup const& vars) const
 
 
 
-void PowerOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
+std::shared_ptr<Node> PowerOperator::Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const
 {
-	if (exponent_->Degree(vars)==0)
-	{
-		base_->Homogenize(vars, homvar);
-	}
-	else{
-		throw std::runtime_error("asking for homogenization on non-polynomial node");
-		//TODO: this will leave the system in a broken state, partially homogenized...
-	}
+	if (exponent_->Degree(vars) == 0)
+		return PowerOperator::Make(base_->Homogenized(vars, homvar), exponent_);
+	// non-constant exponent -> non-polynomial; throw before building anything.
+	throw std::runtime_error("asking for homogenization on non-polynomial node");
+}
+
+// ---- unary operators: rebuild the same op type from the homogenized operand ----
+std::shared_ptr<Node> NegateOperator::Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const
+{
+	return NegateOperator::Make(operand_->Homogenized(vars, homvar));
+}
+
+std::shared_ptr<Node> IntegerPowerOperator::Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const
+{
+	return IntegerPowerOperator::Make(operand_->Homogenized(vars, homvar), exponent_);
+}
+
+std::shared_ptr<Node> SqrtOperator::Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const
+{
+	return SqrtOperator::Make(operand_->Homogenized(vars, homvar));
+}
+
+std::shared_ptr<Node> ExpOperator::Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const
+{
+	return ExpOperator::Make(operand_->Homogenized(vars, homvar));
+}
+
+std::shared_ptr<Node> LogOperator::Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const
+{
+	return LogOperator::Make(operand_->Homogenized(vars, homvar));
 }
 
 bool PowerOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const

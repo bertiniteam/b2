@@ -106,10 +106,13 @@ public:
 		return d;
 	}
 
-	/// Homogenize each function tree in place with respect to the group + its homogenizing var.
+	/// Homogenize each function w.r.t. the group + its homogenizing var, functionally:
+	/// each function is rebound to a freshly homogenized copy, so any external holder of the
+	/// original function node never observes it change (shared variables are preserved).
 	void Homogenize(VariableGroup const& group, Var const& hom_var)
 	{
-		for (auto const& f : functions_) f->Homogenize(group, hom_var);
+		for (auto& f : functions_)
+			f = std::static_pointer_cast<node::Function>(f->Homogenized(group, hom_var));
 		Invalidate();
 	}
 	bool IsHomogeneous(VariableGroup const& vars) const
