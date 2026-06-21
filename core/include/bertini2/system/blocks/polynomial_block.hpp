@@ -48,7 +48,6 @@ variable, functions, and derivatives this block owns (see SLPCompiler::Compile).
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/function_tree.hpp"
-#include "bertini2/system/eval_method.hpp"
 #include "bertini2/system/straight_line_program.hpp"
 
 namespace bertini {
@@ -77,9 +76,6 @@ public:
 	void SetVariableOrdering(VariableGroup const& vars) const { variables_ = vars; Invalidate(); }
 	void SetPathVariable(Var const& t) const { path_variable_ = t; Invalidate(); }
 	void ClearPathVariable() const { path_variable_.reset(); Invalidate(); }
-
-	void SetEvalMethod(EvalMethod m) const { eval_method_ = m; Invalidate(); }
-	EvalMethod GetEvalMethod() const { return eval_method_; }
 
 	// Mutable access for the owning System's construction-time manipulations (Homogenize walks
 	// the trees in place; Reorder/Simplify reassign entries).  The System keeps the variable
@@ -161,27 +157,19 @@ public:
 			for (auto const& n : space_derivatives_) n->precision(new_precision);
 			for (auto const& n : time_derivatives_)  n->precision(new_precision);
 		}
-		if (eval_method_ == EvalMethod::SLP)
-			slp_.precision(new_precision);
+		slp_.precision(new_precision);
 		precision_ = new_precision;
 	}
 
 	// ---- block contract: evaluation (value-in) ----
+	// The compiled SLP is the sole evaluator; the function/derivative trees survive only as the
+	// thing the SLP is compiled from (and that Simplify/Differentiate operate on).
 	template <typename T>
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& path_value) const
 	{
 		EnsureDifferentiated();
 		SetValues<T>(vars, path_value);
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:
-				for (size_t ii = 0; ii < functions_.size(); ++ii)
-					functions_[ii]->template EvalInPlace<T>(result(static_cast<Eigen::Index>(ii)));
-				break;
-			case EvalMethod::SLP:
-				slp_.template GetFuncValsInPlace<T>(result);
-				break;
-		}
+		slp_.template GetFuncValsInPlace<T>(result);
 	}
 
 	template <typename T>
@@ -189,17 +177,7 @@ public:
 	{
 		EnsureDifferentiated();
 		SetValues<T>(vars, path_value);
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:
-				for (size_t jj = 0; jj < variables_.size(); ++jj)
-					for (size_t ii = 0; ii < functions_.size(); ++ii)
-						space_derivatives_[ii + jj * functions_.size()]->template EvalInPlace<T>(J(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)));
-				break;
-			case EvalMethod::SLP:
-				slp_.template GetJacobianInPlace<T>(J);
-				break;
-		}
+		slp_.template GetJacobianInPlace<T>(J);
 	}
 
 	template <typename T>
@@ -208,16 +186,7 @@ public:
 		if (!path_variable_) { result.setZero(); return; }
 		EnsureDifferentiated();
 		SetValues<T>(vars, path_value);
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:
-				for (size_t ii = 0; ii < functions_.size(); ++ii)
-					time_derivatives_[ii]->template EvalInPlace<T>(result(static_cast<Eigen::Index>(ii)));
-				break;
-			case EvalMethod::SLP:
-				slp_.template GetTimeDerivInPlace<T>(result);
-				break;
-		}
+		slp_.template GetTimeDerivInPlace<T>(result);
 	}
 
 	// ---- accessors the SLP compiler reads (mirror the System names) ----
@@ -250,8 +219,7 @@ public:
 		is_differentiated_ = true;  // set before SimplifyDerivatives/Compile, which read the deriv state
 		if (auto_simplify_)
 			SimplifyDerivatives();
-		if (eval_method_ == EvalMethod::SLP)
-			slp_ = SLPCompiler().Compile(*this);
+		slp_ = SLPCompiler().Compile(*this);
 	}
 
 	/// Simplify the function trees (and invalidate the derivatives, which must be rebuilt).
@@ -307,18 +275,8 @@ private:
 	template <typename T>
 	void SetValues(Vec<T> const& vars, T const& path_value) const
 	{
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:
-				for (size_t ii = 0; ii < variables_.size(); ++ii)
-					variables_[ii]->template set_current_value<T>(vars(static_cast<Eigen::Index>(ii)));
-				if (path_variable_) path_variable_->template set_current_value<T>(path_value);
-				break;
-			case EvalMethod::SLP:
-				slp_.SetVariableValues(vars);
-				if (path_variable_) { path_variable_->template set_current_value<T>(path_value); slp_.template SetPathVariable<T>(path_value); }
-				break;
-		}
+		slp_.SetVariableValues(vars);
+		if (path_variable_) { path_variable_->template set_current_value<T>(path_value); slp_.template SetPathVariable<T>(path_value); }
 	}
 
 	void DifferentiateUsingDerivatives() const
@@ -347,7 +305,6 @@ private:
 	mutable VariableGroup variables_;   ///< the system's variable ordering (kept in sync by the owning System)
 	mutable Var path_variable_;         ///< the path variable, or null
 
-	mutable EvalMethod  eval_method_  = DefaultEvalMethod();
 	mutable bool auto_simplify_ = false;  ///< kept in sync with the owning System's auto_simplify_
 	mutable bool is_differentiated_ = false;
 	mutable unsigned precision_;
@@ -366,7 +323,6 @@ private:
 		ar & slp_;
 		ar & variables_;
 		ar & path_variable_;
-		ar & eval_method_;
 		ar & precision_;
 	}
 };

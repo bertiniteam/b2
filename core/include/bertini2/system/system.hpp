@@ -52,7 +52,6 @@
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system/patch.hpp"
 
-#include "bertini2/system/eval_method.hpp"
 #include "bertini2/system/straight_line_program.hpp"
 #include "bertini2/system/blocks/block.hpp"
 
@@ -64,7 +63,6 @@
 
 namespace bertini {
 
-	// EvalMethod and its default now live in bertini2/system/eval_method.hpp
 	// (included above) so the evaluation blocks can see them.
 
 	/**
@@ -1625,25 +1623,6 @@ namespace bertini {
 		*/
 		void Simplify();
 
-
-		/**  
-		 \brief Set  method being used for evaluation
-		 * */
-		void SetEvalMethod(EvalMethod method)
-		{
-			PolyBlock().SetEvalMethod(method);
-			InvalidateDifferentiation();
-		}
-
-		/**
-		 \brief Query the current method used for evaluation
-		 * */
-		EvalMethod  GetEvalMethod() const
-		{
-			if (auto* p = PolyBlockPtr())
-				return p->GetEvalMethod();
-			return DefaultEvalMethod();
-		}
 
 
 

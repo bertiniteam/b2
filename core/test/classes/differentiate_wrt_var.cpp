@@ -68,7 +68,6 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -93,7 +92,6 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
@@ -157,7 +155,6 @@ BOOST_AUTO_TEST_CASE(diff_constant){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -205,7 +202,6 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -252,7 +248,6 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -325,7 +320,6 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -372,7 +366,6 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -419,7 +412,6 @@ BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -467,7 +459,6 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -514,7 +505,6 @@ BOOST_AUTO_TEST_CASE(diff_cos_y){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -561,7 +551,6 @@ BOOST_AUTO_TEST_CASE(diff_tan_z){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -607,7 +596,6 @@ BOOST_AUTO_TEST_CASE(diff_exp_x){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -652,7 +640,6 @@ BOOST_AUTO_TEST_CASE(diff_log_x){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -698,7 +685,6 @@ BOOST_AUTO_TEST_CASE(diff_sqrt_y){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -746,7 +732,6 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -792,7 +777,6 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -842,7 +826,6 @@ BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -887,7 +870,6 @@ BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -931,7 +913,6 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 
 	bertini::System sys;
 	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Eigen::Matrix<dbl, 3, 1> var_dbl;
 	Eigen::Matrix<mpfr, 3, 1> var_mpfr;

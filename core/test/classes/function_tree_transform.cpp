@@ -342,7 +342,9 @@ BOOST_AUTO_TEST_CASE(complicated3)
 
 	fs->Reset();
 
-	BOOST_CHECK_EQUAL(init_val, fs->Eval<dbl>());
+	// simplify reorders the arithmetic (like-factor/like-term combining), so compare with a
+	// tolerance rather than for bit-exact equality.
+	BOOST_CHECK_SMALL(std::abs(init_val - fs->Eval<dbl>()), 1e-12);
 
 }
 
@@ -391,8 +393,10 @@ BOOST_AUTO_TEST_CASE(yet_more_complicated)
 	auto init_val = f->Eval<dbl>();
 
 	auto fs = bertini::Simplify(f);
-fs->Reset();
-	BOOST_CHECK_EQUAL(init_val, fs->Eval<dbl>());
+	fs->Reset();
+	// simplify combines like factors/terms, which reorders the arithmetic, so it preserves the
+	// value only up to floating-point reorder rounding -- compare with a tolerance.
+	BOOST_CHECK_SMALL(std::abs(init_val - fs->Eval<dbl>()), 1e-12);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // simplify

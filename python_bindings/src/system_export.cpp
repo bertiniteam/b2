@@ -284,8 +284,7 @@ namespace bertini{
 					boost::archive::text_iarchive ia(iss);
 					ia >> sys;
 				}
-				if (sys.GetEvalMethod() == EvalMethod::SLP)
-					sys.Differentiate();
+				sys.Differentiate();
 				sys.precision(sys.precision());
 			}
 		};

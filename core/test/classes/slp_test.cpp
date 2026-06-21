@@ -403,63 +403,6 @@ BOOST_AUTO_TEST_CASE(cse_benchmark_squaring_chain)
 BOOST_AUTO_TEST_SUITE_END() // SLP_cse
 
 
-// ---- oracle: the SLP must agree with the legacy tree-walk evaluator ----
-//
-// Before retiring EvalMethod::FunctionTree, pin that the compiled SLP produces the same
-// functions, Jacobian, and time-derivative as evaluating the function trees directly, at the
-// same point (up to floating-point reorder rounding).
+// (the SLP-vs-tree oracle suite lived here; removed when the FunctionTree eval method was
+// retired -- the SLP is now the sole system evaluator.)
 
-BOOST_AUTO_TEST_SUITE(SLP_oracle)
-
-namespace {
-	void AssertClose(dbl const& a, dbl const& b, double tol)
-	{
-		BOOST_CHECK_LE(std::abs(a - b), tol * (1.0 + std::abs(a)));
-	}
-
-	// evaluate functions + Jacobian both ways and assert agreement
-	void OracleCheck(std::string const& sys_text, Vec<dbl> const& point, double tol)
-	{
-		bertini::System sys(sys_text);
-		sys.Differentiate();
-
-		sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
-		Vec<dbl> f_tree = sys.Eval(point);
-		Mat<dbl> J_tree = sys.Jacobian(point);
-
-		sys.SetEvalMethod(bertini::EvalMethod::SLP);
-		Vec<dbl> f_slp = sys.Eval(point);
-		Mat<dbl> J_slp = sys.Jacobian(point);
-
-		BOOST_REQUIRE_EQUAL(f_tree.size(), f_slp.size());
-		for (Eigen::Index ii = 0; ii < f_tree.size(); ++ii)
-			AssertClose(f_tree(ii), f_slp(ii), tol);
-		BOOST_REQUIRE_EQUAL(J_tree.size(), J_slp.size());
-		for (Eigen::Index ii = 0; ii < J_tree.rows(); ++ii)
-			for (Eigen::Index jj = 0; jj < J_tree.cols(); ++jj)
-				AssertClose(J_tree(ii, jj), J_slp(ii, jj), tol);
-	}
-}
-
-BOOST_AUTO_TEST_CASE(slp_matches_tree_polynomial)
-{
-	Vec<dbl> pt(3);
-	pt << dbl(0.7, 0.3), dbl(-0.4, 0.6), dbl(0.5, -0.2);
-	OracleCheck("variable_group x,y,z; function f1,f2; f1 = x^2*y - z*x; f2 = x*y*z + 1;", pt, 1e-12);
-}
-
-BOOST_AUTO_TEST_CASE(slp_matches_tree_transcendental)
-{
-	Vec<dbl> pt(2);
-	pt << dbl(0.6, -0.2), dbl(-0.3, 0.4);
-	OracleCheck("variable_group x,y; function f; f = sin(x)*cos(y) + exp(x*y) - x/y;", pt, 1e-12);
-}
-
-BOOST_AUTO_TEST_CASE(slp_matches_tree_high_degree_shared_subexpressions)
-{
-	Vec<dbl> pt(2);
-	pt << dbl(0.5, 0.1), dbl(0.4, -0.3);
-	OracleCheck("variable_group x,y; function f1,f2; f1 = (x^2+y^2)^3; f2 = (x^2+y^2)*x*y;", pt, 1e-11);
-}
-
-BOOST_AUTO_TEST_SUITE_END() // SLP_oracle

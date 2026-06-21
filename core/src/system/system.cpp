@@ -37,11 +37,6 @@ namespace bertini
 {
 
 	using namespace bertini::node;
-	
-	EvalMethod DefaultEvalMethod()
-	{
-		return EvalMethod::SLP;
-	}
 
 	bool DefaultAutoSimplify()
 	{
@@ -1797,8 +1792,7 @@ namespace bertini
 		// observed 2026-06-06; root cause in SLP serialization not yet identified).
 		// Differentiate() re-derives the derivative trees and recompiles the SLP
 		// from the clone's own (verified-exact) tree.
-		if (sys_clone.GetEvalMethod() == EvalMethod::SLP)
-			sys_clone.Differentiate();
+		sys_clone.Differentiate();
 
 		// Normalize precision across all parts of the clone.  The source system can
 		// carry internally-inconsistent precision state (e.g. precision_ says 30 but

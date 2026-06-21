@@ -592,7 +592,6 @@ BOOST_AUTO_TEST_CASE(add_system_to_self_doubles_under_function_tree_eval)
 	sys.AddVariableGroup(vars);
 	sys.AddFunction(y+1);
 	sys.AddFunction(x*y);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Vec<dbl> values(2);
 	values << dbl(2.0), dbl(3.0);
