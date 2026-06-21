@@ -64,7 +64,7 @@
 
 namespace bertini {
 
-	// EvalMethod / DerivMethod and their defaults now live in bertini2/system/eval_method.hpp
+	// EvalMethod and its default now live in bertini2/system/eval_method.hpp
 	// (included above) so the evaluation blocks can see them.
 
 	/**
@@ -86,8 +86,7 @@ namespace bertini {
 		using Fn = std::shared_ptr<node::Function>;
 		using Var = std::shared_ptr<node::Variable>;
 		using Nd = std::shared_ptr<node::Node>;
-		using Jac = std::shared_ptr<node::Jacobian>;
-		
+
 		/**
 		\brief The default constructor for a system.
 		*/
@@ -1650,26 +1649,6 @@ namespace bertini {
 
 
 		/**
-		 \brief Set  method being used for differentiation
-		 * */
-		void SetDerivMethod(DerivMethod method)
-		{
-			PolyBlock().SetDerivMethod(method);
-			InvalidateDifferentiation();
-		}
-
-		/**
-		 \brief Query the current method used for differentiation
-		 * */
-		DerivMethod  GetDerivMethod() const
-		{
-			if (auto* p = PolyBlockPtr())
-				return p->GetDerivMethod();
-			return DefaultDerivMethod();
-		}
-
-
-		/**
 		\brief Add two systems together.
 
 		\throws std::runtime_error, if the systems are not of compatible size -- either in number of functions, or variables.  Does not check the structure of the variables, just the numbers.
@@ -2004,7 +1983,7 @@ namespace bertini {
 		std::vector< Fn > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.  
 
 		// The polynomial path -- functions_, subfunctions_, constant_subfunctions_, their
-		// derivatives, the SLP, and eval_method_/deriv_method_ -- has been folded into a
+		// derivatives, the SLP, and eval_method_ -- has been folded into a
 		// blocks::PolynomialBlock held in blocks_ (see PolyBlock()/PolyBlockPtr()).  The System
 		// is now a thin orchestrator over blocks + variable groups + patch.
 
@@ -2163,7 +2142,7 @@ namespace bertini {
 	// Explicit instantiation declarations for the two concrete numeric types.
 	// Definitions live in core/src/system/system.cpp.
 	// Suppresses re-instantiation of the heavy Eval/Jacobian/Set template bodies
-	// (with their eval_method_/deriv_method_ switch trees) in every including TU.
+	// (with their eval_method_ switch trees) in every including TU.
 
 	extern template void System::EvalInPlace<dbl>(Vec<dbl>&) const;
 	extern template void System::EvalInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;

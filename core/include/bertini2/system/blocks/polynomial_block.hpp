@@ -61,7 +61,6 @@ class PolynomialBlock
 {
 public:
 	using Fn  = std::shared_ptr<node::Function>;
-	using Jac = std::shared_ptr<node::Jacobian>;
 	using Nd  = std::shared_ptr<node::Node>;
 	using Var = std::shared_ptr<node::Variable>;
 
@@ -81,8 +80,6 @@ public:
 
 	void SetEvalMethod(EvalMethod m) const { eval_method_ = m; Invalidate(); }
 	EvalMethod GetEvalMethod() const { return eval_method_; }
-	void SetDerivMethod(DerivMethod m) const { deriv_method_ = m; Invalidate(); }
-	DerivMethod GetDerivMethod() const { return deriv_method_; }
 
 	// Mutable access for the owning System's construction-time manipulations (Homogenize walks
 	// the trees in place; Reorder/Simplify reassign entries).  The System keeps the variable
@@ -132,7 +129,6 @@ public:
 		for (auto const& f : functions_)             f->Reset();
 		for (auto const& f : subfunctions_)          f->Reset();
 		for (auto const& f : constant_subfunctions_) f->Reset();
-		for (auto const& n : jacobian_)          n->Reset();
 		for (auto const& n : space_derivatives_) n->Reset();
 		for (auto const& n : time_derivatives_)  n->Reset();
 	}
@@ -159,7 +155,6 @@ public:
 		for (auto const& v : variables_) v->precision(new_precision);
 		if (is_differentiated_)
 		{
-			for (auto const& j : jacobian_)         j->precision(new_precision);
 			for (auto const& n : space_derivatives_) n->precision(new_precision);
 			for (auto const& n : time_derivatives_)  n->precision(new_precision);
 		}
@@ -194,19 +189,9 @@ public:
 		switch (eval_method_)
 		{
 			case EvalMethod::FunctionTree:
-				switch (deriv_method_)
-				{
-					case DerivMethod::JacobianNode:
-						for (size_t ii = 0; ii < functions_.size(); ++ii)
-							for (size_t jj = 0; jj < variables_.size(); ++jj)
-								jacobian_[ii]->template EvalJInPlace<T>(J(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)), variables_[jj]);
-						break;
-					case DerivMethod::Derivatives:
-						for (size_t jj = 0; jj < variables_.size(); ++jj)
-							for (size_t ii = 0; ii < functions_.size(); ++ii)
-								space_derivatives_[ii + jj * functions_.size()]->template EvalInPlace<T>(J(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)));
-						break;
-				}
+				for (size_t jj = 0; jj < variables_.size(); ++jj)
+					for (size_t ii = 0; ii < functions_.size(); ++ii)
+						space_derivatives_[ii + jj * functions_.size()]->template EvalInPlace<T>(J(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)));
 				break;
 			case EvalMethod::SLP:
 				slp_.template GetJacobianInPlace<T>(J);
@@ -223,17 +208,8 @@ public:
 		switch (eval_method_)
 		{
 			case EvalMethod::FunctionTree:
-				switch (deriv_method_)
-				{
-					case DerivMethod::JacobianNode:
-						for (size_t ii = 0; ii < functions_.size(); ++ii)
-							jacobian_[ii]->template EvalJInPlace<T>(result(static_cast<Eigen::Index>(ii)), path_variable_);
-						break;
-					case DerivMethod::Derivatives:
-						for (size_t ii = 0; ii < functions_.size(); ++ii)
-							time_derivatives_[ii]->template EvalInPlace<T>(result(static_cast<Eigen::Index>(ii)));
-						break;
-				}
+				for (size_t ii = 0; ii < functions_.size(); ++ii)
+					time_derivatives_[ii]->template EvalInPlace<T>(result(static_cast<Eigen::Index>(ii)));
 				break;
 			case EvalMethod::SLP:
 				slp_.template GetTimeDerivInPlace<T>(result);
@@ -247,18 +223,16 @@ public:
 	Var GetPathVariable() const { return path_variable_; }
 	size_t NumNaturalFunctions() const { return functions_.size(); }
 	std::vector<Fn> const& GetNaturalFunctions() const { return functions_; }
-	// The SLP is always built from the Derivatives representation (space/time derivative trees),
-	// so these force that representation even when deriv_method_ is JacobianNode -- mirroring
-	// the System's historical GetSpaceDerivatives/GetTimeDerivatives behavior.
+	// The SLP is built from the explicit per-variable derivative trees (space/time derivatives).
 	std::vector<Nd> const& GetSpaceDerivatives() const
 	{
-		if (deriv_method_ == DerivMethod::JacobianNode || space_derivatives_.empty())
+		if (space_derivatives_.empty())
 			DifferentiateUsingDerivatives();
 		return space_derivatives_;
 	}
 	std::vector<Nd> const& GetTimeDerivatives() const
 	{
-		if (deriv_method_ == DerivMethod::JacobianNode || (path_variable_ && time_derivatives_.empty()))
+		if (path_variable_ && time_derivatives_.empty())
 			DifferentiateUsingDerivatives();
 		return time_derivatives_;
 	}
@@ -269,11 +243,7 @@ public:
 	void Differentiate() const
 	{
 		if (is_differentiated_) return;
-		switch (deriv_method_)
-		{
-			case DerivMethod::JacobianNode:   DifferentiateUsingJacobianNode(); break;
-			case DerivMethod::Derivatives:    DifferentiateUsingDerivatives();  break;
-		}
+		DifferentiateUsingDerivatives();
 		is_differentiated_ = true;  // set before SimplifyDerivatives/Compile, which read the deriv state
 		if (auto_simplify_)
 			SimplifyDerivatives();
@@ -309,25 +279,17 @@ public:
 			path_variable_->template SetToRandUnit<dbl>();
 		}
 
-		for (auto const& n : jacobian_)         n->Reset();
 		for (auto const& n : space_derivatives_) n->Reset();
 		for (auto const& n : time_derivatives_)  n->Reset();
 
-		switch (deriv_method_)
-		{
-			case DerivMethod::JacobianNode: for (auto& n : jacobian_) Simplify(n); break;
-			case DerivMethod::Derivatives:
-				for (auto& n : space_derivatives_) Simplify(n);
-				for (auto& n : time_derivatives_)  Simplify(n);
-				break;
-		}
+		for (auto& n : space_derivatives_) Simplify(n);
+		for (auto& n : time_derivatives_)  Simplify(n);
 
 		for (size_t ii = 0; ii < num_vars; ++ii)
 			variables_[ii]->template set_current_value<dbl>(old_vals[ii]);
 		if (path_variable_)
 			path_variable_->template set_current_value<dbl>(old_path_var_val);
 
-		for (auto const& n : jacobian_)         n->Reset();
 		for (auto const& n : space_derivatives_) n->Reset();
 		for (auto const& n : time_derivatives_)  n->Reset();
 	}
@@ -352,13 +314,6 @@ private:
 		}
 	}
 
-	void DifferentiateUsingJacobianNode() const
-	{
-		jacobian_.resize(functions_.size());
-		for (size_t ii = 0; ii < functions_.size(); ++ii)
-			jacobian_[ii] = node::Jacobian::Make(functions_[ii]->Differentiate());
-	}
-
 	void DifferentiateUsingDerivatives() const
 	{
 		const size_t n = functions_.size();
@@ -378,7 +333,6 @@ private:
 	mutable std::vector<Fn> subfunctions_;
 	mutable std::vector<Fn> constant_subfunctions_;
 
-	mutable std::vector<Jac> jacobian_;
 	mutable std::vector<Nd>  space_derivatives_;
 	mutable std::vector<Nd>  time_derivatives_;
 	mutable StraightLineProgram slp_;
@@ -387,7 +341,6 @@ private:
 	mutable Var path_variable_;         ///< the path variable, or null
 
 	mutable EvalMethod  eval_method_  = DefaultEvalMethod();
-	mutable DerivMethod deriv_method_ = DefaultDerivMethod();
 	mutable bool auto_simplify_ = false;  ///< kept in sync with the owning System's auto_simplify_
 	mutable bool is_differentiated_ = false;
 	mutable unsigned precision_;
@@ -401,14 +354,12 @@ private:
 		ar & subfunctions_;
 		ar & functions_;
 		ar & is_differentiated_;
-		ar & jacobian_;
 		ar & space_derivatives_;
 		ar & time_derivatives_;
 		ar & slp_;
 		ar & variables_;
 		ar & path_variable_;
 		ar & eval_method_;
-		ar & deriv_method_;
 		ar & precision_;
 	}
 };

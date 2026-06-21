@@ -43,11 +43,6 @@ namespace bertini
 		return EvalMethod::SLP;
 	}
 
-	DerivMethod DefaultDerivMethod()
-	{
-		return DerivMethod::Derivatives;
-	}
-
 	bool DefaultAutoSimplify()
 	{
 		// differentiation now emits already-simplified trees, so the post-hoc

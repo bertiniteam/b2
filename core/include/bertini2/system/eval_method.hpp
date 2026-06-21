@@ -22,7 +22,7 @@
 /**
 \file bertini2/system/eval_method.hpp
 
-\brief The EvalMethod / DerivMethod enums and their defaults.
+\brief The EvalMethod enum and its default.
 
 Split out of system.hpp so the evaluation blocks (which carry an eval/deriv method) can see
 the full enum definitions without depending on the whole System header — system.hpp includes
@@ -40,17 +40,9 @@ namespace bertini {
 		    // now!  20230714, Eindhoven, Netherlands
 	};
 
-	enum class DerivMethod
-	{
-		JacobianNode, // using Jacobian nodes, which are either 1 or 0 when evaluated based on the variable of differentiation
-		Derivatives // classic differentiation, using more space in memory but not requiring a variable of differentation when evaluatiing
-	};
-
 	/**
 	\brief Gets the default evaluation method for Jacobians.  One might be faster...
 	*/
 	EvalMethod DefaultEvalMethod();
-
-	DerivMethod DefaultDerivMethod();
 
 } // namespace bertini
