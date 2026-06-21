@@ -198,8 +198,11 @@ namespace bertini {
 					exp_elem_ =
 					(symbol_  >> !qi::alnum) [_val = _1]
 					|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
-					|   (lit('-') > expression_  [_val = -_1])
-					|   (lit('+') > expression_  [_val = _1])
+					// unary +/- bind a single factor_, NOT the whole expression_: "-y+x" is
+					// (-y)+x, and "-x^2" is -(x^2).  (Binding expression_ here made a leading
+					// minus greedily negate everything after it.)
+					|   (lit('-') > factor_  [_val = -_1])
+					|   (lit('+') > factor_  [_val = _1])
 					|   (lit("sin") > '(' > expression_ [_val = sin_lazy(_1)] > ')' )
 					|   (lit("cos") > '(' > expression_ [_val = cos_lazy(_1)] > ')' )
 					|   (lit("tan") > '(' > expression_ [_val = tan_lazy(_1)] > ')' )
