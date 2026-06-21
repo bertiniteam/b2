@@ -64,6 +64,7 @@ if sys.platform == "win32":
 
 from . import function_tree
 from .function_tree import sin, cos, tan, asin, acos, atan, exp, log, sqrt
+from .function_tree import canonicalize, monomial_order, MonomialOrder
 
 from . import system
 from . import tracking
@@ -97,7 +98,8 @@ __all__ = ['Variable','variables','gather_variables','VariableGroup','system','S
            'nag_algorithm','container','default_precision',
            'tracking','endgame','logging','function_tree','parse','multiprec','random','parallel',
            'linalg',
-           'sin','cos','tan','asin','acos','atan','exp','log','sqrt']
+           'sin','cos','tan','asin','acos','atan','exp','log','sqrt',
+           'canonicalize','monomial_order','MonomialOrder']
 
 
 

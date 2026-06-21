@@ -36,6 +36,7 @@
 
 
 #include "node_export.hpp"
+#include "bertini2/function_tree/canonical.hpp"
 
 
 namespace bertini{
@@ -189,7 +190,28 @@ namespace bertini{
 			def("acos", acosNodeNode, "the symbolic arccosine operator");
 			def("tan", tanNodeNode, "the symbolic tangent operator");
 			def("atan", atanNodeNode, "the symbolic arctangent operator");
-			
+
+			// ---- canonical operand ordering ----
+			enum_<node::MonomialOrder>("MonomialOrder",
+				"the monomial order used to canonically order Sum/Mult operands")
+				.value("Lex",     node::MonomialOrder::Lex)
+				.value("RevLex",  node::MonomialOrder::RevLex)
+				.value("GrevLex", node::MonomialOrder::GrevLex)
+				;
+
+			bool (*canon_get)()     = &node::CanonicalizeByDefault;
+			void (*canon_set)(bool) = &node::SetCanonicalizeByDefault;
+			def("canonicalize", canon_get,
+				"whether Sum/Mult operands are canonically ordered, so x+y and y+x are one node");
+			def("canonicalize", canon_set, (arg("on")),
+				"enable/disable canonical operand ordering, session-global (the per-expression opt-out)");
+
+			node::MonomialOrder (*order_get)()                   = &node::CurrentMonomialOrder;
+			void                (*order_set)(node::MonomialOrder) = &node::SetMonomialOrder;
+			def("monomial_order", order_get, "the current monomial order used for canonicalization");
+			def("monomial_order", order_set, (arg("order")),
+				"set the monomial order (Lex/RevLex/GrevLex), session-global");
+
 		}
 
 		

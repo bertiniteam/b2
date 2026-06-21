@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file Tests for hash-consing (Rung 3): every Make() routes through Intern(), so structurally
+\file Tests for hash-consing: every Make() routes through Intern(), so structurally
 equal nodes collapse to one shared object.  Pins the dedup behavior, the differentiation-
 sharing win, and -- critically -- that building/simplifying never mutates a shared interned
 node (the bug where SimplifiedSum did Make(first) then AddOperand(rest), corrupting a shared
@@ -28,6 +28,7 @@ single-operand sum).
 */
 
 #include <cstdlib>
+#include <sstream>
 #include "bertini2/function_tree.hpp"
 #include "bertini2/function_tree/canonical.hpp"
 #include <boost/test/unit_test.hpp>
@@ -44,7 +45,7 @@ BOOST_AUTO_TEST_SUITE(interning)
 
 BOOST_AUTO_TEST_CASE(simplify_does_not_corrupt_a_shared_single_operand_sum)
 {
-	// This is the minimal form of the bug found in Rung 3a: a single-operand Sum is reused,
+	// This is the minimal form of a bug interning exposed: a single-operand Sum is reused,
 	// and SimplifiedSum used to do Make(first) (which now returns the *interned* shared sum)
 	// then AddOperand(rest) -- mutating that shared node and corrupting every other holder.
 	auto x = Variable::Make("x");
@@ -90,7 +91,7 @@ BOOST_AUTO_TEST_CASE(equal_operator_trees_are_one_object)
 
 BOOST_AUTO_TEST_CASE(variables_are_canonical_by_name)
 {
-	// Rung 3b: Make("x") interns to a single canonical x -- "system1's x IS system2's x".
+	// Make("x") interns to a single canonical x -- "system1's x IS system2's x".
 	auto x1 = Variable::Make("x");
 	auto x2 = Variable::Make("x");
 	BOOST_CHECK_EQUAL(x1.get(), x2.get());
@@ -118,7 +119,7 @@ BOOST_AUTO_TEST_CASE(differentiation_results_are_interned)
 	BOOST_CHECK_EQUAL(a->Differentiate(x).get(), a->Differentiate(x).get());
 
 	// and when 'a' is reused in two functions, the d(a)/dx inside each derivative is the
-	// same interned node -- the whole point of the arc.  Here we check it the direct way:
+	// same interned node -- the payoff of hash-consing derivatives.  Checked the direct way:
 	Nd da = a->Differentiate(x);
 	Nd f = a * y;
 	Nd g = a + x;
@@ -161,7 +162,7 @@ BOOST_AUTO_TEST_CASE(simplify_leaves_a_held_shared_node_untouched)
 BOOST_AUTO_TEST_SUITE_END() // interning
 
 
-// ---- Rung 3c: canonical operand ordering (reorder-only) ----
+// ---- canonical operand ordering (reorder-only) ----
 
 BOOST_AUTO_TEST_SUITE(canonicalization)
 
@@ -244,6 +245,24 @@ BOOST_AUTO_TEST_CASE(all_three_orders_are_selectable_and_dedup)
 		auto y = Variable::Make("y");
 		BOOST_CHECK_EQUAL((x + y).get(), (y + x).get());
 	}
+}
+
+BOOST_AUTO_TEST_CASE(canonicalization_shows_up_in_printing)
+{
+	auto str = [](Nd const& n){ std::ostringstream o; n->print(o); return o.str(); };
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	{
+		CanonGuard g;
+		BOOST_CHECK_EQUAL(str(x + y), str(y + x));   // canonical: same printed form
+		BOOST_CHECK_EQUAL(str(x * y), str(y * x));
+		BOOST_CHECK_EQUAL(str(Integer::Make(3) * pow(x, 2)), "3*x^2");   // coefficient prints first
+	}
+	// turning it off preserves the authored operand order in the print
+	bool prev = bertini::node::CanonicalizeByDefault();
+	bertini::node::SetCanonicalizeByDefault(false);
+	BOOST_CHECK_EQUAL(str(y + x), "y+x");
+	bertini::node::SetCanonicalizeByDefault(prev);
 }
 
 BOOST_AUTO_TEST_CASE(guard_restores_global_canonicalization_state)
