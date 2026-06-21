@@ -73,12 +73,16 @@ BOOST_AUTO_TEST_CASE(equal_rationals_are_same)
 
 // ---- variables are identity (until interned by name in Rung 3) ----
 
-BOOST_AUTO_TEST_CASE(distinct_variables_same_name_are_not_same)
+BOOST_AUTO_TEST_CASE(same_name_variables_are_the_same)
 {
+	// Rung 3b: variables are canonical by name -- two Make("x") are the SAME node.
 	auto x1 = Variable::Make("x");
 	auto x2 = Variable::Make("x");
-	BOOST_CHECK(!x1->IsSame(*x2));      // different objects, by design (pre-interning)
-	BOOST_CHECK(x1->IsSame(*x1));
+	BOOST_CHECK(x1->IsSame(*x2));
+	BOOST_CHECK_EQUAL(x1.get(), x2.get());
+	BOOST_CHECK_EQUAL(x1->Hash(), x2->Hash());
+	// different names remain distinct
+	BOOST_CHECK(!x1->IsSame(*Variable::Make("y")));
 }
 
 // ---- operators: same structure over shared children -> same ----

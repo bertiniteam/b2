@@ -87,11 +87,22 @@ BOOST_AUTO_TEST_CASE(equal_operator_trees_are_one_object)
 	BOOST_CHECK(( x + y).get() != (y + x).get());                  // order-sensitive: distinct
 }
 
-BOOST_AUTO_TEST_CASE(distinct_variables_same_name_still_distinct_in_3a)
+BOOST_AUTO_TEST_CASE(variables_are_canonical_by_name)
 {
-	// Rung 3a interns by structure but Variable equality is still identity (3b makes it
-	// by-name); so two Make("x") remain distinct objects for now.
-	BOOST_CHECK(Variable::Make("x").get() != Variable::Make("x").get());
+	// Rung 3b: Make("x") interns to a single canonical x -- "system1's x IS system2's x".
+	auto x1 = Variable::Make("x");
+	auto x2 = Variable::Make("x");
+	BOOST_CHECK_EQUAL(x1.get(), x2.get());
+	BOOST_CHECK(Variable::Make("x").get() != Variable::Make("z").get());
+
+	// because they are one object, setting the value through one is seen through the other
+	x1->set_current_value(dbl(7.0, 0.0));
+	x2->Reset();
+	BOOST_CHECK_EQUAL(x2->Eval<dbl>(), dbl(7.0, 0.0));
+
+	// and two independently-built expressions over "x" share their structure
+	BOOST_CHECK_EQUAL((Variable::Make("x") * Variable::Make("x")).get(),
+	                  (Variable::Make("x") * Variable::Make("x")).get());
 }
 
 // ---- the headline win: a shared subexpression's derivative is one interned node ----

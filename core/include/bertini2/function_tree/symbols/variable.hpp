@@ -74,7 +74,21 @@ namespace node{
 		
 		
 		virtual ~Variable() = default;
-		
+
+		// Rung 3b: variables are canonical BY NAME -- Make("x") interns to a single shared x,
+		// so system1's x IS system2's x.  (Value/eval-state lives on that shared node until C2
+		// moves it into a per-thread eval context.)
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Variable).hash_code();
+			HashCombine(h, std::hash<std::string>{}(name()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Variable const*>(&other);
+			return o && name() == o->name();
+		}
 
 
 		explicit operator std::string(){return name();}
