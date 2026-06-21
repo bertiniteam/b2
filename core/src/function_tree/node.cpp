@@ -75,6 +75,28 @@ namespace node{
 		return std::const_pointer_cast<Node>(shared_from_this());
 	}
 
+	// ---- structural hash / equality (Rung 2: predicate layer for hash-consing) ----
+
+	std::size_t Node::Hash() const
+	{
+		if (!structural_hash_)
+			structural_hash_ = HashImpl();
+		return *structural_hash_;
+	}
+
+	// Default: identity hash (the object address).  Distinct objects hash distinctly; value
+	// and operator nodes override HashImpl to be structural.
+	std::size_t Node::HashImpl() const
+	{
+		return std::hash<const void*>{}(this);
+	}
+
+	// Default: identity equality.  Value/operator nodes override.
+	bool Node::IsSame(Node const& other) const
+	{
+		return this == &other;
+	}
+
 
 	template<typename T>
 	void Node::EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const

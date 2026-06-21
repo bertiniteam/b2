@@ -956,6 +956,77 @@ std::shared_ptr<Node> LogOperator::Homogenized(VariableGroup const& vars, std::s
 	return LogOperator::Make(operand_->Homogenized(vars, homvar));
 }
 
+// ---- structural hash / equality (Rung 2) ----
+// Order-sensitive; operands folded in by Hash() for the hash, compared by pointer for IsSame.
+
+std::size_t SumOperator::HashImpl() const
+{
+	std::size_t h = typeid(SumOperator).hash_code();
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+	{
+		Node::HashCombine(h, operands_[ii]->Hash());
+		Node::HashCombine(h, signs_[ii] ? 1u : 0u);
+	}
+	return h;
+}
+bool SumOperator::IsSame(Node const& other) const
+{
+	auto o = dynamic_cast<SumOperator const*>(&other);
+	if (!o || operands_.size() != o->operands_.size() || signs_ != o->signs_)
+		return false;
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+		if (operands_[ii].get() != o->operands_[ii].get())
+			return false;
+	return true;
+}
+
+std::size_t MultOperator::HashImpl() const
+{
+	std::size_t h = typeid(MultOperator).hash_code();
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+	{
+		Node::HashCombine(h, operands_[ii]->Hash());
+		Node::HashCombine(h, mult_or_div_[ii] ? 1u : 0u);
+	}
+	return h;
+}
+bool MultOperator::IsSame(Node const& other) const
+{
+	auto o = dynamic_cast<MultOperator const*>(&other);
+	if (!o || operands_.size() != o->operands_.size() || mult_or_div_ != o->mult_or_div_)
+		return false;
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+		if (operands_[ii].get() != o->operands_[ii].get())
+			return false;
+	return true;
+}
+
+std::size_t PowerOperator::HashImpl() const
+{
+	std::size_t h = typeid(PowerOperator).hash_code();
+	Node::HashCombine(h, base_->Hash());
+	Node::HashCombine(h, exponent_->Hash());
+	return h;
+}
+bool PowerOperator::IsSame(Node const& other) const
+{
+	auto o = dynamic_cast<PowerOperator const*>(&other);
+	return o && base_.get() == o->base_.get() && exponent_.get() == o->exponent_.get();
+}
+
+std::size_t IntegerPowerOperator::HashImpl() const
+{
+	std::size_t h = typeid(IntegerPowerOperator).hash_code();
+	Node::HashCombine(h, operand_->Hash());
+	Node::HashCombine(h, std::hash<int>{}(exponent_));
+	return h;
+}
+bool IntegerPowerOperator::IsSame(Node const& other) const
+{
+	auto o = dynamic_cast<IntegerPowerOperator const*>(&other);
+	return o && exponent_ == o->exponent_ && operand_.get() == o->operand_.get();
+}
+
 bool PowerOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 {
 	// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer

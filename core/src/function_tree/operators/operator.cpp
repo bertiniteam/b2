@@ -83,6 +83,22 @@ std::vector<int> UnaryOperator::MultiDegree(VariableGroup const& vars) const
 }
 
 
+std::size_t UnaryOperator::HashImpl() const
+{
+	std::size_t h = typeid(*this).hash_code();   // distinguishes Sin/Cos/Tan/Exp/Log/Sqrt/Negate/...
+	HashCombine(h, operand_->Hash());
+	return h;
+}
+
+bool UnaryOperator::IsSame(Node const& other) const
+{
+	if (typeid(*this) != typeid(other))
+		return false;
+	// same concrete unary type -> safe to view as UnaryOperator and compare operand identity
+	return operand_.get() == static_cast<UnaryOperator const&>(other).operand_.get();
+}
+
+
 bool UnaryOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 {
 	if (Degree(v)==0)

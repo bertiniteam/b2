@@ -188,6 +188,8 @@ namespace node{
 		 Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
 		 */
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -466,6 +468,8 @@ namespace node{
 		
 
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -619,6 +623,8 @@ namespace node{
 
 
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -704,6 +710,8 @@ namespace node{
 		
 		std::shared_ptr<Node> Simplified() const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
 		
 		/**
 		 polymorphic method for printing to an arbitrary stream.

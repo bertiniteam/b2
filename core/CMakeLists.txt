@@ -689,6 +689,7 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/complex_test.cpp
 		test/classes/function_tree_test.cpp
 		test/classes/function_tree_transform.cpp
+		test/classes/structural_hash_test.cpp
 		test/classes/system_test.cpp
 		test/classes/slp_test.cpp
 		test/classes/differentiate_test.cpp

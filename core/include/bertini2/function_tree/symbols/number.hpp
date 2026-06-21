@@ -200,6 +200,18 @@ namespace node{
 			return true_value_ == 1;
 		}
 
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Integer).hash_code();
+			HashCombine(h, std::hash<std::string>{}(true_value_.str()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Integer const*>(&other);
+			return o && true_value_ == o->true_value_;
+		}
+
 		template<typename... Ts>
 		static
 		std::shared_ptr<Integer> Make(Ts&& ...ts){
@@ -301,6 +313,21 @@ namespace node{
 		bool IsLiteralOne() const override
 		{
 			return highest_precision_value_.real() == 1 && highest_precision_value_.imag() == 0;
+		}
+
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Float).hash_code();
+			HashCombine(h, std::hash<std::string>{}(highest_precision_value_.real().str()));
+			HashCombine(h, std::hash<std::string>{}(highest_precision_value_.imag().str()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Float const*>(&other);
+			return o
+				&& highest_precision_value_.real() == o->highest_precision_value_.real()
+				&& highest_precision_value_.imag() == o->highest_precision_value_.imag();
 		}
 
 		template<typename... Ts>
@@ -438,6 +465,19 @@ namespace node{
 		bool IsLiteralOne() const override
 		{
 			return true_value_real_ == 1 && true_value_imag_ == 0;
+		}
+
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Rational).hash_code();
+			HashCombine(h, std::hash<std::string>{}(true_value_real_.str()));
+			HashCombine(h, std::hash<std::string>{}(true_value_imag_.str()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Rational const*>(&other);
+			return o && true_value_real_ == o->true_value_real_ && true_value_imag_ == o->true_value_imag_;
 		}
 
 

@@ -47,6 +47,8 @@
 #include <iostream>
 #include <string>
 #include <tuple>
+#include <optional>
+#include <typeinfo>
 
 #include <boost/type_index.hpp>
 
@@ -266,7 +268,33 @@ public:
 	{
 		return false;
 	}
-	
+
+	/**
+	\brief Memoized structural hash of this node.
+
+	Order-sensitive: equal structures hash equal, where children are folded in by their own
+	Hash() and operand order / signs / exponents participate.  The default (leaves and any
+	node not overriding HashImpl) is node identity (the object's address), so distinct objects
+	hash distinctly; value nodes (Integer/Rational/Float) and operators override to be
+	structural.  Memoized -- valid because nodes are immutable post-construction -- and
+	deliberately independent of the mutable working precision (stable across precision()).
+
+	This is the predicate layer for the hash-consing intern table; nothing wires it into
+	construction yet.
+	*/
+	std::size_t Hash() const;
+
+	/**
+	\brief Order-sensitive structural equality, shallow given interned children.
+
+	Two nodes are the same iff they have the same dynamic type, the same operator payload
+	(signs / mult-or-div flags / integer exponent / literal value), and the same operands
+	**by pointer** (operands are not recursed -- in the hash-consed world children are already
+	canonical, so pointer-equality is structural equality).  The default is node identity;
+	value/operator nodes override.  Consistent with Hash(): IsSame(a,b) implies a.Hash()==b.Hash().
+	*/
+	virtual bool IsSame(Node const& other) const;
+
 
 	/**
 	\brief Compute the derivative with respect to a single variable.
@@ -369,9 +397,23 @@ protected:
 	//We must hard code in all types that we want here.
 	//TODO: Initialize this to some default value, second = false
 	mutable std::tuple< std::pair<dbl,bool>, std::pair<mpfr_complex,bool> > current_value_;
-	
-	
-	
+
+	/// Memoized structural hash (computed on first Hash() call; nodes are immutable so it
+	/// never needs invalidating).  Not serialized -- a clone recomputes it on demand.
+	mutable std::optional<std::size_t> structural_hash_;
+
+	/// Compute this node's structural hash.  Default: identity (the object address), so
+	/// distinct nodes hash distinctly.  Value/operator nodes override to be structural.
+	virtual std::size_t HashImpl() const;
+
+	/// Combine an extra value into a running hash (boost::hash_combine recipe).
+	static void HashCombine(std::size_t& seed, std::size_t value)
+	{
+		seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+	}
+
+
+
 	///////// PRIVATE PURE METHODS /////////////////
 	
 	/**

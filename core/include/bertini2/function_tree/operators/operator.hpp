@@ -90,8 +90,12 @@ namespace node{
 		
 		
 		virtual ~UnaryOperator() = default;
-		
-		
+
+		// Structural hash/equality for every unary op (typeid distinguishes Sin/Cos/Exp/...);
+		// IntegerPowerOperator overrides to fold in its exponent.
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
+
 		void Reset() const override;
 		
 		
