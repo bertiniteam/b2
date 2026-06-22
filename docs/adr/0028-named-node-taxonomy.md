@@ -3,6 +3,19 @@
 **Status:** Accepted (supersedes the "keep `Handle` for `Jacobian`" decision in ADR-0027)
 **Date:** 2026-06-22
 
+> **Implementation status (2026-06-22, on `feature/eliminate_duplicate_nodes` @ `c26ea382`):**
+> *Done:* `NameHolder` rename; `NamedExpression` + `Named(expr,name)`; `Find<T>` (`GatherVariables`
+> = `Find<Variable>`); **`node::Jacobian` deleted** (`b3573117`); **subfunctions → `NamedExpression`**
+> (`c26ea382`) — storage deleted, `Describe` discovers via `Find<NamedExpression>`, and `FunctionParser`
+> no longer wraps results in a `Function` (clean printing).
+> *Correction to this ADR:* `differentiate()` already returns a **`Differential` tree, not a dict** — the
+> "`{variable: derivative}` dict" below was a misread of the code; **no dict change was made or is needed.**
+> *Remaining = **Track F** (`z_notes/2026-06-22_roadmap_FE.md`):* **F1** rewrite the classic parser to
+> eager-bind the declare-then-define kinds (`function`/`constant`/`parameter`) + convert their System
+> storage (`explicit_parameters_`, `constant_subfunctions_`) to `NamedExpression` — then **F2** delete the
+> `Function` class and fold `Handle` into `NamedExpression`. Detailed steps in
+> `z_notes/2026-06-22_finish_function_handle_removal.md`. (An F1 draft was reverted to keep the branch green.)
+
 ## Context
 
 Eliminating `node::Function` (ADR-0027) raised the question of whether its base, `Handle`, is a

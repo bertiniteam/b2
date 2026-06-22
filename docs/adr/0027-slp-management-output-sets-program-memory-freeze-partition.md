@@ -3,6 +3,17 @@
 **Status:** Accepted (design; implementation staged)
 **Date:** 2026-06-22
 
+> **Implementation status (2026-06-22, on `feature/eliminate_duplicate_nodes` @ `c26ea382`):**
+> *Built:* SLP is the sole evaluator (`942f7f18`); eval-without-System **adapter** (`a052de37`,
+> a stepping stone); freeze-set tape partition (the per-step constant-folding prologue);
+> output-sets compiled from explicit bare roots. *Revised by ADR-0028:* `node::Function`'s name
+> role is carried by **`NamedExpression`**, not a parallel `vector<string>` as written below;
+> and `Handle` does **not** survive (no remaining subclass once `Jacobian` was deleted).
+> *Remaining, renumbered as **Track E** (see `z_notes/2026-06-22_roadmap_FE.md`):* **E1** split
+> Program/Memory [★ root; `Clone`→from-old helper, #246 deep-copy dies] → **E2** retire the adapter
+> (real `Compile([outputs],…)` + on-node Program memo) → **E5** delete node-level eval [DEFERRED];
+> **E3** currying/freeze-set API → **E6** tutorial; **E4** intern identical Programs [optimization].
+
 ## Context
 
 The `function_tree` refactor (hash-consing in PR #25, then SLP-as-sole-evaluator and
