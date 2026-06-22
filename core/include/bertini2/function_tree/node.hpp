@@ -285,6 +285,19 @@ public:
 	std::size_t Hash() const;
 
 	/**
+	\brief Opaque, lazily-populated cache of a compiled evaluator for this expression.
+
+	The system layer (EvalExpression / f.eval) compiles a StraightLineProgram for ([this],
+	canonical-by-name variable order) on first use and stashes it here, so repeated evaluations
+	of the same (hash-consed, immutable) expression reuse it --- like the memoized Hash().  The
+	type is erased because the SLP lives in the system layer, above function_tree; the compiled
+	program holds no node pointers (its constants are value recipes, ADR-0027), so
+	there is no reference cycle.  Transient: not serialized; a clone recompiles on demand.
+	*/
+	std::shared_ptr<const void> EvalProgram() const { return eval_program_; }
+	void SetEvalProgram(std::shared_ptr<const void> p) const { eval_program_ = p; }
+
+	/**
 	\brief Order-sensitive structural equality, shallow given interned children.
 
 	Two nodes are the same iff they have the same dynamic type, the same operator payload
@@ -401,6 +414,10 @@ protected:
 	/// Memoized structural hash (computed on first Hash() call; nodes are immutable so it
 	/// never needs invalidating).  Not serialized -- a clone recomputes it on demand.
 	mutable std::optional<std::size_t> structural_hash_;
+
+	/// Opaque compiled-evaluator cache (a system-layer StraightLineProgram for [this]); see
+	/// EvalProgram().  Lazily populated by EvalExpression; transient, not serialized.
+	mutable std::shared_ptr<const void> eval_program_;
 
 	/// Compute this node's structural hash.  Default: identity (the object address), so
 	/// distinct nodes hash distinctly.  Value/operator nodes override to be structural.

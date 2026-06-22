@@ -16,7 +16,7 @@ using mpfr_complex = bertini::mpfr_complex;
 BOOST_AUTO_TEST_SUITE(eval_expression_without_a_system)
 
 // Evaluate a bare expression at a point given as a name->value map, with no System owned
-// by the caller --- the adapter wraps it in a throwaway one-function System internally.
+// by the caller --- the expression's evaluator is compiled internally and memoized on the node.
 BOOST_AUTO_TEST_CASE(evaluates_a_bare_polynomial_in_double)
 {
 	auto x = Variable::Make("x");
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(evaluates_a_bare_polynomial_in_double)
 }
 
 // Variables are matched to values by name regardless of the order they appear in the map
-// or in the expression --- the adapter discovers and orders variables by name internally.
+// or in the expression --- variables are discovered and ordered by name internally.
 BOOST_AUTO_TEST_CASE(binds_values_by_name_not_position)
 {
 	auto a = Variable::Make("a");
@@ -107,6 +107,29 @@ BOOST_AUTO_TEST_CASE(evaluates_in_multiple_precision)
 	auto result = EvalExpression<mpfr_complex>(f, values);
 
 	BOOST_CHECK(abs(result - mpfr_complex(13)) < 1e-40);
+}
+
+// The compiled evaluator is memoized on the (immutable, hash-consed) expression node: the first
+// evaluation compiles and caches it; subsequent evaluations reuse the same cached program rather
+// than recompiling a fresh one each call.
+BOOST_AUTO_TEST_CASE(memoizes_the_compiled_program_on_the_node)
+{
+	auto x = Variable::Make("x");
+	Nd f = x*x + Integer::Make(1);
+
+	BOOST_CHECK(f->EvalProgram() == nullptr);            // nothing compiled yet
+
+	std::map<std::string,dbl> values{ {"x", dbl(3,0)} };
+	auto r1 = EvalExpression<dbl>(f, values);            // x=3 -> 10
+	BOOST_CHECK_SMALL(std::abs(r1 - dbl(10,0)), 1e-14);
+
+	auto cached = f->EvalProgram();
+	BOOST_CHECK(cached != nullptr);                      // first eval compiled + cached the program
+
+	values["x"] = dbl(5,0);
+	auto r2 = EvalExpression<dbl>(f, values);            // x=5 -> 26, still correct
+	BOOST_CHECK_SMALL(std::abs(r2 - dbl(26,0)), 1e-14);
+	BOOST_CHECK(f->EvalProgram() == cached);             // and reused the very same cached program
 }
 
 BOOST_AUTO_TEST_SUITE_END()
