@@ -60,6 +60,7 @@ class PolynomialBlock
 {
 public:
 	using Fn  = std::shared_ptr<node::Function>;
+	using NE  = std::shared_ptr<node::NamedExpression>;
 	using Nd  = std::shared_ptr<node::Node>;
 	using Var = std::shared_ptr<node::Variable>;
 
@@ -67,7 +68,7 @@ public:
 
 	// ---- construction (System forwards AddFunction / AddSubFunction here) ----
 	void AddFunction(Nd const& f)    { functions_.push_back(f);    Invalidate(); }
-	void AddConstant(Fn const& f)    { constant_subfunctions_.push_back(f); Invalidate(); }
+	void AddConstant(NE const& f)    { constant_subfunctions_.push_back(f); Invalidate(); }
 
 	/// The variable ordering + path variable the function trees are evaluated against; the
 	/// owning System keeps these in sync (they change as variable groups are added / the
@@ -81,7 +82,7 @@ public:
 	// groups / ordering; the block keeps the functions and their derivatives.
 	std::vector<Nd>&       Functions()       { return functions_; }
 	std::vector<Nd> const& Functions() const { return functions_; }
-	std::vector<Fn> const& ConstantSubfunctions() const { return constant_subfunctions_; }
+	std::vector<NE> const& ConstantSubfunctions() const { return constant_subfunctions_; }
 	size_t NumConstants() const { return constant_subfunctions_.size(); }
 
 	bool IsDifferentiated() const { return is_differentiated_; }
@@ -289,7 +290,7 @@ private:
 	}
 
 	mutable std::vector<Nd> functions_;
-	mutable std::vector<Fn> constant_subfunctions_;
+	mutable std::vector<NE> constant_subfunctions_;
 
 	mutable std::vector<Nd>  space_derivatives_;
 	mutable std::vector<Nd>  time_derivatives_;

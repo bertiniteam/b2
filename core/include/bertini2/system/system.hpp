@@ -82,6 +82,7 @@ namespace bertini {
 	public:
 		// a few local using statements to reduce typing etc.
 		using Fn = std::shared_ptr<node::Function>;
+		using NE = std::shared_ptr<node::NamedExpression>;
 		using Var = std::shared_ptr<node::Variable>;
 		using Nd = std::shared_ptr<node::Node>;
 
@@ -999,14 +1000,7 @@ namespace bertini {
 
 		 \param F The parameter to add.
 		 */
-		void AddParameter(Fn const& F);
-
-		/**
-		 Add some explicit parameters to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
-
-		 \param F The parameters to add.
-		 */
-		void AddParameters(std::vector<Fn> const& F);
+		void AddParameter(NE const& F);
 
 
 
@@ -1167,15 +1161,7 @@ namespace bertini {
 
 		 \param C The constant to add.
 		 */
-		void AddConstant(Fn const& C);
-
-
-		/**
-		 Add some constant functions to the system.  Constants must not depend on anything which can vary -- they're constant!
-
-		 \param C The constants to add.
-		 */
-		void AddConstants(std::vector<Fn> const& C);
+		void AddConstant(NE const& C);
 
 
 
@@ -1962,7 +1948,7 @@ namespace bertini {
 		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
 		
 		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
-		std::vector< Fn > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.  
+		std::vector< NE > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.
 
 		// The polynomial path -- functions_, subfunctions_, constant_subfunctions_, their
 		// derivatives, the SLP, and eval_method_ -- has been folded into a

@@ -610,17 +610,9 @@ namespace bertini
 
 
 
-	void System::AddParameter(Fn const& F)
+	void System::AddParameter(NE const& F)
 	{
 		explicit_parameters_.push_back(F);
-		InvalidateDifferentiation();
-	}
-
-
-
-	void System::AddParameters(std::vector<Fn> const& v)
-	{
-		explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
 		InvalidateDifferentiation();
 	}
 
@@ -661,16 +653,9 @@ namespace bertini
 
 
 
-	void System::AddConstant(Fn const& F)
+	void System::AddConstant(NE const& F)
 	{
 		PolyBlock().AddConstant(F);
-		InvalidateDifferentiation();
-	}
-
-
-	void System::AddConstants(std::vector<Fn> const& v)
-	{
-		for (auto const& f : v) PolyBlock().AddConstant(f);
 		InvalidateDifferentiation();
 	}
 
