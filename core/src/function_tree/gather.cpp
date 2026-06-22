@@ -24,104 +24,24 @@
 
 
 #include "bertini2/function_tree/gather.hpp"
+#include "bertini2/function_tree/find.hpp"
 #include "bertini2/function_tree.hpp"
-
-#include <algorithm>
-#include <set>
 
 namespace bertini {
 namespace node {
 
-	namespace {
-
-		// Recursively descend the tree, collecting distinct Variables.  Descent uses
-		// only public child accessors, so every operator subtype is handled by its
-		// base class (UnaryOperator / NaryOperator) without enumerating concrete types.
-		void GatherImpl(std::shared_ptr<const Node> const& n,
-		                std::vector<std::shared_ptr<Variable>>& ordered,
-		                std::set<Variable const*>& seen_vars,
-		                std::set<Node const*>& visited)
-		{
-			if (!n)
-				return;
-
-			if (!visited.insert(n.get()).second) // already processed this (possibly shared) node
-				return;
-
-			if (auto v = std::dynamic_pointer_cast<const Variable>(n))
-			{
-				if (seen_vars.insert(v.get()).second)
-					ordered.push_back(std::const_pointer_cast<Variable>(v));
-				return;
-			}
-
-			// Function / Jacobian -- descend into the entry (root) node
-			if (auto h = std::dynamic_pointer_cast<const Handle>(n))
-			{
-				GatherImpl(h->EntryNode(), ordered, seen_vars, visited);
-				return;
-			}
-
-			// Sum, Mult, ... -- any number of operands
-			if (auto nary = std::dynamic_pointer_cast<const NaryOperator>(n))
-			{
-				for (auto const& child : nary->Operands())
-					GatherImpl(child, ordered, seen_vars, visited);
-				return;
-			}
-
-			// Negate, Sqrt, Exp, Log, IntegerPower, trig, ... -- a single operand
-			if (auto u = std::dynamic_pointer_cast<const UnaryOperator>(n))
-			{
-				GatherImpl(u->Operand(), ordered, seen_vars, visited);
-				return;
-			}
-
-			// PowerOperator derives from Operator directly (base and exponent)
-			if (auto p = std::dynamic_pointer_cast<const PowerOperator>(n))
-			{
-				GatherImpl(p->GetBase(), ordered, seen_vars, visited);
-				GatherImpl(p->GetExponent(), ordered, seen_vars, visited);
-				return;
-			}
-
-			// numbers, special numbers, differentials, etc. are leaves with no
-			// solve-variables to contribute.
-		}
-
-		VariableGroup SortedByName(std::vector<std::shared_ptr<Variable>>& vars)
-		{
-			std::sort(vars.begin(), vars.end(),
-			          [](std::shared_ptr<Variable> const& a, std::shared_ptr<Variable> const& b)
-			          { return a->name() < b->name(); });
-			return VariableGroup(vars.begin(), vars.end());
-		}
-
-	} // unnamed namespace
-
+	// GatherVariables is the variable-specific case of the general Find (sympy's find): the
+	// one traversal lives in find.cpp, and these delegate to Find<Variable>.
 
 	VariableGroup GatherVariables(std::shared_ptr<const Node> const& n)
 	{
-		std::vector<std::shared_ptr<Variable>> ordered;
-		std::set<Variable const*> seen_vars;
-		std::set<Node const*> visited;
-
-		GatherImpl(n, ordered, seen_vars, visited);
-
-		return SortedByName(ordered);
+		return Find<Variable>(n);
 	}
-
 
 	VariableGroup GatherVariables(std::vector<std::shared_ptr<Function>> const& functions)
 	{
-		std::vector<std::shared_ptr<Variable>> ordered;
-		std::set<Variable const*> seen_vars;
-		std::set<Node const*> visited;
-
-		for (auto const& f : functions)
-			GatherImpl(f, ordered, seen_vars, visited);
-
-		return SortedByName(ordered);
+		std::vector<std::shared_ptr<const Node>> roots(functions.begin(), functions.end());
+		return Find<Variable>(roots);
 	}
 
 } // namespace node
