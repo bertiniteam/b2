@@ -684,7 +684,6 @@ namespace bertini {
 			public Visitor<node::Rational>,
 			public Visitor<node::Function>,
 			public Visitor<node::NamedExpression>,
-			public Visitor<node::Jacobian>,
 			public Visitor<node::Differential>,
 
 			// arithmetic
@@ -740,7 +739,6 @@ namespace bertini {
 			virtual void Visit(node::Rational const& n);
 			virtual void Visit(node::Function const& n);
 			virtual void Visit(node::NamedExpression const& n);
-			virtual void Visit(node::Jacobian const& n);
 			virtual void Visit(node::Differential const& n);
 
 			// arithmetic

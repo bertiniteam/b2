@@ -42,7 +42,6 @@ BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::special_number::Pi)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::special_number::E)
 
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Function)
-BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Jacobian)
 
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::SinOperator)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::ArcSinOperator)

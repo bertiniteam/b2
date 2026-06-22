@@ -56,7 +56,6 @@ using dbl = std::complex<double>;
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Function = bertini::node::Function;
-using Jacobian = bertini::node::Jacobian;
 
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr_complex;

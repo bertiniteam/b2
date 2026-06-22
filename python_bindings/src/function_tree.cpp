@@ -74,7 +74,6 @@ namespace bertini{
 			implicitly_convertible<std::shared_ptr<node::ArcTanOperator>, Nodeptr>();
 			
 			implicitly_convertible<std::shared_ptr<node::Function>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<node::Jacobian>, Nodeptr>();
 			
 			
 			

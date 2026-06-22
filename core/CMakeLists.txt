@@ -158,7 +158,6 @@ set(function_tree_headers
     include/bertini2/function_tree/symbols/special_number.hpp
     include/bertini2/function_tree/symbols/number.hpp
     include/bertini2/function_tree/roots/function.hpp
-    include/bertini2/function_tree/roots/jacobian.hpp
     include/bertini2/function_tree/operators/arithmetic.hpp
     include/bertini2/function_tree/operators/trig.hpp
 )
@@ -195,7 +194,6 @@ set(functiontree_symbols_HEADERS
 
 set(functiontree_roots_HEADERS
 	include/bertini2/function_tree/roots/function.hpp
-	include/bertini2/function_tree/roots/jacobian.hpp
 )
 
 set(io_headers
@@ -356,7 +354,6 @@ set(function_tree_sources
     src/function_tree/symbols/symbol.cpp
     src/function_tree/symbols/variable.cpp
     src/function_tree/symbols/number.cpp
-    src/function_tree/roots/jacobian.cpp
     src/function_tree/roots/function.cpp
 )
 
@@ -697,7 +694,6 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/slp_test.cpp
 		test/classes/eval_expression_test.cpp
 		test/classes/named_expression_test.cpp
-		test/classes/differentiate_test.cpp
 		test/classes/differentiate_wrt_var.cpp
 		test/classes/homogenization_test.cpp
 		test/classes/start_system_test.cpp

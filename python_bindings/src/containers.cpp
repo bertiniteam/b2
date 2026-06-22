@@ -127,11 +127,6 @@ void ExportContainers()
 	;
 
 
-	// std::vector of Jacobian Node ptrs
-	using T6 = std::vector<std::shared_ptr< bertini::node::Jacobian > >;
-	class_< T6 >("ListOfJacobian")
-	.def(ListVisitor<T6>())
-	;
 
 
 	// std::vector of Eigen::matrix

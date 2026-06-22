@@ -72,17 +72,6 @@ namespace bertini{
 		}
 
 		
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void JacobianVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			cl
-			.def("evalJ_d", &Jacobian::template EvalJ<dbl>)
-			.def("evalJ_mp", &Jacobian::template EvalJ<mpfr_complex>)
-			;
-		}
-
-		
 		
 		void ExportRoots()
 		{
@@ -108,13 +97,6 @@ namespace bertini{
 			
 			.def(FunctionVisitor<Function>())
 			
-			;
-
-			
-			// Jacobian class
-			class_<Jacobian, bases<Handle>, std::shared_ptr<Jacobian> >("Jacobian", no_init)
-			.def("__init__",make_constructor(&Jacobian::template Make<const Nodeptr&>))
-			.def(JacobianVisitor<Jacobian>())
 			;
 
 			// NamedExpression: Named(expr, "a") -- a user-named subexpression that prints as its

@@ -28,10 +28,11 @@
 //  Spring 2018
 
 
-#include "bertini2/function_tree/roots/jacobian.hpp"
 
 
 
+
+#include "bertini2/function_tree.hpp"
 
 namespace bertini{
 namespace node{
