@@ -255,6 +255,49 @@ namespace bertini {
 
 
 	/**
+	 \struct ConstantRecipe
+
+	 An exact, node-independent description of a constant baked into the program: enough to
+	 (re)produce the constant's value at any working precision, without evaluating a function-tree
+	 node (ADR-0027; node evaluation is being retired).  Integers and rationals are stored exactly
+	 (so they downsample to any precision without loss --- sidestepping any maximum-precision
+	 setting); Pi/E are recomputed at the working precision; a Float literal carries its
+	 authored-precision value (its inherent ceiling).
+	 */
+	struct ConstantRecipe{
+		// Snapshot is the one non-symbolic kind: a fixed variable baked to a constant has no exact
+		// symbolic value, so its double and mpfr banks are snapshotted independently at compile time.
+		enum class Kind : int { Integer, Rational, Float, Pi, E, Snapshot };
+
+		Kind kind = Kind::Integer;
+		mpz_int      int_value;             //< Kind::Integer  (exact)
+		mpq_rational rat_real, rat_imag;    //< Kind::Rational (exact)
+		mpfr_complex float_value;           //< Kind::Float (authored-precision literal); Kind::Snapshot mpfr bank
+		dbl_complex  dbl_value;             //< Kind::Snapshot double bank (independent of the mpfr bank)
+		size_t slot = 0;                    //< where this constant lives in the register file
+
+		/// Produce the constant's value at the ambient working precision (ThreadPrecision), matching
+		/// the corresponding number node's FreshEval exactly.  Definition + instantiations in the cpp.
+		template<typename NumT> NumT Produce() const;
+
+		friend class boost::serialization::access;
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned /*version*/) {
+			int k = static_cast<int>(kind);
+			ar & k;
+			kind = static_cast<Kind>(k);
+			ar & int_value;
+			ar & rat_real;
+			ar & rat_imag;
+			ar & float_value;
+			ar & dbl_value;
+			ar & slot;
+		}
+	};
+
+
+
+	/**
 	 \class SLPMemory
 
 	 The per-thread mutable working state of a straight-line program evaluation: the register
@@ -357,9 +400,9 @@ namespace bertini {
 		void AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc);
 
 		/**
-		 \brief Register a number node and the memory location to downsample it into later.
+		 \brief Register an exact constant recipe and the memory location it downsamples into.
 		 */
-		void AddNumber(Nd const num, size_t loc);
+		void AddConstant(ConstantRecipe recipe);
 
 		// Reorder `instructions_` into [frozen | live] and set `first_live_instruction_`.  Called once
 		// at the end of compilation, after `num_slots_` is set.
@@ -375,7 +418,7 @@ namespace bertini {
 		std::vector<IntT> integers_;
 
 		std::vector<size_t> instructions_; //< The instructions.  The opcodes are  stored as size_t's, as well as the locations of operands and results.
-		std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; //< the size_t is where in memory to downsample to.
+		std::vector<ConstantRecipe> constant_recipes_; //< the exact constants, each carrying the slot to downsample into.
 
 		// Freeze-set tape partition (ADR-0027).  After compilation the instructions are stably
 		// reordered so every "frozen" instruction (one whose result depends only on frozen input
@@ -399,7 +442,7 @@ namespace bertini {
 			ar & input_locations_;
 			ar & integers_;
 			ar & instructions_;
-			ar & true_values_of_numbers_;
+			ar & constant_recipes_;
 			ar & first_live_instruction_;
 			ar & num_slots_;
 		}
@@ -864,14 +907,12 @@ namespace bertini {
 
 
 			/**
-			 \brief Provides a uniform interface for dealing with all numeric node types.
+			 \brief Bake an exact constant into the program at the next available slot, and register
+			 the node pointer so repeated references (CSE) share that slot.  The recipe is built from
+			 the concrete number node by the Visit methods (see RecipeFor in the cpp), reading the
+			 node's true value directly --- no function-tree evaluation (ADR-0027).
 			 */
-			template<typename NodeT>
-			void DealWithNumber(NodeT const& n){
-						auto nd=n.shared_from_this(); // make a shared pointer to the node, so that it survives, and we get polymorphism
-						this->program_under_construction_.AddNumber(nd, next_available_complex_); // register the number with the program
-						this->locations_encountered_nodes_[nd] = next_available_complex_++; // add to found symbols in the compiler, increment counter.
-			}
+			void RegisterConstant(Nd const& nd, ConstantRecipe recipe);
 
 			/**
 			 \brief Reset the compiler to compile another SLP from another system.

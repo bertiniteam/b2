@@ -27,6 +27,8 @@
 #include "bertini2/system/system.hpp"
 #include "bertini2/system/blocks/polynomial_block.hpp"
 
+#include <boost/math/constants/constants.hpp>
+
 
 
 BOOST_CLASS_EXPORT(bertini::StraightLineProgram);
@@ -60,6 +62,39 @@ namespace bertini{
 	}
 
 
+	// Produce a constant's value directly from its exact recipe --- no function-tree node, no node
+	// evaluation (ADR-0027).  These mirror the number nodes' FreshEval_d / FreshEval_mp exactly
+	// (Integer/Float/Rational in number.cpp; Pi/E in special_number.cpp) so the compiled program
+	// evaluates bit-for-bit identically to the old node-backed path, at the ambient working
+	// precision (ThreadPrecision).
+	template<>
+	dbl_complex ConstantRecipe::Produce<dbl_complex>() const {
+		switch (kind) {
+			case Kind::Integer:  return dbl_complex(double(int_value), 0);
+			case Kind::Rational: return dbl_complex(double(rat_real), double(rat_imag));
+			case Kind::Float:    return dbl_complex(float_value);
+			case Kind::Pi:       return dbl_complex(boost::math::constants::pi<double>(), 0);
+			case Kind::E:        return dbl_complex(exp(1.0), 0.0);
+			case Kind::Snapshot: return dbl_value;
+		}
+		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<dbl_complex>");
+	}
+
+	template<>
+	mpfr_complex ConstantRecipe::Produce<mpfr_complex>() const {
+		using boost::multiprecision::mpfr_float;
+		switch (kind) {
+			case Kind::Integer:  return mpfr_complex(int_value, 0, ThreadPrecision());
+			case Kind::Rational: return mpfr_complex(mpfr_float(rat_real, ThreadPrecision()), mpfr_float(rat_imag, ThreadPrecision()));
+			case Kind::Float:    return mpfr_complex(float_value, ThreadPrecision());
+			case Kind::Pi:       return mpfr_complex(boost::math::constants::pi<mpfr_float>());
+			case Kind::E:        return mpfr_complex(mpfr_float(exp(mpfr_float(1))));
+			case Kind::Snapshot: return mpfr_complex(float_value, ThreadPrecision());
+		}
+		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<mpfr_complex>");
+	}
+
+
 	// the constructor
 	StraightLineProgram::StraightLineProgram(System const& sys){
 		SLPCompiler compiler;
@@ -75,13 +110,10 @@ namespace bertini{
 		else{
 			auto& mem = memory_.Get<mpfr_complex>();
 
-			for (auto& p: program_->true_values_of_numbers_)
-			{
-				auto& n = std::get<Nd>(p);
-				auto& loc = std::get<size_t>(p);
-
-				mem[loc] = n->Eval<mpfr_complex>();
-			}
+			// Refill the constants from their exact recipes (no node evaluation), then normalize
+			// every slot to the new precision.  (Matches the historical node-backed path.)
+			for (auto const& c : program_->constant_recipes_)
+				mem[c.slot] = c.Produce<mpfr_complex>();
 
 			for (auto& n : mem)
 				Precision(n, new_precision);
@@ -97,10 +129,10 @@ namespace bertini{
 	template<typename NumT>
 	void StraightLineProgram::CopyNumbersIntoMemory() const
 	{
-		for (auto const& x: program_->true_values_of_numbers_){
-			memory_.Get<NumT>()[x.second] = (x.first)->Eval<NumT>();
+		for (auto const& c : program_->constant_recipes_){
+			memory_.Get<NumT>()[c.slot] = c.Produce<NumT>();
 			if (std::is_same<NumT,mpfr_complex>::value)
-				Precision(memory_.Get<NumT>()[x.second], memory_.precision_);
+				Precision(memory_.Get<NumT>()[c.slot], memory_.precision_);
 		}
 	}
 
@@ -145,8 +177,8 @@ namespace bertini{
 
 	}
 
-	void SLPProgram::AddNumber(Nd const num, size_t loc){
-		this->true_values_of_numbers_.push_back(std::pair<Nd,size_t>(num, loc));
+	void SLPProgram::AddConstant(ConstantRecipe recipe){
+		this->constant_recipes_.push_back(std::move(recipe));
 	}
 
 
@@ -181,9 +213,9 @@ namespace bertini{
 
 
 
-		out << std::endl << "true values of numbers: (number, location to downsample to)" << std::endl;
-		for (auto const& x : prog.true_values_of_numbers_)
-		    out << *(x.first)  << ':' << x.second << std::endl;
+		out << std::endl << "constants: (kind, location to downsample to)" << std::endl;
+		for (auto const& c : prog.constant_recipes_)
+		    out << static_cast<int>(c.kind)  << ':' << c.slot << std::endl;
 		out << std::endl << std::endl;
 
 
@@ -387,8 +419,8 @@ namespace bertini{
 		// instruction is frozen iff all its input slots are frozen, and it freezes its output slot.
 		const size_t num_slots = num_slots_;
 		std::vector<bool> slot_frozen(num_slots, false);
-		for (auto const& p : true_values_of_numbers_)
-			slot_frozen[p.second] = true;
+		for (auto const& c : constant_recipes_)
+			slot_frozen[c.slot] = true;
 
 		struct Instr { size_t off; size_t len; bool frozen; };
 		std::vector<Instr> parsed;
@@ -456,15 +488,53 @@ namespace bertini{
 	using SLP = StraightLineProgram;
 
 
+	// Build an exact ConstantRecipe straight from a number node's true value --- no node evaluation
+	// (ADR-0027).  One overload per concrete constant kind.
+	namespace {
+		ConstantRecipe RecipeFor(node::Integer const& n){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Integer; r.int_value = n.GetValue(); return r;
+		}
+		ConstantRecipe RecipeFor(node::Rational const& n){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Rational;
+			r.rat_real = n.GetValueReal(); r.rat_imag = n.GetValueImag(); return r;
+		}
+		ConstantRecipe RecipeFor(node::Float const& n){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Float; r.float_value = n.GetValue(); return r;
+		}
+		ConstantRecipe RecipeFor(node::special_number::Pi const&){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Pi; return r;
+		}
+		ConstantRecipe RecipeFor(node::special_number::E const&){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::E; return r;
+		}
+	}
+
+
+	void SLPCompiler::RegisterConstant(Nd const& nd, ConstantRecipe recipe){
+		recipe.slot = next_available_complex_;
+		program_under_construction_.AddConstant(std::move(recipe));
+		locations_encountered_nodes_[nd] = next_available_complex_++;
+	}
+
+
 	void SLPCompiler::Visit(node::Variable const& n){
 		// System variables (those in the variable ordering) are pre-registered with
 		// memory locations before the function trees are compiled, so this Visit is
 		// only ever reached for a Variable that is NOT one of the system's variables
-		// -- i.e. a "fixed" variable that has been turned into a constant.  Bake its
-		// current value into memory exactly as we do for a number node.  (This also
-		// keeps SLP evaluation consistent with the function-tree evaluator, which
-		// returns a variable's current value when it is not a system variable.)
-		this->DealWithNumber(n);
+		// -- i.e. a "fixed" variable that has been turned into a constant.  A fixed
+		// variable has no symbolic true value, so snapshot its current value once, here
+		// at compile time (single-threaded), into a Snapshot recipe.  The two number banks
+		// are read independently (they can differ for a fixed variable), exactly mirroring the
+		// old per-bank node evaluation; the runtime fill then never evaluates a node.
+		//
+		// NOTE: the Snapshot kind is a deliberate temporary shim.  It exists only because nodes
+		// still store per-bank values; the divergent-bank problem (and this whole kind) vanishes
+		// once node-level evaluation / value storage is removed (E5).
+		ConstantRecipe recipe;
+		recipe.kind = ConstantRecipe::Kind::Snapshot;
+		recipe.dbl_value   = n.Eval<dbl_complex>();
+		recipe.float_value = n.Eval<mpfr_complex>();
+		this->RegisterConstant(n.shared_from_this(), recipe);
 	}
 
 
@@ -478,28 +548,24 @@ namespace bertini{
 
 
 
-	// wtb: factor out this pattern
 	void SLPCompiler::Visit(node::Integer const& n){
-		auto as_ptr = n.shared_from_this();
-		this->DealWithNumber(n); // that sweet template magic.  see slp.hpp for the definition of this template function
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
 	void SLPCompiler::Visit(node::Float const& n){
-		auto as_ptr = n.shared_from_this();
-		this->DealWithNumber(n);
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
 	void SLPCompiler::Visit(node::Rational const& n){
-		auto as_ptr = n.shared_from_this();
-		this->DealWithNumber(n);
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
 	void SLPCompiler::Visit(node::special_number::Pi const& n){
-		this->DealWithNumber(n);
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
 	void SLPCompiler::Visit(node::special_number::E const& n){
-		this->DealWithNumber(n);
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
 
@@ -641,7 +707,7 @@ namespace bertini{
 
 			// this code sucks.  really, there should be a bank of integers that we pull from, instead of many copies of the same integer.
 			auto one = Integer::Make(1);
-			this->DealWithNumber(*one);
+			this->RegisterConstant(one, RecipeFor(*one));
 			auto location_one  = locations_encountered_nodes_[one];
 
 			program_under_construction_.AddInstruction(Divide, location_one, operand_locations[0], next_available_complex_);
