@@ -510,9 +510,11 @@ namespace bertini {
 		void SetVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
 			using NumT = typename Derived::Scalar;
 
-#if !defined(BERTINI_DISABLE_PRECISION_CHECKS) 
+#if !defined(BERTINI_DISABLE_PRECISION_CHECKS)
 // && _WIN32
-			if (!std::is_same<NumT,dbl_complex>::value && Precision(variable_values)!=this->precision_){
+			// An empty variable vector (a constant program with no variables) has no
+			// precision to read or check.
+			if (!std::is_same<NumT,dbl_complex>::value && variable_values.size() > 0 && Precision(variable_values)!=this->precision_){
 				std::stringstream err_msg;
 				err_msg << "variable_values and SLP must be of same precision.  respective precisions: " << Precision(variable_values) << " " << this->precision_ << std::endl;
 				throw std::runtime_error(err_msg.str());

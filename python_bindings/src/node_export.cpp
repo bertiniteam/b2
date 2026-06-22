@@ -35,8 +35,11 @@
 #include <stdio.h>
 
 
+#include <boost/python/raw_function.hpp>
+
 #include "node_export.hpp"
 #include "bertini2/function_tree/canonical.hpp"
+#include "bertini2/system/eval_expression.hpp"
 
 
 namespace bertini{
@@ -217,10 +220,60 @@ namespace bertini{
 		
 		
 		
+		// Interpret a single Python value (int, float, complex, or a multiprecision
+		// number) as an mpfr_complex.  Multiprecision inputs are taken as-is; native
+		// Python numbers are embedded at the current default precision (so a Python
+		// float carries only float64 worth of information --- the documented cap).
+		static mpfr_complex CoerceToMpfrComplex(object const& o)
+		{
+			extract<mpfr_complex> as_mp(o);
+			if (as_mp.check()) return as_mp();
+
+			extract<std::complex<double>> as_complex(o);
+			if (as_complex.check()) { auto c = as_complex(); return mpfr_complex(c.real(), c.imag()); }
+
+			extract<double> as_double(o);
+			if (as_double.check()) return mpfr_complex(as_double());
+
+			extract<long> as_long(o);
+			if (as_long.check()) return mpfr_complex(static_cast<double>(as_long()));
+
+			throw std::runtime_error("could not interpret a supplied value as a number in eval");
+		}
+
+		// f.eval(x=2, y=5) --- evaluate this expression at a point given as keyword
+		// arguments naming the variables.  No System is required; the values are bound
+		// by variable name.  Every variable of the expression must be supplied, and
+		// every keyword must name a variable of the expression (see EvalExpression).
+		static object NodeEvalRaw(tuple args, dict kwargs)
+		{
+			if (len(args) != 1)
+				throw std::runtime_error("eval takes the variable values as keyword arguments, e.g. f.eval(x=2, y=5)");
+
+			std::shared_ptr<Node> self = extract<std::shared_ptr<Node>>(args[0]);
+
+			std::map<std::string, mpfr_complex> values;
+			list items = dict(kwargs).items();
+			for (long i = 0; i < len(items); ++i)
+			{
+				object pair = items[i];
+				std::string name = extract<std::string>(pair[0]);
+				values[name] = CoerceToMpfrComplex(object(pair[1]));
+			}
+
+			return object(bertini::EvalExpression<mpfr_complex>(self, values));
+		}
+
 		void ExportNode()
-		{			
+		{
 			class_<NodeWrap, boost::noncopyable, Nodeptr >("AbstractNode", no_init)
 			.def(NodeVisitor<Node>())
+			.def("eval", raw_function(&NodeEvalRaw, 1),
+				"evaluate this expression at a point given as keyword arguments naming the "
+				"variables, e.g. f.eval(x=2, y=5).  No System is needed.  Evaluation is in "
+				"multiple precision at the current default precision; native Python floats "
+				"carry only float64 of information.  Every variable of the expression must be "
+				"supplied a value, and every keyword must name a variable of the expression.")
 			;
 		};
 		
