@@ -406,3 +406,92 @@ BOOST_AUTO_TEST_SUITE_END() // SLP_cse
 // (the SLP-vs-tree oracle suite lived here; removed when the FunctionTree eval method was
 // retired -- the SLP is now the sole system evaluator.)
 
+
+// ---- freeze-set tape partition (ADR-0027) ----
+//
+// The compiler stably reorders the instruction tape so every constant-only ("frozen")
+// instruction precedes every variable-dependent ("live") one.  A point-only re-evaluation
+// then skips the frozen prologue (reusing the constants already in memory), and the whole
+// tape runs only when the constants are not yet valid for the working precision.
+
+BOOST_AUTO_TEST_SUITE(SLP_freeze_partition)
+
+using bertini::node::Integer;
+using mpfr_complex = bertini::mpfr_complex;
+
+namespace {
+	// f = x + sin(1): sin(1) is a constant unary operation -> a frozen instruction.
+	bertini::System ConstantSubexpressionSystem()
+	{
+		auto x = Variable::Make("x");
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup{x});
+		sys.AddFunction(x + sin(Integer::Make(1)));
+		return sys;
+	}
+}
+
+BOOST_AUTO_TEST_CASE(constant_subexpression_yields_a_frozen_prologue)
+{
+	auto slp = SLP(ConstantSubexpressionSystem());
+	// sin(1) compiles to at least one frozen instruction, so the live segment does not start at 0.
+	BOOST_CHECK_GT(slp.FirstLiveInstructionOffset(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(no_constant_operator_means_no_prologue)
+{
+	auto x = Variable::Make("x");
+	bertini::System sys;
+	sys.AddVariableGroup(bertini::VariableGroup{x});
+	sys.AddFunction(x * x); // every instruction depends on x -> nothing frozen
+	auto slp = SLP(sys);
+	BOOST_CHECK_EQUAL(slp.FirstLiveInstructionOffset(), 0u);
+}
+
+// Skipping the frozen prologue on a point-only change must not corrupt the result: the
+// constant stays in memory and the second eval (at a new point) reuses it.
+BOOST_AUTO_TEST_CASE(point_only_change_reuses_constants_correctly)
+{
+	auto slp = SLP(ConstantSubexpressionSystem());
+
+	const double s1 = std::sin(1.0);
+
+	Vec<dbl> p(1);
+	p(0) = dbl(2.0);
+	slp.Eval(p);
+	BOOST_CHECK_CLOSE(slp.GetFuncVals<dbl>()(0).real(), 2.0 + s1, 1e-10);
+
+	p(0) = dbl(5.0); // point-only change: prologue skipped, sin(1) reused
+	slp.Eval(p);
+	BOOST_CHECK_CLOSE(slp.GetFuncVals<dbl>()(0).real(), 5.0 + s1, 1e-10);
+
+	p(0) = dbl(2.0); // back again
+	slp.Eval(p);
+	BOOST_CHECK_CLOSE(slp.GetFuncVals<dbl>()(0).real(), 2.0 + s1, 1e-10);
+}
+
+// A precision change must invalidate the frozen prologue so the constant is recomputed at the
+// new precision.  The tolerance (1e-40) is tighter than the original precision (30 digits): if
+// invalidation were broken and sin(1) stayed at 30-digit accuracy, this would fail.
+BOOST_AUTO_TEST_CASE(precision_change_recomputes_constants)
+{
+	auto sys = ConstantSubexpressionSystem();
+
+	bertini::DefaultPrecision(30);
+	sys.precision(30);
+	Vec<mpfr_complex> p30(1);
+	p30(0) = mpfr_complex(2);
+	auto f30 = sys.Eval(p30);
+	BOOST_CHECK(abs(f30(0) - (mpfr_complex(2) + sin(mpfr_complex(1)))) < 1e-25);
+
+	bertini::DefaultPrecision(50);
+	sys.precision(50);
+	Vec<mpfr_complex> p50(1);
+	p50(0) = mpfr_complex(2);
+	auto f50 = sys.Eval(p50);
+	// sin(1) recomputed at 50 digits -> accurate well past 30 digits.
+	BOOST_CHECK(abs(f50(0) - (mpfr_complex(2) + sin(mpfr_complex(1)))) < 1e-40);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // SLP_freeze_partition
+

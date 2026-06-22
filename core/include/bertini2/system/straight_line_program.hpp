@@ -463,6 +463,11 @@ namespace bertini {
 		/// is a measure of the compiled (CSE'd) size of the program.
 		inline size_t NumMemorySlots() const{ return std::get<std::vector<dbl_complex>>(memory_).size(); }
 
+		/// Word offset into the instruction tape where the live segment begins (== total word length
+		/// of the frozen, constants-only prologue).  Zero means the program has no frozen prologue.
+		/// Exposed for testing the freeze-set tape partition (ADR-0027).
+		inline size_t FirstLiveInstructionOffset() const { return first_live_instruction_; }
+
 
 		/**
 		\brief Get the current precision of the SLP.
@@ -618,7 +623,26 @@ namespace bertini {
 		std::vector<size_t> instructions_; //< The instructions.  The opcodes are  stored as size_t's, as well as the locations of operands and results.
 		std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; //< the size_t is where in memory to downsample to.
 
+		// Freeze-set tape partition (ADR-0027).  After compilation the instructions are stably
+		// reordered so every "frozen" instruction (one whose result depends only on frozen input
+		// slots --- the literal numbers, Pi/E; i.e. the freeze set is currently the constants)
+		// precedes every "live" instruction.  `first_live_instruction_` is the word offset where the
+		// live segment begins.  The frozen prologue depends only on precision, so a point-only change
+		// re-runs from `first_live_instruction_` and reuses the frozen slots already in memory; the
+		// whole tape runs only when the frozen values are not yet valid for the working precision.
+		size_t first_live_instruction_ = 0;
+
 		mutable bool is_evaluated_ = false;
+
+		// Whether the frozen prologue's results in memory are valid.  Tracked per number type: the
+		// double constants never change once computed; the mpfr constants are valid only while the
+		// working precision is unchanged.  Transient (recomputed on first eval; not serialized).
+		mutable bool frozen_valid_dbl_ = false;
+		mutable unsigned frozen_valid_mp_precision_ = 0;
+
+		// Reorder `instructions_` into [frozen | live] and set `first_live_instruction_`.  Called once
+		// at the end of compilation, after the numbers are in memory.
+		void PartitionInstructions();
 
 
 
@@ -640,6 +664,7 @@ namespace bertini {
 
 			ar & instructions_;
 			ar & true_values_of_numbers_;
+			ar & first_live_instruction_;
 
 			ar & is_evaluated_;
 		}

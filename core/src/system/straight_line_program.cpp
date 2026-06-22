@@ -227,7 +227,18 @@ namespace bertini{
 		if (is_evaluated_)
 			return;
 
-		for (size_t ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
+		// If the frozen prologue's results are already valid for this number type (double constants
+		// never change; mpfr constants are valid while the working precision is unchanged), skip it
+		// and re-run only the live segment, reusing the frozen slots already in memory.
+		bool frozen_valid;
+		if constexpr (std::is_same<NumT,dbl_complex>::value)
+			frozen_valid = frozen_valid_dbl_;
+		else
+			frozen_valid = (frozen_valid_mp_precision_ == this->precision_);
+
+		const size_t loop_start = frozen_valid ? first_live_instruction_ : 0;
+
+		for (size_t ii = loop_start; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
 			//in the unary case the loop will increment by 3
 			//binary: by 4
 
@@ -316,6 +327,15 @@ namespace bertini{
 			}
 		} // for loop around operations
 
+		// A full run (from instruction 0) has just refreshed the frozen prologue at this precision.
+		if (!frozen_valid)
+		{
+			if constexpr (std::is_same<NumT,dbl_complex>::value)
+				frozen_valid_dbl_ = true;
+			else
+				frozen_valid_mp_precision_ = this->precision_;
+		}
+
 		is_evaluated_ = true;
 	}
 
@@ -335,6 +355,71 @@ namespace bertini{
 
 	template void StraightLineProgram::CopyNumbersIntoMemory<dbl_complex>() const;
 	template void StraightLineProgram::CopyNumbersIntoMemory<mpfr_complex>() const;
+
+
+	void StraightLineProgram::PartitionInstructions()
+	{
+		// A memory slot is "frozen" if its value depends only on frozen inputs.  Seed: the literal
+		// numbers (Integer/Float/Rational and Pi/E, all in true_values_of_numbers_) are frozen; the
+		// variable and time slots are live.  Then a single forward pass propagates frozenness: an
+		// instruction is frozen iff all its input slots are frozen, and it freezes its output slot.
+		const size_t num_slots = GetMemory<dbl_complex>().size();
+		std::vector<bool> slot_frozen(num_slots, false);
+		for (auto const& p : true_values_of_numbers_)
+			slot_frozen[p.second] = true;
+
+		struct Instr { size_t off; size_t len; bool frozen; };
+		std::vector<Instr> parsed;
+
+		for (size_t ii = 0; ii < instructions_.size(); )
+		{
+			const auto op = static_cast<Operation>(instructions_[ii]);
+			const bool unary = IsUnary(op);
+			const size_t len = unary ? 3 : 4;
+
+			bool frozen;
+			size_t out;
+			if (unary)
+			{
+				out = instructions_[ii + 2];
+				frozen = slot_frozen[instructions_[ii + 1]];
+			}
+			else if (op == IntPower)
+			{
+				// The second operand of IntPower is an index into integers_, not a memory slot; the
+				// exponent is a literal, so frozenness depends only on the base slot.
+				out = instructions_[ii + 3];
+				frozen = slot_frozen[instructions_[ii + 1]];
+			}
+			else
+			{
+				out = instructions_[ii + 3];
+				frozen = slot_frozen[instructions_[ii + 1]] && slot_frozen[instructions_[ii + 2]];
+			}
+
+			slot_frozen[out] = frozen;
+			parsed.push_back({ii, len, frozen});
+			ii += len;
+		}
+
+		// Stable partition: frozen instructions first (preserving relative order), then live ones.
+		// This is dependency-safe because no live instruction is an input to a frozen one.
+		std::vector<size_t> reordered;
+		reordered.reserve(instructions_.size());
+		size_t frozen_words = 0;
+		for (auto const& I : parsed)
+			if (I.frozen)
+			{
+				reordered.insert(reordered.end(), instructions_.begin() + I.off, instructions_.begin() + I.off + I.len);
+				frozen_words += I.len;
+			}
+		for (auto const& I : parsed)
+			if (!I.frozen)
+				reordered.insert(reordered.end(), instructions_.begin() + I.off, instructions_.begin() + I.off + I.len);
+
+		instructions_ = std::move(reordered);
+		first_live_instruction_ = frozen_words;
+	}
 
 }
 
@@ -890,6 +975,9 @@ namespace bertini{
 		slp_under_construction_.CopyNumbersIntoMemory<dbl_complex>();
 		slp_under_construction_.CopyNumbersIntoMemory<mpfr_complex>();
 
+		// Split the tape into a frozen (constants-only) prologue and a live segment, so a
+		// point-only re-evaluation can skip recomputing the constants (ADR-0027).
+		slp_under_construction_.PartitionInstructions();
 
 		return slp_under_construction_;
 	}
