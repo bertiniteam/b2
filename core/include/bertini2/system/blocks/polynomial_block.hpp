@@ -223,38 +223,14 @@ public:
 		Invalidate();
 	}
 
-	/// Simplify the derivative trees in place (evaluated at a random point, per the System's
-	/// historical logic, to drive the simplifier).  Requires the derivatives to already exist.
+	/// Simplify the derivative trees.  Simplification is functional and purely structural
+	/// (Node::Simplified, ADR-0011), so it needs no point and no node evaluation.  Requires the
+	/// derivatives to already exist.
 	void SimplifyDerivatives() const
 	{
 		using bertini::Simplify;
-
-		const size_t num_vars = variables_.size();
-		std::vector<dbl> old_vals(num_vars); dbl old_path_var_val{};
-		for (size_t ii = 0; ii < num_vars; ++ii)
-		{
-			old_vals[ii] = variables_[ii]->template Eval<dbl>();
-			variables_[ii]->template SetToRandUnit<dbl>();
-		}
-		if (path_variable_)
-		{
-			old_path_var_val = path_variable_->template Eval<dbl>();
-			path_variable_->template SetToRandUnit<dbl>();
-		}
-
-		for (auto const& n : space_derivatives_) n->Reset();
-		for (auto const& n : time_derivatives_)  n->Reset();
-
 		for (auto& n : space_derivatives_) n = Simplify(n);
 		for (auto& n : time_derivatives_)  n = Simplify(n);
-
-		for (size_t ii = 0; ii < num_vars; ++ii)
-			variables_[ii]->template set_current_value<dbl>(old_vals[ii]);
-		if (path_variable_)
-			path_variable_->template set_current_value<dbl>(old_path_var_val);
-
-		for (auto const& n : space_derivatives_) n->Reset();
-		for (auto const& n : time_derivatives_)  n->Reset();
 	}
 
 private:
