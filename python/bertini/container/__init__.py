@@ -49,7 +49,7 @@ __all__ = [
 "ListOfEGBoundaryMetaData_MultiPrec",
 "ListOfRational",
 "ListOfVectorComplexDoublePrecision",
-"ListOfFunction",
+"ListOfNode",
 "ListOfSolutionMetaData_DoublePrec",
 "ListOfVectorComplexVariablePrecision",
 "ListOfInt",

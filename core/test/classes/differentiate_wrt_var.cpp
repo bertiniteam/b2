@@ -55,7 +55,6 @@ using bertini::DefaultPrecision;
 using dbl = std::complex<double>;
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
-using Function = bertini::node::Function;
 
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr_complex;

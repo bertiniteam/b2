@@ -46,7 +46,6 @@
 #include "bertini2/function_tree/symbols/number.hpp"
 #include "bertini2/function_tree/symbols/special_number.hpp"
 
-#include "bertini2/function_tree/roots/function.hpp"
 #include "bertini2/function_tree/roots/named_expression.hpp"
 
 #include "bertini2/function_tree/simplify.hpp"
@@ -60,8 +59,6 @@ BOOST_CLASS_EXPORT_KEY(bertini::node::Node)
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(bertini::node::Node)
 
-
-BOOST_CLASS_EXPORT_KEY(bertini::node::Handle)
 
 BOOST_CLASS_EXPORT_KEY(bertini::node::Symbol)
 BOOST_CLASS_EXPORT_KEY(bertini::node::NamedSymbol)
@@ -83,7 +80,6 @@ BOOST_CLASS_EXPORT_KEY(bertini::node::Rational)
 BOOST_CLASS_EXPORT_KEY(bertini::node::special_number::Pi)
 BOOST_CLASS_EXPORT_KEY(bertini::node::special_number::E)
 
-BOOST_CLASS_EXPORT_KEY(bertini::node::Function)
 BOOST_CLASS_EXPORT_KEY(bertini::node::NamedExpression)
 
 BOOST_CLASS_EXPORT_KEY(bertini::node::SinOperator)
@@ -124,7 +120,6 @@ BOOST_CLASS_TRACKING(bertini::node::Rational, boost::serialization::track_always
 BOOST_CLASS_TRACKING(bertini::node::special_number::Pi, boost::serialization::track_always)
 BOOST_CLASS_TRACKING(bertini::node::special_number::E, boost::serialization::track_always)
 
-BOOST_CLASS_TRACKING(bertini::node::Function, boost::serialization::track_always)
 BOOST_CLASS_TRACKING(bertini::node::NamedExpression, boost::serialization::track_always)
 
 BOOST_CLASS_TRACKING(bertini::node::SinOperator, boost::serialization::track_always)

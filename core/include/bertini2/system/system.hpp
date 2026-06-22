@@ -81,7 +81,6 @@ namespace bertini {
 	
 	public:
 		// a few local using statements to reduce typing etc.
-		using Fn = std::shared_ptr<node::Function>;
 		using NE = std::shared_ptr<node::NamedExpression>;
 		using Var = std::shared_ptr<node::Variable>;
 		using Nd = std::shared_ptr<node::Node>;
@@ -104,7 +103,7 @@ namespace bertini {
 		\param functions The functions which define the system.
 		*/
 		explicit
-		System(std::vector<Fn> const& functions);
+		System(std::vector<Nd> const& functions);
 
 		/**
 		\brief The copy operator, creates a system from a string using the Bertini parser for Bertini classic syntax.
@@ -1023,17 +1022,9 @@ namespace bertini {
 
 
 		/**
-		 Add a function to the system.
+		 Add a function to the system, as a bare expression.
 
 		 \param F The function to add.
-		 */
-		void AddFunction(Fn const& F);
-
-		/**
-		 Add a function to the system.
-
-		 \param F The function to add.
-		 \param name The name of the function
 		 */
 		void AddFunction(Nd const& F);
 
@@ -1043,7 +1034,7 @@ namespace bertini {
 
 		 \param F The functions to add.
 		 */
-		void AddFunctions(std::vector<Fn> const& F);
+		void AddFunctions(std::vector<Nd> const& F);
 
 		/**
 		\brief Append an evaluation block (products-of-linears, blend, ...).

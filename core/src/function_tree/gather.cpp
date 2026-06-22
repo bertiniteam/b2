@@ -38,7 +38,7 @@ namespace node {
 		return Find<Variable>(n);
 	}
 
-	VariableGroup GatherVariables(std::vector<std::shared_ptr<Function>> const& functions)
+	VariableGroup GatherVariables(std::vector<std::shared_ptr<Node>> const& functions)
 	{
 		std::vector<std::shared_ptr<const Node>> roots(functions.begin(), functions.end());
 		return Find<Variable>(roots);

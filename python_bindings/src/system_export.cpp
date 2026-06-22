@@ -143,7 +143,6 @@ namespace bertini{
 			// .def("add_parameters", &SystemBaseT::AddParameters)
 			// .def("add_subfunction", &SystemBaseT::AddSubfunction)
 			// .def("add_subfunctions", &SystemBaseT::AddSubfunctions)
-			.def("add_function", sysAddFunc1, (arg("self"), arg("f")), "Add a function to the System")
 			.def("add_function", AddJustFn, (arg("self"), arg("f")), "Add a function (a bare expression) to the System")
 			
 			.def("add_functions", &SystemBaseT::AddFunctions, (arg("self"), arg("functions")), "Add some functions to the System.  Expects a list of functions")
@@ -293,7 +292,7 @@ namespace bertini{
 			
 			// System class
 		class_<System, std::shared_ptr<System> >("System", "The type in Bertini for systems of simultaneous equations.  Add functions and variable groups via member functions.", init<>())
-			.def(init< std::vector<std::shared_ptr<node::Function>> >((arg("functions")), "Construct a System from a list of functions.  The variables are auto-discovered from the functions and placed into a single affine variable group, ordered alphabetically by name."))
+			.def(init< std::vector<std::shared_ptr<node::Node>> >((arg("functions")), "Construct a System from a list of functions (bare expressions).  The variables are auto-discovered from the functions and placed into a single affine variable group, ordered alphabetically by name."))
 			.def(SystemVisitor<System>())
 			.def_pickle(SystemPickleSuite())
 			;

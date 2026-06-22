@@ -29,25 +29,27 @@
 #ifndef BERTINI_NAMED_EXPRESSION_HPP
 #define BERTINI_NAMED_EXPRESSION_HPP
 
-#include "bertini2/function_tree/roots/function.hpp"  // for Handle
+#include "bertini2/function_tree/symbols/symbol.hpp"
 
 namespace bertini {
 namespace node{
 
 	/**
-	\brief A user-named expression --- the surviving, immutable form of the old Function/Handle.
+	\brief A user-named expression --- the surviving, immutable entry point into a subtree.
 
 	`Named(x^2+y^2, "a")` wraps an expression and gives it a name.  It is **immutable**: the
 	expression is supplied at construction (there is no SetRoot).  It is hash-consed by
 	(expression, name), so `Named(e,"a")` is a distinct node from the bare `e` and from
 	`Named(e,"b")`.  It **prints as its name** --- the expansion is revealed elsewhere (the
 	System's Describe, which discovers named expressions).  Everything else (eval, differentiate,
-	degree, homogenize, precision) forwards to the wrapped expression via Handle.
+	degree, homogenize, precision) forwards to the wrapped expression.
 
-	Distinct from Variable (a leaf) and from the core's named symbols (Pi, E): those are the other
-	two named kinds.  Named expressions are discoverable as their own kind (see Find).
+	This is the sole surviving "handle" node: it absorbed the old Handle base and replaced the
+	deleted Function class.  Distinct from Variable (a leaf) and from the core's named symbols
+	(Pi, E): those are the other two named kinds.  Named expressions are discoverable as their own
+	kind (see Find).
 	*/
-	class NamedExpression : public Handle
+	class NamedExpression : public NamedSymbol
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -79,21 +81,56 @@ namespace node{
 			return o && name() == o->name() && EntryNode().get() == o->EntryNode().get();
 		}
 
+		/// throws a runtime error if the entry node is nullptr
+		void EnsureNotEmpty() const;
+
+		/// flips the fresh-eval bit back to fresh (downward through the wrapped expression)
+		void Reset() const override;
+
+		/// the wrapped (entry) expression this name stands for
+		const std::shared_ptr<Node>& EntryNode() const;
+
+		/// differentiate the wrapped expression
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+		/// the degree is the degree of the wrapped expression
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		int Degree(VariableGroup const& vars) const override;
+
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
+		bool IsHomogeneous(VariableGroup const& vars) const override;
+
+		/// change the precision of this variable-precision tree node
+		void precision(unsigned int prec) const override;
+
 		virtual ~NamedExpression() = default;
 
 	protected:
 		NamedExpression() = default;
 
+		/// Calls FreshEval on the entry node to the tree.
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
+		std::shared_ptr<Node> entry_node_ = nullptr;
+
 	private:
 		NamedExpression(std::shared_ptr<Node> const& entry, std::string const& name)
-			: Handle(entry, name)
+			: NamedSymbol(name), entry_node_(entry)
 		{}
 
 		friend class boost::serialization::access;
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<Handle>(*this);
+			ar & boost::serialization::base_object<NamedSymbol>(*this);
+			ar & entry_node_;
 		}
 	};
 

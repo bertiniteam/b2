@@ -63,15 +63,15 @@ def variables():
 def fg(variables):
     x, y, z = variables
     a = Float("4.897", "1.23")
-    f = Function(x*y)
-    g = Function(pow(x, 2)*y - a*z*x)
+    f = (x*y)
+    g = (pow(x, 2)*y - a*z*x)
     return f, g
 
 
 def test_system_create():
     x = Variable("x")
     y = Variable("y")
-    f = Function(x*y)
+    f = (x*y)
     #
     s = System()
 
@@ -87,16 +87,16 @@ def test_system_create():
 def test_gather_variables_alphabetical(variables):
     x, y, z = variables
     # declared out of order, x used twice; expect distinct, sorted by name
-    f1 = Function(pow(z, 2) + y*x)
-    f2 = Function(x - y)
+    f1 = (pow(z, 2) + y*x)
+    f2 = (x - y)
     found = gather_variables([f1, f2])
     assert [str(v) for v in found] == ['x', 'y', 'z']
 
 
 def test_system_from_functions(variables):
     x, y, z = variables
-    f1 = Function(x*y*z)
-    f2 = Function(x + y + z)
+    f1 = (x*y*z)
+    f2 = (x + y + z)
     s = System([f1, f2])
     assert s.num_functions() == 2
     assert s.num_variable_groups() == 1
@@ -106,7 +106,7 @@ def test_system_from_functions(variables):
 
 def test_set_variable_groups(variables):
     x, y, z = variables
-    s = System([Function(x*y*z)])
+    s = System([(x*y*z)])
     assert s.num_variable_groups() == 1
     s.set_variable_groups([pb.VariableGroup([x]), pb.VariableGroup([y, z])])
     assert s.num_variable_groups() == 2
@@ -115,7 +115,7 @@ def test_set_variable_groups(variables):
 
 def test_fix_variable(variables):
     x, y, z = variables
-    s = System([Function(x + y)])
+    s = System([(x + y)])
     assert s.num_variables() == 2
     assert s.fix_variable(y, complex(3.0))
     assert s.num_variables() == 1

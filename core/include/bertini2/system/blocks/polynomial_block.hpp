@@ -59,7 +59,6 @@ namespace blocks {
 class PolynomialBlock
 {
 public:
-	using Fn  = std::shared_ptr<node::Function>;
 	using NE  = std::shared_ptr<node::NamedExpression>;
 	using Nd  = std::shared_ptr<node::Node>;
 	using Var = std::shared_ptr<node::Variable>;

@@ -43,12 +43,10 @@ namespace bertini {
 	namespace parsing {
 		namespace classic {
 			// a few local using statements to reduce typing etc.
-			using Function = node::Function;
 			using Variable = node::Variable;
 			using Node = node::Node;
-			
-			
-			using Fn = std::shared_ptr<Function>;
+
+
 			using Var = std::shared_ptr<Variable>;
 			using Nd = std::shared_ptr<Node>;
 			
@@ -364,12 +362,6 @@ namespace bertini {
 				{
 					V = Variable::Make(str);
 					encountered_symbols_.add(str, V);
-				}
-				
-				
-				void SetRootNode(Fn & F, const Nd & N)
-				{
-					F->SetRoot(N);
 				}
 
 				// Bertini-1 input declares the declare-then-define kinds first ("function f, g;",

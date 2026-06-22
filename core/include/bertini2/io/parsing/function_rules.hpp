@@ -34,7 +34,7 @@
 #include "bertini2/io/parsing/qi_files.hpp"
 
 #include "bertini2/function_tree/node.hpp"
-#include "bertini2/function_tree/roots/function.hpp"
+#include "bertini2/function_tree/roots/named_expression.hpp"
 
 #include "bertini2/function_tree/operators/arithmetic.hpp"
 #include "bertini2/function_tree/operators/trig.hpp"
@@ -142,7 +142,6 @@ namespace bertini {
 			struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>
 			{
 				using Node = node::Node;
-				using Function = node::Function;
 				using Float = node::Float;
 				using Integer = node::Integer;
 				using Rational = node::Rational;
