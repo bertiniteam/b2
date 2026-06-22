@@ -457,6 +457,24 @@ namespace node{
 			return true_value_imag_;
 		}
 
+		/**
+		\brief Get this exact constant as a number of type NumT, independent of the
+		evaluation engine.
+
+		Unlike Eval, this does no caching and never touches the node's stored working
+		value --- it is a pure read of the literal.  It matches FreshEval's conversion:
+		double truncation for dbl, and a value at the current thread precision for mpfr.
+		*/
+		template<typename NumT>
+		NumT Value() const
+		{
+			if constexpr (std::is_same<NumT, dbl>::value)
+				return dbl(double(true_value_real_), double(true_value_imag_));
+			else
+				return NumT(boost::multiprecision::mpfr_float(true_value_real_, ThreadPrecision()),
+				            boost::multiprecision::mpfr_float(true_value_imag_, ThreadPrecision()));
+		}
+
 		bool IsLiteralZero() const override
 		{
 			return true_value_real_ == 0 && true_value_imag_ == 0;

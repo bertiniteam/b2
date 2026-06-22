@@ -71,7 +71,8 @@ namespace bertini
 			template<typename NumT>
 			NumT RandomValue(size_t index) const
 			{
-				return random_values_[index]->Eval<NumT>();
+				// A direct read of the literal constant --- no node-level evaluation.
+				return random_values_[index]->Value<NumT>();
 			}
 
 

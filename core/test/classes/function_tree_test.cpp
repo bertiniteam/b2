@@ -177,6 +177,23 @@ BOOST_AUTO_TEST_CASE(rational_node_eval_sane_precision_one_half){
 	BOOST_CHECK_EQUAL(Precision(result),16);
 }
 
+// Rational::Value<NumT> reads the literal directly (no node-level eval), and must agree
+// with what Eval produces from the same constant.
+BOOST_AUTO_TEST_CASE(rational_value_accessor_matches_eval){
+
+	DefaultPrecision(30);
+
+	auto frac = bertini::node::Rational::Make(mpq_rational(3,4), mpq_rational(-1,2)); // 3/4 - i/2
+
+	auto by_value_d = frac->Value<dbl>();
+	BOOST_CHECK_SMALL(std::abs(by_value_d - dbl(0.75, -0.5)), 1e-14);
+	BOOST_CHECK_SMALL(std::abs(by_value_d - frac->Eval<dbl>()), 1e-14);
+
+	auto by_value_mp = frac->Value<mpfr_complex>();
+	BOOST_CHECK(abs(by_value_mp - frac->Eval<mpfr_complex>()) < 1e-28);
+	BOOST_CHECK_EQUAL(Precision(by_value_mp), 30u);
+}
+
 
 BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
