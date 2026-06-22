@@ -162,7 +162,9 @@ namespace bertini {
 					using ::pow;
 					
 					root_rule_.name("function_");
-					root_rule_ = expression_ [ _val = make_shared_<Function>()(_1)];
+					// Return the bare parsed expression (no Function wrapper): the System parser names
+					// it (a NamedExpression for subfunctions) or stores it directly (top-level functions).
+					root_rule_ = expression_ [ _val = _1];
 					
 					
 					///////////////////

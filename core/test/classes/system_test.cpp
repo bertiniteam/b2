@@ -35,6 +35,8 @@
 
 
 
+#include <sstream>
+
 #include "bertini2/system/system.hpp"
 #include "bertini2/system/precon.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
@@ -101,6 +103,34 @@ BOOST_AUTO_TEST_CASE(parsed_system_has_functions_and_evaluates)
 	BOOST_REQUIRE_EQUAL(v.size(), 2);
 	BOOST_CHECK_SMALL(std::abs(v(0) - dbl(6,0)), 1e-12);   // x*y at (2,3)
 	BOOST_CHECK_SMALL(std::abs(v(1) - dbl(5,0)), 1e-12);   // x+y at (2,3)
+}
+
+
+/**
+\class bertini::System
+\test \b parsed_subfunction_is_a_named_expression A `s = expr` subfunction parses to an immutable
+NamedExpression embedded in the function that references it; the System evaluates correctly, prints
+the function with `s` by name, and lists the named subexpression's value below (discovered, not stored).
+*/
+BOOST_AUTO_TEST_CASE(parsed_subfunction_is_a_named_expression)
+{
+	System sys;
+	std::string str = "variable_group x, y; function f; s = x*y; f = s + x;";
+	bool ok = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
+	BOOST_CHECK(ok);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 1u);
+
+	// f = s + x = x*y + x; at (2,3) -> 6 + 2 = 8
+	Vec<dbl> pt(2); pt << dbl(2,0), dbl(3,0);
+	auto v = sys.Eval(pt);
+	BOOST_REQUIRE_EQUAL(v.size(), 1);
+	BOOST_CHECK_SMALL(std::abs(v(0) - dbl(8,0)), 1e-12);
+
+	std::stringstream ss; ss << sys;
+	const std::string text = ss.str();
+	BOOST_CHECK(text.find("named subexpression") != std::string::npos);  // discovered + shown
+	BOOST_CHECK(text.find("s = x*y") != std::string::npos);              // its value
 }
 
 

@@ -84,6 +84,7 @@ BOOST_CLASS_EXPORT_KEY(bertini::node::special_number::Pi)
 BOOST_CLASS_EXPORT_KEY(bertini::node::special_number::E)
 
 BOOST_CLASS_EXPORT_KEY(bertini::node::Function)
+BOOST_CLASS_EXPORT_KEY(bertini::node::NamedExpression)
 
 BOOST_CLASS_EXPORT_KEY(bertini::node::SinOperator)
 BOOST_CLASS_EXPORT_KEY(bertini::node::ArcSinOperator)
@@ -124,6 +125,7 @@ BOOST_CLASS_TRACKING(bertini::node::special_number::Pi, boost::serialization::tr
 BOOST_CLASS_TRACKING(bertini::node::special_number::E, boost::serialization::track_always)
 
 BOOST_CLASS_TRACKING(bertini::node::Function, boost::serialization::track_always)
+BOOST_CLASS_TRACKING(bertini::node::NamedExpression, boost::serialization::track_always)
 
 BOOST_CLASS_TRACKING(bertini::node::SinOperator, boost::serialization::track_always)
 BOOST_CLASS_TRACKING(bertini::node::ArcSinOperator, boost::serialization::track_always)

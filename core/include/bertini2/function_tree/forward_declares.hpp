@@ -92,6 +92,7 @@ namespace bertini {
 			ar.template register_type<bertini::node::Float>();
 			ar.template register_type<bertini::node::Rational>();
 			ar.template register_type<bertini::node::Function>();
+			ar.template register_type<bertini::node::NamedExpression>();
 			ar.template register_type<bertini::node::Differential>();
 			// ar.template register_type<bertini::node::Operator>(); // abstract type
 			// ar.template register_type<bertini::node::UnaryOperator>(); // abstract type

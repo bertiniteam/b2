@@ -67,7 +67,6 @@ public:
 
 	// ---- construction (System forwards AddFunction / AddSubFunction here) ----
 	void AddFunction(Nd const& f)    { functions_.push_back(f);    Invalidate(); }
-	void AddSubFunction(Fn const& f) { subfunctions_.push_back(f); Invalidate(); }
 	void AddConstant(Fn const& f)    { constant_subfunctions_.push_back(f); Invalidate(); }
 
 	/// The variable ordering + path variable the function trees are evaluated against; the
@@ -126,7 +125,6 @@ public:
 	void Reset() const
 	{
 		for (auto const& f : functions_)             f->Reset();
-		for (auto const& f : subfunctions_)          f->Reset();
 		for (auto const& f : constant_subfunctions_) f->Reset();
 		for (auto const& n : space_derivatives_) n->Reset();
 		for (auto const& n : time_derivatives_)  n->Reset();
@@ -148,7 +146,6 @@ public:
 	void Precision(unsigned new_precision) const
 	{
 		for (auto const& f : functions_)            f->precision(new_precision);
-		for (auto const& f : subfunctions_)         f->precision(new_precision);
 		for (auto const& f : constant_subfunctions_) f->precision(new_precision);
 		if (path_variable_) path_variable_->precision(new_precision);
 		for (auto const& v : variables_) v->precision(new_precision);
@@ -292,7 +289,6 @@ private:
 	}
 
 	mutable std::vector<Nd> functions_;
-	mutable std::vector<Fn> subfunctions_;
 	mutable std::vector<Fn> constant_subfunctions_;
 
 	mutable std::vector<Nd>  space_derivatives_;
@@ -312,7 +308,6 @@ private:
 	void serialize(Archive& ar, const unsigned /*version*/)
 	{
 		ar & constant_subfunctions_;
-		ar & subfunctions_;
 		ar & functions_;
 		ar & is_differentiated_;
 		ar & space_derivatives_;

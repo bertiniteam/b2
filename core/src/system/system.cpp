@@ -24,6 +24,7 @@
 
 
 #include "bertini2/system/system.hpp"
+#include "bertini2/function_tree/find.hpp"
 
 template<typename NumT> using Vec = bertini::Vec<NumT>;
 template<typename NumT> using Mat = bertini::Mat<NumT>;
@@ -626,19 +627,6 @@ namespace bertini
 
 
 
-	void System::AddSubfunction(Fn const& F)
-	{
-		PolyBlock().AddSubFunction(F);
-		InvalidateDifferentiation();
-	}
-
-
-
-	void System::AddSubfunctions(std::vector<Fn> const& v)
-	{
-		for (auto const& f : v) PolyBlock().AddSubFunction(f);
-		InvalidateDifferentiation();
-	}
 
 
 
@@ -1504,6 +1492,21 @@ namespace bertini
 		size_t row = 0;
 		for (auto const& blk : blocks_)
 			std::visit([&](auto const& b){ b.Describe(out, row, vars, verbose); }, blk);
+
+		// --- named subexpressions: the functions above print these by name; show each one's value
+		// here.  They are not stored separately --- they are discovered (Find) in the function trees
+		// they are embedded in (nested ones included).
+		if (auto* p = PolyBlockPtr())
+		{
+			std::vector<std::shared_ptr<const node::Node>> roots(p->Functions().begin(), p->Functions().end());
+			auto named = node::Find<node::NamedExpression>(roots);
+			if (!named.empty())
+			{
+				out << "\n" << named.size() << (named.size() == 1 ? " named subexpression:\n" : " named subexpressions:\n");
+				for (auto const& ne : named)
+					out << "  " << ne->name() << " = " << ne->EntryNode() << "\n";
+			}
+		}
 
 		// --- parameters / constants (only when present) ---
 		if (NumParameters())

@@ -156,7 +156,7 @@ namespace bertini {
 					  |
 					  path_variable_ [phx::bind(&System::AddPathVariable, _val, _1)]
 					  |
-					  subfunction_ [phx::bind(&System::AddSubfunction, _val, _1)]
+					  qi::omit[subfunction_]
 					  |
 					  definition_
 					  )
@@ -237,12 +237,13 @@ namespace bertini {
 					using qi::_a;
 					using qi::omit;
 					subfunction_.name("subfunction");
-					subfunction_ = new_function_ [_a = _1]  > '=' >
-					function_parser_ [_val = _a, phx::bind( [](Fn & F, const Nd & N)
-														   {
-															   F->SetRoot(N);
-														   },_a, _1)]
-					// omit close
+					subfunction_ = unencountered_symbol_ [_a = _1]  > '=' >
+					function_parser_ [phx::bind( [this](Nd & result, std::string const& name, const Nd & expr)
+										   {
+											   auto ne = node::NamedExpression::Make(expr, name);
+											   encountered_symbols_.add(name, ne);
+											   result = ne;
+										   }, _val, _a, _1)]
 					> ';';
 					
 					
@@ -312,7 +313,7 @@ namespace bertini {
 				
 				qi::rule<Iterator, std::vector<Fn>(), Skipper > functions_, constants_, parameters_;
 				qi::rule<Iterator, std::vector<Fn>(), Skipper > genericfuncgp_;
-				qi::rule<Iterator, Fn(), Skipper, qi::locals<Fn> >  subfunction_;
+				qi::rule<Iterator, Nd(), Skipper, qi::locals<std::string> >  subfunction_;
 				
 				qi::rule<Iterator, Fn()>  new_function_;
 				

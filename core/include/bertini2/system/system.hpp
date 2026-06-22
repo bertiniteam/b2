@@ -1017,7 +1017,6 @@ namespace bertini {
 
 		 \param F The subfunction to add.
 		 */
-		void AddSubfunction(Fn const& F);
 
 		/**
 		 Add some subfunctions to the system.
@@ -1026,7 +1025,6 @@ namespace bertini {
 
 		 \param F The subfunctions to add.
 		 */
-		void AddSubfunctions(std::vector<Fn> const& F);
 
 
 
