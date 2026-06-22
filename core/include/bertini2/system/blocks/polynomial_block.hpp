@@ -285,12 +285,12 @@ private:
 		space_derivatives_.resize(n * variables_.size());
 		for (size_t jj = 0; jj < variables_.size(); ++jj)
 			for (size_t ii = 0; ii < n; ++ii)
-				space_derivatives_[ii + jj * n] = node::Function::Make(functions_[ii]->Differentiate(variables_[jj]));
+				space_derivatives_[ii + jj * n] = functions_[ii]->Differentiate(variables_[jj]);
 		if (path_variable_)
 		{
 			time_derivatives_.resize(n);
 			for (size_t ii = 0; ii < n; ++ii)
-				time_derivatives_[ii] = node::Function::Make(functions_[ii]->Differentiate(path_variable_));
+				time_derivatives_[ii] = functions_[ii]->Differentiate(path_variable_);
 		}
 	}
 

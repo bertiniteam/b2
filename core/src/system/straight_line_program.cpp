@@ -496,15 +496,16 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Function const & f){
-		// put the location of the accepted node into memory, and copy into an output location.
+		// A Function appearing *inside* an expression tree -- a named subfunction.  (Top-level
+		// outputs are no longer Function-wrapped; the Compile loop wires those from bare roots.)
+		// Compute the entry expression, then copy its value into the Function's own slot so every
+		// reference to this subfunction shares that one result.
 		const std::shared_ptr<node::Node>& n = f.EntryNode();
 		const std::shared_ptr<const node::Function> f_as_ptr = std::dynamic_pointer_cast<node::Function const>(f.shared_from_this());
 
-
 		if (this->locations_encountered_nodes_.find(n) == this->locations_encountered_nodes_.end())
-			n->Accept(*this); 
+			n->Accept(*this);
 		size_t location_entry = this->locations_encountered_nodes_[n];
-
 
 		size_t location_this_node;
 		if (this->locations_encountered_nodes_.find(f_as_ptr) == this->locations_encountered_nodes_.end()){
@@ -514,13 +515,7 @@ namespace bertini{
 		else
 			location_this_node = locations_encountered_nodes_[f_as_ptr];
 
-
-		if (locations_top_level_functions_and_derivatives_.find(f_as_ptr)!= locations_top_level_functions_and_derivatives_.end()){ // top-level
-			slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
-		}
-		else{ // not a top-level
-			slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
-		}
+		slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
 	}
 
 
@@ -871,92 +866,61 @@ namespace bertini{
 
 
 		
-			// make space for natural functions and derivatives.  we omit the patches.
-			// 3. ADD FUNCTIONS
-		slp_under_construction_.number_of_.Functions = sys.NumNaturalFunctions();
+			// 3. ADD FUNCTIONS AND DERIVATIVES (we omit the patches).
+			//
+			// Each output is a bare expression root: the natural functions' entry expressions,
+			// then the space derivatives, then the time derivatives.  We reserve a contiguous
+			// output slot for every output, then visit each root (computing its value into its
+			// own slot) and emit an Assign copying that value into the reserved output slot.  The
+			// compiler marks entry points itself via this explicit output list, rather than
+			// relying on a Function wrapper node (ADR-0027).
+
+		std::vector<std::shared_ptr<node::Node>> function_roots;
+		for (auto const& f : sys.GetNaturalFunctions())
+			function_roots.push_back(f->EntryNode());
+
+		auto ds_dx = sys.GetSpaceDerivatives();
+		std::vector<std::shared_ptr<node::Node>> ds_dt;
+		if (sys.HavePathVariable())
+			for (auto const& d : sys.GetTimeDerivatives())
+				ds_dt.push_back(d);
+
+		// reserve the output slots, contiguously, in the order [functions | jacobian | timederiv]
+		slp_under_construction_.number_of_.Functions = function_roots.size();
 		slp_under_construction_.output_locations_.Functions = next_available_complex_;
-		for (auto f: sys.GetNaturalFunctions())
-		{
-			locations_top_level_functions_and_derivatives_[f] = next_available_complex_; // don't increment yet, we're listing it a few places. this is for an optimization that elides a copy for assignment.
-			locations_encountered_nodes_[f] = next_available_complex_++;
+		std::vector<size_t> function_output_slots;
+		for (size_t i = 0; i < function_roots.size(); ++i)
+			function_output_slots.push_back(next_available_complex_++);
 
-			#ifndef BERTINI_DISABLE_FUNCTION_TREE_SANITY_CHECKS
-						try{
-							f->shared_from_this();
-						}
-						catch (std::exception const&){
-							throw std::runtime_error("top level function is not a function");
-						}
-			#endif
-
-
-		}
-
-
-
-
-
-		
-		// always have space derivatives
-
-		auto ds_dx = sys.GetSpaceDerivatives(); // a linear object, so can just run down the object
 		slp_under_construction_.number_of_.Jacobian = ds_dx.size();
 		slp_under_construction_.output_locations_.Jacobian = next_available_complex_;
-		for (auto n: ds_dx)
-		{
-			locations_top_level_functions_and_derivatives_[n] = next_available_complex_; // don't increment yet, we're listing it a few places. this is for an optimization that elides a copy for assignment.
-			locations_encountered_nodes_[n] = next_available_complex_++;
-		}
+		std::vector<size_t> jacobian_output_slots;
+		for (size_t i = 0; i < ds_dx.size(); ++i)
+			jacobian_output_slots.push_back(next_available_complex_++);
 
-
-
-
-		// sometimes have time derivatives
+		std::vector<size_t> time_deriv_output_slots;
 		if (sys.HavePathVariable()) {
-			
-			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
 			slp_under_construction_.number_of_.TimeDeriv = ds_dt.size();
-			slp_under_construction_.output_locations_.TimeDeriv = next_available_complex_; // note the start of the block in memory.  the size was also recorded in the previous line.
-			for (auto n: ds_dt)
-			{
-				locations_top_level_functions_and_derivatives_[n] = next_available_complex_; // don't increment yet, we're listing it a few places. this is for an optimization that elides a copy for assignment.
-				locations_encountered_nodes_[n] = next_available_complex_++;
+			slp_under_construction_.output_locations_.TimeDeriv = next_available_complex_;
+			for (size_t i = 0; i < ds_dt.size(); ++i)
+				time_deriv_output_slots.push_back(next_available_complex_++);
+		}
+
+		// visit each output root and copy its value into the reserved output slot.  A shared root
+		// is visited once (CSE), but every output position gets its own Assign.
+		auto wire_outputs = [&](auto const& roots, std::vector<size_t> const& out_slots) {
+			for (size_t i = 0; i < roots.size(); ++i) {
+				auto const& r = roots[i];
+				if (this->locations_encountered_nodes_.find(r) == this->locations_encountered_nodes_.end())
+					r->Accept(*this);
+				slp_under_construction_.AddInstruction(Assign, this->locations_encountered_nodes_[r], out_slots[i]);
 			}
-		}
+		};
 
-
-
-
-
-		// now we're actually ready to start visiting using recursion, since we've recorded the locations of inputs and outputs.
-		
-		for (auto& f: sys.GetNaturalFunctions())
-		{
-			f->shared_from_this();
-			f->Accept(*this);
-
-			// post visit function
-			/* code */
-		}
-
-
-
-		
-		// always do derivatives with respect to space variables
-		for (auto n: ds_dx)
-			n->Accept(*this);
-
-
-
-
-		// sometimes have time derivatives
-		if (sys.HavePathVariable()) {
-			
-			// we need derivatives with respect to time only if the system has a path variable defined
-			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
-			for (auto n: ds_dt)
-				n->Accept(*this);
-		}
+		wire_outputs(function_roots, function_output_slots);
+		wire_outputs(ds_dx, jacobian_output_slots);
+		if (sys.HavePathVariable())
+			wire_outputs(ds_dt, time_deriv_output_slots);
 
 
 		// Re-seed the thread-local default precision from the SLP's own precision before

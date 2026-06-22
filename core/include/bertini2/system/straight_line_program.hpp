@@ -788,7 +788,6 @@ namespace bertini {
 
 			std::map<Nd, size_t> locations_encountered_nodes_; //< A registry of pointers-to-nodes and location in memory on where to find *their results*
 			std::map<IntT, size_t> locations_integers_;
-			std::map<Nd, size_t> locations_top_level_functions_and_derivatives_;
 
 			SLP slp_under_construction_; //< the under-construction SLP.  will be returned at end of `compile`
 	};
