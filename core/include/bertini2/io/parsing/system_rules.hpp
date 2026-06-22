@@ -146,7 +146,7 @@ namespace bertini {
 					  |
 					  variables_ [phx::bind(&System::AddUngroupedVariables, _val, _1)]
 					  |
-					  functions_ [phx::bind(&System::AddFunctions, _val, _1)]
+					  functions_ [phx::bind([this](std::vector<Fn> const& fns){ this->CollectDeclaredFunctions(fns); }, _1)]
 					  |
 					  constants_ [phx::bind(&System::AddConstants, _val, _1)]
 					  |
@@ -359,6 +359,28 @@ namespace bertini {
 				{
 					F->SetRoot(N);
 				}
+
+				// Bertini-1 input declares the functions first ("function f, g;"), then defines
+				// them and any subfunctions later; the declared names are exactly the top-level
+				// functions (everything else defined inline is a subfunction).  We collect the
+				// declared (still-empty) function boxes here and emit them to the System only after
+				// the whole input is parsed (EmitDeclaredFunctions), by which point every definition
+				// has filled its box -- so the System receives bare, fully-built expressions and
+				// never depends on the box being mutated after it is handed over.
+			public:
+				void CollectDeclaredFunctions(std::vector<Fn> const& fns)
+				{
+					for (auto const& f : fns) declared_functions_.push_back(f);
+				}
+
+				void EmitDeclaredFunctions(System& s) const
+				{
+					for (auto const& f : declared_functions_)
+						s.AddFunction(f->EntryNode());
+				}
+
+			private:
+				std::vector<Fn> declared_functions_;
 			};
 			
 		} // re: namespace classic

@@ -61,7 +61,9 @@ namespace bertini {
 				
 				if (!r || first != last) // fail if we did not get a full match
 					return false;
-				
+
+				// every definition has now filled its function box: emit the bare entries.
+				S.EmitDeclaredFunctions(s);
 				sys = s;
 				return r;
 			}
@@ -94,6 +96,9 @@ namespace bertini {
 				"unparsed remainder: \"" + remaining + "\"");
 		}
 		
+		// every definition has now filled its function box: emit the bare entries.
+		S.EmitDeclaredFunctions(sys);
+
 		using std::swap;
 		swap(sys,*this);
 	}
