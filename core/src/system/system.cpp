@@ -646,15 +646,16 @@ namespace bertini
 
 	void System::AddFunction(Fn const& F)
 	{
-		PolyBlock().AddFunction(F);
+		// The Fn-accepting API survives for the ctor/bindings; we store the bare entry expression.
+		PolyBlock().AddFunction(F->EntryNode());
 		InvalidateDifferentiation();
 	}
 
 
 
-	void System::AddFunction(Nd const& N, std::string const& name)
+	void System::AddFunction(Nd const& N)
 	{
-		PolyBlock().AddFunction(Function::Make(N, name));
+		PolyBlock().AddFunction(N);
 		InvalidateDifferentiation();
 	}
 
@@ -662,7 +663,7 @@ namespace bertini
 
 	void System::AddFunctions(std::vector<Fn> const& v)
 	{
-		for (auto const& f : v) PolyBlock().AddFunction(f);
+		for (auto const& f : v) PolyBlock().AddFunction(f->EntryNode());
 		InvalidateDifferentiation();
 	}
 
@@ -987,9 +988,9 @@ namespace bertini
 
 				if constexpr (std::is_same_v<B, blocks::PolynomialBlock>)
 				{
-					// already function-tree: take each Function's inner expression node.
+					// already function-tree: each stored function is the bare expression node.
 					for (auto const& f : b.Functions())
-						out.push_back(f->EntryNode());
+						out.push_back(f);
 				}
 				else if constexpr (std::is_same_v<B, blocks::ProductsOfLinearsBlock>)
 				{
@@ -1260,7 +1261,7 @@ namespace bertini
 
 
 		// finally, we re-order the functions based on the indices we just computed
-		std::vector<std::shared_ptr<node::Function> > re_ordered_functions(degs.size());
+		std::vector<std::shared_ptr<node::Node> > re_ordered_functions(degs.size());
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
@@ -1288,7 +1289,7 @@ namespace bertini
 
 
 		// finally, we re-order the functions based on the indices we just computed
-		std::vector<std::shared_ptr<node::Function> > re_ordered_functions(degs.size());
+		std::vector<std::shared_ptr<node::Node> > re_ordered_functions(degs.size());
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
@@ -1589,7 +1590,7 @@ namespace bertini
 			auto& lhsf = PolyBlock().Functions();
 			auto const& rhsf = rhs.PolyFunctions();
 			for (size_t ii = 0; ii < lhsf.size(); ++ii)
-				lhsf[ii] = node::Function::Make(rhsf[ii]->EntryNode() + lhsf[ii]->EntryNode(), lhsf[ii]->name());
+				lhsf[ii] = rhsf[ii] + lhsf[ii];
 		}
 
 		InvalidateDifferentiation();
@@ -1607,7 +1608,7 @@ namespace bertini
 		// new wrappers, not SetRoot — see comment in operator+= above.
 		for (auto& f : PolyBlock().Functions())
 		{
-			f = node::Function::Make( N * f->EntryNode(), f->name());
+			f = N * f;
 		}
 		InvalidateDifferentiation();
 		return *this;

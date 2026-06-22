@@ -1043,7 +1043,7 @@ namespace bertini {
 		 \param F The function to add.
 		 \param name The name of the function
 		 */
-		void AddFunction(Nd const& F, std::string const& name = "unnamed_function");
+		void AddFunction(Nd const& F);
 
 
 		/**
@@ -1342,7 +1342,7 @@ namespace bertini {
 		/**
 		 \brief Get the functions.
 		*/
-		std::vector<Fn> GetNaturalFunctions() const
+		std::vector<Nd> GetNaturalFunctions() const
 		{
 			if (auto* p = PolyBlockPtr())
 				return p->Functions();
@@ -1838,9 +1838,9 @@ namespace bertini {
 		}
 
 		/// The polynomial block's functions (an empty list if there is no polynomial block).
-		std::vector<Fn> const& PolyFunctions() const
+		std::vector<Nd> const& PolyFunctions() const
 		{
-			static const std::vector<Fn> none;
+			static const std::vector<Nd> none;
 			auto* p = PolyBlockPtr();
 			return p ? p->Functions() : none;
 		}

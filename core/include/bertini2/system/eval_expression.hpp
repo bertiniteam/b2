@@ -92,7 +92,7 @@ namespace bertini {
 		}
 
 		System sys;
-		sys.AddFunction(expr, "expr");
+		sys.AddFunction(expr);
 		sys.AddVariableGroup(vars);
 
 		if constexpr (!std::is_same<T, dbl>::value)

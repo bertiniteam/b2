@@ -877,7 +877,7 @@ namespace bertini{
 
 		std::vector<std::shared_ptr<node::Node>> function_roots;
 		for (auto const& f : sys.GetNaturalFunctions())
-			function_roots.push_back(f->EntryNode());
+			function_roots.push_back(f);
 
 		auto ds_dx = sys.GetSpaceDerivatives();
 		std::vector<std::shared_ptr<node::Node>> ds_dt;

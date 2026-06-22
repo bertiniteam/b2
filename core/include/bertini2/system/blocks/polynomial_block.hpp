@@ -66,7 +66,7 @@ public:
 	PolynomialBlock() : precision_(DefaultPrecision()) {}
 
 	// ---- construction (System forwards AddFunction / AddSubFunction here) ----
-	void AddFunction(Fn const& f)    { functions_.push_back(f);    Invalidate(); }
+	void AddFunction(Nd const& f)    { functions_.push_back(f);    Invalidate(); }
 	void AddSubFunction(Fn const& f) { subfunctions_.push_back(f); Invalidate(); }
 	void AddConstant(Fn const& f)    { constant_subfunctions_.push_back(f); Invalidate(); }
 
@@ -80,8 +80,8 @@ public:
 	// Mutable access for the owning System's construction-time manipulations (Homogenize walks
 	// the trees in place; Reorder/Simplify reassign entries).  The System keeps the variable
 	// groups / ordering; the block keeps the functions and their derivatives.
-	std::vector<Fn>&       Functions()       { return functions_; }
-	std::vector<Fn> const& Functions() const { return functions_; }
+	std::vector<Nd>&       Functions()       { return functions_; }
+	std::vector<Nd> const& Functions() const { return functions_; }
 	std::vector<Fn> const& ConstantSubfunctions() const { return constant_subfunctions_; }
 	size_t NumConstants() const { return constant_subfunctions_.size(); }
 
@@ -108,7 +108,7 @@ public:
 	void Homogenize(VariableGroup const& group, Var const& hom_var)
 	{
 		for (auto& f : functions_)
-			f = std::static_pointer_cast<node::Function>(f->Homogenized(group, hom_var));
+			f = f->Homogenized(group, hom_var);
 		Invalidate();
 	}
 	bool IsHomogeneous(VariableGroup const& vars) const
@@ -141,7 +141,7 @@ public:
 	void Describe(std::ostream& out, size_t& row, VariableGroup const& /*vars*/, bool /*verbose*/) const
 	{
 		for (auto const& f : functions_)
-			out << "  f_" << row++ << " = " << f->EntryNode() << "\n";
+			out << "  f_" << row++ << " = " << f << "\n";
 	}
 
 	unsigned Precision() const { return precision_; }
@@ -194,7 +194,7 @@ public:
 	bool HavePathVariable() const { return static_cast<bool>(path_variable_); }
 	Var GetPathVariable() const { return path_variable_; }
 	size_t NumNaturalFunctions() const { return functions_.size(); }
-	std::vector<Fn> const& GetNaturalFunctions() const { return functions_; }
+	std::vector<Nd> const& GetNaturalFunctions() const { return functions_; }
 	// The SLP is built from the explicit per-variable derivative trees (space/time derivatives).
 	std::vector<Nd> const& GetSpaceDerivatives() const
 	{
@@ -225,13 +225,10 @@ public:
 	/// Simplify the function trees (and invalidate the derivatives, which must be rebuilt).
 	void SimplifyFunctions() const
 	{
-		using bertini::Simplify;
-		// functional (non-mutating) simplify: rebind each function to its simplified form.
-		// (Handle::Simplified() currently returns self -- a Function is an opaque boundary --
-		// so this is inert for top-level Function wrappers, as it has always been; the
-		// machinery is now functional and ready for when that changes.)
-		for (auto& f : functions_)
-			f = std::static_pointer_cast<node::Function>(Simplify(f));
+		// Intentionally inert on the top-level functions, preserving long-standing behavior:
+		// when functions were Function-wrapped, Handle::Simplified() returned self (an opaque
+		// boundary), so top-level simplification never happened.  Now that functions are bare
+		// roots, actually simplifying them here would be a behavior change, deferred to its own step.
 		Invalidate();
 	}
 
@@ -294,7 +291,7 @@ private:
 		}
 	}
 
-	mutable std::vector<Fn> functions_;
+	mutable std::vector<Nd> functions_;
 	mutable std::vector<Fn> subfunctions_;
 	mutable std::vector<Fn> constant_subfunctions_;
 
