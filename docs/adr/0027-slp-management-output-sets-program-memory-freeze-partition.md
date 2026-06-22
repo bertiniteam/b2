@@ -9,8 +9,16 @@
 > output-sets compiled from explicit bare roots. *Revised by ADR-0028:* `node::Function`'s name
 > role is carried by **`NamedExpression`**, not a parallel `vector<string>` as written below;
 > and `Handle` does **not** survive (no remaining subclass once `Jacobian` was deleted).
-> *Remaining, renumbered as **Track E** (see `z_notes/2026-06-22_roadmap_FE.md`):* **E1** split
-> Program/Memory [★ root; `Clone`→from-old helper, #246 deep-copy dies] → **E2** retire the adapter
+> **E1 DONE (2026-06-22, `f9ea0258`..`a5a17d3b`):** the SLP is split into an immutable, shareable
+> `SLPProgram` (instructions + exact node-free `ConstantRecipe`s + layout) and a per-thread
+> `SLPMemory` (registers + precision + freshness flags); the per-thread eval path writes **no**
+> shared node state (variables/path-value/precision are System-owned buffers + the SLP's own
+> Memory, all node-free); and `Clone(System)` is now a **Memory-isolating shallow copy** — it
+> shares the immutable DAG + compiled Program and copies only the eval Memory (operand-holding
+> blocks deep-copy their nested operand Systems the same way), deleting the **#246** serialize/
+> recompile deep copy. Caveat: node value/precision *storage* still exists (E5 deletes it); a
+> temporary `ConstantRecipe::Snapshot` kind handles fixed-variables-as-constants until then.
+> *Remaining **Track E** (see `z_notes/2026-06-22_roadmap_FE.md`):* **E2** retire the adapter
 > (real `Compile([outputs],…)` + on-node Program memo) → **E5** delete node-level eval [DEFERRED];
 > **E3** currying/freeze-set API → **E6** tutorial; **E4** intern identical Programs [optimization].
 
