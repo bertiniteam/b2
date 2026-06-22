@@ -31,8 +31,7 @@
 from bertini._pybertini.function_tree import root as _pybroot
 from bertini._pybertini.function_tree.root import *
 
-del Handle
-
-_ABSTRACT = {'Handle'}
+# Function and the Handle base were deleted; NamedExpression is the sole root/handle node now.
+_ABSTRACT = set()
 __all__ = [n for n in dir(_pybroot) if n not in _ABSTRACT]
 

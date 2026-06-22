@@ -93,8 +93,6 @@ namespace bertini{
 
 
 			static void AddJustFn(bertini::System& self, std::shared_ptr<node::Node> const& f) { return self.AddFunction(f);}
-			void (bertini::System::*sysAddFunc1)(std::shared_ptr<node::Function> const&) = &bertini::System::AddFunction;
-			// void (bertini::System::*sysAddFunc2)(std::shared_ptr<node::Node> const&, std::string const&) = &bertini::System::AddFunction;
 			
 
 //			Vec<dbl> (System::*sysEval1)(const Vec<dbl> &) = &System::template Eval<dbl>;

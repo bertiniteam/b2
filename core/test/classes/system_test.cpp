@@ -1594,10 +1594,10 @@ BOOST_AUTO_TEST_CASE(gather_variables_alphabetical)
 	Var z = Variable::Make("z");
 
 	// note: declared out of alphabetical order, x used twice
-	auto f1 = bertini::node::Function::Make(pow(z,2) + y*x);
-	auto f2 = bertini::node::Function::Make(x - y);
+	auto f1 = (pow(z,2) + y*x);
+	auto f2 = (x - y);
 
-	auto found = bertini::node::GatherVariables(std::vector<std::shared_ptr<bertini::node::Function>>{f1, f2});
+	auto found = bertini::node::GatherVariables(std::vector<std::shared_ptr<bertini::node::Node>>{f1, f2});
 
 	BOOST_CHECK_EQUAL(found.size(), 3);
 	BOOST_CHECK_EQUAL(found[0]->name(), "x");
@@ -1617,10 +1617,10 @@ BOOST_AUTO_TEST_CASE(system_construct_from_functions)
 	Var y = Variable::Make("y");
 	Var z = Variable::Make("z");
 
-	auto f1 = bertini::node::Function::Make(x*y*z);
-	auto f2 = bertini::node::Function::Make(x + y + z);
+	auto f1 = (x*y*z);
+	auto f2 = (x + y + z);
 
-	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Function>>{f1, f2});
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Node>>{f1, f2});
 
 	BOOST_CHECK_EQUAL(sys.NumTotalFunctions(), 2);
 	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 1);
@@ -1644,9 +1644,9 @@ BOOST_AUTO_TEST_CASE(system_set_variable_groups)
 	Var y = Variable::Make("y");
 	Var z = Variable::Make("z");
 
-	auto f1 = bertini::node::Function::Make(x*y*z);
+	auto f1 = (x*y*z);
 
-	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Function>>{f1});
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Node>>{f1});
 	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 1);
 
 	bertini::VariableGroup g1{x};
@@ -1668,9 +1668,9 @@ BOOST_AUTO_TEST_CASE(system_fix_variable)
 	Var x = Variable::Make("x");
 	Var y = Variable::Make("y");
 
-	auto f = bertini::node::Function::Make(x + y);
+	auto f = (x + y);
 
-	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Function>>{f});
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Node>>{f});
 	BOOST_CHECK_EQUAL(sys.NumVariables(), 2);
 
 	bool fixed = sys.FixVariable(y, dbl(3.0));

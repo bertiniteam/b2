@@ -157,7 +157,7 @@ set(function_tree_headers
     include/bertini2/function_tree/symbols/differential.hpp
     include/bertini2/function_tree/symbols/special_number.hpp
     include/bertini2/function_tree/symbols/number.hpp
-    include/bertini2/function_tree/roots/function.hpp
+    include/bertini2/function_tree/roots/named_expression.hpp
     include/bertini2/function_tree/operators/arithmetic.hpp
     include/bertini2/function_tree/operators/trig.hpp
 )
@@ -193,7 +193,7 @@ set(functiontree_symbols_HEADERS
 )
 
 set(functiontree_roots_HEADERS
-	include/bertini2/function_tree/roots/function.hpp
+	include/bertini2/function_tree/roots/named_expression.hpp
 )
 
 set(io_headers
@@ -354,7 +354,7 @@ set(function_tree_sources
     src/function_tree/symbols/symbol.cpp
     src/function_tree/symbols/variable.cpp
     src/function_tree/symbols/number.cpp
-    src/function_tree/roots/function.cpp
+    src/function_tree/roots/named_expression.cpp
 )
 
 set(parallel_sources

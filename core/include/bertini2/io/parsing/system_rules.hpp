@@ -31,6 +31,8 @@
 
 
 
+#include <map>
+
 #include "bertini2/io/parsing/qi_files.hpp"
 #include "bertini2/system/system.hpp"
 #include "bertini2/io/parsing/function_rules.hpp"
@@ -41,12 +43,10 @@ namespace bertini {
 	namespace parsing {
 		namespace classic {
 			// a few local using statements to reduce typing etc.
-			using Function = node::Function;
 			using Variable = node::Variable;
 			using Node = node::Node;
-			
-			
-			using Fn = std::shared_ptr<Function>;
+
+
 			using Var = std::shared_ptr<Variable>;
 			using Nd = std::shared_ptr<Node>;
 			
@@ -146,19 +146,23 @@ namespace bertini {
 					  |
 					  variables_ [phx::bind(&System::AddUngroupedVariables, _val, _1)]
 					  |
-					  functions_ [phx::bind([this](std::vector<Fn> const& fns){ this->CollectDeclaredFunctions(fns); }, _1)]
+					  functions_ [phx::bind([this](std::vector<std::string> const& names){ this->CollectFunctionNames(names); }, _1)]
 					  |
-					  constants_ [phx::bind(&System::AddConstants, _val, _1)]
+					  constants_ [phx::bind([this](std::vector<std::string> const& names){ this->CollectConstantNames(names); }, _1)]
 					  |
-					  parameters_ [phx::bind(&System::AddParameters, _val, _1)]
+					  parameters_ [phx::bind([this](std::vector<std::string> const& names){ this->CollectParameterNames(names); }, _1)]
 					  |
 					  implicit_parameters_ [phx::bind(&System::AddImplicitParameters, _val, _1)]
 					  |
 					  path_variable_ [phx::bind(&System::AddPathVariable, _val, _1)]
 					  |
-					  qi::omit[subfunction_]
-					  |
+					  // definition_ before subfunction_: a declared name (function/constant/
+					  // parameter) lives only in encountered_functions_, not encountered_symbols_,
+					  // so its definition line would otherwise be misread as a fresh subfunction.
+					  // definition_ matches declared LHS names; subfunction_ catches the rest.
 					  definition_
+					  |
+					  qi::omit[subfunction_]
 					  )
 					;
 					
@@ -204,10 +208,10 @@ namespace bertini {
 					
 					
 					new_function_.name("new_function_");
-					new_function_ = unencountered_symbol_ [boost::phoenix::bind( [this](Fn & F, std::string str)
+					new_function_ = unencountered_symbol_ [boost::phoenix::bind( [this](std::string & name, std::string str)
 																				{
-																					MakeAndAddFunction(F,str);
-																				}, _val, _1 )];//[_val = make_shared_<Function>() (_1)]
+																					MakeAndDeclareName(name,str);
+																				}, _val, _1 )];
 					
 					
 					
@@ -228,9 +232,9 @@ namespace bertini {
 					
 					
 					definition_.name("definition_");
-					definition_ = (encountered_functions_ > '=' > function_parser_ > ';') [phx::bind( [](const Fn & F, const Nd & N)
+					definition_ = (encountered_functions_ > '=' > function_parser_ > ';') [phx::bind( [this](std::string const& name, const Nd & expr)
 																									 {
-																										 F->SetRoot(N);
+																										 this->DefineNamed(name, expr);
 																									 },_1, _2)] ;
 					
 					
@@ -311,11 +315,11 @@ namespace bertini {
 				
 				
 				
-				qi::rule<Iterator, std::vector<Fn>(), Skipper > functions_, constants_, parameters_;
-				qi::rule<Iterator, std::vector<Fn>(), Skipper > genericfuncgp_;
+				qi::rule<Iterator, std::vector<std::string>(), Skipper > functions_, constants_, parameters_;
+				qi::rule<Iterator, std::vector<std::string>(), Skipper > genericfuncgp_;
 				qi::rule<Iterator, Nd(), Skipper, qi::locals<std::string> >  subfunction_;
-				
-				qi::rule<Iterator, Fn()>  new_function_;
+
+				qi::rule<Iterator, std::string()>  new_function_;
 				
 				
 				qi::rule<Iterator, std::string()> unencountered_symbol_;
@@ -329,7 +333,7 @@ namespace bertini {
 				// symbol declarations
 				qi::symbols<char,Nd> encountered_symbols_;
 				qi::symbols<char,int> declarative_symbols_;
-				qi::symbols<char,Fn>  encountered_functions_;
+				qi::symbols<char,std::string>  encountered_functions_;
 				qi::symbols<char,Nd> special_numbers_;
 				
 				FunctionParser<Iterator> function_parser_;
@@ -338,11 +342,16 @@ namespace bertini {
 				 To accompany the rule for making new functions when you encounter a new symbol.
 				 Simultaneously makes a new function, and adds it to the set of symbols.
 				 */
-				void MakeAndAddFunction(Fn & F, std::string str)
+				void MakeAndDeclareName(std::string & name, std::string str)
 				{
-					F = Function::Make(str);
-					encountered_symbols_.add(str, F);
-					encountered_functions_.add(str,F);
+					// A declare-then-define name (function / constant / parameter) is just a
+					// marker until its definition is parsed: record the name in
+					// encountered_functions_ so the definition_ rule can match its LHS.  We do
+					// NOT add it to encountered_symbols_ yet -- the name binds to its
+					// NamedExpression only once defined (DefineNamed), at which point references
+					// to it resolve.  (Define-before-use is assumed.)
+					name = str;
+					encountered_functions_.add(str, str);
 				}
 				
 				/**
@@ -354,34 +363,43 @@ namespace bertini {
 					V = Variable::Make(str);
 					encountered_symbols_.add(str, V);
 				}
-				
-				
-				void SetRootNode(Fn & F, const Nd & N)
-				{
-					F->SetRoot(N);
-				}
 
-				// Bertini-1 input declares the functions first ("function f, g;"), then defines
-				// them and any subfunctions later; the declared names are exactly the top-level
-				// functions (everything else defined inline is a subfunction).  We collect the
-				// declared (still-empty) function boxes here and emit them to the System only after
-				// the whole input is parsed (EmitDeclaredFunctions), by which point every definition
-				// has filled its box -- so the System receives bare, fully-built expressions and
-				// never depends on the box being mutated after it is handed over.
+				// Bertini-1 input declares the declare-then-define kinds first ("function f, g;",
+				// "constant c;", "parameter p;"), then defines them (and any inline subfunctions)
+				// later.  We record the declared names per kind, and bind each name to an immutable
+				// NamedExpression when its definition is parsed (DefineNamed).  After the whole input
+				// is parsed we emit them to the System (EmitDeclaredFunctions): the System receives
+				// bare, fully-built expressions -- no Function declaration box is ever created.
 			public:
-				void CollectDeclaredFunctions(std::vector<Fn> const& fns)
+				void CollectFunctionNames(std::vector<std::string> const& names)
+				{ for (auto const& n : names) declared_function_names_.push_back(n); }
+				void CollectConstantNames(std::vector<std::string> const& names)
+				{ for (auto const& n : names) declared_constant_names_.push_back(n); }
+				void CollectParameterNames(std::vector<std::string> const& names)
+				{ for (auto const& n : names) declared_parameter_names_.push_back(n); }
+
+				// Bind a declared name to its (immutable) NamedExpression: makes references to the
+				// name resolve, and records the definition for emission to the System.
+				void DefineNamed(std::string const& name, Nd const& expr)
 				{
-					for (auto const& f : fns) declared_functions_.push_back(f);
+					auto ne = node::NamedExpression::Make(expr, name);
+					encountered_symbols_.add(name, ne);
+					definitions_[name] = ne;
 				}
 
 				void EmitDeclaredFunctions(System& s) const
 				{
-					for (auto const& f : declared_functions_)
-						s.AddFunction(f->EntryNode());
+					for (auto const& n : declared_function_names_)
+						s.AddFunction(definitions_.at(n)->EntryNode());
+					for (auto const& n : declared_constant_names_)
+						s.AddConstant(definitions_.at(n));
+					for (auto const& n : declared_parameter_names_)
+						s.AddParameter(definitions_.at(n));
 				}
 
 			private:
-				std::vector<Fn> declared_functions_;
+				std::vector<std::string> declared_function_names_, declared_constant_names_, declared_parameter_names_;
+				std::map<std::string, std::shared_ptr<node::NamedExpression>> definitions_;
 			};
 			
 		} // re: namespace classic

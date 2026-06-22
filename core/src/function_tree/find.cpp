@@ -54,8 +54,8 @@ namespace node {
 				if (seen.insert(t.get()).second)
 					out.push_back(std::const_pointer_cast<T>(t));
 
-			// Function / Jacobian / NamedExpression -- descend into the wrapped expression
-			if (auto h = std::dynamic_pointer_cast<const Handle>(n))
+			// NamedExpression -- descend into the wrapped expression
+			if (auto h = std::dynamic_pointer_cast<const NamedExpression>(n))
 				FindImpl<T>(h->EntryNode(), out, seen, visited);
 			// Sum, Mult, ... -- any number of operands
 			else if (auto nary = std::dynamic_pointer_cast<const NaryOperator>(n))

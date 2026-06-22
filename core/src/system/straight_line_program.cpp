@@ -577,30 +577,6 @@ namespace bertini{
 
 
 
-	void SLPCompiler::Visit(node::Function const & f){
-		// A Function appearing *inside* an expression tree -- a named subfunction.  (Top-level
-		// outputs are no longer Function-wrapped; the Compile loop wires those from bare roots.)
-		// Compute the entry expression, then copy its value into the Function's own slot so every
-		// reference to this subfunction shares that one result.
-		const std::shared_ptr<node::Node>& n = f.EntryNode();
-		const std::shared_ptr<const node::Function> f_as_ptr = std::dynamic_pointer_cast<node::Function const>(f.shared_from_this());
-
-		if (this->locations_encountered_nodes_.find(n) == this->locations_encountered_nodes_.end())
-			n->Accept(*this);
-		size_t location_entry = this->locations_encountered_nodes_[n];
-
-		size_t location_this_node;
-		if (this->locations_encountered_nodes_.find(f_as_ptr) == this->locations_encountered_nodes_.end()){
-			location_this_node = next_available_complex_;
-			locations_encountered_nodes_[f_as_ptr] = next_available_complex_++;
-		}
-		else
-			location_this_node = locations_encountered_nodes_[f_as_ptr];
-
-		program_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
-	}
-
-
 	void SLPCompiler::Visit(node::NamedExpression const & f){
 		// A named subexpression appearing inside a tree (a = x^2+y^2, used elsewhere): compute the
 		// entry once and copy its value into the NamedExpression's own slot, so every reference to

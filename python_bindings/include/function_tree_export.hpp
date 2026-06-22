@@ -79,7 +79,6 @@ namespace bertini{
 			implicitly_convertible<std::shared_ptr<ArcCosOperator>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<ArcTanOperator>, Nodeptr>();
 			
-			implicitly_convertible<std::shared_ptr<Function>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<NamedExpression>, Nodeptr>();
 		}
 		

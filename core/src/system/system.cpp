@@ -79,7 +79,7 @@ namespace bertini
 	}
 
 	// construct from a list of functions, auto-discovering the variables
-	System::System(std::vector<Fn> const& functions) : System()
+	System::System(std::vector<Nd> const& functions) : System()
 	{
 		AddFunctions(functions);
 		AddVariableGroup( node::GatherVariables(functions) );
@@ -586,7 +586,7 @@ namespace bertini
 
 
 
-	void System::AddParameter(Fn const& F)
+	void System::AddParameter(NE const& F)
 	{
 		explicit_parameters_.push_back(F);
 		InvalidateDifferentiation();
@@ -594,27 +594,10 @@ namespace bertini
 
 
 
-	void System::AddParameters(std::vector<Fn> const& v)
-	{
-		explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
-		InvalidateDifferentiation();
-	}
 
 
 
 
-
-
-
-
-
-
-	void System::AddFunction(Fn const& F)
-	{
-		// The Fn-accepting API survives for the ctor/bindings; we store the bare entry expression.
-		PolyBlock().AddFunction(F->EntryNode());
-		InvalidateDifferentiation();
-	}
 
 
 
@@ -626,9 +609,9 @@ namespace bertini
 
 
 
-	void System::AddFunctions(std::vector<Fn> const& v)
+	void System::AddFunctions(std::vector<Nd> const& v)
 	{
-		for (auto const& f : v) PolyBlock().AddFunction(f->EntryNode());
+		for (auto const& f : v) PolyBlock().AddFunction(f);
 		InvalidateDifferentiation();
 	}
 
@@ -637,16 +620,9 @@ namespace bertini
 
 
 
-	void System::AddConstant(Fn const& F)
+	void System::AddConstant(NE const& F)
 	{
 		PolyBlock().AddConstant(F);
-		InvalidateDifferentiation();
-	}
-
-
-	void System::AddConstants(std::vector<Fn> const& v)
-	{
-		for (auto const& f : v) PolyBlock().AddConstant(f);
 		InvalidateDifferentiation();
 	}
 
