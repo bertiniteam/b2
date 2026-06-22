@@ -80,6 +80,30 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 }
 
 
+/**
+\class bertini::System
+\test \b parsed_system_has_functions_and_evaluates A parsed system must actually contain its
+functions and evaluate them.  (Regression: when classic functions became eager-bound, a parse
+path that skipped the post-parse emit produced a silently empty, size-0 system -- the earlier
+parse tests only checked parse success / homogeneity, never the function count or a value.)
+*/
+BOOST_AUTO_TEST_CASE(parsed_system_has_functions_and_evaluates)
+{
+	System sys;
+	std::string str = "variable_group x, y; function f, g; f = x*y; g = x + y;";
+	bool ok = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
+	BOOST_CHECK(ok);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 2u);
+
+	Vec<dbl> pt(2); pt << dbl(2,0), dbl(3,0);
+	auto v = sys.Eval(pt);
+	BOOST_REQUIRE_EQUAL(v.size(), 2);
+	BOOST_CHECK_SMALL(std::abs(v(0) - dbl(6,0)), 1e-12);   // x*y at (2,3)
+	BOOST_CHECK_SMALL(std::abs(v(1) - dbl(5,0)), 1e-12);   // x+y at (2,3)
+}
+
+
 
 
 

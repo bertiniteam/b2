@@ -145,7 +145,8 @@ def test_function_root_walkable(xy):
     sys = pb.System()
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    root = sys.function(0).root()
+    # function(i) now returns the bare expression root itself (functions are no longer wrapped).
+    root = sys.function(0)
     assert isinstance(root, op.Sum)
     assert root.num_operands() == 2
 
