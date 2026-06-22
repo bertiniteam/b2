@@ -190,16 +190,10 @@ public:
 	{
 		for (auto const& op : operands_)
 			op->precision(new_precision);
-		// The coefficient nodes (and the shared path variable) must move too, or a blend
-		// of a low-precision operand value with a high-precision coefficient yields a
-		// high-precision result that the tracker then carries as the path point, mismatching
-		// the system's working precision.
-		if (path_variable_)
-			path_variable_->precision(new_precision);
-		for (auto const& c : coefficients_)
-			c->precision(new_precision);
-		for (auto const& c : derivative_coefficients_)
-			c->precision(new_precision);
+		// The coefficients are evaluated through the coefficient sub-system's SLP (which carries
+		// its own precision; see EvalCoefficients), so the coefficient nodes and the shared path
+		// variable are no longer evaluated during tracking.  Their precision is vestigial and
+		// left untouched, keeping the shared node DAG read-only across threads (ADR-0027).
 		if (coefficient_system_)
 			coefficient_system_->precision(new_precision);
 		precision_ = new_precision;

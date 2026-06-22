@@ -227,36 +227,12 @@ namespace bertini
 
 	void System::precision(unsigned new_precision) const
 	{
-		for (const auto& iter : explicit_parameters_) {
-			iter->precision(new_precision);
-		}
-
-
-		for (const auto& iter :implicit_parameters_) {
-			iter->precision(new_precision);
-		}
-
-		// each block precisions its own functions / subfunctions / derivatives / SLP
+		// Each block precisions its own evaluator (its SLP / coefficient sub-system).  The
+		// parameter / function / variable nodes are no longer evaluated during tracking, so their
+		// precision is vestigial and left untouched -- this keeps the shared node DAG read-only
+		// across threads (ADR-0027).
 		for (auto const& blk : blocks_)
 			std::visit([&](auto const& b){ b.Precision(new_precision); }, blk);
-
-		if (have_path_variable_)
-			path_variable_->precision(new_precision);
-
-
-		for (const auto& iter : homogenizing_variables_)
-			iter->precision(new_precision);
-
-		for (const auto& iter : variable_groups_)
-			for (const auto& jter : iter)
-				jter->precision(new_precision);
-
-		for (const auto& iter : hom_variable_groups_)
-			for (const auto& jter : iter)
-				jter->precision(new_precision);
-
-		for (const auto& iter : ungrouped_variables_)
-			iter->precision(new_precision);
 
 		using bertini::Precision;
 		Precision(std::get<Vec<mpfr_complex> >(current_variable_values_),new_precision);

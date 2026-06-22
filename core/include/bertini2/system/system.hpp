@@ -830,32 +830,22 @@ namespace bertini {
 			if (new_values.size()!= static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
 
-			const auto& vars = Variables();
-
 			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
 				// A system with no variables (a constant) has an empty point: there is no
-				// precision to read from it or from a variable, so skip the checks.
+				// precision to read from it, so skip the check.
 				if (new_values.size() > 0)
 				{
 					if constexpr (!std::is_same<T,dbl>::value) {
 						if (Precision(new_values) != this->precision())
 							throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
-
-						if (vars[0]->node::NamedSymbol::precision() != this->precision())
-							throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");
 					}
 				}
 			#endif
 
-			// Set the shared Variable nodes' values: node-level evaluation (function trees,
-			// hand-built Jacobian nodes) reads them directly, independent of any block.  Blocks
-			// are additionally value-in (each block's EvalInPlace re-derives from the stored
-			// vector / its own SLP), and the patch reads the stored vector too.
-			{
-				auto counter = 0;
-				for (auto iter = vars.begin(); iter != vars.end(); ++iter, ++counter)
-					(*iter)->set_current_value(new_values(counter));
-			}
+			// Blocks are value-in: the polynomial block feeds this stored vector into its SLP, the
+			// structured blocks compute on it directly, and the patch reads it too (see
+			// EvalBlocksInPlace).  The shared Variable nodes are no longer written during evaluation
+			// (ADR-0027), so the node DAG stays read-only across threads.
 			std::get<Vec<T> >(current_variable_values_) = new_values;
 		}
 

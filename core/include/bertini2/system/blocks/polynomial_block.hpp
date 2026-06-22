@@ -145,15 +145,9 @@ public:
 	unsigned Precision() const { return precision_; }
 	void Precision(unsigned new_precision) const
 	{
-		for (auto const& f : functions_)            f->precision(new_precision);
-		for (auto const& f : constant_subfunctions_) f->precision(new_precision);
-		if (path_variable_) path_variable_->precision(new_precision);
-		for (auto const& v : variables_) v->precision(new_precision);
-		if (is_differentiated_)
-		{
-			for (auto const& n : space_derivatives_) n->precision(new_precision);
-			for (auto const& n : time_derivatives_)  n->precision(new_precision);
-		}
+		// The SLP (its per-thread Memory) is the sole evaluator and carries its own precision; the
+		// function / derivative / variable nodes are no longer evaluated during tracking, so their
+		// precision is vestigial and left untouched (keeps the shared node DAG read-only).
 		slp_.precision(new_precision);
 		precision_ = new_precision;
 	}
