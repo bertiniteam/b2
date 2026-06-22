@@ -75,7 +75,6 @@ namespace bertini{
 			case Kind::Float:    return dbl_complex(float_value);
 			case Kind::Pi:       return dbl_complex(boost::math::constants::pi<double>(), 0);
 			case Kind::E:        return dbl_complex(exp(1.0), 0.0);
-			case Kind::Snapshot: return dbl_value;
 		}
 		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<dbl_complex>");
 	}
@@ -89,7 +88,6 @@ namespace bertini{
 			case Kind::Float:    return mpfr_complex(float_value, ThreadPrecision());
 			case Kind::Pi:       return mpfr_complex(boost::math::constants::pi<mpfr_float>());
 			case Kind::E:        return mpfr_complex(mpfr_float(exp(mpfr_float(1))));
-			case Kind::Snapshot: return mpfr_complex(float_value, ThreadPrecision());
 		}
 		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<mpfr_complex>");
 	}
@@ -518,23 +516,12 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Variable const& n){
-		// System variables (those in the variable ordering) are pre-registered with
-		// memory locations before the function trees are compiled, so this Visit is
-		// only ever reached for a Variable that is NOT one of the system's variables
-		// -- i.e. a "fixed" variable that has been turned into a constant.  A fixed
-		// variable has no symbolic true value, so snapshot its current value once, here
-		// at compile time (single-threaded), into a Snapshot recipe.  The two number banks
-		// are read independently (they can differ for a fixed variable), exactly mirroring the
-		// old per-bank node evaluation; the runtime fill then never evaluates a node.
-		//
-		// NOTE: the Snapshot kind is a deliberate temporary shim.  It exists only because nodes
-		// still store per-bank values; the divergent-bank problem (and this whole kind) vanishes
-		// once node-level evaluation / value storage is removed.
-		ConstantRecipe recipe;
-		recipe.kind = ConstantRecipe::Kind::Snapshot;
-		recipe.dbl_value   = n.Eval<dbl_complex>();
-		recipe.float_value = n.Eval<mpfr_complex>();
-		this->RegisterConstant(n.shared_from_this(), recipe);
+		// A system's variables are all pre-registered before its function trees are compiled, so
+		// reaching this Visit means a function references a variable that is not in the system's
+		// variable ordering.  That is unsupported: to bake a constant into a function, build it with
+		// a literal (Float / Integer / Rational), not a variable removed from the ordering.
+		throw std::runtime_error("SLP compile: a function references the variable '" + n.name() +
+			"', which is not in the system's variable ordering");
 	}
 
 

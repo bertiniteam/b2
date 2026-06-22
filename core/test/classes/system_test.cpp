@@ -1658,39 +1658,6 @@ BOOST_AUTO_TEST_CASE(system_set_variable_groups)
 }
 
 
-/**
-\class bertini::System
-\test \b system_fix_variable FixVariable removes a variable from the solve set
-and pins its value, so the functions evaluate as if it were a constant.
-*/
-BOOST_AUTO_TEST_CASE(system_fix_variable)
-{
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-
-	auto f = (x + y);
-
-	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Node>>{f});
-	BOOST_CHECK_EQUAL(sys.NumVariables(), 2);
-
-	bool fixed = sys.FixVariable(y, dbl(3.0));
-	BOOST_CHECK(fixed);
-	BOOST_CHECK_EQUAL(sys.NumVariables(), 1);
-
-	auto const& ordering = sys.Variables();
-	BOOST_CHECK_EQUAL(ordering.size(), 1);
-	BOOST_CHECK_EQUAL(ordering[0]->name(), "x");
-
-	Vec<dbl> values(1);
-	values << dbl(2.0);
-	auto result = sys.Eval(values);   // x + y == 2 + 3 == 5
-	BOOST_CHECK_EQUAL(result(0), dbl(5.0));
-
-	// fixing a variable not present returns false
-	Var w = Variable::Make("w");
-	BOOST_CHECK(!sys.FixVariable(w, dbl(1.0)));
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 

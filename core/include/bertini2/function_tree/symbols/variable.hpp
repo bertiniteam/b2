@@ -166,7 +166,7 @@ namespace node{
 
 		Variable();
 	private:
-		
+
 		friend class boost::serialization::access;
 
 		template <typename Archive>

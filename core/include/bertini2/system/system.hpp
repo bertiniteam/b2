@@ -1491,42 +1491,8 @@ namespace bertini {
 		void ClearVariables();
 
 
-		/**
-		 \brief Remove a variable from the system's variable structure.
-
-		 Erases the variable from whichever affine/homogeneous group it belongs to, or
-		 from the ungrouped variables.  If removing it empties an affine or homogeneous
-		 group, that group (and its place in the variable ordering) is removed as well.
-		 The variable node itself is left intact and is still referenced by any
-		 functions which use it; after this call it is simply no longer one of the
-		 system's variables (so it is not solved for, and the system does not
-		 differentiate with respect to it).
-
-		 \param v The variable to remove.
-		 \return true if the variable was found and removed, false otherwise.
-		*/
-		bool RemoveVariable(Var const& v);
 
 
-		/**
-		 \brief Turn a variable into a constant with a fixed value.
-
-		 Removes the variable from the system's variable structure (see RemoveVariable)
-		 and pins its value, so that the functions which use it evaluate as if it were a
-		 constant equal to \p value.
-
-		 \tparam T The numeric type of the value (dbl or mpfr_complex).
-		 \param v The variable to fix.
-		 \param value The constant value to assign to it.
-		 \return true if the variable was found and fixed, false otherwise.
-		*/
-		template<typename T>
-		bool FixVariable(Var const& v, T const& value)
-		{
-			bool removed = this->RemoveVariable(v);
-			v->set_current_value(value);
-			return removed;
-		}
 
 
 		/**

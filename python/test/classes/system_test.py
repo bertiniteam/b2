@@ -113,17 +113,6 @@ def test_set_variable_groups(variables):
     assert s.num_variables() == 3
 
 
-def test_fix_variable(variables):
-    x, y, z = variables
-    s = System([(x + y)])
-    assert s.num_variables() == 2
-    assert s.fix_variable(y, complex(3.0))
-    assert s.num_variables() == 1
-    # x + y, with y pinned to 3, at x = 2  ->  5
-    e = s.eval(np.array([complex(2.0)]))
-    assert e[0] == complex(5.0)
-    # fixing a variable not in the system returns False
-    assert not s.fix_variable(Variable("w"), complex(1.0))
 
 
 def test_system_eval_double(variables, fg):

@@ -240,7 +240,7 @@ private:
 	void SetValues(Vec<T> const& vars, T const& path_value) const
 	{
 		slp_.SetVariableValues(vars);
-		if (path_variable_) { path_variable_->template set_current_value<T>(path_value); slp_.template SetPathVariable<T>(path_value); }
+		if (path_variable_) slp_.template SetPathVariable<T>(path_value);
 	}
 
 	void DifferentiateUsingDerivatives() const

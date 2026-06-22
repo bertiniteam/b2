@@ -265,15 +265,12 @@ namespace bertini {
 	 authored-precision value (its inherent ceiling).
 	 */
 	struct ConstantRecipe{
-		// Snapshot is the one non-symbolic kind: a fixed variable baked to a constant has no exact
-		// symbolic value, so its double and mpfr banks are snapshotted independently at compile time.
-		enum class Kind : int { Integer, Rational, Float, Pi, E, Snapshot };
+		enum class Kind : int { Integer, Rational, Float, Pi, E };
 
 		Kind kind = Kind::Integer;
 		mpz_int      int_value;             //< Kind::Integer  (exact)
 		mpq_rational rat_real, rat_imag;    //< Kind::Rational (exact)
-		mpfr_complex float_value;           //< Kind::Float (authored-precision literal); Kind::Snapshot mpfr bank
-		dbl_complex  dbl_value;             //< Kind::Snapshot double bank (independent of the mpfr bank)
+		mpfr_complex float_value;           //< Kind::Float (authored-precision literal; also a fixed variable's value)
 		size_t slot = 0;                    //< where this constant lives in the register file
 
 		/// Produce the constant's value at the ambient working precision (ThreadPrecision), matching
@@ -290,7 +287,6 @@ namespace bertini {
 			ar & rat_real;
 			ar & rat_imag;
 			ar & float_value;
-			ar & dbl_value;
 			ar & slot;
 		}
 	};
