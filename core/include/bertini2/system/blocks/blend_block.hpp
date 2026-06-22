@@ -101,7 +101,7 @@ public:
 			derivative_coefficients_.push_back(c->Differentiate(path_variable_));
 	}
 
-	// Memory-isolating copy (ADR-0027 / E1 stage 4): each operand System is deep-copied via the
+	// Memory-isolating copy (ADR-0027): each operand System is deep-copied via the
 	// System copy constructor, which shares its immutable node DAG and compiled SLP Program but
 	// gives it its own per-thread evaluation Memory.  The coefficient-system cache is reset (rebuilt
 	// lazily per copy).  The coefficient nodes / path variable are shared --- they are never written

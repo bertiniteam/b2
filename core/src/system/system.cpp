@@ -1704,8 +1704,8 @@ namespace bertini
 
 	System Clone(System const& sys)
 	{
-		// Memory-isolating clone (ADR-0027 / E1 stage 4).  Since the evaluation path no longer
-		// writes shared node state (E1 stage 3), per-thread copies may share the immutable node DAG
+		// Memory-isolating clone (ADR-0027).  Since the evaluation path no longer
+		// writes shared node state, per-thread copies may share the immutable node DAG
 		// and the compiled SLP Program; each copy only needs its own evaluation Memory.  The System
 		// copy constructor provides exactly that: it shares the node DAG (nodes are shared_ptr) and,
 		// per block, shares the compiled Program while copying the per-thread SLPMemory; the

@@ -529,7 +529,7 @@ namespace bertini{
 		//
 		// NOTE: the Snapshot kind is a deliberate temporary shim.  It exists only because nodes
 		// still store per-bank values; the divergent-bank problem (and this whole kind) vanishes
-		// once node-level evaluation / value storage is removed (E5).
+		// once node-level evaluation / value storage is removed.
 		ConstantRecipe recipe;
 		recipe.kind = ConstantRecipe::Kind::Snapshot;
 		recipe.dbl_value   = n.Eval<dbl_complex>();

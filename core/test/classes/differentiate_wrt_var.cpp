@@ -63,7 +63,7 @@ using mpfr_float = bertini::mpfr_float;
 
 // This suite verifies differentiation by evaluating the derivative *nodes* directly (legacy
 // node-level Eval).  System::SetVariables is SLP-oriented and no longer writes the (shared,
-// interned) variable nodes (ADR-0027 / E1 stage 3), so set their values explicitly here so that
+// interned) variable nodes(ADR-0027), so set their values explicitly here so that
 // node-level evaluation sees the intended point.
 template<typename T, typename Derived>
 static void SetVarNodes(bertini::System const& sys, Eigen::MatrixBase<Derived> const& v)

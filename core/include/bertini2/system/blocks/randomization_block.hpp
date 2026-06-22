@@ -106,7 +106,7 @@ public:
 		BuildWorking();
 	}
 
-	// Memory-isolating copy (ADR-0027 / E1 stage 4): the operand System is deep-copied via the
+	// Memory-isolating copy (ADR-0027): the operand System is deep-copied via the
 	// System copy constructor, which shares its immutable node DAG and compiled SLP Program but
 	// gives it its own per-thread evaluation Memory.  Everything else (the coefficient matrices,
 	// multidegrees, working buffers) is value state, copied per copy.  This lets path tracking

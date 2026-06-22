@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(rejects_mismatched_endpoints)
 	BOOST_CHECK_THROW(MakeMovingHomotopy(fixed, sm, em, "t", Gamma()), std::runtime_error);
 }
 
-// E1 stage 4 regression: Clone(System) is now a Memory-isolating shallow copy --- it shares the
+// Regression: Clone(System) is now a Memory-isolating shallow copy --- it shares the
 // immutable node DAG and the compiled SLP Program, but copies the per-thread evaluation Memory at
 // every level, INCLUDING a BlendBlock's nested operand Systems (which are deep-copied via the
 // System copy constructor: own Memory, shared DAG).  A clone of a moving homotopy must therefore

@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(system_clone)
 
 	BOOST_CHECK_EQUAL(variables1.size(), variables2.size());
 
-	// Clone is now a Memory-isolating shallow copy (E1 stage 4): it SHARES the immutable node DAG,
+	// Clone is now a Memory-isolating shallow copy: it SHARES the immutable node DAG,
 	// so the clone's variables are the very same (interned) nodes as the original's.  Independence
 	// lives in the per-thread evaluation Memory, not in the nodes.
 	for (size_t ii=0; ii<variables2.size(); ++ii)
