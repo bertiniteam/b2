@@ -1704,84 +1704,19 @@ namespace bertini
 
 	System Clone(System const& sys)
 	{
-
-//////////////////  attempt 1.  generates a npos == null problem of some sort.  i couldn't figure it out.
-
-
-		// namespace io = boost::iostreams;
-		// using buffer_type = std::vector<char>;
-		// buffer_type buffer;
-
-		// io::stream<io::back_insert_device<buffer_type> > output_stream(buffer);
-		// boost::archive::binary_oarchive oa(output_stream);
-
-		// oa << sys;
-		// output_stream.flush();
-
-		
-
-		// io::basic_array_source<char> source(&buffer[0],buffer.size());
-		// io::stream<io::basic_array_source <char> > input_stream(source);
-		// boost::archive::binary_iarchive ia(input_stream);
-
-		// System sys_clone;
-		// ia >> sys_clone;
-
-		// return sys_clone;
-
-
-
-///////////////////////  attempt2  generates crashes.  :(
-		// std::string serial_str;
-		// {
-		// 	boost::iostreams::back_insert_device<std::string> inserter(serial_str);
-		// 	boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > s(inserter);
-		// 	boost::archive::binary_oarchive oa(s);
-
-		// 	oa << sys;
-
-		// 	// don't forget to flush the stream to finish writing into the buffer
-		// 	s.flush();
-		// }
-		
-		// boost::iostreams::basic_array_source<char> device(serial_str.data(), serial_str.size());
-		// boost::iostreams::stream<boost::iostreams::basic_array_source<char> > t(device);
-		// boost::archive::binary_iarchive ia(t);
-		// System sys_clone;
-		// ia >> sys_clone;
-
-
-
-
-///////////////////// attempt3.  works.  why the others generate problems with the binary archive baffles me.
-
-		std::stringstream ss;
-		{
-			boost::archive::text_oarchive oa(ss);
-			oa << sys;
-		}
-
-		System sys_clone;
-		{
-			boost::archive::text_iarchive ia(ss);
-			ia >> sys_clone;
-		}
-
-		// Rebuild evaluation machinery from the deserialized expression tree rather
-		// than trusting the archived copy: the serialized SLP does not survive the
-		// round trip faithfully (its time-derivative outputs read stale memory,
-		// observed 2026-06-06; root cause in SLP serialization not yet identified).
-		// Differentiate() re-derives the derivative trees and recompiles the SLP
-		// from the clone's own (verified-exact) tree.
-		sys_clone.Differentiate();
-
-		// Normalize precision across all parts of the clone.  The source system can
-		// carry internally-inconsistent precision state (e.g. precision_ says 30 but
-		// the SLP is still at its compile-time precision); precision() propagates to
-		// every node, derivative, and the SLP.
-		sys_clone.precision(sys_clone.precision());
-
-		return sys_clone;
+		// Memory-isolating clone (ADR-0027 / E1 stage 4).  Since the evaluation path no longer
+		// writes shared node state (E1 stage 3), per-thread copies may share the immutable node DAG
+		// and the compiled SLP Program; each copy only needs its own evaluation Memory.  The System
+		// copy constructor provides exactly that: it shares the node DAG (nodes are shared_ptr) and,
+		// per block, shares the compiled Program while copying the per-thread SLPMemory; the
+		// operand-holding blocks (BlendBlock, RandomizationBlock) deep-copy their nested operand
+		// Systems the same way (own Memory, shared DAG).  No mutable state is shared, so a clone is
+		// safe to evaluate concurrently with the original.
+		//
+		// This replaces the old text-archive serialize/deserialize round trip + re-Differentiate()
+		// (issue #246): no deep copy of the DAG, and no SLP recompile (the clone reuses the source's
+		// compiled Program).
+		return System(sys);
 	}
 
 

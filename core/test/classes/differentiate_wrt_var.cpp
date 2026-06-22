@@ -60,6 +60,19 @@ using Function = bertini::node::Function;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
+
+// This suite verifies differentiation by evaluating the derivative *nodes* directly (legacy
+// node-level Eval).  System::SetVariables is SLP-oriented and no longer writes the (shared,
+// interned) variable nodes (ADR-0027 / E1 stage 3), so set their values explicitly here so that
+// node-level evaluation sees the intended point.
+template<typename T, typename Derived>
+static void SetVarNodes(bertini::System const& sys, Eigen::MatrixBase<Derived> const& v)
+{
+	auto const& vars = sys.Variables();
+	for (size_t i = 0; i < vars.size(); ++i)
+		vars[i]->template set_current_value<T>(v(static_cast<Eigen::Index>(i)));
+}
+
 /////////// Basic Operations Alone ///////////////////
 
 BOOST_AUTO_TEST_CASE(just_diff_a_function){
@@ -98,8 +111,8 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -128,7 +141,7 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
 	BOOST_CHECK(fabs(dz->Eval<mpfr>().imag() / exact_mpfr[2].imag() -1) < threshold_clearance_mp);
 
 	var_mpfr << bertini::multiprecision::rand(),bertini::multiprecision::rand(),bertini::multiprecision::rand();
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 	exact_mpfr[0] = 3*var_mpfr(1)*var_mpfr(2);
 	exact_mpfr[1] = 3*var_mpfr(0)*var_mpfr(2);
 	exact_mpfr[2] = 3*var_mpfr(0)*var_mpfr(1);
@@ -160,8 +173,8 @@ BOOST_AUTO_TEST_CASE(diff_constant){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -207,8 +220,8 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -254,7 +267,7 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
 	
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -270,28 +283,28 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
 
 	
 	dx->Reset();
-	sys.SetVariables<dbl>(var_dbl);
+	SetVarNodes<dbl>(sys, var_dbl);
 	auto J_val_0_d = dx->Eval<dbl>();
 
 	dy->Reset();
-	sys.SetVariables<dbl>(var_dbl);
+	SetVarNodes<dbl>(sys, var_dbl);
 	auto J_val_1_d = dy->Eval<dbl>();
 
 	dz->Reset();
-	sys.SetVariables<dbl>(var_dbl);
+	SetVarNodes<dbl>(sys, var_dbl);
 	auto J_val_2_d = dz->Eval<dbl>();
 
 
 	dx->Reset();
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 	auto J_val_0_mp = dx->Eval<mpfr>();
 
 	dy->Reset();
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 	auto J_val_1_mp = dy->Eval<mpfr>();
 
 	dz->Reset();
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 	auto J_val_2_mp = dz->Eval<mpfr>();
 
 
@@ -325,8 +338,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -371,8 +384,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -417,8 +430,8 @@ BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -464,8 +477,8 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -510,8 +523,8 @@ BOOST_AUTO_TEST_CASE(diff_cos_y){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -556,8 +569,8 @@ BOOST_AUTO_TEST_CASE(diff_tan_z){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -601,8 +614,8 @@ BOOST_AUTO_TEST_CASE(diff_exp_x){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -645,8 +658,8 @@ BOOST_AUTO_TEST_CASE(diff_log_x){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 	sys.Differentiate();
 
 	auto func = sys.Function(0);
@@ -690,8 +703,8 @@ BOOST_AUTO_TEST_CASE(diff_sqrt_y){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -737,8 +750,8 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -782,8 +795,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -831,8 +844,8 @@ BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -875,8 +888,8 @@ BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
@@ -918,8 +931,8 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
-	sys.SetVariables<dbl>(var_dbl);
-	sys.SetVariables<mpfr>(var_mpfr);
+	SetVarNodes<dbl>(sys, var_dbl);
+	SetVarNodes<mpfr>(sys, var_mpfr);
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();

@@ -101,6 +101,44 @@ public:
 			derivative_coefficients_.push_back(c->Differentiate(path_variable_));
 	}
 
+	// Memory-isolating copy (ADR-0027 / E1 stage 4): each operand System is deep-copied via the
+	// System copy constructor, which shares its immutable node DAG and compiled SLP Program but
+	// gives it its own per-thread evaluation Memory.  The coefficient-system cache is reset (rebuilt
+	// lazily per copy).  The coefficient nodes / path variable are shared --- they are never written
+	// during evaluation.  This lets path tracking Clone a System into per-thread copies that share
+	// no mutable state.
+	BlendBlock(BlendBlock const& other)
+		: path_variable_(other.path_variable_),
+		  coefficients_(other.coefficients_),
+		  derivative_coefficients_(other.derivative_coefficients_),
+		  precision_(other.precision_)
+	{
+		operands_.reserve(other.operands_.size());
+		for (auto const& op : other.operands_)
+			operands_.push_back(std::make_shared<const SystemT>(*op));
+		// coefficient_system_ deliberately left null: rebuilt lazily per copy
+	}
+
+	BlendBlock& operator=(BlendBlock const& other)
+	{
+		if (this != &other)
+		{
+			path_variable_ = other.path_variable_;
+			coefficients_ = other.coefficients_;
+			derivative_coefficients_ = other.derivative_coefficients_;
+			precision_ = other.precision_;
+			operands_.clear();
+			operands_.reserve(other.operands_.size());
+			for (auto const& op : other.operands_)
+				operands_.push_back(std::make_shared<const SystemT>(*op));
+			coefficient_system_.reset();
+		}
+		return *this;
+	}
+
+	BlendBlock(BlendBlock&&) = default;
+	BlendBlock& operator=(BlendBlock&&) = default;
+
 	/// The number of (natural) functions the blend contributes; the owning System adds any patch.
 	size_t NumFunctions() const
 	{

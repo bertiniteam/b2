@@ -353,12 +353,21 @@ BOOST_AUTO_TEST_CASE(system_clone)
 
 	BOOST_CHECK_EQUAL(variables1.size(), variables2.size());
 
-
+	// Clone is now a Memory-isolating shallow copy (E1 stage 4): it SHARES the immutable node DAG,
+	// so the clone's variables are the very same (interned) nodes as the original's.  Independence
+	// lives in the per-thread evaluation Memory, not in the nodes.
 	for (size_t ii=0; ii<variables2.size(); ++ii)
 	{
-		BOOST_CHECK(variables1[ii].get() != variables2[ii].get());
+		BOOST_CHECK(variables1[ii].get() == variables2[ii].get());
 	}
 
+	// Evaluation is still independent: evaluating the original at a different point does not change
+	// the clone's result.
+	Vec<dbl> other(2); other(0) = dbl(5.0); other(1) = dbl(7.0);
+	(void) sys1.Eval(other);
+	Vec<dbl> v2 = sys2.Eval(values);
+	BOOST_CHECK_EQUAL(v2(0), 36.0);
+	BOOST_CHECK_EQUAL(v2(1), 12.0);
 }
 
 
