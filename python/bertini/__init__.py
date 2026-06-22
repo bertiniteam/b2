@@ -87,6 +87,7 @@ Variable = function_tree.symbol.Variable
 variables = function_tree.variables
 gather_variables = function_tree.gather_variables
 VariableGroup = function_tree.VariableGroup
+Named = function_tree.root.NamedExpression   # Named(expr, "a"): a user-named subexpression
 System = system.System
 default_precision = multiprec.default_precision
 
@@ -94,7 +95,7 @@ default_precision = multiprec.default_precision
 
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
-__all__ = ['Variable','variables','gather_variables','VariableGroup','system','System',
+__all__ = ['Variable','variables','gather_variables','VariableGroup','Named','system','System',
            'nag_algorithm','container','default_precision',
            'tracking','endgame','logging','function_tree','parse','multiprec','random','parallel',
            'linalg',

@@ -116,7 +116,13 @@ namespace bertini{
 			.def("__init__",make_constructor(&Jacobian::template Make<const Nodeptr&>))
 			.def(JacobianVisitor<Jacobian>())
 			;
-			
+
+			// NamedExpression: Named(expr, "a") -- a user-named subexpression that prints as its
+			// name and evaluates to its expression.
+			class_<NamedExpression, bases<Handle>, std::shared_ptr<NamedExpression> >("NamedExpression", no_init)
+			.def("__init__",make_constructor(&NamedExpression::template Make<const std::shared_ptr<Node>&, std::string const&>))
+			;
+
 		}
 
 	}

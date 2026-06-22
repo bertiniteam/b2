@@ -42,6 +42,7 @@ namespace bertini {
 		class Float;
 		class Rational;
 		class Function;
+		class NamedExpression;
 		class Jacobian;
 		class Differential;
 	}

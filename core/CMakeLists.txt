@@ -695,6 +695,7 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/system_test.cpp
 		test/classes/slp_test.cpp
 		test/classes/eval_expression_test.cpp
+		test/classes/named_expression_test.cpp
 		test/classes/differentiate_test.cpp
 		test/classes/differentiate_wrt_var.cpp
 		test/classes/homogenization_test.cpp

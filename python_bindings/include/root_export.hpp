@@ -34,6 +34,7 @@
 #ifndef BERTINI_PYTHON_ROOT_EXPORT_HPP
 #define BERTINI_PYTHON_ROOT_EXPORT_HPP
 #include <bertini2/function_tree/roots/function.hpp>
+#include <bertini2/function_tree/roots/named_expression.hpp>
 #include <bertini2/function_tree/roots/jacobian.hpp>
 
 #include "python_common.hpp"
