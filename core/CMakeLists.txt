@@ -686,7 +686,6 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/precision_propagation_test.cpp
 		test/classes/eigen_test.cpp
 		test/classes/complex_test.cpp
-		test/classes/function_tree_test.cpp
 		test/classes/function_tree_transform.cpp
 		test/classes/structural_hash_test.cpp
 		test/classes/interning_test.cpp
@@ -694,7 +693,6 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/slp_test.cpp
 		test/classes/eval_expression_test.cpp
 		test/classes/named_expression_test.cpp
-		test/classes/differentiate_wrt_var.cpp
 		test/classes/homogenization_test.cpp
 		test/classes/start_system_test.cpp
 		test/classes/node_serialization_test.cpp

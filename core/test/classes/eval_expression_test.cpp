@@ -132,4 +132,58 @@ BOOST_AUTO_TEST_CASE(memoizes_the_compiled_program_on_the_node)
 	BOOST_CHECK(f->EvalProgram() == cached);             // and reused the very same cached program
 }
 
+// Every operator node compiles and evaluates correctly through the straight-line program.  This
+// (with the differentiation case below) is the focused successor to the old node-level evaluation
+// matrices: node evaluation is gone, so operator correctness is verified through the one engine.
+BOOST_AUTO_TEST_CASE(every_operator_compiles_and_evaluates_through_the_slp)
+{
+	using bertini::node::Pi;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	const double tol = 1e-12;
+	auto E1 = [&](Nd f, double xv){ return EvalExpression<dbl>(f, {{"x", dbl(xv,0)}}); };
+	auto E2 = [&](Nd f, double xv, double yv){ return EvalExpression<dbl>(f, {{"x", dbl(xv,0)}, {"y", dbl(yv,0)}}); };
+
+	BOOST_CHECK_SMALL(std::abs(E2(x + y + Integer::Make(3), 2, 5) - dbl(10)), tol); // Sum
+	BOOST_CHECK_SMALL(std::abs(E2(x - y - Integer::Make(1), 5, 2) - dbl(2)),  tol); // Subtract
+	BOOST_CHECK_SMALL(std::abs(E2(x * y * Integer::Make(2), 3, 4) - dbl(24)), tol); // Multiply
+	BOOST_CHECK_SMALL(std::abs(E2(x / y, 6, 2) - dbl(3)), tol);                     // Divide
+	BOOST_CHECK_SMALL(std::abs(E1(-x, 3) - dbl(-3)), tol);                          // Negate
+	BOOST_CHECK_SMALL(std::abs(E1(pow(x, 3), 2) - dbl(8)), tol);                    // IntPower
+	BOOST_CHECK_SMALL(std::abs(E2(pow(x, y), 2, 3) - dbl(8)), tol);                 // Power (variable exponent)
+	BOOST_CHECK_SMALL(std::abs(E1(sqrt(x), 4) - dbl(2)), tol);                      // Sqrt
+	BOOST_CHECK_SMALL(std::abs(E1(exp(x), 0) - dbl(1)), tol);                       // Exp
+	BOOST_CHECK_SMALL(std::abs(E1(log(x), 1) - dbl(0)), tol);                       // Log
+	BOOST_CHECK_SMALL(std::abs(E1(sin(x), 0) - dbl(0)), tol);                       // Sin
+	BOOST_CHECK_SMALL(std::abs(E1(cos(x), 0) - dbl(1)), tol);                       // Cos
+	BOOST_CHECK_SMALL(std::abs(E1(tan(x), 0) - dbl(0)), tol);                       // Tan
+	BOOST_CHECK_SMALL(std::abs(E1(asin(x), 0) - dbl(0)), tol);                      // Asin
+	BOOST_CHECK_SMALL(std::abs(E1(acos(x), 1) - dbl(0)), tol);                      // Acos
+	BOOST_CHECK_SMALL(std::abs(E1(atan(x), 0) - dbl(0)), tol);                      // Atan
+	BOOST_CHECK_SMALL(std::abs(E1(Pi() * x, 1) - dbl(3.141592653589793, 0)), 1e-12); // Pi
+}
+
+// Derivatives produced by Differentiate compile and evaluate correctly through the SLP -- the
+// focused successor to the old differentiate-then-node-eval matrix.  The point map is filtered to
+// each (simplified) derivative's actual variables.
+BOOST_AUTO_TEST_CASE(derivatives_compile_and_evaluate_through_the_slp)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	const double tol = 1e-12;
+	auto evald = [](Nd d, std::map<std::string,dbl> known){
+		std::map<std::string,dbl> m;
+		for (auto const& v : bertini::node::GatherVariables(d)) m[v->name()] = known.at(v->name());
+		return EvalExpression<dbl>(d, m);
+	};
+	std::map<std::string,dbl> pt{ {"x", dbl(2,0)}, {"y", dbl(5,0)} };
+
+	BOOST_CHECK_SMALL(std::abs(evald((x*x)->Differentiate(x), pt)   - dbl(4)),   tol); // d/dx x^2 = 2x, x=2 -> 4
+	BOOST_CHECK_SMALL(std::abs(evald((x*y)->Differentiate(x), pt)   - dbl(5)),   tol); // d/dx x*y = y, y=5 -> 5
+	BOOST_CHECK_SMALL(std::abs(evald(pow(x,3)->Differentiate(x), pt)- dbl(12)),  tol); // d/dx x^3 = 3x^2, x=2 -> 12
+	BOOST_CHECK_SMALL(std::abs(evald(sin(x)->Differentiate(x), pt)  - dbl(std::cos(2.0))), tol); // d/dx sin = cos
+	BOOST_CHECK_SMALL(std::abs(evald(exp(x)->Differentiate(x), pt)  - dbl(std::exp(2.0))), tol); // d/dx exp = exp
+	BOOST_CHECK_SMALL(std::abs(evald((x/y)->Differentiate(x), pt)   - dbl(0.2)), tol); // d/dx x/y = 1/y, y=5 -> 0.2
+}
+
 BOOST_AUTO_TEST_SUITE_END()
