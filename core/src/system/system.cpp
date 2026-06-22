@@ -260,6 +260,7 @@ namespace bertini
 
 		using bertini::Precision;
 		Precision(std::get<Vec<mpfr_complex> >(current_variable_values_),new_precision);
+		Precision(std::get<mpfr_complex>(current_path_value_),new_precision);
 
 		if (IsPatched())
 			patch_.Precision(new_precision);

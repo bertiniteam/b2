@@ -875,10 +875,10 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
 
-			// Set the shared path-variable node so blocks whose coefficients depend on it (e.g.
-			// BlendBlock's (1-t)/gamma*t) see the value.  The polynomial block additionally
-			// pushes it into its SLP inside its own EvalInPlace.
-			path_variable_->set_current_value(new_value);
+			// Store the path value in the System's own per-thread buffer, NOT the shared node.
+			// Blocks are value-in and receive the path value as an argument (see EvalBlocksInPlace /
+			// CurrentPathValue), so the path-variable node is never read during evaluation (ADR-0027).
+			std::get<T>(current_path_value_) = new_value;
 		}
 
 
@@ -1875,7 +1875,7 @@ namespace bertini {
 		T CurrentPathValue() const
 		{
 			if (have_path_variable_)
-				return path_variable_->template Eval<T>();
+				return std::get<T>(current_path_value_);
 			return T(0);
 		}
 
@@ -1979,6 +1979,7 @@ namespace bertini {
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 
 		mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > current_variable_values_;
+		mutable std::tuple< dbl, mpfr_complex > current_path_value_{}; ///< per-thread path value (node-free; read by CurrentPathValue, written by SetPathVariable)
 
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
 		mutable bool have_ordering_ = false;
