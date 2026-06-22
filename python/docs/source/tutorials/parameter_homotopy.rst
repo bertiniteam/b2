@@ -25,7 +25,9 @@ a list of start points you already have).
 A family of systems
 ===================
 
-Take a fixed unit circle intersected with a horizontal line whose height is the parameter::
+Take a fixed unit circle intersected with a horizontal line whose height is the parameter:
+
+.. testcode::
 
     import bertini
     from bertini import nag_algorithm
@@ -46,7 +48,9 @@ Solve once, ab initio
 =====================
 
 Pick a generic member and solve it the usual way (a total-degree start system).  Its two
-solutions are the start points we will reuse forever after::
+solutions are the start points we will reuse forever after:
+
+.. testcode::
 
     generic = member(1)                                # the line y = 1/2
     first = nag_algorithm.ZeroDim(generic, mptype='adaptive')
@@ -57,7 +61,9 @@ Move the parameter -- without solving again
 ===========================================
 
 To reach another member, build the parameter homotopy from that member back to the generic one
-and track the start points through it::
+and track the start points through it:
+
+.. testcode::
 
     target = member(0)                                 # the line y = 0
     H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
@@ -70,7 +76,9 @@ t\,\text{generic}` with ``t`` as the path variable: at :math:`t=1` it is ``gener
 solutions are our start points) and at :math:`t=0` it is ``target``.
 
 Now the payoff -- sweep as many parameters as you want, reusing the *same* start points, never
-solving from scratch again::
+solving from scratch again:
+
+.. testcode::
 
     for s in [0, -1, 1]:                               # lines y = 0, -1/2, 1/2
         target = member(s)

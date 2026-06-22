@@ -14,7 +14,7 @@ A system with no real solutions
 
 Take the unit circle and the hyperbola :math:`xy = 1`
 
-::
+.. testcode::
 
     import numpy as np
     import bertini as bertini
@@ -36,7 +36,9 @@ Solve, and collect the successful endpoints.  ``ZeroDim`` is a small factory ove
 solver classes: ``ZeroDim(sys)`` is the Cauchy endgame in multiple precision with a total-degree
 start system, and you pick the rest with strings -- ``endgame=`` (``'cauchy'`` / ``'powerseries'``),
 ``mptype=`` (``'double'`` / ``'multiple'`` / ``'adaptive'``), and ``startsystem=`` (``'totaldegree'``
-/ ``'mhom'``).  Here we ask for adaptive precision so ill-conditioned paths still succeed::
+/ ``'mhom'``).  Here we ask for adaptive precision so ill-conditioned paths still succeed:
+
+.. testcode::
 
     solver = ZeroDim(sys, mptype='adaptive')
     solver.solve()
@@ -49,7 +51,9 @@ start system, and you pick the rest with strings -- ``endgame=`` (``'cauchy'`` /
 
     assert len(good) == 4                 # all four complex solutions
 
-Every one of them is genuinely complex::
+Every one of them is genuinely complex:
+
+.. testcode::
 
     for s in good:
         xv, yv = complex(s[0]), complex(s[1])

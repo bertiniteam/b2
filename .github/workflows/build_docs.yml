@@ -104,7 +104,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install \
             sphinx sphinx-rtd-theme sphinxcontrib-bibtex gitpython \
-            scikit-build-core build numpy
+            scikit-build-core build numpy matplotlib
 
       - name: Download built wheel
         uses: actions/download-artifact@v5
