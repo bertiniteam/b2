@@ -83,7 +83,7 @@ namespace node {
 	primary base (e.g. special_number::Pi, which is a Number) inherit this
 	without creating a diamond in the Node hierarchy.
 	*/
-	class Named
+	class NameHolder
 	{
 	public:
 		const std::string& name() const
@@ -97,11 +97,11 @@ namespace node {
 		}
 
 	protected:
-		~Named() = default;  // not polymorphic; never delete through Named*
+		~NameHolder() = default;  // not polymorphic; never delete through NameHolder*
 
-		Named() = default;
+		NameHolder() = default;
 
-		explicit Named(std::string new_name) : name_(std::move(new_name))
+		explicit NameHolder(std::string new_name) : name_(std::move(new_name))
 		{}
 
 		std::string name_;

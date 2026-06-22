@@ -63,7 +63,7 @@ namespace node{
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
 		*/
-		class Pi : public Number, public Named
+		class Pi : public Number, public NameHolder
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
@@ -84,7 +84,7 @@ namespace node{
 
 		private:
 
-			Pi() : Named("pi")
+			Pi() : NameHolder("pi")
 			{}
 
 			// Return value of constant
@@ -103,7 +103,7 @@ namespace node{
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<Number>(*this);
-				ar & boost::serialization::base_object<Named>(*this);
+				ar & boost::serialization::base_object<NameHolder>(*this);
 			}
 		};
 
@@ -114,7 +114,7 @@ namespace node{
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
 		*/
-		class E : public Number, public Named
+		class E : public Number, public NameHolder
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
@@ -138,7 +138,7 @@ namespace node{
 
 		private:
 
-			E() : Named("e")
+			E() : NameHolder("e")
 			{}
 
 			
@@ -158,7 +158,7 @@ namespace node{
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<Number>(*this);
-				ar & boost::serialization::base_object<Named>(*this);
+				ar & boost::serialization::base_object<NameHolder>(*this);
 			}
 
 		};
