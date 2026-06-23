@@ -70,9 +70,6 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 
 		private:
-			static unsigned GetPrecision(NodeBaseT const& self) {return self.precision();}
-			static void SetPrecision(NodeBaseT & self, unsigned p){self.precision(p);}
-
 			static Nodeptr Diff0(NodeBaseT& self) { return self.Differentiate();}
 			Nodeptr (NodeBaseT::*Diff1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Differentiate;
 
@@ -87,23 +84,6 @@ namespace bertini{
 			static bool IsPoly0(NodeBaseT& self) { return self.IsPolynomial();}
 			bool (NodeBaseT::*IsPoly1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsPolynomial;
 			bool (NodeBaseT::*IsPoly2)(VariableGroup const& vars) const= &NodeBaseT::IsPolynomial;
-
-			// Can't create member function pointer to Eval with zero arguments because implementation
-			// uses default arguments
-			template <typename T>
-			static T Eval0(NodeBaseT& self) { return self.template Eval<T>();}
-
-			// Use templating to return member function pointer to Eval<T>
-			template <typename T>
-			using Eval1_ptr = T (NodeBaseT::*)(std::shared_ptr<Variable> const&) const;
-
-			template <typename T>
-			static Eval1_ptr<T> return_Eval1_ptr()
-			{
-				return &NodeBaseT::template Eval<T>;
-			};
-
-
 
 			// Addition operators
 			Nodeptr(*addNodeNode)(Nodeptr, const Nodeptr&) = &(operator+);

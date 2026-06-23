@@ -24,6 +24,7 @@
 
 
 #include "bertini2/system/system.hpp"
+#include "bertini2/function_tree/find.hpp"
 
 template<typename NumT> using Vec = bertini::Vec<NumT>;
 template<typename NumT> using Mat = bertini::Mat<NumT>;
@@ -37,26 +38,6 @@ namespace bertini
 {
 
 	using namespace bertini::node;
-	
-	EvalMethod DefaultEvalMethod()
-	{
-		return EvalMethod::SLP;
-	}
-
-	DerivMethod DefaultDerivMethod()
-	{
-		return DerivMethod::Derivatives;
-	}
-
-	bool DefaultAutoSimplify()
-	{
-		// differentiation now emits already-simplified trees, so the post-hoc
-		// Simplify pass is redundant -- and it mutates IN PLACE, including
-		// subtrees the derivative shares with the user's original functions.
-		// holding f must never observe f changing because the system was
-		// differentiated.  Simplify()/AutoSimplify(true) remain explicit opt-ins.
-		return false;
-	}
 
 	void swap(System & a, System & b)
 	{
@@ -88,7 +69,7 @@ namespace bertini
 	}
 
 	// construct from a list of functions, auto-discovering the variables
-	System::System(std::vector<Fn> const& functions) : System()
+	System::System(std::vector<Nd> const& functions) : System()
 	{
 		AddFunctions(functions);
 		AddVariableGroup( node::GatherVariables(functions) );
@@ -236,39 +217,16 @@ namespace bertini
 
 	void System::precision(unsigned new_precision) const
 	{
-		for (const auto& iter : explicit_parameters_) {
-			iter->precision(new_precision);
-		}
-
-
-		for (const auto& iter :implicit_parameters_) {
-			iter->precision(new_precision);
-		}
-
-		// each block precisions its own functions / subfunctions / derivatives / SLP
+		// Each block precisions its own evaluator (its SLP / coefficient sub-system).  The
+		// parameter / function / variable nodes are no longer evaluated during tracking, so their
+		// precision is vestigial and left untouched -- this keeps the shared node DAG read-only
+		// across threads (ADR-0027).
 		for (auto const& blk : blocks_)
 			std::visit([&](auto const& b){ b.Precision(new_precision); }, blk);
 
-		if (have_path_variable_)
-			path_variable_->precision(new_precision);
-
-
-		for (const auto& iter : homogenizing_variables_)
-			iter->precision(new_precision);
-
-		for (const auto& iter : variable_groups_)
-			for (const auto& jter : iter)
-				jter->precision(new_precision);
-
-		for (const auto& iter : hom_variable_groups_)
-			for (const auto& jter : iter)
-				jter->precision(new_precision);
-
-		for (const auto& iter : ungrouped_variables_)
-			iter->precision(new_precision);
-
 		using bertini::Precision;
 		Precision(std::get<Vec<mpfr_complex> >(current_variable_values_),new_precision);
+		Precision(std::get<mpfr_complex>(current_path_value_),new_precision);
 
 		if (IsPatched())
 			patch_.Precision(new_precision);
@@ -618,7 +576,7 @@ namespace bertini
 
 
 
-	void System::AddParameter(Fn const& F)
+	void System::AddParameter(NE const& F)
 	{
 		explicit_parameters_.push_back(F);
 		InvalidateDifferentiation();
@@ -626,51 +584,22 @@ namespace bertini
 
 
 
-	void System::AddParameters(std::vector<Fn> const& v)
+
+
+
+
+
+
+
+	void System::AddFunction(Nd const& N)
 	{
-		explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
+		PolyBlock().AddFunction(N);
 		InvalidateDifferentiation();
 	}
 
 
 
-
-
-	void System::AddSubfunction(Fn const& F)
-	{
-		PolyBlock().AddSubFunction(F);
-		InvalidateDifferentiation();
-	}
-
-
-
-	void System::AddSubfunctions(std::vector<Fn> const& v)
-	{
-		for (auto const& f : v) PolyBlock().AddSubFunction(f);
-		InvalidateDifferentiation();
-	}
-
-
-
-
-
-	void System::AddFunction(Fn const& F)
-	{
-		PolyBlock().AddFunction(F);
-		InvalidateDifferentiation();
-	}
-
-
-
-	void System::AddFunction(Nd const& N, std::string const& name)
-	{
-		PolyBlock().AddFunction(Function::Make(N, name));
-		InvalidateDifferentiation();
-	}
-
-
-
-	void System::AddFunctions(std::vector<Fn> const& v)
+	void System::AddFunctions(std::vector<Nd> const& v)
 	{
 		for (auto const& f : v) PolyBlock().AddFunction(f);
 		InvalidateDifferentiation();
@@ -681,16 +610,9 @@ namespace bertini
 
 
 
-	void System::AddConstant(Fn const& F)
+	void System::AddConstant(NE const& F)
 	{
 		PolyBlock().AddConstant(F);
-		InvalidateDifferentiation();
-	}
-
-
-	void System::AddConstants(std::vector<Fn> const& v)
-	{
-		for (auto const& f : v) PolyBlock().AddConstant(f);
 		InvalidateDifferentiation();
 	}
 
@@ -997,9 +919,9 @@ namespace bertini
 
 				if constexpr (std::is_same_v<B, blocks::PolynomialBlock>)
 				{
-					// already function-tree: take each Function's inner expression node.
+					// already function-tree: each stored function is the bare expression node.
 					for (auto const& f : b.Functions())
-						out.push_back(f->EntryNode());
+						out.push_back(f);
 				}
 				else if constexpr (std::is_same_v<B, blocks::ProductsOfLinearsBlock>)
 				{
@@ -1270,7 +1192,7 @@ namespace bertini
 
 
 		// finally, we re-order the functions based on the indices we just computed
-		std::vector<std::shared_ptr<node::Function> > re_ordered_functions(degs.size());
+		std::vector<std::shared_ptr<node::Node> > re_ordered_functions(degs.size());
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
@@ -1298,7 +1220,7 @@ namespace bertini
 
 
 		// finally, we re-order the functions based on the indices we just computed
-		std::vector<std::shared_ptr<node::Function> > re_ordered_functions(degs.size());
+		std::vector<std::shared_ptr<node::Node> > re_ordered_functions(degs.size());
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
@@ -1342,85 +1264,6 @@ namespace bertini
 
 
 
-	bool System::RemoveVariable(Var const& v)
-	{
-		// remove the n-th time-ordering entry of the given group type, keeping the
-		// FIFO ordering consistent with the variable-group containers.
-		auto remove_nth_time_order = [this](VariableGroupType t, size_t n)
-		{
-			size_t count = 0;
-			for (auto it = time_order_of_variable_groups_.begin(); it != time_order_of_variable_groups_.end(); ++it)
-			{
-				if (*it == t)
-				{
-					if (count == n)
-					{
-						time_order_of_variable_groups_.erase(it);
-						return;
-					}
-					++count;
-				}
-			}
-		};
-
-		auto did_remove = [this]()
-		{
-			InvalidateDifferentiation();
-			have_ordering_ = false;
-			is_patched_ = false;
-		};
-
-		// search the affine variable groups
-		for (size_t gi = 0; gi < variable_groups_.size(); ++gi)
-		{
-			auto& group = variable_groups_[gi];
-			auto it = std::find(group.begin(), group.end(), v);
-			if (it != group.end())
-			{
-				group.erase(it);
-				if (group.empty())
-				{
-					variable_groups_.erase(variable_groups_.begin() + gi);
-					remove_nth_time_order(VariableGroupType::Affine, gi);
-				}
-				did_remove();
-				return true;
-			}
-		}
-
-		// search the homogeneous / projective variable groups
-		for (size_t gi = 0; gi < hom_variable_groups_.size(); ++gi)
-		{
-			auto& group = hom_variable_groups_[gi];
-			auto it = std::find(group.begin(), group.end(), v);
-			if (it != group.end())
-			{
-				group.erase(it);
-				if (group.empty())
-				{
-					hom_variable_groups_.erase(hom_variable_groups_.begin() + gi);
-					remove_nth_time_order(VariableGroupType::Homogeneous, gi);
-				}
-				did_remove();
-				return true;
-			}
-		}
-
-		// search the ungrouped variables (each is its own ungrouped time-order entry)
-		{
-			auto it = std::find(ungrouped_variables_.begin(), ungrouped_variables_.end(), v);
-			if (it != ungrouped_variables_.end())
-			{
-				size_t idx = static_cast<size_t>(std::distance(ungrouped_variables_.begin(), it));
-				ungrouped_variables_.erase(it);
-				remove_nth_time_order(VariableGroupType::Ungrouped, idx);
-				did_remove();
-				return true;
-			}
-		}
-
-		return false;
-	}
 
 
 
@@ -1514,6 +1357,21 @@ namespace bertini
 		for (auto const& blk : blocks_)
 			std::visit([&](auto const& b){ b.Describe(out, row, vars, verbose); }, blk);
 
+		// --- named subexpressions: the functions above print these by name; show each one's value
+		// here.  They are not stored separately --- they are discovered (Find) in the function trees
+		// they are embedded in (nested ones included).
+		if (auto* p = PolyBlockPtr())
+		{
+			std::vector<std::shared_ptr<const node::Node>> roots(p->Functions().begin(), p->Functions().end());
+			auto named = node::Find<node::NamedExpression>(roots);
+			if (!named.empty())
+			{
+				out << "\n" << named.size() << (named.size() == 1 ? " named subexpression:\n" : " named subexpressions:\n");
+				for (auto const& ne : named)
+					out << "  " << ne->name() << " = " << ne->EntryNode() << "\n";
+			}
+		}
+
 		// --- parameters / constants (only when present) ---
 		if (NumParameters())
 		{
@@ -1599,7 +1457,7 @@ namespace bertini
 			auto& lhsf = PolyBlock().Functions();
 			auto const& rhsf = rhs.PolyFunctions();
 			for (size_t ii = 0; ii < lhsf.size(); ++ii)
-				lhsf[ii] = node::Function::Make(rhsf[ii]->EntryNode() + lhsf[ii]->EntryNode(), lhsf[ii]->name());
+				lhsf[ii] = rhsf[ii] + lhsf[ii];
 		}
 
 		InvalidateDifferentiation();
@@ -1617,7 +1475,7 @@ namespace bertini
 		// new wrappers, not SetRoot — see comment in operator+= above.
 		for (auto& f : PolyBlock().Functions())
 		{
-			f = node::Function::Make( N * f->EntryNode(), f->name());
+			f = N * f;
 		}
 		InvalidateDifferentiation();
 		return *this;
@@ -1733,85 +1591,19 @@ namespace bertini
 
 	System Clone(System const& sys)
 	{
-
-//////////////////  attempt 1.  generates a npos == null problem of some sort.  i couldn't figure it out.
-
-
-		// namespace io = boost::iostreams;
-		// using buffer_type = std::vector<char>;
-		// buffer_type buffer;
-
-		// io::stream<io::back_insert_device<buffer_type> > output_stream(buffer);
-		// boost::archive::binary_oarchive oa(output_stream);
-
-		// oa << sys;
-		// output_stream.flush();
-
-		
-
-		// io::basic_array_source<char> source(&buffer[0],buffer.size());
-		// io::stream<io::basic_array_source <char> > input_stream(source);
-		// boost::archive::binary_iarchive ia(input_stream);
-
-		// System sys_clone;
-		// ia >> sys_clone;
-
-		// return sys_clone;
-
-
-
-///////////////////////  attempt2  generates crashes.  :(
-		// std::string serial_str;
-		// {
-		// 	boost::iostreams::back_insert_device<std::string> inserter(serial_str);
-		// 	boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > s(inserter);
-		// 	boost::archive::binary_oarchive oa(s);
-
-		// 	oa << sys;
-
-		// 	// don't forget to flush the stream to finish writing into the buffer
-		// 	s.flush();
-		// }
-		
-		// boost::iostreams::basic_array_source<char> device(serial_str.data(), serial_str.size());
-		// boost::iostreams::stream<boost::iostreams::basic_array_source<char> > t(device);
-		// boost::archive::binary_iarchive ia(t);
-		// System sys_clone;
-		// ia >> sys_clone;
-
-
-
-
-///////////////////// attempt3.  works.  why the others generate problems with the binary archive baffles me.
-
-		std::stringstream ss;
-		{
-			boost::archive::text_oarchive oa(ss);
-			oa << sys;
-		}
-
-		System sys_clone;
-		{
-			boost::archive::text_iarchive ia(ss);
-			ia >> sys_clone;
-		}
-
-		// Rebuild evaluation machinery from the deserialized expression tree rather
-		// than trusting the archived copy: the serialized SLP does not survive the
-		// round trip faithfully (its time-derivative outputs read stale memory,
-		// observed 2026-06-06; root cause in SLP serialization not yet identified).
-		// Differentiate() re-derives the derivative trees and recompiles the SLP
-		// from the clone's own (verified-exact) tree.
-		if (sys_clone.GetEvalMethod() == EvalMethod::SLP)
-			sys_clone.Differentiate();
-
-		// Normalize precision across all parts of the clone.  The source system can
-		// carry internally-inconsistent precision state (e.g. precision_ says 30 but
-		// the SLP is still at its compile-time precision); precision() propagates to
-		// every node, derivative, and the SLP.
-		sys_clone.precision(sys_clone.precision());
-
-		return sys_clone;
+		// Memory-isolating clone (ADR-0027).  Since the evaluation path no longer
+		// writes shared node state, per-thread copies may share the immutable node DAG
+		// and the compiled SLP Program; each copy only needs its own evaluation Memory.  The System
+		// copy constructor provides exactly that: it shares the node DAG (nodes are shared_ptr) and,
+		// per block, shares the compiled Program while copying the per-thread SLPMemory; the
+		// operand-holding blocks (BlendBlock, RandomizationBlock) deep-copy their nested operand
+		// Systems the same way (own Memory, shared DAG).  No mutable state is shared, so a clone is
+		// safe to evaluate concurrently with the original.
+		//
+		// This replaces the old text-archive serialize/deserialize round trip + re-Differentiate()
+		// (issue #246): no deep copy of the DAG, and no SLP recompile (the clone reuses the source's
+		// compiled Program).
+		return System(sys);
 	}
 
 
@@ -1820,28 +1612,6 @@ namespace bertini
 		sys.Simplify();
 	}
 
-
-	void System::ResetFunctions() const
-	{
-		if (auto* p = PolyBlockPtr()) p->Reset();
-	}
-
-	void System::ResetJacobian() const
-	{
-		if (auto* p = PolyBlockPtr()) p->Reset();
-	}
-
-	void System::ResetTimeDerivatives() const
-	{
-		if (auto* p = PolyBlockPtr()) p->Reset();
-	}
-
-	void System::Reset() const
-	{
-		ResetFunctions();
-		ResetJacobian();
-		ResetTimeDerivatives();
-	}
 
 	const System::Var& System::GetPathVariable() const
 	{

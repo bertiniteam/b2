@@ -56,8 +56,7 @@ namespace node{
 	/**
 	\brief Abstract Number type from which other Numbers derive.
 
-	This class represents constant leaves to a function tree.  FreshEval simply returns
-	the value of the constant.
+	This class represents constant leaves to a function tree.
 	*/
 	class Number : public Symbol
 	{
@@ -67,7 +66,6 @@ namespace node{
 
 
 
-		void Reset() const override;
 
 
 		
@@ -109,15 +107,6 @@ namespace node{
 			return std::vector<int>(vars.size(), 0);
 		}
 
-		/**
-		\brief Homogenize this node.
-
-		Homogenization of a number is a trivial operation.  Don't do anything.
-		*/
-		void Homogenize(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) override
-		{
-			
-		}
 
 		/**
 		\brief Is this node homogeneous?
@@ -138,13 +127,6 @@ namespace node{
 		}
 
 		
-		/**
-		 Change the precision of this variable-precision tree node.
-		 
-		 \param prec the number of digits to change precision to.
-		 */
-		void precision(unsigned int prec) const override;
-
 		/**
 		\brief Differentiate a number.
 		 */
@@ -209,10 +191,22 @@ namespace node{
 			return true_value_ == 1;
 		}
 
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Integer).hash_code();
+			HashCombine(h, std::hash<std::string>{}(true_value_.str()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Integer const*>(&other);
+			return o && true_value_ == o->true_value_;
+		}
+
 		template<typename... Ts>
 		static
 		std::shared_ptr<Integer> Make(Ts&& ...ts){
-			return std::shared_ptr<Integer>( new Integer(ts...) );
+			return std::static_pointer_cast<Integer>(Intern(std::shared_ptr<Node>( new Integer(ts...) )));
 		}
 
 	private:
@@ -233,15 +227,6 @@ namespace node{
 
 
 
-		// Return value of constant
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpz_int true_value_;
@@ -312,10 +297,25 @@ namespace node{
 			return highest_precision_value_.real() == 1 && highest_precision_value_.imag() == 0;
 		}
 
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Float).hash_code();
+			HashCombine(h, std::hash<std::string>{}(highest_precision_value_.real().str()));
+			HashCombine(h, std::hash<std::string>{}(highest_precision_value_.imag().str()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Float const*>(&other);
+			return o
+				&& highest_precision_value_.real() == o->highest_precision_value_.real()
+				&& highest_precision_value_.imag() == o->highest_precision_value_.imag();
+		}
+
 		template<typename... Ts>
 		static
 		std::shared_ptr<Float> Make(Ts&& ...ts){
-			return std::shared_ptr<Float>( new Float(ts...) );
+			return std::static_pointer_cast<Float>(Intern(std::shared_ptr<Node>( new Float(ts...) )));
 		}
 
 	private:
@@ -336,14 +336,6 @@ namespace node{
 		Float(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
 		{}
 
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpfr_complex highest_precision_value_;
@@ -439,6 +431,24 @@ namespace node{
 			return true_value_imag_;
 		}
 
+		/**
+		\brief Get this exact constant as a number of type NumT, independent of the
+		evaluation engine.
+
+		Unlike Eval, this does no caching and never touches the node's stored working
+		value --- it is a pure read of the literal.  It matches the literal's conversion:
+		double truncation for dbl, and a value at the current thread precision for mpfr.
+		*/
+		template<typename NumT>
+		NumT Value() const
+		{
+			if constexpr (std::is_same<NumT, dbl>::value)
+				return dbl(double(true_value_real_), double(true_value_imag_));
+			else
+				return NumT(boost::multiprecision::mpfr_float(true_value_real_, ThreadPrecision()),
+				            boost::multiprecision::mpfr_float(true_value_imag_, ThreadPrecision()));
+		}
+
 		bool IsLiteralZero() const override
 		{
 			return true_value_real_ == 0 && true_value_imag_ == 0;
@@ -449,12 +459,25 @@ namespace node{
 			return true_value_real_ == 1 && true_value_imag_ == 0;
 		}
 
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Rational).hash_code();
+			HashCombine(h, std::hash<std::string>{}(true_value_real_.str()));
+			HashCombine(h, std::hash<std::string>{}(true_value_imag_.str()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Rational const*>(&other);
+			return o && true_value_real_ == o->true_value_real_ && true_value_imag_ == o->true_value_imag_;
+		}
+
 
 
 		template<typename... Ts>
 		static
 		std::shared_ptr<Rational> Make(Ts&& ...ts){
-			return std::shared_ptr<Rational>( new Rational(ts...) );
+			return std::static_pointer_cast<Rational>(Intern(std::shared_ptr<Node>( new Rational(ts...) )));
 		}
 
 	private:
@@ -483,15 +506,6 @@ namespace node{
 		{}
 
 
-		// Return value of constant
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpq_rational true_value_real_, true_value_imag_;

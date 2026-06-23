@@ -18,7 +18,9 @@
    real_points
    solving_at_scale
    crossed_paths
+   precision_matters
    evaluation_cyclic
+   canonical_ordering
    tracking_nonsingular
    manual_endgame_usage
    observers_and_path_data

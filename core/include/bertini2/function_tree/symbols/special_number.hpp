@@ -63,7 +63,7 @@ namespace node{
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
 		*/
-		class Pi : public Number, public Named
+		class Pi : public Number, public NameHolder
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
@@ -73,7 +73,7 @@ namespace node{
 			template<typename... Ts>
 			static
 			std::shared_ptr<Pi> Make(Ts&& ...ts){
-				return std::shared_ptr<Pi>( new Pi(ts...) );
+				return std::static_pointer_cast<Pi>(Intern(std::shared_ptr<Node>( new Pi(ts...) )));
 			}
 
 			void print(std::ostream & target) const override
@@ -84,18 +84,14 @@ namespace node{
 
 		private:
 
-			Pi() : Named("pi")
+			Pi() : NameHolder("pi")
 			{}
 
 			// Return value of constant
-			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-			mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 			friend class boost::serialization::access;
@@ -103,7 +99,7 @@ namespace node{
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<Number>(*this);
-				ar & boost::serialization::base_object<Named>(*this);
+				ar & boost::serialization::base_object<NameHolder>(*this);
 			}
 		};
 
@@ -114,7 +110,7 @@ namespace node{
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
 		*/
-		class E : public Number, public Named
+		class E : public Number, public NameHolder
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
@@ -127,7 +123,7 @@ namespace node{
 			template<typename... Ts>
 			static
 			std::shared_ptr<E> Make(Ts&& ...ts){
-				return std::shared_ptr<E>( new E(ts...) );
+				return std::static_pointer_cast<E>(Intern(std::shared_ptr<Node>( new E(ts...) )));
 			}
 
 			void print(std::ostream & target) const override
@@ -138,19 +134,15 @@ namespace node{
 
 		private:
 
-			E() : Named("e")
+			E() : NameHolder("e")
 			{}
 
 			
 			// Return value of constant
-			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-			mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 			friend class boost::serialization::access;
@@ -158,7 +150,7 @@ namespace node{
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<Number>(*this);
-				ar & boost::serialization::base_object<Named>(*this);
+				ar & boost::serialization::base_object<NameHolder>(*this);
 			}
 
 		};

@@ -4,6 +4,9 @@
 #include "bertini2/io/parsing/system_parsers.hpp"
 #include "bertini2/system/start_systems.hpp"
 
+#include <set>
+#include <iostream>
+
 using Variable = bertini::node::Variable;
 
 using bertini::Operation;
@@ -298,3 +301,197 @@ BOOST_AUTO_TEST_CASE(evaluate_three_variable_system)
 
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
+// ---- common-subexpression elimination via hash-consing ----
+//
+// The SLP compiler keys a node->result-slot map by node pointer and compiles each node only
+// once.  Because identical subexpressions are hash-consed to a single shared node, the
+// compiled program tracks the *DAG* of distinct subexpressions, not the fully-expanded
+// expression tree -- so repeated/shared structure is computed once.
+
+BOOST_AUTO_TEST_SUITE(SLP_cse)
+
+namespace {
+	using Node = bertini::node::Node;
+	using NaryOperator = bertini::node::NaryOperator;
+	using Nd = std::shared_ptr<Node>;
+
+	// nodes in the fully-expanded expression TREE: a shared subnode is counted once per place
+	// it appears -- the work a naive, non-CSE tree-walk evaluator would do.
+	std::size_t ExpandedTreeNodes(Nd const& n)
+	{
+		if (auto nary = std::dynamic_pointer_cast<NaryOperator const>(n))
+		{
+			std::size_t c = 1;
+			for (auto const& op : nary->Operands())
+				c += ExpandedTreeNodes(op);
+			return c;
+		}
+		return 1;
+	}
+
+	// DISTINCT nodes (the DAG): what hash-consing + the SLP compiler actually share.
+	void CollectDistinct(Nd const& n, std::set<Node const*>& seen)
+	{
+		if (!seen.insert(n.get()).second)
+			return;
+		if (auto nary = std::dynamic_pointer_cast<NaryOperator const>(n))
+			for (auto const& op : nary->Operands())
+				CollectDistinct(op, seen);
+	}
+	std::size_t DistinctNodes(Nd const& n)
+	{
+		std::set<Node const*> seen;
+		CollectDistinct(n, seen);
+		return seen.size();
+	}
+
+	std::size_t SlpSlots(bertini::System const& s)
+	{
+		bertini::StraightLineProgram slp(s);
+		return slp.NumMemorySlots();
+	}
+}
+
+BOOST_AUTO_TEST_CASE(hash_consing_unifies_independently_built_subexpressions)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	// (x+y) built twice, independently, then added: hash-consing makes them one node, so the
+	// DAG has a single (x+y) even though the expanded tree repeats it.
+	Nd f = (x + y) + (x + y);
+	BOOST_CHECK_EQUAL(DistinctNodes(f), 4u);      // x, y, (x+y), the outer sum
+	BOOST_CHECK_EQUAL(ExpandedTreeNodes(f), 7u);  // outer + 2*(sum + x + y)
+}
+
+BOOST_AUTO_TEST_CASE(cse_benchmark_squaring_chain)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+
+	std::cout << "\nCSE_TABLE_BEGIN\n";
+	std::cout << "| K | expanded tree nodes | distinct nodes (DAG) | SLP slots (fns+Jac) | reduction (tree/DAG) |\n";
+	std::cout << "|--:|--------------------:|---------------------:|--------------------:|---------------------:|\n";
+
+	for (int K = 1; K <= 16; ++K)
+	{
+		Nd e = x + y;
+		for (int i = 0; i < K; ++i)
+			e = e * e;          // e*e reuses the same node; the DAG grows by one per level
+
+		const auto expanded = ExpandedTreeNodes(e);
+		const auto distinct = DistinctNodes(e);
+
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup{x, y});
+		sys.AddFunction(e);
+		const auto slots = SlpSlots(sys);
+
+		std::cout << "| " << K << " | " << expanded << " | " << distinct
+		          << " | " << slots << " | " << (expanded / distinct) << "x |\n";
+
+		// the same function is a linear DAG but an exponential tree: hash-consing collapses it
+		BOOST_CHECK_EQUAL(distinct, static_cast<std::size_t>(K + 3));   // x, y, (x+y), e_1..e_K
+		BOOST_CHECK_EQUAL(expanded, (std::size_t{1} << (K + 2)) - 1);   // a binary tree
+		if (K >= 8)
+			BOOST_CHECK_LT(slots, expanded);   // the compiled program stays DAG-sized
+	}
+	std::cout << "CSE_TABLE_END\n" << std::endl;
+}
+
+BOOST_AUTO_TEST_SUITE_END() // SLP_cse
+
+
+// (the SLP-vs-tree oracle suite lived here; removed when the FunctionTree eval method was
+// retired -- the SLP is now the sole system evaluator.)
+
+
+// ---- freeze-set tape partition (ADR-0027) ----
+//
+// The compiler stably reorders the instruction tape so every constant-only ("frozen")
+// instruction precedes every variable-dependent ("live") one.  A point-only re-evaluation
+// then skips the frozen prologue (reusing the constants already in memory), and the whole
+// tape runs only when the constants are not yet valid for the working precision.
+
+BOOST_AUTO_TEST_SUITE(SLP_freeze_partition)
+
+using bertini::node::Integer;
+using mpfr_complex = bertini::mpfr_complex;
+
+namespace {
+	// f = x + sin(1): sin(1) is a constant unary operation -> a frozen instruction.
+	bertini::System ConstantSubexpressionSystem()
+	{
+		auto x = Variable::Make("x");
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup{x});
+		sys.AddFunction(x + sin(Integer::Make(1)));
+		return sys;
+	}
+}
+
+BOOST_AUTO_TEST_CASE(constant_subexpression_yields_a_frozen_prologue)
+{
+	auto slp = SLP(ConstantSubexpressionSystem());
+	// sin(1) compiles to at least one frozen instruction, so the live segment does not start at 0.
+	BOOST_CHECK_GT(slp.FirstLiveInstructionOffset(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(no_constant_operator_means_no_prologue)
+{
+	auto x = Variable::Make("x");
+	bertini::System sys;
+	sys.AddVariableGroup(bertini::VariableGroup{x});
+	sys.AddFunction(x * x); // every instruction depends on x -> nothing frozen
+	auto slp = SLP(sys);
+	BOOST_CHECK_EQUAL(slp.FirstLiveInstructionOffset(), 0u);
+}
+
+// Skipping the frozen prologue on a point-only change must not corrupt the result: the
+// constant stays in memory and the second eval (at a new point) reuses it.
+BOOST_AUTO_TEST_CASE(point_only_change_reuses_constants_correctly)
+{
+	auto slp = SLP(ConstantSubexpressionSystem());
+
+	const double s1 = std::sin(1.0);
+
+	Vec<dbl> p(1);
+	p(0) = dbl(2.0);
+	slp.Eval(p);
+	BOOST_CHECK_CLOSE(slp.GetFuncVals<dbl>()(0).real(), 2.0 + s1, 1e-10);
+
+	p(0) = dbl(5.0); // point-only change: prologue skipped, sin(1) reused
+	slp.Eval(p);
+	BOOST_CHECK_CLOSE(slp.GetFuncVals<dbl>()(0).real(), 5.0 + s1, 1e-10);
+
+	p(0) = dbl(2.0); // back again
+	slp.Eval(p);
+	BOOST_CHECK_CLOSE(slp.GetFuncVals<dbl>()(0).real(), 2.0 + s1, 1e-10);
+}
+
+// A precision change must invalidate the frozen prologue so the constant is recomputed at the
+// new precision.  The tolerance (1e-40) is tighter than the original precision (30 digits): if
+// invalidation were broken and sin(1) stayed at 30-digit accuracy, this would fail.
+BOOST_AUTO_TEST_CASE(precision_change_recomputes_constants)
+{
+	auto sys = ConstantSubexpressionSystem();
+
+	bertini::DefaultPrecision(30);
+	sys.precision(30);
+	Vec<mpfr_complex> p30(1);
+	p30(0) = mpfr_complex(2);
+	auto f30 = sys.Eval(p30);
+	BOOST_CHECK(abs(f30(0) - (mpfr_complex(2) + sin(mpfr_complex(1)))) < 1e-25);
+
+	bertini::DefaultPrecision(50);
+	sys.precision(50);
+	Vec<mpfr_complex> p50(1);
+	p50(0) = mpfr_complex(2);
+	auto f50 = sys.Eval(p50);
+	// sin(1) recomputed at 50 digits -> accurate well past 30 digits.
+	BOOST_CHECK(abs(f50(0) - (mpfr_complex(2) + sin(mpfr_complex(1)))) < 1e-40);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // SLP_freeze_partition
+

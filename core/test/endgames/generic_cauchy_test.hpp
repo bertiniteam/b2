@@ -382,12 +382,13 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
 
 	auto precision_config = PrecisionConfig(sys);
 
 	TrackerType tracker(sys);
-	
+
 	bertini::tracking::SteppingConfig stepping_preferences;
 	bertini::tracking::NewtonConfig newton_preferences;
 

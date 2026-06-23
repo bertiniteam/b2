@@ -156,11 +156,9 @@ two have purely imaginary :math:`x`:
 
 .. testcode::
 
-    md = solver.solution_metadata()
-    assert all(m.is_finite for m in md)
-    assert not any(m.is_singular for m in md)
-    assert sum(1 for m in md if m.is_real) == 2
-    assert sum(1 for m in md if not m.is_real) == 2
+    assert len(solver.finite_solutions()) == 4       # all four endpoints are finite
+    assert len(solver.nonsingular_solutions()) == 4  # ... and all nonsingular
+    assert len(solver.real_solutions()) == 2         # two real, two with purely imaginary x
 
 That is the whole arc: an exact, hand-authored product-of-linears start system, four start points
 you wrote down yourself, blended into a homotopy and tracked through the same solver bertini uses

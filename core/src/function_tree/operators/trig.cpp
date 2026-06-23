@@ -43,15 +43,6 @@ namespace node{
 	}
 
 
-	unsigned SinOperator::EliminateZeros()
-	{
-		return 0;
-	}
-	unsigned SinOperator::EliminateOnes()
-	{
-		return 0;
-	}
-
 	void SinOperator::print(std::ostream & target) const
 	{
 		target << "sin(";
@@ -68,38 +59,10 @@ namespace node{
 		});
 	}
 
-	// Specific implementation of FreshEval for negate.
-	dbl SinOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return sin(operand_->Eval<dbl>(diff_variable));
-	}
-	
-	mpfr_complex SinOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return sin(operand_->Eval<mpfr_complex>(diff_variable));
-	}
 	
 	
-	void SinOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-		evaluation_value = sin(evaluation_value);
-	}
 	
-	void SinOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-		evaluation_value = sin(evaluation_value);
-	}
-
-	unsigned ArcSinOperator::EliminateZeros()
-	{
-		return 0;
-	}
-	unsigned ArcSinOperator::EliminateOnes()
-	{
-		return 0;
-	}
+	
 
 	void ArcSinOperator::print(std::ostream & target) const
 	{
@@ -117,38 +80,10 @@ namespace node{
 	}
 
 
-	// Specific implementation of FreshEval for negate.
-	dbl ArcSinOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return asin(operand_->Eval<dbl>(diff_variable));
-	}
 	
-	mpfr_complex ArcSinOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return asin(operand_->Eval<mpfr_complex>(diff_variable));
-	}
 
 	
-	void ArcSinOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-		evaluation_value = asin(evaluation_value);
-	}
 	
-	void ArcSinOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-		evaluation_value = asin(evaluation_value);
-	}
-
-	unsigned CosOperator::EliminateZeros()
-	{
-		return 0;
-	}
-	unsigned CosOperator::EliminateOnes()
-	{
-		return 0;
-	}
 
 	void CosOperator::print(std::ostream & target) const
 	{
@@ -165,38 +100,11 @@ namespace node{
 		}));
 	}
 
-	dbl CosOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return cos(operand_->Eval<dbl>(diff_variable));
-	}
-	
-	mpfr_complex CosOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return cos(operand_->Eval<mpfr_complex>(diff_variable));
-	}
 	
 	
-	void CosOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-		evaluation_value = cos(evaluation_value);
-	}
 	
-	void CosOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-		evaluation_value = cos(evaluation_value);
-	}
+	
 
-
-	unsigned ArcCosOperator::EliminateZeros()
-	{
-		return 0;
-	}
-	unsigned ArcCosOperator::EliminateOnes()
-	{
-		return 0;
-	}
 
 	void ArcCosOperator::print(std::ostream & target) const
 	{
@@ -214,39 +122,11 @@ namespace node{
 		}));
 	}
 
-	// Specific implementation of FreshEval for negate.
-	dbl ArcCosOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return acos(operand_->Eval<dbl>(diff_variable));
-	}
-	
-	mpfr_complex ArcCosOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return acos(operand_->Eval<mpfr_complex>(diff_variable));
-	}
 	
 	
-	void ArcCosOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-		evaluation_value = acos(evaluation_value);
-	}
 	
-	void ArcCosOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-		evaluation_value = acos(evaluation_value);
-	}
+	
 
-
-	unsigned TanOperator::EliminateZeros()
-	{
-		return 0;
-	}
-	unsigned TanOperator::EliminateOnes()
-	{
-		return 0;
-	}
 
 	void TanOperator::print(std::ostream & target) const
 	{
@@ -263,38 +143,11 @@ namespace node{
 		});
 	}
 
-	dbl TanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return tan(operand_->Eval<dbl>(diff_variable));
-	}
-	
-	mpfr_complex TanOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return tan(operand_->Eval<mpfr_complex>(diff_variable));
-	}
 	
 	
-	void TanOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-		evaluation_value = tan(evaluation_value);
-	}
 	
-	void TanOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-		evaluation_value = tan(evaluation_value);
-	}
+	
 
-
-	unsigned ArcTanOperator::EliminateZeros()
-	{
-		return 0;
-	}
-	unsigned ArcTanOperator::EliminateOnes()
-	{
-		return 0;
-	}
 
 	void ArcTanOperator::print(std::ostream & target) const
 	{
@@ -312,27 +165,25 @@ namespace node{
 		});
 	}
 
-	dbl ArcTanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return atan(operand_->Eval<dbl>(diff_variable));
-	}
-	
-	mpfr_complex ArcTanOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-	{
-		return atan(operand_->Eval<mpfr_complex>(diff_variable));
-	}
 	
 	
-	void ArcTanOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-		evaluation_value = atan(evaluation_value);
-	}
 	
-	void ArcTanOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-	{
-		operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-		evaluation_value = atan(evaluation_value);
-	}
-} // re: namespace node	
+	
+
+	// ---- functional Simplified(): rebuild same op type from the simplified operand ----
+	std::shared_ptr<Node> SinOperator::Simplified()    const { return SinOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> ArcSinOperator::Simplified() const { return ArcSinOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> CosOperator::Simplified()    const { return CosOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> ArcCosOperator::Simplified() const { return ArcCosOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> TanOperator::Simplified()    const { return TanOperator::Make(operand_->Simplified()); }
+	std::shared_ptr<Node> ArcTanOperator::Simplified() const { return ArcTanOperator::Make(operand_->Simplified()); }
+
+	// ---- functional Homogenized(): rebuild same op type from the homogenized operand ----
+	std::shared_ptr<Node> SinOperator::Homogenized(VariableGroup const& v, std::shared_ptr<Variable> const& h)    const { return SinOperator::Make(operand_->Homogenized(v,h)); }
+	std::shared_ptr<Node> ArcSinOperator::Homogenized(VariableGroup const& v, std::shared_ptr<Variable> const& h) const { return ArcSinOperator::Make(operand_->Homogenized(v,h)); }
+	std::shared_ptr<Node> CosOperator::Homogenized(VariableGroup const& v, std::shared_ptr<Variable> const& h)    const { return CosOperator::Make(operand_->Homogenized(v,h)); }
+	std::shared_ptr<Node> ArcCosOperator::Homogenized(VariableGroup const& v, std::shared_ptr<Variable> const& h) const { return ArcCosOperator::Make(operand_->Homogenized(v,h)); }
+	std::shared_ptr<Node> TanOperator::Homogenized(VariableGroup const& v, std::shared_ptr<Variable> const& h)    const { return TanOperator::Make(operand_->Homogenized(v,h)); }
+	std::shared_ptr<Node> ArcTanOperator::Homogenized(VariableGroup const& v, std::shared_ptr<Variable> const& h) const { return ArcTanOperator::Make(operand_->Homogenized(v,h)); }
+} // re: namespace node
 } // re: bertini namespace

@@ -157,8 +157,7 @@ set(function_tree_headers
     include/bertini2/function_tree/symbols/differential.hpp
     include/bertini2/function_tree/symbols/special_number.hpp
     include/bertini2/function_tree/symbols/number.hpp
-    include/bertini2/function_tree/roots/function.hpp
-    include/bertini2/function_tree/roots/jacobian.hpp
+    include/bertini2/function_tree/roots/named_expression.hpp
     include/bertini2/function_tree/operators/arithmetic.hpp
     include/bertini2/function_tree/operators/trig.hpp
 )
@@ -194,8 +193,7 @@ set(functiontree_symbols_HEADERS
 )
 
 set(functiontree_roots_HEADERS
-	include/bertini2/function_tree/roots/function.hpp
-	include/bertini2/function_tree/roots/jacobian.hpp
+	include/bertini2/function_tree/roots/named_expression.hpp
 )
 
 set(io_headers
@@ -345,7 +343,9 @@ set(basics_sources
 set(function_tree_sources
     src/function_tree/node.cpp
     src/function_tree/gather.cpp
+    src/function_tree/find.cpp
     src/function_tree/simplify.cpp
+    src/function_tree/canonical.cpp
     src/function_tree/operators/arithmetic.cpp
     src/function_tree/operators/trig.cpp
     src/function_tree/operators/operator.cpp
@@ -354,8 +354,7 @@ set(function_tree_sources
     src/function_tree/symbols/symbol.cpp
     src/function_tree/symbols/variable.cpp
     src/function_tree/symbols/number.cpp
-    src/function_tree/roots/jacobian.cpp
-    src/function_tree/roots/function.cpp
+    src/function_tree/roots/named_expression.cpp
 )
 
 set(parallel_sources
@@ -687,12 +686,13 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/precision_propagation_test.cpp
 		test/classes/eigen_test.cpp
 		test/classes/complex_test.cpp
-		test/classes/function_tree_test.cpp
 		test/classes/function_tree_transform.cpp
+		test/classes/structural_hash_test.cpp
+		test/classes/interning_test.cpp
 		test/classes/system_test.cpp
 		test/classes/slp_test.cpp
-		test/classes/differentiate_test.cpp
-		test/classes/differentiate_wrt_var.cpp
+		test/classes/eval_expression_test.cpp
+		test/classes/named_expression_test.cpp
 		test/classes/homogenization_test.cpp
 		test/classes/start_system_test.cpp
 		test/classes/node_serialization_test.cpp

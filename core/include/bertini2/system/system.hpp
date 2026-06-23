@@ -52,7 +52,6 @@
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system/patch.hpp"
 
-#include "bertini2/system/eval_method.hpp"
 #include "bertini2/system/straight_line_program.hpp"
 #include "bertini2/system/blocks/block.hpp"
 
@@ -64,13 +63,7 @@
 
 namespace bertini {
 
-	// EvalMethod / DerivMethod and their defaults now live in bertini2/system/eval_method.hpp
 	// (included above) so the evaluation blocks can see them.
-
-	/**
-	\brief Get the default value for whether a system should autosimplify.
-	*/
-	bool DefaultAutoSimplify();
 
 	/**
 	\brief The fundamental polynomial system class for Bertini2.
@@ -83,11 +76,10 @@ namespace bertini {
 	
 	public:
 		// a few local using statements to reduce typing etc.
-		using Fn = std::shared_ptr<node::Function>;
+		using NE = std::shared_ptr<node::NamedExpression>;
 		using Var = std::shared_ptr<node::Variable>;
 		using Nd = std::shared_ptr<node::Node>;
-		using Jac = std::shared_ptr<node::Jacobian>;
-		
+
 		/**
 		\brief The default constructor for a system.
 		*/
@@ -106,7 +98,7 @@ namespace bertini {
 		\param functions The functions which define the system.
 		*/
 		explicit
-		System(std::vector<Fn> const& functions);
+		System(std::vector<Nd> const& functions);
 
 		/**
 		\brief The copy operator, creates a system from a string using the Bertini parser for Bertini classic syntax.
@@ -163,23 +155,6 @@ namespace bertini {
 		void Differentiate() const;
 
 
-		
-		/**
-		\brief Force re-evaluation of the system next eval of functions. If something has changed in the system, call this.
-		*/
-		void ResetFunctions() const;
-
-		/**
-		\brief Force re-evaluation of the system next eval of Jacobians. If something has changed in the system, call this.
-		*/
-		void ResetJacobian() const;
-
-		void ResetTimeDerivatives() const;
-
-		/**
-		\brief A complete reset of the system, so that all of functions, space derivatives, and time derivatives will all be re-evaluated.
-		*/
-		void Reset() const;
 		/**
 		 \brief Evaluate the system using the previously set variable (and time) values, in place.
 
@@ -256,7 +231,6 @@ namespace bertini {
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 			
 			SetVariables(variable_values.eval());
-			ResetFunctions();
 			EvalInPlace(function_values);
 		}
 		
@@ -320,7 +294,6 @@ namespace bertini {
 			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
 
-			ResetFunctions(); // todo, elimiante this.  i feel like setting the variables or path variable should be enough to set the flag/ take the action
 
 			EvalInPlace(function_values);
 		}
@@ -493,7 +466,6 @@ namespace bertini {
 			
 			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
-			ResetJacobian();
 			JacobianInPlace(J);
 		}
 
@@ -561,7 +533,6 @@ namespace bertini {
 
 			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
-			ResetTimeDerivatives();
 			TimeDerivativeInPlace(ds_dt);
 		}
 
@@ -602,7 +573,6 @@ namespace bertini {
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
 			SetVariables(variable_values.eval());
-			ResetTimeDerivatives();
 			TimeDerivativeInPlace(ds_dt);
 		}
 
@@ -833,27 +803,22 @@ namespace bertini {
 			if (new_values.size()!= static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
 
-			const auto& vars = Variables();
-
 			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
-				if constexpr (!std::is_same<T,dbl>::value) {
-					if (Precision(new_values) != this->precision())
-						throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
+				// A system with no variables (a constant) has an empty point: there is no
+				// precision to read from it, so skip the check.
+				if (new_values.size() > 0)
+				{
+					if constexpr (!std::is_same<T,dbl>::value) {
+						if (Precision(new_values) != this->precision())
+							throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
+					}
 				}
-
-				if (!std::is_same<T,dbl>::value && (vars[0]->node::NamedSymbol::precision() != this->precision()) )
-					throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");
 			#endif
 
-			// Set the shared Variable nodes' values: node-level evaluation (function trees,
-			// hand-built Jacobian nodes) reads them directly, independent of any block.  Blocks
-			// are additionally value-in (each block's EvalInPlace re-derives from the stored
-			// vector / its own SLP), and the patch reads the stored vector too.
-			{
-				auto counter = 0;
-				for (auto iter = vars.begin(); iter != vars.end(); ++iter, ++counter)
-					(*iter)->set_current_value(new_values(counter));
-			}
+			// Blocks are value-in: the polynomial block feeds this stored vector into its SLP, the
+			// structured blocks compute on it directly, and the patch reads it too (see
+			// EvalBlocksInPlace).  The shared Variable nodes are no longer written during evaluation
+			// (ADR-0027), so the node DAG stays read-only across threads.
 			std::get<Vec<T> >(current_variable_values_) = new_values;
 		}
 
@@ -873,46 +838,29 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
 
-			// Set the shared path-variable node so blocks whose coefficients depend on it (e.g.
-			// BlendBlock's (1-t)/gamma*t) see the value.  The polynomial block additionally
-			// pushes it into its SLP inside its own EvalInPlace.
-			path_variable_->set_current_value(new_value);
+			// Store the path value in the System's own per-thread buffer, NOT the shared node.
+			// Blocks are value-in and receive the path value as an argument (see EvalBlocksInPlace /
+			// CurrentPathValue), so the path-variable node is never read during evaluation (ADR-0027).
+			std::get<T>(current_path_value_) = new_value;
 		}
 
 
+		// Stage the system's current point (variables, and optionally the path value) for a
+		// subsequent Eval/Jacobian.  (Formerly also reset the function-tree node caches; node-level
+		// evaluation is gone, so there is nothing to reset -- the SLP carries its own state.)
 		template<typename T>
 		void SetAndReset(Vec<T> const& new_space, T const& new_time) const
 		{
 			SetVariables(new_space);
 			SetPathVariable(new_time);
-
-			Reset();
 		}
 
 		template<typename T>
 		void SetAndReset(Vec<T> const& new_space) const
 		{
 			SetVariables(new_space);
-
-			Reset();
 		}
 
-		/**
-		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
-		 \param new_values The new updated values for the implicit parameters.
-		 */
-		template<typename T>
-		void SetImplicitParameters(Vec<T> new_values) const
-		{
-			if (new_values.size()!= implicit_parameters_.size())
-				throw std::runtime_error("trying to set implicit parameter values, but there is a size mismatch");
-
-			size_t counter = 0;
-			for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++)
-				(*iter)->set_current_value(new_values(counter));
-
-		}
 
 
 
@@ -997,14 +945,7 @@ namespace bertini {
 
 		 \param F The parameter to add.
 		 */
-		void AddParameter(Fn const& F);
-
-		/**
-		 Add some explicit parameters to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
-
-		 \param F The parameters to add.
-		 */
-		void AddParameters(std::vector<Fn> const& F);
+		void AddParameter(NE const& F);
 
 
 
@@ -1015,7 +956,6 @@ namespace bertini {
 
 		 \param F The subfunction to add.
 		 */
-		void AddSubfunction(Fn const& F);
 
 		/**
 		 Add some subfunctions to the system.
@@ -1024,24 +964,15 @@ namespace bertini {
 
 		 \param F The subfunctions to add.
 		 */
-		void AddSubfunctions(std::vector<Fn> const& F);
 
 
 
 		/**
-		 Add a function to the system.
+		 Add a function to the system, as a bare expression.
 
 		 \param F The function to add.
 		 */
-		void AddFunction(Fn const& F);
-
-		/**
-		 Add a function to the system.
-
-		 \param F The function to add.
-		 \param name The name of the function
-		 */
-		void AddFunction(Nd const& F, std::string const& name = "unnamed_function");
+		void AddFunction(Nd const& F);
 
 
 		/**
@@ -1049,7 +980,7 @@ namespace bertini {
 
 		 \param F The functions to add.
 		 */
-		void AddFunctions(std::vector<Fn> const& F);
+		void AddFunctions(std::vector<Nd> const& F);
 
 		/**
 		\brief Append an evaluation block (products-of-linears, blend, ...).
@@ -1167,15 +1098,7 @@ namespace bertini {
 
 		 \param C The constant to add.
 		 */
-		void AddConstant(Fn const& C);
-
-
-		/**
-		 Add some constant functions to the system.  Constants must not depend on anything which can vary -- they're constant!
-
-		 \param C The constants to add.
-		 */
-		void AddConstants(std::vector<Fn> const& C);
+		void AddConstant(NE const& C);
 
 
 
@@ -1340,7 +1263,7 @@ namespace bertini {
 		/**
 		 \brief Get the functions.
 		*/
-		std::vector<Fn> GetNaturalFunctions() const
+		std::vector<Nd> GetNaturalFunctions() const
 		{
 			if (auto* p = PolyBlockPtr())
 				return p->Functions();
@@ -1524,42 +1447,8 @@ namespace bertini {
 		void ClearVariables();
 
 
-		/**
-		 \brief Remove a variable from the system's variable structure.
-
-		 Erases the variable from whichever affine/homogeneous group it belongs to, or
-		 from the ungrouped variables.  If removing it empties an affine or homogeneous
-		 group, that group (and its place in the variable ordering) is removed as well.
-		 The variable node itself is left intact and is still referenced by any
-		 functions which use it; after this call it is simply no longer one of the
-		 system's variables (so it is not solved for, and the system does not
-		 differentiate with respect to it).
-
-		 \param v The variable to remove.
-		 \return true if the variable was found and removed, false otherwise.
-		*/
-		bool RemoveVariable(Var const& v);
 
 
-		/**
-		 \brief Turn a variable into a constant with a fixed value.
-
-		 Removes the variable from the system's variable structure (see RemoveVariable)
-		 and pins its value, so that the functions which use it evaluate as if it were a
-		 constant equal to \p value.
-
-		 \tparam T The numeric type of the value (dbl or mpfr_complex).
-		 \param v The variable to fix.
-		 \param value The constant value to assign to it.
-		 \return true if the variable was found and fixed, false otherwise.
-		*/
-		template<typename T>
-		bool FixVariable(Var const& v, T const& value)
-		{
-			bool removed = this->RemoveVariable(v);
-			v->set_current_value(value);
-			return removed;
-		}
 
 
 		/**
@@ -1578,32 +1467,6 @@ namespace bertini {
 		// System::precision() it was meant to enable was dead code, and skipping the
 		// propagation is unsound anyway (e.g. the SLP can be at a different precision
 		// than precision_ claims).  precision() now always propagates.
-
-		inline
-		void PleaseAutoSimplify()
-		{
-			SetAutoSimplify(true);
-		}
-
-		inline
-		void DontAutoSimplify()
-		{
-			SetAutoSimplify(false);
-		}
-
-		void SetAutoSimplify(bool val)
-		{
-			auto_simplify_ = val;
-		}
-
-
-		/**
-		\brief Query the state of autosimplification
-		*/
-		auto IsAutoSimplifying() const
-		{
-			return auto_simplify_;
-		}
 
 		/**
 		\brief Simplify the functions contained in the system.
@@ -1627,46 +1490,7 @@ namespace bertini {
 		void Simplify();
 
 
-		/**  
-		 \brief Set  method being used for evaluation
-		 * */
-		void SetEvalMethod(EvalMethod method)
-		{
-			PolyBlock().SetEvalMethod(method);
-			InvalidateDifferentiation();
-		}
 
-		/**
-		 \brief Query the current method used for evaluation
-		 * */
-		EvalMethod  GetEvalMethod() const
-		{
-			if (auto* p = PolyBlockPtr())
-				return p->GetEvalMethod();
-			return DefaultEvalMethod();
-		}
-
-
-
-
-		/**
-		 \brief Set  method being used for differentiation
-		 * */
-		void SetDerivMethod(DerivMethod method)
-		{
-			PolyBlock().SetDerivMethod(method);
-			InvalidateDifferentiation();
-		}
-
-		/**
-		 \brief Query the current method used for differentiation
-		 * */
-		DerivMethod  GetDerivMethod() const
-		{
-			if (auto* p = PolyBlockPtr())
-				return p->GetDerivMethod();
-			return DefaultDerivMethod();
-		}
 
 
 		/**
@@ -1875,9 +1699,9 @@ namespace bertini {
 		}
 
 		/// The polynomial block's functions (an empty list if there is no polynomial block).
-		std::vector<Fn> const& PolyFunctions() const
+		std::vector<Nd> const& PolyFunctions() const
 		{
-			static const std::vector<Fn> none;
+			static const std::vector<Nd> none;
 			auto* p = PolyBlockPtr();
 			return p ? p->Functions() : none;
 		}
@@ -1900,7 +1724,6 @@ namespace bertini {
 				p->SetVariableOrdering(Variables());
 				if (have_path_variable_) p->SetPathVariable(path_variable_);
 				else                     p->ClearPathVariable();
-				p->SetAutoSimplify(auto_simplify_);
 			}
 		}
 
@@ -1914,7 +1737,7 @@ namespace bertini {
 		T CurrentPathValue() const
 		{
 			if (have_path_variable_)
-				return path_variable_->template Eval<T>();
+				return std::get<T>(current_path_value_);
 			return T(0);
 		}
 
@@ -2001,10 +1824,10 @@ namespace bertini {
 		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
 		
 		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
-		std::vector< Fn > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.  
+		std::vector< NE > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.
 
 		// The polynomial path -- functions_, subfunctions_, constant_subfunctions_, their
-		// derivatives, the SLP, and eval_method_/deriv_method_ -- has been folded into a
+		// derivatives, the SLP, and eval_method_ -- has been folded into a
 		// blocks::PolynomialBlock held in blocks_ (see PolyBlock()/PolyBlockPtr()).  The System
 		// is now a thin orchestrator over blocks + variable groups + patch.
 
@@ -2018,14 +1841,13 @@ namespace bertini {
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 
 		mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > current_variable_values_;
+		mutable std::tuple< dbl, mpfr_complex > current_path_value_{}; ///< per-thread path value (node-free; read by CurrentPathValue, written by SetPathVariable)
 
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
 		mutable bool have_ordering_ = false;
 
 		mutable unsigned precision_; ///< the current working precision of the system
 
-
-		bool auto_simplify_ = DefaultAutoSimplify();
 
 
 
@@ -2056,7 +1878,6 @@ namespace bertini {
 			// methods) now lives inside the PolynomialBlock, which is archived as part of blocks_.
 			ar & blocks_;
 
-			ar & auto_simplify_;
 
 			// now for the cached / mutable things
 			ar & precision_;
@@ -2163,7 +1984,7 @@ namespace bertini {
 	// Explicit instantiation declarations for the two concrete numeric types.
 	// Definitions live in core/src/system/system.cpp.
 	// Suppresses re-instantiation of the heavy Eval/Jacobian/Set template bodies
-	// (with their eval_method_/deriv_method_ switch trees) in every including TU.
+	// (with their eval_method_ switch trees) in every including TU.
 
 	extern template void System::EvalInPlace<dbl>(Vec<dbl>&) const;
 	extern template void System::EvalInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;

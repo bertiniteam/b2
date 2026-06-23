@@ -160,15 +160,14 @@ def as_coefficients(array_like):
     return out
 
 
-def add_functions(system, expressions, basename=None):
+def add_functions(system, expressions):
     """Add a vector/array of expressions to a ``System`` as individual functions.
 
     ``expressions`` may be a numpy object array, a (possibly nested) list, or a single
-    expression node.  With ``basename`` the functions are named ``basename0, basename1,
-    ...``.  Returns the number of functions added.
+    expression node.  Returns the number of functions added.
 
         equations = A @ x - lam * x
-        add_functions(sys, equations, basename='eig')
+        add_functions(sys, equations)
     """
     if isinstance(expressions, _AbstractNode):
         expressions = [expressions]
@@ -180,10 +179,7 @@ def add_functions(system, expressions, basename=None):
                 f"expression {i} is a {type(e).__name__}, not a function-tree node; "
                 "did a coefficient fail to combine with a variable?"
             )
-        if basename is None:
-            system.add_function(e)
-        else:
-            system.add_function(e, f'{basename}{i}')
+        system.add_function(e)
     return int(flat.size)
 
 

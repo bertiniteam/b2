@@ -198,6 +198,38 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
 		return_internal_reference<>(),
 		"get the computed solutions.  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.")
+	.def("finite_solutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.FiniteSolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the FINITE solutions: successful endpoints the solver calls finite (is_finite applies endpoint_finite_threshold).  includes singular, nonsingular, and real solutions alike.  user coordinates by default; user_coords=False for internal coordinates.")
+	.def("real_solutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.RealSolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the REAL finite solutions (is_real applies the configured tolerance).")
+	.def("nonsingular_solutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.NonsingularSolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the NONSINGULAR finite solutions (simple, well-conditioned roots).")
+	.def("singular_solutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.SingularSolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the SINGULAR finite solutions (multiple or ill-conditioned roots).")
 	.def("target_system",
 		+[](AlgoT& self) -> decltype(self.TargetSystem()) { return self.TargetSystem(); },
 		return_internal_reference<>(),
@@ -205,6 +237,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 	.def("solution_metadata", &AlgoT::FinalSolutionMetadata, return_internal_reference<>(), "get the metadata for the solutions at the target time")
 	.def("endgame_boundary_solutions", &AlgoT::EndgameBoundarySolutions, return_internal_reference<>(), "get the solutions (per-path point data) at the endgame boundary, where regular tracking switches to the endgame")
 	.def("endgame_boundary_metadata", &AlgoT::EndgameBoundaryMetadata, return_internal_reference<>(), "get the MidpathCheckReport from the path-crossing check at the endgame boundary: how many crossings were detected, which paths, how many re-track attempts were made, and whether the check ultimately passed")
+	.def("report", &AlgoT::Report, "a concise end-of-solve diagnostic summary (a SolveReport): how every path ended up -- finite solutions, diverged, or FAILED (by named reason) -- plus singular/real counts, max condition number, the path-crossing outcome, and all_paths_resolved.  print(solver.report()) for a human-readable summary; a count alone can hide a path the tracker silently lost.")
 	;
 }
 

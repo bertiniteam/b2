@@ -72,9 +72,8 @@ configured ``real_threshold``, so there is no hand-picked epsilon in the tutoria
     solver = nag_algorithm.ZeroDim(crit_system, mptype='adaptive')
     solver.solve()
 
-    sols, meta = solver.solutions(), solver.solution_metadata()
     crit = [(complex(s[0]).real, complex(s[1]).real)
-            for s, m in zip(sols, meta) if m.is_real]
+            for s in solver.real_solutions()]      # the solver decides what "real" means
 
     assert len(crit) == 8                  # two per oval (nearest + farthest), all four ovals hit
 

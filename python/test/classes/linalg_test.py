@@ -76,7 +76,7 @@ def test_add_functions_adds_each_component():
     x = linalg.variable_vector('x', 3)
     A = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     sys = pb.System()
-    n = linalg.add_functions(sys, A @ x, basename='f')
+    n = linalg.add_functions(sys, A @ x)
     assert n == 3
     assert sys.num_functions() == 3
 

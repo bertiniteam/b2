@@ -42,11 +42,14 @@ import bertini.multiprec as mp
 from bertini.multiprec import Float as mpfr_float
 from bertini.multiprec import Complex as mpfr_complex
 
+from eval_helper import eval_at
+
 
 # global default precision is reset to 30 before every test by the autouse
-# _reset_precision fixture in python/test/conftest.py. These cases mix double (eval_d)
-# and multiprecision (eval_mp) evaluation; the transcendental expected constants are only
-# ~47 digits, so this suite stays at the baseline precision rather than parametrizing.
+# _reset_precision fixture in python/test/conftest.py.  Partial derivatives are taken with
+# node.differentiate(var) and evaluated through the SLP (eval_at) in multiple precision at the
+# baseline precision; the transcendental expected constants are only ~47 digits, so this suite
+# stays at the baseline precision rather than parametrizing.
 
 TOL_D = float(1e-14)
 
@@ -58,128 +61,81 @@ def tol_mp():
 
 @pytest.fixture
 def diffvars():
-    # each variable carries both a double and a multiprecision current value
-    # (eval_d uses the former, eval_mp the latter), so set both.
+    # variables, two Float constants, and the evaluation point (a superset map; eval_at takes only
+    # the variables each partial derivative actually contains).
     x = Variable("x")
-    x.set_current_value(complex(-2.43, .21))
-    x.set_current_value(mpfr_complex("-2.43", ".21"))
     y = Variable("y")
-    y.set_current_value(complex(4.84, -1.94))
-    y.set_current_value(mpfr_complex("4.84", "-1.94"))
     z = Variable('z')
-    z.set_current_value(complex(-6.48, -.731))
-    z.set_current_value(mpfr_complex("-6.48", "-.731"))
     p = Variable('p')
-    p.set_current_value(complex(-.321, -.72))
-    p.set_current_value(mpfr_complex("-.321", "-.72"))
     a = Float(mpfr_complex("3.12", ".612"))
     b = Float(mpfr_complex("-.823", "2.62"))
-    return x, y, z, p, a, b
+    pt = dict(x=mpfr_complex("-2.43", ".21"), y=mpfr_complex("4.84", "-1.94"),
+              z=mpfr_complex("-6.48", "-.731"), p=mpfr_complex("-.321", "-.72"))
+    return x, y, z, p, a, b, pt
 
 
 def test_sum_rule(diffvars, tol_mp):
-    x, y, z, p, a, b = diffvars
-    tol_d = TOL_D
+    x, y, z, p, a, b, pt = diffvars
+    f = x + y + a
     #
-    f = x+y+a
-    df = f.differentiate()
+    dfx = eval_at(f.differentiate(x), **pt)
+    assert mp.abs(dfx.real / mpfr_float("1.0") - 1) <= tol_mp
+    assert mp.abs(dfx.imag - mpfr_float("0")) <= tol_mp
     #
-    assert np.abs(df.eval_d(x).real/(1.0)-1) <= tol_d
-    assert np.abs(df.eval_d(x).imag-0) <= tol_d
+    dfy = eval_at(f.differentiate(y), **pt)
+    assert mp.abs(dfy.real / mpfr_float("1.0") - 1) <= tol_mp
+    assert mp.abs(dfy.imag - mpfr_float("0")) <= tol_mp
     #
-    assert mp.abs(df.eval_mp(x).real/mpfr_float("1.0")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(x).imag-mpfr_float("0")) <= tol_mp
-    #
-    df.reset()
-    assert np.abs(df.eval_d(y).real/(1.0)-1) <= tol_d
-    assert np.abs(df.eval_d(y).imag-0) <= tol_d
-    #
-    assert mp.abs(df.eval_mp(y).real/mpfr_float("1.0")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(y).imag-mpfr_float("0")) <= tol_mp
-    #
-    df.reset()
-    assert np.abs(df.eval_d(z).real-0) <= tol_d
-    assert np.abs(df.eval_d(z).imag-0) <= tol_d
-    #
-    assert mp.abs(df.eval_mp(z).real-mpfr_float("0.0")) <= tol_mp
-    assert mp.abs(df.eval_mp(z).imag-mpfr_float("0")) <= tol_mp
+    dfz = eval_at(f.differentiate(z), **pt)
+    assert mp.abs(dfz.real - mpfr_float("0.0")) <= tol_mp
+    assert mp.abs(dfz.imag - mpfr_float("0")) <= tol_mp
 
 
 def test_power_rule(diffvars, tol_mp):
-    x, y, z, p, a, b = diffvars
-    tol_d = TOL_D
-    #
+    x, y, z, p, a, b, pt = diffvars
     f = x**2 + y**3
-    df = f.differentiate()
     #
-    assert np.abs(df.eval_d(x).real / (-4.86)-1) <= tol_d
-    assert np.abs(df.eval_d(x).imag / (0.42)-1) <= tol_d
+    dfx = eval_at(f.differentiate(x), **pt)
+    assert mp.abs(dfx.real / mpfr_float("-4.86") - 1) <= tol_mp
+    assert mp.abs(dfx.imag / mpfr_float("0.42") - 1) <= tol_mp
     #
-    assert mp.abs(df.eval_mp(x).real / mpfr_float("-4.86")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(x).imag / mpfr_float("0.42")-1) <= tol_mp
-    #
-    df.reset()
-    assert np.abs(df.eval_d(y).real / (58.9860)-1) <= tol_d
-    assert np.abs(df.eval_d(y).imag / (-56.3376)-1) <= tol_d
-    #
-    assert mp.abs(df.eval_mp(y).real / mpfr_float("58.9860")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(y).imag / mpfr_float("-56.3376")-1) <= tol_mp
+    dfy = eval_at(f.differentiate(y), **pt)
+    assert mp.abs(dfy.real / mpfr_float("58.9860") - 1) <= tol_mp
+    assert mp.abs(dfy.imag / mpfr_float("-56.3376") - 1) <= tol_mp
 
 
 def test_prod_rule(diffvars, tol_mp):
-    x, y, z, p, a, b = diffvars
-    tol_d = TOL_D
-    #
+    x, y, z, p, a, b, pt = diffvars
     f = x**2*y**4 - a*x*y*z**2
-    df = f.differentiate()
     #
-    assert np.abs(df.eval_d(x).real / (-559.28968169592)-1) <= tol_d
-    assert np.abs(df.eval_d(x).imag / (3577.05276993648)-1) <= tol_d
+    dfx = eval_at(f.differentiate(x), **pt)
+    assert mp.abs(dfx.real / mpfr_float("-559.28968169592") - 1) <= tol_mp
+    assert mp.abs(dfx.imag / mpfr_float("3577.05276993648") - 1) <= tol_mp
     #
-    assert mp.abs(df.eval_mp(x).real / mpfr_float("-559.28968169592")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(x).imag / mpfr_float("3577.05276993648")-1) <= tol_mp
+    dfy = eval_at(f.differentiate(y), **pt)
+    assert mp.abs(dfy.real / mpfr_float("1161.85042980828") - 1) <= tol_mp
+    assert mp.abs(dfy.imag / mpfr_float("-3157.24325320476") - 1) <= tol_mp
     #
-    df.reset()
-    assert np.abs(df.eval_d(y).real / (1161.85042980828)-1) <= tol_d
-    assert np.abs(df.eval_d(y).imag / (-3157.24325320476)-1) <= tol_d
-    #
-    assert mp.abs(df.eval_mp(y).real / mpfr_float("1161.85042980828")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(y).imag / mpfr_float("-3157.24325320476")-1) <= tol_mp
-    #
-    df.reset()
-    assert np.abs(df.eval_d(z).real / (-520.5265859088)-1) <= tol_d
-    assert np.abs(df.eval_d(z).imag / (84.7479679056)-1) <= tol_d
-    #
-    assert mp.abs(df.eval_mp(z).real / mpfr_float("-520.5265859088")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(z).imag / mpfr_float("84.7479679056")-1) <= tol_mp
+    dfz = eval_at(f.differentiate(z), **pt)
+    assert mp.abs(dfz.real / mpfr_float("-520.5265859088") - 1) <= tol_mp
+    assert mp.abs(dfz.imag / mpfr_float("84.7479679056") - 1) <= tol_mp
 
 
 def test_trancendental(diffvars, tol_mp):
-    x, y, z, p, a, b = diffvars
-    tol_d = TOL_D
-    #
+    x, y, z, p, a, b, pt = diffvars
     f = sin(x*y) + exp(z*y) - log(x*x)
-    df = f.differentiate()
     #
-    assert np.abs(df.eval_d(x).real / (-17.648420086229721902138620795382021306411662490)-1) <= 9e-13
-    assert np.abs(df.eval_d(x).imag / (-803.11883403426275105632833868183320319093878729)-1) <= tol_d
+    dfx = eval_at(f.differentiate(x), **pt)
+    assert mp.abs(dfx.real / mpfr_float("-17.648420086229721902138620795382021306411662490") - 1) <= tol_mp
+    assert mp.abs(dfx.imag / mpfr_float("-803.11883403426275105632833868183320319093878729") - 1) <= tol_mp
     #
-    assert mp.abs(df.eval_mp(x).real / mpfr_float("-17.648420086229721902138620795382021306411662490")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(x).imag / mpfr_float("-803.11883403426275105632833868183320319093878729")-1) <= tol_mp
+    dfy = eval_at(f.differentiate(y), **pt)
+    assert mp.abs(dfy.real / mpfr_float("-100.97157179433748763552280062599971478593963953") - 1) <= tol_mp
+    assert mp.abs(dfy.imag / mpfr_float("361.98093991820979266721712882115615553425318528") - 1) <= tol_mp
     #
-    df.reset()
-    assert np.abs(df.eval_d(y).real / (-100.97157179433748763552280062599971478593963953)-1) <= tol_d
-    assert np.abs(df.eval_d(y).imag / (361.98093991820979266721712882115615553425318528)-1) <= tol_d
-    #
-    assert mp.abs(df.eval_mp(y).real / mpfr_float("-100.97157179433748763552280062599971478593963953")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(y).imag / mpfr_float("361.98093991820979266721712882115615553425318528")-1) <= tol_mp
-    #
-    df.reset()
-    assert np.abs(df.eval_d(z).real / (-2.1642907643013779167501866500194314960002972412e-14)-1) <= tol_d
-    assert np.abs(df.eval_d(z).imag / (2.1105887207247540399884720817624768568595288922e-14)-1) <= tol_d
-    #
-    assert mp.abs(df.eval_mp(z).real / mpfr_float("-2.1642907643013779167501866500194314960002972412e-14")-1) <= tol_mp
-    assert mp.abs(df.eval_mp(z).imag / mpfr_float("2.1105887207247540399884720817624768568595288922e-14")-1) <= tol_mp
+    dfz = eval_at(f.differentiate(z), **pt)
+    assert mp.abs(dfz.real / mpfr_float("-2.1642907643013779167501866500194314960002972412e-14") - 1) <= tol_mp
+    assert mp.abs(dfz.imag / mpfr_float("2.1105887207247540399884720817624768568595288922e-14") - 1) <= tol_mp
 
 
 # --- derivatives come out already simplified ---

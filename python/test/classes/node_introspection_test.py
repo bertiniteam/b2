@@ -42,6 +42,8 @@ from bertini.function_tree import operator as op
 from bertini.function_tree import symbol as sym
 from bertini import multiprec as mp
 
+from eval_helper import eval_at
+
 
 @pytest.fixture
 def xy():
@@ -145,7 +147,8 @@ def test_function_root_walkable(xy):
     sys = pb.System()
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    root = sys.function(0).root()
+    # function(i) now returns the bare expression root itself (functions are no longer wrapped).
+    root = sys.function(0)
     assert isinstance(root, op.Sum)
     assert root.num_operands() == 2
 
@@ -197,6 +200,6 @@ def test_rebuild_tree_from_introspection(xy):
 
     assert str(rebuilt) == str(expr)
 
-    x.set_current_value(complex(1.25, 0))
-    y.set_current_value(complex(-0.5, 0.75))
-    assert abs(rebuilt.eval_d() - expr.eval_d()) < 1e-15
+    # the rebuilt tree evaluates identically to the original (through the SLP)
+    pt = dict(x=complex(1.25, 0), y=complex(-0.5, 0.75))
+    assert mp.abs(eval_at(rebuilt, **pt) - eval_at(expr, **pt)) < 1e-15

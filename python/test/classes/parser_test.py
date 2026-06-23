@@ -54,3 +54,33 @@ def test_create_system():
     #
     sys.differentiate()
     sysJac = sys.eval_jacobian(vals)
+
+
+def _f_eval(expr, vals):
+    """Parse 'f = <expr>' over x,y,z and evaluate at vals."""
+    return pp.system(f'function f; variable_group x,y,z; f = {expr};').eval(vals)[0]
+
+
+# Regression: a leading unary '-' used to negate the ENTIRE following expression ("-y+x"
+# parsed as "-(y+x)") instead of just its operand.  This surfaced once canonical
+# ordering let a printed sum lead with a subtracted term, breaking print->parse round-trips.
+def test_leading_unary_minus_negates_only_its_operand():
+    vals = np.array((complex(2, 0), complex(5, 0), complex(3, 0)))  # x=2, y=5, z=3
+    assert abs(_f_eval('-y+x', vals) - _f_eval('x-y', vals)) < 1e-12
+    assert abs(_f_eval('-y+x', vals) - (-3)) < 1e-12               # (-y)+x, not -(y+x)=-7
+
+
+def test_leading_minus_on_parenthesized_sum_round_trips():
+    vals = np.array((complex(2, 0), complex(5, 0), complex(3, 0)))
+    assert abs(_f_eval('-(y-z)+x', vals) - _f_eval('x-(y-z)', vals)) < 1e-12
+    assert abs(_f_eval('-(y-z)+x', vals) - 0) < 1e-12             # x-(y-z) == 0, not -((y-z)+x)
+
+
+def test_unary_minus_binds_looser_than_power():
+    vals = np.array((complex(2, 0), complex(5, 0), complex(3, 0)))
+    assert abs(_f_eval('-x^2', vals) - (-4)) < 1e-12              # -(x^2), not (-x)^2 == 4
+
+
+def test_unary_minus_then_product():
+    vals = np.array((complex(2, 0), complex(5, 0), complex(3, 0)))
+    assert abs(_f_eval('-x*y', vals) - (-10)) < 1e-12            # -(x*y)

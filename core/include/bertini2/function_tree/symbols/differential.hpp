@@ -67,7 +67,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<Differential> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Differential>( new Differential(ts...) );
+			return std::static_pointer_cast<Differential>(Intern(std::shared_ptr<Node>( new Differential(ts...) )));
 		}
 
 
@@ -79,7 +79,6 @@ namespace node{
 
 	public:
 
-		void Reset() const override;
 
 
 		const std::shared_ptr<const Variable>& GetVariable() const;
@@ -108,8 +107,6 @@ namespace node{
 		
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
-		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		/**
@@ -123,19 +120,14 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		void precision(unsigned int prec) const override;
 
 		
 	protected:
 		// This should never be called for a Differential.  Only for Jacobians.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 

@@ -63,15 +63,15 @@ def variables():
 def fg(variables):
     x, y, z = variables
     a = Float("4.897", "1.23")
-    f = Function(x*y)
-    g = Function(pow(x, 2)*y - a*z*x)
+    f = (x*y)
+    g = (pow(x, 2)*y - a*z*x)
     return f, g
 
 
 def test_system_create():
     x = Variable("x")
     y = Variable("y")
-    f = Function(x*y)
+    f = (x*y)
     #
     s = System()
 
@@ -87,16 +87,16 @@ def test_system_create():
 def test_gather_variables_alphabetical(variables):
     x, y, z = variables
     # declared out of order, x used twice; expect distinct, sorted by name
-    f1 = Function(pow(z, 2) + y*x)
-    f2 = Function(x - y)
+    f1 = (pow(z, 2) + y*x)
+    f2 = (x - y)
     found = gather_variables([f1, f2])
     assert [str(v) for v in found] == ['x', 'y', 'z']
 
 
 def test_system_from_functions(variables):
     x, y, z = variables
-    f1 = Function(x*y*z)
-    f2 = Function(x + y + z)
+    f1 = (x*y*z)
+    f2 = (x + y + z)
     s = System([f1, f2])
     assert s.num_functions() == 2
     assert s.num_variable_groups() == 1
@@ -106,24 +106,13 @@ def test_system_from_functions(variables):
 
 def test_set_variable_groups(variables):
     x, y, z = variables
-    s = System([Function(x*y*z)])
+    s = System([(x*y*z)])
     assert s.num_variable_groups() == 1
     s.set_variable_groups([pb.VariableGroup([x]), pb.VariableGroup([y, z])])
     assert s.num_variable_groups() == 2
     assert s.num_variables() == 3
 
 
-def test_fix_variable(variables):
-    x, y, z = variables
-    s = System([Function(x + y)])
-    assert s.num_variables() == 2
-    assert s.fix_variable(y, complex(3.0))
-    assert s.num_variables() == 1
-    # x + y, with y pinned to 3, at x = 2  ->  5
-    e = s.eval(np.array([complex(2.0)]))
-    assert e[0] == complex(5.0)
-    # fixing a variable not in the system returns False
-    assert not s.fix_variable(Variable("w"), complex(1.0))
 
 
 def test_system_eval_double(variables, fg):
@@ -159,6 +148,9 @@ def test_system_eval_mp(precision):
     # tolerance scales with the working precision, replacing the old hard-coded 1e-27.
     tol = mpfr_float(10) ** (-(precision - 3))
     s = pb.parse.system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
+    # variables are canonical-by-name and shared across tests, so they may carry a neighbor's
+    # precision; set the system (and thus its variables) to this test's precision explicitly.
+    s.precision(precision)
     exact_real = (mpfr_float('-32.841085'), mpfr_float('-62.9317230'))
     exact_imag = (mpfr_float('-26.66705'), mpfr_float('-196.39641065'))
     v = np.array((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')))
@@ -206,6 +198,8 @@ def test_system_Jac_double(variables, fg):
 def test_system_Jac_mp(precision):
     tol = mpfr_float(10) ** (-(precision - 3))
     s = pb.parse.system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
+    # shared canonical variables may carry a neighbor's precision; pin this test's precision.
+    s.precision(precision)
     exact_real = ((mpfr_float('-9.32'), mpfr_float('3.5'), mpfr_float('0')),
                   (mpfr_float('-71.082170'), mpfr_float('3.8979'), mpfr_float('-3.5')))
     exact_imag = ((mpfr_float('.0765'), mpfr_float('2.89'), mpfr_float('0')),

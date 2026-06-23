@@ -53,16 +53,16 @@ namespace node {
 	VariableGroup GatherVariables(std::shared_ptr<const Node> const& n);
 
 	/**
-	\brief Collect the distinct Variables appearing across a collection of functions.
+	\brief Collect the distinct Variables appearing across a collection of expressions.
 
-	The union of the variables of each function, de-duplicated (by node identity)
+	The union of the variables of each expression, de-duplicated (by node identity)
 	and ordered alphabetically by Variable name.  This is what the
 	function-list System constructor uses to auto-build a single variable group.
 
-	\param functions The functions to scan.
+	\param functions The expressions to scan.
 	\return A VariableGroup of the distinct variables found, sorted by name.
 	*/
-	VariableGroup GatherVariables(std::vector<std::shared_ptr<Function>> const& functions);
+	VariableGroup GatherVariables(std::vector<std::shared_ptr<Node>> const& functions);
 
 } // namespace node
 } // namespace bertini

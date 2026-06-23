@@ -50,8 +50,7 @@ namespace node{
 	/**
 	\brief Represents variable leaves in the function tree.
 
-	This class represents variable leaves in the function tree.  FreshEval returns
-	the current value of the variable.
+	This class represents variable leaves in the function tree.
 
 	When differentiated, produces a differential referring to it.
 	*/
@@ -64,7 +63,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<Variable> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Variable>( new Variable(ts...) );
+			return std::static_pointer_cast<Variable>(Intern(std::shared_ptr<Node>( new Variable(ts...) )));
 		}
 
 	private:
@@ -74,41 +73,31 @@ namespace node{
 		
 		
 		virtual ~Variable() = default;
-		
+
+		// variables are canonical BY NAME -- Make("x") interns to a single shared x,
+		// so system1's x IS system2's x.  (Value/eval-state lives on that shared node until C2
+		// moves it into a per-thread eval context.)
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Variable).hash_code();
+			HashCombine(h, std::hash<std::string>{}(name()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Variable const*>(&other);
+			return o && name() == o->name();
+		}
 
 
 		explicit operator std::string(){return name();}
 		
 		
 		
-		// This sets the value for the variable
-		template <typename T>
-		void set_current_value(T const& val);
-
 		/**
-		\brief Changes the value of the variable to be not-a-number.  
-		*/
-		template <typename T>
-		void SetToNan();
-
-		/**
-		\brief Changes the value of the variable to be a random complex number.  
-		*/
-		template <typename T>
-		void SetToRand();
-
-		/**
-		\brief Changes the value of the variable to be a random complex number, of magnitude 1.  
-		*/
-		template <typename T>
-		void SetToRandUnit();
-
-		/**
-		 Differentiates a variable.  
+		 Differentiates a variable.
 		 */
 		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-		void Reset() const override;
 
 		/**
 		Compute the degree with respect to a single variable.
@@ -123,8 +112,6 @@ namespace node{
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
-
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		/**
@@ -132,29 +119,11 @@ namespace node{
 		*/
 		bool IsHomogeneous(VariableGroup const& vars) const override;
 
-
-		/**
-		 Change the precision of this variable-precision tree node.
-		 
-		 \param prec the number of digits to change precision to.
-		 */
-		void precision(unsigned int prec) const override;
-		
 	protected:
-		
-		// Return current value of the variable.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		Variable();
 	private:
-		
+
 		friend class boost::serialization::access;
 
 		template <typename Archive>

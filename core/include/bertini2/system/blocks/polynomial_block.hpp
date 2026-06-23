@@ -48,7 +48,6 @@ variable, functions, and derivatives this block owns (see SLPCompiler::Compile).
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/function_tree.hpp"
-#include "bertini2/system/eval_method.hpp"
 #include "bertini2/system/straight_line_program.hpp"
 
 namespace bertini {
@@ -60,17 +59,15 @@ namespace blocks {
 class PolynomialBlock
 {
 public:
-	using Fn  = std::shared_ptr<node::Function>;
-	using Jac = std::shared_ptr<node::Jacobian>;
+	using NE  = std::shared_ptr<node::NamedExpression>;
 	using Nd  = std::shared_ptr<node::Node>;
 	using Var = std::shared_ptr<node::Variable>;
 
 	PolynomialBlock() : precision_(DefaultPrecision()) {}
 
 	// ---- construction (System forwards AddFunction / AddSubFunction here) ----
-	void AddFunction(Fn const& f)    { functions_.push_back(f);    Invalidate(); }
-	void AddSubFunction(Fn const& f) { subfunctions_.push_back(f); Invalidate(); }
-	void AddConstant(Fn const& f)    { constant_subfunctions_.push_back(f); Invalidate(); }
+	void AddFunction(Nd const& f)    { functions_.push_back(f);    Invalidate(); }
+	void AddConstant(NE const& f)    { constant_subfunctions_.push_back(f); Invalidate(); }
 
 	/// The variable ordering + path variable the function trees are evaluated against; the
 	/// owning System keeps these in sync (they change as variable groups are added / the
@@ -79,17 +76,12 @@ public:
 	void SetPathVariable(Var const& t) const { path_variable_ = t; Invalidate(); }
 	void ClearPathVariable() const { path_variable_.reset(); Invalidate(); }
 
-	void SetEvalMethod(EvalMethod m) const { eval_method_ = m; Invalidate(); }
-	EvalMethod GetEvalMethod() const { return eval_method_; }
-	void SetDerivMethod(DerivMethod m) const { deriv_method_ = m; Invalidate(); }
-	DerivMethod GetDerivMethod() const { return deriv_method_; }
-
 	// Mutable access for the owning System's construction-time manipulations (Homogenize walks
 	// the trees in place; Reorder/Simplify reassign entries).  The System keeps the variable
 	// groups / ordering; the block keeps the functions and their derivatives.
-	std::vector<Fn>&       Functions()       { return functions_; }
-	std::vector<Fn> const& Functions() const { return functions_; }
-	std::vector<Fn> const& ConstantSubfunctions() const { return constant_subfunctions_; }
+	std::vector<Nd>&       Functions()       { return functions_; }
+	std::vector<Nd> const& Functions() const { return functions_; }
+	std::vector<NE> const& ConstantSubfunctions() const { return constant_subfunctions_; }
 	size_t NumConstants() const { return constant_subfunctions_.size(); }
 
 	bool IsDifferentiated() const { return is_differentiated_; }
@@ -109,10 +101,13 @@ public:
 		return d;
 	}
 
-	/// Homogenize each function tree in place with respect to the group + its homogenizing var.
+	/// Homogenize each function w.r.t. the group + its homogenizing var, functionally:
+	/// each function is rebound to a freshly homogenized copy, so any external holder of the
+	/// original function node never observes it change (shared variables are preserved).
 	void Homogenize(VariableGroup const& group, Var const& hom_var)
 	{
-		for (auto const& f : functions_) f->Homogenize(group, hom_var);
+		for (auto& f : functions_)
+			f = f->Homogenized(group, hom_var);
 		Invalidate();
 	}
 	bool IsHomogeneous(VariableGroup const& vars) const
@@ -126,17 +121,6 @@ public:
 		return true;
 	}
 
-	/// Reset the cached values in the function / derivative trees (function-tree eval path).
-	void Reset() const
-	{
-		for (auto const& f : functions_)             f->Reset();
-		for (auto const& f : subfunctions_)          f->Reset();
-		for (auto const& f : constant_subfunctions_) f->Reset();
-		for (auto const& n : jacobian_)          n->Reset();
-		for (auto const& n : space_derivatives_) n->Reset();
-		for (auto const& n : time_derivatives_)  n->Reset();
-	}
-
 	// ---- block contract: metadata ----
 	size_t NumFunctions() const { return functions_.size(); }
 	bool DependsOnPathVariable() const { return static_cast<bool>(path_variable_); }
@@ -146,44 +130,28 @@ public:
 	void Describe(std::ostream& out, size_t& row, VariableGroup const& /*vars*/, bool /*verbose*/) const
 	{
 		for (auto const& f : functions_)
-			out << "  f_" << row++ << " = " << f->EntryNode() << "\n";
+			out << "  f_" << row++ << " = " << f << "\n";
 	}
 
 	unsigned Precision() const { return precision_; }
 	void Precision(unsigned new_precision) const
 	{
-		for (auto const& f : functions_)            f->precision(new_precision);
-		for (auto const& f : subfunctions_)         f->precision(new_precision);
-		for (auto const& f : constant_subfunctions_) f->precision(new_precision);
-		if (path_variable_) path_variable_->precision(new_precision);
-		for (auto const& v : variables_) v->precision(new_precision);
-		if (is_differentiated_)
-		{
-			for (auto const& j : jacobian_)         j->precision(new_precision);
-			for (auto const& n : space_derivatives_) n->precision(new_precision);
-			for (auto const& n : time_derivatives_)  n->precision(new_precision);
-		}
-		if (eval_method_ == EvalMethod::SLP)
-			slp_.precision(new_precision);
+		// The SLP (its per-thread Memory) is the sole evaluator and carries its own precision; the
+		// function / derivative / variable nodes are no longer evaluated during tracking, so their
+		// precision is vestigial and left untouched (keeps the shared node DAG read-only).
+		slp_.precision(new_precision);
 		precision_ = new_precision;
 	}
 
 	// ---- block contract: evaluation (value-in) ----
+	// The compiled SLP is the sole evaluator; the function/derivative trees survive only as the
+	// thing the SLP is compiled from (and that Simplify/Differentiate operate on).
 	template <typename T>
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& path_value) const
 	{
 		EnsureDifferentiated();
 		SetValues<T>(vars, path_value);
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:
-				for (size_t ii = 0; ii < functions_.size(); ++ii)
-					functions_[ii]->template EvalInPlace<T>(result(static_cast<Eigen::Index>(ii)));
-				break;
-			case EvalMethod::SLP:
-				slp_.template GetFuncValsInPlace<T>(result);
-				break;
-		}
+		slp_.template GetFuncValsInPlace<T>(result);
 	}
 
 	template <typename T>
@@ -191,27 +159,7 @@ public:
 	{
 		EnsureDifferentiated();
 		SetValues<T>(vars, path_value);
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:
-				switch (deriv_method_)
-				{
-					case DerivMethod::JacobianNode:
-						for (size_t ii = 0; ii < functions_.size(); ++ii)
-							for (size_t jj = 0; jj < variables_.size(); ++jj)
-								jacobian_[ii]->template EvalJInPlace<T>(J(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)), variables_[jj]);
-						break;
-					case DerivMethod::Derivatives:
-						for (size_t jj = 0; jj < variables_.size(); ++jj)
-							for (size_t ii = 0; ii < functions_.size(); ++ii)
-								space_derivatives_[ii + jj * functions_.size()]->template EvalInPlace<T>(J(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)));
-						break;
-				}
-				break;
-			case EvalMethod::SLP:
-				slp_.template GetJacobianInPlace<T>(J);
-				break;
-		}
+		slp_.template GetJacobianInPlace<T>(J);
 	}
 
 	template <typename T>
@@ -220,25 +168,7 @@ public:
 		if (!path_variable_) { result.setZero(); return; }
 		EnsureDifferentiated();
 		SetValues<T>(vars, path_value);
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:
-				switch (deriv_method_)
-				{
-					case DerivMethod::JacobianNode:
-						for (size_t ii = 0; ii < functions_.size(); ++ii)
-							jacobian_[ii]->template EvalJInPlace<T>(result(static_cast<Eigen::Index>(ii)), path_variable_);
-						break;
-					case DerivMethod::Derivatives:
-						for (size_t ii = 0; ii < functions_.size(); ++ii)
-							time_derivatives_[ii]->template EvalInPlace<T>(result(static_cast<Eigen::Index>(ii)));
-						break;
-				}
-				break;
-			case EvalMethod::SLP:
-				slp_.template GetTimeDerivInPlace<T>(result);
-				break;
-		}
+		slp_.template GetTimeDerivInPlace<T>(result);
 	}
 
 	// ---- accessors the SLP compiler reads (mirror the System names) ----
@@ -246,90 +176,50 @@ public:
 	bool HavePathVariable() const { return static_cast<bool>(path_variable_); }
 	Var GetPathVariable() const { return path_variable_; }
 	size_t NumNaturalFunctions() const { return functions_.size(); }
-	std::vector<Fn> const& GetNaturalFunctions() const { return functions_; }
-	// The SLP is always built from the Derivatives representation (space/time derivative trees),
-	// so these force that representation even when deriv_method_ is JacobianNode -- mirroring
-	// the System's historical GetSpaceDerivatives/GetTimeDerivatives behavior.
+	std::vector<Nd> const& GetNaturalFunctions() const { return functions_; }
+	// The SLP is built from the explicit per-variable derivative trees (space/time derivatives).
 	std::vector<Nd> const& GetSpaceDerivatives() const
 	{
-		if (deriv_method_ == DerivMethod::JacobianNode || space_derivatives_.empty())
+		if (space_derivatives_.empty())
 			DifferentiateUsingDerivatives();
 		return space_derivatives_;
 	}
 	std::vector<Nd> const& GetTimeDerivatives() const
 	{
-		if (deriv_method_ == DerivMethod::JacobianNode || (path_variable_ && time_derivatives_.empty()))
+		if (path_variable_ && time_derivatives_.empty())
 			DifferentiateUsingDerivatives();
 		return time_derivatives_;
 	}
 
-	void SetAutoSimplify(bool b) const { auto_simplify_ = b; Invalidate(); }
-
 	/// Build the symbolic derivatives (and, for SLP eval, compile the SLP from this block).
+	/// Derivatives are NOT simplified here; explicit simplification is System::Simplify
+	/// (SimplifyDerivatives), an opt-in the user invokes.
 	void Differentiate() const
 	{
 		if (is_differentiated_) return;
-		switch (deriv_method_)
-		{
-			case DerivMethod::JacobianNode:   DifferentiateUsingJacobianNode(); break;
-			case DerivMethod::Derivatives:    DifferentiateUsingDerivatives();  break;
-		}
-		is_differentiated_ = true;  // set before SimplifyDerivatives/Compile, which read the deriv state
-		if (auto_simplify_)
-			SimplifyDerivatives();
-		if (eval_method_ == EvalMethod::SLP)
-			slp_ = SLPCompiler().Compile(*this);
+		DifferentiateUsingDerivatives();
+		is_differentiated_ = true;  // set before Compile, which reads the deriv state
+		slp_ = SLPCompiler().Compile(*this);
 	}
 
 	/// Simplify the function trees (and invalidate the derivatives, which must be rebuilt).
 	void SimplifyFunctions() const
 	{
-		using bertini::Simplify;
-		for (auto& f : functions_)
-			Simplify(f);
+		// Intentionally inert on the top-level functions, preserving long-standing behavior:
+		// when functions were Function-wrapped, Handle::Simplified() returned self (an opaque
+		// boundary), so top-level simplification never happened.  Now that functions are bare
+		// roots, actually simplifying them here would be a behavior change, deferred to its own step.
 		Invalidate();
 	}
 
-	/// Simplify the derivative trees in place (evaluated at a random point, per the System's
-	/// historical logic, to drive the simplifier).  Requires the derivatives to already exist.
+	/// Simplify the derivative trees.  Simplification is functional and purely structural
+	/// (Node::Simplified, ADR-0011), so it needs no point and no node evaluation.  Requires the
+	/// derivatives to already exist.
 	void SimplifyDerivatives() const
 	{
 		using bertini::Simplify;
-
-		const size_t num_vars = variables_.size();
-		std::vector<dbl> old_vals(num_vars); dbl old_path_var_val{};
-		for (size_t ii = 0; ii < num_vars; ++ii)
-		{
-			old_vals[ii] = variables_[ii]->template Eval<dbl>();
-			variables_[ii]->template SetToRandUnit<dbl>();
-		}
-		if (path_variable_)
-		{
-			old_path_var_val = path_variable_->template Eval<dbl>();
-			path_variable_->template SetToRandUnit<dbl>();
-		}
-
-		for (auto const& n : jacobian_)         n->Reset();
-		for (auto const& n : space_derivatives_) n->Reset();
-		for (auto const& n : time_derivatives_)  n->Reset();
-
-		switch (deriv_method_)
-		{
-			case DerivMethod::JacobianNode: for (auto& n : jacobian_) Simplify(n); break;
-			case DerivMethod::Derivatives:
-				for (auto& n : space_derivatives_) Simplify(n);
-				for (auto& n : time_derivatives_)  Simplify(n);
-				break;
-		}
-
-		for (size_t ii = 0; ii < num_vars; ++ii)
-			variables_[ii]->template set_current_value<dbl>(old_vals[ii]);
-		if (path_variable_)
-			path_variable_->template set_current_value<dbl>(old_path_var_val);
-
-		for (auto const& n : jacobian_)         n->Reset();
-		for (auto const& n : space_derivatives_) n->Reset();
-		for (auto const& n : time_derivatives_)  n->Reset();
+		for (auto& n : space_derivatives_) n = Simplify(n);
+		for (auto& n : time_derivatives_)  n = Simplify(n);
 	}
 
 private:
@@ -338,25 +228,8 @@ private:
 	template <typename T>
 	void SetValues(Vec<T> const& vars, T const& path_value) const
 	{
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:
-				for (size_t ii = 0; ii < variables_.size(); ++ii)
-					variables_[ii]->template set_current_value<T>(vars(static_cast<Eigen::Index>(ii)));
-				if (path_variable_) path_variable_->template set_current_value<T>(path_value);
-				break;
-			case EvalMethod::SLP:
-				slp_.SetVariableValues(vars);
-				if (path_variable_) { path_variable_->template set_current_value<T>(path_value); slp_.template SetPathVariable<T>(path_value); }
-				break;
-		}
-	}
-
-	void DifferentiateUsingJacobianNode() const
-	{
-		jacobian_.resize(functions_.size());
-		for (size_t ii = 0; ii < functions_.size(); ++ii)
-			jacobian_[ii] = node::Jacobian::Make(functions_[ii]->Differentiate());
+		slp_.SetVariableValues(vars);
+		if (path_variable_) slp_.template SetPathVariable<T>(path_value);
 	}
 
 	void DifferentiateUsingDerivatives() const
@@ -365,20 +238,18 @@ private:
 		space_derivatives_.resize(n * variables_.size());
 		for (size_t jj = 0; jj < variables_.size(); ++jj)
 			for (size_t ii = 0; ii < n; ++ii)
-				space_derivatives_[ii + jj * n] = node::Function::Make(functions_[ii]->Differentiate(variables_[jj]));
+				space_derivatives_[ii + jj * n] = functions_[ii]->Differentiate(variables_[jj]);
 		if (path_variable_)
 		{
 			time_derivatives_.resize(n);
 			for (size_t ii = 0; ii < n; ++ii)
-				time_derivatives_[ii] = node::Function::Make(functions_[ii]->Differentiate(path_variable_));
+				time_derivatives_[ii] = functions_[ii]->Differentiate(path_variable_);
 		}
 	}
 
-	mutable std::vector<Fn> functions_;
-	mutable std::vector<Fn> subfunctions_;
-	mutable std::vector<Fn> constant_subfunctions_;
+	mutable std::vector<Nd> functions_;
+	mutable std::vector<NE> constant_subfunctions_;
 
-	mutable std::vector<Jac> jacobian_;
 	mutable std::vector<Nd>  space_derivatives_;
 	mutable std::vector<Nd>  time_derivatives_;
 	mutable StraightLineProgram slp_;
@@ -386,9 +257,6 @@ private:
 	mutable VariableGroup variables_;   ///< the system's variable ordering (kept in sync by the owning System)
 	mutable Var path_variable_;         ///< the path variable, or null
 
-	mutable EvalMethod  eval_method_  = DefaultEvalMethod();
-	mutable DerivMethod deriv_method_ = DefaultDerivMethod();
-	mutable bool auto_simplify_ = false;  ///< kept in sync with the owning System's auto_simplify_
 	mutable bool is_differentiated_ = false;
 	mutable unsigned precision_;
 
@@ -398,17 +266,13 @@ private:
 	void serialize(Archive& ar, const unsigned /*version*/)
 	{
 		ar & constant_subfunctions_;
-		ar & subfunctions_;
 		ar & functions_;
 		ar & is_differentiated_;
-		ar & jacobian_;
 		ar & space_derivatives_;
 		ar & time_derivatives_;
 		ar & slp_;
 		ar & variables_;
 		ar & path_variable_;
-		ar & eval_method_;
-		ar & deriv_method_;
 		ar & precision_;
 	}
 };

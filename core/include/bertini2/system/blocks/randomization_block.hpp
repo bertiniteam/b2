@@ -106,6 +106,45 @@ public:
 		BuildWorking();
 	}
 
+	// Memory-isolating copy (ADR-0027): the operand System is deep-copied via the
+	// System copy constructor, which shares its immutable node DAG and compiled SLP Program but
+	// gives it its own per-thread evaluation Memory.  Everything else (the coefficient matrices,
+	// multidegrees, working buffers) is value state, copied per copy.  This lets path tracking
+	// Clone a System into per-thread copies that share no mutable state.
+	RandomizationBlock(RandomizationBlock const& other)
+		: operand_(other.operand_ ? std::make_shared<SystemT>(*other.operand_) : nullptr),
+		  coefficients_highest_precision_(other.coefficients_highest_precision_),
+		  coefficients_working_(other.coefficients_working_),
+		  target_multidegrees_(other.target_multidegrees_),
+		  operand_multidegrees_(other.operand_multidegrees_),
+		  num_groups_(other.num_groups_),
+		  homogenized_(other.homogenized_),
+		  hom_vars_(other.hom_vars_),
+		  hom_var_index_(other.hom_var_index_),
+		  precision_(other.precision_)
+	{}
+
+	RandomizationBlock& operator=(RandomizationBlock const& other)
+	{
+		if (this != &other)
+		{
+			operand_ = other.operand_ ? std::make_shared<SystemT>(*other.operand_) : nullptr;
+			coefficients_highest_precision_ = other.coefficients_highest_precision_;
+			coefficients_working_ = other.coefficients_working_;
+			target_multidegrees_ = other.target_multidegrees_;
+			operand_multidegrees_ = other.operand_multidegrees_;
+			num_groups_ = other.num_groups_;
+			homogenized_ = other.homogenized_;
+			hom_vars_ = other.hom_vars_;
+			hom_var_index_ = other.hom_var_index_;
+			precision_ = other.precision_;
+		}
+		return *this;
+	}
+
+	RandomizationBlock(RandomizationBlock&&) = default;
+	RandomizationBlock& operator=(RandomizationBlock&&) = default;
+
 	/// Number of randomized functions (rows this block contributes) = n.
 	size_t NumFunctions() const { return static_cast<size_t>(coefficients_highest_precision_.rows()); }
 

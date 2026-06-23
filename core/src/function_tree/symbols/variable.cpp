@@ -35,61 +35,10 @@ namespace bertini{
 		using ::pow;
 		
 Variable::Variable(std::string new_name) : NamedSymbol(new_name)
-{ 
-	SetToRandUnit<mpfr_complex>();
-	set_current_value(dbl(Eval<mpfr_complex>()));
-}
+{ }
 
 Variable::Variable() : NamedSymbol("unnamed_variable_be_scared")
-{ 
-	SetToRandUnit<mpfr_complex>();
-	set_current_value(dbl(Eval<mpfr_complex>()));
-}
-
-template <typename T>
-void Variable::set_current_value(T const& val)
-{
-	using ComplexT = typename NumTraits<T>::Complex;
-	static_assert(!Eigen::NumTraits<T>::IsInteger,"type must be floating point in nature, with a real-complex pair defined in NumTraits");
-
-	assert(Precision(std::get< std::pair<ComplexT,bool> >(current_value_).first)==Precision(val) && "precision of value setting into variable doesn't match precision of variable.  is default precision correct?");
-	
-	std::get< std::pair<ComplexT,bool> >(current_value_).first = static_cast<ComplexT>(val);
-	std::get< std::pair<ComplexT,bool> >(current_value_).second = false;
-}
-
-template void Variable::set_current_value<double>(double const&);
-template void Variable::set_current_value<dbl>(dbl const&);
-template void Variable::set_current_value<mpfr_float>(mpfr_float const&);
-template void Variable::set_current_value<mpfr_complex>(mpfr_complex const&);
-
-
-template <typename T>
-void Variable::SetToNan()
-{
-	set_current_value<T>(static_cast<T>(std::numeric_limits<double>::quiet_NaN()));
-}
-
-template void Variable::SetToNan<dbl>();
-template void Variable::SetToNan<mpfr_complex>();
-
-
-template <typename T>
-void Variable::SetToRand()
-{
-	set_current_value<T>(RandomUnit<T>());
-}
-template void Variable::SetToRand<dbl>();
-template void Variable::SetToRand<mpfr_complex>();
-
-
-template <typename T>
-void Variable::SetToRandUnit()
-{
-	set_current_value<T>(RandomUnit<T>());
-}
-template void Variable::SetToRandUnit<dbl>();
-template void Variable::SetToRandUnit<mpfr_complex>();
+{ }
 
 std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v) const
 {
@@ -98,13 +47,6 @@ std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v
 	else
 		return v.get() == this ? Integer::Make(1) : Integer::Make(0);
 }
-
-void Variable::Reset() const
-{
-	Node::ResetStoredValues();
-}
-
-
 
 int Variable::Degree(std::shared_ptr<Variable> const& v) const
 {
@@ -143,10 +85,6 @@ std::vector<int> Variable::MultiDegree(VariableGroup const& vars) const
 }
 
 
-void Variable::Homogenize(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/)
-{
-	
-}
 
 bool Variable::IsHomogeneous(std::shared_ptr<Variable> const& /*v*/) const
 {
@@ -160,42 +98,6 @@ bool Variable::IsHomogeneous(VariableGroup const& /*vars*/) const
 {
 	return true;
 }
-
-
-/**
- Change the precision of this variable-precision tree node.
- 
- \param prec the number of digits to change precision to.
- */
-void Variable::precision(unsigned int prec) const
-{
-	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
-	val_pair.first.precision(prec);
-}
-
-
-// Return current value of the variable.
-dbl Variable::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return std::get< std::pair<dbl,bool> >(current_value_).first;
-}
-
-void Variable::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = std::get< std::pair<dbl,bool> >(current_value_).first;
-}
-
-
-mpfr_complex Variable::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return std::get< std::pair<mpfr_complex,bool> >(current_value_).first;
-}
-
-void Variable::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = std::get< std::pair<mpfr_complex,bool> >(current_value_).first;
-}
-
 
 
 	} // re: namespace node

@@ -40,8 +40,12 @@ import pytest
 
 import bertini as pb
 import bertini.parse as parse
+import bertini.multiprec as mp
+from bertini.multiprec import Complex as mpfr_complex
 from bertini.function_tree.symbol import Variable, Integer, Rational
 from bertini.function_tree import sin
+
+from eval_helper import eval_at
 
 
 @pytest.fixture
@@ -66,7 +70,8 @@ def test_mult_binds_tighter_than_sum(xyz):
     x, y, z = xyz
     assert str(x * y + z) == 'x*y+z'
     assert str((x + y) * z) == '(x+y)*z'
-    assert str(x * (y + z)) == 'x*(y+z)'
+    # canonical ordering sorts the graded factor (y+z) ahead of the degree-1 x
+    assert str(x * (y + z)) == '(y+z)*x'
 
 
 def test_division_groups(xyz):
@@ -121,10 +126,8 @@ def test_printed_form_reparses_to_same_values(xyz):
     reparsed = parse.system(text)
 
     vals = np.array([complex(-2.43, .21), complex(4.84, -1.94), complex(-6.48, -.731)])
-    x.set_current_value(vals[0])
-    y.set_current_value(vals[1])
-    z.set_current_value(vals[2])
 
-    got = reparsed.eval(vals)[0]
-    want = expr.eval_d()
-    assert abs(got - want) / abs(want) <= 1e-13
+    got = reparsed.eval(vals)[0]                                          # System eval (double)
+    want = eval_at(expr, x=vals[0], y=vals[1], z=vals[2])                 # node expr through the SLP
+    got_mp = mpfr_complex(str(got.real), str(got.imag))
+    assert mp.abs(got_mp - want) / mp.abs(want) <= 1e-13

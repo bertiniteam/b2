@@ -112,4 +112,63 @@ BOOST_AUTO_TEST_SUITE_END() // end parser_errors suite
 
 
 
+BOOST_AUTO_TEST_SUITE(unary_minus_precedence)
+
+using dbl = bertini::dbl;
+
+namespace {
+	// parse "f = <expr>" over variable_group x,y,z and evaluate at the given point
+	dbl ParseEval(std::string const& expr, dbl x, dbl y, dbl z)
+	{
+		bertini::System s{"variable_group x, y, z;\nfunction f;\nf = " + expr + ";"};
+		bertini::Vec<dbl> pt(3);
+		pt << x, y, z;
+		return s.Eval(pt)(0);
+	}
+}
+
+// Regression for the grammar bug where a leading unary '-' negated the ENTIRE following
+// expression ("-y+x" parsed as "-(y+x)") instead of just its operand.  Unary +/- bind one
+// factor_, so "-y+x" is (-y)+x and "-x^2" is -(x^2).
+BOOST_AUTO_TEST_CASE(leading_minus_negates_only_its_operand)
+{
+	const dbl x(2,0), y(5,0), z(3,0);
+	// "-y+x" == x-y == -3, NOT -(y+x) == -7
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-y+x", x,y,z) - ParseEval("x-y", x,y,z)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-y+x", x,y,z) - dbl(-3,0)),               1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(leading_minus_on_a_parenthesized_sum)
+{
+	const dbl x(2,0), y(5,0), z(3,0);
+	// the bug found via round-tripping: "-(y-z)+x" == x-(y-z) == 0, NOT -((y-z)+x)
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-(y-z)+x", x,y,z) - ParseEval("x-(y-z)", x,y,z)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-(y-z)+x", x,y,z) - dbl(0,0)),                    1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(all_negative_sum_is_unchanged)
+{
+	const dbl x(2,0), y(5,0), z(3,0);
+	// "-y-x" == -(y+x) == -7 (here the greedy reading happened to agree)
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-y-x", x,y,z) - dbl(-7,0)), 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(unary_minus_binds_looser_than_power)
+{
+	const dbl x(2,0), y(5,0), z(3,0);
+	// "-x^2" == -(x^2) == -4, NOT (-x)^2 == 4
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-x^2", x,y,z) - dbl(-4,0)), 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(unary_minus_then_product)
+{
+	const dbl x(2,0), y(5,0), z(3,0);
+	// "-x*y" == -(x*y) == -10
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-x*y", x,y,z) - dbl(-10,0)), 1e-12);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // unary_minus_precedence
+
+
+
 BOOST_AUTO_TEST_SUITE_END() // end the blackbox suite

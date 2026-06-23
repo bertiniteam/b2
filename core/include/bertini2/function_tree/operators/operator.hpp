@@ -90,9 +90,12 @@ namespace node{
 		
 		
 		virtual ~UnaryOperator() = default;
-		
-		
-		void Reset() const override;
+
+		// Structural hash/equality for every unary op (typeid distinguishes Sin/Cos/Exp/...);
+		// IntegerPowerOperator overrides to fold in its exponent.
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
+
 		
 		
 		void SetOperand(std::shared_ptr<Node> n);
@@ -118,10 +121,6 @@ namespace node{
 		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 
-
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
-
-		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		
@@ -137,7 +136,6 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		void precision(unsigned int prec) const override;
 
 
 
@@ -172,7 +170,6 @@ namespace node{
 		virtual ~NaryOperator() = default;
 		
 		
-		void Reset() const override;
 		
 		// Add an operand onto the container for this operator
 		virtual void AddOperand(std::shared_ptr<Node> n);
@@ -192,7 +189,6 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		void precision(unsigned int prec) const override;
 
 		
 		

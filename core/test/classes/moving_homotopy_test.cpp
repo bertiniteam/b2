@@ -225,4 +225,37 @@ BOOST_AUTO_TEST_CASE(rejects_mismatched_endpoints)
 	BOOST_CHECK_THROW(MakeMovingHomotopy(fixed, sm, em, "t", Gamma()), std::runtime_error);
 }
 
+// Regression: Clone(System) is now a Memory-isolating shallow copy --- it shares the
+// immutable node DAG and the compiled SLP Program, but copies the per-thread evaluation Memory at
+// every level, INCLUDING a BlendBlock's nested operand Systems (which are deep-copied via the
+// System copy constructor: own Memory, shared DAG).  A clone of a moving homotopy must therefore
+// reproduce the original exactly, and the two must evaluate independently.  (Thread-safety itself
+// --- no shared mutable state --- is by construction here and is exercised by the threaded zero-dim
+// solves; a sequential test cannot observe a data race because each Eval re-sets its inputs.)
+BOOST_AUTO_TEST_CASE(clone_of_moving_homotopy_reproduces_and_is_independent)
+{
+	DefaultPrecision(30);
+	System H = CircleMovingSlice();
+	H.Differentiate();
+
+	Vec<dbl> p1(2); p1 << dbl(0.3, 0.1), dbl(-0.2, 0.4);
+	Vec<dbl> p2(2); p2 << dbl(1.5, -0.7), dbl(0.9, 0.2);
+	const dbl t1(0.25, 0.0), t2(0.8, -0.1);
+
+	const Vec<dbl> f1 = H.Eval(p1, t1);
+	const Mat<dbl> j1 = H.Jacobian(p1, t1);
+
+	System H_clone = Clone(H);
+
+	// The clone (its deep-copied operands included) reproduces the original exactly.
+	BOOST_CHECK(H_clone.Eval(p1, t1).isApprox(f1));
+	BOOST_CHECK(H_clone.Jacobian(p1, t1).isApprox(j1));
+
+	// Evaluating the clone elsewhere leaves the original's results unchanged (independent state).
+	(void) H_clone.Eval(p2, t2);
+	(void) H_clone.Jacobian(p2, t2);
+	BOOST_CHECK(H.Eval(p1, t1).isApprox(f1));
+	BOOST_CHECK(H.Jacobian(p1, t1).isApprox(j1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -35,6 +35,8 @@
 
 
 
+#include <sstream>
+
 #include "bertini2/system/system.hpp"
 #include "bertini2/system/precon.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
@@ -77,6 +79,58 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 	BOOST_CHECK(s);
 	BOOST_CHECK(!sys.IsHomogeneous());
 
+}
+
+
+/**
+\class bertini::System
+\test \b parsed_system_has_functions_and_evaluates A parsed system must actually contain its
+functions and evaluate them.  (Regression: when classic functions became eager-bound, a parse
+path that skipped the post-parse emit produced a silently empty, size-0 system -- the earlier
+parse tests only checked parse success / homogeneity, never the function count or a value.)
+*/
+BOOST_AUTO_TEST_CASE(parsed_system_has_functions_and_evaluates)
+{
+	System sys;
+	std::string str = "variable_group x, y; function f, g; f = x*y; g = x + y;";
+	bool ok = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
+	BOOST_CHECK(ok);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 2u);
+
+	Vec<dbl> pt(2); pt << dbl(2,0), dbl(3,0);
+	auto v = sys.Eval(pt);
+	BOOST_REQUIRE_EQUAL(v.size(), 2);
+	BOOST_CHECK_SMALL(std::abs(v(0) - dbl(6,0)), 1e-12);   // x*y at (2,3)
+	BOOST_CHECK_SMALL(std::abs(v(1) - dbl(5,0)), 1e-12);   // x+y at (2,3)
+}
+
+
+/**
+\class bertini::System
+\test \b parsed_subfunction_is_a_named_expression A `s = expr` subfunction parses to an immutable
+NamedExpression embedded in the function that references it; the System evaluates correctly, prints
+the function with `s` by name, and lists the named subexpression's value below (discovered, not stored).
+*/
+BOOST_AUTO_TEST_CASE(parsed_subfunction_is_a_named_expression)
+{
+	System sys;
+	std::string str = "variable_group x, y; function f; s = x*y; f = s + x;";
+	bool ok = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
+	BOOST_CHECK(ok);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 1u);
+
+	// f = s + x = x*y + x; at (2,3) -> 6 + 2 = 8
+	Vec<dbl> pt(2); pt << dbl(2,0), dbl(3,0);
+	auto v = sys.Eval(pt);
+	BOOST_REQUIRE_EQUAL(v.size(), 1);
+	BOOST_CHECK_SMALL(std::abs(v(0) - dbl(8,0)), 1e-12);
+
+	std::stringstream ss; ss << sys;
+	const std::string text = ss.str();
+	BOOST_CHECK(text.find("named subexpression") != std::string::npos);  // discovered + shown
+	BOOST_CHECK(text.find("s = x*y") != std::string::npos);              // its value
 }
 
 
@@ -447,16 +501,18 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 	auto y = Variable::Make("y");
 	auto z = Variable::Make("z");
 
+	// Modest magnitudes keep the high-degree SLP-vs-analytic rounding comfortably inside the
+	// 1e-15 tolerance below.
+	dbl a(0.5,  0.25);
+	dbl b(0.4, -0.30);
+	dbl c(0.6,  0.20);
+
 	System sys;
 
 	sys.AddVariableGroup(VariableGroup{x, y, z});
 
 	sys.AddFunction(pow(x,2)*pow(y,3)*pow(z,4) + 1);
 	sys.AddFunction(pow(x,3)*pow(y,4)*pow(z,5) + 4);
-
-	auto a = x->Eval<dbl>();
-	auto b = y->Eval<dbl>();
-	auto c = z->Eval<dbl>();
 
 	Vec<dbl> v(3);
 	v << a, b, c;
@@ -584,7 +640,6 @@ BOOST_AUTO_TEST_CASE(add_system_to_self_doubles_under_function_tree_eval)
 	sys.AddVariableGroup(vars);
 	sys.AddFunction(y+1);
 	sys.AddFunction(x*y);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
 	Vec<dbl> values(2);
 	values << dbl(2.0), dbl(3.0);
@@ -1533,10 +1588,10 @@ BOOST_AUTO_TEST_CASE(gather_variables_alphabetical)
 	Var z = Variable::Make("z");
 
 	// note: declared out of alphabetical order, x used twice
-	auto f1 = bertini::node::Function::Make(pow(z,2) + y*x);
-	auto f2 = bertini::node::Function::Make(x - y);
+	auto f1 = (pow(z,2) + y*x);
+	auto f2 = (x - y);
 
-	auto found = bertini::node::GatherVariables(std::vector<std::shared_ptr<bertini::node::Function>>{f1, f2});
+	auto found = bertini::node::GatherVariables(std::vector<std::shared_ptr<bertini::node::Node>>{f1, f2});
 
 	BOOST_CHECK_EQUAL(found.size(), 3);
 	BOOST_CHECK_EQUAL(found[0]->name(), "x");
@@ -1556,10 +1611,10 @@ BOOST_AUTO_TEST_CASE(system_construct_from_functions)
 	Var y = Variable::Make("y");
 	Var z = Variable::Make("z");
 
-	auto f1 = bertini::node::Function::Make(x*y*z);
-	auto f2 = bertini::node::Function::Make(x + y + z);
+	auto f1 = (x*y*z);
+	auto f2 = (x + y + z);
 
-	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Function>>{f1, f2});
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Node>>{f1, f2});
 
 	BOOST_CHECK_EQUAL(sys.NumTotalFunctions(), 2);
 	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 1);
@@ -1583,9 +1638,9 @@ BOOST_AUTO_TEST_CASE(system_set_variable_groups)
 	Var y = Variable::Make("y");
 	Var z = Variable::Make("z");
 
-	auto f1 = bertini::node::Function::Make(x*y*z);
+	auto f1 = (x*y*z);
 
-	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Function>>{f1});
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Node>>{f1});
 	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 1);
 
 	bertini::VariableGroup g1{x};
@@ -1596,39 +1651,6 @@ BOOST_AUTO_TEST_CASE(system_set_variable_groups)
 	BOOST_CHECK_EQUAL(sys.NumVariables(), 3);
 }
 
-
-/**
-\class bertini::System
-\test \b system_fix_variable FixVariable removes a variable from the solve set
-and pins its value, so the functions evaluate as if it were a constant.
-*/
-BOOST_AUTO_TEST_CASE(system_fix_variable)
-{
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-
-	auto f = bertini::node::Function::Make(x + y);
-
-	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Function>>{f});
-	BOOST_CHECK_EQUAL(sys.NumVariables(), 2);
-
-	bool fixed = sys.FixVariable(y, dbl(3.0));
-	BOOST_CHECK(fixed);
-	BOOST_CHECK_EQUAL(sys.NumVariables(), 1);
-
-	auto const& ordering = sys.Variables();
-	BOOST_CHECK_EQUAL(ordering.size(), 1);
-	BOOST_CHECK_EQUAL(ordering[0]->name(), "x");
-
-	Vec<dbl> values(1);
-	values << dbl(2.0);
-	auto result = sys.Eval(values);   // x + y == 2 + 3 == 5
-	BOOST_CHECK_EQUAL(result(0), dbl(5.0));
-
-	// fixing a variable not present returns false
-	Var w = Variable::Make("w");
-	BOOST_CHECK(!sys.FixVariable(w, dbl(1.0)));
-}
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -34,7 +34,7 @@
 #include "bertini2/io/parsing/qi_files.hpp"
 
 #include "bertini2/function_tree/node.hpp"
-#include "bertini2/function_tree/roots/function.hpp"
+#include "bertini2/function_tree/roots/named_expression.hpp"
 
 #include "bertini2/function_tree/operators/arithmetic.hpp"
 #include "bertini2/function_tree/operators/trig.hpp"
@@ -142,7 +142,6 @@ namespace bertini {
 			struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>
 			{
 				using Node = node::Node;
-				using Function = node::Function;
 				using Float = node::Float;
 				using Integer = node::Integer;
 				using Rational = node::Rational;
@@ -162,7 +161,9 @@ namespace bertini {
 					using ::pow;
 					
 					root_rule_.name("function_");
-					root_rule_ = expression_ [ _val = make_shared_<Function>()(_1)];
+					// Return the bare parsed expression (no Function wrapper): the System parser names
+					// it (a NamedExpression for subfunctions) or stores it directly (top-level functions).
+					root_rule_ = expression_ [ _val = _1];
 					
 					
 					///////////////////
@@ -198,8 +199,11 @@ namespace bertini {
 					exp_elem_ =
 					(symbol_  >> !qi::alnum) [_val = _1]
 					|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
-					|   (lit('-') > expression_  [_val = -_1])
-					|   (lit('+') > expression_  [_val = _1])
+					// unary +/- bind a single factor_, NOT the whole expression_: "-y+x" is
+					// (-y)+x, and "-x^2" is -(x^2).  (Binding expression_ here made a leading
+					// minus greedily negate everything after it.)
+					|   (lit('-') > factor_  [_val = -_1])
+					|   (lit('+') > factor_  [_val = _1])
 					|   (lit("sin") > '(' > expression_ [_val = sin_lazy(_1)] > ')' )
 					|   (lit("cos") > '(' > expression_ [_val = cos_lazy(_1)] > ')' )
 					|   (lit("tan") > '(' > expression_ [_val = tan_lazy(_1)] > ')' )

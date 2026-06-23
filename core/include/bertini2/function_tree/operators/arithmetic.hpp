@@ -56,6 +56,7 @@
 #include "bertini2/function_tree/symbols/differential.hpp"
 
 #include "bertini2/function_tree/forward_declares.hpp"
+#include "bertini2/function_tree/canonical.hpp"
 
 #include <cmath>
 
@@ -73,8 +74,7 @@ namespace node{
 	\brief Represents summation and difference Operator.
 
 	This class represents summation and difference operators.  All children are terms and are stored
-	in a single vector, and a vector of bools is used to determine the sign of each term.  FreshEval method
-	is defined for summation and difference.
+	in a single vector, and a vector of bools is used to determine the sign of each term.
 	*/
 	class SumOperator : public NaryOperator
 	{
@@ -83,16 +83,12 @@ namespace node{
 
 		virtual ~SumOperator() = default;
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
-		unsigned ReduceDepth() override;
-		unsigned ReduceSubSums();
-		unsigned ReduceSubMults();
+		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<SumOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<SumOperator>( new SumOperator(ts...) );
+			return std::static_pointer_cast<SumOperator>(Intern(std::shared_ptr<Node>( new SumOperator(ts...) )));
 		}
 
 	private:
@@ -105,13 +101,25 @@ namespace node{
 		{
 			AddOperand(left);
 			AddOperand(right);
+			CanonicalizeNaryOperands(operands_, signs_, false);
 		}
-		
-		
+
+
 		SumOperator(const std::shared_ptr<Node> & left, bool add_or_sub_left, const std::shared_ptr<Node> & right, bool add_or_sub_right)
 		{
 			AddOperand(left, add_or_sub_left);
 			AddOperand(right, add_or_sub_right);
+			CanonicalizeNaryOperands(operands_, signs_, false);
+		}
+
+		// Build a complete sum from a full (term, sign) list.  The node is fully constructed
+		// before Make() interns it -- so callers never AddOperand AFTER Make (which, with interning,
+		// could mutate a shared interned node).
+		explicit SumOperator(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms)
+		{
+			for (auto const& t : terms)
+				AddOperand(t.first, t.second);
+			CanonicalizeNaryOperands(operands_, signs_, false);
 		}
 		
 	public:
@@ -191,7 +199,9 @@ namespace node{
 		/**
 		 Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
 		 */
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -206,30 +216,10 @@ namespace node{
 
 
 	protected:
-		/**
-		 Specific implementation of FreshEval for add and subtract.
-		 If child_sign_ = true, then add, else subtract
-		 */
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 
-		/**
-		 Specific implementation of FreshEval in place for add and subtract.
-		 If child_sign_ = true, then add, else subtract
-		 */
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
-		/**
-		 Specific implementation of FreshEval for add and subtract.
-		 If child_sign_ = true, then add, else subtract
-		 */
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 
-		/**
-		 Specific implementation of FreshEval for add and subtract.
-		 If child_sign_ = true, then add, else subtract
-		 */
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 	private:
 		// Stores the sign of the particular term.  There is a one-one
@@ -279,8 +269,7 @@ namespace node{
 	/**
 	\brief The negation Operator.
 
-	 This class represents the negation Operator.  FreshEval method
-	 is defined for negation and multiplies the value by -1.
+	 This class represents the negation Operator.
 	 */
 	class NegateOperator : public UnaryOperator
 	{
@@ -290,7 +279,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<NegateOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<NegateOperator>( new NegateOperator(ts...) );
+			return std::static_pointer_cast<NegateOperator>(Intern(std::shared_ptr<Node>( new NegateOperator(ts...) )));
 		}
 
 	private:
@@ -300,8 +289,8 @@ namespace node{
 		
 	public:
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		/**
 		 Print to an arbitrary ostream.
@@ -336,12 +325,7 @@ namespace node{
 		
 	protected:
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 	private:
@@ -376,24 +360,20 @@ namespace node{
 	\brief Multiplication and division Operator.
 
 	This class represents the Operator for multiplication and division.  All children are factors and are stored
-	in a vector.  FreshEval method is defined for multiplication.
+	in a vector.
 	*/
 	class MultOperator : public NaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
-		unsigned ReduceDepth() override;
-		unsigned ReduceSubSums();
-		unsigned ReduceSubMults();
+		std::shared_ptr<Node> Simplified() const override;
 
 
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<MultOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<MultOperator>( new MultOperator(ts...) );
+			return std::static_pointer_cast<MultOperator>(Intern(std::shared_ptr<Node>( new MultOperator(ts...) )));
 		}
 
 	private:
@@ -411,15 +391,26 @@ namespace node{
 		{
 			AddOperand(left);
 			AddOperand(right);
+			CanonicalizeNaryOperands(operands_, mult_or_div_, true);
 		}
-		
-		
+
+
 		MultOperator(const std::shared_ptr<Node> & left, bool mult_or_div_left, const std::shared_ptr<Node> & right, bool mult_or_div_right)
 		{
 			AddOperand(left, mult_or_div_left);
 			AddOperand(right, mult_or_div_right);
+			CanonicalizeNaryOperands(operands_, mult_or_div_, true);
 		}
-		
+
+		// Build a complete product from a full (factor, mult-or-div) list -- fully constructed
+		// before Make() interns it, so no post-Make AddOperand on a shared interned node.
+		explicit MultOperator(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& factors)
+		{
+			for (auto const& f : factors)
+				AddOperand(f.first, f.second);
+			CanonicalizeNaryOperands(operands_, mult_or_div_, true);
+		}
+
 	public:
 		
 		virtual ~MultOperator() = default;
@@ -473,7 +464,9 @@ namespace node{
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -492,13 +485,8 @@ namespace node{
 
 	protected:
 		
-		// Specific implementation of FreshEval for mult and divide.
 		//  If child_mult_ = true, then multiply, else divide
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
 		
@@ -556,13 +544,12 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
 
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<PowerOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<PowerOperator>( new PowerOperator(ts...) );
+			return std::static_pointer_cast<PowerOperator>(Intern(std::shared_ptr<Node>( new PowerOperator(ts...) )));
 		}
 
 
@@ -595,7 +582,6 @@ namespace node{
 			return exponent_;
 		}
 		
-		void Reset() const override;
 
 
 
@@ -627,7 +613,9 @@ namespace node{
 		
 
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -643,24 +631,12 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) const override
-		{
-			auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
-			val_pair.first.precision(prec);
-
-			base_->precision(prec);
-			exponent_->precision(prec);
-		}
 
 
 
 	protected:
 		
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_d(dbl& evaulation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr_complex& evaulation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 	private:
 				
@@ -703,16 +679,17 @@ namespace node{
 
 
 	 This class represents the exponentiation operator.  The base is stored in
-	 operand_, and an extra variable(exponent_) stores the exponent.  FreshEval is
-	 defined as the exponention operation.
+	 operand_, and an extra variable(exponent_) stores the exponent.
 	 */
 	class IntegerPowerOperator : public UnaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
 		
 		/**
 		 polymorphic method for printing to an arbitrary stream.
@@ -775,7 +752,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<IntegerPowerOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<IntegerPowerOperator>( new IntegerPowerOperator(ts...) );
+			return std::static_pointer_cast<IntegerPowerOperator>(Intern(std::shared_ptr<Node>( new IntegerPowerOperator(ts...) )));
 		}
 
 	private:
@@ -791,28 +768,10 @@ namespace node{
 	protected:
 		
 		
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return pow(operand_->Eval<dbl>(diff_variable), exponent_);
-		}
 
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-			evaluation_value = pow(evaluation_value, exponent_);
-		}
 
 		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return pow(operand_->Eval<mpfr_complex>(diff_variable),exponent_);
-		}
 
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-			evaluation_value = pow(evaluation_value, exponent_);
-		}
 
 	private:
 		
@@ -853,8 +812,7 @@ namespace node{
 	\brief Represents the square root Operator
 
 
-	 This class represents the square root function.  FreshEval method
-	 is defined for square root and takes the square root of the child node.
+	 This class represents the square root function.
 	 */
 	class SqrtOperator : public UnaryOperator
 	{
@@ -864,7 +822,7 @@ namespace node{
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<SqrtOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<SqrtOperator>( new SqrtOperator(ts...) );
+			return std::static_pointer_cast<SqrtOperator>(Intern(std::shared_ptr<Node>( new SqrtOperator(ts...) )));
 		}
 
 	private:
@@ -873,8 +831,8 @@ namespace node{
 
 	public:
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		void print(std::ostream & target) const override;
 		
@@ -896,12 +854,7 @@ namespace node{
 		
 	protected:
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 	private:
@@ -929,21 +882,20 @@ namespace node{
 	/**
 	\brief represents the exponential function
 
-	This class represents the exponential function.  FreshEval method
-	is defined for exponential and takes the exponential of the child node.
+	This class represents the exponential function.
 	*/
 	class ExpOperator : public UnaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ExpOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<ExpOperator>( new ExpOperator(ts...) );
+			return std::static_pointer_cast<ExpOperator>(Intern(std::shared_ptr<Node>( new ExpOperator(ts...) )));
 		}
 
 	private:
@@ -975,12 +927,7 @@ namespace node{
 		
 	protected:
 		
-		// Specific implementation of FreshEval for exponentiate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 	private:
 		ExpOperator() = default;
@@ -1003,13 +950,13 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<LogOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<LogOperator>( new LogOperator(ts...) );
+			return std::static_pointer_cast<LogOperator>(Intern(std::shared_ptr<Node>( new LogOperator(ts...) )));
 		}
 
 	private:
@@ -1041,12 +988,7 @@ namespace node{
 		
 	protected:
 		
-		// Specific implementation of FreshEval for exponentiate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 	private:
 		LogOperator() = default;

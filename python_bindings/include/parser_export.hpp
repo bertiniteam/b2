@@ -52,15 +52,15 @@ namespace bertini{
 		using namespace bertini;
 		
 		/////////////  Parser Exposure  /////////////////////
+		// Route through the canonical C++ parse entry (bertini::parsing::classic::parse) rather
+		// than duplicating the phrase_parse here: that one function owns the post-parse step that
+		// emits the eager-bound functions into the System (EmitDeclaredFunctions).  Duplicating it
+		// silently dropped every function (size-0 systems).
 		template <typename ResultT, typename ParserT>
 		ResultT Parser(std::string str)
 		{
 			ResultT res;
-			std::string::const_iterator iter = str.begin();
-			std::string::const_iterator end = str.end();
-			ParserT P;
-			phrase_parse(iter, end, P, boost::spirit::ascii::space, res);
-			
+			bertini::parsing::classic::parse(str.begin(), str.end(), res);
 			return res;
 		};
 		

@@ -50,7 +50,6 @@ using namespace bertini;
 using Var = std::shared_ptr<node::Variable>;
 using bertini::node::Variable;
 using bertini::node::Integer;
-using bertini::node::Function;
 using bertini::blocks::PolynomialBlock;
 using bertini::blocks::ProductsOfLinearsBlock;
 using bertini::blocks::LinearFormsBlock;
@@ -154,8 +153,7 @@ BOOST_AUTO_TEST_CASE(bilinear_eigenvalue_row_is_degree_two)
 	Var x0 = Variable::Make("x0"), x1 = Variable::Make("x1"), lam = Variable::Make("lam");
 	// row of (A - lam I) x : a*x0 + b*x1 - lam*x0   (the lam*x0 term is degree 2)
 	auto row = Integer::Make(2) * x0 + Integer::Make(3) * x1 - lam * x0;
-	auto f = Function::Make(row);
-	BOOST_CHECK_EQUAL(f->Degree(), 2);
+	BOOST_CHECK_EQUAL(row->Degree(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(eigenproblem_degrees_bilinear_rows_plus_linear_normalization)

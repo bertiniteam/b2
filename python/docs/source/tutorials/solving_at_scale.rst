@@ -102,13 +102,15 @@ The complete, runnable script is :download:`solve_cyclic.py
 
 Two things to notice.  First, the **whole** distributed machinery is the single
 ``solver.solve(communicator=comm)`` line -- everything else is building the system and *checking
-the answer*.  Second, the check is real and uses the solver's *own* classification rather than a
-hand-rolled cutoff: it counts the endpoints the library marks **finite** (``is_finite``, which
-applies the configured ``endpoint_finite_threshold``) and confirms the number of *distinct* such
-solutions equals the mathematically known cyclic-:math:`n` value.  We count *distinct* points by
-summing :math:`1/\text{multiplicity}` over the finite endpoints, so a genuine **multiple root** --
-several paths converging to one true solution of higher multiplicity -- is counted once, as it
-should be.  That is the only reason two endpoints should ever coincide.
+the answer*.  Second, the check is real and uses the solver's *own* report rather than a hand-rolled
+cutoff: ``report.num_finite_solutions`` is the number of *distinct* finite solutions -- the report
+sums :math:`1/\text{multiplicity}` over the finite endpoints, so a genuine **multiple root** (several
+paths converging to one true solution of higher multiplicity) is counted once -- and we confirm it
+equals the mathematically known cyclic-:math:`n` value.  Just as important, we assert
+``report.all_paths_resolved``: had any path failed to track, a genuine root would be silently missing
+and the count would come up short, so the report catches the loss rather than letting a quiet 69 pass
+for 70.  (A coincident pair of *distinct* paths is the one other way two endpoints meet -- see the
+note below.)
 
 .. note::
 

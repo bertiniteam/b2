@@ -86,7 +86,7 @@ namespace bertini {
 			auto two_i_pi = boost::math::constants::pi<double>() * dbl(0,2);
 
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), 1.0 / static_cast<double>(degrees_[ii]));
+				start_point(ii+offset) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(random_values_[ii]->Value<dbl>(), 1.0 / static_cast<double>(degrees_[ii]));
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);
@@ -117,7 +117,7 @@ namespace bertini {
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
 			{
 				mpfr_complex a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
-				mpfr_complex b = pow(random_values_[ii]->Eval<mpfr_complex>(), one / degrees_[ii]);
+				mpfr_complex b = pow(random_values_[ii]->Value<mpfr_complex>(), one / degrees_[ii]);
 
 				Precision(a,ThreadPrecision());
 				Precision(b,ThreadPrecision());

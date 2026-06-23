@@ -45,45 +45,6 @@ namespace bertini{
 		
 		
 
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void HandleVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			cl
-			// return the shared_ptr by value: Boost.Python's automatic downcast to the
-			// most-derived registered node type only happens for by-value shared_ptrs;
-			// the old reference_existing_object form produced an unusable AbstractNode
-			.def("root", +[](Handle const& h) { return h.EntryNode(); }, (arg("self")), "the defining root node of this handle")
-			.def("root", &Handle::SetRoot)
-			.def("ensure_not_empy", &Handle::EnsureNotEmpty)
-			;
-		}
-
-
-
-
-		
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void FunctionVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			//cl // nothing to do in the base clas for functions
-			;
-		}
-
-		
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void JacobianVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			cl
-			.def("evalJ_d", &Jacobian::template EvalJ<dbl>)
-			.def("evalJ_mp", &Jacobian::template EvalJ<mpfr_complex>)
-			;
-		}
-
-		
-		
 		void ExportRoots()
 		{
 			scope current_scope;
@@ -95,28 +56,14 @@ namespace bertini{
 			scope new_submodule_scope = new_submodule;
 
 
-			// TrigOperator class
-			class_<Handle, boost::noncopyable, bases<NamedSymbol>, std::shared_ptr<Handle> >("Handle", no_init)
-			.def(HandleVisitor<Handle>())
+			// NamedExpression: Named(expr, "a") -- a user-named subexpression that prints as its
+			// name and evaluates to its expression.  This is the sole surviving handle node
+			// (Function and Handle were deleted; it inherits NamedSymbol directly).
+			class_<NamedExpression, bases<NamedSymbol>, std::shared_ptr<NamedExpression> >("NamedExpression", no_init)
+			.def("__init__",make_constructor(&NamedExpression::template Make<const std::shared_ptr<Node>&, std::string const&>))
+			.def("root", +[](NamedExpression const& h) { return h.EntryNode(); }, (arg("self")), "the defining expression this name stands for")
 			;
 
-
-			// Function class
-			class_<Function, bases<Handle>, std::shared_ptr<Function> >("Function", no_init)
-			.def("__init__",make_constructor(&Function::template Make<std::string const&>))
-			.def("__init__",make_constructor(&Function::template Make<const std::shared_ptr<Node> &> ))
-			
-			.def(FunctionVisitor<Function>())
-			
-			;
-
-			
-			// Jacobian class
-			class_<Jacobian, bases<Handle>, std::shared_ptr<Jacobian> >("Jacobian", no_init)
-			.def("__init__",make_constructor(&Jacobian::template Make<const Nodeptr&>))
-			.def(JacobianVisitor<Jacobian>())
-			;
-			
 		}
 
 	}

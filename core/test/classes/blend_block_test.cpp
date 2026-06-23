@@ -122,4 +122,31 @@ BOOST_AUTO_TEST_CASE(eval_and_time_derivative_mpfr)
 	BOOST_CHECK(abs(dHdt(0) - mpfr_complex(-2)) < mpfr_float("1e-25"));
 }
 
+// The coefficients are evaluated through a cached coefficient System (compiled once,
+// reused), not by node-level tree evaluation.  Repeated calls --- and a call at a changed
+// value --- must keep giving the right answer, exercising the cache across invocations.
+BOOST_AUTO_TEST_CASE(repeated_evaluation_reuses_coefficients_consistently)
+{
+	DefaultPrecision(30);
+	auto blend = MakeTestBlend();
+
+	bertini::Vec<dbl> x(2); x << dbl(1), dbl(1);
+	bertini::Vec<dbl> result(1);
+
+	// First call builds the cached coefficient system; subsequent calls reuse it.
+	blend.EvalInPlace<dbl>(result, x, dbl(0.5));
+	BOOST_CHECK_CLOSE(result(0).real(), 2.0, 1e-11);
+
+	blend.EvalInPlace<dbl>(result, x, dbl(0.5));
+	BOOST_CHECK_CLOSE(result(0).real(), 2.0, 1e-11);
+
+	// A different path value: H = (1-t)*3 + t*1 = 3 - 2t; at t=0 -> 3.
+	blend.EvalInPlace<dbl>(result, x, dbl(0.0));
+	BOOST_CHECK_CLOSE(result(0).real(), 3.0, 1e-11);
+
+	// And at t=1 -> 1.
+	blend.EvalInPlace<dbl>(result, x, dbl(1.0));
+	BOOST_CHECK_CLOSE(result(0).real(), 1.0, 1e-11);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

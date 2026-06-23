@@ -72,10 +72,7 @@ namespace bertini{
 			implicitly_convertible<std::shared_ptr<node::ArcSinOperator>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::ArcCosOperator>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::ArcTanOperator>, Nodeptr>();
-			
-			implicitly_convertible<std::shared_ptr<node::Function>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<node::Jacobian>, Nodeptr>();
-			
+
 			
 			
 			// Expose the deque containers

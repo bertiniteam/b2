@@ -1,0 +1,2 @@
+ranks,threads,total_workers,wall_time_s,solutions_found,speedup_vs_serial
+1,1,1,42.7632,6,1.0000

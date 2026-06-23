@@ -38,8 +38,8 @@ Let's make an empty :class:`~bertini.system.System`, then build into it:
 .. testcode::
 
 	sys = bertini.System()
-	sys.add_function(f, 'f')  # name the function
-	sys.add_function(g)       # or not...
+	sys.add_function(f)
+	sys.add_function(g)
 
 ``sys`` doesn't know its variables yet, so let's group them into an affine :class:`~bertini.container.VariableGroup` [#]_, and stuff it into ``sys``:
 
@@ -88,8 +88,8 @@ We can indeed do homotopy continuation with a non-algebraic systems.  What we ca
 	# so, we start over
 	sys = bertini.System()
 	sys.add_variable_group(grp)
-	sys.add_function(f, 'f') #name the function in the system
-	sys.add_function(g) # default name
+	sys.add_function(f)
+	sys.add_function(g)
 
 
 
@@ -227,7 +227,7 @@ Now that we've tracked a single path, you might want to loop over all start poin
 	g = x+y
 
 	sys = bertini.System()
-	sys.add_function(f, 'f')
+	sys.add_function(f)
 	sys.add_function(g)
 
 	grp = bertini.VariableGroup()

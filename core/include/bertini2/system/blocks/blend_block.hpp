@@ -101,6 +101,44 @@ public:
 			derivative_coefficients_.push_back(c->Differentiate(path_variable_));
 	}
 
+	// Memory-isolating copy (ADR-0027): each operand System is deep-copied via the
+	// System copy constructor, which shares its immutable node DAG and compiled SLP Program but
+	// gives it its own per-thread evaluation Memory.  The coefficient-system cache is reset (rebuilt
+	// lazily per copy).  The coefficient nodes / path variable are shared --- they are never written
+	// during evaluation.  This lets path tracking Clone a System into per-thread copies that share
+	// no mutable state.
+	BlendBlock(BlendBlock const& other)
+		: path_variable_(other.path_variable_),
+		  coefficients_(other.coefficients_),
+		  derivative_coefficients_(other.derivative_coefficients_),
+		  precision_(other.precision_)
+	{
+		operands_.reserve(other.operands_.size());
+		for (auto const& op : other.operands_)
+			operands_.push_back(std::make_shared<const SystemT>(*op));
+		// coefficient_system_ deliberately left null: rebuilt lazily per copy
+	}
+
+	BlendBlock& operator=(BlendBlock const& other)
+	{
+		if (this != &other)
+		{
+			path_variable_ = other.path_variable_;
+			coefficients_ = other.coefficients_;
+			derivative_coefficients_ = other.derivative_coefficients_;
+			precision_ = other.precision_;
+			operands_.clear();
+			operands_.reserve(other.operands_.size());
+			for (auto const& op : other.operands_)
+				operands_.push_back(std::make_shared<const SystemT>(*op));
+			coefficient_system_.reset();
+		}
+		return *this;
+	}
+
+	BlendBlock(BlendBlock&&) = default;
+	BlendBlock& operator=(BlendBlock&&) = default;
+
 	/// The number of (natural) functions the blend contributes; the owning System adds any patch.
 	size_t NumFunctions() const
 	{
@@ -190,16 +228,12 @@ public:
 	{
 		for (auto const& op : operands_)
 			op->precision(new_precision);
-		// The coefficient nodes (and the shared path variable) must move too, or a blend
-		// of a low-precision operand value with a high-precision coefficient yields a
-		// high-precision result that the tracker then carries as the path point, mismatching
-		// the system's working precision.
-		if (path_variable_)
-			path_variable_->precision(new_precision);
-		for (auto const& c : coefficients_)
-			c->precision(new_precision);
-		for (auto const& c : derivative_coefficients_)
-			c->precision(new_precision);
+		// The coefficients are evaluated through the coefficient sub-system's SLP (which carries
+		// its own precision; see EvalCoefficients), so the coefficient nodes and the shared path
+		// variable are no longer evaluated during tracking.  Their precision is vestigial and
+		// left untouched, keeping the shared node DAG read-only across threads (ADR-0027).
+		if (coefficient_system_)
+			coefficient_system_->precision(new_precision);
 		precision_ = new_precision;
 	}
 
@@ -210,10 +244,11 @@ public:
 		SyncPrecision(vars);
 		result.setZero();
 		const Eigen::Index k = static_cast<Eigen::Index>(NumFunctions());
+		const Vec<T> coeffs = EvalCoefficients<T>(path_value);
 		for (size_t i = 0; i < operands_.size(); ++i)
 		{
 			const Vec<T> fi = operands_[i]->template Eval<T>(vars);
-			result += EvalNode<T>(coefficients_[i], path_value) * fi.head(k);
+			result += coeffs(static_cast<Eigen::Index>(i)) * fi.head(k);
 		}
 	}
 
@@ -224,10 +259,11 @@ public:
 		SyncPrecision(vars);
 		J.setZero();
 		const Eigen::Index k = static_cast<Eigen::Index>(NumFunctions());
+		const Vec<T> coeffs = EvalCoefficients<T>(path_value);
 		for (size_t i = 0; i < operands_.size(); ++i)
 		{
 			const Mat<T> Ji = operands_[i]->template Jacobian<T>(vars);
-			J += EvalNode<T>(coefficients_[i], path_value) * Ji.topRows(k);
+			J += coeffs(static_cast<Eigen::Index>(i)) * Ji.topRows(k);
 		}
 	}
 
@@ -238,10 +274,12 @@ public:
 		SyncPrecision(vars);
 		result.setZero();
 		const Eigen::Index k = static_cast<Eigen::Index>(NumFunctions());
-		for (size_t i = 0; i < operands_.size(); ++i)
+		const Vec<T> coeffs = EvalCoefficients<T>(path_value);
+		const size_t n = operands_.size();
+		for (size_t i = 0; i < n; ++i)
 		{
 			const Vec<T> fi = operands_[i]->template Eval<T>(vars);
-			result += EvalNode<T>(derivative_coefficients_[i], path_value) * fi.head(k);
+			result += coeffs(static_cast<Eigen::Index>(n + i)) * fi.head(k);
 		}
 	}
 
@@ -263,13 +301,37 @@ private:
 		}
 	}
 
-	/// Evaluate a coefficient (or derivative) node at the given path-variable value.
-	template <typename T>
-	T EvalNode(Nd const& n, T const& path_value) const
+	/// Build (once) a small System whose functions are the coefficients c_i(t) followed by
+	/// the derivative coefficients c_i'(t), with the path variable t as their sole variable.
+	/// Evaluating it through its SLP yields every c_i(t) and c_i'(t) in one run --- so the
+	/// blend carries no node-level tree evaluation, and the coefficients' program is compiled
+	/// once and reused across tracker steps rather than rebuilt per evaluation.
+	SystemT& EnsureCoefficientSystem() const
 	{
-		path_variable_->template set_current_value<T>(path_value);
-		n->Reset();
-		return n->template Eval<T>();
+		if (!coefficient_system_)
+		{
+			auto sys = std::make_shared<SystemT>();
+			for (auto const& c : coefficients_)
+				sys->AddFunction(c);
+			for (auto const& c : derivative_coefficients_)
+				sys->AddFunction(c);
+			sys->AddVariableGroup(VariableGroup{path_variable_});
+			sys->precision(precision_);
+			coefficient_system_ = sys;
+		}
+		return *coefficient_system_;
+	}
+
+	/// Evaluate [c_0(t) .. c_{n-1}(t), c_0'(t) .. c_{n-1}'(t)] at the given path-variable value.
+	template <typename T>
+	Vec<T> EvalCoefficients(T const& path_value) const
+	{
+		auto& cs = EnsureCoefficientSystem();
+		if constexpr (!std::is_same<T, dbl>::value)
+			cs.precision(bertini::Precision(path_value));
+		Vec<T> t_point(1);
+		t_point(0) = path_value;
+		return cs.template Eval<T>(t_point);
 	}
 
 	Var path_variable_;
@@ -277,6 +339,10 @@ private:
 	std::vector<Nd> derivative_coefficients_;
 	std::vector<OperandPtr> operands_;
 	mutable unsigned precision_;
+
+	/// Cached program for the coefficients (lazily built, see EnsureCoefficientSystem).  Not
+	/// serialized: it is a pure cache, rebuilt on first evaluation after a load.
+	mutable std::shared_ptr<SystemT> coefficient_system_;
 
 	friend class boost::serialization::access;
 

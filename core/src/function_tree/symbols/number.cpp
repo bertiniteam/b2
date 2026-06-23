@@ -33,20 +33,6 @@ namespace bertini{
 	namespace node{
 		using ::pow;
 		
-void Number::Reset() const
-{
-	// ResetStoredValues();
-}
-
-
-void Number::precision(unsigned int prec) const
-{
-	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
-	val_pair.first.precision(prec);
-	val_pair.second = false; // false indicates to re-evaluate 
-}
-
-
 std::shared_ptr<Node> Number::Differentiate(std::shared_ptr<Variable> const& /*v*/) const
 {
 	return Integer::Make(0);
@@ -62,28 +48,6 @@ std::shared_ptr<Node> Number::Differentiate(std::shared_ptr<Variable> const& /*v
 void Integer::print(std::ostream & target) const
 {
 	target << true_value_;
-}
-
-// Return value of constant
-dbl Integer::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return dbl(double(true_value_),0);
-}
-
-void Integer::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = dbl(double(true_value_),0);
-}
-
-
-mpfr_complex Integer::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return mpfr_complex(true_value_,0,ThreadPrecision());
-}
-
-void Integer::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = mpfr_complex(true_value_,0,ThreadPrecision());
 }
 
 
@@ -104,28 +68,6 @@ void Float::print(std::ostream & target) const
 		target << highest_precision_value_;
 }
 
-// Return value of constant
-dbl Float::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return dbl(highest_precision_value_);
-}
-
-void Float::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = dbl(highest_precision_value_);
-}
-
-
-mpfr_complex Float::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return mpfr_complex(highest_precision_value_,ThreadPrecision());
-}
-
-void Float::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = mpfr_complex(highest_precision_value_,ThreadPrecision());
-}
-
 
 //
 //  Rational
@@ -141,28 +83,6 @@ void Rational::print(std::ostream & target) const
 		target << true_value_real_;
 	else
 		target << "(" << true_value_real_ << "," << true_value_imag_ << ")";
-}
-
-// Return value of constant
-dbl Rational::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return dbl(double(true_value_real_),double(true_value_imag_));
-}
-
-void Rational::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = dbl(double(true_value_real_),double(true_value_imag_));
-}
-
-
-mpfr_complex Rational::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_,ThreadPrecision()),boost::multiprecision::mpfr_float(true_value_imag_,ThreadPrecision()));
-}
-
-void Rational::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_,ThreadPrecision()),boost::multiprecision::mpfr_float(true_value_imag_,ThreadPrecision()));
 }
 
 

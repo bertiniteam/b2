@@ -56,15 +56,13 @@ def main():
     if args.seed is not None:
         pb.random.set_random_seed(args.seed)
     system = cyclic_system(args.n)
-    solver = pb.nag_algorithm.ZeroDimCauchyDoublePrecisionTotalDegree(system)
+    solver = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(system)
 
-    # Tighten the tracking tolerances so a random homotopy reliably finds every solution: with the
-    # loose defaults a borderline path occasionally fails (a root is missed) or two paths merge (a
-    # duplicate).  Tolerances are the right fix for that, not a fixed seed -- see ADR-0017.
-    tol = solver.get_config(pb.nag_algorithm.TolerancesConfig)
-    tol.newton_before_endgame = 1e-7
-    tol.newton_during_endgame = 1e-8
-    solver.set_config(tol)
+    # Adaptive precision is what makes this reliable.  cyclic-n has a few near-singular paths that
+    # sit right at the edge of double-precision tracking tolerance; in double precision one of them
+    # occasionally fails the endgame (MinStepSizeReached) and a genuine root is silently lost -- so
+    # the distinct count comes back 1 or 2 short of the known value.  Adaptive precision raises the
+    # working precision on exactly those paths, so every run finds all the finite solutions.
 
     start = time.time()
     if comm.Get_size() > 1:
@@ -76,28 +74,26 @@ def main():
     if not pb.parallel.is_manager():
         return
 
-    # Correctness, not just bookkeeping.  Ask the solver how it classified each endpoint instead of
-    # rolling our own cutoff: a genuine solution is one whose endgame succeeded and that the library
-    # calls FINITE (is_finite applies the configured endpoint_finite_threshold).  Count DISTINCT
-    # points -- if two paths happen to converge to the same solution they share a multiplicity
-    # cluster, so summing 1/multiplicity over the finite endpoints counts each point exactly once.
-    OK = int(pb.tracking.SuccessCode.Success)
-    md = solver.solution_metadata()
-    finite = [m for m in md if int(m.endgame_success) == OK and m.is_finite]
-    distinct = round(sum(1.0 / m.multiplicity for m in finite))
-    num_paths = len(solver.solutions())
+    # Correctness, not just bookkeeping.  The solver's own report classifies every path; we trust it
+    # rather than rolling our own cutoff.  Crucially, report.all_paths_resolved is False if any path
+    # failed to track -- so a silently-lost root is caught here, not hidden behind a short count.
+    report = solver.report()
 
     print('cyclic-{}:  ranks={}  threads/rank={}  paths tracked={}  finite solutions={}  wall={:.1f}s'.format(
         args.n, comm.Get_size(), os.environ.get('OMP_NUM_THREADS', '1'),
-        num_paths, distinct, elapsed))
+        report.num_paths_tracked, report.num_finite_solutions, elapsed))
 
-    assert num_paths == math.factorial(args.n), \
-        'expected {} paths, got {}'.format(math.factorial(args.n), num_paths)
+    if not report.all_paths_resolved:        # a path failed or a crossing was left -- show what and why
+        print(report)
+
+    assert report.num_paths_tracked == math.factorial(args.n), \
+        'expected {} paths, got {}'.format(math.factorial(args.n), report.num_paths_tracked)
     if args.n in KNOWN_FINITE:
-        assert distinct == KNOWN_FINITE[args.n], \
-            'expected {} finite solutions, got {}'.format(KNOWN_FINITE[args.n], distinct)
+        assert report.all_paths_resolved, 'some paths did not resolve -- see the report above'
+        assert report.num_finite_solutions == KNOWN_FINITE[args.n], \
+            'expected {} finite solutions, got {}'.format(KNOWN_FINITE[args.n], report.num_finite_solutions)
         print('  OK: {} paths, {} finite solutions -- matches the known cyclic-{} count'.format(
-            num_paths, distinct, args.n))
+            report.num_paths_tracked, report.num_finite_solutions, args.n))
 
 
 if __name__ == '__main__':
