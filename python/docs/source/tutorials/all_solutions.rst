@@ -32,7 +32,7 @@ Newton solver returns nothing useful.  But over the complex numbers they meet in
 :math:`2 \times 2 = 4` points (the product of the degrees -- the total-degree Bézout
 number).
 
-Solve, and collect the successful endpoints.  ``ZeroDim`` is a small factory over the bound
+Solve, and collect the finite solutions.  ``ZeroDim`` is a small factory over the bound
 solver classes: ``ZeroDim(sys)`` is the Cauchy endgame in multiple precision with a total-degree
 start system, and you pick the rest with strings -- ``endgame=`` (``'cauchy'`` / ``'powerseries'``),
 ``mptype=`` (``'double'`` / ``'multiple'`` / ``'adaptive'``), and ``startsystem=`` (``'totaldegree'``
@@ -43,11 +43,7 @@ start system, and you pick the rest with strings -- ``endgame=`` (``'cauchy'`` /
     solver = ZeroDim(sys, mptype='adaptive')
     solver.solve()
 
-    OK = int(bertini.tracking.SuccessCode.Success)
-    sols = solver.solutions()
-    meta = solver.solution_metadata()
-    good = [sols[i] for i in range(len(sols))
-            if int(meta[i].endgame_success) == OK]
+    good = solver.finite_solutions()      # successful, finite endpoints -- the actual points
 
     assert len(good) == 4                 # all four complex solutions
 
