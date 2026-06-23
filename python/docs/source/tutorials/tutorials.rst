@@ -20,6 +20,8 @@
    solving_at_scale
    crossed_paths
    precision_matters
+   precision_models
+   carrying_settings
    evaluation_cyclic
    canonical_ordering
    tracking_nonsingular
