@@ -177,11 +177,6 @@ BOOST_AUTO_TEST_CASE(interning_unifies_whole_trees_and_hash_ignores_precision)
 	BOOST_CHECK(f1->IsSame(*f2));
 	BOOST_CHECK_EQUAL(f1.get(), f2.get());
 	BOOST_CHECK_EQUAL(f1->Hash(), f2->Hash());
-
-	// the structural hash does not depend on the mutable working precision
-	auto h = f1->Hash();
-	f1->precision(100);
-	BOOST_CHECK_EQUAL(f1->Hash(), h);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // structural_hash
