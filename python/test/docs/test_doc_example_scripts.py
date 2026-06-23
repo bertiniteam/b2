@@ -49,8 +49,10 @@ def _run(script, *args, timeout=170):
 
 def test_solve_cyclic_runs():
     # cyclic-5 (120 paths, 70 finite) is the smallest *zero-dimensional* cyclic case;
-    # cyclic-4 is positive-dimensional, so do not use it here.
-    _run("solve_cyclic.py", "--n", "5")
+    # cyclic-4 is positive-dimensional, so do not use it here.  The script solves in ADAPTIVE
+    # precision (the point of the example), which is much slower than double -- give it the same
+    # generous budget as crossed_paths.py rather than the 170s default (Windows CI timed out at 170).
+    _run("solve_cyclic.py", "--n", "5", timeout=600)
 
 
 def test_solve_eigenvalues_runs():
