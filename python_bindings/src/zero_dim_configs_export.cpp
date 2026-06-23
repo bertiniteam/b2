@@ -54,12 +54,13 @@ namespace bertini{
 				"Whether to test for, and remove, points lying on higher-dimensional components during regeneration.")
 			.def_readwrite("start_level", &RegenerationConfig::start_level,
 				"The regeneration level at which to begin.")
-			.def_readwrite("newton_before_endgame", &RegenerationConfig::newton_before_endgame,
-				"Regeneration slice tracking tolerance before the endgame.")
-			.def_readwrite("newton_during_endgame", &RegenerationConfig::newton_during_endgame,
-				"Regeneration slice tracking tolerance during the endgame.")
-			.def_readwrite("final_tolerance", &RegenerationConfig::final_tolerance,
-				"Regeneration slice final tolerance, tracked to using the endgame.")
+			.def_readwrite("slice_newton_before_endgame", &RegenerationConfig::slice_newton_before_endgame,
+				"Slice-moving tracking tolerance before the endgame (Bertini 1 SliceTolBeforeEG). "
+				"Separate from TolerancesConfig.newton_before_endgame, which governs the main tracking.")
+			.def_readwrite("slice_newton_during_endgame", &RegenerationConfig::slice_newton_during_endgame,
+				"Slice-moving tracking tolerance during the endgame (Bertini 1 SliceTolDuringEG).")
+			.def_readwrite("slice_final_tolerance", &RegenerationConfig::slice_final_tolerance,
+				"Final tolerance to track the slice move to, using the endgame (Bertini 1 SliceFinalTol).")
 			;
 
 			class_<PostProcessingConfig>("PostProcessingConfig", init<>())

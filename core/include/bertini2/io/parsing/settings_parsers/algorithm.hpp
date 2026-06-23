@@ -600,15 +600,15 @@ namespace bertini {
 															 }, _val, _1 )]
 								   ^ slice_before_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
 															 {
-																 S.newton_before_endgame = num;
+																 S.slice_newton_before_endgame = num;
 															 }, _val, _1 )]
 								   ^ slice_during_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
 															 {
-																 S.newton_during_endgame = num;
+																 S.slice_newton_during_endgame = num;
 															 }, _val, _1 )]
 								   ^ slice_final_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
 															 {
-																 S.final_tolerance = num;
+																 S.slice_final_tolerance = num;
 															 }, _val, _1 )]
 								   )
 								  >> -no_setting_) | no_setting_;

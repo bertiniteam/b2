@@ -123,9 +123,14 @@ struct RegenerationConfig
 
 	bool higher_dimension_check = true; ///< RegenHigherDimTest
 	unsigned start_level = 0;
-	T newton_before_endgame; ///< The tolerance for tracking before reaching the endgame.  SliceTolBeforeEG
-	T newton_during_endgame; ///< The tolerance for tracking during the endgame.  SliceTolDuringEG
-	T final_tolerance; ///< The final tolerance to track to, using the endgame.  SliceFinalTol
+	// These are the SLICE-moving tracking tolerances (Bertini 1's SliceTol* family) -- the tolerances
+	// for moving the linear slices during regeneration, kept separate from the main tracking
+	// tolerances in TolerancesConfig.  The slice_ prefix makes every config field name unique across
+	// structs, which is what lets a field be set on an owner without naming its struct
+	// (owner.update(field=...) routes by field).
+	T slice_newton_before_endgame; ///< Slice-moving tracking tolerance before the endgame.  SliceTolBeforeEG
+	T slice_newton_during_endgame; ///< Slice-moving tracking tolerance during the endgame.  SliceTolDuringEG
+	T slice_final_tolerance; ///< Final tolerance to track the slice move to, using the endgame.  SliceFinalTol
 };
 
 

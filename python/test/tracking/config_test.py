@@ -124,6 +124,33 @@ def test_update_float_still_works_on_double_fields():
     assert TolerancesConfig().update(final_tolerance=1e-11).final_tolerance == 1e-11
 
 
+def test_regeneration_slice_tolerances_are_prefixed():
+    # RegenerationConfig's tolerances are the slice-MOVING tracking tolerances (Bertini 1's SliceTol*
+    # family), distinct from the main tracking tolerances in TolerancesConfig.  They carry a slice_
+    # prefix so every config field name is unique across structs -- the precondition for routing a
+    # field to its config without naming the struct.
+    from bertini.nag_algorithm import RegenerationConfig
+    c = RegenerationConfig().update(slice_newton_before_endgame="1e-7",
+                                    slice_newton_during_endgame="1e-8",
+                                    slice_final_tolerance="1e-12")
+    assert c.slice_newton_before_endgame == 1e-7
+    assert c.slice_final_tolerance == 1e-12
+    # the un-prefixed names belong only to TolerancesConfig now
+    assert not hasattr(c, 'newton_before_endgame')
+    assert not hasattr(c, 'final_tolerance')
+
+
+def test_no_field_name_collisions_across_configs():
+    # The slice_ rename leaves every config field name unique across all of an owner's configs, which
+    # is what lets a field be routed to its owning config unambiguously.
+    from bertini.nag_algorithm import (ZeroDimCauchyAdaptivePrecisionTotalDegree as ZD,
+                                       TolerancesConfig, RegenerationConfig)
+    from bertini.config import writable_fields
+    tol = set(writable_fields(TolerancesConfig))
+    regen = set(writable_fields(RegenerationConfig))
+    assert tol & regen == set(), "tolerances/regeneration still share field names: {}".format(tol & regen)
+
+
 def test_update_rejects_garbage_string():
     with pytest.raises(Exception):
         SteppingConfig().update(max_step_size="not a number")
