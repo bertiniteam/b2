@@ -68,14 +68,26 @@ namespace bertini{
 			.def("differentiate", &SystemBaseT::Differentiate, (arg("self")), "differentiate the system with respect to the declared variable groups")
 
 			.def("to_classic_input",
-				+[](SystemBaseT const& self, int mptype, int odepredictor){
+				+[](SystemBaseT const& self, int mptype, int odepredictor,
+				    double tracktolbeforeeg, double tracktolduringeg, double finaltol,
+				    double maxstepsize, double stepsuccessfactor, double stepfailfactor,
+				    unsigned stepsforincrease, unsigned long maxnumbersteps, unsigned maxnewtonits,
+				    unsigned maxcrossedpathresolves){
 					bertini::classic::ClassicWriteOptions opt;
-					opt.mptype = mptype;
-					opt.odepredictor = odepredictor;
+					opt.mptype = mptype;                       opt.odepredictor = odepredictor;
+					opt.tracktolbeforeeg = tracktolbeforeeg;   opt.tracktolduringeg = tracktolduringeg;
+					opt.finaltol = finaltol;                   opt.maxstepsize = maxstepsize;
+					opt.stepsuccessfactor = stepsuccessfactor; opt.stepfailfactor = stepfailfactor;
+					opt.stepsforincrease = stepsforincrease;   opt.maxnumbersteps = maxnumbersteps;
+					opt.maxnewtonits = maxnewtonits;           opt.maxcrossedpathresolves = maxcrossedpathresolves;
 					return bertini::classic::SystemToClassicFile(self, opt);
 				},
-				(arg("self"), arg("mptype") = 2, arg("odepredictor") = 5),
-				"Emit this system as a Bertini 1 classic input file (a CONFIG + INPUT string) so the same problem can be solved in Bertini 1 for cross-validation.  mptype: 0 double, 1 fixed-multiple, 2 adaptive (default).  odepredictor: 0 Euler, 2 RK4, 5 RKF45 (default), 6 Cash-Karp.  Tracking tolerances, max steps, Newton iterations and AMP bounds come from Bertini 2's defaults / the system.  Write the returned string to a .input file and run `bertini1` on it (note: Bertini 1 writes many output files into its working directory).")
+				(arg("self"), arg("mptype") = 2, arg("odepredictor") = 5,
+				 arg("tracktolbeforeeg") = 1e-5, arg("tracktolduringeg") = 1e-6, arg("finaltol") = 1e-11,
+				 arg("maxstepsize") = 0.1, arg("stepsuccessfactor") = 2.0, arg("stepfailfactor") = 0.5,
+				 arg("stepsforincrease") = 5u, arg("maxnumbersteps") = 100000ul, arg("maxnewtonits") = 2u,
+				 arg("maxcrossedpathresolves") = 2u),
+				"Emit this system as a Bertini 1 classic input file (a CONFIG + INPUT string) so the same problem can be solved in Bertini 1 for cross-validation.  Every tracking knob that governs path resolution -- predictor, tolerances, and the FULL step-size cadence (maxstepsize / stepsuccessfactor / stepfailfactor / stepsforincrease) plus maxnewtonits -- is settable, so the emitted file is fully controlled against a Bertini 2 solve (defaults mirror Bertini 2's).  mptype: 0 double, 1 fixed-multiple, 2 adaptive.  odepredictor: 0 Euler, 2 RK4, 5 RKF45, 6 Cash-Karp.  AMP coeff/degree bounds are derived from the system.  Run `bertini1` on the result in a SCRATCH dir (it writes many files into its CWD).")
 
 			// Register mpfr overloads first so dbl overloads have highest priority
 			// (boost::python resolves in LIFO order). Without this, a numpy int64

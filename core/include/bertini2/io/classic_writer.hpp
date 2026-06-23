@@ -111,8 +111,14 @@ namespace bertini{
 			double        tracktolbeforeeg        = 1e-5;  ///< Newton tolerance before the endgame
 			double        tracktolduringeg        = 1e-6;  ///< Newton tolerance during the endgame
 			double        finaltol                = 1e-11; ///< final tracking tolerance
-			unsigned long maxnumbersteps          = 100000;///< max steps per path
-			unsigned      maxnewtonits             = 2;     ///< max Newton iterations per correction
+			// step-size cadence -- governs how aggressively a path may take a big step (i.e. jump),
+			// so it must be controlled for a fair crossing-rate comparison against Bertini 1.
+			double        maxstepsize             = 0.1;   ///< MaxStepSize (B2 SteppingConfig default 1/10)
+			double        stepsuccessfactor       = 2.0;   ///< StepSuccessFactor (B2 default 2)
+			double        stepfailfactor          = 0.5;   ///< StepFailFactor (B2 default 1/2)
+			unsigned      stepsforincrease         = 5;     ///< StepsForIncrease (B2 default 5)
+			unsigned long maxnumbersteps          = 100000;///< MaxNumberSteps (B2 default 1e5)
+			unsigned      maxnewtonits             = 2;     ///< MaxNewtonIts (B2 default 2)
 			unsigned      maxcrossedpathresolves   = 2;     ///< endgame-boundary crossed-path re-track attempts
 		};
 
@@ -129,6 +135,10 @@ namespace bertini{
 			out << "tracktolbeforeeg: "       << num(opt.tracktolbeforeeg)  << ";\n";
 			out << "tracktolduringeg: "       << num(opt.tracktolduringeg)  << ";\n";
 			out << "finaltol: "               << num(opt.finaltol)          << ";\n";
+			out << "maxstepsize: "            << num(opt.maxstepsize)       << ";\n";
+			out << "stepsuccessfactor: "      << num(opt.stepsuccessfactor) << ";\n";
+			out << "stepfailfactor: "         << num(opt.stepfailfactor)    << ";\n";
+			out << "stepsforincrease: "       << opt.stepsforincrease       << ";\n";
 			out << "maxnumbersteps: "         << opt.maxnumbersteps         << ";\n";
 			out << "maxnewtonits: "           << opt.maxnewtonits           << ";\n";
 			out << "maxcrossedpathresolves: " << opt.maxcrossedpathresolves << ";\n";
