@@ -95,20 +95,43 @@ def config_key(cls):
 # ---------------------------------------------------------------------------
 
 def _coerced_setattr(obj, key, value):
-    """setattr, retrying strings as multiprecision Floats.
+    """setattr, retrying a string as the field's numeric type.
 
     Strings are the blessed noise-free way to express numeric settings
-    (e.g. max_step_size="0.05"); plain Python floats stay rejected by policy,
-    since 0.05 the double is not 1/20.  Coercion is retry-on-failure so any
-    genuinely string-valued field is unaffected.
+    (e.g. max_step_size="0.05", final_tolerance="1e-11"); plain Python floats
+    stay rejected for the *exact* fields by policy, since 0.05 the double is not
+    1/20.  The catch is that the fields have different underlying types:
+    mpq_rational / mpfr_float fields (step sizes, factors) take a multiprecision
+    Float, while NumErrorT / double fields (tolerances, AMP bounds, min_step_size)
+    take a plain double, and integer-count fields take an int.  So one string
+    spelling works for EVERY field: we try it as an exact Float first, then as a
+    plain float, then as an int, and keep the first that the field accepts.
+
+    Coercion only happens for strings (a non-string that the field rejects raises
+    straight through), so the float-rejection policy on the exact fields stands:
+    passing the double 0.05 to max_step_size is still an error.
     """
     try:
         setattr(obj, key, value)
-    except TypeError:
+        return
+    except TypeError:                       # Boost.Python.ArgumentError is a TypeError
         if not isinstance(value, str):
             raise
-        from .multiprec import Float
-        setattr(obj, key, Float(value))
+
+    from .multiprec import Float
+    last_error = None
+    for convert in (Float, float, int):
+        try:
+            converted = convert(value)      # e.g. int("1e-7") is a ValueError -- skip it
+        except (ValueError, TypeError):
+            continue
+        try:
+            setattr(obj, key, converted)
+            return
+        except TypeError as e:              # field rejected this representation; try the next
+            last_error = e
+    raise last_error if last_error is not None else TypeError(
+        "could not set {0!r} to {1!r}".format(key, value))
 
 
 def _make_update(fields):

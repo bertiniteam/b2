@@ -98,6 +98,32 @@ def test_update_rejects_python_float_for_mpfr_field():
         SteppingConfig().update(max_step_size=0.05)
 
 
+def test_update_accepts_string_for_double_tolerance_field():
+    # NumErrorT (tolerance) fields are plain doubles -- a high-precision number would have no value
+    # there -- but update() still takes the same noise-free string spelling as the exact fields, so
+    # the whole config surface is uniform.  (Regression: these used to throw Boost ArgumentError.)
+    assert TolerancesConfig().update(final_tolerance="1e-11").final_tolerance == 1e-11
+    assert TolerancesConfig().update(newton_before_endgame="1e-7").newton_before_endgame == 1e-7
+
+
+def test_update_accepts_string_for_min_step_size():
+    # min_step_size is a plain double (def_readwrite) where its siblings are mpq_rational; update()
+    # papers over that difference so a string works on every stepping field alike.
+    from bertini.tracking import SteppingConfig as SC
+    assert SC().update(min_step_size="1e-50").min_step_size == 1e-50
+
+
+def test_update_accepts_string_for_integer_field():
+    from bertini.tracking import NewtonConfig
+    assert NewtonConfig().update(max_num_newton_iterations="4").max_num_newton_iterations == 4
+
+
+def test_update_float_still_works_on_double_fields():
+    # the float-rejection policy is only for the exact (mpq/mpfr) fields; a plain double is the
+    # natural input for a NumErrorT tolerance and must keep working.
+    assert TolerancesConfig().update(final_tolerance=1e-11).final_tolerance == 1e-11
+
+
 def test_update_rejects_garbage_string():
     with pytest.raises(Exception):
         SteppingConfig().update(max_step_size="not a number")
