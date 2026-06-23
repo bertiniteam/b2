@@ -198,6 +198,38 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
 		return_internal_reference<>(),
 		"get the computed solutions.  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.")
+	.def("finite_solutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.FiniteSolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the FINITE solutions: successful endpoints the solver calls finite (is_finite applies endpoint_finite_threshold).  includes singular, nonsingular, and real solutions alike.  user coordinates by default; user_coords=False for internal coordinates.")
+	.def("real_solutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.RealSolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the REAL finite solutions (is_real applies the configured tolerance).")
+	.def("nonsingular_solutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.NonsingularSolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the NONSINGULAR finite solutions (simple, well-conditioned roots).")
+	.def("singular_solutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.SingularSolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the SINGULAR finite solutions (multiple or ill-conditioned roots).")
 	.def("target_system",
 		+[](AlgoT& self) -> decltype(self.TargetSystem()) { return self.TargetSystem(); },
 		return_internal_reference<>(),

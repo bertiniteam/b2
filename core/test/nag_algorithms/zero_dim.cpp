@@ -472,6 +472,42 @@ BOOST_AUTO_TEST_CASE(solve_report_from_a_real_solve)
 	BOOST_CHECK(!oss.str().empty());
 }
 
+// The filtered-solution convenience accessors, on the same x^2-1, y^2-1 solve: all four roots
+// (+-1, +-1) are finite, real, and nonsingular.
+BOOST_AUTO_TEST_CASE(filtered_solution_accessors)
+{
+	using namespace bertini;
+
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	System sys;
+	sys.AddFunction(pow(x, 2) - 1);
+	sys.AddFunction(pow(y, 2) - 1);
+	sys.AddVariableGroup(VariableGroup{x, y});
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System, start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto r = zd.Report();
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(),      4u);
+	BOOST_CHECK_EQUAL(zd.RealSolutions().size(),        4u);
+	BOOST_CHECK_EQUAL(zd.NonsingularSolutions().size(), 4u);
+	BOOST_CHECK_EQUAL(zd.SingularSolutions().size(),    0u);
+
+	// the accessors agree with the report's counts
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(), r.num_finite_endpoints);
+	BOOST_CHECK_EQUAL(zd.RealSolutions().size(),   r.num_real);
+	BOOST_CHECK_EQUAL(zd.SingularSolutions().size(), r.num_singular);
+
+	// singular + nonsingular partition the finite set
+	BOOST_CHECK_EQUAL(zd.SingularSolutions().size() + zd.NonsingularSolutions().size(),
+	                  zd.FiniteSolutions().size());
+
+	// user vs internal coordinates: same count, different representation
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions(false).size(), zd.FiniteSolutions(true).size());
+}
+
 // PROBE observer (branch perf/amp-block-precision-escalation): record, per successful step, the
 // |t|, working precision, and the tracker's condition-number estimate -- so we can SEE whether the
 // condition number (||J|| * ||J^{-1}||) spikes then RECOVERS along the actual seed-6 path, and at

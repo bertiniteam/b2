@@ -997,6 +997,57 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			}
 
 			/**
+			\brief Select the solution points whose parallel metadata satisfies a predicate.
+
+			The backing for the FiniteSolutions / RealSolutions / Singular / Nonsingular convenience
+			accessors.  Returns points in user coordinates by default (pass user_coords=false for the
+			solver's internal coordinates), mirroring SolutionsUserCoords / SolutionsInternalCoords.
+			*/
+			template<typename Pred>
+			SolnCont<Vec<BaseComplexT>> SolutionsWhere(Pred pred, bool user_coords = true) const
+			{
+				auto const& sols = user_coords ? SolutionsUserCoords() : SolutionsInternalCoords();
+				auto const& md   = FinalSolutionMetadata();
+				SolnCont<Vec<BaseComplexT>> out;
+				for (size_t i = 0; i < md.size() && i < sols.size(); ++i)
+					if (pred(md[i]))
+						out.push_back(sols[i]);
+				return out;
+			}
+
+			/**
+			\brief The finite solutions: successful endpoints the library calls FINITE (is_finite
+			applies the configured endpoint_finite_threshold).  Includes singular, nonsingular, and
+			real solutions alike.  \see RealSolutions, SingularSolutions, NonsingularSolutions
+			*/
+			SolnCont<Vec<BaseComplexT>> FiniteSolutions(bool user_coords = true) const
+			{
+				return SolutionsWhere([](auto const& m){
+					return m.endgame_success == SuccessCode::Success && m.is_finite; }, user_coords);
+			}
+
+			/// \brief The real finite solutions (is_real applies the configured tolerance).
+			SolnCont<Vec<BaseComplexT>> RealSolutions(bool user_coords = true) const
+			{
+				return SolutionsWhere([](auto const& m){
+					return m.endgame_success == SuccessCode::Success && m.is_finite && m.is_real; }, user_coords);
+			}
+
+			/// \brief The nonsingular finite solutions (simple, well-conditioned roots).
+			SolnCont<Vec<BaseComplexT>> NonsingularSolutions(bool user_coords = true) const
+			{
+				return SolutionsWhere([](auto const& m){
+					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_singular; }, user_coords);
+			}
+
+			/// \brief The singular finite solutions (multiple or ill-conditioned roots).
+			SolnCont<Vec<BaseComplexT>> SingularSolutions(bool user_coords = true) const
+			{
+				return SolutionsWhere([](auto const& m){
+					return m.endgame_success == SuccessCode::Success && m.is_finite && m.is_singular; }, user_coords);
+			}
+
+			/**
 			\brief Get the metadat associated with the final computed solutions
 			*/
 			const auto& FinalSolutionMetadata() const
