@@ -90,11 +90,11 @@ def _infer_start_system(system):
     return 'mhom'
 
 
-def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='infer',
+def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
             precision=None):
     """Construct a zero-dim solver by name, with friendly defaults.
 
-    ``ZeroDim(system)`` is the Cauchy endgame in multiple precision with the start system **inferred
+    ``ZeroDim(system)`` is the Cauchy endgame in adaptive precision with the start system **inferred
     from the system's variable-group structure** -- total degree for a single affine group,
     multihomogeneous otherwise -- so a multi-group (e.g. eigenvalue) system gets MHom automatically
     rather than an over-counting total-degree start.  Override any piece with a string::
@@ -105,7 +105,7 @@ def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='infer',
     ----------
     system : the polynomial :class:`~bertini.System` to solve.
     endgame : ``'cauchy'`` (default) or ``'powerseries'``.
-    mptype : the precision -- ``'double'``, ``'multiple'`` (default), or ``'adaptive'`` (``'amp'``).
+    mptype : the precision -- ``'double'``, ``'multiple'``, or ``'adaptive'`` (``'amp'``, the default).
     precision : an alias for ``mptype``; if given (not ``None``) it overrides ``mptype``.
     startsystem : ``'infer'`` (default -- choose from the variable-group structure, matching the
         C++ blackbox), or force it with ``'totaldegree'`` / ``'mhom'``.  To run from a homotopy you
@@ -125,7 +125,7 @@ def ZeroDim(system, *, endgame='cauchy', mptype='multiple', startsystem='infer',
         >>> sys.add_variable_group(bertini.VariableGroup([x]))
         >>> sys.add_function(x * x - 1)
         >>> type(ZeroDim(sys)).__name__
-        'ZeroDimCauchyFixedMultiplePrecisionTotalDegree'
+        'ZeroDimCauchyAdaptivePrecisionTotalDegree'
         >>> type(ZeroDim(sys, mptype='amp', startsystem='mhom')).__name__
         'ZeroDimCauchyAdaptivePrecisionMHomogeneous'
         >>> solver = ZeroDim(sys, mptype='adaptive')   # robust path
