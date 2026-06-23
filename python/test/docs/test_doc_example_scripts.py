@@ -47,12 +47,15 @@ def _run(script, *args, timeout=170):
     return proc
 
 
+# cyclic-5 in ADAPTIVE precision (the point of the example) is much slower than double and varies a
+# lot by runner -- on a slow Windows CI box it exceeds the global 180s pytest-timeout, so override it
+# here.  The inner subprocess budget (540s) sits just under the test budget (600s) so a genuine hang
+# surfaces as a clean subprocess.TimeoutExpired rather than pytest-timeout killing the test.
+@pytest.mark.timeout(600)
 def test_solve_cyclic_runs():
     # cyclic-5 (120 paths, 70 finite) is the smallest *zero-dimensional* cyclic case;
-    # cyclic-4 is positive-dimensional, so do not use it here.  The script solves in ADAPTIVE
-    # precision (the point of the example), which is much slower than double -- give it the same
-    # generous budget as crossed_paths.py rather than the 170s default (Windows CI timed out at 170).
-    _run("solve_cyclic.py", "--n", "5", timeout=600)
+    # cyclic-4 is positive-dimensional, so do not use it here.
+    _run("solve_cyclic.py", "--n", "5", timeout=540)
 
 
 def test_solve_eigenvalues_runs():
