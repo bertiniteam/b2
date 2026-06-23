@@ -411,6 +411,53 @@ def update(self, **fields):
     return self
 
 
+def get_settings(self):
+    """This owner's whole configuration as a carryable dict ``{config_name: config}``.
+
+    Each value is a copy of one of the owner's configs (e.g. ``{'stepping': SteppingConfig(...),
+    'tolerances': TolerancesConfig(...)}``), keyed by the same short names config_names() lists.  The
+    configs are independent copies (and picklable), so the dict is a plain Python value you can stash,
+    tweak, and apply to other owners -- the way to carry one set of tracking settings across a series
+    of related solves::
+
+        settings = first_solver.get_settings()
+        next_solver.set_settings(settings)
+
+    See set_settings() for applying one back.
+    """
+    return {config_key(cls): self.get_config(cls)
+            for cls in self.config_types() if cls is not None}
+
+
+def set_settings(self, settings, strict=False):
+    """Apply a settings dict (from get_settings()) onto this owner.  Returns self.
+
+    ``settings`` is ``{config_name: config}`` (or ``{config_name: {field: value}}``).  By default only
+    the configs this owner actually has are applied and the rest are skipped -- so a bundle carried
+    from one solver drops cleanly onto another whose config set differs (e.g. a different precision
+    model, or a different algorithm stage).  Pass ``strict=True`` to instead raise on any key this
+    owner does not have.
+    """
+    have = set(config_names(self))
+    for key, value in dict(settings).items():
+        if key not in have:
+            if strict:
+                raise KeyError(
+                    "{0} has no config {1!r}; available: {2}".format(
+                        type(self).__name__, key, sorted(have)))
+            continue
+        cls = _resolve_config_class(self, key)
+        if isinstance(value, cls):
+            self.set_config(value)
+        elif isinstance(value, dict):
+            self.set_config(self.get_config(cls).update(**value))
+        else:
+            raise TypeError(
+                "value for {0!r} must be a {1} or a dict of fields, got {2}".format(
+                    key, cls.__name__, type(value).__name__))
+    return self
+
+
 def _enhance_owner_class(cls):
     """Attach configure()/config_names() to a tracker/algorithm class (idempotent)."""
     if getattr(cls, "_b2_owner_enhanced", False):
@@ -418,6 +465,8 @@ def _enhance_owner_class(cls):
     cls.configure = configure
     cls.config_names = config_names
     cls.update = update
+    cls.get_settings = get_settings
+    cls.set_settings = set_settings
     cls._b2_owner_enhanced = True
     return cls
 

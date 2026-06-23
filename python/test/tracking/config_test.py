@@ -280,3 +280,68 @@ def test_owner_update_routes_only_across_this_owners_configs(solver):
 def test_owner_update_rejects_unknown_field(solver):
     with pytest.raises(AttributeError):
         solver.update(finaltol="1e-9")
+
+
+# ------------------------------------------------ get_settings / set_settings (the carry)
+
+def _square():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = pb.System()
+    s.add_function(x ** 2 + y ** 2 - 1); s.add_function(x + y)
+    s.add_variable_group(pb.VariableGroup([x, y]))
+    return s
+
+
+def test_get_settings_is_a_named_dict_of_configs():
+    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    settings = a.get_settings()
+    assert set(settings) == set(a.config_names())
+    assert isinstance(settings['tolerances'], TolerancesConfig)
+
+
+def test_settings_round_trip_onto_another_solver():
+    from bertini.nag_algorithm import ZeroDimConfig
+    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a.update(final_tolerance="1e-12", max_num_crossed_path_resolve_attempts=4)
+
+    b = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    b.set_settings(a.get_settings())
+    assert b.get_config(TolerancesConfig).final_tolerance == 1e-12
+    assert b.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 4
+
+
+def test_settings_carry_across_precision_models():
+    # the de-templated, precision-agnostic configs are what make this work: a bundle from a multiple-
+    # precision solver applies unchanged to a double or adaptive one.  This is the cross-stage carry
+    # an NID-style workflow needs.
+    src = pb.nag_algorithm.ZeroDim(_square(), mptype='multiple')
+    src.update(final_tolerance="1e-11")
+    for mptype in ('double', 'adaptive'):
+        dst = pb.nag_algorithm.ZeroDim(_square(), mptype=mptype)
+        dst.set_settings(src.get_settings())
+        assert dst.get_config(TolerancesConfig).final_tolerance == 1e-11
+
+
+def test_settings_bundle_is_picklable():
+    import pickle
+    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a.update(final_tolerance="1e-9")
+    restored = pickle.loads(pickle.dumps(a.get_settings()))
+    b = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    b.set_settings(restored)
+    assert b.get_config(TolerancesConfig).final_tolerance == 1e-9
+
+
+def test_set_settings_skips_inapplicable_by_default_strict_raises():
+    from bertini.tracking import AMPTracker
+    settings = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square()).get_settings()
+    trk = AMPTracker(_square())            # a tracker has no 'tolerances' / 'zero_dim'
+    trk.set_settings(settings)             # non-strict: silently skips them
+    with pytest.raises(KeyError):
+        trk.set_settings(settings, strict=True)
+
+
+def test_set_settings_accepts_dict_of_fields():
+    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a.set_settings({'tolerances': {'final_tolerance': '1e-10'}})
+    assert a.get_config(TolerancesConfig).final_tolerance == 1e-10
