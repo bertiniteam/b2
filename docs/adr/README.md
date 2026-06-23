@@ -39,3 +39,12 @@ Each ADR follows the template:
 | [0019](0019-omit-debug-info-from-release-builds.md) | Omit debug info (-g) from Release builds; per-TU peak RSS caps build parallelism | Build / core |
 | [0020](0020-structured-block-start-systems-need-blend-homotopy.md) | A structured-block start system must be coupled into a homotopy via a blend (MakeHomotopy / blend_homotopy), not System node arithmetic | Core / nag_algorithms |
 | [0021](0021-block-evaluations-fully-define-their-own-rows.md) | A block (and the patch) must fully define its own output rows; System allocates result buffers uninitialized | Core / system |
+| [0022](0022-path-crossings-are-detected-and-retracked.md) | Path crossings at the endgame boundary are detected and re-tracked, not tolerated | Core / nag_algorithms |
+| [0023](0023-unified-speculative-full-path-parallelism.md) | ZeroDim uses one per-path primitive and a speculative-full-path parallel model | Core / nag_algorithms |
+| [0024](0024-condition-probe-tracker-owned-per-path.md) | The condition-number random direction is refreshed once per path, by the tracker | Numerics / tracking |
+| [0025](0025-randomization-block.md) | Randomization of overdetermined systems is a first-class block | Core / system |
+| [0026](0026-moving-homotopy-blend-moving-rows-only.md) | Moving homotopies blend only the moving rows; fixed equations stay sibling blocks | Core / nag_algorithms |
+| [0027](0027-slp-management-output-sets-program-memory-freeze-partition.md) | SLPs belong to output-sets, not nodes; Program/Memory split with a freeze-set tape partition | Core / function_tree |
+| [0028](0028-named-node-taxonomy.md) | Named-node taxonomy — NameHolder, three named kinds, NamedExpression replaces Handle, Jacobian deleted | Core / function_tree |
+| [0029](0029-gamma-trick-max-precision-unit-modulus.md) | The gamma-trick constant is a unit-modulus complex generated at maximum precision | Numerics / system |
+| [0030](0030-fixed-multiple-uniform-ambient-precision-adaptive-default.md) | Fixed-multiple solves use one uniform ambient precision; ZeroDim defaults to adaptive | Numerics / nag_algorithms |
