@@ -1525,7 +1525,7 @@ namespace bertini
 	{
 		auto t = node::Variable::Make(path_variable_name);
 		auto g = gamma ? gamma
-		               : std::static_pointer_cast<node::Node>(node::Rational::Make(node::Rational::Rand()));
+		               : std::static_pointer_cast<node::Node>(node::Float::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Float node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
 
 		System homotopy;
 		if (start.HasStructuredBlocks() || target.HasStructuredBlocks())
@@ -1570,7 +1570,7 @@ namespace bertini
 
 		auto t = node::Variable::Make(path_variable_name);
 		auto g = gamma ? gamma
-		               : std::static_pointer_cast<node::Node>(node::Rational::Make(node::Rational::Rand()));
+		               : std::static_pointer_cast<node::Node>(node::Float::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Float node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
 
 		// Keep the fixed system's blocks as sibling blocks (do NOT clear them): they are autonomous,
 		// so they are evaluated once per point and contribute nothing to dH/dt as the moving rows
