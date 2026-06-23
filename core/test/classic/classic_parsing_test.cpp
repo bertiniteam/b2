@@ -27,6 +27,8 @@
 
 #include "bertini2/bertini.hpp"
 #include <bertini2/io/parsing/classic_utilities.hpp>
+#include <bertini2/io/parsing/system_parsers.hpp>
+#include <bertini2/io/classic_writer.hpp>
 #include <string>
 #include <boost/test/unit_test.hpp>
 
@@ -616,7 +618,32 @@ BOOST_AUTO_TEST_CASE(test_split_and_uncomment)
 
     BOOST_CHECK(input.find("variable_group x,y;")!=std::string::npos);
     BOOST_CHECK(input.find("f = x^2 + y;")!=std::string::npos);
-    
+
+}
+
+
+// The classic WRITER is the inverse of the parser: emitting a system to classic syntax and parsing
+// it back must reconstruct an equivalent system (so a Bertini 1 run sees the same problem).
+BOOST_AUTO_TEST_CASE(classic_writer_round_trips_a_system)
+{
+	using namespace bertini;
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*x + y*y - 1);
+	sys.AddFunction(x - y);
+
+	System reparsed{ classic::SystemToClassic(sys) };
+	BOOST_CHECK_EQUAL(reparsed.NumNaturalFunctions(), sys.NumNaturalFunctions());
+
+	// identical values at a generic point -> the emitted classic text is a faithful round-trip
+	Vec<dbl> pt(2); pt << dbl(0.3, 0.7), dbl(-0.4, 0.2);
+	auto a = sys.Eval(pt);
+	auto b = reparsed.Eval(pt);
+	BOOST_REQUIRE_EQUAL(a.size(), b.size());
+	for (Eigen::Index i = 0; i < a.size(); ++i)
+		BOOST_CHECK_SMALL(abs(a(i) - b(i)), 1e-12);
 }
 
 

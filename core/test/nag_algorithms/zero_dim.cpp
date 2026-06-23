@@ -508,6 +508,37 @@ BOOST_AUTO_TEST_CASE(filtered_solution_accessors)
 	BOOST_CHECK_EQUAL(zd.FiniteSolutions(false).size(), zd.FiniteSolutions(true).size());
 }
 
+// Regression: a fixed-multiple (MultiplePrecisionTracker) zero-dim solve used to throw at the start
+// of tracking -- "start point ... differing precision from default (20!=16)" -- because the tracker
+// (built at DefaultPrecision) and the config-driven ambient/thread precision (DoublePrecision)
+// disagreed.  ZeroDimConfig::initial_ambient_precision now defaults to the multiprecision
+// DefaultPrecision, so the precision is uniform everywhere and the solve completes -- at whatever
+// precision is the default when the solver is constructed.
+BOOST_AUTO_TEST_CASE(fixed_multiple_precision_solves_uniformly)
+{
+	using namespace bertini;
+	using MPTracker = tracking::MultiplePrecisionTracker;
+
+	auto solve_at = [](unsigned at_precision) -> unsigned long long {
+		auto saved = DefaultPrecision();
+		DefaultPrecision(at_precision);
+		auto x = node::Variable::Make("x");
+		System sys;
+		sys.AddFunction(pow(x, 2) - 1);
+		sys.AddVariableGroup(VariableGroup{x});
+		auto zd = algorithm::ZeroDim<MPTracker, endgame::EndgameSelector<MPTracker>::Cauchy,
+		                             System, start_system::TotalDegree>(sys);
+		zd.DefaultSetup();
+		zd.Solve();                                  // used to throw on the precision mismatch
+		auto n = zd.Report().num_finite_solutions;
+		DefaultPrecision(saved);
+		return n;
+	};
+
+	BOOST_CHECK_EQUAL(solve_at(30), 2u);             // a typical multiprecision default
+	BOOST_CHECK_EQUAL(solve_at(60), 2u);             // and a higher one -- still uniform, still solves
+}
+
 // PROBE observer (branch perf/amp-block-precision-escalation): record, per successful step, the
 // |t|, working precision, and the tracker's condition-number estimate -- so we can SEE whether the
 // condition number (||J|| * ||J^{-1}||) spikes then RECOVERS along the actual seed-6 path, and at

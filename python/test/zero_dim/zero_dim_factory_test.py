@@ -1,6 +1,6 @@
 """The friendly ZeroDim(...) factory selects the right bound solver class by string.
 
-Instead of typing ZeroDimCauchyFixedMultiplePrecisionTotalDegree, you say ZeroDim(system) (the
+Instead of typing ZeroDimCauchyAdaptivePrecisionTotalDegree, you say ZeroDim(system) (the
 defaults) or ZeroDim(system, endgame=..., mptype=..., startsystem=...).
 """
 
@@ -21,22 +21,22 @@ def _system():
     return sys
 
 
-def test_defaults_are_cauchy_multiple_totaldegree():
+def test_defaults_are_cauchy_adaptive_totaldegree():
     solver = ZeroDim(_system())
-    assert isinstance(solver, _n.ZeroDimCauchyFixedMultiplePrecisionTotalDegree)
+    assert isinstance(solver, _n.ZeroDimCauchyAdaptivePrecisionTotalDegree)
 
 
 @pytest.mark.parametrize("kwargs, expected", [
-    (dict(),                                                   'ZeroDimCauchyFixedMultiplePrecisionTotalDegree'),
+    (dict(),                                                   'ZeroDimCauchyAdaptivePrecisionTotalDegree'),
     (dict(mptype='double'),                                   'ZeroDimCauchyDoublePrecisionTotalDegree'),
     (dict(mptype='dbl'),                                      'ZeroDimCauchyDoublePrecisionTotalDegree'),
     (dict(mptype='multiple'),                                 'ZeroDimCauchyFixedMultiplePrecisionTotalDegree'),
     (dict(mptype='amp'),                                      'ZeroDimCauchyAdaptivePrecisionTotalDegree'),
     (dict(mptype='adaptive'),                                 'ZeroDimCauchyAdaptivePrecisionTotalDegree'),
-    (dict(endgame='powerseries'),                             'ZeroDimPowerSeriesFixedMultiplePrecisionTotalDegree'),
-    (dict(endgame='power_series'),                            'ZeroDimPowerSeriesFixedMultiplePrecisionTotalDegree'),
-    (dict(startsystem='mhom'),                                'ZeroDimCauchyFixedMultiplePrecisionMHomogeneous'),
-    (dict(startsystem='td'),                                  'ZeroDimCauchyFixedMultiplePrecisionTotalDegree'),
+    (dict(endgame='powerseries'),                             'ZeroDimPowerSeriesAdaptivePrecisionTotalDegree'),
+    (dict(endgame='power_series'),                            'ZeroDimPowerSeriesAdaptivePrecisionTotalDegree'),
+    (dict(startsystem='mhom'),                                'ZeroDimCauchyAdaptivePrecisionMHomogeneous'),
+    (dict(startsystem='td'),                                  'ZeroDimCauchyAdaptivePrecisionTotalDegree'),
     # the docstring's headline example, and a fully-specified power-series/double/total-degree:
     (dict(endgame='cauchy', mptype='amp', startsystem='mhom'),'ZeroDimCauchyAdaptivePrecisionMHomogeneous'),
     (dict(endgame='power_series', mptype='dbl', startsystem='td'),
@@ -103,8 +103,19 @@ def test_startsystem_inferred_from_variable_groups():
     # total degree; two-or-more groups, or any projective group, is multihomogeneous.  This matters
     # because total degree THROWS ("more than one affine variable group") on a multi-group system.
     assert isinstance(ZeroDim(_system()),
-                      _n.ZeroDimCauchyFixedMultiplePrecisionTotalDegree)
+                      _n.ZeroDimCauchyAdaptivePrecisionTotalDegree)
     assert isinstance(ZeroDim(_two_affine_group_system()),
-                      _n.ZeroDimCauchyFixedMultiplePrecisionMHomogeneous)
+                      _n.ZeroDimCauchyAdaptivePrecisionMHomogeneous)
     assert isinstance(ZeroDim(_projective_system()),
-                      _n.ZeroDimCauchyFixedMultiplePrecisionMHomogeneous)
+                      _n.ZeroDimCauchyAdaptivePrecisionMHomogeneous)
+
+
+def test_fixed_multiple_precision_solves():
+    # Regression: a fixed-multiple zero-dim solve used to throw at the start of tracking --
+    # "start point ... has differing precision from default (20!=16)" -- because the start points
+    # (default precision) and the config-driven thread precision (double) disagreed.  The ambient
+    # precision is now uniform (sourced from the multiprecision default), so a plain multiple-
+    # precision solve completes.  See ZeroDimConfig::initial_ambient_precision.
+    solver = ZeroDim(_system(), mptype='multiple')
+    solver.solve()
+    assert len(solver.finite_solutions()) == 2

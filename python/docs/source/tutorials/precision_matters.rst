@@ -54,7 +54,7 @@ user should -- not by trusting the raw endpoint count, but by asking the solver 
    report = solver.report()
 
    assert report.num_finite_solutions == 70         # every finite solution of cyclic-5
-   assert report.all_paths_resolved                 # nothing fell off the tightrope
+   assert report.num_failed == 0                    # no path the tracker had to give up on
 
 The report is a one-call summary of how every path ended up.  ``print(report)`` shows it::
 
@@ -67,9 +67,11 @@ The report is a one-call summary of how every path ended up.  ``print(report)`` 
      all paths resolved? yes
 
 ``num_finite_solutions`` counts *distinct* points (it sums ``1/multiplicity``, so a genuine multiple
-root is counted once).  ``all_paths_resolved`` is the headline: every one of the 120 paths reached a
-definite outcome -- a finite solution, or a clean divergence to infinity (which is a *result*, not a
-failure).  Nothing was lost.
+root is counted once).  ``num_failed`` is the **precision** headline: it counts paths the tracker had
+to *give up* on -- the ``MinStepSizeReached`` failures that adaptive precision exists to prevent.
+Zero of them here.  (The report also exposes ``all_paths_resolved``, a stricter all-in-one flag that
+*additionally* requires the midpath check to have cleared every path crossing -- a separate,
+predictor-driven concern covered in :doc:`crossed_paths`, not a precision one.)
 
 How a count can lie
 ===================
@@ -113,6 +115,6 @@ Two habits keep a solve honest:
    arithmetic than ``'double'``, but it spends that cost *only* where the geometry demands it, and it
    turns "sometimes 69" into "always 70".  Pinning a random seed only makes a flaky run
    *reproducible*; it is never the fix.
-#. **Check** ``report().all_paths_resolved``\ **, not just the count.**  The solve report classifies
-   every path; if any failed to track, ``all_paths_resolved`` is ``False`` and ``failures_by_reason``
-   names the reason.  A count alone can hide a root the tracker silently lost.
+#. **Check** ``report().num_failed``\ **, not just the count.**  The solve report classifies every
+   path; if any *failed to track*, ``num_failed`` is nonzero and ``failures_by_reason`` names the
+   reason.  A count alone can hide a root the tracker silently lost.

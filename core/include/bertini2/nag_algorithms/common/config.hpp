@@ -29,6 +29,8 @@
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/nag_algorithms/common/policies.hpp"
 
+#include <type_traits>
+
 namespace bertini{
 	namespace algorithm{
 
@@ -140,10 +142,28 @@ struct PostProcessingConfig{
 	T condition_number_threshold {T(100000000)}; ///< Bertini 1's `CondNumThreshold`.  An endpoint is considered singular if it is the endpoint of multiple paths (multiplicity > 1), or if the approximation of the condition number (in the spectral norm, as estimated by the tracker) is larger than this value.  B1 default 1e8.
 };
 
+/**
+\brief The default ambient precision for a ZeroDimConfig, by complex type.
+
+Double-precision solves work at double; multiprecision solves work at the current default precision
+-- which is the precision the MultiplePrecisionTracker is built at, so that in a fixed-multiple solve
+the start points, the tracker, and the working ("thread") precision are all one and the same value.
+(Defaulting to DoublePrecision() here left fixed-multiple solves with the tracker at DefaultPrecision()
+but the ambient/thread precision at double -- a mismatch the tracker rejects at start.)
+*/
+template<typename ComplexT>
+inline unsigned DefaultInitialAmbientPrecision()
+{
+	if constexpr (std::is_same<ComplexT, dbl_complex>::value)
+		return DoublePrecision();
+	else
+		return DefaultPrecision();
+}
+
 template<typename ComplexT>
 struct ZeroDimConfig
 {
-	unsigned initial_ambient_precision = DoublePrecision();
+	unsigned initial_ambient_precision = DefaultInitialAmbientPrecision<ComplexT>();
 	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 
 	ComplexT start_time = ComplexT(1);

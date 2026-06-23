@@ -40,6 +40,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include "system_export.hpp"
+#include <bertini2/io/classic_writer.hpp>
 
 
 
@@ -65,6 +66,28 @@ namespace bertini{
 			.def("precision", get_prec_, (arg("self")), "Get the current precision of the system.  Returns a postive number, representing the number of digits (not bits) at which the system is currently represented.  (there is a reference-level precision stored, so you can change this up / down mostly fearlessly)")
 			.def("precision", set_prec_, (arg("self"), arg("precision")),"Set / change the precision of the system.  Feed in a positive number, representing the digits (not bits) of the precision.  Double precision is 16, but that only effects the multi-precision precision...  you can eval in double precision without changing the precision to 16.")
 			.def("differentiate", &SystemBaseT::Differentiate, (arg("self")), "differentiate the system with respect to the declared variable groups")
+
+			.def("to_classic_input",
+				+[](SystemBaseT const& self, int mptype, int odepredictor,
+				    double tracktolbeforeeg, double tracktolduringeg, double finaltol,
+				    double maxstepsize, double stepsuccessfactor, double stepfailfactor,
+				    unsigned stepsforincrease, unsigned long maxnumbersteps, unsigned maxnewtonits,
+				    unsigned maxcrossedpathresolves){
+					bertini::classic::ClassicWriteOptions opt;
+					opt.mptype = mptype;                       opt.odepredictor = odepredictor;
+					opt.tracktolbeforeeg = tracktolbeforeeg;   opt.tracktolduringeg = tracktolduringeg;
+					opt.finaltol = finaltol;                   opt.maxstepsize = maxstepsize;
+					opt.stepsuccessfactor = stepsuccessfactor; opt.stepfailfactor = stepfailfactor;
+					opt.stepsforincrease = stepsforincrease;   opt.maxnumbersteps = maxnumbersteps;
+					opt.maxnewtonits = maxnewtonits;           opt.maxcrossedpathresolves = maxcrossedpathresolves;
+					return bertini::classic::SystemToClassicFile(self, opt);
+				},
+				(arg("self"), arg("mptype") = 2, arg("odepredictor") = 5,
+				 arg("tracktolbeforeeg") = 1e-5, arg("tracktolduringeg") = 1e-6, arg("finaltol") = 1e-11,
+				 arg("maxstepsize") = 0.1, arg("stepsuccessfactor") = 2.0, arg("stepfailfactor") = 0.5,
+				 arg("stepsforincrease") = 5u, arg("maxnumbersteps") = 100000ul, arg("maxnewtonits") = 2u,
+				 arg("maxcrossedpathresolves") = 2u),
+				"Emit this system as a Bertini 1 classic input file (a CONFIG + INPUT string) so the same problem can be solved in Bertini 1 for cross-validation.  Every tracking knob that governs path resolution -- predictor, tolerances, and the FULL step-size cadence (maxstepsize / stepsuccessfactor / stepfailfactor / stepsforincrease) plus maxnewtonits -- is settable, so the emitted file is fully controlled against a Bertini 2 solve (defaults mirror Bertini 2's).  mptype: 0 double, 1 fixed-multiple, 2 adaptive.  odepredictor: 0 Euler, 2 RK4, 5 RKF45, 6 Cash-Karp.  AMP coeff/degree bounds are derived from the system.  Run `bertini1` on the result in a SCRATCH dir (it writes many files into its CWD).")
 
 			// Register mpfr overloads first so dbl overloads have highest priority
 			// (boost::python resolves in LIFO order). Without this, a numpy int64
@@ -295,8 +318,8 @@ namespace bertini{
 			;
 
 			// free functions
-			def("concatenate", &Concatenate,(arg("self"), arg("other")), "concatenate two Systems to produce a new one.  Appends the second onto what was the first.");
-			def("clone", &Clone,(arg("self")), "Make a complete clone of a System.  Includes all functions, variables, etc.  Truly and genuinely distinct.");
+			def("concatenate", &Concatenate,(arg("self"), arg("other")), "concatenate two Systems to produce a new one.  Appends the second's functions onto a copy of the first.  The two must share variable ordering (cloning one from the other, or just reusing the same variables, guarantees this -- variables are canonical by name).  If exactly one is patched, the result takes that patch.");
+			def("clone", &Clone,(arg("self")), "Copy a System.  The copy shares the immutable node DAG (variables, functions, subexpressions) with the original but gets its own evaluation memory, so it is safe to evaluate concurrently AND its variables line up with the original's -- which is what lets you clone a set-up system, give the clone different functions, and concatenate the two (issue #256).  Adding/removing functions on one does not affect the other.  For a fully serialized deep copy use copy.deepcopy or pickle.");
 			def("make_homotopy", &MakeHomotopy,
 				(arg("target"), arg("start"), arg("path_variable")="t", arg("gamma")=std::shared_ptr<node::Node>()),
 				"Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start, with the path variable added.  At t=1 the homotopy is gamma*start (so start's solutions are its roots) and at t=0 it is target.  When start carries a structured block (e.g. a products-of-linears start system) the two systems are combined with a blend block; otherwise node arithmetic is used.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.");

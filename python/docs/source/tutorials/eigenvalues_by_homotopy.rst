@@ -114,15 +114,10 @@ eigenvector):
 
 .. testcode::
 
-    OK = int(bertini.tracking.SuccessCode.Success)
-
     def eigenvalues_of(system):
         solver = ZeroDim(system, mptype='adaptive', startsystem='mhom')
         solver.solve()
-        sols = solver.solutions()
-        meta = solver.solution_metadata()
-        good = [s for s, m in zip(sols, meta)
-                if int(m.endgame_success) == OK and len(s) > 0]
+        good = solver.finite_solutions()                 # the n eigenpairs (lam is the last coord)
         assert len(good) == n                            # one path per eigenvalue
         return sorted(complex(s[len(s) - 1]).real for s in good)
 
