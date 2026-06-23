@@ -40,3 +40,8 @@ flakiness is real and should be removed, not masked.
 - Relevant for the upcoming performance work: changing step-size/precision logic
   must not be "validated" by a lucky seed — re-check correctness across several
   random draws (distinct-solution count against the known value).
+- ADR-0029 later improved the *conditioning* of `gamma` (unit modulus, generated at
+  maximum precision). That is complementary numerical hygiene, not a contradiction:
+  a better-conditioned `gamma` is still no substitute for fixing a flaky solve with
+  tolerances/precision, and correctness is still measured by the distinct-solution
+  count across random draws.
