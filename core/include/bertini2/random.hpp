@@ -259,7 +259,7 @@ using bertini::RandomMp;
 	inline complex rand_unit()
 	{
 		complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
-		return returnme / sqrt( abs(returnme));
+		return returnme / abs(returnme);   // normalize to modulus 1 (NOT sqrt(abs), which left modulus sqrt|z|)
 	}
 
 	inline complex RandomUnit()
@@ -300,7 +300,7 @@ using bertini::RandomMp;
 		a.precision(num_digits);
 		
 		complex temp(RandomMp(num_digits),RandomMp(num_digits));
-		a = std::move(temp/sqrt(abs(temp)));
+		a = std::move(temp/abs(temp));   // normalize to modulus 1 (NOT sqrt(abs))
 		SetThreadPrecision(cached);
 	}
 
