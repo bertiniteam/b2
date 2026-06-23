@@ -1456,6 +1456,38 @@ BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 
 /**
 \class bertini::System
+\test \b concatenate_copies_patch_from_patched_operand When exactly one operand is patched,
+Concatenate must give the result that operand's patch.  Regression: Concatenate used to call
+sys1.CopyPatches(sys1) -- copying patches from itself, a no-op -- so the patch was silently
+dropped and the result came out unpatched.
+*/
+BOOST_AUTO_TEST_CASE(concatenate_copies_patch_from_patched_operand)
+{
+	bertini::SetGlobalSeed(1u); // AutoPatch draws random patch coefficients
+
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x,y};
+
+	bertini::System base;
+	base.AddVariableGroup(vars);
+	base.AddFunction(x*x + y*y - 1);
+	base.Homogenize();
+
+	// Two systems with identical variable ordering (clones share the node DAG), only one patched.
+	auto sys1 = Clone(base);              // unpatched
+	auto sys2 = Clone(base);
+	sys2.AutoPatch();                     // patched
+
+	BOOST_CHECK(!sys1.IsPatched());
+	BOOST_CHECK(sys2.IsPatched());
+
+	auto sys3 = Concatenate(sys1, sys2);
+	BOOST_CHECK(sys3.IsPatched());
+	BOOST_CHECK(sys3.GetPatch() == sys2.GetPatch());
+}
+
+/**
+\class bertini::System
 \test \b parsed_system_evaluates_correctly 
 */
 BOOST_AUTO_TEST_CASE(parsed_system_evaluates_correctly)

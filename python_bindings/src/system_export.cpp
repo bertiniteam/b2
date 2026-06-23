@@ -318,8 +318,8 @@ namespace bertini{
 			;
 
 			// free functions
-			def("concatenate", &Concatenate,(arg("self"), arg("other")), "concatenate two Systems to produce a new one.  Appends the second onto what was the first.");
-			def("clone", &Clone,(arg("self")), "Make a complete clone of a System.  Includes all functions, variables, etc.  Truly and genuinely distinct.");
+			def("concatenate", &Concatenate,(arg("self"), arg("other")), "concatenate two Systems to produce a new one.  Appends the second's functions onto a copy of the first.  The two must share variable ordering (cloning one from the other, or just reusing the same variables, guarantees this -- variables are canonical by name).  If exactly one is patched, the result takes that patch.");
+			def("clone", &Clone,(arg("self")), "Copy a System.  The copy shares the immutable node DAG (variables, functions, subexpressions) with the original but gets its own evaluation memory, so it is safe to evaluate concurrently AND its variables line up with the original's -- which is what lets you clone a set-up system, give the clone different functions, and concatenate the two (issue #256).  Adding/removing functions on one does not affect the other.  For a fully serialized deep copy use copy.deepcopy or pickle.");
 			def("make_homotopy", &MakeHomotopy,
 				(arg("target"), arg("start"), arg("path_variable")="t", arg("gamma")=std::shared_ptr<node::Node>()),
 				"Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start, with the path variable added.  At t=1 the homotopy is gamma*start (so start's solutions are its roots) and at t=0 it is target.  When start carries a structured block (e.g. a products-of-linears start system) the two systems are combined with a blend block; otherwise node arithmetic is used.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.");
