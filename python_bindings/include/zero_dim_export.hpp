@@ -43,6 +43,7 @@
 #include <bertini2/nag_algorithms/zero_dim_solve.hpp>
 #include <bertini2/nag_algorithms/events.hpp>
 #include <bertini2/system/start_systems.hpp>
+#include <bertini2/io/classic_writer.hpp>
 
 #include <boost/python/stl_iterator.hpp>
 
@@ -238,6 +239,51 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 	.def("endgame_boundary_solutions", &AlgoT::EndgameBoundarySolutions, return_internal_reference<>(), "get the solutions (per-path point data) at the endgame boundary, where regular tracking switches to the endgame")
 	.def("endgame_boundary_metadata", &AlgoT::EndgameBoundaryMetadata, return_internal_reference<>(), "get the MidpathCheckReport from the path-crossing check at the endgame boundary: how many crossings were detected, which paths, how many re-track attempts were made, and whether the check ultimately passed")
 	.def("report", &AlgoT::Report, "a concise end-of-solve diagnostic summary (a SolveReport): how every path ended up -- finite solutions, diverged, or FAILED (by named reason) -- plus singular/real counts, max condition number, the path-crossing outcome, and all_paths_resolved.  print(solver.report()) for a human-readable summary; a count alone can hide a path the tracker silently lost.")
+	.def("to_classic_input",
+		+[](AlgoT const& self, System const& sys) -> std::string {
+			using namespace bertini::tracking;
+			classic::ClassicWriteOptions opt;
+
+			// mptype: how THIS solver tracks precision -- 2 adaptive, 0 fixed-double, 1 fixed-multiple.
+			using TrackerTraitsT = TrackerTraits<typename AlgoT::TrackerT>;
+			if (TrackerTraitsT::IsAdaptivePrec)
+				opt.mptype = 2;
+			else if (std::is_same<typename TrackerTraitsT::BaseComplexT, dbl>::value)
+				opt.mptype = 0;
+			else
+				opt.mptype = 1;
+
+			// predictor + step-size cadence + Newton: read off the live tracker.
+			auto const& tracker  = self.GetTracker();
+			auto const& stepping = tracker.template Get<SteppingConfig>();
+			auto const& newton   = tracker.template Get<NewtonConfig>();
+			opt.odepredictor      = classic::PredictorToClassic(tracker.GetPredictor());
+			opt.maxstepsize       = static_cast<double>(stepping.max_step_size);
+			opt.stepsuccessfactor = static_cast<double>(stepping.step_size_success_factor);
+			opt.stepfailfactor    = static_cast<double>(stepping.step_size_fail_factor);
+			opt.stepsforincrease  = stepping.consecutive_successful_steps_before_stepsize_increase;
+			opt.maxnumbersteps    = stepping.max_num_steps;
+			opt.maxnewtonits      = newton.max_num_newton_iterations;
+
+			// tolerances + crossed-path resolve cap: read off the algorithm's own configs.
+			auto const& tol = self.template Get<algorithm::TolerancesConfig>();
+			opt.tracktolbeforeeg = static_cast<double>(tol.newton_before_endgame);
+			opt.tracktolduringeg = static_cast<double>(tol.newton_during_endgame);
+			opt.finaltol         = static_cast<double>(tol.final_tolerance);
+			opt.maxcrossedpathresolves =
+				self.template Get<typename AlgoT::ZeroDimConf>().max_num_crossed_path_resolve_attempts;
+
+			return classic::SystemToClassicFile(sys, opt);
+		},
+		(boost::python::arg("self"), boost::python::arg("system")),
+		"emit a complete Bertini 1 classic input file (CONFIG + INPUT) for the given natural system, "
+		"using THIS solver's tracking settings for the CONFIG: precision mode (mptype), ODE predictor, "
+		"tolerances (before/during endgame, final), the full step-size cadence, max Newton iterations, "
+		"and the crossed-path resolve cap.  The system you pass supplies INPUT -- pass the natural "
+		"(un-homogenized) system you constructed the solver from, since the solver homogenizes and "
+		"patches its internal copy.  Use this to re-run the exact same problem with the exact same knobs "
+		"in Bertini 1 for cross-validation (the random start system aside).  For sweeping settings without "
+		"a solver, see system.to_classic_input(**kwargs).")
 	;
 }
 

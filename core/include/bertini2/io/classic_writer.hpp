@@ -37,6 +37,7 @@ yields an equivalent system.
 
 #include "bertini2/system/system.hpp"
 #include "bertini2/function_tree/find.hpp"
+#include "bertini2/trackers/config.hpp"
 
 #include <ostream>
 #include <sstream>
@@ -121,6 +122,31 @@ namespace bertini{
 			unsigned      maxnewtonits             = 2;     ///< MaxNewtonIts (B2 default 2)
 			unsigned      maxcrossedpathresolves   = 2;     ///< endgame-boundary crossed-path re-track attempts
 		};
+
+		/**
+		\brief Map a Bertini 2 `Predictor` to its Bertini 1 classic `odepredictor` integer.
+
+		The inverse of the classic settings parser's predictor table (`settings_parsers/tracking.hpp`).
+		`HeunEuler` has no classic number; it is emitted as `1` (Heun), its nearest classic relative.
+		*/
+		inline int PredictorToClassic(tracking::Predictor p)
+		{
+			using P = tracking::Predictor;
+			switch (p)
+			{
+				case P::Constant:          return -1;
+				case P::Euler:             return 0;
+				case P::Heun:              return 1;
+				case P::RK4:               return 2;
+				case P::HeunEuler:         return 1;
+				case P::RKNorsett34:       return 4;
+				case P::RKF45:             return 5;
+				case P::RKCashKarp45:      return 6;
+				case P::RKDormandPrince56: return 7;
+				case P::RKVerner67:        return 8;
+			}
+			return 5; // RKF45 -- the Bertini 2 default, a safe fallback
+		}
 
 		/**
 		\brief Emit the CONFIG-section body (no CONFIG/END wrapper).  The AMP coefficient/degree
