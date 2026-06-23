@@ -48,6 +48,9 @@
 
 
 #include "externs.hpp"
+#include "eval_helper.hpp"
+
+using bertini::test::EvalAt;
 
 
 
@@ -115,7 +118,7 @@ BOOST_AUTO_TEST_CASE(serialize_float)
 		ia >> two_point_oh_four2;
 	}
 
-	BOOST_CHECK(two_point_oh_four->Eval<dbl>()==two_point_oh_four2->Eval<dbl>());
+	BOOST_CHECK(EvalAt<dbl>(two_point_oh_four)==EvalAt<dbl>(two_point_oh_four2));
 }
 
 BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
@@ -147,10 +150,8 @@ BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
 
 	BOOST_CHECK(x->name()==x2->name());
 
-	x->set_current_value(dbl(1.2,0.9));
-	x2->set_current_value(dbl(1.2,0.9));
-
-	BOOST_CHECK(abs(f->Eval<dbl>() - f2->Eval<dbl>()) < threshold_clearance_d);
+	std::map<std::string,dbl> pt{ {"x", dbl(1.2,0.9)} };
+	BOOST_CHECK(abs(EvalAt<dbl>(f, pt) - EvalAt<dbl>(f2, pt)) < threshold_clearance_d);
 
 }
 

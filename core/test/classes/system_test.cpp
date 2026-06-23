@@ -501,13 +501,11 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 	auto y = Variable::Make("y");
 	auto z = Variable::Make("z");
 
-	// Variables are canonical-by-name and therefore SHARED across tests, so this
-	// test must set its own evaluation point instead of reading whatever a prior test left
-	// on x/y/z.  Modest magnitudes keep the high-degree SLP-vs-analytic rounding comfortably
-	// inside the 1e-15 tolerance below.
-	x->set_current_value(dbl(0.5,  0.25));
-	y->set_current_value(dbl(0.4, -0.30));
-	z->set_current_value(dbl(0.6,  0.20));
+	// Modest magnitudes keep the high-degree SLP-vs-analytic rounding comfortably inside the
+	// 1e-15 tolerance below.
+	dbl a(0.5,  0.25);
+	dbl b(0.4, -0.30);
+	dbl c(0.6,  0.20);
 
 	System sys;
 
@@ -515,10 +513,6 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 
 	sys.AddFunction(pow(x,2)*pow(y,3)*pow(z,4) + 1);
 	sys.AddFunction(pow(x,3)*pow(y,4)*pow(z,5) + 4);
-
-	auto a = x->Eval<dbl>();
-	auto b = y->Eval<dbl>();
-	auto c = z->Eval<dbl>();
 
 	Vec<dbl> v(3);
 	v << a, b, c;

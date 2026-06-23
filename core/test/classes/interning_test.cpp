@@ -29,15 +29,19 @@ single-operand sum).
 
 #include <cstdlib>
 #include <sstream>
+#include <map>
 #include "bertini2/function_tree.hpp"
 #include "bertini2/function_tree/canonical.hpp"
 #include <boost/test/unit_test.hpp>
+
+#include "eval_helper.hpp"
 
 using Nd = std::shared_ptr<bertini::node::Node>;
 using Variable = bertini::node::Variable;
 using Integer = bertini::node::Integer;
 using SumOperator = bertini::node::SumOperator;
 using dbl = bertini::dbl;
+using bertini::test::EvalAt;
 
 BOOST_AUTO_TEST_SUITE(interning)
 
@@ -60,16 +64,14 @@ BOOST_AUTO_TEST_CASE(simplify_does_not_corrupt_a_shared_single_operand_sum)
 	Nd r = p + q + 0*x;    // 2x   (the +0 forces simplification work)
 
 	dbl xv(2.0, -3.0), yv(5.0, 1.0);
-	x->set_current_value(xv);
-	y->set_current_value(yv);
+	std::map<std::string,dbl> pt{ {"x", xv}, {"y", yv} };
 
 	Nd rs = bertini::Simplify(r);
-	rs->Reset();
-	BOOST_CHECK_EQUAL(rs->Eval<dbl>(), xv + xv);   // == 2x, with the y's cancelled
+	BOOST_CHECK_EQUAL(EvalAt<dbl>(rs, pt), xv + xv);   // == 2x, with the y's cancelled
 
 	// and the reused sub-objects must be intact (not mutated by the simplification above)
-	m->Reset(); BOOST_CHECK_EQUAL(m->Eval<dbl>(), xv);
-	n->Reset(); BOOST_CHECK_EQUAL(n->Eval<dbl>(), yv);
+	BOOST_CHECK_EQUAL(EvalAt<dbl>(m, pt), xv);
+	BOOST_CHECK_EQUAL(EvalAt<dbl>(n, pt), yv);
 }
 
 // ---- basic dedup: structurally equal builds return the same object ----
@@ -94,13 +96,8 @@ BOOST_AUTO_TEST_CASE(variables_are_canonical_by_name)
 	// Make("x") interns to a single canonical x -- "system1's x IS system2's x".
 	auto x1 = Variable::Make("x");
 	auto x2 = Variable::Make("x");
-	BOOST_CHECK_EQUAL(x1.get(), x2.get());
+	BOOST_CHECK_EQUAL(x1.get(), x2.get());   // one object: identity is the canonicalization
 	BOOST_CHECK(Variable::Make("x").get() != Variable::Make("z").get());
-
-	// because they are one object, setting the value through one is seen through the other
-	x1->set_current_value(dbl(7.0, 0.0));
-	x2->Reset();
-	BOOST_CHECK_EQUAL(x2->Eval<dbl>(), dbl(7.0, 0.0));
 
 	// and two independently-built expressions over "x" share their structure
 	BOOST_CHECK_EQUAL((Variable::Make("x") * Variable::Make("x")).get(),
@@ -135,9 +132,7 @@ BOOST_AUTO_TEST_CASE(eval_correct_with_shared_subexpression)
 	auto x = Variable::Make("x");
 	Nd a = x*x;                 // shared
 	Nd f = a + a + a;           // 3 * x^2, all the same interned 'a'
-	x->set_current_value(dbl(2.0, 0.0));
-	f->Reset();
-	BOOST_CHECK_EQUAL(f->Eval<dbl>(), dbl(12.0, 0.0));   // 3 * 4
+	BOOST_CHECK_EQUAL(EvalAt<dbl>(f, {{"x", dbl(2.0, 0.0)}}), dbl(12.0, 0.0));   // 3 * 4
 }
 
 // ---- immutability under interning: simplifying never changes a held input ----
@@ -147,16 +142,13 @@ BOOST_AUTO_TEST_CASE(simplify_leaves_a_held_shared_node_untouched)
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	Nd held = (x + y) * x;      // hold a shared node
-	x->set_current_value(dbl(3.0, 0.0));
-	y->set_current_value(dbl(4.0, 0.0));
-	held->Reset();
-	auto before = held->Eval<dbl>();
+	std::map<std::string,dbl> pt{ {"x", dbl(3.0, 0.0)}, {"y", dbl(4.0, 0.0)} };
+	auto before = EvalAt<dbl>(held, pt);
 
 	Nd s = bertini::Simplify(held + 0*y);   // simplify an expression that contains 'held'
 	(void)s;
 
-	held->Reset();
-	BOOST_CHECK_EQUAL(held->Eval<dbl>(), before);   // held is byte-for-byte unchanged
+	BOOST_CHECK_EQUAL(EvalAt<dbl>(held, pt), before);   // held is unchanged by simplifying around it
 }
 
 BOOST_AUTO_TEST_SUITE_END() // interning
