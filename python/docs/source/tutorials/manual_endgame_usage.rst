@@ -37,7 +37,7 @@ Form a system
 
 The Griewank-Osborne system has one multiplicity-three singular solution at the origin :cite:`griewank1983analysis`.  Let's build it from scratch, for the practice.
 
-:: 
+.. testcode::
 
     import bertini
 
@@ -60,7 +60,7 @@ Form a start system and homotopy
 
 Next, we make the total degree start system for `gw`, and couple it using the gamma trick :cite:`morgan1987homotopy` and a path variable.
 
-::
+.. testcode::
 
     t = bertini.Variable('t')
     td = bertini.system.start_system.TotalDegree(gw)
@@ -75,7 +75,7 @@ Next, we make the total degree start system for `gw`, and couple it using the ga
 
 Make a tracker.  I use adaptive precision a lot, so we'll roll with that.  There are also double and fixed-multiple versions.  See the other tutorials or the detailed documentation.
 
-::
+.. testcode::
 
     tr = bertini.tracking.AMPTracker(hom)
 
@@ -84,10 +84,9 @@ Make a tracker.  I use adaptive precision a lot, so we'll roll with that.  There
 
     midpath_points = [None]*td.num_start_points()
     for ii in range(td.num_start_points()):
-        midpath_points[ii] = bertini.multiprec.Vector()
+        midpath_points[ii] = bertini.multiprec.Vector(gw.num_variables())   # result must be pre-sized
         code = tr.track_path(result=midpath_points[ii], start_time=start_time, end_time=eg_boundary, start_point=td.start_point_mp(ii))
-        if code != bertini.tracking.SuccessCode.Success:
-            print('uh oh, tracking a path before the endgame boundary failed, successcode ' + code)
+        assert code == bertini.tracking.SuccessCode.Success                 # every path reaches the boundary
 
 
 
@@ -96,41 +95,52 @@ Make a tracker.  I use adaptive precision a lot, so we'll roll with that.  There
 ~~~~~~~~~~~~~~~~~~~~
 
 
-To make an endgame, we need to feed it the tracker that is used to run.  There are also config structs to play with, that control the way things are computed.
+To make an endgame, we feed it the tracker it should drive and the **endgame-boundary time**
+(where the endgame takes over from straight-line tracking -- the :math:`t=0.1` we tracked to
+above).  There are also config structs to play with, that control the way things are computed.
 
-::
+.. testcode::
 
-    eg = bertini.endgame.AMPCauchyEG(tr)
+    eg = bertini.endgame.AMPCauchyEG(tr, eg_boundary)
 
     # make an observer to be able to see what's going on inside
     ob = bertini.endgame.observers.amp_cauchy.GoryDetailLogger()
 
     eg.add_observer(ob)
 
-Since the endgame hasn't been run yet things are empty and default::
+The ``GoryDetailLogger`` writes a running, step-by-step account of the endgame to Bertini's log as
+it runs -- handy when you want to watch the loops being walked.  Since the endgame hasn't been run
+yet, things are empty and default:
 
-    assert(eg.cycle_number()==0)
-    assert(eg.final_approximation()==np.array([]))
+.. testcode::
 
-The endgames are used by invoking ``run``, feeding it the point we are tracking on, the time we are at, and the time we want to track to. 
+    assert eg.cycle_number() == 0
+    assert len(eg.final_approximation()) == 0    # nothing computed yet
 
+The endgame is used by invoking ``run``, feeding it just the boundary point to refine: the
+endgame-boundary time and the target time (:math:`t=0`) were both fixed when we constructed the
+endgame, so all ``run`` needs is where to start.
 
-::
+.. testcode::
 
     final_points = []
-
-
-    target_time = bertini.multiprec.Complex(0)
     codes = []
     for ii in range(td.num_start_points()):
-        eg_boundary.precision( midpath_points[ii][0].precision())
-        target_time.precision( midpath_points[ii][0].precision())
-        print('before {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
-        codes.append(eg.run(start_time=eg_boundary, target_time=target_time, start_point=midpath_points[ii]))
-        print('path {} -- code {}'.format(ii,codes[-1]))
-        print(eg.final_approximation())
-        # final_points.append(copy.deep_copy(eg.final_approximation()))
-        print('after {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
+        codes.append(eg.run(midpath_points[ii]))   # refine from the boundary down to t = 0
+        final_points.append(eg.final_approximation())
+
+The Griewank-Osborne system's only finite solution is the triple point at the origin, so exactly
+three of the six homotopy paths converge there (the other three run off to infinity):
+
+.. testcode::
+
+    origin_hits = sum(1 for fa in final_points
+                      if len(fa) and max(abs(complex(v)) for v in fa) < 1e-6)
+    print('paths landing on the triple point:', origin_hits)
+
+.. testoutput::
+
+    paths landing on the triple point: 3
 
 
 Conclusion

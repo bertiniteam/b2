@@ -38,7 +38,9 @@ Building and solving it
 
 We let bertini differentiate :math:`f` for us, and keep every coefficient exact -- the random
 point's coordinates are exact rationals, since :mod:`bertini.linalg` (rightly) refuses python
-floats that would silently cap precision::
+floats that would silently cap precision:
+
+.. testcode::
 
     import numpy as np
     from fractions import Fraction
@@ -63,7 +65,9 @@ floats that would silently cap precision::
 Both equations are degree 4, so the total-degree solve tracks :math:`4 \times 4 = 16` paths.  We
 solve, then keep the real solutions -- and we let the *solver* decide what "real" means: each
 endpoint's metadata carries an ``is_real`` flag, set when the imaginary parts fall under the
-configured ``real_threshold``, so there is no hand-picked epsilon in the tutorial::
+configured ``real_threshold``, so there is no hand-picked epsilon in the tutorial:
+
+.. testcode::
 
     solver = nag_algorithm.ZeroDim(crit_system, mptype='adaptive')
     solver.solve()
@@ -81,7 +85,9 @@ Plotting the curve, the point, and the distances
 ================================================
 
 Plot the curve as an implicit contour, mark :math:`p` and the real critical points, and draw a
-segment from :math:`p` to each one so the distances are visible::
+segment from :math:`p` to each one so the distances are visible:
+
+.. testcode::
 
     import matplotlib.pyplot as plt
 

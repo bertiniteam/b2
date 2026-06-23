@@ -27,14 +27,18 @@ Setting up the system
 =====================
 
 We need ``numpy`` for the matrix and the cross-check, ``bertini`` for the solve, and the
-:mod:`bertini.linalg` layer so we can write the equations as actual linear algebra::
+:mod:`bertini.linalg` layer so we can write the equations as actual linear algebra:
+
+.. testcode::
 
     import numpy as np
     import bertini as bertini
     from bertini import linalg
     from bertini.nag_algorithm import ZeroDim
 
-Pick a small symmetric matrix (real, distinct eigenvalues make the check easy to read)::
+Pick a small symmetric matrix (real, distinct eigenvalues make the check easy to read):
+
+.. testcode::
 
     A = np.array([[2, 1, 0],
                   [1, 3, 1],
@@ -43,7 +47,9 @@ Pick a small symmetric matrix (real, distinct eigenvalues make the check easy to
 
 With the linear-algebra layer the equations *are* linear algebra: make a **vector of
 variables** for the eigenvector and a scalar for the eigenvalue, and :math:`(A-\lambda I)x`
-is just ``A @ x - lam*x``::
+is just ``A @ x - lam*x``:
+
+.. testcode::
 
     x = linalg.variable_vector('x', n)        # array([x0, x1, x2], dtype=object)
     lam = bertini.Variable('lam')
@@ -65,7 +71,9 @@ An eigenvector is only defined up to scale, so :math:`(A-\lambda I)x = 0` alone 
 ways to cut that down to isolated points, and Bertini supports both.
 
 **Affine, with a normalization.**  Keep :math:`x` an ordinary (affine) variable group and
-add one generic linear equation :math:`c\cdot x = 1` to pin the scale::
+add one generic linear equation :math:`c\cdot x = 1` to pin the scale:
+
+.. testcode::
 
     def build_affine():
         x = linalg.variable_vector('x', n)
@@ -80,7 +88,9 @@ add one generic linear equation :math:`c\cdot x = 1` to pin the scale::
 
 **Projective.**  Declare :math:`x` a *projective* (homogeneous) variable group: the
 eigenvector then lives in :math:`\mathbb{P}^{n-1}` natively, where scale is already
-quotiented out, so **no normalization equation is needed**::
+quotiented out, so **no normalization equation is needed**:
+
+.. testcode::
 
     def build_projective():
         x = linalg.variable_vector('x', n)
@@ -100,7 +110,9 @@ Solving, and reading off the eigenvalues
 
 The solve is identical for either system.  A small helper runs it and pulls out the
 eigenvalues (``lam`` is the last user coordinate of each solution; the rest are the
-eigenvector)::
+eigenvector):
+
+.. testcode::
 
     OK = int(bertini.tracking.SuccessCode.Success)
 
@@ -114,7 +126,9 @@ eigenvector)::
         assert len(good) == n                            # one path per eigenvalue
         return sorted(complex(s[len(s) - 1]).real for s in good)
 
-Both formulations recover ``numpy``'s eigenvalues::
+Both formulations recover ``numpy``'s eigenvalues:
+
+.. testcode::
 
     expected = sorted(np.linalg.eigvals(A).real)
     for build in (build_affine, build_projective):
@@ -127,7 +141,9 @@ Comparing the two
 
 Both track the same number of paths, but the projective system is **leaner** -- one fewer
 equation, and the eigenvector group needs no homogenizing coordinate -- so it is usually
-the faster of the two.  Time them and see::
+the faster of the two.  Time them and see:
+
+.. testcode::
 
     import time
 
@@ -137,6 +153,12 @@ the faster of the two.  Time them and see::
         got = eigenvalues_of(build())
         dt = time.perf_counter() - t0
         print(f"{name}: {got}  in {dt:.3f}s")
+
+.. testoutput::
+   :options: +ELLIPSIS
+
+   affine+normalization: [...]  in ...s
+   projective          : [...]  in ...s
 
 The projective system is the more direct statement of the problem and typically solves
 faster; the affine one is handy when you would rather not think projectively.  Either way
