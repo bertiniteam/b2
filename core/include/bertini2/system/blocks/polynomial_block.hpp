@@ -191,16 +191,14 @@ public:
 		return time_derivatives_;
 	}
 
-	void SetAutoSimplify(bool b) const { auto_simplify_ = b; Invalidate(); }
-
 	/// Build the symbolic derivatives (and, for SLP eval, compile the SLP from this block).
+	/// Derivatives are NOT simplified here; explicit simplification is System::Simplify
+	/// (SimplifyDerivatives), an opt-in the user invokes.
 	void Differentiate() const
 	{
 		if (is_differentiated_) return;
 		DifferentiateUsingDerivatives();
-		is_differentiated_ = true;  // set before SimplifyDerivatives/Compile, which read the deriv state
-		if (auto_simplify_)
-			SimplifyDerivatives();
+		is_differentiated_ = true;  // set before Compile, which reads the deriv state
 		slp_ = SLPCompiler().Compile(*this);
 	}
 
@@ -259,7 +257,6 @@ private:
 	mutable VariableGroup variables_;   ///< the system's variable ordering (kept in sync by the owning System)
 	mutable Var path_variable_;         ///< the path variable, or null
 
-	mutable bool auto_simplify_ = false;  ///< kept in sync with the owning System's auto_simplify_
 	mutable bool is_differentiated_ = false;
 	mutable unsigned precision_;
 

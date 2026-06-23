@@ -66,11 +66,6 @@ namespace bertini {
 	// (included above) so the evaluation blocks can see them.
 
 	/**
-	\brief Get the default value for whether a system should autosimplify.
-	*/
-	bool DefaultAutoSimplify();
-
-	/**
 	\brief The fundamental polynomial system class for Bertini2.
 	
 	 The fundamental polynomial system class for Bertini2.
@@ -1473,32 +1468,6 @@ namespace bertini {
 		// propagation is unsound anyway (e.g. the SLP can be at a different precision
 		// than precision_ claims).  precision() now always propagates.
 
-		inline
-		void PleaseAutoSimplify()
-		{
-			SetAutoSimplify(true);
-		}
-
-		inline
-		void DontAutoSimplify()
-		{
-			SetAutoSimplify(false);
-		}
-
-		void SetAutoSimplify(bool val)
-		{
-			auto_simplify_ = val;
-		}
-
-
-		/**
-		\brief Query the state of autosimplification
-		*/
-		auto IsAutoSimplifying() const
-		{
-			return auto_simplify_;
-		}
-
 		/**
 		\brief Simplify the functions contained in the system.
 
@@ -1755,7 +1724,6 @@ namespace bertini {
 				p->SetVariableOrdering(Variables());
 				if (have_path_variable_) p->SetPathVariable(path_variable_);
 				else                     p->ClearPathVariable();
-				p->SetAutoSimplify(auto_simplify_);
 			}
 		}
 
@@ -1881,8 +1849,6 @@ namespace bertini {
 		mutable unsigned precision_; ///< the current working precision of the system
 
 
-		bool auto_simplify_ = DefaultAutoSimplify();
-
 
 
 
@@ -1912,7 +1878,6 @@ namespace bertini {
 			// methods) now lives inside the PolynomialBlock, which is archived as part of blocks_.
 			ar & blocks_;
 
-			ar & auto_simplify_;
 
 			// now for the cached / mutable things
 			ar & precision_;
