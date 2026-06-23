@@ -81,26 +81,25 @@ namespace bertini{
 				"exceeds this value. Default 1e8.")
 			;
 
-			class_<ZeroDimConfig<dbl_complex>>("ZeroDimConfigDoublePrec", init<>())
-			.def_readwrite("start_time", &ZeroDimConfig<dbl_complex>::start_time,
+			// One ZeroDimConfig for every precision model -- the homotopy times are stored precision-free
+			// (mpq_rational) and converted to the tracking type at use, so the config is no longer
+			// templated on the complex type.  The times are real (the solve tracks the real t-axis);
+			// they are exposed as mpfr_float and round-trip exactly, the same way SteppingConfig exposes
+			// its mpq_rational step sizes.
+			class_<ZeroDimConfig>("ZeroDimConfig", init<>())
+			.add_property("start_time",
+				+[](ZeroDimConfig const& c) -> mpfr_float { return mpfr_float(c.start_time); },
+				+[](ZeroDimConfig& c, mpfr_float const& v) { c.start_time = mpq_rational(v); },
 				"The time value at which the homotopy starts (where the start solutions live).")
-			.def_readwrite("target_time", &ZeroDimConfig<dbl_complex>::target_time,
+			.add_property("target_time",
+				+[](ZeroDimConfig const& c) -> mpfr_float { return mpfr_float(c.target_time); },
+				+[](ZeroDimConfig& c, mpfr_float const& v) { c.target_time = mpq_rational(v); },
 				"The time value the homotopy tracks to (where the solutions of interest live).")
-			.def_readwrite("endgame_boundary", &ZeroDimConfig<dbl_complex>::endgame_boundary,
+			.add_property("endgame_boundary",
+				+[](ZeroDimConfig const& c) -> mpfr_float { return mpfr_float(c.endgame_boundary); },
+				+[](ZeroDimConfig& c, mpfr_float const& v) { c.endgame_boundary = mpq_rational(v); },
 				"The time value at which tracking stops and the endgame takes over.")
-			.def_readwrite("max_num_crossed_path_resolve_attempts", &ZeroDimConfig<dbl_complex>::max_num_crossed_path_resolve_attempts,
-				"How many times to re-track crossed paths (with tightened settings) at the endgame "
-				"boundary before giving up. 0 = detect and report only, do not re-track. Default 2.")
-			;
-
-			class_<ZeroDimConfig<mpfr_complex>>("ZeroDimConfigMultiprec", init<>())
-			.def_readwrite("start_time", &ZeroDimConfig<mpfr_complex>::start_time,
-				"The time value at which the homotopy starts (where the start solutions live).")
-			.def_readwrite("target_time", &ZeroDimConfig<mpfr_complex>::target_time,
-				"The time value the homotopy tracks to (where the solutions of interest live).")
-			.def_readwrite("endgame_boundary", &ZeroDimConfig<mpfr_complex>::endgame_boundary,
-				"The time value at which tracking stops and the endgame takes over.")
-			.def_readwrite("max_num_crossed_path_resolve_attempts", &ZeroDimConfig<mpfr_complex>::max_num_crossed_path_resolve_attempts,
+			.def_readwrite("max_num_crossed_path_resolve_attempts", &ZeroDimConfig::max_num_crossed_path_resolve_attempts,
 				"How many times to re-track crossed paths (with tightened settings) at the endgame "
 				"boundary before giving up. 0 = detect and report only, do not re-track. Default 2.")
 			;

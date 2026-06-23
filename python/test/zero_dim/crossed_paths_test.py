@@ -89,7 +89,7 @@ def _solve(resolve_attempts, predictor=pb.tracking.Predictor.Euler, step=COARSE_
     tol_cfg.newton_during_endgame = tol / 10
     solver.set_config(tol_cfg)
 
-    zd = solver.get_config(pb.nag_algorithm.ZeroDimConfigDoublePrec)
+    zd = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
     zd.max_num_crossed_path_resolve_attempts = resolve_attempts
     solver.set_config(zd)
 

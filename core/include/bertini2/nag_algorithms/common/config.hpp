@@ -165,15 +165,25 @@ inline unsigned DefaultInitialAmbientPrecision()
 		return DefaultPrecision();
 }
 
-template<typename ComplexT>
+// Not templated on the complex type: the three times are stored as exact, precision-free
+// mpq_rational (real) and converted to the tracking complex type at the current working precision at
+// use -- the same pattern SteppingConfig uses for its step sizes.  This keeps the config precision-
+// agnostic (one struct, not a DoublePrec/Multiprec pair), and is in fact more correct under adaptive
+// precision: a value like the endgame boundary 1/10 is materialized at full working precision rather
+// than frozen at whatever precision the config happened to be constructed at.
+//
+// The times are real because a zero-dim solve tracks along the real t-axis (1 -> 0).  Complex
+// homotopy times remain available at the endgame level (set directly), just not through this config.
 struct ZeroDimConfig
 {
-	unsigned initial_ambient_precision = DefaultInitialAmbientPrecision<ComplexT>();
+	// Per-complex-type default; the ZeroDim algorithm overwrites this in DefaultSettingsSetup with
+	// DefaultInitialAmbientPrecision<BaseComplexT>() (it knows its tracking type, this struct does not).
+	unsigned initial_ambient_precision = DefaultPrecision();
 	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 
-	ComplexT start_time = ComplexT(1);
-	ComplexT endgame_boundary = ComplexT(1)/ComplexT(10);
-	ComplexT target_time = ComplexT(0);
+	mpq_rational start_time{1};          ///< Homotopy start time (t=1).
+	mpq_rational endgame_boundary{1, 10}; ///< Time at which tracking hands off to the endgame (t=1/10).
+	mpq_rational target_time{0};         ///< Homotopy target time (t=0).
 
 	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";
 };

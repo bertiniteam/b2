@@ -124,6 +124,32 @@ def test_update_float_still_works_on_double_fields():
     assert TolerancesConfig().update(final_tolerance=1e-11).final_tolerance == 1e-11
 
 
+def test_zero_dim_config_is_precision_agnostic():
+    # ZeroDimConfig is no longer templated on the complex type: there is one config, keyed 'zero_dim'
+    # on every precision model (was zero_dim_config_double_prec / _multiprec).  This is what lets a
+    # carried settings bundle apply across a double, multiple, or adaptive solver unchanged.
+    from bertini.nag_algorithm import ZeroDimConfig
+    import bertini.nag_algorithm as na
+    assert not hasattr(na, 'ZeroDimConfigDoublePrec')
+    assert not hasattr(na, 'ZeroDimConfigMultiprec')
+
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = pb.System()
+    s.add_function(x * x + y * y - 1); s.add_function(x + y)
+    s.add_variable_group(pb.VariableGroup([x, y]))
+    for mptype in ('double', 'multiple', 'adaptive'):
+        names = pb.nag_algorithm.ZeroDim(s, mptype=mptype).config_names()
+        assert 'zero_dim' in names, names
+
+
+def test_zero_dim_config_times_accept_strings():
+    # the homotopy times are stored precision-free (mpq_rational) but exposed as real and take the
+    # same string spelling as every other numeric field.
+    from bertini.nag_algorithm import ZeroDimConfig
+    c = ZeroDimConfig().update(endgame_boundary="0.05", start_time="1", target_time="0")
+    assert c.endgame_boundary == pb.multiprec.Float("0.05")
+
+
 def test_regeneration_slice_tolerances_are_prefixed():
     # RegenerationConfig's tolerances are the slice-MOVING tracking tolerances (Bertini 1's SliceTol*
     # family), distinct from the main tracking tolerances in TolerancesConfig.  They carry a slice_
