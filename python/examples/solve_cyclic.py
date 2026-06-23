@@ -74,27 +74,26 @@ def main():
     if not pb.parallel.is_manager():
         return
 
-    # Correctness, not just bookkeeping.  Ask the solver how it classified each endpoint instead of
-    # rolling our own cutoff: a genuine solution is one whose endgame succeeded and that the library
-    # calls FINITE (is_finite applies the configured endpoint_finite_threshold).  Count DISTINCT
-    # points -- if two paths happen to converge to the same solution they share a multiplicity
-    # cluster, so summing 1/multiplicity over the finite endpoints counts each point exactly once.
-    md = solver.solution_metadata()
-    finite = [m for m in md if m.endgame_success == pb.tracking.SuccessCode.Success and m.is_finite]
-    distinct = round(sum(1.0 / m.multiplicity for m in finite))
-    num_paths = len(solver.solutions())
+    # Correctness, not just bookkeeping.  The solver's own report classifies every path; we trust it
+    # rather than rolling our own cutoff.  Crucially, report.all_paths_resolved is False if any path
+    # failed to track -- so a silently-lost root is caught here, not hidden behind a short count.
+    report = solver.report()
 
     print('cyclic-{}:  ranks={}  threads/rank={}  paths tracked={}  finite solutions={}  wall={:.1f}s'.format(
         args.n, comm.Get_size(), os.environ.get('OMP_NUM_THREADS', '1'),
-        num_paths, distinct, elapsed))
+        report.num_paths_tracked, report.num_finite_solutions, elapsed))
 
-    assert num_paths == math.factorial(args.n), \
-        'expected {} paths, got {}'.format(math.factorial(args.n), num_paths)
+    if not report.all_paths_resolved:        # a path failed or a crossing was left -- show what and why
+        print(report)
+
+    assert report.num_paths_tracked == math.factorial(args.n), \
+        'expected {} paths, got {}'.format(math.factorial(args.n), report.num_paths_tracked)
     if args.n in KNOWN_FINITE:
-        assert distinct == KNOWN_FINITE[args.n], \
-            'expected {} finite solutions, got {}'.format(KNOWN_FINITE[args.n], distinct)
+        assert report.all_paths_resolved, 'some paths did not resolve -- see the report above'
+        assert report.num_finite_solutions == KNOWN_FINITE[args.n], \
+            'expected {} finite solutions, got {}'.format(KNOWN_FINITE[args.n], report.num_finite_solutions)
         print('  OK: {} paths, {} finite solutions -- matches the known cyclic-{} count'.format(
-            num_paths, distinct, args.n))
+            report.num_paths_tracked, report.num_finite_solutions, args.n))
 
 
 if __name__ == '__main__':

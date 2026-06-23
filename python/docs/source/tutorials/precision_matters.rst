@@ -44,69 +44,65 @@ paths leading to them are ill-conditioned -- the kind double precision struggles
 Solve it reliably, with adaptive precision
 ==========================================
 
-Ask for adaptive precision with ``mptype='adaptive'`` and solve.  We check the answer the same way
-a careful user should: not by trusting the raw endpoint list, but by asking the solver how it
-**classified** each path, using the *named* success codes:
+Ask for adaptive precision with ``mptype='adaptive'``, solve, and check the answer the way a careful
+user should -- not by trusting the raw endpoint count, but by asking the solver for its **report**:
 
 .. testcode::
-
-   SC = bertini.tracking.SuccessCode
 
    solver = ZeroDim(sys, mptype='adaptive')
    solver.solve()
-   md = solver.solution_metadata()
+   report = solver.report()
 
-   # A genuine solution is a path whose endgame SUCCEEDED and whose endpoint is FINITE.  Count
-   # DISTINCT points by summing 1/multiplicity, so a true multiple root is counted once.
-   finite = [m for m in md if m.endgame_success == SC.Success and m.is_finite]
-   distinct = round(sum(1.0 / m.multiplicity for m in finite))
-   assert distinct == 70                            # every finite solution of cyclic-5
+   assert report.num_finite_solutions == 70         # every finite solution of cyclic-5
+   assert report.all_paths_resolved                 # nothing fell off the tightrope
 
-Just as important: **no path was lost**.  Every one of the 120 paths reached a definite outcome --
-either it succeeded, or it cleanly diverged (``GoingToInfinity`` is a *result*, not a failure).  A
-path that ended any other way is one the tracker could not follow, and any root it was heading for
-is missing:
+The report is a one-call summary of how every path ended up.  ``print(report)`` shows it::
 
-.. testcode::
+   zero-dim solve -- 120 paths tracked
+     finite solutions    70   (distinct)
+     diverged            50
+     FAILED               0
+     ----
+     ...
+     all paths resolved? yes
 
-   lost = [m for m in md
-           if m.endgame_success not in (SC.Success, SC.GoingToInfinity)]
-   assert lost == []                                # nothing fell off the tightrope
+``num_finite_solutions`` counts *distinct* points (it sums ``1/multiplicity``, so a genuine multiple
+root is counted once).  ``all_paths_resolved`` is the headline: every one of the 120 paths reached a
+definite outcome -- a finite solution, or a clean divergence to infinity (which is a *result*, not a
+failure).  Nothing was lost.
 
 How a count can lie
 ===================
 
 The same solve in ``double`` precision is faster, and *most* of the time it also finds all 70.  But
 about one run in ten, one of those near-singular paths fails -- the tracker hits its minimum step
-size and abandons it -- and the distinct count quietly comes back **69**:
+size and abandons it -- and the finite count quietly comes back **69**:
 
 .. testcode::
 
    solver_d = ZeroDim(sys, mptype='double')
    solver_d.solve()
-   md_d = solver_d.solution_metadata()
+   report_d = solver_d.report()
 
-   distinct_d = round(sum(1.0 / m.multiplicity
-                          for m in md_d if m.endgame_success == SC.Success and m.is_finite))
-   assert distinct_d <= 70                          # never too many -- but sometimes too few
+   assert report_d.num_finite_solutions <= 70       # never too many -- but sometimes too few
 
-   lost_d = [m for m in md_d
-             if m.endgame_success not in (SC.Success, SC.GoingToInfinity)]
+The crucial point is that the solver *knows*; a short count is never silent.  When a path is lost,
+``report_d.all_paths_resolved`` is ``False`` and the reason is named in ``report_d.failures_by_reason``.
+On a run that drops a root, ``print(report_d)`` shows it plainly:
 
-The crucial point is that the solver *knows*.  When a path is dropped, it is right there in the
-metadata with a name on it:
+.. code-block:: text
 
-.. code-block:: python
+   zero-dim solve -- 120 paths tracked
+     finite solutions    69   (distinct)
+     diverged            50
+     FAILED               1    1 x MinStepSizeReached
+     ----
+     ...
+     all paths resolved? NO
 
-   for m in lost_d:
-       print(m.solution_index, m.endgame_success)
-
-   # on a run that drops a root, this prints something like:
-   #   99  SuccessCode.MinStepSizeReached
-
-``SuccessCode.MinStepSizeReached`` is the tracker telling you, in plain language, that it could not
-follow that path far enough in double precision.  A program that only looks at ``len(solutions())``
-or the distinct count never sees it -- it just reports 69 and moves on, silently wrong.
+``MinStepSizeReached`` is the tracker telling you, in plain language, that it could not follow that
+path far enough in double precision.  A program that trusts only the count never sees it -- it
+reports 69 and moves on, silently wrong.  ``report.all_paths_resolved`` does.
 
 The lesson
 ==========
@@ -114,10 +110,9 @@ The lesson
 Two habits keep a solve honest:
 
 #. **Reach for adaptive precision when paths are hard.**  ``mptype='adaptive'`` costs more
-   arithmetic than ``'double'``, but it spends that cost *only* where the geometry demands it, and
-   it turns "sometimes 69" into "always 70".  Pinning a random seed only makes a flaky run
+   arithmetic than ``'double'``, but it spends that cost *only* where the geometry demands it, and it
+   turns "sometimes 69" into "always 70".  Pinning a random seed only makes a flaky run
    *reproducible*; it is never the fix.
-#. **Check the success codes, by name, not just the count.**  ``[m for m in
-   solver.solution_metadata() if m.endgame_success not in (SC.Success, SC.GoingToInfinity)]`` is the
-   list of paths the solver could not resolve.  If it is empty, you found everything; if it is not,
-   the names tell you what went wrong.
+#. **Check** ``report().all_paths_resolved``\ **, not just the count.**  The solve report classifies
+   every path; if any failed to track, ``all_paths_resolved`` is ``False`` and ``failures_by_reason``
+   names the reason.  A count alone can hide a root the tracker silently lost.
