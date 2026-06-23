@@ -357,12 +357,67 @@ def config_names(self):
     return sorted({config_key(c) for c in self.config_types() if c is not None})
 
 
+def _field_owners(owner):
+    """Map {field_name: config_class} across all of this owner's configs, plus any collisions.
+
+    Field names are unique across an owner's configs (the RegenerationConfig slice_ rename and the
+    ZeroDimConfig de-template removed the only collisions), so each field routes to exactly one
+    config.  Collisions, if ever reintroduced, are reported so update() can refuse them rather than
+    silently pick one.
+    """
+    owners = {}
+    collisions = {}
+    for cls in owner.config_types():
+        if cls is None:
+            continue
+        for f in writable_fields(cls):
+            if f in owners and owners[f] is not cls:
+                collisions.setdefault(f, {owners[f]})
+                collisions[f].add(cls)
+            owners[f] = cls
+    return owners, collisions
+
+
+def update(self, **fields):
+    """Set config fields on this owner by NAME, each routed to whichever config owns it.
+
+    You never name the config struct::
+
+        solver.update(final_tolerance="1e-11",          # -> TolerancesConfig
+                      max_num_crossed_path_resolve_attempts=3)   # -> ZeroDimConfig
+
+    Strings work for every numeric field (converted exactly).  A field that none of this owner's
+    configs has raises AttributeError with the valid names -- so a typo, or trying to set a tracker
+    field on the algorithm (or vice versa), never silently does nothing.  Returns self, so calls
+    chain.  To set a whole config at once, or to name the config explicitly, use configure().
+    """
+    owners, collisions = _field_owners(self)
+    by_config = {}
+    for key, value in fields.items():
+        if key in collisions:
+            raise AttributeError(
+                "config field {0!r} is ambiguous on {1} (in {2}); set it with configure() naming "
+                "the config".format(key, type(self).__name__,
+                                    sorted(c.__name__ for c in collisions[key])))
+        cls = owners.get(key)
+        if cls is None:
+            raise AttributeError(
+                "{0} has no config field {1!r}; valid fields: {2}".format(
+                    type(self).__name__, key, sorted(owners)))
+        by_config.setdefault(cls, {})[key] = value
+    # one get/update/set per touched config, not per field
+    for cls, kv in by_config.items():
+        self.set_config(self.get_config(cls).update(**kv))
+    return self
+
+
 def _enhance_owner_class(cls):
     """Attach configure()/config_names() to a tracker/algorithm class (idempotent)."""
     if getattr(cls, "_b2_owner_enhanced", False):
         return cls
     cls.configure = configure
     cls.config_names = config_names
+    cls.update = update
     cls._b2_owner_enhanced = True
     return cls
 

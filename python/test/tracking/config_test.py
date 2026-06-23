@@ -240,3 +240,43 @@ def test_set_and_get_algorithm_config(solver):
     tol = solver.get_config(TolerancesConfig).update(final_tolerance=1e-11)
     solver.set_config(tol)
     assert solver.get_config(TolerancesConfig) == tol
+
+
+# ------------------------------------------------ owner.update(**fields) field router
+
+def test_owner_update_routes_fields_by_name(solver):
+    # the headline ergonomic: set fields on the owner without naming the config struct -- each field
+    # goes to whichever config owns it.
+    from bertini.nag_algorithm import ZeroDimConfig
+    solver.update(final_tolerance="1e-11", max_num_crossed_path_resolve_attempts=3)
+    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-11
+    assert solver.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 3
+
+
+def test_owner_update_is_chainable(solver):
+    assert solver.update(final_tolerance="1e-9") is solver
+
+
+def test_owner_update_accepts_strings(solver):
+    # strings work through the router for every numeric field, same as the per-config update().
+    solver.update(final_tolerance="1e-12")
+    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-12
+
+
+def test_tracker_update_routes_to_its_configs(tracker):
+    from bertini.tracking import SteppingConfig, NewtonConfig
+    tracker.update(max_step_size="0.05", max_num_newton_iterations=2)
+    assert tracker.get_config(SteppingConfig).max_step_size == pb.multiprec.Float("0.05")
+    assert tracker.get_config(NewtonConfig).max_num_newton_iterations == 2
+
+
+def test_owner_update_routes_only_across_this_owners_configs(solver):
+    # max_step_size lives on the tracker's SteppingConfig, not on the algorithm's configs -- the
+    # router refuses it on the algorithm rather than silently doing nothing.
+    with pytest.raises(AttributeError):
+        solver.update(max_step_size="0.05")
+
+
+def test_owner_update_rejects_unknown_field(solver):
+    with pytest.raises(AttributeError):
+        solver.update(finaltol="1e-9")
