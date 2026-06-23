@@ -85,6 +85,15 @@ import warnings
 import matplotlib
 matplotlib.use("Agg")
 warnings.filterwarnings("ignore", message="FigureCanvasAgg is non-interactive")
+
+# Reset the global default precision at the start of every document.  The multiprecision default
+# precision is global mutable state; unlike pytest (which resets it per-test via conftest), the
+# sphinx doctest build shares one process across all documents, so an adaptive solve in one tutorial
+# would otherwise leak an elevated precision into the next and cause flaky, order-dependent failures
+# (e.g. a point built at the leaked precision not matching a system built at the baseline).  20 is the
+# natural default precision on a fresh `import bertini`.
+import bertini
+bertini.default_precision(20)
 '''
 
 bibtex_bibfiles = ['../../../doc_resources/bertini2.bib']
