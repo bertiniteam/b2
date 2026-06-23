@@ -56,15 +56,13 @@ def main():
     if args.seed is not None:
         pb.random.set_random_seed(args.seed)
     system = cyclic_system(args.n)
-    solver = pb.nag_algorithm.ZeroDimCauchyDoublePrecisionTotalDegree(system)
+    solver = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(system)
 
-    # Tighten the tracking tolerances so a random homotopy reliably finds every solution: with the
-    # loose defaults a borderline path occasionally fails (a root is missed) or two paths merge (a
-    # duplicate).  Tolerances are the right fix for that, not a fixed seed -- see ADR-0017.
-    tol = solver.get_config(pb.nag_algorithm.TolerancesConfig)
-    tol.newton_before_endgame = 1e-7
-    tol.newton_during_endgame = 1e-8
-    solver.set_config(tol)
+    # Adaptive precision is what makes this reliable.  cyclic-n has a few near-singular paths that
+    # sit right at the edge of double-precision tracking tolerance; in double precision one of them
+    # occasionally fails the endgame (MinStepSizeReached) and a genuine root is silently lost -- so
+    # the distinct count comes back 1 or 2 short of the known value.  Adaptive precision raises the
+    # working precision on exactly those paths, so every run finds all the finite solutions.
 
     start = time.time()
     if comm.Get_size() > 1:
@@ -81,9 +79,8 @@ def main():
     # calls FINITE (is_finite applies the configured endpoint_finite_threshold).  Count DISTINCT
     # points -- if two paths happen to converge to the same solution they share a multiplicity
     # cluster, so summing 1/multiplicity over the finite endpoints counts each point exactly once.
-    OK = int(pb.tracking.SuccessCode.Success)
     md = solver.solution_metadata()
-    finite = [m for m in md if int(m.endgame_success) == OK and m.is_finite]
+    finite = [m for m in md if m.endgame_success == pb.tracking.SuccessCode.Success and m.is_finite]
     distinct = round(sum(1.0 / m.multiplicity for m in finite))
     num_paths = len(solver.solutions())
 

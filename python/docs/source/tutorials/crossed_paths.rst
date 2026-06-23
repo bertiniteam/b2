@@ -59,7 +59,7 @@ The key knobs are three lines on the solver:
 
    The fixed seed only makes the *bad behaviour* reproducible so we can talk about it.  Pinning a
    seed is **never** the fix for a flaky solve -- the fixes are tolerance, precision, and predictor.
-   See :doc:`solving_at_scale` and the project's ADR-0017.
+   See :doc:`solving_at_scale`.
 
 Seeing the damage, then the repair
 ===================================
