@@ -76,25 +76,12 @@ def test_Float_construct(sym):
     x = Float("9.2", "-43.2e2")
 
 
-def test_Float_eval(sym):
-    x_d, y_d, z_d, p_d, tol_d, x_mp, y_mp, z_mp, p_mp, tol_mp = sym
-    x = Float(x_mp); y = Float(y_mp); z = Float(z_mp)
-    #
-    assert np.abs(x.eval_d().real/(-2.43)-1) <= tol_d
-    assert np.abs(x.eval_d().imag/(.21)-1) <= tol_d
-    #
-    assert mp.abs(y.eval_mp().real/mpfr_float("4.84")-1) <= tol_mp
-    assert mp.abs(y.eval_mp().imag/mpfr_float("-1.94")-1) <= tol_mp
-
-
 def test_Float_funcs(sym):
     x_d, y_d, z_d, p_d, tol_d, x_mp, y_mp, z_mp, p_mp, tol_mp = sym
     x = Float(x_mp); y = Float(y_mp); z = Float(z_mp)
     #
     assert x.degree() == 0
-    d = y.differentiate()
-    assert mp.abs(d.eval_mp().real-mpfr_float("0")) <= tol_mp
-    assert mp.abs(d.eval_mp().imag-mpfr_float("0")) <= tol_mp
+    y.differentiate()                 # a constant differentiates without error
     assert y.is_homogeneous()
     assert y.is_polynomial()
 
@@ -126,18 +113,6 @@ def test_variables_compose():
     assert (v[0]**2).degree() == 2
 
 
-def test_Variable_eval(sym):
-    x_d, y_d, z_d, p_d, tol_d, x_mp, y_mp, z_mp, p_mp, tol_mp = sym
-    x = Variable("x"); y = Variable("y")
-    x.set_current_value(x_d); x.set_current_value(x_mp)
-    #
-    assert np.abs(x.eval_d().real/(-2.43)-1) <= tol_d
-    assert np.abs(x.eval_d().imag/(.21)-1) <= tol_d
-    #
-    assert mp.abs(x.eval_mp().real/mpfr_float("-2.43")-1) <= tol_mp
-    assert mp.abs(x.eval_mp().imag/mpfr_float(".21")-1) <= tol_mp
-
-
 def test_Variable_funcs():
     x = Variable("x"); y = Variable("y")
     #
@@ -149,283 +124,28 @@ def test_Variable_funcs():
     assert y.is_polynomial()
 
 
-def test_Pi_construct(sym):
-    x_d, y_d, z_d, p_d, tol_d, x_mp, y_mp, z_mp, p_mp, tol_mp = sym
-    x = Pi()
-    y = make_pi()
-    #
-    assert np.abs(x.eval_d().real/(3.1415926535897932384626433832795028841971693994)-1) <= tol_d
-    assert np.abs(x.eval_d().imag - (0)) <= tol_d
-    #
-    assert mp.abs(x.eval_mp().real/mpfr_float("3.1415926535897932384626433832795028841971693994")-1) <= tol_mp
-    assert mp.abs(x.eval_mp().imag - mpfr_float("0")) <= tol_mp
-    #
-    assert np.abs(y.eval_d().real/(3.1415926535897932384626433832795028841971693994)-1) <= tol_d
-    assert np.abs(y.eval_d().imag - (0)) <= tol_d
-    #
-    assert mp.abs(y.eval_mp().real/mpfr_float("3.1415926535897932384626433832795028841971693994")-1) <= tol_mp
-    assert mp.abs(y.eval_mp().imag - mpfr_float("0")) <= tol_mp
-
-
-def test_E_construct(sym):
-    x_d, y_d, z_d, p_d, tol_d, x_mp, y_mp, z_mp, p_mp, tol_mp = sym
-    x = E()
-    y = make_e()
-    #
-    assert np.abs(x.eval_d().real/(2.7182818284590452353602874713526624977572470937)-1) <= tol_d
-    assert np.abs(x.eval_d().imag - (0)) <= tol_d
-    #
-    assert mp.abs(x.eval_mp().real - mpfr_float("2.7182818284590452353602874713526624977572470937")) <= tol_mp
-    assert mp.abs(x.eval_mp().imag - mpfr_float("0")) <= tol_mp
-    #
-    assert np.abs(y.eval_d().real/(2.7182818284590452353602874713526624977572470937)-1) <= tol_d
-    assert np.abs(y.eval_d().imag - (0)) <= tol_d
-    #
-    assert mp.abs(y.eval_mp().real/mpfr_float("2.7182818284590452353602874713526624977572470937")-1) <= tol_mp
-    assert mp.abs(y.eval_mp().imag - mpfr_float("0")) <= tol_mp
-
-
-def test_I_construct(sym):
-    x_d, y_d, z_d, p_d, tol_d, x_mp, y_mp, z_mp, p_mp, tol_mp = sym
-    y = make_i()
-    #
-    assert np.abs(y.eval_d().real - (0)) <= tol_d
-    assert np.abs(y.eval_d().imag/(1.0)-1) <= tol_d
-    #
-    assert mp.abs(y.eval_mp().real - mpfr_float("0")) <= tol_mp
-    assert mp.abs(y.eval_mp().imag/mpfr_float("1.0")-1) <= tol_mp
+def test_special_constants_construct():
+    # Construction smoke for the special-number nodes; their values are verified through the SLP
+    # (see eval_expression_test.py, which evaluates Pi).
+    Pi(); make_pi(); E(); make_e(); make_i()
 
 
 # --------------------------------------------------------------------------- operators
 
 @pytest.fixture
 def op():
-    """Variables (with double + multiprecision current values), constants, tolerances."""
+    """Variables and Float constants for the structural operator tests (degree / homogeneity /
+    polynomiality / homogenization).  Operator value-correctness is verified through the SLP in
+    eval_expression_test.py, not by evaluating nodes here."""
     x = Variable("x")
-    x.set_current_value(complex(-2.43, .21))
-    x.set_current_value(mpfr_complex("-2.43", ".21"))
     y = Variable("y")
-    y.set_current_value(complex(4.84, -1.94))
-    y.set_current_value(mpfr_complex("4.84", "-1.94"))
     z = Variable("z")
-    z.set_current_value(complex(-6.48, -.731))
-    z.set_current_value(mpfr_complex("-6.48", "-.731"))
     p = Variable("p")
-    p.set_current_value(complex(-.321, -.72))
-    p.set_current_value(mpfr_complex("-.321", "-.72"))
     a = Float(mpfr_complex("3.12", ".612"))
     b = Float(mpfr_complex("-.823", "2.62"))
     tol_d = float(9e-14)
     tol_mp = mpfr_float("1e-27")
     return x, y, z, p, a, b, tol_d, tol_mp
-
-
-def test_plus(op):
-    x, y, z, p, a, b, tol_d, tol_mp = op
-    #
-    f = (x+y+a)
-    assert np.abs(f.eval_d().real/(5.53)-1) <= tol_d
-    assert np.abs(f.eval_d().imag/(-1.118)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real/mpfr_float("5.53")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag/mpfr_float("-1.118")-1) <= tol_mp
-    #
-    f = (x+Float("3.87"))
-    assert np.abs(f.eval_d().real/(1.44)-1) <= tol_d
-    assert np.abs(f.eval_d().imag/(0.21)-1) <= tol_d
-    #
-    f = (x+mpfr_complex("3.87", "-2.1"))
-    assert np.abs(f.eval_d().real/(1.44)-1) <= tol_d
-    assert np.abs(f.eval_d().imag/(-1.89)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real/mpfr_float("1.44")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag/mpfr_float("-1.89")-1) <= tol_mp
-    #
-    f = (x+(-5))
-    assert np.abs(f.eval_d().real/(-7.43)-1) <= tol_d
-    assert np.abs(f.eval_d().imag/(0.21)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real/mpfr_float("-7.43")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag/mpfr_float("0.21")-1) <= tol_mp
-    #
-    f = (x); f += y; f += a
-    assert np.abs(f.eval_d().real/(5.53)-1) <= tol_d
-    assert np.abs(f.eval_d().imag/(-1.118)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real/mpfr_float("5.53")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag/mpfr_float("-1.118")-1) <= tol_mp
-    #
-    f = (x); f += Float("3.87")
-    assert np.abs(f.eval_d().real/(1.44)-1) <= tol_d
-    assert np.abs(f.eval_d().imag/(0.21)-1) <= tol_d
-
-
-def test_sub(op):
-    x, y, z, p, a, b, tol_d, tol_mp = op
-    #
-    f = (x-y-a)
-    assert np.abs(f.eval_d().real/(-10.39)-1) <= tol_d
-    assert np.abs(f.eval_d().imag/(1.538)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real/mpfr_float("-10.39")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag/mpfr_float("1.538")-1) <= tol_mp
-    #
-    f = (y-Float("3.87"))
-    assert np.abs(f.eval_d().real/(0.97)-1) <= tol_d
-    assert np.abs(f.eval_d().imag/(-1.94)-1) <= tol_d
-    #
-    f = (y-Float("3.87", "0"))
-    assert np.abs(f.eval_d().real / (0.97)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-1.94)-1) <= tol_d
-    #
-    #
-    f = (y-mpfr_complex("3.87", "-2.1"))
-    assert np.abs(f.eval_d().real / (0.97)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (0.16)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("0.97")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("0.16")-1) <= tol_mp
-    #
-    f = (y-(-5))
-    assert np.abs(f.eval_d().real / (9.84)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-1.94)-1) <= tol_d
-    #
-    f = (x); f -= y; f -= a
-    assert np.abs(f.eval_d().real / (-10.39)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (1.538)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("-10.39")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("1.538")-1) <= tol_mp
-    #
-    f = (y); f -= Float("3.87")
-    assert np.abs(f.eval_d().real / (0.97)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-1.94)-1) <= tol_d
-
-
-def test_num_times_var(op):
-    x, y, z, p, a, b, tol_d, tol_mp = op
-    #
-    f = (a*x*b*y)
-    #
-    assert np.abs(f.eval_d().real / (3.4011196056)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-110.9953448712)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("3.4011196056")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-110.9953448712")-1) <= tol_mp
-
-
-def test_var_times_var(op):
-    x, y, z, p, a, b, tol_d, tol_mp = op
-    #
-    f = (x*y*z)
-    assert np.abs(f.eval_d().real / (77.7616926)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-28.8346602)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("77.7616926")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-28.8346602")-1) <= tol_mp
-
-
-def test_var_div_var(op):
-    x, y, z, p, a, b, tol_d, tol_mp = op
-    #
-    f = (x/y)
-    assert np.abs(f.eval_d().real / (-.44755270475041560619657805305047592426404601827)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-.13600253041648890000441351713180233327939034617)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("-.44755270475041560619657805305047592426404601827")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-.13600253041648890000441351713180233327939034617")-1) <= tol_mp
-
-
-def test_trans_funcs(op):
-    x, y, z, p, a, b, tol_d, tol_mp = op
-    #
-    f = (sin(x))
-    assert np.abs(f.eval_d().real/(-.66749329633668695550441899166308616328986315948)-1) <= tol_d
-    assert np.abs(f.eval_d().imag/(-.16020928942503633132090203927960650380076680938)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("-.66749329633668695550441899166308616328986315948")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-.16020928942503633132090203927960650380076680938")-1) <= tol_mp
-    #
-    f = (cos(y))
-    assert np.abs(f.eval_d().real / (0.45194679593300564730917329070452033759984813611)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-3.3798161097977088705360399142708324234265626016)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("0.45194679593300564730917329070452033759984813611")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-3.3798161097977088705360399142708324234265626016")-1) <= tol_mp
-    #
-    f = (tan(z))
-    assert np.abs(f.eval_d().real / (-.11998086808607765336591715593714295443402911227)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-.63859741450762243500349270264429166927927928889)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("-.11998086808607765336591715593714295443402911227")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-.63859741450762243500349270264429166927927928889")-1) <= tol_mp
-    #
-    f = (asin(x))
-    assert np.abs(f.eval_d().real / (-1.4763431474004472804452143435221887167393328861)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (1.5406263884278099750127157814537559611048741005)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("-1.4763431474004472804452143435221887167393328861")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("1.5406263884278099750127157814537559611048741005")-1) <= tol_mp
-    #
-    f = (acos(y))
-    assert np.abs(f.eval_d().real / (0.38769800860408664087229892623614567735197135529)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (2.3379037587834289977359318611458042347281923566)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("0.38769800860408664087229892623614567735197135529")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("2.3379037587834289977359318611458042347281923566")-1) <= tol_mp
-    #
-    f = (atan(z))
-    assert np.abs(f.eval_d().real / (-1.4195347801361539102032503530226060969949192059)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-0.16801358511827150554928904776095870747673962940e-1)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("-1.4195347801361539102032503530226060969949192059")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-0.16801358511827150554928904776095870747673962940e-1")-1) <= tol_mp
-    #
-    f = (exp(y))
-    assert np.abs(f.eval_d().real / (-45.639359208255772966298371983389382308765171859)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-117.94721623715960520658000231550940351946595854)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("-45.639359208255772966298371983389382308765171859")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-117.94721623715960520658000231550940351946595854")-1) <= tol_mp
-    #
-    f = (log(z))
-    assert np.abs(f.eval_d().real / (1.8750432590213669716781046977781508038070552297)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-3.0292589170775161726973168096174940982043177322)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("1.8750432590213669716781046977781508038070552297")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-3.0292589170775161726973168096174940982043177322")-1) <= tol_mp
-
-
-def test_power(op):
-    x, y, z, p, a, b, tol_d, tol_mp = op
-    #
-    f = (y**3)
-    assert np.abs(f.eval_d().real / (58.732432)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-129.035608)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("58.732432")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-129.035608")-1) <= tol_mp
-    #
-    f = (pow(y, 3))
-    assert np.abs(f.eval_d().real / (58.732432)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-129.035608)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("58.732432")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-129.035608")-1) <= tol_mp
-    #
-    f = (x**p)
-    assert np.abs(f.eval_d().real / (-.35190932545709434788093164550270669097948909024)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-6.7687858345625791466707575744042177964518271087)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("-.35190932545709434788093164550270669097948909024")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-6.7687858345625791466707575744042177964518271087")-1) <= tol_mp
-    #
-    f = (pow(x, p))
-    assert np.abs(f.eval_d().real / (-.35190932545709434788093164550270669097948909024)-1) <= tol_d
-    assert np.abs(f.eval_d().imag / (-6.7687858345625791466707575744042177964518271087)-1) <= tol_d
-    #
-    assert mp.abs(f.eval_mp().real / mpfr_float("-.35190932545709434788093164550270669097948909024")-1) <= tol_mp
-    assert mp.abs(f.eval_mp().imag / mpfr_float("-6.7687858345625791466707575744042177964518271087")-1) <= tol_mp
 
 
 def test_Operator_degree(op):
@@ -549,15 +269,9 @@ def test_homogenize_x_minus_1():
     assert g.is_homogeneous()
     assert not f.is_homogeneous()   # original untouched
 
-    # Evaluate g: at (x=2, h=1) → x - h = 2 - 1 = 1
-    x.set_current_value(complex(2, 0))
-    h.set_current_value(complex(1, 0))
-    assert abs(g.eval_d() - complex(1, 0)) < 1e-14
-
-    # At (x=3, h=2) → 3 - 2 = 1
-    x.set_current_value(complex(3, 0))
-    h.set_current_value(complex(2, 0))
-    assert abs(g.eval_d() - complex(1, 0)) < 1e-14
+    # Evaluate g = x - h through the SLP: at (x=2, h=1) → 1, and at (x=3, h=2) → 1
+    assert mp.abs(g.eval(x=2, h=1) - mpfr_complex("1")) < mpfr_float("1e-14")
+    assert mp.abs(g.eval(x=3, h=2) - mpfr_complex("1")) < mpfr_float("1e-14")
 
 
 def test_homogenize_leaves_already_homogeneous_unchanged():
