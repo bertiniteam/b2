@@ -396,6 +396,82 @@ BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
 }
 
 
+// SolveReport: the end-of-solve diagnostic summary.  SummarizeSolve is pure aggregation, so unit-test
+// it on synthetic metadata that includes a genuine tracking failure.
+BOOST_AUTO_TEST_CASE(solve_report_buckets_metadata_and_flags_failures)
+{
+	using bertini::algorithm::SolutionMetaData;
+	using bertini::algorithm::SummarizeSolve;
+	using bertini::algorithm::MidpathCheckReport;
+	using SC = bertini::SuccessCode;
+	using CT = bertini::dbl;
+
+	auto set = [](SolutionMetaData<CT>& m, SC code, bool finite, int mult,
+	              bool real, bool sing, double cond){
+		m.endgame_success = code; m.is_finite = finite; m.multiplicity = mult;
+		m.is_real = real; m.is_singular = sing; m.condition_number = cond; m.max_precision_used = 16;
+	};
+
+	std::vector<SolutionMetaData<CT>> md(8);
+	set(md[0], SC::Success,            true,  1, true,  false, 1e3);   // finite, real
+	set(md[1], SC::Success,            true,  1, false, false, 1e8);   // finite, complex
+	set(md[2], SC::Success,            true,  2, false, true,  1e9);   // a double root: two paths...
+	set(md[3], SC::Success,            true,  2, false, true,  1e9);   // ...counted once (sum 1/mult)
+	set(md[4], SC::Success,            false, 1, false, false, 0);     // diverged (success + infinite)
+	set(md[5], SC::GoingToInfinity,    false, 1, false, false, 0);     // diverged (clean)
+	set(md[6], SC::MinStepSizeReached, false, 1, false, false, 0);     // FAILED -- a lost path
+	set(md[7], SC::FailedToConverge,   false, 1, false, false, 0);     // FAILED
+
+	auto r = SummarizeSolve(md, MidpathCheckReport{});
+	BOOST_CHECK_EQUAL(r.num_paths_tracked,    8u);
+	BOOST_CHECK_EQUAL(r.num_finite_endpoints, 4u);
+	BOOST_CHECK_EQUAL(r.num_finite_solutions, 3u);   // 1 + 1 + (1/2 + 1/2)
+	BOOST_CHECK_EQUAL(r.num_diverged,         2u);
+	BOOST_CHECK_EQUAL(r.num_failed,           2u);
+	BOOST_CHECK_EQUAL(r.num_real,             1u);
+	BOOST_CHECK_EQUAL(r.num_singular,         2u);
+	BOOST_CHECK_EQUAL(r.failures_by_reason[SC::MinStepSizeReached], 1u);
+	BOOST_CHECK_EQUAL(r.failures_by_reason[SC::FailedToConverge],   1u);
+	BOOST_CHECK(r.max_condition_number >= 1e9);
+	BOOST_CHECK(!r.all_paths_resolved);              // failures present -> not trustworthy
+
+	// drop the two failures: now every path resolved (and the midpath check passed by default)
+	std::vector<SolutionMetaData<CT>> clean(md.begin(), md.begin() + 6);
+	auto rc = SummarizeSolve(clean, MidpathCheckReport{});
+	BOOST_CHECK_EQUAL(rc.num_failed, 0u);
+	BOOST_CHECK(rc.all_paths_resolved);
+}
+
+// A real solve: x^2-1, y^2-1 -> exactly 4 finite roots, no losses.
+BOOST_AUTO_TEST_CASE(solve_report_from_a_real_solve)
+{
+	using namespace bertini;
+
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	System sys;
+	sys.AddFunction(pow(x, 2) - 1);
+	sys.AddFunction(pow(y, 2) - 1);
+	sys.AddVariableGroup(VariableGroup{x, y});
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System, start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto const& meta = zd.FinalSolutionMetadata();
+	auto r = zd.Report();
+
+	BOOST_CHECK_EQUAL(r.num_paths_tracked, meta.size());                       // total degree 2*2 = 4
+	BOOST_CHECK_EQUAL(r.num_finite_endpoints + r.num_diverged + r.num_failed,  // the buckets partition
+	                  r.num_paths_tracked);
+	BOOST_CHECK_EQUAL(r.num_finite_solutions, 4u);
+	BOOST_CHECK_EQUAL(r.num_failed, 0u);
+	BOOST_CHECK(r.all_paths_resolved);
+
+	std::ostringstream oss; oss << r;                                          // it prints
+	BOOST_CHECK(!oss.str().empty());
+}
+
 // PROBE observer (branch perf/amp-block-precision-escalation): record, per successful step, the
 // |t|, working precision, and the tracker's condition-number estimate -- so we can SEE whether the
 // condition number (||J|| * ||J^{-1}||) spikes then RECOVERS along the actual seed-6 path, and at

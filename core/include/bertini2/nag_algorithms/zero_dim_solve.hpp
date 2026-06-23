@@ -48,6 +48,7 @@
 #include <chrono>
 #include <mutex>
 #include <iostream>
+#include <map>
 
 
 namespace bertini {
@@ -278,6 +279,107 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 	for (size_t i = 0; i < r.crossed_path_indices.size(); ++i)
 		out << (i ? ", " : "") << r.crossed_path_indices[i];
 	out << "]" << std::endl;
+	return out;
+}
+
+/**
+\brief A concise, human-readable summary of a zero-dimensional solve: how every path ended up, and
+-- crucially -- whether any path was lost.
+
+A raw solution count can lie: if a near-singular path fails to track, a genuine root is silently
+missing and the count comes back short.  This report buckets every endpoint into a finite solution,
+a clean divergence, or a genuine FAILURE (the tracker gave up), records the failures by their named
+SuccessCode, and exposes all_paths_resolved as the one-line health check.
+
+\see ZeroDim::Report, SummarizeSolve
+*/
+struct SolveReport
+{
+	unsigned long long num_paths_tracked = 0;    ///< total paths tracked (the Bezout / start count)
+	unsigned long long num_finite_solutions = 0; ///< DISTINCT finite solutions (round of sum 1/multiplicity)
+	unsigned long long num_finite_endpoints = 0; ///< raw count of finite, successful endpoints
+	unsigned long long num_diverged = 0;         ///< paths ending at infinity (Success & !finite, or GoingToInfinity)
+	unsigned long long num_failed = 0;           ///< paths the tracker could not resolve (no solution, no clean divergence)
+	unsigned long long num_singular = 0;         ///< finite solutions flagged singular (multiple / ill-conditioned)
+	unsigned long long num_real = 0;             ///< finite solutions flagged real
+	std::map<SuccessCode, unsigned long long> failures_by_reason; ///< histogram of the failed paths' SuccessCodes
+	double max_condition_number = 0;             ///< largest condition number among finite solutions
+	unsigned max_precision_used = 0;             ///< highest working precision any path needed (digits)
+	MidpathCheckReport midpath;                  ///< the path-crossing check outcome
+	bool all_paths_resolved = false;             ///< num_failed==0 AND no unresolved crossings: the solve is trustworthy
+};
+
+/**
+\brief Build a SolveReport from the per-endpoint final metadata and the midpath-crossing report.
+Pure aggregation -- one pass, no solve state -- so it is unit-testable on synthetic metadata.
+*/
+template<typename ComplexT>
+SolveReport SummarizeSolve(std::vector<SolutionMetaData<ComplexT>> const& metadata,
+                           MidpathCheckReport const& midpath)
+{
+	SolveReport r;
+	r.num_paths_tracked = metadata.size();
+	r.midpath = midpath;
+	double finite_distinct = 0;
+	for (auto const& m : metadata)
+	{
+		if (m.max_precision_used > r.max_precision_used)
+			r.max_precision_used = m.max_precision_used;
+
+		bool diverged = (m.endgame_success == SuccessCode::GoingToInfinity);
+		if (m.endgame_success == SuccessCode::Success)
+		{
+			if (m.is_finite)
+			{
+				++r.num_finite_endpoints;
+				finite_distinct += 1.0 / m.multiplicity;
+				if (m.is_singular) ++r.num_singular;
+				if (m.is_real)     ++r.num_real;
+				if (static_cast<double>(m.condition_number) > r.max_condition_number)
+					r.max_condition_number = static_cast<double>(m.condition_number);
+			}
+			else
+				diverged = true;
+		}
+
+		if (diverged)
+			++r.num_diverged;
+		else if (m.endgame_success != SuccessCode::Success)   // neither a solution nor a clean divergence
+		{
+			++r.num_failed;
+			++r.failures_by_reason[m.endgame_success];
+		}
+	}
+	r.num_finite_solutions = static_cast<unsigned long long>(finite_distinct + 0.5);
+	r.all_paths_resolved = (r.num_failed == 0) && midpath.passed;
+	return r;
+}
+
+inline
+std::ostream& operator<<(std::ostream & out, const SolveReport & r)
+{
+	out << "zero-dim solve -- " << r.num_paths_tracked << " paths tracked\n";
+	out << "  finite solutions    " << r.num_finite_solutions << "   (distinct)\n";
+	out << "  diverged            " << r.num_diverged << "\n";
+	out << "  FAILED              " << r.num_failed;
+	if (r.num_failed)
+	{
+		out << "    ";
+		bool first = true;
+		for (auto const& kv : r.failures_by_reason)
+		{
+			out << (first ? "" : ", ") << kv.second << " x " << kv.first;
+			first = false;
+		}
+	}
+	out << "\n  ----\n";
+	out << "  singular solutions  " << r.num_singular << "\n";
+	out << "  real solutions      " << r.num_real << "\n";
+	out << "  path crossings      " << r.midpath.num_crossings_detected
+	    << (r.midpath.passed ? " (resolved)" : " (UNRESOLVED)") << "\n";
+	out << "  max condition num   " << r.max_condition_number << "\n";
+	out << "  max precision used  " << r.max_precision_used << " digits\n";
+	out << "  all paths resolved? " << (r.all_paths_resolved ? "yes" : "NO") << "\n";
 	return out;
 }
 
@@ -920,6 +1022,17 @@ std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 			const MidpathCheckReport& EndgameBoundaryMetadata() const
 			{
 				return midpath_report_;
+			}
+
+			/**
+			\brief A concise summary of the solve: how every path ended, by category, and whether any
+			path was lost.  Computed on demand from the final solution metadata and the midpath report.
+
+			\see SolveReport
+			*/
+			SolveReport Report() const
+			{
+				return SummarizeSolve(FinalSolutionMetadata(), EndgameBoundaryMetadata());
 			}
 
 		private:

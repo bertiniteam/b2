@@ -3,6 +3,7 @@
 // from the heavy class_<ZeroDimT> algorithm instantiations.
 
 #include "zero_dim_export.hpp"
+#include <sstream>
 
 namespace bertini{
 	namespace python{
@@ -134,6 +135,41 @@ namespace bertini{
 					return out;
 				},
 				"Indices of the paths flagged as crossed on the first check.")
+			;
+
+			// SolveReport: the end-of-solve diagnostic summary (see the solver's report() method).
+			class_<SolveReport>("SolveReport", init<>())
+			.def_readonly("num_paths_tracked", &SolveReport::num_paths_tracked,
+				"Total number of paths tracked (the start-system / Bezout count).")
+			.def_readonly("num_finite_solutions", &SolveReport::num_finite_solutions,
+				"Number of DISTINCT finite solutions (multiple roots counted once).")
+			.def_readonly("num_finite_endpoints", &SolveReport::num_finite_endpoints,
+				"Raw number of finite, successful endpoints (before collapsing multiplicities).")
+			.def_readonly("num_diverged", &SolveReport::num_diverged,
+				"Number of paths that diverged to infinity -- a result, not a failure.")
+			.def_readonly("num_failed", &SolveReport::num_failed,
+				"Number of paths the tracker could not resolve -- each one a possibly-missing solution.")
+			.def_readonly("num_singular", &SolveReport::num_singular,
+				"Number of finite solutions flagged singular (multiple or ill-conditioned).")
+			.def_readonly("num_real", &SolveReport::num_real,
+				"Number of finite solutions flagged real.")
+			.def_readonly("max_condition_number", &SolveReport::max_condition_number,
+				"Largest condition number among the finite solutions.")
+			.def_readonly("max_precision_used", &SolveReport::max_precision_used,
+				"Highest working precision (digits) any path needed.")
+			.def_readonly("midpath", &SolveReport::midpath,
+				"The MidpathCheckReport from the path-crossing check.")
+			.def_readonly("all_paths_resolved", &SolveReport::all_paths_resolved,
+				"True iff no path failed and no crossing was left unresolved -- the solve is trustworthy.")
+			.add_property("failures_by_reason",
+				+[](SolveReport const& r){
+					boost::python::dict out;
+					for (auto const& kv : r.failures_by_reason) out[kv.first] = kv.second;
+					return out;
+				},
+				"Dict {SuccessCode: count} of how the failed paths ended.")
+			.def("__str__",  +[](SolveReport const& r){ std::ostringstream s; s << r; return s.str(); })
+			.def("__repr__", +[](SolveReport const& r){ std::ostringstream s; s << r; return s.str(); })
 			;
 		}
 

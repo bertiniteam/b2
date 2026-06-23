@@ -205,6 +205,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 	.def("solution_metadata", &AlgoT::FinalSolutionMetadata, return_internal_reference<>(), "get the metadata for the solutions at the target time")
 	.def("endgame_boundary_solutions", &AlgoT::EndgameBoundarySolutions, return_internal_reference<>(), "get the solutions (per-path point data) at the endgame boundary, where regular tracking switches to the endgame")
 	.def("endgame_boundary_metadata", &AlgoT::EndgameBoundaryMetadata, return_internal_reference<>(), "get the MidpathCheckReport from the path-crossing check at the endgame boundary: how many crossings were detected, which paths, how many re-track attempts were made, and whether the check ultimately passed")
+	.def("report", &AlgoT::Report, "a concise end-of-solve diagnostic summary (a SolveReport): how every path ended up -- finite solutions, diverged, or FAILED (by named reason) -- plus singular/real counts, max condition number, the path-crossing outcome, and all_paths_resolved.  print(solver.report()) for a human-readable summary; a count alone can hide a path the tracker silently lost.")
 	;
 }
 
