@@ -40,6 +40,7 @@ yields an equivalent system.
 
 #include <ostream>
 #include <sstream>
+#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -92,6 +93,66 @@ namespace bertini{
 		{
 			std::ostringstream ss;
 			EmitSystem(ss, sys);
+			return ss.str();
+		}
+
+
+		/**
+		\brief Tracking / precision settings to emit in the CONFIG section, in Bertini 1 terms.
+
+		Defaults mirror Bertini 2's defaults for an adaptive zero-dim solve, so the emitted file runs
+		the *same* problem with the *same* knobs in Bertini 1 (the random start system aside).
+		*/
+		struct ClassicWriteOptions
+		{
+			int           tracktype              = 0;      ///< 0 = zero-dimensional solve
+			int           mptype                 = 2;      ///< 0 double, 1 fixed-multiple, 2 adaptive
+			int           odepredictor           = 5;      ///< 5 = RKF45 (the Bertini 2 default)
+			double        tracktolbeforeeg        = 1e-5;  ///< Newton tolerance before the endgame
+			double        tracktolduringeg        = 1e-6;  ///< Newton tolerance during the endgame
+			double        finaltol                = 1e-11; ///< final tracking tolerance
+			unsigned long maxnumbersteps          = 100000;///< max steps per path
+			unsigned      maxnewtonits             = 2;     ///< max Newton iterations per correction
+			unsigned      maxcrossedpathresolves   = 2;     ///< endgame-boundary crossed-path re-track attempts
+		};
+
+		/**
+		\brief Emit the CONFIG-section body (no CONFIG/END wrapper).  The AMP coefficient/degree
+		bounds are derived from the system; the rest come from `opt`.
+		*/
+		inline void EmitConfig(std::ostream& out, System const& sys, ClassicWriteOptions const& opt)
+		{
+			auto num = [](double v){ std::ostringstream s; s << std::setprecision(15) << v; return s.str(); };
+			out << "tracktype: "              << opt.tracktype              << ";\n";
+			out << "mptype: "                 << opt.mptype                 << ";\n";
+			out << "odepredictor: "           << opt.odepredictor           << ";\n";
+			out << "tracktolbeforeeg: "       << num(opt.tracktolbeforeeg)  << ";\n";
+			out << "tracktolduringeg: "       << num(opt.tracktolduringeg)  << ";\n";
+			out << "finaltol: "               << num(opt.finaltol)          << ";\n";
+			out << "maxnumbersteps: "         << opt.maxnumbersteps         << ";\n";
+			out << "maxnewtonits: "           << opt.maxnewtonits           << ";\n";
+			out << "maxcrossedpathresolves: " << opt.maxcrossedpathresolves << ";\n";
+			out << "coefficientbound: "       << num(static_cast<double>(sys.CoefficientBound<dbl>())) << ";\n";
+			out << "degreebound: "            << sys.DegreeBound()          << ";\n";
+		}
+
+		/// \brief Write a complete Bertini 1 classic input file: `CONFIG ... END;\nINPUT ... END;`.
+		inline void WriteClassicInput(std::ostream& out, System const& sys,
+		                              ClassicWriteOptions const& opt = ClassicWriteOptions{})
+		{
+			out << "CONFIG\n";
+			EmitConfig(out, sys, opt);
+			out << "END;\n\nINPUT\n";
+			EmitSystem(out, sys);
+			out << "END;\n";
+		}
+
+		/// \brief The complete classic input file as a string.  \see WriteClassicInput.
+		inline std::string SystemToClassicFile(System const& sys,
+		                                       ClassicWriteOptions const& opt = ClassicWriteOptions{})
+		{
+			std::ostringstream ss;
+			WriteClassicInput(ss, sys, opt);
 			return ss.str();
 		}
 

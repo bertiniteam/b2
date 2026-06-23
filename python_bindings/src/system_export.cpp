@@ -40,6 +40,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include "system_export.hpp"
+#include <bertini2/io/classic_writer.hpp>
 
 
 
@@ -65,6 +66,16 @@ namespace bertini{
 			.def("precision", get_prec_, (arg("self")), "Get the current precision of the system.  Returns a postive number, representing the number of digits (not bits) at which the system is currently represented.  (there is a reference-level precision stored, so you can change this up / down mostly fearlessly)")
 			.def("precision", set_prec_, (arg("self"), arg("precision")),"Set / change the precision of the system.  Feed in a positive number, representing the digits (not bits) of the precision.  Double precision is 16, but that only effects the multi-precision precision...  you can eval in double precision without changing the precision to 16.")
 			.def("differentiate", &SystemBaseT::Differentiate, (arg("self")), "differentiate the system with respect to the declared variable groups")
+
+			.def("to_classic_input",
+				+[](SystemBaseT const& self, int mptype, int odepredictor){
+					bertini::classic::ClassicWriteOptions opt;
+					opt.mptype = mptype;
+					opt.odepredictor = odepredictor;
+					return bertini::classic::SystemToClassicFile(self, opt);
+				},
+				(arg("self"), arg("mptype") = 2, arg("odepredictor") = 5),
+				"Emit this system as a Bertini 1 classic input file (a CONFIG + INPUT string) so the same problem can be solved in Bertini 1 for cross-validation.  mptype: 0 double, 1 fixed-multiple, 2 adaptive (default).  odepredictor: 0 Euler, 2 RK4, 5 RKF45 (default), 6 Cash-Karp.  Tracking tolerances, max steps, Newton iterations and AMP bounds come from Bertini 2's defaults / the system.  Write the returned string to a .input file and run `bertini1` on it (note: Bertini 1 writes many output files into its working directory).")
 
 			// Register mpfr overloads first so dbl overloads have highest priority
 			// (boost::python resolves in LIFO order). Without this, a numpy int64
