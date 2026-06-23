@@ -88,14 +88,10 @@ namespace node{
 			{}
 
 			// Return value of constant
-			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-			mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 			friend class boost::serialization::access;
@@ -143,14 +139,10 @@ namespace node{
 
 			
 			// Return value of constant
-			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-			mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 			friend class boost::serialization::access;

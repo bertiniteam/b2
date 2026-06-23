@@ -199,10 +199,7 @@ BOOST_AUTO_TEST_CASE(commutative_sum_dedups_when_enabled)
 	Nd a = x + y;
 	Nd b = y + x;
 	BOOST_CHECK_EQUAL(a.get(), b.get());          // canonicalized to one node
-	x->set_current_value(dbl(2.0, 0.0));
-	y->set_current_value(dbl(5.0, 0.0));
-	a->Reset();
-	BOOST_CHECK_EQUAL(a->Eval<dbl>(), dbl(7.0, 0.0));
+	BOOST_CHECK_EQUAL(EvalAt<dbl>(a, {{"x", dbl(2.0, 0.0)}, {"y", dbl(5.0, 0.0)}}), dbl(7.0, 0.0));
 }
 
 BOOST_AUTO_TEST_CASE(commutative_product_dedups_when_enabled)
@@ -219,10 +216,7 @@ BOOST_AUTO_TEST_CASE(division_stays_correct_under_canonicalization)
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	Nd q = y / x;                                 // a divisor must not become the leading factor
-	x->set_current_value(dbl(2.0, 0.0));
-	y->set_current_value(dbl(6.0, 0.0));
-	q->Reset();
-	BOOST_CHECK_EQUAL(q->Eval<dbl>(), dbl(3.0, 0.0));    // 6/2
+	BOOST_CHECK_EQUAL(EvalAt<dbl>(q, {{"x", dbl(2.0, 0.0)}, {"y", dbl(6.0, 0.0)}}), dbl(3.0, 0.0));  // 6/2
 	BOOST_CHECK((x/y).get() != (y/x).get());            // x/y and y/x stay distinct
 }
 

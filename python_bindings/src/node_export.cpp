@@ -48,17 +48,6 @@ namespace bertini{
 		// Wrapper struct to allow derived classes to overide methods in python
 		struct NodeWrap : Node, wrapper<Node>
 		{
-			void Reset()
-			{
-				if (override Reset = this->get_override("Reset"))
-					Reset(); 
-				
-				Node::Reset();
-			}
-			void default_Reset(){ return this->Node::Reset();}
-			
-			void precision(unsigned int prec) { this->get_override("precision")(prec); }
-			
 			int Degree(std::shared_ptr<Variable> const& v = nullptr) const {return this->get_override("Degree")(v); }
 			int Degree(VariableGroup const& vars) const {return this->get_override("Degree")(vars); }
 			
@@ -92,9 +81,6 @@ namespace bertini{
 		void NodeVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("reset", &NodeBaseT::Reset, (arg("self")),"reset (downward) the values of a function tree so that when the next eval_mp or eval_d is called, the tree re-computes")
-			.def("precision", &GetPrecision, (arg("self")),"")
-			.def("precision", SetPrecision, (arg("self"), arg("precision")),"")
 			.def("degree", &Deg0, (arg("self")),"compute the algebraic degree of node in a function tree, with respect to all variables. returns one integer.  negative is non-algebraic.")
 			.def("degree", Deg1, (arg("self"),arg("var")),"compute the algebraic degree of node in a function tree, with respect to a particular variable. returns one integer.  negative is non-algebraic.")
 			.def("degree", Deg2, (arg("self"),arg("vars")),"compute the algebraic degree of node in a function tree, with respect to a variable group. returns one integer.  negative is non-algebraic.")
@@ -109,11 +95,6 @@ namespace bertini{
 			.def("is_polynomial", IsPoly1,(arg("self"),arg("var")), "test if this Node is polynomial with respect to Variable `var`.")
 			.def("is_polynomial", IsPoly2,(arg("self"),arg("vars")), "test if this Node is polynomial with respect to Variables `vars`.")
 
-			.def("eval_d", &Eval0<dbl>, (arg("self")), "evaluate in double precision.  uses the values of variables already set in a preceding call to `var.set_current_value()`")
-			.def("eval_d", return_Eval1_ptr<dbl>(), (arg("self"),arg("var")), "evaluate the derivative of this node with respect to variable `var` in double precision.  uses the values of variables already set in a preceding call to `var.set_current_value()`")
-			.def("eval_mp", &Eval0<mpfr_complex>, (arg("self")), "evaluate in multiple precision.  uses the values of variables already set in a preceding call to `var.set_current_value()`")
-			.def("eval_mp", return_Eval1_ptr<mpfr_complex>(), (arg("self"),arg("var")), "evaluate the derivative of this node with respect to variable `var` in multiple precision.  uses the values of variables already set in a preceding call to `var.set_current_value()`")
-			
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))
 			

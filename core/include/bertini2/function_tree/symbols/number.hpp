@@ -56,8 +56,7 @@ namespace node{
 	/**
 	\brief Abstract Number type from which other Numbers derive.
 
-	This class represents constant leaves to a function tree.  FreshEval simply returns
-	the value of the constant.
+	This class represents constant leaves to a function tree.
 	*/
 	class Number : public Symbol
 	{
@@ -67,7 +66,6 @@ namespace node{
 
 
 
-		void Reset() const override;
 
 
 		
@@ -129,13 +127,6 @@ namespace node{
 		}
 
 		
-		/**
-		 Change the precision of this variable-precision tree node.
-		 
-		 \param prec the number of digits to change precision to.
-		 */
-		void precision(unsigned int prec) const override;
-
 		/**
 		\brief Differentiate a number.
 		 */
@@ -236,15 +227,6 @@ namespace node{
 
 
 
-		// Return value of constant
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpz_int true_value_;
@@ -354,14 +336,6 @@ namespace node{
 		Float(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
 		{}
 
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpfr_complex highest_precision_value_;
@@ -462,7 +436,7 @@ namespace node{
 		evaluation engine.
 
 		Unlike Eval, this does no caching and never touches the node's stored working
-		value --- it is a pure read of the literal.  It matches FreshEval's conversion:
+		value --- it is a pure read of the literal.  It matches the literal's conversion:
 		double truncation for dbl, and a value at the current thread precision for mpfr.
 		*/
 		template<typename NumT>
@@ -532,15 +506,6 @@ namespace node{
 		{}
 
 
-		// Return value of constant
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpq_rational true_value_real_, true_value_imag_;

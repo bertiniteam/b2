@@ -85,7 +85,6 @@ namespace node{
 		void EnsureNotEmpty() const;
 
 		/// flips the fresh-eval bit back to fresh (downward through the wrapped expression)
-		void Reset() const override;
 
 		/// the wrapped (entry) expression this name stands for
 		const std::shared_ptr<Node>& EntryNode() const;
@@ -105,18 +104,12 @@ namespace node{
 		bool IsHomogeneous(VariableGroup const& vars) const override;
 
 		/// change the precision of this variable-precision tree node
-		void precision(unsigned int prec) const override;
 
 		virtual ~NamedExpression() = default;
 
 	protected:
 		NamedExpression() = default;
 
-		/// Calls FreshEval on the entry node to the tree.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		std::shared_ptr<Node> entry_node_ = nullptr;
 

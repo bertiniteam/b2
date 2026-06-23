@@ -28,26 +28,10 @@ namespace bertini{
 namespace node{
 
 
-dbl NamedExpression::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return entry_node_->Eval<dbl>(diff_variable);
-}
-
-void NamedExpression::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	entry_node_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-}
 
 
-mpfr_complex NamedExpression::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return entry_node_->Eval<mpfr_complex>(diff_variable);
-}
 
-void NamedExpression::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	entry_node_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-}
+
 
 
 const std::shared_ptr<Node> & NamedExpression::EntryNode() const
@@ -58,13 +42,6 @@ const std::shared_ptr<Node> & NamedExpression::EntryNode() const
 }
 
 
-void NamedExpression::Reset() const
-{
-	EnsureNotEmpty();
-
-	Node::ResetStoredValues();
-	entry_node_->Reset();
-}
 
 
 void NamedExpression::EnsureNotEmpty() const
@@ -124,17 +101,6 @@ bool NamedExpression::IsHomogeneous(VariableGroup const& vars) const
 }
 
 
-void NamedExpression::precision(unsigned int prec) const
-{
-	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
-	if (val_pair.first.precision()==prec)
-		return;
-	else{
-		val_pair.first.precision(prec);
-		entry_node_->precision(prec);
-	}
-
-}
 
 
 } // re: namespace node

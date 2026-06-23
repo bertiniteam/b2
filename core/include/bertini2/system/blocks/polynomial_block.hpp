@@ -121,15 +121,6 @@ public:
 		return true;
 	}
 
-	/// Reset the cached values in the function / derivative trees (function-tree eval path).
-	void Reset() const
-	{
-		for (auto const& f : functions_)             f->Reset();
-		for (auto const& f : constant_subfunctions_) f->Reset();
-		for (auto const& n : space_derivatives_) n->Reset();
-		for (auto const& n : time_derivatives_)  n->Reset();
-	}
-
 	// ---- block contract: metadata ----
 	size_t NumFunctions() const { return functions_.size(); }
 	bool DependsOnPathVariable() const { return static_cast<bool>(path_variable_); }

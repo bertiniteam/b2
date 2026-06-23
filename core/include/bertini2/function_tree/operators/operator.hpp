@@ -96,7 +96,6 @@ namespace node{
 		std::size_t HashImpl() const override;
 		bool IsSame(Node const& other) const override;
 
-		void Reset() const override;
 		
 		
 		void SetOperand(std::shared_ptr<Node> n);
@@ -137,7 +136,6 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		void precision(unsigned int prec) const override;
 
 
 
@@ -172,7 +170,6 @@ namespace node{
 		virtual ~NaryOperator() = default;
 		
 		
-		void Reset() const override;
 		
 		// Add an operand onto the container for this operator
 		virtual void AddOperand(std::shared_ptr<Node> n);
@@ -192,7 +189,6 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		void precision(unsigned int prec) const override;
 
 		
 		

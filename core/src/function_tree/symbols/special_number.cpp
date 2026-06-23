@@ -44,51 +44,18 @@ using ::pow;
 // inverse-cosine implementation.  This keeps pi identical across ranks/runs at a given precision,
 // which matters because the Cauchy endgame's roots of unity and the total-degree start points are
 // built from pi.  See https://github.com/bertiniteam/b2/issues/156.
-dbl Pi::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return boost::math::constants::pi<double>();
-}
-
-void Pi::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = boost::math::constants::pi<double>();
-}
-
-
-mpfr_complex Pi::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	return mpfr_complex(boost::math::constants::pi<mpfr_float>());
-}
-
-void Pi::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
-{
-	evaluation_value = mpfr_complex(boost::math::constants::pi<mpfr_float>());
-}
 
 
 
 
-// Return value of constant
-dbl E::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const 
-{
-	return dbl(exp(1.0),0.0);
-}
-
-void E::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const 
-{
-	evaluation_value = dbl(exp(1.0),0.0);
-}
 
 
-mpfr_complex E::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const 
-{
-	return mpfr_complex(mpfr_float(exp(mpfr_float(1))));
-}
 
-void E::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const 
-{
-	evaluation_value = mpfr_complex(mpfr_float(exp(mpfr_float(1))));
-}
+
+
+
+
+
 			}// special number namespace
 
 

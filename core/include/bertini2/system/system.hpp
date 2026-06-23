@@ -160,23 +160,6 @@ namespace bertini {
 		void Differentiate() const;
 
 
-		
-		/**
-		\brief Force re-evaluation of the system next eval of functions. If something has changed in the system, call this.
-		*/
-		void ResetFunctions() const;
-
-		/**
-		\brief Force re-evaluation of the system next eval of Jacobians. If something has changed in the system, call this.
-		*/
-		void ResetJacobian() const;
-
-		void ResetTimeDerivatives() const;
-
-		/**
-		\brief A complete reset of the system, so that all of functions, space derivatives, and time derivatives will all be re-evaluated.
-		*/
-		void Reset() const;
 		/**
 		 \brief Evaluate the system using the previously set variable (and time) values, in place.
 
@@ -253,7 +236,6 @@ namespace bertini {
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 			
 			SetVariables(variable_values.eval());
-			ResetFunctions();
 			EvalInPlace(function_values);
 		}
 		
@@ -317,7 +299,6 @@ namespace bertini {
 			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
 
-			ResetFunctions(); // todo, elimiante this.  i feel like setting the variables or path variable should be enough to set the flag/ take the action
 
 			EvalInPlace(function_values);
 		}
@@ -490,7 +471,6 @@ namespace bertini {
 			
 			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
-			ResetJacobian();
 			JacobianInPlace(J);
 		}
 
@@ -558,7 +538,6 @@ namespace bertini {
 
 			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
-			ResetTimeDerivatives();
 			TimeDerivativeInPlace(ds_dt);
 		}
 
@@ -599,7 +578,6 @@ namespace bertini {
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
 			SetVariables(variable_values.eval());
-			ResetTimeDerivatives();
 			TimeDerivativeInPlace(ds_dt);
 		}
 
@@ -872,39 +850,22 @@ namespace bertini {
 		}
 
 
+		// Stage the system's current point (variables, and optionally the path value) for a
+		// subsequent Eval/Jacobian.  (Formerly also reset the function-tree node caches; node-level
+		// evaluation is gone, so there is nothing to reset -- the SLP carries its own state.)
 		template<typename T>
 		void SetAndReset(Vec<T> const& new_space, T const& new_time) const
 		{
 			SetVariables(new_space);
 			SetPathVariable(new_time);
-
-			Reset();
 		}
 
 		template<typename T>
 		void SetAndReset(Vec<T> const& new_space) const
 		{
 			SetVariables(new_space);
-
-			Reset();
 		}
 
-		/**
-		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
-		 \param new_values The new updated values for the implicit parameters.
-		 */
-		template<typename T>
-		void SetImplicitParameters(Vec<T> new_values) const
-		{
-			if (new_values.size()!= implicit_parameters_.size())
-				throw std::runtime_error("trying to set implicit parameter values, but there is a size mismatch");
-
-			size_t counter = 0;
-			for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++)
-				(*iter)->set_current_value(new_values(counter));
-
-		}
 
 
 

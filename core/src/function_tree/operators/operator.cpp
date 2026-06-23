@@ -30,11 +30,6 @@
 namespace bertini {
 namespace node{	
 
-void UnaryOperator::Reset() const
-{
-	Node::ResetStoredValues();
-	operand_->Reset();
-}
 
 void UnaryOperator::SetOperand(std::shared_ptr<Node> n)
 {
@@ -130,13 +125,6 @@ bool UnaryOperator::IsHomogeneous(VariableGroup const& vars) const
  
  \param prec the number of digits to change precision to.
  */
-void UnaryOperator::precision(unsigned int prec) const
-{
-	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
-	val_pair.first.precision(prec);
-
-	operand_->precision(prec);
-}
 
 
 
@@ -146,13 +134,6 @@ void UnaryOperator::precision(unsigned int prec) const
 //
 ////////////
 
-void NaryOperator::Reset() const
-{
-	Node::ResetStoredValues();
-	for (const auto& ii : operands_)
-		ii->Reset();
-
-}
 
 // Add an operand onto the container for this operator
 void NaryOperator::AddOperand(std::shared_ptr<Node> n)
@@ -183,16 +164,6 @@ std::shared_ptr<Node> NaryOperator::FirstOperand() const
  
  \param prec the number of digits to change precision to.
  */
-void NaryOperator::precision(unsigned int prec) const
-{
-	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
-	val_pair.first.precision(prec);
-	
-	this->PrecisionChangeSpecific(prec);
-
-	for (const auto& iter : operands_)
-		iter->precision(prec);
-}
 
 
 void NaryOperator::PrecisionChangeSpecific(unsigned /*prec*/) const

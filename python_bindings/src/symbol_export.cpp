@@ -70,15 +70,10 @@ namespace bertini{
 		
 		template<typename NodeBaseT>
 		template<class PyClass>
-		void VariableVisitor<NodeBaseT>::visit(PyClass& cl) const
+		void VariableVisitor<NodeBaseT>::visit(PyClass& /*cl*/) const
 		{
-			cl
-			// .def("set_current_value", &NodeBaseT::template set_current_value<dbl>)
-			.def("set_current_value", set_mpfr)
-			.def("set_current_value", set_double)
-			.def("set_current_value", set_string1)
-			.def("set_current_value", set_string2)
-			;
+			// Variables no longer carry a value: evaluation is through the SLP (System.eval /
+			// Node.eval), so there is no longer a set_current_value to bind.
 		}
 
 		

@@ -89,49 +89,6 @@ enum class VariableGroupType
 
 namespace node{
 
-namespace detail{
-	template<typename T>
-	struct FreshEvalSelector
-	{};
-
-	template<>
-	struct FreshEvalSelector<dbl>
-	{
-		
-		template<typename N>
-		static dbl Run(N const& n, std::shared_ptr<Variable> const& diff_variable)
-		{
-			return n.FreshEval_d(diff_variable);
-		}
-		
-		
-		template<typename N>
-		static void RunInPlace(dbl& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
-		{
-			n.FreshEval_d(evaluation_value, diff_variable);
-		}
-
-	};
-
-	template<>
-	struct FreshEvalSelector<mpfr_complex>
-	{
-		template<typename N>
-		static mpfr_complex Run(N const& n, std::shared_ptr<Variable> const& diff_variable)
-		{
-			return n.FreshEval_mp(diff_variable);
-		}
-		
-		
-		template<typename N>
-		static void RunInPlace(mpfr_complex& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
-		{
-			n.FreshEval_mp(evaluation_value, diff_variable);
-		}
-
-	};
-}
-
 /**
 \brief Operator precedence classes, used to decide parenthesization when printing.
 
@@ -160,57 +117,10 @@ An interface for all nodes in a function tree, and for a function object as well
  */
 class Node : public VisitableBase<>, public std::enable_shared_from_this<Node>
 {
-	friend detail::FreshEvalSelector<dbl>;
-	friend detail::FreshEvalSelector<mpfr_complex>;
 public:
-	
+
 	virtual ~Node() = default;
-	
-	///////// PUBLIC PURE METHODS /////////////////
-  
 
-
-	/**
-	 Tells code to run a fresh eval on node next time.
-	*/
-	virtual void Reset() const = 0;
-	
-	///////// END PUBLIC PURE METHODS /////////////////
-	
-	
-
-	public:
-	/**
-	 Evaluate the node.  If flag false, just return value, if flag true
-	 run the specific FreshEval of the node, then set flag to false.
-
-	 Template type is type of value you want returned.
-
-	 \return The value of the node.
-	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr_complex.
-	 */
-	template<typename T>
-	T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const 
-	{
-		T result;
-		EvalInPlace(result, diff_variable);
-		return result;
-	}
-	
-
-	/**
-	 Evaluate the node in place.  If flag false, just return value, if flag true
-	 run the specific FreshEval of the node, then set flag to false.
-	 
-	 Template type is type of value you want returned.
-	 
-	 \return The value of the node.
-	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr_complex.
-	 */
-	template<typename T>
-	void EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable = nullptr) const;
-
-	
 	///////// PUBLIC PURE METHODS /////////////////
 
 
@@ -351,7 +261,7 @@ public:
 	The input tree is never modified; degree-deficient summands are padded with powers of homvar
 	in a freshly-built tree (so a throw on a non-polynomial term can't leave a half-homogenized
 	tree behind).  The default (leaves, and anything with nothing to homogenize) returns the node
-	unchanged -- shared variables are preserved, so set_current_value still drives the result.
+	unchanged.
 
 	\param homvar The homogenizing variable, which is multiplied against terms with degree deficiency with repect to other terms.
 	\param vars A group of variables, with respect to which you wish to homogenize.
@@ -372,16 +282,6 @@ public:
 	\return True if it is homogeneous, false if not.
 	*/
 	virtual bool IsHomogeneous(VariableGroup const& vars) const = 0;
-	
-	
-	/**
-	 Change the precision of this variable-precision tree node.
-	 
-	 \param prec the number of digits to change precision to.
-	 */
-	virtual void precision(unsigned int prec) const = 0;
-
-	unsigned precision() const;
 
 	///////// PUBLIC PURE METHODS /////////////////
 
@@ -406,11 +306,6 @@ public:
 	
 
 protected:
-	//Stores the current value of the node in all required types
-	//We must hard code in all types that we want here.
-	//TODO: Initialize this to some default value, second = false
-	mutable std::tuple< std::pair<dbl,bool>, std::pair<mpfr_complex,bool> > current_value_;
-
 	/// Memoized structural hash (computed on first Hash() call; nodes are immutable so it
 	/// never needs invalidating).  Not serialized -- a clone recomputes it on demand.
 	mutable std::optional<std::size_t> structural_hash_;
@@ -430,48 +325,6 @@ protected:
 	}
 
 
-
-	///////// PRIVATE PURE METHODS /////////////////
-	
-	/**
-	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
-
-	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr_complex.
-	*/
-	virtual dbl FreshEval_d(std::shared_ptr<Variable> const&) const = 0;
-
-	/**
-	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper EvalInPlace<>() call from Node, if so required (by resetting, etc).
-	 
-	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr_complex.
-	 */
-	virtual void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
-
-	
-	/**
-	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
-
-	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr_complex.
-	*/
-	virtual mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const&) const = 0;
-	
-	/**
-	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
-	 
-	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr_complex.
-	 */
-	virtual void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
-
-	
-	
-	
-	///////// END PRIVATE PURE METHODS /////////////////
-	
-	
-	/**
-	Set the stored values for the Node to indicate a fresh eval on the next pass.  This is so that Nodes which are referred to more than once, are only evaluated once.  The first evaluation is fresh, and then the indicator for fresh/stored is set to stored.  Subsequent evaluation calls simply return the stored number.
-	*/
-	void ResetStoredValues() const;
 
 	Node();
 

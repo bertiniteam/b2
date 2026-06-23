@@ -79,7 +79,6 @@ namespace node{
 
 	public:
 
-		void Reset() const override;
 
 
 		const std::shared_ptr<const Variable>& GetVariable() const;
@@ -121,19 +120,14 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		void precision(unsigned int prec) const override;
 
 		
 	protected:
 		// This should never be called for a Differential.  Only for Jacobians.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 

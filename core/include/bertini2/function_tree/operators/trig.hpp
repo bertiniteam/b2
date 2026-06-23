@@ -88,8 +88,7 @@ namespace node{
 	/**
 	\brief Provides the sine Operator.
 
-	This class represents the sine function.  FreshEval method
-	is defined for sine and takes the sine of the child node.
+	This class represents the sine function.
 	*/
 	class SinOperator : public TrigOperator
 	{
@@ -126,15 +125,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 
 		
 	private:
@@ -151,8 +145,7 @@ namespace node{
 	/**
 	\brief Provides the inverse sine Operator.
 
-	This class represents the inverse sine function.  FreshEval method
-	is defined for arcsine and takes the sine of the child node.
+	This class represents the inverse sine function.
 	*/
 	class ArcSinOperator : public TrigOperator
 	{
@@ -187,15 +180,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 	private:
 		ArcSinOperator() = default;
@@ -218,8 +206,7 @@ namespace node{
 	/**
 	\brief  Provides the cosine Operator.
 
-	This class represents the cosine function.  FreshEval method
-	is defined for cosine and takes the cosine of the child node.
+	This class represents the cosine function.
 	*/
 	class CosOperator : public TrigOperator
 	{
@@ -258,15 +245,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 
 		
 		
@@ -284,8 +266,7 @@ namespace node{
 	/**
 	\brief Provides the arc cosine Operator.
 
-	This class represents the inverse cosine function.  FreshEval method
-	is defined for arccosine and takes the arccosine of the child node.
+	This class represents the inverse cosine function.
 	*/
 	class ArcCosOperator : public TrigOperator
 	{
@@ -323,15 +304,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 
 		
 	private:
@@ -356,8 +332,7 @@ namespace node{
 	/**
 	\brief Provides the tangent Operator.
 
-	This class represents the tangent function.  FreshEval method
-	is defined for tangent and takes the tangent of the child node.
+	This class represents the tangent function.
 	*/
 	class TanOperator : public TrigOperator
 	{
@@ -393,15 +368,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 
 		
 	private:
@@ -419,8 +389,7 @@ namespace node{
 	/**
 	\brief Provides the inverse tangent Operator.
 
-	This class represents the inverse tangent function.  FreshEval method
-	is defined for arctangent and takes the arc tangent of the child node.
+	This class represents the inverse tangent function.
 	*/
 	class ArcTanOperator : public TrigOperator
 	{
@@ -456,15 +425,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for arctangent.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 		
 	private:
 		ArcTanOperator() = default;

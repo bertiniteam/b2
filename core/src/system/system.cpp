@@ -1623,28 +1623,6 @@ namespace bertini
 	}
 
 
-	void System::ResetFunctions() const
-	{
-		if (auto* p = PolyBlockPtr()) p->Reset();
-	}
-
-	void System::ResetJacobian() const
-	{
-		if (auto* p = PolyBlockPtr()) p->Reset();
-	}
-
-	void System::ResetTimeDerivatives() const
-	{
-		if (auto* p = PolyBlockPtr()) p->Reset();
-	}
-
-	void System::Reset() const
-	{
-		ResetFunctions();
-		ResetJacobian();
-		ResetTimeDerivatives();
-	}
-
 	const System::Var& System::GetPathVariable() const
 	{
 		if (this->HavePathVariable())

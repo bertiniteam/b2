@@ -592,66 +592,12 @@ bool SumOperator::IsHomogeneous(VariableGroup const& v) const
 
 
 
-dbl SumOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-{
-	dbl retval;
-	this->FreshEval_d(retval, diff_variable);
-	return retval;
-}
 	
-void SumOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	evaluation_value = dbl(0);
-	for(size_t ii = 0; ii < operands_.size(); ++ii)
-	{
-		if(signs_[ii])
-		{
-			operands_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
-			evaluation_value += temp_d_;
-		}
-		else
-		{
-			operands_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
-			evaluation_value -= temp_d_;
-		}
-	}
-}
 
 	
 	
 
-mpfr_complex SumOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-{
-	mpfr_complex retval;
-	this->FreshEval_mp(retval, diff_variable);
-	return retval;
-}
 
-void SumOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	if (signs_[0])
-		operands_[0]->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-	else
-	{
-		operands_[0]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
-		evaluation_value = -temp_mp_;
-	}
-
-	for(size_t ii = 1; ii < operands_.size(); ++ii)
-	{
-		if(signs_[ii])
-		{
-			operands_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
-			evaluation_value += temp_mp_;
-		}
-		else
-		{
-			operands_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
-			evaluation_value -= temp_mp_;
-		}
-	}
-	
-}
 
 
 
@@ -687,28 +633,10 @@ std::shared_ptr<Node> NegateOperator::Differentiate(std::shared_ptr<Variable> co
 	return SimplifiedNegate(operand_->Differentiate(v));
 }
 
-dbl NegateOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return -(operand_->Eval<dbl>(diff_variable));
-}
-
-void NegateOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-	evaluation_value = -evaluation_value;
-}
 
 
-mpfr_complex NegateOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return -operand_->Eval<mpfr_complex>(diff_variable);
-}
 
-void NegateOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-	evaluation_value = -evaluation_value;
-}
+
 
 
 
@@ -912,60 +840,10 @@ bool MultOperator::IsHomogeneous(VariableGroup const& v) const
 	return true;
 }
 
-dbl MultOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-{
-	dbl retval;
-	this->FreshEval_d(retval, diff_variable);
-	return retval;
-}
-
-void MultOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	evaluation_value = dbl(1);
-	for(size_t ii = 0; ii < operands_.size(); ++ii)
-	{
-		if(mult_or_div_[ii])
-		{
-			operands_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
-			evaluation_value *= temp_d_;
-		}
-		else
-		{
-			operands_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
-			evaluation_value /= temp_d_;
-		}
-	}
-	
-}
 
 
-mpfr_complex MultOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-{
-	mpfr_complex retval;
-	this->FreshEval_mp(retval, diff_variable);
-	return retval;
-}
 
-void MultOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	if (mult_or_div_[0])
-		operands_[0]->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-	else
-	{
-		operands_[0]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
-		evaluation_value = static_cast<mpfr_float>(1)/temp_mp_;
-	}
 
-	for(size_t ii = 1; ii < operands_.size(); ++ii)
-	{
-		operands_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
-		if(mult_or_div_[ii])
-			evaluation_value *= temp_mp_;
-		else
-			evaluation_value /= temp_mp_;
-	}
-	
-}
 
 
 
@@ -977,12 +855,6 @@ void MultOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<
 
 
 
-void PowerOperator::Reset() const
-{
-	Node::ResetStoredValues();
-	base_->Reset();
-	exponent_->Reset();
-}
 
 void PowerOperator::print(std::ostream & target) const
 {
@@ -1005,6 +877,20 @@ std::shared_ptr<Node> PowerOperator::Differentiate(std::shared_ptr<Variable> con
 }
 
 
+namespace {
+	// The double value of a constant (degree-0) exponent node, for testing whether a PowerOperator's
+	// constant exponent is a non-negative integer.  Returns NaN for anything that is not a plain
+	// numeric literal, so the integer test fails (the conservative answer).  Node evaluation is gone,
+	// so this reads the literal directly rather than evaluating.
+	dbl ConstantExponentValue(std::shared_ptr<Node> const& n)
+	{
+		if (auto i = std::dynamic_pointer_cast<Integer const>(n))  return dbl(double(i->GetValue()), 0);
+		if (auto f = std::dynamic_pointer_cast<Float const>(n))    return dbl(f->GetValue());
+		if (auto r = std::dynamic_pointer_cast<Rational const>(n)) return r->Value<dbl>();
+		return dbl(std::numeric_limits<double>::quiet_NaN(), 0);
+	}
+}
+
 int PowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
 	
@@ -1013,7 +899,7 @@ int PowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 	
 	if (exp_deg==0)
 	{
-		auto exp_val = exponent_->Eval<dbl>();
+		dbl exp_val = ConstantExponentValue(exponent_);
 		bool exp_is_int = false;
 		
 		if (fabs(imag(exp_val))< 10*std::numeric_limits<double>::epsilon()) // so a real thresholding step
@@ -1187,7 +1073,7 @@ bool PowerOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 	// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
 	if (exponent_->Degree(v)==0)
 	{
-		auto exp_val = exponent_->Eval<dbl>();
+		dbl exp_val = ConstantExponentValue(exponent_);
 		if (fabs(imag(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 			if (fabs(std::round(real(exp_val)) - real(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 				if (real(exp_val) >=0 )
@@ -1202,7 +1088,7 @@ bool PowerOperator::IsHomogeneous(VariableGroup const& v) const
 	// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
 	if (exponent_->Degree(v)==0)
 	{
-		auto exp_val = exponent_->Eval<dbl>();
+		dbl exp_val = ConstantExponentValue(exponent_);
 		if (fabs(imag(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 			if (fabs(std::round(real(exp_val)) - real(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 				if (real(exp_val) >=0 )
@@ -1211,34 +1097,10 @@ bool PowerOperator::IsHomogeneous(VariableGroup const& v) const
 	return false;
 }
 
-dbl PowerOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return std::pow( base_->Eval<dbl>(diff_variable), exponent_->Eval<dbl>());
-}
-
-void PowerOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	dbl temp_d;
-	exponent_->EvalInPlace<dbl>(temp_d);
-	base_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-	
-	evaluation_value = std::pow(evaluation_value, temp_d);
-}
 
 
-mpfr_complex PowerOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return pow( base_->Eval<mpfr_complex>(diff_variable), exponent_->Eval<mpfr_complex>());
-}
 
-void PowerOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	mpfr_complex temp_mp;
-	exponent_->EvalInPlace<mpfr_complex>(temp_mp);
-	base_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-	
-	evaluation_value = pow(evaluation_value, temp_mp);
-}
+
 
 
 
@@ -1347,28 +1209,10 @@ int SqrtOperator::Degree(std::shared_ptr<Variable> const& v) const
 }
 
 
-dbl SqrtOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return sqrt(operand_->Eval<dbl>(diff_variable));
-}
-
-void SqrtOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-	evaluation_value = sqrt(evaluation_value);
-}
 
 
-mpfr_complex SqrtOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return sqrt(operand_->Eval<mpfr_complex>(diff_variable));
-}
 
-void SqrtOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-	evaluation_value = sqrt(evaluation_value);
-}
+
 
 
 
@@ -1421,28 +1265,10 @@ int ExpOperator::Degree(std::shared_ptr<Variable> const& v) const
 	}
 }
 
-dbl ExpOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return exp(operand_->Eval<dbl>(diff_variable));
-}
-
-void ExpOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-	evaluation_value = exp(evaluation_value);
-}
 
 
-mpfr_complex ExpOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return exp(operand_->Eval<mpfr_complex>(diff_variable));
-}
 
-void ExpOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-	evaluation_value = exp(evaluation_value);
-}
+
 
 
 
@@ -1490,28 +1316,10 @@ int LogOperator::Degree(std::shared_ptr<Variable> const& v) const
 	}
 }
 
-dbl LogOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return log(operand_->Eval<dbl>(diff_variable));
-}
-
-void LogOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-	evaluation_value = log(evaluation_value);
-}
 
 
-mpfr_complex LogOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-{
-	return log(operand_->Eval<mpfr_complex>(diff_variable));
-}
 
-void LogOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
-	evaluation_value = log(evaluation_value);
-}
+
 
 
 	} // re: namespace node
