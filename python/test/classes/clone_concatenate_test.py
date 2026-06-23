@@ -12,13 +12,15 @@
 
 """Tests for bertini.system.clone and bertini.system.concatenate.
 
-clone is a *serialization round-trip* deep copy (boost text-archive, see C++ ``Clone``), so it is
-the natural place for serialization bugs to surface -- the same round-trip the distributed solver
-uses to broadcast systems.  These tests check that a clone (and a concatenation) is not just
-structurally the right shape but *evaluates* identically -- functions AND Jacobian, with and without
-a path variable -- and is a genuinely independent deep copy.  Systems are now pickleable (a
-boost-archive round-trip, same machinery as clone), so copy.copy / copy.deepcopy / pickle round-trip
-a System too; those are exercised here alongside clone.
+clone is a memory-isolating copy (C++ ``Clone``, ADR-0027): it SHARES the immutable node DAG
+(variables included -- variables are canonical by name anyway) and only gives the copy its own
+evaluation memory, so a clone is safe to evaluate concurrently with the original yet still shares
+its variables.  Sharing variables is what makes clone-then-concatenate work (issue #256): the two
+systems have, by construction, identical variable orderings.  These tests check that a clone (and a
+concatenation) is not just structurally the right shape but *evaluates* identically -- functions AND
+Jacobian, with and without a path variable -- and that adding functions to one system does not leak
+into the other.  Systems are also pickleable (a boost-archive round-trip), so copy.copy /
+copy.deepcopy / pickle round-trip a System too; those are exercised here alongside clone.
 """
 
 import copy
@@ -173,6 +175,28 @@ def test_concatenate_appends_and_evaluates():
 
     pt = np.array([complex(2.0, 0.3), complex(-1.0, 0.5)])
     _assert_close(_eval(u, pt), _eval(a, pt) + _eval(b, pt))
+
+
+def test_concatenate_of_cloned_system_issue_256():
+    # Regression for issue #256: clone a system to reuse its variable-group setup, give the
+    # original and the clone different functions, then concatenate.  The old serialization-based
+    # clone minted fresh variable nodes, so the two systems' orderings compared unequal and
+    # concatenate threw "differing variable orderings".  The ADR-0027 clone shares the variable
+    # nodes, so the orderings match and concatenate succeeds (and evaluates correctly).
+    x, y = pb.Variable('x'), pb.Variable('y')
+    orig = pb.System()
+    orig.add_variable_group(pb.VariableGroup([x, y]))
+
+    new = pb.system.clone(orig)              # reuse the variable-group setup, no re-declaration
+    orig.add_function(2 * x - 7 * y - 1)
+    new.add_function(x - 3 * y)
+
+    u = pb.system.concatenate(new, orig)     # <- issue #256 threw here
+    assert u.num_functions() == 2
+
+    pt = np.array([complex(2.0), complex(5.0)])   # x=2, y=5
+    # row 0 = new's  x - 3y    = -13 ; row 1 = orig's 2x - 7y - 1 = -32
+    _assert_close(_eval(u, pt), [complex(-13.0), complex(-32.0)])
 
 
 def test_concatenate_is_independent_of_inputs():

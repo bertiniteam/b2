@@ -1509,7 +1509,7 @@ namespace bertini
 				throw std::runtime_error("concatenating systems with incompatible patches");
 
 		if (sys2.IsPatched() && !sys1.IsPatched())
-			sys1.CopyPatches(sys1);
+			sys1.CopyPatches(sys2); // give the unpatched result sys2's patch
 		// the other cases are automatically covered.  sys1 already patched, or neither patched.
 
 		for (unsigned ii(0); ii<sys2.NumNaturalFunctions(); ++ii)
