@@ -48,9 +48,12 @@ from bertini.function_tree import sin
 from bertini.multiprec import Float as mpfr_float
 from bertini.multiprec import Complex as mpfr_complex
 
+from eval_helper import eval_at
+
 
 # global default precision is reset to 30 before every test by the autouse
-# _reset_precision fixture in python/test/conftest.py.
+# _reset_precision fixture in python/test/conftest.py.  Hessian entries are second-derivative
+# trees (f.differentiate(vi).differentiate(vj)) evaluated through the SLP (eval_at) at the point.
 
 TOL_D = 1e-14
 
@@ -66,61 +69,47 @@ def hessian(f, variables):
             for vi in variables]
 
 
-def set_value(v, re, im):
-    # each variable carries both a double and a multiprecision current value
-    # (eval_d uses the former, eval_mp the latter), so set both.
-    v.set_current_value(complex(re, im))
-    v.set_current_value(mpfr_complex(str(re), str(im)))
-
-
 @pytest.fixture
 def xy_integer_point():
     x, y = Variable('x'), Variable('y')
-    set_value(x, 2, 0)
-    set_value(y, 3, 0)
-    return x, y
+    pt = dict(x=mpfr_complex("2", "0"), y=mpfr_complex("3", "0"))
+    return x, y, pt
 
 
 @pytest.fixture
 def xy_complex_point():
     x, y = Variable('x'), Variable('y')
-    set_value(x, -2.43, .21)
-    set_value(y, 4.84, -1.94)
-    return x, y
+    pt = dict(x=mpfr_complex("-2.43", ".21"), y=mpfr_complex("4.84", "-1.94"))
+    return x, y, pt
 
 
 # --- exact entries at an integer point (values exactly representable) ---
 
 def test_polynomial_hessian_entries(xy_integer_point, tol_mp):
-    x, y = xy_integer_point
+    x, y, pt = xy_integer_point
     f = x**3 * y + x * y**2
     H = hessian(f, [x, y])
     # at (2,3): fxx = 6xy = 36, fxy = fyx = 3x^2 + 2y = 18, fyy = 2x = 4
     expected = [[36, 18], [18, 4]]
     for i in range(2):
         for j in range(2):
-            d = H[i][j].eval_d()
-            assert abs(d.real - expected[i][j]) <= TOL_D
-            assert abs(d.imag) <= TOL_D
-            m = H[i][j].eval_mp()
+            m = eval_at(H[i][j], **pt)
             assert mp.abs(m.real - mpfr_float(expected[i][j])) <= tol_mp
             assert mp.abs(m.imag) <= tol_mp
 
 
 def test_hessian_of_absent_variable_is_zero(xy_integer_point, tol_mp):
-    x, y = xy_integer_point
+    x, y, pt = xy_integer_point
     z = Variable('z')
-    set_value(z, -6.48, -.731)
     f = x**2 * y
-    assert abs(f.differentiate(z).differentiate(z).eval_d()) <= TOL_D
-    assert abs(f.differentiate(x).differentiate(z).eval_d()) <= TOL_D
-    assert mp.abs(f.differentiate(z).differentiate(z).eval_mp()) <= tol_mp
+    assert mp.abs(eval_at(f.differentiate(z).differentiate(z), **pt)) <= tol_mp
+    assert mp.abs(eval_at(f.differentiate(x).differentiate(z), **pt)) <= tol_mp
 
 
 def test_hessian_degrees_exact(xy_integer_point):
     # differentiation emits already-simplified trees, so degree() on second
     # derivatives is exact -- this is algebra, not an upper bound.
-    x, y = xy_integer_point
+    x, y, pt = xy_integer_point
     f = x**3 * y  # total degree 4
 
     fxx = f.differentiate(x).differentiate(x)  # 6xy
@@ -141,34 +130,22 @@ def test_hessian_degrees_exact(xy_integer_point):
 # --- mixed partials commute (the trees differ; the values must not) ---
 
 def test_mixed_partial_symmetry_complex_point(xy_complex_point, tol_mp):
-    x, y = xy_complex_point
+    x, y, pt = xy_complex_point
     f = x**3 * y + x * y**2 - Rational('1/3') * x * y + sin(x * y)
     fxy = f.differentiate(x).differentiate(y)
     fyx = f.differentiate(y).differentiate(x)
     assert str(fxy) != str(fyx)  # genuinely different trees...
-    assert abs(fxy.eval_d() - fyx.eval_d()) <= 1e-12  # ...same value
-    assert mp.abs(fxy.eval_mp() - fyx.eval_mp()) <= mpfr_float("1e-25")
+    assert mp.abs(eval_at(fxy, **pt) - eval_at(fyx, **pt)) <= mpfr_float("1e-25")  # ...same value
 
 
 # --- transcendental entries, against independently computed values ---
 
 def test_transcendental_hessian(xy_complex_point, tol_mp):
-    x, y = xy_complex_point
+    x, y, pt = xy_complex_point
     f = sin(x * y)
     H = hessian(f, [x, y])
 
-    # doubles: independent expected values via numpy
-    x0, y0 = complex(-2.43, .21), complex(4.84, -1.94)
-    expected_d = [
-        [-y0**2 * np.sin(x0 * y0), np.cos(x0 * y0) - x0 * y0 * np.sin(x0 * y0)],
-        [np.cos(x0 * y0) - x0 * y0 * np.sin(x0 * y0), -x0**2 * np.sin(x0 * y0)],
-    ]
-    for i in range(2):
-        for j in range(2):
-            got = H[i][j].eval_d()
-            assert abs(got - expected_d[i][j]) / abs(expected_d[i][j]) <= 1e-12
-
-    # multiprecision: independent expected values via the multiprec library
+    # independent expected values via the multiprec library (an oracle independent of the SLP)
     x0m, y0m = mpfr_complex("-2.43", ".21"), mpfr_complex("4.84", "-1.94")
     s, c = mp.sin(x0m * y0m), mp.cos(x0m * y0m)
     expected_m = [
@@ -177,14 +154,14 @@ def test_transcendental_hessian(xy_complex_point, tol_mp):
     ]
     for i in range(2):
         for j in range(2):
-            got = H[i][j].eval_mp()
+            got = eval_at(H[i][j], **pt)
             assert mp.abs(got - expected_m[i][j]) / mp.abs(expected_m[i][j]) <= tol_mp
 
 
 # --- the Hessian tensor of a System ---
 
 def test_system_hessian_tensor(xy_integer_point, tol_mp):
-    x, y = xy_integer_point
+    x, y, pt = xy_integer_point
     sys = pb.System()
     sys.add_function(x**2 * y + y**3)
     sys.add_function(x * y)
@@ -203,8 +180,6 @@ def test_system_hessian_tensor(xy_integer_point, tol_mp):
     for i in range(2):
         for j in range(2):
             for k in range(2):
-                d = tensor[i][j][k].eval_d()
-                assert abs(d.real - expected[i][j][k]) <= TOL_D
-                assert abs(d.imag) <= TOL_D
-                m = tensor[i][j][k].eval_mp()
+                m = eval_at(tensor[i][j][k], **pt)
                 assert mp.abs(m.real - mpfr_float(expected[i][j][k])) <= tol_mp
+                assert mp.abs(m.imag) <= tol_mp

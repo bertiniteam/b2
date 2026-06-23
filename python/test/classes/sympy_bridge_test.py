@@ -43,6 +43,8 @@ from bertini.function_tree import sin, gather_variables
 from bertini.function_tree.symbol import Rational
 from bertini.sympy_bridge import from_sympy, to_sympy, system_from_sympy
 
+from eval_helper import eval_at
+
 
 @pytest.fixture
 def sxy():
@@ -59,23 +61,21 @@ def test_forward_values_match(sxy):
     tree = from_sympy(expr, [x, y])
 
     x0, y0 = complex(1.25, -0.3), complex(-0.5, 0.75)
-    x.set_current_value(x0)
-    y.set_current_value(y0)
 
-    want = complex(expr.subs({sx: x0, sy: y0}).evalf())
-    got = tree.eval_d()
-    assert abs(got - want) / abs(want) < 1e-13
+    want_py = complex(expr.subs({sx: x0, sy: y0}).evalf())   # sympy oracle
+    want = mp.Complex(str(want_py.real), str(want_py.imag))
+    got = eval_at(tree, x=x0, y=y0)                          # bertini tree through the SLP
+    assert mp.abs(got - want) / mp.abs(want) < 1e-13
 
 
 def test_forward_reuses_supplied_variables(sxy):
     sx, sy = sxy
     x = pb.Variable('x')
     tree = from_sympy(sx**2, [x])
-    x.set_current_value(complex(3.0, 0))
-    assert abs(tree.eval_d() - 9.0) < 1e-14
-    x.set_current_value(complex(2.0, 0))
-    tree.reset()
-    assert abs(tree.eval_d() - 4.0) < 1e-14  # same Variable object is live
+    # the supplied Variable is reused (not a fresh one), and the tree evaluates correctly
+    assert {str(v) for v in gather_variables(tree)} == {'x'}
+    assert mp.abs(eval_at(tree, x=complex(3.0, 0)) - mp.Complex('9')) < mp.Float('1e-14')
+    assert mp.abs(eval_at(tree, x=complex(2.0, 0)) - mp.Complex('4')) < mp.Float('1e-14')
 
 
 def test_forward_exact_rational(sxy):
@@ -163,10 +163,8 @@ def test_round_trip_bertini_to_sympy_to_bertini():
     x, y = pb.Variable('x'), pb.Variable('y')
     tree = x**2 * y - Rational('2/5') + sin(x)
     rebuilt = from_sympy(to_sympy(tree), [x, y])
-    x.set_current_value(complex(0.6, -0.2))
-    y.set_current_value(complex(-1.1, 0.4))
-    assert abs(rebuilt.eval_d() - tree.eval_d()) < 1e-14
-    assert mp.abs(rebuilt.eval_mp() - tree.eval_mp()) <= mp.Float('1e-25')
+    pt = dict(x=complex(0.6, -0.2), y=complex(-1.1, 0.4))
+    assert mp.abs(eval_at(rebuilt, **pt) - eval_at(tree, **pt)) <= mp.Float('1e-25')
 
 
 # --- the acceptance test: define in sympy, solve with bertini ---

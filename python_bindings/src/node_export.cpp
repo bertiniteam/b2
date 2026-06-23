@@ -264,6 +264,12 @@ namespace bertini{
 			return object(bertini::EvalExpression<mpfr_complex>(self, values));
 		}
 
+		// f.variables() --- the distinct variables appearing in this expression, sorted by name.
+		static VariableGroup NodeVariables(std::shared_ptr<Node> const& self)
+		{
+			return bertini::node::GatherVariables(self);
+		}
+
 		void ExportNode()
 		{
 			class_<NodeWrap, boost::noncopyable, Nodeptr >("AbstractNode", no_init)
@@ -274,6 +280,8 @@ namespace bertini{
 				"multiple precision at the current default precision; native Python floats "
 				"carry only float64 of information.  Every variable of the expression must be "
 				"supplied a value, and every keyword must name a variable of the expression.")
+			.def("variables", &NodeVariables, (arg("self")),
+				"The distinct variables appearing in this expression, sorted by name.")
 			;
 		};
 		
