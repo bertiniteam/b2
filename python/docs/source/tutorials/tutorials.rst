@@ -16,6 +16,7 @@
    parameter_homotopy
    user_product_of_linears
    randomize
+   intro_to_slices
    moving_slice
    real_points
    solving_at_scale
