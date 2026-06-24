@@ -26,6 +26,9 @@
 #include "bertini2/system/system.hpp"
 #include "bertini2/function_tree/find.hpp"
 
+#include <algorithm>
+#include <sstream>
+
 template<typename NumT> using Vec = bertini::Vec<NumT>;
 template<typename NumT> using Mat = bertini::Mat<NumT>;
 using Nd = std::shared_ptr<bertini::node::Node>;
@@ -1567,6 +1570,45 @@ namespace bertini
 			throw std::runtime_error("MakeMovingHomotopy: fixed, start_moving and end_moving must share the same variable structure.");
 		if (start_moving.HavePathVariable() || end_moving.HavePathVariable() || fixed.HavePathVariable())
 			throw std::runtime_error("MakeMovingHomotopy: the fixed and moving systems must not already have a path variable.");
+
+		// Catch the equations being placed in the wrong block.  Compare top-level functions
+		// structurally (their serialized form, the same one the classic writer emits), expanding any
+		// structured block via NaturalFunctionsAsNodes so polynomial and slice/products rows alike are
+		// covered.  Two failure modes:
+		//   * a fixed equation also living in the moving rows -- the rows that move must be ONLY the
+		//     moving rows, so a fixed function appearing there is a duplicate (the typical cause:
+		//     concatenating the fixed system into start_moving/end_moving; see issue #258); and
+		//   * a moving row identical at both endpoints -- it does not actually move and belongs in
+		//     `fixed`.  The blend pairs the moving rows by position, so this check is positional.
+		auto function_strings = [](System const& s) {
+			std::vector<std::string> out;
+			for (auto const& f : s.NaturalFunctionsAsNodes())
+			{
+				std::ostringstream ss;
+				ss << f;
+				out.push_back(ss.str());
+			}
+			return out;
+		};
+		auto const fixed_funcs = function_strings(fixed);
+		auto const start_funcs = function_strings(start_moving);
+		auto const end_funcs   = function_strings(end_moving);
+
+		for (auto const& f : fixed_funcs)
+			if (std::find(start_funcs.begin(), start_funcs.end(), f) != start_funcs.end()
+			 || std::find(end_funcs.begin(),   end_funcs.end(),   f) != end_funcs.end())
+				throw std::runtime_error(
+					"MakeMovingHomotopy: the function `" + f + "` appears in both the fixed system and "
+					"the moving rows.  start_moving/end_moving must contain ONLY the rows that move "
+					"(e.g. the sliding slice), not the fixed system as well -- did you concatenate the "
+					"fixed system into them?");
+
+		for (size_t i = 0; i < start_funcs.size(); ++i)   // start/end agree in count (checked above)
+			if (start_funcs[i] == end_funcs[i])
+				throw std::runtime_error(
+					"MakeMovingHomotopy: moving row " + std::to_string(i) + " (`" + start_funcs[i]
+					+ "`) is identical in start_moving and end_moving, so it does not move; put "
+					"non-moving equations in `fixed` instead.");
 
 		auto t = node::Variable::Make(path_variable_name);
 		auto g = gamma ? gamma

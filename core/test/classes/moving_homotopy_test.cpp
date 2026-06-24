@@ -225,6 +225,48 @@ BOOST_AUTO_TEST_CASE(rejects_mismatched_endpoints)
 	BOOST_CHECK_THROW(MakeMovingHomotopy(fixed, sm, em, "t", Gamma()), std::runtime_error);
 }
 
+// Regression (b2 issue #258): concatenating the fixed system INTO the moving rows (instead of
+// passing only the rows that move) duplicates the fixed equations.  The count/structure checks pass
+// (both moving systems have 2 functions over the same variables), so the duplication is caught by
+// the structural top-level-function comparison instead.
+BOOST_AUTO_TEST_CASE(rejects_fixed_function_duplicated_in_moving_rows)
+{
+	DefaultPrecision(30);
+	auto x = Variable::Make("x"), y = Variable::Make("y");
+	auto circle = x*x + y*y - node::Integer::Make(1);
+	System fixed; fixed.AddVariableGroup(VariableGroup{x, y}); fixed.AddFunction(circle);
+
+	// the mistake: moving rows = fixed (circle) AND the slice, in both endpoints.
+	System sm; sm.AddVariableGroup(VariableGroup{x, y}); sm.AddFunction(circle); sm.AddFunction(y);
+	System em; em.AddVariableGroup(VariableGroup{x, y}); em.AddFunction(circle); em.AddFunction(y - x);
+	BOOST_CHECK_THROW(MakeMovingHomotopy(fixed, sm, em, "t", Gamma()), std::runtime_error);
+
+	// even a structurally-equal but independently-built copy of the fixed function is caught
+	// (comparison is by serialized form, not pointer identity).
+	System sm2; sm2.AddVariableGroup(VariableGroup{x, y}); sm2.AddFunction(x*x + y*y - node::Integer::Make(1)); sm2.AddFunction(y);
+	System em2; em2.AddVariableGroup(VariableGroup{x, y}); em2.AddFunction(x*x + y*y - node::Integer::Make(1)); em2.AddFunction(y - x);
+	BOOST_CHECK_THROW(MakeMovingHomotopy(fixed, sm2, em2, "t", Gamma()), std::runtime_error);
+
+	// the correct call (slice-only moving rows) still builds.
+	System sm_ok; sm_ok.AddVariableGroup(VariableGroup{x, y}); sm_ok.AddFunction(y);
+	System em_ok; em_ok.AddVariableGroup(VariableGroup{x, y}); em_ok.AddFunction(y - x);
+	BOOST_CHECK_NO_THROW(MakeMovingHomotopy(fixed, sm_ok, em_ok, "t", Gamma()));
+}
+
+// A "moving" row that is identical at both endpoints does not move; it belongs in `fixed`.  The
+// check is positional (the blend pairs start/end rows by index), so row 1 here trips it while the
+// genuinely-moving row 0 does not.
+BOOST_AUTO_TEST_CASE(rejects_non_moving_row_in_moving_block)
+{
+	DefaultPrecision(30);
+	auto x = Variable::Make("x"), y = Variable::Make("y");
+	System fixed; fixed.AddVariableGroup(VariableGroup{x, y}); fixed.AddFunction(x*x + y*y - node::Integer::Make(1));
+
+	System sm; sm.AddVariableGroup(VariableGroup{x, y}); sm.AddFunction(y);     sm.AddFunction(x);  // row 1: x
+	System em; em.AddVariableGroup(VariableGroup{x, y}); em.AddFunction(y - x); em.AddFunction(x);  // row 1: x (static!)
+	BOOST_CHECK_THROW(MakeMovingHomotopy(fixed, sm, em, "t", Gamma()), std::runtime_error);
+}
+
 // Regression: Clone(System) is now a Memory-isolating shallow copy --- it shares the
 // immutable node DAG and the compiled SLP Program, but copies the per-thread evaluation Memory at
 // every level, INCLUDING a BlendBlock's nested operand Systems (which are deep-copied via the
