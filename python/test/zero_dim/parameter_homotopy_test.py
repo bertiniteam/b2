@@ -55,7 +55,7 @@ def test_user_homotopy_rejects_bad_precision():
 
 
 def test_user_homotopy_rejects_solver_as_start_points():
-    # Regression for issue #258: passing the start-point *solver* (not its .solutions())
+    # Regression for issue #258: passing the start-point *solver* (not its .all_solutions())
     # used to fail with a cryptic "object is not iterable"; now it explains the mistake.
     x, t = pb.Variable('x'), pb.Variable('t')
     H = pb.System(); H.add_variable_group(pb.VariableGroup([x])); H.add_function(x * x - (4 - 3 * t)); H.add_path_variable(t)
