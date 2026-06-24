@@ -39,6 +39,7 @@
 
 #include "bertini2/system/system.hpp"
 #include "bertini2/system/precon.hpp"
+#include "bertini2/system/slice.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
 
 #include "externs.hpp"
@@ -1452,6 +1453,40 @@ BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 	auto sys3 = Concatenate(sys1, sys2);
 
 	BOOST_CHECK_EQUAL(sys3.NumNaturalFunctions(),6);
+}
+
+/**
+\class bertini::System
+\test \b concatenate_accepts_a_structured_block_system  Concatenate must append the functions of a
+system whose rows live in a structured block (a linear-forms slice), not only PolynomialBlock rows.
+Regression: it iterated sys2.Function(ii) -- which reads only the PolynomialBlock -- so a structured
+operand was skipped (and null-deref/segfaulted when it had no polynomial block).
+*/
+BOOST_AUTO_TEST_CASE(concatenate_accepts_a_structured_block_system)
+{
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	bertini::VariableGroup vars{x,y};
+
+	bertini::System sys1;
+	sys1.AddVariableGroup(vars);
+	sys1.AddFunction(x*x + y*y - 1);          // a polynomial: f0 = x^2 + y^2 - 1
+
+	// a system whose two functions live in a LinearFormsBlock (a slice): f = 2x+3y+1, x-y+4
+	bertini::Mat<bertini::mpfr_complex> M(2,3);
+	M << bertini::mpfr_complex(2), bertini::mpfr_complex(3),  bertini::mpfr_complex(1),
+	     bertini::mpfr_complex(1), bertini::mpfr_complex(-1), bertini::mpfr_complex(4);
+	auto sys2 = bertini::Slice::FromCoefficients(vars, M).AsSystem();
+
+	auto sys3 = Concatenate(sys1, sys2);      // used to segfault on the structured operand
+	BOOST_CHECK_EQUAL(sys3.NumNaturalFunctions(), 3);
+
+	// at (x,y) = (1,1):  f0 = 1,  f1 = 6,  f2 = 4
+	bertini::Vec<bertini::dbl> p(2); p << bertini::dbl(1), bertini::dbl(1);
+	auto v = sys3.Eval(p);
+	BOOST_CHECK_EQUAL(v.size(), 3);
+	BOOST_CHECK_CLOSE(v(0).real(), 1.0, 1e-11);
+	BOOST_CHECK_CLOSE(v(1).real(), 6.0, 1e-11);
+	BOOST_CHECK_CLOSE(v(2).real(), 4.0, 1e-11);
 }
 
 /**

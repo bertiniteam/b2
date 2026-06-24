@@ -30,6 +30,8 @@
 #pragma once
 
 #include <deque>
+#include <boost/serialization/deque.hpp>
+#include <boost/serialization/split_member.hpp>
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/nag_datatypes/common/policies.hpp"
 #include "bertini2/system/slice.hpp"
@@ -74,7 +76,7 @@ namespace bertini {
 		class WitnessSet
 		{
 			using PointP = ObjManagementP<Vec<NumT>>;
-			using SliceP = ObjManagementP<LinearSlice>;
+			using SliceP = ObjManagementP<Slice>;
 			using SystemP = ObjManagementP<SystemT>;
 
 			using PointContT = PointCont<typename PointP::HeldT>;
@@ -216,7 +218,7 @@ public:
 			/**
 			Gets (a const reference to) the slice for the witness set.
 			*/
-			const LinearSlice & GetSlice() const
+			const Slice & GetSlice() const
 			{
 				return SliceP::AtGet(slice_);
 			}
@@ -229,6 +231,38 @@ public:
 				return (GetSystem().NumVariables() - GetSystem().NumNaturalFunctions()) == GetSlice().Dimension();
 			}
 
+
+		private:
+
+			friend class boost::serialization::access;
+
+			/// Serialize the witness set's three parts (points, slice, system).  Save/load are split
+			/// so load can restore the system's differentiated form + working precision afterwards:
+			/// System::serialize persists neither, so without this a deserialized witness set's system
+			/// would be unusable for evaluation/tracking.  Doing it here (not just in the Python pickle
+			/// suite) makes the C++ deserialize path -- the one MPI and threading use -- correct too.
+			template <typename Archive>
+			void save(Archive& ar, const unsigned /*version*/) const
+			{
+				ar & points_;
+				ar & slice_;
+				ar & system_;
+			}
+
+			template <typename Archive>
+			void load(Archive& ar, const unsigned /*version*/)
+			{
+				ar & points_;
+				ar & slice_;
+				ar & system_;
+				// GetSystem() is const and returns a const System&; Differentiate()/precision() are
+				// const (they mutate only the system's mutable evaluation state), so this restores
+				// the held system in place regardless of object-management policy.
+				GetSystem().Differentiate();
+				GetSystem().precision(GetSystem().precision());
+			}
+
+			BOOST_SERIALIZATION_SPLIT_MEMBER()
 
 		};
 	}

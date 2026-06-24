@@ -35,8 +35,9 @@ evaluated augmented with a trailing 1).  Evaluation is matrix-multiplies followe
 row-wise products; the Jacobian is the product rule, done with prefix/suffix products.
 Nothing here is a function-tree node, so it never touches the SLP compiler.
 
-Mirrors the multiprecision-coefficient pattern of bertini::LinearSlice (system/slice.hpp):
-an mpfr master plus per-type working copies, with Precision() recasting the mpfr copy.
+Uses the multiprecision-coefficient pattern shared by the linear blocks (system/blocks/
+linear_forms_block.hpp): an mpfr master plus per-type working copies, with Precision()
+recasting the mpfr copy.
 */
 
 #pragma once

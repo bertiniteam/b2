@@ -48,6 +48,193 @@ _enhance_all(_pybnalag)
 _enhance_owners(_pybnalag)
 
 
+# --- Slice: a Python sequence of linear forms ----------------------------------------------
+#
+# A Slice is a stack of linear forms; treat it as a Python sequence, following list semantics:
+#   * an integer index selects an ELEMENT -- the i-th form's coefficient VECTOR (a 1-D array);
+#     "a single linear form is a vector".  Iterating the slice yields these form vectors.
+#   * a Python slice (s[i:j]) selects a SUB-COLLECTION -- a new (sub-)Slice (same type).  A list /
+#     tuple of indices likewise selects a sub-Slice (a numpy-flavoured multi-select).
+# The whole coefficient matrix is `coefficients()` (always 2-D); see the coefficients wrapper below.
+#
+# The vector-vs-matrix distinction is thus explicit (element index vs collection slice / matrix
+# accessor), never an emergent property of the form count -- which is exactly the eigenpy 1-D
+# "collapse" footgun we are insulating callers from.  See docs/adr for the eigenpy shape rule.
+
+# eigenpy collapses a 1-row Eigen matrix to a 1-D numpy array, so the bound coefficients() is 1-D for
+# a single-form slice and 2-D otherwise -- a data-dependent shape.  Wrap it to ALWAYS return 2-D,
+# reshaped to (num_forms, num_variables+1) using the dimensions we know in C++ (orientation-correct).
+_slice_coefficients_native = _pybnalag.Slice.coefficients if hasattr(_pybnalag, 'Slice') else None
+
+
+def _slice_coefficients(self):
+    """The augmented coefficient matrix of the slice's linear forms -- **always 2-D**.
+
+    Shape ``(num_forms, num_variables + 1)``: one row per linear form, the trailing column carrying
+    each form's constant term.  This holds even for a single-form slice, where the underlying
+    binding library would otherwise hand back a 1-D array (eigenpy collapses a one-row matrix).  The
+    2-D shape is part of *this* accessor's contract -- ours, not the binding's -- so it is stable
+    across binding libraries; see ``docs/adr/0033``.  For one form's coefficient *vector*, index an
+    element: ``slice[i]``.
+
+    Examples
+    --------
+    >>> from bertini import linalg                                       # doctest: +SKIP
+    >>> import bertini                                                   # doctest: +SKIP
+    >>> x, y = bertini.Variable('x'), bertini.Variable('y')             # doctest: +SKIP
+    >>> linalg.slice_from_coefficients([[2, 3, 1]], [x, y]).coefficients().shape  # doctest: +SKIP
+    (1, 3)
+    """
+    import numpy as np
+    raw = np.asarray(_slice_coefficients_native(self))
+    return raw.reshape(self.dimension(), self.num_variables() + 1)
+
+
+def _slice_getitem(self, key):
+    """Index a slice like a Python sequence of its linear forms.
+
+    * ``slice[i]`` (an integer) -> the i-th form's coefficient **vector**, a 1-D array of length
+      ``num_variables + 1`` (trailing entry = constant term).  Iterating (``for form in slice``)
+      yields these vectors.  "A single linear form is a vector."
+    * ``slice[i:j]`` (a Python slice) -> a **sub-Slice**, a new Slice of those forms.  A list/tuple
+      of indices (``slice[[0, 2]]``) likewise -> a sub-Slice.
+
+    So the vector view and the matrix view are *named* (element index vs slice / :meth:`coefficients`),
+    never inferred from the form count.  See ``docs/adr/0033``.
+
+    Examples
+    --------
+    >>> from bertini import linalg                                       # doctest: +SKIP
+    >>> import bertini                                                   # doctest: +SKIP
+    >>> x, y = bertini.Variable('x'), bertini.Variable('y')             # doctest: +SKIP
+    >>> s = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])  # doctest: +SKIP
+    >>> s[0]                       # an ELEMENT: the first form's vector  # doctest: +SKIP
+    array([2, 3, 1], dtype=object)
+    >>> s[:1].dimension()          # a SUB-COLLECTION: a one-form Slice   # doctest: +SKIP
+    1
+    """
+    n = self.dimension()
+    if isinstance(key, slice):
+        return self.rows(list(range(*key.indices(n))))                 # sub-Slice (a sub-collection)
+    if isinstance(key, (list, tuple)):
+        return self.rows([int(k) + n if int(k) < 0 else int(k) for k in key])   # sub-Slice
+    k = int(key)
+    if k < 0:
+        k += n
+    if not (0 <= k < n):
+        raise IndexError("slice form index {!r} out of range [0, {})".format(key, n))
+    return self.coefficients()[k]                                      # element: the form's vector
+
+
+_SLICE_DOC = """A linear slice: a stack of linear forms M [x ; 1] that cuts a positive-dimensional
+component down to witness points.  The linear part of a witness set.
+
+A slice is a Python **sequence of its linear forms**:
+
+* ``len(slice)`` -- the number of forms (the slice's dimension).
+* ``slice[i]`` (integer) -- the i-th form's coefficient **vector** (1-D, length num_variables+1).
+  Iterating yields these vectors.  A single linear form is a vector.
+* ``slice[i:j]`` / ``slice[[i, j]]`` -- a **sub-Slice** (a sub-collection of forms).
+* ``slice.coefficients()`` -- the whole augmented coefficient matrix, **always 2-D**
+  ``(num_forms, num_variables+1)``.
+
+The vector view vs the matrix view is named (element index vs slice / coefficients), never inferred
+from the form count -- so it is stable regardless of the binding library's shape conventions
+(docs/adr/0033).
+
+A slice does NOT own homogenization -- the system does.  ``slice.add_to(system)`` appends the forms
+to a system (folding the constant onto the homogenizing variable if the system was homogenized);
+``slice.as_system()`` returns a standalone System of just the forms.  Build slices with
+``Slice.random_complex`` / ``Slice.random_real`` / ``Slice.from_coefficients`` (or
+``bertini.linalg.slice_from_coefficients`` for exact numpy/list coefficients).
+"""
+
+if hasattr(_pybnalag, 'Slice'):
+    _pybnalag.Slice.coefficients = _slice_coefficients
+    _pybnalag.Slice.__getitem__ = _slice_getitem
+    _pybnalag.Slice.__len__ = lambda self: self.dimension()
+    try:
+        _pybnalag.Slice.__doc__ = _SLICE_DOC
+    except (AttributeError, TypeError):
+        pass   # some Boost.Python builds make the class docstring read-only; the methods carry docs
+
+
+# --- Bertini 1 / classic emission -----------------------------------------------------------
+#
+# A slice's linear forms are ordinary System functions (the classic writer expands the
+# LinearFormsBlock), so a slice emits to a Bertini 1 input file via its standalone system.  A
+# witness set emits its SQUARE system -- the witness set's system with the slice's forms appended
+# (concatenate) -- which is what you would track in Bertini 1 for cross-validation.
+def _slice_to_classic_input(self, **kwargs):
+    """Emit this slice's linear forms as a Bertini 1 classic input file (see System.to_classic_input)."""
+    return self.as_system().to_classic_input(**kwargs)
+
+
+def _witness_system(self):
+    """The square system whose isolated solutions are the witness points: this witness set's system
+    with the slice's linear forms appended.  Requires the slice and system to share variables.
+
+    Built by cloning the system (a copy sharing the variable nodes, so the witness set is left
+    unmutated) and slice.add_to()-ing the clone.  add_to is homogenization-aware -- if the system was
+    homogenized, it folds the slice's constant onto the homogenizing variable so the appended forms
+    match the rest of the system -- which plain concatenate (a generic same-structure append) is not."""
+    from bertini.system import clone
+    sys = clone(self.get_system())
+    self.get_slice().add_to(sys)
+    return sys
+
+
+def _witness_to_classic_input(self, **kwargs):
+    """Emit the witness (square) system as a Bertini 1 classic input file (see System.to_classic_input)."""
+    return self.witness_system().to_classic_input(**kwargs)
+
+
+if hasattr(_pybnalag, 'Slice'):
+    _pybnalag.Slice.to_classic_input = _slice_to_classic_input
+
+
+def _plural(n, noun):
+    return f"{n} {noun}" if n == 1 else f"{n} {noun}s"
+
+
+def _witness_repr(self):
+    """A concise summary: the component's dimension and degree, and a one-line description of the
+    system and slice it carries.  (The slice and system have their own detailed reprs.)"""
+    try:
+        consistent = 'consistent' if self.is_consistent() else 'INCONSISTENT'
+    except Exception:
+        consistent = 'consistency unknown'
+
+    lines = ["WitnessSet -- dimension {}, degree {} ({})".format(
+        self.dimension(), self.degree(), consistent)]
+
+    try:
+        s = self.get_slice()
+        lines.append("  slice:  {} on {}".format(
+            _plural(s.dimension(), 'linear form'), _plural(s.num_variables(), 'variable')))
+    except Exception:
+        lines.append("  slice:  <none>")
+
+    try:
+        sysm = self.get_system()
+        lines.append("  system: {} on {}".format(
+            _plural(sysm.num_functions(), 'function'), _plural(sysm.num_variables(), 'variable')))
+    except Exception:
+        lines.append("  system: <none>")
+
+    return "\n".join(lines)
+
+
+for _ws_name in dir(_pybnalag):
+    if _ws_name.startswith('WitnessSet'):
+        _ws_cls = getattr(_pybnalag, _ws_name)
+        if isinstance(_ws_cls, type):
+            _ws_cls.witness_system = _witness_system
+            _ws_cls.to_classic_input = _witness_to_classic_input
+            _ws_cls.__repr__ = _witness_repr
+            _ws_cls.__str__ = _witness_repr
+
+
 # --- to_dataframe: a ZeroDim solve as a pandas DataFrame -- the "database of solutions" ---
 #
 # One ROW per solution (per tracked path), columns = the coordinates (x0, x1, ...) followed by

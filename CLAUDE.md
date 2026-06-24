@@ -14,8 +14,13 @@ Bertini 2 (b2) is a C++17 numerical algebraic geometry library with Python bindi
 # Configure (from repo root)
 cmake -DENABLE_UNIT_TESTING=ON -G Ninja -B build -S .
 
-# Build
+# Build everything (core library, bindings, exe, tests)
 cmake --build build --target all --config Release
+
+# For iterative C++ work, build just the core library first -- it's much faster, and
+# the heavy Boost.Python/eigenpy bindings (`_pybertini`) only need rebuilding when the
+# bindings themselves change:
+cmake --build build --target bertini2 --config Release
 
 # Run all C++ tests
 ctest --test-dir build/core
@@ -57,6 +62,7 @@ ctest --test-dir build/core
 ./build/core/test_generating
 ./build/core/test_nag_algorithms
 ./build/core/test_nag_datatypes
+./build/core/test_pool
 ./build/core/test_tracking_basics
 ./build/core/test_settings
 ```
@@ -86,13 +92,13 @@ cross-test state.
 The project has three layers, built in order:
 
 1. **`core/`** -- C++ shared library (`libbertini2`). Header-only-heavy design under `core/include/bertini2/`. Key subsystems:
-   - `function_tree/` -- Expression tree (nodes, operators, symbols) for representing polynomial systems
+   - `function_tree/` -- Expression tree (nodes, operators, symbols) for *building and representing* polynomial systems. Nodes no longer evaluate: node-level recursive evaluation was removed -- the **SLP (`straight_line_program`) is the sole evaluator** (compile a system once, evaluate the compiled program). `Function`/`Handle` are gone; `NamedExpression` is the sole root node. See ADR-0027 (SLP: immutable Program + per-thread Memory) and ADR-0028 (named-node taxonomy).
    - `system/` -- Polynomial system construction, start systems (`start/total_degree.hpp`, `start/mhom.hpp`), patches, slices
    - `trackers/` -- Path tracking (fixed-precision and adaptive-precision trackers, predictors, Newton correctors)
    - `endgames/` -- Power series and Cauchy endgames for singular endpoint handling
-   - `nag_algorithms/` -- Higher-level algorithms (zero-dim solve, numerical irreducible decomposition)
+   - `nag_algorithms/` -- Higher-level algorithms (zero-dim solve; numerical irreducible decomposition is *framework scaffolding* -- not yet implemented, its `Solve()` throws)
    - `io/parsing/` -- Boost.Spirit Qi parsers for classic Bertini input format
-   - `blackbox/` -- CLI executable entry point (`bertini2_exe`)
+   - `blackbox/` -- CLI executable entry point (CMake target `bertini2_exe`, binary named `bertini2`)
 
 2. **`python_bindings/`** -- Boost.Python + eigenpy bindings producing `_pybertini` native module. Each `*_export.cpp` wraps the corresponding C++ subsystem. Depends on `eigenpy` for NumPy/Eigen interop.
 
@@ -101,9 +107,9 @@ The project has three layers, built in order:
 ## Key Dependencies
 
 - **GMP/MPFR/MPC** -- Arbitrary-precision arithmetic (found via custom CMake modules in `cmake/`)
-- **Eigen 3.3** -- Linear algebra (pinned to v3.3)
-- **Boost** (serialization, filesystem, log, graph, regex, timer, chrono, thread, unit_test_framework, python) -- Boost >= 1.82 required; `boost_system` is conditionally linked for Boost < 1.89
-- **eigenpy** -- Eigen/NumPy bridge for Python bindings
+- **Eigen 3** -- Linear algebra. **Not** pinned in cmake (`find_package(Eigen3)`, no version floor). In practice the version is coupled to the eigenpy build: the wheel CI builds **eigen 3.4.0** and then builds eigenpy against it (a dev env may use newer, e.g. `eigen=5.0.1`). Newer Eigen is welcome -- we *want* upstream improvements -- but it must be matched by an eigenpy built against the same Eigen (they share Eigen types across the binding ABI).
+- **Boost** (serialization, filesystem, log, graph, regex, timer, chrono, thread, unit_test_framework, python) -- no minimum version pinned in cmake; `boost_system` is conditionally linked for Boost < 1.89 (header-only from 1.89). Boost.Python is ABI-locked to one CPython version, so CI rebuilds it per target Python.
+- **eigenpy** -- Eigen/NumPy bridge for Python bindings. Built **from source** in CI at a single pinned version (`EIGENPY_VERSION` in `build_and_test.yml`, currently `3.13.0`) against the chosen Eigen -- eigenpy and bertini must use the *same* Eigen. eigenpy >= 3.13 sets the Python floor (>= 3.10).
 - **jrl-cmakemodules** -- CMake helper macros (auto-fetched via FetchContent if not found)
 
 ## Build System Notes

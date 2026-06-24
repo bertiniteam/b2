@@ -67,9 +67,11 @@ _MP_VALUE_TYPES = tuple(
     if isinstance(t, type)
 )
 
+from bertini.function_tree import VariableGroup as _VariableGroup
+
 __all__ = ['variable_vector', 'variable_matrix', 'coefficient', 'as_coefficients',
            'add_functions', 'add_linear_forms', 'add_linear', 'add_products_of_linears',
-           'randomize']
+           'randomize', 'slice_from_coefficients', 'add_slices_as_products']
 
 
 def variable_vector(name, n, start=0):
@@ -466,3 +468,76 @@ def randomize(system, matrix=None):
         for j, entry in enumerate(row):
             M[i, j] = _exact_to_mpfr(entry)
     return system.randomize(M)
+
+
+def _coerce_mpfr_matrix(coefficients, context):
+    """Coerce a (possibly nested list / numpy) array of exact values to an mpfr_complex matrix.
+
+    Shared by the slice helpers; mirrors the per-entry coercion of :func:`add_linear_forms`.
+    Returns ``(numpy_object_matrix, num_rows, num_cols)``.  Refuses Python floats.
+    """
+    rows = [list(r) for r in coefficients]
+    if not rows:
+        raise ValueError(f"{context} must have at least one row")
+    ncol = len(rows[0])
+    M = np.empty((len(rows), ncol), dtype=_mp.Complex)
+    for i, row in enumerate(rows):
+        if len(row) != ncol:
+            raise ValueError(f"{context} is ragged (rows of differing length)")
+        for j, entry in enumerate(row):
+            M[i, j] = _exact_to_mpfr(entry)
+    return M, len(rows), ncol
+
+
+def slice_from_coefficients(coefficients, variables, homogeneous=False):
+    """Build a :class:`Slice` from an exact augmented coefficient matrix.
+
+    The linear part of a witness set.  ``coefficients`` is an ``(m x n+1)`` array/list of EXACT
+    values (see :func:`coefficient`; Python floats are refused) -- one row per linear form, the
+    trailing column being each form's constant term (give ``0`` there for a homogeneous slice).
+    ``variables`` is the length-``n`` vector of variables the slice is a function of (a numpy object
+    array of :class:`~bertini.function_tree.symbol.Variable`, e.g. from :func:`variable_vector`, or a
+    :class:`~bertini.container.VariableGroup`).
+
+    Returns a ``bertini.nag_algorithm.Slice``.  Its rows are also ready-made factors for a
+    products-of-linears block -- see :func:`add_slices_as_products`.
+
+    Examples
+    --------
+    The line ``2x + y - 1 = 0`` as a one-form slice on (x, y)::
+
+        >>> import bertini                                            # doctest: +SKIP
+        >>> from bertini import linalg                                # doctest: +SKIP
+        >>> x, y = bertini.Variable('x'), bertini.Variable('y')      # doctest: +SKIP
+        >>> s = linalg.slice_from_coefficients([[2, 1, -1]], [x, y]) # doctest: +SKIP
+        >>> s.dimension(), s.num_variables()                         # doctest: +SKIP
+        (1, 2)
+    """
+    from bertini.nag_algorithm import Slice  # local import: linalg loads before this is needed
+
+    vg = variables if isinstance(variables, _VariableGroup) else _VariableGroup(list(variables))
+    M, _, ncol = _coerce_mpfr_matrix(coefficients, "slice coefficients")
+    if ncol != len(vg) + 1:
+        raise ValueError(
+            f"slice coefficient matrix has {ncol} columns but needs num_variables+1 = {len(vg) + 1} "
+            "(one column per variable plus a trailing constant-term column)"
+        )
+    return Slice.from_coefficients(vg, M, homogeneous)
+
+
+def add_slices_as_products(system, slices):
+    """Add one products-of-linears function per slice to ``system`` (the regen bridge).
+
+    Each :class:`Slice` is a stack of linear forms; this turns each slice into a single function that
+    is the *product* of its forms -- a product of hyperplanes -- using the same first-class
+    ``ProductsOfLinearsBlock`` as :func:`add_products_of_linears`.  Slice rows and product-of-linears
+    factor rows share the augmented ``num_vars+1`` layout, so this is a direct hand-off.
+
+    The slices' coefficient columns must follow ``system``'s variable ordering (build each slice over
+    the system's variables).  Returns ``system`` for chaining.
+    """
+    # Slice.coefficients() is contractually 2-D (num_forms x num_vars+1), even for a one-form slice
+    # -- our accessor owns that shape, regardless of eigenpy's 1-D collapse -- so each slice maps
+    # straight to one products-of-linears factor matrix.
+    factors = [np.asarray(s.coefficients()) for s in slices]
+    return add_products_of_linears(system, factors)

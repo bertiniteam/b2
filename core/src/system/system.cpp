@@ -23,6 +23,9 @@
 // silviana amethyst, university of wisconsin eau claire
 
 
+#include <variant>
+#include <type_traits>
+
 #include "bertini2/system/system.hpp"
 #include "bertini2/function_tree/find.hpp"
 
@@ -1515,8 +1518,28 @@ namespace bertini
 			sys1.CopyPatches(sys2); // give the unpatched result sys2's patch
 		// the other cases are automatically covered.  sys1 already patched, or neither patched.
 
-		for (unsigned ii(0); ii<sys2.NumNaturalFunctions(); ++ii)
-			sys1.AddFunction(sys2.Function(ii));
+		// Append sys2's functions to sys1, block by block.  We cannot just iterate
+		// sys2.Function(ii): that reads only the PolynomialBlock (PolyBlockPtr()->Functions()),
+		// so a system whose rows live in a structured block -- a linear-forms slice, a
+		// products-of-linears block -- would be skipped (and null-deref if it has no polynomial
+		// block at all).  Instead merge sys2's polynomial functions into sys1's PolynomialBlock
+		// and copy each structured block verbatim (they are value-in and indexed by the shared
+		// variable ordering, which we have already checked matches).
+		for (auto const& blk : sys2.Blocks())
+		{
+			std::visit([&sys1](auto const& b) {
+				using B = std::decay_t<decltype(b)>;
+				if constexpr (std::is_same_v<B, blocks::PolynomialBlock>)
+				{
+					for (auto const& f : b.Functions())
+						sys1.AddFunction(f);
+				}
+				else
+				{
+					sys1.AddBlock(b);
+				}
+			}, blk);
+		}
 
 		return sys1;
 	}

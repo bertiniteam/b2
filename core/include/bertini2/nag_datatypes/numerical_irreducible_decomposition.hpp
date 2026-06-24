@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <boost/serialization/vector.hpp>
 
 namespace bertini {
 
@@ -97,6 +98,18 @@ namespace bertini {
 						w_correct_dim.push_back(w);
 
 				return w_correct_dim;
+			}
+
+		private:
+
+			friend class boost::serialization::access;
+
+			/// Serialize the stored witness sets.  Each WitnessSet handles its own load-time fixup
+			/// (re-differentiating its system), so this is just the container.
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned /*version*/)
+			{
+				ar & finished_witness_sets_;
 			}
 
 		};

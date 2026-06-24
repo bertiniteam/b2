@@ -40,9 +40,9 @@ convention of ProductsOfLinearsBlock, but with one factor per function instead o
 product.  Evaluation is a single matrix-vector multiply; the Jacobian is the constant
 coefficient matrix (its variable columns).
 
-Mirrors the multiprecision-coefficient pattern of ProductsOfLinearsBlock / bertini::
-LinearSlice: an mpfr master plus per-type working copies, with Precision() recasting the
-mpfr copy.
+Mirrors the multiprecision-coefficient pattern of ProductsOfLinearsBlock: an mpfr master
+plus per-type working copies, with Precision() recasting the mpfr copy.  bertini::Slice
+(system/slice.hpp) is a thin wrapper around this block.
 */
 
 #pragma once
