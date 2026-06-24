@@ -27,6 +27,7 @@ import copy
 import pickle
 
 import numpy as np
+import pytest
 
 import bertini as pb
 from bertini import linalg
@@ -100,23 +101,48 @@ def test_random_real_slice():
 
 # ---- row subsetting / composition ----------------------------------------------------------
 
-def test_slice_len_and_getitem_slice():
+def test_slice_getitem_slice_is_a_subcollection():
+    # s[i:j] selects a SUB-COLLECTION -> a (sub-)Slice (Python list semantics).
     s = _known_slice()
     assert len(s) == 2
     head = s[:1]
     assert head.dimension() == 1
-    # a one-form slice's coefficients come back from eigenpy as a 1-D array (numpy convention).
-    assert np.atleast_2d(np.asarray(head.coefficients())).shape == (1, 3)
+    assert head.coefficients().shape == (1, 3)   # coefficients() is always 2-D
     tail = s[-1:]
     assert tail.dimension() == 1
 
 
-def test_slice_getitem_list_and_int():
+def test_slice_getitem_list_is_a_subcollection():
     s = _known_slice()
     reordered = s[[1, 0]]
     assert reordered.dimension() == 2
-    single = s[0]
-    assert single.dimension() == 1
+    rows = np.asarray(reordered.coefficients())
+    assert [complex(rows[0, j]).real for j in range(3)] == [1.0, -1.0, 4.0]   # form 1 came first
+
+
+def test_slice_int_index_is_a_form_vector():
+    # s[i] selects an ELEMENT -> the i-th form's coefficient VECTOR (1-D), "a line is a vector".
+    s = _known_slice()
+    v0 = np.asarray(s[0])
+    assert v0.shape == (3,)
+    assert [complex(c).real for c in v0] == [2.0, 3.0, 1.0]
+    v_last = np.asarray(s[-1])
+    assert [complex(c).real for c in v_last] == [1.0, -1.0, 4.0]
+    with pytest.raises(IndexError):
+        _ = s[5]
+
+
+def test_iterating_slice_yields_form_vectors():
+    s = _known_slice()
+    forms = list(s)               # iteration yields elements = form vectors
+    assert len(forms) == 2
+    assert all(np.asarray(f).shape == (3,) for f in forms)
+
+
+def test_coefficients_always_2d_even_for_one_form():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    one = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])
+    assert one.coefficients().shape == (1, 3)     # NOT (3,): coefficients() never collapses
 
 
 def test_slice_concatenate_and_add_operator():
@@ -162,7 +188,8 @@ def test_head_tail_rows_methods():
 def test_subslice_rows_match_parent():
     s = _known_slice()
     C = np.asarray(s.coefficients())
-    sub = np.atleast_2d(np.asarray(s[[1]].coefficients()))   # one-form slice -> 1-D from eigenpy
+    sub = np.asarray(s[[1]].coefficients())   # a sub-Slice; coefficients() is always 2-D (1, 3)
+    assert sub.shape == (1, 3)
     assert all(abs(complex(C[1, j]) - complex(sub[0, j])) < 1e-25 for j in range(3))
 
 
@@ -184,7 +211,6 @@ def test_slice_add_to_system_agrees_with_slice_eval():
 
 
 def test_add_to_rejects_variable_count_mismatch():
-    import pytest
     x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
     s = Slice.random_complex(pb.VariableGroup([x, y, z]), 1)   # three variables
     sys = pb.System()

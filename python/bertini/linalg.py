@@ -536,7 +536,8 @@ def add_slices_as_products(system, slices):
     The slices' coefficient columns must follow ``system``'s variable ordering (build each slice over
     the system's variables).  Returns ``system`` for chaining.
     """
-    # atleast_2d: a one-form slice's coefficients come back from eigenpy as a 1-D array; keep it a
-    # (1 x num_vars+1) factor matrix so a single-hyperplane slice is still one degree-1 product.
-    factors = [np.atleast_2d(np.asarray(s.coefficients())) for s in slices]
+    # Slice.coefficients() is contractually 2-D (num_forms x num_vars+1), even for a one-form slice
+    # -- our accessor owns that shape, regardless of eigenpy's 1-D collapse -- so each slice maps
+    # straight to one products-of-linears factor matrix.
+    factors = [np.asarray(s.coefficients()) for s in slices]
     return add_products_of_linears(system, factors)

@@ -50,3 +50,4 @@ Each ADR follows the template:
 | [0030](0030-fixed-multiple-uniform-ambient-precision-adaptive-default.md) | Fixed-multiple solves use one uniform ambient precision; ZeroDim defaults to adaptive | Numerics / nag_algorithms |
 | [0031](0031-eigenpy-vec-index-returns-aliasing-view-copy-before-storing.md) | Indexing an eigenpy Vec returns an aliasing view — copy values before storing them (fixes #259) | Python bindings |
 | [0032](0032-slice-is-a-thin-wrapper-over-linear-forms-block.md) | A witness set's Slice is a thin wrapper over LinearFormsBlock; LinearSlice retired | Core / nag_datatypes |
+| [0033](0033-slice-shape-contract-we-own-dimensionality.md) | Slice shape is OUR accessors' contract, not eigenpy's: coefficients() always 2-D, slice[i] a form vector, slice[i:j] a sub-Slice | Python bindings |
