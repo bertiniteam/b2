@@ -291,7 +291,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		"(un-homogenized) system you constructed the solver from, since the solver homogenizes and "
 		"patches its internal copy.  Use this to re-run the exact same problem with the exact same knobs "
 		"in Bertini 1 for cross-validation (the random start system aside).  For sweeping settings without "
-		"a solver, see system.to_classic_input(**kwargs).")
+		"a solver, see ``system.to_classic_input(**kwargs)``.")
 	;
 }
 

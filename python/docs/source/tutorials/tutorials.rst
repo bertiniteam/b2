@@ -10,6 +10,7 @@
 
 
    all_solutions
+   solution_database
    concatenate_systems
    eigenvalues_by_homotopy
    parameter_homotopy

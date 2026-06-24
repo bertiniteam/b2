@@ -77,12 +77,9 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True):
 
     Columns are the solution coordinates ``x0, x1, ...`` followed by every per-solution metadata
     field (``is_finite``, ``is_real``, ``is_singular``, ``multiplicity``, ``condition_number``,
-    ``endgame_success``, ``max_precision_used``, ...).  Each category then becomes a trivial
-    filter on the frame::
-
-        df = solver.to_dataframe(omit_infinite=False)
-        df[df.is_real & ~df.is_singular]      # the nonsingular real solutions
-        df[~df.is_finite]                      # the endpoints at infinity
+    ``endgame_success``, ``max_precision_used``, ...).  Each category is then a one-line filter,
+    e.g. ``df[df.is_real & ~df.is_singular]`` (nonsingular real) or ``df[~df.is_finite]`` (at
+    infinity).
 
     Parameters
     ----------
@@ -94,11 +91,18 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True):
         failed paths.  ``True`` by default, so the frame holds just the genuine finite solutions;
         pass ``False`` to get every tracked path (their coordinate cells may be empty/NaN).
 
-    Coordinate cells are Python ``complex`` for a double-precision solve and
-    :class:`bertini.multiprec.Complex` for a multiprecision one (kept native, so no precision is
-    lost).  ``pandas`` is an optional dependency; this raises :class:`ImportError` if it is absent
-    (the point accessors -- :meth:`all_solutions`, :meth:`finite_solutions`,
-    :meth:`solution_metadata` -- are the no-pandas path).
+    Returns
+    -------
+    pandas.DataFrame
+        One row per solution; coordinate cells are Python ``complex`` for a double-precision solve
+        and :class:`bertini.multiprec.Complex` for a multiprecision one (kept native, so no
+        precision is lost).
+
+    Notes
+    -----
+    ``pandas`` is an optional dependency; this raises :class:`ImportError` if it is absent.  The
+    point accessors -- :meth:`all_solutions`, :meth:`finite_solutions`, :meth:`solution_metadata`
+    -- are the no-pandas path.
     """
     try:
         import pandas as pd
