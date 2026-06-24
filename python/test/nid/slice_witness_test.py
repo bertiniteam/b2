@@ -183,6 +183,16 @@ def test_slice_add_to_system_agrees_with_slice_eval():
     assert abs(complex(from_sys[1]) - complex(from_slice[1])) < 1e-12
 
 
+def test_add_to_rejects_variable_count_mismatch():
+    import pytest
+    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    s = Slice.random_complex(pb.VariableGroup([x, y, z]), 1)   # three variables
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))           # two variables
+    with pytest.raises(RuntimeError):
+        s.add_to(sys)
+
+
 def test_add_slices_as_products_is_the_regen_bridge():
     x, y = pb.Variable('x'), pb.Variable('y')
     sys = pb.System()

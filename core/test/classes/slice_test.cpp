@@ -221,6 +221,20 @@ BOOST_AUTO_TEST_CASE(add_to_system_agrees_with_slice_eval)
 }
 
 
+BOOST_AUTO_TEST_CASE(add_to_system_rejects_variable_count_mismatch)
+{
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+
+	// a slice on three variables cannot be added to a system on two.
+	auto s = Slice::RandomComplex(VariableGroup{x,y,z}, 1);
+
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x,y});
+
+	BOOST_CHECK_THROW(s.AddTo(sys), std::runtime_error);
+}
+
+
 BOOST_AUTO_TEST_CASE(concatenate_stacks_forms)
 {
 	DefaultPrecision(30);
