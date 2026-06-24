@@ -1104,6 +1104,28 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 			void PreSolveSetup()
 			{
+				// Fixed-multiple precision: FixedPrecisionConfig.precision (on the tracker) is the
+				// authoritative precision for the whole solve.  Lift the tracker, the ambient/thread
+				// precision, the start-point precision (via initial_ambient_precision), and the systems
+				// all to that one value -- TrackerLoopInitialization requires them to agree.  (Double is
+				// fixed at 16 and adaptive manages its own precision, so neither enters here.)
+				if constexpr (!tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+				{
+					auto const& fp = GetTracker().template Get<PrecisionConfig>();
+					// Double validates (its PrecisionSetup throws on any precision other than 16);
+					// fixed-multiple adopts the value into precision_.
+					GetTracker().PrecisionSetup(fp);
+					if constexpr (!std::is_same<BaseComplexT, dbl>::value)
+						if (fp.precision != 0)
+						{
+							ZeroDimConf zdc = this->template Get<ZeroDimConf>();
+							zdc.initial_ambient_precision = fp.precision;  // -> thread + start-point precision
+							this->template Set<ZeroDimConf>(zdc);
+							TargetSystem().precision(fp.precision);
+							Homotopy().precision(fp.precision);
+						}
+				}
+
 				auto num_as_size_t = static_cast<SolnIndT>(num_start_points_);
 
 				solution_final_metadata_.resize(num_as_size_t);

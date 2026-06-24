@@ -345,3 +345,33 @@ def test_set_settings_accepts_dict_of_fields():
     a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
     a.set_settings({'tolerances': {'final_tolerance': '1e-10'}})
     assert a.get_config(TolerancesConfig).final_tolerance == 1e-10
+
+
+# ------------------------------------------------ FixedPrecisionConfig.precision
+
+def test_fixed_multiple_precision_set_via_config():
+    # set a fixed-multiple solve's precision on the tracker's FixedPrecisionConfig -- no
+    # default_precision()-before-construct dance -- and it runs at that precision.
+    import bertini as b
+    from bertini.tracking import FixedPrecisionConfig
+    b.default_precision(30)
+    x = b.Variable('x'); s = b.System()
+    s.add_function(x * x - 1); s.add_variable_group(b.VariableGroup([x]))
+    solver = b.nag_algorithm.ZeroDim(s, mptype='multiple')
+    assert solver.get_tracker().get_config(FixedPrecisionConfig).precision == 30   # honest report
+    solver.get_tracker().update(precision=70)
+    solver.solve()
+    assert len(solver.finite_solutions()) == 2
+    assert solver.get_tracker().current_precision() == 70
+
+
+def test_double_precision_rejects_a_different_precision():
+    import bertini as b
+    from bertini.tracking import FixedPrecisionConfig
+    x = b.Variable('x'); s = b.System()
+    s.add_function(x * x - 1); s.add_variable_group(b.VariableGroup([x]))
+    solver = b.nag_algorithm.ZeroDim(s, mptype='double')
+    assert solver.get_tracker().get_config(FixedPrecisionConfig).precision == 16
+    solver.get_tracker().update(precision=50)
+    with pytest.raises(RuntimeError):
+        solver.solve()

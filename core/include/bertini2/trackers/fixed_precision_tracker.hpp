@@ -425,7 +425,12 @@ namespace bertini{
 			\brief Construct a tracker, associating to it a System.
 			*/
 			DoublePrecisionTracker(class System const& sys) : FixedPrecisionTracker<DoublePrecisionTracker>(sys)
-			{	}
+			{
+				// Report the precision honestly: double tracking is always DoublePrecision() digits.
+				FixedPrecisionConfig c = this->template Get<FixedPrecisionConfig>();
+				c.precision = DoublePrecision();
+				this->template Set<FixedPrecisionConfig>(c);
+			}
 
 
 			DoublePrecisionTracker() = delete;
@@ -436,6 +441,20 @@ namespace bertini{
 			unsigned CurrentPrecision() const override
 			{
 				return DoublePrecision();
+			}
+
+			/**
+			\brief Double-precision tracking is fixed at DoublePrecision() digits.  Accept that value (or
+			the 0 sentinel), but reject any attempt to set a different precision -- use mptype 'multiple'
+			or 'adaptive' for more digits.
+			*/
+			void PrecisionSetup(FixedPrecisionConfig const& c)
+			{
+				if (c.precision != 0 && c.precision != DoublePrecision())
+					throw std::runtime_error("double-precision tracking is fixed at "
+						+ std::to_string(DoublePrecision())
+						+ " digits; cannot set precision to " + std::to_string(c.precision)
+						+ " (use mptype 'multiple' or 'adaptive')");
 			}
 
 
@@ -487,9 +506,11 @@ namespace bertini{
 			The precision of the tracker will be whatever the current default is.  The tracker cannot change its precision, and will require the default precision to be this precision whenever tracking is started.  That is, the precision is fixed.
 			*/
 			MultiplePrecisionTracker(class System const& sys) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(DefaultPrecision())
-			{	}
+			{
+				SyncPrecisionToConfig();
+			}
 
-			
+
 			MultiplePrecisionTracker() = delete;
 
 			virtual ~MultiplePrecisionTracker() = default;
@@ -498,6 +519,30 @@ namespace bertini{
 			unsigned CurrentPrecision() const override
 			{
 				return precision_;
+			}
+
+			/**
+			\brief Set the fixed precision this tracker works at.
+
+			The next TrackPath re-precisions all of the tracker's state to this value
+			(TrackerLoopInitialization does it).  The caller must also ensure the system, the working
+			(thread) precision, and the start points are at this precision -- the zero-dim algorithm
+			does this from FixedPrecisionConfig.precision.
+			*/
+			void SetPrecision(unsigned p)
+			{
+				precision_ = p;
+				SyncPrecisionToConfig();
+			}
+
+			/**
+			\brief Adopt the precision named in a FixedPrecisionConfig (its sentinel 0 means "leave as
+			is").  Replaces the base no-op so the fixed-multiple precision is configurable.
+			*/
+			void PrecisionSetup(FixedPrecisionConfig const& c)
+			{
+				if (c.precision != 0)
+					SetPrecision(c.precision);
 			}
 
 
@@ -578,6 +623,15 @@ namespace bertini{
 						        ;				
 			}
 		private:
+
+			// Keep the stored FixedPrecisionConfig.precision equal to the tracker's actual precision,
+			// so reading the config tells you the precision in effect (not the 0 sentinel).
+			void SyncPrecisionToConfig()
+			{
+				FixedPrecisionConfig c = this->template Get<FixedPrecisionConfig>();
+				c.precision = precision_;
+				this->template Set<FixedPrecisionConfig>(c);
+			}
 
 			unsigned precision_;
 		}; // re: MultiplePrecisionTracker

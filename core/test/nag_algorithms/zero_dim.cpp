@@ -539,6 +539,58 @@ BOOST_AUTO_TEST_CASE(fixed_multiple_precision_solves_uniformly)
 	BOOST_CHECK_EQUAL(solve_at(60), 2u);             // and a higher one -- still uniform, still solves
 }
 
+// FixedPrecisionConfig.precision sets a fixed-multiple solve's precision *after* construction -- no
+// DefaultPrecision()-before-construct dance.  This is the "real precision setter" ADR-0030 deferred:
+// the algorithm lifts the tracker, the systems, and the ambient/start-point precision to the config's
+// value at PreSolveSetup.
+BOOST_AUTO_TEST_CASE(fixed_multiple_precision_set_via_config)
+{
+	using namespace bertini;
+	using MPTracker = tracking::MultiplePrecisionTracker;
+
+	auto saved = DefaultPrecision();
+	DefaultPrecision(30);                            // construct at a modest default
+	auto x = node::Variable::Make("x");
+	System sys;
+	sys.AddFunction(pow(x, 2) - 1);
+	sys.AddVariableGroup(VariableGroup{x});
+	auto zd = algorithm::ZeroDim<MPTracker, endgame::EndgameSelector<MPTracker>::Cauchy,
+	                             System, start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+
+	// the tracker reports its precision honestly
+	BOOST_CHECK_EQUAL(zd.GetTracker().template Get<tracking::FixedPrecisionConfig>().precision, 30u);
+
+	// choose a different fixed precision via the config, then solve at it
+	auto fp = zd.GetTracker().template Get<tracking::FixedPrecisionConfig>();
+	fp.precision = 70;
+	zd.GetTracker().template Set<tracking::FixedPrecisionConfig>(fp);
+
+	zd.Solve();
+	BOOST_CHECK_EQUAL(zd.Report().num_finite_solutions, 2u);
+	BOOST_CHECK_EQUAL(zd.GetTracker().CurrentPrecision(), 70u);   // the solve ran at 70
+	DefaultPrecision(saved);
+}
+
+// Double-precision tracking is fixed at DoublePrecision(); asking the config for any other precision
+// is rejected (use mptype multiple/adaptive for more digits).
+BOOST_AUTO_TEST_CASE(double_precision_rejects_a_different_precision)
+{
+	using namespace bertini;
+	auto x = node::Variable::Make("x");
+	System sys;
+	sys.AddFunction(pow(x, 2) - 1);
+	sys.AddVariableGroup(VariableGroup{x});
+	tracking::DoublePrecisionTracker tracker(sys);
+
+	BOOST_CHECK_EQUAL(tracker.template Get<tracking::FixedPrecisionConfig>().precision, DoublePrecision());
+	tracking::FixedPrecisionConfig fp;
+	fp.precision = 50;
+	BOOST_CHECK_THROW(tracker.PrecisionSetup(fp), std::runtime_error);
+	fp.precision = DoublePrecision();
+	BOOST_CHECK_NO_THROW(tracker.PrecisionSetup(fp));   // the native precision is fine
+}
+
 // PROBE observer (branch perf/amp-block-precision-escalation): record, per successful step, the
 // |t|, working precision, and the tracker's condition-number estimate -- so we can SEE whether the
 // condition number (||J|| * ||J^{-1}||) spikes then RECOVERS along the actual seed-6 path, and at

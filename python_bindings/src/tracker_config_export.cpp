@@ -55,7 +55,14 @@ namespace bertini{
 				.def_readwrite("min_num_newton_iterations", &NewtonConfig::min_num_newton_iterations)
 				;
 
-			class_<FixedPrecisionConfig, std::shared_ptr<FixedPrecisionConfig> >("FixedPrecisionConfig", init<System const&>());
+			class_<FixedPrecisionConfig, std::shared_ptr<FixedPrecisionConfig> >("FixedPrecisionConfig", init<>())
+				.def(init<System const&>())
+				.def_readwrite("precision", &FixedPrecisionConfig::precision,
+					"The number of digits to always work at.  For a double-precision tracker this is "
+					"DoublePrecision() (16) and cannot be changed; for a fixed-multiple tracker it is the "
+					"precision the whole solve runs at -- set it to choose a different fixed precision.  "
+					"A tracker keeps this in sync with its actual precision, so reading it tells you the "
+					"precision in effect.");
 
 			class_<AdaptiveMultiplePrecisionConfig, std::shared_ptr<AdaptiveMultiplePrecisionConfig> >("AMPConfig", init<>())
 				.def(init<System const&>())

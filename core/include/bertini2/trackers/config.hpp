@@ -113,10 +113,22 @@ namespace tracking{
 		using RealT = double;
 
 		/**
+		\brief The number of digits to always work at.
+
+		For a double-precision tracker this is DoublePrecision() (16) and cannot be changed.  For a
+		fixed-multiple tracker it is the precision the whole solve runs at -- the tracker, the system,
+		the start points, and the working precision all sit at this one value.  A tracker keeps this
+		field in sync with its actual precision, so reading it tells you the precision in effect; set it
+		to choose a different fixed precision (the algorithm then lifts the system and start points to
+		match).  The sentinel 0 means "unset -- use the tracker's natural precision".
+		*/
+		unsigned precision = 0;
+
+		/**
 		\brief Construct a ready-to-go set of fixed precision settings from a system.
 		*/
 		explicit
-		FixedPrecisionConfig(System const& /*sys*/) 
+		FixedPrecisionConfig(System const& /*sys*/)
 		{ }
 
 		FixedPrecisionConfig() = default;
