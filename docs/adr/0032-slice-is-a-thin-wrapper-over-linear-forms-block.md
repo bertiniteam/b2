@@ -62,8 +62,14 @@ mpfr master" types forever — exactly the kind of duplication that invites drif
 - The slice is numpy-native (coefficients round-trip through eigenpy) and authored by the existing
   `bertini.linalg` layer, so the Python NID prototype has an ergonomic, composable slice today, and
   the C++ `Slice` is the forward-investment for the later C++ NID port.
-- "Homogeneous" is currently **authoring metadata** (a zero constant column), not full patch
-  awareness. Genuine affine/projective patch handling for slices remains future work.
+- A slice does **not** own homogenization; the system does. "Homogeneous" on a slice is just
+  authoring metadata (a zero constant column). The relationship to homogenization is that an
+  affine slice's constant term, when the system homogenizes, becomes the coefficient on the
+  homogenizing variable (`LinearFormsBlock::Homogenize`). `Slice::AddTo` is homogenization-aware:
+  adding a slice to an already-homogenized system folds the slice's constant onto the hom var so
+  the appended forms stay consistent (single affine variable group for now). A slice that touches
+  only some variables simply has zero columns for the rest (no sparse representation -- not worth
+  optimizing yet).
 - A one-row coefficient matrix returns from eigenpy as a 1-D array (a general eigenpy convention);
   helpers that treat it as a matrix use `np.atleast_2d`.
 
