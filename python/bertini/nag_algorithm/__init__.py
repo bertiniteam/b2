@@ -75,12 +75,18 @@ _SOLUTION_METADATA_FIELDS = (
 def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_multiplicities=True):
     """The solve as a pandas DataFrame -- one row per solution, the "database of solutions".
 
-    Columns are the solution coordinates ``x0, x1, ...``, then every per-solution metadata field
-    (``is_finite``, ``is_real``, ``is_singular``, ``multiplicity``, ``condition_number``,
-    ``endgame_success``, ``max_precision_used``, ...), and finally ``system`` -- a reference to the
-    (target) system these solutions satisfy, so rows accumulated from several solves stay
-    identifiable.  Each category is then a one-line filter, e.g. ``df[df.is_real & ~df.is_singular]``
-    (nonsingular real) or ``df[~df.is_finite]`` (at infinity).
+    Columns are ``solution`` -- the whole solution point, kept in a single cell -- then every
+    per-solution metadata field (``is_finite``, ``is_real``, ``is_singular``, ``multiplicity``,
+    ``condition_number``, ``endgame_success``, ``max_precision_used``, ...), and finally ``system``,
+    a reference to the (target) system these solutions satisfy (so rows accumulated from several
+    solves stay identifiable).  Each category is then a one-line filter, e.g.
+    ``df[df.is_real & ~df.is_singular]`` (nonsingular real) or ``df[~df.is_finite]`` (at infinity).
+
+    The ``solution`` cell is an independent copy of the solution vector (a numpy array of Python
+    ``complex`` for a double solve, of :class:`bertini.multiprec.Complex` for a multiprecision one,
+    so no precision is lost).  Coordinates are deliberately **not** exploded into ``x0, x1, ...``
+    columns; split them yourself if you want them, e.g.
+    ``df['x'] = [v[0] for v in df.solution]``.
 
     Parameters
     ----------
@@ -101,9 +107,9 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_m
     Returns
     -------
     pandas.DataFrame
-        One row per solution; coordinate cells are Python ``complex`` for a double-precision solve
-        and :class:`bertini.multiprec.Complex` for a multiprecision one (kept native, so no
-        precision is lost).
+        One row per solution; the ``solution`` cell is a copied vector whose elements are Python
+        ``complex`` for a double-precision solve and :class:`bertini.multiprec.Complex` for a
+        multiprecision one (kept native, so no precision is lost).
 
     Notes
     -----
@@ -130,13 +136,12 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_m
             continue
         if merge_multiplicities and not m.multiplicity_representative:
             continue                    # a duplicate copy of an already-kept multiple solution
-        pt = points[i]
-        # COPY each coordinate as it is read.  Indexing the eigenpy vector returns a scalar that
-        # aliases a reused internal buffer; storing the live references and letting pandas read them
-        # later collapses every cell to one value.  type(c)(c) makes an independent copy of the
-        # right type -- a Python complex for a double solve, a bertini.multiprec.Complex for a
-        # multiprecision one (so no precision is lost) -- and must happen before the next index.
-        row = {'x{}'.format(k): (lambda c: type(c)(c))(pt[k]) for k in range(len(pt))}
+        # The whole solution lives in one cell.  .copy() snapshots the eigenpy vector's buffer --
+        # essential, because indexing that vector lazily returns scalars that alias a reused
+        # internal buffer, so storing the live vector (or its elements) and letting pandas read it
+        # later would collapse every cell to one value.  The copy keeps the native element type, so
+        # a multiprecision solve loses no precision.
+        row = {'solution': points[i].copy()}
         for field in _SOLUTION_METADATA_FIELDS:
             row[field] = getattr(m, field)
         row['system'] = system          # a reference, so rows from different solves stay identifiable
