@@ -80,7 +80,7 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 	using NeededConfigs = detail::TypeList<
 								TolerancesConfig,
 								PostProcessingConfig,
-								ZeroDimConfig<BaseComplexT>,
+								ZeroDimConfig,
 								AutoRetrackConfig
 								>;
 };
@@ -434,7 +434,7 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 			using Tolerances = TolerancesConfig;
 			using PostProcessing = PostProcessingConfig;
-			using ZeroDimConf = ZeroDimConfig<BaseComplexT>;
+			using ZeroDimConf = ZeroDimConfig;
 			using AutoRetrack = AutoRetrackConfig;
 
 
@@ -743,7 +743,11 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 				this->template Set<Tolerances>(Tolerances());
 				this->template Set<PostProcessing>(PostProcessing());
-				this->template Set<ZeroDimConf>(ZeroDimConf());
+				// ZeroDimConfig is not templated on the complex type, so it cannot pick its own
+				// per-type ambient-precision default.  Set it here, where the tracking type is known.
+				ZeroDimConf zdc;
+				zdc.initial_ambient_precision = DefaultInitialAmbientPrecision<BaseComplexT>();
+				this->template Set<ZeroDimConf>(zdc);
 				this->template Set<AutoRetrack>(AutoRetrack());
 			}
 
@@ -1201,8 +1205,10 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 				// direction persists start to finish.
 				ctx.tracker.RefreshConditionDirection();
 
-				auto t_start            = this->template Get<ZeroDimConf>().start_time;
-				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
+				// The times are stored precision-free (mpq_rational); materialize them as the tracking
+				// complex type at the current working precision.
+				BaseComplexT t_start           ( BaseRealT(this->template Get<ZeroDimConf>().start_time) );
+				BaseComplexT t_endgame_boundary( BaseRealT(this->template Get<ZeroDimConf>().endgame_boundary) );
 
 				// The start point is supplied by the caller (computed once, authoritatively, via
 				// ComputeStartPoint) rather than regenerated here.  In a distributed solve rank 0
@@ -1413,8 +1419,8 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 				auto start_prec = solutions_at_endgame_boundary_[soln_ind].precision;
 				SetThreadPrecision(start_prec);
 
-				ctx.endgame.SetBoundaryTime(this->template Get<ZeroDimConf>().endgame_boundary);
-				ctx.endgame.SetTargetTime  (this->template Get<ZeroDimConf>().target_time);
+				ctx.endgame.SetBoundaryTime(BaseComplexT(BaseRealT(this->template Get<ZeroDimConf>().endgame_boundary)));
+				ctx.endgame.SetTargetTime  (BaseComplexT(BaseRealT(this->template Get<ZeroDimConf>().target_time)));
 
 				auto eg_success = ctx.endgame.Run(bdry_point);
 

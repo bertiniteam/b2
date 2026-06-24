@@ -98,6 +98,85 @@ def test_update_rejects_python_float_for_mpfr_field():
         SteppingConfig().update(max_step_size=0.05)
 
 
+def test_update_accepts_string_for_double_tolerance_field():
+    # NumErrorT (tolerance) fields are plain doubles -- a high-precision number would have no value
+    # there -- but update() still takes the same noise-free string spelling as the exact fields, so
+    # the whole config surface is uniform.  (Regression: these used to throw Boost ArgumentError.)
+    assert TolerancesConfig().update(final_tolerance="1e-11").final_tolerance == 1e-11
+    assert TolerancesConfig().update(newton_before_endgame="1e-7").newton_before_endgame == 1e-7
+
+
+def test_update_accepts_string_for_min_step_size():
+    # min_step_size is a plain double (def_readwrite) where its siblings are mpq_rational; update()
+    # papers over that difference so a string works on every stepping field alike.
+    from bertini.tracking import SteppingConfig as SC
+    assert SC().update(min_step_size="1e-50").min_step_size == 1e-50
+
+
+def test_update_accepts_string_for_integer_field():
+    from bertini.tracking import NewtonConfig
+    assert NewtonConfig().update(max_num_newton_iterations="4").max_num_newton_iterations == 4
+
+
+def test_update_float_still_works_on_double_fields():
+    # the float-rejection policy is only for the exact (mpq/mpfr) fields; a plain double is the
+    # natural input for a NumErrorT tolerance and must keep working.
+    assert TolerancesConfig().update(final_tolerance=1e-11).final_tolerance == 1e-11
+
+
+def test_zero_dim_config_is_precision_agnostic():
+    # ZeroDimConfig is no longer templated on the complex type: there is one config, keyed 'zero_dim'
+    # on every precision model (was zero_dim_config_double_prec / _multiprec).  This is what lets a
+    # carried settings bundle apply across a double, multiple, or adaptive solver unchanged.
+    from bertini.nag_algorithm import ZeroDimConfig
+    import bertini.nag_algorithm as na
+    assert not hasattr(na, 'ZeroDimConfigDoublePrec')
+    assert not hasattr(na, 'ZeroDimConfigMultiprec')
+
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = pb.System()
+    s.add_function(x * x + y * y - 1); s.add_function(x + y)
+    s.add_variable_group(pb.VariableGroup([x, y]))
+    for mptype in ('double', 'multiple', 'adaptive'):
+        names = pb.nag_algorithm.ZeroDim(s, mptype=mptype).config_names()
+        assert 'zero_dim' in names, names
+
+
+def test_zero_dim_config_times_accept_strings():
+    # the homotopy times are stored precision-free (mpq_rational) but exposed as real and take the
+    # same string spelling as every other numeric field.
+    from bertini.nag_algorithm import ZeroDimConfig
+    c = ZeroDimConfig().update(endgame_boundary="0.05", start_time="1", target_time="0")
+    assert c.endgame_boundary == pb.multiprec.Float("0.05")
+
+
+def test_regeneration_slice_tolerances_are_prefixed():
+    # RegenerationConfig's tolerances are the slice-MOVING tracking tolerances (Bertini 1's SliceTol*
+    # family), distinct from the main tracking tolerances in TolerancesConfig.  They carry a slice_
+    # prefix so every config field name is unique across structs -- the precondition for routing a
+    # field to its config without naming the struct.
+    from bertini.nag_algorithm import RegenerationConfig
+    c = RegenerationConfig().update(slice_newton_before_endgame="1e-7",
+                                    slice_newton_during_endgame="1e-8",
+                                    slice_final_tolerance="1e-12")
+    assert c.slice_newton_before_endgame == 1e-7
+    assert c.slice_final_tolerance == 1e-12
+    # the un-prefixed names belong only to TolerancesConfig now
+    assert not hasattr(c, 'newton_before_endgame')
+    assert not hasattr(c, 'final_tolerance')
+
+
+def test_no_field_name_collisions_across_configs():
+    # The slice_ rename leaves every config field name unique across all of an owner's configs, which
+    # is what lets a field be routed to its owning config unambiguously.
+    from bertini.nag_algorithm import (ZeroDimCauchyAdaptivePrecisionTotalDegree as ZD,
+                                       TolerancesConfig, RegenerationConfig)
+    from bertini.config import writable_fields
+    tol = set(writable_fields(TolerancesConfig))
+    regen = set(writable_fields(RegenerationConfig))
+    assert tol & regen == set(), "tolerances/regeneration still share field names: {}".format(tol & regen)
+
+
 def test_update_rejects_garbage_string():
     with pytest.raises(Exception):
         SteppingConfig().update(max_step_size="not a number")
@@ -161,3 +240,108 @@ def test_set_and_get_algorithm_config(solver):
     tol = solver.get_config(TolerancesConfig).update(final_tolerance=1e-11)
     solver.set_config(tol)
     assert solver.get_config(TolerancesConfig) == tol
+
+
+# ------------------------------------------------ owner.update(**fields) field router
+
+def test_owner_update_routes_fields_by_name(solver):
+    # the headline ergonomic: set fields on the owner without naming the config struct -- each field
+    # goes to whichever config owns it.
+    from bertini.nag_algorithm import ZeroDimConfig
+    solver.update(final_tolerance="1e-11", max_num_crossed_path_resolve_attempts=3)
+    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-11
+    assert solver.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 3
+
+
+def test_owner_update_is_chainable(solver):
+    assert solver.update(final_tolerance="1e-9") is solver
+
+
+def test_owner_update_accepts_strings(solver):
+    # strings work through the router for every numeric field, same as the per-config update().
+    solver.update(final_tolerance="1e-12")
+    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-12
+
+
+def test_tracker_update_routes_to_its_configs(tracker):
+    from bertini.tracking import SteppingConfig, NewtonConfig
+    tracker.update(max_step_size="0.05", max_num_newton_iterations=2)
+    assert tracker.get_config(SteppingConfig).max_step_size == pb.multiprec.Float("0.05")
+    assert tracker.get_config(NewtonConfig).max_num_newton_iterations == 2
+
+
+def test_owner_update_routes_only_across_this_owners_configs(solver):
+    # max_step_size lives on the tracker's SteppingConfig, not on the algorithm's configs -- the
+    # router refuses it on the algorithm rather than silently doing nothing.
+    with pytest.raises(AttributeError):
+        solver.update(max_step_size="0.05")
+
+
+def test_owner_update_rejects_unknown_field(solver):
+    with pytest.raises(AttributeError):
+        solver.update(finaltol="1e-9")
+
+
+# ------------------------------------------------ get_settings / set_settings (the carry)
+
+def _square():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = pb.System()
+    s.add_function(x ** 2 + y ** 2 - 1); s.add_function(x + y)
+    s.add_variable_group(pb.VariableGroup([x, y]))
+    return s
+
+
+def test_get_settings_is_a_named_dict_of_configs():
+    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    settings = a.get_settings()
+    assert set(settings) == set(a.config_names())
+    assert isinstance(settings['tolerances'], TolerancesConfig)
+
+
+def test_settings_round_trip_onto_another_solver():
+    from bertini.nag_algorithm import ZeroDimConfig
+    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a.update(final_tolerance="1e-12", max_num_crossed_path_resolve_attempts=4)
+
+    b = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    b.set_settings(a.get_settings())
+    assert b.get_config(TolerancesConfig).final_tolerance == 1e-12
+    assert b.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 4
+
+
+def test_settings_carry_across_precision_models():
+    # the de-templated, precision-agnostic configs are what make this work: a bundle from a multiple-
+    # precision solver applies unchanged to a double or adaptive one.  This is the cross-stage carry
+    # an NID-style workflow needs.
+    src = pb.nag_algorithm.ZeroDim(_square(), mptype='multiple')
+    src.update(final_tolerance="1e-11")
+    for mptype in ('double', 'adaptive'):
+        dst = pb.nag_algorithm.ZeroDim(_square(), mptype=mptype)
+        dst.set_settings(src.get_settings())
+        assert dst.get_config(TolerancesConfig).final_tolerance == 1e-11
+
+
+def test_settings_bundle_is_picklable():
+    import pickle
+    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a.update(final_tolerance="1e-9")
+    restored = pickle.loads(pickle.dumps(a.get_settings()))
+    b = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    b.set_settings(restored)
+    assert b.get_config(TolerancesConfig).final_tolerance == 1e-9
+
+
+def test_set_settings_skips_inapplicable_by_default_strict_raises():
+    from bertini.tracking import AMPTracker
+    settings = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square()).get_settings()
+    trk = AMPTracker(_square())            # a tracker has no 'tolerances' / 'zero_dim'
+    trk.set_settings(settings)             # non-strict: silently skips them
+    with pytest.raises(KeyError):
+        trk.set_settings(settings, strict=True)
+
+
+def test_set_settings_accepts_dict_of_fields():
+    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a.set_settings({'tolerances': {'final_tolerance': '1e-10'}})
+    assert a.get_config(TolerancesConfig).final_tolerance == 1e-10

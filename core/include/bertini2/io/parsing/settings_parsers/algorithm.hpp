@@ -163,8 +163,8 @@ namespace bertini {
 			
 			
 
-			template<typename Iterator, typename ComplexT, typename Skipper> 
-			struct ConfigSettingParser<Iterator, algorithm::ZeroDimConfig<ComplexT>, Skipper> : qi::grammar<Iterator, algorithm::ZeroDimConfig<ComplexT>(), Skipper>
+			template<typename Iterator, typename Skipper>
+			struct ConfigSettingParser<Iterator, algorithm::ZeroDimConfig, Skipper> : qi::grammar<Iterator, algorithm::ZeroDimConfig(), Skipper>
 			{
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::ZeroDimConfig")
@@ -195,27 +195,27 @@ namespace bertini {
 
 					root_rule_.name("config::ZeroDim");
 					
-					root_rule_ = ((init_prec_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, int num)
+					root_rule_ = ((init_prec_[phx::bind( [this](algorithm::ZeroDimConfig & S, int num)
 														   {
 															   S.initial_ambient_precision = num;
 														   }, _val, _1 )]
-								   ^ path_variable_name_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, std::string omnom)
+								   ^ path_variable_name_[phx::bind( [this](algorithm::ZeroDimConfig & S, std::string omnom)
 															 {
 																 S.path_variable_name = omnom;
 															 }, _val, _1 )]
-								   ^ max_cross_resolve_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, int num)
+								   ^ max_cross_resolve_[phx::bind( [this](algorithm::ZeroDimConfig & S, int num)
 															 {
 																 S.max_num_crossed_path_resolve_attempts = num;
 															 }, _val, _1 )]
-								   ^ start_time_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, ComplexT num)
+								   ^ start_time_[phx::bind( [this](algorithm::ZeroDimConfig & S, mpq_rational num)
 															 {
 																 S.start_time = num;
 															 }, _val, _1 )]
-								   ^ endgame_boundary_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, ComplexT num)
+								   ^ endgame_boundary_[phx::bind( [this](algorithm::ZeroDimConfig & S, mpq_rational num)
 															 {
 																 S.endgame_boundary = num;
 															 }, _val, _1 )]
-								   ^ target_time_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, ComplexT num)
+								   ^ target_time_[phx::bind( [this](algorithm::ZeroDimConfig & S, mpq_rational num)
 															 {
 																 S.target_time = num;
 															 }, _val, _1 )]
@@ -231,9 +231,11 @@ namespace bertini {
 								 ;
 					
 
-					auto str_to_ComplexT = [this](ComplexT & num, std::string str)
+					// The times are stored as exact, precision-free mpq_rational.  Parse the number
+					// string to a multiprecision real, then to a rational (the homotopy times are real).
+					auto str_to_rational = [this](mpq_rational & num, std::string str)
 									   {
-										   num = bertini::NumTraits<ComplexT>::FromString(str);
+										   num = mpq_rational(mpfr_float(str));
 									   };
 
 
@@ -253,15 +255,15 @@ namespace bertini {
 
 					start_time_.name("start_time_");
 					start_time_ = *(char_ - all_names_) >> (no_case[start_time_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( str_to_ComplexT, _val, _1 )] >> ';';
+					>> mpfr_rules.number_string_[phx::bind( str_to_rational, _val, _1 )] >> ';';
 
 					endgame_boundary_.name("endgame_boundary_");
 					endgame_boundary_ = *(char_ - all_names_) >> (no_case[endgame_boundary_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( str_to_ComplexT, _val, _1 )] >> ';';
+					>> mpfr_rules.number_string_[phx::bind( str_to_rational, _val, _1 )] >> ';';
 
 					target_time_.name("target_time_");
 					target_time_ = *(char_ - all_names_) >> (no_case[target_time_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( str_to_ComplexT, _val, _1 )] >> ';';
+					>> mpfr_rules.number_string_[phx::bind( str_to_rational, _val, _1 )] >> ';';
 
 
 
@@ -285,9 +287,9 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, algorithm::ZeroDimConfig<ComplexT>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::ZeroDimConfig(), ascii::space_type > root_rule_;
 
-				qi::rule<Iterator, ComplexT(), ascii::space_type > start_time_, target_time_, endgame_boundary_;
+				qi::rule<Iterator, mpq_rational(), ascii::space_type > start_time_, target_time_, endgame_boundary_;
 				qi::rule<Iterator, int(), ascii::space_type > init_prec_, max_cross_resolve_;
 				qi::rule<Iterator, std::string(), ascii::space_type > valid_variable_name_, path_variable_name_;
 				
@@ -600,15 +602,15 @@ namespace bertini {
 															 }, _val, _1 )]
 								   ^ slice_before_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
 															 {
-																 S.newton_before_endgame = num;
+																 S.slice_newton_before_endgame = num;
 															 }, _val, _1 )]
 								   ^ slice_during_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
 															 {
-																 S.newton_during_endgame = num;
+																 S.slice_newton_during_endgame = num;
 															 }, _val, _1 )]
 								   ^ slice_final_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
 															 {
-																 S.final_tolerance = num;
+																 S.slice_final_tolerance = num;
 															 }, _val, _1 )]
 								   )
 								  >> -no_setting_) | no_setting_;

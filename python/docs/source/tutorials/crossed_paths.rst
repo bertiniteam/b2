@@ -51,7 +51,7 @@ The key knobs are three lines on the solver:
     tols.newton_before_endgame = 1e-4                              # loose tracking before the endgame
     solver.set_config(tols)
 
-    zd = solver.get_config(pb.nag_algorithm.ZeroDimConfigDoublePrec)
+    zd = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
     zd.max_num_crossed_path_resolve_attempts = 0                  # 0 = detect & report, do NOT re-track
     solver.set_config(zd)
 

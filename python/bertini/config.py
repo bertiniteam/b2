@@ -95,20 +95,43 @@ def config_key(cls):
 # ---------------------------------------------------------------------------
 
 def _coerced_setattr(obj, key, value):
-    """setattr, retrying strings as multiprecision Floats.
+    """setattr, retrying a string as the field's numeric type.
 
     Strings are the blessed noise-free way to express numeric settings
-    (e.g. max_step_size="0.05"); plain Python floats stay rejected by policy,
-    since 0.05 the double is not 1/20.  Coercion is retry-on-failure so any
-    genuinely string-valued field is unaffected.
+    (e.g. max_step_size="0.05", final_tolerance="1e-11"); plain Python floats
+    stay rejected for the *exact* fields by policy, since 0.05 the double is not
+    1/20.  The catch is that the fields have different underlying types:
+    mpq_rational / mpfr_float fields (step sizes, factors) take a multiprecision
+    Float, while NumErrorT / double fields (tolerances, AMP bounds, min_step_size)
+    take a plain double, and integer-count fields take an int.  So one string
+    spelling works for EVERY field: we try it as an exact Float first, then as a
+    plain float, then as an int, and keep the first that the field accepts.
+
+    Coercion only happens for strings (a non-string that the field rejects raises
+    straight through), so the float-rejection policy on the exact fields stands:
+    passing the double 0.05 to max_step_size is still an error.
     """
     try:
         setattr(obj, key, value)
-    except TypeError:
+        return
+    except TypeError:                       # Boost.Python.ArgumentError is a TypeError
         if not isinstance(value, str):
             raise
-        from .multiprec import Float
-        setattr(obj, key, Float(value))
+
+    from .multiprec import Float
+    last_error = None
+    for convert in (Float, float, int):
+        try:
+            converted = convert(value)      # e.g. int("1e-7") is a ValueError -- skip it
+        except (ValueError, TypeError):
+            continue
+        try:
+            setattr(obj, key, converted)
+            return
+        except TypeError as e:              # field rejected this representation; try the next
+            last_error = e
+    raise last_error if last_error is not None else TypeError(
+        "could not set {0!r} to {1!r}".format(key, value))
 
 
 def _make_update(fields):
@@ -334,12 +357,116 @@ def config_names(self):
     return sorted({config_key(c) for c in self.config_types() if c is not None})
 
 
+def _field_owners(owner):
+    """Map {field_name: config_class} across all of this owner's configs, plus any collisions.
+
+    Field names are unique across an owner's configs (the RegenerationConfig slice_ rename and the
+    ZeroDimConfig de-template removed the only collisions), so each field routes to exactly one
+    config.  Collisions, if ever reintroduced, are reported so update() can refuse them rather than
+    silently pick one.
+    """
+    owners = {}
+    collisions = {}
+    for cls in owner.config_types():
+        if cls is None:
+            continue
+        for f in writable_fields(cls):
+            if f in owners and owners[f] is not cls:
+                collisions.setdefault(f, {owners[f]})
+                collisions[f].add(cls)
+            owners[f] = cls
+    return owners, collisions
+
+
+def update(self, **fields):
+    """Set config fields on this owner by NAME, each routed to whichever config owns it.
+
+    You never name the config struct::
+
+        solver.update(final_tolerance="1e-11",          # -> TolerancesConfig
+                      max_num_crossed_path_resolve_attempts=3)   # -> ZeroDimConfig
+
+    Strings work for every numeric field (converted exactly).  A field that none of this owner's
+    configs has raises AttributeError with the valid names -- so a typo, or trying to set a tracker
+    field on the algorithm (or vice versa), never silently does nothing.  Returns self, so calls
+    chain.  To set a whole config at once, or to name the config explicitly, use configure().
+    """
+    owners, collisions = _field_owners(self)
+    by_config = {}
+    for key, value in fields.items():
+        if key in collisions:
+            raise AttributeError(
+                "config field {0!r} is ambiguous on {1} (in {2}); set it with configure() naming "
+                "the config".format(key, type(self).__name__,
+                                    sorted(c.__name__ for c in collisions[key])))
+        cls = owners.get(key)
+        if cls is None:
+            raise AttributeError(
+                "{0} has no config field {1!r}; valid fields: {2}".format(
+                    type(self).__name__, key, sorted(owners)))
+        by_config.setdefault(cls, {})[key] = value
+    # one get/update/set per touched config, not per field
+    for cls, kv in by_config.items():
+        self.set_config(self.get_config(cls).update(**kv))
+    return self
+
+
+def get_settings(self):
+    """This owner's whole configuration as a carryable dict ``{config_name: config}``.
+
+    Each value is a copy of one of the owner's configs (e.g. ``{'stepping': SteppingConfig(...),
+    'tolerances': TolerancesConfig(...)}``), keyed by the same short names config_names() lists.  The
+    configs are independent copies (and picklable), so the dict is a plain Python value you can stash,
+    tweak, and apply to other owners -- the way to carry one set of tracking settings across a series
+    of related solves::
+
+        settings = first_solver.get_settings()
+        next_solver.set_settings(settings)
+
+    See set_settings() for applying one back.
+    """
+    return {config_key(cls): self.get_config(cls)
+            for cls in self.config_types() if cls is not None}
+
+
+def set_settings(self, settings, strict=False):
+    """Apply a settings dict (from get_settings()) onto this owner.  Returns self.
+
+    ``settings`` is ``{config_name: config}`` (or ``{config_name: {field: value}}``).  By default only
+    the configs this owner actually has are applied and the rest are skipped -- so a bundle carried
+    from one solver drops cleanly onto another whose config set differs (e.g. a different precision
+    model, or a different algorithm stage).  Pass ``strict=True`` to instead raise on any key this
+    owner does not have.
+    """
+    have = set(config_names(self))
+    for key, value in dict(settings).items():
+        if key not in have:
+            if strict:
+                raise KeyError(
+                    "{0} has no config {1!r}; available: {2}".format(
+                        type(self).__name__, key, sorted(have)))
+            continue
+        cls = _resolve_config_class(self, key)
+        if isinstance(value, cls):
+            self.set_config(value)
+        elif isinstance(value, dict):
+            self.set_config(self.get_config(cls).update(**value))
+        else:
+            raise TypeError(
+                "value for {0!r} must be a {1} or a dict of fields, got {2}".format(
+                    key, cls.__name__, type(value).__name__))
+    return self
+
+
 def _enhance_owner_class(cls):
     """Attach configure()/config_names() to a tracker/algorithm class (idempotent)."""
     if getattr(cls, "_b2_owner_enhanced", False):
         return cls
     cls.configure = configure
     cls.config_names = config_names
+    cls.update = update
+    cls.get_settings = get_settings
+    cls.set_settings = set_settings
     cls._b2_owner_enhanced = True
     return cls
 
