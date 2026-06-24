@@ -74,7 +74,7 @@ namespace bertini {
 		class WitnessSet
 		{
 			using PointP = ObjManagementP<Vec<NumT>>;
-			using SliceP = ObjManagementP<LinearSlice>;
+			using SliceP = ObjManagementP<Slice>;
 			using SystemP = ObjManagementP<SystemT>;
 
 			using PointContT = PointCont<typename PointP::HeldT>;
@@ -216,7 +216,7 @@ public:
 			/**
 			Gets (a const reference to) the slice for the witness set.
 			*/
-			const LinearSlice & GetSlice() const
+			const Slice & GetSlice() const
 			{
 				return SliceP::AtGet(slice_);
 			}

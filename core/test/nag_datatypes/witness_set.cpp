@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			WitnessSet w;
 
-			bertini::LinearSlice ell;
+			bertini::Slice ell;
 
 			w.SetSlice(ell);
 
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 
 			const auto vars = sys.VariableGroups()[0];
 
-			auto slice = bertini::LinearSlice::RandomComplex(vars, 1);
+			auto slice = bertini::Slice::RandomComplex(vars, 1);
 
 
 			WitnessSet w{points, slice, sys};
@@ -99,6 +99,9 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 			BOOST_CHECK(!w.IsConsistent());
 			// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
 
+			// the stored slice round-trips: same dimension, same variable count.
+			BOOST_CHECK_EQUAL(w.GetSlice().Dimension(), 1);
+			BOOST_CHECK_EQUAL(w.GetSlice().NumVariables(), slice.NumVariables());
 		}
 
 
@@ -115,7 +118,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 
 			const auto vars = sys.Variables();
 
-			auto slice = bertini::LinearSlice::RandomComplex(vars, 2);
+			auto slice = bertini::Slice::RandomComplex(vars, 2);
 
 
 			WitnessSet w{points, slice, sys};
@@ -151,7 +154,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 
 			const auto vars = sys.VariableGroups()[0];
 
-			auto slice = bertini::LinearSlice::RandomComplex(vars, 1);
+			auto slice = bertini::Slice::RandomComplex(vars, 1);
 
 
 			WitnessSet w{points, slice, sys};
@@ -192,7 +195,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 				points.push_back(std::make_shared<Vec<mpfr_complex>>(n_vars));
 
 
-			auto slice = std::make_shared<LinearSlice>(LinearSlice::RandomComplex(vars, 1));
+			auto slice = std::make_shared<Slice>(Slice::RandomComplex(vars, 1));
 
 
 			WitnessSet w{points, slice, sys};

@@ -15,67 +15,91 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
 // silviana amethyst, university of wisconsin eau claire
 
 /**
-\file bertini2/system/slice.hpp 
+\file bertini2/system/slice.hpp
 
-\brief Provides the bertini::LinearSlice class.
+\brief Provides the bertini::Slice class -- a linear slice of affine or projective space.
+
+A Slice is the linear part of a witness set: a stack of linear forms whose common zero set
+cuts a positive-dimensional component down to isolated witness points.  It is backed by a
+bertini::blocks::LinearFormsBlock (the augmented coefficient matrix M, one row per linear
+form, the last column carrying each form's constant term), so a Slice evaluates, carries
+precision, and drops into a System exactly like any other evaluation block.  Because that
+augmented (num_vars+1)-column layout is shared with ProductsOfLinearsBlock, a Slice's rows
+are also ready-made factors for a product-of-linears block -- the composition regeneration
+needs.
+
+\see bertini::blocks::LinearFormsBlock
+\see bertini::blocks::ProductsOfLinearsBlock
 */
 
 
 #ifndef BERTINI_SLICE_HPP
 #define BERTINI_SLICE_HPP
 
+#include <vector>
+
 #include "bertini2/function_tree.hpp"
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
+#include "bertini2/system/blocks/linear_forms_block.hpp"
 
 
 namespace bertini {
 
+	// Slice::AddTo hands the slice's linear-forms block to a System; we only need System's
+	// name here (the definition lives in slice.cpp, which includes system.hpp).
+	class System;
 
 	/**
-	\brief Base class for other Slices.  
+	\brief A linear slice of affine or projective space: a stack of linear forms, M [x ; 1].
 
-	\see LinearSlice
+	The slice is held as an augmented coefficient matrix (one row per linear form, the
+	trailing column being that form's constant term) inside a LinearFormsBlock.  A
+	homogeneous slice simply has a zero constant column.  Slices compose: Head / Tail / Rows
+	return a new Slice over the same variables built from a subset of the linear forms.
 	*/
 	class Slice
 	{
+		blocks::LinearFormsBlock block_;  ///< the linear forms M [x ; 1] -- eval / precision / coefficients
+		VariableGroup sliced_vars_;       ///< the variables this slice is a function of
+		bool is_homogeneous_ = false;     ///< whether the forms were authored without constant terms
 
-	};
-
-
-
-	/**
-	\brief Slice an affine or projective space with a LinearSlice today!
-	*/
-	class LinearSlice : public Slice
-	{
-
-
-		mutable std::tuple<Mat<dbl>, Mat<mpfr_complex> > coefficients_working_;
-		Mat< mpfr_complex > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
-
-		mutable std::tuple<Vec<dbl>, Vec<mpfr_complex> > constants_working_;
-		Vec< mpfr_complex > constants_highest_precision_; ///< the highest-precision coefficients for the patch
-
-		VariableGroup sliced_vars_;
-		unsigned num_dims_sliced_;
-		mutable unsigned precision_; ///< the current working precision of the patch.
-
-		bool is_homogeneous_;
 	public:
 
+		/// An empty slice (zero forms, zero variables).
+		Slice() = default;
+
 		/**
-		Produce a random real slice on a variable group, slicing a given number of dimensions.
+		\brief Build a slice directly from an augmented coefficient matrix.
+
+		\param v The variables the slice is a function of.
+		\param augmented_coefficients One row per linear form, (number-of-forms) x (v.size()+1);
+		       the trailing column is each form's constant term (zero, for a homogeneous slice).
+		\param homogeneous Whether the slice was authored without constant terms.
 		*/
-		static LinearSlice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
+		static Slice FromCoefficients(VariableGroup const& v, Mat<mpfr_complex> const& augmented_coefficients, bool homogeneous = false)
+		{
+			assert(static_cast<size_t>(augmented_coefficients.cols()) == v.size() + 1 &&
+			       "a slice coefficient matrix must have (num_variables + 1) columns");
+			Slice s;
+			s.sliced_vars_ = v;
+			s.is_homogeneous_ = homogeneous;
+			s.block_ = blocks::LinearFormsBlock(v.size(), augmented_coefficients);
+			return s;
+		}
+
+		/**
+		\brief Produce a random real slice on a variable group, slicing a given number of dimensions.
+		*/
+		static Slice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
 			typedef void (*funtype) (mpfr_complex&, unsigned); // the type for number generation
 			funtype gen = bertini::multiprecision::RandomRealAssign;
@@ -85,257 +109,246 @@ namespace bertini {
 		/**
 		\brief Generate a random complex slice.
 		*/
-		static LinearSlice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
+		static Slice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
 			typedef void (*funtype) (mpfr_complex&, unsigned); // the type for number generation
 			funtype gen = bertini::multiprecision::RandomComplexAssign;
 			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
+		/**
+		\brief Factory for generating slices.  Generates the variable-coefficient block (optionally
+		orthonormalized by a QR factorization) and the constant column, then assembles the augmented
+		matrix the LinearFormsBlock holds.
+		*/
+		static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, std::function<void(mpfr_complex&, unsigned)> gen)
+		{
+			const unsigned num_vars = static_cast<unsigned>(v.size());
+
+			Mat<mpfr_complex> coeffs(dim, num_vars); // the variable coefficients (one row per form)
+
+			if (orthogonal)
+			{
+				using std::min;
+				using std::max;
+
+				auto mindim = min(dim, num_vars);
+				auto maxdim = max(dim, num_vars);
+
+				bool need_transpose = dim < num_vars;
+
+				coeffs.resize(maxdim, mindim);
+
+				for (unsigned ii(0); ii < maxdim; ++ii)
+					for (unsigned jj(0); jj < mindim; ++jj)
+						gen(coeffs(ii, jj), MaxPrecisionAllowed());
+
+				auto prev_precision = DefaultPrecision();
+				DefaultPrecision(MaxPrecisionAllowed());
+
+				auto QR_factorization = Eigen::HouseholderQR<Mat<mpfr_complex> >(coeffs);
+				coeffs = QR_factorization.householderQ() * Mat<mpfr_complex>::Identity(maxdim, mindim);
+
+				if (need_transpose)
+					coeffs.transposeInPlace();
+
+				DefaultPrecision(prev_precision);
+			}
+			else
+			{
+				for (unsigned ii(0); ii < dim; ++ii)
+					for (unsigned jj(0); jj < num_vars; ++jj)
+						gen(coeffs(ii, jj), MaxPrecisionAllowed());
+			}
+
+			assert(static_cast<unsigned>(coeffs.rows()) == dim);
+			assert(static_cast<unsigned>(coeffs.cols()) == num_vars);
+
+			// Assemble the augmented matrix: [ coeffs | constants ].  A homogeneous slice's constant
+			// column is zero; otherwise it is freshly generated.
+			Mat<mpfr_complex> augmented(dim, num_vars + 1);
+			augmented.leftCols(num_vars) = coeffs;
+			if (homogeneous)
+				augmented.col(num_vars).setZero();
+			else
+				for (unsigned ii(0); ii < dim; ++ii)
+					gen(augmented(ii, num_vars), MaxPrecisionAllowed());
+
+			return FromCoefficients(v, augmented, homogeneous);
+		}
+
 
 		/**
-		\brief Evaluate the function values of the LinearSlice, in-place
+		\brief Evaluate the slice's linear-form values, in-place.
 		*/
 		template<typename NumT>
 		void Eval(Vec<NumT> & result, Vec<NumT> const& x) const
 		{
-			result = std::get<Mat<NumT> >(coefficients_working_) * x;
-
-			if (!is_homogeneous_)
-				result += std::get<Vec<NumT> >(constants_working_);
+			result.resize(Dimension());
+			NumT path_value(0); // ignored: linear forms are autonomous
+			block_.EvalInPlace<NumT>(result, x, path_value);
 		}
 
 		/**
-		\brief Evaluate the function values of the LinearSlice
+		\brief Evaluate the slice's linear-form values.
 		*/
 		template<typename NumT>
 		Vec<NumT> Eval(Vec<NumT> const& x) const
 		{
-			if (!is_homogeneous_)
-				return std::get<Mat<NumT> >(coefficients_working_) * x + std::get<Vec<NumT> >(constants_working_);
-			else
-				return std::get<Mat<NumT> >(coefficients_working_) * x;
+			Vec<NumT> result(Dimension());
+			Eval(result, x);
+			return result;
 		}
 
-
 		/**
-		\brief Evaluate the Jacobian of the LinearSlice, in-place
+		\brief The slice's Jacobian (its constant variable-coefficient matrix), in-place.
 		*/
 		template<typename NumT>
-		void Jacobian(Mat<NumT> & result, Mat<NumT> const& x) const
+		void Jacobian(Mat<NumT> & result, Vec<NumT> const& x) const
 		{
-			result = std::get<Mat<NumT> >(coefficients_working_);
+			result.resize(Dimension(), NumVariables());
+			NumT path_value(0);
+			block_.JacobianInPlace<NumT>(result, x, path_value);
 		}
 
 		/**
-		\brief Evaluate the Jacobian of the LinearSlice
+		\brief The slice's Jacobian (its constant variable-coefficient matrix).
 		*/
 		template<typename NumT>
-		Mat<NumT> Jacobian(Mat<NumT> const& x) const
+		Mat<NumT> Jacobian(Vec<NumT> const& x) const
 		{
-			return std::get<Mat<NumT> >(coefficients_working_);
+			Mat<NumT> result(Dimension(), NumVariables());
+			Jacobian(result, x);
+			return result;
 		}
 
 
+		/**
+		\brief The augmented coefficient matrix: one row per linear form, (Dimension) x (NumVariables+1),
+		the trailing column carrying each form's constant term.
+
+		These rows are also factor rows for a ProductsOfLinearsBlock, so a slice composes directly into
+		the product-of-linears form regeneration uses.
+		*/
+		Mat<mpfr_complex> const& Coefficients() const
+		{
+			return block_.Coefficients();
+		}
+
+		/// The underlying linear-forms block (eval / Jacobian / precision engine).
+		blocks::LinearFormsBlock const& AsLinearFormsBlock() const
+		{
+			return block_;
+		}
+
+		/// Add this slice's linear forms to a System as a LinearFormsBlock.  (Defined in slice.cpp.)
+		void AddTo(System & s) const;
 
 
 		/**
-		\brief Get the current precision of the slice.
-
-		\return The current precision, in digits.
+		\brief A new slice over the same variables built from the first \p m linear forms.
 		*/
-		unsigned Precision() const
+		Slice Head(unsigned m) const
 		{
-			return precision_;
+			if (m > Dimension())
+				throw std::runtime_error("Slice::Head asked for more forms than the slice has");
+			return FromCoefficients(sliced_vars_, Coefficients().topRows(m), is_homogeneous_);
 		}
 
 		/**
-		\brief Set the precision of the slice.
-	
-		Copies the slice coefficients into correct precision for subsequent precision.
-
-		\param new_precision The precision to change to.
+		\brief A new slice over the same variables built from the last \p m linear forms.
 		*/
-		void Precision(unsigned new_precision) const
+		Slice Tail(unsigned m) const
 		{
-			if (new_precision > DoublePrecision())
+			if (m > Dimension())
+				throw std::runtime_error("Slice::Tail asked for more forms than the slice has");
+			return FromCoefficients(sliced_vars_, Coefficients().bottomRows(m), is_homogeneous_);
+		}
+
+		/**
+		\brief A new slice over the same variables built from the chosen linear forms.
+		*/
+		Slice Rows(std::vector<unsigned> const& indices) const
+		{
+			Mat<mpfr_complex> const& C = Coefficients();
+			Mat<mpfr_complex> sub(static_cast<Eigen::Index>(indices.size()), C.cols());
+			for (size_t ii = 0; ii < indices.size(); ++ii)
 			{
-				Mat<mpfr_complex>& coefficients_mpfr = std::get<Mat<mpfr_complex> >(coefficients_working_);
-				Vec<mpfr_complex>& constants_mpfr = std::get<Vec<mpfr_complex> >(constants_working_);
-				for (unsigned ii = 0; ii < Dimension(); ++ii)
-				{
-					for (unsigned jj=0; jj<NumVariables(); ++jj)
-					{
-						coefficients_mpfr(ii,jj).precision(new_precision);
-						if (new_precision>precision_)
-							coefficients_mpfr(ii,jj) = coefficients_highest_precision_(ii,jj);
-					}
-					
-					if (!is_homogeneous_)
-					{
-						constants_mpfr(ii).precision(new_precision);
-						if (new_precision>precision_)
-							constants_mpfr(ii) = constants_highest_precision_(ii);
-					}
-				}
+				if (indices[ii] >= Dimension())
+					throw std::runtime_error("Slice::Rows asked for a form index outside the slice");
+				sub.row(static_cast<Eigen::Index>(ii)) = C.row(indices[ii]);
 			}
-			precision_ = new_precision;
+			return FromCoefficients(sliced_vars_, sub, is_homogeneous_);
 		}
 
+
 		/**
-		\brief Get the dimension of the slice
+		\brief The dimension of the slice -- the number of linear forms.
 		*/
 		unsigned Dimension() const
 		{
-			return num_dims_sliced_;
+			return static_cast<unsigned>(block_.NumFunctions());
 		}
 
 		/**
-		\brief Get the number of variables sliced.  
+		\brief The number of variables sliced.
 		*/
 		unsigned NumVariables() const
 		{
 			return static_cast<unsigned>(sliced_vars_.size());
 		}
 
-
-
-		/** 
-		\brief the default constructor for linear slices. 
-
-		Make an empty linear slice. 
-		*/
-		LinearSlice() : 
-			coefficients_highest_precision_(0, 0), 
-			constants_highest_precision_(static_cast<unsigned>(0)), 
-			sliced_vars_(), 
-			num_dims_sliced_(0), 
-			precision_(DefaultPrecision()), 
-			is_homogeneous_(false)
-		{ 
-			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
-			std::get<Mat<mpfr_complex> >(coefficients_working_).resize(Dimension(), NumVariables());
-
-			std::get<Vec<dbl> > (constants_working_).resize(Dimension());
-			std::get<Vec<mpfr_complex> >(constants_working_).resize(Dimension());
-		}
-
 		/**
-		\brief the constructor for linear slices.
+		\brief The variables the slice is a function of.
 		*/
-		LinearSlice(VariableGroup const& v, unsigned dim, bool homogeneous) : coefficients_highest_precision_(dim, v.size()), constants_highest_precision_(dim), sliced_vars_(v), num_dims_sliced_(dim), precision_(DefaultPrecision()), is_homogeneous_(homogeneous)
-		{ 
-			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
-			std::get<Mat<mpfr_complex> >(coefficients_working_).resize(Dimension(), NumVariables());
-
-			if (!homogeneous)
-			{
-				std::get<Vec<dbl> > (constants_working_).resize(Dimension());
-				std::get<Vec<mpfr_complex> >(constants_working_).resize(Dimension());
-			}
-		}
-
-
-		/**
-		\brief factory function for generating slices
-		*/
-		static
-		LinearSlice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, std::function<void(mpfr_complex&, unsigned)> gen)
+		VariableGroup const& Variables() const
 		{
-			LinearSlice s(v, dim, homogeneous);
+			return sliced_vars_;
+		}
 
-			
+		/**
+		\brief Whether the slice was authored without constant terms (passes through the origin).
+		*/
+		bool IsHomogeneous() const
+		{
+			return is_homogeneous_;
+		}
 
-			if (orthogonal)
-			{	
-				using std::min;
-				using std::max;
 
-				auto mindim = min(s.Dimension(),s.NumVariables());
-				auto maxdim = max(s.Dimension(),s.NumVariables());
+		/**
+		\brief Get the current working precision of the slice, in digits.
+		*/
+		unsigned Precision() const
+		{
+			return block_.Precision();
+		}
 
-				bool need_transpose = s.Dimension() < s.NumVariables();
-
-				s.coefficients_highest_precision_.resize(maxdim,mindim);
-
-				for (unsigned ii(0); ii<maxdim; ++ii)
-					for (unsigned jj(0); jj<mindim; ++jj)
-						gen(s.coefficients_highest_precision_(ii,jj), MaxPrecisionAllowed());
-
-				auto prev_precision = DefaultPrecision();
-				DefaultPrecision(MaxPrecisionAllowed());
-
-				auto QR_factorization = Eigen::HouseholderQR<Mat<mpfr_complex> >(s.coefficients_highest_precision_);
-				s.coefficients_highest_precision_ = QR_factorization.householderQ()*Mat<mpfr_complex>::Identity(maxdim, mindim);
-				
-				if (need_transpose)
-					s.coefficients_highest_precision_.transposeInPlace();
-
-				DefaultPrecision(prev_precision);
-			}
-			else
-			{
-				for (unsigned ii(0); ii<s.Dimension(); ++ii)
-					for (unsigned jj(0); jj<s.NumVariables(); ++jj)
-						gen(s.coefficients_highest_precision_(ii,jj), MaxPrecisionAllowed());
-			}
-
-			for (unsigned ii(0); ii<s.Dimension(); ++ii)
-				for (unsigned jj(0); jj<s.NumVariables(); ++jj)
-				{
-					std::get<Mat<dbl> >(s.coefficients_working_)(ii,jj) = dbl(s.coefficients_highest_precision_(ii,jj));
-					std::get<Mat<mpfr_complex> >(s.coefficients_working_)(ii,jj) = s.coefficients_highest_precision_(ii,jj);
-				}
-
-			if (!homogeneous)
-			{
-				s.constants_highest_precision_.resize(s.Dimension());
-				std::get<Vec<dbl> >(s.constants_working_).resize(s.Dimension());
-				std::get<Vec<mpfr_complex> >(s.constants_working_).resize(s.Dimension());
-
-				for (unsigned ii(0); ii<s.Dimension(); ++ii)
-				{
-					gen(s.constants_highest_precision_(ii), MaxPrecisionAllowed());
-					std::get<Vec<dbl> >(s.constants_working_)(ii) = dbl(s.constants_highest_precision_(ii));
-					std::get<Vec<mpfr_complex> >(s.constants_working_)(ii) = s.constants_highest_precision_(ii);
-				}
-			}
-
-			assert(s.coefficients_highest_precision_.rows()==s.Dimension());
-			assert(s.coefficients_highest_precision_.cols()==s.NumVariables());
-
-			if (!homogeneous)
-				assert(s.constants_highest_precision_.size()==s.Dimension());
-			else
-				assert(s.constants_highest_precision_.size()==0);
-
-			return s;
+		/**
+		\brief Set the working precision of the slice, in digits.
+		*/
+		void Precision(unsigned new_precision) const
+		{
+			block_.Precision(new_precision);
 		}
 
 	private:
-		
 
 		friend class boost::serialization::access;
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & precision_;
-
-			ar & coefficients_highest_precision_;
-
-			ar & std::get<0>(coefficients_working_);
-			ar & std::get<1>(coefficients_working_);
+			ar & block_;
 			ar & sliced_vars_;
+			ar & is_homogeneous_;
 		}
 
-		friend std::ostream& operator<<(std::ostream&, LinearSlice const&);
+		friend std::ostream& operator<<(std::ostream&, Slice const&);
 	};
 
 	/**
-	\brief Provides output streaming for LinearSlice
+	\brief Provides output streaming for Slice
 	*/
-	std::ostream& operator<<(std::ostream& out, LinearSlice const& s);
-} // re: namespace bertini 
+	std::ostream& operator<<(std::ostream& out, Slice const& s);
+} // re: namespace bertini
 
 #endif
-

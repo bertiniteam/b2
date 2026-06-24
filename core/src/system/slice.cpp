@@ -1,25 +1,24 @@
 #include "bertini2/system/slice.hpp"
+#include "bertini2/system/system.hpp"
 
 namespace bertini {
-	
-	std::ostream& operator<<(std::ostream& out, LinearSlice const& s)
+
+	void Slice::AddTo(System & s) const
+	{
+		s.AddBlock(block_);
+	}
+
+	std::ostream& operator<<(std::ostream& out, Slice const& s)
 	{
 		out << "linear slice on " << s.NumVariables() << " variables:\n";
 		for (auto& v : s.sliced_vars_)
 			out << *v << " ";
 
-		out << "\n\ncoefficient matrix:\n\n";
-		out << std::get<Mat<dbl> >(s.coefficients_working_) << "\n\n";
+		out << "\n\naugmented coefficient matrix (last column is the constant term):\n\n";
+		out << s.Coefficients() << "\n\n";
 
-		
-		if (s.is_homogeneous_)
-			out << "slice is homogeneous";
-		else
-		{
-			out << "slice is not homogeneous, with constants\n";
-			out << std::get<Vec<dbl> >(s.constants_working_) << "\n";
-		}
-		
+		out << (s.is_homogeneous_ ? "slice is homogeneous" : "slice is not homogeneous") << "\n";
+
 		return out;
 	}
 }
