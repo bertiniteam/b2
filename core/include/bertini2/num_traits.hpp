@@ -127,19 +127,19 @@ namespace bertini
 		return 10;
 	}
 
-	inline
+	constexpr
 	unsigned DoublePrecision()
 	{
 		return 16;
 	}
 
-	inline
+	constexpr
 	unsigned LowestMultiplePrecision()
 	{
 		return 20;
 	}
-		
-	inline
+
+	constexpr
 	unsigned MaxPrecisionAllowed()
 	{
 		return 1000;
