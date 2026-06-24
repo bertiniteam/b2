@@ -48,6 +48,25 @@ _enhance_all(_pybnalag)
 _enhance_owners(_pybnalag)
 
 
+# --- Slice: numpy-style row subsetting via [] and len(), on top of head()/tail()/rows() ---
+#
+# A Slice is a stack of linear forms; indexing/slicing it selects forms and returns a new (sub-)Slice
+# over the same variables, so s[:k], s[-k:], s[[0, 2]], s[1] all compose.
+def _slice_getitem(self, key):
+    n = self.dimension()
+    if isinstance(key, slice):
+        return self.rows(list(range(*key.indices(n))))
+    if isinstance(key, (list, tuple)):
+        return self.rows([int(k) + n if int(k) < 0 else int(k) for k in key])
+    k = int(key)
+    return self.rows([k + n if k < 0 else k])
+
+
+if hasattr(_pybnalag, 'Slice'):
+    _pybnalag.Slice.__getitem__ = _slice_getitem
+    _pybnalag.Slice.__len__ = lambda self: self.dimension()
+
+
 # --- to_dataframe: a ZeroDim solve as a pandas DataFrame -- the "database of solutions" ---
 #
 # One ROW per solution (per tracked path), columns = the coordinates (x0, x1, ...) followed by
