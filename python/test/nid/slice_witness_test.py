@@ -276,6 +276,74 @@ def test_concatenate_accepts_a_slice_system():
     assert abs(complex(v[2]) - 4) < 1e-12
 
 
+def test_witness_system_preserves_patch_on_a_projective_system():
+    # A slice rides along with a system; it owns no homogenization.  For an already-projective,
+    # patched system the witness (square) system must keep the system's patch and stay evaluable.
+    x0, x1, x2 = pb.Variable('x0'), pb.Variable('x1'), pb.Variable('x2')
+    vg = pb.VariableGroup([x0, x1, x2])
+
+    sys = pb.System()
+    sys.add_hom_variable_group(vg)                 # projective P^2
+    sys.add_function(x0 * x0 + x1 * x1 - x2 * x2)  # a homogeneous conic
+    sys.auto_patch()
+    assert sys.is_patched()
+
+    s = Slice.random_complex(vg, 1, True)          # one homogeneous hyperplane (no constant term)
+    w = WitnessSetMultiplePrecision([], s, sys)
+
+    wsys = w.witness_system()
+    assert wsys.is_patched()                       # the patch carried through concatenate
+    assert wsys.eval(_mpvec(1, 1, 1)) is not None  # the combined projective system still evaluates
+
+
+def test_witness_system_homogenizes_an_affine_slice_for_a_homogenized_system():
+    # Adding a slice to an already-homogenized system folds the slice's constant onto the
+    # homogenizing variable (Slice.add_to is homogenization-aware), so witness_system stays
+    # consistent even when the witness set's system was homogenized and patched.
+    x, y = pb.Variable('x'), pb.Variable('y')
+    vg = pb.VariableGroup([x, y])
+
+    sys = pb.System()
+    sys.add_variable_group(vg)
+    sys.add_function(x * x + y * y - 1)
+    sys.homogenize()                 # mints a homogenizing variable -> 3 variables
+    sys.auto_patch()
+    assert sys.is_patched()
+    assert sys.num_variables() == 3
+
+    s = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])   # an affine slice over the 2 natural vars
+    w = WitnessSetMultiplePrecision([], s, sys)
+
+    wsys = w.witness_system()        # clone + add_to: the slice's constant folds onto the hom var
+    assert wsys.is_patched()         # the system's patch carried through
+    assert wsys.is_homogeneous()     # the appended slice form is homogeneous too -- it was folded
+    assert wsys.eval(_mpvec(1, 1, 1)) is not None
+
+
+def test_affine_slice_constant_rides_on_hom_var_after_homogenize():
+    # The slice does not homogenize itself; the system does.  When a system carrying an affine slice
+    # form is homogenized, the form's constant term becomes the coefficient on the homogenizing
+    # variable (LinearFormsBlock::Homogenize) -- so the slice stays unaware of homogenization.
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = linalg.slice_from_coefficients([[2, 3, 1]], [x, y]).as_system()   # 2x + 3y + 1
+
+    # affine: at the origin the form is its constant term, 1.
+    assert abs(complex(sys.eval(_mpvec(0, 0))[0]) - 1) < 1e-12
+
+    sys.homogenize()
+    assert sys.num_variables() == 3                # a homogenizing variable was added
+
+    # now homogeneous of degree 1: a*x + b*y + c*h with c the old constant (1).  Across the three
+    # coordinate axes the form takes the values {2, 3, 1}: the hom-var axis yields the old constant.
+    axis_vals = [complex(sys.eval(_mpvec(*([1 if i == k else 0 for i in range(3)])))[0])
+                 for k in range(3)]
+    assert any(abs(v - 1) < 1e-12 for v in axis_vals)     # the constant rode onto the hom var
+    assert any(abs(v - 2) < 1e-12 for v in axis_vals)     # x coefficient
+    assert any(abs(v - 3) < 1e-12 for v in axis_vals)     # y coefficient
+    # and the standalone constant is gone: the homogeneous form vanishes at the origin.
+    assert abs(complex(sys.eval(_mpvec(0, 0, 0))[0])) < 1e-12
+
+
 def test_witness_set_classic_emission():
     x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
     vg = pb.VariableGroup([x, y, z])

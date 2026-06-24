@@ -221,6 +221,37 @@ BOOST_AUTO_TEST_CASE(add_to_system_agrees_with_slice_eval)
 }
 
 
+BOOST_AUTO_TEST_CASE(add_to_homogenized_system_folds_constant_onto_hom_var)
+{
+	DefaultPrecision(30);
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x,y};
+
+	// an affine system, homogenized: it now has a homogenizing variable.
+	System sys;
+	sys.AddVariableGroup(vars);
+	sys.AddFunction(x*x + y*y - 1);
+	sys.Homogenize();
+	BOOST_CHECK_EQUAL(sys.NumHomVariables(), 1u);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 3u);
+
+	// an affine slice (built on the two natural variables) added to the homogenized system: AddTo
+	// folds its constant onto the homogenizing variable, so the added form is homogeneous degree 1.
+	Mat<mpfr_complex> M(1,3); M << mpfr_complex(2), mpfr_complex(3), mpfr_complex(1); // 2x + 3y + 1
+	auto s = Slice::FromCoefficients(vars, M);
+	s.AddTo(sys);
+
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 2u);
+	BOOST_CHECK(sys.IsHomogeneous());   // the whole system, slice form included, is homogeneous
+
+	// the slice form is now a*x + b*y + c*h with c the old constant (1): vanishes at the origin.
+	Vec<dbl> origin(3); origin << dbl(0), dbl(0), dbl(0);
+	auto v = sys.Eval(origin);
+	BOOST_CHECK_EQUAL(v.size(), 2);
+	BOOST_CHECK_SMALL(std::abs(v(1)), 1e-11);   // the homogeneous slice form is 0 at the origin
+}
+
+
 BOOST_AUTO_TEST_CASE(add_to_system_rejects_variable_count_mismatch)
 {
 	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
