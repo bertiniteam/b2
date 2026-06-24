@@ -244,6 +244,32 @@ namespace bertini {
 		/// Add this slice's linear forms to a System as a LinearFormsBlock.  (Defined in slice.cpp.)
 		void AddTo(System & s) const;
 
+		/// A standalone System whose functions are exactly this slice's linear forms (over the slice's
+		/// variable group).  Lets a slice be carried around and evaluated / tracked on its own.
+		/// (Defined in slice.cpp.)
+		System AsSystem() const;
+
+		/**
+		\brief A new slice stacking this slice's linear forms on top of \p other's.
+
+		Both slices must be on the same number of variables.  The result is homogeneous only if both
+		operands are.  This is how you build a higher-codimension slice from pieces (and the Python
+		`+` operator).
+		*/
+		Slice Concatenate(Slice const& other) const
+		{
+			if (NumVariables() != other.NumVariables())
+				throw std::runtime_error("Slice::Concatenate requires both slices to be on the same number of variables");
+
+			Mat<mpfr_complex> const& A = Coefficients();
+			Mat<mpfr_complex> const& B = other.Coefficients();
+			Mat<mpfr_complex> stacked(A.rows() + B.rows(), A.cols());
+			stacked.topRows(A.rows()) = A;
+			stacked.bottomRows(B.rows()) = B;
+
+			return FromCoefficients(sliced_vars_, stacked, is_homogeneous_ && other.is_homogeneous_);
+		}
+
 
 		/**
 		\brief A new slice over the same variables built from the first \p m linear forms.

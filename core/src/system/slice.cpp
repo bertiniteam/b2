@@ -8,6 +8,14 @@ namespace bertini {
 		s.AddBlock(block_);
 	}
 
+	System Slice::AsSystem() const
+	{
+		System s;
+		s.AddVariableGroup(sliced_vars_);
+		AddTo(s);
+		return s;
+	}
+
 	std::ostream& operator<<(std::ostream& out, Slice const& s)
 	{
 		out << "linear slice on " << s.NumVariables() << " variables:\n";

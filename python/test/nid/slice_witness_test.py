@@ -119,6 +119,38 @@ def test_slice_getitem_list_and_int():
     assert single.dimension() == 1
 
 
+def test_slice_concatenate_and_add_operator():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sa = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])    # 2x + 3y + 1
+    sb = linalg.slice_from_coefficients([[1, -1, 4]], [x, y])   # x - y + 4
+
+    combined = sa.concatenate(sb)
+    assert combined.dimension() == 2
+    v = combined.eval(_mpvec(1, 1))
+    assert abs(complex(v[0]) - 6) < 1e-12 and abs(complex(v[1]) - 4) < 1e-12
+
+    # the + operator is concatenation
+    plus = sa + sb
+    assert plus.dimension() == 2
+
+
+def test_slice_as_system_matches_eval():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
+    sys = s.as_system()
+    assert sys.num_functions() == 2
+    pt = _mpvec(1, 1)
+    from_sys, from_slice = sys.eval(pt), s.eval(pt)
+    assert all(abs(complex(from_sys[i]) - complex(from_slice[i])) < 1e-12 for i in range(2))
+
+
+def test_slice_repr_is_readable():
+    s = _known_slice()
+    text = repr(s)
+    assert 'slice' in text.lower()
+    assert 'coefficient' in text.lower()
+
+
 def test_head_tail_rows_methods():
     x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
     s = Slice.random_complex(pb.VariableGroup([x, y, z]), 4)

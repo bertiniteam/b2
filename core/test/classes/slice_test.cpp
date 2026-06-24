@@ -221,6 +221,47 @@ BOOST_AUTO_TEST_CASE(add_to_system_agrees_with_slice_eval)
 }
 
 
+BOOST_AUTO_TEST_CASE(concatenate_stacks_forms)
+{
+	DefaultPrecision(30);
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x,y};
+
+	Mat<mpfr_complex> A(1,3); A << mpfr_complex(2), mpfr_complex(3),  mpfr_complex(1);  // 2x + 3y + 1
+	Mat<mpfr_complex> B(1,3); B << mpfr_complex(1), mpfr_complex(-1), mpfr_complex(4);  // x - y + 4
+	auto sa = Slice::FromCoefficients(vars, A);
+	auto sb = Slice::FromCoefficients(vars, B);
+
+	auto s = sa.Concatenate(sb);
+	BOOST_CHECK_EQUAL(s.Dimension(), 2);
+	BOOST_CHECK_EQUAL(s.NumVariables(), 2);
+
+	Vec<dbl> p(2); p << dbl(1), dbl(1);
+	auto v = s.Eval(p);
+	BOOST_CHECK_CLOSE(v(0).real(), 6.0, 1e-11);
+	BOOST_CHECK_CLOSE(v(1).real(), 4.0, 1e-11);
+
+	// slices on different numbers of variables cannot be concatenated.
+	Var z = Variable::Make("z");
+	auto sc = Slice::RandomComplex(VariableGroup{x,y,z}, 1);
+	BOOST_CHECK_THROW(sa.Concatenate(sc), std::runtime_error);
+}
+
+
+BOOST_AUTO_TEST_CASE(as_system_evaluates_like_slice)
+{
+	DefaultPrecision(30);
+	auto s = MakeKnownSlice();
+
+	auto sys = s.AsSystem();
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 2);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2);
+
+	Vec<dbl> p(2); p << dbl(1), dbl(1);
+	BOOST_CHECK_SMALL((sys.Eval(p) - s.Eval(p)).norm(), 1e-11);
+}
+
+
 BOOST_AUTO_TEST_CASE(serialization_roundtrip)
 {
 	DefaultPrecision(30);

@@ -78,6 +78,9 @@ namespace bertini{
 				+[](Slice const& s, bertini::Vec<mpfr_complex> const& x){ return s.Eval(x); },
 				(arg("self"), arg("x")), "evaluate the linear forms at x, in multiple precision")
 			.def("add_to", &Slice::AddTo, (arg("self"), arg("system")), "add this slice's linear forms to a System as a linear-forms block")
+			.def("as_system", &Slice::AsSystem, (arg("self")), "a standalone System whose functions are exactly this slice's linear forms")
+			.def("concatenate", &Slice::Concatenate, (arg("self"), arg("other")), "a new slice stacking this slice's forms on top of other's (both on the same variables)")
+			.def("__add__", &Slice::Concatenate, "stack two slices' linear forms into one slice")
 			.def("head", &Slice::Head, (arg("self"), arg("m")), "a new slice over the same variables, built from the first m linear forms")
 			.def("tail", &Slice::Tail, (arg("self"), arg("m")), "a new slice over the same variables, built from the last m linear forms")
 			.def("rows",
@@ -90,6 +93,8 @@ namespace bertini{
 				(arg("self"), arg("indices")), "a new slice over the same variables, built from the chosen linear forms")
 			.def("precision", +[](Slice const& s){ return s.Precision(); }, (arg("self")), "get the current working precision of the slice")
 			.def("precision", +[](Slice const& s, unsigned p){ s.Precision(p); }, (arg("self"), arg("precision")), "set the working precision of the slice")
+			.def("__str__", +[](Slice const& s){ std::ostringstream oss; oss << s; return oss.str(); })
+			.def("__repr__", +[](Slice const& s){ std::ostringstream oss; oss << s; return oss.str(); })
 			.def_pickle(BoostSerializePickle<Slice>())
 			;
 		}
