@@ -54,6 +54,21 @@ def test_user_homotopy_rejects_bad_precision():
         pb.nag_algorithm.user_homotopy(H, [], target, precision='quadruple')
 
 
+def test_user_homotopy_rejects_solver_as_start_points():
+    # Regression for issue #258: passing the start-point *solver* (not its .solutions())
+    # used to fail with a cryptic "object is not iterable"; now it explains the mistake.
+    x, t = pb.Variable('x'), pb.Variable('t')
+    H = pb.System(); H.add_variable_group(pb.VariableGroup([x])); H.add_function(x * x - (4 - 3 * t)); H.add_path_variable(t)
+    target = pb.System(); target.add_variable_group(pb.VariableGroup([x])); target.add_function(x * x - 1)
+
+    generic = pb.System(); generic.add_variable_group(pb.VariableGroup([x])); generic.add_function(x * x - 4)
+    solver = pb.nag_algorithm.ZeroDim(generic, mptype='adaptive')   # a solver, not solutions
+
+    import pytest
+    with pytest.raises(TypeError, match="start_points must be"):
+        pb.nag_algorithm.user_homotopy(H, solver, target)
+
+
 def test_coefficient_parameter_homotopy_helper():
     # the coefficient_parameter_homotopy helper builds (1-t)*target + t*generic for you.
     x = pb.Variable('x')

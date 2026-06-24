@@ -217,6 +217,18 @@ def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endga
             "precision in {{'adaptive','double','multiple'}}, endgame in {{'cauchy','powerseries'}}"
             .format(precision, endgame))
     solver_cls = getattr(_pybnalag, cls_name)
+    # A frequent mix-up (issue #258): passing the start-point *solver* instead of its
+    # start *points*.  A ZeroDim solver is not iterable, so list(start_points) below would
+    # raise a cryptic "object is not iterable" naming an opaque class.  Catch it here and
+    # say what to do.  (A list / numpy array / tuple of vectors has no .solutions/.get_tracker.)
+    if hasattr(start_points, 'solutions') and hasattr(start_points, 'get_tracker'):
+        raise TypeError(
+            "user_homotopy: start_points must be the actual start *points* (an iterable of "
+            "solution vectors), but a {} solver was passed.  Call its .solve() and then pass "
+            "its .solutions():\n"
+            "    start_solver.solve()\n"
+            "    nag_algorithm.user_homotopy(homotopy, start_solver.solutions(), target)"
+            .format(type(start_points).__name__))
     user_start = _pybnalag.UserStartSystem(target, list(start_points))
     solver = solver_cls(target, user_start, homotopy)
     return _UserHomotopySolver(solver, homotopy, target, user_start)
