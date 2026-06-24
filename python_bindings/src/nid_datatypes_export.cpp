@@ -4,11 +4,38 @@
 #include "numerical_irreducible_decomposition_export.hpp"
 #include <boost/python/copy_const_reference.hpp>
 #include <boost/python/stl_iterator.hpp>
+#include <sstream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 namespace bertini{
 	namespace python{
 
 		using dbl = std::complex<double>;
+
+		// pickle via boost serialization -- so Slice / WitnessSet / NID result round-trip through
+		// pickle, copy, and deepcopy (and, in C++, through MPI / threads).  Mirrors the suites in
+		// system_export.cpp and mpfr_export.cpp.  WitnessSet restores its system's differentiated
+		// state in its own serialization load(), so setstate needs no extra fixup here.
+		template<typename T>
+		struct BoostSerializePickle : boost::python::pickle_suite
+		{
+			static boost::python::tuple getinitargs(T const&){ return boost::python::make_tuple(); }
+
+			static boost::python::object getstate(T const& obj)
+			{
+				std::ostringstream oss;
+				{ boost::archive::text_oarchive oa(oss); oa << obj; }
+				return boost::python::str(oss.str());
+			}
+
+			static void setstate(T& obj, boost::python::object state)
+			{
+				std::string s = boost::python::extract<std::string>(state)();
+				std::istringstream iss(s);
+				{ boost::archive::text_iarchive ia(iss); ia >> obj; }
+			}
+		};
 
 		// ---- Slice: the linear part of a witness set -----------------------------------------
 		// A Slice is a stack of linear forms M [x ; 1] (one row per form, the trailing column the
@@ -63,6 +90,7 @@ namespace bertini{
 				(arg("self"), arg("indices")), "a new slice over the same variables, built from the chosen linear forms")
 			.def("precision", +[](Slice const& s){ return s.Precision(); }, (arg("self")), "get the current working precision of the slice")
 			.def("precision", +[](Slice const& s, unsigned p){ s.Precision(p); }, (arg("self"), arg("precision")), "set the working precision of the slice")
+			.def_pickle(BoostSerializePickle<Slice>())
 			;
 		}
 
@@ -108,6 +136,7 @@ namespace bertini{
 				(arg("self"), arg("points")), "replace the witness points with the given list")
 			.def("set_slice", &WS::SetSlice, (arg("self"), arg("slice")), "set the linear slice")
 			.def("set_system", &WS::SetSystem, (arg("self"), arg("system")), "set the system")
+			.def_pickle(BoostSerializePickle<WS>())
 			;
 		}
 
@@ -118,6 +147,7 @@ namespace bertini{
 			.def("nonempty_codimensions", &R::NonEmptyCodimensions, "the distinct codimensions which contain at least one component")
 			.def("num_witness_sets", &R::NumWitnessSets, "the number of stored witness sets")
 			.def("get_witness_set", &R::GetWitnessSet, return_internal_reference<>(), "get the i-th stored witness set")
+			.def_pickle(BoostSerializePickle<R>())
 			;
 		}
 

@@ -23,6 +23,9 @@
 adding a slice to a System, the regen products-of-linears bridge, and constructing a witness
 set both incrementally and all-at-once."""
 
+import copy
+import pickle
+
 import numpy as np
 
 import bertini as pb
@@ -200,3 +203,51 @@ def test_witness_set_from_parts_and_consistency():
     # 3 variables - 1 natural function == slice dimension 2
     assert w.is_consistent()
     assert w.get_system().num_functions() == 1
+
+
+# ---- serialization (pickle / deepcopy) -----------------------------------------------------
+
+def test_slice_pickle_roundtrip():
+    s = _known_slice()
+    s2 = pickle.loads(pickle.dumps(s))
+    assert s2.dimension() == 2
+    assert s2.num_variables() == 2
+    C, C2 = np.asarray(s.coefficients()), np.asarray(s2.coefficients())
+    assert all(abs(complex(C[i, j]) - complex(C2[i, j])) < 1e-25
+               for i in range(2) for j in range(3))
+    v = s2.eval(_mpvec(1, 1))
+    assert abs(complex(v[0]) - 6) < 1e-12 and abs(complex(v[1]) - 4) < 1e-12
+
+
+def test_slice_deepcopy():
+    s = _known_slice()
+    s2 = copy.deepcopy(s)
+    assert s2.dimension() == 2
+    assert np.asarray(s2.coefficients()).shape == (2, 3)
+
+
+def test_witness_set_pickle_roundtrip():
+    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    vg = pb.VariableGroup([x, y, z])
+
+    sys = pb.System()
+    sys.add_variable_group(vg)
+    sys.add_function(x * x + y * y + z * z - 1)
+
+    s = Slice.random_complex(vg, 2)
+    w = WitnessSetMultiplePrecision([_mpvec(1, 0, 0), _mpvec(0, 1, 0)], s, sys)
+
+    w2 = pickle.loads(pickle.dumps(w))
+    assert w2.degree() == 2
+    assert w2.dimension() == 2
+    assert w2.is_consistent()
+    assert w2.get_slice().dimension() == 2
+    assert len(w2.get_points()) == 2
+
+    # the deserialized system is usable: its load() re-differentiated it.
+    pt = _mpvec(1, 1, 1)
+    v = w2.get_system().eval(pt)
+    assert abs(complex(v[0]) - 2) < 1e-12     # 1 + 1 + 1 - 1 = 2
+    # a 1-function Jacobian comes back from eigenpy as a 1-D array (see other tests); the point is
+    # that differentiating the deserialized system works at all -- load() restored it.
+    assert np.atleast_2d(np.asarray(w2.get_system().eval_jacobian(pt))).shape == (1, 3)

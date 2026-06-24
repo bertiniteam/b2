@@ -29,7 +29,11 @@
 \file slice_test.cpp Unit testing for slicing
 */
 
+#include <sstream>
+
 #include <boost/test/unit_test.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 #include "bertini2/system/slice.hpp"
 #include "bertini2/system/system.hpp"
@@ -214,6 +218,29 @@ BOOST_AUTO_TEST_CASE(add_to_system_agrees_with_slice_eval)
 
 	BOOST_CHECK_EQUAL(from_system.size(), from_slice.size());
 	BOOST_CHECK_SMALL((from_system - from_slice).norm(), 1e-11);
+}
+
+
+BOOST_AUTO_TEST_CASE(serialization_roundtrip)
+{
+	DefaultPrecision(30);
+	auto s = MakeKnownSlice();
+
+	std::stringstream ss;
+	{ boost::archive::text_oarchive oa(ss); oa << s; }
+
+	Slice s2;
+	{ boost::archive::text_iarchive ia(ss); ia >> s2; }
+
+	BOOST_CHECK_EQUAL(s2.Dimension(), 2);
+	BOOST_CHECK_EQUAL(s2.NumVariables(), 2);
+	BOOST_CHECK(!s2.IsHomogeneous());
+
+	// the deserialized slice evaluates exactly like the original.
+	Vec<dbl> p(2); p << dbl(1), dbl(1);
+	auto v = s2.Eval(p);
+	BOOST_CHECK_CLOSE(v(0).real(), 6.0, 1e-11);
+	BOOST_CHECK_CLOSE(v(1).real(), 4.0, 1e-11);
 }
 
 
