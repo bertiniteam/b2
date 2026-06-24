@@ -75,8 +75,10 @@ def test_to_dataframe_finite_only_by_default(one_finite_one_infinite_solver):
     # omit_infinite defaults True: just the one genuine finite solution
     assert len(df) == 1
     assert bool(df['is_finite'].all())
-    # coordinates first, then metadata columns
-    assert 'x0' in df.columns and 'x1' in df.columns
+    # the whole point lives in one 'solution' column -- coordinates are NOT exploded into x0,x1,...
+    assert 'solution' in df.columns
+    assert 'x0' not in df.columns and 'x1' not in df.columns
+    assert len(df['solution'].iloc[0]) == 2          # a 2-vector for this 2-variable system
     for col in ('is_finite', 'is_real', 'is_singular', 'multiplicity', 'endgame_success'):
         assert col in df.columns
 
@@ -101,9 +103,9 @@ def test_to_dataframe_coords_match_points(two_circles_solver):
     df = two_circles_solver.to_dataframe()
     pts = two_circles_solver.finite_solutions()
     assert len(df) == len(pts)
-    # the x0 column reproduces each finite solution's first coordinate
+    # the solution column reproduces each finite solution's first coordinate
     key = lambda z: (z.real, z.imag)
-    df_x0 = sorted((complex(v) for v in df['x0']), key=key)
+    df_x0 = sorted((complex(v[0]) for v in df['solution']), key=key)
     pt_x0 = sorted((complex(p[0]) for p in pts), key=key)
     for a, b in zip(df_x0, pt_x0):
         assert a == pytest.approx(b)
@@ -122,14 +124,14 @@ def four_root_solver():
     return solver
 
 
-def test_to_dataframe_coordinates_are_independent_per_row(four_root_solver):
-    """Regression: the coordinate columns must hold each row's OWN value.
+def test_to_dataframe_solutions_are_independent_per_row(four_root_solver):
+    """Regression: the solution column must hold each row's OWN point.
 
     to_dataframe stored the value returned by indexing the eigenpy solution vector, which is a
     view aliasing a reused internal buffer; the live references then collapsed so every row showed
-    the same coordinate.  Two rows never triggered it -- it needs several distinct solutions.  The
-    four roots (+/-1, +/-1) have two distinct x-values and two distinct y-values, so an aliased
-    frame would show only one.  Assert the DataFrame reproduces all_solutions exactly.
+    the same point.  Two rows never triggered it -- it needs several distinct solutions.  The four
+    roots (+/-1, +/-1) have two distinct x-values and two distinct y-values, so an aliased frame
+    would show only one.  Assert the DataFrame reproduces all_solutions exactly.
     """
     pytest.importorskip("pandas")
     s = four_root_solver
@@ -137,13 +139,13 @@ def test_to_dataframe_coordinates_are_independent_per_row(four_root_solver):
     assert len(df) == 4
 
     key = lambda z: (round(z.real, 6), round(z.imag, 6))
-    for col, coord in (('x0', 0), ('x1', 1)):
-        from_df  = sorted((complex(v) for v in df[col]), key=key)
+    for coord in (0, 1):
+        from_df  = sorted((complex(v[coord]) for v in df['solution']), key=key)
         from_pts = sorted((complex(p[coord]) for p in s.finite_solutions()), key=key)
         for a, b in zip(from_df, from_pts):
             assert a == pytest.approx(b)
     # the x-coordinates really are both +1 and -1 (not one value repeated)
-    assert {round(complex(v).real) for v in df['x0']} == {-1, 1}
+    assert {round(complex(v[0]).real) for v in df['solution']} == {-1, 1}
 
 
 def test_to_dataframe_has_system_reference_column(four_root_solver):

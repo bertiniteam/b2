@@ -44,8 +44,8 @@ One row per solution
 ====================
 
 :meth:`to_dataframe` lays the solve out as a table.  By default it keeps only the finite
-solutions (``omit_infinite=True``); each row is a solution, with a column per coordinate
-(``x0``, ``x1``) followed by every metadata field.
+solutions (``omit_infinite=True``); each row is a solution -- the whole point in a single
+``solution`` column, followed by every metadata field.
 
 .. testcode::
 
@@ -53,7 +53,12 @@ solutions (``omit_infinite=True``); each row is a solution, with a column per co
 
    df = solver.to_dataframe()
    assert len(df) == 5                         # five distinct finite solutions
-   assert {'x0', 'x1', 'is_real', 'is_singular', 'multiplicity'} <= set(df.columns)
+   assert {'solution', 'is_real', 'is_singular', 'multiplicity'} <= set(df.columns)
+   assert len(df['solution'].iloc[0]) == 2     # each cell is the whole (x, y) point
+
+The ``solution`` cell is the whole point (a copied vector), **not** exploded into ``x0``, ``x1``,
+... columns -- if you want per-coordinate columns, you split it yourself (we do exactly that for
+plotting, below).
 
 **One row per distinct solution.**  A multiplicity-:math:`m` solution arrives from the solver as
 :math:`m` coincident endpoints -- the node here is the end of *two* paths.  Carrying :math:`m`
@@ -98,13 +103,14 @@ of **complex** numbers -- four real numbers -- but the page has only two axes.  
 solutions are genuine points of the real :math:`(x, y)` plane; the complex ones are not there at
 all.  So we draw two different kinds of picture.
 
-To plot, lift each coordinate from a :class:`bertini.multiprec.Complex` to a Python ``complex`` and
-split it into real and imaginary parts -- pandas does this column-at-a-time:
+To plot, pull the two coordinates out of the ``solution`` cell -- each is a
+:class:`bertini.multiprec.Complex` -- and lift them to Python ``complex`` so we can take real and
+imaginary parts.  This is the "split it yourself" step: one column per coordinate, made on demand.
 
 .. testcode::
 
-   df['x'] = [complex(v) for v in df.x0]
-   df['y'] = [complex(v) for v in df.x1]
+   df['x'] = [complex(p[0]) for p in df.solution]
+   df['y'] = [complex(p[1]) for p in df.solution]
    df['x_re'], df['x_im'] = df.x.map(lambda z: z.real), df.x.map(lambda z: z.imag)
    df['y_re'], df['y_im'] = df.y.map(lambda z: z.real), df.y.map(lambda z: z.imag)
 
