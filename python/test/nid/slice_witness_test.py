@@ -363,6 +363,32 @@ def test_witness_set_classic_emission():
     assert text.count('END;') == 2
 
 
+def test_witness_set_repr_is_readable():
+    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    vg = pb.VariableGroup([x, y, z])
+    sys = pb.System()
+    sys.add_variable_group(vg)
+    sys.add_function(x * x + y * y + z * z - 1)
+    s = Slice.random_complex(vg, 2)
+    w = WitnessSetMultiplePrecision([_mpvec(1, 0, 0), _mpvec(0, 1, 0)], s, sys)
+
+    text = repr(w)
+    assert 'WitnessSet' in text
+    assert 'dimension 2' in text
+    assert 'degree 2' in text
+    assert 'consistent' in text
+    assert 'slice' in text and 'system' in text
+    # single vs plural: 1 function reads "1 function", not "1 functions"
+    assert '1 function ' in text and '2 linear forms' in text
+
+
+def test_empty_witness_set_repr():
+    w = WitnessSetMultiplePrecision()
+    text = repr(w)
+    assert 'WitnessSet' in text
+    assert 'degree 0' in text
+
+
 # ---- serialization (pickle / deepcopy) -----------------------------------------------------
 
 def test_slice_pickle_roundtrip():

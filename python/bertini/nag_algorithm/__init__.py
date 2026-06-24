@@ -100,12 +100,47 @@ def _witness_to_classic_input(self, **kwargs):
 if hasattr(_pybnalag, 'Slice'):
     _pybnalag.Slice.to_classic_input = _slice_to_classic_input
 
+
+def _plural(n, noun):
+    return f"{n} {noun}" if n == 1 else f"{n} {noun}s"
+
+
+def _witness_repr(self):
+    """A concise summary: the component's dimension and degree, and a one-line description of the
+    system and slice it carries.  (The slice and system have their own detailed reprs.)"""
+    try:
+        consistent = 'consistent' if self.is_consistent() else 'INCONSISTENT'
+    except Exception:
+        consistent = 'consistency unknown'
+
+    lines = ["WitnessSet -- dimension {}, degree {} ({})".format(
+        self.dimension(), self.degree(), consistent)]
+
+    try:
+        s = self.get_slice()
+        lines.append("  slice:  {} on {}".format(
+            _plural(s.dimension(), 'linear form'), _plural(s.num_variables(), 'variable')))
+    except Exception:
+        lines.append("  slice:  <none>")
+
+    try:
+        sysm = self.get_system()
+        lines.append("  system: {} on {}".format(
+            _plural(sysm.num_functions(), 'function'), _plural(sysm.num_variables(), 'variable')))
+    except Exception:
+        lines.append("  system: <none>")
+
+    return "\n".join(lines)
+
+
 for _ws_name in dir(_pybnalag):
     if _ws_name.startswith('WitnessSet'):
         _ws_cls = getattr(_pybnalag, _ws_name)
         if isinstance(_ws_cls, type):
             _ws_cls.witness_system = _witness_system
             _ws_cls.to_classic_input = _witness_to_classic_input
+            _ws_cls.__repr__ = _witness_repr
+            _ws_cls.__str__ = _witness_repr
 
 
 # --- to_dataframe: a ZeroDim solve as a pandas DataFrame -- the "database of solutions" ---
