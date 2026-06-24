@@ -154,4 +154,4 @@ Single-argument bindings and read-only `Vec<T> const&` bindings are unaffected. 
 
 - C++ standard: C++17. Headers use `.hpp` extension.
 - License: GPL v3 with additional terms (see `licenses/`, `core/ADDITIONAL_GPL_TERMS`).
-- Version is tracked in `python/bertini/_version.py` and `pyproject.toml`.
+- Version is tracked in `pyproject.toml` (the `version = "..."` line), read at runtime via `importlib.metadata.version("bertini2")`.
