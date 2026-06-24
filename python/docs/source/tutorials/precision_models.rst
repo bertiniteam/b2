@@ -45,17 +45,17 @@ coordinate with :func:`complex`:
    bertini.random.set_random_seed(2)
 
    dbl = bertini.nag_algorithm.ZeroDim(system, mptype='double'); dbl.solve()
-   assert dbl.solutions()[0].dtype == np.complex128
+   assert dbl.all_solutions()[0].dtype == np.complex128
 
    amp = bertini.nag_algorithm.ZeroDim(system, mptype='adaptive'); amp.solve()
-   assert str(amp.solutions()[0].dtype) == 'Complex'        # bertini.multiprec.Complex
+   assert str(amp.all_solutions()[0].dtype) == 'Complex'        # bertini.multiprec.Complex
 
    # the same code reads either one:
    def to_python(solution):
        return np.array([complex(c) for c in solution])
 
    for solver in (dbl, amp):
-       pts = sorted(tuple(np.round(to_python(s).real, 4)) for s in solver.solutions())
+       pts = sorted(tuple(np.round(to_python(s).real, 4)) for s in solver.all_solutions())
        assert pts == [(-0.7071, 0.7071), (0.7071, -0.7071)]
 
 Setting the precision
@@ -71,7 +71,7 @@ solver:
    system.precision(40)                           # the system must match
    m = bertini.nag_algorithm.ZeroDim(system, mptype='multiple')
    m.solve()
-   assert len(m.solutions()) == 2
+   assert len(m.all_solutions()) == 2
 
    bertini.default_precision(30)                  # restore a modest default
    system.precision(30)

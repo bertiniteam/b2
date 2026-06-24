@@ -55,7 +55,7 @@ solutions are the start points we will reuse forever after:
     generic = member(1)                                # the line y = 1/2
     first = nag_algorithm.ZeroDim(generic, mptype='adaptive')
     first.solve()
-    start_points = first.solutions()                   # (+/- sqrt(3)/2, 1/2)
+    start_points = first.all_solutions()                   # (+/- sqrt(3)/2, 1/2)
 
 Move the parameter -- without solving again
 ===========================================
@@ -69,7 +69,7 @@ and track the start points through it:
     H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
     moved = nag_algorithm.user_homotopy(H, start_points, target)
     moved.solve()
-    # moved.solutions() are now (+/- 1, 0)
+    # moved.all_solutions() are now (+/- 1, 0)
 
 ``coefficient_parameter_homotopy(target, generic)`` is just :math:`(1-t)\,\text{target} +
 t\,\text{generic}` with ``t`` as the path variable: at :math:`t=1` it is ``generic`` (so its
@@ -85,7 +85,7 @@ solving from scratch again:
         H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
         solver = nag_algorithm.user_homotopy(H, start_points, target)
         solver.solve()
-        roots = [p for p in solver.solutions() if len(p) == 2]
+        roots = [p for p in solver.all_solutions() if len(p) == 2]
         for p in roots:
             xv, yv = complex(p[0]), complex(p[1])
             assert abs(xv*xv + yv*yv - 1) < 1e-8       # on the circle

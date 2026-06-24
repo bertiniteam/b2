@@ -64,7 +64,7 @@ def test_unequal_degree_single_group_solves_and_filters():
 
     zd = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(randomized)
     zd.solve()
-    sols = zd.solutions()
+    sols = zd.all_solutions()
     assert len(sols) == 4                                   # Bezout 2*2: two true + two extraneous
 
     true = _true_solutions(original, sols)
@@ -88,7 +88,7 @@ def test_equal_degree_conics_solves_and_filters():
 
     zd = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(randomized)
     zd.solve()
-    sols = zd.solutions()
+    sols = zd.all_solutions()
     assert len(sols) == 4
 
     true = _true_solutions(original, sols)
@@ -113,7 +113,7 @@ def test_multihomogeneous_bilinear_solves_and_filters():
 
     zd = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionMHomogeneous(randomized)
     zd.solve()
-    sols = zd.solutions()
+    sols = zd.all_solutions()
     assert len(sols) >= 1
 
     true = _true_solutions(original, sols)

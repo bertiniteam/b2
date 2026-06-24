@@ -114,7 +114,7 @@ blend block instead:
 
     solver = nag_algorithm.user_homotopy(H, start_points, target)
     solver.solve()
-    solutions = solver.solutions()
+    solutions = solver.all_solutions()
 
 At :math:`t=1` the homotopy is :math:`\gamma\,\text{start}`, so our four points are its roots; at
 :math:`t=0` it is the target.  :func:`~bertini.nag_algorithm.user_homotopy` runs the full zero-dim

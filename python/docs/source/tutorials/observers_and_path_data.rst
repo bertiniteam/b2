@@ -176,7 +176,7 @@ path in the complex plane:
         ax.plot(zaff.real, zaff.imag, '-', color=color, lw=1.3)
         ax.plot(zaff.real[0], zaff.imag[0], 'o', color=color, ms=6, mfc='white')  # start, t near 1
 
-    sols = [complex(s[0]) for s in solver.solutions()]
+    sols = [complex(s[0]) for s in solver.all_solutions()]
     ax.scatter([s.real for s in sols], [s.imag for s in sols],
                c='k', marker='*', s=140, zorder=5, label='solutions')
     ax.set_aspect(1.0); ax.set_box_aspect(1)     # 1:1 data scaling, square box
@@ -353,7 +353,7 @@ whose colour varies along it (a ``Line3DCollection`` with a shared log-scaled co
         ax.add_collection3d(lc)
         last = lc
 
-    sols = solver.solutions()
+    sols = solver.all_solutions()
     ax.scatter([complex(s[0]).real for s in sols],
                [complex(s[1]).real for s in sols],
                [complex(s[2]).real for s in sols], c='k', marker='*', s=120, depthshade=False)

@@ -63,7 +63,7 @@ def test_factory_returns_a_real_solver():
     # the returned object is a genuine solver, not just a class lookup: solve end to end.
     solver = ZeroDim(_system(), mptype='amp')
     solver.solve()
-    assert len(solver.solutions()) == 2
+    assert len(solver.all_solutions()) == 2
 
 
 def test_precision_is_an_alias_for_mptype():

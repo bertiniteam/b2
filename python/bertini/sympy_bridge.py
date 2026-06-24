@@ -47,7 +47,7 @@ Forward (define in sympy, solve with bertini)::
     sys = system_from_sympy([x**2 + y**2 - 1, x + y], [x, y])
     solver = ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
     solver.solve()
-    solver.solutions()   # in your variables, comparable with sympy.solve output
+    solver.all_solutions()   # in your variables, comparable with sympy.solve output
 
 Reverse (inspect bertini trees symbolically)::
 

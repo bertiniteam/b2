@@ -105,7 +105,7 @@ def test_serial_vs_parallel_solution_count(circle_intersection_solver):
     solver.solve(communicator=comm)
 
     if pb.parallel.is_manager():
-        solns = solver.solutions()
+        solns = solver.all_solutions()
         assert len(solns) == 2, f"Expected 2 solutions, got {len(solns)}"
 
 
@@ -115,7 +115,7 @@ def test_serial_solve_works(circle_intersection_solver):
     solver.solve()
 
     if pb.parallel.is_manager():
-        solns = solver.solutions()
+        solns = solver.all_solutions()
         assert len(solns) == 2
 
 
@@ -147,7 +147,7 @@ def _solve_cyclic5(solver_cls):
 def test_distributed_cyclic5_double_matches_known_count():
     solver = _solve_cyclic5(ZeroDimCauchyDoublePrecisionTotalDegree)
     if pb.parallel.is_manager():
-        assert len(solver.solutions()) == 120
+        assert len(solver.all_solutions()) == 120
         assert _distinct_finite(solver) == CYCLIC5_FINITE
 
 
@@ -156,5 +156,5 @@ def test_distributed_cyclic5_adaptive_matches_known_count():
     # recover all 70 finite solutions, not a precision-degraded subset.
     solver = _solve_cyclic5(ZeroDimCauchyAdaptivePrecisionTotalDegree)
     if pb.parallel.is_manager():
-        assert len(solver.solutions()) == 120
+        assert len(solver.all_solutions()) == 120
         assert _distinct_finite(solver) == CYCLIC5_FINITE

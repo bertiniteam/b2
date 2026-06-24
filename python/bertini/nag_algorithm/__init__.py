@@ -48,6 +48,97 @@ _enhance_all(_pybnalag)
 _enhance_owners(_pybnalag)
 
 
+# --- to_dataframe: a ZeroDim solve as a pandas DataFrame -- the "database of solutions" ---
+#
+# One ROW per solution (per tracked path), columns = the coordinates (x0, x1, ...) followed by
+# every field of the per-solution metadata.  Once it is a DataFrame, every category and its
+# metadata is a one-line filter -- df[df.is_finite], df[df.is_real & ~df.is_singular],
+# df[~df.is_finite] (at infinity) -- which is what the point/category accessors give you ad hoc.
+#
+# pandas is an OPTIONAL dependency (mirrors meta_observer's collector-as-DataFrame): the point
+# accessors (all_solutions / finite_solutions / solution_metadata / ...) are the no-pandas path;
+# to_dataframe raises a helpful ImportError if pandas is missing.
+
+# The metadata columns, in a fixed order (so the DataFrame's shape is stable across solves and
+# precision models).  Mirrors the fields exposed on SolutionMetaData (see zero_dim_export.hpp);
+# the classification flags come first since they are what you filter on.
+_SOLUTION_METADATA_FIELDS = (
+    'path_index', 'solution_index',
+    'is_finite', 'is_real', 'is_singular', 'multiplicity',
+    'condition_number', 'function_residual', 'newton_residual',
+    'accuracy_estimate', 'accuracy_estimate_user_coords',
+    'cycle_num', 'endgame_success', 'pre_endgame_success', 'final_time_used',
+    'precision_changed', 'max_precision_used', 'time_of_first_prec_increase',
+)
+
+
+def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True):
+    """The solve as a pandas DataFrame -- one row per solution, the "database of solutions".
+
+    Columns are the solution coordinates ``x0, x1, ...`` followed by every per-solution metadata
+    field (``is_finite``, ``is_real``, ``is_singular``, ``multiplicity``, ``condition_number``,
+    ``endgame_success``, ``max_precision_used``, ...).  Each category then becomes a trivial
+    filter on the frame::
+
+        df = solver.to_dataframe(omit_infinite=False)
+        df[df.is_real & ~df.is_singular]      # the nonsingular real solutions
+        df[~df.is_finite]                      # the endpoints at infinity
+
+    Parameters
+    ----------
+    user_coords : bool
+        Coordinates in YOUR variables (dehomogenized; default), or the solver's internal
+        homogenized on-patch coordinates when ``False`` -- the same choice as :meth:`all_solutions`.
+    omit_infinite : bool
+        Drop the endpoints not classified finite (``is_finite`` False) -- the at-infinity and
+        failed paths.  ``True`` by default, so the frame holds just the genuine finite solutions;
+        pass ``False`` to get every tracked path (their coordinate cells may be empty/NaN).
+
+    Coordinate cells are Python ``complex`` for a double-precision solve and
+    :class:`bertini.multiprec.Complex` for a multiprecision one (kept native, so no precision is
+    lost).  ``pandas`` is an optional dependency; this raises :class:`ImportError` if it is absent
+    (the point accessors -- :meth:`all_solutions`, :meth:`finite_solutions`,
+    :meth:`solution_metadata` -- are the no-pandas path).
+    """
+    try:
+        import pandas as pd
+    except ImportError as e:
+        raise ImportError(
+            "ZeroDim.to_dataframe() needs the optional 'pandas' dependency (install it, e.g. "
+            "`pip install pandas`).  Without pandas, use the point accessors instead: "
+            "all_solutions(), finite_solutions(), solution_metadata()."
+        ) from e
+
+    points = self.all_solutions(user_coords)
+    metadata = self.solution_metadata()
+    rows = []
+    for i in range(min(len(points), len(metadata))):
+        m = metadata[i]
+        if omit_infinite and not m.is_finite:
+            continue
+        pt = points[i]
+        row = {'x{}'.format(k): pt[k] for k in range(len(pt))}
+        for field in _SOLUTION_METADATA_FIELDS:
+            row[field] = getattr(m, field)
+        rows.append(row)
+
+    return pd.DataFrame(rows)
+
+
+def _attach_to_dataframe():
+    """Give every bound ZeroDim class a to_dataframe method (idempotent)."""
+    for name in dir(_pybnalag):
+        if not name.startswith('ZeroDim'):
+            continue
+        cls = getattr(_pybnalag, name)
+        if isinstance(cls, type) and not getattr(cls, '_b2_has_to_dataframe', False):
+            cls.to_dataframe = _zerodim_to_dataframe
+            cls._b2_has_to_dataframe = True
+
+
+_attach_to_dataframe()
+
+
 # --- ZeroDim: a friendly factory over the 18 bound ZeroDim<endgame x precision x start> classes ---
 
 # Each bound class is named ZeroDim<Endgame><Precision>Precision<StartSystem>; rather than type
@@ -112,7 +203,7 @@ def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
         built yourself with given start points, use :func:`user_homotopy` / :func:`blend_homotopy`
         instead (their construction needs the homotopy and start points, not just a system).
 
-    Returns a solver; call ``.solve()`` then ``.solutions()`` as for any zero-dim solver.
+    Returns a solver; call ``.solve()`` then ``.all_solutions()`` as for any zero-dim solver.
 
     Examples
     --------
@@ -130,7 +221,7 @@ def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
         'ZeroDimCauchyAdaptivePrecisionMHomogeneous'
         >>> solver = ZeroDim(sys, mptype='adaptive')   # robust path
         >>> solver.solve()                             # doctest: +SKIP
-        >>> solver.solutions()                         # doctest: +SKIP
+        >>> solver.all_solutions()                         # doctest: +SKIP
     """
     if precision is not None:
         mptype = precision
@@ -203,7 +294,7 @@ def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endga
         'adaptive' (default) is the robust path.
     endgame : {'cauchy', 'powerseries'}
 
-    Returns a solver: call ``.solve()`` then ``.solutions()`` as for any zero-dim solver.
+    Returns a solver: call ``.solve()`` then ``.all_solutions()`` as for any zero-dim solver.
     """
     prec = {'double': 'double', 'multiple': 'multiple', 'fixed_multiple': 'multiple',
             'adaptive': 'adaptive'}.get(precision, precision)
@@ -233,7 +324,7 @@ def coefficient_parameter_homotopy(target, generic, path_variable='t'):
         gen_solver = nag_algorithm.ZeroDim(generic, mptype='adaptive')
         gen_solver.solve()
         H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
-        solver = nag_algorithm.user_homotopy(H, gen_solver.solutions(), target)
+        solver = nag_algorithm.user_homotopy(H, gen_solver.all_solutions(), target)
         solver.solve()
 
     ``target`` and ``generic`` must be built over the SAME variable objects (the interpolation

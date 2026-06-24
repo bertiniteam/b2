@@ -192,13 +192,13 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		"Run the zero-dim algorithm. Pass an mpi4py communicator for parallel execution.")
 	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
 	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
-	.def("solutions",
+	.def("all_solutions",
 		+[](AlgoT const& self, bool user_coords) -> decltype(self.SolutionsInternalCoords()) {
 			return user_coords ? self.SolutionsUserCoords() : self.SolutionsInternalCoords();
 		},
 		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
 		return_internal_reference<>(),
-		"get the computed solutions.  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.")
+		"get ALL the computed solutions, one per tracked path (finite, at-infinity, and failed alike).  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.  for just the finite ones see finite_solutions; for the at-infinity ones see infinite_solutions.")
 	.def("finite_solutions",
 		+[](AlgoT const& self, bool user_coords){
 			boost::python::list out;
@@ -231,6 +231,14 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		},
 		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
 		"the SINGULAR finite solutions (multiple or ill-conditioned roots).")
+	.def("infinite_solutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.InfiniteSolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the solutions AT INFINITY: endpoints not classified finite (is_finite is False).  these are the paths the endgame resolved as diverging -- its GoingToInfinity / SecurityMaxNormReached verdict, or a successful endpoint whose dehomogenized infinity norm exceeds endpoint_finite_threshold.  the complement of finite_solutions within all_solutions.  NOTE a path that FAILED before the endgame also has is_finite False (its point is not a real solution at infinity); inspect solution_metadata()/report() to tell a true divergence from a tracking failure.")
 	.def("target_system",
 		+[](AlgoT& self) -> decltype(self.TargetSystem()) { return self.TargetSystem(); },
 		return_internal_reference<>(),

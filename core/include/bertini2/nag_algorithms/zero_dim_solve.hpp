@@ -1052,6 +1052,22 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			}
 
 			/**
+			\brief The solutions at infinity: endpoints not classified finite (is_finite is false) --
+			the complement of FiniteSolutions within the full solution list.  These are the paths the
+			endgame resolved as diverging (its GoingToInfinity / SecurityMaxNormReached verdict, or a
+			successful endpoint whose dehomogenized infinity norm exceeds endpoint_finite_threshold).
+
+			\note A path that FAILED before the endgame also leaves is_finite at its default (false) and
+			so appears here; its stored point is not a meaningful solution at infinity.  Consult the
+			endgame_success in FinalSolutionMetadata (or Report()) to distinguish a true divergence from a
+			tracking failure.  \see FiniteSolutions
+			*/
+			SolnCont<Vec<BaseComplexT>> InfiniteSolutions(bool user_coords = true) const
+			{
+				return SolutionsWhere([](auto const& m){ return !m.is_finite; }, user_coords);
+			}
+
+			/**
 			\brief Get the metadat associated with the final computed solutions
 			*/
 			const auto& FinalSolutionMetadata() const

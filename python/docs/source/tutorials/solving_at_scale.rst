@@ -57,7 +57,7 @@ is::
         solver.solve()                       # serial: a lone manager would have no workers
 
     if pb.parallel.is_manager():             # only rank 0 has the collected solutions
-        print(len(solver.solutions()), "solutions")
+        print(len(solver.all_solutions()), "solutions")
 
 The :mod:`bertini.parallel` helpers -- :func:`~bertini.parallel.rank`,
 :func:`~bertini.parallel.size`, :func:`~bertini.parallel.is_manager`,

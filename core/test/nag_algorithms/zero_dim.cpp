@@ -508,6 +508,41 @@ BOOST_AUTO_TEST_CASE(filtered_solution_accessors)
 	BOOST_CHECK_EQUAL(zd.FiniteSolutions(false).size(), zd.FiniteSolutions(true).size());
 }
 
+// InfiniteSolutions: the at-infinity complement of FiniteSolutions.  The system {x*y - 1, x - 1}
+// has Bezout number 2 but exactly one affine solution (1,1); the second total-degree path must
+// diverge -- so there is one finite endpoint and one at infinity.
+BOOST_AUTO_TEST_CASE(infinite_solutions_at_infinity)
+{
+	using namespace bertini;
+
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	System sys;
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x - 1);
+	sys.AddVariableGroup(VariableGroup{x, y});
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System, start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto r = zd.Report();
+	BOOST_CHECK_EQUAL(zd.FinalSolutionMetadata().size(), 2u);   // Bezout 2
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(),       1u);
+	BOOST_CHECK_EQUAL(zd.InfiniteSolutions().size(),     1u);
+
+	// finite + infinite partition the whole list (no failed paths on this clean solve)
+	BOOST_CHECK_EQUAL(r.num_failed, 0u);
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size() + zd.InfiniteSolutions().size(),
+	                  zd.FinalSolutionMetadata().size());
+
+	// the at-infinity count matches the report's diverged bucket
+	BOOST_CHECK_EQUAL(zd.InfiniteSolutions().size(), r.num_diverged);
+
+	// user vs internal coordinates: same count
+	BOOST_CHECK_EQUAL(zd.InfiniteSolutions(false).size(), zd.InfiniteSolutions(true).size());
+}
+
 // Regression: a fixed-multiple (MultiplePrecisionTracker) zero-dim solve used to throw at the start
 // of tracking -- "start point ... differing precision from default (20!=16)" -- because the tracker
 // (built at DefaultPrecision) and the config-driven ambient/thread precision (DoublePrecision)

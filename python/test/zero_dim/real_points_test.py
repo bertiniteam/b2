@@ -37,7 +37,7 @@ def test_real_point_on_every_trott_component():
 
     # keep the real solutions by the solver's own classification (is_real applies the configured
     # real_threshold) rather than a hand-picked epsilon
-    sols, meta = solver.solutions(), solver.solution_metadata()
+    sols, meta = solver.all_solutions(), solver.solution_metadata()
     reals = [(complex(s[0]).real, complex(s[1]).real)
              for s, m in zip(sols, meta) if m.is_real]
 

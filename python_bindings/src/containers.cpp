@@ -51,7 +51,7 @@ void ListVisitor<T>::visit(PyClass& cl) const
     // disabled by supplying *true* in the NoProxy template parameter.
 
 	// vector_indexing_suite only provides the __getitem__/__len__ sequence protocol; add a real
-	// __iter__ so `for s in solver.solutions(): ...` (and any other list container) iterates
+	// __iter__ so `for s in solver.all_solutions(): ...` (and any other list container) iterates
 	// directly rather than relying on the index-fallback.
 	.def("__iter__", boost::python::iterator<T>())
 

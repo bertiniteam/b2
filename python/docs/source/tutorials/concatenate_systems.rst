@@ -72,7 +72,7 @@ product of the degrees, :math:`2 \times 2 \times 1 \times 1 = 4`.
    zd = bertini.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(system)
    zd.solve()
 
-   solutions = [np.array([complex(c) for c in s]) for s in zd.solutions()]
+   solutions = [np.array([complex(c) for c in s]) for s in zd.all_solutions()]
    assert len(solutions) == 4
 
    # every computed point satisfies the concatenated system
@@ -117,7 +117,7 @@ functions to one clone does not touch the others.
    bertini.random.set_random_seed(1)
    zd = bertini.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(system)
    zd.solve()
-   assert len(zd.solutions()) == 4
+   assert len(zd.all_solutions()) == 4
 
 Same four solutions, assembled from cloned blocks. The pattern -- **set up variables once, clone per
 block, concatenate, solve** -- scales to as many blocks as your problem comes in.
