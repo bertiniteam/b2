@@ -259,6 +259,23 @@ def test_slice_to_classic_input():
     assert 'f0' in text
 
 
+def test_concatenate_accepts_a_slice_system():
+    # concatenate must append a slice's structured linear-forms block, not just polynomial rows.
+    from bertini.system import concatenate
+    x, y = pb.Variable('x'), pb.Variable('y')
+    poly = pb.System()
+    poly.add_variable_group(pb.VariableGroup([x, y]))
+    poly.add_function(x * x + y * y - 1)
+
+    slice_sys = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y]).as_system()
+    combined = concatenate(poly, slice_sys)
+    assert combined.num_functions() == 3
+    v = combined.eval(_mpvec(1, 1))     # f0=1, f1=6, f2=4 at (1,1)
+    assert abs(complex(v[0]) - 1) < 1e-12
+    assert abs(complex(v[1]) - 6) < 1e-12
+    assert abs(complex(v[2]) - 4) < 1e-12
+
+
 def test_witness_set_classic_emission():
     x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
     vg = pb.VariableGroup([x, y, z])

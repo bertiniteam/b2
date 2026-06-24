@@ -80,15 +80,10 @@ def _slice_to_classic_input(self, **kwargs):
 
 def _witness_system(self):
     """The square system whose isolated solutions are the witness points: this witness set's system
-    with the slice's linear forms appended.  Requires the slice and system to share variables.
-
-    Built by cloning the witness set's system (a copy that shares the variable nodes, so it is left
-    unmutated) and adding the slice's linear-forms block to the clone -- not concatenate(), which
-    assumes polynomial blocks and cannot append a structured linear-forms block."""
-    from bertini.system import clone
-    sys = clone(self.get_system())
-    self.get_slice().add_to(sys)
-    return sys
+    with the slice's linear forms appended (concatenate, which handles the slice's structured
+    linear-forms block).  Requires the slice and system to share variables."""
+    from bertini.system import concatenate
+    return concatenate(self.get_system(), self.get_slice().as_system())
 
 
 def _witness_to_classic_input(self, **kwargs):
