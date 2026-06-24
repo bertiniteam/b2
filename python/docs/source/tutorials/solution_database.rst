@@ -55,6 +55,14 @@ solutions (``omit_infinite=True``); each row is a solution, with a column per co
    assert len(df) == 6                         # six finite endpoints (the node counts twice)
    assert {'x0', 'x1', 'is_real', 'is_singular', 'multiplicity'} <= set(df.columns)
 
+The last column, ``system``, is a reference to the (target) system these solutions satisfy -- cheap,
+since every row shares the *one* object rather than a copy, and the natural key when you stack the
+frames from *several* solves into one database and need to know which solve each row came from.
+
+.. testcode::
+
+   assert df['system'].iloc[0] is df['system'].iloc[-1]   # one shared reference, not a per-row copy
+
 Now each category is a filter on the frame -- and the metadata rides along with the points, so you
 never have to line up two parallel lists by index:
 

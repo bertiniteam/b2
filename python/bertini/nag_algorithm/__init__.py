@@ -75,11 +75,12 @@ _SOLUTION_METADATA_FIELDS = (
 def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True):
     """The solve as a pandas DataFrame -- one row per solution, the "database of solutions".
 
-    Columns are the solution coordinates ``x0, x1, ...`` followed by every per-solution metadata
-    field (``is_finite``, ``is_real``, ``is_singular``, ``multiplicity``, ``condition_number``,
-    ``endgame_success``, ``max_precision_used``, ...).  Each category is then a one-line filter,
-    e.g. ``df[df.is_real & ~df.is_singular]`` (nonsingular real) or ``df[~df.is_finite]`` (at
-    infinity).
+    Columns are the solution coordinates ``x0, x1, ...``, then every per-solution metadata field
+    (``is_finite``, ``is_real``, ``is_singular``, ``multiplicity``, ``condition_number``,
+    ``endgame_success``, ``max_precision_used``, ...), and finally ``system`` -- a reference to the
+    (target) system these solutions satisfy, so rows accumulated from several solves stay
+    identifiable.  Each category is then a one-line filter, e.g. ``df[df.is_real & ~df.is_singular]``
+    (nonsingular real) or ``df[~df.is_finite]`` (at infinity).
 
     Parameters
     ----------
@@ -115,15 +116,22 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True):
 
     points = self.all_solutions(user_coords)
     metadata = self.solution_metadata()
+    system = self.target_system()       # the system these solutions satisfy (one shared reference)
     rows = []
     for i in range(min(len(points), len(metadata))):
         m = metadata[i]
         if omit_infinite and not m.is_finite:
             continue
         pt = points[i]
-        row = {'x{}'.format(k): pt[k] for k in range(len(pt))}
+        # COPY each coordinate as it is read.  Indexing the eigenpy vector returns a scalar that
+        # aliases a reused internal buffer; storing the live references and letting pandas read them
+        # later collapses every cell to one value.  type(c)(c) makes an independent copy of the
+        # right type -- a Python complex for a double solve, a bertini.multiprec.Complex for a
+        # multiprecision one (so no precision is lost) -- and must happen before the next index.
+        row = {'x{}'.format(k): (lambda c: type(c)(c))(pt[k]) for k in range(len(pt))}
         for field in _SOLUTION_METADATA_FIELDS:
             row[field] = getattr(m, field)
+        row['system'] = system          # a reference, so rows from different solves stay identifiable
         rows.append(row)
 
     return pd.DataFrame(rows)

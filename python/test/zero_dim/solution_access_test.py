@@ -109,6 +109,52 @@ def test_to_dataframe_coords_match_points(two_circles_solver):
         assert a == pytest.approx(b)
 
 
+@pytest.fixture
+def four_root_solver():
+    """x^2 - 1 = 0 and y^2 - 1 = 0: four distinct finite roots (+/-1, +/-1)."""
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys_ = pb.System()
+    sys_.add_function(x * x - 1)
+    sys_.add_function(y * y - 1)
+    sys_.add_variable_group(pb.VariableGroup([x, y]))
+    solver = ZeroDim(sys_)
+    solver.solve()
+    return solver
+
+
+def test_to_dataframe_coordinates_are_independent_per_row(four_root_solver):
+    """Regression: the coordinate columns must hold each row's OWN value.
+
+    to_dataframe stored the value returned by indexing the eigenpy solution vector, which is a
+    view aliasing a reused internal buffer; the live references then collapsed so every row showed
+    the same coordinate.  Two rows never triggered it -- it needs several distinct solutions.  The
+    four roots (+/-1, +/-1) have two distinct x-values and two distinct y-values, so an aliased
+    frame would show only one.  Assert the DataFrame reproduces all_solutions exactly.
+    """
+    pytest.importorskip("pandas")
+    s = four_root_solver
+    df = s.to_dataframe()
+    assert len(df) == 4
+
+    key = lambda z: (round(z.real, 6), round(z.imag, 6))
+    for col, coord in (('x0', 0), ('x1', 1)):
+        from_df  = sorted((complex(v) for v in df[col]), key=key)
+        from_pts = sorted((complex(p[coord]) for p in s.finite_solutions()), key=key)
+        for a, b in zip(from_df, from_pts):
+            assert a == pytest.approx(b)
+    # the x-coordinates really are both +1 and -1 (not one value repeated)
+    assert {round(complex(v).real) for v in df['x0']} == {-1, 1}
+
+
+def test_to_dataframe_has_system_reference_column(four_root_solver):
+    """Each row carries a reference to the system its solution satisfies (one shared object)."""
+    pytest.importorskip("pandas")
+    df = four_root_solver.to_dataframe()
+    assert 'system' in df.columns
+    assert all(isinstance(s, pb.System) for s in df['system'])
+    assert df['system'].map(id).nunique() == 1          # a single shared reference, not N copies
+
+
 def test_to_dataframe_without_pandas_raises(two_circles_solver, monkeypatch):
     """When pandas is absent, to_dataframe raises a helpful ImportError (not the point accessors)."""
     monkeypatch.setitem(sys.modules, 'pandas', None)   # makes `import pandas` raise ImportError
