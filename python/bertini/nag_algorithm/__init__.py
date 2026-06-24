@@ -67,6 +67,46 @@ if hasattr(_pybnalag, 'Slice'):
     _pybnalag.Slice.__len__ = lambda self: self.dimension()
 
 
+# --- Bertini 1 / classic emission -----------------------------------------------------------
+#
+# A slice's linear forms are ordinary System functions (the classic writer expands the
+# LinearFormsBlock), so a slice emits to a Bertini 1 input file via its standalone system.  A
+# witness set emits its SQUARE system -- the witness set's system with the slice's forms appended
+# (concatenate) -- which is what you would track in Bertini 1 for cross-validation.
+def _slice_to_classic_input(self, **kwargs):
+    """Emit this slice's linear forms as a Bertini 1 classic input file (see System.to_classic_input)."""
+    return self.as_system().to_classic_input(**kwargs)
+
+
+def _witness_system(self):
+    """The square system whose isolated solutions are the witness points: this witness set's system
+    with the slice's linear forms appended.  Requires the slice and system to share variables.
+
+    Built by cloning the witness set's system (a copy that shares the variable nodes, so it is left
+    unmutated) and adding the slice's linear-forms block to the clone -- not concatenate(), which
+    assumes polynomial blocks and cannot append a structured linear-forms block."""
+    from bertini.system import clone
+    sys = clone(self.get_system())
+    self.get_slice().add_to(sys)
+    return sys
+
+
+def _witness_to_classic_input(self, **kwargs):
+    """Emit the witness (square) system as a Bertini 1 classic input file (see System.to_classic_input)."""
+    return self.witness_system().to_classic_input(**kwargs)
+
+
+if hasattr(_pybnalag, 'Slice'):
+    _pybnalag.Slice.to_classic_input = _slice_to_classic_input
+
+for _ws_name in dir(_pybnalag):
+    if _ws_name.startswith('WitnessSet'):
+        _ws_cls = getattr(_pybnalag, _ws_name)
+        if isinstance(_ws_cls, type):
+            _ws_cls.witness_system = _witness_system
+            _ws_cls.to_classic_input = _witness_to_classic_input
+
+
 # --- to_dataframe: a ZeroDim solve as a pandas DataFrame -- the "database of solutions" ---
 #
 # One ROW per solution (per tracked path), columns = the coordinates (x0, x1, ...) followed by

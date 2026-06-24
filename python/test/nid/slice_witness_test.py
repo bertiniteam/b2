@@ -247,6 +247,37 @@ def test_witness_set_from_parts_and_consistency():
     assert w.get_system().num_functions() == 1
 
 
+# ---- Bertini 1 / classic emission ----------------------------------------------------------
+
+def test_slice_to_classic_input():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])     # 2x + 3y + 1
+    text = s.to_classic_input()
+    assert 'CONFIG' in text and 'INPUT' in text
+    assert text.count('END;') == 2
+    assert 'x' in text and 'y' in text
+    assert 'f0' in text
+
+
+def test_witness_set_classic_emission():
+    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    vg = pb.VariableGroup([x, y, z])
+    sys = pb.System()
+    sys.add_variable_group(vg)
+    sys.add_function(x * x + y * y + z * z - 1)
+
+    s = Slice.random_complex(vg, 2)
+    w = WitnessSetMultiplePrecision([_mpvec(1, 0, 0), _mpvec(0, 1, 0)], s, sys)
+
+    # the witness (square) system: 1 sphere function + 2 slice forms in 3 variables.
+    wsys = w.witness_system()
+    assert wsys.num_functions() == 3
+
+    text = w.to_classic_input()
+    assert 'CONFIG' in text and 'INPUT' in text
+    assert text.count('END;') == 2
+
+
 # ---- serialization (pickle / deepcopy) -----------------------------------------------------
 
 def test_slice_pickle_roundtrip():
