@@ -64,7 +64,7 @@ _enhance_owners(_pybnalag)
 # the classification flags come first since they are what you filter on.
 _SOLUTION_METADATA_FIELDS = (
     'path_index', 'solution_index',
-    'is_finite', 'is_real', 'is_singular', 'multiplicity',
+    'is_finite', 'is_real', 'is_singular', 'multiplicity', 'multiplicity_representative',
     'condition_number', 'function_residual', 'newton_residual',
     'accuracy_estimate', 'accuracy_estimate_user_coords',
     'cycle_num', 'endgame_success', 'pre_endgame_success', 'final_time_used',
@@ -72,7 +72,7 @@ _SOLUTION_METADATA_FIELDS = (
 )
 
 
-def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True):
+def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_multiplicities=True):
     """The solve as a pandas DataFrame -- one row per solution, the "database of solutions".
 
     Columns are the solution coordinates ``x0, x1, ...``, then every per-solution metadata field
@@ -91,6 +91,12 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True):
         Drop the endpoints not classified finite (``is_finite`` False) -- the at-infinity and
         failed paths.  ``True`` by default, so the frame holds just the genuine finite solutions;
         pass ``False`` to get every tracked path (their coordinate cells may be empty/NaN).
+    merge_multiplicities : bool
+        Collapse a multiplicity-``m`` solution -- which the solver returns as ``m`` coincident
+        endpoints -- to its single representative row (``multiplicity`` still records ``m``).
+        ``True`` by default.  Pass ``False`` to keep every endpoint, including the ``m-1``
+        duplicate copies.  The grouping is the solver's own (the C++ clustering that computes
+        multiplicity), read off ``multiplicity_representative``; this does not re-cluster.
 
     Returns
     -------
@@ -122,6 +128,8 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True):
         m = metadata[i]
         if omit_infinite and not m.is_finite:
             continue
+        if merge_multiplicities and not m.multiplicity_representative:
+            continue                    # a duplicate copy of an already-kept multiple solution
         pt = points[i]
         # COPY each coordinate as it is read.  Indexing the eigenpy vector returns a scalar that
         # aliases a reused internal buffer; storing the live references and letting pandas read them

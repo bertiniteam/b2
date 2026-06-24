@@ -146,6 +146,7 @@ struct SolutionMetaData
 	NumErrorT function_residual; 	// the latest function residual
 
 	int multiplicity = 1; 		// multiplicity
+	bool multiplicity_representative = true; // is this the chosen single representative of its multiplicity cluster? (the m copies of a multiplicity-m point share one point; exactly one is the representative, the rest are false)
 	bool is_real = false;       		// real flag: whether the (dehomogenized) endpoint is real
 	bool is_finite = false;     		// finite flag: whether the endpoint is finite (not at infinity)
 	bool is_singular = false;       		// singular flag: whether the endpoint is singular (multiple, or ill-conditioned)
@@ -167,6 +168,7 @@ struct SolutionMetaData
 			 && this->endgame_success == other.endgame_success
 			 && this->function_residual == other.function_residual
 			 && this->multiplicity == other.multiplicity
+			 && this->multiplicity_representative == other.multiplicity_representative
 			 && this->is_real == other.is_real
 			 && this->is_finite == other.is_finite
 			 && this->is_singular == other.is_singular
@@ -198,6 +200,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 	out << "function_residual = " << meta.function_residual << std::endl;
 
 	out << "multiplicity = " << meta.multiplicity << std::endl;
+	out << "multiplicity_representative = " << meta.multiplicity_representative << std::endl;
 	out << "is_real = " << meta.is_real << std::endl;
 	out << "is_finite = " << meta.is_finite << std::endl;
 	out << "is_singular = " << meta.is_singular << std::endl;
@@ -1617,6 +1620,10 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 						{
 							++solution_final_metadata_[ii].multiplicity;
 							++solution_final_metadata_[jj].multiplicity;
+							// jj coincides with the earlier ii, so it is a duplicate, not the
+							// representative; the lowest-index member of a cluster is never marked
+							// here, so it remains the single representative.
+							solution_final_metadata_[jj].multiplicity_representative = false;
 						}
 					}
 				}

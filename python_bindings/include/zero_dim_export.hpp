@@ -116,6 +116,12 @@ void ExposeSolutionMetaData(std::string const& class_name){
 		"How many paths ended at this same point (1 for a simple solution). Computed by comparing "
 		"dehomogenized endpoints with the infinity norm against final_tolerance * "
 		"same_point_tolerance_multiplier.")
+	.def_readwrite("multiplicity_representative",&MDT::multiplicity_representative,
+		"For a multiplicity-m solution the solver returns m coincident endpoints; exactly one of "
+		"them is the chosen representative (True) and the other m-1 are duplicates (False).  Use it "
+		"to collapse a multiple solution to a single row -- which is what ZeroDim.to_dataframe() does "
+		"by default (merge_multiplicities=True).  Simple solutions and at-infinity/failed endpoints "
+		"are each their own representative (True).")
 	.def_readwrite("is_real",&MDT::is_real,
 		"Whether the (dehomogenized) endpoint is real, i.e. the infinity norm of its coordinates' "
 		"imaginary parts is below PostProcessingConfig.real_threshold. Only meaningful for finite, "

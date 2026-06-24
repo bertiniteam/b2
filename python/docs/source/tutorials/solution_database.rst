@@ -52,8 +52,19 @@ solutions (``omit_infinite=True``); each row is a solution, with a column per co
    import pandas as pd
 
    df = solver.to_dataframe()
-   assert len(df) == 6                         # six finite endpoints (the node counts twice)
+   assert len(df) == 5                         # five distinct finite solutions
    assert {'x0', 'x1', 'is_real', 'is_singular', 'multiplicity'} <= set(df.columns)
+
+**One row per distinct solution.**  A multiplicity-:math:`m` solution arrives from the solver as
+:math:`m` coincident endpoints -- the node here is the end of *two* paths.  Carrying :math:`m`
+identical rows around is a nuisance, so :meth:`to_dataframe` **merges each cluster to one
+representative row by default** (``merge_multiplicities=True``); the ``multiplicity`` column still
+records the :math:`m`.  The clustering is the solver's own (the same C++ test that computes
+multiplicity), not a re-derivation here.  Pass ``merge_multiplicities=False`` to get every endpoint:
+
+.. testcode::
+
+   assert len(solver.to_dataframe(merge_multiplicities=False)) == 6     # the node counted twice
 
 The last column, ``system``, is a reference to the (target) system these solutions satisfy -- cheap,
 since every row shares the *one* object rather than a copy, and the natural key when you stack the
@@ -70,11 +81,11 @@ never have to line up two parallel lists by index:
 
    real_simple    = df[df.is_real & ~df.is_singular]      # transverse real crossings
    complex_simple = df[~df.is_real & ~df.is_singular]      # a complex-conjugate pair
-   singular       = df[df.is_singular]                     # the node, multiplicity 2
+   singular       = df[df.is_singular]                     # the node, one row, multiplicity 2
 
    assert len(real_simple) == 2
    assert len(complex_simple) == 2
-   assert len(singular) == 2 and (singular.multiplicity == 2).all()
+   assert len(singular) == 1 and (singular.multiplicity == 2).all()
 
 (The three paths that diverged are not in the frame; ``solver.to_dataframe(omit_infinite=False)``
 keeps them, and ``solver.infinite_solutions()`` returns just those at-infinity endpoints.)

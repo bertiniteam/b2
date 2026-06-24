@@ -155,6 +155,44 @@ def test_to_dataframe_has_system_reference_column(four_root_solver):
     assert df['system'].map(id).nunique() == 1          # a single shared reference, not N copies
 
 
+@pytest.fixture
+def multiplicity_solver():
+    """x^2 = 0 and y^2 = 0: a single solution (0,0) of multiplicity four (four coincident paths)."""
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys_ = pb.System()
+    sys_.add_function(x * x)
+    sys_.add_function(y * y)
+    sys_.add_variable_group(pb.VariableGroup([x, y]))
+    solver = ZeroDim(sys_)
+    solver.solve()
+    return solver
+
+
+def test_to_dataframe_merges_multiplicities_by_default(multiplicity_solver):
+    """The m coincident copies of a multiplicity-m point collapse to one representative row."""
+    pytest.importorskip("pandas")
+    df = multiplicity_solver.to_dataframe()
+    assert len(df) == 1                          # one representative for the (0,0) cluster
+    assert int(df['multiplicity'].iloc[0]) == 4  # but it still records the multiplicity
+    assert bool(df['multiplicity_representative'].all())
+
+
+def test_to_dataframe_can_keep_every_copy(multiplicity_solver):
+    """merge_multiplicities=False keeps all m endpoints, including the duplicates."""
+    pytest.importorskip("pandas")
+    df = multiplicity_solver.to_dataframe(merge_multiplicities=False)
+    assert len(df) == 4                                       # every coincident endpoint
+    assert int(df['multiplicity_representative'].sum()) == 1  # still exactly one representative
+
+
+def test_merge_is_a_noop_for_simple_roots(four_root_solver):
+    """With no multiplicities, merging changes nothing -- every root is its own representative."""
+    pytest.importorskip("pandas")
+    merged = four_root_solver.to_dataframe()
+    kept = four_root_solver.to_dataframe(merge_multiplicities=False)
+    assert len(merged) == len(kept) == 4
+
+
 def test_to_dataframe_without_pandas_raises(two_circles_solver, monkeypatch):
     """When pandas is absent, to_dataframe raises a helpful ImportError (not the point accessors)."""
     monkeypatch.setitem(sys.modules, 'pandas', None)   # makes `import pandas` raise ImportError
