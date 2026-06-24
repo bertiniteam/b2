@@ -155,7 +155,7 @@ def test_zerodim_lifecycle_events():
                 started.append(1)
             elif isinstance(e, nag.observers.AlgorithmComplete):
                 completed.append(1)
-                solver_nsol.append(len(e.solver().solutions()))   # concrete solver API
+                solver_nsol.append(len(e.solver().all_solutions()))   # concrete solver API
             elif isinstance(e, nag.observers.PathStarted):
                 begins.append(e.path_index())
             elif isinstance(e, nag.observers.PathComplete):
@@ -198,7 +198,7 @@ def test_solution_path_collector_one_series_per_solution_path():
     solver.add_observer(a)
     solver.solve()
 
-    assert len(solver.solutions()) == 2
+    assert len(solver.all_solutions()) == 2
     assert len(a.series) == 2                       # exactly one per solution path
     for path in a.series:
         assert len(path) > 0
@@ -242,7 +242,7 @@ def test_zerodim_solve_collects_all_paths():
     solver.get_tracker().add_observer(a)
     solver.solve()
 
-    assert len(solver.solutions()) == 2
+    assert len(solver.all_solutions()) == 2
 
     # The solver reuses one tracker for both the homotopy paths AND the endgame
     # sub-tracks, so we collect more than two series ...

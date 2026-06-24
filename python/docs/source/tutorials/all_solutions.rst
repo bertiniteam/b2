@@ -33,10 +33,10 @@ Newton solver returns nothing useful.  But over the complex numbers they meet in
 number).
 
 Solve, and collect the finite solutions.  ``ZeroDim`` is a small factory over the bound
-solver classes: ``ZeroDim(sys)`` is the Cauchy endgame in multiple precision with a total-degree
+solver classes: ``ZeroDim(sys)`` is the Cauchy endgame in adaptive precision with a total-degree
 start system, and you pick the rest with strings -- ``endgame=`` (``'cauchy'`` / ``'powerseries'``),
 ``mptype=`` (``'double'`` / ``'multiple'`` / ``'adaptive'``), and ``startsystem=`` (``'totaldegree'``
-/ ``'mhom'``).  Here we ask for adaptive precision so ill-conditioned paths still succeed:
+/ ``'mhom'``).  Here we ask for adaptive precision explicitly so ill-conditioned paths still succeed:
 
 .. testcode::
 
@@ -70,6 +70,45 @@ exactly the total-degree Bézout number of start points (four), and tracked one 
 path from each.  Paths that diverge to infinity are reported as failures rather than
 silently dropped, so the successful endpoints are the complete set of finite isolated
 solutions.
+
+Every solution, and the at-infinity ones
+========================================
+
+``finite_solutions()`` above is one of a family of accessors.  ``all_solutions()`` is the whole
+list -- **one entry per tracked path**, finite and at-infinity alike -- and the categories are
+filtered views of it.  Because this system has four finite solutions and the total-degree start
+tracked exactly four paths, none diverged, so the finite set *is* the whole set here:
+
+.. testcode::
+
+    assert len(solver.all_solutions()) == 4          # one per tracked path
+    assert len(solver.finite_solutions()) == 4        # the finite ones
+    assert len(solver.infinite_solutions()) == 0      # the at-infinity ones (is_finite is False)
+
+``infinite_solutions()`` is the complement of ``finite_solutions()`` within ``all_solutions()`` --
+the endpoints the endgame resolved as diverging to infinity.  The other filtered views are
+``real_solutions()``, ``nonsingular_solutions()``, and ``singular_solutions()``; every accessor
+takes ``user_coords=False`` to hand back the solver's internal homogenized coordinates instead of
+your variables'.
+
+The database of solutions
+=========================
+
+For bookkeeping across a whole solve -- or many solves -- ``to_dataframe()`` returns the solve as a
+:mod:`pandas` DataFrame: **one row per solution**, with a column per coordinate (``x0``, ``x1``,
+...) followed by every field of the per-solution metadata (``is_finite``, ``is_real``,
+``is_singular``, ``multiplicity``, ``condition_number``, ``endgame_success``, ...).  Each category
+is then a one-line filter on the frame, and you have the metadata right alongside the points::
+
+    df = solver.to_dataframe()                  # finite solutions only, by default
+    df[df.is_real & ~df.is_singular]            # the nonsingular real ones, with their metadata
+
+    everything = solver.to_dataframe(omit_infinite=False)   # every tracked path
+    everything[~everything.is_finite]                       # the endpoints at infinity
+
+``omit_infinite`` is ``True`` by default, so the frame holds just the genuine finite solutions.
+:mod:`pandas` is an optional dependency: ``to_dataframe()`` raises a helpful :class:`ImportError`
+if it is not installed, and the point accessors above are the no-pandas path.
 
 A note on precision
 ===================

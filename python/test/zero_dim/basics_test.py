@@ -44,7 +44,7 @@ def test_solution_count(circle_intersection_solver):
     that the solver runs.
     """
     circle_intersection_solver.solve()
-    solns = circle_intersection_solver.solutions()
+    solns = circle_intersection_solver.all_solutions()
     assert len(solns) == 2
 
 
@@ -60,7 +60,7 @@ def test_custom_tolerances(circle_intersection_solver):
     solver.set_config(tols)
 
     solver.solve()
-    solns = solver.solutions()
+    solns = solver.all_solutions()
     assert len(solns) == 2
 
 
@@ -77,7 +77,7 @@ def test_power_series_endgame_variant():
 
     solver = ZeroDimPowerSeriesAdaptivePrecisionTotalDegree(sys)
     solver.solve()
-    solns = solver.solutions()
+    solns = solver.all_solutions()
     assert len(solns) == 2
 
 
@@ -120,7 +120,7 @@ def solved():
 
 def test_solutions_are_in_user_coordinates_by_default(solved):
     _, solver = solved
-    sols = solver.solutions()
+    sols = solver.all_solutions()
     assert len(sols) == 2
     for s in sols:
         assert len(s) == 2  # the user's variables, not [h, x, y]
@@ -129,10 +129,10 @@ def test_solutions_are_in_user_coordinates_by_default(solved):
 
 def test_solutions_internal_coords_are_explicit_optout(solved):
     _, solver = solved
-    internal = solver.solutions(user_coords=False)
+    internal = solver.all_solutions(user_coords=False)
     assert len(internal) == 2
     ts = solver.target_system()
-    user = solver.solutions()
+    user = solver.all_solutions()
     for i in range(2):
         assert len(internal[i]) == 3  # [hom_var, x, y]
         dehomed = ts.dehomogenize_point(internal[i])
@@ -148,8 +148,8 @@ def test_homogenize_point_reenters_internal_coordinates(solved):
     """the lift: user coords -> homogenized, on the target system's patch."""
     _, solver = solved
     ts = solver.target_system()
-    user = solver.solutions()
-    internal = solver.solutions(user_coords=False)
+    user = solver.all_solutions()
+    internal = solver.all_solutions(user_coords=False)
     for i in range(2):
         lifted = ts.homogenize_point(user[i])
         assert len(lifted) == 3

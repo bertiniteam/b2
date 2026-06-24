@@ -30,7 +30,7 @@ def _solve(fixed, start_moving, end_moving, start_points, nvars):
     target = pb.system.concatenate(fixed, end_moving)
     solver = na.user_homotopy(H, start_points, target)
     solver.solve()
-    return H, _roots(solver.solutions(), nvars)
+    return H, _roots(solver.all_solutions(), nvars)
 
 
 def _fixed_rows_have_zero_dHdt(H, num_fixed_rows, num_vars):

@@ -32,7 +32,7 @@ def test_circle_intersect_line_via_add_linear_solves():
 
     zd = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
     zd.solve()
-    got = _roots_xy(zd.solutions())
+    got = _roots_xy(zd.all_solutions())
 
     assert len(got) == 2
     expected = sorted([(0.0, 1.0), (0.8, -0.6)])
@@ -51,7 +51,7 @@ def test_circle_intersect_line_via_add_linear_forms_solves():
 
     zd = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
     zd.solve()
-    got = _roots_xy(zd.solutions())
+    got = _roots_xy(zd.all_solutions())
 
     assert len(got) == 2
     expected = sorted([(0.0, 1.0), (0.8, -0.6)])

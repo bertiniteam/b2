@@ -178,7 +178,7 @@ def test_end_to_end_solve_matches_sympy(sxy):
     sys = system_from_sympy(eqs, [sx, sy])
     solver = ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
     solver.solve()
-    got = [np.array([complex(s[i]) for i in range(len(s))]) for s in solver.solutions()]
+    got = [np.array([complex(s[i]) for i in range(len(s))]) for s in solver.all_solutions()]
 
     exact = sp.solve(eqs, [sx, sy])
     want = [np.array([complex(r[0]), complex(r[1])]) for r in exact]

@@ -23,7 +23,7 @@ def test_solve_once_then_sweep_a_parameter():
     generic.add_function(xg * xg - 4)
     zd0 = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(generic)
     zd0.solve()
-    start_points = zd0.solutions()
+    start_points = zd0.all_solutions()
     assert _roots_real(start_points) == [-2.0, 2.0]
 
     # Now reuse those two solutions as start points to move the parameter p: 4 -> p_target,
@@ -42,7 +42,7 @@ def test_solve_once_then_sweep_a_parameter():
 
         solver = pb.nag_algorithm.user_homotopy(H, start_points, target)
         solver.solve()
-        assert _roots_real(solver.solutions()) == expected
+        assert _roots_real(solver.all_solutions()) == expected
 
 
 def test_user_homotopy_rejects_bad_precision():
@@ -55,7 +55,7 @@ def test_user_homotopy_rejects_bad_precision():
 
 
 def test_user_homotopy_rejects_solver_as_start_points():
-    # Regression for issue #258: passing the start-point *solver* (not its .solutions())
+    # Regression for issue #258: passing the start-point *solver* (not its .all_solutions())
     # used to fail with a cryptic "object is not iterable"; now it explains the mistake.
     x, t = pb.Variable('x'), pb.Variable('t')
     H = pb.System(); H.add_variable_group(pb.VariableGroup([x])); H.add_function(x * x - (4 - 3 * t)); H.add_path_variable(t)
@@ -79,6 +79,6 @@ def test_coefficient_parameter_homotopy_helper():
     gen_solver.solve()
 
     H = pb.nag_algorithm.coefficient_parameter_homotopy(target, generic)
-    solver = pb.nag_algorithm.user_homotopy(H, gen_solver.solutions(), target)
+    solver = pb.nag_algorithm.user_homotopy(H, gen_solver.all_solutions(), target)
     solver.solve()
-    assert _roots_real(solver.solutions()) == [-3.0, 3.0]
+    assert _roots_real(solver.all_solutions()) == [-3.0, 3.0]

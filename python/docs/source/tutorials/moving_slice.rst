@@ -57,7 +57,7 @@ intersections with it, :math:`(\pm 1, 0)`; at :math:`t=0` the slice is the diago
     solver = nag_algorithm.user_homotopy(H, start_points, target)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
-                   for s in solver.solutions())
+                   for s in solver.all_solutions())
 
     r = round(1 / np.sqrt(2), 4)
     assert roots == sorted([(r, r), (-r, -r)])        # circle ∩ diagonal = (±1/√2, ±1/√2)
@@ -97,7 +97,7 @@ slice); only the moving slice carries :math:`t`:
     solver = nag_algorithm.user_homotopy(H, start_points, target)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4), round(complex(s[2]).real, 4))
-                   for s in solver.solutions())
+                   for s in solver.all_solutions())
     r = round(1 / np.sqrt(2), 4)
     assert roots == sorted([(r, r, 0.0), (-r, -r, 0.0)])
 
@@ -146,7 +146,7 @@ moving row is :math:`\gamma\,(x-1)(x+1)`, whose roots on the slice are :math:`(\
     solver = nag_algorithm.user_homotopy(H, start_points, target)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
-                   for s in solver.solutions())
+                   for s in solver.all_solutions())
     s3 = round(np.sqrt(3) / 2, 4)
     assert roots == sorted([(s3, 0.5), (-s3, 0.5)])     # circle ∩ {y = 1/2}
 

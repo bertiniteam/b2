@@ -53,7 +53,7 @@ def _eigen_system_projective(A):
 
 def _recovered_eigenvalues(solver):
     # lam is the last user (dehomogenized) coordinate in both formulations.
-    sols = solver.solutions()
+    sols = solver.all_solutions()
     md = solver.solution_metadata()
     return sorted(
         complex(sols[i][len(sols[i]) - 1]).real

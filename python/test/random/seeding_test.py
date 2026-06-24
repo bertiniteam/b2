@@ -106,7 +106,7 @@ def _as_complex(pt):
 
 def _sorted_internal(solver):
     """Internal (patched) coords, sorted to a canonical order for comparison."""
-    internal = [_as_complex(s) for s in solver.solutions(user_coords=False)]
+    internal = [_as_complex(s) for s in solver.all_solutions(user_coords=False)]
     return sorted(internal, key=lambda v: (round(v[1].real, 9), round(v[1].imag, 9)))
 
 
@@ -124,7 +124,7 @@ def test_user_solutions_are_seed_independent():
     """The patch differs by seed, but the actual solutions do not."""
     for seed in (31415, 27182):
         solver = _solve_circle_line(seed)
-        sols = solver.solutions()
+        sols = solver.all_solutions()
         assert len(sols) == 2
         for s in sols:
             d = min(np.linalg.norm(_as_complex(s) - k) for k in KNOWN)

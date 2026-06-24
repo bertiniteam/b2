@@ -508,6 +508,90 @@ BOOST_AUTO_TEST_CASE(filtered_solution_accessors)
 	BOOST_CHECK_EQUAL(zd.FiniteSolutions(false).size(), zd.FiniteSolutions(true).size());
 }
 
+// InfiniteSolutions: the at-infinity complement of FiniteSolutions.  The system {x*y - 1, x - 1}
+// has Bezout number 2 but exactly one affine solution (1,1); the second total-degree path must
+// diverge -- so there is one finite endpoint and one at infinity.
+BOOST_AUTO_TEST_CASE(infinite_solutions_at_infinity)
+{
+	using namespace bertini;
+
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	System sys;
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x - 1);
+	sys.AddVariableGroup(VariableGroup{x, y});
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System, start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto r = zd.Report();
+	BOOST_CHECK_EQUAL(zd.FinalSolutionMetadata().size(), 2u);   // Bezout 2
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(),       1u);
+	BOOST_CHECK_EQUAL(zd.InfiniteSolutions().size(),     1u);
+
+	// finite + infinite partition the whole list (no failed paths on this clean solve)
+	BOOST_CHECK_EQUAL(r.num_failed, 0u);
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size() + zd.InfiniteSolutions().size(),
+	                  zd.FinalSolutionMetadata().size());
+
+	// the at-infinity count matches the report's diverged bucket
+	BOOST_CHECK_EQUAL(zd.InfiniteSolutions().size(), r.num_diverged);
+
+	// user vs internal coordinates: same count
+	BOOST_CHECK_EQUAL(zd.InfiniteSolutions(false).size(), zd.InfiniteSolutions(true).size());
+}
+
+// multiplicity_representative: a multiplicity-m solution arrives as m coincident endpoints, and
+// the solver must mark exactly ONE of them the representative (the rest false), so a consumer can
+// collapse the cluster to one row.  {x^2, y^2} has a single solution (0,0) of multiplicity 4.
+BOOST_AUTO_TEST_CASE(multiplicity_representative_marks_one_per_cluster)
+{
+	using namespace bertini;
+
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	System sys;
+	sys.AddFunction(pow(x, 2));
+	sys.AddFunction(pow(y, 2));
+	sys.AddVariableGroup(VariableGroup{x, y});
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System, start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto const& md = zd.FinalSolutionMetadata();
+	BOOST_CHECK_EQUAL(md.size(), 4u);                                // Bezout 2*2 = 4 paths
+
+	unsigned representatives = 0, duplicates = 0;
+	for (auto const& m : md)
+	{
+		if (!m.is_finite) continue;
+		if (m.multiplicity_representative) { ++representatives; BOOST_CHECK_EQUAL(m.multiplicity, 4); }
+		else                                 ++duplicates;
+	}
+	BOOST_CHECK_EQUAL(representatives, 1u);                          // exactly one representative
+	BOOST_CHECK_EQUAL(duplicates,     3u);                          // the other m-1 copies
+
+	// the representative count equals the number of DISTINCT finite solutions in the report
+	BOOST_CHECK_EQUAL(representatives, zd.Report().num_finite_solutions);
+
+	// a clean simple-root solve marks every finite endpoint a representative (nothing to merge):
+	// x^2 - 1, y^2 - 1 has four distinct simple roots.
+	System simple;
+	simple.AddFunction(pow(x, 2) - 1);
+	simple.AddFunction(pow(y, 2) - 1);
+	simple.AddVariableGroup(VariableGroup{x, y});
+	auto zd2 = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System, start_system::TotalDegree>(simple);
+	zd2.DefaultSetup();
+	zd2.Solve();
+	unsigned reps2 = 0;
+	for (auto const& m : zd2.FinalSolutionMetadata())
+		if (m.is_finite && m.multiplicity_representative) ++reps2;
+	BOOST_CHECK_EQUAL(reps2, 4u);
+}
+
 // Regression: a fixed-multiple (MultiplePrecisionTracker) zero-dim solve used to throw at the start
 // of tracking -- "start point ... differing precision from default (20!=16)" -- because the tracker
 // (built at DefaultPrecision) and the config-driven ambient/thread precision (DoublePrecision)

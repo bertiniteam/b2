@@ -73,7 +73,7 @@ keep the ones with a tiny residual.
    bertini.random.set_random_seed(1)               # reproducible generic coefficients + gamma
    zd = bertini.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(randomized)
    zd.solve()
-   solutions = zd.solutions()
+   solutions = zd.all_solutions()
    assert len(solutions) == 4                       # the two we want, plus two extraneous
 
    def satisfies_original(point):
@@ -130,7 +130,7 @@ a total-degree start would track :math:`2^2 = 4`. Same answer, half the work.
        coords = np.array([complex(c) for c in point])
        return max(abs(complex(v)) for v in original.eval(coords)) < 1e-7
 
-   true_solutions = [np.array([complex(c) for c in s]) for s in zd.solutions() if satisfies(s)]
+   true_solutions = [np.array([complex(c) for c in s]) for s in zd.all_solutions() if satisfies(s)]
 
    assert len(true_solutions) == 1
    p = true_solutions[0]

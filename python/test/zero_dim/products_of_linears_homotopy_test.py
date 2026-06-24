@@ -69,7 +69,7 @@ def test_user_authored_product_of_linears_solves_to_known_roots():
     H = nag_algorithm.blend_homotopy(T, S, gamma=linalg.coefficient(_GAMMA))
     solver = nag_algorithm.user_homotopy(H, _start_points(), T)
     solver.solve()
-    sols = solver.solutions()
+    sols = solver.all_solutions()
 
     assert len(sols) == 4                                   # guard against an empty/short result
 
@@ -144,7 +144,7 @@ def test_multi_affine_group_products_of_linears_solves():
     H = nag_algorithm.blend_homotopy(T, S, gamma=linalg.coefficient(_GAMMA))
     solver = nag_algorithm.user_homotopy(H, start_points, T)
     solver.solve()
-    sols = solver.solutions()
+    sols = solver.all_solutions()
 
     assert len(sols) == 4
     phi, psi = (1 + math.sqrt(5)) / 2, (1 - math.sqrt(5)) / 2

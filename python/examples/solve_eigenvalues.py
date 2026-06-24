@@ -65,7 +65,7 @@ def recovered_eigenvalues(solver):
     We trust the solver's own classification: a real eigenvalue is the lam coordinate of a path
     whose endgame succeeded and that the library calls finite (is_finite) -- no hand-rolled cutoff.
     """
-    sols = solver.solutions()
+    sols = solver.all_solutions()
     md = solver.solution_metadata()
     return [
         complex(sols[i][len(sols[i]) - 1]).real

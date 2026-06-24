@@ -97,7 +97,7 @@ def _solve(resolve_attempts, predictor=pb.tracking.Predictor.Euler, step=COARSE_
 
     report = solver.endgame_boundary_metadata()
     roots = sorted({round(complex(v[0]).real, 3)
-                    for v in solver.solutions() if len(v) > 0})
+                    for v in solver.all_solutions() if len(v) > 0})
     return report, roots
 
 

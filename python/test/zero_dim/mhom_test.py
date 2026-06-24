@@ -48,7 +48,7 @@ def _solve(solver_cls, seed=1):
 
 def _successful_roots(solver):
     """User-coordinate solutions of paths that reached the endgame successfully."""
-    sols = solver.solutions()
+    sols = solver.all_solutions()
     md = solver.solution_metadata()
     return [sols[i] for i in range(len(sols))
             if int(md[i].endgame_success) == OK and len(sols[i]) == 2]

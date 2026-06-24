@@ -19,9 +19,9 @@ solver = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
 solver.solve()
 
 print('\nsolutions in homogeneous space:')
-for soln in solver.solutions():
+for soln in solver.all_solutions():
 	print(soln)
 
 print('\nsolutions in original affine space:')
-for soln in solver.solutions():
+for soln in solver.all_solutions():
 	print(sys.dehomogenize_point(soln))
