@@ -49,3 +49,4 @@ Each ADR follows the template:
 | [0029](0029-gamma-trick-max-precision-unit-modulus.md) | The gamma-trick constant is a unit-modulus complex generated at maximum precision | Numerics / system |
 | [0030](0030-fixed-multiple-uniform-ambient-precision-adaptive-default.md) | Fixed-multiple solves use one uniform ambient precision; ZeroDim defaults to adaptive | Numerics / nag_algorithms |
 | [0031](0031-eigenpy-vec-index-returns-aliasing-view-copy-before-storing.md) | Indexing an eigenpy Vec returns an aliasing view — copy values before storing them (fixes #259) | Python bindings |
+| [0032](0032-slice-is-a-thin-wrapper-over-linear-forms-block.md) | A witness set's Slice is a thin wrapper over LinearFormsBlock; LinearSlice retired | Core / nag_datatypes |
