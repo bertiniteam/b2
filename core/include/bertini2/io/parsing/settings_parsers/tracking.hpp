@@ -264,23 +264,23 @@ namespace bertini {
 					
 					root_rule_.name("SteppingConfig");
 					
-					root_rule_ = ((max_step_size_[phx::bind( [this](SteppingConfig & S, T num)
+					root_rule_ = ((max_step_size_[phx::bind( [](SteppingConfig & S, T num)
 															{
 																S.max_step_size = num;
 															}, _val, _1 )]
-								   ^ stepsize_success_[phx::bind( [this](SteppingConfig & S, R num)
+								   ^ stepsize_success_[phx::bind( [](SteppingConfig & S, R num)
 																 {
 																	 S.step_size_success_factor = num;
 																 }, _val, _1 )]
-								   ^ stepsize_fail_[phx::bind( [this](SteppingConfig & S, R num)
+								   ^ stepsize_fail_[phx::bind( [](SteppingConfig & S, R num)
 															  {
 																  S.step_size_fail_factor = num;
 															  }, _val, _1 )]
-								   ^ steps_increase_[phx::bind( [this](SteppingConfig & S, unsigned num)
+								   ^ steps_increase_[phx::bind( [](SteppingConfig & S, unsigned num)
 																	 {
 																		 S.consecutive_successful_steps_before_stepsize_increase = num;
 																	 }, _val, _1 )]
-								   ^ max_num_steps_[phx::bind( [this](SteppingConfig & S, unsigned num)
+								   ^ max_num_steps_[phx::bind( [](SteppingConfig & S, unsigned num)
 																	{
 																		S.max_num_steps = num;
 																	}, _val, _1 )])
@@ -385,7 +385,7 @@ namespace bertini {
 					
 					root_rule_.name("NewtonConfig");
 					
-					root_rule_ = (max_its_[phx::bind( [this](NewtonConfig & S, unsigned num)
+					root_rule_ = (max_its_[phx::bind( [](NewtonConfig & S, unsigned num)
 													 {
 														 S.max_num_newton_iterations = num;
 													 }, _val, _1 )]

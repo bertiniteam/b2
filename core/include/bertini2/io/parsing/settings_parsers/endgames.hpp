@@ -72,11 +72,11 @@ namespace bertini {
 					
 					root_rule_.name("config::Security");
 					
-					root_rule_ = ((security_level_[phx::bind( [this](bertini::endgame::SecurityConfig & S, int l)
+					root_rule_ = ((security_level_[phx::bind( [](bertini::endgame::SecurityConfig & S, int l)
 															 {
 																 S.level = l;
 															 }, _val, _1 )]
-								   ^ security_max_norm_[phx::bind( [this](bertini::endgame::SecurityConfig & S, T norm)
+								   ^ security_max_norm_[phx::bind( [](bertini::endgame::SecurityConfig & S, T norm)
 																  {
 																	  S.max_norm = norm;
 																  }, _val, _1 )])
@@ -89,7 +89,7 @@ namespace bertini {
 					
 					security_max_norm_.name("security_max_norm_");
 					security_max_norm_ = *(char_ - all_names_) >> (no_case[maxnorm_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
@@ -163,15 +163,15 @@ namespace bertini {
 
 					root_rule_.name("config::Endgame");
 
-					root_rule_ = ((sample_factor_[phx::bind( [this](bertini::endgame::EndgameConfig & S, R num)
+					root_rule_ = ((sample_factor_[phx::bind( [](bertini::endgame::EndgameConfig & S, R num)
 															{
 																S.sample_factor = num;
 															}, _val, _1 )]
-								   ^ min_track_[phx::bind( [this](bertini::endgame::EndgameConfig & S, T num)
+								   ^ min_track_[phx::bind( [](bertini::endgame::EndgameConfig & S, T num)
 														  {
 															  S.min_track_time = num;
 														  }, _val, _1 )]
-								   ^ num_sample_[phx::bind( [this](bertini::endgame::EndgameConfig & S, unsigned num)
+								   ^ num_sample_[phx::bind( [](bertini::endgame::EndgameConfig & S, unsigned num)
 															  {
 																  S.num_sample_points = num;
 															  }, _val, _1 )])
@@ -191,7 +191,7 @@ namespace bertini {
 					
 					min_track_.name("min_track_");
 					min_track_ = *(char_ - all_names_) >> (no_case[mintrack_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
@@ -264,7 +264,7 @@ namespace bertini {
 					
 					root_rule_.name("bertini::endgame::PowerSeriesConfig");
 					
-					root_rule_ = (max_cycle_[phx::bind( [this](bertini::endgame::PowerSeriesConfig & S, unsigned num)
+					root_rule_ = (max_cycle_[phx::bind( [](bertini::endgame::PowerSeriesConfig & S, unsigned num)
 													   {
 														   S.max_cycle_number = num;
 													   }, _val, _1 )]
@@ -341,11 +341,11 @@ namespace bertini {
 					
 					root_rule_.name("config::Cauchy");
 					
-					root_rule_ = ((cycle_cutoff_[phx::bind( [this](bertini::endgame::CauchyConfig & S, T num)
+					root_rule_ = ((cycle_cutoff_[phx::bind( [](bertini::endgame::CauchyConfig & S, T num)
 														   {
 															   S.cycle_cutoff_time = num;
 														   }, _val, _1 )]
-								   ^ ratio_cutoff_[phx::bind( [this](bertini::endgame::CauchyConfig & S, T num)
+								   ^ ratio_cutoff_[phx::bind( [](bertini::endgame::CauchyConfig & S, T num)
 															 {
 																 S.ratio_cutoff_time = num;
 															 }, _val, _1 )])
@@ -355,14 +355,14 @@ namespace bertini {
 					
 					cycle_cutoff_.name("cycle_cutoff_");
 					cycle_cutoff_ = *(char_ - all_names_) >> (no_case[cyclecutoff_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					ratio_cutoff_.name("ratio_cutoff_");
 					ratio_cutoff_ = *(char_ - all_names_) >> (no_case[ratiocutoff_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';

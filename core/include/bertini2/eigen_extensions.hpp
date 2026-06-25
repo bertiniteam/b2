@@ -93,7 +93,7 @@ namespace Eigen {
 
 		static inline int digits10()
 		{
-			return bertini::ThreadPrecision();
+			return static_cast<int>(bertini::ThreadPrecision());
 			// return internal::default_digits10_impl<T>::run();
 		}
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
@@ -505,7 +505,7 @@ namespace bertini {
 	inline
 	Mat<NumberType> RandomOfUnits(unsigned int rows, unsigned int cols)
 	{
-		return Mat<NumberType>(rows,cols).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });
+		return Mat<NumberType>(rows,cols).unaryExpr([](NumberType const& /*x*/) { return RandomUnit<NumberType>(); });
 	}
 
 	/**

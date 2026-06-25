@@ -255,8 +255,8 @@ namespace bertini{
 						{
 							s_ = 2;
 							
-							FillButcherTable<double>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
-							FillButcherTable<mpfr_float>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							FillButcherTable<double>(static_cast<int>(s_),aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							FillButcherTable<mpfr_float>(static_cast<int>(s_),aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
 							
 							break;
 						}
@@ -264,8 +264,8 @@ namespace bertini{
 						{
 							s_ = 4;
 							
-							FillButcherTable<double>(s_, aRK4_, bRK4_, cRK4_);
-							FillButcherTable<mpfr_float>(s_, aRK4_, bRK4_, cRK4_);
+							FillButcherTable<double>(static_cast<int>(s_),aRK4_, bRK4_, cRK4_);
+							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRK4_, bRK4_, cRK4_);
 							
 							break;
 						}
@@ -274,8 +274,8 @@ namespace bertini{
 						{
 							s_ = 6;
 							
-							FillButcherTable<double>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
-							FillButcherTable<mpfr_float>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+							FillButcherTable<double>(static_cast<int>(s_),aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
 							
 							break;
 						}
@@ -284,8 +284,8 @@ namespace bertini{
 						{
 							s_ = 6;
 							
-							FillButcherTable<double>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
-							FillButcherTable<mpfr_float>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+							FillButcherTable<double>(static_cast<int>(s_),aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
 							
 							break;
 						}
@@ -294,8 +294,8 @@ namespace bertini{
 						{
 							s_ = 8;
 							
-							FillButcherTable<double>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
-							FillButcherTable<mpfr_float>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+							FillButcherTable<double>(static_cast<int>(s_),aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
 							
 							break;
 						}
@@ -304,8 +304,8 @@ namespace bertini{
 						{
 							s_ = 10;
 							
-							FillButcherTable<double>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
-							FillButcherTable<mpfr_float>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+							FillButcherTable<double>(static_cast<int>(s_),aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
 							
 							break;
 						}

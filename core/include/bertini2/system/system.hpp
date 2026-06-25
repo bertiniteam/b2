@@ -621,7 +621,7 @@ namespace bertini {
 			// the patch doesn't move with time.  derivatives 0.
 			if (IsPatched())
 				for (size_t ii = 0; ii < NumTotalVariableGroups(); ++ii)
-					ds_dt(ii + NumNaturalFunctions()) = T(0);
+					ds_dt(static_cast<Eigen::Index>(ii + NumNaturalFunctions())) = T(0);
 			CoerceBlockOutputPrecision(ds_dt);
 		}
 
@@ -801,7 +801,9 @@ namespace bertini {
 		void SetVariables(const Vec<T> & new_values) const
 		{
 			if (new_values.size()!= static_cast<Eigen::Index>(NumVariables()))
+			{
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
+			}
 
 			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
 				// A system with no variables (a constant) has an empty point: there is no
@@ -1570,7 +1572,6 @@ namespace bertini {
 
 			unsigned affine_group_counter = 0;
 			unsigned hom_group_counter = 0;
-			unsigned ungrouped_variable_counter = 0;
 
 			unsigned hom_index = 0; // index into x, the point we are dehomogenizing
 			unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
@@ -1604,7 +1605,6 @@ namespace bertini {
 					case VariableGroupType::Ungrouped:
 					{
 						x_dehomogenized(dehom_index++) = x(hom_index++);
-						ungrouped_variable_counter++;
 						break;
 					}
 					default:

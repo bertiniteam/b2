@@ -348,7 +348,7 @@ namespace bertini {
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
-			ObserveResult OnEvent(FailedStep<EmitterT> const& e)
+			ObserveResult OnEvent(FailedStep<EmitterT> const& /*e*/)
 			{
 				std::cout << "observed step failure" << std::endl;
 				return ObserveResult::KeepObserving;

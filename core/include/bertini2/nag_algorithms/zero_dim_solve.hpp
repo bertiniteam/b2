@@ -227,6 +227,7 @@ struct EGBoundaryMetaData
 
 	EGBoundaryMetaData() = default;
 	EGBoundaryMetaData(EGBoundaryMetaData const&) = default;
+	EGBoundaryMetaData& operator=(EGBoundaryMetaData const&) = default;
 	EGBoundaryMetaData(Vec<ComplexT> const& pt, SuccessCode const& code, RealT const& ss, unsigned prec) :
 		path_point(pt), success_code(code), last_used_stepsize(ss), precision(prec)
 	{}

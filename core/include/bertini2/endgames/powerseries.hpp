@@ -414,7 +414,7 @@ public:
 		{			
 			using std::pow;
 
-			std::tie(s_times, s_derivatives) = TransformToSPlane(candidate, t0, num_pts, ContStart::Front);
+			std::tie(s_times, s_derivatives) = TransformToSPlane(static_cast<int>(candidate), t0, num_pts, ContStart::Front);
 			RealT cand_power{1/static_cast<RealT>(candidate)};
 			RealT curr_diff = (HermiteInterpolateAndSolve<ComplexT>(
 								  pow((most_recent_time-t0)/(times[0]-t0),cand_power), // the target time
@@ -545,7 +545,7 @@ public:
 		TimeCont<ComplexT> s_times;
 		SampCont<ComplexT> s_derivatives;
 
-		std::tie(s_times, s_derivatives) = TransformToSPlane(c, t0, num_pts, ContStart::Back);
+		std::tie(s_times, s_derivatives) = TransformToSPlane(static_cast<int>(c), t0, num_pts, ContStart::Back);
 		// the data was transformed to be on the interval [0 1] so we can hard-code the time-to-solve as 0 here.
 
 		Precision(result, Precision(s_derivatives.back()));

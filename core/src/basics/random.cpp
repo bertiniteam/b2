@@ -136,37 +136,37 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
 		
 		mpfr_float a;
 		if (num_digits<=50)
-			a = std::move(RandomMp<50>());
+			a = RandomMp<50>();
 		else if (num_digits<=100)
-			a = std::move(RandomMp<100>());
+			a = RandomMp<100>();
 		else if (num_digits<=200)
-			a = std::move(RandomMp<200>());
+			a = RandomMp<200>();
 		else if (num_digits<=400)
-			a = std::move(RandomMp<400>());
+			a = RandomMp<400>();
 		else if (num_digits<=800)
-			a = std::move(RandomMp<800>());
+			a = RandomMp<800>();
 		else if (num_digits<=1600)
-			a = std::move(RandomMp<1600>());
+			a = RandomMp<1600>();
 		else if (num_digits<=3200)
-			a = std::move(RandomMp<3200>());
+			a = RandomMp<3200>();
 		else if (num_digits<=6400)
-			a = std::move(RandomMp<6400>());
+			a = RandomMp<6400>();
 		else if (num_digits<=8000)
-			a = std::move(RandomMp<8000>());
+			a = RandomMp<8000>();
 		else if (num_digits<=10000)
-			a = std::move(RandomMp<10000>());
+			a = RandomMp<10000>();
 		else if (num_digits<=12000)
-			a = std::move(RandomMp<12000>());
+			a = RandomMp<12000>();
 		else if (num_digits<=14000)
-			a = std::move(RandomMp<14000>());
+			a = RandomMp<14000>();
 		else if (num_digits<=16000)
-			a = std::move(RandomMp<16000>());
+			a = RandomMp<16000>();
 		else if (num_digits<=18000)
-			a = std::move(RandomMp<18000>());
+			a = RandomMp<18000>();
 		else if (num_digits<=20000)
-			a = std::move(RandomMp<20000>());
+			a = RandomMp<20000>();
 		else if (num_digits<=40000)
-			a = std::move(RandomMp<40000>());
+			a = RandomMp<40000>();
 		else
 			throw std::out_of_range("requesting random long number of digits -- higher than 40000.  this throw can be remedied by adding more cases to the generating function RandomMp in random.cpp.  If you have a better solution to this problem, please write the authors of this software.");
 		a.precision(num_digits);
@@ -197,37 +197,37 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
 		
 		mpfr_float result;
 		if (num_digits<=50)
-			result = std::move(RandomMp<50>(a,b));
+			result = RandomMp<50>(a,b);
 		else if (num_digits<=100)
-			result = std::move(RandomMp<100>(a,b));
+			result = RandomMp<100>(a,b);
 		else if (num_digits<=200)
-			result = std::move(RandomMp<200>(a,b));
+			result = RandomMp<200>(a,b);
 		else if (num_digits<=400)
-			result = std::move(RandomMp<400>(a,b));
+			result = RandomMp<400>(a,b);
 		else if (num_digits<=800)
-			result = std::move(RandomMp<800>(a,b));
+			result = RandomMp<800>(a,b);
 		else if (num_digits<=1600)
-			result = std::move(RandomMp<1600>(a,b));
+			result = RandomMp<1600>(a,b);
 		else if (num_digits<=3200)
-			result = std::move(RandomMp<3200>(a,b));
+			result = RandomMp<3200>(a,b);
 		else if (num_digits<=6400)
-			result = std::move(RandomMp<6400>(a,b));
+			result = RandomMp<6400>(a,b);
 		else if (num_digits<=8000)
-			result = std::move(RandomMp<8000>(a,b));
+			result = RandomMp<8000>(a,b);
 		else if (num_digits<=10000)
-			result = std::move(RandomMp<10000>(a,b));
+			result = RandomMp<10000>(a,b);
 		else if (num_digits<=12000)
-			result = std::move(RandomMp<12000>(a,b));
+			result = RandomMp<12000>(a,b);
 		else if (num_digits<=14000)
-			result = std::move(RandomMp<14000>(a,b));
+			result = RandomMp<14000>(a,b);
 		else if (num_digits<=16000)
-			result = std::move(RandomMp<16000>(a,b));
+			result = RandomMp<16000>(a,b);
 		else if (num_digits<=18000)
-			result = std::move(RandomMp<18000>(a,b));
+			result = RandomMp<18000>(a,b);
 		else if (num_digits<=20000)
-			result = std::move(RandomMp<20000>(a,b));
+			result = RandomMp<20000>(a,b);
 		else if (num_digits<=40000)
-			result = std::move(RandomMp<40000>(a,b));
+			result = RandomMp<40000>(a,b);
 		else
 			throw std::out_of_range("requesting random long number of digits -- higher than 40000.  this throw can be remedied by adding more cases to the generating function RandomMp in random.cpp.  If you have a better solution to this problem, please write the authors of this software.");
 		result.precision(num_digits);

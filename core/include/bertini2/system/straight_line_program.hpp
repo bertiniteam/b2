@@ -558,7 +558,7 @@ namespace bertini {
 
 			// copy content
 			for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-				result(ii) = memory[ii + program_->output_locations_.Functions];
+				result(static_cast<Eigen::Index>(ii)) = memory[ii + program_->output_locations_.Functions];
 			}
 		}
 
@@ -583,7 +583,7 @@ namespace bertini {
 			// copy content
 			for (size_t jj =0; jj < program_->number_of_.Variables; ++jj) {
 				for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-					result(ii, jj) = memory[ii+jj*program_->number_of_.Functions + program_->output_locations_.Jacobian];
+					result(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)) = memory[ii+jj*program_->number_of_.Functions + program_->output_locations_.Jacobian];
 				}
 			}
 		}
@@ -608,7 +608,7 @@ namespace bertini {
 			// 1. make container, size correctly.
 			// 2. copy content
 			for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-				result(ii) = memory[ii + program_->output_locations_.TimeDeriv];
+				result(static_cast<Eigen::Index>(ii)) = memory[ii + program_->output_locations_.TimeDeriv];
 			}
 		}
 
@@ -726,7 +726,7 @@ namespace bertini {
 
 			for (size_t ii = 0; ii < program_->number_of_.Variables; ++ii) {
 				//assign  to memory
-				memory[ii + program_->input_locations_.Variables] = variable_values(ii);
+				memory[ii + program_->input_locations_.Variables] = variable_values(static_cast<Eigen::Index>(ii));
 			}
 			memory_.is_evaluated_ = false;
 		}

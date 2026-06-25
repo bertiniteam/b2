@@ -176,7 +176,7 @@ std::string MPIVersion()
     char buf[MPI_MAX_LIBRARY_VERSION_STRING];
     int len = 0;
     MPI_Get_library_version(buf, &len);
-    return std::string(buf, len);
+    return std::string(buf, static_cast<size_t>(len));
 #else
     return "not available (serial build)";
 #endif
