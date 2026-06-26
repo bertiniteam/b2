@@ -320,14 +320,14 @@ BOOST_AUTO_TEST_CASE(RandomMP_honors_global_seed)
 	auto second = draw_five();
 
 	for (int ii = 0; ii < 5; ++ii)
-		BOOST_CHECK_EQUAL(first[ii], second[ii]);
+		BOOST_CHECK_EQUAL(first[static_cast<size_t>(ii)], second[static_cast<size_t>(ii)]);
 
 	SetGlobalSeed(5678u);
 	auto third = draw_five();
 
 	bool any_different = false;
 	for (int ii = 0; ii < 5; ++ii)
-		if (third[ii] != first[ii])
+		if (third[static_cast<size_t>(ii)] != first[static_cast<size_t>(ii)])
 			any_different = true;
 	BOOST_CHECK(any_different);
 }

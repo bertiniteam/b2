@@ -435,6 +435,13 @@ target_include_directories(bertini2
     ${GMP_INCLUDES}
     ${MPFR_INCLUDES}
     ${MPC_INCLUDES}
+    # Treat Boost/Eigen headers as system so their (and their template
+    # instantiations') warnings stay out of our build output. Boost is linked
+    # below via raw ${Boost_LIBRARIES} (no include propagation), so its include
+    # dir must be added here explicitly. Eigen3::Eigen is an imported target
+    # (already SYSTEM by default), but we mark it explicitly to be robust.
+    ${Boost_INCLUDE_DIRS}
+    $<TARGET_PROPERTY:Eigen3::Eigen,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_include_directories(bertini2 PUBLIC

@@ -225,10 +225,15 @@ target_link_libraries(_pybertini PUBLIC ${MPFR_LIBRARIES})
 target_link_libraries(_pybertini PUBLIC ${MPC_LIBRARIES})
 
 
-# which directories contain headers we need
-target_include_directories(_pybertini PUBLIC SYSTEM ${Boost_INCLUDE_DIRS})
-target_include_directories(_pybertini PUBLIC SYSTEM ${PYTHON_INCLUDE_DIRS})
-target_include_directories(_pybertini PUBLIC SYSTEM ${Python3_NumPy_INCLUDE_DIRS})
+# which directories contain headers we need.
+# NOTE: the SYSTEM keyword must precede the scope keyword (SYSTEM PUBLIC, not
+# PUBLIC SYSTEM) -- otherwise CMake reads "SYSTEM" as a relative include path and
+# these external headers are NOT treated as system, leaking their warnings into
+# our build output. (Eigen comes via the imported Eigen3::Eigen target below,
+# which is already treated as SYSTEM.)
+target_include_directories(_pybertini SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
+target_include_directories(_pybertini SYSTEM PUBLIC ${PYTHON_INCLUDE_DIRS})
+target_include_directories(_pybertini SYSTEM PUBLIC ${Python3_NumPy_INCLUDE_DIRS})
 target_include_directories(_pybertini PUBLIC ${Bertini2_INCLUDES})
 
 if(WIN32)

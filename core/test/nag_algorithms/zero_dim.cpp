@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
 	He.precision(80);
 	for (int trial = 0; trial < 5; ++trial)
 	{
-		Vec<mpfr_complex> p = RandomOfUnits<mpfr_complex>(n);
+		Vec<mpfr_complex> p = RandomOfUnits<mpfr_complex>(static_cast<unsigned int>(n));
 		mpfr_complex t = RandomOfUnits<mpfr_complex>(1)(0);
 		compare(H.Eval(p, t),     He.Eval(p, t),     1e-70);
 		compare(H.Jacobian(p, t), He.Jacobian(p, t), 1e-70);

@@ -514,39 +514,39 @@ namespace bertini {
 
 					root_rule_.name("config::AMP");
 					
-					root_rule_ = ((coefficient_bound_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
+					root_rule_ = ((coefficient_bound_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, T num)
 														   {
 															   S.coefficient_bound = num;
 														   }, _val, _1 )]
-								   ^ degree_bound_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
+								   ^ degree_bound_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, T num)
 															 {
 																 S.degree_bound = num;
 															 }, _val, _1 )]
-								   ^ lin_solve_error_bnd_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
+								   ^ lin_solve_error_bnd_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, T num)
 															 {
 																 S.epsilon = num;
 															 }, _val, _1 )]
-								   ^ jac_eval_err_bnd_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
+								   ^ jac_eval_err_bnd_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, T num)
 															 {
 																 S.Phi = num;
 															 }, _val, _1 )]
-								   ^ func_eval_err_bnd_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
+								   ^ func_eval_err_bnd_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, T num)
 															 {
 																 S.Psi = num;
 															 }, _val, _1 )]
-								   ^ safety_one_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, int num)
+								   ^ safety_one_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, int num)
 															 {
 																 S.safety_digits_1 = num;
 															 }, _val, _1 )]
-								   ^ safety_two_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, int num)
+								   ^ safety_two_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, int num)
 															 {
 																 S.safety_digits_2 = num;
 															 }, _val, _1 )]
-								   ^ max_prec_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, unsigned num)
+								   ^ max_prec_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, unsigned num)
 															 {
 																 S.maximum_precision = num;
 															 }, _val, _1 )]
-								   ^ max_num_prec_decs_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, unsigned num)
+								   ^ max_num_prec_decs_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, unsigned num)
 															 {
 																 S.max_num_precision_decreases = num;
 															 }, _val, _1 )]
@@ -565,7 +565,7 @@ namespace bertini {
 								 ;
 					
 
-					auto str_to_T = [this](T & num, std::string const& str)
+					auto str_to_T = [](T & num, std::string const& str)
 									   {
 									   	// std::cout << str << std::endl;
 										   num = bertini::NumTraits<T>::FromString(str);

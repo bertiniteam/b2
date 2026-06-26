@@ -483,15 +483,15 @@ namespace bertini {
 
 					root_rule_.name("config::Sharpening");
 					
-					root_rule_ = ((sharpen_digits_[phx::bind( [this](algorithm::SharpeningConfig & S, unsigned num)
+					root_rule_ = ((sharpen_digits_[phx::bind( [](algorithm::SharpeningConfig & S, unsigned num)
 														   {
 															   S.sharpendigits = num;
 														   }, _val, _1 )]
-								   ^ func_res_tol_[phx::bind( [this](algorithm::SharpeningConfig & S, T num)
+								   ^ func_res_tol_[phx::bind( [](algorithm::SharpeningConfig & S, T num)
 															 {
 																 S.function_residual_tolerance = num;
 															 }, _val, _1 )]
-								   ^ ratio_tol_[phx::bind( [this](algorithm::SharpeningConfig & S, T num)
+								   ^ ratio_tol_[phx::bind( [](algorithm::SharpeningConfig & S, T num)
 															 {
 																 S.ratio_tolerance = num;
 															 }, _val, _1 )]
@@ -504,7 +504,7 @@ namespace bertini {
 								 ;
 					
 
-					auto str_to_T = [this](T & num, std::string str)
+					auto str_to_T = [](T & num, std::string str)
 									   {
 										   num = bertini::NumTraits<T>::FromString(str);
 									   };
@@ -588,27 +588,27 @@ namespace bertini {
 
 					root_rule_.name("config::Regeneration");
 					
-					root_rule_ = ((regen_remove_inf_[phx::bind( [this](algorithm::RegenerationConfig & S, int num)
+					root_rule_ = ((regen_remove_inf_[phx::bind( [](algorithm::RegenerationConfig & S, int num)
 														   {
 															   S.remove_infinite_endpoints = static_cast<bool>(num);
 														   }, _val, _1 )]
-								   ^ higher_dim_check_[phx::bind( [this](algorithm::RegenerationConfig & S, int num)
+								   ^ higher_dim_check_[phx::bind( [](algorithm::RegenerationConfig & S, int num)
 															 {
 																 S.higher_dimension_check = static_cast<bool>(num);
 															 }, _val, _1 )]
-								   ^ start_level_[phx::bind( [this](algorithm::RegenerationConfig & S, int num)
+								   ^ start_level_[phx::bind( [](algorithm::RegenerationConfig & S, int num)
 															 {
 																 S.start_level = static_cast<unsigned int>(num);
 															 }, _val, _1 )]
-								   ^ slice_before_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
+								   ^ slice_before_[phx::bind( [](algorithm::RegenerationConfig & S, T num)
 															 {
 																 S.slice_newton_before_endgame = num;
 															 }, _val, _1 )]
-								   ^ slice_during_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
+								   ^ slice_during_[phx::bind( [](algorithm::RegenerationConfig & S, T num)
 															 {
 																 S.slice_newton_during_endgame = num;
 															 }, _val, _1 )]
-								   ^ slice_final_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
+								   ^ slice_final_[phx::bind( [](algorithm::RegenerationConfig & S, T num)
 															 {
 																 S.slice_final_tolerance = num;
 															 }, _val, _1 )]
@@ -624,7 +624,7 @@ namespace bertini {
 								 ;
 					
 
-					auto str_to_T = [this](T & num, std::string str)
+					auto str_to_T = [](T & num, std::string str)
 									   {
 										   num = bertini::NumTraits<T>::FromString(str);
 									   };

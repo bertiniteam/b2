@@ -427,15 +427,15 @@ namespace bertini {
 
 					root_rule_.name("bertini::endgame::TrackBackConfig");
 					
-					root_rule_ = root_rule_ = ((min_cycle_[phx::bind( [this](bertini::endgame::TrackBackConfig & S, unsigned num)
+					root_rule_ = root_rule_ = ((min_cycle_[phx::bind( [](bertini::endgame::TrackBackConfig & S, unsigned num)
 																	   {
 																		   S.minimum_cycle = num;
 																	   }, _val, _1 )]
-											   ^ junk_removal_[phx::bind( [this](bertini::endgame::TrackBackConfig & S, int num)
+											   ^ junk_removal_[phx::bind( [](bertini::endgame::TrackBackConfig & S, int num)
 																		 {
 																			 S.junk_removal_test = static_cast<bool>(num);
 																		 }, _val, _1 )]
-											   ^ max_depth_[phx::bind( [this](bertini::endgame::TrackBackConfig & S, unsigned num)
+											   ^ max_depth_[phx::bind( [](bertini::endgame::TrackBackConfig & S, unsigned num)
 																	   {
 																		   S.max_depth_LDT = num;
 																	   }, _val, _1 )]

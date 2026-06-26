@@ -42,7 +42,7 @@ namespace bertini {
 
 
 		template <typename ComplexT>
-		ComplexT Trace(nag_datatype::WitnessSet<ComplexT> const& w)
+		ComplexT Trace(nag_datatype::WitnessSet<ComplexT> const& /*w*/)
 		{
 			return ComplexT(0);
 		}

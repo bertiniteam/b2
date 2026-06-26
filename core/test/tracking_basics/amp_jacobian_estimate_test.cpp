@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(estimate_reflects_genuine_near_singularity)
 
 	for (int k = 20; k <= 140; k += 40)
 	{
-		bertini::DefaultPrecision(k + 50); // enough digits to represent eps = 1e-k
+		bertini::DefaultPrecision(static_cast<unsigned int>(k + 50)); // enough digits to represent eps = 1e-k
 
 		mpfr_float eps = pow(mpfr_float(10), -k);
 		// J = [[1, 1], [1, 1+eps]] : det = eps, so ||J^{-1}||_2 ~ 2/eps ~ 1e+k (analytic).

@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(complicated)
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 
-	auto n = (((((2*x*1)*y)+(0*(pow(x,2))))/2)-(0*((pow(x,2))*y)/(pow(2,2))));
+	auto n = (((((2*x*1)*y)+(0*(pow(x,2))))/2)-(0*((pow(x,2))*y)/(static_cast<int>(pow(2,2)))));
 
 	auto ns = bertini::Simplify(n);
 
