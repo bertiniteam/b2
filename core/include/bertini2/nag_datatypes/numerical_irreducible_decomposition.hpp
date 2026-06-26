@@ -63,7 +63,7 @@ namespace bertini {
 				std::vector<int> codims;
 				for (const auto& w : finished_witness_sets_)
 					if (std::find(codims.begin(), codims.end(), w.Dimension()) == codims.end())
-						codims.push_back(w.Dimension());
+						codims.push_back(static_cast<int>(w.Dimension()));
 
 				return codims;
 			}

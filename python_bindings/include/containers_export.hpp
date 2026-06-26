@@ -51,7 +51,7 @@ template< typename T>
 inline std::ostream& operator<<(std::ostream & out, const std::vector<T> & t)
 {
 	out << "[";
-	for (int ii = 0; ii < t.size(); ++ii)
+	for (size_t ii = 0; ii < t.size(); ++ii)
 	{
 		out << t[ii];
 		if (ii!=t.size()-1)
@@ -69,7 +69,7 @@ template< typename T>
 inline std::ostream& operator<<(std::ostream & out, const std::deque<T> & t)
 {
 	out << "[";
-	for (int ii = 0; ii < t.size(); ++ii)
+	for (size_t ii = 0; ii < t.size(); ++ii)
 	{
 		out << t[ii];
 		if (ii!=t.size()-1)
@@ -104,7 +104,7 @@ private:
 		ContT self=extract<ContT>(obj)();
 		std::stringstream ss;
 		ss << "[";
-		for (int ii = 0; ii < self.size(); ++ii)
+		for (size_t ii = 0; ii < self.size(); ++ii)
 		{
 			ss << self[ii];
 			if (ii!=self.size()-1)

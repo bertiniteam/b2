@@ -53,7 +53,7 @@ struct EndgameObserverVisitor: public def_visitor<EndgameObserverVisitor<ObsT> >
 public:
 
 	template<class PyClass>
-	void visit(PyClass& cl) const{
+	void visit(PyClass& /*cl*/) const{
 	}
 };
 

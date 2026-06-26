@@ -137,7 +137,6 @@ namespace bertini{
 		{
 			using TrackerT = typename EndgameT::TrackerType;
 			using BCT = typename TrackerTraits<TrackerT>::BaseComplexT;
-			using BRT = typename TrackerTraits<TrackerT>::BaseRealT;
 
 			cl
 			.def("cycle_number", this->GetCycleNumberFn(),arg("self"),"Get the cycle number as currently computed")

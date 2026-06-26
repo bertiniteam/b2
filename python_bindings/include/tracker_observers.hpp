@@ -53,7 +53,7 @@ struct TrackingObserverVisitor: public def_visitor<TrackingObserverVisitor<ObsT>
 public:
 
 	template<class PyClass>
-	void visit(PyClass& cl) const{
+	void visit(PyClass& /*cl*/) const{
 	}
 };
 
