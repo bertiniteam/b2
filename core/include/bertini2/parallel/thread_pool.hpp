@@ -138,7 +138,7 @@ public:
 	WorkerThreadPool(int n_threads, StateFactory state_factory, TrackFn track_fn)
 		: n_threads_(n_threads)
 	{
-		threads_.reserve(n_threads);
+		threads_.reserve(static_cast<size_t>(n_threads));
 		for (int i = 0; i < n_threads; ++i)
 		{
 			threads_.emplace_back([this, state_factory, track_fn]() mutable

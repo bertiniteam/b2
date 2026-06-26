@@ -135,7 +135,7 @@ namespace bertini{
 
 		template<typename T>
 		template<typename PyClass>
-		void RealFreeVisitor<T>::visit(PyClass& cl) const
+		void RealFreeVisitor<T>::visit(PyClass& /*cl*/) const
 		{
 			def("abs", &RealFreeVisitor::__abs__, (arg("val")), "absolute value"); // free
 		}
@@ -215,7 +215,7 @@ namespace bertini{
 
 		template<typename T>
 		template<typename PyClass>
-		void TranscendentalVisitor<T>::visit(PyClass& cl) const
+		void TranscendentalVisitor<T>::visit(PyClass& /*cl*/) const
 		{
 			def("exp", &TranscendentalVisitor::__exp__, (arg("val")), "exponential, base e");
 			def("log", &TranscendentalVisitor::__log__, (arg("val")), "natural log");

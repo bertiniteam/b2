@@ -103,7 +103,7 @@ std::mt19937& ThreadEngine();
 			return z*z*z;
 		else
 		{
-			unsigned int p(power);
+			unsigned int p(static_cast<unsigned int>(power));
 			dbl result(1,0), z_to_the_current_power_of_two = z;
 			// have copy of p in memory, can freely modify it.
 			do {

@@ -1797,9 +1797,6 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
-	unsigned num_fails = 0;
-
-	unsigned num_infinite_solutions = 0;
 	unsigned num_converged_at_origin = 0;
 	for (auto& s : griewank_homogenized_solutions) //current_space_values)
 	{
@@ -1839,11 +1836,6 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 		{
 			num_paths_diverging++;
 		}
-		else
-			++num_fails;
-
-		if (griewank_osborn_sys.DehomogenizePoint(my_endgame.FinalApproximation<BCT>()).template lpNorm<Eigen::Infinity>() > security_settings.max_norm)
-			++num_infinite_solutions;
 
 	}
 	BOOST_CHECK(num_paths_converging>=3);

@@ -88,7 +88,7 @@ namespace bertini
 						const int d = degree_matrix_(ii, jj);
 						if (d == 0)
 							continue;
-						const Eigen::Index gsize = static_cast<Eigen::Index>(var_groups_[jj].size());
+						const Eigen::Index gsize = static_cast<Eigen::Index>(var_groups_[static_cast<size_t>(jj)].size());
 						const bool projective = (static_cast<size_t>(jj) < s.NumHomVariableGroups());
 						Mat<mpfr_complex> C(d, gsize + 1);
 						for (Eigen::Index f = 0; f < d; ++f)
@@ -131,7 +131,7 @@ namespace bertini
 				const VariableGroup& vars = this->Variables();
 				std::map<node::Node const*, Eigen::Index> col_of;
 				for (Eigen::Index c = 0; c < static_cast<Eigen::Index>(vars.size()); ++c)
-					col_of[vars[c].get()] = c;
+					col_of[vars[static_cast<size_t>(c)].get()] = c;
 				const Eigen::Index n = static_cast<Eigen::Index>(this->NumVariables());
 
 				std::vector<Mat<mpfr_complex>> per_function;
@@ -232,7 +232,7 @@ namespace bertini
 		*/
 		void MHomogeneous::CreateDegreeMatrix(System const& target_system)
 		{
-			degree_matrix_ = Mat<int>::Zero(target_system.NumNaturalFunctions(),target_system.NumTotalVariableGroups());
+			degree_matrix_ = Mat<int>::Zero(static_cast<Eigen::Index>(target_system.NumNaturalFunctions()),static_cast<Eigen::Index>(target_system.NumTotalVariableGroups()));
 
 			var_groups_ = target_system.HomVariableGroups();
 			num_hom_groups_ = var_groups_.size();   // the leading var_groups_ entries are projective
@@ -241,13 +241,11 @@ namespace bertini
 			var_groups_.insert(var_groups_.end(), affine_var_groups.begin(), affine_var_groups.end());
 
 			int col_count = 0;
-			int outer_loop = 0;
 			size_t var_count = 0;
 			std::vector<int> zero_column_vector(target_system.Degrees(*(var_groups_.begin())).size(), 0);
 
 			for(std::vector<VariableGroup>::iterator it = var_groups_.begin(); it != var_groups_.end(); ++it)
 			{
-				outer_loop++;
   				std::vector<int> degs = target_system.Degrees(*it);
 				
 				std::vector<size_t> temp_v;
@@ -266,7 +264,7 @@ namespace bertini
 
   				for(size_t ii = 0; ii < degs.size(); ++ii)
   				{
-  					degree_matrix_(ii,col_count) = degs[ii];
+  					degree_matrix_(static_cast<Eigen::Index>(ii),col_count) = degs[ii];
   				}
   				col_count++;
 			}
@@ -307,8 +305,8 @@ namespace bertini
 		{
 			int row = 0;
 			int bad_choice = 0;
-			Vec<int> current_partition = -1*Vec<int>::Ones(target_system.NumNaturalFunctions());
-			Vec<int> variable_group_counter = Vec<int>::Zero(target_system.NumTotalVariableGroups());
+			Vec<int> current_partition = -1*Vec<int>::Ones(static_cast<Eigen::Index>(target_system.NumNaturalFunctions()));
+			Vec<int> variable_group_counter = Vec<int>::Zero(static_cast<Eigen::Index>(target_system.NumTotalVariableGroups()));
 
 			// Capacity per group = the number of functions that group may be assigned, which
 			// is the group's declared dimension.  Use var_groups_ (the groups as concatenated
@@ -323,7 +321,7 @@ namespace bertini
 				// k-1 functions; an affine group of size m takes m.  The leading num_hom_groups_
 				// entries of var_groups_ are the projective ones.
 				const int dim = static_cast<int>(var_groups_[ii].size()) - (ii < num_hom_groups_ ? 1 : 0);
-				variable_group_counter[ii] = dim;
+				variable_group_counter[static_cast<Eigen::Index>(ii)] = dim;
 			}
 			// std::cout << "variable_group_counter is " << std::endl;
 			// std::cout << variable_group_counter << std::endl;		
@@ -458,11 +456,11 @@ namespace bertini
 			
 			
 			// Using partition ii, create dimension vector.  Then find the subscript.
-			auto partition = valid_partitions_[partition_ii];
-			std::vector<size_t> dim_vector(partition.size());
+			auto partition = valid_partitions_[static_cast<size_t>(partition_ii)];
+			std::vector<size_t> dim_vector(static_cast<size_t>(partition.size()));
 			for (int ii = 0; ii < partition.size(); ++ii)
 			{
-				dim_vector[ii] = degree_matrix_(ii, partition(ii));
+				dim_vector[static_cast<size_t>(ii)] = static_cast<size_t>(degree_matrix_(ii, partition(ii)));
 			}
 			
 			std::vector<size_t> subscript = IndexToSubscript<size_t>(index, dim_vector);
@@ -497,9 +495,9 @@ namespace bertini
 			};
 			for(int ii = 0; ii < partition.size(); ++ii)
 			{
-				std::vector<size_t> cols = variable_cols_[partition[ii]];
+				std::vector<size_t> cols = variable_cols_[static_cast<size_t>(partition[ii])];
 				const Mat<mpfr_complex>& C = linear_coeffs_(ii, partition[ii]);
-				const Eigen::Index f = static_cast<Eigen::Index>(subscript[ii]);
+				const Eigen::Index f = static_cast<Eigen::Index>(subscript[static_cast<size_t>(ii)]);
 				for(size_t jj = 0; jj < cols.size(); ++jj)
 				{
 					A(ii, static_cast<Eigen::Index>(cols[jj])) = as_T(C(f, static_cast<Eigen::Index>(jj)));
@@ -565,7 +563,7 @@ namespace bertini
 			unsigned long long num_points = 1;
     			for(int ii = 0; ii < partition.size() ; ii++)
     			{
-    				num_points *= degree_matrix_(ii,partition[ii]); 
+    				num_points *= static_cast<unsigned long long>(degree_matrix_(ii,partition[ii]));
     			}
 
 			return num_points;

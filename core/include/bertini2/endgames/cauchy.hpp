@@ -955,7 +955,7 @@ public:
 
 		Precision(result, Precision(cau_samples.back()));
 
-		result = Vec<ComplexT>::Zero(this->GetSystem().NumVariables());
+		result = Vec<ComplexT>::Zero(static_cast<Eigen::Index>(this->GetSystem().NumVariables()));
 		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
 			result += cau_samples[ii];
 		result /= this->CycleNumber() * this->EndgameSettings().num_sample_points;

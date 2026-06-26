@@ -96,10 +96,10 @@ static void AgreesWithExpansion(System const& sys)
 	std::vector<Vec<dbl>> pts;
 	{
 		Vec<dbl> p(nv);
-		for (Eigen::Index k = 0; k < nv; ++k) p(k) = dbl(0.3 + 0.17 * k, 0.5 - 0.11 * k);
+		for (Eigen::Index k = 0; k < nv; ++k) p(k) = dbl(0.3 + 0.17 * static_cast<double>(k), 0.5 - 0.11 * static_cast<double>(k));
 		pts.push_back(p);
 		Vec<dbl> q(nv);
-		for (Eigen::Index k = 0; k < nv; ++k) q(k) = dbl(-0.7 + 0.05 * k, 0.9 + 0.03 * k);
+		for (Eigen::Index k = 0; k < nv; ++k) q(k) = dbl(-0.7 + 0.05 * static_cast<double>(k), 0.9 + 0.03 * static_cast<double>(k));
 		pts.push_back(q);
 	}
 
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(eval_and_jacobian_fully_define_rows_in_a_dirty_buffer)
 	const Eigen::Index nv = static_cast<Eigen::Index>(r.NumVariables());
 
 	Vec<dbl> p(nv);
-	for (Eigen::Index k = 0; k < nv; ++k) p(k) = dbl(0.4 + 0.1 * k, 0.2 - 0.05 * k);
+	for (Eigen::Index k = 0; k < nv; ++k) p(k) = dbl(0.4 + 0.1 * static_cast<double>(k), 0.2 - 0.05 * static_cast<double>(k));
 
 	// poison the output buffers with a huge value; the block must overwrite every owned entry.
 	Vec<dbl> seg(n);   seg.setConstant(dbl(1e300, 1e300));

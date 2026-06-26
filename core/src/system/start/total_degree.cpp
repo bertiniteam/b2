@@ -86,7 +86,7 @@ namespace bertini {
 			auto two_i_pi = boost::math::constants::pi<double>() * dbl(0,2);
 
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(random_values_[ii]->Value<dbl>(), 1.0 / static_cast<double>(degrees_[ii]));
+				start_point(static_cast<Eigen::Index>(ii+offset)) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(random_values_[ii]->Value<dbl>(), 1.0 / static_cast<double>(degrees_[ii]));
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);
@@ -122,7 +122,7 @@ namespace bertini {
 				Precision(a,ThreadPrecision());
 				Precision(b,ThreadPrecision());
 
-				start_point(ii+offset) = a*b;
+				start_point(static_cast<Eigen::Index>(ii+offset)) = a*b;
 			}
 
 			if (IsPatched())
@@ -166,9 +166,9 @@ namespace bertini {
 
 		void TotalDegree::SeedRandomValues(int num_functions)
 		{
-			random_values_.resize(num_functions);
+			random_values_.resize(static_cast<size_t>(num_functions));
 			for (int ii = 0; ii < num_functions; ++ii)
-				random_values_[ii] = Rational::Make(node::Rational::Rand());
+				random_values_[static_cast<size_t>(ii)] = Rational::Make(node::Rational::Rand());
 		}
 
 		void TotalDegree::GenerateFunctions()
@@ -176,7 +176,7 @@ namespace bertini {
 			// by hypothesis, the system has a single variable group.
 			auto v = this->AffineVariableGroup(0);
 			for (auto iter = v.begin(); iter!=v.end(); iter++)
-				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[iter-v.begin()]);
+				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[static_cast<size_t>(iter-v.begin())]);
 		}
 	} // namespace start_system
 } //namespace bertini

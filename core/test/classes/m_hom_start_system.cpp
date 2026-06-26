@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(start_points_are_roots_of_the_start_system)
 
 	bertini::Vec<dbl> xq(H.NumVariables());
 	for (Eigen::Index k = 0; k < xq.size(); ++k)
-		xq(k) = dbl(0.37 * (k + 1) + 0.11, -0.19 * k + 0.07);
+		xq(k) = dbl(0.37 * static_cast<double>(k + 1) + 0.11, -0.19 * static_cast<double>(k) + 0.07);
 	const dbl tv(0.42, -0.13);
 	const dbl hstep(1e-6, 0);
 

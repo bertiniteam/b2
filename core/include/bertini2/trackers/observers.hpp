@@ -237,7 +237,7 @@ namespace bertini {
 
 				if (auto p = dynamic_cast<const Initializing<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(p->Get().GetSystem().precision())
+					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(static_cast<int>(p->Get().GetSystem().precision()))
 						<< "initializing in double, tracking path\nfrom\tt = "
 						<< p->StartTime() << "\nto\tt = " << p->EndTime()
 						<< "\n from\tx = \n" << p->StartPoint()
@@ -245,7 +245,7 @@ namespace bertini {
 				}
 				else if (auto p = dynamic_cast<const Initializing<EmitterT,mpfr_complex>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(p->Get().GetSystem().precision())
+					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(static_cast<int>(p->Get().GetSystem().precision()))
 						 << "initializing in multiprecision, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint()
 						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}
@@ -259,7 +259,7 @@ namespace bertini {
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "Tracker iteration " << t.NumTotalStepsTaken() << "\ncurrent precision: " << t.CurrentPrecision();
 
 
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(t.CurrentPrecision())
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(t.CurrentPrecision()))
 						<< "t = " << t.CurrentTime()
 						<< "\ncurrent stepsize: " << t.CurrentStepsize()
 						<< "\ndelta_t = " << t.DeltaT() 
@@ -294,20 +294,20 @@ namespace bertini {
 
 				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,mpfr_complex>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "prediction successful (mpfr_complex), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "prediction successful (mpfr_complex), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "prediction successful (dbl), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "prediction successful (dbl), result:\n" << p->ResultingPoint();
 				}
 
 				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,mpfr_complex>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "correction successful (mpfr_complex), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "correction successful (mpfr_complex), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "correction successful (dbl), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "correction successful (dbl), result:\n" << p->ResultingPoint();
 				}
 
 
@@ -348,7 +348,7 @@ namespace bertini {
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
-			ObserveResult OnEvent(FailedStep<EmitterT> const& e)
+			ObserveResult OnEvent(FailedStep<EmitterT> const& /*e*/)
 			{
 				std::cout << "observed step failure" << std::endl;
 				return ObserveResult::KeepObserving;

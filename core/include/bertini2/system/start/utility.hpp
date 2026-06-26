@@ -71,9 +71,9 @@ namespace bertini{
 
 		for (int ii = static_cast<int>(dimensions.size())-1; ii >= 0; --ii)
 		{
-		  T I = index%k[ii];
-		  T J = (index - I) / k[ii];
-		  subscripts[ii] = J;
+		  T I = index%k[static_cast<size_t>(ii)];
+		  T J = (index - I) / k[static_cast<size_t>(ii)];
+		  subscripts[static_cast<size_t>(ii)] = J;
 		  index = I;
 		}
 

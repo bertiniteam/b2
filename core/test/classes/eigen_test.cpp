@@ -554,7 +554,7 @@ using bertini::KahanMatrix;
 
 		auto new_prec = 50-10;
 
-		bertini::DefaultPrecision(new_prec);
+		bertini::DefaultPrecision(static_cast<unsigned int>(new_prec));
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B(2,2);
 		
 		B = A; // assignment preserves precision of source
@@ -577,7 +577,7 @@ using bertini::KahanMatrix;
 
 		auto new_prec = 50-10;
 
-		bertini::DefaultPrecision(new_prec);
+		bertini::DefaultPrecision(static_cast<unsigned int>(new_prec));
 		Eigen::Matrix<data_type, Eigen::Dynamic, 1> B(4);
 
 		B = A;
