@@ -94,7 +94,29 @@ int RunZeroDim(std::string const& config_str, std::string const& input_str)
 			std::ofstream raw_data{"raw_data"};
 			alg->WriteRawData(raw_data);
 		}
-		std::cout << "bertini: wrote main_data and raw_data\n";
+		// Bertini 1.7-compatible machine-readable solution files (count-led coordinate blocks),
+		// so tooling that parses Bertini 1 output reads these unchanged.
+		{
+			std::ofstream f{"finite_solutions"};
+			alg->WriteFiniteSolutions(f);
+		}
+		{
+			std::ofstream f{"real_finite_solutions"};
+			alg->WriteRealFiniteSolutions(f);
+		}
+		{
+			std::ofstream f{"nonsingular_solutions"};
+			alg->WriteNonsingularSolutions(f);
+		}
+		{
+			std::ofstream f{"singular_solutions"};
+			alg->WriteSingularSolutions(f);
+		}
+		{
+			std::ofstream f{"raw_solutions"};
+			alg->WriteRawSolutions(f);
+		}
+		std::cout << "bertini: wrote main_data, raw_data, and solution files\n";
 	}
 	return 0;
 }

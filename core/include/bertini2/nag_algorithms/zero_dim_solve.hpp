@@ -90,6 +90,12 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 {
 	virtual void WriteMainData(std::ostream& out) const = 0;
 	virtual void WriteRawData(std::ostream& out)  const = 0;
+	// Bertini 1.7-compatible machine-readable solution files (count-led coordinate blocks).
+	virtual void WriteFiniteSolutions(std::ostream& out)      const = 0;
+	virtual void WriteRealFiniteSolutions(std::ostream& out)  const = 0;
+	virtual void WriteNonsingularSolutions(std::ostream& out) const = 0;
+	virtual void WriteSingularSolutions(std::ostream& out)    const = 0;
+	virtual void WriteRawSolutions(std::ostream& out)         const = 0;
 	virtual void ApplyParsedConfigs(std::string const& config_str) = 0;
 	virtual ~AnyZeroDim() = default;
 };
@@ -682,6 +688,11 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			// output.hpp is included (avoiding a circular-include chicken-and-egg).
 			void WriteMainData(std::ostream& out) const override;
 			void WriteRawData(std::ostream& out)  const override;
+			void WriteFiniteSolutions(std::ostream& out)      const override;
+			void WriteRealFiniteSolutions(std::ostream& out)  const override;
+			void WriteNonsingularSolutions(std::ostream& out) const override;
+			void WriteSingularSolutions(std::ostream& out)    const override;
+			void WriteRawSolutions(std::ostream& out)         const override;
 			void ApplyParsedConfigs(std::string const& config_str) override;
 
 			virtual ~ZeroDim() = default;
@@ -1885,6 +1896,51 @@ inline void
 ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteRawData(std::ostream& out) const
 {
 	output::Classic<ZeroDim>::RawData(out, *this);
+}
+
+template<typename TrackerType, typename EndgameType,
+         typename SystemType, typename StartSystemType,
+         template<typename,typename> class SystemManagementP>
+inline void
+ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteFiniteSolutions(std::ostream& out) const
+{
+	output::Classic<ZeroDim>::FiniteSolutions(out, *this);
+}
+
+template<typename TrackerType, typename EndgameType,
+         typename SystemType, typename StartSystemType,
+         template<typename,typename> class SystemManagementP>
+inline void
+ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteRealFiniteSolutions(std::ostream& out) const
+{
+	output::Classic<ZeroDim>::RealFiniteSolutions(out, *this);
+}
+
+template<typename TrackerType, typename EndgameType,
+         typename SystemType, typename StartSystemType,
+         template<typename,typename> class SystemManagementP>
+inline void
+ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteNonsingularSolutions(std::ostream& out) const
+{
+	output::Classic<ZeroDim>::NonsingularSolutions(out, *this);
+}
+
+template<typename TrackerType, typename EndgameType,
+         typename SystemType, typename StartSystemType,
+         template<typename,typename> class SystemManagementP>
+inline void
+ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteSingularSolutions(std::ostream& out) const
+{
+	output::Classic<ZeroDim>::SingularSolutions(out, *this);
+}
+
+template<typename TrackerType, typename EndgameType,
+         typename SystemType, typename StartSystemType,
+         template<typename,typename> class SystemManagementP>
+inline void
+ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteRawSolutions(std::ostream& out) const
+{
+	output::Classic<ZeroDim>::RawSolutions(out, *this);
 }
 
 } // ns algorithm
