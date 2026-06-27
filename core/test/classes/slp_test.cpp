@@ -8,6 +8,8 @@
 #include <iostream>
 #include <chrono>
 #include <cstdlib>
+#include <atomic>
+#include <gmp.h>
 
 using Variable = bertini::node::Variable;
 
@@ -730,6 +732,116 @@ BOOST_AUTO_TEST_CASE(mpfr_raw_op_microbench)
 	          << "  => " << (t_rc / t_cc < 0.8 ? "real*complex IS cheaper -- tier helps arithmetic"
 	                                           : "real*complex ~ complex*complex -- Boost promotes; no arithmetic win")
 	          << "\n\n";
+	BOOST_CHECK(true);
+}
+
+namespace {
+	// A counting GMP allocator: delegates to std malloc/realloc/free (so blocks stay interchangeable
+	// with the default GMP allocator) while tallying calls.  Used to quantify mpfr churn per eval.
+	std::atomic<long> g_alloc{0}, g_realloc{0}, g_free{0}, g_bytes{0};
+	void* counting_alloc(size_t n)                       { ++g_alloc;  g_bytes += static_cast<long>(n); return std::malloc(n); }
+	void* counting_realloc(void* p, size_t /*o*/, size_t n){ ++g_realloc; return std::realloc(p, n); }
+	void  counting_free(void* p, size_t /*n*/)           { ++g_free;   std::free(p); }
+}
+
+// Quantify the mpfr allocation churn of the live eval segment (the user's hypothesis: alloc/dealloc,
+// not op-count, is the mp performance limit).  Counts malloc/realloc/free per eval of f+J at mp
+// precision.  Opt-in via BERTINI_SLP_BENCH.
+BOOST_AUTO_TEST_CASE(mpfr_alloc_churn_per_eval)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+	using real_mp = bertini::real_mp;
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	bertini::DefaultPrecision(prec);
+
+	const char* sysenv = std::getenv("BERTINI_SLP_BENCH_SYS");
+	auto sys_for_slp = ParseSLPSys(sysenv ? sysenv :
+		"function f0,f1,f2,f3; variable_group x0,x1,x2,x3; "
+		"f0 = 3*x0^4 + 5*x1^3 + 7*x2^2 + 11*x3^5 + 2*x0*x1*x2 - 13*x2*x3 + 17*x0 - 19; "
+		"f1 = 23*x1^4 + 29*x2^3 + 31*x0^2 + 37*x3 + 41*x0*x2*x3 - 43*x0*x1 + 47; "
+		"f2 = 53*x2^4 + 59*x3^3 + 61*x0^2 + 67*x1^5 + 71*x1*x2*x3 - 73*x0*x3 + 79; "
+		"f3 = 83*x3^4 + 89*x0^3 + 97*x1^2 + 101*x2^4 + 103*x0*x1*x3 - 107*x1*x2 + 109;");
+	auto slp = SLP(sys_for_slp);
+	if (std::getenv("BERTINI_SLP_DUMP")) std::cout << "\n----- SLP -----\n" << slp << "\n---------------\n";
+	slp.precision(prec);
+	const int nvars = static_cast<int>(slp.NumVariables());
+	Vec<complex_mp> pt(nvars);
+	for (int j = 0; j < nvars; ++j) pt(j) = complex_mp(real_mp(j + 2), real_mp(j + 1));
+	slp.Eval(pt); (void)slp.GetFuncVals<complex_mp>(); (void)slp.GetJacobian<complex_mp>();  // warm prologue
+
+	// install the counting allocator (blocks stay malloc/free-compatible, so mixing is safe)
+	void* (*oa)(size_t); void* (*ora)(void*, size_t, size_t); void (*ofr)(void*, size_t);
+	mp_get_memory_functions(&oa, &ora, &ofr);
+	mp_set_memory_functions(counting_alloc, counting_realloc, counting_free);
+
+	const int N = 200;
+	// Pre-build the varying inputs OUTSIDE the counted region -- constructing complex_mp/real_mp
+	// allocates, and we must not attribute that to eval.  Assigning a prebuilt value is alloc-free.
+	std::vector<complex_mp> inputs;
+	for (int i = 0; i < N; ++i) inputs.push_back(complex_mp(real_mp(i % 7 + 2), real_mp(i % 5 + 1)));
+
+	// (a) eval live segment only
+	g_alloc = g_realloc = g_free = 0;
+	for (int i = 0; i < N; ++i) { pt(0) = inputs[i]; slp.Eval(pt); }
+	const double e_malloc = double(g_alloc)/N, e_realloc = double(g_realloc)/N, e_free = double(g_free)/N;
+	// (b) eval + output extraction (GetFuncVals + GetJacobian build Eigen Vec/Mat<mpc>)
+	g_alloc = g_realloc = g_free = 0;
+	for (int i = 0; i < N; ++i) {
+		pt(0) = inputs[i];
+		slp.Eval(pt); (void)slp.GetFuncVals<complex_mp>(); (void)slp.GetJacobian<complex_mp>();
+	}
+	const double t_malloc = double(g_alloc)/N, t_realloc = double(g_realloc)/N, t_free = double(g_free)/N;
+	mp_set_memory_functions(oa, ora, ofr);         // restore
+
+	std::cout << "\n=== mpfr alloc churn (prec=" << prec << ", N=" << N << ", 4 fns/4 vars) ===\n"
+	          << "  eval only        : malloc=" << e_malloc << " realloc=" << e_realloc << " free=" << e_free << "\n"
+	          << "  eval + extraction: malloc=" << t_malloc << " realloc=" << t_realloc << " free=" << t_free << "\n"
+	          << "  extraction adds  : malloc=" << (t_malloc-e_malloc) << " realloc=" << (t_realloc-e_realloc) << "\n\n";
+	BOOST_CHECK(true);
+}
+
+// How many heap ops does a single raw mpc/mpfr op cost?  Tells us how much of the eval churn is
+// Boost's per-op INTERNAL scratch (which only a pooling allocator can fix) vs our own temporaries.
+BOOST_AUTO_TEST_CASE(mpfr_alloc_per_raw_op)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+	using real_mp = bertini::real_mp;
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	bertini::DefaultPrecision(prec);
+	const long M = 5000;
+
+	complex_mp a(real_mp("1.5"), real_mp("2.5")), b(real_mp("3.5"), real_mp("4.5")), c(0);
+	bertini::Precision(c, prec);
+
+	void* (*oa)(size_t); void* (*ora)(void*, size_t, size_t); void (*ofr)(void*, size_t);
+	mp_get_memory_functions(&oa, &ora, &ofr);
+	auto measure = [&](const char* label, auto&& op){
+		mp_set_memory_functions(counting_alloc, counting_realloc, counting_free);
+		g_alloc = g_realloc = g_free = 0;
+		for (long i = 0; i < M; ++i) op();
+		mp_set_memory_functions(oa, ora, ofr);
+		std::cout << "  " << label << ": malloc=" << double(g_alloc)/M
+		          << " realloc=" << double(g_realloc)/M << " free=" << double(g_free)/M << "\n";
+	};
+	std::cout << "\n=== heap ops per raw op (prec=" << prec << ", into a preallocated dest) ===\n";
+	real_mp r("2.5"); bertini::Precision(r, prec);
+	measure("c = a * b   (complex*complex)    ", [&]{ c = a * b; });
+	measure("c = a * a   (SQUARING, aliased)  ", [&]{ c = a * a; });
+	measure("c = a + b   (complex+complex)    ", [&]{ c = a + b; });
+	measure("c = r * a   (real*complex MIXED) ", [&]{ c = r * a; });
+	measure("c = r + a   (real+complex MIXED) ", [&]{ c = r + a; });
+	measure("c = a * r   (complex*real MIXED) ", [&]{ c = a * r; });
+	measure("c = a       (copy / Assign)      ", [&]{ c = a; });
+	measure("c = mul-lambda(a,b) (eval binop) ", [&]{ c = [](auto const& x, auto const& y){ return x*y; }(a, b); });
+	measure("c = (-x)-lambda(a)  (eval Negate)", [&]{ c = [](auto const& x){ return -x; }(a); });
+	measure("c = pow(a,4)(IntPower)           ", [&]{ c = pow(a, 4); });
+	// in-place exponentiation by squaring with one reused scratch -- the proposed IntPower replacement
+	measure("c = a^4 by squaring (1 scratch)  ", [&]{
+		static thread_local complex_mp base; bertini::Precision(base, prec);
+		base = a; c = a; for (int k = 1; k < 4; ++k) c *= base;   // simple repeated multiply (alloc-free?)
+	});
 	BOOST_CHECK(true);
 }
 
