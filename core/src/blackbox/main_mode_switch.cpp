@@ -39,6 +39,10 @@
 #include <fstream>
 #include <iostream>
 
+#include <gmp.h>
+#include <atomic>
+#include <cstdlib>
+
 #ifdef BERTINI2_HAVE_MPI
 #include "bertini2/parallel/mpi_include.hpp"
 #endif
@@ -47,6 +51,37 @@
 namespace bertini{
 
 namespace {
+
+// --- TEMPORARY performance instrumentation (remove before merge) -----------------------------
+// Counts GMP/MPFR/MPC allocations during a solve by wrapping GMP's memory functions (mpfr/mpc
+// allocate through these).  A noise-free measure of multiprecision allocation churn, far steadier
+// than wall-clock.  Off unless the env var BERTINI2_COUNT_ALLOCS is set; when off, zero overhead.
+namespace allocount {
+	std::atomic<unsigned long long> n_alloc{0}, n_realloc{0}, n_free{0};
+	void* (*old_alloc)(size_t) = nullptr;
+	void* (*old_realloc)(void*, size_t, size_t) = nullptr;
+	void  (*old_free)(void*, size_t) = nullptr;
+
+	void* counting_alloc(size_t n)                 { n_alloc.fetch_add(1, std::memory_order_relaxed);   return old_alloc(n); }
+	void* counting_realloc(void* p, size_t o, size_t n){ n_realloc.fetch_add(1, std::memory_order_relaxed); return old_realloc(p, o, n); }
+	void  counting_free(void* p, size_t n)         { n_free.fetch_add(1, std::memory_order_relaxed);    old_free(p, n); }
+
+	bool active() { return std::getenv("BERTINI2_COUNT_ALLOCS") != nullptr; }
+
+	void start() {
+		if (!active()) return;
+		mp_get_memory_functions(&old_alloc, &old_realloc, &old_free);
+		mp_set_memory_functions(counting_alloc, counting_realloc, counting_free);
+	}
+	void report() {
+		if (!active()) return;
+		mp_set_memory_functions(old_alloc, old_realloc, old_free);
+		std::cerr << "alloc-count: gmp_alloc=" << n_alloc.load()
+		          << " gmp_realloc=" << n_realloc.load()
+		          << " gmp_free=" << n_free.load() << "\n";
+	}
+}
+// -------------------------------------------------------------------------------------------
 
 int RunZeroDim(std::string const& config_str, std::string const& input_str)
 {
@@ -82,7 +117,9 @@ int RunZeroDim(std::string const& config_str, std::string const& input_str)
 		return 1;
 	}
 
+	allocount::start();
 	alg->Run();
+	allocount::report();
 
 	if (parallel::IsManager())
 	{
