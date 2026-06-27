@@ -27,7 +27,7 @@
 A System is composed of evaluation blocks held in a std::variant and dispatched by
 std::visit -- closed set, no type erasure.  Each block contributes a contiguous range
 of rows to the system's function vector / Jacobian.  Every block must provide, for each
-numeric type T in {dbl, mpfr_complex}:
+numeric type T in {complex_dbl, complex_mp}:
 
     template<typename T> void EvalInPlace(Eigen::Ref<Vec<T>> seg, Vec<T> const& vars, T const& t) const;
     template<typename T> void JacobianInPlace(Eigen::Ref<Mat<T>> blk, Vec<T> const& vars, T const& t) const;
@@ -79,7 +79,7 @@ namespace blocks {
 /**
 \brief Detection trait: does B satisfy the evaluation-block contract?
 
-Checks the dbl instantiation of the templated eval entry points plus the metadata
+Checks the complex_dbl instantiation of the templated eval entry points plus the metadata
 methods.  Adding a non-conforming type to the block variant then fails a one-line
 static_assert instead of producing a deep template error at the visit site.
 */
@@ -100,12 +100,12 @@ struct is_block<B, std::void_t<
 	// it is detected on a non-const B&.
 	decltype(std::declval<B&>().Homogenize(
 		std::declval<VariableGroup const&>(), std::declval<std::shared_ptr<node::Variable> const&>())),
-	decltype(std::declval<const B&>().template EvalInPlace<dbl>(
-		std::declval<Eigen::Ref<Vec<dbl>>>(), std::declval<Vec<dbl> const&>(), std::declval<dbl const&>())),
-	decltype(std::declval<const B&>().template JacobianInPlace<dbl>(
-		std::declval<Eigen::Ref<Mat<dbl>>>(), std::declval<Vec<dbl> const&>(), std::declval<dbl const&>())),
-	decltype(std::declval<const B&>().template TimeDerivInPlace<dbl>(
-		std::declval<Eigen::Ref<Vec<dbl>>>(), std::declval<Vec<dbl> const&>(), std::declval<dbl const&>()))
+	decltype(std::declval<const B&>().template EvalInPlace<complex_dbl>(
+		std::declval<Eigen::Ref<Vec<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>())),
+	decltype(std::declval<const B&>().template JacobianInPlace<complex_dbl>(
+		std::declval<Eigen::Ref<Mat<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>())),
+	decltype(std::declval<const B&>().template TimeDerivInPlace<complex_dbl>(
+		std::declval<Eigen::Ref<Vec<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>()))
 >> : std::true_type {};
 
 template <typename B>

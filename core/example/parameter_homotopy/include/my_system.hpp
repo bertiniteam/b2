@@ -9,7 +9,7 @@ namespace demo{
 	using Node = std::shared_ptr<bertini::node::Node>;
 	using Variable = std::shared_ptr<bertini::node::Variable>;
 
-	using dbl = bertini::dbl;
+	using complex_dbl = bertini::complex_dbl;
 	using mpfr = bertini::mpfr;
 
 	auto MakeStep1Parameters()

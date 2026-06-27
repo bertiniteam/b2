@@ -113,7 +113,7 @@ namespace bertini
 	 \tparam length_in_digits The length of the desired random number
 	 */
 	template <unsigned int length_in_digits>
-	mpfr_float RandomMp()
+	real_mp RandomMp()
 	{
 
 		using namespace boost::multiprecision;
@@ -126,7 +126,7 @@ namespace bertini
 		// ones), so SetGlobalSeed()/ReseedThisThread() control them all uniformly.
 		// The distribution fills the full mp mantissa from the 32-bit engine via
 		// generate_canonical.
-		mpfr_float a{distribution(ThreadEngine())};
+		real_mp a{distribution(ThreadEngine())};
 		return a;
 	}
 	
@@ -137,7 +137,7 @@ namespace bertini
 	 \param a the number which will be assigned in this call
 	 */
 	template <unsigned int length_in_digits>
-	void RandomMpAssign(mpfr_float & a)
+	void RandomMpAssign(real_mp & a)
 	{	
 		a = RandomMp<length_in_digits>();
 	}
@@ -151,7 +151,7 @@ namespace bertini
 	 \param b The right bound.
 	 */
 	template <unsigned int length_in_digits>
-	mpfr_float RandomMp(const mpfr_float & left, const mpfr_float & right)
+	real_mp RandomMp(const real_mp & left, const real_mp & right)
 	{
 		return (right-left)*RandomMp<length_in_digits>()+left;
 	}
@@ -161,31 +161,31 @@ namespace bertini
 	/**
 	 \brief create a random number, at the current default precision
 	 */
-	mpfr_float RandomMp();
+	real_mp RandomMp();
 
 	/**
 	 \brief create a random number, at the specified precision
 
 	 \param num_digits the precision that you desire.  
 	 */
-	mpfr_float RandomMp(unsigned num_digits);
+	real_mp RandomMp(unsigned num_digits);
 
 	/**
 	 \brief create a random number in a given interval, at the current default precision
 	*/
-	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b);
+	real_mp RandomMp(const real_mp & a, const real_mp & b);
 
 	/**
 	 \brief create a random number in a given interval, at the specified precision
 	*/
-	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b, unsigned num_digits);
+	real_mp RandomMp(const real_mp & a, const real_mp & b, unsigned num_digits);
 
 	/**
-	 \brief Set an existing mpfr_float to a random number, to a given precision.  
+	 \brief Set an existing real_mp to a random number, to a given precision.  
 
 	 This function is how to get random numbers at a precision different from the current default.
 	 */
-	void RandomMpAssign(mpfr_float & a, unsigned num_digits);
+	void RandomMpAssign(real_mp & a, unsigned num_digits);
 
 	
 
@@ -200,7 +200,7 @@ namespace bertini{
 namespace multiprecision{
 
 
-using complex = bertini::mpfr_complex;
+using complex = bertini::complex_mp;
 using bertini::RandomMp;
 
 
@@ -213,7 +213,7 @@ using bertini::RandomMp;
 	{
 		auto cached = ThreadPrecision();
 		SetThreadPrecision(num_digits);
-		complex temp(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits)); // ,0
+		complex temp(RandomMp(real_mp(-1),real_mp(1),num_digits)); // ,0
 		a.swap(temp);
 		SetThreadPrecision(cached);
 	}
@@ -223,7 +223,7 @@ using bertini::RandomMp;
 	 */
 	inline complex RandomReal()
 	{
-		return complex(RandomMp(mpfr_float(-1),mpfr_float(1))); // ,0
+		return complex(RandomMp(real_mp(-1),real_mp(1))); // ,0
 	}
 	
 	/**
@@ -233,7 +233,7 @@ using bertini::RandomMp;
 	{
 		auto cached = ThreadPrecision();
 		SetThreadPrecision(num_digits);
-		auto result = complex(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits));// ,0
+		auto result = complex(RandomMp(real_mp(-1),real_mp(1),num_digits));// ,0
 		SetThreadPrecision(cached);
 		return result;
 	}
@@ -249,7 +249,7 @@ using bertini::RandomMp;
 	 */
 	inline complex rand()
 	{
-		return complex( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
+		return complex( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
 	}
 
 
@@ -258,7 +258,7 @@ using bertini::RandomMp;
 	 */
 	inline complex rand_unit()
 	{
-		complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
+		complex returnme( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
 		return returnme / abs(returnme);   // normalize to modulus 1 (NOT sqrt(abs), which left modulus sqrt|z|)
 	}
 
@@ -273,7 +273,7 @@ using bertini::RandomMp;
 		auto cached = ThreadPrecision();
 		SetThreadPrecision(num_digits);
 		
-		mpfr_complex temp( RandomMp(num_digits), RandomMp(num_digits) );
+		complex_mp temp( RandomMp(num_digits), RandomMp(num_digits) );
 		a = std::move(temp);
 		SetThreadPrecision(cached);
 	}

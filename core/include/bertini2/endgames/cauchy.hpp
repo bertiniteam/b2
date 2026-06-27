@@ -561,21 +561,21 @@ public:
 	/*
 	Input: A time value and the space value above that time.
 
-	Output: An mpfr_float representing a tolerance threshold for declaring a loop to be closed.
+	Output: An real_mp representing a tolerance threshold for declaring a loop to be closed.
 	Details: Used in Bertini 1 as a heuristic for computing separatedness of roots. Decided to not be used since assumptions for this tolerance are not usually met.
 	template<typename ComplexT>
-	mpfr_float FindToleranceForClosedLoop(ComplexT x_time, Vec<ComplexT> x_sample)
+	real_mp FindToleranceForClosedLoop(ComplexT x_time, Vec<ComplexT> x_sample)
 	{
-		auto degree_max = std::max(this->GetTracker().AMP_config_.degree_bound,mpfr_float("2.0"));
+		auto degree_max = std::max(this->GetTracker().AMP_config_.degree_bound,real_mp("2.0"));
 		auto K = this->GetTracker().AMP_config_.coefficient_bound;
-		mpfr_float N;
-		mpfr_float M;
-		mpfr_float L;
+		real_mp N;
+		real_mp M;
+		real_mp L;
 		if(max_closed_loop_tolerance_ < min_closed_loop_tolerance_)
 		{
 			max_closed_loop_tolerance_ = min_closed_loop_tolerance_;
 		}
-		auto error_tolerance = mpfr_float("1e-13");
+		auto error_tolerance = real_mp("1e-13");
 		if(x_sample.size() <= 1)
 		{
 			N = degree_max;
@@ -594,7 +594,7 @@ public:
 					tol = minimum_singular_value;
 			else
 			{
-			tol = mpfr_float("2.0") / tol;
+			tol = real_mp("2.0") / tol;
 		tol = tol * minimum_singular_value;
 			}
 			// make sure that tol is between min_tol & max_tol

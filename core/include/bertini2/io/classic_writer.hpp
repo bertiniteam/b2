@@ -168,7 +168,7 @@ namespace bertini{
 			out << "maxnumbersteps: "         << opt.maxnumbersteps         << ";\n";
 			out << "maxnewtonits: "           << opt.maxnewtonits           << ";\n";
 			out << "maxcrossedpathresolves: " << opt.maxcrossedpathresolves << ";\n";
-			out << "coefficientbound: "       << num(static_cast<double>(sys.CoefficientBound<dbl>())) << ";\n";
+			out << "coefficientbound: "       << num(static_cast<double>(sys.CoefficientBound<complex_dbl>())) << ";\n";
 			out << "degreebound: "            << sys.DegreeBound()          << ";\n";
 		}
 

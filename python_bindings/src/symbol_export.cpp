@@ -124,10 +124,10 @@ namespace bertini{
 				"complex value (a real literal is just zero imaginary part).  Build it as Complex(real) "
 				"or Complex(real, imag) from exact strings/multiprec values; prefer Integer or Rational "
 				"for exact non-irrational coefficients.", no_init)
-			.def("__init__", make_constructor(&Complex::template Make<mpfr_float const&, mpfr_float const&>))
+			.def("__init__", make_constructor(&Complex::template Make<real_mp const&, real_mp const&>))
 			.def("__init__", make_constructor(&Complex::template Make<std::string const&>))
 			.def("__init__", make_constructor(&Complex::template Make<std::string const&, std::string const&>))
-			.def("__init__", make_constructor(&Complex::template Make<mpfr_complex const&>))
+			.def("__init__", make_constructor(&Complex::template Make<complex_mp const&>))
 			.def("value", &Complex::GetValue, return_value_policy<copy_const_reference>(), "the literal value this node represents, at its stored (highest) precision")
 			;
 			

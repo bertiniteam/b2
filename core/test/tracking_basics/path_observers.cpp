@@ -36,7 +36,7 @@
 
 
 extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
+extern bertini::real_mp threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
@@ -54,9 +54,9 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
-using dbl = std::complex<double>;
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using complex_dbl = std::complex<double>;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 
 
 template<typename NumT> using Vec = bertini::Vec<NumT>;

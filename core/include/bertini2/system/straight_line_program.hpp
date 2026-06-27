@@ -155,6 +155,20 @@ namespace bertini {
 	class StraightLineProgram;
 
 
+	/**
+	\brief The numeric type a memory slot holds, orthogonal to working precision (ADR-0034).
+
+	Precision (double vs multiprecision) is the Eval<NumT> template parameter; this is the ℝ/ℂ
+	axis within a precision.  A slot tagged Real lives in the real register bank (real_dbl /
+	real_mp), Complex in the complex bank (complex_dbl / complex_mp).  The compiler infers each
+	slot's NumType from the function tree (a constant whose imaginary part is zero, an Integer, a
+	Rational with zero imaginary part, Pi/E are Real; variables and the path variable are Complex;
+	an operator's result is the join of its operands, escaping to Complex for ops that can leave ℝ).
+	Integer is reserved for a later stage; S1 uses {Real, Complex}.
+	*/
+	enum class NumType : uint8_t { Real = 0, Complex = 1 };  // Integer added in a later stage
+
+
 	enum Operation { // we'll start with the binary ones
 		Add=      1 << 0,
 		Subtract= 1 << 1,
@@ -190,6 +204,16 @@ namespace bertini {
 	}
 
 	std::string OpcodeToString(Operation op);
+
+	// Compile-time bank selectors (ADR-0034).  After NumType inference, each instruction's opcode word
+	// gets these high bits set to record which bank (real or complex) each operand and the result live
+	// in, so the hot eval loop reads the banks inline from the instruction it has already loaded instead
+	// of looking up slot_numtype_[slot] per operand.  The base Operation occupies bits 0..16, so these
+	// sit well clear of it; masking with kOpcodeMask recovers the base op for the switch and for IsUnary.
+	constexpr size_t kOpcodeMask = (static_cast<size_t>(1) << 17) - 1;
+	constexpr size_t kArg0Real   =  static_cast<size_t>(1) << 20;  // first operand slot is NumType::Real
+	constexpr size_t kArg1Real   =  static_cast<size_t>(1) << 21;  // second operand slot is Real (binary, not IntPower)
+	constexpr size_t kOutReal    =  static_cast<size_t>(1) << 22;  // result slot is NumType::Real
 
 
 	/**
@@ -270,12 +294,26 @@ namespace bertini {
 		Kind kind = Kind::Integer;
 		mpz_int      int_value;             //< Kind::Integer  (exact)
 		mpq_rational rat_real, rat_imag;    //< Kind::Rational (exact)
-		mpfr_complex float_value;           //< Kind::Complex (authored-precision literal; also a fixed variable's value)
+		complex_mp float_value;           //< Kind::Complex (authored-precision literal; also a fixed variable's value)
 		size_t slot = 0;                    //< where this constant lives in the register file
 
 		/// Produce the constant's value at the ambient working precision (ThreadPrecision), matching
 		/// the corresponding number node's FreshEval exactly.  Definition + instantiations in the cpp.
 		template<typename NumT> NumT Produce() const;
+
+		/// Produce just the REAL value (for a slot inferred NumType::Real).  Only valid when IsReal().
+		template<typename RealT> RealT ProduceReal() const;
+
+		/// Whether this constant is real-valued: Integer/Pi/E always; a Rational/Complex literal iff its
+		/// imaginary part is exactly zero.  Drives NumType::Real inference for constant slots (ADR-0034).
+		bool IsReal() const {
+			switch (kind) {
+				case Kind::Integer: case Kind::Pi: case Kind::E: return true;
+				case Kind::Rational: return rat_imag == 0;
+				case Kind::Complex:  return float_value.imag() == 0;
+			}
+			return false;
+		}
 
 		friend class boost::serialization::access;
 		template <typename Archive>
@@ -308,9 +346,11 @@ namespace bertini {
 		template<typename NumT>
 		std::vector<NumT> const& Get() const { return std::get<std::vector<NumT>>(registers_); }
 
-		//< The register file.  Numbers and variables, plus temp results and output locations.  It's
-		//  all one block per number type.  That's why it's called a SLP!
-		mutable std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > registers_;
+		//< The register file (ADR-0034): one bank per (precision, NumType).  A slot lives in exactly
+		//  one bank, chosen by its NumType; the real banks are the real companions of the complex ones
+		//  (real_dbl for complex_dbl, real_mp for complex_mp).  Get<NumT>() selects a bank by type.
+		mutable std::tuple< std::vector<real_dbl>, std::vector<complex_dbl>,
+		                    std::vector<real_mp>,  std::vector<complex_mp> > registers_;
 
 		mutable unsigned precision_ = 16; //< The current working number of digits
 		mutable bool is_evaluated_ = false;
@@ -325,8 +365,10 @@ namespace bertini {
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & std::get<std::vector<dbl_complex>>(registers_);
-			ar & std::get<std::vector<mpfr_complex>>(registers_);
+			ar & std::get<std::vector<real_dbl>>(registers_);
+			ar & std::get<std::vector<complex_dbl>>(registers_);
+			ar & std::get<std::vector<real_mp>>(registers_);
+			ar & std::get<std::vector<complex_mp>>(registers_);
 			ar & precision_;
 			ar & is_evaluated_;
 			// frozen_valid_* are transient (recomputed on first eval); not serialized.
@@ -355,6 +397,11 @@ namespace bertini {
 		using IntT = int;  // this needs to co-vary on the stored type inside the node.  node should stop using mpz, it's slow.
 
 		SLPProgram() = default;
+
+		// ADR-0034 A/B switch: when false, ComputeSlotNumTypes leaves every slot Complex, reproducing
+		// the pre-tier all-complex evaluation.  Read at compile time (SLP construction).  Default true;
+		// the benchmark flips it to measure tiers-on vs tiers-off.  Not for production toggling.
+		static bool tiers_enabled_;
 
 		bool HavePathVariable() const { return has_path_variable_; }
 		inline unsigned NumFunctions() const{ return static_cast<unsigned>(number_of_.Functions);}
@@ -404,6 +451,17 @@ namespace bertini {
 		// at the end of compilation, after `num_slots_` is set.
 		void PartitionInstructions();
 
+		// Fill slot_numtype_ by a forward pass over the (dependency-ordered) tape (ADR-0034): seed
+		// constant slots from ConstantRecipe::IsReal() and input slots as Complex, then propagate the
+		// NumType join through each instruction.  Called at the end of compilation.
+		void ComputeSlotNumTypes();
+
+		// Pack each instruction's operand/result banks (from slot_numtype_) into its opcode word's high
+		// bits (kArg0Real/kArg1Real/kOutReal), so eval dispatches banks without per-slot lookups.  Runs
+		// after ComputeSlotNumTypes and PartitionInstructions (it only sets bits; order vs. partition
+		// doesn't matter as it rewrites instructions in place).
+		void SpecializeInstructions();
+
 
 		bool has_path_variable_ = false; //< Does this SLP have a path variable?
 
@@ -427,6 +485,11 @@ namespace bertini {
 
 		size_t num_slots_ = 0; //< Total number of memory slots the program needs (per number bank).
 
+		// The NumType of each slot (ADR-0034), indexed by global slot number; sized to num_slots_.
+		// Selects which register bank a slot lives in.  Default Complex (filled by the compiler);
+		// an all-Complex table reproduces the pre-tier behavior exactly.
+		std::vector<NumType> slot_numtype_;
+
 
 		friend class boost::serialization::access;
 
@@ -441,6 +504,7 @@ namespace bertini {
 			ar & constant_recipes_;
 			ar & first_live_instruction_;
 			ar & num_slots_;
+			ar & slot_numtype_;
 		}
 	};
 
@@ -549,16 +613,33 @@ namespace bertini {
 		the function will NOT automatically resize your vector for you to be the correct size
 
 		 */
+		/// Number of slots the compiler inferred as NumType::Real (ADR-0034).  >0 means real-valued
+		/// subexpressions are being evaluated in the cheaper real banks; used by tests to confirm the
+		/// tier inference is live (not silently all-Complex).
+		size_t NumRealSlots() const {
+			size_t n = 0;
+			for (auto t : program_->slot_numtype_) if (t == NumType::Real) ++n;
+			return n;
+		}
+
+		// Read a slot's value as NumT (complex), pulling from the real or complex bank per its NumType
+		// (ADR-0034).  Used to copy outputs out, since a function/derivative slot could be Real-typed.
+		template<typename NumT>
+		NumT ReadSlotAsComplex(size_t slot) const {
+			using RealT = typename NumTraits<NumT>::Real;
+			if (program_->slot_numtype_[slot] == NumType::Real)
+				return NumT(memory_.template Get<RealT>()[slot]);
+			return memory_.template Get<NumT>()[slot];
+		}
+
 		template<typename NumT>
 		void GetFuncValsInPlace(Eigen::Ref<Vec<NumT>> result) const{
 			if (!memory_.is_evaluated_)
 				program_->Eval<NumT>(memory_);
 
-			auto& memory = memory_.Get<NumT>();
-
-			// copy content
+			// copy content (an output slot may be Real-typed; read from the bank its NumType selects)
 			for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-				result(static_cast<Eigen::Index>(ii)) = memory[ii + program_->output_locations_.Functions];
+				result(static_cast<Eigen::Index>(ii)) = ReadSlotAsComplex<NumT>(ii + program_->output_locations_.Functions);
 			}
 		}
 
@@ -578,12 +659,10 @@ namespace bertini {
 			if (!memory_.is_evaluated_)
 				program_->Eval<NumT>(memory_);
 
-			auto& memory = memory_.Get<NumT>();
-
-			// copy content
+			// copy content (a derivative slot may be Real-typed; read from the bank its NumType selects)
 			for (size_t jj =0; jj < program_->number_of_.Variables; ++jj) {
 				for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-					result(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)) = memory[ii+jj*program_->number_of_.Functions + program_->output_locations_.Jacobian];
+					result(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)) = ReadSlotAsComplex<NumT>(ii+jj*program_->number_of_.Functions + program_->output_locations_.Jacobian);
 				}
 			}
 		}
@@ -604,11 +683,9 @@ namespace bertini {
 			if (!memory_.is_evaluated_)
 				program_->Eval<NumT>(memory_);
 
-			auto& memory = memory_.Get<NumT>();
-			// 1. make container, size correctly.
-			// 2. copy content
+			// copy content (a time-derivative slot may be Real-typed; read from the right bank)
 			for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-				result(static_cast<Eigen::Index>(ii)) = memory[ii + program_->output_locations_.TimeDeriv];
+				result(static_cast<Eigen::Index>(ii)) = ReadSlotAsComplex<NumT>(ii + program_->output_locations_.TimeDeriv);
 			}
 		}
 
@@ -715,7 +792,7 @@ namespace bertini {
 // && _WIN32
 			// An empty variable vector (a constant program with no variables) has no
 			// precision to read or check.
-			if (!std::is_same<NumT,dbl_complex>::value && variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_){
+			if (!std::is_same<NumT,complex_dbl>::value && variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_){
 				std::stringstream err_msg;
 				err_msg << "variable_values and SLP must be of same precision.  respective precisions: " << Precision(variable_values) << " " << memory_.precision_ << std::endl;
 				throw std::runtime_error(err_msg.str());

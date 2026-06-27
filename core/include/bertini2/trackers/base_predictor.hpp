@@ -461,8 +461,8 @@ namespace bertini{
 				
 				Predictor predictor_;
 				unsigned p_;
-				std::tuple< Mat<dbl>, Mat<mpfr> > dh_dx_;
-				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr>> > LU_;
+				std::tuple< Mat<complex_dbl>, Mat<mpfr> > dh_dx_;
+				std::tuple< Eigen::PartialPivLU<Mat<complex_dbl>>, Eigen::PartialPivLU<Mat<mpfr>> > LU_;
 				
 
 				

@@ -32,7 +32,7 @@
 
 
 extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
+extern bertini::real_mp threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
@@ -47,9 +47,9 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
-using dbl = std::complex<double>;
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using complex_dbl = std::complex<double>;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 
 
 template<typename NumT> using Vec = bertini::Vec<NumT>;
@@ -87,13 +87,13 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 					newton_preferences);
 
 	
-	dbl t_start(1);
-	dbl t_end(0);
+	complex_dbl t_start(1);
+	complex_dbl t_end(0);
 	
-	Vec<dbl> y_start(1);
-	y_start << dbl(1);
+	Vec<complex_dbl> y_start(1);
+	y_start << complex_dbl(1);
 
-	Vec<dbl> y_end;
+	Vec<complex_dbl> y_end;
 
 	auto obs = GoryDetailLogger<DoublePrecisionTracker>();
 		tracker.AddObserver(obs);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 	BOOST_CHECK(code==bertini::SuccessCode::Success);
 
 	BOOST_CHECK_EQUAL(y_end.size(),1);
-	BOOST_CHECK(abs(y_end(0)-dbl(0)) < 1e-5);
+	BOOST_CHECK(abs(y_end(0)-complex_dbl(0)) < 1e-5);
 
 }
 	

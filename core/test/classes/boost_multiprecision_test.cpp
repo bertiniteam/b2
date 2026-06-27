@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/multiprecision/mpc.hpp>
 
-using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>;
+using real_mp = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>;
 using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_on>;
 using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_on>;
 using mpc_complex = boost::multiprecision::number<boost::multiprecision::backends::mpc_complex_backend<0>, boost::multiprecision::et_on>;
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_rational_div_other_order, *utf::depends_o
 
 BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float_16digits)
 {
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	mpc_complex::default_precision(16);
 
 	mpc_complex b(1,0);
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_complex_16digits, *utf::
 
 BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_both_16digits, *utf::depends_on("boost_multiprecision/precision_complex_longlong_div_set_complex_16digits"))
 {
-	mpfr_float::default_precision(16);
+	real_mp::default_precision(16);
 	mpc_complex::default_precision(16);
 
 	mpc_complex b(1,0);
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_both_16digits, *utf::dep
 
 BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float20_complex16, *utf::depends_on("boost_multiprecision/precision_complex_longlong_div_set_both_16digits"))
 {
-	mpfr_float::default_precision(20);
+	real_mp::default_precision(20);
 	mpc_complex::default_precision(16);
 
 	mpc_complex b(1,0);
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float20_complex16, *utf:
 
 BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float16_complex20, *utf::depends_on("boost_multiprecision/precision_complex_longlong_div_set_float20_complex16"))
 {
-	mpfr_float::default_precision(16);
+	real_mp::default_precision(16);
 	mpc_complex::default_precision(20);
 
 	mpc_complex b(1,0);
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float16_complex20, *utf:
 
 BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float20_complex20)
 {
-	mpfr_float::default_precision(20);
+	real_mp::default_precision(20);
 	mpc_complex::default_precision(20);
 
 	mpc_complex b(1,0);
@@ -356,17 +356,17 @@ BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float20_complex20)
 struct scoped_mpfr_precision_options_all_threads
 {
    boost::multiprecision::variable_precision_options saved_options;
-   scoped_mpfr_precision_options_all_threads(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::default_variable_precision_options())
+   scoped_mpfr_precision_options_all_threads(boost::multiprecision::variable_precision_options opts) : saved_options(real_mp::default_variable_precision_options())
    {
-      mpfr_float::default_variable_precision_options(opts);
+      real_mp::default_variable_precision_options(opts);
    }
    ~scoped_mpfr_precision_options_all_threads()
    {
-      mpfr_float::default_variable_precision_options(saved_options);
+      real_mp::default_variable_precision_options(saved_options);
    }
    void reset(boost::multiprecision::variable_precision_options opts)
    {
-      mpfr_float::default_variable_precision_options(opts);
+      real_mp::default_variable_precision_options(opts);
    }
 };
 
@@ -377,17 +377,17 @@ struct scoped_mpfr_precision_options_all_threads
 struct scoped_mpfr_precision_options_this_thread
 {
    boost::multiprecision::variable_precision_options saved_options;
-   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::thread_default_variable_precision_options())
+   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(real_mp::thread_default_variable_precision_options())
    {
-      mpfr_float::thread_default_variable_precision_options(opts);
+      real_mp::thread_default_variable_precision_options(opts);
    }
    ~scoped_mpfr_precision_options_this_thread()
    {
-      mpfr_float::thread_default_variable_precision_options(saved_options);
+      real_mp::thread_default_variable_precision_options(saved_options);
    }
    void reset(boost::multiprecision::variable_precision_options opts)
    {
-      mpfr_float::thread_default_variable_precision_options(opts);
+      real_mp::thread_default_variable_precision_options(opts);
    }
 };
 
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(precision_opts_all_threads_affect_current_thread)
 
 	scoped_mpfr_precision_options_all_threads scoped_opts_all(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
-	bool options_match = mpfr_float::default_variable_precision_options() == mpfr_float::thread_default_variable_precision_options();
+	bool options_match = real_mp::default_variable_precision_options() == real_mp::thread_default_variable_precision_options();
 	BOOST_CHECK(options_match && "there's a bug in Boost.Multiprecision in 1.82 and below: default_variable_precision_options() doesn't affect the current thread.  see https://github.com/boostorg/multiprecision/issues/551");
 }
 
@@ -429,22 +429,22 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_all_threads_preserve_ta
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
-	mpfr_float w(0);
+	real_mp w(0);
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_all_threads scoped_opts(boost::multiprecision::variable_precision_options::preserve_target_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -465,21 +465,21 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_all_threads_preserve_so
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_all_threads scoped_opts(boost::multiprecision::variable_precision_options::preserve_source_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -497,21 +497,21 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_all_threads_preserve_co
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_all_threads scoped_opts(boost::multiprecision::variable_precision_options::preserve_component_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -527,21 +527,21 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_all_threads_preserve_re
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_all_threads scoped_opts(boost::multiprecision::variable_precision_options::preserve_related_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -557,21 +557,21 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_all_threads_preserve_al
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_all_threads scoped_opts(boost::multiprecision::variable_precision_options::preserve_all_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -612,26 +612,26 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_all_threads_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 	BOOST_CHECK_EQUAL(z.precision(), 70);
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 
@@ -655,19 +655,19 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_all_threads_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
@@ -676,7 +676,7 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_all_threads_preserve
 
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 
@@ -700,26 +700,26 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_all_threads_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 	BOOST_CHECK_EQUAL(z.precision(), 70);
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 
@@ -745,30 +745,30 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_all_threads_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 	BOOST_CHECK_EQUAL(z.precision(), 70);
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. If the expression contains component types then these are also considered when calculating the precision of the expression. In addition to component types, all related types are considered when evaluating the precision of the expression. Related types are considered to be instantiations of the same template, but with different parameters. So for example mpfr_float_100 would be a related type to mpfr_float, and all expressions containing an mpfr_float_100 variable would have at least 100 decimal digits of precision when evaluated as an mpfr_float expression. Moves, are true moves not copies.  
+	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. If the expression contains component types then these are also considered when calculating the precision of the expression. In addition to component types, all related types are considered when evaluating the precision of the expression. Related types are considered to be instantiations of the same template, but with different parameters. So for example mpfr_float_100 would be a related type to real_mp, and all expressions containing an mpfr_float_100 variable would have at least 100 decimal digits of precision when evaluated as an real_mp expression. Moves, are true moves not copies.  
 
 	scoped_mpfr_precision_options_all_threads   scoped_opts(boost::multiprecision::variable_precision_options::preserve_related_precision);
 
@@ -787,26 +787,26 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_all_threads_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 	BOOST_CHECK_EQUAL(z.precision(), 70);
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 
@@ -892,21 +892,21 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_this_thread_preserve_ta
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_this_thread scoped_opts(boost::multiprecision::variable_precision_options::preserve_target_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -923,21 +923,21 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_this_thread_preserve_so
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_this_thread scoped_opts(boost::multiprecision::variable_precision_options::preserve_source_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -955,21 +955,21 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_this_thread_preserve_co
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_this_thread scoped_opts(boost::multiprecision::variable_precision_options::preserve_component_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -985,21 +985,21 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_this_thread_preserve_re
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_this_thread scoped_opts(boost::multiprecision::variable_precision_options::preserve_related_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -1015,21 +1015,21 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable_this_thread_preserve_al
 
 
 
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
+	real_mp::default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 
-	mpfr_float::default_precision(30);
+	real_mp::default_precision(30);
 	scoped_mpfr_precision_options_this_thread scoped_opts(boost::multiprecision::variable_precision_options::preserve_all_precision);
 	
-	mpfr_float z = x*y;
+	real_mp z = x*y;
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
@@ -1062,26 +1062,26 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 	BOOST_CHECK_EQUAL(z.precision(), 70);
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 
@@ -1106,19 +1106,19 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
@@ -1127,7 +1127,7 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve
 
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 
@@ -1151,26 +1151,26 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 	BOOST_CHECK_EQUAL(z.precision(), 70);
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 
@@ -1196,30 +1196,30 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 	BOOST_CHECK_EQUAL(z.precision(), 70);
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. If the expression contains component types then these are also considered when calculating the precision of the expression. In addition to component types, all related types are considered when evaluating the precision of the expression. Related types are considered to be instantiations of the same template, but with different parameters. So for example mpfr_float_100 would be a related type to mpfr_float, and all expressions containing an mpfr_float_100 variable would have at least 100 decimal digits of precision when evaluated as an mpfr_float expression. Moves, are true moves not copies.  
+	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. If the expression contains component types then these are also considered when calculating the precision of the expression. In addition to component types, all related types are considered when evaluating the precision of the expression. Related types are considered to be instantiations of the same template, but with different parameters. So for example mpfr_float_100 would be a related type to real_mp, and all expressions containing an mpfr_float_100 variable would have at least 100 decimal digits of precision when evaluated as an real_mp expression. Moves, are true moves not copies.  
 
 	scoped_mpfr_precision_options_this_thread   scoped_opts(boost::multiprecision::variable_precision_options::preserve_related_precision);
 
@@ -1238,26 +1238,26 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve
 
 
 
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(50);
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
+	real_mp::thread_default_precision(60);
+	real_mp y("0.12345678901234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 
 
 	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
+	real_mp::thread_default_precision(70);
+	real_mp z("0");
 
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 	BOOST_CHECK_EQUAL(y.precision(), 60);
 	BOOST_CHECK_EQUAL(z.precision(), 70);
 
 
-	mpfr_float::thread_default_precision(30);
+	real_mp::thread_default_precision(30);
 	// then try to write into this existing variable with various policies
 
 

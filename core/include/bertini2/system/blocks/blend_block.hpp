@@ -290,7 +290,7 @@ private:
 	template <typename T>
 	void SyncPrecision(Vec<T> const& vars) const
 	{
-		if constexpr (!std::is_same<T, dbl>::value)
+		if constexpr (!std::is_same<T, complex_dbl>::value)
 		{
 			if (vars.size() > 0)
 			{
@@ -327,7 +327,7 @@ private:
 	Vec<T> EvalCoefficients(T const& path_value) const
 	{
 		auto& cs = EnsureCoefficientSystem();
-		if constexpr (!std::is_same<T, dbl>::value)
+		if constexpr (!std::is_same<T, complex_dbl>::value)
 			cs.precision(bertini::Precision(path_value));
 		Vec<T> t_point(1);
 		t_point(0) = path_value;

@@ -253,7 +253,7 @@ namespace node{
 	/**
 	\brief A complex-number literal node in an expression tree.
 
-	Stores an arbitrary-precision **complex** value (mpfr_complex) -- a real-valued literal is just
+	Stores an arbitrary-precision **complex** value (complex_mp) -- a real-valued literal is just
 	the special case with zero imaginary part.  The value passed at construction time is held as the
 	'true value' at its authored precision, and evaluation down- or up-samples from it.  Despite the
 	historical "float" name this node carried, it is NOT real-only: it holds a full complex number.
@@ -287,7 +287,7 @@ namespace node{
 		/**
 		\brief Get the literal value this node represents, at its stored (highest) precision.
 		*/
-		mpfr_complex const& GetValue() const
+		complex_mp const& GetValue() const
 		{
 			return highest_precision_value_;
 		}
@@ -326,11 +326,11 @@ namespace node{
 	private:
 
 		explicit
-		Complex(mpfr_complex const& val) : highest_precision_value_(val)
+		Complex(complex_mp const& val) : highest_precision_value_(val)
 		{}
 
 		explicit
-		Complex(mpfr_float const& rval, mpfr_float const& ival = 0) : highest_precision_value_(rval,ival)
+		Complex(real_mp const& rval, real_mp const& ival = 0) : highest_precision_value_(rval,ival)
 		{}
 
 		explicit
@@ -343,14 +343,14 @@ namespace node{
 
 
 
-		mpfr_complex highest_precision_value_;
+		complex_mp highest_precision_value_;
 
 		friend class boost::serialization::access;
 		Complex() = default;
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Number>(*this);
-			ar & const_cast<mpfr_complex &>(highest_precision_value_);
+			ar & const_cast<complex_mp &>(highest_precision_value_);
 		}
 	};
 
@@ -362,7 +362,7 @@ namespace node{
 	/**
 	\brief The Rational number type for Bertini2 expression trees.
 
-	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a mpfr_complex at evaluate time.
+	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a complex_mp at evaluate time.
 	*/
 	class Rational : public Number
 	{
@@ -442,13 +442,13 @@ namespace node{
 
 		Unlike Eval, this does no caching and never touches the node's stored working
 		value --- it is a pure read of the literal.  It matches the literal's conversion:
-		double truncation for dbl, and a value at the current thread precision for mpfr.
+		double truncation for complex_dbl, and a value at the current thread precision for mpfr.
 		*/
 		template<typename NumT>
 		NumT Value() const
 		{
-			if constexpr (std::is_same<NumT, dbl>::value)
-				return dbl(double(true_value_real_), double(true_value_imag_));
+			if constexpr (std::is_same<NumT, complex_dbl>::value)
+				return complex_dbl(double(true_value_real_), double(true_value_imag_));
 			else
 				return NumT(boost::multiprecision::mpfr_float(true_value_real_, ThreadPrecision()),
 				            boost::multiprecision::mpfr_float(true_value_imag_, ThreadPrecision()));

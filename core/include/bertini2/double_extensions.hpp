@@ -43,8 +43,10 @@ namespace bertini{
 // Avoids pulling mpfr_complex.hpp into the Boost.Multiprecision include chain.
 std::mt19937& ThreadEngine();
 
-	using dbl = std::complex<double>;
-	using dbl_complex = std::complex<double>;
+	// The two double-precision scalar types, named to parallel real_mp / complex_mp.
+	// real_dbl is an explicit alias for double so a future change lives in one place.
+	using real_dbl = double;
+	using complex_dbl = std::complex<double>;
 
 	/**
 	\brief Overload * for unsigned * complex<double>
@@ -78,7 +80,8 @@ std::mt19937& ThreadEngine();
 	}
 
 	namespace{
-		using dbl = std::complex<double>;
+		using real_dbl = double;
+		using complex_dbl = std::complex<double>;
 	}
 
 	/**
@@ -88,13 +91,13 @@ std::mt19937& ThreadEngine();
 
 	 \note This overload was removed from C++ in C++11, for some insane reason.  Here it is, back in black.
 	 */
-	inline dbl pow(const dbl & z, int power)
+	inline complex_dbl pow(const complex_dbl & z, int power)
 	{
 		if (power < 0) {
 			return pow(1./z, -power);
 		}
 		else if (power==0)
-			return dbl(1,0);
+			return complex_dbl(1,0);
 		else if(power==1)
 			return z;
 		else if(power==2)
@@ -104,7 +107,7 @@ std::mt19937& ThreadEngine();
 		else
 		{
 			unsigned int p(static_cast<unsigned int>(power));
-			dbl result(1,0), z_to_the_current_power_of_two = z;
+			complex_dbl result(1,0), z_to_the_current_power_of_two = z;
 			// have copy of p in memory, can freely modify it.
 			do {
 				if ( (p & 1) == 1 ) { // get the lowest bit of the number

@@ -59,7 +59,7 @@ namespace bertini {
 	name must appear in the expression; either kind of mismatch throws.  The latter is a
 	guard against typos --- a value silently going nowhere is almost always a mistake.
 
-	\tparam T The evaluation number type (`dbl` or `mpfr_complex`).
+	\tparam T The evaluation number type (`complex_dbl` or `complex_mp`).
 	\param expr The expression to evaluate.
 	\param variable_values A map from variable name to the value to substitute.
 	\return The value of the expression at the given point.
@@ -111,7 +111,7 @@ namespace bertini {
 		// evaluation Memory, so concurrent evaluations of the same cached expression do not race.
 		StraightLineProgram slp = *cached;
 
-		if constexpr (!std::is_same<T, dbl>::value)
+		if constexpr (!std::is_same<T, complex_dbl>::value)
 			if (vars.size() > 0)
 				slp.precision(Precision(point));
 

@@ -320,7 +320,7 @@ namespace bertini{
 			using RealT = typename NumTraits<T>::Real;
 
 		private:
-			static void set_real(T &c, mpfr_float const& r) { c.real(r);}
+			static void set_real(T &c, real_mp const& r) { c.real(r);}
 			static RealT get_real(T const&c) { return c.real();}
 
 			static void set_imag(T &c, RealT const& r) { c.imag(r);}

@@ -89,34 +89,34 @@ namespace bertini{
 				 arg("maxcrossedpathresolves") = 2u),
 				"Emit this system as a Bertini 1 classic input file (a CONFIG + INPUT string) so the same problem can be solved in Bertini 1 for cross-validation.  Every tracking knob that governs path resolution -- predictor, tolerances, and the FULL step-size cadence (maxstepsize / stepsuccessfactor / stepfailfactor / stepsforincrease) plus maxnewtonits -- is settable, so the emitted file is fully controlled against a Bertini 2 solve (defaults mirror Bertini 2's).  mptype: 0 double, 1 fixed-multiple, 2 adaptive.  odepredictor: 0 Euler, 2 RK4, 5 RKF45, 6 Cash-Karp.  AMP coeff/degree bounds are derived from the system.  Run `bertini1` on the result in a SCRATCH dir (it writes many files into its CWD).")
 
-			// Register mpfr overloads first so dbl overloads have highest priority
+			// Register mpfr overloads first so complex_dbl overloads have highest priority
 			// (boost::python resolves in LIFO order). Without this, a numpy int64
 			// array causes eigenpy to probe Vec<mpfr> construction first; with
 			// thread_default_precision=0 on Boost>=1.87 that aborts in mpfr_init2.
 			.def("eval", return_Eval0_ptr<mpfr>(), (arg("self")) ,"Evaluate the system in multiple precision, using already-set variable values.")
-			.def("eval", return_Eval0_ptr<dbl>(), (arg("self")) ,"Evaluate the system in double precision, using already-set variable values.")
+			.def("eval", return_Eval0_ptr<complex_dbl>(), (arg("self")) ,"Evaluate the system in double precision, using already-set variable values.")
 			.def("eval", return_Eval1_ptr<mpfr>(), (arg("self")) ,"Evaluate the system in multiple precision, using space variable values passed into this function.")
-			.def("eval", return_Eval1_ptr<dbl>(), (arg("self")) ,"Evaluate the system in double precision, using space variable values passed into this function.")
+			.def("eval", return_Eval1_ptr<complex_dbl>(), (arg("self")) ,"Evaluate the system in double precision, using space variable values passed into this function.")
 			.def("eval", return_Eval2_ptr<mpfr>(), (arg("self")) ,"Evaluate the system in multiple precision using space and time values passed into this function.  Throws if doesn't use a time variable")
-			.def("eval", return_Eval2_ptr<dbl>(), (arg("self")) ,"Evaluate the system in double precision using space and time values passed into this function.  Throws if doesn't use a time variable")
+			.def("eval", return_Eval2_ptr<complex_dbl>(), (arg("self")) ,"Evaluate the system in double precision using space and time values passed into this function.  Throws if doesn't use a time variable")
 			
 			// these two commented out because i don't need in-place Eigen::Ref wrapping here. 
 			// but if you did, you'd use two lines like this, ha.
 			// .def("eval", &eval_wrap_1<mpfr>)
-			// .def("eval", &eval_wrap_1<dbl>)
+			// .def("eval", &eval_wrap_1<complex_dbl>)
 
-			.def("eval_jacobian", return_Jac0_ptr<dbl>(), (arg("self")) ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.")
+			.def("eval_jacobian", return_Jac0_ptr<complex_dbl>(), (arg("self")) ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.")
 			.def("eval_jacobian", return_Jac0_ptr<mpfr>(), (arg("self")) ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.")
-			.def("eval_jacobian", return_Jac1_ptr<dbl>(), (arg("self")) ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function")
+			.def("eval_jacobian", return_Jac1_ptr<complex_dbl>(), (arg("self")) ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function")
 			.def("eval_jacobian", return_Jac1_ptr<mpfr>(), (arg("self")) ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function")
-			.def("eval_jacobian", return_Jac2_ptr<dbl>(), (arg("self")) , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
+			.def("eval_jacobian", return_Jac2_ptr<complex_dbl>(), (arg("self")) , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
 			.def("eval_jacobian", return_Jac2_ptr<mpfr>(), (arg("self")) , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
 
 			.def("eval_time_derivative",
 				+[](SystemBaseT const& self, bertini::Vec<mpfr> const& v, mpfr const& t) { return self.TimeDerivative(v, t); },
 				(arg("self"), arg("space"), arg("time")), "Evaluate dH/dt (the time derivative) in multiple precision at the given space and time values.  Rows of t-independent blocks are zero.")
 			.def("eval_time_derivative",
-				+[](SystemBaseT const& self, bertini::Vec<dbl> const& v, dbl const& t) { return self.TimeDerivative(v, t); },
+				+[](SystemBaseT const& self, bertini::Vec<complex_dbl> const& v, complex_dbl const& t) { return self.TimeDerivative(v, t); },
 				(arg("self"), arg("space"), arg("time")), "Evaluate dH/dt (the time derivative) in double precision at the given space and time values.  Rows of t-independent blocks are zero.")
 
 			.def("homogenize", static_cast<void (SystemBaseT::*)()>(&SystemBaseT::Homogenize), (arg("self")),"Homogenize the system, adding new homogenizing variables if necessary.  This may change your polynomials; that is, it has side effects.")
@@ -133,11 +133,11 @@ namespace bertini{
 			// .def("num_parameters", &SystemBaseT::NumParameters,"Has no impact on anything.  The number of 'parameters' in the system.")
 			// .def("num_implicit_parameters", &SystemBaseT::NumImplicitParameters,"Has no impact on anything.  The number of 'implicit parameters' in the system.") // commented out until implemented
 			
-			.def("set_variables", &SystemBaseT::template SetVariables<dbl>, (arg("self"), arg("values")), "Set the values of the variables. Expects a vector of doubles")
+			.def("set_variables", &SystemBaseT::template SetVariables<complex_dbl>, (arg("self"), arg("values")), "Set the values of the variables. Expects a vector of doubles")
 			.def("set_variables", &SystemBaseT::template SetVariables<mpfr>, (arg("self"), arg("values")), "Set the values of the variables. Expects a vector of complex mpfr's")
-			.def("set_path_variable", &SystemBaseT::template SetPathVariable<dbl>, (arg("self"), arg("values")), "Set the value of the path variable.  This one's double-precision.  Throws if path variable not defined.")
+			.def("set_path_variable", &SystemBaseT::template SetPathVariable<complex_dbl>, (arg("self"), arg("values")), "Set the value of the path variable.  This one's double-precision.  Throws if path variable not defined.")
 			.def("set_path_variable", &SystemBaseT::template SetPathVariable<mpfr>, (arg("self"), arg("values")), "Set the value of the path variable.  This one's variable-precision.  Throws if path variable not defined.")
-			// .def("set_implicit_parameters", &SystemBaseT::template SetImplicitParameters<dbl>,"Doesn't do anything.  Sets the values of algebraically constrained parameters")
+			// .def("set_implicit_parameters", &SystemBaseT::template SetImplicitParameters<complex_dbl>,"Doesn't do anything.  Sets the values of algebraically constrained parameters")
 			// .def("set_implicit_parameters", &SystemBaseT::template SetImplicitParameters<mpfr>,"Doesn't do anything.  Sets the values of algebraically constrained parameters")
 			
 			.def("add_variable_group", &SystemBaseT::AddVariableGroup, (arg("self"), arg("group")), "Add a (affine) variable group to the System")
@@ -148,7 +148,7 @@ namespace bertini{
 					self.AddBlock(bertini::blocks::LinearFormsBlock(num_vars, coefficients));
 				},
 				(arg("self"), arg("num_vars"), arg("coefficients")),
-				"Add a block of affine linear forms f(x) = M [x;1] to the System, evaluated as a single matrix-vector product rather than as scalar expressions.  coefficients is an mpfr_complex matrix with one row per function and num_vars+1 columns; the trailing column carries each form's constant term.")
+				"Add a block of affine linear forms f(x) = M [x;1] to the System, evaluated as a single matrix-vector product rather than as scalar expressions.  coefficients is an complex_mp matrix with one row per function and num_vars+1 columns; the trailing column carries each form's constant term.")
 			.def("add_products_of_linears_block",
 				+[](SystemBaseT& self, std::size_t num_vars, boost::python::list const& factors) {
 					std::vector<bertini::Mat<mpfr>> v{
@@ -157,7 +157,7 @@ namespace bertini{
 					self.AddBlock(bertini::blocks::ProductsOfLinearsBlock(num_vars, std::move(v)));
 				},
 				(arg("self"), arg("num_vars"), arg("factors")),
-				"Add a block of products-of-linear-forms f_i(x) = prod_r ( c_{i,r} . [x;1] ) to the System, evaluated as matrix-multiplies-then-row-products rather than as scalar expressions.  factors is a list with one entry per function; entry i is an mpfr_complex matrix with one row per linear factor and num_vars+1 columns (the trailing column carries each factor's constant term).  Each function's degree is its number of factors.")
+				"Add a block of products-of-linear-forms f_i(x) = prod_r ( c_{i,r} . [x;1] ) to the System, evaluated as matrix-multiplies-then-row-products rather than as scalar expressions.  factors is a list with one entry per function; entry i is an complex_mp matrix with one row per linear factor and num_vars+1 columns (the trailing column carries each factor's constant term).  Each function's degree is its number of factors.")
 			// .def("add_ungrouped_variable", &SystemBaseT::AddUngroupedVariable,"Add an ungrouped variable to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_ungrouped_variables", &SystemBaseT::AddUngroupedVariables,"Add some ungrouped variables to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_implicit_parameter", &SystemBaseT::AddImplicitParameter)
@@ -190,7 +190,7 @@ namespace bertini{
 			.def("randomization_matrix",
 				+[](SystemBaseT const& self) { return self.RandomizationMatrix(); },
 				(arg("self")),
-				"The randomization matrix R (n x N, mpfr_complex) of a system produced by randomize().  Raises if the system has no randomization block.")
+				"The randomization matrix R (n x N, complex_mp) of a system produced by randomize().  Raises if the system has no randomization block.")
 			.def("reorder_functions_by_degree_decreasing", &SystemBaseT::ReorderFunctionsByDegreeDecreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("reorder_functions_by_degree_increasing", &SystemBaseT::ReorderFunctionsByDegreeIncreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("clear_variables", &SystemBaseT::ClearVariables, (arg("self")), "Remove the variable structure from the system")
@@ -201,18 +201,18 @@ namespace bertini{
 			.def("get_patch",&SystemBaseT::GetPatch, (arg("self")),"Get (a reference to) the patches from the system.")
 			.def("is_patched",&SystemBaseT::IsPatched, (arg("self")),"Check whether the system is patched.")
 
-			.def("rescale_point_to_fit_patch",&SystemBaseT::template RescalePointToFitPatch<dbl>,(arg("self"), arg("point")),"Return a rescaled version of the input point, which fits the patch for the system.")
+			.def("rescale_point_to_fit_patch",&SystemBaseT::template RescalePointToFitPatch<complex_dbl>,(arg("self"), arg("point")),"Return a rescaled version of the input point, which fits the patch for the system.")
 			.def("rescale_point_to_fit_patch",&SystemBaseT::template RescalePointToFitPatch<mpfr>,(arg("self"), arg("point")),"Return a rescaled version of the input point, which fits the patch for the system.")
 
-			.def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<dbl>,(arg("self"), arg("point")),"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
+			.def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<complex_dbl>,(arg("self"), arg("point")),"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
 
 			// .def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<mpfr>,"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
 			.def("rescale_point_to_fit_patch_in_place",&rescale_wrap_inplace_mpfr,(arg("self"), arg("point")),"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
 
-			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<dbl>,(arg("self"), arg("point")), "Dehomogenize a vector of doubles (complex), using the variable structure in this System")
+			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<complex_dbl>,(arg("self"), arg("point")), "Dehomogenize a vector of doubles (complex), using the variable structure in this System")
 			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<mpfr>,(arg("self"), arg("point")), "Dehomogenize a vector of mpfr's (complex), using the variable structure in this System")
 
-			.def("homogenize_point",&SystemBaseT::template HomogenizePoint<dbl>,(arg("self"), arg("point")), "Take a point in user (dehomogenized) coordinates to this system's internal coordinates: inserts the homogenizing coordinate for each affine variable group, then rescales onto the system's patch if patched.  Inverse of dehomogenize_point.")
+			.def("homogenize_point",&SystemBaseT::template HomogenizePoint<complex_dbl>,(arg("self"), arg("point")), "Take a point in user (dehomogenized) coordinates to this system's internal coordinates: inserts the homogenizing coordinate for each affine variable group, then rescales onto the system's patch if patched.  Inverse of dehomogenize_point.")
 			.def("homogenize_point",&SystemBaseT::template HomogenizePoint<mpfr>,(arg("self"), arg("point")), "Take a point in user (dehomogenized) coordinates to this system's internal coordinates: inserts the homogenizing coordinate for each affine variable group, then rescales onto the system's patch if patched.  Inverse of dehomogenize_point.")
 
 			.def("variable_ordering",&SystemBaseT::VariableOrdering,(arg("self")), "The ordering of variables saying what each coordinate of a point in THIS system's coordinates means.  On your original system these are your variables; on a solver's target_system() the homogenizing variables appear too.")
@@ -241,7 +241,7 @@ namespace bertini{
 		{
 			cl
 			.def("num_start_points", &SystemBaseT::NumStartPoints,(arg("self")), "Get the number of start points that would be required by the system.  Non-negative, unsigned")
-			.def("start_point_d", return_GenStart_ptr<dbl>(),(arg("self"), arg("index")),"Get the k-th start point in double precision")
+			.def("start_point_d", return_GenStart_ptr<complex_dbl>(),(arg("self"), arg("index")),"Get the k-th start point in double precision")
 			.def("start_point_mp", return_GenStart_ptr<mpfr>(),(arg("self"), arg("index")),"Get the k-th start point in current multiple precision")
 			;
 
@@ -367,7 +367,7 @@ namespace bertini{
 		void ExportTotalDegree()
 		{
 			class_<start_system::TotalDegree, bases<start_system::StartSystem>, std::shared_ptr<start_system::TotalDegree> >("TotalDegree",init<System const&>())//,"Only constructor for a TotalDegree start system, requires a system.  You cannot construct one without.  If this is a problem, please contact the authors for help.")
-			.def("random_value", &start_system::TotalDegree::RandomValue<dbl>,(arg("self"), arg("index")), "Get the k-th random value, in double precision")
+			.def("random_value", &start_system::TotalDegree::RandomValue<complex_dbl>,(arg("self"), arg("index")), "Get the k-th random value, in double precision")
 			.def("random_value", &start_system::TotalDegree::RandomValue<mpfr>,(arg("self"), arg("index")), "Get the k-th random value, in current multiple precision")
 			.def("random_values", &start_system::TotalDegree::RandomValues,(arg("self")), return_value_policy<copy_const_reference>(), "Get (a reference to) the random values for the start system, as Nodes")
 			;

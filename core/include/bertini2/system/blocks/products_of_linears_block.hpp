@@ -71,7 +71,7 @@ public:
 	\param factors One augmented coefficient matrix per function; matrix i has shape
 	(number-of-factors_i) x (num_vars + 1).
 	*/
-	ProductsOfLinearsBlock(size_t num_vars, std::vector<Mat<mpfr_complex>> factors)
+	ProductsOfLinearsBlock(size_t num_vars, std::vector<Mat<complex_mp>> factors)
 		: num_vars_(num_vars), factors_highest_precision_(std::move(factors)), precision_(DefaultPrecision())
 	{
 #ifndef NDEBUG
@@ -107,7 +107,7 @@ public:
 	/// The master (highest-precision) coefficient matrices, one per function; matrix i is
 	/// (#factors_i) x (num_vars+1), the last column being the constant/augmenting term.  Exposed
 	/// so the function-tree expansion (System::ExpandToFunctionTree) can rebuild f_i = prod_r L_r.
-	std::vector<Mat<mpfr_complex>> const& Factors() const { return factors_highest_precision_; }
+	std::vector<Mat<complex_mp>> const& Factors() const { return factors_highest_precision_; }
 
 	/// Human-facing description: terse shows `prod of k linear forms`; verbose shows the actual
 	/// product of affine factors `(x - 1) * (x + 1)`.
@@ -154,7 +154,7 @@ public:
 	{
 		if (new_precision > DoublePrecision())
 		{
-			auto& wm = std::get<std::vector<Mat<mpfr_complex>>>(factors_working_);
+			auto& wm = std::get<std::vector<Mat<complex_mp>>>(factors_working_);
 			for (size_t i = 0; i < wm.size(); ++i)
 				for (Eigen::Index r = 0; r < wm[i].rows(); ++r)
 					for (Eigen::Index c = 0; c < wm[i].cols(); ++c)
@@ -272,7 +272,7 @@ private:
 		Vec<T> aug(static_cast<Eigen::Index>(num_vars_ + 1));
 		aug.head(static_cast<Eigen::Index>(num_vars_)) = vars;
 		T one(1);
-		if constexpr (!std::is_same<T, dbl>::value)
+		if constexpr (!std::is_same<T, complex_dbl>::value)
 			one.precision(precision_);
 		aug(static_cast<Eigen::Index>(num_vars_)) = one;
 		return aug;
@@ -280,8 +280,8 @@ private:
 
 	void BuildWorking() const
 	{
-		auto& wd = std::get<std::vector<Mat<dbl>>>(factors_working_);
-		auto& wm = std::get<std::vector<Mat<mpfr_complex>>>(factors_working_);
+		auto& wd = std::get<std::vector<Mat<complex_dbl>>>(factors_working_);
+		auto& wm = std::get<std::vector<Mat<complex_mp>>>(factors_working_);
 		const size_t n = factors_highest_precision_.size();
 		wd.resize(n);
 		wm.resize(n);
@@ -293,15 +293,15 @@ private:
 			for (Eigen::Index r = 0; r < M.rows(); ++r)
 				for (Eigen::Index c = 0; c < M.cols(); ++c)
 				{
-					wd[i](r, c) = dbl(M(r, c));
+					wd[i](r, c) = complex_dbl(M(r, c));
 					wm[i](r, c) = M(r, c);
 				}
 		}
 	}
 
 	size_t num_vars_;
-	std::vector<Mat<mpfr_complex>> factors_highest_precision_; ///< master coefficients, one matrix per function
-	mutable std::tuple<std::vector<Mat<dbl>>, std::vector<Mat<mpfr_complex>>> factors_working_;
+	std::vector<Mat<complex_mp>> factors_highest_precision_; ///< master coefficients, one matrix per function
+	mutable std::tuple<std::vector<Mat<complex_dbl>>, std::vector<Mat<complex_mp>>> factors_working_;
 	mutable unsigned precision_;
 
 	friend class boost::serialization::access;

@@ -137,7 +137,7 @@ namespace bertini {
 		/**
 		Change the precision of the entire system's functions, subfunctions, and all other nodes.
 
-		\param new_precision The new precision, in digits, to work in.  This only affects the mpfr_complex types, not double.  To use low-precision (doubles), use that number type in the templated functions.
+		\param new_precision The new precision, in digits, to work in.  This only affects the complex_mp types, not double.  To use low-precision (doubles), use that number type in the templated functions.
 		*/
 		void precision(unsigned new_precision) const;
 
@@ -213,7 +213,7 @@ namespace bertini {
 		 
 		 
 		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
 		template<typename T, typename Derived>
@@ -244,7 +244,7 @@ namespace bertini {
 
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename Derived>
@@ -274,7 +274,7 @@ namespace bertini {
 		 Evaluate the system, provided a path variable is defined for the system, in place.
 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
@@ -310,7 +310,7 @@ namespace bertini {
 		 Evaluate the system, provided a path variable is defined for the system.
 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
@@ -339,7 +339,7 @@ namespace bertini {
 		/**
 		 \brief Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
 
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
 		This is analogous to J = sys.JacobianInPlace();
 
@@ -374,7 +374,7 @@ namespace bertini {
 		/**
 		Evaluate the Jacobian matrix of the system, using the previous space and time values.
 
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		*/
 		template<typename T>
 		Mat<T> Jacobian() const
@@ -393,7 +393,7 @@ namespace bertini {
 		 Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
 		 
 		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
@@ -421,7 +421,7 @@ namespace bertini {
 		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		
 		\param variable_values The values of the variables, for the evaluation.
 		*/
@@ -451,7 +451,7 @@ namespace bertini {
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
 
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 */
 		template<typename Derived, typename T>
 		void JacobianInPlace(Mat<T> & J, const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
@@ -482,7 +482,7 @@ namespace bertini {
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
 
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 */
 		template<typename Derived, typename T>
 		Mat<T> Jacobian(const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
@@ -521,7 +521,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T The number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename Derived, typename T>
@@ -546,7 +546,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T The number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename Derived, typename T>
@@ -586,7 +586,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T The number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename Derived, typename T>
@@ -635,7 +635,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T The number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename T>
@@ -782,7 +782,7 @@ namespace bertini {
 		/**
 		 Set the values of the variables to be equal to the input values
 
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 \throws std::runtime_error if the number of variables doesn't match.
 
 		 The ordering of the variables matters.  
@@ -810,7 +810,7 @@ namespace bertini {
 				// precision to read from it, so skip the check.
 				if (new_values.size() > 0)
 				{
-					if constexpr (!std::is_same<T,dbl>::value) {
+					if constexpr (!std::is_same<T,complex_dbl>::value) {
 						if (Precision(new_values) != this->precision())
 							throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
 					}
@@ -830,7 +830,7 @@ namespace bertini {
 		 Set the current value of the path variable.
 		
 		 \throws std::runtime_error, if a path variable is not defined.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
 		 \param new_value The new updated values for the path variable.
 		 */
@@ -1079,7 +1079,7 @@ namespace bertini {
 
 		\throws std::runtime_error if R's column count does not equal this system's natural-function count.
 		*/
-		System Randomize(Mat<mpfr_complex> const& R) const;
+		System Randomize(Mat<complex_mp> const& R) const;
 
 		/**
 		\brief The randomization matrix R of a system produced by Randomize() (its first
@@ -1087,7 +1087,7 @@ namespace bertini {
 
 		\throws std::runtime_error if this system carries no randomization block.
 		*/
-		Mat<mpfr_complex> RandomizationMatrix() const;
+		Mat<complex_mp> RandomizationMatrix() const;
 
 
 
@@ -1163,7 +1163,7 @@ namespace bertini {
 		/**
 		\brief Dehomogenize a point, using the variable grouping / structure of the system.
 		
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
 		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the total number of var
 		*/
@@ -1220,7 +1220,7 @@ namespace bertini {
 		This is the inverse of DehomogenizePoint: DehomogenizePoint(HomogenizePoint(p)) == p.
 		On an unhomogenized, unpatched system this is the identity.
 
-		\tparam T the number-type.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
 		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the number of natural variables of the system.
 		*/
@@ -1538,7 +1538,7 @@ namespace bertini {
 		/// Shared back end of the Randomize overloads: given the overdetermined operand (already a
 		/// copy, sorted or not) and a finished coefficient matrix, compute the per-row target
 		/// multidegrees, build the RandomizationBlock, and return a new system carrying it.
-		System AssembleRandomized(std::shared_ptr<System> operand, Mat<mpfr_complex> coefficients) const;
+		System AssembleRandomized(std::shared_ptr<System> operand, Mat<complex_mp> coefficients) const;
 
 		/**
 		\brief Get the sizes according to the FIFO ordering.
@@ -1556,7 +1556,7 @@ namespace bertini {
 		/**
 		\brief Dehomogenize a point according to the FIFO variable ordering.
 	
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
 		\see FIFOVariableOrdering
 		*/
@@ -1758,7 +1758,7 @@ namespace bertini {
 		void CoerceBlockOutputPrecision(Eigen::MatrixBase<Derived>& result) const
 		{
 			using Scalar = typename Derived::Scalar;
-			if constexpr (!std::is_same<Scalar, dbl>::value)
+			if constexpr (!std::is_same<Scalar, complex_dbl>::value)
 			{
 				using bertini::Precision;
 				Precision(result, precision_);
@@ -1840,8 +1840,8 @@ namespace bertini {
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 
-		mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > current_variable_values_;
-		mutable std::tuple< dbl, mpfr_complex > current_path_value_{}; ///< per-thread path value (node-free; read by CurrentPathValue, written by SetPathVariable)
+		mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > current_variable_values_;
+		mutable std::tuple< complex_dbl, complex_mp > current_path_value_{}; ///< per-thread path value (node-free; read by CurrentPathValue, written by SetPathVariable)
 
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
 		mutable bool have_ordering_ = false;
@@ -1896,12 +1896,12 @@ namespace bertini {
 
 
 			// if (Archive::is_loading::value == true){
-        	// 	std::get<Vec<dbl>>(current_variable_values_).resize(NumVariables());
-        	// 	std::get<Vec<mpfr_complex>>(current_variable_values_).resize(NumVariables());
+        	// 	std::get<Vec<complex_dbl>>(current_variable_values_).resize(NumVariables());
+        	// 	std::get<Vec<complex_mp>>(current_variable_values_).resize(NumVariables());
 			// }
 			// // next two lines no matter what
-			// ar & std::get<Vec<dbl>>(current_variable_values_);
-			// ar & std::get<Vec<mpfr_complex>>(current_variable_values_);
+			// ar & std::get<Vec<complex_dbl>>(current_variable_values_);
+			// ar & std::get<Vec<complex_mp>>(current_variable_values_);
 
 		}
 
@@ -1986,41 +1986,41 @@ namespace bertini {
 	// Suppresses re-instantiation of the heavy Eval/Jacobian/Set template bodies
 	// (with their eval_method_ switch trees) in every including TU.
 
-	extern template void System::EvalInPlace<dbl>(Vec<dbl>&) const;
-	extern template void System::EvalInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+	extern template void System::EvalInPlace<complex_dbl>(Vec<complex_dbl>&) const;
+	extern template void System::EvalInPlace<complex_mp>(Vec<complex_mp>&) const;
 
-	extern template Vec<dbl> System::Eval<dbl>() const;
-	extern template Vec<mpfr_complex> System::Eval<mpfr_complex>() const;
+	extern template Vec<complex_dbl> System::Eval<complex_dbl>() const;
+	extern template Vec<complex_mp> System::Eval<complex_mp>() const;
 
-	extern template void System::JacobianInPlace<dbl>(Mat<dbl>&) const;
-	extern template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&) const;
+	extern template void System::JacobianInPlace<complex_dbl>(Mat<complex_dbl>&) const;
+	extern template void System::JacobianInPlace<complex_mp>(Mat<complex_mp>&) const;
 
-	extern template Mat<dbl> System::Jacobian<dbl>() const;
-	extern template Mat<mpfr_complex> System::Jacobian<mpfr_complex>() const;
+	extern template Mat<complex_dbl> System::Jacobian<complex_dbl>() const;
+	extern template Mat<complex_mp> System::Jacobian<complex_mp>() const;
 
-	extern template Mat<dbl> System::Jacobian<dbl>(const Vec<dbl>&) const;
-	extern template Mat<mpfr_complex> System::Jacobian<mpfr_complex>(const Vec<mpfr_complex>&) const;
+	extern template Mat<complex_dbl> System::Jacobian<complex_dbl>(const Vec<complex_dbl>&) const;
+	extern template Mat<complex_mp> System::Jacobian<complex_mp>(const Vec<complex_mp>&) const;
 
-	extern template void System::JacobianInPlace<dbl>(Mat<dbl>&, const Vec<dbl>&) const;
-	extern template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&, const Vec<mpfr_complex>&) const;
+	extern template void System::JacobianInPlace<complex_dbl>(Mat<complex_dbl>&, const Vec<complex_dbl>&) const;
+	extern template void System::JacobianInPlace<complex_mp>(Mat<complex_mp>&, const Vec<complex_mp>&) const;
 
-	extern template void System::TimeDerivativeInPlace<dbl>(Vec<dbl>&) const;
-	extern template void System::TimeDerivativeInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+	extern template void System::TimeDerivativeInPlace<complex_dbl>(Vec<complex_dbl>&) const;
+	extern template void System::TimeDerivativeInPlace<complex_mp>(Vec<complex_mp>&) const;
 
-	extern template Vec<dbl> System::TimeDerivative<dbl>() const;
-	extern template Vec<mpfr_complex> System::TimeDerivative<mpfr_complex>() const;
+	extern template Vec<complex_dbl> System::TimeDerivative<complex_dbl>() const;
+	extern template Vec<complex_mp> System::TimeDerivative<complex_mp>() const;
 
-	extern template void System::SetVariables<dbl>(const Vec<dbl>&) const;
-	extern template void System::SetVariables<mpfr_complex>(const Vec<mpfr_complex>&) const;
+	extern template void System::SetVariables<complex_dbl>(const Vec<complex_dbl>&) const;
+	extern template void System::SetVariables<complex_mp>(const Vec<complex_mp>&) const;
 
-	extern template void System::SetPathVariable<dbl>(dbl const&) const;
-	extern template void System::SetPathVariable<mpfr_complex>(mpfr_complex const&) const;
+	extern template void System::SetPathVariable<complex_dbl>(complex_dbl const&) const;
+	extern template void System::SetPathVariable<complex_mp>(complex_mp const&) const;
 
-	extern template void System::SetAndReset<dbl>(Vec<dbl> const&, dbl const&) const;
-	extern template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&, mpfr_complex const&) const;
+	extern template void System::SetAndReset<complex_dbl>(Vec<complex_dbl> const&, complex_dbl const&) const;
+	extern template void System::SetAndReset<complex_mp>(Vec<complex_mp> const&, complex_mp const&) const;
 
-	extern template void System::SetAndReset<dbl>(Vec<dbl> const&) const;
-	extern template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&) const;
+	extern template void System::SetAndReset<complex_dbl>(Vec<complex_dbl> const&) const;
+	extern template void System::SetAndReset<complex_mp>(Vec<complex_mp> const&) const;
 
 }
 

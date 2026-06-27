@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(linear_forms_placeholder_vs_actual)
 	auto x = Variable::Make("x"), y = Variable::Make("y");
 	System m; m.AddVariableGroup(VariableGroup{x, y});
 	m.AddFunction(x*x + y*y - node::Integer::Make(1));        // row 0: polynomial
-	Mat<mpfr_complex> M(1, 3); M << mpfr_complex(2), mpfr_complex(1), mpfr_complex(-1);
+	Mat<complex_mp> M(1, 3); M << complex_mp(2), complex_mp(1), complex_mp(-1);
 	m.AddBlock(blocks::LinearFormsBlock(2, M));               // row 1: 2x + y - 1
 
 	std::string t = Terse(m);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(moving_homotopy_blend)
 	System fixed; fixed.AddVariableGroup(VariableGroup{x, y}); fixed.AddFunction(x*x + y*y - node::Integer::Make(1));
 	System sm; sm.AddVariableGroup(VariableGroup{x, y}); sm.AddFunction(y);
 	System em; em.AddVariableGroup(VariableGroup{x, y}); em.AddFunction(y - x);
-	System H = MakeMovingHomotopy(fixed, sm, em, "t", node::Complex::Make(mpfr_complex("0.6", "0.8")));
+	System H = MakeMovingHomotopy(fixed, sm, em, "t", node::Complex::Make(complex_mp("0.6", "0.8")));
 
 	std::string t = Terse(H);
 	BOOST_CHECK(Has(t, "f_0 = "));               // the fixed polynomial row

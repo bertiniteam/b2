@@ -47,10 +47,10 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 using mpq_rational = bertini::mpq_rational;
-using mpfr_float = bertini::mpfr_float;
+using real_mp = bertini::real_mp;
 using mpz_int = bertini::mpz_int;
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
 
 template<typename NumT> using Vec = bertini::Vec<NumT>;
 template<typename NumT> using Mat = bertini::Mat<NumT>;
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 
 	sys.AddVariableGroup(v);
 	sys.AddFunction(x + y - 1);
-	sys.AddFunction(x - mpfr_float("0.5")*y - 1);
+	sys.AddFunction(x - real_mp("0.5")*y - 1);
 
 
 	bertini::start_system::TotalDegree TD(sys);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 
 	sys.AddVariableGroup(v);
 	sys.AddFunction(x*y + y - 1);
-	sys.AddFunction(x*x - mpfr_float("0.5")*y - x*y);
+	sys.AddFunction(x*x - real_mp("0.5")*y - x*y);
 
 
 	bertini::start_system::TotalDegree TD(sys);
@@ -218,13 +218,13 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 
 	BOOST_CHECK_EQUAL(variable_ordering.size(), 2);
 
-	Vec<dbl> vals(2);
-	vals << dbl(1.0),dbl(1.0);
+	Vec<complex_dbl> vals(2);
+	vals << complex_dbl(1.0),complex_dbl(1.0);
 
 	auto sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 2; ++ii)
-		BOOST_CHECK( abs(sysvals(ii) - (1.0 - TD.RandomValue<dbl>(ii))) < threshold_clearance_d);
+		BOOST_CHECK( abs(sysvals(ii) - (1.0 - TD.RandomValue<complex_dbl>(ii))) < threshold_clearance_d);
 
 
 
@@ -237,12 +237,12 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	BOOST_CHECK_EQUAL(J(1,1),1.0);
 
 
-	vals << dbl(0.0),dbl(0.0);
+	vals << complex_dbl(0.0),complex_dbl(0.0);
 
 	sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 2; ++ii)
-		BOOST_CHECK(abs(sysvals(ii)+TD.RandomValue<dbl>(ii)) < threshold_clearance_d);
+		BOOST_CHECK(abs(sysvals(ii)+TD.RandomValue<complex_dbl>(ii)) < threshold_clearance_d);
 
 
 	J = TD.Jacobian(vals);
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	vars.push_back(x); vars.push_back(y); vars.push_back(z);
 
 	sys.AddVariableGroup(vars);
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -288,13 +288,13 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 		BOOST_CHECK_EQUAL(deg[2],4);
 	}
 
-	Vec<dbl> vals(3);
-	vals << dbl(1.0),dbl(1.0),dbl(1.0);
+	Vec<complex_dbl> vals(3);
+	vals << complex_dbl(1.0),complex_dbl(1.0),complex_dbl(1.0);
 
 	auto sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 3; ++ii)
-		BOOST_CHECK( abs(sysvals(ii) - (1.0 - TD.RandomValue<dbl>(ii))) < threshold_clearance_d);
+		BOOST_CHECK( abs(sysvals(ii) - (1.0 - TD.RandomValue<complex_dbl>(ii))) < threshold_clearance_d);
 
 	auto J = TD.Jacobian(vals);
 
@@ -312,12 +312,12 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 
 
 
-	vals << dbl(0.0),dbl(0.0),dbl(0.0);
+	vals << complex_dbl(0.0),complex_dbl(0.0),complex_dbl(0.0);
 
 	sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 3; ++ii)
-		BOOST_CHECK(abs(sysvals(ii)+TD.RandomValue<dbl>(ii)) < threshold_clearance_d);
+		BOOST_CHECK(abs(sysvals(ii)+TD.RandomValue<complex_dbl>(ii)) < threshold_clearance_d);
 
 	J = TD.Jacobian(vals);
 
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -359,14 +359,14 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
-		auto start = TD.StartPoint<dbl>(ii);
+		auto start = TD.StartPoint<complex_dbl>(ii);
 		auto function_values = TD.Eval(start);
 
 		const auto& vs = TD.RandomValues();
 
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 			BOOST_CHECK(abs(function_values(jj)) <
-				abs(vs[static_cast<size_t>(jj)]->Value<dbl>())*relaxed_threshold_clearance_d);
+				abs(vs[static_cast<size_t>(jj)]->Value<complex_dbl>())*relaxed_threshold_clearance_d);
 	}
 
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 	const auto& vs = TD.RandomValues();
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
-		auto start = TD.StartPoint<dbl>(ii);
+		auto start = TD.StartPoint<complex_dbl>(ii);
 		auto function_values = TD.Eval(start);
 
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 			// a fixed absolute threshold is scale-naive and flakes when a random r happens
 			// to be large.  Rows with jj >= vs.size() are patch/homogenization equations of
 			// O(1) scale, so a unit scale (absolute floor) is correct for them.
-			double scale = (static_cast<size_t>(jj) < vs.size()) ? abs(vs[static_cast<size_t>(jj)]->Value<dbl>()) : 1.0;
+			double scale = (static_cast<size_t>(jj) < vs.size()) ? abs(vs[static_cast<size_t>(jj)]->Value<complex_dbl>()) : 1.0;
 			if (scale < 1.0) scale = 1.0;
 			BOOST_CHECK(abs(function_values(jj)) < scale*1000*relaxed_threshold_clearance_d);
 		}
@@ -441,8 +441,8 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 		{
 			// scale-relative, as in the double-precision loop above
-			mpfr_float scale = (static_cast<size_t>(jj) < vs.size()) ? abs(vs[static_cast<size_t>(jj)]->Value<mpfr>()) : mpfr_float(1);
-			if (scale < 1) scale = mpfr_float(1);
+			real_mp scale = (static_cast<size_t>(jj) < vs.size()) ? abs(vs[static_cast<size_t>(jj)]->Value<mpfr>()) : real_mp(1);
+			if (scale < 1) scale = real_mp(1);
 			BOOST_CHECK(abs(function_values(jj)) < scale*threshold_clearance_mp);
 		}
 	}
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_precision_16)
 		DefaultPrecision(static_cast<unsigned int>(this_test_precision));
 		final_system.precision(static_cast<unsigned int>(this_test_precision));
 		TD.precision(static_cast<unsigned int>(this_test_precision));
-		auto start_point = TD.StartPoint<mpfr_complex>(ii);
+		auto start_point = TD.StartPoint<complex_mp>(ii);
 		BOOST_CHECK_EQUAL(bertini::Precision(start_point), this_test_precision);
 	}
 
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 		DefaultPrecision(static_cast<unsigned int>(this_test_precision));
 		final_system.precision(static_cast<unsigned int>(this_test_precision));
 		TD.precision(static_cast<unsigned int>(this_test_precision));
-		auto start_point = TD.StartPoint<mpfr_complex>(ii);
+		auto start_point = TD.StartPoint<complex_mp>(ii);
 		BOOST_CHECK_EQUAL(bertini::Precision(start_point), this_test_precision);
 	}
 
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 

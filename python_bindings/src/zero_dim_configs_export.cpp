@@ -84,20 +84,20 @@ namespace bertini{
 			// One ZeroDimConfig for every precision model -- the homotopy times are stored precision-free
 			// (mpq_rational) and converted to the tracking type at use, so the config is no longer
 			// templated on the complex type.  The times are real (the solve tracks the real t-axis);
-			// they are exposed as mpfr_float and round-trip exactly, the same way SteppingConfig exposes
+			// they are exposed as real_mp and round-trip exactly, the same way SteppingConfig exposes
 			// its mpq_rational step sizes.
 			class_<ZeroDimConfig>("ZeroDimConfig", init<>())
 			.add_property("start_time",
-				+[](ZeroDimConfig const& c) -> mpfr_float { return mpfr_float(c.start_time); },
-				+[](ZeroDimConfig& c, mpfr_float const& v) { c.start_time = mpq_rational(v); },
+				+[](ZeroDimConfig const& c) -> real_mp { return real_mp(c.start_time); },
+				+[](ZeroDimConfig& c, real_mp const& v) { c.start_time = mpq_rational(v); },
 				"The time value at which the homotopy starts (where the start solutions live).")
 			.add_property("target_time",
-				+[](ZeroDimConfig const& c) -> mpfr_float { return mpfr_float(c.target_time); },
-				+[](ZeroDimConfig& c, mpfr_float const& v) { c.target_time = mpq_rational(v); },
+				+[](ZeroDimConfig const& c) -> real_mp { return real_mp(c.target_time); },
+				+[](ZeroDimConfig& c, real_mp const& v) { c.target_time = mpq_rational(v); },
 				"The time value the homotopy tracks to (where the solutions of interest live).")
 			.add_property("endgame_boundary",
-				+[](ZeroDimConfig const& c) -> mpfr_float { return mpfr_float(c.endgame_boundary); },
-				+[](ZeroDimConfig& c, mpfr_float const& v) { c.endgame_boundary = mpq_rational(v); },
+				+[](ZeroDimConfig const& c) -> real_mp { return real_mp(c.endgame_boundary); },
+				+[](ZeroDimConfig& c, real_mp const& v) { c.endgame_boundary = mpq_rational(v); },
 				"The time value at which tracking stops and the endgame takes over.")
 			.def_readwrite("max_num_crossed_path_resolve_attempts", &ZeroDimConfig::max_num_crossed_path_resolve_attempts,
 				"How many times to re-track crossed paths (with tightened settings) at the endgame "
@@ -118,11 +118,11 @@ namespace bertini{
 			.def_readwrite("elapsed_time",&AlgorithmMetaData::elapsed_time)
 			;
 
-			ExposeSolutionMetaData<mpfr_complex>("SolutionMetaDataMultiPrec");
-			ExposeSolutionMetaData<dbl_complex>("SolutionMetaDataDoublePrec");
+			ExposeSolutionMetaData<complex_mp>("SolutionMetaDataMultiPrec");
+			ExposeSolutionMetaData<complex_dbl>("SolutionMetaDataDoublePrec");
 
-			ExposeEndgameBoundaryMetaData<mpfr_complex>("EndgameBoundaryMetaDataMultiPrec");
-			ExposeEndgameBoundaryMetaData<dbl_complex>("EndgameBoundaryMetaDataDoublePrec");
+			ExposeEndgameBoundaryMetaData<complex_mp>("EndgameBoundaryMetaDataMultiPrec");
+			ExposeEndgameBoundaryMetaData<complex_dbl>("EndgameBoundaryMetaDataDoublePrec");
 
 			// Report from the path-crossing (midpath) check at the endgame boundary.
 			class_<MidpathCheckReport>("MidpathCheckReport", init<>())

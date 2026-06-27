@@ -81,11 +81,11 @@ namespace bertini{
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					Precision(std::get< Vec<mpfr_complex> >(f_temp_), new_precision);
-					Precision(std::get< Vec<mpfr_complex> >(step_temp_), new_precision);
-					Precision(std::get< Mat<mpfr_complex> >(J_temp_), new_precision);
-					Precision(std::get< Vec<mpfr_complex> >(rand_temp_), new_precision);
-					Precision(std::get< Vec<mpfr_complex> >(solve_temp_), new_precision);
+					Precision(std::get< Vec<complex_mp> >(f_temp_), new_precision);
+					Precision(std::get< Vec<complex_mp> >(step_temp_), new_precision);
+					Precision(std::get< Mat<complex_mp> >(J_temp_), new_precision);
+					Precision(std::get< Vec<complex_mp> >(rand_temp_), new_precision);
+					Precision(std::get< Vec<complex_mp> >(solve_temp_), new_precision);
 
 					current_precision_ = new_precision;
 				}
@@ -106,14 +106,14 @@ namespace bertini{
 				{
 					numTotalFunctions_ = static_cast<unsigned>(S.NumTotalFunctions());
 					numVariables_ = static_cast<unsigned>(S.NumVariables());
-					std::get< Mat<dbl> >(J_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr_complex> >(J_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Vec<dbl> >(f_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr_complex> >(f_temp_).resize(numTotalFunctions_);
-					std::get< Vec<dbl> >(step_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr_complex> >(step_temp_).resize(numTotalFunctions_);
-					std::get< Vec<dbl> >(solve_temp_).resize(numVariables_);
-					std::get< Vec<mpfr_complex> >(solve_temp_).resize(numVariables_);
+					std::get< Mat<complex_dbl> >(J_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<complex_mp> >(J_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Vec<complex_dbl> >(f_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(f_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_dbl> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_dbl> >(solve_temp_).resize(numVariables_);
+					std::get< Vec<complex_mp> >(solve_temp_).resize(numVariables_);
 					RefreshRandomDirection();
 				}
 
@@ -130,8 +130,8 @@ namespace bertini{
 				 */
 				void RefreshRandomDirection()
 				{
-					std::get< Vec<dbl> >(rand_temp_) = RandomOfUnits<dbl>(numVariables_);
-					std::get< Vec<mpfr_complex> >(rand_temp_) = RandomOfUnits<mpfr_complex>(numVariables_);
+					std::get< Vec<complex_dbl> >(rand_temp_) = RandomOfUnits<complex_dbl>(numVariables_);
+					std::get< Vec<complex_mp> >(rand_temp_) = RandomOfUnits<complex_mp>(numVariables_);
 				}
 
 				
@@ -407,13 +407,13 @@ namespace bertini{
 				unsigned numTotalFunctions_; // Number of total functions for the current system
 				unsigned numVariables_;  // Number of variables for the current system
 				
-				std::tuple< Vec<dbl>, Vec<mpfr_complex> > f_temp_;
-				std::tuple< Vec<dbl>, Vec<mpfr_complex> > step_temp_;
-				std::tuple< Mat<dbl>, Mat<mpfr_complex> > J_temp_;
-				std::tuple< Vec<dbl>, Vec<mpfr_complex> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
-				std::tuple< Vec<dbl>, Vec<mpfr_complex> > solve_temp_; // reused scratch: LU solve result
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > f_temp_;
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > step_temp_;
+				std::tuple< Mat<complex_dbl>, Mat<complex_mp> > J_temp_;
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > solve_temp_; // reused scratch: LU solve result
 
-				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_;
+				std::tuple< Eigen::PartialPivLU<Mat<complex_dbl>>, Eigen::PartialPivLU<Mat<complex_mp>> > LU_;
 				
 				unsigned current_precision_;
 

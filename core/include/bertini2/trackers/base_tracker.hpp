@@ -263,7 +263,7 @@ namespace bertini{
 
 				NotifyObservers(TrackingStarted<typename TrackerTraits<D>::EventEmitterType>(static_cast<typename TrackerTraits<D>::EventEmitterType const&>(*this)));
 
-				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
+				// as precondition to this while loop, the correct container, either complex_dbl or mpfr, must have the correct data.
 				while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<ComplexT>::epsilon()))
 				{
 					SuccessCode pre_iteration_code = PreIterationCheck();
@@ -478,7 +478,7 @@ namespace bertini{
 			void CopyFinalSolution(Vec<ComplexT> & solution_at_endtime) const = 0;
 
 			// virtual
-			// void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const = 0;
+			// void CopyFinalSolution(Vec<complex_dbl> & solution_at_endtime) const = 0;
 
 
 		protected:

@@ -43,8 +43,8 @@
 #include <Eigen/Core>
 
 namespace {
-using mpfr_real = bertini::mpfr_float;
-using mpfr_complex = bertini::mpfr_complex;
+using mpfr_real = bertini::real_mp;
+using complex_mp = bertini::complex_mp;
 }
 
 namespace Eigen {
@@ -138,15 +138,15 @@ namespace Eigen {
 
 
 	/**
-	 \brief This templated struct permits us to use the mpfr_complex type in Eigen matrices.
+	 \brief This templated struct permits us to use the complex_mp type in Eigen matrices.
 
 	 Provides methods to get the epsilon, dummy_precision, lowest, highest functions, largely by inheritance from the NumTraits<mpfr_real> contained in mpfr_extensions.
 	 */
-	template<> struct NumTraits<mpfr_complex> : NumTraits<mpfr_real>
+	template<> struct NumTraits<complex_mp> : NumTraits<mpfr_real>
 	{
 		typedef mpfr_real Real;
 		typedef mpfr_real NonInteger;
-		typedef mpfr_complex Nested;// Nested;
+		typedef complex_mp Nested;// Nested;
 		enum {
 			IsComplex = 1,
 			IsInteger = 0,
@@ -161,29 +161,29 @@ namespace Eigen {
 
 	namespace internal {
 		template<>
-		struct abs2_impl<mpfr_complex>
+		struct abs2_impl<complex_mp>
 		{
-			static inline mpfr_real run(const mpfr_complex& x)
+			static inline mpfr_real run(const complex_mp& x)
 			{
 				return real(x)*real(x) + imag(x)*imag(x);
 			}
 		};
 
 
-		template<> inline mpfr_complex random<mpfr_complex>()
+		template<> inline complex_mp random<complex_mp>()
 		{
 			return bertini::multiprecision::rand();
 		}
 
-		template<> inline mpfr_complex random<mpfr_complex>(const mpfr_complex& a, const mpfr_complex& b)
+		template<> inline complex_mp random<complex_mp>(const complex_mp& a, const complex_mp& b)
 		{
-			return a + (b-a) * random<mpfr_complex>();
+			return a + (b-a) * random<complex_mp>();
 		}
 
 		template<>
-		struct conj_helper<mpfr_complex, mpfr_complex, false, true>
+		struct conj_helper<complex_mp, complex_mp, false, true>
 		{
-			typedef mpfr_complex Scalar;
+			typedef complex_mp Scalar;
 			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
 			{ return c + pmul(x,y); }
 
@@ -192,9 +192,9 @@ namespace Eigen {
 		};
 
 		template<>
-		struct conj_helper<mpfr_complex, mpfr_complex, true, false>
+		struct conj_helper<complex_mp, complex_mp, true, false>
 		{
-			typedef mpfr_complex Scalar;
+			typedef complex_mp Scalar;
 			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
 			{ return c + pmul(x,y); }
 
@@ -206,78 +206,78 @@ namespace Eigen {
 
 		//int
 		template<>
-		struct scalar_product_traits<int,mpfr_complex>
+		struct scalar_product_traits<int,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, int>
+		struct scalar_product_traits<complex_mp, int>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		//long
 		template<>
-		struct scalar_product_traits<long,mpfr_complex>
+		struct scalar_product_traits<long,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, long>
+		struct scalar_product_traits<complex_mp, long>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		//long long
 		template<>
-		struct scalar_product_traits<long long,mpfr_complex>
+		struct scalar_product_traits<long long,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, long long>
+		struct scalar_product_traits<complex_mp, long long>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 
 		//mpfr_real
 		template<>
-		struct scalar_product_traits<mpfr_real,mpfr_complex>
+		struct scalar_product_traits<mpfr_real,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, mpfr_real>
+		struct scalar_product_traits<complex_mp, mpfr_real>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		//mpz_int
 		template<>
-		struct scalar_product_traits<bertini::mpz_int,mpfr_complex>
+		struct scalar_product_traits<bertini::mpz_int,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, bertini::mpz_int>
+		struct scalar_product_traits<complex_mp, bertini::mpz_int>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 	} // re: namespace internal

@@ -92,7 +92,7 @@ public:
 	\param num_groups           The number of (affine) variable groups G.
 	*/
 	RandomizationBlock(OperandPtr operand,
-	                   Mat<mpfr_complex> coefficients,
+	                   Mat<complex_mp> coefficients,
 	                   std::vector<std::vector<int>> target_multidegrees,
 	                   std::vector<std::vector<int>> operand_multidegrees,
 	                   size_t num_groups)
@@ -219,7 +219,7 @@ public:
 	/// The overdetermined operand, for the function-tree expansion oracle and the matrix getter.
 	OperandPtr const& Operand() const { return operand_; }
 	/// The randomization matrix R (master, highest precision); n x N, row i column j is c_ij.
-	Mat<mpfr_complex> const& RandomizationMatrix() const { return coefficients_highest_precision_; }
+	Mat<complex_mp> const& RandomizationMatrix() const { return coefficients_highest_precision_; }
 
 	// Accessors for the function-tree expansion oracle (System::NaturalFunctionsAsNodes), which
 	// rebuilds g_i = sum_j c_ij * node(f_j) * prod_g h_g^{(D_{i,g}-d_{j,g})}.
@@ -267,7 +267,7 @@ public:
 	{
 		if (new_precision > DoublePrecision())
 		{
-			auto& wm = std::get<Mat<mpfr_complex>>(coefficients_working_);
+			auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
 			for (Eigen::Index r = 0; r < wm.rows(); ++r)
 				for (Eigen::Index c = 0; c < wm.cols(); ++c)
 				{
@@ -372,12 +372,12 @@ private:
 	T Zero() const
 	{
 		T z(0);
-		if constexpr (!std::is_same<T, dbl>::value) z.precision(precision_);
+		if constexpr (!std::is_same<T, complex_dbl>::value) z.precision(precision_);
 		return z;
 	}
 
-	static bool IsZero(dbl const& c) { return c == dbl(0); }
-	static bool IsZero(mpfr_complex const& c) { return c.real() == 0 && c.imag() == 0; }
+	static bool IsZero(complex_dbl const& c) { return c == complex_dbl(0); }
+	static bool IsZero(complex_mp const& c) { return c.real() == 0 && c.imag() == 0; }
 
 	/// The (signed) degree deficit of operand function j against row i's target, in group g.
 	int Deficit(size_t i, size_t j, size_t g) const
@@ -390,7 +390,7 @@ private:
 	T HPower(size_t i, size_t j, Vec<T> const& vars) const
 	{
 		T w(1);
-		if constexpr (!std::is_same<T, dbl>::value) w.precision(precision_);
+		if constexpr (!std::is_same<T, complex_dbl>::value) w.precision(precision_);
 		if (!homogenized_)
 			return w;
 		for (size_t g = 0; g < num_groups_; ++g)
@@ -409,7 +409,7 @@ private:
 	{
 		const int eg = Deficit(i, j, g);
 		T d(eg);
-		if constexpr (!std::is_same<T, dbl>::value) d.precision(precision_);
+		if constexpr (!std::is_same<T, complex_dbl>::value) d.precision(precision_);
 		d *= IntPow<T>(vars(hom_var_index_[g]), eg - 1);
 		for (size_t g2 = 0; g2 < num_groups_; ++g2)
 		{
@@ -428,7 +428,7 @@ private:
 	static T IntPow(T const& base, int e)
 	{
 		T result(1);
-		if constexpr (!std::is_same<T, dbl>::value) result.precision(bertini::Precision(base));
+		if constexpr (!std::is_same<T, complex_dbl>::value) result.precision(bertini::Precision(base));
 		for (int k = 0; k < e; ++k)
 			result *= base;
 		return result;
@@ -456,7 +456,7 @@ private:
 	template <typename T>
 	void SyncPrecision(Vec<T> const& vars) const
 	{
-		if constexpr (!std::is_same<T, dbl>::value)
+		if constexpr (!std::is_same<T, complex_dbl>::value)
 		{
 			if (vars.size() > 0)
 			{
@@ -470,21 +470,21 @@ private:
 	void BuildWorking() const
 	{
 		const auto& M = coefficients_highest_precision_;
-		auto& wd = std::get<Mat<dbl>>(coefficients_working_);
-		auto& wm = std::get<Mat<mpfr_complex>>(coefficients_working_);
+		auto& wd = std::get<Mat<complex_dbl>>(coefficients_working_);
+		auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
 		wd.resize(M.rows(), M.cols());
 		wm.resize(M.rows(), M.cols());
 		for (Eigen::Index r = 0; r < M.rows(); ++r)
 			for (Eigen::Index c = 0; c < M.cols(); ++c)
 			{
-				wd(r, c) = dbl(M(r, c));
+				wd(r, c) = complex_dbl(M(r, c));
 				wm(r, c) = M(r, c);
 			}
 	}
 
 	OperandPtr operand_;
-	Mat<mpfr_complex> coefficients_highest_precision_;             ///< master n x N randomization matrix
-	mutable std::tuple<Mat<dbl>, Mat<mpfr_complex>> coefficients_working_;
+	Mat<complex_mp> coefficients_highest_precision_;             ///< master n x N randomization matrix
+	mutable std::tuple<Mat<complex_dbl>, Mat<complex_mp>> coefficients_working_;
 	std::vector<std::vector<int>> target_multidegrees_;            ///< n x G
 	std::vector<std::vector<int>> operand_multidegrees_;           ///< N x G
 	size_t num_groups_;                                            ///< G (affine variable groups)

@@ -43,7 +43,7 @@ a reported huge ||J^{-1}|| reflects a genuine near-singularity, not an estimatio
 
 BOOST_AUTO_TEST_SUITE(amp_jacobian_estimate)
 
-using dbl = bertini::dbl;
+using complex_dbl = bertini::complex_dbl;
 template <typename T> using Vec = bertini::Vec<T>;
 template <typename T> using Mat = bertini::Mat<T>;
 
@@ -51,22 +51,22 @@ namespace {
 
 	// The corrector's estimate: ||J^{-1} r|| for a random unit-modulus r (max over a few draws,
 	// as a path accumulates many draws).  This mirrors newton_corrector.hpp.
-	double NormJInverseEstimate(Mat<dbl> const& J, int draws = 12)
+	double NormJInverseEstimate(Mat<complex_dbl> const& J, int draws = 12)
 	{
 		double best = 0.0;
 		auto lu = J.partialPivLu();
 		for (int i = 0; i < draws; ++i)
 		{
-			Vec<dbl> r = bertini::RandomOfUnits<dbl>(static_cast<unsigned>(J.cols()));
+			Vec<complex_dbl> r = bertini::RandomOfUnits<complex_dbl>(static_cast<unsigned>(J.cols()));
 			best = std::max(best, lu.solve(r).norm());
 		}
 		return best;
 	}
 
 	// True spectral ||J^{-1}|| = 1 / smallest singular value of J.
-	double TrueNormJInverse(Mat<dbl> const& J)
+	double TrueNormJInverse(Mat<complex_dbl> const& J)
 	{
-		Eigen::JacobiSVD<Mat<dbl>> svd(J);
+		Eigen::JacobiSVD<Mat<complex_dbl>> svd(J);
 		double sigma_min = svd.singularValues()(svd.singularValues().size() - 1);
 		return 1.0 / sigma_min;
 	}
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(estimate_tracks_truth_well_conditioned)
 	for (int n = 2; n <= 6; ++n)
 		for (int trial = 0; trial < 20; ++trial)
 		{
-			Mat<dbl> J = Mat<dbl>::Random(n, n);
+			Mat<complex_dbl> J = Mat<complex_dbl>::Random(n, n);
 			double est  = NormJInverseEstimate(J);
 			double tru  = TrueNormJInverse(J);
 
@@ -99,30 +99,30 @@ BOOST_AUTO_TEST_CASE(estimate_tracks_truth_well_conditioned)
 // it nor inflating it by orders.  This is the case the DigitsB~147 spike falls into.
 BOOST_AUTO_TEST_CASE(estimate_reflects_genuine_near_singularity)
 {
-	using mpfr_complex = bertini::mpfr_complex;
-	using mpfr_float   = bertini::mpfr_float;
+	using complex_mp = bertini::complex_mp;
+	using real_mp   = bertini::real_mp;
 
 	for (int k = 20; k <= 140; k += 40)
 	{
 		bertini::DefaultPrecision(static_cast<unsigned int>(k + 50)); // enough digits to represent eps = 1e-k
 
-		mpfr_float eps = pow(mpfr_float(10), -k);
+		real_mp eps = pow(real_mp(10), -k);
 		// J = [[1, 1], [1, 1+eps]] : det = eps, so ||J^{-1}||_2 ~ 2/eps ~ 1e+k (analytic).
-		Mat<mpfr_complex> J(2, 2);
-		J(0,0) = mpfr_complex(1); J(0,1) = mpfr_complex(1);
-		J(1,0) = mpfr_complex(1); J(1,1) = mpfr_complex(1) + mpfr_complex(eps);
+		Mat<complex_mp> J(2, 2);
+		J(0,0) = complex_mp(1); J(0,1) = complex_mp(1);
+		J(1,0) = complex_mp(1); J(1,1) = complex_mp(1) + complex_mp(eps);
 
 		auto lu = J.partialPivLu();
-		mpfr_float best(0);
+		real_mp best(0);
 		for (int i = 0; i < 12; ++i)
 		{
-			Vec<mpfr_complex> r = bertini::RandomOfUnits<mpfr_complex>(2);
-			mpfr_float nrm = lu.solve(r).norm();
+			Vec<complex_mp> r = bertini::RandomOfUnits<complex_mp>(2);
+			real_mp nrm = lu.solve(r).norm();
 			if (nrm > best) best = nrm;
 		}
 
 		double log_est = static_cast<double>(log10(best));
-		double log_tru = static_cast<double>(log10(mpfr_float(2) / eps)); // ~ k
+		double log_tru = static_cast<double>(log10(real_mp(2) / eps)); // ~ k
 
 		// the estimate is the right order of magnitude (within ~2 decades) of the true value --
 		// so a DigitsB spike of ~147 means a genuinely ~1e145 ||J^{-1}||, NOT an estimation artifact.

@@ -44,9 +44,9 @@ using VariableGroup = bertini::VariableGroup;
 
 
 
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 using mpq_rational = bertini::mpq_rational;
 
 using bertini::Precision;

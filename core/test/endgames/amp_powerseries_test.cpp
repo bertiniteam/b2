@@ -91,7 +91,7 @@ using namespace bertini::endgame;
 
 using TrackerType = bertini::tracking::AMPTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
-using mpfr = bertini::mpfr_complex;
+using mpfr = bertini::complex_mp;
 
 using namespace bertini;
 BOOST_AUTO_TEST_CASE(ensure_uniform_precision_16_30_40)

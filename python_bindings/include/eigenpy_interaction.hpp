@@ -51,18 +51,18 @@ namespace eigenpy
 		};
 
 		template <>
-		struct mpfr_slot<bertini::mpfr_float>
+		struct mpfr_slot<bertini::real_mp>
 		{
-			static bool uninitialized(bertini::mpfr_float const& x)
+			static bool uninitialized(bertini::real_mp const& x)
 			{
 				return x.backend().data()[0]._mpfr_d == 0;
 			}
 		};
 
 		template <>
-		struct mpfr_slot<bertini::mpfr_complex>
+		struct mpfr_slot<bertini::complex_mp>
 		{
-			static bool uninitialized(bertini::mpfr_complex const& x)
+			static bool uninitialized(bertini::complex_mp const& x)
 			{
 				return x.backend().data()[0].re->_mpfr_d == 0;
 			}
@@ -78,9 +78,9 @@ namespace eigenpy
 
 		// template specialization for real numbers
 		template <>
-		struct getitem<bertini::mpfr_float>
+		struct getitem<bertini::real_mp>
 		{
-			using NumT = bertini::mpfr_float;
+			using NumT = bertini::real_mp;
 
 			static PyObject *run(void *data, void * /* arr */)
 			{
@@ -98,9 +98,9 @@ namespace eigenpy
 
 		// a template specialization for complex numbers
 		template <>
-		struct getitem<bertini::mpfr_complex>
+		struct getitem<bertini::complex_mp>
 		{
-			using NumT = bertini::mpfr_complex;
+			using NumT = bertini::complex_mp;
 
 			static PyObject *run(void *data, void * /* arr */)
 			{
@@ -333,22 +333,22 @@ namespace eigenpy
 	// `to[i] = eigenpy::cast<From,To>::run(from[i])`, reading From slots
 	// unguarded.  The primary template is documented as specializable.
 	template <typename To>
-	struct cast<bertini::mpfr_float, To>
+	struct cast<bertini::real_mp, To>
 	{
-		static To run(bertini::mpfr_float const& from)
+		static To run(bertini::real_mp const& from)
 		{
-			if (internal::mpfr_slot<bertini::mpfr_float>::uninitialized(from))
+			if (internal::mpfr_slot<bertini::real_mp>::uninitialized(from))
 				return To(0);
 			return static_cast<To>(from);
 		}
 	};
 
 	template <typename To>
-	struct cast<bertini::mpfr_complex, To>
+	struct cast<bertini::complex_mp, To>
 	{
-		static To run(bertini::mpfr_complex const& from)
+		static To run(bertini::complex_mp const& from)
 		{
-			if (internal::mpfr_slot<bertini::mpfr_complex>::uninitialized(from))
+			if (internal::mpfr_slot<bertini::complex_mp>::uninitialized(from))
 				return To(0);
 			return static_cast<To>(from);
 		}
@@ -416,7 +416,7 @@ namespace eigenpy
 	// versions from internal:: above (eigenpy's read input slots unguarded —
 	// see the header comment), and the ordering comparitors are a compile-time
 	// option because they are NOT defined for complex types (instantiating
-	// them for mpfr_complex would be a hard error).
+	// them for complex_mp would be a hard error).
 	template <typename Scalar, bool WithOrderingComparitors>
 	void registerGuardedUfunct()
 	{

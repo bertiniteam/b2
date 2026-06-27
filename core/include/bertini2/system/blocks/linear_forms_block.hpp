@@ -73,7 +73,7 @@ public:
 	\param coefficients The augmented coefficient matrix: one row per function, shape
 	(number-of-functions) x (num_vars + 1).
 	*/
-	LinearFormsBlock(size_t num_vars, Mat<mpfr_complex> coefficients)
+	LinearFormsBlock(size_t num_vars, Mat<complex_mp> coefficients)
 		: num_vars_(num_vars), coefficients_highest_precision_(std::move(coefficients)),
 		  precision_(DefaultPrecision())
 	{
@@ -107,7 +107,7 @@ public:
 			throw std::runtime_error("LinearFormsBlock::Homogenize: block is already homogenized "
 				"(multiple affine variable groups are not yet supported for linear-forms blocks)");
 		const auto& M = coefficients_highest_precision_;
-		Mat<mpfr_complex> Mh(M.rows(), M.cols());                                   // same #cols: n+1
+		Mat<complex_mp> Mh(M.rows(), M.cols());                                   // same #cols: n+1
 		Mh.col(0) = M.col(static_cast<Eigen::Index>(num_vars_));                    // constant -> h column (front)
 		Mh.rightCols(static_cast<Eigen::Index>(num_vars_)) =
 			M.leftCols(static_cast<Eigen::Index>(num_vars_));                       // original variable columns
@@ -123,7 +123,7 @@ public:
 	/// The master coefficient matrix (one row per form).  Affine: num_vars+1 columns, the last being
 	/// the constant term.  Homogeneous (post-Homogenize): num_vars columns, all variable columns.
 	/// Exposed for the function-tree expansion (System::NaturalFunctionsAsNodes).
-	Mat<mpfr_complex> const& Coefficients() const { return coefficients_highest_precision_; }
+	Mat<complex_mp> const& Coefficients() const { return coefficients_highest_precision_; }
 	/// Whether Homogenize has folded the constant column onto a homogenizing variable.
 	bool IsHomogenized() const { return homogeneous_; }
 
@@ -161,7 +161,7 @@ public:
 	{
 		if (new_precision > DoublePrecision())
 		{
-			auto& wm = std::get<Mat<mpfr_complex>>(coefficients_working_);
+			auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
 			for (Eigen::Index r = 0; r < wm.rows(); ++r)
 				for (Eigen::Index c = 0; c < wm.cols(); ++c)
 				{
@@ -234,7 +234,7 @@ private:
 		Vec<T> aug(static_cast<Eigen::Index>(num_vars_ + 1));
 		aug.head(static_cast<Eigen::Index>(num_vars_)) = vars;
 		T one(1);
-		if constexpr (!std::is_same<T, dbl>::value)
+		if constexpr (!std::is_same<T, complex_dbl>::value)
 			one.precision(precision_);
 		aug(static_cast<Eigen::Index>(num_vars_)) = one;
 		return aug;
@@ -243,22 +243,22 @@ private:
 	void BuildWorking() const
 	{
 		const auto& M = coefficients_highest_precision_;
-		auto& wd = std::get<Mat<dbl>>(coefficients_working_);
-		auto& wm = std::get<Mat<mpfr_complex>>(coefficients_working_);
+		auto& wd = std::get<Mat<complex_dbl>>(coefficients_working_);
+		auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
 		wd.resize(M.rows(), M.cols());
 		wm.resize(M.rows(), M.cols());
 		for (Eigen::Index r = 0; r < M.rows(); ++r)
 			for (Eigen::Index c = 0; c < M.cols(); ++c)
 			{
-				wd(r, c) = dbl(M(r, c));
+				wd(r, c) = complex_dbl(M(r, c));
 				wm(r, c) = M(r, c);
 			}
 	}
 
 	size_t num_vars_;
 	bool homogeneous_ = false; ///< false: augmented affine (M*[x;1]); true: post-Homogenize (M*x)
-	Mat<mpfr_complex> coefficients_highest_precision_; ///< master: rows = functions, cols = num_vars (homogeneous) or num_vars+1 (affine)
-	mutable std::tuple<Mat<dbl>, Mat<mpfr_complex>> coefficients_working_;
+	Mat<complex_mp> coefficients_highest_precision_; ///< master: rows = functions, cols = num_vars (homogeneous) or num_vars+1 (affine)
+	mutable std::tuple<Mat<complex_dbl>, Mat<complex_mp>> coefficients_working_;
 	mutable unsigned precision_;
 
 	friend class boost::serialization::access;

@@ -81,7 +81,7 @@ namespace bertini
 				auto const saved_prec = DefaultPrecision();
 				DefaultPrecision(MaxPrecisionAllowed());
 
-				linear_coeffs_ = Mat<Mat<mpfr_complex>>(degree_matrix_.rows(), degree_matrix_.cols());
+				linear_coeffs_ = Mat<Mat<complex_mp>>(degree_matrix_.rows(), degree_matrix_.cols());
 				for (Eigen::Index ii = 0; ii < degree_matrix_.rows(); ++ii)
 					for (Eigen::Index jj = 0; jj < degree_matrix_.cols(); ++jj)
 					{
@@ -90,13 +90,13 @@ namespace bertini
 							continue;
 						const Eigen::Index gsize = static_cast<Eigen::Index>(var_groups_[static_cast<size_t>(jj)].size());
 						const bool projective = (static_cast<size_t>(jj) < s.NumHomVariableGroups());
-						Mat<mpfr_complex> C(d, gsize + 1);
+						Mat<complex_mp> C(d, gsize + 1);
 						for (Eigen::Index f = 0; f < d; ++f)
 						{
 							for (Eigen::Index k = 0; k < gsize; ++k)
-								C(f, k) = mpfr_complex(mpfr_float(RandomRat()), mpfr_float(RandomRat()));
-							C(f, gsize) = projective ? mpfr_complex(0)
-							                         : mpfr_complex(mpfr_float(RandomRat()), mpfr_float(RandomRat()));
+								C(f, k) = complex_mp(real_mp(RandomRat()), real_mp(RandomRat()));
+							C(f, gsize) = projective ? complex_mp(0)
+							                         : complex_mp(real_mp(RandomRat()), real_mp(RandomRat()));
 						}
 						linear_coeffs_(ii, jj) = std::move(C);
 					}
@@ -134,19 +134,19 @@ namespace bertini
 					col_of[vars[static_cast<size_t>(c)].get()] = c;
 				const Eigen::Index n = static_cast<Eigen::Index>(this->NumVariables());
 
-				std::vector<Mat<mpfr_complex>> per_function;
+				std::vector<Mat<complex_mp>> per_function;
 				per_function.reserve(static_cast<size_t>(degree_matrix_.rows()));
 
 				for (Eigen::Index ii = 0; ii < degree_matrix_.rows(); ++ii)
 				{
-					std::vector<Vec<mpfr_complex>> rows;
+					std::vector<Vec<complex_mp>> rows;
 					for (Eigen::Index g = 0; g < degree_matrix_.cols(); ++g)
 					{
 						const int d = degree_matrix_(ii, g);
 						if (d == 0)
 							continue;
 
-						const Mat<mpfr_complex>& C = linear_coeffs_(ii, g);
+						const Mat<complex_mp>& C = linear_coeffs_(ii, g);
 						const VariableGroup& gvars = var_groups_[static_cast<size_t>(g)];
 						// the homogenizing variable of an affine group, if the system is
 						// homogenized; projective groups (g < num_hom_groups_) have none.
@@ -157,10 +157,10 @@ namespace bertini
 
 						for (Eigen::Index f = 0; f < d; ++f)
 						{
-							Vec<mpfr_complex> row = Vec<mpfr_complex>::Zero(n + 1);
+							Vec<complex_mp> row = Vec<complex_mp>::Zero(n + 1);
 							for (size_t k = 0; k < gvars.size(); ++k)
 								row(col_of.at(gvars[k].get())) = C(f, static_cast<Eigen::Index>(k));
-							const mpfr_complex& constant = C(f, static_cast<Eigen::Index>(gvars.size()));
+							const complex_mp& constant = C(f, static_cast<Eigen::Index>(gvars.size()));
 							if (hom_var && col_of.count(hom_var.get()))
 								row(col_of.at(hom_var.get())) = constant;
 							else
@@ -169,7 +169,7 @@ namespace bertini
 						}
 					}
 
-					Mat<mpfr_complex> M(static_cast<Eigen::Index>(rows.size()), n + 1);
+					Mat<complex_mp> M(static_cast<Eigen::Index>(rows.size()), n + 1);
 					for (size_t r = 0; r < rows.size(); ++r)
 						M.row(static_cast<Eigen::Index>(r)) = rows[r].transpose();
 					per_function.push_back(std::move(M));
@@ -488,15 +488,15 @@ namespace bertini
 			Vec<T> b = Vec<T>::Zero(static_cast<Eigen::Index>(num_grouped_variables));
 
 			// coefficients come from linear_coeffs_ (mpfr master); cast each to the working
-			// type T (a no-op widen for mpfr, a narrowing for dbl).
-			auto as_T = [](mpfr_complex const& z) -> T {
-				if constexpr (std::is_same<T, dbl>::value) return dbl(z);
+			// type T (a no-op widen for mpfr, a narrowing for complex_dbl).
+			auto as_T = [](complex_mp const& z) -> T {
+				if constexpr (std::is_same<T, complex_dbl>::value) return complex_dbl(z);
 				else return z;
 			};
 			for(int ii = 0; ii < partition.size(); ++ii)
 			{
 				std::vector<size_t> cols = variable_cols_[static_cast<size_t>(partition[ii])];
-				const Mat<mpfr_complex>& C = linear_coeffs_(ii, partition[ii]);
+				const Mat<complex_mp>& C = linear_coeffs_(ii, partition[ii]);
 				const Eigen::Index f = static_cast<Eigen::Index>(subscript[static_cast<size_t>(ii)]);
 				for(size_t jj = 0; jj < cols.size(); ++jj)
 				{
@@ -527,24 +527,24 @@ namespace bertini
 			// coefficients and the patch are stored at MaxPrecisionAllowed, which would
 			// otherwise leak into the start point and mismatch the tracker's working
 			// precision (the adaptive tracker begins at the ambient precision).
-			if constexpr (!std::is_same<T, dbl>::value)
+			if constexpr (!std::is_same<T, complex_dbl>::value)
 				for (Eigen::Index i = 0; i < start_point.size(); ++i)
 					start_point(i).precision(DefaultPrecision());
 		}
 		
 		
-		Vec<dbl> MHomogeneous::GenerateStartPoint(dbl,unsigned long long index) const
+		Vec<complex_dbl> MHomogeneous::GenerateStartPoint(complex_dbl,unsigned long long index) const
 		{
-			Vec<dbl> start_point(NumVariables());
+			Vec<complex_dbl> start_point(NumVariables());
 			GenerateStartPointT(start_point, index);
 			
 			return start_point;
 		}
 
 
-		Vec<mpfr_complex> MHomogeneous::GenerateStartPoint(mpfr_complex,unsigned long long index) const
+		Vec<complex_mp> MHomogeneous::GenerateStartPoint(complex_mp,unsigned long long index) const
 		{
-			Vec<mpfr_complex> start_point(NumVariables());
+			Vec<complex_mp> start_point(NumVariables());
 			GenerateStartPointT(start_point, index);
 
 			return start_point;	

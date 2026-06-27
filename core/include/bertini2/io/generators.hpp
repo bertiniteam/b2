@@ -63,10 +63,10 @@ BOOST_MATH_STD_USING
 
 
 // BOOST_FUSION_ADAPT_ADT(
-//     bertini::mpfr_complex,
+//     bertini::complex_mp,
 //     (bool, bool, obj.imag() != 0, /**/)
-//     (bertini::mpfr_float, bertini::mpfr_float, obj.real(), /**/)
-//     (bertini::mpfr_float, bertini::mpfr_float, obj.imag(), /**/)
+//     (bertini::real_mp, bertini::real_mp, obj.real(), /**/)
+//     (bertini::real_mp, bertini::real_mp, obj.imag(), /**/)
 // )
 
 
@@ -87,12 +87,12 @@ namespace bertini{
 		};
 
 		template<>
-		struct BertiniNumPolicy<mpfr_float>  : public karma::real_policies<mpfr_float>
+		struct BertiniNumPolicy<real_mp>  : public karma::real_policies<real_mp>
 		{
 		    // we want the numbers always to be in scientific format
-		    static int floatfield(mpfr_float /*n*/) { return std::ios_base::scientific; }
+		    static int floatfield(real_mp /*n*/) { return std::ios_base::scientific; }
 
-		    static unsigned int precision(mpfr_float const& x) {
+		    static unsigned int precision(real_mp const& x) {
 		        return x.precision();
 		      }
 		};
@@ -103,7 +103,7 @@ namespace bertini{
 		using FullPrec = boost::spirit::karma::real_generator<Num, BertiniNumPolicy<Num> >;
 
 		FullPrec<double> const full_prec_d = FullPrec<double>();
-		FullPrec<mpfr_float> const full_prec_mp = FullPrec<mpfr_float>();
+		FullPrec<real_mp> const full_prec_mp = FullPrec<real_mp>();
 
 
 		struct Classic{
@@ -148,7 +148,7 @@ namespace bertini{
 
 
 			template <typename OutputIterator>
-			static bool generate(OutputIterator sink, mpfr_float const& c)
+			static bool generate(OutputIterator sink, real_mp const& c)
 			{
 	            using boost::spirit::karma::omit;
 	            using boost::spirit::karma::generate;
@@ -167,7 +167,7 @@ namespace bertini{
 
 
 			template <typename OutputIterator>
-			static bool generate(OutputIterator sink, mpfr_complex const& c)
+			static bool generate(OutputIterator sink, complex_mp const& c)
 			{
 	            using boost::spirit::karma::omit;
 	            using boost::spirit::karma::generate;

@@ -63,8 +63,8 @@ using Node = bertini::node::Node;
 using Complex = bertini::node::Complex;
 
 
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
 
 using System = bertini::System;
 
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(serialize_float)
 		ia >> two_point_oh_four2;
 	}
 
-	BOOST_CHECK(EvalAt<dbl>(two_point_oh_four)==EvalAt<dbl>(two_point_oh_four2));
+	BOOST_CHECK(EvalAt<complex_dbl>(two_point_oh_four)==EvalAt<complex_dbl>(two_point_oh_four2));
 }
 
 BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
@@ -150,8 +150,8 @@ BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
 
 	BOOST_CHECK(x->name()==x2->name());
 
-	std::map<std::string,dbl> pt{ {"x", dbl(1.2,0.9)} };
-	BOOST_CHECK(abs(EvalAt<dbl>(f, pt) - EvalAt<dbl>(f2, pt)) < threshold_clearance_d);
+	std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(1.2,0.9)} };
+	BOOST_CHECK(abs(EvalAt<complex_dbl>(f, pt) - EvalAt<complex_dbl>(f2, pt)) < threshold_clearance_d);
 
 }
 
@@ -163,10 +163,10 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes)
 
 
 	
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 
-	values(0) = dbl(2.0);
-	values(1) = dbl(3.0);
+	values(0) = complex_dbl(2.0);
+	values(1) = complex_dbl(3.0);
 
 	
 	
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes)
 		bertini::System sys2;
 		ia >> sys2;
 
-		Vec<dbl> v = sys2.Eval(values);
+		Vec<complex_dbl> v = sys2.Eval(values);
 
 
 		BOOST_CHECK_EQUAL(v.size(),2);
@@ -224,12 +224,12 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes_via_parsing)
 
 
 	
-	Vec<dbl> x(2);
+	Vec<complex_dbl> x(2);
 
-	x(0) = dbl(2.0);
-	x(1) = dbl(3.0);
+	x(0) = complex_dbl(2.0);
+	x(1) = complex_dbl(3.0);
 
-	Vec<dbl> y_before(2);
+	Vec<complex_dbl> y_before(2);
 	
 	{ // to create a scope
 
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes_via_parsing)
 		bertini::System sys2;
 		ia >> sys2;
 
-		Vec<dbl> y_after = sys2.Eval(x);
+		Vec<complex_dbl> y_after = sys2.Eval(x);
 
 
 		BOOST_CHECK_EQUAL(y_after.size(),2);
@@ -278,10 +278,10 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes_using_subfunctions_via_parsing)
 
 
 	
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 
-	values(0) = dbl(2.0);
-	values(1) = dbl(3.0);
+	values(0) = complex_dbl(2.0);
+	values(1) = complex_dbl(3.0);
 
 	
 	
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes_using_subfunctions_via_parsing)
 		bertini::System sys2;
 		ia >> sys2;
 
-		Vec<dbl> v = sys2.Eval(values);
+		Vec<complex_dbl> v = sys2.Eval(values);
 
 
 		BOOST_CHECK_EQUAL(v.size(),2);
@@ -337,12 +337,12 @@ BOOST_AUTO_TEST_CASE(system_clone)
 	auto sys2 = Clone(sys1);
 	
 
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 
-	values(0) = dbl(2.0);
-	values(1) = dbl(3.0);
+	values(0) = complex_dbl(2.0);
+	values(1) = complex_dbl(3.0);
 
-	Vec<dbl> v = sys2.Eval(values);
+	Vec<complex_dbl> v = sys2.Eval(values);
 
 	BOOST_CHECK_EQUAL(v.size(),2);
 
@@ -364,9 +364,9 @@ BOOST_AUTO_TEST_CASE(system_clone)
 
 	// Evaluation is still independent: evaluating the original at a different point does not change
 	// the clone's result.
-	Vec<dbl> other(2); other(0) = dbl(5.0); other(1) = dbl(7.0);
+	Vec<complex_dbl> other(2); other(0) = complex_dbl(5.0); other(1) = complex_dbl(7.0);
 	(void) sys1.Eval(other);
-	Vec<dbl> v2 = sys2.Eval(values);
+	Vec<complex_dbl> v2 = sys2.Eval(values);
 	BOOST_CHECK_EQUAL(v2(0), 36.0);
 	BOOST_CHECK_EQUAL(v2(1), 12.0);
 }

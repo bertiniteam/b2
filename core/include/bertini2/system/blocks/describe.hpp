@@ -37,9 +37,9 @@ namespace bertini {
 namespace blocks {
 namespace describe_detail {
 
-/// Print one (mpfr_complex) coefficient compactly: a real prints as its real part, a pure imaginary
+/// Print one (complex_mp) coefficient compactly: a real prints as its real part, a pure imaginary
 /// as `b*i`, otherwise as `(a+b*i)`.
-inline void PrintCoeff(std::ostream& out, mpfr_complex const& c)
+inline void PrintCoeff(std::ostream& out, complex_mp const& c)
 {
 	const bool re0 = (c.real() == 0), im0 = (c.imag() == 0);
 	if (im0)            out << c.real();
@@ -69,14 +69,14 @@ inline void PrintAugmentedVars(std::ostream& out, VariableGroup const& vars, siz
 /// One affine linear form, row r of an augmented coefficient matrix M (num_vars+1 cols affine, or
 /// num_vars cols homogeneous).  Verbose prints the actual sum `2*x + 1*y - 1`; otherwise nothing
 /// (the caller prints the placeholder `c.[...]`).
-inline void PrintLinearFormVerbose(std::ostream& out, Mat<mpfr_complex> const& M, Eigen::Index r,
+inline void PrintLinearFormVerbose(std::ostream& out, Mat<complex_mp> const& M, Eigen::Index r,
                                    VariableGroup const& vars, size_t num_vars, bool homogeneous)
 {
 	bool first = true;
 	const size_t ncol = homogeneous ? num_vars : num_vars + 1;
 	for (size_t c = 0; c < ncol; ++c)
 	{
-		mpfr_complex const& coeff = M(r, static_cast<Eigen::Index>(c));
+		complex_mp const& coeff = M(r, static_cast<Eigen::Index>(c));
 		if (coeff.real() == 0 && coeff.imag() == 0)
 			continue;
 		if (!first) out << " + ";

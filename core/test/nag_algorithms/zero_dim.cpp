@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(user_homotopy_parameter_homotopy_solves)
 {
 	using namespace bertini;
 	using namespace tracking;
-	using mpfr = bertini::mpfr_complex;
+	using mpfr = bertini::complex_mp;
 
 	auto x = Variable::Make("x");
 	auto t = Variable::Make("t");
@@ -248,17 +248,17 @@ BOOST_AUTO_TEST_CASE(user_homotopy_parameter_homotopy_solves)
 
 	auto const& sols = zd.SolutionsUserCoords();
 	auto const& md   = zd.FinalSolutionMetadata();
-	std::vector<dbl> ends;
+	std::vector<complex_dbl> ends;
 	for (size_t i = 0; i < sols.size(); ++i)
 		if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 1)
-			ends.push_back(dbl(sols[i](0)));
+			ends.push_back(complex_dbl(sols[i](0)));
 
 	BOOST_CHECK_EQUAL(ends.size(), 2u);
 	bool has_pos = false, has_neg = false;
 	for (auto const& e : ends)
 	{
-		if (std::abs(e - dbl(3,0))  < 1e-7) has_pos = true;
-		if (std::abs(e - dbl(-3,0)) < 1e-7) has_neg = true;
+		if (std::abs(e - complex_dbl(3,0))  < 1e-7) has_pos = true;
+		if (std::abs(e - complex_dbl(-3,0)) < 1e-7) has_neg = true;
 	}
 	BOOST_CHECK(has_pos); // tracked +2 -> +3
 	BOOST_CHECK(has_neg); // tracked -2 -> -3
@@ -308,13 +308,13 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 
 	BOOST_REQUIRE_EQUAL(good.size(), 2u); // both MHom paths solved (the m-homogeneous Bezout number)
 
-	for (auto const& s : good)   // AMP returns mpfr_complex coords; double is plenty for a root check
+	for (auto const& s : good)   // AMP returns complex_mp coords; double is plenty for a root check
 	{
-		dbl a(s(0)), b(s(1));
-		BOOST_CHECK_SMALL(std::abs(a * b - dbl(1)), 1e-8);
+		complex_dbl a(s(0)), b(s(1));
+		BOOST_CHECK_SMALL(std::abs(a * b - complex_dbl(1)), 1e-8);
 		BOOST_CHECK_SMALL(std::abs(a + b), 1e-8);
 	}
-	BOOST_CHECK_GT(std::abs(dbl(good[0](0)) - dbl(good[1](0))), 1e-3); // the two distinct roots
+	BOOST_CHECK_GT(std::abs(complex_dbl(good[0](0)) - complex_dbl(good[1](0))), 1e-3); // the two distinct roots
 }
 
 
@@ -375,9 +375,9 @@ BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
 	// double, including t very close to 0 (endgame region, where the spike lives)
 	for (int trial = 0; trial < 10; ++trial)
 	{
-		Vec<dbl> p = Vec<dbl>::Random(n);
-		dbl t = (trial < 5) ? dbl(0.4, -0.3) * dbl(trial + 1)
-		                    : dbl(std::pow(10.0, -(trial - 1)), 0.0); // 1e-4 .. 1e-8
+		Vec<complex_dbl> p = Vec<complex_dbl>::Random(n);
+		complex_dbl t = (trial < 5) ? complex_dbl(0.4, -0.3) * complex_dbl(trial + 1)
+		                    : complex_dbl(std::pow(10.0, -(trial - 1)), 0.0); // 1e-4 .. 1e-8
 		compare(H.Eval(p, t),     He.Eval(p, t),     1e-11);
 		compare(H.Jacobian(p, t), He.Jacobian(p, t), 1e-11);
 	}
@@ -388,8 +388,8 @@ BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
 	He.precision(80);
 	for (int trial = 0; trial < 5; ++trial)
 	{
-		Vec<mpfr_complex> p = RandomOfUnits<mpfr_complex>(static_cast<unsigned int>(n));
-		mpfr_complex t = RandomOfUnits<mpfr_complex>(1)(0);
+		Vec<complex_mp> p = RandomOfUnits<complex_mp>(static_cast<unsigned int>(n));
+		complex_mp t = RandomOfUnits<complex_mp>(1)(0);
 		compare(H.Eval(p, t),     He.Eval(p, t),     1e-70);
 		compare(H.Jacobian(p, t), He.Jacobian(p, t), 1e-70);
 	}
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(solve_report_buckets_metadata_and_flags_failures)
 	using bertini::algorithm::SummarizeSolve;
 	using bertini::algorithm::MidpathCheckReport;
 	using SC = bertini::SuccessCode;
-	using CT = bertini::dbl;
+	using CT = bertini::complex_dbl;
 
 	auto set = [](SolutionMetaData<CT>& m, SC code, bool finite, int mult,
 	              bool real, bool sing, double cond){
@@ -757,19 +757,19 @@ BOOST_AUTO_TEST_SUITE_END()
 // reports no crossings and the new accessors work.
 BOOST_AUTO_TEST_SUITE(crossed_paths)
 
-using bertini::dbl_complex;
+using bertini::complex_dbl;
 using bertini::Vec;
 using bertini::SuccessCode;
 using MidPathConfig = bertini::algorithm::MidPathConfig;
-using BoundaryMD = bertini::algorithm::EGBoundaryMetaData<dbl_complex>;
-using Checker = bertini::algorithm::MidpathChecker<double, dbl_complex, BoundaryMD>;
+using BoundaryMD = bertini::algorithm::EGBoundaryMetaData<complex_dbl>;
+using Checker = bertini::algorithm::MidpathChecker<double, complex_dbl, BoundaryMD>;
 
 namespace {
 	// Minimal stand-in providing just the StartPoint<ComplexT>(index) interface MidpathChecker
 	// needs, so the test controls both the boundary points and the start points.
 	struct MockStartSystem
 	{
-		std::vector<Vec<dbl_complex>> pts;
+		std::vector<Vec<complex_dbl>> pts;
 
 		template<typename ComplexT>
 		Vec<ComplexT> StartPoint(unsigned long long i) const
@@ -778,14 +778,14 @@ namespace {
 		}
 	};
 
-	Vec<dbl_complex> Pt(dbl_complex a, dbl_complex b)
+	Vec<complex_dbl> Pt(complex_dbl a, complex_dbl b)
 	{
-		Vec<dbl_complex> v(2);
+		Vec<complex_dbl> v(2);
 		v << a, b;
 		return v;
 	}
 
-	BoundaryMD MakeBoundaryPoint(Vec<dbl_complex> const& p)
+	BoundaryMD MakeBoundaryPoint(Vec<complex_dbl> const& p)
 	{
 		return BoundaryMD(p, SuccessCode::Success, 0.01, 16);
 	}

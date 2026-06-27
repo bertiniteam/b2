@@ -48,7 +48,7 @@ int main()
             bertini::mpfr v;
             bertini::RandomReal(v, 30);
             p->precision(30);
-            p->set_current_value(bertini::dbl(v));
+            p->set_current_value(bertini::complex_dbl(v));
             p->set_current_value(v);
         }
 
@@ -56,7 +56,7 @@ int main()
 
         // std::cout << "your target system for step2:\n" << target_sys_step2 << '\n';
         // for (auto& p : std::get<1>(step2_stuff))
-        //     std::cout << "solving for parameter values " << *p <<  " " << p->Eval<bertini::dbl>() << '\n';
+        //     std::cout << "solving for parameter values " << *p <<  " " << p->Eval<bertini::complex_dbl>() << '\n';
 
         auto steptwo_solutions = demo::StepTwo(target_sys_step2, target_sys_step1, homotopy_sys_step2, stepone_solutions);
         
