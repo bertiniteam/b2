@@ -495,3 +495,60 @@ BOOST_AUTO_TEST_CASE(precision_change_recomputes_constants)
 
 BOOST_AUTO_TEST_SUITE_END() // SLP_freeze_partition
 
+
+
+// ADR-0034: real-valued subexpressions evaluate in the cheaper real banks (NumType::Real), and the
+// result must equal the all-complex evaluation.  The rest of the C++ suite is the broad equivalence
+// gate (it solves/tracks integer- and rational-coefficient systems through the SLP); here we confirm
+// the inference is actually LIVE (not a silent all-Complex no-op) and that the mixed real-coefficient
+// x complex-variable path is numerically correct, at double and multiprecision.
+BOOST_AUTO_TEST_SUITE(SLP_tiered_numtype)
+
+using complex_mp = bertini::complex_mp;
+
+namespace {
+	bertini::System ParseSLPSys(std::string const& str){
+		bertini::System sys;
+		[[maybe_unused]] bool ok = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+		return sys;
+	}
+	// f = 3*x^2 + 2 : integer coefficients 3 and 2 are real, x is complex.
+	const std::string kRealCoeffSys = "function f; variable_group x; f = 3*x^2 + 2;";
+}
+
+// An integer-coefficient system must infer at least one Real slot -- otherwise the tier machinery
+// would be a silent no-op and there would be no speedup.
+BOOST_AUTO_TEST_CASE(integer_coeff_system_infers_real_slots)
+{
+	auto slp = SLP(ParseSLPSys(kRealCoeffSys));
+	BOOST_CHECK_GT(slp.NumRealSlots(), size_t(0));
+}
+
+// Evaluated at a genuinely complex point, the real-coefficient * complex-variable path must produce
+// the correct complex value (and Jacobian) -- i.e. the imaginary part propagates through the mixed
+// real*complex arithmetic.  x = 1+i:  3*(1+i)^2 + 2 = 3*(2i) + 2 = 2 + 6i;  df/dx = 6x = 6 + 6i.
+BOOST_AUTO_TEST_CASE(real_tier_mixed_eval_correct_double)
+{
+	auto slp = SLP(ParseSLPSys(kRealCoeffSys));
+	BOOST_REQUIRE_GT(slp.NumRealSlots(), size_t(0));
+
+	Vec<complex_dbl> x(1); x(0) = complex_dbl(1.0, 1.0);
+	slp.Eval(x);
+	auto f = slp.GetFuncVals<complex_dbl>();
+	auto J = slp.GetJacobian<complex_dbl>();
+	BOOST_CHECK_SMALL(abs(f(0)   - complex_dbl(2.0, 6.0)), 1e-13);
+	BOOST_CHECK_SMALL(abs(J(0,0) - complex_dbl(6.0, 6.0)), 1e-13);
+}
+
+// Same, at multiprecision: the real_mp bank carries the coefficients at the working precision.
+BOOST_AUTO_TEST_CASE(real_tier_mixed_eval_correct_mp)
+{
+	auto slp = SLP(ParseSLPSys(kRealCoeffSys));
+	Vec<complex_mp> x(1); x(0) = complex_mp(1, 1);
+	slp.Eval(x);
+	auto f = slp.GetFuncVals<complex_mp>();
+	BOOST_CHECK(abs(f(0) - complex_mp(2, 6)) < 1e-40);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // SLP_tiered_numtype
+

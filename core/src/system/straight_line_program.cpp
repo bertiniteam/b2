@@ -92,6 +92,33 @@ namespace bertini{
 		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<complex_mp>");
 	}
 
+	// Real companion of Produce (ADR-0034): the real value of a constant whose slot was inferred
+	// NumType::Real.  Only the real part is used; IsReal() guarantees the imaginary part is zero, so
+	// this matches the real part of Produce<complex>() bit-for-bit.
+	template<>
+	real_dbl ConstantRecipe::ProduceReal<real_dbl>() const {
+		switch (kind) {
+			case Kind::Integer:  return double(int_value);
+			case Kind::Rational: return double(rat_real);
+			case Kind::Complex:  return double(float_value.real());
+			case Kind::Pi:       return boost::math::constants::pi<double>();
+			case Kind::E:        return exp(1.0);
+		}
+		throw std::runtime_error("unrecognized ConstantRecipe kind in ProduceReal<real_dbl>");
+	}
+
+	template<>
+	real_mp ConstantRecipe::ProduceReal<real_mp>() const {
+		switch (kind) {
+			case Kind::Integer:  return real_mp(int_value, ThreadPrecision());
+			case Kind::Rational: return real_mp(rat_real, ThreadPrecision());
+			case Kind::Complex:  return real_mp(float_value.real(), ThreadPrecision());
+			case Kind::Pi:       return boost::math::constants::pi<real_mp>();
+			case Kind::E:        return real_mp(exp(real_mp(1)));
+		}
+		throw std::runtime_error("unrecognized ConstantRecipe kind in ProduceReal<real_mp>");
+	}
+
 
 	// the constructor
 	StraightLineProgram::StraightLineProgram(System const& sys){
@@ -106,14 +133,21 @@ namespace bertini{
 			return;
 		}
 		else{
-			auto& mem = memory_.Get<complex_mp>();
+			auto& cmem = memory_.Get<complex_mp>();
+			auto& rmem = memory_.Get<real_mp>();
 
-			// Refill the constants from their exact recipes (no node evaluation), then normalize
-			// every slot to the new precision.  (Matches the historical node-backed path.)
-			for (auto const& c : program_->constant_recipes_)
-				mem[c.slot] = c.Produce<complex_mp>();
+			// Refill the constants from their exact recipes (no node evaluation) into the bank their
+			// NumType selects, then normalize every slot of both banks to the new precision.
+			for (auto const& c : program_->constant_recipes_){
+				if (program_->slot_numtype_[c.slot] == NumType::Real)
+					rmem[c.slot] = c.ProduceReal<real_mp>();
+				else
+					cmem[c.slot] = c.Produce<complex_mp>();
+			}
 
-			for (auto& n : mem)
+			for (auto& n : cmem)
+				Precision(n, new_precision);
+			for (auto& n : rmem)
 				Precision(n, new_precision);
 
 			memory_.precision_ = new_precision;
@@ -127,10 +161,19 @@ namespace bertini{
 	template<typename NumT>
 	void StraightLineProgram::CopyNumbersIntoMemory() const
 	{
+		using RealT = typename NumTraits<NumT>::Real;
+		constexpr bool is_mp = std::is_same<NumT,complex_mp>::value;
 		for (auto const& c : program_->constant_recipes_){
-			memory_.Get<NumT>()[c.slot] = c.Produce<NumT>();
-			if (std::is_same<NumT,complex_mp>::value)
-				Precision(memory_.Get<NumT>()[c.slot], memory_.precision_);
+			if (program_->slot_numtype_[c.slot] == NumType::Real){
+				memory_.Get<RealT>()[c.slot] = c.ProduceReal<RealT>();
+				if constexpr (is_mp)
+					Precision(memory_.Get<RealT>()[c.slot], memory_.precision_);
+			}
+			else{
+				memory_.Get<NumT>()[c.slot] = c.Produce<NumT>();
+				if constexpr (is_mp)
+					Precision(memory_.Get<NumT>()[c.slot], memory_.precision_);
+			}
 		}
 	}
 
@@ -284,11 +327,24 @@ namespace bertini{
 	template<typename NumT>
 	void SLPProgram::Eval(SLPMemory& mem) const{
 
-		auto& memory =  mem.Get<NumT>();
+		// Two banks at this precision: the complex bank (NumT) and its real companion (ADR-0034).
+		// A slot's value lives in exactly one, selected by slot_numtype_.  An all-Complex program
+		// only ever touches `cplx`, so this is identical to the pre-tier path.
+		using RealT = typename NumTraits<NumT>::Real;
+		auto& cplx = mem.Get<NumT>();
+		auto& real = mem.Get<RealT>();
+
+		// Bring the std math functions into scope so the REAL (double) path resolves them: a plain
+		// double has no associated namespace, so unqualified sin/pow/... would otherwise bind to the
+		// function-tree node operators.  ADL still finds Boost's overloads for real_mp / complex_mp
+		// and std's for complex_dbl, so all four numeric types resolve correctly.
+		using std::pow;  using std::sqrt; using std::log;  using std::exp;
+		using std::sin;  using std::cos;  using std::tan;
+		using std::asin; using std::acos; using std::atan;
 
 
 #ifndef BERTINI_DISABLE_PRECISION_CHECKS
-		if (! std::is_same<NumT,complex_dbl>::value && Precision(memory[0])!=mem.precision_){
+		if (! std::is_same<NumT,complex_dbl>::value && Precision(cplx[0])!=mem.precision_){
 			throw std::runtime_error("memory and SLP are out-of-sync WRT precision");
 		}
 #endif
@@ -308,81 +364,69 @@ namespace bertini{
 
 		const size_t loop_start = frozen_valid ? first_live_instruction_ : 0;
 
+		auto is_real = [&](size_t s){ return slot_numtype_[s] == NumType::Real; };
+
+		// Binary arithmetic: read each operand from its NumType's bank and write the result to the
+		// result slot's bank.  When the result is Real, inference guarantees both operands are Real
+		// (R+R, R-R, R*R, R/R), so we use the cheap real path; otherwise we use native mixed
+		// arithmetic (real * complex is ~half the work of complex * complex), promoting nothing.
+		auto binop = [&](size_t i1, size_t i2, size_t o, auto fn){
+			if (is_real(o))                          real[o] = fn(real[i1], real[i2]);
+			else if (is_real(i1) && !is_real(i2))    cplx[o] = fn(real[i1], cplx[i2]);
+			else if (!is_real(i1) && is_real(i2))    cplx[o] = fn(cplx[i1], real[i2]);
+			else                                     cplx[o] = fn(cplx[i1], cplx[i2]);
+		};
+
+		// Type-preserving unary (result NumType == operand NumType): negate/copy/exp/sin/cos/tan/atan.
+		auto un_preserve = [&](size_t i, size_t o, auto fn){
+			if (is_real(o)) real[o] = fn(real[i]); else cplx[o] = fn(cplx[i]);
+		};
+
+		// Escape unary (result is Complex; a real operand is promoted so the complex branch is taken):
+		// sqrt/log/asin/acos, which can leave ℝ for some real inputs.
+		auto un_escape = [&](size_t i, size_t o, auto fn){
+			cplx[o] = is_real(i) ? fn(NumT(real[i])) : fn(cplx[i]);
+		};
+
 		for (size_t ii = loop_start; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
 			//in the unary case the loop will increment by 3
 			//binary: by 4
 
+			const size_t a = instructions_[ii+1], b = instructions_[ii+2], c = instructions_[ii+3];
+
 			switch (instructions_[ii]) {
 
-				case Add:
-					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] + memory[instructions_[ii+2]];
-					break;
+				case Add:      binop(a, b, c, [](auto const& x, auto const& y){ return x + y; }); break;
+				case Subtract: binop(a, b, c, [](auto const& x, auto const& y){ return x - y; }); break;
+				case Multiply: binop(a, b, c, [](auto const& x, auto const& y){ return x * y; }); break;
+				case Divide:   binop(a, b, c, [](auto const& x, auto const& y){ return x / y; }); break;
 
-				case Subtract:
-					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] - memory[instructions_[ii+2]];
+				case Power: {
+					// general a^b (slot exponent); result is Complex, so promote any real operand.
+					const NumT base = is_real(a) ? NumT(real[a]) : cplx[a];
+					const NumT expo = is_real(b) ? NumT(real[b]) : cplx[b];
+					cplx[c] = pow(base, expo);
 					break;
-
-				case Multiply:
-					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] * memory[instructions_[ii+2]];
-					break;
-
-				case Divide:
-					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] / memory[instructions_[ii+2]];
-					break;
-
-				case Power:
-					memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
-					break;
+				}
 
 				case IntPower:
-					{
-					memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], this->integers_[instructions_[ii+2]]);
-					break;
-					}
-
-				case Assign:
-					memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]];
+					// in2 (b) is an index into integers_, not a slot.  real^int -> real, complex^int -> complex.
+					if (is_real(c)) real[c] = pow(real[a], this->integers_[b]);
+					else            cplx[c] = pow(cplx[a], this->integers_[b]);
 					break;
 
-				case Negate:
-					memory[this->instructions_[ii+2]] = -(memory[instructions_[ii+1]]);
-					break;
+				case Assign:   un_preserve(a, b, [](auto const& x){ return x; }); break;
+				case Negate:   un_preserve(a, b, [](auto const& x){ return -x; }); break;
+				case Exp:      un_preserve(a, b, [](auto const& x){ return exp(x); }); break;
+				case Sin:      un_preserve(a, b, [](auto const& x){ return sin(x); }); break;
+				case Cos:      un_preserve(a, b, [](auto const& x){ return cos(x); }); break;
+				case Tan:      un_preserve(a, b, [](auto const& x){ return tan(x); }); break;
+				case Atan:     un_preserve(a, b, [](auto const& x){ return atan(x); }); break;
 
-				case Sqrt:
-					memory[this->instructions_[ii+2]] = sqrt(memory[instructions_[ii+1]]);
-					break;
-
-				case Log:
-					memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
-					break;
-
-				case Exp:
-					memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
-					break;
-
-				case Sin:
-					memory[this->instructions_[ii+2]] = sin(memory[instructions_[ii+1]]);
-					break;
-
-				case Cos:
-					memory[this->instructions_[ii+2]] = cos(memory[instructions_[ii+1]]);
-					break;
-
-				case Tan:
-					memory[this->instructions_[ii+2]] = tan(memory[instructions_[ii+1]]);
-					break;
-
-				case Asin:
-					memory[this->instructions_[ii+2]] = asin(memory[instructions_[ii+1]]);
-					break;
-
-				case Acos:
-					memory[this->instructions_[ii+2]] = acos(memory[instructions_[ii+1]]);
-					break;
-
-				case Atan:
-					memory[this->instructions_[ii+2]] = atan(memory[instructions_[ii+1]]);
-					break;
+				case Sqrt:     un_escape(a, b, [](auto const& x){ return sqrt(x); }); break;
+				case Log:      un_escape(a, b, [](auto const& x){ return log(x); }); break;
+				case Asin:     un_escape(a, b, [](auto const& x){ return asin(x); }); break;
+				case Acos:     un_escape(a, b, [](auto const& x){ return acos(x); }); break;
 
 			} // switch for operation
 
@@ -411,6 +455,73 @@ namespace bertini{
 
 	template void SLPProgram::Eval<complex_dbl>(SLPMemory&) const;
 	template void SLPProgram::Eval<complex_mp>(SLPMemory&) const;
+
+
+	namespace {
+		// The NumType of a binary op's result given its operands' NumTypes (ADR-0034).  Real only when
+		// the result is GUARANTEED real for all inputs; otherwise Complex (the safe escape).  IntPower
+		// is handled separately (its exponent is an integer index, and result = base NumType).
+		NumType BinaryResultNumType(Operation op, NumType a, NumType b)
+		{
+			const bool both_real = (a == NumType::Real && b == NumType::Real);
+			switch (op)
+			{
+				// R+R, R-R, R*R are real; R/R is real (real/real stays in ℝ); any complex operand -> complex.
+				case Add: case Subtract: case Multiply: case Divide:
+					return both_real ? NumType::Real : NumType::Complex;
+				// general a^b (slot exponent): negative real base to a non-integer power leaves ℝ.
+				case Power:
+				default:
+					return NumType::Complex;
+			}
+		}
+
+		// The NumType of a unary op's result given its operand's NumType.
+		NumType UnaryResultNumType(Operation op, NumType a)
+		{
+			switch (op)
+			{
+				case Negate: case Assign:                          return a;          // sign/copy preserve
+				case Exp: case Sin: case Cos: case Tan: case Atan: return a;          // real-valued for real input
+				case Sqrt: case Log: case Asin: case Acos:         return NumType::Complex;  // can leave ℝ
+				default:                                           return NumType::Complex;
+			}
+		}
+	} // anonymous namespace
+
+	void SLPProgram::ComputeSlotNumTypes()
+	{
+		// Seed: constant slots from their recipe's real-ness; everything else (variables, the path
+		// variable, and as-yet-unwritten temporaries) starts Complex.  Then one forward pass over the
+		// dependency-ordered tape propagates the NumType of each instruction's result (same shape as
+		// PartitionInstructions' frozenness pass).
+		slot_numtype_.assign(num_slots_, NumType::Complex);
+		for (auto const& c : constant_recipes_)
+			slot_numtype_[c.slot] = c.IsReal() ? NumType::Real : NumType::Complex;
+
+		for (size_t ii = 0; ii < instructions_.size(); )
+		{
+			const auto op = static_cast<Operation>(instructions_[ii]);
+			if (IsUnary(op))
+			{
+				slot_numtype_[instructions_[ii + 2]] =
+					UnaryResultNumType(op, slot_numtype_[instructions_[ii + 1]]);
+				ii += 3;
+			}
+			else if (op == IntPower)
+			{
+				// in2 is an index into integers_, not a slot; real^int = real, complex^int = complex.
+				slot_numtype_[instructions_[ii + 3]] = slot_numtype_[instructions_[ii + 1]];
+				ii += 4;
+			}
+			else
+			{
+				slot_numtype_[instructions_[ii + 3]] =
+					BinaryResultNumType(op, slot_numtype_[instructions_[ii + 1]], slot_numtype_[instructions_[ii + 2]]);
+				ii += 4;
+			}
+		}
+	}
 
 
 	void SLPProgram::PartitionInstructions()
@@ -982,10 +1093,8 @@ namespace bertini{
 		// the program's total slot count is the number of memory slots allocated during compilation
 		program_under_construction_.num_slots_ = next_available_complex_;
 
-		// NumType per slot (ADR-0034).  Stage-0/foundation: every slot is Complex, which makes the
-		// real banks unused and reproduces the pre-tier behavior exactly.  Tier inference (next
-		// increment) is what flips real-valued slots to NumType::Real.
-		program_under_construction_.slot_numtype_.assign(next_available_complex_, NumType::Complex);
+		// NumType per slot (ADR-0034): infer which slots are real vs complex from the tree/tape.
+		program_under_construction_.ComputeSlotNumTypes();
 
 		// Split the tape into a frozen (constants-only) prologue and a live segment, so a
 		// point-only re-evaluation can skip recomputing the constants (ADR-0027).  This is a pure

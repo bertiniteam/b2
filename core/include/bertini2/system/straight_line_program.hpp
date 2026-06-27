@@ -291,6 +291,20 @@ namespace bertini {
 		/// the corresponding number node's FreshEval exactly.  Definition + instantiations in the cpp.
 		template<typename NumT> NumT Produce() const;
 
+		/// Produce just the REAL value (for a slot inferred NumType::Real).  Only valid when IsReal().
+		template<typename RealT> RealT ProduceReal() const;
+
+		/// Whether this constant is real-valued: Integer/Pi/E always; a Rational/Complex literal iff its
+		/// imaginary part is exactly zero.  Drives NumType::Real inference for constant slots (ADR-0034).
+		bool IsReal() const {
+			switch (kind) {
+				case Kind::Integer: case Kind::Pi: case Kind::E: return true;
+				case Kind::Rational: return rat_imag == 0;
+				case Kind::Complex:  return float_value.imag() == 0;
+			}
+			return false;
+		}
+
 		friend class boost::serialization::access;
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
@@ -421,6 +435,11 @@ namespace bertini {
 		// Reorder `instructions_` into [frozen | live] and set `first_live_instruction_`.  Called once
 		// at the end of compilation, after `num_slots_` is set.
 		void PartitionInstructions();
+
+		// Fill slot_numtype_ by a forward pass over the (dependency-ordered) tape (ADR-0034): seed
+		// constant slots from ConstantRecipe::IsReal() and input slots as Complex, then propagate the
+		// NumType join through each instruction.  Called at the end of compilation.
+		void ComputeSlotNumTypes();
 
 
 		bool has_path_variable_ = false; //< Does this SLP have a path variable?
@@ -573,16 +592,33 @@ namespace bertini {
 		the function will NOT automatically resize your vector for you to be the correct size
 
 		 */
+		/// Number of slots the compiler inferred as NumType::Real (ADR-0034).  >0 means real-valued
+		/// subexpressions are being evaluated in the cheaper real banks; used by tests to confirm the
+		/// tier inference is live (not silently all-Complex).
+		size_t NumRealSlots() const {
+			size_t n = 0;
+			for (auto t : program_->slot_numtype_) if (t == NumType::Real) ++n;
+			return n;
+		}
+
+		// Read a slot's value as NumT (complex), pulling from the real or complex bank per its NumType
+		// (ADR-0034).  Used to copy outputs out, since a function/derivative slot could be Real-typed.
+		template<typename NumT>
+		NumT ReadSlotAsComplex(size_t slot) const {
+			using RealT = typename NumTraits<NumT>::Real;
+			if (program_->slot_numtype_[slot] == NumType::Real)
+				return NumT(memory_.template Get<RealT>()[slot]);
+			return memory_.template Get<NumT>()[slot];
+		}
+
 		template<typename NumT>
 		void GetFuncValsInPlace(Eigen::Ref<Vec<NumT>> result) const{
 			if (!memory_.is_evaluated_)
 				program_->Eval<NumT>(memory_);
 
-			auto& memory = memory_.Get<NumT>();
-
-			// copy content
+			// copy content (an output slot may be Real-typed; read from the bank its NumType selects)
 			for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-				result(static_cast<Eigen::Index>(ii)) = memory[ii + program_->output_locations_.Functions];
+				result(static_cast<Eigen::Index>(ii)) = ReadSlotAsComplex<NumT>(ii + program_->output_locations_.Functions);
 			}
 		}
 
@@ -602,12 +638,10 @@ namespace bertini {
 			if (!memory_.is_evaluated_)
 				program_->Eval<NumT>(memory_);
 
-			auto& memory = memory_.Get<NumT>();
-
-			// copy content
+			// copy content (a derivative slot may be Real-typed; read from the bank its NumType selects)
 			for (size_t jj =0; jj < program_->number_of_.Variables; ++jj) {
 				for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-					result(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)) = memory[ii+jj*program_->number_of_.Functions + program_->output_locations_.Jacobian];
+					result(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)) = ReadSlotAsComplex<NumT>(ii+jj*program_->number_of_.Functions + program_->output_locations_.Jacobian);
 				}
 			}
 		}
@@ -628,11 +662,9 @@ namespace bertini {
 			if (!memory_.is_evaluated_)
 				program_->Eval<NumT>(memory_);
 
-			auto& memory = memory_.Get<NumT>();
-			// 1. make container, size correctly.
-			// 2. copy content
+			// copy content (a time-derivative slot may be Real-typed; read from the right bank)
 			for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-				result(static_cast<Eigen::Index>(ii)) = memory[ii + program_->output_locations_.TimeDeriv];
+				result(static_cast<Eigen::Index>(ii)) = ReadSlotAsComplex<NumT>(ii + program_->output_locations_.TimeDeriv);
 			}
 		}
 
