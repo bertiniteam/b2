@@ -845,5 +845,35 @@ BOOST_AUTO_TEST_CASE(mpfr_alloc_per_raw_op)
 	BOOST_CHECK(true);
 }
 
+// Is the lowered O(n) repeated-multiply actually faster than the transcendental pow(complex,complex)?
+// Find the crossover exponent above which we should stop lowering and keep a general pow.  Opt-in.
+BOOST_AUTO_TEST_CASE(power_method_crossover)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+	using real_mp = bertini::real_mp;
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	bertini::DefaultPrecision(prec);
+	complex_mp base(real_mp("1.3"), real_mp("0.7")), basec(0), acc(0), tmp(0), result(0);
+	for (auto* p : {&base, &basec, &acc, &tmp, &result}) bertini::Precision(*p, prec);
+	basec = base;
+	const long M = 5000;
+	auto timeit = [&](auto&& f){ auto t0 = std::chrono::steady_clock::now();
+		for (long i = 0; i < M; ++i) f();
+		return std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count() / M * 1e6; };  // us/op
+
+	std::cout << "\n=== power method crossover (prec=" << prec << " digits, us per op) ===\n";
+	std::cout << "   n | repeated-mul | pow(c,int) | pow(c,complex) | mul faster than pow(c,c)?\n";
+	for (int n : {2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96}) {
+		complex_mp en(n); bertini::Precision(en, prec);
+		const double t_mul = timeit([&]{ acc = base; for (int k = 2; k <= n; ++k) { tmp = acc * basec; acc.swap(tmp); } result.swap(acc); });
+		const double t_pi  = timeit([&]{ result = pow(base, n); });
+		const double t_pc  = timeit([&]{ result = pow(base, en); });
+		std::cout << "  " << (n<10?" ":"") << n << " | " << t_mul << "      | " << t_pi
+		          << "    | " << t_pc << "      | " << (t_mul < t_pc ? "yes" : "NO -- pow wins") << "\n";
+	}
+	BOOST_CHECK(true);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // SLP_tiered_numtype
 
