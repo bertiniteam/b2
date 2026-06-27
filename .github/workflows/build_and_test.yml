@@ -181,6 +181,27 @@ jobs:
           DYLD_LIBRARY_PATH: /tmp/boost-base/lib
         run: ctest --output-on-failure --timeout 600 --parallel $(nproc 2>/dev/null || sysctl -n hw.ncpu)
 
+      # The published wheels ship WITHOUT MPI (we can't know the user's MPI), but this C++ build is
+      # MPI-enabled (openmpi is installed above), so we verify the MPI runtime path actually works
+      # on each OS we support -- and, crucially, that it gives the SAME answer as the serial solve.
+      # The blackbox CLI reads a file named `input` from the cwd and writes the solution count as
+      # the first line of `main_data`.  mpirun -n 2 = one manager + one worker (the minimal pool).
+      - name: MPI smoke test (CLI under mpirun)
+        working-directory: build/core
+        env:
+          LD_LIBRARY_PATH: /tmp/boost-base/lib:/tmp/boost-base/lib64
+          DYLD_LIBRARY_PATH: /tmp/boost-base/lib
+        run: |
+          set -e
+          cp "$GITHUB_WORKSPACE/benchmark/inputs/small.b2" input
+          ./bertini2 >/dev/null 2>&1
+          serial=$(head -n1 main_data); rm -f main_data
+          mpirun -n 2 --bind-to none ./bertini2 >/dev/null 2>&1
+          parallel=$(head -n1 main_data)
+          echo "solution count: serial=$serial  mpi(-n 2)=$parallel"
+          test -n "$serial"
+          test "$serial" = "$parallel"   # MPI must match serial, not merely run
+
   test_cpp_windows:
     name: C++ tests on Windows
     if: ${{ inputs.minimal != true }}
