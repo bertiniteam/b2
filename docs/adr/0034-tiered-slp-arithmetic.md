@@ -3,9 +3,32 @@
 **Status:** Accepted (design; implementation staged and measurement-gated)
 **Date:** 2026-06-27
 
-> **Implementation status (2026-06-27):** design only. No tier code yet. Foundation in flight:
-> the `Float`→`Complex` node rename (PR #37) makes the literal node honestly "complex" and frees
-> the name `Real`. Stages below land behind equivalence tests and a benchmark gate.
+> **Implementation status (2026-06-27):** **Stage 1 (real tier) implemented and landed.** The
+> `Float`→`Complex` node rename (PR #37) and the scalar-name standardization (PR #38) are the
+> foundation. Stage 2 (integer tier) is **deferred** — see the measured outcome below. JIT (the lever
+> for competing with HomotopyContinuation.jl) is captured separately and deferred unless it proves
+> straightforward.
+
+## Measured outcome (Stage 1)
+
+The real tier is correct (tiered eval is bit-identical to all-complex; verified by the full C++ suite
+plus `SLP_tiered_numtype`) and a **modest, no-regression win**: ~10% at mpfr (256 digits) and ~8% at
+double, with no fully-complex regression even at 4096 digits.
+
+A raw-op probe (`mpfr_raw_op_microbench`) settles *why* the win is only modest — and rules out two
+suspected culprits:
+- Boost does **not** promote: `real_mp * complex_mp` costs 0.33–0.45× a complex×complex multiply, and
+  `real_mp * real_mp` 0.14–0.21×. So the tier genuinely makes the ops it touches 2–3× cheaper.
+- The hot loop is **not** allocation-bound: the register banks are pre-allocated and expression
+  templates evaluate into the destination slot.
+
+The ceiling is **structural**: in a polynomial over *complex* variables, the monomial arithmetic
+(`x⁵`, `x·y·z`) is irreducibly complex and dominates per-eval cost, while the real-valued coefficients
+are frozen constants computed once in the prologue. Only the coefficient×monomial multiplies (~1 in
+`degree`) go cheap, so the aggregate per-eval win is bounded. The genuine "much faster" levers are
+therefore **reducing the count of complex multiplies** (Horner / stronger CSE) and **JIT** (removing
+interpreter overhead, biggest at double) — not more tiers. Hence Stage 2 (integer tier, expected to
+hit the same ceiling for even less of the work) is deferred.
 
 ## Context
 
