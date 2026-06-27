@@ -388,6 +388,11 @@ namespace bertini {
 
 		SLPProgram() = default;
 
+		// ADR-0034 A/B switch: when false, ComputeSlotNumTypes leaves every slot Complex, reproducing
+		// the pre-tier all-complex evaluation.  Read at compile time (SLP construction).  Default true;
+		// the benchmark flips it to measure tiers-on vs tiers-off.  Not for production toggling.
+		static bool tiers_enabled_;
+
 		bool HavePathVariable() const { return has_path_variable_; }
 		inline unsigned NumFunctions() const{ return static_cast<unsigned>(number_of_.Functions);}
 		inline unsigned NumVariables() const{ return static_cast<unsigned>(number_of_.Variables);}

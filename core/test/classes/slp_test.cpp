@@ -6,6 +6,8 @@
 
 #include <set>
 #include <iostream>
+#include <chrono>
+#include <cstdlib>
 
 using Variable = bertini::node::Variable;
 
@@ -548,6 +550,66 @@ BOOST_AUTO_TEST_CASE(real_tier_mixed_eval_correct_mp)
 	slp.Eval(x);
 	auto f = slp.GetFuncVals<complex_mp>();
 	BOOST_CHECK(abs(f(0) - complex_mp(2, 6)) < 1e-40);
+}
+
+// Opt-in A/B speedup benchmark (ADR-0034 gate).  Skipped unless BERTINI_SLP_BENCH is set, so it adds
+// no time to normal runs.  Builds the SAME real-coefficient-heavy system twice -- once with tiers
+// forced off (all-complex baseline) and once on -- and times N evaluations of function + Jacobian at
+// high mpfr precision, where mpfr-complex arithmetic dominates.  Run with:
+//   BERTINI_SLP_BENCH=1 ./build/core/test_classes --run_test=SLP_tiered_numtype/tier_speedup_benchmark
+BOOST_AUTO_TEST_CASE(tier_speedup_benchmark)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+
+	using real_mp = bertini::real_mp;
+	const std::string dense =
+		"function f1,f2,f3,f4; variable_group x,y,z,w; "
+		"f1 = 3*x^4 + 5*y^3 + 7*z^2 + 11*w^5 + 2*x*y*z - 13*z*w + 17*x - 19; "
+		"f2 = 23*y^4 + 29*z^3 + 31*x^2 + 37*w + 41*x*z*w - 43*x*y + 47; "
+		"f3 = 53*z^4 + 59*w^3 + 61*x^2 + 67*y^5 + 71*y*z*w - 73*x*w + 79; "
+		"f4 = 83*w^4 + 89*x^3 + 97*y^2 + 101*z^4 + 103*x*y*w - 107*y*z + 109;";
+
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const char* nenv = std::getenv("BERTINI_SLP_BENCH_N");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	const int N = nenv ? std::atoi(nenv) : 400;
+
+	auto run = [&](bool tiers) -> double {
+		bertini::SLPProgram::tiers_enabled_ = tiers;
+		bertini::DefaultPrecision(prec);
+		auto sys = ParseSLPSys(dense);
+		SLP slp(sys);
+		slp.precision(prec);
+
+		Vec<complex_mp> pt(4);
+		for (int j = 0; j < 4; ++j) pt(j) = complex_mp(real_mp(j + 2), real_mp(j + 1));
+		slp.Eval(pt); (void)slp.GetFuncVals<complex_mp>();  // warm the frozen prologue
+
+		complex_mp sink(0);
+		auto t0 = std::chrono::steady_clock::now();
+		for (int i = 0; i < N; ++i) {
+			pt(0) = complex_mp(real_mp(i % 7 + 2), real_mp(i % 5 + 1));
+			slp.Eval(pt);
+			auto f = slp.GetFuncVals<complex_mp>();
+			auto J = slp.GetJacobian<complex_mp>();
+			sink += f(0) + J(0,0);
+		}
+		auto t1 = std::chrono::steady_clock::now();
+		std::cout << "  [tiers=" << tiers << " real_slots=" << slp.NumRealSlots()
+		          << " sink=" << sink.real() << "]\n";
+		return std::chrono::duration<double>(t1 - t0).count();
+	};
+
+	const double off = run(false);
+	const double on  = run(true);
+	bertini::SLPProgram::tiers_enabled_ = true;  // restore default
+
+	std::cout << "\n=== SLP tier benchmark (prec=" << prec << " digits, N=" << N
+	          << " evals of f+J, 4 fns / 4 vars) ===\n"
+	          << "  tiers OFF (all-complex): " << off << " s\n"
+	          << "  tiers ON  (real tier):   " << on  << " s\n"
+	          << "  speedup: " << (off / on) << "x\n\n";
+	BOOST_CHECK(true);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // SLP_tiered_numtype

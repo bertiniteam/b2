@@ -489,6 +489,8 @@ namespace bertini{
 		}
 	} // anonymous namespace
 
+	bool SLPProgram::tiers_enabled_ = true;
+
 	void SLPProgram::ComputeSlotNumTypes()
 	{
 		// Seed: constant slots from their recipe's real-ness; everything else (variables, the path
@@ -496,6 +498,8 @@ namespace bertini{
 		// dependency-ordered tape propagates the NumType of each instruction's result (same shape as
 		// PartitionInstructions' frozenness pass).
 		slot_numtype_.assign(num_slots_, NumType::Complex);
+		if (!tiers_enabled_)  // A/B baseline: force the pre-tier all-complex evaluation
+			return;
 		for (auto const& c : constant_recipes_)
 			slot_numtype_[c.slot] = c.IsReal() ? NumType::Real : NumType::Complex;
 
