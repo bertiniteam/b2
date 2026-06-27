@@ -41,7 +41,7 @@
 
 
 double threshold_clearance_d(1e-15);
-bertini::mpfr_float threshold_clearance_mp("1e-28");
+bertini::real_mp threshold_clearance_mp("1e-28");
 unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS(30);
 
 

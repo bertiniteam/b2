@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_SUITE(system_class)
 
 using Var = std::shared_ptr<bertini::node::Variable>;
 
-using mpfr = bertini::mpfr_complex;
+using mpfr = bertini::complex_mp;
 
 using namespace bertini;
 /**
@@ -99,11 +99,11 @@ BOOST_AUTO_TEST_CASE(parsed_system_has_functions_and_evaluates)
 	BOOST_CHECK(ok);
 	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 2u);
 
-	Vec<dbl> pt(2); pt << dbl(2,0), dbl(3,0);
+	Vec<complex_dbl> pt(2); pt << complex_dbl(2,0), complex_dbl(3,0);
 	auto v = sys.Eval(pt);
 	BOOST_REQUIRE_EQUAL(v.size(), 2);
-	BOOST_CHECK_SMALL(std::abs(v(0) - dbl(6,0)), 1e-12);   // x*y at (2,3)
-	BOOST_CHECK_SMALL(std::abs(v(1) - dbl(5,0)), 1e-12);   // x+y at (2,3)
+	BOOST_CHECK_SMALL(std::abs(v(0) - complex_dbl(6,0)), 1e-12);   // x*y at (2,3)
+	BOOST_CHECK_SMALL(std::abs(v(1) - complex_dbl(5,0)), 1e-12);   // x+y at (2,3)
 }
 
 
@@ -123,10 +123,10 @@ BOOST_AUTO_TEST_CASE(parsed_subfunction_is_a_named_expression)
 	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 1u);
 
 	// f = s + x = x*y + x; at (2,3) -> 6 + 2 = 8
-	Vec<dbl> pt(2); pt << dbl(2,0), dbl(3,0);
+	Vec<complex_dbl> pt(2); pt << complex_dbl(2,0), complex_dbl(3,0);
 	auto v = sys.Eval(pt);
 	BOOST_REQUIRE_EQUAL(v.size(), 1);
-	BOOST_CHECK_SMALL(std::abs(v(0) - dbl(8,0)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(v(0) - complex_dbl(8,0)), 1e-12);
 
 	std::stringstream ss; ss << sys;
 	const std::string text = ss.str();
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
-	Vec<dbl> v(1);
+	Vec<complex_dbl> v(1);
 	v << 1.0;
 
 	auto J = S.Jacobian(v);
@@ -270,12 +270,12 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
-	Vec<dbl> v(2);
+	Vec<complex_dbl> v(2);
 	v << 1.0 , 2.0;
 
 	auto J = S.Jacobian(v);
 
-	BOOST_CHECK_THROW(S.Jacobian(v,dbl(0.5)), std::runtime_error);
+	BOOST_CHECK_THROW(S.Jacobian(v,complex_dbl(0.5)), std::runtime_error);
 }
 
 
@@ -296,10 +296,10 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
-	Vec<dbl> v(1);
+	Vec<complex_dbl> v(1);
 	v << 1.0;
-	dbl time(0.5,0.2);
-	bertini::Mat<dbl> J = S.Jacobian(v,time);
+	complex_dbl time(0.5,0.2);
+	bertini::Mat<complex_dbl> J = S.Jacobian(v,time);
 
 	BOOST_CHECK_THROW(S.Jacobian(v), std::runtime_error);
 }
@@ -443,12 +443,12 @@ BOOST_AUTO_TEST_CASE(system_evaluate_double)
 	bertini::System sys;
 	[[maybe_unused]] bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 
-	values(0) = dbl(2.0);
-	values(1) = dbl(3.0);
+	values(0) = complex_dbl(2.0);
+	values(1) = complex_dbl(3.0);
 
-	Vec<dbl> v = sys.Eval(values);
+	Vec<complex_dbl> v = sys.Eval(values);
 
 	BOOST_CHECK_EQUAL(v(0), 36.0);
 
@@ -504,9 +504,9 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 
 	// Modest magnitudes keep the high-degree SLP-vs-analytic rounding comfortably inside the
 	// 1e-15 tolerance below.
-	dbl a(0.5,  0.25);
-	dbl b(0.4, -0.30);
-	dbl c(0.6,  0.20);
+	complex_dbl a(0.5,  0.25);
+	complex_dbl b(0.4, -0.30);
+	complex_dbl c(0.6,  0.20);
 
 	System sys;
 
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 	sys.AddFunction(pow(x,2)*pow(y,3)*pow(z,4) + 1);
 	sys.AddFunction(pow(x,3)*pow(y,4)*pow(z,5) + 4);
 
-	Vec<dbl> v(3);
+	Vec<complex_dbl> v(3);
 	v << a, b, c;
 
 	auto J = sys.Jacobian(v);
@@ -564,9 +564,9 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 	sys1+=sys2;
 
 
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 
-	values << dbl(2.0), dbl(3.0);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 
 	auto v = sys1.Eval(values);
 
@@ -591,7 +591,7 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 \test \b add_two_systems_evaluated_in_mpfr Sibling of add_two_systems, but
 exercises the Vec<mpfr> evaluation path. This is the C++ analog of the
 Python test_add_systems that surfaced the macos-15-intel SIGABRT — the C++
-suite previously only covered the Vec<dbl> path.
+suite previously only covered the Vec<complex_dbl> path.
 */
 BOOST_AUTO_TEST_CASE(add_two_systems_evaluated_in_mpfr)
 {
@@ -642,8 +642,8 @@ BOOST_AUTO_TEST_CASE(add_system_to_self_doubles_under_function_tree_eval)
 	sys.AddFunction(y+1);
 	sys.AddFunction(x*y);
 
-	Vec<dbl> values(2);
-	values << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 	auto before = sys.Eval(values);   // [4, 6]
 
 	sys += sys;                       // self-add
@@ -674,15 +674,15 @@ BOOST_AUTO_TEST_CASE(operator_plus_equals_invalidates_slp_cache)
 	sys.AddFunction(y+1);
 	sys.AddFunction(x*y);
 
-	Vec<dbl> values(2);
-	values << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 	(void) sys.Eval(values);          // primes the SLP cache: [y+1, x*y]
 
 	sys += sys;                       // mutates tree to [2(y+1), 2xy] but cache stale
 
 	auto after = sys.Eval(values);    // expected [8, 12], currently [4, 6]
-	BOOST_CHECK_EQUAL(after(0), dbl(8.0));
-	BOOST_CHECK_EQUAL(after(1), dbl(12.0));
+	BOOST_CHECK_EQUAL(after(0), complex_dbl(8.0));
+	BOOST_CHECK_EQUAL(after(1), complex_dbl(12.0));
 }
 
 
@@ -705,14 +705,14 @@ BOOST_AUTO_TEST_CASE(operator_mult_equals_invalidates_slp_cache)
 	sys.AddVariableGroup(vars);
 	sys.AddFunction(x+y);
 
-	Vec<dbl> values(2);
-	values << dbl(1.0), dbl(2.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(1.0), complex_dbl(2.0);
 	(void) sys.Eval(values);          // primes SLP for f = x+y
 
 	sys *= Complex::Make("3.0");        // f should now be 3*(x+y)
 
 	auto after = sys.Eval(values);    // expected [9], currently [3]
-	BOOST_CHECK_EQUAL(after(0), dbl(9.0));
+	BOOST_CHECK_EQUAL(after(0), complex_dbl(9.0));
 }
 
 
@@ -735,15 +735,15 @@ BOOST_AUTO_TEST_CASE(reorder_functions_decreasing_invalidates_slp_cache)
 	sys.AddFunction(x+y);             // degree 1, initially at position 0
 	sys.AddFunction(x*y);             // degree 2, initially at position 1
 
-	Vec<dbl> values(2);
-	values << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 	(void) sys.Eval(values);          // primes SLP with the [degree1, degree2] order
 
 	sys.ReorderFunctionsByDegreeDecreasing();   // now [degree2, degree1] = [x*y, x+y]
 
 	auto after = sys.Eval(values);
-	BOOST_CHECK_EQUAL(after(0), dbl(6.0));      // x*y at position 0
-	BOOST_CHECK_EQUAL(after(1), dbl(5.0));      // x+y at position 1
+	BOOST_CHECK_EQUAL(after(0), complex_dbl(6.0));      // x*y at position 0
+	BOOST_CHECK_EQUAL(after(1), complex_dbl(5.0));      // x+y at position 1
 }
 
 
@@ -765,15 +765,15 @@ BOOST_AUTO_TEST_CASE(reorder_functions_increasing_invalidates_slp_cache)
 	sys.AddFunction(x*y);             // degree 2, initially at position 0
 	sys.AddFunction(x+y);             // degree 1, initially at position 1
 
-	Vec<dbl> values(2);
-	values << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 	(void) sys.Eval(values);          // primes SLP with the [degree2, degree1] order
 
 	sys.ReorderFunctionsByDegreeIncreasing();   // now [degree1, degree2] = [x+y, x*y]
 
 	auto after = sys.Eval(values);
-	BOOST_CHECK_EQUAL(after(0), dbl(5.0));      // x+y at position 0
-	BOOST_CHECK_EQUAL(after(1), dbl(6.0));      // x*y at position 1
+	BOOST_CHECK_EQUAL(after(0), complex_dbl(5.0));      // x+y at position 0
+	BOOST_CHECK_EQUAL(after(1), complex_dbl(6.0));      // x*y at position 1
 }
 
 
@@ -794,12 +794,12 @@ BOOST_AUTO_TEST_CASE(eval_wrong_size_input_throws)
 	sys.AddVariableGroup(vars);
 	sys.AddFunction(x+y);
 
-	Vec<dbl> too_small(1);
-	too_small << dbl(1.0);
+	Vec<complex_dbl> too_small(1);
+	too_small << complex_dbl(1.0);
 	BOOST_CHECK_THROW(sys.Eval(too_small), std::runtime_error);
 
-	Vec<dbl> too_big(3);
-	too_big << dbl(1.0), dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> too_big(3);
+	too_big << complex_dbl(1.0), complex_dbl(2.0), complex_dbl(3.0);
 	BOOST_CHECK_THROW(sys.Eval(too_big), std::runtime_error);
 }
 
@@ -827,21 +827,21 @@ BOOST_AUTO_TEST_CASE(add_systems_chain)
 
 	sys1 += sys2 += sys3;      // sys2 becomes sys2+sys3; sys1 becomes sys1+sys2+sys3
 
-	Vec<dbl> v(2);
-	v << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> v(2);
+	v << complex_dbl(2.0), complex_dbl(3.0);
 
 	// sys1 originally: [x, y] = [2, 3]
 	// sys2 originally: [y, x] = [3, 2]
 	// sys3 originally: [xy, x+y] = [6, 5]
 	// sys1 final:      [2+3+6, 3+2+5] = [11, 10]
 	auto v1 = sys1.Eval(v);
-	BOOST_CHECK_EQUAL(v1(0), dbl(11.0));
-	BOOST_CHECK_EQUAL(v1(1), dbl(10.0));
+	BOOST_CHECK_EQUAL(v1(0), complex_dbl(11.0));
+	BOOST_CHECK_EQUAL(v1(1), complex_dbl(10.0));
 
 	// sys2 final:      [3+6, 2+5] = [9, 7]
 	auto v2 = sys2.Eval(v);
-	BOOST_CHECK_EQUAL(v2(0), dbl(9.0));
-	BOOST_CHECK_EQUAL(v2(1), dbl(7.0));
+	BOOST_CHECK_EQUAL(v2(0), complex_dbl(9.0));
+	BOOST_CHECK_EQUAL(v2(1), complex_dbl(7.0));
 }
 
 
@@ -903,13 +903,13 @@ BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
-	Vec<dbl> v(1);
+	Vec<complex_dbl> v(1);
 	v << 1.0;
-	dbl time(0.5,0.2);
+	complex_dbl time(0.5,0.2);
 	auto dS_dt = S.TimeDerivative(v,time);
 
-	BOOST_CHECK_CLOSE( dS_dt(0).real(), dbl(-1).real(), threshold_clearance_d);
-	BOOST_CHECK_CLOSE( dS_dt(1).imag(), dbl(-1).imag(), threshold_clearance_d);
+	BOOST_CHECK_CLOSE( dS_dt(0).real(), complex_dbl(-1).real(), threshold_clearance_d);
+	BOOST_CHECK_CLOSE( dS_dt(1).imag(), complex_dbl(-1).imag(), threshold_clearance_d);
 
 
 }
@@ -931,8 +931,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(3);
-	v << dbl(2,3), dbl(3,4), dbl(4,5);
+	Vec<complex_dbl> v(3);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -959,9 +959,9 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(6);
-	v << dbl(2,3), dbl(3,4), dbl(4,5), 
-		 dbl(5,6), dbl(6,7), dbl(7,8);
+	Vec<complex_dbl> v(6);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5), 
+		 complex_dbl(5,6), complex_dbl(6,7), complex_dbl(7,8);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -996,10 +996,10 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(8);
-	v << dbl(2,3), dbl(3,4), dbl(4,5), 
-		 dbl(10,11), dbl(11,12),
-		 dbl(5,6), dbl(6,7), dbl(7,8);
+	Vec<complex_dbl> v(8);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5), 
+		 complex_dbl(10,11), complex_dbl(11,12),
+		 complex_dbl(5,6), complex_dbl(6,7), complex_dbl(7,8);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -1031,8 +1031,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(2);
-	v << dbl(2,3), dbl(3,4);
+	Vec<complex_dbl> v(2);
+	v << complex_dbl(2,3), complex_dbl(3,4);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -1054,8 +1054,8 @@ BOOST_AUTO_TEST_CASE(system_homogenize_point_unhomogenized_is_identity)
 	VariableGroup vars{x, y};
 	sys.AddVariableGroup(vars);
 
-	Vec<dbl> p(2);
-	p << dbl(3,4), dbl(4,5);
+	Vec<complex_dbl> p(2);
+	p << complex_dbl(3,4), complex_dbl(4,5);
 
 	auto h = sys.HomogenizePoint(p);
 
@@ -1078,13 +1078,13 @@ BOOST_AUTO_TEST_CASE(system_homogenize_point_FIFO_one_aff_group)
 
 	sys.Homogenize();
 
-	Vec<dbl> p(2);
-	p << dbl(3,4), dbl(4,5);
+	Vec<complex_dbl> p(2);
+	p << complex_dbl(3,4), complex_dbl(4,5);
 
 	auto h = sys.HomogenizePoint(p);
 
 	BOOST_CHECK_EQUAL(h.size(),3);
-	BOOST_CHECK(abs(h(0) - dbl(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(0) - complex_dbl(1)) < threshold_clearance_d);
 	BOOST_CHECK(abs(h(1) - p(0)) < threshold_clearance_d);
 	BOOST_CHECK(abs(h(2) - p(1)) < threshold_clearance_d);
 
@@ -1114,21 +1114,21 @@ BOOST_AUTO_TEST_CASE(system_homogenize_point_FIFO_mixed_groups)
 
 	sys.Homogenize();
 
-	Vec<dbl> p(6);
-	p << dbl(3,4), dbl(4,5),
-		 dbl(10,11), dbl(11,12),
-		 dbl(6,7), dbl(7,8);
+	Vec<complex_dbl> p(6);
+	p << complex_dbl(3,4), complex_dbl(4,5),
+		 complex_dbl(10,11), complex_dbl(11,12),
+		 complex_dbl(6,7), complex_dbl(7,8);
 
 	auto h = sys.HomogenizePoint(p);
 
 	BOOST_CHECK_EQUAL(h.size(),8);
 	// [hom0, x, y, hom-group passthrough, hom1, z, w]
-	BOOST_CHECK(abs(h(0) - dbl(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(0) - complex_dbl(1)) < threshold_clearance_d);
 	BOOST_CHECK(abs(h(1) - p(0)) < threshold_clearance_d);
 	BOOST_CHECK(abs(h(2) - p(1)) < threshold_clearance_d);
 	BOOST_CHECK(abs(h(3) - p(2)) < threshold_clearance_d);
 	BOOST_CHECK(abs(h(4) - p(3)) < threshold_clearance_d);
-	BOOST_CHECK(abs(h(5) - dbl(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(5) - complex_dbl(1)) < threshold_clearance_d);
 	BOOST_CHECK(abs(h(6) - p(4)) < threshold_clearance_d);
 	BOOST_CHECK(abs(h(7) - p(5)) < threshold_clearance_d);
 
@@ -1158,8 +1158,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(4);
-	v << dbl(2,3), dbl(3,4), dbl(4,5), dbl(5,6);
+	Vec<complex_dbl> v(4);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5), complex_dbl(5,6);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -1196,11 +1196,11 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_a
 
 	sys.Homogenize();
 
-	Vec<dbl> v(10);
-	v << dbl(2,3), dbl(3,4), dbl(4,5), 
-		 dbl(10,11), dbl(11,12),
-		 dbl(5,6), dbl(6,7), dbl(7,8),
-		 dbl(12,13), dbl(13,14);
+	Vec<complex_dbl> v(10);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5), 
+		 complex_dbl(10,11), complex_dbl(11,12),
+		 complex_dbl(5,6), complex_dbl(6,7), complex_dbl(7,8),
+		 complex_dbl(12,13), complex_dbl(13,14);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -1245,9 +1245,9 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 	S.AddFunction((1-t)*x + t*(1-x));
 	S.AddFunction(x-t);
 
-	mpfr_float coefficient_bound = S.CoefficientBound<mpfr>();
-	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
-	BOOST_CHECK(coefficient_bound > mpfr_float("0.5"));
+	real_mp coefficient_bound = S.CoefficientBound<mpfr>();
+	BOOST_CHECK(coefficient_bound < real_mp("10"));
+	BOOST_CHECK(coefficient_bound > real_mp("0.5"));
 }
 
 
@@ -1265,13 +1265,13 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	mpfr_float coefficient_bound = sys.CoefficientBound<mpfr>();
-	BOOST_CHECK(coefficient_bound < mpfr_float("5"));
-	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
+	real_mp coefficient_bound = sys.CoefficientBound<mpfr>();
+	BOOST_CHECK(coefficient_bound < real_mp("5"));
+	BOOST_CHECK(coefficient_bound > real_mp("2"));
 }
 
 
@@ -1295,16 +1295,16 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	mpfr_float coefficient_bound = sys.CoefficientBound<mpfr>();
-	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
-	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
+	real_mp coefficient_bound = sys.CoefficientBound<mpfr>();
+	BOOST_CHECK(coefficient_bound < real_mp("10"));
+	BOOST_CHECK(coefficient_bound > real_mp("2"));
 }
 
 
@@ -1322,8 +1322,8 @@ BOOST_AUTO_TEST_CASE(system_homogenize_point_lands_on_patch)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	Vec<dbl> p(2);
-	p << dbl(3,4), dbl(4,5);
+	Vec<complex_dbl> p(2);
+	p << complex_dbl(3,4), complex_dbl(4,5);
 
 	auto h = sys.HomogenizePoint(p);
 	BOOST_CHECK_EQUAL(h.size(),3);
@@ -1340,8 +1340,8 @@ BOOST_AUTO_TEST_CASE(system_homogenize_point_lands_on_patch)
 
 	// and the round trip from an on-patch internal point is exact:
 	// Hom(Dehom(s)) == s for s on the patch
-	Vec<dbl> v(3);
-	v << dbl(2,3), dbl(3,4), dbl(4,5);
+	Vec<complex_dbl> v(3);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5);
 	auto s = sys.RescalePointToFitPatch(v);
 	auto s_again = sys.HomogenizePoint(sys.DehomogenizePoint(s));
 	for (int ii = 0; ii < 3; ++ii)
@@ -1365,8 +1365,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
 	S.AddFunction((1-t)*x + t*(1-x));
 	S.AddFunction(x-t);
 
-	mpfr_float degree_bound = S.DegreeBound();
-	BOOST_CHECK(degree_bound == mpfr_float("1"));
+	real_mp degree_bound = S.DegreeBound();
+	BOOST_CHECK(degree_bound == real_mp("1"));
 }
 
 
@@ -1384,12 +1384,12 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	mpfr_float degree_bound = sys.DegreeBound();
-	BOOST_CHECK(degree_bound == mpfr_float("4"));
+	real_mp degree_bound = sys.DegreeBound();
+	BOOST_CHECK(degree_bound == real_mp("4"));
 }
 
 
@@ -1414,7 +1414,7 @@ BOOST_AUTO_TEST_CASE(system_multiply_by_node)
 	sys1.AddFunction(z);
 
 	sys2.AddVariableGroup(vars);  
-	sys2.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys2.AddFunction(y+x*y + real_mp("0.5"));
 	sys2.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys2.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -1445,7 +1445,7 @@ BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 	sys1.AddFunction(z);
 
 	sys2.AddVariableGroup(vars);  
-	sys2.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys2.AddFunction(y+x*y + real_mp("0.5"));
 	sys2.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys2.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -1472,16 +1472,16 @@ BOOST_AUTO_TEST_CASE(concatenate_accepts_a_structured_block_system)
 	sys1.AddFunction(x*x + y*y - 1);          // a polynomial: f0 = x^2 + y^2 - 1
 
 	// a system whose two functions live in a LinearFormsBlock (a slice): f = 2x+3y+1, x-y+4
-	bertini::Mat<bertini::mpfr_complex> M(2,3);
-	M << bertini::mpfr_complex(2), bertini::mpfr_complex(3),  bertini::mpfr_complex(1),
-	     bertini::mpfr_complex(1), bertini::mpfr_complex(-1), bertini::mpfr_complex(4);
+	bertini::Mat<bertini::complex_mp> M(2,3);
+	M << bertini::complex_mp(2), bertini::complex_mp(3),  bertini::complex_mp(1),
+	     bertini::complex_mp(1), bertini::complex_mp(-1), bertini::complex_mp(4);
 	auto sys2 = bertini::Slice::FromCoefficients(vars, M).AsSystem();
 
 	auto sys3 = Concatenate(sys1, sys2);      // used to segfault on the structured operand
 	BOOST_CHECK_EQUAL(sys3.NumNaturalFunctions(), 3);
 
 	// at (x,y) = (1,1):  f0 = 1,  f1 = 6,  f2 = 4
-	bertini::Vec<bertini::dbl> p(2); p << bertini::dbl(1), bertini::dbl(1);
+	bertini::Vec<bertini::complex_dbl> p(2); p << bertini::complex_dbl(1), bertini::complex_dbl(1);
 	auto v = sys3.Eval(p);
 	BOOST_CHECK_EQUAL(v.size(), 3);
 	BOOST_CHECK_CLOSE(v(0).real(), 1.0, 1e-11);
@@ -1533,12 +1533,12 @@ BOOST_AUTO_TEST_CASE(parsed_system_evaluates_correctly)
 	bertini::System sys;
 	[[maybe_unused]] bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 	
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 	
-	values(0) = dbl(2.0);
-	values(1) = dbl(3.0);
+	values(0) = complex_dbl(2.0);
+	values(1) = complex_dbl(3.0);
 	
-	Vec<dbl> v(sys.NumNaturalFunctions());
+	Vec<complex_dbl> v(sys.NumNaturalFunctions());
 	sys.EvalInPlace(v, values);
 	
 	BOOST_CHECK_EQUAL(v(0), 36.0);

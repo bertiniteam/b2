@@ -247,8 +247,8 @@ namespace node{
 			temp_mp_.precision(prec);
 		}
 
-		mutable mpfr_complex temp_mp_;
-		mutable dbl temp_d_;
+		mutable complex_mp temp_mp_;
+		mutable complex_dbl temp_d_;
 
 		friend MultOperator;
 	};
@@ -520,8 +520,8 @@ namespace node{
 			temp_mp_.precision(prec);
 		}
 
-		mutable mpfr_complex temp_mp_;
-		mutable dbl temp_d_;
+		mutable complex_mp temp_mp_;
+		mutable complex_dbl temp_d_;
 
 		friend SumOperator;
 	};
@@ -1027,14 +1027,14 @@ namespace node{
 
 	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p) = delete;
 	
-	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, dbl p) = delete;
+	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, complex_dbl p) = delete;
 
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr_float p)
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, real_mp p)
 	{
 		return PowerOperator::Make(N,Complex::Make(p));
 	}
 
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr_complex p)
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, complex_mp p)
 	{
 		return PowerOperator::Make(N,Complex::Make(p));
 	}
@@ -1117,22 +1117,22 @@ namespace node{
 		return SumOperator::Make(lhs,rhs);
 	}
 	
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, real_mp const& rhs)
 	{
 		return SumOperator::Make(lhs,Complex::Make(rhs));
 	}
 
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, complex_mp const& rhs)
 	{
 		return SumOperator::Make(lhs,Complex::Make(rhs));
 	}
 	
-	inline std::shared_ptr<Node> operator+(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator+(real_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Complex::Make(lhs), rhs);
 	}
 
-	inline std::shared_ptr<Node> operator+(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator+(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Complex::Make(lhs), rhs);
 	}
@@ -1189,22 +1189,22 @@ namespace node{
 		return SumOperator::Make(lhs,true,rhs,false);
 	}
 	
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, real_mp const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 
-	inline std::shared_ptr<Node> operator-(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator-(real_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, complex_mp const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 
-	inline std::shared_ptr<Node> operator-(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator-(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
@@ -1251,22 +1251,22 @@ namespace node{
 	}
 	
 	
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, real_mp const& rhs)
 	{
 		return MultOperator::Make(lhs,Complex::Make(rhs));
 	}
 
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, complex_mp const& rhs)
 	{
 		return MultOperator::Make(lhs,Complex::Make(rhs));
 	}
 	
-	inline std::shared_ptr<Node> operator*(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator*(real_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Complex::Make(lhs), rhs);
 	}
 
-	inline std::shared_ptr<Node> operator*(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator*(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Complex::Make(lhs), rhs);
 	}
@@ -1381,22 +1381,22 @@ namespace node{
 		return lhs/=rhs;
 	}
 	
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr_float rhs)
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, real_mp rhs)
 	{
 		return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr_complex rhs)
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, complex_mp rhs)
 	{
 		return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 	
-	inline std::shared_ptr<Node> operator/(mpfr_float lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator/(real_mp lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
-	inline std::shared_ptr<Node> operator/(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator/(complex_mp lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}

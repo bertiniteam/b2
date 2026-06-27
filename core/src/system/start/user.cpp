@@ -33,57 +33,57 @@ namespace bertini {
 	namespace start_system {
 
 		// constructor for User start system, from any other *suitable* system.
-		User::User(System const& s, SampCont<dbl> const& solns) : user_system_(s), solns_in_dbl_(true)
+		User::User(System const& s, SampCont<complex_dbl> const& solns) : user_system_(s), solns_in_dbl_(true)
 		{
-			std::get<SampCont<dbl>>(solns_) = solns;
+			std::get<SampCont<complex_dbl>>(solns_) = solns;
 		}
 
-		User::User(System const& s, SampCont<mpfr_complex> const& solns) : user_system_(s), solns_in_dbl_(false)
+		User::User(System const& s, SampCont<complex_mp> const& solns) : user_system_(s), solns_in_dbl_(false)
 		{
-			std::get<SampCont<mpfr_complex>>(solns_) = solns;
+			std::get<SampCont<complex_mp>>(solns_) = solns;
 		}
 				
 		
 		unsigned long long User::NumStartPoints() const
 		{
 			if (solns_in_dbl_)
-				return std::get<SampCont<dbl>>(solns_).size();
+				return std::get<SampCont<complex_dbl>>(solns_).size();
 			else
-				return std::get<SampCont<mpfr_complex>>(solns_).size();
+				return std::get<SampCont<complex_mp>>(solns_).size();
 		}
 
 
 		
-		Vec<dbl> User::GenerateStartPoint(dbl,unsigned long long index) const
+		Vec<complex_dbl> User::GenerateStartPoint(complex_dbl,unsigned long long index) const
 		{
 			if (solns_in_dbl_)
-				return std::get<SampCont<dbl>>(solns_)[index];
+				return std::get<SampCont<complex_dbl>>(solns_)[index];
 			else
 			{
-				const auto& r = std::get<SampCont<mpfr_complex>>(solns_)[index];
-				Vec<dbl> pt(r.size());
+				const auto& r = std::get<SampCont<complex_mp>>(solns_)[index];
+				Vec<complex_dbl> pt(r.size());
 				for (unsigned ii=0; ii<r.size(); ++ii)
-					pt(ii) = dbl(r(ii));
+					pt(ii) = complex_dbl(r(ii));
 
 				return pt;
 			}
 		}
 
 
-		Vec<mpfr_complex> User::GenerateStartPoint(mpfr_complex,unsigned long long index) const
+		Vec<complex_mp> User::GenerateStartPoint(complex_mp,unsigned long long index) const
 		{
 			if (solns_in_dbl_)
 			{
-				const auto& r = std::get<SampCont<dbl>>(solns_)[index];
-				Vec<mpfr_complex> pt(r.size());
+				const auto& r = std::get<SampCont<complex_dbl>>(solns_)[index];
+				Vec<complex_mp> pt(r.size());
 				for (unsigned ii=0; ii<r.size(); ++ii)
-					pt(ii) = static_cast<mpfr_complex>(r(ii));
+					pt(ii) = static_cast<complex_mp>(r(ii));
 
 				return pt;
 			}
 			else
 			{
-				return std::get<SampCont<mpfr_complex>>(solns_)[index];
+				return std::get<SampCont<complex_mp>>(solns_)[index];
 			}
 		}
 

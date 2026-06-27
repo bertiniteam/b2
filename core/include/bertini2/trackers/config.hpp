@@ -76,7 +76,7 @@ namespace tracking{
 	struct SteppingConfig
 	{
 		// mpq_rational: exact rationals with no MPFR precision state — safe in DefaultConstruct<T>::value statics.
-		// mpfr_float fields here would be initialized at BMP's startup precision (20) and contaminate
+		// real_mp fields here would be initialized at BMP's startup precision (20) and contaminate
 		// tracker arithmetic when target precision < 20 via preserve_related_precision.
 		mpq_rational initial_step_size{1, 10}; ///< The length of the first time step when calling TrackPath.  StepInitSize
 		mpq_rational max_step_size{1, 10};     ///<  The largest allowed step size.  MaxStepSize
@@ -207,7 +207,7 @@ namespace tracking{
 
 			epsilon = pow(NumErrorT(sys.NumVariables()),2);
 			degree_bound = sys.DegreeBound();
-			coefficient_bound = sys.CoefficientBound<dbl>();
+			coefficient_bound = sys.CoefficientBound<complex_dbl>();
 		}
 		
 
@@ -292,7 +292,7 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<DoublePrecisionTracker>
 	{
-		using BaseComplexT = dbl;
+		using BaseComplexT = complex_dbl;
 		using BaseRealT = double;
 		using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
 		using PrecisionConfig = FixedPrecisionConfig;
@@ -301,7 +301,7 @@ namespace tracking{
 			IsAdaptivePrec = 0
 		};
 
-		using NeededTypes = detail::TypeList<dbl>;
+		using NeededTypes = detail::TypeList<complex_dbl>;
 		using NeededConfigs = detail::TypeList<
 			SteppingConfig, 
 			NewtonConfig,
@@ -313,8 +313,8 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<MultiplePrecisionTracker>
 	{
-		using BaseComplexT = mpfr_complex;
-		using BaseRealT = mpfr_float;
+		using BaseComplexT = complex_mp;
+		using BaseRealT = real_mp;
 		using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 		using PrecisionConfig = FixedPrecisionConfig;
 
@@ -323,7 +323,7 @@ namespace tracking{
 			IsAdaptivePrec = 0
 		};
 
-		using NeededTypes = detail::TypeList<mpfr_complex>;
+		using NeededTypes = detail::TypeList<complex_mp>;
 
 		using NeededConfigs = detail::TypeList<
 			SteppingConfig, 
@@ -337,8 +337,8 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<AMPTracker>
 	{
-		using BaseComplexT = mpfr_complex;
-		using BaseRealT = mpfr_float;
+		using BaseComplexT = complex_mp;
+		using BaseRealT = real_mp;
 		using EventEmitterType = AMPTracker;
 		using PrecisionConfig = AdaptiveMultiplePrecisionConfig;
 
@@ -347,7 +347,7 @@ namespace tracking{
 			IsAdaptivePrec = 1
 		};
 
-		using NeededTypes = detail::TypeList<dbl, mpfr_complex>;
+		using NeededTypes = detail::TypeList<complex_dbl, complex_mp>;
 
 		using NeededConfigs = detail::TypeList<
 			SteppingConfig, 

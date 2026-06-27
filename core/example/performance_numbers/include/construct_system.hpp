@@ -5,7 +5,7 @@
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
-using dbl = bertini::dbl;
+using complex_dbl = bertini::complex_dbl;
 using mpfr = bertini::mpfr;
 
 namespace demo{

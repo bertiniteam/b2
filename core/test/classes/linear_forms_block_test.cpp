@@ -34,9 +34,9 @@ static_assert(bertini::blocks::is_block_v<LinearFormsBlock>,
 //   Jacobian is constant: [[2, 3], [1, -1]]
 static LinearFormsBlock MakeTestBlock()
 {
-	bertini::Mat<mpfr_complex> M(2, 3);
-	M << mpfr_complex(2), mpfr_complex(3),  mpfr_complex(1),
-	     mpfr_complex(1), mpfr_complex(-1), mpfr_complex(4);
+	bertini::Mat<complex_mp> M(2, 3);
+	M << complex_mp(2), complex_mp(3),  complex_mp(1),
+	     complex_mp(1), complex_mp(-1), complex_mp(4);
 	return LinearFormsBlock(2, std::move(M));
 }
 
@@ -55,9 +55,9 @@ BOOST_AUTO_TEST_CASE(eval_double)
 	DefaultPrecision(30);
 	auto block = MakeTestBlock();
 
-	bertini::Vec<dbl> x(2); x << dbl(1), dbl(1);
-	bertini::Vec<dbl> result(2);
-	block.EvalInPlace<dbl>(result, x, dbl(0));
+	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
+	bertini::Vec<complex_dbl> result(2);
+	block.EvalInPlace<complex_dbl>(result, x, complex_dbl(0));
 
 	BOOST_CHECK_CLOSE(result(0).real(), 6.0, 1e-11);
 	BOOST_CHECK_CLOSE(result(1).real(), 4.0, 1e-11);
@@ -71,12 +71,12 @@ BOOST_AUTO_TEST_CASE(eval_mpfr)
 	auto block = MakeTestBlock();
 	block.Precision(30);
 
-	bertini::Vec<mpfr_complex> x(2); x << mpfr_complex(1), mpfr_complex(1);
-	bertini::Vec<mpfr_complex> result(2);
-	block.EvalInPlace<mpfr_complex>(result, x, mpfr_complex(0));
+	bertini::Vec<complex_mp> x(2); x << complex_mp(1), complex_mp(1);
+	bertini::Vec<complex_mp> result(2);
+	block.EvalInPlace<complex_mp>(result, x, complex_mp(0));
 
-	BOOST_CHECK(abs(result(0) - mpfr_complex(6)) < mpfr_float("1e-25"));
-	BOOST_CHECK(abs(result(1) - mpfr_complex(4)) < mpfr_float("1e-25"));
+	BOOST_CHECK(abs(result(0) - complex_mp(6)) < real_mp("1e-25"));
+	BOOST_CHECK(abs(result(1) - complex_mp(4)) < real_mp("1e-25"));
 }
 
 BOOST_AUTO_TEST_CASE(jacobian_is_constant_coefficient_matrix)
@@ -85,11 +85,11 @@ BOOST_AUTO_TEST_CASE(jacobian_is_constant_coefficient_matrix)
 	auto block = MakeTestBlock();
 
 	// evaluate the Jacobian at two different points; it must not change.
-	bertini::Mat<dbl> J0(2, 2), J1(2, 2);
-	bertini::Vec<dbl> p0(2); p0 << dbl(1), dbl(1);
-	bertini::Vec<dbl> p1(2); p1 << dbl(-5), dbl(7);
-	block.JacobianInPlace<dbl>(J0, p0, dbl(0));
-	block.JacobianInPlace<dbl>(J1, p1, dbl(0));
+	bertini::Mat<complex_dbl> J0(2, 2), J1(2, 2);
+	bertini::Vec<complex_dbl> p0(2); p0 << complex_dbl(1), complex_dbl(1);
+	bertini::Vec<complex_dbl> p1(2); p1 << complex_dbl(-5), complex_dbl(7);
+	block.JacobianInPlace<complex_dbl>(J0, p0, complex_dbl(0));
+	block.JacobianInPlace<complex_dbl>(J1, p1, complex_dbl(0));
 
 	BOOST_CHECK_CLOSE(J0(0,0).real(), 2.0, 1e-11);
 	BOOST_CHECK_CLOSE(J0(0,1).real(), 3.0, 1e-11);
@@ -102,9 +102,9 @@ BOOST_AUTO_TEST_CASE(time_derivative_is_zero)
 {
 	DefaultPrecision(30);
 	auto block = MakeTestBlock();
-	bertini::Vec<dbl> x(2); x << dbl(3), dbl(4);
-	bertini::Vec<dbl> dt(2);
-	block.TimeDerivInPlace<dbl>(dt, x, dbl(0));
+	bertini::Vec<complex_dbl> x(2); x << complex_dbl(3), complex_dbl(4);
+	bertini::Vec<complex_dbl> dt(2);
+	block.TimeDerivInPlace<complex_dbl>(dt, x, complex_dbl(0));
 	BOOST_CHECK_SMALL(dt.norm(), 1e-12);
 }
 
@@ -112,20 +112,20 @@ BOOST_AUTO_TEST_CASE(time_derivative_is_zero)
 BOOST_AUTO_TEST_CASE(eval_matches_matrix_vector_reference)
 {
 	DefaultPrecision(40);
-	bertini::Mat<mpfr_complex> M(3, 4);
-	M << mpfr_complex(2),  mpfr_complex(-1), mpfr_complex(0),  mpfr_complex(5),
-	     mpfr_complex(1),  mpfr_complex(3),  mpfr_complex(-2), mpfr_complex(-1),
-	     mpfr_complex(0),  mpfr_complex(4),  mpfr_complex(7),  mpfr_complex(2);
+	bertini::Mat<complex_mp> M(3, 4);
+	M << complex_mp(2),  complex_mp(-1), complex_mp(0),  complex_mp(5),
+	     complex_mp(1),  complex_mp(3),  complex_mp(-2), complex_mp(-1),
+	     complex_mp(0),  complex_mp(4),  complex_mp(7),  complex_mp(2);
 	LinearFormsBlock block(3, M);
 	block.Precision(40);
 
-	bertini::Vec<mpfr_complex> x(3); x << mpfr_complex(2), mpfr_complex(-3), mpfr_complex(1);
-	bertini::Vec<mpfr_complex> result(3);
-	block.EvalInPlace<mpfr_complex>(result, x, mpfr_complex(0));
+	bertini::Vec<complex_mp> x(3); x << complex_mp(2), complex_mp(-3), complex_mp(1);
+	bertini::Vec<complex_mp> result(3);
+	block.EvalInPlace<complex_mp>(result, x, complex_mp(0));
 
-	bertini::Vec<mpfr_complex> aug(4); aug << x(0), x(1), x(2), mpfr_complex(1);
-	bertini::Vec<mpfr_complex> reference = M * aug;
-	BOOST_CHECK((result - reference).norm() < mpfr_float("1e-30"));
+	bertini::Vec<complex_mp> aug(4); aug << x(0), x(1), x(2), complex_mp(1);
+	bertini::Vec<complex_mp> reference = M * aug;
+	BOOST_CHECK((result - reference).norm() < real_mp("1e-30"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

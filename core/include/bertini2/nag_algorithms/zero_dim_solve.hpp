@@ -97,7 +97,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 
 
-using SolnIndT = typename SolnCont<dbl_complex>::size_type;
+using SolnIndT = typename SolnCont<complex_dbl>::size_type;
 
 
 /// metadata structs
@@ -1162,7 +1162,7 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 					// Double validates (its PrecisionSetup throws on any precision other than 16);
 					// fixed-multiple adopts the value into precision_.
 					GetTracker().PrecisionSetup(fp);
-					if constexpr (!std::is_same<BaseComplexT, dbl>::value)
+					if constexpr (!std::is_same<BaseComplexT, complex_dbl>::value)
 						if (fp.precision != 0)
 						{
 							ZeroDimConf zdc = this->template Get<ZeroDimConf>();

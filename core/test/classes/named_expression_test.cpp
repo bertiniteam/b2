@@ -12,7 +12,7 @@ using bertini::node::Named;
 using bertini::node::NamedExpression;
 using bertini::node::Find;
 using Nd = std::shared_ptr<bertini::node::Node>;
-using dbl = bertini::dbl;
+using complex_dbl = bertini::complex_dbl;
 using bertini::EvalExpression;
 
 BOOST_AUTO_TEST_SUITE(named_expression)
@@ -35,8 +35,8 @@ BOOST_AUTO_TEST_CASE(evaluates_to_its_expression)
 	auto y = Variable::Make("y");
 	Nd a = Named(x*x + y*y, "a");
 	// a at (3,4) = 9 + 16 = 25
-	auto v = EvalExpression<dbl>(a, {{"x", dbl(3,0)}, {"y", dbl(4,0)}});
-	BOOST_CHECK_SMALL(std::abs(v - dbl(25,0)), 1e-12);
+	auto v = EvalExpression<complex_dbl>(a, {{"x", complex_dbl(3,0)}, {"y", complex_dbl(4,0)}});
+	BOOST_CHECK_SMALL(std::abs(v - complex_dbl(25,0)), 1e-12);
 }
 
 // Hash-consed by (expression, name): same -> one node; different name or bare expr -> different.
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(usable_as_a_subexpression)
 	auto x = Variable::Make("x");
 	Nd a = Named(x*x, "a");
 	Nd f = a*a + a;   // a^2 + a, with a = x^2; at x=2 -> 16 + 4 = 20
-	auto v = EvalExpression<dbl>(f, {{"x", dbl(2,0)}});
-	BOOST_CHECK_SMALL(std::abs(v - dbl(20,0)), 1e-12);
+	auto v = EvalExpression<complex_dbl>(f, {{"x", complex_dbl(2,0)}});
+	BOOST_CHECK_SMALL(std::abs(v - complex_dbl(20,0)), 1e-12);
 }
 
 // Find<NamedExpression> discovers the named subexpressions in a tree, including nested ones,

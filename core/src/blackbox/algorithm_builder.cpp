@@ -53,7 +53,7 @@ int AlgoBuilder::ClassicBuild(std::string const& config_str, std::string const& 
 
 	// Parse all configuration structs (double precision versions suffice for
 	// choosing algorithm types; mpfr versions would be used for mp-specific defaults)
-	using AllConfsD = config::Configs::All<dbl>::type;
+	using AllConfsD = config::Configs::All<complex_dbl>::type;
 	decltype(parsing::classic::ConfigParser<AllConfsD>::Parse(config_str)) cfgs_d;
 	try {
 		cfgs_d = parsing::classic::ConfigParser<AllConfsD>::Parse(config_str);

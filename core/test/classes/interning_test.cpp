@@ -40,7 +40,7 @@ using Nd = std::shared_ptr<bertini::node::Node>;
 using Variable = bertini::node::Variable;
 using Integer = bertini::node::Integer;
 using SumOperator = bertini::node::SumOperator;
-using dbl = bertini::dbl;
+using complex_dbl = bertini::complex_dbl;
 using bertini::test::EvalAt;
 
 BOOST_AUTO_TEST_SUITE(interning)
@@ -63,15 +63,15 @@ BOOST_AUTO_TEST_CASE(simplify_does_not_corrupt_a_shared_single_operand_sum)
 	Nd q = m - n;          // x - y
 	Nd r = p + q + 0*x;    // 2x   (the +0 forces simplification work)
 
-	dbl xv(2.0, -3.0), yv(5.0, 1.0);
-	std::map<std::string,dbl> pt{ {"x", xv}, {"y", yv} };
+	complex_dbl xv(2.0, -3.0), yv(5.0, 1.0);
+	std::map<std::string,complex_dbl> pt{ {"x", xv}, {"y", yv} };
 
 	Nd rs = bertini::Simplify(r);
-	BOOST_CHECK_EQUAL(EvalAt<dbl>(rs, pt), xv + xv);   // == 2x, with the y's cancelled
+	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(rs, pt), xv + xv);   // == 2x, with the y's cancelled
 
 	// and the reused sub-objects must be intact (not mutated by the simplification above)
-	BOOST_CHECK_EQUAL(EvalAt<dbl>(m, pt), xv);
-	BOOST_CHECK_EQUAL(EvalAt<dbl>(n, pt), yv);
+	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(m, pt), xv);
+	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(n, pt), yv);
 }
 
 // ---- basic dedup: structurally equal builds return the same object ----
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(eval_correct_with_shared_subexpression)
 	auto x = Variable::Make("x");
 	Nd a = x*x;                 // shared
 	Nd f = a + a + a;           // 3 * x^2, all the same interned 'a'
-	BOOST_CHECK_EQUAL(EvalAt<dbl>(f, {{"x", dbl(2.0, 0.0)}}), dbl(12.0, 0.0));   // 3 * 4
+	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(f, {{"x", complex_dbl(2.0, 0.0)}}), complex_dbl(12.0, 0.0));   // 3 * 4
 }
 
 // ---- immutability under interning: simplifying never changes a held input ----
@@ -142,13 +142,13 @@ BOOST_AUTO_TEST_CASE(simplify_leaves_a_held_shared_node_untouched)
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	Nd held = (x + y) * x;      // hold a shared node
-	std::map<std::string,dbl> pt{ {"x", dbl(3.0, 0.0)}, {"y", dbl(4.0, 0.0)} };
-	auto before = EvalAt<dbl>(held, pt);
+	std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(3.0, 0.0)}, {"y", complex_dbl(4.0, 0.0)} };
+	auto before = EvalAt<complex_dbl>(held, pt);
 
 	Nd s = bertini::Simplify(held + 0*y);   // simplify an expression that contains 'held'
 	(void)s;
 
-	BOOST_CHECK_EQUAL(EvalAt<dbl>(held, pt), before);   // held is unchanged by simplifying around it
+	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(held, pt), before);   // held is unchanged by simplifying around it
 }
 
 BOOST_AUTO_TEST_SUITE_END() // interning
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(commutative_sum_dedups_when_enabled)
 	Nd a = x + y;
 	Nd b = y + x;
 	BOOST_CHECK_EQUAL(a.get(), b.get());          // canonicalized to one node
-	BOOST_CHECK_EQUAL(EvalAt<dbl>(a, {{"x", dbl(2.0, 0.0)}, {"y", dbl(5.0, 0.0)}}), dbl(7.0, 0.0));
+	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(a, {{"x", complex_dbl(2.0, 0.0)}, {"y", complex_dbl(5.0, 0.0)}}), complex_dbl(7.0, 0.0));
 }
 
 BOOST_AUTO_TEST_CASE(commutative_product_dedups_when_enabled)
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(division_stays_correct_under_canonicalization)
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	Nd q = y / x;                                 // a divisor must not become the leading factor
-	BOOST_CHECK_EQUAL(EvalAt<dbl>(q, {{"x", dbl(2.0, 0.0)}, {"y", dbl(6.0, 0.0)}}), dbl(3.0, 0.0));  // 6/2
+	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(q, {{"x", complex_dbl(2.0, 0.0)}, {"y", complex_dbl(6.0, 0.0)}}), complex_dbl(3.0, 0.0));  // 6/2
 	BOOST_CHECK((x/y).get() != (y/x).get());            // x/y and y/x stay distinct
 }
 

@@ -35,13 +35,13 @@ BOOST_AUTO_TEST_SUITE(blackbox_test)
 BOOST_AUTO_TEST_SUITE(parsing_configs)
 
 using namespace bertini;
-using mpfr = bertini::mpfr_complex;
-using dbl = bertini::dbl;
+using mpfr = bertini::complex_mp;
+using complex_dbl = bertini::complex_dbl;
  
 BOOST_AUTO_TEST_CASE(parse1)
 {
 	
-	using AllConfsD = blackbox::config::Configs::All<dbl>::type;
+	using AllConfsD = blackbox::config::Configs::All<complex_dbl>::type;
 	using AllConfsMP = blackbox::config::Configs::All<mpfr>::type;
 
 std::string config = 
@@ -114,14 +114,14 @@ BOOST_AUTO_TEST_SUITE_END() // end parser_errors suite
 
 BOOST_AUTO_TEST_SUITE(unary_minus_precedence)
 
-using dbl = bertini::dbl;
+using complex_dbl = bertini::complex_dbl;
 
 namespace {
 	// parse "f = <expr>" over variable_group x,y,z and evaluate at the given point
-	dbl ParseEval(std::string const& expr, dbl x, dbl y, dbl z)
+	complex_dbl ParseEval(std::string const& expr, complex_dbl x, complex_dbl y, complex_dbl z)
 	{
 		bertini::System s{"variable_group x, y, z;\nfunction f;\nf = " + expr + ";"};
-		bertini::Vec<dbl> pt(3);
+		bertini::Vec<complex_dbl> pt(3);
 		pt << x, y, z;
 		return s.Eval(pt)(0);
 	}
@@ -132,39 +132,39 @@ namespace {
 // factor_, so "-y+x" is (-y)+x and "-x^2" is -(x^2).
 BOOST_AUTO_TEST_CASE(leading_minus_negates_only_its_operand)
 {
-	const dbl x(2,0), y(5,0), z(3,0);
+	const complex_dbl x(2,0), y(5,0), z(3,0);
 	// "-y+x" == x-y == -3, NOT -(y+x) == -7
 	BOOST_CHECK_SMALL(std::abs(ParseEval("-y+x", x,y,z) - ParseEval("x-y", x,y,z)), 1e-12);
-	BOOST_CHECK_SMALL(std::abs(ParseEval("-y+x", x,y,z) - dbl(-3,0)),               1e-12);
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-y+x", x,y,z) - complex_dbl(-3,0)),               1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(leading_minus_on_a_parenthesized_sum)
 {
-	const dbl x(2,0), y(5,0), z(3,0);
+	const complex_dbl x(2,0), y(5,0), z(3,0);
 	// the bug found via round-tripping: "-(y-z)+x" == x-(y-z) == 0, NOT -((y-z)+x)
 	BOOST_CHECK_SMALL(std::abs(ParseEval("-(y-z)+x", x,y,z) - ParseEval("x-(y-z)", x,y,z)), 1e-12);
-	BOOST_CHECK_SMALL(std::abs(ParseEval("-(y-z)+x", x,y,z) - dbl(0,0)),                    1e-12);
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-(y-z)+x", x,y,z) - complex_dbl(0,0)),                    1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(all_negative_sum_is_unchanged)
 {
-	const dbl x(2,0), y(5,0), z(3,0);
+	const complex_dbl x(2,0), y(5,0), z(3,0);
 	// "-y-x" == -(y+x) == -7 (here the greedy reading happened to agree)
-	BOOST_CHECK_SMALL(std::abs(ParseEval("-y-x", x,y,z) - dbl(-7,0)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-y-x", x,y,z) - complex_dbl(-7,0)), 1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(unary_minus_binds_looser_than_power)
 {
-	const dbl x(2,0), y(5,0), z(3,0);
+	const complex_dbl x(2,0), y(5,0), z(3,0);
 	// "-x^2" == -(x^2) == -4, NOT (-x)^2 == 4
-	BOOST_CHECK_SMALL(std::abs(ParseEval("-x^2", x,y,z) - dbl(-4,0)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-x^2", x,y,z) - complex_dbl(-4,0)), 1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(unary_minus_then_product)
 {
-	const dbl x(2,0), y(5,0), z(3,0);
+	const complex_dbl x(2,0), y(5,0), z(3,0);
 	// "-x*y" == -(x*y) == -10
-	BOOST_CHECK_SMALL(std::abs(ParseEval("-x*y", x,y,z) - dbl(-10,0)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-x*y", x,y,z) - complex_dbl(-10,0)), 1e-12);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // unary_minus_precedence

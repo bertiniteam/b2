@@ -65,11 +65,11 @@ namespace bertini{
 		\todo This function has a hardcoded value which should be replaced
 		*/
 		inline
-		mpfr_float MinTimeForCurrentPrecision(unsigned precision, mpfr_float const& time_to_go, int safety_digits = 3)
+		real_mp MinTimeForCurrentPrecision(unsigned precision, real_mp const& time_to_go, int safety_digits = 3)
 		{
-			mpfr_float t = pow( mpfr_float(10), safety_digits-long(precision)) * time_to_go;
+			real_mp t = pow( real_mp(10), safety_digits-long(precision)) * time_to_go;
 			if (precision==DoublePrecision() && t<1e-150)
-				return mpfr_float("1e-150");
+				return real_mp("1e-150");
 			else
 				return t;
 		}
@@ -84,7 +84,7 @@ namespace bertini{
 		\return The smallest permissible stepsize
 		*/
 		inline
-		mpfr_float MinStepSizeForPrecision(unsigned precision, mpfr_float const& time_to_go, int safety_digits = 3)
+		real_mp MinStepSizeForPrecision(unsigned precision, real_mp const& time_to_go, int safety_digits = 3)
 		{
 			return MinTimeForCurrentPrecision(precision, time_to_go, safety_digits);
 		}
@@ -101,7 +101,7 @@ namespace bertini{
 
 		 Calibrated by benchmarking three operations representative of path tracking
 		 (dot product / SLP evaluation, dense matvec, LU factorization+solve) using
-		 GNU MPC (\c mpfr_complex) vs \c std::complex<double> on modern hardware.
+		 GNU MPC (\c complex_mp) vs \c std::complex<double> on modern hardware.
 		 See \c tuning/arithmetic_cost.cpp for the methodology and compile instructions.
 
 		 The paper \cite AMP2 reports \f$C(P) = 10.35 + 0.04 P_\mathrm{bits}\f$ (measured on
@@ -157,7 +157,7 @@ namespace bertini{
 		\return An integral number of necessary digits to use
 		*/
 		inline
-		unsigned MinDigitsForLogOfStepsize(mpfr_float const& log_of_stepsize, mpfr_float const& time_to_go, unsigned safety_digits = 3)
+		unsigned MinDigitsForLogOfStepsize(real_mp const& log_of_stepsize, real_mp const& time_to_go, unsigned safety_digits = 3)
 		{
 			return (ceil(log_of_stepsize) + ceil(log10(abs(time_to_go))) + safety_digits).convert_to<unsigned>();
 		}
@@ -173,7 +173,7 @@ namespace bertini{
 		This function assumes you are going to time=0, or that you have taken care of that difference.  That is, time_to_go should be a duration, not the current time, unless you are tracking to t=0, in which case current time is the duration left to go.  Dig it?
 		*/
 		inline
-		unsigned MinDigitsForStepsizeInterval(mpfr_float const& min_stepsize, mpfr_float const& max_stepsize, mpfr_float const& time_to_go)
+		unsigned MinDigitsForStepsizeInterval(real_mp const& min_stepsize, real_mp const& max_stepsize, real_mp const& time_to_go)
 		{
 			return max(MinDigitsForLogOfStepsize(-log10(min_stepsize),time_to_go),
 				       MinDigitsForLogOfStepsize(-log10(max_stepsize),time_to_go));
@@ -376,22 +376,22 @@ namespace bertini{
 
 		// 3. Get the settings into the tracker 
 		tracker.Setup(Predictor::Euler,
-		              	mpfr_float("1e-5"),
-						mpfr_float("1e5"),
+		              	real_mp("1e-5"),
+						real_mp("1e5"),
 						stepping_preferences,
 						newton_preferences);
 
 		tracker.PrecisionSetup(AMP);
 	
 		//  4. Create a start and end time.  These are complex numbers.
-		mpfr_complex t_start("1.0");
-		mpfr_complex t_end("0");
+		complex_mp t_start("1.0");
+		complex_mp t_end("0");
 		
 		//  5. Create a start point, and container for the end point.
-		Vec<mpfr_complex> start_point(2);
-		start_point << mpfr_complex("1"), mpfr_complex("1.414");  // set the value of the start point.  This is Eigen syntax.
+		Vec<complex_mp> start_point(2);
+		start_point << complex_mp("1"), complex_mp("1.414");  // set the value of the start point.  This is Eigen syntax.
 
-		Vec<mpfr_complex> end_point;
+		Vec<complex_mp> end_point;
 
 		// 6. actually do the tracking
 		SuccessCode tracking_success = tracker.TrackPath(end_point,
@@ -473,20 +473,20 @@ namespace bertini{
 			virtual ~AMPTracker() = default;
 
 
-			Vec<mpfr_complex> CurrentPoint() const override
+			Vec<complex_mp> CurrentPoint() const override
 			{
 				if (this->CurrentPrecision()==DoublePrecision())
 				{
-					const auto& curr_vector = std::get<Vec<dbl>>(this->current_space_);
-					Vec<mpfr_complex> returnme(NumVariables());
+					const auto& curr_vector = std::get<Vec<complex_dbl>>(this->current_space_);
+					Vec<complex_mp> returnme(NumVariables());
 					for (unsigned ii = 0; ii < NumVariables(); ++ii)
 					{
-						returnme(ii) = mpfr_complex(curr_vector(ii));
+						returnme(ii) = complex_mp(curr_vector(ii));
 					}
 					return returnme;
 				}
 				else
-					return std::get<Vec<mpfr_complex>>(this->current_space_);
+					return std::get<Vec<complex_mp>>(this->current_space_);
 			}
 
 			
@@ -502,9 +502,9 @@ namespace bertini{
 			\param end_time The time to which to track.
 			\param start_point The space values from which to start tracking.
 			*/
-			SuccessCode TrackerLoopInitialization(mpfr_complex const& start_time,
-			                               mpfr_complex const& end_time,
-										   Vec<mpfr_complex> const& start_point) const override
+			SuccessCode TrackerLoopInitialization(complex_mp const& start_time,
+			                               complex_mp const& end_time,
+										   Vec<complex_mp> const& start_point) const override
 			{
 				initial_precision_ = override_start_precision_.value_or(Precision(start_point(0)));
 
@@ -517,7 +517,7 @@ namespace bertini{
 				         );
 				#endif
 
-				NotifyObservers(Initializing<AMPTracker,mpfr_complex>(*this,start_time, end_time, start_point));
+				NotifyObservers(Initializing<AMPTracker,complex_mp>(*this,start_time, end_time, start_point));
 				SetThreadPrecision(initial_precision_);
 				// set up the master current time and the current step size
 				
@@ -534,8 +534,8 @@ namespace bertini{
 				current_stepsize_.precision(initial_precision_);
 				if (reinitialize_stepsize_)
 				{
-					mpfr_float segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
-					SetStepSize(min(mpfr_float(Get<Stepping>().initial_step_size, current_precision_),segment_length));
+					real_mp segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
+					SetStepSize(min(real_mp(Get<Stepping>().initial_step_size, current_precision_),segment_length));
 				}
 
 				// populate the current space value with the start point, in appropriate precision
@@ -552,10 +552,10 @@ namespace bertini{
 
 				#ifndef BERTINI_DISABLE_ASSERTS
 				if (initial_precision_==DoublePrecision()){
-					PrecisionSanityCheck<dbl>();
+					PrecisionSanityCheck<complex_dbl>();
 				}
 				else{
-					PrecisionSanityCheck<mpfr_complex>();
+					PrecisionSanityCheck<complex_mp>();
 				}
 				#endif
 
@@ -643,7 +643,7 @@ namespace bertini{
 
 			\param[out] solution_at_endtime The solution at the end time
 			*/
-			void CopyFinalSolution(Vec<mpfr_complex> & solution_at_endtime) const override
+			void CopyFinalSolution(Vec<complex_mp> & solution_at_endtime) const override
 			{
 
 				// the current precision is the precision of the output solution point.
@@ -652,7 +652,7 @@ namespace bertini{
 					unsigned num_vars = static_cast<unsigned>(GetSystem().NumVariables());
 					solution_at_endtime.resize(num_vars);
 					for (unsigned ii=0; ii<num_vars; ii++)
-						solution_at_endtime(ii) = mpfr_complex(std::get<Vec<dbl> >(current_space_)(ii));
+						solution_at_endtime(ii) = complex_mp(std::get<Vec<complex_dbl> >(current_space_)(ii));
 				}
 				else
 				{
@@ -660,7 +660,7 @@ namespace bertini{
 					solution_at_endtime.resize(num_vars);
 					for (unsigned ii=0; ii<num_vars; ii++)
 					{
-						solution_at_endtime(ii) = std::get<Vec<mpfr_complex> >(current_space_)(ii);
+						solution_at_endtime(ii) = std::get<Vec<complex_mp> >(current_space_)(ii);
 						solution_at_endtime(ii).precision(current_precision_);
 					}
 				}
@@ -679,9 +679,9 @@ namespace bertini{
 			SuccessCode TrackerIteration() const override
 			{
 				if (current_precision_==DoublePrecision())
-					return TrackerIteration<dbl>();
+					return TrackerIteration<complex_dbl>();
 				else
-					return TrackerIteration<mpfr_complex>();
+					return TrackerIteration<complex_mp>();
 			}
 
 
@@ -784,9 +784,9 @@ namespace bertini{
 			SuccessCode CheckGoingToInfinity() const override
 			{
 				if (current_precision_ == DoublePrecision())
-					return Base::CheckGoingToInfinity<dbl>();
+					return Base::CheckGoingToInfinity<complex_dbl>();
 				else
-					return Base::CheckGoingToInfinity<mpfr_complex>();
+					return Base::CheckGoingToInfinity<complex_mp>();
 			}
 
 			/**
@@ -858,8 +858,8 @@ namespace bertini{
 				//      (ExtraDigitsBeforePrecisionDecrease).  The single StepsForIncrease setting
 				//      (SteppingConfig::consecutive_successful_steps_before_stepsize_increase) governs both
 				//      gates -- the old, duplicate AMP-config precision-decrease setting was removed.
-				mpfr_float min_stepsize = current_stepsize_ * mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_);
-				mpfr_float max_stepsize = min( current_stepsize_ * mpfr_float(Get<Stepping>().step_size_success_factor, current_precision_),  mpfr_float(Get<Stepping>().max_step_size, current_precision_));
+				real_mp min_stepsize = current_stepsize_ * real_mp(Get<Stepping>().step_size_fail_factor, current_precision_);
+				real_mp max_stepsize = min( current_stepsize_ * real_mp(Get<Stepping>().step_size_success_factor, current_precision_),  real_mp(Get<Stepping>().max_step_size, current_precision_));
 
 				const unsigned steps_for_increase = Get<Stepping>().consecutive_successful_steps_before_stepsize_increase; // B1 StepsForIncrease
 
@@ -954,7 +954,7 @@ namespace bertini{
 			{
 				next_precision_ = current_precision_;
 
-				next_stepsize_ = mpfr_float(Get<Stepping>().step_size_fail_factor, CurrentPrecision())*current_stepsize_;
+				next_stepsize_ = real_mp(Get<Stepping>().step_size_fail_factor, CurrentPrecision())*current_stepsize_;
 				while (next_stepsize_ < MinStepSizeForPrecision(next_precision_, abs(current_time_ - endtime_)))
 				{
 					if (next_precision_==DoublePrecision())
@@ -992,15 +992,15 @@ namespace bertini{
 					min_next_precision = current_precision_ + (1+num_consecutive_failed_steps_)*PrecisionIncrement(); // precision increases
 
 
-				mpfr_float min_stepsize = MinStepSizeForPrecision(current_precision_, abs(current_time_ - endtime_));
-				mpfr_float max_stepsize = current_stepsize_ * mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_);  // Stepsize decreases.
+				real_mp min_stepsize = MinStepSizeForPrecision(current_precision_, abs(current_time_ - endtime_));
+				real_mp max_stepsize = current_stepsize_ * real_mp(Get<Stepping>().step_size_fail_factor, current_precision_);  // Stepsize decreases.
 
 				if (min_stepsize > max_stepsize)
 				{
 					// stepsizes are incompatible, must increase precision
 					next_precision_ = min_next_precision;
 					// decrease stepsize somewhat less than the fail factor
-					next_stepsize_ = max(current_stepsize_ * (1+mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_))/2, min_stepsize);
+					next_stepsize_ = max(current_stepsize_ * (1+real_mp(Get<Stepping>().step_size_fail_factor, current_precision_))/2, min_stepsize);
 				}
 				else
 				{
@@ -1291,15 +1291,15 @@ namespace bertini{
 				SuccessCode code;
 				if (current_precision_==DoublePrecision())
 				{
-					code = RefineImpl<dbl>(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_));
+					code = RefineImpl<complex_dbl>(std::get<Vec<complex_dbl> >(temporary_space_),std::get<Vec<complex_dbl> >(current_space_), complex_dbl(current_time_));
 					if (code == SuccessCode::Success)
-						std::get<Vec<dbl> >(current_space_) = std::get<Vec<dbl> >(temporary_space_);
+						std::get<Vec<complex_dbl> >(current_space_) = std::get<Vec<complex_dbl> >(temporary_space_);
 				}
 				else
 				{
-					code = RefineImpl<mpfr_complex>(std::get<Vec<mpfr_complex> >(temporary_space_),std::get<Vec<mpfr_complex> >(current_space_), current_time_);
+					code = RefineImpl<complex_mp>(std::get<Vec<complex_mp> >(temporary_space_),std::get<Vec<complex_mp> >(current_space_), current_time_);
 					if (code == SuccessCode::Success)
-						std::get<Vec<mpfr_complex> >(current_space_) = std::get<Vec<mpfr_complex> >(temporary_space_);
+						std::get<Vec<complex_mp> >(current_space_) = std::get<Vec<complex_mp> >(temporary_space_);
 				}
 				return code;
 			}
@@ -1448,14 +1448,14 @@ namespace bertini{
 					// convert from double to multiple precision
 					DoubleToMultiple(new_precision);
 					#ifndef BERTINI_DISABLE_ASSERTS
-					assert(PrecisionSanityCheck<mpfr_complex>() && "precision sanity check failed.  some internal variable is not in correct precision");
+					assert(PrecisionSanityCheck<complex_mp>() && "precision sanity check failed.  some internal variable is not in correct precision");
 					#endif
 				}
 				else
 				{
 					MultipleToMultiple(new_precision);
 					#ifndef BERTINI_DISABLE_ASSERTS
-					assert(PrecisionSanityCheck<mpfr_complex>() && "precision sanity check failed.  some internal variable is not in correct precision");
+					assert(PrecisionSanityCheck<complex_mp>() && "precision sanity check failed.  some internal variable is not in correct precision");
 					#endif
 				}
 
@@ -1478,7 +1478,7 @@ namespace bertini{
 
 			\param source_point The point into which to copy to the internally stored current space point.
 			*/
-			void DoubleToDouble(Vec<dbl> const& source_point) const
+			void DoubleToDouble(Vec<complex_dbl> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
@@ -1489,7 +1489,7 @@ namespace bertini{
 
 				GetSystem().precision(16);
 
-				std::get<Vec<dbl> >(current_space_) = source_point;
+				std::get<Vec<complex_dbl> >(current_space_) = source_point;
 			}
 
 			/**
@@ -1499,7 +1499,7 @@ namespace bertini{
 			*/
 			void DoubleToDouble() const
 			{
-				DoubleToDouble(std::get<Vec<dbl> >(current_space_));
+				DoubleToDouble(std::get<Vec<complex_dbl> >(current_space_));
 			}
 			
 
@@ -1511,7 +1511,7 @@ namespace bertini{
 
 			\param source_point The point into which to copy to the internally stored current space point.
 			*/
-			void MultipleToDouble(Vec<mpfr_complex> const& source_point) const
+			void MultipleToDouble(Vec<complex_mp> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
@@ -1522,11 +1522,11 @@ namespace bertini{
 				GetSystem().precision(DoublePrecision()); 
 
 				// copy the current space in.
-				if (std::get<Vec<dbl> >(current_space_).size()!=source_point.size())
-					std::get<Vec<dbl> >(current_space_).resize(source_point.size());
+				if (std::get<Vec<complex_dbl> >(current_space_).size()!=source_point.size())
+					std::get<Vec<complex_dbl> >(current_space_).resize(source_point.size());
 
 				for (unsigned ii=0; ii<source_point.size(); ii++)
-					std::get<Vec<dbl> >(current_space_)(ii) = dbl(source_point(ii));
+					std::get<Vec<complex_dbl> >(current_space_)(ii) = complex_dbl(source_point(ii));
 
 				endtime_.precision(DoublePrecision()); // i question this one  2021-04-12
 			}
@@ -1538,7 +1538,7 @@ namespace bertini{
 			*/
 			void MultipleToDouble() const
 			{
-				MultipleToDouble(std::get<Vec<mpfr_complex> >(current_space_));
+				MultipleToDouble(std::get<Vec<complex_mp> >(current_space_));
 			}
 
 
@@ -1553,7 +1553,7 @@ namespace bertini{
 			\param new_precision The new precision.
 			\param source_point The point into which to copy to the internally stored current space point.
 			*/
-			void DoubleToMultiple(unsigned new_precision, Vec<dbl> const& source_point) const
+			void DoubleToMultiple(unsigned new_precision, Vec<complex_dbl> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
@@ -1566,7 +1566,7 @@ namespace bertini{
 				AdjustTemporariesPrecision(new_precision);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				PrecisionSanityCheck<mpfr_complex>();
+				PrecisionSanityCheck<complex_mp>();
 				#endif
 			}
 
@@ -1581,7 +1581,7 @@ namespace bertini{
 			*/
 			void DoubleToMultiple(unsigned new_precision) const
 			{
-				DoubleToMultiple( new_precision, std::get<Vec<dbl> >(current_space_));
+				DoubleToMultiple( new_precision, std::get<Vec<complex_dbl> >(current_space_));
 			}
 
 
@@ -1597,7 +1597,7 @@ namespace bertini{
 			\param new_precision The new precision.
 			\param source_point The point into which to copy to the internally stored current space point.
 			*/
-			void MultipleToMultiple(unsigned new_precision, Vec<mpfr_complex> const& source_point) const
+			void MultipleToMultiple(unsigned new_precision, Vec<complex_mp> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
@@ -1610,7 +1610,7 @@ namespace bertini{
 				AdjustTemporariesPrecision(new_precision);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				PrecisionSanityCheck<mpfr_complex>();
+				PrecisionSanityCheck<complex_mp>();
 				#endif
 			}
 
@@ -1624,7 +1624,7 @@ namespace bertini{
 			*/
 			void MultipleToMultiple(unsigned new_precision) const
 			{
-				MultipleToMultiple( new_precision, std::get<Vec<mpfr_complex> >(current_space_));
+				MultipleToMultiple( new_precision, std::get<Vec<complex_mp> >(current_space_));
 			}
 
 
@@ -1639,18 +1639,18 @@ namespace bertini{
 			}
 
 			
-			void CopyToCurrentSpace(Vec<dbl> const& source_point) const
+			void CopyToCurrentSpace(Vec<complex_dbl> const& source_point) const
 			{
-				auto& space = std::get<Vec<mpfr_complex> >(current_space_);
+				auto& space = std::get<Vec<complex_mp> >(current_space_);
 				if (space.size()!=source_point.size())
 					space.resize(source_point.size());
 				for (unsigned ii=0; ii<source_point.size(); ii++)
-					space(ii) = mpfr_complex(source_point(ii));
+					space(ii) = complex_mp(source_point(ii));
 			}
 
-			void CopyToCurrentSpace(Vec<mpfr_complex> const& source_point) const
+			void CopyToCurrentSpace(Vec<complex_mp> const& source_point) const
 			{
-				auto& space = std::get<Vec<mpfr_complex> >(current_space_);
+				auto& space = std::get<Vec<complex_mp> >(current_space_);
 				if (space.size()!=source_point.size())
 					space.resize(source_point.size());
 				space = source_point;
@@ -1669,7 +1669,7 @@ namespace bertini{
 				delta_t_.precision(new_precision);
 				current_time_.precision(new_precision);
 
-				Precision(std::get<Vec<mpfr_complex> >(current_space_),new_precision);
+				Precision(std::get<Vec<complex_mp> >(current_space_),new_precision);
 			}
 
 			/**
@@ -1684,11 +1684,11 @@ namespace bertini{
 				const auto num_vars = GetSystem().NumVariables();
 
 				//  the current_space value is adjusted in the appropriate ChangePrecision function
-				std::get<Vec<mpfr_complex> >(tentative_space_).resize(static_cast<Eigen::Index>(num_vars));
-				Precision(std::get<Vec<mpfr_complex> >(tentative_space_), new_precision);
+				std::get<Vec<complex_mp> >(tentative_space_).resize(static_cast<Eigen::Index>(num_vars));
+				Precision(std::get<Vec<complex_mp> >(tentative_space_), new_precision);
 
-				std::get<Vec<mpfr_complex> >(temporary_space_).resize(static_cast<Eigen::Index>(num_vars));
-				Precision(std::get<Vec<mpfr_complex> >(temporary_space_), new_precision);
+				std::get<Vec<complex_mp> >(temporary_space_).resize(static_cast<Eigen::Index>(num_vars));
+				Precision(std::get<Vec<complex_mp> >(temporary_space_), new_precision);
 			}
 
 
@@ -1703,17 +1703,17 @@ namespace bertini{
 			bool PrecisionSanityCheck() const
 			{	
 
-				if constexpr (std::is_same<ComplexT, dbl>::value){
+				if constexpr (std::is_same<ComplexT, complex_dbl>::value){
 					return true;
 				}
 
-				if constexpr (std::is_same<ComplexT, mpfr_complex>::value){
+				if constexpr (std::is_same<ComplexT, complex_mp>::value){
 					assert(ThreadPrecision()==current_precision_ && "current precision differs from the thread-local default precision");
 					assert(GetSystem().precision() == current_precision_ && "tracked system is out of precision");
 					
-					assert(std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == current_precision_ && "current space out of precision");
-					assert(std::get<Vec<mpfr_complex> >(tentative_space_)(0).precision() == current_precision_ && "tentative space out of precision");
-					assert(std::get<Vec<mpfr_complex> >(temporary_space_)(0).precision() == current_precision_ && "temporary space out of precision");
+					assert(std::get<Vec<complex_mp> >(current_space_)(0).precision() == current_precision_ && "current space out of precision");
+					assert(std::get<Vec<complex_mp> >(tentative_space_)(0).precision() == current_precision_ && "tentative space out of precision");
+					assert(std::get<Vec<complex_mp> >(temporary_space_)(0).precision() == current_precision_ && "temporary space out of precision");
 					assert(Precision(current_stepsize_) == current_precision_ && "current_stepsize_ out of precision");
 					assert(Precision(delta_t_) == current_precision_ && "delta_t_ out of precision");
 					assert(Precision(endtime_) == current_precision_ && "endtime_ out of precision");
@@ -1753,7 +1753,7 @@ namespace bertini{
 			mutable unsigned initial_precision_; ///< The precision at the start of tracking.
 			mutable unsigned num_successful_steps_since_precision_decrease_; ///< Consecutive successful steps since precision last decreased; gated by B1's StepsForIncrease.
 
-			mutable mpfr_complex endtime_highest_precision_;
+			mutable complex_mp endtime_highest_precision_;
 
 		public:
 

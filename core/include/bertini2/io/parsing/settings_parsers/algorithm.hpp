@@ -235,7 +235,7 @@ namespace bertini {
 					// string to a multiprecision real, then to a rational (the homotopy times are real).
 					auto str_to_rational = [](mpq_rational & num, std::string str)
 									   {
-										   num = mpq_rational(mpfr_float(str));
+										   num = mpq_rational(real_mp(str));
 									   };
 
 

@@ -231,8 +231,8 @@ namespace bertini
 			std::visit([&](auto const& b){ b.Precision(new_precision); }, blk);
 
 		using bertini::Precision;
-		Precision(std::get<Vec<mpfr_complex> >(current_variable_values_),new_precision);
-		Precision(std::get<mpfr_complex>(current_path_value_),new_precision);
+		Precision(std::get<Vec<complex_mp> >(current_variable_values_),new_precision);
+		Precision(std::get<complex_mp>(current_path_value_),new_precision);
 
 		if (IsPatched())
 			patch_.Precision(new_precision);
@@ -847,8 +847,8 @@ namespace bertini
 		return bound;
 	}
 
-	template double System::CoefficientBound<dbl>(unsigned) const;
-	template mpfr_float System::CoefficientBound<mpfr_complex>(unsigned) const;
+	template double System::CoefficientBound<complex_dbl>(unsigned) const;
+	template real_mp System::CoefficientBound<complex_mp>(unsigned) const;
 
     int System::DegreeBound() const
     {
@@ -893,13 +893,13 @@ namespace bertini
 		// where row r of M holds the (augmented) coefficients and `vars` are the ordered variable
 		// nodes (column c <-> vars[c]); the last column is the constant / augmenting term.  Zero
 		// coefficients are skipped to keep the tree compact (and exact: a skipped term is +0).
-		Nd LinearFormNode(Mat<mpfr_complex> const& M, Eigen::Index r,
+		Nd LinearFormNode(Mat<complex_mp> const& M, Eigen::Index r,
 		                  VariableGroup const& vars, size_t num_vars)
 		{
 			Nd form = node::Complex::Make(M(r, static_cast<Eigen::Index>(num_vars))); // constant term
 			for (size_t c = 0; c < num_vars; ++c)
 			{
-				mpfr_complex const& coeff = M(r, static_cast<Eigen::Index>(c));
+				complex_mp const& coeff = M(r, static_cast<Eigen::Index>(c));
 				if (coeff.real() == 0 && coeff.imag() == 0)
 					continue;
 				form = form + node::Complex::Make(coeff) * vars[c];
@@ -985,7 +985,7 @@ namespace bertini
 						Nd gi = nullptr;
 						for (size_t j = 0; j < N; ++j)
 						{
-							mpfr_complex const& c = R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
+							complex_mp const& c = R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
 							if (c.real() == 0 && c.imag() == 0)
 								continue;
 							Nd term = Complex::Make(c) * fj[j];
@@ -1017,7 +1017,7 @@ namespace bertini
 							Nd form = nullptr;
 							for (size_t c = 0; c < n; ++c)
 							{
-								mpfr_complex const& coeff = M(r, static_cast<Eigen::Index>(c));
+								complex_mp const& coeff = M(r, static_cast<Eigen::Index>(c));
 								if (coeff.real() == 0 && coeff.imag() == 0)
 									continue;
 								Nd term = node::Complex::Make(coeff) * vars[c];
@@ -1084,7 +1084,7 @@ namespace bertini
 	} // anonymous namespace
 
 
-	System System::AssembleRandomized(std::shared_ptr<System> operand, Mat<mpfr_complex> coefficients) const
+	System System::AssembleRandomized(std::shared_ptr<System> operand, Mat<complex_mp> coefficients) const
 	{
 		const size_t G = operand->NumVariableGroups();
 		const size_t N = operand->NumNaturalFunctions();
@@ -1103,7 +1103,7 @@ namespace bertini
 		for (size_t i = 0; i < n; ++i)
 			for (size_t j = 0; j < N; ++j)
 			{
-				mpfr_complex const& c = coefficients(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
+				complex_mp const& c = coefficients(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
 				if (c.real() == 0 && c.imag() == 0)
 					continue;
 				for (size_t g = 0; g < G; ++g)
@@ -1132,7 +1132,7 @@ namespace bertini
 
 		auto operand = std::make_shared<System>(*this);
 
-		Mat<mpfr_complex> R(static_cast<Eigen::Index>(n), static_cast<Eigen::Index>(N));
+		Mat<complex_mp> R(static_cast<Eigen::Index>(n), static_cast<Eigen::Index>(N));
 
 		if (G == 1)
 		{
@@ -1146,7 +1146,7 @@ namespace bertini
 				{
 					if (j < n)
 						R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) =
-							(i == j) ? mpfr_complex(1) : mpfr_complex(0);
+							(i == j) ? complex_mp(1) : complex_mp(0);
 					else
 						R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) =
 							bertini::multiprecision::RandomComplex(DefaultPrecision());
@@ -1166,7 +1166,7 @@ namespace bertini
 	}
 
 
-	System System::Randomize(Mat<mpfr_complex> const& R) const
+	System System::Randomize(Mat<complex_mp> const& R) const
 	{
 		if (static_cast<size_t>(R.cols()) != NumNaturalFunctions())
 			throw std::runtime_error("Randomize: supplied matrix must have one column per natural function of the system.");
@@ -1175,7 +1175,7 @@ namespace bertini
 	}
 
 
-	Mat<mpfr_complex> System::RandomizationMatrix() const
+	Mat<complex_mp> System::RandomizationMatrix() const
 	{
 		for (auto const& b : blocks_)
 			if (auto const* rb = std::get_if<blocks::RandomizationBlock<System>>(&b))
@@ -1688,40 +1688,40 @@ namespace bertini
 
 	// Explicit instantiation definitions — paired with extern template declarations in system.hpp.
 
-	template void System::EvalInPlace<dbl>(Vec<dbl>&) const;
-	template void System::EvalInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+	template void System::EvalInPlace<complex_dbl>(Vec<complex_dbl>&) const;
+	template void System::EvalInPlace<complex_mp>(Vec<complex_mp>&) const;
 
-	template Vec<dbl> System::Eval<dbl>() const;
-	template Vec<mpfr_complex> System::Eval<mpfr_complex>() const;
+	template Vec<complex_dbl> System::Eval<complex_dbl>() const;
+	template Vec<complex_mp> System::Eval<complex_mp>() const;
 
-	template void System::JacobianInPlace<dbl>(Mat<dbl>&) const;
-	template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&) const;
+	template void System::JacobianInPlace<complex_dbl>(Mat<complex_dbl>&) const;
+	template void System::JacobianInPlace<complex_mp>(Mat<complex_mp>&) const;
 
-	template Mat<dbl> System::Jacobian<dbl>() const;
-	template Mat<mpfr_complex> System::Jacobian<mpfr_complex>() const;
+	template Mat<complex_dbl> System::Jacobian<complex_dbl>() const;
+	template Mat<complex_mp> System::Jacobian<complex_mp>() const;
 
-	template Mat<dbl> System::Jacobian<dbl>(const Vec<dbl>&) const;
-	template Mat<mpfr_complex> System::Jacobian<mpfr_complex>(const Vec<mpfr_complex>&) const;
+	template Mat<complex_dbl> System::Jacobian<complex_dbl>(const Vec<complex_dbl>&) const;
+	template Mat<complex_mp> System::Jacobian<complex_mp>(const Vec<complex_mp>&) const;
 
-	template void System::JacobianInPlace<dbl>(Mat<dbl>&, const Vec<dbl>&) const;
-	template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&, const Vec<mpfr_complex>&) const;
+	template void System::JacobianInPlace<complex_dbl>(Mat<complex_dbl>&, const Vec<complex_dbl>&) const;
+	template void System::JacobianInPlace<complex_mp>(Mat<complex_mp>&, const Vec<complex_mp>&) const;
 
-	template void System::TimeDerivativeInPlace<dbl>(Vec<dbl>&) const;
-	template void System::TimeDerivativeInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+	template void System::TimeDerivativeInPlace<complex_dbl>(Vec<complex_dbl>&) const;
+	template void System::TimeDerivativeInPlace<complex_mp>(Vec<complex_mp>&) const;
 
-	template Vec<dbl> System::TimeDerivative<dbl>() const;
-	template Vec<mpfr_complex> System::TimeDerivative<mpfr_complex>() const;
+	template Vec<complex_dbl> System::TimeDerivative<complex_dbl>() const;
+	template Vec<complex_mp> System::TimeDerivative<complex_mp>() const;
 
-	template void System::SetVariables<dbl>(const Vec<dbl>&) const;
-	template void System::SetVariables<mpfr_complex>(const Vec<mpfr_complex>&) const;
+	template void System::SetVariables<complex_dbl>(const Vec<complex_dbl>&) const;
+	template void System::SetVariables<complex_mp>(const Vec<complex_mp>&) const;
 
-	template void System::SetPathVariable<dbl>(dbl const&) const;
-	template void System::SetPathVariable<mpfr_complex>(mpfr_complex const&) const;
+	template void System::SetPathVariable<complex_dbl>(complex_dbl const&) const;
+	template void System::SetPathVariable<complex_mp>(complex_mp const&) const;
 
-	template void System::SetAndReset<dbl>(Vec<dbl> const&, dbl const&) const;
-	template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&, mpfr_complex const&) const;
+	template void System::SetAndReset<complex_dbl>(Vec<complex_dbl> const&, complex_dbl const&) const;
+	template void System::SetAndReset<complex_mp>(Vec<complex_mp> const&, complex_mp const&) const;
 
-	template void System::SetAndReset<dbl>(Vec<dbl> const&) const;
-	template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&) const;
+	template void System::SetAndReset<complex_dbl>(Vec<complex_dbl> const&) const;
+	template void System::SetAndReset<complex_mp>(Vec<complex_mp> const&) const;
 
 }

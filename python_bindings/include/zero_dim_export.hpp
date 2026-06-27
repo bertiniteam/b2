@@ -280,7 +280,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 			using TrackerTraitsT = TrackerTraits<typename AlgoT::TrackerT>;
 			if (TrackerTraitsT::IsAdaptivePrec)
 				opt.mptype = 2;
-			else if (std::is_same<typename TrackerTraitsT::BaseComplexT, dbl>::value)
+			else if (std::is_same<typename TrackerTraitsT::BaseComplexT, complex_dbl>::value)
 				opt.mptype = 0;
 			else
 				opt.mptype = 1;
@@ -338,14 +338,14 @@ void ExportZeroDimSpecific(std::string const& class_name){
 // solve loop is re-implemented here -- this only registers the class + a constructor.
 
 // Build a start_system::User from a target system + a Python list of start-point vectors
-// (each element an mpfr_complex vector via eigenpy).  The returned User references `target`, and
+// (each element an complex_mp vector via eigenpy).  The returned User references `target`, and
 // RefToGiven references all three systems, so the friendly Python wrapper keeps them all alive.
 inline std::shared_ptr<start_system::User>
 MakeUserStartSystem(System const& target, boost::python::list const& start_points)
 {
-	SampCont<mpfr_complex> solns{
-		boost::python::stl_input_iterator<Vec<mpfr_complex>>(start_points),
-		boost::python::stl_input_iterator<Vec<mpfr_complex>>() };
+	SampCont<complex_mp> solns{
+		boost::python::stl_input_iterator<Vec<complex_mp>>(start_points),
+		boost::python::stl_input_iterator<Vec<complex_mp>>() };
 	return std::make_shared<start_system::User>(target, solns);
 }
 

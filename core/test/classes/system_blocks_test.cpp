@@ -44,10 +44,10 @@ static System MakeBlockSystem()
 	Var x = node::Variable::Make("x"), y = node::Variable::Make("y");
 	sys.AddVariableGroup(VariableGroup{x, y});
 
-	bertini::Mat<mpfr_complex> f(2, 3);
-	f << mpfr_complex(2), mpfr_complex(3),  mpfr_complex(1),
-	     mpfr_complex(1), mpfr_complex(-1), mpfr_complex(4);
-	sys.AddBlock(ProductsOfLinearsBlock(2, std::vector<bertini::Mat<mpfr_complex>>{f}));
+	bertini::Mat<complex_mp> f(2, 3);
+	f << complex_mp(2), complex_mp(3),  complex_mp(1),
+	     complex_mp(1), complex_mp(-1), complex_mp(4);
+	sys.AddBlock(ProductsOfLinearsBlock(2, std::vector<bertini::Mat<complex_mp>>{f}));
 	return sys;
 }
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(eval_double)
 	DefaultPrecision(30);
 	auto sys = MakeBlockSystem();
 
-	bertini::Vec<dbl> x(2); x << dbl(1), dbl(1);
+	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
 	auto v = sys.Eval(x);
 
 	BOOST_CHECK_EQUAL(v.size(), 1);
@@ -79,9 +79,9 @@ BOOST_AUTO_TEST_CASE(jacobian_double)
 	DefaultPrecision(30);
 	auto sys = MakeBlockSystem();
 
-	bertini::Vec<dbl> x(2); x << dbl(1), dbl(1);
+	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
 	sys.Eval(x);                       // sets the current variable values
-	auto J = sys.Jacobian<dbl>();      // uses the current variable values
+	auto J = sys.Jacobian<complex_dbl>();      // uses the current variable values
 
 	BOOST_CHECK_EQUAL(J.rows(), 1);
 	BOOST_CHECK_EQUAL(J.cols(), 2);
@@ -95,10 +95,10 @@ BOOST_AUTO_TEST_CASE(eval_mpfr)
 	auto sys = MakeBlockSystem();
 	sys.precision(30);                 // propagate precision to variables and blocks
 
-	bertini::Vec<mpfr_complex> x(2); x << mpfr_complex(1), mpfr_complex(1);
+	bertini::Vec<complex_mp> x(2); x << complex_mp(1), complex_mp(1);
 	auto v = sys.Eval(x);
 
-	BOOST_CHECK(abs(v(0) - mpfr_complex(24)) < mpfr_float("1e-25"));
+	BOOST_CHECK(abs(v(0) - complex_mp(24)) < real_mp("1e-25"));
 }
 
 // round-trip a System through a boost text archive, returning the deserialized copy.
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(serialize_products_of_linears_block)
 {
 	DefaultPrecision(30);
 	auto sys = MakeBlockSystem();
-	bertini::Vec<dbl> x(2); x << dbl(1), dbl(1);
+	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
 	auto before = sys.Eval(x);
 
 	auto sys2 = RoundTrip(sys);
@@ -139,12 +139,12 @@ BOOST_AUTO_TEST_CASE(serialize_linear_forms_block)
 	Var x = node::Variable::Make("x"), y = node::Variable::Make("y");
 	sys.AddVariableGroup(VariableGroup{x, y});
 	// f0 = 2x + 3y + 1, f1 = x - y + 4   (augmented rows)
-	bertini::Mat<mpfr_complex> M(2, 3);
-	M << mpfr_complex(2), mpfr_complex(3),  mpfr_complex(1),
-	     mpfr_complex(1), mpfr_complex(-1), mpfr_complex(4);
+	bertini::Mat<complex_mp> M(2, 3);
+	M << complex_mp(2), complex_mp(3),  complex_mp(1),
+	     complex_mp(1), complex_mp(-1), complex_mp(4);
 	sys.AddBlock(LinearFormsBlock(2, M));
 
-	bertini::Vec<dbl> p(2); p << dbl(1), dbl(1);
+	bertini::Vec<complex_dbl> p(2); p << complex_dbl(1), complex_dbl(1);
 	auto before = sys.Eval(p);          // [6, 4]
 
 	auto sys2 = RoundTrip(sys);
@@ -178,12 +178,12 @@ BOOST_AUTO_TEST_CASE(serialize_blend_block)
 	std::vector<std::shared_ptr<const System>> operands{ target, start };
 	H.AddBlock(BlendBlock<System>(t, std::move(coeffs), std::move(operands)));
 
-	bertini::Vec<dbl> p(1); p << dbl(1);
-	auto before = H.Eval(p, dbl(0));        // x - 2 - 0 = -1
+	bertini::Vec<complex_dbl> p(1); p << complex_dbl(1);
+	auto before = H.Eval(p, complex_dbl(0));        // x - 2 - 0 = -1
 
 	auto H2 = RoundTrip(H);
 	BOOST_REQUIRE(H2.HasBlocks());
-	auto after = H2.Eval(p, dbl(0));
+	auto after = H2.Eval(p, complex_dbl(0));
 
 	BOOST_REQUIRE_EQUAL(after.size(), 1);
 	BOOST_CHECK_CLOSE(after(0).real(), before(0).real(), 1e-9);  // -1

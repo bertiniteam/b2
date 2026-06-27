@@ -70,23 +70,23 @@ namespace bertini {
 
 
 		
-		Vec<dbl> TotalDegree::GenerateStartPoint(dbl,unsigned long long index) const
+		Vec<complex_dbl> TotalDegree::GenerateStartPoint(complex_dbl,unsigned long long index) const
 		{
-			Vec<dbl> start_point(NumVariables());
+			Vec<complex_dbl> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
 
 			unsigned offset = 0;
 			if (IsPatched())
 			{
-				start_point(0) = dbl(1);
+				start_point(0) = complex_dbl(1);
 				offset = 1;
 			}
 
 			// authoritative pi (see issue #156 / special_number.cpp), not acos(-1)
-			auto two_i_pi = boost::math::constants::pi<double>() * dbl(0,2);
+			auto two_i_pi = boost::math::constants::pi<double>() * complex_dbl(0,2);
 
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(static_cast<Eigen::Index>(ii+offset)) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(random_values_[ii]->Value<dbl>(), 1.0 / static_cast<double>(degrees_[ii]));
+				start_point(static_cast<Eigen::Index>(ii+offset)) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(random_values_[ii]->Value<complex_dbl>(), 1.0 / static_cast<double>(degrees_[ii]));
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);
@@ -95,29 +95,29 @@ namespace bertini {
 		}
 
 
-		Vec<mpfr_complex> TotalDegree::GenerateStartPoint(mpfr_complex,unsigned long long index) const
+		Vec<complex_mp> TotalDegree::GenerateStartPoint(complex_mp,unsigned long long index) const
 		{
 			using bertini::ThreadPrecision;
 
-			Vec<mpfr_complex> start_point(NumVariables()); // make the value we're returning
+			Vec<complex_mp> start_point(NumVariables()); // make the value we're returning
 			auto indices = IndexToSubscript(index, degrees_); // get the position of it -- used in the angle of the coordinates of the produced point.
 
 			unsigned offset = 0;
 			if (IsPatched())
 			{
-				start_point(0) = mpfr_complex(1,0,ThreadPrecision());
+				start_point(0) = complex_mp(1,0,ThreadPrecision());
 				offset = 1;
 			}
 
 // TODO: this code should be cleaned up after issue 308 is solved -- namely, the two precision adjustment calls should be removed.  They're only necessary because prec16 / ulonglog = prec19.
 
-			auto one = mpfr_float(1);
+			auto one = real_mp(1);
 			// authoritative pi (see issue #156 / special_number.cpp), not acos(-1)
-			mpfr_complex two_i_pi = mpfr_complex(0,2) * boost::math::constants::pi<mpfr_float>();
+			complex_mp two_i_pi = complex_mp(0,2) * boost::math::constants::pi<real_mp>();
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
 			{
-				mpfr_complex a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
-				mpfr_complex b = pow(random_values_[ii]->Value<mpfr_complex>(), one / degrees_[ii]);
+				complex_mp a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
+				complex_mp b = pow(random_values_[ii]->Value<complex_mp>(), one / degrees_[ii]);
 
 				Precision(a,ThreadPrecision());
 				Precision(b,ThreadPrecision());

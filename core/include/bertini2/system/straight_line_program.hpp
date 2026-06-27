@@ -270,7 +270,7 @@ namespace bertini {
 		Kind kind = Kind::Integer;
 		mpz_int      int_value;             //< Kind::Integer  (exact)
 		mpq_rational rat_real, rat_imag;    //< Kind::Rational (exact)
-		mpfr_complex float_value;           //< Kind::Complex (authored-precision literal; also a fixed variable's value)
+		complex_mp float_value;           //< Kind::Complex (authored-precision literal; also a fixed variable's value)
 		size_t slot = 0;                    //< where this constant lives in the register file
 
 		/// Produce the constant's value at the ambient working precision (ThreadPrecision), matching
@@ -310,7 +310,7 @@ namespace bertini {
 
 		//< The register file.  Numbers and variables, plus temp results and output locations.  It's
 		//  all one block per number type.  That's why it's called a SLP!
-		mutable std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > registers_;
+		mutable std::tuple< std::vector<complex_dbl>, std::vector<complex_mp> > registers_;
 
 		mutable unsigned precision_ = 16; //< The current working number of digits
 		mutable bool is_evaluated_ = false;
@@ -325,8 +325,8 @@ namespace bertini {
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & std::get<std::vector<dbl_complex>>(registers_);
-			ar & std::get<std::vector<mpfr_complex>>(registers_);
+			ar & std::get<std::vector<complex_dbl>>(registers_);
+			ar & std::get<std::vector<complex_mp>>(registers_);
 			ar & precision_;
 			ar & is_evaluated_;
 			// frozen_valid_* are transient (recomputed on first eval); not serialized.
@@ -715,7 +715,7 @@ namespace bertini {
 // && _WIN32
 			// An empty variable vector (a constant program with no variables) has no
 			// precision to read or check.
-			if (!std::is_same<NumT,dbl_complex>::value && variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_){
+			if (!std::is_same<NumT,complex_dbl>::value && variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_){
 				std::stringstream err_msg;
 				err_msg << "variable_values and SLP must be of same precision.  respective precisions: " << Precision(variable_values) << " " << memory_.precision_ << std::endl;
 				throw std::runtime_error(err_msg.str());

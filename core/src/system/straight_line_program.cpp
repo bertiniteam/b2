@@ -68,28 +68,28 @@ namespace bertini{
 	// evaluates bit-for-bit identically to the old node-backed path, at the ambient working
 	// precision (ThreadPrecision).
 	template<>
-	dbl_complex ConstantRecipe::Produce<dbl_complex>() const {
+	complex_dbl ConstantRecipe::Produce<complex_dbl>() const {
 		switch (kind) {
-			case Kind::Integer:  return dbl_complex(double(int_value), 0);
-			case Kind::Rational: return dbl_complex(double(rat_real), double(rat_imag));
-			case Kind::Complex:    return dbl_complex(float_value);
-			case Kind::Pi:       return dbl_complex(boost::math::constants::pi<double>(), 0);
-			case Kind::E:        return dbl_complex(exp(1.0), 0.0);
+			case Kind::Integer:  return complex_dbl(double(int_value), 0);
+			case Kind::Rational: return complex_dbl(double(rat_real), double(rat_imag));
+			case Kind::Complex:    return complex_dbl(float_value);
+			case Kind::Pi:       return complex_dbl(boost::math::constants::pi<double>(), 0);
+			case Kind::E:        return complex_dbl(exp(1.0), 0.0);
 		}
-		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<dbl_complex>");
+		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<complex_dbl>");
 	}
 
 	template<>
-	mpfr_complex ConstantRecipe::Produce<mpfr_complex>() const {
+	complex_mp ConstantRecipe::Produce<complex_mp>() const {
 		using boost::multiprecision::mpfr_float;
 		switch (kind) {
-			case Kind::Integer:  return mpfr_complex(int_value, 0, ThreadPrecision());
-			case Kind::Rational: return mpfr_complex(mpfr_float(rat_real, ThreadPrecision()), mpfr_float(rat_imag, ThreadPrecision()));
-			case Kind::Complex:    return mpfr_complex(float_value, ThreadPrecision());
-			case Kind::Pi:       return mpfr_complex(boost::math::constants::pi<mpfr_float>());
-			case Kind::E:        return mpfr_complex(mpfr_float(exp(mpfr_float(1))));
+			case Kind::Integer:  return complex_mp(int_value, 0, ThreadPrecision());
+			case Kind::Rational: return complex_mp(real_mp(rat_real, ThreadPrecision()), real_mp(rat_imag, ThreadPrecision()));
+			case Kind::Complex:    return complex_mp(float_value, ThreadPrecision());
+			case Kind::Pi:       return complex_mp(boost::math::constants::pi<real_mp>());
+			case Kind::E:        return complex_mp(real_mp(exp(real_mp(1))));
 		}
-		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<mpfr_complex>");
+		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<complex_mp>");
 	}
 
 
@@ -106,12 +106,12 @@ namespace bertini{
 			return;
 		}
 		else{
-			auto& mem = memory_.Get<mpfr_complex>();
+			auto& mem = memory_.Get<complex_mp>();
 
 			// Refill the constants from their exact recipes (no node evaluation), then normalize
 			// every slot to the new precision.  (Matches the historical node-backed path.)
 			for (auto const& c : program_->constant_recipes_)
-				mem[c.slot] = c.Produce<mpfr_complex>();
+				mem[c.slot] = c.Produce<complex_mp>();
 
 			for (auto& n : mem)
 				Precision(n, new_precision);
@@ -129,31 +129,31 @@ namespace bertini{
 	{
 		for (auto const& c : program_->constant_recipes_){
 			memory_.Get<NumT>()[c.slot] = c.Produce<NumT>();
-			if (std::is_same<NumT,mpfr_complex>::value)
+			if (std::is_same<NumT,complex_mp>::value)
 				Precision(memory_.Get<NumT>()[c.slot], memory_.precision_);
 		}
 	}
 
-	template void StraightLineProgram::CopyNumbersIntoMemory<dbl_complex>() const;
-	template void StraightLineProgram::CopyNumbersIntoMemory<mpfr_complex>() const;
+	template void StraightLineProgram::CopyNumbersIntoMemory<complex_dbl>() const;
+	template void StraightLineProgram::CopyNumbersIntoMemory<complex_mp>() const;
 
 
 	void StraightLineProgram::SetupMemory()
 	{
 		// Re-seed the thread-local default precision from the program's own precision before
-		// growing the mpfr_complex memory block. resize() default-constructs each new element via
+		// growing the complex_mp memory block. resize() default-constructs each new element via
 		// mpfr_init2(x, thread_default_precision()); on Boost 1.87 that value can be 0 on fresh
 		// threads, which aborts. DefaultPrecision() sets both the static and thread-local defaults
 		// so the default-constructed slots are valid.
 		DefaultPrecision(memory_.precision_);
 
 		// adjust the sizes of the memory blocks to match the number expected via compilation
-		memory_.Get<dbl_complex>().resize(program_->num_slots_);
-		memory_.Get<mpfr_complex>().resize(program_->num_slots_);
+		memory_.Get<complex_dbl>().resize(program_->num_slots_);
+		memory_.Get<complex_mp>().resize(program_->num_slots_);
 
 		// downsample to get ready for evaluation
-		CopyNumbersIntoMemory<dbl_complex>();
-		CopyNumbersIntoMemory<mpfr_complex>();
+		CopyNumbersIntoMemory<complex_dbl>();
+		CopyNumbersIntoMemory<complex_mp>();
 	}
 
 
@@ -237,10 +237,10 @@ namespace bertini{
 
 
 
-		auto& memory_dbl =  s.memory_.Get<dbl_complex>();
-		auto& memory_mpfr =  s.memory_.Get<mpfr_complex>();
+		auto& memory_dbl =  s.memory_.Get<complex_dbl>();
+		auto& memory_mpfr =  s.memory_.Get<complex_mp>();
 
-		out << "\nvariable values in dbl memory:\n";
+		out << "\nvariable values in complex_dbl memory:\n";
 		for (unsigned ii=0; ii<prog.number_of_.Variables; ++ii){
 			out << memory_dbl[prog.input_locations_.Variables + ii] << " ";
 		}
@@ -252,7 +252,7 @@ namespace bertini{
 		}
 
 		if (s.HavePathVariable()){
-			out << "\ntime value in dbl memory:\n";
+			out << "\ntime value in complex_dbl memory:\n";
 				out << memory_dbl[prog.input_locations_.Time] << " ";
 
 
@@ -284,7 +284,7 @@ namespace bertini{
 
 
 #ifndef BERTINI_DISABLE_PRECISION_CHECKS
-		if (! std::is_same<NumT,dbl_complex>::value && Precision(memory[0])!=mem.precision_){
+		if (! std::is_same<NumT,complex_dbl>::value && Precision(memory[0])!=mem.precision_){
 			throw std::runtime_error("memory and SLP are out-of-sync WRT precision");
 		}
 #endif
@@ -297,7 +297,7 @@ namespace bertini{
 		// never change; mpfr constants are valid while the working precision is unchanged), skip it
 		// and re-run only the live segment, reusing the frozen slots already in memory.
 		bool frozen_valid;
-		if constexpr (std::is_same<NumT,dbl_complex>::value)
+		if constexpr (std::is_same<NumT,complex_dbl>::value)
 			frozen_valid = mem.frozen_valid_dbl_;
 		else
 			frozen_valid = (mem.frozen_valid_mp_precision_ == mem.precision_);
@@ -396,7 +396,7 @@ namespace bertini{
 		// A full run (from instruction 0) has just refreshed the frozen prologue at this precision.
 		if (!frozen_valid)
 		{
-			if constexpr (std::is_same<NumT,dbl_complex>::value)
+			if constexpr (std::is_same<NumT,complex_dbl>::value)
 				mem.frozen_valid_dbl_ = true;
 			else
 				mem.frozen_valid_mp_precision_ = mem.precision_;
@@ -405,8 +405,8 @@ namespace bertini{
 		mem.is_evaluated_ = true;
 	}
 
-	template void SLPProgram::Eval<dbl_complex>(SLPMemory&) const;
-	template void SLPProgram::Eval<mpfr_complex>(SLPMemory&) const;
+	template void SLPProgram::Eval<complex_dbl>(SLPMemory&) const;
+	template void SLPProgram::Eval<complex_mp>(SLPMemory&) const;
 
 
 	void SLPProgram::PartitionInstructions()

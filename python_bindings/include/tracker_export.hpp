@@ -94,7 +94,7 @@ namespace bertini{
 				// Invariant backstop for multiprecision trackers: no mpc value entering the
 				// tracker may carry precision 0.  Refuse loudly rather than abort in libmpfr.
 				// (No precision concept for the fixed-double tracker, hence the constexpr gate.)
-				if constexpr (std::is_same_v<ComplexT, bertini::mpfr_complex>)
+				if constexpr (std::is_same_v<ComplexT, bertini::complex_mp>)
 				{
 					if (std::getenv("BERTINI_DIAG") != nullptr)
 					{
@@ -345,16 +345,16 @@ namespace bertini{
 			.def("precision_setup", &TrackerT::PrecisionSetup)
 			.def("precision_preservation", &TrackerT::PrecisionPreservation, "Turn on or off the preservation of precision.  That is, if this is on (true), then the precision of the final point will be the precision of the start point.  Generally, you want to let precision drift, methinks.")
 
-			.def("refine", return_Refine3_ptr<dbl>(),
+			.def("refine", return_Refine3_ptr<complex_dbl>(),
 				(arg("self"), arg("result"), arg("start_point"), arg("time")),
 				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-			.def("refine", return_Refine3_ptr<mpfr_complex>(),
+			.def("refine", return_Refine3_ptr<complex_mp>(),
 				(arg("self"), arg("result"), arg("start_point"), arg("time")),
 				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-			.def("refine", return_Refine4_ptr<dbl>(),
+			.def("refine", return_Refine4_ptr<complex_dbl>(),
 				(arg("self"), arg("result"), arg("start_point"), arg("time"), arg("tolerance"), arg("max_iterations")),
 				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
-			.def("refine", return_Refine4_ptr<mpfr_complex>(),
+			.def("refine", return_Refine4_ptr<complex_mp>(),
 				(arg("self"), arg("result"), arg("start_point"), arg("time"), arg("tolerance"), arg("max_iterations")),
 				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
 			;
@@ -366,11 +366,11 @@ namespace bertini{
 		void FixedDoubleTrackerVisitor<TrackerT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("refine", return_Refine3_ptr<dbl>(),
+			.def("refine", return_Refine3_ptr<complex_dbl>(),
 				(arg("self"), arg("result"), arg("start_point"), arg("time")),
 				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
 
-			.def("refine", return_Refine4_ptr<dbl>(),
+			.def("refine", return_Refine4_ptr<complex_dbl>(),
 				(arg("self"), arg("result"), arg("start_point"), arg("time"), arg("tolerance"), arg("max_iterations")),
 				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
 			;
@@ -382,11 +382,11 @@ namespace bertini{
 		void FixedMultipleTrackerVisitor<TrackerT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("refine", return_Refine3_ptr<mpfr_complex>(),
+			.def("refine", return_Refine3_ptr<complex_mp>(),
 				(arg("self"), arg("result"), arg("start_point"), arg("time")),
 				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
 
-			.def("refine", return_Refine4_ptr<mpfr_complex>(),
+			.def("refine", return_Refine4_ptr<complex_mp>(),
 				(arg("self"), arg("result"), arg("start_point"), arg("time"), arg("tolerance"), arg("max_iterations")),
 				"refine a point using this tracker, from `start_point`, at fixed `time`.  returns a success code, computed refined point is in `result`.")
 			;
@@ -398,26 +398,26 @@ namespace bertini{
 		void SteppingVisitor<T>::visit(PyClass& cl) const
 		{
 			// initial_step_size, max_step_size, step_size_success_factor, step_size_fail_factor are
-			// stored as mpq_rational (no MPFR precision state) but exposed to Python as mpfr_float
+			// stored as mpq_rational (no MPFR precision state) but exposed to Python as real_mp
 			// so the existing string/Float setter API is unchanged.  The round-trip is exact:
-			// every mpfr_float has an exact rational representation, and converting back recovers it.
+			// every real_mp has an exact rational representation, and converting back recovers it.
 			cl
 			.add_property("initial_step_size",
-				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.initial_step_size); },
-				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.initial_step_size = mpq_rational(v); },
+				+[](tracking::SteppingConfig const& c) -> real_mp { return real_mp(c.initial_step_size); },
+				+[](tracking::SteppingConfig& c, real_mp const& v) { c.initial_step_size = mpq_rational(v); },
 				"The initial stepsize when tracking is started.  See also tracking.AMPTracker.reinitialize_initial_step_size")
 			.add_property("max_step_size",
-				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.max_step_size); },
-				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.max_step_size = mpq_rational(v); },
+				+[](tracking::SteppingConfig const& c) -> real_mp { return real_mp(c.max_step_size); },
+				+[](tracking::SteppingConfig& c, real_mp const& v) { c.max_step_size = mpq_rational(v); },
 				"The maximum allowed stepsize during tracking.  See also min_num_steps")
 			.def_readwrite("min_step_size", &tracking::SteppingConfig::min_step_size,"The minimum stepsize the tracker is allowed to take.  See also max_step_size")
 			.add_property("step_size_success_factor",
-				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.step_size_success_factor); },
-				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.step_size_success_factor = mpq_rational(v); },
+				+[](tracking::SteppingConfig const& c) -> real_mp { return real_mp(c.step_size_success_factor); },
+				+[](tracking::SteppingConfig& c, real_mp const& v) { c.step_size_success_factor = mpq_rational(v); },
 				"The scale factor for stepsize, after some consecutive steps.  See also consecutive_successful_steps_before_stepsize_increase")
 			.add_property("step_size_fail_factor",
-				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.step_size_fail_factor); },
-				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.step_size_fail_factor = mpq_rational(v); },
+				+[](tracking::SteppingConfig const& c) -> real_mp { return real_mp(c.step_size_fail_factor); },
+				+[](tracking::SteppingConfig& c, real_mp const& v) { c.step_size_fail_factor = mpq_rational(v); },
 				"The scale factor for stepsize, after a fail happens.  See also step_size_success_factor")
 			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &tracking::SteppingConfig::consecutive_successful_steps_before_stepsize_increase,"This number of successful steps have to taken consecutively, and then the stepsize is permitted to increase")
 			.def_readwrite("min_num_steps", &tracking::SteppingConfig::min_num_steps, "The minimum number of steps the tracker can take between now and then.  This is useful if you are tracking closely between times, and want to guarantee some number of steps are taken.  Then again, this could be wasteful, too.")

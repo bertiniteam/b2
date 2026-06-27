@@ -159,7 +159,7 @@ but the ambient/thread precision at double -- a mismatch the tracker rejects at 
 template<typename ComplexT>
 inline unsigned DefaultInitialAmbientPrecision()
 {
-	if constexpr (std::is_same<ComplexT, dbl_complex>::value)
+	if constexpr (std::is_same<ComplexT, complex_dbl>::value)
 		return DoublePrecision();
 	else
 		return DefaultPrecision();

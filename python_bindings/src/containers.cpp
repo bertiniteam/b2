@@ -130,33 +130,33 @@ void ExportContainers()
 
 
 	// std::vector of Eigen::matrix
-	using T7 = std::vector<bertini::Vec<dbl_complex>>;
+	using T7 = std::vector<bertini::Vec<complex_dbl>>;
 	class_< T7 >("ListOfVectorComplexDoublePrecision")
 	.def(ListVisitor<T7>())
 	;
 
 	// std::vector of Eigen::matrix
-	using T8 = std::vector<bertini::Vec<mpfr_complex>>;
+	using T8 = std::vector<bertini::Vec<complex_mp>>;
 	class_< T8 >("ListOfVectorComplexVariablePrecision")
 	.def(ListVisitor<T8>())
 	;
 
-	using T9 = std::vector<bertini::algorithm::SolutionMetaData<dbl_complex>>;
+	using T9 = std::vector<bertini::algorithm::SolutionMetaData<complex_dbl>>;
 	class_< T9 >("ListOfSolutionMetaData_DoublePrec")
 	.def(ListVisitor<T9>())
 	;
 
-	using T10 = std::vector<bertini::algorithm::SolutionMetaData<mpfr_complex>>;
+	using T10 = std::vector<bertini::algorithm::SolutionMetaData<complex_mp>>;
 	class_< T10 >("ListOfSolutionMetaData_MultiPrec")
 	.def(ListVisitor<T10>())
 	;
 
-	using T11 = std::vector<bertini::algorithm::EGBoundaryMetaData<dbl_complex>>;
+	using T11 = std::vector<bertini::algorithm::EGBoundaryMetaData<complex_dbl>>;
 	class_< T11 >("ListOfEGBoundaryMetaData_DoublePrec")
 	.def(ListVisitor<T11>())
 	;
 
-	using T12 = std::vector<bertini::algorithm::EGBoundaryMetaData<mpfr_complex>>;
+	using T12 = std::vector<bertini::algorithm::EGBoundaryMetaData<complex_mp>>;
 	class_< T12 >("ListOfEGBoundaryMetaData_MultiPrec")
 	.def(ListVisitor<T12>())
 	;

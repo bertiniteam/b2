@@ -42,9 +42,9 @@
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
-using mpfr_float = bertini::mpfr_float;
+using real_mp = bertini::real_mp;
 using mpq_rational = bertini::mpq_rational;
-using dbl = bertini::dbl;
+using complex_dbl = bertini::complex_dbl;
 using bertini::DefaultPrecision;
 #include <limits>
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(complex_pow_on_real_stays_real)
 	
 	for (int ii=0; ii<100; ++ii)
 	{
-		auto x = dbl(bertini::RandReal());
+		auto x = complex_dbl(bertini::RandReal());
 		auto result = pow(x, 2);
 		BOOST_CHECK_EQUAL(result, x*x);
 		BOOST_CHECK_EQUAL(imag(result), 0);
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(complex_pow_on_real_stays_real)
 
 BOOST_AUTO_TEST_CASE(complex_double_nans)
 {
-	dbl x(0., std::numeric_limits<double>::quiet_NaN());
+	complex_dbl x(0., std::numeric_limits<double>::quiet_NaN());
 	using bertini::isnan;
 	BOOST_CHECK(isnan(x));
 }
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(complex_double_nans)
 
 BOOST_AUTO_TEST_CASE(complex_double_nans2)
 {
-	dbl x(std::numeric_limits<double>::quiet_NaN(), 0.);
+	complex_dbl x(std::numeric_limits<double>::quiet_NaN(), 0.);
 	using bertini::isnan;
 	BOOST_CHECK(isnan(x));
 }
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(complex_double_nans2)
 
 BOOST_AUTO_TEST_CASE(complex_double_nans3)
 {
-	dbl x(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
+	complex_dbl x(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
 	using bertini::isnan;
 	BOOST_CHECK(isnan(x));
 }
@@ -107,14 +107,14 @@ BOOST_AUTO_TEST_CASE(complex_double_nans3)
 
 BOOST_AUTO_TEST_CASE(complex_double_nans4)
 {
-	dbl x(0., 0.);
+	complex_dbl x(0., 0.);
 	using bertini::isnan;
 	BOOST_CHECK(!isnan(x));
 }
 
 BOOST_AUTO_TEST_CASE(complex_double_random_subsequent_not_equal)
 {
-	using T = dbl;
+	using T = complex_dbl;
 
 	auto x = bertini::RandomUnit<T>();
 	auto y = bertini::RandomUnit<T>();
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(complex_double_random_subsequent_not_equal)
 BOOST_AUTO_TEST_CASE(mpfr_float_can_be_nan)
 {
 	DefaultPrecision(50);
-	mpfr_float a(std::numeric_limits<double>::quiet_NaN());
+	real_mp a(std::numeric_limits<double>::quiet_NaN());
 	BOOST_CHECK(isnan(a));
 }
 
@@ -134,8 +134,8 @@ BOOST_AUTO_TEST_CASE(mpfr_float_can_be_nan)
 BOOST_AUTO_TEST_CASE(constructing_mpfr_from_double)
 {
 	DefaultPrecision(50);
-	mpfr_float from_double(0.1);
-	mpfr_float from_string("0.1");
+	real_mp from_double(0.1);
+	real_mp from_string("0.1");
 
 	BOOST_CHECK(abs(from_string - from_double) < std::numeric_limits<double>::epsilon());
 }
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(construct_rational_from_integers)
 // BOOST_AUTO_TEST_CASE(construct_rational_from_mpfr)
 // {
 // 	DefaultPrecision(50);
-// 	mpfr_float p("1.1");
+// 	real_mp p("1.1");
 // 	mpq_rational q(p);
 // 	BOOST_CHECK_EQUAL(mpq_rational(11,10), q);
 // }
@@ -169,11 +169,11 @@ BOOST_AUTO_TEST_CASE(construct_rational_from_integers)
 // BOOST_AUTO_TEST_CASE(multiple_mpfr_by_double)
 // {
 // 	DefaultPrecision(50);
-// 	mpfr_float a("0.1");
+// 	real_mp a("0.1");
 // 	double factor = 0.1;
 
-// 	mpfr_float result = a*factor;
-// 	mpfr_float expected("0.01");
+// 	real_mp result = a*factor;
+// 	real_mp expected("0.01");
 
 // 	BOOST_CHECK_CLOSE(expected, result, 1e-50);
 // }
@@ -184,8 +184,8 @@ BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_int_base)
 {
 	DefaultPrecision(50);
 
-	mpfr_float result = pow(mpfr_float(10), -5);
-	mpfr_float expected("1e-5");
+	real_mp result = pow(real_mp(10), -5);
+	real_mp expected("1e-5");
 
 	BOOST_CHECK_CLOSE(expected, result, 1e-50);
 }
@@ -194,8 +194,8 @@ BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_str_base)
 {
 	DefaultPrecision(50);
 
-	mpfr_float result = pow(mpfr_float("10"), -5);
-	mpfr_float expected("1e-5");
+	real_mp result = pow(real_mp("10"), -5);
+	real_mp expected("1e-5");
 
 	BOOST_CHECK_CLOSE(expected, result, 1e-50);
 }
@@ -207,8 +207,8 @@ BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_doub_exp)
 
 using boost::multiprecision::pow;
 
-	mpfr_float result = pow(mpfr_float(10), -5);
-	mpfr_float expected("1e-5");
+	real_mp result = pow(real_mp(10), -5);
+	real_mp expected("1e-5");
 
 	BOOST_CHECK_CLOSE(expected, result, 1e-50);
 }
@@ -218,8 +218,8 @@ BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_int_base_mpfr_exp)
 {
 	DefaultPrecision(50);
 
-	mpfr_float result = pow(10, mpfr_float(-5));
-	mpfr_float expected("1e-5");
+	real_mp result = pow(10, real_mp(-5));
+	real_mp expected("1e-5");
 
 	BOOST_CHECK_CLOSE(expected, result, 1e-50);
 }
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(RandomMP_default_precision_50)
 {
 	using namespace bertini;
 	DefaultPrecision(50);
-	auto a = RandomMp(mpfr_float(-1),mpfr_float(1));
+	auto a = RandomMp(real_mp(-1),real_mp(1));
 	BOOST_CHECK_EQUAL(a.precision(), DefaultPrecision());
 	BOOST_CHECK_EQUAL(50, DefaultPrecision());
 }
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(RandomMP_default_precision_100)
 {
 	using namespace bertini;
 	DefaultPrecision(100);
-	auto a = RandomMp(mpfr_float(-1),mpfr_float(1));
+	auto a = RandomMp(real_mp(-1),real_mp(1));
 	BOOST_CHECK_EQUAL(a.precision(), DefaultPrecision());
 	BOOST_CHECK_EQUAL(100, DefaultPrecision());
 }
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(RandomMP_nondefault_precision_100)
 {
 	using namespace bertini;
 	DefaultPrecision(100);
-	mpfr_float a;
+	real_mp a;
 
 	RandomMpAssign(a,500);
 
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(RandomMP_honors_global_seed)
 	DefaultPrecision(50);
 
 	auto draw_five = []{
-		std::vector<mpfr_float> v;
+		std::vector<real_mp> v;
 		for (int ii = 0; ii < 5; ++ii)
 			v.push_back(RandomMp(50));
 		return v;
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(RandomMP_honors_global_seed)
 
 BOOST_AUTO_TEST_CASE(max_et_on)
 {
-	mpfr_float a(1), b(2), c(4);
+	real_mp a(1), b(2), c(4);
 	// auto d = max(a,b*b+c);
 
 }
@@ -369,17 +369,17 @@ BOOST_AUTO_TEST_CASE(max_et_on)
 struct scoped_mpfr_precision_options_all_threads
 {
    boost::multiprecision::variable_precision_options saved_options;
-   scoped_mpfr_precision_options_all_threads(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::default_variable_precision_options())
+   scoped_mpfr_precision_options_all_threads(boost::multiprecision::variable_precision_options opts) : saved_options(real_mp::default_variable_precision_options())
    {
-      mpfr_float::default_variable_precision_options(opts);
+      real_mp::default_variable_precision_options(opts);
    }
    ~scoped_mpfr_precision_options_all_threads()
    {
-      mpfr_float::default_variable_precision_options(saved_options);
+      real_mp::default_variable_precision_options(saved_options);
    }
    void reset(boost::multiprecision::variable_precision_options opts)
    {
-      mpfr_float::default_variable_precision_options(opts);
+      real_mp::default_variable_precision_options(opts);
    }
 };
 
@@ -392,17 +392,17 @@ struct scoped_mpfr_precision_options_all_threads
 struct scoped_mpfr_precision_options_this_thread
 {
    boost::multiprecision::variable_precision_options saved_options;
-   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::thread_default_variable_precision_options())
+   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(real_mp::thread_default_variable_precision_options())
    {
-      mpfr_float::thread_default_variable_precision_options(opts);
+      real_mp::thread_default_variable_precision_options(opts);
    }
    ~scoped_mpfr_precision_options_this_thread()
    {
-      mpfr_float::thread_default_variable_precision_options(saved_options);
+      real_mp::thread_default_variable_precision_options(saved_options);
    }
    void reset(boost::multiprecision::variable_precision_options opts)
    {
-      mpfr_float::thread_default_variable_precision_options(opts);
+      real_mp::thread_default_variable_precision_options(opts);
    }
 };
 
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 
 	scoped_mpfr_precision_options_this_thread scoped_opts1(boost::multiprecision::variable_precision_options::preserve_related_precision);
 
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 // https://github.com/boostorg/multiprecision/issues/60
@@ -431,12 +431,12 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 // Assignment keeps the precision of the target."
 
 	DefaultPrecision(30);
-	mpfr_float y = pow(x,2);
+	real_mp y = pow(x,2);
 	BOOST_CHECK_EQUAL(y.precision(), 50);
 	
 
-	mpfr_float z = x;
-	mpfr_float q(x);
+	real_mp z = x;
+	real_mp q(x);
 	BOOST_CHECK_EQUAL(z.precision(), 50);
 	BOOST_CHECK_EQUAL(q.precision(), 50);
 
@@ -478,13 +478,13 @@ BOOST_AUTO_TEST_CASE(precision_in_construction)
 {
 	DefaultPrecision(50);
 
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 	DefaultPrecision(30);
 	
-	mpfr_float a = x;
-	mpfr_float b(x);
+	real_mp a = x;
+	real_mp b(x);
 	BOOST_CHECK_EQUAL(a.precision(), 50);
 	BOOST_CHECK_EQUAL(b.precision(), 50);
 	BOOST_CHECK_EQUAL(a,x);
@@ -492,8 +492,8 @@ BOOST_AUTO_TEST_CASE(precision_in_construction)
 
 	DefaultPrecision(70);
 
-	mpfr_float c = x;
-	mpfr_float d(x);
+	real_mp c = x;
+	real_mp d(x);
 	BOOST_CHECK_EQUAL(c.precision(), 50);
 	BOOST_CHECK_EQUAL(d.precision(), 50);
 	BOOST_CHECK_EQUAL(c,x);
@@ -504,13 +504,13 @@ BOOST_AUTO_TEST_CASE(precision_in_construction)
 BOOST_AUTO_TEST_CASE(precision_through_arithemetic2)
 {
 	DefaultPrecision(50);
-	mpfr_float a(1);
+	real_mp a(1);
 
 	DefaultPrecision(400);
-	mpfr_float b(2);
+	real_mp b(2);
 
 	DefaultPrecision(600);
-	mpfr_float c(3);
+	real_mp c(3);
 
 	a = b;
 	BOOST_CHECK_EQUAL(a.precision(),400); // the precision of source
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic2)
 BOOST_AUTO_TEST_CASE(precision_mpfr_constructed_from_string)
 {
 	DefaultPrecision(30);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	real_mp x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(),30);
 }
 
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(num_digits_complex_double)
 
 BOOST_AUTO_TEST_CASE(num_digits_mpfr_float)
 {
-	using T = bertini::mpfr_float;
+	using T = bertini::real_mp;
 	
 	DefaultPrecision(16);
 	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
@@ -599,7 +599,7 @@ BOOST_AUTO_TEST_CASE(num_digits_mpfr_float)
 
 BOOST_AUTO_TEST_CASE(num_digits_mpfr_complex)
 {
-	using T = bertini::mpfr_complex;
+	using T = bertini::complex_mp;
 	
 	DefaultPrecision(16);
 	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);

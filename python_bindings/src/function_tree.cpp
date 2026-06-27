@@ -34,7 +34,7 @@
 
 using namespace boost::python;
 
-using dbl = std::complex<double>;
+using complex_dbl = std::complex<double>;
 using mpfr = bertini::complex;
 
 // BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(NodeEvalOverloadsMpfr, bertini::node::Node::template Eval<mpfr>, 0, 1);

@@ -882,12 +882,12 @@ namespace {
 	// constant exponent is a non-negative integer.  Returns NaN for anything that is not a plain
 	// numeric literal, so the integer test fails (the conservative answer).  Node evaluation is gone,
 	// so this reads the literal directly rather than evaluating.
-	dbl ConstantExponentValue(std::shared_ptr<Node> const& n)
+	complex_dbl ConstantExponentValue(std::shared_ptr<Node> const& n)
 	{
-		if (auto i = std::dynamic_pointer_cast<Integer const>(n))  return dbl(double(i->GetValue()), 0);
-		if (auto f = std::dynamic_pointer_cast<Complex const>(n))    return dbl(f->GetValue());
-		if (auto r = std::dynamic_pointer_cast<Rational const>(n)) return r->Value<dbl>();
-		return dbl(std::numeric_limits<double>::quiet_NaN(), 0);
+		if (auto i = std::dynamic_pointer_cast<Integer const>(n))  return complex_dbl(double(i->GetValue()), 0);
+		if (auto f = std::dynamic_pointer_cast<Complex const>(n))    return complex_dbl(f->GetValue());
+		if (auto r = std::dynamic_pointer_cast<Rational const>(n)) return r->Value<complex_dbl>();
+		return complex_dbl(std::numeric_limits<double>::quiet_NaN(), 0);
 	}
 }
 
@@ -899,7 +899,7 @@ int PowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 	
 	if (exp_deg==0)
 	{
-		dbl exp_val = ConstantExponentValue(exponent_);
+		complex_dbl exp_val = ConstantExponentValue(exponent_);
 		bool exp_is_int = false;
 		
 		if (fabs(imag(exp_val))< 10*std::numeric_limits<double>::epsilon()) // so a real thresholding step
@@ -908,7 +908,7 @@ int PowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 		
 		if (exp_is_int)
 		{
-			if (abs(exp_val-dbl(0.0))< 10*std::numeric_limits<double>::epsilon())
+			if (abs(exp_val-complex_dbl(0.0))< 10*std::numeric_limits<double>::epsilon())
 				return 0;
 			else if (real(exp_val)<0)
 				return -1;
@@ -1073,7 +1073,7 @@ bool PowerOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 	// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
 	if (exponent_->Degree(v)==0)
 	{
-		dbl exp_val = ConstantExponentValue(exponent_);
+		complex_dbl exp_val = ConstantExponentValue(exponent_);
 		if (fabs(imag(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 			if (fabs(std::round(real(exp_val)) - real(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 				if (real(exp_val) >=0 )
@@ -1088,7 +1088,7 @@ bool PowerOperator::IsHomogeneous(VariableGroup const& v) const
 	// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
 	if (exponent_->Degree(v)==0)
 	{
-		dbl exp_val = ConstantExponentValue(exponent_);
+		complex_dbl exp_val = ConstantExponentValue(exponent_);
 		if (fabs(imag(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 			if (fabs(std::round(real(exp_val)) - real(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 				if (real(exp_val) >=0 )

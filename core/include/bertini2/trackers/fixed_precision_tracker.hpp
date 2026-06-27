@@ -415,7 +415,7 @@ namespace bertini{
 		class DoublePrecisionTracker : public FixedPrecisionTracker<DoublePrecisionTracker>
 		{
 		public:
-			using BaseComplexT = dbl;
+			using BaseComplexT = complex_dbl;
 			using BaseRealT = double;
 
 			using EmitterType = typename TrackerTraits<DoublePrecisionTracker>::EventEmitterType;
@@ -494,8 +494,8 @@ namespace bertini{
 		class MultiplePrecisionTracker : public FixedPrecisionTracker<MultiplePrecisionTracker>
 		{
 		public:
-			using BaseComplexT = mpfr_complex;
-			using BaseRealT = mpfr_float;
+			using BaseComplexT = complex_mp;
+			using BaseRealT = real_mp;
 
 			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 
@@ -605,7 +605,7 @@ namespace bertini{
 				this->endtime_ = end_time;
 				std::get<Vec<BaseComplexT> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(mpfr_float(Get<Stepping>().initial_step_size),mpfr_float(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
+					this->SetStepSize(min(real_mp(Get<Stepping>().initial_step_size),real_mp(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
 
 				ResetCounters();
 
@@ -616,9 +616,9 @@ namespace bertini{
 			{	
 				return GetSystem().precision() == precision_ &&
 						ThreadPrecision()==precision_ &&
-						std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == precision_ &&
-						std::get<Vec<mpfr_complex> >(tentative_space_)(0).precision() == precision_ &&
-						std::get<Vec<mpfr_complex> >(temporary_space_)(0).precision() == precision_ &&
+						std::get<Vec<complex_mp> >(current_space_)(0).precision() == precision_ &&
+						std::get<Vec<complex_mp> >(tentative_space_)(0).precision() == precision_ &&
+						std::get<Vec<complex_mp> >(temporary_space_)(0).precision() == precision_ &&
 						Precision(this->endtime_)==precision_
 						        ;				
 			}

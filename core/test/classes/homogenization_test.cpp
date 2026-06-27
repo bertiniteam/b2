@@ -39,13 +39,13 @@ BOOST_AUTO_TEST_SUITE(homogenization)
 
 using Variable = bertini::node::Variable;
 using Complex = bertini::node::Complex;
-using mpfr_float = bertini::mpfr_float;
+using real_mp = bertini::real_mp;
 using Var = std::shared_ptr<bertini::node::Variable>;
 
 using Flt = std::shared_ptr<bertini::node::Complex>;
 using VariableGroup = bertini::VariableGroup;
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
 
 
 
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_summands_homogeneous)
 	Var y = Variable::Make("y");
 
 	auto a = pow(x,3) / 2;
-	auto b = pow(x,2) * mpfr_float("4.12331") * pow(x,1);
+	auto b = pow(x,2) * real_mp("4.12331") * pow(x,1);
 	
 	auto f1 = a+b;
 	BOOST_CHECK(f1->IsHomogeneous());
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
 	Var y = Variable::Make("y");
 
 	auto a = pow(x,3) / 2;
-	auto b = pow(x,2) * mpfr_float("4.12331");
+	auto b = pow(x,2) * real_mp("4.12331");
 	
 	auto f1 = a+b;
 	BOOST_CHECK(!f1->IsHomogeneous());

@@ -63,7 +63,7 @@ namespace bertini{
 
 		void ExportAMPTracker()
 		{
-			class_<AMPTracker, std::shared_ptr<AMPTracker>, bases<bertini::Observable> >("AMPTracker", "The adaptive multiple precision (AMP) tracker.  Ambient numeric type is multiple-precision (mpfr_complex).  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
+			class_<AMPTracker, std::shared_ptr<AMPTracker>, bases<bertini::Observable> >("AMPTracker", "The adaptive multiple precision (AMP) tracker.  Ambient numeric type is multiple-precision (complex_mp).  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
 			.def(TrackerVisitor<AMPTracker>())
 			.def(AMPTrackerVisitor<AMPTracker>())
 			;
@@ -85,7 +85,7 @@ namespace bertini{
 
 		void ExportFixedMultipleTracker()
 		{
-			class_<MultiplePrecisionTracker, std::shared_ptr<MultiplePrecisionTracker>, bases<bertini::Observable> >("MultiplePrecisionTracker", "The fixed multiple precision tracker.  Ambient numeric type is multiple-precision (mpfr_complex).  Precision is the value of bertini.default_precision() at contruction.  Errors if you try to feed it things not at that precision.  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
+			class_<MultiplePrecisionTracker, std::shared_ptr<MultiplePrecisionTracker>, bases<bertini::Observable> >("MultiplePrecisionTracker", "The fixed multiple precision tracker.  Ambient numeric type is multiple-precision (complex_mp).  Precision is the value of bertini.default_precision() at contruction.  Errors if you try to feed it things not at that precision.  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
 			.def(TrackerVisitor<MultiplePrecisionTracker>())
 			.def(FixedMultipleTrackerVisitor<MultiplePrecisionTracker>())
 			;

@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_SUITE(threaded_solve)
 
 namespace {
 
-using Sol  = bertini::Vec<bertini::dbl>;
+using Sol  = bertini::Vec<bertini::complex_dbl>;
 using Sols = std::vector<Sol>;
 
 template<typename ZD>

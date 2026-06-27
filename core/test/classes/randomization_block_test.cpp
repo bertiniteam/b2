@@ -22,7 +22,7 @@
 
 The workhorse oracle is ExpandToFunctionTree(): a randomized system evaluated through its block
 must agree, value-for-value and derivative-for-derivative, with the same system expanded to plain
-function-tree nodes -- in both dbl and mpfr_complex, before AND after homogenization (so the
+function-tree nodes -- in both complex_dbl and complex_mp, before AND after homogenization (so the
 homogenizing-variable power deficits are exercised), for single- and multi-projective systems.
 That cross-check is deterministic on every platform, unlike a heap-dirtiness-dependent bug.
 */
@@ -93,49 +93,49 @@ static void AgreesWithExpansion(System const& sys)
 	const Eigen::Index nv = static_cast<Eigen::Index>(sys.NumVariables());
 
 	// a few non-degenerate complex points
-	std::vector<Vec<dbl>> pts;
+	std::vector<Vec<complex_dbl>> pts;
 	{
-		Vec<dbl> p(nv);
-		for (Eigen::Index k = 0; k < nv; ++k) p(k) = dbl(0.3 + 0.17 * static_cast<double>(k), 0.5 - 0.11 * static_cast<double>(k));
+		Vec<complex_dbl> p(nv);
+		for (Eigen::Index k = 0; k < nv; ++k) p(k) = complex_dbl(0.3 + 0.17 * static_cast<double>(k), 0.5 - 0.11 * static_cast<double>(k));
 		pts.push_back(p);
-		Vec<dbl> q(nv);
-		for (Eigen::Index k = 0; k < nv; ++k) q(k) = dbl(-0.7 + 0.05 * static_cast<double>(k), 0.9 + 0.03 * static_cast<double>(k));
+		Vec<complex_dbl> q(nv);
+		for (Eigen::Index k = 0; k < nv; ++k) q(k) = complex_dbl(-0.7 + 0.05 * static_cast<double>(k), 0.9 + 0.03 * static_cast<double>(k));
 		pts.push_back(q);
 	}
 
 	for (auto const& p : pts)
 	{
-		// --- dbl ---
-		Vec<dbl> ea = sys.Eval(p);
-		Vec<dbl> eb = twin.Eval(p);
+		// --- complex_dbl ---
+		Vec<complex_dbl> ea = sys.Eval(p);
+		Vec<complex_dbl> eb = twin.Eval(p);
 		BOOST_REQUIRE_EQUAL(ea.size(), eb.size());
 		for (Eigen::Index i = 0; i < ea.size(); ++i)
 			BOOST_CHECK(std::abs(ea(i) - eb(i)) < 1e-10);
 
-		Mat<dbl> ja = sys.Jacobian(p);
-		Mat<dbl> jb = twin.Jacobian(p);
+		Mat<complex_dbl> ja = sys.Jacobian(p);
+		Mat<complex_dbl> jb = twin.Jacobian(p);
 		BOOST_REQUIRE_EQUAL(ja.rows(), jb.rows());
 		BOOST_REQUIRE_EQUAL(ja.cols(), jb.cols());
 		for (Eigen::Index i = 0; i < ja.rows(); ++i)
 			for (Eigen::Index j = 0; j < ja.cols(); ++j)
 				BOOST_CHECK(std::abs(ja(i, j) - jb(i, j)) < 1e-10);
 
-		// --- mpfr_complex ---
+		// --- complex_mp ---
 		DefaultPrecision(40);
-		Vec<mpfr_complex> pm(nv);
+		Vec<complex_mp> pm(nv);
 		for (Eigen::Index k = 0; k < nv; ++k)
-			pm(k) = mpfr_complex(p(k).real(), p(k).imag());
+			pm(k) = complex_mp(p(k).real(), p(k).imag());
 
-		Vec<mpfr_complex> ema = sys.Eval(pm);
-		Vec<mpfr_complex> emb = twin.Eval(pm);
+		Vec<complex_mp> ema = sys.Eval(pm);
+		Vec<complex_mp> emb = twin.Eval(pm);
 		for (Eigen::Index i = 0; i < ema.size(); ++i)
-			BOOST_CHECK(abs(ema(i) - emb(i)) < mpfr_float("1e-30"));
+			BOOST_CHECK(abs(ema(i) - emb(i)) < real_mp("1e-30"));
 
-		Mat<mpfr_complex> jma = sys.Jacobian(pm);
-		Mat<mpfr_complex> jmb = twin.Jacobian(pm);
+		Mat<complex_mp> jma = sys.Jacobian(pm);
+		Mat<complex_mp> jmb = twin.Jacobian(pm);
 		for (Eigen::Index i = 0; i < jma.rows(); ++i)
 			for (Eigen::Index j = 0; j < jma.cols(); ++j)
-				BOOST_CHECK(abs(jma(i, j) - jmb(i, j)) < mpfr_float("1e-30"));
+				BOOST_CHECK(abs(jma(i, j) - jmb(i, j)) < real_mp("1e-30"));
 	}
 }
 
@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(matrix_getter_round_trips_and_is_I_C)
 	BOOST_REQUIRE_EQUAL(R.rows(), 2);
 	BOOST_REQUIRE_EQUAL(R.cols(), 3);
 	// leading 2x2 is the identity (the [I | C] structure after the descending sort)
-	BOOST_CHECK(R(0, 0) == mpfr_complex(1) && R(1, 1) == mpfr_complex(1));
-	BOOST_CHECK(R(0, 1) == mpfr_complex(0) && R(1, 0) == mpfr_complex(0));
+	BOOST_CHECK(R(0, 0) == complex_mp(1) && R(1, 1) == complex_mp(1));
+	BOOST_CHECK(R(0, 1) == complex_mp(0) && R(1, 0) == complex_mp(0));
 }
 
 BOOST_AUTO_TEST_CASE(underdetermined_throws)
@@ -247,18 +247,18 @@ BOOST_AUTO_TEST_CASE(user_supplied_matrix_reproduces_combination)
 	System s = OverdeterminedSingleGroup();    // f0=x^2+y^2-1, f1=x-y, f2=2x^2-1 (order preserved)
 
 	// g0 = 1*f0 + 0*f1 + 0*f2 ; g1 = 3*f0 + 0*f1 + 5*f2  (kept in author order: f0 has max degree)
-	Mat<mpfr_complex> R(2, 3);
-	R << mpfr_complex(1), mpfr_complex(0), mpfr_complex(0),
-	     mpfr_complex(3), mpfr_complex(0), mpfr_complex(5);
+	Mat<complex_mp> R(2, 3);
+	R << complex_mp(1), complex_mp(0), complex_mp(0),
+	     complex_mp(3), complex_mp(0), complex_mp(5);
 	System r = s.Randomize(R);
 
 	BOOST_CHECK_EQUAL(r.NumNaturalFunctions(), 2u);
 
 	// at (x,y) = (2,3):  f0 = 4+9-1 = 12, f2 = 8-1 = 7.  g0 = 12, g1 = 3*12 + 5*7 = 71.
-	Vec<dbl> p(2); p << dbl(2), dbl(3);
-	Vec<dbl> g = r.Eval(p);
-	BOOST_CHECK(std::abs(g(0) - dbl(12)) < 1e-10);
-	BOOST_CHECK(std::abs(g(1) - dbl(71)) < 1e-10);
+	Vec<complex_dbl> p(2); p << complex_dbl(2), complex_dbl(3);
+	Vec<complex_dbl> g = r.Eval(p);
+	BOOST_CHECK(std::abs(g(0) - complex_dbl(12)) < 1e-10);
+	BOOST_CHECK(std::abs(g(1) - complex_dbl(71)) < 1e-10);
 
 	// and it agrees with its own expansion, affine and homogenized
 	AgreesWithExpansion(r);
@@ -270,8 +270,8 @@ BOOST_AUTO_TEST_CASE(user_supplied_matrix_wrong_columns_throws)
 {
 	DefaultPrecision(30);
 	System s = OverdeterminedSingleGroup();   // 3 natural functions
-	Mat<mpfr_complex> R(2, 2);                // 2 columns != 3
-	R << mpfr_complex(1), mpfr_complex(0), mpfr_complex(0), mpfr_complex(1);
+	Mat<complex_mp> R(2, 2);                // 2 columns != 3
+	R << complex_mp(1), complex_mp(0), complex_mp(0), complex_mp(1);
 	BOOST_CHECK_THROW(s.Randomize(R), std::runtime_error);
 }
 
@@ -288,20 +288,20 @@ BOOST_AUTO_TEST_CASE(eval_and_jacobian_fully_define_rows_in_a_dirty_buffer)
 	const Eigen::Index n  = static_cast<Eigen::Index>(r.NumNaturalFunctions());
 	const Eigen::Index nv = static_cast<Eigen::Index>(r.NumVariables());
 
-	Vec<dbl> p(nv);
-	for (Eigen::Index k = 0; k < nv; ++k) p(k) = dbl(0.4 + 0.1 * static_cast<double>(k), 0.2 - 0.05 * static_cast<double>(k));
+	Vec<complex_dbl> p(nv);
+	for (Eigen::Index k = 0; k < nv; ++k) p(k) = complex_dbl(0.4 + 0.1 * static_cast<double>(k), 0.2 - 0.05 * static_cast<double>(k));
 
 	// poison the output buffers with a huge value; the block must overwrite every owned entry.
-	Vec<dbl> seg(n);   seg.setConstant(dbl(1e300, 1e300));
-	Mat<dbl> jac(n, nv); jac.setConstant(dbl(1e300, 1e300));
+	Vec<complex_dbl> seg(n);   seg.setConstant(complex_dbl(1e300, 1e300));
+	Mat<complex_dbl> jac(n, nv); jac.setConstant(complex_dbl(1e300, 1e300));
 
-	block.EvalInPlace<dbl>(seg, p, dbl(0));
-	block.JacobianInPlace<dbl>(jac, p, dbl(0));
+	block.EvalInPlace<complex_dbl>(seg, p, complex_dbl(0));
+	block.JacobianInPlace<complex_dbl>(jac, p, complex_dbl(0));
 
 	// reference: the function-tree expansion of just the block's rows
 	System twin = r.ExpandToFunctionTree();
-	Vec<dbl> seg_ref = twin.Eval(p);
-	Mat<dbl> jac_ref = twin.Jacobian(p);
+	Vec<complex_dbl> seg_ref = twin.Eval(p);
+	Mat<complex_dbl> jac_ref = twin.Jacobian(p);
 
 	for (Eigen::Index i = 0; i < n; ++i)
 		BOOST_CHECK(std::abs(seg(i) - seg_ref(i)) < 1e-10);
@@ -323,9 +323,9 @@ BOOST_AUTO_TEST_CASE(metadata)
 	BOOST_CHECK(!block.HasConstantJacobian());
 
 	// time-derivative is identically zero
-	Vec<dbl> p(2); p << dbl(1), dbl(1);
-	Vec<dbl> dt(2); dt.setConstant(dbl(7));
-	block.TimeDerivInPlace<dbl>(dt, p, dbl(0));
+	Vec<complex_dbl> p(2); p << complex_dbl(1), complex_dbl(1);
+	Vec<complex_dbl> dt(2); dt.setConstant(complex_dbl(7));
+	block.TimeDerivInPlace<complex_dbl>(dt, p, complex_dbl(0));
 	BOOST_CHECK(std::abs(dt(0)) < 1e-14 && std::abs(dt(1)) < 1e-14);
 }
 

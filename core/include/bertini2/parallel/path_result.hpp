@@ -36,7 +36,7 @@ serialization for Eigen vectors and arbitrary-precision types.
 
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"   // defines Vec<T> and sets up Eigen serialization plugin
-#include "bertini2/mpfr_extensions.hpp"    // Boost.Serialization for mpfr_float, mpc_complex
+#include "bertini2/mpfr_extensions.hpp"    // Boost.Serialization for real_mp, mpc_complex
 #include "bertini2/common/config.hpp"      // SuccessCode (needs Vec<T> and <deque> first)
 
 #include <boost/serialization/vector.hpp>

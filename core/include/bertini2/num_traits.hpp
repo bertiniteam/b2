@@ -82,11 +82,11 @@ namespace bertini
 		}
 
 		using Real = double;
-		using Complex = dbl_complex;
+		using Complex = complex_dbl;
 	};
 
 
-	template <> struct NumTraits<dbl_complex > 
+	template <> struct NumTraits<complex_dbl > 
 	{
 		inline static unsigned NumDigits()
 		{
@@ -99,25 +99,25 @@ namespace bertini
 		}
 
 		inline static 
-		dbl_complex FromString(std::string const& s)
+		complex_dbl FromString(std::string const& s)
 		{
-			return boost::lexical_cast<dbl_complex>(s);
+			return boost::lexical_cast<complex_dbl>(s);
 		}
 
 		inline static 
-		dbl_complex FromString(std::string const& s, std::string const& t)
+		complex_dbl FromString(std::string const& s, std::string const& t)
 		{
-			return dbl_complex(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
+			return complex_dbl(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
 		}
 
 		inline static
-		dbl_complex FromRational(mpq_rational const& n, unsigned /* precision */)
+		complex_dbl FromRational(mpq_rational const& n, unsigned /* precision */)
 		{
-			return dbl_complex(static_cast<double>(n),0);
+			return complex_dbl(static_cast<double>(n),0);
 		}
 
 		using Real = double;
-		using Complex = dbl_complex;
+		using Complex = complex_dbl;
 	};
 
 
@@ -176,7 +176,7 @@ namespace bertini
 	For complex doubles, this is trivially 16.
 	*/
 	inline
-	unsigned Precision(dbl_complex)
+	unsigned Precision(complex_dbl)
 	{
 		return DoublePrecision();
 	}
@@ -185,7 +185,7 @@ namespace bertini
 	For complex doubles, throw if the requested precision is not DoublePrecision.
 	*/
 	inline
-	void Precision(dbl_complex, unsigned prec)
+	void Precision(complex_dbl, unsigned prec)
 	{
 		if (prec!=DoublePrecision())
 		{
@@ -196,26 +196,26 @@ namespace bertini
 	}
 
 	inline
-	dbl_complex rand_complex()
+	complex_dbl rand_complex()
 	{
 		using std::abs;
 		using std::sqrt;
 		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		dbl_complex returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
+		complex_dbl returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
 		return returnme / sqrt( abs(returnme));
 	}
 
 	template <> inline
-	dbl_complex RandomUnit<dbl_complex >()
+	complex_dbl RandomUnit<complex_dbl >()
 	{
 		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		dbl_complex returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
+		complex_dbl returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
 		return returnme / abs(returnme);
 	}
 
 	template <> 
 	inline 
-	mpfr_complex RandomUnit<mpfr_complex>()
+	complex_mp RandomUnit<complex_mp>()
 	{
 		return multiprecision::RandomUnit();
 	}
@@ -236,7 +236,7 @@ namespace bertini {
 
 	
 	
-	template <> struct NumTraits<mpfr_float> 
+	template <> struct NumTraits<real_mp> 
 	{
 		inline static unsigned NumDigits()
 		{
@@ -249,31 +249,31 @@ namespace bertini {
 		}
 
 		inline
-		static unsigned TolToDigits(mpfr_float tol)
+		static unsigned TolToDigits(real_mp tol)
 		{
-			mpfr_float b = ceil(-log10(tol));
+			real_mp b = ceil(-log10(tol));
 			return b.convert_to<unsigned int>();
 		}
 
 		inline static 
-		mpfr_float FromString(std::string const& s)
+		real_mp FromString(std::string const& s)
 		{
-			return mpfr_float(s);
+			return real_mp(s);
 		}
 
 		inline static
-		mpfr_float FromRational(mpq_rational const& n, unsigned precision)
+		real_mp FromRational(mpq_rational const& n, unsigned precision)
 		{
-			return mpfr_float(n,precision);
+			return real_mp(n,precision);
 		}
 
-		using Real = mpfr_float;
-		using Complex = mpfr_complex;
+		using Real = real_mp;
+		using Complex = complex_mp;
 	};	
 
 
 
-	template <> struct NumTraits<mpfr_complex> 
+	template <> struct NumTraits<complex_mp> 
 	{
 		inline static unsigned NumDigits()
 		{
@@ -281,25 +281,25 @@ namespace bertini {
 		}
 
 		inline static 
-		mpfr_complex FromString(std::string const& s)
+		complex_mp FromString(std::string const& s)
 		{
-			return mpfr_complex(s);
+			return complex_mp(s);
 		}
 
 		inline static 
-		mpfr_complex FromString(std::string const& s, std::string const& t)
+		complex_mp FromString(std::string const& s, std::string const& t)
 		{
-			return mpfr_complex(s,t);
+			return complex_mp(s,t);
 		}
 
 		inline static
-		mpfr_complex FromRational(mpq_rational const& n, unsigned precision)
+		complex_mp FromRational(mpq_rational const& n, unsigned precision)
 		{
-			return mpfr_complex(n,0,precision);
+			return complex_mp(n,0,precision);
 		}
 
-		using Real = mpfr_float;
-		using Complex = mpfr_complex;
+		using Real = real_mp;
+		using Complex = complex_mp;
 	};
 
 	template <> struct NumTraits<mpq_rational>
