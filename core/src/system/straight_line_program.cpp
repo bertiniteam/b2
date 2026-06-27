@@ -389,14 +389,17 @@ namespace bertini{
 		// result slot's bank.  When the result is Real, inference guarantees both operands are Real
 		// (R+R, R-R, R*R, R/R), so we use the cheap real path; otherwise we use native mixed
 		// arithmetic (real * complex is ~half the work of complex * complex), promoting nothing.
-		auto binop = [&](size_t i1, size_t i2, size_t o, auto fn){
+		// `is_div` marks Divide: only `real_mp / complex_mp` trips the Boost precision bug (and only
+		// when the complex value's imaginary part is 0, which is data-dependent), so we re-tag exactly
+		// that one branch -- the common mixed multiply/add/subtract need no fix-up.
+		auto binop = [&](size_t i1, size_t i2, size_t o, bool is_div, auto fn){
 			if (is_real(o))                          real[o] = fn(real[i1], real[i2]);  // all-real, cheap
-			else if (!is_real(i1) && !is_real(i2))   cplx[o] = fn(cplx[i1], cplx[i2]);  // pure complex, correctly tagged
-			else {  // mixed real/complex: native (the win), but re-tag the mis-reported mpc precision
-				if (is_real(i1)) cplx[o] = fn(real[i1], cplx[i2]);
-				else             cplx[o] = fn(cplx[i1], real[i2]);
-				retag(o);
+			else if (!is_real(i1) && !is_real(i2))   cplx[o] = fn(cplx[i1], cplx[i2]);  // pure complex
+			else if (is_real(i1)) {                                                     // real (op) complex
+				cplx[o] = fn(real[i1], cplx[i2]);
+				if (is_div) retag(o);
 			}
+			else                                     cplx[o] = fn(cplx[i1], real[i2]);  // complex (op) real
 		};
 
 		// Type-preserving unary (result NumType == operand NumType): negate/copy/exp/sin/cos/tan/atan.
@@ -407,8 +410,9 @@ namespace bertini{
 		// Escape unary (result is Complex; a real operand is promoted so the complex branch is taken):
 		// sqrt/log/asin/acos, which can leave ℝ for some real inputs.
 		auto un_escape = [&](size_t i, size_t o, auto fn){
+			// a real operand is promoted by a single converting construction (at the working precision),
+			// not a mixed expression template, so the result is tagged correctly -- no re-tag needed.
 			cplx[o] = is_real(i) ? fn(NumT(real[i])) : fn(cplx[i]);
-			retag(o);
 		};
 
 		for (size_t ii = loop_start; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
@@ -419,10 +423,10 @@ namespace bertini{
 
 			switch (instructions_[ii]) {
 
-				case Add:      binop(a, b, c, [](auto const& x, auto const& y){ return x + y; }); break;
-				case Subtract: binop(a, b, c, [](auto const& x, auto const& y){ return x - y; }); break;
-				case Multiply: binop(a, b, c, [](auto const& x, auto const& y){ return x * y; }); break;
-				case Divide:   binop(a, b, c, [](auto const& x, auto const& y){ return x / y; }); break;
+				case Add:      binop(a, b, c, false, [](auto const& x, auto const& y){ return x + y; }); break;
+				case Subtract: binop(a, b, c, false, [](auto const& x, auto const& y){ return x - y; }); break;
+				case Multiply: binop(a, b, c, false, [](auto const& x, auto const& y){ return x * y; }); break;
+				case Divide:   binop(a, b, c, true,  [](auto const& x, auto const& y){ return x / y; }); break;
 
 				case Power: {
 					// general a^b (slot exponent); result is Complex, so promote any real operand to
@@ -431,7 +435,6 @@ namespace bertini{
 					const NumT base = is_real(a) ? NumT(real[a]) : cplx[a];
 					const NumT expo = is_real(b) ? NumT(real[b]) : cplx[b];
 					cplx[c] = pow(base, expo);
-					retag(c);
 					break;
 				}
 
