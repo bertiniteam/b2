@@ -342,6 +342,25 @@ namespace bertini{
 		using std::sin;  using std::cos;  using std::tan;
 		using std::asin; using std::acos; using std::atan;
 
+		// The tier dispatch constructs complex temporaries during eval (promoting a real operand to
+		// complex in Power/sqrt/log/...).  Boost inits such a new mpc at the *thread default* precision,
+		// which is not guaranteed to be the working precision on this path -- if it is 0, mpc_init2
+		// aborts.  Pin the thread-local default to the working precision (thread-safe; no global write).
+		// (The old eval never constructed mp temporaries, so it didn't need this.)
+		if constexpr (!std::is_same<NumT,complex_dbl>::value)
+			SetThreadPrecision(mem.precision_);
+
+		// Re-tag a freshly written complex slot to the working precision.  Boost.Multiprecision has a
+		// bug in mixed mpfr_float/mpc_complex expression templates: `real_mp / complex_mp` computes the
+		// correct value but tags the result precision 0 (multiplication is unaffected), which later
+		// aborts when that slot is copied (mpc_init2 with precision 0).  Minimal bertini-free repro:
+		// two operands at precision 40, `out = r / z` gives out.precision()==0.  Re-tagging restores it.
+		// No-op for complex_dbl (std::complex has no precision tag), so the hot double path keeps native
+		// mixed arithmetic with zero overhead.
+		auto retag = [&](size_t o){
+			if constexpr (!std::is_same<NumT,complex_dbl>::value) Precision(cplx[o], mem.precision_);
+		};
+
 
 #ifndef BERTINI_DISABLE_PRECISION_CHECKS
 		if (! std::is_same<NumT,complex_dbl>::value && Precision(cplx[0])!=mem.precision_){
@@ -371,10 +390,13 @@ namespace bertini{
 		// (R+R, R-R, R*R, R/R), so we use the cheap real path; otherwise we use native mixed
 		// arithmetic (real * complex is ~half the work of complex * complex), promoting nothing.
 		auto binop = [&](size_t i1, size_t i2, size_t o, auto fn){
-			if (is_real(o))                          real[o] = fn(real[i1], real[i2]);
-			else if (is_real(i1) && !is_real(i2))    cplx[o] = fn(real[i1], cplx[i2]);
-			else if (!is_real(i1) && is_real(i2))    cplx[o] = fn(cplx[i1], real[i2]);
-			else                                     cplx[o] = fn(cplx[i1], cplx[i2]);
+			if (is_real(o))                          real[o] = fn(real[i1], real[i2]);  // all-real, cheap
+			else if (!is_real(i1) && !is_real(i2))   cplx[o] = fn(cplx[i1], cplx[i2]);  // pure complex, correctly tagged
+			else {  // mixed real/complex: native (the win), but re-tag the mis-reported mpc precision
+				if (is_real(i1)) cplx[o] = fn(real[i1], cplx[i2]);
+				else             cplx[o] = fn(cplx[i1], real[i2]);
+				retag(o);
+			}
 		};
 
 		// Type-preserving unary (result NumType == operand NumType): negate/copy/exp/sin/cos/tan/atan.
@@ -386,6 +408,7 @@ namespace bertini{
 		// sqrt/log/asin/acos, which can leave ℝ for some real inputs.
 		auto un_escape = [&](size_t i, size_t o, auto fn){
 			cplx[o] = is_real(i) ? fn(NumT(real[i])) : fn(cplx[i]);
+			retag(o);
 		};
 
 		for (size_t ii = loop_start; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
@@ -402,10 +425,13 @@ namespace bertini{
 				case Divide:   binop(a, b, c, [](auto const& x, auto const& y){ return x / y; }); break;
 
 				case Power: {
-					// general a^b (slot exponent); result is Complex, so promote any real operand.
+					// general a^b (slot exponent); result is Complex, so promote any real operand to
+					// complex (a single converting construction at the working precision, not a mixed
+					// expression template), then a pure-complex pow -- so the result is tagged correctly.
 					const NumT base = is_real(a) ? NumT(real[a]) : cplx[a];
 					const NumT expo = is_real(b) ? NumT(real[b]) : cplx[b];
 					cplx[c] = pow(base, expo);
+					retag(c);
 					break;
 				}
 

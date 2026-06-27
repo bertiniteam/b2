@@ -552,6 +552,35 @@ BOOST_AUTO_TEST_CASE(real_tier_mixed_eval_correct_mp)
 	BOOST_CHECK(abs(f(0) - complex_mp(2, 6)) < 1e-40);
 }
 
+// Regression: the tier dispatch builds complex temporaries when promoting a real operand to complex
+// (Power/sqrt/log/...).  Boost inits a fresh mpc at the thread-default precision, which on the eval
+// path is not guaranteed to be the working precision -- if it is 0, mpc_init2 aborts.  Eval pins the
+// thread precision to the working precision first.  Exercises the promotion paths at mp precision:
+// x/y's Jacobian (-x/y^2) promotes a real exponent constant, and sqrt/log/x^3 are the escape ops.
+BOOST_AUTO_TEST_CASE(mp_promotion_paths_evaluate_correctly)
+{
+	bertini::DefaultPrecision(40);
+	auto slp = SLP(ParseSLPSys("function f; variable_group x, y; f = x/y;"));
+	slp.precision(40);
+
+	Vec<complex_mp> pt(2);
+	pt(0) = complex_mp(6); pt(1) = complex_mp(2);
+	slp.Eval(pt);
+	auto f = slp.GetFuncVals<complex_mp>();
+	auto J = slp.GetJacobian<complex_mp>();         // -x/y^2 promotes a real exponent constant
+
+	BOOST_CHECK(abs(f(0)   - complex_mp(3)) < 1e-30);             // 6/2 = 3
+	BOOST_CHECK(abs(J(0,0) - complex_mp(1) / complex_mp(2)) < 1e-30); // d(x/y)/dx = 1/y = 1/2
+
+	auto g = SLP(ParseSLPSys("function f; variable_group x; f = sqrt(x) + log(x) + x^3;"));
+	g.precision(40);
+	Vec<complex_mp> q(1); q(0) = complex_mp(4);
+	g.Eval(q);
+	auto gf = g.GetFuncVals<complex_mp>();
+	using std::sqrt; using std::log;
+	BOOST_CHECK(abs(gf(0) - (sqrt(complex_mp(4)) + log(complex_mp(4)) + complex_mp(64))) < 1e-30);
+}
+
 // Opt-in A/B speedup benchmark (ADR-0034 gate).  Skipped unless BERTINI_SLP_BENCH is set, so it adds
 // no time to normal runs.  Builds the SAME real-coefficient-heavy system twice -- once with tiers
 // forced off (all-complex baseline) and once on -- and times N evaluations of function + Jacobian at
