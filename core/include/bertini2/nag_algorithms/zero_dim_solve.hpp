@@ -1469,21 +1469,26 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			*/
 			void ExecuteOnePath(DuringEGContext ctx, SolnIndT soln_ind, Vec<BaseComplexT> const& start_point)
 			{
-				this->NotifyObservers(PathStarted<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
+				// Carry the executing tracker on the path events: &ctx.tracker is the member tracker
+				// in a serial solve and the thread-local clone in a threaded one, so a meta-observer
+				// attaches its per-path sub-observer to the tracker that actually runs this path.
+				Observable const* exec_tracker = &ctx.tracker;
+
+				this->NotifyObservers(PathStarted<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 
 				ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
 				ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind, start_point);
 
 				if (solution_final_metadata_[soln_ind].pre_endgame_success != SuccessCode::Success)
 				{
-					this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
+					this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 					return;
 				}
 
 				ctx.tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
 				ExecuteDuringEG(ctx, soln_ind);
 
-				this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
+				this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 			}
 
 

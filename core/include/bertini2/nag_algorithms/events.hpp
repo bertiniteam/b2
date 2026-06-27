@@ -34,6 +34,7 @@ type.
 #pragma once
 
 #include "bertini2/detail/events.hpp"
+#include "bertini2/detail/observable.hpp"   // Observable: the executing tracker is carried as one
 
 #include <cstddef>
 
@@ -69,16 +70,29 @@ namespace bertini {
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
 			using HeldT = typename AlgorithmEvent<ObservedT>::HeldT;
-			PathStarted(HeldT obs, std::size_t path_index)
-				: AlgorithmEvent<ObservedT>(obs), path_index_(path_index)
+			PathStarted(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr)
+				: AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker)
 			{}
 
 			std::size_t PathIndex() const { return path_index_; }
+
+			/**
+			\brief The tracker that actually executes this path.
+
+			In a serial solve this is the solver's member tracker; in a threaded solve it is the
+			thread-local tracker clone that owns the path (Observable copies inherit no observers,
+			so the member tracker would see nothing).  A meta-observer that wants per-path tracking
+			data must attach its sub-observer here, NOT to solver.GetTracker().  AddObserver is a
+			const method, so observers can still be attached through this const handle.  May be null
+			if the emitter supplied no tracker.
+			*/
+			Observable const* Tracker() const { return tracker_; }
 
 			virtual ~PathStarted() = default;
 			PathStarted() = delete;
 		private:
 			std::size_t path_index_;
+			Observable const* tracker_ = nullptr;
 		};
 
 		/**
@@ -89,16 +103,21 @@ namespace bertini {
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
 			using HeldT = typename AlgorithmEvent<ObservedT>::HeldT;
-			PathComplete(HeldT obs, std::size_t path_index)
-				: AlgorithmEvent<ObservedT>(obs), path_index_(path_index)
+			PathComplete(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr)
+				: AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker)
 			{}
 
 			std::size_t PathIndex() const { return path_index_; }
+
+			/// The tracker that executed this path -- see PathStarted::Tracker().  A meta-observer
+			/// detaches its per-path sub-observer from this same tracker on PathComplete.
+			Observable const* Tracker() const { return tracker_; }
 
 			virtual ~PathComplete() = default;
 			PathComplete() = delete;
 		private:
 			std::size_t path_index_;
+			Observable const* tracker_ = nullptr;
 		};
 
 	} // namespace algorithm

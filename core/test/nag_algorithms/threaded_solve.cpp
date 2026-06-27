@@ -274,4 +274,70 @@ BOOST_AUTO_TEST_CASE(num_threads_one_equals_default_solve)
 	BOOST_CHECK_EQUAL(one.size(), 4u);
 }
 
+
+// A solver-level observer that records, per PathStarted, which tracker actually ran the path
+// (event.Tracker()).  Because notifications are mutex-serialized, the set insert below is safe
+// even when PathStarted fires from several worker threads -- so this also exercises the
+// Observable notify mutex under concurrency.
+struct TrackerCapture : public bertini::Observer<bertini::algorithm::AnyZeroDim>
+{
+	std::set<bertini::Observable const*> trackers_seen;
+	bool                                 saw_null = false;
+	int                                  path_starts = 0;
+
+	bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+	{
+		using namespace bertini::algorithm;
+		if (auto p = dynamic_cast<PathStarted<AnyZeroDim> const*>(&e))
+		{
+			++path_starts;
+			if (p->Tracker() == nullptr) saw_null = true;
+			else                         trackers_seen.insert(p->Tracker());
+		}
+		return bertini::ObserveResult::KeepObserving;
+	}
+};
+
+// Serial: every path's event.Tracker() is the solver's own member tracker.
+BOOST_AUTO_TEST_CASE(event_tracker_is_member_tracker_when_serial)
+{
+	using namespace bertini;
+	auto sys = TwoCubics();
+	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+	                              System, start_system::TotalDegree>;
+	ZD zd(sys); zd.DefaultSetup();
+
+	TrackerCapture cap;
+	zd.AddObserver(cap);
+	SolveWith(zd, 1);
+
+	auto const* member = static_cast<Observable const*>(&zd.GetTracker());
+	BOOST_CHECK_EQUAL(cap.path_starts, 9);
+	BOOST_CHECK(!cap.saw_null);
+	BOOST_REQUIRE_EQUAL(cap.trackers_seen.size(), 1u);   // one tracker ran every path
+	BOOST_CHECK(*cap.trackers_seen.begin() == member);
+}
+
+// Threaded: every path's event.Tracker() is a thread-local clone, never the member tracker --
+// which is exactly why a meta-observer must attach to event.tracker(), not solver.GetTracker().
+BOOST_AUTO_TEST_CASE(event_tracker_is_a_clone_when_threaded)
+{
+	using namespace bertini;
+	auto sys = TwoCubics();
+	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+	                              System, start_system::TotalDegree>;
+	ZD zd(sys); zd.DefaultSetup();
+
+	TrackerCapture cap;
+	zd.AddObserver(cap);
+	SolveWith(zd, 4);
+
+	auto const* member = static_cast<Observable const*>(&zd.GetTracker());
+	BOOST_CHECK_EQUAL(cap.path_starts, 9);
+	BOOST_CHECK(!cap.saw_null);
+	BOOST_CHECK(cap.trackers_seen.count(member) == 0);   // never the member tracker
+	BOOST_CHECK(!cap.trackers_seen.empty());
+	BOOST_CHECK(cap.trackers_seen.size() <= 4u);          // at most one clone per worker thread
+}
+
 BOOST_AUTO_TEST_SUITE_END()
