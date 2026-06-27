@@ -205,6 +205,16 @@ namespace bertini {
 
 	std::string OpcodeToString(Operation op);
 
+	// Compile-time bank selectors (ADR-0034).  After NumType inference, each instruction's opcode word
+	// gets these high bits set to record which bank (real or complex) each operand and the result live
+	// in, so the hot eval loop reads the banks inline from the instruction it has already loaded instead
+	// of looking up slot_numtype_[slot] per operand.  The base Operation occupies bits 0..16, so these
+	// sit well clear of it; masking with kOpcodeMask recovers the base op for the switch and for IsUnary.
+	constexpr size_t kOpcodeMask = (static_cast<size_t>(1) << 17) - 1;
+	constexpr size_t kArg0Real   =  static_cast<size_t>(1) << 20;  // first operand slot is NumType::Real
+	constexpr size_t kArg1Real   =  static_cast<size_t>(1) << 21;  // second operand slot is Real (binary, not IntPower)
+	constexpr size_t kOutReal    =  static_cast<size_t>(1) << 22;  // result slot is NumType::Real
+
 
 	/**
 	 \struct SLPOutputLocations
@@ -445,6 +455,12 @@ namespace bertini {
 		// constant slots from ConstantRecipe::IsReal() and input slots as Complex, then propagate the
 		// NumType join through each instruction.  Called at the end of compilation.
 		void ComputeSlotNumTypes();
+
+		// Pack each instruction's operand/result banks (from slot_numtype_) into its opcode word's high
+		// bits (kArg0Real/kArg1Real/kOutReal), so eval dispatches banks without per-slot lookups.  Runs
+		// after ComputeSlotNumTypes and PartitionInstructions (it only sets bits; order vs. partition
+		// doesn't matter as it rewrites instructions in place).
+		void SpecializeInstructions();
 
 
 		bool has_path_variable_ = false; //< Does this SLP have a path variable?

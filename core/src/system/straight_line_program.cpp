@@ -266,7 +266,7 @@ namespace bertini{
 
 		out << std::endl << "instructions: " << std::endl;
 		for (size_t ii(0); ii<prog.instructions_.size(); /*it's in the loop at access time*/){
-			auto op = static_cast<Operation>(prog.instructions_[ii++]);
+			auto op = static_cast<Operation>(prog.instructions_[ii++] & kOpcodeMask);  // strip packed bank bits
 			out << OpcodeToString(op) << "(";
 			if (IsUnary(op)){
 				auto operand = prog.instructions_[ii++];
@@ -383,91 +383,89 @@ namespace bertini{
 
 		const size_t loop_start = frozen_valid ? first_live_instruction_ : 0;
 
-		auto is_real = [&](size_t s){ return slot_numtype_[s] == NumType::Real; };
+		// The operand/result banks are baked into each instruction's opcode word at compile time
+		// (SpecializeInstructions), so these take the decoded flags directly -- no slot_numtype_ lookup
+		// in the hot loop.  r0/r1 = operand-is-real, ro = result-is-real.
 
-		// Binary arithmetic: read each operand from its NumType's bank and write the result to the
-		// result slot's bank.  When the result is Real, inference guarantees both operands are Real
-		// (R+R, R-R, R*R, R/R), so we use the cheap real path; otherwise we use native mixed
-		// arithmetic (real * complex is ~half the work of complex * complex), promoting nothing.
-		// `is_div` marks Divide: only `real_mp / complex_mp` trips the Boost precision bug (and only
-		// when the complex value's imaginary part is 0, which is data-dependent), so we re-tag exactly
-		// that one branch -- the common mixed multiply/add/subtract need no fix-up.
-		auto binop = [&](size_t i1, size_t i2, size_t o, bool is_div, auto fn){
-			if (is_real(o))                          real[o] = fn(real[i1], real[i2]);  // all-real, cheap
-			else if (!is_real(i1) && !is_real(i2))   cplx[o] = fn(cplx[i1], cplx[i2]);  // pure complex
-			else if (is_real(i1)) {                                                     // real (op) complex
+		// Binary arithmetic.  When the result is Real, inference guarantees both operands are Real
+		// (R+R, R-R, R*R, R/R), so we use the cheap real path; otherwise native mixed arithmetic
+		// (real * complex is ~half the work of complex * complex), promoting nothing.  `is_div` marks
+		// Divide: only `real_mp / complex_mp` trips the Boost precision bug (and only when the complex
+		// value's imaginary part is 0), so we re-tag exactly that branch -- mixed +,-,* need no fix-up.
+		auto binop = [&](size_t i1, size_t i2, size_t o, bool r0, bool r1, bool ro, bool is_div, auto fn){
+			if (ro)               real[o] = fn(real[i1], real[i2]);  // all-real, cheap
+			else if (!r0 && !r1)  cplx[o] = fn(cplx[i1], cplx[i2]);  // pure complex
+			else if (r0) {                                           // real (op) complex
 				cplx[o] = fn(real[i1], cplx[i2]);
 				if (is_div) retag(o);
 			}
-			else                                     cplx[o] = fn(cplx[i1], real[i2]);  // complex (op) real
+			else                  cplx[o] = fn(cplx[i1], real[i2]);  // complex (op) real
 		};
 
 		// Type-preserving unary (result NumType == operand NumType): negate/copy/exp/sin/cos/tan/atan.
-		auto un_preserve = [&](size_t i, size_t o, auto fn){
-			if (is_real(o)) real[o] = fn(real[i]); else cplx[o] = fn(cplx[i]);
+		auto un_preserve = [&](size_t i, size_t o, bool ro, auto fn){
+			if (ro) real[o] = fn(real[i]); else cplx[o] = fn(cplx[i]);
 		};
 
-		// Escape unary (result is Complex; a real operand is promoted so the complex branch is taken):
-		// sqrt/log/asin/acos, which can leave ℝ for some real inputs.
-		auto un_escape = [&](size_t i, size_t o, auto fn){
-			// a real operand is promoted by a single converting construction (at the working precision),
-			// not a mixed expression template, so the result is tagged correctly -- no re-tag needed.
-			cplx[o] = is_real(i) ? fn(NumT(real[i])) : fn(cplx[i]);
+		// Escape unary (result is Complex; a real operand is promoted by a single converting
+		// construction at the working precision -- not a mixed expression template -- so it's tagged
+		// correctly): sqrt/log/asin/acos, which can leave ℝ for some real inputs.
+		auto un_escape = [&](size_t i, size_t o, bool ri, auto fn){
+			cplx[o] = ri ? fn(NumT(real[i])) : fn(cplx[i]);
 		};
 
 		for (size_t ii = loop_start; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
 			//in the unary case the loop will increment by 3
 			//binary: by 4
 
+			const size_t opw = instructions_[ii];                        // opcode + packed bank bits
+			const Operation op = static_cast<Operation>(opw & kOpcodeMask);
+			const bool r0 = opw & kArg0Real;   // first operand in real bank
+			const bool r1 = opw & kArg1Real;   // second operand in real bank (binary, non-IntPower)
+			const bool ro = opw & kOutReal;    // result in real bank
 			const size_t a = instructions_[ii+1], b = instructions_[ii+2], c = instructions_[ii+3];
 
-			switch (instructions_[ii]) {
+			switch (op) {
 
-				case Add:      binop(a, b, c, false, [](auto const& x, auto const& y){ return x + y; }); break;
-				case Subtract: binop(a, b, c, false, [](auto const& x, auto const& y){ return x - y; }); break;
-				case Multiply: binop(a, b, c, false, [](auto const& x, auto const& y){ return x * y; }); break;
-				case Divide:   binop(a, b, c, true,  [](auto const& x, auto const& y){ return x / y; }); break;
+				case Add:      binop(a, b, c, r0, r1, ro, false, [](auto const& x, auto const& y){ return x + y; }); break;
+				case Subtract: binop(a, b, c, r0, r1, ro, false, [](auto const& x, auto const& y){ return x - y; }); break;
+				case Multiply: binop(a, b, c, r0, r1, ro, false, [](auto const& x, auto const& y){ return x * y; }); break;
+				case Divide:   binop(a, b, c, r0, r1, ro, true,  [](auto const& x, auto const& y){ return x / y; }); break;
 
 				case Power: {
 					// general a^b (slot exponent); result is Complex, so promote any real operand to
 					// complex (a single converting construction at the working precision, not a mixed
 					// expression template), then a pure-complex pow -- so the result is tagged correctly.
-					const NumT base = is_real(a) ? NumT(real[a]) : cplx[a];
-					const NumT expo = is_real(b) ? NumT(real[b]) : cplx[b];
+					const NumT base = r0 ? NumT(real[a]) : cplx[a];
+					const NumT expo = r1 ? NumT(real[b]) : cplx[b];
 					cplx[c] = pow(base, expo);
 					break;
 				}
 
 				case IntPower:
-					// in2 (b) is an index into integers_, not a slot.  real^int -> real, complex^int -> complex.
-					if (is_real(c)) real[c] = pow(real[a], this->integers_[b]);
-					else            cplx[c] = pow(cplx[a], this->integers_[b]);
+					// in2 (b) is an index into integers_, not a slot.  real^int -> real, complex^int -> complex
+					// (result bank == base bank, so `ro` selects both).
+					if (ro) real[c] = pow(real[a], this->integers_[b]);
+					else    cplx[c] = pow(cplx[a], this->integers_[b]);
 					break;
 
-				case Assign:   un_preserve(a, b, [](auto const& x){ return x; }); break;
-				case Negate:   un_preserve(a, b, [](auto const& x){ return -x; }); break;
-				case Exp:      un_preserve(a, b, [](auto const& x){ return exp(x); }); break;
-				case Sin:      un_preserve(a, b, [](auto const& x){ return sin(x); }); break;
-				case Cos:      un_preserve(a, b, [](auto const& x){ return cos(x); }); break;
-				case Tan:      un_preserve(a, b, [](auto const& x){ return tan(x); }); break;
-				case Atan:     un_preserve(a, b, [](auto const& x){ return atan(x); }); break;
+				case Assign:   un_preserve(a, b, ro, [](auto const& x){ return x; }); break;
+				case Negate:   un_preserve(a, b, ro, [](auto const& x){ return -x; }); break;
+				case Exp:      un_preserve(a, b, ro, [](auto const& x){ return exp(x); }); break;
+				case Sin:      un_preserve(a, b, ro, [](auto const& x){ return sin(x); }); break;
+				case Cos:      un_preserve(a, b, ro, [](auto const& x){ return cos(x); }); break;
+				case Tan:      un_preserve(a, b, ro, [](auto const& x){ return tan(x); }); break;
+				case Atan:     un_preserve(a, b, ro, [](auto const& x){ return atan(x); }); break;
 
-				case Sqrt:     un_escape(a, b, [](auto const& x){ return sqrt(x); }); break;
-				case Log:      un_escape(a, b, [](auto const& x){ return log(x); }); break;
-				case Asin:     un_escape(a, b, [](auto const& x){ return asin(x); }); break;
-				case Acos:     un_escape(a, b, [](auto const& x){ return acos(x); }); break;
+				case Sqrt:     un_escape(a, b, r0, [](auto const& x){ return sqrt(x); }); break;
+				case Log:      un_escape(a, b, r0, [](auto const& x){ return log(x); }); break;
+				case Asin:     un_escape(a, b, r0, [](auto const& x){ return asin(x); }); break;
+				case Acos:     un_escape(a, b, r0, [](auto const& x){ return acos(x); }); break;
 
 			} // switch for operation
 
 
-			if (IsUnary(static_cast<Operation>(instructions_[ii]))) {
-				ii = ii+3;
-
-			}
-			//in the binary case the loop will increment by 4
-			else {
-				ii = ii+4;
-			}
+			ii += IsUnary(op) ? 3 : 4;  // op is masked, so arity is read correctly
 		} // for loop around operations
 
 		// A full run (from instruction 0) has just refreshed the frozen prologue at this precision.
@@ -551,6 +549,35 @@ namespace bertini{
 			{
 				slot_numtype_[instructions_[ii + 3]] =
 					BinaryResultNumType(op, slot_numtype_[instructions_[ii + 1]], slot_numtype_[instructions_[ii + 2]]);
+				ii += 4;
+			}
+		}
+	}
+
+
+	void SLPProgram::SpecializeInstructions()
+	{
+		// Bake each instruction's operand/result banks into its opcode word (ADR-0034), so the eval
+		// loop reads them inline rather than looking up slot_numtype_ per slot.  Walk the still-clean
+		// tape; the base op (read before we OR in bits) drives arity, so the increment stays correct.
+		for (size_t ii = 0; ii < instructions_.size(); )
+		{
+			const auto op = static_cast<Operation>(instructions_[ii]);  // clean: bits not yet set here
+			size_t bits = 0;
+			if (IsUnary(op))
+			{
+				if (slot_numtype_[instructions_[ii + 1]] == NumType::Real) bits |= kArg0Real;
+				if (slot_numtype_[instructions_[ii + 2]] == NumType::Real) bits |= kOutReal;
+				instructions_[ii] |= bits;
+				ii += 3;
+			}
+			else
+			{
+				if (slot_numtype_[instructions_[ii + 1]] == NumType::Real) bits |= kArg0Real;
+				// IntPower's second word is an index into integers_, not a slot, so it gets no bank bit.
+				if (op != IntPower && slot_numtype_[instructions_[ii + 2]] == NumType::Real) bits |= kArg1Real;
+				if (slot_numtype_[instructions_[ii + 3]] == NumType::Real) bits |= kOutReal;
+				instructions_[ii] |= bits;
 				ii += 4;
 			}
 		}
@@ -1133,6 +1160,10 @@ namespace bertini{
 		// point-only re-evaluation can skip recomputing the constants (ADR-0027).  This is a pure
 		// program operation (no memory needed).
 		program_under_construction_.PartitionInstructions();
+
+		// Pack the per-instruction bank selectors into the opcode words (after the tape is final), so
+		// eval never touches slot_numtype_.  Must come last -- PartitionInstructions reads clean opcodes.
+		program_under_construction_.SpecializeInstructions();
 
 
 		// Wrap the now-immutable program in a facade and set up a per-thread memory for it.
