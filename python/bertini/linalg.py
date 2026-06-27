@@ -52,7 +52,7 @@ downstream computation.  Pass the value exactly instead.
 import numpy as np
 from fractions import Fraction
 
-from bertini.function_tree.symbol import Variable, Integer, Rational, Float
+from bertini.function_tree.symbol import Variable, Integer, Rational, Complex
 from bertini import multiprec as _mp
 
 try:
@@ -61,9 +61,9 @@ except ImportError:  # pragma: no cover - fall back to the native module
     from bertini._pybertini.function_tree import AbstractNode as _AbstractNode
 
 # bertini multiprecision value types (not function-tree nodes) that we accept as exact
-# coefficients by wrapping them in a Float node.
+# coefficients by wrapping them in a Complex node.
 _MP_VALUE_TYPES = tuple(
-    t for t in (getattr(_mp, n, None) for n in ('Complex', 'Float', 'Int', 'Rational'))
+    t for t in (getattr(_mp, n, None) for n in ('Float', 'Complex', 'Int', 'Rational'))
     if isinstance(t, type)
 )
 
@@ -127,9 +127,9 @@ def coefficient(value):
     if isinstance(value, Fraction):
         return Rational(str(value))            # 'p/q', or 'p' when the denominator is 1
     if isinstance(value, str):
-        return Rational(value) if '/' in value else Float(value)
+        return Rational(value) if '/' in value else Complex(value)
     if _MP_VALUE_TYPES and isinstance(value, _MP_VALUE_TYPES):
-        return Float(value)
+        return Complex(value)
     if isinstance(value, (float, complex, np.floating, np.complexfloating)):
         raise TypeError(
             f"refusing to use the Python {type(value).__name__} {value!r} as a coefficient: "

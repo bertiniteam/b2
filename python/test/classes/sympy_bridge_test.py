@@ -139,9 +139,9 @@ def test_reverse_jacobian_form_raises():
 def test_reverse_float_precision_carry():
     mp.default_precision(50)
     fifty = '1.' + '3' * 49
-    from bertini.function_tree.symbol import Float
-    expr = to_sympy(Float(fifty))
-    # the mpfr precision rides into sympy's Float; allow the last digits to round
+    from bertini.function_tree.symbol import Complex
+    expr = to_sympy(Complex(fifty))
+    # the mpfr precision rides into sympy's Complex; allow the last digits to round
     assert str(expr)[:48] == fifty[:48]
 
 

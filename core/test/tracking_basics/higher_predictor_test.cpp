@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_SUITE(higher_predict_tracking_basics)
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
-using Float = bertini::node::Float;
+using Complex = bertini::node::Complex;
 using ExplicitRKPredictor = bertini::tracking::predict::ExplicitRKPredictor;
 
 using Var = std::shared_ptr<Variable>;
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKF45_d)
 	
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	std::shared_ptr<Float> half = Float::Make("0.5");
+	std::shared_ptr<Complex> half = Complex::Make("0.5");
 	
 	VariableGroup vars{x,y};
 	
@@ -645,7 +645,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKF45_mp)
 	
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	std::shared_ptr<Float> half = Float::Make("0.5");
+	std::shared_ptr<Complex> half = Complex::Make("0.5");
 	
 	VariableGroup vars{x,y};
 	
@@ -915,7 +915,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_d)
 	
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	std::shared_ptr<Float> half = Float::Make("0.5");
+	std::shared_ptr<Complex> half = Complex::Make("0.5");
 	
 	VariableGroup vars{x,y};
 	
@@ -994,7 +994,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp)
 	
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	std::shared_ptr<Float> half = Float::Make("0.5");
+	std::shared_ptr<Complex> half = Complex::Make("0.5");
 	
 	VariableGroup vars{x,y};
 	
@@ -1077,7 +1077,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 	
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	std::shared_ptr<Float> half = Float::Make("0.5");
+	std::shared_ptr<Complex> half = Complex::Make("0.5");
 	
 	VariableGroup vars{x,y};
 	
@@ -1532,7 +1532,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKDP56_d)
 	
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	std::shared_ptr<Float> half = Float::Make("0.5");
+	std::shared_ptr<Complex> half = Complex::Make("0.5");
 	
 	VariableGroup vars{x,y};
 	
@@ -1611,7 +1611,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKDP56_mp)
 	
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	std::shared_ptr<Float> half = Float::Make("0.5");
+	std::shared_ptr<Complex> half = Complex::Make("0.5");
 	
 	VariableGroup vars{x,y};
 	
@@ -1868,7 +1868,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_d)
 	
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	std::shared_ptr<Float> half = Float::Make("0.5");
+	std::shared_ptr<Complex> half = Complex::Make("0.5");
 	
 	VariableGroup vars{x,y};
 	
@@ -1947,7 +1947,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_mp)
 	
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	std::shared_ptr<Float> half = Float::Make("0.5");
+	std::shared_ptr<Complex> half = Complex::Make("0.5");
 	
 	VariableGroup vars{x,y};
 	

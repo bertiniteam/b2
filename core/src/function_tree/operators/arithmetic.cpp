@@ -885,7 +885,7 @@ namespace {
 	dbl ConstantExponentValue(std::shared_ptr<Node> const& n)
 	{
 		if (auto i = std::dynamic_pointer_cast<Integer const>(n))  return dbl(double(i->GetValue()), 0);
-		if (auto f = std::dynamic_pointer_cast<Float const>(n))    return dbl(f->GetValue());
+		if (auto f = std::dynamic_pointer_cast<Complex const>(n))    return dbl(f->GetValue());
 		if (auto r = std::dynamic_pointer_cast<Rational const>(n)) return r->Value<dbl>();
 		return dbl(std::numeric_limits<double>::quiet_NaN(), 0);
 	}

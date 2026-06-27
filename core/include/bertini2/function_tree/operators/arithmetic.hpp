@@ -1031,12 +1031,12 @@ namespace node{
 
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr_float p)
 	{
-		return PowerOperator::Make(N,Float::Make(p));
+		return PowerOperator::Make(N,Complex::Make(p));
 	}
 
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr_complex p)
 	{
-		return PowerOperator::Make(N,Float::Make(p));
+		return PowerOperator::Make(N,Complex::Make(p));
 	}
 
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpq_rational const& p)
@@ -1077,7 +1077,7 @@ namespace node{
 
 	A multiplied literal zero collapses the whole product to 0; literal ones are
 	dropped; literal Integer/Rational constants (real-valued) are folded together
-	exactly (no Float folding -- precision semantics stay untouched).  A literal
+	exactly (no Complex folding -- precision semantics stay untouched).  A literal
 	zero DIVISOR is left in place, keeping the division by zero visible.  A single
 	surviving multiplied factor is returned unwrapped.  Builds fresh nodes; the
 	factor nodes are shared, never modified.
@@ -1119,22 +1119,22 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
 	{
-		return SumOperator::Make(lhs,Float::Make(rhs));
+		return SumOperator::Make(lhs,Complex::Make(rhs));
 	}
 
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
 	{
-		return SumOperator::Make(lhs,Float::Make(rhs));
+		return SumOperator::Make(lhs,Complex::Make(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator+(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return SumOperator::Make(Float::Make(lhs), rhs);
+		return SumOperator::Make(Complex::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator+(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return SumOperator::Make(Float::Make(lhs), rhs);
+		return SumOperator::Make(Complex::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, int rhs)
@@ -1191,22 +1191,22 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
 	{
-		return SumOperator::Make(lhs, true, Float::Make(rhs), false);
+		return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 
 	inline std::shared_ptr<Node> operator-(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return SumOperator::Make(Float::Make(lhs), true, rhs, false);
+		return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
 	{
-		return SumOperator::Make(lhs, true, Float::Make(rhs), false);
+		return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 
 	inline std::shared_ptr<Node> operator-(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return SumOperator::Make(Float::Make(lhs), true, rhs, false);
+		return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, int rhs)
@@ -1253,22 +1253,22 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
 	{
-		return MultOperator::Make(lhs,Float::Make(rhs));
+		return MultOperator::Make(lhs,Complex::Make(rhs));
 	}
 
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
 	{
-		return MultOperator::Make(lhs,Float::Make(rhs));
+		return MultOperator::Make(lhs,Complex::Make(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator*(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return MultOperator::Make(Float::Make(lhs), rhs);
+		return MultOperator::Make(Complex::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator*(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return MultOperator::Make(Float::Make(lhs), rhs);
+		return MultOperator::Make(Complex::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, int rhs)
@@ -1383,22 +1383,22 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr_float rhs)
 	{
-		return MultOperator::Make(lhs, true, Float::Make(rhs), false);
+		return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr_complex rhs)
 	{
-		return MultOperator::Make(lhs, true, Float::Make(rhs), false);
+		return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator/(mpfr_float lhs,  std::shared_ptr<Node> rhs)
 	{
-		return MultOperator::Make(Float::Make(lhs), true, rhs, false);
+		return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator/(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
 	{
-		return MultOperator::Make(Float::Make(lhs), true, rhs, false);
+		return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, int rhs)

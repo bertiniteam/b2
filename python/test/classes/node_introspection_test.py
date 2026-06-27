@@ -120,7 +120,7 @@ def test_rational_value_exact():
 
 
 def test_float_value():
-    n = sym.Float('2.5')  # exactly representable in binary
+    n = sym.Complex('2.5')  # exactly representable in binary
     v = n.value()
     assert v.real == mp.Float('2.5')
     assert v.imag == mp.Float(0)
@@ -188,8 +188,8 @@ def _rebuild(n):
         return sym.Integer(n.value())
     if isinstance(n, sym.Rational):
         return sym.Rational(n.value_real(), n.value_imag())
-    if isinstance(n, sym.Float):
-        return sym.Float(n.value())
+    if isinstance(n, sym.Complex):
+        return sym.Complex(n.value())
     raise NotImplementedError(type(n).__name__)
 
 

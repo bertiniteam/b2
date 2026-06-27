@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_SUITE(euler_predict_tracking_basics)
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
-using Float = bertini::node::Float;
+using Complex = bertini::node::Complex;
 using ExplicitRKPredictor = bertini::tracking::predict::ExplicitRKPredictor;
 
 using Var = std::shared_ptr<Variable>;

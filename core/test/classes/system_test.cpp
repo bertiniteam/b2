@@ -694,7 +694,7 @@ by a Node and must also invalidate is_differentiated_.
 */
 BOOST_AUTO_TEST_CASE(operator_mult_equals_invalidates_slp_cache)
 {
-	using bertini::node::Float;
+	using bertini::node::Complex;
 
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y");
@@ -709,7 +709,7 @@ BOOST_AUTO_TEST_CASE(operator_mult_equals_invalidates_slp_cache)
 	values << dbl(1.0), dbl(2.0);
 	(void) sys.Eval(values);          // primes SLP for f = x+y
 
-	sys *= Float::Make("3.0");        // f should now be 3*(x+y)
+	sys *= Complex::Make("3.0");        // f should now be 3*(x+y)
 
 	auto after = sys.Eval(values);    // expected [9], currently [3]
 	BOOST_CHECK_EQUAL(after(0), dbl(9.0));

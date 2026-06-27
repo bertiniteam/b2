@@ -73,7 +73,7 @@ BOOST_SERIALIZATION_ASSUME_ABSTRACT(bertini::node::Number)
 BOOST_CLASS_EXPORT_KEY(bertini::node::Variable)
 BOOST_CLASS_EXPORT_KEY(bertini::node::Differential)
 
-BOOST_CLASS_EXPORT_KEY(bertini::node::Float)
+BOOST_CLASS_EXPORT_KEY(bertini::node::Complex)
 BOOST_CLASS_EXPORT_KEY(bertini::node::Integer)
 BOOST_CLASS_EXPORT_KEY(bertini::node::Rational)
 
@@ -113,7 +113,7 @@ BOOST_CLASS_TRACKING(bertini::node::Number, boost::serialization::track_always)
 BOOST_CLASS_TRACKING(bertini::node::Variable, boost::serialization::track_always)
 BOOST_CLASS_TRACKING(bertini::node::Differential, boost::serialization::track_always)
 
-BOOST_CLASS_TRACKING(bertini::node::Float, boost::serialization::track_always)
+BOOST_CLASS_TRACKING(bertini::node::Complex, boost::serialization::track_always)
 BOOST_CLASS_TRACKING(bertini::node::Integer, boost::serialization::track_always)
 BOOST_CLASS_TRACKING(bertini::node::Rational, boost::serialization::track_always)
 

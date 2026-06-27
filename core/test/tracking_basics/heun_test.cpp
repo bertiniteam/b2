@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_SUITE(heun_predict_tracking_basics)
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
-using Float = bertini::node::Float;
+using Complex = bertini::node::Complex;
 using ExplicitRKPredictor = bertini::tracking::predict::ExplicitRKPredictor;
 
 
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		bertini::System sys;
 		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		std::shared_ptr<Float> half = Float::Make("0.5");
+		std::shared_ptr<Complex> half = Complex::Make("0.5");
 		
 		VariableGroup vars{x,y};
 		
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		bertini::System sys;
 		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		std::shared_ptr<Float> half = Float::Make("0.5");
+		std::shared_ptr<Complex> half = Complex::Make("0.5");
 		
 		VariableGroup vars{x,y};
 		

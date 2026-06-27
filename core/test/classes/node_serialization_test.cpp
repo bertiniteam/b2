@@ -60,7 +60,7 @@ template<typename NumT> using Vec = bertini::Vec<NumT>;
 template<typename NumT> using Mat = bertini::Mat<NumT>;
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
-using Float = bertini::node::Float;
+using Complex = bertini::node::Complex;
 
 
 using dbl = bertini::dbl;
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(serialize_variable)
 
 BOOST_AUTO_TEST_CASE(serialize_float)
 {
-	std::shared_ptr<Float> two_point_oh_four = Float::Make("2.04");
+	std::shared_ptr<Complex> two_point_oh_four = Complex::Make("2.04");
 
 	{
 		std::ofstream fout("serialization_test_node");
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(serialize_float)
 		oa << two_point_oh_four;
 	}
 	
-	std::shared_ptr<Float> two_point_oh_four2;
+	std::shared_ptr<Complex> two_point_oh_four2;
 	{
 		std::ifstream fin("serialization_test_node");
 		

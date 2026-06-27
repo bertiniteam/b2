@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(moving_homotopy_blend)
 	System fixed; fixed.AddVariableGroup(VariableGroup{x, y}); fixed.AddFunction(x*x + y*y - node::Integer::Make(1));
 	System sm; sm.AddVariableGroup(VariableGroup{x, y}); sm.AddFunction(y);
 	System em; em.AddVariableGroup(VariableGroup{x, y}); em.AddFunction(y - x);
-	System H = MakeMovingHomotopy(fixed, sm, em, "t", node::Float::Make(mpfr_complex("0.6", "0.8")));
+	System H = MakeMovingHomotopy(fixed, sm, em, "t", node::Complex::Make(mpfr_complex("0.6", "0.8")));
 
 	std::string t = Terse(H);
 	BOOST_CHECK(Has(t, "f_0 = "));               // the fixed polynomial row
