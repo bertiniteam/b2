@@ -1684,10 +1684,10 @@ namespace bertini{
 				const auto num_vars = GetSystem().NumVariables();
 
 				//  the current_space value is adjusted in the appropriate ChangePrecision function
-				std::get<Vec<mpfr_complex> >(tentative_space_).resize(num_vars);
+				std::get<Vec<mpfr_complex> >(tentative_space_).resize(static_cast<Eigen::Index>(num_vars));
 				Precision(std::get<Vec<mpfr_complex> >(tentative_space_), new_precision);
 
-				std::get<Vec<mpfr_complex> >(temporary_space_).resize(num_vars);
+				std::get<Vec<mpfr_complex> >(temporary_space_).resize(static_cast<Eigen::Index>(num_vars));
 				Precision(std::get<Vec<mpfr_complex> >(temporary_space_), new_precision);
 			}
 

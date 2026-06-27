@@ -225,10 +225,21 @@ target_link_libraries(_pybertini PUBLIC ${MPFR_LIBRARIES})
 target_link_libraries(_pybertini PUBLIC ${MPC_LIBRARIES})
 
 
-# which directories contain headers we need
-target_include_directories(_pybertini PUBLIC SYSTEM ${Boost_INCLUDE_DIRS})
-target_include_directories(_pybertini PUBLIC SYSTEM ${PYTHON_INCLUDE_DIRS})
-target_include_directories(_pybertini PUBLIC SYSTEM ${Python3_NumPy_INCLUDE_DIRS})
+# which directories contain headers we need.
+# NOTE: the SYSTEM keyword must precede the scope keyword (SYSTEM PUBLIC, not
+# PUBLIC SYSTEM) -- otherwise CMake reads "SYSTEM" as a relative include path and
+# these external headers are NOT treated as system, leaking their warnings into
+# our build output. (Eigen comes via the imported Eigen3::Eigen target below,
+# which is already treated as SYSTEM.)
+target_include_directories(_pybertini SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
+target_include_directories(_pybertini SYSTEM PUBLIC ${PYTHON_INCLUDE_DIRS})
+target_include_directories(_pybertini SYSTEM PUBLIC ${Python3_NumPy_INCLUDE_DIRS})
+# eigenpy is linked as an imported target below, but its install prefix (e.g.
+# /usr/local/include) is not reliably treated as system, so its headers (e.g.
+# numpy-allocator.hpp) leak -Wshorten-64-to-32 etc. Mark its include dirs SYSTEM
+# explicitly so this third-party dependency's warnings stay out of our output.
+target_include_directories(_pybertini SYSTEM PUBLIC
+    $<TARGET_PROPERTY:eigenpy::eigenpy,INTERFACE_INCLUDE_DIRECTORIES>)
 target_include_directories(_pybertini PUBLIC ${Bertini2_INCLUDES})
 
 if(WIN32)
@@ -248,9 +259,16 @@ if(MPI_CXX_FOUND)
     target_compile_definitions(_pybertini PUBLIC BERTINI2_HAVE_MPI)
 endif()
 
-if(NOT WIN32)
-  target_compile_options(_pybertini PRIVATE "-Wno-conversion")
-endif()
+# eigenpy's own templates (e.g. numpy-allocator.hpp's npy_intp->int) emit
+# conversion/shorten warnings when instantiated from our binding code. Marking
+# eigenpy's include dir SYSTEM is not enough: clang still reports warnings raised
+# during template instantiation requested from non-system code. --system-header-
+# prefix=eigenpy/ tells clang to treat any eigenpy/ header as a system header,
+# suppressing exactly that third-party noise -- without a blanket -Wno-conversion
+# that would also hide genuine conversion bugs in OUR binding code. Clang-only
+# flag (GCC/MSVC don't accept it).
+target_compile_options(_pybertini PRIVATE
+    $<$<CXX_COMPILER_ID:AppleClang,Clang>:--system-header-prefix=eigenpy/>)
 
 # lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj)
 # from the static bertini2 archive unless every object is forced in. CMake 3.24+

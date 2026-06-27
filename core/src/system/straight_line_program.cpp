@@ -462,12 +462,12 @@ namespace bertini{
 		for (auto const& I : parsed)
 			if (I.frozen)
 			{
-				reordered.insert(reordered.end(), instructions_.begin() + I.off, instructions_.begin() + I.off + I.len);
+				reordered.insert(reordered.end(), instructions_.begin() + static_cast<std::ptrdiff_t>(I.off), instructions_.begin() + static_cast<std::ptrdiff_t>(I.off) + static_cast<std::ptrdiff_t>(I.len));
 				frozen_words += I.len;
 			}
 		for (auto const& I : parsed)
 			if (!I.frozen)
-				reordered.insert(reordered.end(), instructions_.begin() + I.off, instructions_.begin() + I.off + I.len);
+				reordered.insert(reordered.end(), instructions_.begin() + static_cast<std::ptrdiff_t>(I.off), instructions_.begin() + static_cast<std::ptrdiff_t>(I.off) + static_cast<std::ptrdiff_t>(I.len));
 
 		instructions_ = std::move(reordered);
 		first_live_instruction_ = frozen_words;

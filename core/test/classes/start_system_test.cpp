@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 			BOOST_CHECK(abs(function_values(jj)) <
-				abs(vs[jj]->Value<dbl>())*relaxed_threshold_clearance_d);
+				abs(vs[static_cast<size_t>(jj)]->Value<dbl>())*relaxed_threshold_clearance_d);
 	}
 
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 			// a fixed absolute threshold is scale-naive and flakes when a random r happens
 			// to be large.  Rows with jj >= vs.size() are patch/homogenization equations of
 			// O(1) scale, so a unit scale (absolute floor) is correct for them.
-			double scale = (jj < vs.size()) ? abs(vs[jj]->Value<dbl>()) : 1.0;
+			double scale = (static_cast<size_t>(jj) < vs.size()) ? abs(vs[static_cast<size_t>(jj)]->Value<dbl>()) : 1.0;
 			if (scale < 1.0) scale = 1.0;
 			BOOST_CHECK(abs(function_values(jj)) < scale*1000*relaxed_threshold_clearance_d);
 		}
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 		{
 			// scale-relative, as in the double-precision loop above
-			mpfr_float scale = (jj < vs.size()) ? abs(vs[jj]->Value<mpfr>()) : mpfr_float(1);
+			mpfr_float scale = (static_cast<size_t>(jj) < vs.size()) ? abs(vs[static_cast<size_t>(jj)]->Value<mpfr>()) : mpfr_float(1);
 			if (scale < 1) scale = mpfr_float(1);
 			BOOST_CHECK(abs(function_values(jj)) < scale*threshold_clearance_mp);
 		}
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_precision_16)
 {
 	int this_test_precision{16};
 
-	DefaultPrecision(this_test_precision);
+	DefaultPrecision(static_cast<unsigned int>(this_test_precision));
 
 	Var x = Variable::Make("x");
 	Var y = Variable::Make("y");
@@ -485,9 +485,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_precision_16)
 	// test whether all start points have correct precision
 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
-		DefaultPrecision(this_test_precision);
-		final_system.precision(this_test_precision);
-		TD.precision(this_test_precision);
+		DefaultPrecision(static_cast<unsigned int>(this_test_precision));
+		final_system.precision(static_cast<unsigned int>(this_test_precision));
+		TD.precision(static_cast<unsigned int>(this_test_precision));
 		auto start_point = TD.StartPoint<mpfr_complex>(ii);
 		BOOST_CHECK_EQUAL(bertini::Precision(start_point), this_test_precision);
 	}
@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 {
 	int this_test_precision{16};
 
-	DefaultPrecision(this_test_precision);
+	DefaultPrecision(static_cast<unsigned int>(this_test_precision));
 
 	Var x = Variable::Make("x");
 	Var y = Variable::Make("y");
@@ -534,9 +534,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 	// test whether all start points have correct precision
 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
-		DefaultPrecision(this_test_precision);
-		final_system.precision(this_test_precision);
-		TD.precision(this_test_precision);
+		DefaultPrecision(static_cast<unsigned int>(this_test_precision));
+		final_system.precision(static_cast<unsigned int>(this_test_precision));
+		TD.precision(static_cast<unsigned int>(this_test_precision));
 		auto start_point = TD.StartPoint<mpfr_complex>(ii);
 		BOOST_CHECK_EQUAL(bertini::Precision(start_point), this_test_precision);
 	}

@@ -322,7 +322,7 @@ namespace bertini
 			converter << "HOM_VAR_" << group_counter;
 
 			if (already_had_homvars){
-				Var hom_var = homogenizing_variables_[group_counter];
+				Var hom_var = homogenizing_variables_[static_cast<size_t>(group_counter)];
 				VariableGroup temp_group = *curr_var_gp;
 
 				PushFront(temp_group, hom_var);
@@ -335,7 +335,7 @@ namespace bertini
 			else
 			{
 				Var hom_var = Variable::Make(converter.str());
-				homogenizing_variables_[group_counter] = hom_var;
+				homogenizing_variables_[static_cast<size_t>(group_counter)] = hom_var;
 				for (auto& b : blocks_)
 					std::visit([&](auto& blk){ blk.Homogenize(*curr_var_gp, hom_var); }, b);
 			}
@@ -376,8 +376,8 @@ namespace bertini
 		auto group_counter = 0;
 		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
 		{
-			Var hom_var = provided_hom_vars[group_counter];
-			homogenizing_variables_[group_counter] = hom_var;
+			Var hom_var = provided_hom_vars[static_cast<size_t>(group_counter)];
+			homogenizing_variables_[static_cast<size_t>(group_counter)] = hom_var;
 			for (auto& b : blocks_)
 				std::visit([&](auto& blk){ blk.Homogenize(*curr_var_gp, hom_var); }, b);
 			group_counter++;
@@ -419,7 +419,7 @@ namespace bertini
 		{
 			auto tempvars = vars;
 			if (have_homvars)
-				PushFront(tempvars, homogenizing_variables_[counter]);
+				PushFront(tempvars, homogenizing_variables_[static_cast<size_t>(counter)]);
 			counter++;
 			if (!all_blocks_homogeneous(tempvars))
 				return false;
@@ -460,7 +460,7 @@ namespace bertini
 		{
 			auto tempvars = vars;
 			if (have_homvars)
-				PushFront(tempvars,homogenizing_variables_[counter]);
+				PushFront(tempvars,homogenizing_variables_[static_cast<size_t>(counter)]);
 			counter++;
 			if (!all_blocks_polynomial(tempvars))
 				return false;

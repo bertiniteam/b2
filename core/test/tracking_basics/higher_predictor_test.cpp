@@ -121,8 +121,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RK4_double)
 	dbl(0.524028449166667552309395092084449, 1.42874855320540049801773082714871);
 	
 	Vec<dbl> RK4_prediction_result;
-	dbl next_time;
-	
+
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
@@ -428,8 +427,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKF45_double)
 	double predicted_error = 0.0000106466724075688025735071053994891;
 	
 	Vec<dbl> RKF45_prediction_result;
-	dbl next_time;
-	
+
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
@@ -778,8 +776,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKCK45_double)
 	double predicted_error = 0.00000353010590253211978478006394088836;
 	
 	Vec<dbl> RKCK45_prediction_result;
-	dbl next_time;
-	
+
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
@@ -1260,8 +1257,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_double)
 	double predicted_error = 6.79397491522542193110307157970405e-7;
 	
 	Vec<dbl> RKDP56_prediction_result;
-	dbl next_time;
-	
+
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
@@ -1733,8 +1729,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKV67_double)
 	double predicted_error = 0.00000128891520195955347062706145253149;
 	
 	Vec<dbl> RKV67_prediction_result;
-	dbl next_time;
-	
+
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;

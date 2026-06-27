@@ -104,8 +104,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	double predicted_error = .197349645229023708608160063982175;
 	
 	Vec<dbl> heun_prediction_result;
-	dbl next_time;
-	
+
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;

@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE( constant_four_variate )
 		derivatives.push_back(derivative);
 
 	BCT target_time = ComplexFromString("0.9471925368945182312341234123");
-	auto result = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	auto result = HermiteInterpolateAndSolve(target_time,static_cast<unsigned int>(num_samples),times,samples,derivatives);
 	BOOST_CHECK( (result - sample).norm() < pow(RealFromString("10"),ambient_precision-2)); 
 }
 

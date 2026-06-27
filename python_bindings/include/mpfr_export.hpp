@@ -237,6 +237,12 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 
 		private:
+			// NOTE: for the PowVisitor<T,int> instantiation this emits a single
+			// -Wsign-conversion (int->unsigned) warning. It is left intentionally:
+			// the natural pow(a,b) is correct for every (T,S) instantiation here,
+			// including negative integer exponents (e.g. a**-2). Forcing the
+			// exponent to unsigned silences the warning but breaks negative
+			// exponents; promoting it to T fails to compile for the complex T.
 			static T __pow__(const T& a, const S& b){using std::pow; using boost::multiprecision::pow; return pow(a,b); };
 		};
 

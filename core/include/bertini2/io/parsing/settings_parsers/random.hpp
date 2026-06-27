@@ -49,7 +49,7 @@ namespace bertini {
 
 					root_rule_.name("config::Random");
 					root_rule_ = (random_seed_[phx::bind(
-									[this](algorithm::RandomConfig& S, unsigned long v) {
+									[](algorithm::RandomConfig& S, unsigned long v) {
 										S.random_seed = v;
 									}, _val, _1)]
 								  >> -no_setting_)

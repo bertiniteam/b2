@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 	Mat<dbl> dh_dx = sys.Jacobian(current_space, current_time); 
 	Eigen::PartialPivLU<Mat<dbl>> LU = dh_dx.lu();
 
-	Vec<dbl> randy = Vec<dbl>::Random(sys.NumVariables());
+	Vec<dbl> randy = Vec<dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
 	Vec<dbl> temp_soln = LU.solve(randy);
 					
 	auto norm_J = double(dh_dx.norm());
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
 	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
 	Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
 
-	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
+	Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
 	Vec<mpfr> temp_soln = LU.solve(randy);
 					
 	auto norm_J = double(dh_dx.norm());
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 	Eigen::PartialPivLU<Mat<dbl>> LU = dh_dx.lu();
 	Vec<dbl> delta_z = LU.solve(-f);
 
-	Vec<dbl> randy = Vec<dbl>::Random(sys.NumVariables());
+	Vec<dbl> randy = Vec<dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
 	Vec<dbl> temp_soln = LU.solve(randy);
 					
 	auto norm_J = double(dh_dx.norm());
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
 	Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
 	Vec<mpfr> delta_z = LU.solve(-f);
 
-	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
+	Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
 	Vec<mpfr> temp_soln = LU.solve(randy);
 					
 	auto norm_J = double(dh_dx.norm());
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 	Mat<dbl> dh_dx = sys.Jacobian(current_space, current_time); 
 	Eigen::PartialPivLU<Mat<dbl>> LU = dh_dx.lu();
 
-	Vec<dbl> randy = Vec<dbl>::Random(sys.NumVariables());
+	Vec<dbl> randy = Vec<dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
 	Vec<dbl> temp_soln = LU.solve(randy);
 	auto norm_J_inverse = double(temp_soln.norm());
 
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
 	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
 	Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
 
-	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
+	Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
 	Vec<mpfr> temp_soln = LU.solve(randy);
 	auto norm_J_inverse = double(temp_soln.norm());
 

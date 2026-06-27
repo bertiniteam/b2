@@ -61,7 +61,7 @@ namespace bertini{
 			// Recursion over the config type-list: return a *copy* of the owner's
 			// configuration struct whose registered Python class is `cls`.
 			template<typename OwnerT>
-			boost::python::object GetConfigDispatch(OwnerT&, boost::python::object const& cls)
+			boost::python::object GetConfigDispatch(OwnerT&, boost::python::object const& /*cls*/)
 			{
 				PyErr_SetString(PyExc_KeyError,
 					"this object has no configuration of the requested type; see config_types()");
