@@ -155,6 +155,20 @@ namespace bertini {
 	class StraightLineProgram;
 
 
+	/**
+	\brief The numeric type a memory slot holds, orthogonal to working precision (ADR-0034).
+
+	Precision (double vs multiprecision) is the Eval<NumT> template parameter; this is the ℝ/ℂ
+	axis within a precision.  A slot tagged Real lives in the real register bank (real_dbl /
+	real_mp), Complex in the complex bank (complex_dbl / complex_mp).  The compiler infers each
+	slot's NumType from the function tree (a constant whose imaginary part is zero, an Integer, a
+	Rational with zero imaginary part, Pi/E are Real; variables and the path variable are Complex;
+	an operator's result is the join of its operands, escaping to Complex for ops that can leave ℝ).
+	Integer is reserved for a later stage; S1 uses {Real, Complex}.
+	*/
+	enum class NumType : uint8_t { Real = 0, Complex = 1 };  // Integer added in a later stage
+
+
 	enum Operation { // we'll start with the binary ones
 		Add=      1 << 0,
 		Subtract= 1 << 1,
@@ -308,9 +322,11 @@ namespace bertini {
 		template<typename NumT>
 		std::vector<NumT> const& Get() const { return std::get<std::vector<NumT>>(registers_); }
 
-		//< The register file.  Numbers and variables, plus temp results and output locations.  It's
-		//  all one block per number type.  That's why it's called a SLP!
-		mutable std::tuple< std::vector<complex_dbl>, std::vector<complex_mp> > registers_;
+		//< The register file (ADR-0034): one bank per (precision, NumType).  A slot lives in exactly
+		//  one bank, chosen by its NumType; the real banks are the real companions of the complex ones
+		//  (real_dbl for complex_dbl, real_mp for complex_mp).  Get<NumT>() selects a bank by type.
+		mutable std::tuple< std::vector<real_dbl>, std::vector<complex_dbl>,
+		                    std::vector<real_mp>,  std::vector<complex_mp> > registers_;
 
 		mutable unsigned precision_ = 16; //< The current working number of digits
 		mutable bool is_evaluated_ = false;
@@ -325,7 +341,9 @@ namespace bertini {
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
+			ar & std::get<std::vector<real_dbl>>(registers_);
 			ar & std::get<std::vector<complex_dbl>>(registers_);
+			ar & std::get<std::vector<real_mp>>(registers_);
 			ar & std::get<std::vector<complex_mp>>(registers_);
 			ar & precision_;
 			ar & is_evaluated_;
@@ -427,6 +445,11 @@ namespace bertini {
 
 		size_t num_slots_ = 0; //< Total number of memory slots the program needs (per number bank).
 
+		// The NumType of each slot (ADR-0034), indexed by global slot number; sized to num_slots_.
+		// Selects which register bank a slot lives in.  Default Complex (filled by the compiler);
+		// an all-Complex table reproduces the pre-tier behavior exactly.
+		std::vector<NumType> slot_numtype_;
+
 
 		friend class boost::serialization::access;
 
@@ -441,6 +464,7 @@ namespace bertini {
 			ar & constant_recipes_;
 			ar & first_live_instruction_;
 			ar & num_slots_;
+			ar & slot_numtype_;
 		}
 	};
 

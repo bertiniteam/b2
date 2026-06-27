@@ -147,8 +147,12 @@ namespace bertini{
 		// so the default-constructed slots are valid.
 		DefaultPrecision(memory_.precision_);
 
-		// adjust the sizes of the memory blocks to match the number expected via compilation
+		// adjust the sizes of the memory blocks to match the number expected via compilation.
+		// All four banks (real/complex x dbl/mp) are sized to the slot count; a slot lives in exactly
+		// one bank per its NumType, so the off-type banks hold default, never-read entries for now.
+		memory_.Get<real_dbl>().resize(program_->num_slots_);
 		memory_.Get<complex_dbl>().resize(program_->num_slots_);
+		memory_.Get<real_mp>().resize(program_->num_slots_);
 		memory_.Get<complex_mp>().resize(program_->num_slots_);
 
 		// downsample to get ready for evaluation
@@ -977,6 +981,11 @@ namespace bertini{
 
 		// the program's total slot count is the number of memory slots allocated during compilation
 		program_under_construction_.num_slots_ = next_available_complex_;
+
+		// NumType per slot (ADR-0034).  Stage-0/foundation: every slot is Complex, which makes the
+		// real banks unused and reproduces the pre-tier behavior exactly.  Tier inference (next
+		// increment) is what flips real-valued slots to NumType::Real.
+		program_under_construction_.slot_numtype_.assign(next_available_complex_, NumType::Complex);
 
 		// Split the tape into a frozen (constants-only) prologue and a live segment, so a
 		// point-only re-evaluation can skip recomputing the constants (ADR-0027).  This is a pure
