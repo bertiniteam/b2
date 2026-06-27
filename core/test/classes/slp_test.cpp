@@ -6,6 +6,10 @@
 
 #include <set>
 #include <iostream>
+#include <chrono>
+#include <cstdlib>
+#include <atomic>
+#include <gmp.h>
 
 using Variable = bertini::node::Variable;
 
@@ -494,4 +498,382 @@ BOOST_AUTO_TEST_CASE(precision_change_recomputes_constants)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // SLP_freeze_partition
+
+
+
+// ADR-0034: real-valued subexpressions evaluate in the cheaper real banks (NumType::Real), and the
+// result must equal the all-complex evaluation.  The rest of the C++ suite is the broad equivalence
+// gate (it solves/tracks integer- and rational-coefficient systems through the SLP); here we confirm
+// the inference is actually LIVE (not a silent all-Complex no-op) and that the mixed real-coefficient
+// x complex-variable path is numerically correct, at double and multiprecision.
+BOOST_AUTO_TEST_SUITE(SLP_tiered_numtype)
+
+using complex_mp = bertini::complex_mp;
+
+namespace {
+	bertini::System ParseSLPSys(std::string const& str){
+		bertini::System sys;
+		[[maybe_unused]] bool ok = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+		return sys;
+	}
+	// f = 3*x^2 + 2 : integer coefficients 3 and 2 are real, x is complex.
+	const std::string kRealCoeffSys = "function f; variable_group x; f = 3*x^2 + 2;";
+}
+
+// An integer-coefficient system must infer at least one Real slot -- otherwise the tier machinery
+// would be a silent no-op and there would be no speedup.
+BOOST_AUTO_TEST_CASE(integer_coeff_system_infers_real_slots)
+{
+	auto slp = SLP(ParseSLPSys(kRealCoeffSys));
+	BOOST_CHECK_GT(slp.NumRealSlots(), size_t(0));
+}
+
+// Evaluated at a genuinely complex point, the real-coefficient * complex-variable path must produce
+// the correct complex value (and Jacobian) -- i.e. the imaginary part propagates through the mixed
+// real*complex arithmetic.  x = 1+i:  3*(1+i)^2 + 2 = 3*(2i) + 2 = 2 + 6i;  df/dx = 6x = 6 + 6i.
+BOOST_AUTO_TEST_CASE(real_tier_mixed_eval_correct_double)
+{
+	auto slp = SLP(ParseSLPSys(kRealCoeffSys));
+	BOOST_REQUIRE_GT(slp.NumRealSlots(), size_t(0));
+
+	Vec<complex_dbl> x(1); x(0) = complex_dbl(1.0, 1.0);
+	slp.Eval(x);
+	auto f = slp.GetFuncVals<complex_dbl>();
+	auto J = slp.GetJacobian<complex_dbl>();
+	BOOST_CHECK_SMALL(abs(f(0)   - complex_dbl(2.0, 6.0)), 1e-13);
+	BOOST_CHECK_SMALL(abs(J(0,0) - complex_dbl(6.0, 6.0)), 1e-13);
+}
+
+// Same, at multiprecision: the real_mp bank carries the coefficients at the working precision.
+BOOST_AUTO_TEST_CASE(real_tier_mixed_eval_correct_mp)
+{
+	auto slp = SLP(ParseSLPSys(kRealCoeffSys));
+	Vec<complex_mp> x(1); x(0) = complex_mp(1, 1);
+	slp.Eval(x);
+	auto f = slp.GetFuncVals<complex_mp>();
+	BOOST_CHECK(abs(f(0) - complex_mp(2, 6)) < 1e-40);
+}
+
+// Regression: the tier dispatch builds complex temporaries when promoting a real operand to complex
+// (Power/sqrt/log/...).  Boost inits a fresh mpc at the thread-default precision, which on the eval
+// path is not guaranteed to be the working precision -- if it is 0, mpc_init2 aborts.  Eval pins the
+// thread precision to the working precision first.  Exercises the promotion paths at mp precision:
+// x/y's Jacobian (-x/y^2) promotes a real exponent constant, and sqrt/log/x^3 are the escape ops.
+BOOST_AUTO_TEST_CASE(mp_promotion_paths_evaluate_correctly)
+{
+	bertini::DefaultPrecision(40);
+	auto slp = SLP(ParseSLPSys("function f; variable_group x, y; f = x/y;"));
+	slp.precision(40);
+
+	Vec<complex_mp> pt(2);
+	pt(0) = complex_mp(6); pt(1) = complex_mp(2);
+	slp.Eval(pt);
+	auto f = slp.GetFuncVals<complex_mp>();
+	auto J = slp.GetJacobian<complex_mp>();         // -x/y^2 promotes a real exponent constant
+
+	BOOST_CHECK(abs(f(0)   - complex_mp(3)) < 1e-30);             // 6/2 = 3
+	BOOST_CHECK(abs(J(0,0) - complex_mp(1) / complex_mp(2)) < 1e-30); // d(x/y)/dx = 1/y = 1/2
+
+	auto g = SLP(ParseSLPSys("function f; variable_group x; f = sqrt(x) + log(x) + x^3;"));
+	g.precision(40);
+	Vec<complex_mp> q(1); q(0) = complex_mp(4);
+	g.Eval(q);
+	auto gf = g.GetFuncVals<complex_mp>();
+	using std::sqrt; using std::log;
+	BOOST_CHECK(abs(gf(0) - (sqrt(complex_mp(4)) + log(complex_mp(4)) + complex_mp(64))) < 1e-30);
+}
+
+// Opt-in A/B speedup benchmark (ADR-0034 gate).  Skipped unless BERTINI_SLP_BENCH is set, so it adds
+// no time to normal runs.  Builds the SAME real-coefficient-heavy system twice -- once with tiers
+// forced off (all-complex baseline) and once on -- and times N evaluations of function + Jacobian at
+// high mpfr precision, where mpfr-complex arithmetic dominates.  Run with:
+//   BERTINI_SLP_BENCH=1 ./build/core/test_classes --run_test=SLP_tiered_numtype/tier_speedup_benchmark
+BOOST_AUTO_TEST_CASE(tier_speedup_benchmark)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+
+	using real_mp = bertini::real_mp;
+	// Generate an nv-variable, nv-function dense integer-coefficient system (degree up to `deg`),
+	// so the benchmark can scale: bigger systems do more arithmetic per eval, shrinking the fixed
+	// per-eval overhead (allocations, output extraction) relative to the tiered arithmetic.
+	const char* nvenv = std::getenv("BERTINI_SLP_BENCH_NVARS");
+	const int nv  = nvenv ? std::atoi(nvenv) : 4;
+	const int deg = 5;
+	// zero-padded names (x00, x01, ...) so no name is a prefix of another (x1 vs x10 confuses the parser)
+	auto vn = [](int i){ char b[8]; std::snprintf(b, sizeof b, "x%03d", i); return std::string(b); };
+	auto fn = [](int i){ char b[8]; std::snprintf(b, sizeof b, "f%03d", i); return std::string(b); };
+	auto make_system = [&]() -> std::string {
+		std::string s = "function ";
+		for (int i = 0; i < nv; ++i) s += fn(i) + (i + 1 < nv ? "," : "; ");
+		s += "variable_group ";
+		for (int i = 0; i < nv; ++i) s += vn(i) + (i + 1 < nv ? "," : "; ");
+		int c = 2;
+		for (int i = 0; i < nv; ++i) {
+			s += fn(i) + " = ";
+			for (int j = 0; j < nv; ++j)  // one power term per variable
+				s += std::to_string(c++) + "*" + vn(j) + "^" + std::to_string((j % deg) + 2) + " + ";
+			for (int j = 0; j + 1 < nv; ++j)  // cross terms
+				s += std::to_string(c++) + "*" + vn(j) + "*" + vn(j + 1) + " + ";
+			s += std::to_string(c++) + "; ";
+		}
+		return s;
+	};
+	const std::string dense = make_system();
+
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const char* nenv = std::getenv("BERTINI_SLP_BENCH_N");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	const int N = nenv ? std::atoi(nenv) : 400;
+
+	auto run = [&](bool tiers) -> double {
+		bertini::SLPProgram::tiers_enabled_ = tiers;
+		bertini::DefaultPrecision(prec);
+		auto sys = ParseSLPSys(dense);
+		SLP slp(sys);
+		slp.precision(prec);
+
+		Vec<complex_mp> pt(nv);
+		for (int j = 0; j < nv; ++j) pt(j) = complex_mp(real_mp(j + 2), real_mp(j + 1));
+		slp.Eval(pt); (void)slp.GetFuncVals<complex_mp>();  // warm the frozen prologue
+
+		complex_mp sink(0);
+		auto t0 = std::chrono::steady_clock::now();
+		for (int i = 0; i < N; ++i) {
+			pt(0) = complex_mp(real_mp(i % 7 + 2), real_mp(i % 5 + 1));
+			slp.Eval(pt);
+			auto f = slp.GetFuncVals<complex_mp>();
+			auto J = slp.GetJacobian<complex_mp>();
+			sink += f(0) + J(0,0);
+		}
+		auto t1 = std::chrono::steady_clock::now();
+		std::cout << "  [tiers=" << tiers << " real_slots=" << slp.NumRealSlots()
+		          << " sink=" << sink.real() << "]\n";
+		return std::chrono::duration<double>(t1 - t0).count();
+	};
+
+	// DOUBLE precision -- where the AMP tracker spends most of its time, and the worst case for
+	// per-op dispatch overhead (cheap hardware arithmetic, so the slot_numtype_ branches dominate).
+	const char* ndenv = std::getenv("BERTINI_SLP_BENCH_NDBL");
+	const int Nd = ndenv ? std::atoi(ndenv) : 100000;
+	auto run_dbl = [&](bool tiers) -> double {
+		bertini::SLPProgram::tiers_enabled_ = tiers;
+		auto sys = ParseSLPSys(dense);
+		SLP slp(sys);
+		Vec<complex_dbl> pt(nv);
+		for (int j = 0; j < nv; ++j) pt(j) = complex_dbl(j + 2, j + 1);
+		slp.Eval(pt); (void)slp.GetFuncVals<complex_dbl>();
+
+		complex_dbl sink(0);
+		auto t0 = std::chrono::steady_clock::now();
+		for (int i = 0; i < Nd; ++i) {
+			pt(0) = complex_dbl(i % 7 + 2, i % 5 + 1);
+			slp.Eval(pt);
+			auto f = slp.GetFuncVals<complex_dbl>();
+			auto J = slp.GetJacobian<complex_dbl>();
+			sink += f(0) + J(0,0);
+		}
+		auto t1 = std::chrono::steady_clock::now();
+		std::cout << "  [dbl tiers=" << tiers << " real_slots=" << slp.NumRealSlots()
+		          << " sink=" << sink.real() << "]\n";
+		return std::chrono::duration<double>(t1 - t0).count();
+	};
+	const double d_off = run_dbl(false);
+	const double d_on  = run_dbl(true);
+
+	const double off = run(false);
+	const double on  = run(true);
+	bertini::SLPProgram::tiers_enabled_ = true;  // restore default
+
+	std::cout << "\n=== SLP tier benchmark (4 fns / 4 vars) ===\n"
+	          << "  DOUBLE  (N=" << Nd << " evals of f+J):\n"
+	          << "    tiers OFF: " << d_off << " s    tiers ON: " << d_on
+	          << " s    speedup: " << (d_off / d_on) << "x\n"
+	          << "  MPFR prec=" << prec << " digits (N=" << N << " evals of f+J):\n"
+	          << "    tiers OFF: " << off << " s    tiers ON: " << on
+	          << " s    speedup: " << (off / on) << "x\n\n";
+	BOOST_CHECK(true);
+}
+
+// Probe the user's hypothesis: is real_mp * complex_mp actually cheaper than complex*complex, or
+// does Boost.Multiprecision promote the real operand to complex first (4 muls, no saving)?  And how
+// much of mpfr cost is the multiply vs. number management?  Opt-in via BERTINI_SLP_BENCH.
+BOOST_AUTO_TEST_CASE(mpfr_raw_op_microbench)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+	using real_mp = bertini::real_mp;
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	const char* menv = std::getenv("BERTINI_SLP_BENCH_M");
+	const long M = menv ? std::atol(menv) : 1000000;
+	bertini::DefaultPrecision(prec);
+
+	complex_mp ac(real_mp("1.2345"), real_mp("5.6789"));
+	complex_mp bc(real_mp("9.8765"), real_mp("4.3210"));
+	complex_mp zc(0); bertini::Precision(zc, prec);
+	real_mp ar("3.14159"), br("2.71828"), zr(0);
+
+	complex_mp sink(0); bertini::Precision(sink, prec);
+	real_mp rsink(0);
+	auto timeit = [&](auto&& f){
+		auto t0 = std::chrono::steady_clock::now();
+		for (long i = 0; i < M; ++i) f();
+		return std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+	};
+
+	const double t_cc = timeit([&]{ zc = ac * bc; sink += zc; });  // complex * complex
+	const double t_rc = timeit([&]{ zc = ar * bc; sink += zc; });  // real * complex (tier hot path)
+	const double t_rr = timeit([&]{ zr = ar * br; rsink += zr; }); // real * real
+
+	std::cout << "\n=== raw mpfr multiply microbench (prec=" << prec << ", M=" << M
+	          << ", sink=" << sink.real() << "/" << rsink << ") ===\n"
+	          << "  complex*complex: " << t_cc << " s\n"
+	          << "  real*complex:    " << t_rc << " s   (rc/cc = " << (t_rc / t_cc) << ")\n"
+	          << "  real*real:       " << t_rr << " s   (rr/cc = " << (t_rr / t_cc) << ")\n"
+	          << "  => " << (t_rc / t_cc < 0.8 ? "real*complex IS cheaper -- tier helps arithmetic"
+	                                           : "real*complex ~ complex*complex -- Boost promotes; no arithmetic win")
+	          << "\n\n";
+	BOOST_CHECK(true);
+}
+
+namespace {
+	// A counting GMP allocator: delegates to std malloc/realloc/free (so blocks stay interchangeable
+	// with the default GMP allocator) while tallying calls.  Used to quantify mpfr churn per eval.
+	std::atomic<long> g_alloc{0}, g_realloc{0}, g_free{0}, g_bytes{0};
+	void* counting_alloc(size_t n)                       { ++g_alloc;  g_bytes += static_cast<long>(n); return std::malloc(n); }
+	void* counting_realloc(void* p, size_t /*o*/, size_t n){ ++g_realloc; return std::realloc(p, n); }
+	void  counting_free(void* p, size_t /*n*/)           { ++g_free;   std::free(p); }
+}
+
+// Quantify the mpfr allocation churn of the live eval segment (the user's hypothesis: alloc/dealloc,
+// not op-count, is the mp performance limit).  Counts malloc/realloc/free per eval of f+J at mp
+// precision.  Opt-in via BERTINI_SLP_BENCH.
+BOOST_AUTO_TEST_CASE(mpfr_alloc_churn_per_eval)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+	using real_mp = bertini::real_mp;
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	bertini::DefaultPrecision(prec);
+
+	const char* sysenv = std::getenv("BERTINI_SLP_BENCH_SYS");
+	auto sys_for_slp = ParseSLPSys(sysenv ? sysenv :
+		"function f0,f1,f2,f3; variable_group x0,x1,x2,x3; "
+		"f0 = 3*x0^4 + 5*x1^3 + 7*x2^2 + 11*x3^5 + 2*x0*x1*x2 - 13*x2*x3 + 17*x0 - 19; "
+		"f1 = 23*x1^4 + 29*x2^3 + 31*x0^2 + 37*x3 + 41*x0*x2*x3 - 43*x0*x1 + 47; "
+		"f2 = 53*x2^4 + 59*x3^3 + 61*x0^2 + 67*x1^5 + 71*x1*x2*x3 - 73*x0*x3 + 79; "
+		"f3 = 83*x3^4 + 89*x0^3 + 97*x1^2 + 101*x2^4 + 103*x0*x1*x3 - 107*x1*x2 + 109;");
+	auto slp = SLP(sys_for_slp);
+	if (std::getenv("BERTINI_SLP_DUMP")) std::cout << "\n----- SLP -----\n" << slp << "\n---------------\n";
+	slp.precision(prec);
+	const int nvars = static_cast<int>(slp.NumVariables());
+	Vec<complex_mp> pt(nvars);
+	for (int j = 0; j < nvars; ++j) pt(j) = complex_mp(real_mp(j + 2), real_mp(j + 1));
+	slp.Eval(pt); (void)slp.GetFuncVals<complex_mp>(); (void)slp.GetJacobian<complex_mp>();  // warm prologue
+
+	// install the counting allocator (blocks stay malloc/free-compatible, so mixing is safe)
+	void* (*oa)(size_t); void* (*ora)(void*, size_t, size_t); void (*ofr)(void*, size_t);
+	mp_get_memory_functions(&oa, &ora, &ofr);
+	mp_set_memory_functions(counting_alloc, counting_realloc, counting_free);
+
+	const int N = 200;
+	// Pre-build the varying inputs OUTSIDE the counted region -- constructing complex_mp/real_mp
+	// allocates, and we must not attribute that to eval.  Assigning a prebuilt value is alloc-free.
+	std::vector<complex_mp> inputs;
+	for (int i = 0; i < N; ++i) inputs.push_back(complex_mp(real_mp(i % 7 + 2), real_mp(i % 5 + 1)));
+
+	// (a) eval live segment only
+	g_alloc = g_realloc = g_free = 0;
+	for (int i = 0; i < N; ++i) { pt(0) = inputs[i]; slp.Eval(pt); }
+	const double e_malloc = double(g_alloc)/N, e_realloc = double(g_realloc)/N, e_free = double(g_free)/N;
+	// (b) eval + output extraction (GetFuncVals + GetJacobian build Eigen Vec/Mat<mpc>)
+	g_alloc = g_realloc = g_free = 0;
+	for (int i = 0; i < N; ++i) {
+		pt(0) = inputs[i];
+		slp.Eval(pt); (void)slp.GetFuncVals<complex_mp>(); (void)slp.GetJacobian<complex_mp>();
+	}
+	const double t_malloc = double(g_alloc)/N, t_realloc = double(g_realloc)/N, t_free = double(g_free)/N;
+	mp_set_memory_functions(oa, ora, ofr);         // restore
+
+	std::cout << "\n=== mpfr alloc churn (prec=" << prec << ", N=" << N << ", 4 fns/4 vars) ===\n"
+	          << "  eval only        : malloc=" << e_malloc << " realloc=" << e_realloc << " free=" << e_free << "\n"
+	          << "  eval + extraction: malloc=" << t_malloc << " realloc=" << t_realloc << " free=" << t_free << "\n"
+	          << "  extraction adds  : malloc=" << (t_malloc-e_malloc) << " realloc=" << (t_realloc-e_realloc) << "\n\n";
+	BOOST_CHECK(true);
+}
+
+// How many heap ops does a single raw mpc/mpfr op cost?  Tells us how much of the eval churn is
+// Boost's per-op INTERNAL scratch (which only a pooling allocator can fix) vs our own temporaries.
+BOOST_AUTO_TEST_CASE(mpfr_alloc_per_raw_op)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+	using real_mp = bertini::real_mp;
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	bertini::DefaultPrecision(prec);
+	const long M = 5000;
+
+	complex_mp a(real_mp("1.5"), real_mp("2.5")), b(real_mp("3.5"), real_mp("4.5")), c(0);
+	bertini::Precision(c, prec);
+
+	void* (*oa)(size_t); void* (*ora)(void*, size_t, size_t); void (*ofr)(void*, size_t);
+	mp_get_memory_functions(&oa, &ora, &ofr);
+	auto measure = [&](const char* label, auto&& op){
+		mp_set_memory_functions(counting_alloc, counting_realloc, counting_free);
+		g_alloc = g_realloc = g_free = 0;
+		for (long i = 0; i < M; ++i) op();
+		mp_set_memory_functions(oa, ora, ofr);
+		std::cout << "  " << label << ": malloc=" << double(g_alloc)/M
+		          << " realloc=" << double(g_realloc)/M << " free=" << double(g_free)/M << "\n";
+	};
+	std::cout << "\n=== heap ops per raw op (prec=" << prec << ", into a preallocated dest) ===\n";
+	real_mp r("2.5"); bertini::Precision(r, prec);
+	measure("c = a * b   (complex*complex)    ", [&]{ c = a * b; });
+	measure("c = a * a   (SQUARING, aliased)  ", [&]{ c = a * a; });
+	measure("c = a + b   (complex+complex)    ", [&]{ c = a + b; });
+	measure("c = r * a   (real*complex MIXED) ", [&]{ c = r * a; });
+	measure("c = r + a   (real+complex MIXED) ", [&]{ c = r + a; });
+	measure("c = a * r   (complex*real MIXED) ", [&]{ c = a * r; });
+	measure("c = a       (copy / Assign)      ", [&]{ c = a; });
+	measure("c = mul-lambda(a,b) (eval binop) ", [&]{ c = [](auto const& x, auto const& y){ return x*y; }(a, b); });
+	measure("c = (-x)-lambda(a)  (eval Negate)", [&]{ c = [](auto const& x){ return -x; }(a); });
+	measure("c = pow(a,4)(IntPower)           ", [&]{ c = pow(a, 4); });
+	// in-place exponentiation by squaring with one reused scratch -- the proposed IntPower replacement
+	measure("c = a^4 by squaring (1 scratch)  ", [&]{
+		static thread_local complex_mp base; bertini::Precision(base, prec);
+		base = a; c = a; for (int k = 1; k < 4; ++k) c *= base;   // simple repeated multiply (alloc-free?)
+	});
+	BOOST_CHECK(true);
+}
+
+// Is the lowered O(n) repeated-multiply actually faster than the transcendental pow(complex,complex)?
+// Find the crossover exponent above which we should stop lowering and keep a general pow.  Opt-in.
+BOOST_AUTO_TEST_CASE(power_method_crossover)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+	using real_mp = bertini::real_mp;
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	bertini::DefaultPrecision(prec);
+	complex_mp base(real_mp("1.3"), real_mp("0.7")), basec(0), acc(0), tmp(0), result(0);
+	for (auto* p : {&base, &basec, &acc, &tmp, &result}) bertini::Precision(*p, prec);
+	basec = base;
+	const long M = 5000;
+	auto timeit = [&](auto&& f){ auto t0 = std::chrono::steady_clock::now();
+		for (long i = 0; i < M; ++i) f();
+		return std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count() / M * 1e6; };  // us/op
+
+	std::cout << "\n=== power method crossover (prec=" << prec << " digits, us per op) ===\n";
+	std::cout << "   n | repeated-mul | pow(c,int) | pow(c,complex) | mul faster than pow(c,c)?\n";
+	for (int n : {2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96}) {
+		complex_mp en(n); bertini::Precision(en, prec);
+		const double t_mul = timeit([&]{ acc = base; for (int k = 2; k <= n; ++k) { tmp = acc * basec; acc.swap(tmp); } result.swap(acc); });
+		const double t_pi  = timeit([&]{ result = pow(base, n); });
+		const double t_pc  = timeit([&]{ result = pow(base, en); });
+		std::cout << "  " << (n<10?" ":"") << n << " | " << t_mul << "      | " << t_pi
+		          << "    | " << t_pc << "      | " << (t_mul < t_pc ? "yes" : "NO -- pow wins") << "\n";
+	}
+	BOOST_CHECK(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // SLP_tiered_numtype
 
