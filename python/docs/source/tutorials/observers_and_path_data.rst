@@ -196,7 +196,9 @@ path in the complex plane:
 If instead you want the bare tracker-level building block (one series per *track*, with endgame
 sub-tracks kept separate), attach a ``bertini.tracking.observers.<precision>.PathCollectionObserver``
 to ``solver.get_tracker()`` directly; each of its series is tagged with a ``start_time`` so you can
-tell main tracks from endgame loops.
+tell main tracks from endgame loops.  (Attaching to ``solver.get_tracker()`` like this only collects
+in a **serial** solve -- set ``num_threads = 1`` first; see *Observers, threads, and MPI* below for
+why, and use ``SolutionPathCollector`` if you want it to work threaded.)
 
 Build it yourself: one observer that attaches another
 =====================================================
@@ -252,9 +254,9 @@ the path finishes, B hands its haul back to A.
 
         def Observe(self, event):
             if isinstance(event, nag_observers.PathStarted):
-                tracker = event.solver().get_tracker()
-                b = PathRecorder(self, event.path_index())
-                tracker.add_observer(b)                  # attach B ...
+                tracker = event.tracker()      # the tracker that RUNS this path (a thread-local
+                b = PathRecorder(self, event.path_index())   # clone when threaded -- not the member
+                tracker.add_observer(b)                  # attach B ...   tracker)
                 self._active[event.path_index()] = (tracker, b)
             elif isinstance(event, nag_observers.PathComplete):
                 tracker, b = self._active.pop(event.path_index())
@@ -280,6 +282,7 @@ Attach **A** to the solver and run -- one entry in ``A.paths`` per solution path
     solver.solve()
 
     assert len(A.paths) == 6                  # same six paths SolutionPathCollector would give you
+    assert all(len(times) > 0 for times, _ in A.paths.values())   # each path actually captured steps
 
 The subtle part is that A's ``add_observer``/``remove_observer`` calls happen *from inside* B's
 sibling notification -- A is mutating the tracker's observer list while the solver is mid-dispatch.
@@ -290,6 +293,69 @@ disturbs the dispatch in flight.  Attach-and-forget, compose freely.
 This hand-built ``MyPathCollector`` is essentially ``SolutionPathCollector`` -- the real one just
 reuses the ready-made ``PathDataCollector`` for B (so you get diagnostics and ``as_dataframe()``
 too) and harvests the collector object itself instead of a plain tuple.
+
+Observers, threads, and MPI
+===========================
+
+A zero-dimensional solve is **multi-threaded by default** -- it uses all your cores, tracking many
+paths at once.  That has one consequence you must know when writing observers, and it is the whole
+reason the examples above call ``event.tracker()``.
+
+Under threading, **each path runs on its own thread-local *clone* of the tracker**, not on the
+solver's one member tracker.  (A fresh tracker copy starts with an empty observer list -- which is
+exactly what makes it safe to hand to another thread.)  So:
+
+.. note::
+
+   Attaching a per-path observer to ``solver.get_tracker()`` collects **nothing** during a threaded
+   solve: the member tracker runs no paths.  Always attach to **event.tracker()** -- the tracker
+   that actually runs *this* path -- as the meta-observers above do.  ``event.tracker()`` is the
+   member tracker in a serial solve and the running clone in a threaded one, so the same code is
+   correct either way.
+
+Everything else the framework handles for you.  Your Python ``Observe`` is called safely from the
+worker threads: notifications are serialized and the GIL is re-acquired around each call, so you
+never see two ``Observe`` calls at once and never corrupt your own Python state.  The flip side is
+that a *heavy* ``Observe`` serializes the threads against each other -- keep it to copying values
+out (as ``PathRecorder`` does); do the plotting and analysis afterwards.
+
+Two more things to expect under threads:
+
+* **Paths complete out of order.**  ``PathComplete`` arrives in finish order, not ``path_index``
+  order.  Key your bookkeeping by ``event.path_index()`` (the collectors above do) and sort at the
+  end if you need a stable order.
+* **Force serial when you must.**  To pin a solve to one thread -- e.g. to attach directly to the
+  member tracker, or for a fully reproducible event order -- set ``num_threads = 1``:
+
+.. testcode::
+
+    from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
+    import bertini
+
+    z = bertini.Variable('z')
+    sys = bertini.System()
+    sys.add_variable_group(bertini.VariableGroup([z]))
+    sys.add_function(z**6 - 2*z**2 + 2)
+
+    solver = ZeroDim(sys, mptype='adaptive')
+    cfg = solver.get_config(bertini.nag_algorithm.ZeroDimConfig)
+    cfg.num_threads = 1                 # 0 = auto (all cores), 1 = serial, N = N threads
+    solver.set_config(cfg)
+
+    A = SolutionPathCollector()         # works the same in serial and threaded
+    solver.add_observer(A)
+    solver.solve()
+    assert len(A.series) == 6
+
+Under **MPI** the picture is different again, and observers do **not** span ranks.  In a distributed
+solve the manager rank coordinates while the *worker* ranks track the paths, so the per-path events
+(``PathStarted``/``PathComplete`` and every tracker step) fire **inside the worker processes** --
+not on the manager where you launched the solve.  An observer is a per-process object: it only sees
+the events emitted in *its* process.  To collect path data across an MPI run you attach observers on
+the workers and gather their results yourself with MPI (e.g. ``comm.gather``); a single observer on
+rank 0 will not see the paths.  For shared-memory threading there is nothing to gather -- the worker
+threads share the one process, which is why ``SolutionPathCollector`` "just works" with threads but
+needs help under MPI.
 
 A 3-D system, coloured by condition number
 ==========================================
