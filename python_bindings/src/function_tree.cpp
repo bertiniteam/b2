@@ -51,7 +51,7 @@ namespace bertini{
 		void SetupFunctionTree()
 		{
 			// Tell Python that pointers to derived Nodes can be used as Node pointers
-			implicitly_convertible<std::shared_ptr<node::Float>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<node::Complex>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::special_number::Pi>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::special_number::E>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::Variable>, Nodeptr>();

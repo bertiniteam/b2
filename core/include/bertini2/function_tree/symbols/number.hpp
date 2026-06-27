@@ -36,7 +36,7 @@
 /**
 \file number.hpp
 
-\brief Provides the Number Node types, including Rational, Float, and Integer
+\brief Provides the Number Node types, including Rational, Complex, and Integer
 
 */
 
@@ -251,18 +251,23 @@ namespace node{
 
 
 	/**
-	\brief Number type for storing floating point numbers within an expression tree.  
+	\brief A complex-number literal node in an expression tree.
 
-	 Number type for storing floating point numbers within an expression tree.  The number passed in at construct time is stored as the true value, and evaluation down or up samples from this 'true value'.  Consider using a Rational or Integer if possible.
+	Stores an arbitrary-precision **complex** value (mpfr_complex) -- a real-valued literal is just
+	the special case with zero imaginary part.  The value passed at construction time is held as the
+	'true value' at its authored precision, and evaluation down- or up-samples from it.  Despite the
+	historical "float" name this node carried, it is NOT real-only: it holds a full complex number.
+	Prefer a Rational or Integer when the coefficient is exact -- they evaluate faster and to
+	arbitrary precision without a stored sample.
 	*/
-	class Float : public Number
+	class Complex : public Number
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
 
 
-		~Float() = default;
+		~Complex() = default;
 		
 
 
@@ -299,14 +304,14 @@ namespace node{
 
 		std::size_t HashImpl() const override
 		{
-			std::size_t h = typeid(Float).hash_code();
+			std::size_t h = typeid(Complex).hash_code();
 			HashCombine(h, std::hash<std::string>{}(highest_precision_value_.real().str()));
 			HashCombine(h, std::hash<std::string>{}(highest_precision_value_.imag().str()));
 			return h;
 		}
 		bool IsSame(Node const& other) const override
 		{
-			auto o = dynamic_cast<Float const*>(&other);
+			auto o = dynamic_cast<Complex const*>(&other);
 			return o
 				&& highest_precision_value_.real() == o->highest_precision_value_.real()
 				&& highest_precision_value_.imag() == o->highest_precision_value_.imag();
@@ -314,26 +319,26 @@ namespace node{
 
 		template<typename... Ts>
 		static
-		std::shared_ptr<Float> Make(Ts&& ...ts){
-			return std::static_pointer_cast<Float>(Intern(std::shared_ptr<Node>( new Float(ts...) )));
+		std::shared_ptr<Complex> Make(Ts&& ...ts){
+			return std::static_pointer_cast<Complex>(Intern(std::shared_ptr<Node>( new Complex(ts...) )));
 		}
 
 	private:
 
 		explicit
-		Float(mpfr_complex const& val) : highest_precision_value_(val)
+		Complex(mpfr_complex const& val) : highest_precision_value_(val)
 		{}
 
 		explicit
-		Float(mpfr_float const& rval, mpfr_float const& ival = 0) : highest_precision_value_(rval,ival)
+		Complex(mpfr_float const& rval, mpfr_float const& ival = 0) : highest_precision_value_(rval,ival)
 		{}
 
 		explicit
-		Float(std::string const& val) : highest_precision_value_(val)
+		Complex(std::string const& val) : highest_precision_value_(val)
 		{}
 
 		explicit
-		Float(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
+		Complex(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
 		{}
 
 
@@ -341,7 +346,7 @@ namespace node{
 		mpfr_complex highest_precision_value_;
 
 		friend class boost::serialization::access;
-		Float() = default;
+		Complex() = default;
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Number>(*this);

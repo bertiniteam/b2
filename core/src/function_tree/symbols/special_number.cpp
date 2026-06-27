@@ -71,7 +71,7 @@ std::shared_ptr<Node> E()
 
 std::shared_ptr<Node> I()
 {
-	return Float::Make(0,1);
+	return Complex::Make(0,1);
 }
 
 

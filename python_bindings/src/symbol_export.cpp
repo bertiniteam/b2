@@ -115,13 +115,20 @@ namespace bertini{
 			class_<Number, boost::noncopyable, bases<Symbol>, std::shared_ptr<Number> >("AbstractNumber", no_init)
 			;
 			
-			// Float class
-			class_<Float, bases<Number>, std::shared_ptr<Float> >("Float", no_init)
-			.def("__init__", make_constructor(&Float::template Make<mpfr_float const&, mpfr_float const&>))
-			.def("__init__", make_constructor(&Float::template Make<std::string const&>))
-			.def("__init__", make_constructor(&Float::template Make<std::string const&, std::string const&>))
-			.def("__init__", make_constructor(&Float::template Make<mpfr_complex const&>))
-			.def("value", &Float::GetValue, return_value_policy<copy_const_reference>(), "the literal value this node represents, at its stored (highest) precision")
+			// Complex class -- a complex-number literal node (NOT a real "float"): it stores a full
+			// arbitrary-precision complex value; a real literal is the zero-imaginary special case.
+			// Construct from one argument (the real part, or a multiprec value) or two (real, imag).
+			// Prefer Integer/Rational for exact coefficients -- they are faster and need no stored sample.
+			class_<Complex, bases<Number>, std::shared_ptr<Complex> >("Complex",
+				"A complex-number literal node in an expression tree.  Holds a full arbitrary-precision "
+				"complex value (a real literal is just zero imaginary part).  Build it as Complex(real) "
+				"or Complex(real, imag) from exact strings/multiprec values; prefer Integer or Rational "
+				"for exact non-irrational coefficients.", no_init)
+			.def("__init__", make_constructor(&Complex::template Make<mpfr_float const&, mpfr_float const&>))
+			.def("__init__", make_constructor(&Complex::template Make<std::string const&>))
+			.def("__init__", make_constructor(&Complex::template Make<std::string const&, std::string const&>))
+			.def("__init__", make_constructor(&Complex::template Make<mpfr_complex const&>))
+			.def("value", &Complex::GetValue, return_value_policy<copy_const_reference>(), "the literal value this node represents, at its stored (highest) precision")
 			;
 			
 			

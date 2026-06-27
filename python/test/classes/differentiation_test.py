@@ -61,14 +61,14 @@ def tol_mp():
 
 @pytest.fixture
 def diffvars():
-    # variables, two Float constants, and the evaluation point (a superset map; eval_at takes only
+    # variables, two Complex constants, and the evaluation point (a superset map; eval_at takes only
     # the variables each partial derivative actually contains).
     x = Variable("x")
     y = Variable("y")
     z = Variable('z')
     p = Variable('p')
-    a = Float(mpfr_complex("3.12", ".612"))
-    b = Float(mpfr_complex("-.823", "2.62"))
+    a = Complex(mpfr_complex("3.12", ".612"))
+    b = Complex(mpfr_complex("-.823", "2.62"))
     pt = dict(x=mpfr_complex("-2.43", ".21"), y=mpfr_complex("4.84", "-1.94"),
               z=mpfr_complex("-6.48", "-.731"), p=mpfr_complex("-.321", "-.72"))
     return x, y, z, p, a, b, pt

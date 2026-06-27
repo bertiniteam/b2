@@ -261,16 +261,16 @@ namespace bertini {
 	 (re)produce the constant's value at any working precision, without evaluating a function-tree
 	 node (ADR-0027; node evaluation is being retired).  Integers and rationals are stored exactly
 	 (so they downsample to any precision without loss --- sidestepping any maximum-precision
-	 setting); Pi/E are recomputed at the working precision; a Float literal carries its
+	 setting); Pi/E are recomputed at the working precision; a Complex literal carries its
 	 authored-precision value (its inherent ceiling).
 	 */
 	struct ConstantRecipe{
-		enum class Kind : int { Integer, Rational, Float, Pi, E };
+		enum class Kind : int { Integer, Rational, Complex, Pi, E };
 
 		Kind kind = Kind::Integer;
 		mpz_int      int_value;             //< Kind::Integer  (exact)
 		mpq_rational rat_real, rat_imag;    //< Kind::Rational (exact)
-		mpfr_complex float_value;           //< Kind::Float (authored-precision literal; also a fixed variable's value)
+		mpfr_complex float_value;           //< Kind::Complex (authored-precision literal; also a fixed variable's value)
 		size_t slot = 0;                    //< where this constant lives in the register file
 
 		/// Produce the constant's value at the ambient working precision (ThreadPrecision), matching
@@ -816,7 +816,7 @@ namespace bertini {
 			// symbols and roots
 			public Visitor<node::Variable>,
 			public Visitor<node::Integer>,
-			public Visitor<node::Float>,
+			public Visitor<node::Complex>,
 			public Visitor<node::Rational>,
 			public Visitor<node::NamedExpression>,
 			public Visitor<node::Differential>,
@@ -870,7 +870,7 @@ namespace bertini {
 			// symbols and roots
 			virtual void Visit(node::Variable const& n);
 			virtual void Visit(node::Integer const& n);
-			virtual void Visit(node::Float const& n);
+			virtual void Visit(node::Complex const& n);
 			virtual void Visit(node::Rational const& n);
 			virtual void Visit(node::NamedExpression const& n);
 			virtual void Visit(node::Differential const& n);

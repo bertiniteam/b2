@@ -35,7 +35,7 @@ using bertini::node::Variable;
 // gamma fixed off the real axis for reproducibility.
 static std::shared_ptr<node::Node> Gamma()
 {
-	return node::Float::Make(mpfr_complex("0.6", "0.8"));
+	return node::Complex::Make(mpfr_complex("0.6", "0.8"));
 }
 
 // A LinearFormsBlock-backed single-form system  c.[x;1]  over variables {x,y}.

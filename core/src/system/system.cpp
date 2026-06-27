@@ -896,13 +896,13 @@ namespace bertini
 		Nd LinearFormNode(Mat<mpfr_complex> const& M, Eigen::Index r,
 		                  VariableGroup const& vars, size_t num_vars)
 		{
-			Nd form = node::Float::Make(M(r, static_cast<Eigen::Index>(num_vars))); // constant term
+			Nd form = node::Complex::Make(M(r, static_cast<Eigen::Index>(num_vars))); // constant term
 			for (size_t c = 0; c < num_vars; ++c)
 			{
 				mpfr_complex const& coeff = M(r, static_cast<Eigen::Index>(c));
 				if (coeff.real() == 0 && coeff.imag() == 0)
 					continue;
-				form = form + node::Float::Make(coeff) * vars[c];
+				form = form + node::Complex::Make(coeff) * vars[c];
 			}
 			return form;
 		}
@@ -988,7 +988,7 @@ namespace bertini
 							mpfr_complex const& c = R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
 							if (c.real() == 0 && c.imag() == 0)
 								continue;
-							Nd term = Float::Make(c) * fj[j];
+							Nd term = Complex::Make(c) * fj[j];
 							if (hom)
 								for (size_t g = 0; g < homvars.size(); ++g)
 								{
@@ -1020,7 +1020,7 @@ namespace bertini
 								mpfr_complex const& coeff = M(r, static_cast<Eigen::Index>(c));
 								if (coeff.real() == 0 && coeff.imag() == 0)
 									continue;
-								Nd term = node::Float::Make(coeff) * vars[c];
+								Nd term = node::Complex::Make(coeff) * vars[c];
 								form = form ? (form + term) : term;
 							}
 							out.push_back(form ? form : Nd(Integer::Make(0)));
@@ -1551,7 +1551,7 @@ namespace bertini
 	{
 		auto t = node::Variable::Make(path_variable_name);
 		auto g = gamma ? gamma
-		               : std::static_pointer_cast<node::Node>(node::Float::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Float node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
+		               : std::static_pointer_cast<node::Node>(node::Complex::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Complex node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
 
 		System homotopy;
 		if (start.HasStructuredBlocks() || target.HasStructuredBlocks())
@@ -1635,7 +1635,7 @@ namespace bertini
 
 		auto t = node::Variable::Make(path_variable_name);
 		auto g = gamma ? gamma
-		               : std::static_pointer_cast<node::Node>(node::Float::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Float node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
+		               : std::static_pointer_cast<node::Node>(node::Complex::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Complex node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
 
 		// Keep the fixed system's blocks as sibling blocks (do NOT clear them): they are autonomous,
 		// so they are evaluated once per point and contribute nothing to dH/dt as the moving rows

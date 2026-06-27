@@ -64,7 +64,7 @@ namespace bertini{
 
 	// Produce a constant's value directly from its exact recipe --- no function-tree node, no node
 	// evaluation (ADR-0027).  These mirror the number nodes' FreshEval_d / FreshEval_mp exactly
-	// (Integer/Float/Rational in number.cpp; Pi/E in special_number.cpp) so the compiled program
+	// (Integer/Complex/Rational in number.cpp; Pi/E in special_number.cpp) so the compiled program
 	// evaluates bit-for-bit identically to the old node-backed path, at the ambient working
 	// precision (ThreadPrecision).
 	template<>
@@ -72,7 +72,7 @@ namespace bertini{
 		switch (kind) {
 			case Kind::Integer:  return dbl_complex(double(int_value), 0);
 			case Kind::Rational: return dbl_complex(double(rat_real), double(rat_imag));
-			case Kind::Float:    return dbl_complex(float_value);
+			case Kind::Complex:    return dbl_complex(float_value);
 			case Kind::Pi:       return dbl_complex(boost::math::constants::pi<double>(), 0);
 			case Kind::E:        return dbl_complex(exp(1.0), 0.0);
 		}
@@ -85,7 +85,7 @@ namespace bertini{
 		switch (kind) {
 			case Kind::Integer:  return mpfr_complex(int_value, 0, ThreadPrecision());
 			case Kind::Rational: return mpfr_complex(mpfr_float(rat_real, ThreadPrecision()), mpfr_float(rat_imag, ThreadPrecision()));
-			case Kind::Float:    return mpfr_complex(float_value, ThreadPrecision());
+			case Kind::Complex:    return mpfr_complex(float_value, ThreadPrecision());
 			case Kind::Pi:       return mpfr_complex(boost::math::constants::pi<mpfr_float>());
 			case Kind::E:        return mpfr_complex(mpfr_float(exp(mpfr_float(1))));
 		}
@@ -412,7 +412,7 @@ namespace bertini{
 	void SLPProgram::PartitionInstructions()
 	{
 		// A memory slot is "frozen" if its value depends only on frozen inputs.  Seed: the literal
-		// numbers (Integer/Float/Rational and Pi/E, all in true_values_of_numbers_) are frozen; the
+		// numbers (Integer/Complex/Rational and Pi/E, all in true_values_of_numbers_) are frozen; the
 		// variable and time slots are live.  Then a single forward pass propagates frozenness: an
 		// instruction is frozen iff all its input slots are frozen, and it freezes its output slot.
 		const size_t num_slots = num_slots_;
@@ -496,8 +496,8 @@ namespace bertini{
 			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Rational;
 			r.rat_real = n.GetValueReal(); r.rat_imag = n.GetValueImag(); return r;
 		}
-		ConstantRecipe RecipeFor(node::Float const& n){
-			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Float; r.float_value = n.GetValue(); return r;
+		ConstantRecipe RecipeFor(node::Complex const& n){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Complex; r.float_value = n.GetValue(); return r;
 		}
 		ConstantRecipe RecipeFor(node::special_number::Pi const&){
 			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Pi; return r;
@@ -519,7 +519,7 @@ namespace bertini{
 		// A system's variables are all pre-registered before its function trees are compiled, so
 		// reaching this Visit means a function references a variable that is not in the system's
 		// variable ordering.  That is unsupported: to bake a constant into a function, build it with
-		// a literal (Float / Integer / Rational), not a variable removed from the ordering.
+		// a literal (Complex / Integer / Rational), not a variable removed from the ordering.
 		throw std::runtime_error("SLP compile: a function references the variable '" + n.name() +
 			"', which is not in the system's variable ordering");
 	}
@@ -539,7 +539,7 @@ namespace bertini{
 		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
-	void SLPCompiler::Visit(node::Float const& n){
+	void SLPCompiler::Visit(node::Complex const& n){
 		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 

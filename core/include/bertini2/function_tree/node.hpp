@@ -159,7 +159,7 @@ public:
 	/**
 	\brief Is this node the literal constant 0?
 
-	Exact check on stored literal values (Integer/Float/Rational override);
+	Exact check on stored literal values (Integer/Complex/Rational override);
 	false for everything else, including non-literal expressions that happen
 	to evaluate to zero.  Used by differentiation to build already-simplified
 	trees without evaluating anything.
@@ -185,7 +185,7 @@ public:
 	Order-sensitive: equal structures hash equal, where children are folded in by their own
 	Hash() and operand order / signs / exponents participate.  The default (leaves and any
 	node not overriding HashImpl) is node identity (the object's address), so distinct objects
-	hash distinctly; value nodes (Integer/Rational/Float) and operators override to be
+	hash distinctly; value nodes (Integer/Rational/Complex) and operators override to be
 	structural.  Memoized -- valid because nodes are immutable post-construction -- and
 	deliberately independent of the mutable working precision (stable across precision()).
 

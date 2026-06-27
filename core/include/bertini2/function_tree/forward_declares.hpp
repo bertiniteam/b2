@@ -39,7 +39,7 @@ namespace bertini {
 	namespace node{ 
 		class Variable;
 		class Integer;
-		class Float;
+		class Complex;
 		class Rational;
 		class NamedExpression;
 		class Differential;
@@ -88,7 +88,7 @@ namespace bertini {
 		{
 			ar.template register_type<bertini::node::Variable>();
 			ar.template register_type<bertini::node::Integer>();
-			ar.template register_type<bertini::node::Float>();
+			ar.template register_type<bertini::node::Complex>();
 			ar.template register_type<bertini::node::Rational>();
 			ar.template register_type<bertini::node::NamedExpression>();
 			ar.template register_type<bertini::node::Differential>();

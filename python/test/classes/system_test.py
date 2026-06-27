@@ -62,7 +62,7 @@ def variables():
 @pytest.fixture
 def fg(variables):
     x, y, z = variables
-    a = Float("4.897", "1.23")
+    a = Complex("4.897", "1.23")
     f = (x*y)
     g = (pow(x, 2)*y - a*z*x)
     return f, g

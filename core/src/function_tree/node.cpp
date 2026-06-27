@@ -34,7 +34,7 @@
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Variable)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Differential)
 
-BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Float)
+BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Complex)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Integer)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Rational)
 

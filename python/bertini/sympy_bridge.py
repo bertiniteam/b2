@@ -113,7 +113,7 @@ def from_sympy(expr, variables=None):
         if isinstance(e, _sp.Rational):  # after Integer: Integer is a Rational in sympy
             return _sym.Rational(f'{e.p}/{e.q}')
         if isinstance(e, _sp.Float):
-            return _sym.Float(str(e))
+            return _sym.Complex(str(e))
         if e is _sp.pi:
             return _sym.make_pi()
         if e is _sp.E:
@@ -245,7 +245,7 @@ def to_sympy(node):
         re = _exact_rational(n.value_real())
         im = _exact_rational(n.value_imag())
         return re if im == 0 else re + _sp.I * im
-    if isinstance(n, _sym.Float):
+    if isinstance(n, _sym.Complex):
         v = n.value()
         digits = v.real.precision
         # repr is full-precision (str truncates to ostream's default 6 digits)

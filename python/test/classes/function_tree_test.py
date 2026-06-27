@@ -70,15 +70,15 @@ def sym():
 
 def test_Float_construct(sym):
     x_d, y_d, z_d, p_d, tol_d, x_mp, y_mp, z_mp, p_mp, tol_mp = sym
-    x = Float("4.3", "-9e-3")
-    x = Float(y_mp)
-    x = Float(mpfr_float("9.3"), mpfr_float("-3"))
-    x = Float("9.2", "-43.2e2")
+    x = Complex("4.3", "-9e-3")
+    x = Complex(y_mp)
+    x = Complex(mpfr_float("9.3"), mpfr_float("-3"))
+    x = Complex("9.2", "-43.2e2")
 
 
 def test_Float_funcs(sym):
     x_d, y_d, z_d, p_d, tol_d, x_mp, y_mp, z_mp, p_mp, tol_mp = sym
-    x = Float(x_mp); y = Float(y_mp); z = Float(z_mp)
+    x = Complex(x_mp); y = Complex(y_mp); z = Complex(z_mp)
     #
     assert x.degree() == 0
     y.differentiate()                 # a constant differentiates without error
@@ -134,15 +134,15 @@ def test_special_constants_construct():
 
 @pytest.fixture
 def op():
-    """Variables and Float constants for the structural operator tests (degree / homogeneity /
+    """Variables and Complex constants for the structural operator tests (degree / homogeneity /
     polynomiality / homogenization).  Operator value-correctness is verified through the SLP in
     eval_expression_test.py, not by evaluating nodes here."""
     x = Variable("x")
     y = Variable("y")
     z = Variable("z")
     p = Variable("p")
-    a = Float(mpfr_complex("3.12", ".612"))
-    b = Float(mpfr_complex("-.823", "2.62"))
+    a = Complex(mpfr_complex("3.12", ".612"))
+    b = Complex(mpfr_complex("-.823", "2.62"))
     tol_d = float(9e-14)
     tol_mp = mpfr_float("1e-27")
     return x, y, z, p, a, b, tol_d, tol_mp

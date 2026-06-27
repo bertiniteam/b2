@@ -142,7 +142,7 @@ namespace bertini {
 			struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>
 			{
 				using Node = node::Node;
-				using Float = node::Float;
+				using Complex = node::Complex;
 				using Integer = node::Integer;
 				using Rational = node::Rational;
 				
@@ -238,7 +238,7 @@ namespace bertini {
 					
 					number_.name("number_");
 					number_ =
-					mpfr_rules_.long_number_string_ [ _val = make_shared_<Float>()(_1) ]
+					mpfr_rules_.long_number_string_ [ _val = make_shared_<Complex>()(_1) ]
 					|
 					mpfr_rules_.integer_string_ [ _val = make_shared_<Integer>()(_1) ];
 					

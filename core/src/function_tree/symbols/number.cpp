@@ -58,7 +58,7 @@ void Integer::print(std::ostream & target) const
 ////////////////
 
 
-void Float::print(std::ostream & target) const
+void Complex::print(std::ostream & target) const
 {
 	// real-valued floats print bare; the complex pair form is reserved for
 	// genuinely complex values

@@ -38,11 +38,11 @@
 BOOST_AUTO_TEST_SUITE(homogenization)
 
 using Variable = bertini::node::Variable;
-using Float = bertini::node::Float;
+using Complex = bertini::node::Complex;
 using mpfr_float = bertini::mpfr_float;
 using Var = std::shared_ptr<bertini::node::Variable>;
 
-using Flt = std::shared_ptr<bertini::node::Float>;
+using Flt = std::shared_ptr<bertini::node::Complex>;
 using VariableGroup = bertini::VariableGroup;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr_complex;
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_sqrt_x)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_sin_0)
 {
-	Flt n = Float::Make("1");
+	Flt n = Complex::Make("1");
 
 	auto f1 = sin(n);
 	
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_sin_0)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
 {
-	Flt n = Float::Make("1");
+	Flt n = Complex::Make("1");
 
 	auto f1 = cos(n);
 	
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_sin_1_plus_1)
 {
-	Flt n = Float::Make("1");
+	Flt n = Complex::Make("1");
 
 	auto f1 = sin(n + n);
 	
