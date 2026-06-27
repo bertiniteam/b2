@@ -450,8 +450,10 @@ namespace bertini{
 					else    cplx[c] = pow(cplx[a], this->integers_[b]);
 					break;
 
-				case Assign:   un_preserve(a, b, ro, [](auto const& x){ return x; }); break;
-				case Negate:   un_preserve(a, b, ro, [](auto const& x){ return -x; }); break;
+				// Direct, in-place (no by-value lambda): `return x` / `return -x` would mint a temporary
+				// (an allocation per op at mp); a slot-to-slot copy / negate evaluates in place.
+				case Assign:   if (ro) real[b] = real[a];  else cplx[b] = cplx[a];   break;
+				case Negate:   if (ro) real[b] = -real[a]; else cplx[b] = -cplx[a];  break;
 				case Exp:      un_preserve(a, b, ro, [](auto const& x){ return exp(x); }); break;
 				case Sin:      un_preserve(a, b, ro, [](auto const& x){ return sin(x); }); break;
 				case Cos:      un_preserve(a, b, ro, [](auto const& x){ return cos(x); }); break;
@@ -906,19 +908,30 @@ namespace bertini{
 		else {
 			const unsigned m = expo < 0 ? static_cast<unsigned>(-static_cast<long long>(expo))
 			                            : static_cast<unsigned>(expo);
-			if (m == 1)
-				result_loc = base_loc;                       // x^1 = x (no instruction)
-			else {
-				// base^m by repeated multiplication.  Every multiply must have DISTINCT operands:
-				// mpc squaring (a*a, aliased) allocates a temporary, whereas a*b does not -- so we
-				// first copy the base into its own slot and always multiply against that copy.  The
-				// result is allocation-free (vs ~14 heap ops for boost's pow).
-				const size_t base_copy = next_available_complex_++;
-				program_under_construction_.AddInstruction(Assign, base_loc, base_copy);
-				size_t acc = base_loc;                       // acc = base^1
-				for (unsigned k = 2; k <= m; ++k) acc = emit_mul(acc, base_copy);  // acc *= base
-				result_loc = acc;                            // base^m
+			// base^m by exponentiation-by-squaring, emitted as multiplications: O(log m) multiplies
+			// instead of O(m) -- a large win at high degree / high precision, where each mpfr multiply
+			// is costly and pow(complex,complex) is far costlier still.  Allocation-free: a*a (aliased
+			// operands) allocates a temporary whereas a*b does not, so before each squaring we copy the
+			// running square into a distinct slot and only ever multiply distinct slots.  The loop also
+			// covers m==1 (yields base_loc, emitting nothing).
+			auto emit_copy = [&](size_t s) -> size_t {
+				const size_t out = next_available_complex_++;
+				program_under_construction_.AddInstruction(Assign, s, out);
+				return out;
+			};
+			size_t sq = base_loc;                            // sq = base^(2^bit)
+			size_t acc = 0; bool have = false;
+			for (unsigned mm = m; mm > 0; mm >>= 1u) {
+				if (mm & 1u) {                               // accumulate this set bit
+					if (have) acc = emit_mul(acc, sq);
+					else      { acc = sq; have = true; }
+				}
+				if (mm > 1u) {                               // more bits remain: sq = sq^2 (distinct ops)
+					const size_t copy = emit_copy(sq);
+					sq = emit_mul(sq, copy);
+				}
 			}
+			result_loc = acc;                                // base^m
 			if (expo < 0) {                                  // x^-k = 1 / x^k
 				const size_t recip = next_available_complex_++;
 				program_under_construction_.AddInstruction(Divide, one_loc(), result_loc, recip);
