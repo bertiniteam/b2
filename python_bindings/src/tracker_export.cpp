@@ -49,6 +49,13 @@ namespace bertini{
 			scope new_submodule_scope = new_submodule;
 			new_submodule_scope.attr("__doc__") = "Tracking things.  Includes the three fundamental trackers, and utility functions.";
 
+			// Register the common observable base so that a base-class pointer (e.g. the one
+			// returned by a path event's tracker()) RTTI-downcasts to the concrete tracker in
+			// Python -- the same mechanism AnyZeroDim uses for event.solver().  No methods are
+			// exposed on it; add_observer lives on each concrete tracker via ObservableVisitor.
+			// Must be registered before the trackers that declare bases<Observable>.
+			class_<bertini::Observable, boost::noncopyable>("Observable", no_init);
+
 			ExportConfigSettings();
 			ExportAMPTracker();
 			ExportFixedTrackers();
@@ -56,7 +63,7 @@ namespace bertini{
 
 		void ExportAMPTracker()
 		{
-			class_<AMPTracker, std::shared_ptr<AMPTracker> >("AMPTracker", "The adaptive multiple precision (AMP) tracker.  Ambient numeric type is multiple-precision (mpfr_complex).  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
+			class_<AMPTracker, std::shared_ptr<AMPTracker>, bases<bertini::Observable> >("AMPTracker", "The adaptive multiple precision (AMP) tracker.  Ambient numeric type is multiple-precision (mpfr_complex).  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
 			.def(TrackerVisitor<AMPTracker>())
 			.def(AMPTrackerVisitor<AMPTracker>())
 			;
@@ -70,7 +77,7 @@ namespace bertini{
 
 		void ExportFixedDoubleTracker()
 		{
-			class_<DoublePrecisionTracker, std::shared_ptr<DoublePrecisionTracker> >("DoublePrecisionTracker", "The double precision tracker.  Tracks using only complex doubles.  Ambient numeric type is double.  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
+			class_<DoublePrecisionTracker, std::shared_ptr<DoublePrecisionTracker>, bases<bertini::Observable> >("DoublePrecisionTracker", "The double precision tracker.  Tracks using only complex doubles.  Ambient numeric type is double.  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
 			.def(TrackerVisitor<DoublePrecisionTracker>())
 			.def(FixedDoubleTrackerVisitor<DoublePrecisionTracker>())
 			;
@@ -78,7 +85,7 @@ namespace bertini{
 
 		void ExportFixedMultipleTracker()
 		{
-			class_<MultiplePrecisionTracker, std::shared_ptr<MultiplePrecisionTracker> >("MultiplePrecisionTracker", "The fixed multiple precision tracker.  Ambient numeric type is multiple-precision (mpfr_complex).  Precision is the value of bertini.default_precision() at contruction.  Errors if you try to feed it things not at that precision.  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
+			class_<MultiplePrecisionTracker, std::shared_ptr<MultiplePrecisionTracker>, bases<bertini::Observable> >("MultiplePrecisionTracker", "The fixed multiple precision tracker.  Ambient numeric type is multiple-precision (mpfr_complex).  Precision is the value of bertini.default_precision() at contruction.  Errors if you try to feed it things not at that precision.  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
 			.def(TrackerVisitor<MultiplePrecisionTracker>())
 			.def(FixedMultipleTrackerVisitor<MultiplePrecisionTracker>())
 			;

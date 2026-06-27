@@ -183,6 +183,11 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 	.def(ObservableVisitor<AlgoT>())
 	.def("solve",
 		+[](AlgoT& self, boost::python::object comm) -> void {
+			// Release the GIL for the whole solve: the worker threads run pure C++ numerics
+			// (no Python objects), so dropping the GIL gives true multicore parallelism on a
+			// stock CPython -- no free-threaded build needed.  Python observer callbacks
+			// re-acquire the GIL in the observer trampoline (see generic_observer.hpp).
+			bertini::python::ScopedGILRelease unlock_gil;
 #ifdef BERTINI2_HAVE_MPI
 			if (comm.is_none()) {
 				self.Run();

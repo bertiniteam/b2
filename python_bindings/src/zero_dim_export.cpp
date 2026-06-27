@@ -76,10 +76,26 @@ namespace bertini{
 			class_<AlgorithmStarted<AZ>,  bases<AlgorithmEvent<AZ>>, boost::noncopyable>("AlgorithmStarted",  no_init);
 			class_<AlgorithmComplete<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("AlgorithmComplete", no_init);
 
+			// .tracker() returns the tracker that actually executed this path; RTTI resolves the
+			// Observable base pointer to the concrete tracker (registered with bases<Observable>),
+			// so python gets the full tracker API (.add_observer, .observers, ...).  In a serial
+			// solve this is the solver's member tracker; in a threaded solve it is the thread-local
+			// clone -- so a meta-observer MUST attach its per-path sub-observer here, not to
+			// solver.get_tracker() (which runs nothing under threading).
+			auto started_tracker = +[](const PathStarted<AZ>& e) -> bertini::Observable* {
+				return const_cast<bertini::Observable*>(e.Tracker()); };
+			auto complete_tracker = +[](const PathComplete<AZ>& e) -> bertini::Observable* {
+				return const_cast<bertini::Observable*>(e.Tracker()); };
+
 			class_<PathStarted<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathStarted", no_init)
-				.def("path_index", &PathStarted<AZ>::PathIndex, "index of the solution path that is starting");
+				.def("path_index", &PathStarted<AZ>::PathIndex, "index of the solution path that is starting")
+				.def("tracker", started_tracker, return_value_policy<reference_existing_object>(),
+				     "the tracker that runs this path -- attach a per-path observer here (a thread-local "
+				     "clone when threaded, the member tracker when serial)");
 			class_<PathComplete<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathComplete", no_init)
-				.def("path_index", &PathComplete<AZ>::PathIndex, "index of the solution path that finished");
+				.def("path_index", &PathComplete<AZ>::PathIndex, "index of the solution path that finished")
+				.def("tracker", complete_tracker, return_value_policy<reference_existing_object>(),
+				     "the tracker that ran this path -- detach the per-path observer from it here");
 		}
 
 		void ExportZeroDim(){

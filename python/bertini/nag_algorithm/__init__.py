@@ -657,7 +657,12 @@ class SolutionPathCollector(_pybnalag.observers.CustomObserver):
     def Observe(self, event):
         obs = _pybnalag.observers
         if isinstance(event, obs.PathStarted):
-            tracker = event.solver().get_tracker()
+            # event.tracker() is the tracker that ACTUALLY runs this path: the solver's member
+            # tracker in a serial solve, or the thread-local clone in a threaded solve.  Attaching
+            # here (rather than to event.solver().get_tracker()) is what makes per-path collection
+            # work identically with and without threads -- under threading the member tracker runs
+            # nothing, so collecting from it would silently yield empty series.
+            tracker = event.tracker()
             # tracker.observers is the precision-appropriate module (set in bertini.tracking)
             collector = tracker.observers.PathDataCollector()
             collector.path_index = event.path_index()

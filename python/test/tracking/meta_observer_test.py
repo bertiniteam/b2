@@ -16,6 +16,20 @@ from bertini.tracking import amp_config_from
 from bertini.nag_algorithm import ZeroDim
 
 
+def _force_serial(solver):
+    """Pin a ZeroDim solver to a single thread (no pool).
+
+    The default solve is multi-threaded, where each path runs on a thread-local tracker clone --
+    so an observer attached to the solver's MEMBER tracker sees nothing.  Tests that exercise the
+    member-tracker attachment pattern force serial; threaded collection is covered separately via
+    SolutionPathCollector / event.tracker() in threaded_solve_test.py.
+    """
+    cfg = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
+    cfg.num_threads = 1
+    solver.set_config(cfg)
+    return solver
+
+
 # ---------------------------------------------------------------------------
 # Bare-tracker: deterministic, no endgame noise -> exactly one series per track
 # ---------------------------------------------------------------------------
@@ -218,7 +232,12 @@ def test_solution_path_collector_captures_more_than_the_main_track():
 
     sys = _circle_meets_line()
 
+    # Pin serial: this test attaches a collector directly to the solver's MEMBER tracker
+    # (solver2 below), which only runs the paths in serial mode.  The default solve is threaded,
+    # where paths run on thread-local clones -- see threaded_solve_test.py for the threaded path,
+    # which collects via event.tracker().
     solver = ZeroDim(sys, mptype='amp')
+    _force_serial(solver)
     a = SolutionPathCollector()
     solver.add_observer(a)
     solver.solve()
@@ -226,6 +245,7 @@ def test_solution_path_collector_captures_more_than_the_main_track():
 
     # tracker-level collector keeps only the main tracks (|t| start > 0.5)
     solver2 = ZeroDim(sys, mptype='amp')
+    _force_serial(solver2)
     b = tk.observers.amp.PathCollectionObserver()
     solver2.get_tracker().add_observer(b)
     solver2.solve()
@@ -237,6 +257,10 @@ def test_solution_path_collector_captures_more_than_the_main_track():
 def test_zerodim_solve_collects_all_paths():
     sys = _circle_meets_line()
     solver = ZeroDim(sys, mptype='amp')
+    # Attaching to the solver's member tracker collects only in serial mode; the default solve is
+    # threaded (paths run on clones).  For threaded collection use SolutionPathCollector /
+    # event.tracker() -- see threaded_solve_test.py.
+    _force_serial(solver)
 
     a = tk.observers.amp.PathCollectionObserver()
     solver.get_tracker().add_observer(a)
