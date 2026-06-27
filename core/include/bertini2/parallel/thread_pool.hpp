@@ -53,9 +53,14 @@ Example:
 
 #pragma once
 
-#ifdef BERTINI2_HAVE_MPI
+// NOTE: this header is intentionally NOT gated behind BERTINI2_HAVE_MPI.  The thread pool is
+// pure <thread>/<mutex>/<condition_variable> with no MPI dependency; it backs both the
+// MPI+threads hybrid worker AND the MPI-less shared-memory threaded solve.  See ADR / the
+// "MPI-less threading" plan: threading must be available in builds (and wheels) compiled
+// without any MPI installation.
 
 #include <condition_variable>
+#include <cstdlib>   // std::getenv, std::atoi
 #include <deque>
 #include <functional>
 #include <mutex>
@@ -67,6 +72,36 @@ Example:
 
 namespace bertini {
 namespace parallel {
+
+
+/**
+\brief Resolve a configured thread count to the number of worker threads to actually spawn.
+
+Precedence (highest first):
+  1. The OMP_NUM_THREADS environment variable, if set to an integer >= 1.  HPC schedulers
+     (SLURM) set this from --cpus-per-task, so honoring it keeps the MPI+threads hybrid and
+     the standalone threaded solve behaving the same under a job allocation.
+  2. The `configured` value, if >= 1 (e.g. a num_threads config knob set by the user).
+  3. std::thread::hardware_concurrency() when `configured == 0` ("auto").
+
+Always returns >= 1 (a return of 1 means "run serially, no pool").  hardware_concurrency()
+can report 0 on exotic platforms; we clamp that to 1.
+*/
+inline unsigned EffectiveThreadCount(unsigned configured = 0)
+{
+	if (const char* env = std::getenv("OMP_NUM_THREADS"))
+	{
+		int n = std::atoi(env);
+		if (n >= 1)
+			return static_cast<unsigned>(n);
+	}
+
+	if (configured >= 1)
+		return configured;
+
+	unsigned hw = std::thread::hardware_concurrency();
+	return hw >= 1 ? hw : 1u;
+}
 
 
 template<typename T>
@@ -194,5 +229,3 @@ public:
 
 } // namespace parallel
 } // namespace bertini
-
-#endif // BERTINI2_HAVE_MPI

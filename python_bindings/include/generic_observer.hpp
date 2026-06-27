@@ -56,6 +56,9 @@ struct ObserverWrapper : ObsT, wrapper<ObsT>
 	// existing observers keep working.  An observer that wants to self-detach can
 	// `return bertini.ObserveResult.Unsubscribe`.
 	ObserveResult Observe(AnyEvent const& e) override {
+		// A threaded solve releases the GIL and fires events from C++ worker threads; re-acquire
+		// the GIL before touching any Python object.  Safe on the main thread too (serial solve).
+		ScopedGILAcquire acquire_gil;
 		object result = this->get_override("Observe")(boost::ref(const_cast<AnyEvent&>(e)));
 		if (result.is_none())
 			return ObserveResult::KeepObserving;

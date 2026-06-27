@@ -628,6 +628,97 @@ def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma
     return _system.make_moving_homotopy(fixed, start_moving, end_moving, path_variable, gamma)
 
 
+def parameter_sweep(make_system, generic_parameters, target_parameters,
+                    *, collect=None, comm=None, mptype='adaptive', endgame='cauchy'):
+    """Solve a whole family of systems that differ only in their coefficients.
+
+    This is the *parameter homotopy* workhorse: pay for the hard ab-initio solve **once**, at a
+    generic parameter value, then reach every parameter point you actually care about by cheap
+    tracking that reuses those start solutions.  It is also the unit of parallelism -- the points
+    are independent, so pass an MPI communicator and the sweep spreads across the ranks for you.
+
+    Parameters
+    ----------
+    make_system : callable
+        ``make_system(parameters) -> bertini.System``.  Must return systems of the SAME shape
+        every call -- same variables and same monomials -- with only the coefficient *values*
+        depending on ``parameters``.  (Until first-class coefficient parameters land, this factory
+        is how you say "the same system at a different parameter value".)
+    generic_parameters
+        The parameter value for the one-time generic solve.  For robustness this should be
+        *generic* -- random complex values -- so the straight-line coefficient path to each target
+        avoids the measure-zero singular locus.
+    target_parameters : iterable
+        The parameter values you want solved.  Results line up with this order.
+    collect : callable, optional
+        ``collect(solver) -> value``.  If given, each solved point is reduced to ``collect(solver)``
+        and the return is the list of those values (instead of the solvers).  **Required** when
+        ``comm`` is given -- solver objects cannot cross MPI ranks, so what is gathered must be a
+        picklable value (e.g. a solution count, or ``solver.to_dataframe()``).
+    comm : mpi4py communicator, optional
+        If given, ``target_parameters`` is split across the ranks (each rank solves the generic
+        once, then tracks its slice -- with the path tracking inside each solve threaded across the
+        rank's cores via ``OMP_NUM_THREADS``).  The collected results are gathered and **every rank
+        returns the full list in the original order**.  This is the two-level model: MPI across
+        parameter points, threads across paths -- one extra argument, no manual scatter/gather.
+    mptype, endgame
+        Passed through to the solves (see :func:`ZeroDim`).
+
+    Returns
+    -------
+    list, one entry per ``target_parameters``: the solved :class:`ZeroDim` solvers, or -- if
+    ``collect`` is given -- the ``collect(solver)`` values.  A solver exposes ``.all_solutions()``,
+    ``.solution_metadata()`` and ``.to_dataframe()`` (let the solver do the real/finite
+    classification -- don't redo it by hand).
+
+    Examples
+    --------
+    Serial / threaded (threads are automatic -- a solve uses all cores by default)::
+
+        solvers = parameter_sweep(make_system, generic, targets)
+        counts  = [positive_real_count(s) for s in solvers]
+
+    Across MPI ranks, threads within -- the user-facing MPI code is just ``comm=`` and ``collect=``::
+
+        from mpi4py import MPI
+        counts = parameter_sweep(make_system, generic, targets,
+                                 collect=positive_real_count, comm=MPI.COMM_WORLD)
+        # every rank now holds the full `counts` list, in `targets` order
+    """
+    targets = list(target_parameters)
+    if comm is not None and collect is None:
+        raise ValueError("parameter_sweep(comm=...) needs collect=<solver -> picklable value>: "
+                         "solver objects cannot be gathered across MPI ranks.")
+
+    if comm is None:
+        my_indices = range(len(targets))
+    else:
+        my_indices = range(comm.Get_rank(), len(targets), comm.Get_size())
+
+    generic = make_system(generic_parameters)
+    gen_solver = ZeroDim(generic, mptype=mptype, endgame=endgame)
+    gen_solver.solve()
+    start_points = gen_solver.all_solutions()
+
+    local = []   # (index, solver-or-collected) for this rank's slice, in index order
+    for i in my_indices:
+        target = make_system(targets[i])
+        H = coefficient_parameter_homotopy(target, generic)
+        solver = user_homotopy(H, start_points, target, precision=mptype, endgame=endgame)
+        solver.solve()
+        local.append((i, collect(solver) if collect is not None else solver))
+
+    if comm is None:
+        return [value for _, value in local]
+
+    # Gather every rank's (index, value) pairs and reassemble in the original target order, so
+    # every rank returns the same full list.
+    merged = {}
+    for chunk in comm.allgather(local):
+        merged.update(dict(chunk))
+    return [merged[i] for i in range(len(targets))]
+
+
 # --- SolutionPathCollector: collect every solution path of a whole solve, for plotting ---
 #
 # A two-level meta-observer.  Attach one to a ZeroDim solver; on each PathStarted it spins
@@ -657,7 +748,12 @@ class SolutionPathCollector(_pybnalag.observers.CustomObserver):
     def Observe(self, event):
         obs = _pybnalag.observers
         if isinstance(event, obs.PathStarted):
-            tracker = event.solver().get_tracker()
+            # event.tracker() is the tracker that ACTUALLY runs this path: the solver's member
+            # tracker in a serial solve, or the thread-local clone in a threaded solve.  Attaching
+            # here (rather than to event.solver().get_tracker()) is what makes per-path collection
+            # work identically with and without threads -- under threading the member tracker runs
+            # nothing, so collecting from it would silently yield empty series.
+            tracker = event.tracker()
             # tracker.observers is the precision-appropriate module (set in bertini.tracking)
             collector = tracker.observers.PathDataCollector()
             collector.path_index = event.path_index()
@@ -678,6 +774,7 @@ __all__ = dir(_pybnalag)
 __all__.append('ZeroDim')
 __all__.append('user_homotopy')
 __all__.append('coefficient_parameter_homotopy')
+__all__.append('parameter_sweep')
 __all__.append('moving_homotopy')
 __all__.append('blend_homotopy')
 __all__.append('SolutionPathCollector')

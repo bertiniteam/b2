@@ -939,13 +939,40 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 				// re-run any crossed path in full.  This is the same shape the distributed solve uses
 				// (one worker per whole path), so serial and distributed share the per-path primitive
 				// -- including computing the start point via the same ComputeStartPoint.
+
+				// Compute every start point once, up front (deterministic per index, as the MPI
+				// manager does).  The threaded dispatch ships each worker its start point, and the
+				// serial path / crossed-path re-tracks reuse the identical points from here.
+				std::vector<Vec<BaseComplexT>> start_points(num_start_points_);
+				std::vector<SolnIndT>          all_indices(num_start_points_);
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
 					auto idx = static_cast<SolnIndT>(ii);
-					ExecuteOnePath(MemberDuringEGContext(), idx, ComputeStartPoint(idx));
+					start_points[ii] = ComputeStartPoint(idx);
+					all_indices[ii]  = idx;
 				}
 
-				RunMidpathResolution([this](SolnIndT idx){ ExecuteOnePath(MemberDuringEGContext(), idx, ComputeStartPoint(idx)); });
+				// num_threads: 0 = auto (hardware_concurrency), 1 = serial, N = N threads;
+				// OMP_NUM_THREADS overrides.  n_threads <= 1 takes the pool-free serial path.
+				const unsigned n_threads =
+					parallel::EffectiveThreadCount(this->template Get<ZeroDimConf>().num_threads);
+
+				if (n_threads <= 1)
+				{
+					for (auto idx : all_indices)
+						ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
+				}
+				else
+				{
+					RunPathsThreaded(all_indices, start_points, n_threads);
+				}
+
+				// Crossed-path re-tracks run on the main thread against the (escalated) member
+				// tracker.  They are typically rare (often none); running them in parallel too is a
+				// deferred optimization.
+				RunMidpathResolution([this, &start_points](SolnIndT idx){
+					ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
+				});
 
 				PostEGAction();
 
@@ -1302,9 +1329,9 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 				}
 			}
 
-#ifdef BERTINI2_HAVE_MPI
 			/**
-			Self-contained per-thread state for executing one WHOLE path on a threaded MPI worker.
+			Self-contained per-thread state for executing one WHOLE path on a worker thread --
+			used by both the standalone (MPI-less) threaded solve and the threaded MPI worker.
 			Each std::thread owns one: a homotopy copy (tracked by `tracker`), a target-system copy
 			(residual evaluation mutates System precision state), a Tracker and Endgame, and its own
 			precision observers so observer-derived metadata matches serial runs.  Build a
@@ -1324,7 +1351,83 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 					return DuringEGContext{ target_sys, tracker, endgame, first_prec_rec, min_max_prec };
 				}
 			};
-#endif // BERTINI2_HAVE_MPI
+
+			/**
+			\brief Build the per-thread state factory: a callable () -> unique_ptr<PathThreadState>
+			that each worker thread invokes once at startup.
+
+			Clone() (deep copy), not a plain copy: System copies are SHALLOW (they share
+			expression-tree nodes whose value caches mutate on Eval), so two threads sharing a System
+			copy would race on those caches.  Clone() deep-copies the tree, giving each thread a fully
+			independent homotopy + target system.  The tracker/endgame are copied and re-pointed at the
+			thread's own systems, and the thread's mpfr precision is set.  Shared by the standalone
+			threaded solve and the threaded MPI worker.
+			*/
+			auto MakeThreadStateFactory()
+			{
+				return [this]() -> std::unique_ptr<PathThreadState>
+				{
+					// Trackers/Endgames have no default ctor, so aggregate-init via new; {},{} default
+					// the two precision recorders.
+					std::unique_ptr<PathThreadState> s(
+						new PathThreadState{ Clone(GetTracker().GetSystem()), Clone(TargetSystem()),
+						                     GetTracker(), GetEndgame(), {}, {} });
+					s->tracker.SetSystem(s->sys);       // re-point the copy at its own System
+					s->endgame.SetTracker(s->tracker);  // ... and the endgame at that tracker
+					SetThreadPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
+					return s;
+				};
+			}
+
+			/**
+			\brief Build the per-path track function: (PathThreadState&, StartPointTask) -> FullPathResult.
+
+			Executes one whole path against the thread-local state, then packs the result.  The pack
+			(read shared [idx] slots into a value) + main-thread StoreFullPathResult (install) split is
+			what keeps the shared result arrays race-free across worker threads.  Shared by the
+			standalone threaded solve and the threaded MPI worker.
+			*/
+			auto MakeThreadTrackFn()
+			{
+				return [this](std::unique_ptr<PathThreadState>& state,
+				              parallel::StartPointTask<BaseComplexT> const& task)
+				           -> parallel::FullPathResult<BaseComplexT>
+				{
+					auto idx = static_cast<SolnIndT>(task.path_index);
+					ExecuteOnePath(state->Context(), idx, task.start_point);
+					return PackFullPathResult(idx);
+				};
+			}
+
+			/**
+			\brief Track a set of whole paths across a shared-memory thread pool (no MPI).
+
+			Each worker thread owns a PathThreadState clone; this (the main) thread submits all the
+			given path indices, then collects exactly that many results and installs each serially via
+			StoreFullPathResult.  `start_points` is indexed by global path index, so a subset of
+			`indices` (e.g. crossed paths) reuses the identical authoritative start points.
+			*/
+			void RunPathsThreaded(std::vector<SolnIndT> const& indices,
+			                      std::vector<Vec<BaseComplexT>> const& start_points,
+			                      unsigned n_threads)
+			{
+				using Task   = parallel::StartPointTask<BaseComplexT>;
+				using Result = parallel::FullPathResult<BaseComplexT>;
+
+				auto state_factory = MakeThreadStateFactory();
+				auto track_fn      = MakeThreadTrackFn();
+
+				parallel::WorkerThreadPool<Task, Result, decltype(state_factory), decltype(track_fn)>
+					pool(static_cast<int>(n_threads), state_factory, track_fn);
+
+				for (auto idx : indices)
+					pool.submit(Task{ static_cast<std::size_t>(idx), start_points[idx] });
+
+				for (std::size_t k = 0; k < indices.size(); ++k)
+					StoreFullPathResult(pool.collect());
+
+				pool.shutdown();
+			}
 
 			/**
 			\brief Apply one step of escalation to the tracker before re-tracking crossed paths.
@@ -1367,21 +1470,26 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			*/
 			void ExecuteOnePath(DuringEGContext ctx, SolnIndT soln_ind, Vec<BaseComplexT> const& start_point)
 			{
-				this->NotifyObservers(PathStarted<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
+				// Carry the executing tracker on the path events: &ctx.tracker is the member tracker
+				// in a serial solve and the thread-local clone in a threaded one, so a meta-observer
+				// attaches its per-path sub-observer to the tracker that actually runs this path.
+				Observable const* exec_tracker = &ctx.tracker;
+
+				this->NotifyObservers(PathStarted<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 
 				ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
 				ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind, start_point);
 
 				if (solution_final_metadata_[soln_ind].pre_endgame_success != SuccessCode::Success)
 				{
-					this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
+					this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 					return;
 				}
 
 				ctx.tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
 				ExecuteDuringEG(ctx, soln_ind);
 
-				this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind)));
+				this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 			}
 
 
@@ -1655,8 +1763,11 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 		//	MPI pack/store helpers (only compiled when BERTINI2_HAVE_MPI is defined)
 		///////
 
-#ifdef BERTINI2_HAVE_MPI
-			// Pack everything a worker computed for one whole path into the single result message.
+			// Pack everything computed for one whole path into a single result value.  Used as the
+			// thread-safe handoff in BOTH the MPI protocol (serialized over the wire) and the
+			// standalone threaded solve (a worker thread packs, the main thread installs via
+			// StoreFullPathResult) -- the compute/install split is what keeps shared result arrays
+			// race-free when several threads run distinct paths.
 			parallel::FullPathResult<BaseComplexT> PackFullPathResult(SolnIndT idx) const
 			{
 				parallel::FullPathResult<BaseComplexT> r;
@@ -1707,7 +1818,6 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 				smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
 				smd.max_precision_used  = r.max_precision_used;
 			}
-#endif // BERTINI2_HAVE_MPI
 
 
 		///////

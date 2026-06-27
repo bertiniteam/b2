@@ -62,4 +62,37 @@ using namespace boost::python;
 using mpfr_float = bertini::mpfr_float;
 using mpfr_complex = bertini::mpfr_complex;
 
+namespace bertini { namespace python {
+
+/**
+\brief RAII: release the Python GIL for the duration of a long C++ call (a threaded solve), so
+worker threads run truly in parallel and Python observer callbacks can re-acquire the GIL.
+Equivalent to Py_BEGIN_ALLOW_THREADS / Py_END_ALLOW_THREADS.
+*/
+struct ScopedGILRelease
+{
+	PyThreadState* state_;
+	ScopedGILRelease()  : state_(PyEval_SaveThread()) {}
+	~ScopedGILRelease() { PyEval_RestoreThread(state_); }
+	ScopedGILRelease(ScopedGILRelease const&) = delete;
+	ScopedGILRelease& operator=(ScopedGILRelease const&) = delete;
+};
+
+/**
+\brief RAII: ensure the calling thread holds the GIL before touching Python objects, and restore
+on scope exit.  Safe to call from any thread -- a C++ worker thread (the solve released the GIL)
+or the main thread.  Used at the top of the observer trampoline before calling into a Python
+observer's Observe().
+*/
+struct ScopedGILAcquire
+{
+	PyGILState_STATE state_;
+	ScopedGILAcquire()  : state_(PyGILState_Ensure()) {}
+	~ScopedGILAcquire() { PyGILState_Release(state_); }
+	ScopedGILAcquire(ScopedGILAcquire const&) = delete;
+	ScopedGILAcquire& operator=(ScopedGILAcquire const&) = delete;
+};
+
+}} // namespace bertini::python
+
 #endif

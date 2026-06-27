@@ -29,6 +29,10 @@
 #include "bertini2/parallel/initialize_finalize.hpp"
 #include "bertini2/parallel/path_result.hpp"
 
+// The shared-memory thread pool is MPI-independent (pure std::thread); it backs both the
+// standalone threaded solve and the MPI+threads hybrid, so it is always available.
+#include "bertini2/parallel/thread_pool.hpp"
+
 #ifdef BERTINI2_HAVE_MPI
 #include "bertini2/parallel/manager.hpp"
 #include "bertini2/parallel/worker.hpp"

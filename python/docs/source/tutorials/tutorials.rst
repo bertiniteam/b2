@@ -20,6 +20,7 @@
    moving_slice
    real_points
    solving_at_scale
+   parallel_parameter_homotopy
    crossed_paths
    precision_matters
    precision_models

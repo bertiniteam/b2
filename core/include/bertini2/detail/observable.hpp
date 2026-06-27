@@ -39,6 +39,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <typeindex>
 #include <typeinfo>
@@ -107,6 +108,7 @@ namespace bertini{
 		*/
 		void AddObserver(AnyObserver& new_observer) const
 		{
+			std::lock_guard<std::recursive_mutex> lock(notify_mutex_);
 			RejectIfIncompatible(new_observer);
 			Watcher w;
 			w.raw = &new_observer;        // non-owning: owned stays null
@@ -127,6 +129,7 @@ namespace bertini{
 		*/
 		void AddObserver(std::shared_ptr<AnyObserver> const& new_observer) const
 		{
+			std::lock_guard<std::recursive_mutex> lock(notify_mutex_);
 			RejectIfIncompatible(*new_observer);
 			Watcher w;
 			w.owned = new_observer;          // owning: keeps the observer alive
@@ -142,6 +145,7 @@ namespace bertini{
 		*/
 		void RemoveObserver(AnyObserver& observer) const
 		{
+			std::lock_guard<std::recursive_mutex> lock(notify_mutex_);
 			if (dispatch_depth_ > 0)
 			{
 				PendingOp op;
@@ -288,6 +292,7 @@ namespace bertini{
 
 		void DispatchEvent(AnyEvent const& e) const
 		{
+			std::lock_guard<std::recursive_mutex> lock(notify_mutex_);
 			++dispatch_depth_;
 
 			auto run = [&](ObserverList& bucket) {
@@ -320,6 +325,16 @@ namespace bertini{
 
 		mutable unsigned dispatch_depth_ = 0;
 		mutable std::vector<PendingOp> pending_ops_;
+
+		// Serializes notification and watcher-list mutation so the same observable can be safely
+		// notified from several worker threads at once (the MPI-less threaded solve fires per-path
+		// events from each tracking thread onto one shared solver).  Recursive because an observer's
+		// Observe() may itself Add/RemoveObserver on this same observable during a dispatch (the
+		// "meta-observer" pattern) -- that re-entrant call re-locks on the same thread and is routed
+		// through the deferred pending_ops_ path via dispatch_depth_.  Held across Observe() calls,
+		// so observer callbacks are serialized; the heavy numerical work runs outside this lock.
+		// Single-threaded callers pay one uncontended recursive lock per event -- negligible.
+		mutable std::recursive_mutex notify_mutex_;
 	};
 
 } // namespace bertini

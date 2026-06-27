@@ -23,6 +23,7 @@ import argparse
 import csv
 import math
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -48,12 +49,27 @@ def parse_args():
                    help="Number of timed repeats per (ranks, threads) combo (default: 1)")
     p.add_argument("--mpirun", default="mpirun",
                    help="mpirun command (default: mpirun)")
+    p.add_argument("--mpirun-args", default="--bind-to none",
+                   help="Extra flags passed to mpirun before -n, as one quoted string "
+                        "(default: '--bind-to none'). Site-specific: e.g. on a host whose CPU "
+                        "topology hwloc can't read, use "
+                        "'--map-by slot:OVERSUBSCRIBE --bind-to none'.")
+    p.add_argument("--no-mpi", action="store_true",
+                   help="Run the solver directly (no mpirun): a pure shared-memory THREAD sweep "
+                        "for a bertini2 built without MPI. Forces ranks=1 and sweeps --threads only.")
+    p.add_argument("--assert-speedup", type=float, default=None, metavar="FACTOR",
+                   help="Fail (exit 1) unless the best multi-thread run beats the serial baseline "
+                        "by at least FACTOR (e.g. 1.5). Off by default; use in CI / acceptance runs.")
     return p.parse_args()
 
 
-def run_once(bertini2_path, input_file, ranks, threads, mpirun_cmd, timeout):
+def run_once(bertini2_path, input_file, ranks, threads, mpirun_cmd, mpirun_args, timeout, use_mpi):
     """
     Run bertini2 with the given parallelism settings in a fresh temp directory.
+
+    When use_mpi is True the solver is launched under `mpirun -n <ranks>` (MPI across ranks,
+    OMP_NUM_THREADS threads within each rank).  When use_mpi is False the binary is run directly
+    -- a pure shared-memory thread sweep that needs no MPI at all; ranks is ignored (always 1).
 
     Returns (wall_time_s, solutions_found) or (float('nan'), -1) on failure.
     """
@@ -63,10 +79,15 @@ def run_once(bertini2_path, input_file, ranks, threads, mpirun_cmd, timeout):
         shutil.copy2(input_file, dest_input)
 
         env = os.environ.copy()
+        # OMP_NUM_THREADS drives the worker-thread count in both modes: per MPI rank under mpirun,
+        # and the whole shared-memory solve when run directly.
         env["OMP_NUM_THREADS"] = str(threads)
 
-        cmd = [mpirun_cmd, "-n", str(ranks), "--bind-to", "none",
-               os.path.abspath(bertini2_path)]
+        if use_mpi:
+            cmd = [mpirun_cmd, *shlex.split(mpirun_args), "-n", str(ranks),
+                   os.path.abspath(bertini2_path)]
+        else:
+            cmd = [os.path.abspath(bertini2_path)]
 
         t0 = time.perf_counter()
         try:
@@ -110,13 +131,18 @@ def validate_inputs(args):
         sys.exit(f"Error: input file not found: {args.input}")
     if not os.path.isfile(args.bertini2):
         sys.exit(f"Error: bertini2 executable not found: {args.bertini2}")
-    if shutil.which(args.mpirun) is None:
-        sys.exit(f"Error: {args.mpirun!r} not found on PATH")
+    # mpirun is only needed for the MPI rank sweep; the --no-mpi thread sweep runs the binary
+    # directly, so don't demand mpirun there.
+    if not args.no_mpi and shutil.which(args.mpirun) is None:
+        sys.exit(f"Error: {args.mpirun!r} not found on PATH "
+                 f"(use --no-mpi for a threads-only sweep on a build without MPI)")
 
 
 def main():
     args = parse_args()
     validate_inputs(args)
+
+    use_mpi = not args.no_mpi
 
     ranks_list = sorted(set(args.ranks))
     threads_list = sorted(set(args.threads))
@@ -127,8 +153,13 @@ def main():
     if 1 not in threads_list:
         threads_list = [1] + threads_list
 
+    # In --no-mpi mode there are no ranks: collapse to a pure thread sweep at ranks=1.
+    if not use_mpi:
+        ranks_list = [1]
+
     print(f"bertini2:  {args.bertini2}")
     print(f"input:     {args.input}")
+    print(f"mode:      {'MPI ranks x OMP threads' if use_mpi else 'shared-memory threads (no MPI)'}")
     print(f"ranks:     {ranks_list}")
     print(f"threads:   {threads_list}")
     print(f"repeats:   {args.repeats}")
@@ -150,7 +181,7 @@ def main():
             rep_label = f"  rep {rep+1}/{args.repeats}" if args.repeats > 1 else ""
             print(f"Running {label}{rep_label} ... ", end="", flush=True)
             t, sol = run_once(args.bertini2, args.input, ranks, threads,
-                              args.mpirun, args.timeout)
+                              args.mpirun, args.mpirun_args, args.timeout, use_mpi)
             if math.isnan(t):
                 print("failed")
                 times.append(float("nan"))
@@ -196,6 +227,25 @@ def main():
               f"{row['wall_time_s']:>9}  {row['solutions_found']:>9}  {row['speedup_vs_serial']:>8}")
 
     print(f"\nResults written to: {args.output}")
+
+    # Best speedup achieved by any genuinely parallel run (more than one worker).
+    parallel_speedups = [
+        float(row["speedup_vs_serial"])
+        for row in rows
+        if row["total_workers"] > 1 and row["speedup_vs_serial"] != "nan"
+    ]
+    best = max(parallel_speedups) if parallel_speedups else float("nan")
+    if parallel_speedups:
+        print(f"Best parallel speedup: {best:.2f}x vs serial baseline.")
+
+    # Optional acceptance gate: did parallelism actually pay off?
+    if args.assert_speedup is not None:
+        if math.isnan(best):
+            sys.exit("FAIL: --assert-speedup set but no parallel run produced a valid time.")
+        if best < args.assert_speedup:
+            sys.exit(f"FAIL: best parallel speedup {best:.2f}x < required "
+                     f"{args.assert_speedup:.2f}x.")
+        print(f"PASS: best parallel speedup {best:.2f}x >= required {args.assert_speedup:.2f}x.")
 
 
 if __name__ == "__main__":
