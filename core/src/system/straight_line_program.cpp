@@ -443,8 +443,9 @@ namespace bertini{
 				}
 
 				case IntPower:
-					// in2 (b) is an index into integers_, not a slot.  real^int -> real, complex^int -> complex
-					// (result bank == base bank, so `ro` selects both).
+					// Integer powers are lowered to Multiply instructions at COMPILE time now
+					// (Visit(IntegerPowerOperator) does exponentiation by squaring), so the hot loop
+					// only ever does allocation-free multiplies.  This case is a defensive fallback.
 					if (ro) real[c] = pow(real[a], this->integers_[b]);
 					else    cplx[c] = pow(cplx[a], this->integers_[b]);
 					break;
@@ -875,44 +876,81 @@ namespace bertini{
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
 		auto as_ptr = std::dynamic_pointer_cast<node::IntegerPowerOperator const>(n.shared_from_this());
 
-		IntT expo = n.exponent(); //integer
+		const IntT expo = n.exponent(); //integer
 
 		// ensure we have the location of the base of the power operation.  it's a node at this point.
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-		{
 			operand->Accept(*this);
+		const size_t base_loc = locations_encountered_nodes_[operand];
+
+		// Lower base^expo to multiplications at COMPILE time (exponentiation by squaring) instead of
+		// emitting an IntPower that calls boost's pow(mpc,int) -- which does ~14 heap allocations per
+		// call and is the dominant allocation churn in multiprecision eval.  A complex multiply into a
+		// preallocated slot is allocation-free, and the SLP's hash-consing already shares repeated
+		// powers across terms, so this is both faster and the right layer for a known exponent.
+		auto emit_mul = [&](size_t l, size_t r) -> size_t {
+			const size_t out = next_available_complex_++;
+			program_under_construction_.AddInstruction(Multiply, l, r, out);
+			return out;
+		};
+		auto one_loc = [&]() -> size_t {
+			auto one = Integer::Make(1);
+			this->RegisterConstant(one, RecipeFor(*one));
+			return locations_encountered_nodes_[one];
+		};
+
+		size_t result_loc;
+		if (expo == 0)
+			result_loc = one_loc();                         // x^0 = 1
+		else {
+			const unsigned m = expo < 0 ? static_cast<unsigned>(-static_cast<long long>(expo))
+			                            : static_cast<unsigned>(expo);
+			if (m == 1)
+				result_loc = base_loc;                       // x^1 = x (no instruction)
+			else {
+				// base^m by repeated multiplication.  Every multiply must have DISTINCT operands:
+				// mpc squaring (a*a, aliased) allocates a temporary, whereas a*b does not -- so we
+				// first copy the base into its own slot and always multiply against that copy.  The
+				// result is allocation-free (vs ~14 heap ops for boost's pow).
+				const size_t base_copy = next_available_complex_++;
+				program_under_construction_.AddInstruction(Assign, base_loc, base_copy);
+				size_t acc = base_loc;                       // acc = base^1
+				for (unsigned k = 2; k <= m; ++k) acc = emit_mul(acc, base_copy);  // acc *= base
+				result_loc = acc;                            // base^m
+			}
+			if (expo < 0) {                                  // x^-k = 1 / x^k
+				const size_t recip = next_available_complex_++;
+				program_under_construction_.AddInstruction(Divide, one_loc(), result_loc, recip);
+				result_loc = recip;
+			}
 		}
 
-		auto location_operand = locations_encountered_nodes_[operand];
-
-
-
-		if (this->locations_integers_.find(expo) == this->locations_integers_.end())
-		{
-			locations_integers_[expo] = program_under_construction_.integers_.size();
-			program_under_construction_.integers_.push_back(expo);
-		}
-
-
-		auto location_exponent  = locations_integers_[expo]; // this is a map lookup
-
-
-		this->locations_encountered_nodes_[as_ptr] = next_available_complex_;
-		program_under_construction_.AddInstruction(IntPower,location_operand,location_exponent, next_available_complex_++);
+		this->locations_encountered_nodes_[as_ptr] = result_loc;
 	}
 
 
 	void SLPCompiler::Visit(node::PowerOperator const& n){
 		auto as_ptr = std::dynamic_pointer_cast<node::PowerOperator const>(n.shared_from_this());
-		//get location of base and power then add instruction
 
 		const auto& base = n.GetBase();
 		const auto& exponent = n.GetExponent();
 
+		// If the exponent is a compile-time integer (e.g. parsed x^4), lower it to multiplications via
+		// the IntegerPowerOperator path instead of emitting a general Power -- pow(complex,complex) is
+		// the single most allocation-heavy op in mp eval (it goes through exp/log), whereas the lowered
+		// multiplies are allocation-free.
+		if (auto exp_int = std::dynamic_pointer_cast<node::Integer const>(exponent)) {
+			auto ipow = node::pow(base, exp_int->GetValue().convert_to<int>());  // makes an IntegerPowerOperator
+			if (this->locations_encountered_nodes_.find(ipow) == this->locations_encountered_nodes_.end())
+				ipow->Accept(*this);
+			this->locations_encountered_nodes_[as_ptr] = locations_encountered_nodes_[ipow];
+			return;
+		}
+
+		// general base^exponent (symbolic or non-integer exponent)
 		if (this->locations_encountered_nodes_.find(base) == this->locations_encountered_nodes_.end())
 			base->Accept(*this);
-
 		if (this->locations_encountered_nodes_.find(exponent) == this->locations_encountered_nodes_.end())
 			exponent->Accept(*this);
 
@@ -921,9 +959,6 @@ namespace bertini{
 
 		this->locations_encountered_nodes_[as_ptr] =  next_available_complex_;
 		program_under_construction_.AddInstruction(Power, loc_base, loc_exponent, next_available_complex_++);
-
-
-
 	}
 
 	void SLPCompiler::Visit(node::ExpOperator const& n){

@@ -868,7 +868,16 @@ void PowerOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> PowerOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	auto exp_minus_one = exponent_-1;
+	// d/dv (base^exp) = exp * base^(exp-1) * base'.  When the exponent is an integer literal, fold
+	// exp-1 to a literal Integer (e.g. 4 -> 3) instead of leaving a computed `exponent - 1` node --
+	// otherwise the derivative is base^(4-1), a power with a non-literal exponent, which the SLP
+	// compiler cannot lower to multiplications and must evaluate with a general (allocation-heavy)
+	// pow.  Non-integer exponents keep the symbolic exp-1.
+	std::shared_ptr<Node> exp_minus_one;
+	if (auto exp_as_int = std::dynamic_pointer_cast<Integer const>(exponent_))
+		exp_minus_one = Integer::Make(exp_as_int->GetValue() - 1);
+	else
+		exp_minus_one = exponent_-1;
 	return SimplifiedMult({
 		{base_->Differentiate(v), true},
 		{exponent_, true},
