@@ -628,6 +628,58 @@ def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma
     return _system.make_moving_homotopy(fixed, start_moving, end_moving, path_variable, gamma)
 
 
+def parameter_sweep(make_system, generic_parameters, target_parameters,
+                    *, mptype='adaptive', endgame='cauchy'):
+    """Solve a whole family of systems that differ only in their coefficients.
+
+    This is the *parameter homotopy* workhorse: pay for the hard ab-initio solve **once**, at a
+    generic parameter value, then reach every parameter point you actually care about by cheap
+    tracking that reuses those start solutions.
+
+    Parameters
+    ----------
+    make_system : callable
+        ``make_system(parameters) -> bertini.System``.  Must return systems of the SAME shape
+        every call -- same variables and same monomials -- with only the coefficient *values*
+        depending on ``parameters``.  (Until first-class coefficient parameters land, this factory
+        is how you say "the same system at a different parameter value".)
+    generic_parameters
+        The parameter value for the one-time generic solve.  For robustness this should be
+        *generic* -- random complex values -- so the straight-line coefficient path to each target
+        avoids the measure-zero singular locus.
+    target_parameters : iterable
+        The parameter values you want solved.  Returned solvers line up with this order.
+    mptype, endgame
+        Passed through to the solves (see :func:`ZeroDim`).
+
+    Returns
+    -------
+    list of solved ZeroDim solvers, one per entry of ``target_parameters``.  Each gives you
+    ``.all_solutions()``, ``.solution_metadata()`` and ``.to_dataframe()`` (let the solver do the
+    real/finite classification -- don't redo it by hand).
+
+    Notes
+    -----
+    The targets are independent, which is exactly what makes this *embarrassingly parallel*:
+    distribute ``target_parameters`` across MPI ranks (one slice per rank) and let each rank's
+    solve thread its own path tracking.  That is the two-level model -- MPI across parameter
+    points, threads across paths -- demonstrated in the parameter-homotopy tutorial.
+    """
+    generic = make_system(generic_parameters)
+    gen_solver = ZeroDim(generic, mptype=mptype, endgame=endgame)
+    gen_solver.solve()
+    start_points = gen_solver.all_solutions()
+
+    solvers = []
+    for params in target_parameters:
+        target = make_system(params)
+        H = coefficient_parameter_homotopy(target, generic)
+        solver = user_homotopy(H, start_points, target, precision=mptype, endgame=endgame)
+        solver.solve()
+        solvers.append(solver)
+    return solvers
+
+
 # --- SolutionPathCollector: collect every solution path of a whole solve, for plotting ---
 #
 # A two-level meta-observer.  Attach one to a ZeroDim solver; on each PathStarted it spins
@@ -683,6 +735,7 @@ __all__ = dir(_pybnalag)
 __all__.append('ZeroDim')
 __all__.append('user_homotopy')
 __all__.append('coefficient_parameter_homotopy')
+__all__.append('parameter_sweep')
 __all__.append('moving_homotopy')
 __all__.append('blend_homotopy')
 __all__.append('SolutionPathCollector')
