@@ -600,15 +600,46 @@ BOOST_AUTO_TEST_CASE(tier_speedup_benchmark)
 		return std::chrono::duration<double>(t1 - t0).count();
 	};
 
+	// DOUBLE precision -- where the AMP tracker spends most of its time, and the worst case for
+	// per-op dispatch overhead (cheap hardware arithmetic, so the slot_numtype_ branches dominate).
+	const char* ndenv = std::getenv("BERTINI_SLP_BENCH_NDBL");
+	const int Nd = ndenv ? std::atoi(ndenv) : 100000;
+	auto run_dbl = [&](bool tiers) -> double {
+		bertini::SLPProgram::tiers_enabled_ = tiers;
+		auto sys = ParseSLPSys(dense);
+		SLP slp(sys);
+		Vec<complex_dbl> pt(4);
+		for (int j = 0; j < 4; ++j) pt(j) = complex_dbl(j + 2, j + 1);
+		slp.Eval(pt); (void)slp.GetFuncVals<complex_dbl>();
+
+		complex_dbl sink(0);
+		auto t0 = std::chrono::steady_clock::now();
+		for (int i = 0; i < Nd; ++i) {
+			pt(0) = complex_dbl(i % 7 + 2, i % 5 + 1);
+			slp.Eval(pt);
+			auto f = slp.GetFuncVals<complex_dbl>();
+			auto J = slp.GetJacobian<complex_dbl>();
+			sink += f(0) + J(0,0);
+		}
+		auto t1 = std::chrono::steady_clock::now();
+		std::cout << "  [dbl tiers=" << tiers << " real_slots=" << slp.NumRealSlots()
+		          << " sink=" << sink.real() << "]\n";
+		return std::chrono::duration<double>(t1 - t0).count();
+	};
+	const double d_off = run_dbl(false);
+	const double d_on  = run_dbl(true);
+
 	const double off = run(false);
 	const double on  = run(true);
 	bertini::SLPProgram::tiers_enabled_ = true;  // restore default
 
-	std::cout << "\n=== SLP tier benchmark (prec=" << prec << " digits, N=" << N
-	          << " evals of f+J, 4 fns / 4 vars) ===\n"
-	          << "  tiers OFF (all-complex): " << off << " s\n"
-	          << "  tiers ON  (real tier):   " << on  << " s\n"
-	          << "  speedup: " << (off / on) << "x\n\n";
+	std::cout << "\n=== SLP tier benchmark (4 fns / 4 vars) ===\n"
+	          << "  DOUBLE  (N=" << Nd << " evals of f+J):\n"
+	          << "    tiers OFF: " << d_off << " s    tiers ON: " << d_on
+	          << " s    speedup: " << (d_off / d_on) << "x\n"
+	          << "  MPFR prec=" << prec << " digits (N=" << N << " evals of f+J):\n"
+	          << "    tiers OFF: " << off << " s    tiers ON: " << on
+	          << " s    speedup: " << (off / on) << "x\n\n";
 	BOOST_CHECK(true);
 }
 
