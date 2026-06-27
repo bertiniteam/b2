@@ -508,6 +508,55 @@ BOOST_AUTO_TEST_CASE(filtered_solution_accessors)
 	BOOST_CHECK_EQUAL(zd.FiniteSolutions(false).size(), zd.FiniteSolutions(true).size());
 }
 
+// The Bertini 1.7-compatible solution-file writers (output::Classic): each file is count-led and
+// machine-readable -- first line is the solution count, then one block of NumVariables "re im"
+// coordinate lines per solution.  On x^2-1, y^2-1 the four roots (+-1,+-1) are all finite, real,
+// and nonsingular.
+BOOST_AUTO_TEST_CASE(classic_solution_file_output)
+{
+	using namespace bertini;
+	namespace out = bertini::algorithm::output;
+
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	System sys;
+	sys.AddFunction(pow(x, 2) - 1);
+	sys.AddFunction(pow(y, 2) - 1);
+	sys.AddVariableGroup(VariableGroup{x, y});
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System, start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	// first whitespace-delimited token is the solution count
+	auto first_count = [](std::string const& s){ std::istringstream iss(s); long n=-1; iss >> n; return n; };
+	// "re im" coordinate lines contain a space; count lines, path-index lines, and blanks do not
+	auto coord_lines = [](std::string const& s){
+		std::istringstream iss(s); std::string line; std::size_t c=0;
+		while (std::getline(iss, line)) if (line.find(' ') != std::string::npos) ++c;
+		return c; };
+
+	std::ostringstream fin, real, nonsing, sing, raw;
+	out::Classic<decltype(zd)>::FiniteSolutions(fin, zd);
+	out::Classic<decltype(zd)>::RealFiniteSolutions(real, zd);
+	out::Classic<decltype(zd)>::NonsingularSolutions(nonsing, zd);
+	out::Classic<decltype(zd)>::SingularSolutions(sing, zd);
+	out::Classic<decltype(zd)>::RawSolutions(raw, zd);
+
+	BOOST_CHECK_EQUAL(first_count(fin.str()),     4);
+	BOOST_CHECK_EQUAL(first_count(real.str()),    4);
+	BOOST_CHECK_EQUAL(first_count(nonsing.str()), 4);
+	BOOST_CHECK_EQUAL(first_count(sing.str()),    0);
+	BOOST_CHECK_EQUAL(first_count(raw.str()),     4);
+
+	// the count in the file agrees with the corresponding accessor
+	BOOST_CHECK_EQUAL(first_count(fin.str()),  static_cast<long>(zd.FiniteSolutions().size()));
+	BOOST_CHECK_EQUAL(first_count(sing.str()), static_cast<long>(zd.SingularSolutions().size()));
+
+	// exactly one coordinate block (NumVariables lines) per finite solution
+	BOOST_CHECK_EQUAL(coord_lines(fin.str()), sys.NumVariables() * 4u);
+}
+
 // InfiniteSolutions: the at-infinity complement of FiniteSolutions.  The system {x*y - 1, x - 1}
 // has Bezout number 2 but exactly one affine solution (1,1); the second total-degree path must
 // diverge -- so there is one finite endpoint and one at infinity.

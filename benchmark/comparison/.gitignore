@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+# default per-run snapshot CSV (history.csv IS committed; this transient one is not)
+comparison_results.csv
