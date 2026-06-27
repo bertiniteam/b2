@@ -187,19 +187,29 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 			// communicator), and RELEASED only around the actual C++ solve so the worker threads
 			// run truly in parallel on stock CPython (no free-threaded build needed).  Python
 			// observer callbacks re-acquire the GIL in the observer trampoline (generic_observer.hpp).
-#ifdef BERTINI2_HAVE_MPI
+			// No communicator => a purely LOCAL solve (serial or shared-memory threaded).  We call
+			// Solve() directly, NOT Run(): Run() auto-promotes to MPI manager-worker whenever the
+			// process was launched under mpirun (parallel::Size() > 1), which would make a plain
+			// solve() secretly drive MPI_COMM_WORLD.  That breaks the common "MPI at an outer level,
+			// independent local solves per rank" pattern (e.g. parameter_sweep across ranks).  MPI is
+			// opt-in: you get it only by explicitly passing communicator=.
 			if (comm.is_none()) {
 				bertini::python::ScopedGILRelease unlock_gil;
-				self.Run();
-			} else {
+				self.Solve();
+			}
+#ifdef BERTINI2_HAVE_MPI
+			else {
 				// Extract the communicator with the GIL held, then release it for RunParallel.
 				MPI_Comm c = MPI_Comm_f2c(boost::python::extract<MPI_Fint>(comm.attr("py2f")()));
 				bertini::python::ScopedGILRelease unlock_gil;
 				self.RunParallel(c);
 			}
 #else
-			bertini::python::ScopedGILRelease unlock_gil;
-			self.Solve();
+			else {
+				PyErr_SetString(PyExc_RuntimeError,
+					"solve(communicator=...) requires a bertini2 built with MPI; this build has none.");
+				boost::python::throw_error_already_set();
+			}
 #endif
 		},
 		(boost::python::arg("communicator") = boost::python::object()),

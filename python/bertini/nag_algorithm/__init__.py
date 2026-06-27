@@ -629,12 +629,13 @@ def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma
 
 
 def parameter_sweep(make_system, generic_parameters, target_parameters,
-                    *, mptype='adaptive', endgame='cauchy'):
+                    *, collect=None, comm=None, mptype='adaptive', endgame='cauchy'):
     """Solve a whole family of systems that differ only in their coefficients.
 
     This is the *parameter homotopy* workhorse: pay for the hard ab-initio solve **once**, at a
     generic parameter value, then reach every parameter point you actually care about by cheap
-    tracking that reuses those start solutions.
+    tracking that reuses those start solutions.  It is also the unit of parallelism -- the points
+    are independent, so pass an MPI communicator and the sweep spreads across the ranks for you.
 
     Parameters
     ----------
@@ -648,36 +649,74 @@ def parameter_sweep(make_system, generic_parameters, target_parameters,
         *generic* -- random complex values -- so the straight-line coefficient path to each target
         avoids the measure-zero singular locus.
     target_parameters : iterable
-        The parameter values you want solved.  Returned solvers line up with this order.
+        The parameter values you want solved.  Results line up with this order.
+    collect : callable, optional
+        ``collect(solver) -> value``.  If given, each solved point is reduced to ``collect(solver)``
+        and the return is the list of those values (instead of the solvers).  **Required** when
+        ``comm`` is given -- solver objects cannot cross MPI ranks, so what is gathered must be a
+        picklable value (e.g. a solution count, or ``solver.to_dataframe()``).
+    comm : mpi4py communicator, optional
+        If given, ``target_parameters`` is split across the ranks (each rank solves the generic
+        once, then tracks its slice -- with the path tracking inside each solve threaded across the
+        rank's cores via ``OMP_NUM_THREADS``).  The collected results are gathered and **every rank
+        returns the full list in the original order**.  This is the two-level model: MPI across
+        parameter points, threads across paths -- one extra argument, no manual scatter/gather.
     mptype, endgame
         Passed through to the solves (see :func:`ZeroDim`).
 
     Returns
     -------
-    list of solved ZeroDim solvers, one per entry of ``target_parameters``.  Each gives you
-    ``.all_solutions()``, ``.solution_metadata()`` and ``.to_dataframe()`` (let the solver do the
-    real/finite classification -- don't redo it by hand).
+    list, one entry per ``target_parameters``: the solved :class:`ZeroDim` solvers, or -- if
+    ``collect`` is given -- the ``collect(solver)`` values.  A solver exposes ``.all_solutions()``,
+    ``.solution_metadata()`` and ``.to_dataframe()`` (let the solver do the real/finite
+    classification -- don't redo it by hand).
 
-    Notes
-    -----
-    The targets are independent, which is exactly what makes this *embarrassingly parallel*:
-    distribute ``target_parameters`` across MPI ranks (one slice per rank) and let each rank's
-    solve thread its own path tracking.  That is the two-level model -- MPI across parameter
-    points, threads across paths -- demonstrated in the parameter-homotopy tutorial.
+    Examples
+    --------
+    Serial / threaded (threads are automatic -- a solve uses all cores by default)::
+
+        solvers = parameter_sweep(make_system, generic, targets)
+        counts  = [positive_real_count(s) for s in solvers]
+
+    Across MPI ranks, threads within -- the user-facing MPI code is just ``comm=`` and ``collect=``::
+
+        from mpi4py import MPI
+        counts = parameter_sweep(make_system, generic, targets,
+                                 collect=positive_real_count, comm=MPI.COMM_WORLD)
+        # every rank now holds the full `counts` list, in `targets` order
     """
+    targets = list(target_parameters)
+    if comm is not None and collect is None:
+        raise ValueError("parameter_sweep(comm=...) needs collect=<solver -> picklable value>: "
+                         "solver objects cannot be gathered across MPI ranks.")
+
+    if comm is None:
+        my_indices = range(len(targets))
+    else:
+        my_indices = range(comm.Get_rank(), len(targets), comm.Get_size())
+
     generic = make_system(generic_parameters)
     gen_solver = ZeroDim(generic, mptype=mptype, endgame=endgame)
     gen_solver.solve()
     start_points = gen_solver.all_solutions()
 
-    solvers = []
-    for params in target_parameters:
-        target = make_system(params)
+    local = []   # (index, solver-or-collected) for this rank's slice, in index order
+    for i in my_indices:
+        target = make_system(targets[i])
         H = coefficient_parameter_homotopy(target, generic)
         solver = user_homotopy(H, start_points, target, precision=mptype, endgame=endgame)
         solver.solve()
-        solvers.append(solver)
-    return solvers
+        local.append((i, collect(solver) if collect is not None else solver))
+
+    if comm is None:
+        return [value for _, value in local]
+
+    # Gather every rank's (index, value) pairs and reassemble in the original target order, so
+    # every rank returns the same full list.
+    merged = {}
+    for chunk in comm.allgather(local):
+        merged.update(dict(chunk))
+    return [merged[i] for i in range(len(targets))]
 
 
 # --- SolutionPathCollector: collect every solution path of a whole solve, for plotting ---
