@@ -45,14 +45,14 @@
 
 #include "externs.hpp"
 
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
 
 const double relaxed_threshold_clearance_d = 1e-14;
 const double threshold_clearance_d = 1e-14;
 
 unsigned const CLASS_TEST_MPFR_DEFAULT_DIGITS = 50;
-bertini::mpfr_float threshold_clearance_mp("1e-27");
+bertini::real_mp threshold_clearance_mp("1e-27");
 
 const std::string xstr_real = "3.1";
 const std::string xstr_imag = "4.1";
@@ -70,12 +70,12 @@ const std::string pstr_imag = "-1.7";
 
 
 
-const dbl xnum_dbl(std::stod(xstr_real), std::stod(xstr_imag));
-const dbl ynum_dbl(std::stod(ystr_real), std::stod(ystr_imag));
-const dbl znum_dbl(std::stod(zstr_real), std::stod(zstr_imag));
-const dbl anum_dbl(std::stod(astr_real), std::stod(astr_imag));
-const dbl bnum_dbl(std::stod(bstr_real), std::stod(bstr_imag));
-const dbl pnum_dbl(std::stod(pstr_real), std::stod(pstr_imag));
+const complex_dbl xnum_dbl(std::stod(xstr_real), std::stod(xstr_imag));
+const complex_dbl ynum_dbl(std::stod(ystr_real), std::stod(ystr_imag));
+const complex_dbl znum_dbl(std::stod(zstr_real), std::stod(zstr_imag));
+const complex_dbl anum_dbl(std::stod(astr_real), std::stod(astr_imag));
+const complex_dbl bnum_dbl(std::stod(bstr_real), std::stod(bstr_imag));
+const complex_dbl pnum_dbl(std::stod(pstr_real), std::stod(pstr_imag));
 
 mpfr xnum_mpfr;
 mpfr ynum_mpfr;
@@ -105,7 +105,7 @@ struct ClassTestInit{
 		bnum_mpfr = mpfr(bstr_real, bstr_imag);
 		pnum_mpfr = mpfr(pstr_real, pstr_imag);
 
-		threshold_clearance_mp = bertini::mpfr_float("1e-27");
+		threshold_clearance_mp = bertini::real_mp("1e-27");
 	}
 };
 

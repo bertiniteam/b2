@@ -67,8 +67,8 @@ namespace bertini {
 
 	Patch p(s);
 
-	Vec<mpfr_complex> v(5);
-	v << mpfr_complex(1),  mpfr_complex(1),  mpfr_complex(1),  mpfr_complex(1),  mpfr_complex(1);
+	Vec<complex_mp> v(5);
+	v << complex_mp(1),  complex_mp(1),  complex_mp(1),  complex_mp(1),  complex_mp(1);
 
 	auto v_rescaled = p.RescalePoint(v);
 
@@ -105,8 +105,8 @@ namespace bertini {
 			precision_ = DefaultPrecision();
 
 			// a little shorthand unpacking the tuple
-			std::vector<Vec<mpfr_complex> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr_complex> > >(this->coefficients_working_);
-			std::vector<Vec<dbl> >& coefficients_dbl = std::get<std::vector<Vec<dbl> > >(this->coefficients_working_);
+			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(this->coefficients_working_);
+			std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(this->coefficients_working_);
 
 			coefficients_highest_precision_.resize(other.NumVariableGroups());
 			coefficients_mpfr.resize(variable_group_sizes_.size());
@@ -126,8 +126,8 @@ namespace bertini {
 
 					coefficients_highest_precision_[ii](jj) = other.coefficients_highest_precision_[ii](jj);
 
-					coefficients_dbl[ii](jj) = dbl(coefficients_highest_precision_[ii](jj));
-					coefficients_mpfr[ii](jj) = mpfr_complex(coefficients_highest_precision_[ii](jj));
+					coefficients_dbl[ii](jj) = complex_dbl(coefficients_highest_precision_[ii](jj));
+					coefficients_mpfr[ii](jj) = complex_mp(coefficients_highest_precision_[ii](jj));
 
 					assert(coefficients_highest_precision_[ii](jj) == other.coefficients_highest_precision_[ii](jj));
 				}
@@ -155,8 +155,8 @@ namespace bertini {
 			using bertini::Precision;
 			using bertini::multiprecision::RandomComplex;
 
-			std::vector<Vec<mpfr_complex> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr_complex> > >(coefficients_working_);
-			std::vector<Vec<dbl> >& coefficients_dbl = std::get<std::vector<Vec<dbl> > >(coefficients_working_);
+			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(coefficients_working_);
+			std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(coefficients_working_);
 
 			coefficients_highest_precision_.resize(sizes.size());
 			coefficients_dbl.resize(sizes.size());
@@ -174,7 +174,7 @@ namespace bertini {
 				coefficients_dbl[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
 				{
-					coefficients_dbl[ii](jj) = dbl(coefficients_highest_precision_[ii](jj));
+					coefficients_dbl[ii](jj) = complex_dbl(coefficients_highest_precision_[ii](jj));
 				}
 
 				// assignment preserves precision of source.  
@@ -214,8 +214,8 @@ namespace bertini {
 
 			
 
-			std::vector<Vec<mpfr_complex> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr_complex> > >(p.coefficients_working_);
-			std::vector<Vec<dbl> >& coefficients_dbl = std::get<std::vector<Vec<dbl> > >(p.coefficients_working_);
+			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(p.coefficients_working_);
+			std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(p.coefficients_working_);
 
 			p.coefficients_highest_precision_.resize(sizes.size());
 			coefficients_mpfr.resize(sizes.size());
@@ -233,7 +233,7 @@ namespace bertini {
 
 				coefficients_dbl[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-					coefficients_dbl[ii](jj) = dbl(p.coefficients_highest_precision_[ii](jj));
+					coefficients_dbl[ii](jj) = complex_dbl(p.coefficients_highest_precision_[ii](jj));
 			}
 
 			return p;
@@ -263,7 +263,7 @@ namespace bertini {
 				return;
 
 			using bertini::Precision;
-			std::vector<Vec<mpfr_complex> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr_complex> > >(coefficients_working_);
+			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(coefficients_working_);
 
 			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
 			{
@@ -527,9 +527,9 @@ namespace bertini {
 		//
 		//////////////////
 
-		std::vector< Vec< mpfr_complex > > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
+		std::vector< Vec< complex_mp > > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
 
-		mutable std::tuple< std::vector< Vec< mpfr_complex > >, std::vector< Vec< dbl > > > coefficients_working_; ///< the current working coefficients of the patch.  changing precision affects these, particularly the mpfr_complex coefficients, which are down-sampled from the highest_precision coefficients.  the doubles are only down-sampled at time of creation or modification.
+		mutable std::tuple< std::vector< Vec< complex_mp > >, std::vector< Vec< complex_dbl > > > coefficients_working_; ///< the current working coefficients of the patch.  changing precision affects these, particularly the complex_mp coefficients, which are down-sampled from the highest_precision coefficients.  the doubles are only down-sampled at time of creation or modification.
 
 		std::vector<unsigned> variable_group_sizes_; ///< the sizes of the groups.  In principle, these must be at least 2.
 

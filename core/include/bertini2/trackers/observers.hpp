@@ -209,7 +209,7 @@ namespace bertini {
 				return ObserveResult::KeepObserving;
 			}
 
-			const std::vector<Vec<mpfr_complex> >& Path() const
+			const std::vector<Vec<complex_mp> >& Path() const
 			{
 				return path_;
 			}
@@ -217,7 +217,7 @@ namespace bertini {
 			virtual ~AMPPathAccumulator() = default;
 
 		private:
-			std::vector<Vec<mpfr_complex> > path_;
+			std::vector<Vec<complex_mp> > path_;
 		};
 
 
@@ -235,7 +235,7 @@ namespace bertini {
 			{
 
 
-				if (auto p = dynamic_cast<const Initializing<EmitterT,dbl>*>(&e))
+				if (auto p = dynamic_cast<const Initializing<EmitterT,complex_dbl>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(static_cast<int>(p->Get().GetSystem().precision()))
 						<< "initializing in double, tracking path\nfrom\tt = "
@@ -243,7 +243,7 @@ namespace bertini {
 						<< "\n from\tx = \n" << p->StartPoint()
 						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}
-				else if (auto p = dynamic_cast<const Initializing<EmitterT,mpfr_complex>*>(&e))
+				else if (auto p = dynamic_cast<const Initializing<EmitterT,complex_mp>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(static_cast<int>(p->Get().GetSystem().precision()))
 						 << "initializing in multiprecision, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint()
@@ -292,22 +292,22 @@ namespace bertini {
 
 
 
-				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,mpfr_complex>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,complex_mp>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "prediction successful (mpfr_complex), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "prediction successful (complex_mp), result:\n" << p->ResultingPoint();
 				}
-				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,dbl>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,complex_dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "prediction successful (dbl), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "prediction successful (complex_dbl), result:\n" << p->ResultingPoint();
 				}
 
-				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,mpfr_complex>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,complex_mp>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "correction successful (mpfr_complex), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "correction successful (complex_mp), result:\n" << p->ResultingPoint();
 				}
-				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,dbl>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,complex_dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "correction successful (dbl), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(static_cast<int>(Precision(p->ResultingPoint()))) << "correction successful (complex_dbl), result:\n" << p->ResultingPoint();
 				}
 
 

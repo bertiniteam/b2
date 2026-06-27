@@ -54,8 +54,8 @@
 
 #include "test/utility/enable_logging.hpp"
 
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 using mpq_rational = bertini::mpq_rational;
 
 namespace algorithm = bertini::algorithm;
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(read_stepping)
 	using namespace bertini::tracking;
 
 
-	mpfr_float tol{"1e-25"}; // settings are parsed as mpfr_float at current default precision, so values are far more accurate than double
+	real_mp tol{"1e-25"}; // settings are parsed as real_mp at current default precision, so values are far more accurate than double
 	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n StepSuccessFactor  : 4.2;  FinalTol: 1.845e-7;\n MaxNumberSteps: 234; % the predictor type\nMaxStepSize: 1e-2; StepsForIncrease: 7;\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 
 
@@ -374,9 +374,9 @@ BOOST_AUTO_TEST_CASE(read_stepping)
 
 	BOOST_CHECK(parsed && iter == end);
 
-	BOOST_CHECK(abs(structure.max_step_size - mpfr_float("1e-2")) < tol);
-	BOOST_CHECK(abs(structure.step_size_success_factor - mpfr_float("4.2")) < tol);
-	BOOST_CHECK(abs(structure.step_size_fail_factor - mpfr_float(1)/2) < tol); // not set in the input, so should be the default value
+	BOOST_CHECK(abs(structure.max_step_size - real_mp("1e-2")) < tol);
+	BOOST_CHECK(abs(structure.step_size_success_factor - real_mp("4.2")) < tol);
+	BOOST_CHECK(abs(structure.step_size_fail_factor - real_mp(1)/2) < tol); // not set in the input, so should be the default value
 
 	BOOST_CHECK_EQUAL(structure.consecutive_successful_steps_before_stepsize_increase, 7);
 	BOOST_CHECK_EQUAL(structure.max_num_steps, 234);
@@ -610,11 +610,11 @@ BOOST_AUTO_TEST_CASE(all_config_settings)
 	bertini::endgame::EndgameConfig end = std::get<bertini::endgame::EndgameConfig>(sets);
 	
 	BOOST_CHECK(pred == Predictor::RKDormandPrince56);
-	BOOST_CHECK_EQUAL( steps.max_step_size, mpfr_float(1)/10); // not set in the input, so should be the default value
+	BOOST_CHECK_EQUAL( steps.max_step_size, real_mp(1)/10); // not set in the input, so should be the default value
 	BOOST_CHECK_EQUAL(newt.max_num_newton_iterations, 7);
 	BOOST_CHECK_EQUAL(newt.min_num_newton_iterations, 1);
 	BOOST_CHECK(abs(tols.final_tolerance - 1.845e-7) < tol);
-	BOOST_CHECK(abs(end.sample_factor - mpfr_float("0.647")) < mpfr_float("1e-25"));
+	BOOST_CHECK(abs(end.sample_factor - real_mp("0.647")) < real_mp("1e-25"));
 	BOOST_CHECK_EQUAL(end.num_sample_points, 7);
 	BOOST_CHECK_EQUAL(end.min_track_time, 1e-100);
 }

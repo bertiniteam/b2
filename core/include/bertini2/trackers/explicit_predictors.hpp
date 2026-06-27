@@ -223,9 +223,9 @@ namespace bertini{
 							crefd.resize(s_); crefd(0) = 0;
 							arefd.resize(s_,s_); arefd(0,0) = 0;
 							brefd.resize(s_); brefd(0) = 0;
-							Mat<mpfr_float>& arefmp = std::get< Mat<mpfr_float> >(a_);
-							Vec<mpfr_float>& brefmp = std::get< Vec<mpfr_float> >(b_);
-							Vec<mpfr_float>& crefmp = std::get< Vec<mpfr_float> >(c_);
+							Mat<real_mp>& arefmp = std::get< Mat<real_mp> >(a_);
+							Vec<real_mp>& brefmp = std::get< Vec<real_mp> >(b_);
+							Vec<real_mp>& crefmp = std::get< Vec<real_mp> >(c_);
 							crefmp.resize(s_); crefmp(0) = 0;
 							arefmp.resize(s_,s_); arefmp(0,0) = 0;
 							brefmp.resize(s_); brefmp(0) = 0;
@@ -242,12 +242,12 @@ namespace bertini{
 							crefd.resize(s_); crefd(0) = static_cast<double>(cEuler_(0));
 							arefd.resize(s_,s_); arefd(0,0) = static_cast<double>(aEuler_(0,0));
 							brefd.resize(s_); brefd(0) = static_cast<double>(bEuler_(0));
-							Mat<mpfr_float>& arefmp = std::get< Mat<mpfr_float> >(a_);
-							Vec<mpfr_float>& brefmp = std::get< Vec<mpfr_float> >(b_);
-							Vec<mpfr_float>& crefmp = std::get< Vec<mpfr_float> >(c_);
-							crefmp.resize(s_); crefmp(0) = static_cast<mpfr_float>(cEuler_(0));
-							arefmp.resize(s_,s_); arefmp(0,0) = static_cast<mpfr_float>(aEuler_(0,0));
-							brefmp.resize(s_); brefmp(0) = static_cast<mpfr_float>(bEuler_(0));
+							Mat<real_mp>& arefmp = std::get< Mat<real_mp> >(a_);
+							Vec<real_mp>& brefmp = std::get< Vec<real_mp> >(b_);
+							Vec<real_mp>& crefmp = std::get< Vec<real_mp> >(c_);
+							crefmp.resize(s_); crefmp(0) = static_cast<real_mp>(cEuler_(0));
+							arefmp.resize(s_,s_); arefmp(0,0) = static_cast<real_mp>(aEuler_(0,0));
+							brefmp.resize(s_); brefmp(0) = static_cast<real_mp>(bEuler_(0));
 							uses_embedded_ = false;
 							break;
 						}
@@ -256,7 +256,7 @@ namespace bertini{
 							s_ = 2;
 							
 							FillButcherTable<double>(static_cast<int>(s_),aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
-							FillButcherTable<mpfr_float>(static_cast<int>(s_),aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
 							
 							break;
 						}
@@ -265,7 +265,7 @@ namespace bertini{
 							s_ = 4;
 							
 							FillButcherTable<double>(static_cast<int>(s_),aRK4_, bRK4_, cRK4_);
-							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRK4_, bRK4_, cRK4_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRK4_, bRK4_, cRK4_);
 							
 							break;
 						}
@@ -275,7 +275,7 @@ namespace bertini{
 							s_ = 6;
 							
 							FillButcherTable<double>(static_cast<int>(s_),aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
-							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
 							
 							break;
 						}
@@ -285,7 +285,7 @@ namespace bertini{
 							s_ = 6;
 							
 							FillButcherTable<double>(static_cast<int>(s_),aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
-							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
 							
 							break;
 						}
@@ -295,7 +295,7 @@ namespace bertini{
 							s_ = 8;
 							
 							FillButcherTable<double>(static_cast<int>(s_),aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
-							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
 							
 							break;
 						}
@@ -305,7 +305,7 @@ namespace bertini{
 							s_ = 10;
 							
 							FillButcherTable<double>(static_cast<int>(s_),aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
-							FillButcherTable<mpfr_float>(static_cast<int>(s_),aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
 							
 							break;
 						}
@@ -332,18 +332,18 @@ namespace bertini{
 					numTotalFunctions_ = static_cast<unsigned>(S.NumTotalFunctions());
 					numVariables_ = static_cast<unsigned>(S.NumVariables());
 					// you cannot set K_ here, because s_ may not have been set
-					std::get< Mat<dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr_complex> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<dbl> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr_complex> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Vec<dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr_complex> >(dh_dt_temp_).resize(numTotalFunctions_);
-					std::get< Vec<dbl> >(step_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr_complex> >(step_temp_).resize(numTotalFunctions_);
-					std::get< Vec<dbl> >(rand_temp_) = RandomOfUnits<dbl>(numVariables_);
-					std::get< Vec<mpfr_complex> >(rand_temp_) = RandomOfUnits<mpfr_complex>(numVariables_);
-					std::get< Vec<dbl> >(solve_temp_).resize(numVariables_);
-					std::get< Vec<mpfr_complex> >(solve_temp_).resize(numVariables_);
+					std::get< Mat<complex_dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<complex_mp> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<complex_dbl> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<complex_mp> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Vec<complex_dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_dbl> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_dbl> >(rand_temp_) = RandomOfUnits<complex_dbl>(numVariables_);
+					std::get< Vec<complex_mp> >(rand_temp_) = RandomOfUnits<complex_mp>(numVariables_);
+					std::get< Vec<complex_dbl> >(solve_temp_).resize(numVariables_);
+					std::get< Vec<complex_mp> >(solve_temp_).resize(numVariables_);
 
 					ResizeK();
 				}
@@ -351,8 +351,8 @@ namespace bertini{
 				
 				void ResizeK()
 				{
-					std::get< Mat<dbl> >(K_).resize(numTotalFunctions_, s_);
-					std::get< Mat<mpfr_complex> >(K_).resize(numTotalFunctions_, s_);
+					std::get< Mat<complex_dbl> >(K_).resize(numTotalFunctions_, s_);
+					std::get< Mat<complex_mp> >(K_).resize(numTotalFunctions_, s_);
 				}
 				
 				
@@ -372,19 +372,19 @@ namespace bertini{
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					Precision(std::get< Mat<mpfr_complex> >(K_),new_precision);
+					Precision(std::get< Mat<complex_mp> >(K_),new_precision);
 
-					Precision(std::get< Vec<mpfr_complex> >(dh_dt_temp_),new_precision);
-					Precision(std::get< Mat<mpfr_complex> >(dh_dx_0_),new_precision);
-					Precision(std::get< Mat<mpfr_complex> >(dh_dx_temp_),new_precision);
-					Precision(std::get< Vec<mpfr_complex> >(step_temp_),new_precision);
-					Precision(std::get< Vec<mpfr_complex> >(rand_temp_),new_precision);
-					Precision(std::get< Vec<mpfr_complex> >(solve_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(dh_dt_temp_),new_precision);
+					Precision(std::get< Mat<complex_mp> >(dh_dx_0_),new_precision);
+					Precision(std::get< Mat<complex_mp> >(dh_dx_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(step_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(rand_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(solve_temp_),new_precision);
 
-					Precision(std::get< Mat<mpfr_float> >(a_),new_precision);
-					Precision(std::get< Vec<mpfr_float> >(b_),new_precision);
-					Precision(std::get< Vec<mpfr_float> >(b_minus_bstar_),new_precision);
-					Precision(std::get< Vec<mpfr_float> >(c_),new_precision);
+					Precision(std::get< Mat<real_mp> >(a_),new_precision);
+					Precision(std::get< Vec<real_mp> >(b_),new_precision);
+					Precision(std::get< Vec<real_mp> >(b_minus_bstar_),new_precision);
+					Precision(std::get< Vec<real_mp> >(c_),new_precision);
 
 					PredictorMethod(predictor_);
 
@@ -400,14 +400,14 @@ namespace bertini{
 					// where precision is set via SetThreadPrecision (thread-local only).
 					assert(current_precision_==ThreadPrecision());
 
-					Vec<mpfr_complex>& dhdttemp = std::get< Vec<mpfr_complex> >(dh_dt_temp_);
-					Mat<mpfr_complex>& dhdx0 = std::get< Mat<mpfr_complex> >(dh_dx_0_); 
-					Mat<mpfr_complex>& dhdxtemp = std::get< Mat<mpfr_complex> >(dh_dx_temp_); 
+					Vec<complex_mp>& dhdttemp = std::get< Vec<complex_mp> >(dh_dt_temp_);
+					Mat<complex_mp>& dhdx0 = std::get< Mat<complex_mp> >(dh_dx_0_); 
+					Mat<complex_mp>& dhdxtemp = std::get< Mat<complex_mp> >(dh_dx_temp_); 
 
-					Mat<mpfr_float>& a = std::get< Mat<mpfr_float> >(a_); 
-					Vec<mpfr_float>& b = std::get< Vec<mpfr_float> >(b_); 
-					Vec<mpfr_float>& bstar = std::get< Vec<mpfr_float> >(b_minus_bstar_); 
-					Vec<mpfr_float>& c = std::get< Vec<mpfr_float> >(c_);
+					Mat<real_mp>& a = std::get< Mat<real_mp> >(a_); 
+					Vec<real_mp>& b = std::get< Vec<real_mp> >(b_); 
+					Vec<real_mp>& bstar = std::get< Vec<real_mp> >(b_minus_bstar_); 
+					Vec<real_mp>& c = std::get< Vec<real_mp> >(c_);
 
 
 
@@ -827,7 +827,7 @@ namespace bertini{
 				{
 
 
-					if (std::is_same<ComplexT, mpfr_complex>::value)
+					if (std::is_same<ComplexT, complex_mp>::value)
 						PrecisionSanityCheck();
 
 					if(stage == 0)
@@ -835,7 +835,7 @@ namespace bertini{
 						Eigen::PartialPivLU<Mat<ComplexT>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexT>> >(LU_);
 						Mat<ComplexT>& dhdxref = std::get< Mat<ComplexT> >(dh_dx_0_);
 
-						if (!std::is_same<ComplexT,dbl>::value)
+						if (!std::is_same<ComplexT,complex_dbl>::value)
 						{
 							assert(ThreadPrecision()==current_precision_);
 
@@ -847,7 +847,7 @@ namespace bertini{
 						S.SetAndReset<ComplexT>(space, time);
 						S.JacobianInPlace(dhdxref);
 						LUref.compute(dhdxref);
-						if (!std::is_same<ComplexT,dbl>::value)
+						if (!std::is_same<ComplexT,complex_dbl>::value)
 						{
 							assert(Precision(dhdxref)==current_precision_);
 							assert(Precision(LUref.matrixLU())==current_precision_);
@@ -1009,27 +1009,27 @@ namespace bertini{
 				
 				unsigned numTotalFunctions_; // Number of total functions for the current system
 				unsigned numVariables_;  // Number of variables for the current system
-				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > K_;  // All the stage variables.  Each column represents a different stage.
+				mutable std::tuple< Mat<complex_dbl>, Mat<complex_mp> > K_;  // All the stage variables.  Each column represents a different stage.
 				Predictor predictor_;  // Method for prediction
 				unsigned p_;  //Order of the prediction method
-				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > dh_dx_0_;  // Jacobian for the initial stage.  Use for AMP testing
-				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > dh_dx_temp_;  // Temporary jacobian for all other stages
-				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > dh_dt_temp_;  // Temporary time derivative used for all stages
-				// std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_0_;  // LU from the intial stage used for AMP testing
+				mutable std::tuple< Mat<complex_dbl>, Mat<complex_mp> > dh_dx_0_;  // Jacobian for the initial stage.  Use for AMP testing
+				mutable std::tuple< Mat<complex_dbl>, Mat<complex_mp> > dh_dx_temp_;  // Temporary jacobian for all other stages
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > dh_dt_temp_;  // Temporary time derivative used for all stages
+				// std::tuple< Eigen::PartialPivLU<Mat<complex_dbl>>, Eigen::PartialPivLU<Mat<complex_mp>> > LU_0_;  // LU from the intial stage used for AMP testing
 
-				mutable std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_;
+				mutable std::tuple< Eigen::PartialPivLU<Mat<complex_dbl>>, Eigen::PartialPivLU<Mat<complex_mp>> > LU_;
 
-				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > step_temp_;  // reused scratch for FullStep stage accumulation
-				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
-				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > solve_temp_; // reused scratch: LU solve result
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > step_temp_;  // reused scratch for FullStep stage accumulation
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > solve_temp_; // reused scratch: LU solve result
 				
 				
 				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods )
 				mutable unsigned s_; // Number of stages
-				mutable std::tuple< Mat<double>, Mat<mpfr_float> > a_;
-				mutable std::tuple< Vec<double>, Vec<mpfr_float> > b_;
-				mutable std::tuple< Vec<double>, Vec<mpfr_float> > b_minus_bstar_;
-				mutable std::tuple< Vec<double>, Vec<mpfr_float> > c_;
+				mutable std::tuple< Mat<double>, Mat<real_mp> > a_;
+				mutable std::tuple< Vec<double>, Vec<real_mp> > b_;
+				mutable std::tuple< Vec<double>, Vec<real_mp> > b_minus_bstar_;
+				mutable std::tuple< Vec<double>, Vec<real_mp> > c_;
 				
 				mutable bool uses_embedded_;
 				mutable unsigned current_precision_;
@@ -1117,65 +1117,65 @@ namespace bertini{
 			
 		// Explicit instantiation declarations — suppress re-instantiation in every
 		// including TU.  The definitions live in core/src/tracking/explicit_predictors.cpp.
-		// Concrete types: dbl = std::complex<double>, mpfr_complex (multiprecision).
+		// Concrete types: complex_dbl = std::complex<double>, complex_mp (multiprecision).
 		// NumErrorT = double (from bertini2/common/config.hpp).
 
-		extern template SuccessCode ExplicitRKPredictor::Predict<dbl>(
-		    Vec<dbl>&, System const&, Vec<dbl> const&, dbl, dbl const&,
+		extern template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
+		    Vec<complex_dbl>&, System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
 		    double&, unsigned&, unsigned, double const&);
-		extern template SuccessCode ExplicitRKPredictor::Predict<mpfr_complex>(
-		    Vec<mpfr_complex>&, System const&, Vec<mpfr_complex> const&, mpfr_complex, mpfr_complex const&,
+		extern template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
+		    Vec<complex_mp>&, System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
 		    double&, unsigned&, unsigned, double const&);
 
-		extern template SuccessCode ExplicitRKPredictor::Predict<dbl>(
-		    Vec<dbl>&, double&, double&, double&,
-		    System const&, Vec<dbl> const&, dbl, dbl const&,
+		extern template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
+		    Vec<complex_dbl>&, double&, double&, double&,
+		    System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
 		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
-		extern template SuccessCode ExplicitRKPredictor::Predict<mpfr_complex>(
-		    Vec<mpfr_complex>&, double&, double&, double&,
-		    System const&, Vec<mpfr_complex> const&, mpfr_complex, mpfr_complex const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
-
-		extern template SuccessCode ExplicitRKPredictor::Predict<dbl>(
-		    Vec<dbl>&, double&, double&, double&, double&,
-		    System const&, Vec<dbl> const&, dbl, dbl const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
-		extern template SuccessCode ExplicitRKPredictor::Predict<mpfr_complex>(
-		    Vec<mpfr_complex>&, double&, double&, double&, double&,
-		    System const&, Vec<mpfr_complex> const&, mpfr_complex, mpfr_complex const&,
+		extern template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
+		    Vec<complex_mp>&, double&, double&, double&,
+		    System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
 		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
 
-		extern template SuccessCode ExplicitRKPredictor::FullStep<dbl>(
-		    Vec<dbl>&, System const&, Vec<dbl> const&, dbl const&, dbl const&);
-		extern template SuccessCode ExplicitRKPredictor::FullStep<mpfr_complex>(
-		    Vec<mpfr_complex>&, System const&, Vec<mpfr_complex> const&, mpfr_complex const&, mpfr_complex const&);
+		extern template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
+		    Vec<complex_dbl>&, double&, double&, double&, double&,
+		    System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
+		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
+		extern template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
+		    Vec<complex_mp>&, double&, double&, double&, double&,
+		    System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
+		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
 
-		extern template void ExplicitRKPredictor::SetNormsCond<dbl>(
+		extern template SuccessCode ExplicitRKPredictor::FullStep<complex_dbl>(
+		    Vec<complex_dbl>&, System const&, Vec<complex_dbl> const&, complex_dbl const&, complex_dbl const&);
+		extern template SuccessCode ExplicitRKPredictor::FullStep<complex_mp>(
+		    Vec<complex_mp>&, System const&, Vec<complex_mp> const&, complex_mp const&, complex_mp const&);
+
+		extern template void ExplicitRKPredictor::SetNormsCond<complex_dbl>(
 		    double&, double&, double&, unsigned, unsigned);
-		extern template void ExplicitRKPredictor::SetNormsCond<mpfr_complex>(
+		extern template void ExplicitRKPredictor::SetNormsCond<complex_mp>(
 		    double&, double&, double&, unsigned, unsigned);
 
-		extern template SuccessCode ExplicitRKPredictor::SetErrorEstimate<dbl>(double&, dbl const&);
-		extern template SuccessCode ExplicitRKPredictor::SetErrorEstimate<mpfr_complex>(double&, mpfr_complex const&);
+		extern template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_dbl>(double&, complex_dbl const&);
+		extern template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_mp>(double&, complex_mp const&);
 
-		extern template SuccessCode ExplicitRKPredictor::SetSizeProportion<dbl>(double&, dbl const&);
-		extern template SuccessCode ExplicitRKPredictor::SetSizeProportion<mpfr_complex>(double&, mpfr_complex const&);
+		extern template SuccessCode ExplicitRKPredictor::SetSizeProportion<complex_dbl>(double&, complex_dbl const&);
+		extern template SuccessCode ExplicitRKPredictor::SetSizeProportion<complex_mp>(double&, complex_mp const&);
 
-		extern template SuccessCode ExplicitRKPredictor::EvalRHS<dbl>(
-		    System const&, Vec<dbl> const&, dbl const&, Mat<dbl>&, unsigned);
-		extern template SuccessCode ExplicitRKPredictor::EvalRHS<mpfr_complex>(
-		    System const&, Vec<mpfr_complex> const&, mpfr_complex const&, Mat<mpfr_complex>&, unsigned);
+		extern template SuccessCode ExplicitRKPredictor::EvalRHS<complex_dbl>(
+		    System const&, Vec<complex_dbl> const&, complex_dbl const&, Mat<complex_dbl>&, unsigned);
+		extern template SuccessCode ExplicitRKPredictor::EvalRHS<complex_mp>(
+		    System const&, Vec<complex_mp> const&, complex_mp const&, Mat<complex_mp>&, unsigned);
 
 		extern template void ExplicitRKPredictor::FillButcherTable<double>(
 		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
 		    Mat<mpq_rational> const&, Mat<mpq_rational> const&);
-		extern template void ExplicitRKPredictor::FillButcherTable<mpfr_float>(
+		extern template void ExplicitRKPredictor::FillButcherTable<real_mp>(
 		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
 		    Mat<mpq_rational> const&, Mat<mpq_rational> const&);
 
 		extern template void ExplicitRKPredictor::FillButcherTable<double>(
 		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
-		extern template void ExplicitRKPredictor::FillButcherTable<mpfr_float>(
+		extern template void ExplicitRKPredictor::FillButcherTable<real_mp>(
 		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
 
 		} // re: predict

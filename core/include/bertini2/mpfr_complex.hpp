@@ -58,9 +58,9 @@ namespace bmp = boost::multiprecision;
 using bmp::backends::mpc_complex_backend;
 
 #ifdef BMP_EXPRESSION_TEMPLATES
-	using mpfr_complex = bmp::number<mpc_complex_backend<0>, bmp::et_on >;
+	using complex_mp = bmp::number<mpc_complex_backend<0>, bmp::et_on >;
 #else
-	using mpfr_complex = bmp::number<mpc_complex_backend<0>, bmp::et_off >;
+	using complex_mp = bmp::number<mpc_complex_backend<0>, bmp::et_off >;
 #endif
 
 	inline auto DefaultPrecisionPolicy(){
@@ -76,19 +76,19 @@ using bmp::backends::mpc_complex_backend;
 	{
 	   boost::multiprecision::variable_precision_options saved_options;
 
-	   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::thread_default_variable_precision_options())
+	   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(real_mp::thread_default_variable_precision_options())
 	   {
-	      mpfr_float::thread_default_variable_precision_options(opts);
+	      real_mp::thread_default_variable_precision_options(opts);
 	   }
 
 	   ~scoped_mpfr_precision_options_this_thread()
 	   {
-	      mpfr_float::thread_default_variable_precision_options(saved_options);
+	      real_mp::thread_default_variable_precision_options(saved_options);
 	   }
 
 	   void reset(boost::multiprecision::variable_precision_options opts)
 	   {
-	      mpfr_float::thread_default_variable_precision_options(opts);
+	      real_mp::thread_default_variable_precision_options(opts);
 	   }
 
 	};
@@ -101,23 +101,23 @@ using bmp::backends::mpc_complex_backend;
 	   boost::multiprecision::variable_precision_options saved_options_this_thread;
 
 	   scoped_mpfr_precision_options_all_threads(boost::multiprecision::variable_precision_options opts) :
-	   		saved_options_all_threads(mpfr_float::default_variable_precision_options()),
-	   		saved_options_this_thread(mpfr_float::default_variable_precision_options())
+	   		saved_options_all_threads(real_mp::default_variable_precision_options()),
+	   		saved_options_this_thread(real_mp::default_variable_precision_options())
 	   {
-	      mpfr_float::default_variable_precision_options(opts);
-	      mpfr_float::thread_default_variable_precision_options(opts);
+	      real_mp::default_variable_precision_options(opts);
+	      real_mp::thread_default_variable_precision_options(opts);
 	   }
 
 	   ~scoped_mpfr_precision_options_all_threads()
 	   {
-	      mpfr_float::default_variable_precision_options(saved_options_all_threads);
-	      mpfr_float::thread_default_variable_precision_options(saved_options_this_thread);
+	      real_mp::default_variable_precision_options(saved_options_all_threads);
+	      real_mp::thread_default_variable_precision_options(saved_options_this_thread);
 	   }
 
 	   void reset(boost::multiprecision::variable_precision_options opts)
 	   {
-	      mpfr_float::default_variable_precision_options(opts);
-	      mpfr_float::thread_default_variable_precision_options(opts);
+	      real_mp::default_variable_precision_options(opts);
+	      real_mp::thread_default_variable_precision_options(opts);
 	   }
 
 	};
@@ -129,22 +129,22 @@ using bmp::backends::mpc_complex_backend;
 
 	inline auto DefaultPrecision()
 	{
-		auto p = mpfr_float::default_precision();
-		assert(p==mpfr_complex::default_precision() && "precision of real and complex multiprecision numbers have drifted...");
+		auto p = real_mp::default_precision();
+		assert(p==complex_mp::default_precision() && "precision of real and complex multiprecision numbers have drifted...");
 		return p;
 	}
 
 	inline void DefaultPrecision(unsigned prec)
 	{
-		mpfr_float::default_precision(prec);
-		mpfr_complex::default_precision(prec);
+		real_mp::default_precision(prec);
+		complex_mp::default_precision(prec);
 		// Boost.Multiprecision >= 1.87 reads thread_default_precision when
 		// default-constructing mpfr temporaries (including those created by
 		// boost::python const& extractors). If left at 0, mpfr_init2 aborts.
 		// Set both so that calls to default_precision() align thread-local
 		// with the static default. See commit 3111255b for original context.
-		mpfr_float::thread_default_precision(prec);
-		mpfr_complex::thread_default_precision(prec);
+		real_mp::thread_default_precision(prec);
+		complex_mp::thread_default_precision(prec);
 #ifdef BMP_EXPRESSION_TEMPLATES
 		// With ET on, the default global policy for mpc_complex_backend is preserve_related_precision
 		// and for mpfr_float_backend it is preserve_target_precision. Both differ from what we want.
@@ -153,12 +153,12 @@ using bmp::backends::mpc_complex_backend;
 		//   - mpc_complex copy ctor uses preserve_related_precision() (>= 3) to preserve source precision
 		//   - assign_components_set_precision uses preserve_component_precision() (>= 2) to resize
 		//     a complex from real components at higher-than-default precision
-		//   - mpc_complex = mpfr_float uses preserve_component_precision() (>= 2) to resize
+		//   - mpc_complex = real_mp uses preserve_component_precision() (>= 2) to resize
 		// preserve_related_precision satisfies all three thresholds.
-		// For mpfr_float, preserve_related_precision also enables source-precision-preserving copies.
-		mpfr_float::thread_default_variable_precision_options(
+		// For real_mp, preserve_related_precision also enables source-precision-preserving copies.
+		real_mp::thread_default_variable_precision_options(
 			bmp::variable_precision_options::preserve_related_precision);
-		mpfr_complex::thread_default_variable_precision_options(
+		complex_mp::thread_default_variable_precision_options(
 			bmp::variable_precision_options::preserve_related_precision);
 #endif
 	}
@@ -168,13 +168,13 @@ using bmp::backends::mpc_complex_backend;
 	// precisions. Use instead of DefaultPrecision() inside per-thread tracking loops.
 	inline void SetThreadPrecision(unsigned prec)
 	{
-		mpfr_float::thread_default_precision(prec);
-		mpfr_complex::thread_default_precision(prec);
+		real_mp::thread_default_precision(prec);
+		complex_mp::thread_default_precision(prec);
 	}
 
 	inline unsigned ThreadPrecision()
 	{
-		return static_cast<unsigned>(mpfr_float::thread_default_precision());
+		return static_cast<unsigned>(real_mp::thread_default_precision());
 	}
 
 }
@@ -222,10 +222,10 @@ namespace bertini{
 	/**
 	\brief Get the precision of a number.
 
-	For mpfr_floats, this calls the precision member method for mpfr_float.
+	For mpfr_floats, this calls the precision member method for real_mp.
 	*/
 	inline
-	auto Precision(mpfr_complex const& num)
+	auto Precision(complex_mp const& num)
 	{
 		return num.precision();
 	}
@@ -234,15 +234,15 @@ namespace bertini{
 	/**
 	\brief Change the precision of a number.
 
-	For mpfr_floats, this calls the precision member method for mpfr_float.
+	For mpfr_floats, this calls the precision member method for real_mp.
 	*/
-	inline void Precision(mpfr_complex & num, unsigned prec)
+	inline void Precision(complex_mp & num, unsigned prec)
 	{
 		num.precision(prec);
 	}
 
 	inline
-	bool isnan(mpfr_complex const& num){return isnan(num.real()) || isnan(num.imag());};
+	bool isnan(complex_mp const& num){return isnan(num.real()) || isnan(num.imag());};
 
 
 

@@ -638,7 +638,7 @@ BOOST_AUTO_TEST_CASE(classic_writer_round_trips_a_system)
 	BOOST_CHECK_EQUAL(reparsed.NumNaturalFunctions(), sys.NumNaturalFunctions());
 
 	// identical values at a generic point -> the emitted classic text is a faithful round-trip
-	Vec<dbl> pt(2); pt << dbl(0.3, 0.7), dbl(-0.4, 0.2);
+	Vec<complex_dbl> pt(2); pt << complex_dbl(0.3, 0.7), complex_dbl(-0.4, 0.2);
 	auto a = sys.Eval(pt);
 	auto b = reparsed.Eval(pt);
 	BOOST_REQUIRE_EQUAL(a.size(), b.size());

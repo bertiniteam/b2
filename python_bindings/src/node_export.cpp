@@ -202,22 +202,22 @@ namespace bertini{
 		
 		
 		// Interpret a single Python value (int, float, complex, or a multiprecision
-		// number) as an mpfr_complex.  Multiprecision inputs are taken as-is; native
+		// number) as an complex_mp.  Multiprecision inputs are taken as-is; native
 		// Python numbers are embedded at the current default precision (so a Python
 		// float carries only float64 worth of information --- the documented cap).
-		static mpfr_complex CoerceToMpfrComplex(object const& o)
+		static complex_mp CoerceToMpfrComplex(object const& o)
 		{
-			extract<mpfr_complex> as_mp(o);
+			extract<complex_mp> as_mp(o);
 			if (as_mp.check()) return as_mp();
 
 			extract<std::complex<double>> as_complex(o);
-			if (as_complex.check()) { auto c = as_complex(); return mpfr_complex(c.real(), c.imag()); }
+			if (as_complex.check()) { auto c = as_complex(); return complex_mp(c.real(), c.imag()); }
 
 			extract<double> as_double(o);
-			if (as_double.check()) return mpfr_complex(as_double());
+			if (as_double.check()) return complex_mp(as_double());
 
 			extract<long> as_long(o);
-			if (as_long.check()) return mpfr_complex(static_cast<double>(as_long()));
+			if (as_long.check()) return complex_mp(static_cast<double>(as_long()));
 
 			throw std::runtime_error("could not interpret a supplied value as a number in eval");
 		}
@@ -233,7 +233,7 @@ namespace bertini{
 
 			std::shared_ptr<Node> self = extract<std::shared_ptr<Node>>(args[0]);
 
-			std::map<std::string, mpfr_complex> values;
+			std::map<std::string, complex_mp> values;
 			list items = dict(kwargs).items();
 			for (long i = 0; i < len(items); ++i)
 			{
@@ -242,7 +242,7 @@ namespace bertini{
 				values[name] = CoerceToMpfrComplex(object(pair[1]));
 			}
 
-			return object(bertini::EvalExpression<mpfr_complex>(self, values));
+			return object(bertini::EvalExpression<complex_mp>(self, values));
 		}
 
 		// f.variables() --- the distinct variables appearing in this expression, sorted by name.

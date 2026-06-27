@@ -123,7 +123,7 @@ using namespace bertini;
 
 BOOST_AUTO_TEST_CASE(make_double_point_point)
 {
-	[[maybe_unused]] PointPool<dbl> pool;
+	[[maybe_unused]] PointPool<complex_dbl> pool;
 }
 BOOST_AUTO_TEST_SUITE_END()
 

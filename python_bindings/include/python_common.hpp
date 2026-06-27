@@ -59,8 +59,8 @@
 
 
 using namespace boost::python;
-using mpfr_float = bertini::mpfr_float;
-using mpfr_complex = bertini::mpfr_complex;
+using real_mp = bertini::real_mp;
+using complex_mp = bertini::complex_mp;
 
 namespace bertini { namespace python {
 

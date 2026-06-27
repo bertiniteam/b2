@@ -13,7 +13,7 @@ using bertini::Operation;
 using SLP = bertini::StraightLineProgram;
 template<typename NumT> using Vec = bertini::Vec<NumT>;
 template<typename NumT> using Mat = bertini::Mat<NumT>;
-using dbl = bertini::dbl;
+using complex_dbl = bertini::complex_dbl;
 
 BOOST_AUTO_TEST_SUITE(SLP_tests)
 
@@ -129,16 +129,16 @@ BOOST_AUTO_TEST_CASE(evaluate_simple_system)
 
 	auto slp = SLP(sys);
 
-	Vec<dbl> values(1);
+	Vec<complex_dbl> values(1);
 
-	values(0) = dbl(2.0);
+	values(0) = complex_dbl(2.0);
 	
 
 	slp.Eval(values);
 
 
-	Vec<dbl> f = slp.GetFuncVals<dbl>();
-	bertini::Mat<dbl> J = slp.GetJacobian<dbl>();
+	Vec<complex_dbl> f = slp.GetFuncVals<complex_dbl>();
+	bertini::Mat<complex_dbl> J = slp.GetJacobian<complex_dbl>();
 
 	// x = 2, and the function is f=x+1
 	BOOST_CHECK_EQUAL(f(0), 3.);
@@ -167,22 +167,22 @@ BOOST_AUTO_TEST_CASE(evaluate_system2)
 	bertini::System sys = TwoVariableTestSystem();
 	auto slp = SLP(sys);
 
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 
-	values(0) = dbl(0.5); // x = 0.5
-	values(1) = dbl(0.1); // y = 0.1
+	values(0) = complex_dbl(0.5); // x = 0.5
+	values(1) = complex_dbl(0.1); // y = 0.1
 
 
 
 
 	slp.Eval(values);
-	Vec<dbl> f = slp.GetFuncVals<dbl>();
-	bertini::Mat<dbl> J = slp.GetJacobian<dbl>();
+	Vec<complex_dbl> f = slp.GetFuncVals<complex_dbl>();
+	bertini::Mat<complex_dbl> J = slp.GetJacobian<complex_dbl>();
 
 
 	// not returned yet -- point_d parVals, vec_d parDer,  mat_d Jp
 
-	dbl x{values(0)}, y{values(1)};
+	complex_dbl x{values(0)}, y{values(1)};
 
 	BOOST_CHECK_SMALL(abs(f(0) - (pow(x,2)+pow(y,2)-1.)),1e-15); // x^2+y^2-1
 	BOOST_CHECK_SMALL(abs(f(1) - (x-y)),1e-15);
@@ -201,10 +201,10 @@ BOOST_AUTO_TEST_CASE(evaluate_system2_inplace)
 	bertini::System sys = TwoVariableTestSystem();
 	auto slp = SLP(sys);
 
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 
-	values(0) = dbl(0.5); // x = 0.5
-	values(1) = dbl(0.1); // y = 0.1
+	values(0) = complex_dbl(0.5); // x = 0.5
+	values(1) = complex_dbl(0.1); // y = 0.1
 
 
 
@@ -212,17 +212,17 @@ BOOST_AUTO_TEST_CASE(evaluate_system2_inplace)
 	slp.Eval(values);
 
 
-	Vec<dbl> f(slp.NumFunctions());
-	slp.GetFuncValsInPlace<dbl>(f);
+	Vec<complex_dbl> f(slp.NumFunctions());
+	slp.GetFuncValsInPlace<complex_dbl>(f);
 
 
-	bertini::Mat<dbl> J(slp.NumFunctions(), slp.NumVariables());
-	slp.GetJacobianInPlace<dbl>(J);
+	bertini::Mat<complex_dbl> J(slp.NumFunctions(), slp.NumVariables());
+	slp.GetJacobianInPlace<complex_dbl>(J);
 
 
 	// not returned yet -- point_d parVals, vec_d parDer,  mat_d Jp
 
-	dbl x{values(0)}, y{values(1)};
+	complex_dbl x{values(0)}, y{values(1)};
 
 	BOOST_CHECK_SMALL(abs(f(0) - (pow(x,2)+pow(y,2)-1.)),1e-15); // x^2+y^2-1
 	BOOST_CHECK_SMALL(abs(f(1) - (x-y)),1e-15);
@@ -237,16 +237,16 @@ BOOST_AUTO_TEST_CASE(evaluate_system2_inplace)
 
 
 // BOOST_AUTO_TEST_CASE(evaluate){
-	// Vec<dbl> values(2);
+	// Vec<complex_dbl> values(2);
 
-	// values(0) = dbl(2.0);
-	// values(1) = dbl(3.0);
+	// values(0) = complex_dbl(2.0);
+	// values(1) = complex_dbl(3.0);
 
-	// Vec<dbl> v = sys.Eval(values);
+	// Vec<complex_dbl> v = sys.Eval(values);
 // 	auto J = sys.Jacobian(values);
 
-// 	dbl x1 = 2;
-// 	dbl x2 = 3;
+// 	complex_dbl x1 = 2;
+// 	complex_dbl x2 = 3;
 
 // 	BOOST_CHECK_EQUAL(J(0,0), 2*x1*x2*x2);
 // 	BOOST_CHECK_EQUAL(J(0,1), x1*x1*2*x2);
@@ -273,17 +273,17 @@ BOOST_AUTO_TEST_CASE(evaluate_three_variable_system)
 
 	auto slp = SLP(sys);
 
-	Vec<dbl> values(3);
+	Vec<complex_dbl> values(3);
 
-	values(0) = dbl(2.0);
-	values(1) = dbl(3.0);
-	values(2) = dbl(3.0);
+	values(0) = complex_dbl(2.0);
+	values(1) = complex_dbl(3.0);
+	values(2) = complex_dbl(3.0);
 
 
 	slp.Eval(values);
 
-	Vec<dbl> f = slp.GetFuncVals<dbl>();
-	bertini::Mat<dbl> J = slp.GetJacobian<dbl>();
+	Vec<complex_dbl> f = slp.GetFuncVals<complex_dbl>();
+	bertini::Mat<complex_dbl> J = slp.GetJacobian<complex_dbl>();
 
 
 	BOOST_CHECK_EQUAL(f(0), 3.); // f=x+1, x=2 ==> f=3
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_SUITE_END() // SLP_cse
 BOOST_AUTO_TEST_SUITE(SLP_freeze_partition)
 
 using bertini::node::Integer;
-using mpfr_complex = bertini::mpfr_complex;
+using complex_mp = bertini::complex_mp;
 
 namespace {
 	// f = x + sin(1): sin(1) is a constant unary operation -> a frozen instruction.
@@ -456,18 +456,18 @@ BOOST_AUTO_TEST_CASE(point_only_change_reuses_constants_correctly)
 
 	const double s1 = std::sin(1.0);
 
-	Vec<dbl> p(1);
-	p(0) = dbl(2.0);
+	Vec<complex_dbl> p(1);
+	p(0) = complex_dbl(2.0);
 	slp.Eval(p);
-	BOOST_CHECK_CLOSE(slp.GetFuncVals<dbl>()(0).real(), 2.0 + s1, 1e-10);
+	BOOST_CHECK_CLOSE(slp.GetFuncVals<complex_dbl>()(0).real(), 2.0 + s1, 1e-10);
 
-	p(0) = dbl(5.0); // point-only change: prologue skipped, sin(1) reused
+	p(0) = complex_dbl(5.0); // point-only change: prologue skipped, sin(1) reused
 	slp.Eval(p);
-	BOOST_CHECK_CLOSE(slp.GetFuncVals<dbl>()(0).real(), 5.0 + s1, 1e-10);
+	BOOST_CHECK_CLOSE(slp.GetFuncVals<complex_dbl>()(0).real(), 5.0 + s1, 1e-10);
 
-	p(0) = dbl(2.0); // back again
+	p(0) = complex_dbl(2.0); // back again
 	slp.Eval(p);
-	BOOST_CHECK_CLOSE(slp.GetFuncVals<dbl>()(0).real(), 2.0 + s1, 1e-10);
+	BOOST_CHECK_CLOSE(slp.GetFuncVals<complex_dbl>()(0).real(), 2.0 + s1, 1e-10);
 }
 
 // A precision change must invalidate the frozen prologue so the constant is recomputed at the
@@ -479,18 +479,18 @@ BOOST_AUTO_TEST_CASE(precision_change_recomputes_constants)
 
 	bertini::DefaultPrecision(30);
 	sys.precision(30);
-	Vec<mpfr_complex> p30(1);
-	p30(0) = mpfr_complex(2);
+	Vec<complex_mp> p30(1);
+	p30(0) = complex_mp(2);
 	auto f30 = sys.Eval(p30);
-	BOOST_CHECK(abs(f30(0) - (mpfr_complex(2) + sin(mpfr_complex(1)))) < 1e-25);
+	BOOST_CHECK(abs(f30(0) - (complex_mp(2) + sin(complex_mp(1)))) < 1e-25);
 
 	bertini::DefaultPrecision(50);
 	sys.precision(50);
-	Vec<mpfr_complex> p50(1);
-	p50(0) = mpfr_complex(2);
+	Vec<complex_mp> p50(1);
+	p50(0) = complex_mp(2);
 	auto f50 = sys.Eval(p50);
 	// sin(1) recomputed at 50 digits -> accurate well past 30 digits.
-	BOOST_CHECK(abs(f50(0) - (mpfr_complex(2) + sin(mpfr_complex(1)))) < 1e-40);
+	BOOST_CHECK(abs(f50(0) - (complex_mp(2) + sin(complex_mp(1)))) < 1e-40);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // SLP_freeze_partition

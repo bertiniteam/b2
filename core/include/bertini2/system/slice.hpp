@@ -85,7 +85,7 @@ namespace bertini {
 		       the trailing column is each form's constant term (zero, for a homogeneous slice).
 		\param homogeneous Whether the slice was authored without constant terms.
 		*/
-		static Slice FromCoefficients(VariableGroup const& v, Mat<mpfr_complex> const& augmented_coefficients, bool homogeneous = false)
+		static Slice FromCoefficients(VariableGroup const& v, Mat<complex_mp> const& augmented_coefficients, bool homogeneous = false)
 		{
 			assert(static_cast<size_t>(augmented_coefficients.cols()) == v.size() + 1 &&
 			       "a slice coefficient matrix must have (num_variables + 1) columns");
@@ -101,7 +101,7 @@ namespace bertini {
 		*/
 		static Slice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
-			typedef void (*funtype) (mpfr_complex&, unsigned); // the type for number generation
+			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
 			funtype gen = bertini::multiprecision::RandomRealAssign;
 			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
@@ -111,7 +111,7 @@ namespace bertini {
 		*/
 		static Slice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
-			typedef void (*funtype) (mpfr_complex&, unsigned); // the type for number generation
+			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
 			funtype gen = bertini::multiprecision::RandomComplexAssign;
 			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
@@ -121,11 +121,11 @@ namespace bertini {
 		orthonormalized by a QR factorization) and the constant column, then assembles the augmented
 		matrix the LinearFormsBlock holds.
 		*/
-		static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, std::function<void(mpfr_complex&, unsigned)> gen)
+		static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, std::function<void(complex_mp&, unsigned)> gen)
 		{
 			const unsigned num_vars = static_cast<unsigned>(v.size());
 
-			Mat<mpfr_complex> coeffs(dim, num_vars); // the variable coefficients (one row per form)
+			Mat<complex_mp> coeffs(dim, num_vars); // the variable coefficients (one row per form)
 
 			if (orthogonal)
 			{
@@ -146,8 +146,8 @@ namespace bertini {
 				auto prev_precision = DefaultPrecision();
 				DefaultPrecision(MaxPrecisionAllowed());
 
-				auto QR_factorization = Eigen::HouseholderQR<Mat<mpfr_complex> >(coeffs);
-				coeffs = QR_factorization.householderQ() * Mat<mpfr_complex>::Identity(maxdim, mindim);
+				auto QR_factorization = Eigen::HouseholderQR<Mat<complex_mp> >(coeffs);
+				coeffs = QR_factorization.householderQ() * Mat<complex_mp>::Identity(maxdim, mindim);
 
 				if (need_transpose)
 					coeffs.transposeInPlace();
@@ -166,7 +166,7 @@ namespace bertini {
 
 			// Assemble the augmented matrix: [ coeffs | constants ].  A homogeneous slice's constant
 			// column is zero; otherwise it is freshly generated.
-			Mat<mpfr_complex> augmented(dim, num_vars + 1);
+			Mat<complex_mp> augmented(dim, num_vars + 1);
 			augmented.leftCols(num_vars) = coeffs;
 			if (homogeneous)
 				augmented.col(num_vars).setZero();
@@ -230,7 +230,7 @@ namespace bertini {
 		These rows are also factor rows for a ProductsOfLinearsBlock, so a slice composes directly into
 		the product-of-linears form regeneration uses.
 		*/
-		Mat<mpfr_complex> const& Coefficients() const
+		Mat<complex_mp> const& Coefficients() const
 		{
 			return block_.Coefficients();
 		}
@@ -261,9 +261,9 @@ namespace bertini {
 			if (NumVariables() != other.NumVariables())
 				throw std::runtime_error("Slice::Concatenate requires both slices to be on the same number of variables");
 
-			Mat<mpfr_complex> const& A = Coefficients();
-			Mat<mpfr_complex> const& B = other.Coefficients();
-			Mat<mpfr_complex> stacked(A.rows() + B.rows(), A.cols());
+			Mat<complex_mp> const& A = Coefficients();
+			Mat<complex_mp> const& B = other.Coefficients();
+			Mat<complex_mp> stacked(A.rows() + B.rows(), A.cols());
 			stacked.topRows(A.rows()) = A;
 			stacked.bottomRows(B.rows()) = B;
 
@@ -296,8 +296,8 @@ namespace bertini {
 		*/
 		Slice Rows(std::vector<unsigned> const& indices) const
 		{
-			Mat<mpfr_complex> const& C = Coefficients();
-			Mat<mpfr_complex> sub(static_cast<Eigen::Index>(indices.size()), C.cols());
+			Mat<complex_mp> const& C = Coefficients();
+			Mat<complex_mp> sub(static_cast<Eigen::Index>(indices.size()), C.cols());
 			for (size_t ii = 0; ii < indices.size(); ++ii)
 			{
 				if (indices[ii] >= Dimension())

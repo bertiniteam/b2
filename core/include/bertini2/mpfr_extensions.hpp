@@ -27,7 +27,7 @@
 
 \brief Extensions to the Boost.Multiprecision library.
 
-Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and gmp_int types.
+Particularly includes Boost.Serialize code for the real_mp, gmp_rational, and gmp_int types.
 */
 
 #ifndef BERTINI_MPFR_EXTENSIONS_HPP
@@ -53,11 +53,11 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 
 namespace bertini{
 #ifdef BMP_EXPRESSION_TEMPLATES
-	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>; 
+	using real_mp = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>; 
 	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_on>;
 	using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_on>;
 #else
-	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off>; 
+	using real_mp = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off>; 
 	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_off>;
 	using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_off>;
 #endif
@@ -65,10 +65,10 @@ namespace bertini{
 	/** 
 	\brief Get the precision of a real number.
 
-	For mpfr_floats, this calls the precision member method for mpfr_float.
+	For mpfr_floats, this calls the precision member method for real_mp.
 	*/
 	inline
-	auto Precision(mpfr_float const& num)
+	auto Precision(real_mp const& num)
 	{
 		return num.precision();
 	}
@@ -76,9 +76,9 @@ namespace bertini{
 	/** 
 	\brief Change the precision of a real number.
 
-	For mpfr_floats, this calls the precision member method for mpfr_float.
+	For mpfr_floats, this calls the precision member method for real_mp.
 	*/
-	inline void Precision(mpfr_float & num, unsigned prec)
+	inline void Precision(real_mp & num, unsigned prec)
 	{
 		num.precision(prec);
 	}
@@ -138,10 +138,10 @@ namespace bertini{
 
 
 
-// the following code block extends serialization to the mpfr_float class from boost::multiprecision
+// the following code block extends serialization to the real_mp class from boost::multiprecision
 namespace boost { namespace serialization {
 	/**
-	 Save a mpfr_float type to a boost archive.
+	 Save a real_mp type to a boost archive.
 	 */
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
@@ -153,7 +153,7 @@ namespace boost { namespace serialization {
 	}
 	
 	/**
-	 Load a mpfr_float type from a boost archive.
+	 Load a real_mp type from a boost archive.
 	 */
 	template <typename Archive>
 	void load(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0>& r, unsigned /*version*/)

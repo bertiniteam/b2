@@ -70,8 +70,8 @@ namespace bertini
 			/**
 			 Constructor for making a user-provided start system from another.
 			*/
-			User(System const& s, SampCont<dbl> const& solns);
-			User(System const& s, SampCont<mpfr_complex> const& solns);
+			User(System const& s, SampCont<complex_dbl> const& solns);
+			User(System const& s, SampCont<complex_mp> const& solns);
 
 
 
@@ -91,14 +91,14 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<dbl> GenerateStartPoint(dbl,unsigned long long index) const override;
+			Vec<complex_dbl> GenerateStartPoint(complex_dbl,unsigned long long index) const override;
 
 			/**
 			Get the ith start point, in current default precision.
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const override;
+			Vec<complex_mp> GenerateStartPoint(complex_mp,unsigned long long index) const override;
 
 
 			friend class boost::serialization::access;
@@ -110,7 +110,7 @@ namespace bertini
 			}
 
 			const bertini::System& user_system_;
-			std::tuple<SampCont<dbl>, SampCont<mpfr_complex>> solns_;
+			std::tuple<SampCont<complex_dbl>, SampCont<complex_mp>> solns_;
 			bool solns_in_dbl_;
 		};
 	}
@@ -143,13 +143,13 @@ inline void load_construct_data(
 
     if (solns_in_dbl)
     {
-    	bertini::SampCont<bertini::dbl> solns;
+    	bertini::SampCont<bertini::complex_dbl> solns;
     	ar >> solns;
     	::new(t)bertini::start_system::User(sys, solns);
     }
 	else
 	{
-		bertini::SampCont<bertini::mpfr_complex> solns;
+		bertini::SampCont<bertini::complex_mp> solns;
 		ar >> solns;
 		::new(t)bertini::start_system::User(sys, solns);
 	}

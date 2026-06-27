@@ -32,7 +32,7 @@
 
 
 extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
+extern bertini::real_mp threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
@@ -47,9 +47,9 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
-using dbl = std::complex<double>;
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using complex_dbl = std::complex<double>;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 
 
 template<typename NumT> using Vec = bertini::Vec<NumT>;
@@ -60,11 +60,11 @@ BOOST_AUTO_TEST_CASE(minstepsize)
 {
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
-	mpfr_float remaining_time("1e-10");
+	real_mp remaining_time("1e-10");
 	
-	BOOST_CHECK_EQUAL(MinStepSizeForPrecision(16, remaining_time),mpfr_float("1e-23"));
+	BOOST_CHECK_EQUAL(MinStepSizeForPrecision(16, remaining_time),real_mp("1e-23"));
 
-	BOOST_CHECK_CLOSE(MinStepSizeForPrecision(40, remaining_time),mpfr_float("1e-47"), mpfr_float("1e-28"));
+	BOOST_CHECK_CLOSE(MinStepSizeForPrecision(40, remaining_time),real_mp("1e-47"), real_mp("1e-28"));
 }
 
 
@@ -73,9 +73,9 @@ BOOST_AUTO_TEST_CASE(mindigits)
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	mpfr_float remaining_time("1e-30");
-	mpfr_float min_stepsize("1e-35");
-	mpfr_float max_stepsize("1e-33");
+	real_mp remaining_time("1e-30");
+	real_mp min_stepsize("1e-35");
+	real_mp max_stepsize("1e-33");
 
 	auto digits = MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, remaining_time);
 
@@ -839,7 +839,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	unsigned num_occurences(0);
 	for (auto s : solutions)
 	{
-		if ( (s-solution_1).norm() < mpfr_float("1e-5"))
+		if ( (s-solution_1).norm() < real_mp("1e-5"))
 			num_occurences++;
 	}
 	BOOST_CHECK_EQUAL(num_occurences,1);
@@ -847,7 +847,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	num_occurences = 0;
 	for (auto s : solutions)
 	{
-		if ( (s-solution_2).norm() < mpfr_float("1e-5"))
+		if ( (s-solution_2).norm() < real_mp("1e-5"))
 			num_occurences++;
 	}
 	BOOST_CHECK_EQUAL(num_occurences,1);
@@ -931,7 +931,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 	unsigned num_occurences(0);
 	for (auto s : solutions)
 	{
-		if ( (s-solution_1).norm() < mpfr_float("1e-5"))
+		if ( (s-solution_1).norm() < real_mp("1e-5"))
 			num_occurences++;
 	}
 	BOOST_CHECK_EQUAL(num_occurences,1);
@@ -939,7 +939,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 	num_occurences = 0;
 	for (auto s : solutions)
 	{
-		if ( (s-solution_2).norm() < mpfr_float("1e-5"))
+		if ( (s-solution_2).norm() < real_mp("1e-5"))
 			num_occurences++;
 	}
 	BOOST_CHECK_EQUAL(num_occurences,1);
@@ -1015,9 +1015,9 @@ BOOST_AUTO_TEST_CASE(minimize_tracking_cost_skips_precision_below_min_stepsize)
 	using namespace bertini::tracking;
 
 	unsigned new_precision = 0;
-	mpfr_float new_stepsize("0");
-	mpfr_float min_stepsize("1e-5");
-	mpfr_float max_stepsize("1");
+	real_mp new_stepsize("0");
+	real_mp min_stepsize("1e-5");
+	real_mp max_stepsize("1");
 
 	MinimizeTrackingCost(new_precision, new_stepsize,
 	                     bertini::DoublePrecision(), min_stepsize,
@@ -1036,9 +1036,9 @@ BOOST_AUTO_TEST_CASE(minimize_tracking_cost_throws_when_no_precision_satisfies_m
 	using namespace bertini::tracking;
 
 	unsigned new_precision = 0;
-	mpfr_float new_stepsize("0");
-	mpfr_float min_stepsize("2");
-	mpfr_float max_stepsize("10");
+	real_mp new_stepsize("0");
+	real_mp min_stepsize("2");
+	real_mp max_stepsize("10");
 
 	BOOST_CHECK_THROW(
 	    MinimizeTrackingCost(new_precision, new_stepsize,

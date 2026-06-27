@@ -53,10 +53,10 @@ template<typename NumT> using Vec = bertini::Vec<NumT>;
 template<typename NumT> using Mat = bertini::Mat<NumT>;
 using Patch = bertini::Patch;
 
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
 
-using mpfr_float = bertini::mpfr_float;
+using real_mp = bertini::real_mp;
 
 
 BOOST_AUTO_TEST_CASE(patch_create)
@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE(patch_eval_two_variable_groups_prec16)
 
 	Patch p(s);
 
-	Vec<dbl> v(5);
-	v << dbl(1),  dbl(1),  dbl(1),  dbl(1),  dbl(1);
+	Vec<complex_dbl> v(5);
+	v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
 
 	p.Precision(16);
 	
@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec16)
 
 	Patch p(s);
 
-	Vec<dbl> v(5);
-	v << dbl(1),  dbl(1),  dbl(1),  dbl(1),  dbl(1);
+	Vec<complex_dbl> v(5);
+	v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
 
 	p.Precision(16);
 
@@ -113,12 +113,12 @@ BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec16)
 	BOOST_CHECK_EQUAL(J.rows(),2);
 	BOOST_CHECK_EQUAL(J.cols(),5);
 
-	BOOST_CHECK_EQUAL(J(0,2),dbl(0));
-	BOOST_CHECK_EQUAL(J(0,3),dbl(0));
-	BOOST_CHECK_EQUAL(J(0,4),dbl(0));
+	BOOST_CHECK_EQUAL(J(0,2),complex_dbl(0));
+	BOOST_CHECK_EQUAL(J(0,3),complex_dbl(0));
+	BOOST_CHECK_EQUAL(J(0,4),complex_dbl(0));
 
-	BOOST_CHECK_EQUAL(J(1,0),dbl(0));
-	BOOST_CHECK_EQUAL(J(1,1),dbl(0));
+	BOOST_CHECK_EQUAL(J(1,0),complex_dbl(0));
+	BOOST_CHECK_EQUAL(J(1,1),complex_dbl(0));
 }
 
 
@@ -137,23 +137,23 @@ BOOST_AUTO_TEST_CASE(patch_jacobian_fully_defines_its_rows_into_a_dirty_buffer)
 	Patch p(s);
 	p.Precision(16);
 
-	Vec<dbl> v(5);
-	v << dbl(1),  dbl(1),  dbl(1),  dbl(1),  dbl(1);
+	Vec<complex_dbl> v(5);
+	v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
 
-	Mat<dbl> J = Mat<dbl>::Constant(2, 5, dbl(1e300)); // poison every entry
+	Mat<complex_dbl> J = Mat<complex_dbl>::Constant(2, 5, complex_dbl(1e300)); // poison every entry
 
 	p.JacobianInPlace(J, v);
 
 	// off-coefficient entries of each patch row must be overwritten with zero, not left poisoned
-	BOOST_CHECK_EQUAL(J(0,2), dbl(0));
-	BOOST_CHECK_EQUAL(J(0,3), dbl(0));
-	BOOST_CHECK_EQUAL(J(0,4), dbl(0));
-	BOOST_CHECK_EQUAL(J(1,0), dbl(0));
-	BOOST_CHECK_EQUAL(J(1,1), dbl(0));
+	BOOST_CHECK_EQUAL(J(0,2), complex_dbl(0));
+	BOOST_CHECK_EQUAL(J(0,3), complex_dbl(0));
+	BOOST_CHECK_EQUAL(J(0,4), complex_dbl(0));
+	BOOST_CHECK_EQUAL(J(1,0), complex_dbl(0));
+	BOOST_CHECK_EQUAL(J(1,1), complex_dbl(0));
 
 	// the coefficient entries are still written (no longer the poison value)
-	BOOST_CHECK_NE(J(0,0), dbl(1e300));
-	BOOST_CHECK_NE(J(1,2), dbl(1e300));
+	BOOST_CHECK_NE(J(0,0), complex_dbl(1e300));
+	BOOST_CHECK_NE(J(1,2), complex_dbl(1e300));
 }
 
 
@@ -212,8 +212,8 @@ BOOST_AUTO_TEST_CASE(patch_rescale_and_evaluate_prec16)
 	Patch p(s);
 	p.Precision(16);
 
-	Vec<dbl> v(5);
-	v << dbl(1),  dbl(1),  dbl(1),  dbl(1),  dbl(1);
+	Vec<complex_dbl> v(5);
+	v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
 
 	auto v_rescaled = p.RescalePoint(v);
 

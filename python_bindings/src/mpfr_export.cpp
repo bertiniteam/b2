@@ -258,15 +258,15 @@ namespace bertini{
 			using boost::multiprecision::real;
 			using boost::multiprecision::imag;
 
-			mpfr_float (*reeeal)(const T&) = &boost::multiprecision::real;
-			mpfr_float (*imaaag)(const T&) = &boost::multiprecision::real;
+			real_mp (*reeeal)(const T&) = &boost::multiprecision::real;
+			real_mp (*imaaag)(const T&) = &boost::multiprecision::real;
 			def("real",reeeal, (arg("val")), "get the real part"); //,return_value_policy<copy_const_reference>()
 			def("imag",imaaag, (arg("val")), "get the imaginary part"); //,return_value_policy<copy_const_reference>()
 
 			// and then a few more free functions
 			// def("abs2",&T::abs2);
 
-			mpfr_complex (*pooolar)(const mpfr_float&,const mpfr_float&) = &boost::multiprecision::polar;
+			complex_mp (*pooolar)(const real_mp&,const real_mp&) = &boost::multiprecision::polar;
 
 			def("polar",pooolar, "construct from polar form");
 			// def("norm",&T::norm);
@@ -274,7 +274,7 @@ namespace bertini{
 			T (*conjjj)(const T&) = +[](const T& x) -> T { return boost::multiprecision::conj(x); };
 			def("conj",conjjj, "complex conjugate");
 
-			mpfr_float (*aaaarg)(const T&) = &boost::multiprecision::arg;
+			real_mp (*aaaarg)(const T&) = &boost::multiprecision::arg;
 			def("arg",aaaarg, "the argument, or the angle from 0.  beware the branch cut.");
 
 			// def("square",&square);
@@ -309,10 +309,10 @@ namespace bertini{
 			// Read the static default directly; fall back to 50 (Boost's library
 			// default) in case the getter itself delegates to the unset thread-local.
 			{
-				auto p = mpfr_float::default_precision();
+				auto p = real_mp::default_precision();
 				if (p == 0) p = 50;
-				mpfr_float::thread_default_precision(p);
-				mpfr_complex::thread_default_precision(p);
+				real_mp::thread_default_precision(p);
+				complex_mp::thread_default_precision(p);
 			}
 
 			def("default_precision", def_prec1, "get the default precision for variable-precision numbers.  is digits, not bits.");
@@ -406,7 +406,7 @@ namespace bertini{
 
 		void ExposeFloat()
 		{
-			using T = mpfr_float;
+			using T = real_mp;
 
 			class_<T>("Float", init<>("Default Construct a variable-precision float"))
 			.def_pickle(BoostArchivePickle<T>())
@@ -492,17 +492,17 @@ namespace bertini{
 		void ExposeComplex()
 		{
 
-			using T = bertini::mpfr_complex;
+			using T = bertini::complex_mp;
 
 			class_<T>("Complex", init<>())
 			.def_pickle(BoostArchivePickle<T>())
 			.def(init<double>((arg("self"),arg("real")),"Construct variable-precision complex number from a double, with 0 imaginary part. do this with caution, as 0.1 is not what you think it is -- there's noise at the end.")) // this should probably be made an explicit constructor rather than implicit
-			.def(init<mpfr_float>((arg("self"),arg("real")),"Construct variable-precision complex number from a variable-precision float, with 0 imaginary part"))
+			.def(init<real_mp>((arg("self"),arg("real")),"Construct variable-precision complex number from a variable-precision float, with 0 imaginary part"))
 			.def(init<std::string>((arg("self"),arg("real")),"Construct variable-precision complex number from a string, with 0 imaginary part"))
-			.def(init<mpfr_float,mpfr_float>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a pair of variable-precision floats"))
+			.def(init<real_mp,real_mp>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a pair of variable-precision floats"))
 			.def(init<double, double>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a pair of doubles.  do this with caution, as 0.1 is not what you think it is -- there's noise at the end.")) // this should probably be made an explicit constructor rather than implicit
-			.def(init<std::string, mpfr_float>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a string and a variable-precision float"))
-			.def(init<mpfr_float, std::string>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a variable-precision float and a string"))
+			.def(init<std::string, real_mp>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a string and a variable-precision float"))
+			.def(init<real_mp, std::string>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a variable-precision float and a string"))
 			.def(init<std::string, std::string>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a pair of strings.  the best way to construct one and be sure you have padded with zeros to the end, in the current working precision"))
 
 			.def(init<T>((arg("self"),arg("value")),"Construct variable-precision complex number from another one"))
@@ -522,20 +522,20 @@ namespace bertini{
 
 			.def(FieldVisitor<T, mpz_int>())
 			.def(FieldVisitor<T, mpq_rational>())
-			.def(FieldVisitor<T, mpfr_float>())
+			.def(FieldVisitor<T, real_mp>())
 
 			.def(FieldVisitor<T, int>())
 
 			.def(PowVisitor<T,T>())
 			.def(PowVisitor<T,int>())
-			.def(PowVisitor<T,mpfr_float>())
+			.def(PowVisitor<T,real_mp>())
 
 			.def(TranscendentalVisitor<T>())
 
 			.def(PrecisionVisitor<T>())
 
 			.def(EqualitySelfVisitor<T>())
-			.def(EqualityVisitor<T, mpfr_float>())
+			.def(EqualityVisitor<T, real_mp>())
 			.def(EqualityVisitor<T, int>())
 			;
 
@@ -562,14 +562,14 @@ namespace bertini{
 			eigenpy::registerCast<double,T>(false);
 
 			// it's ok to convert from variable precision Float to Complex, that's ok!
-			eigenpy::registerCast<mpfr_float,T>(true);
+			eigenpy::registerCast<real_mp,T>(true);
 
 			IMPLICITLY_CONVERTIBLE(int,T);
 			IMPLICITLY_CONVERTIBLE(long,T);
 			IMPLICITLY_CONVERTIBLE(int64_t,T);
 
 			// this is a general python conversion, not an eigenpy conversion.  it's ok to convert from reals to complexes.
-			IMPLICITLY_CONVERTIBLE(mpfr_float,T);
+			IMPLICITLY_CONVERTIBLE(real_mp,T);
 
 			// BUT!!
 			// do not allow implicit conversion, because it is a potential source of problems.
@@ -586,7 +586,7 @@ namespace bertini{
 			eigenpy::exposeType<T>();
 			eigenpy::exposeType<T, Eigen::RowMajor>();
 
-			boost::python::def("precision", &get_precision_vector<mpfr_complex>, "get the precision of a vector of complexes");
+			boost::python::def("precision", &get_precision_vector<complex_mp>, "get the precision of a vector of complexes");
 
 			boost::python::def("default_align_bytes", &get_default_align);
 

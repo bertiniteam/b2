@@ -41,8 +41,8 @@ BOOST_AUTO_TEST_SUITE(expand_to_function_tree)
 using System        = bertini::System;
 using Variable      = bertini::node::Variable;
 using VariableGroup = bertini::VariableGroup;
-using dbl           = bertini::dbl;
-using mpfr_complex  = bertini::mpfr_complex;
+using complex_dbl           = bertini::complex_dbl;
+using complex_mp  = bertini::complex_mp;
 template <typename T> using Vec = bertini::Vec<T>;
 template <typename T> using Mat = bertini::Mat<T>;
 
@@ -63,9 +63,9 @@ namespace {
 			}
 	}
 
-	Vec<dbl> RandomVecD(int n)
+	Vec<complex_dbl> RandomVecD(int n)
 	{
-		return Vec<dbl>::Random(n);
+		return Vec<complex_dbl>::Random(n);
 	}
 
 	// compare block vs expanded system on eval + Jacobian at a point (autonomous overload)
@@ -102,13 +102,13 @@ BOOST_AUTO_TEST_CASE(polynomial_block_roundtrip)
 	System expanded = sys.ExpandToFunctionTree();
 
 	for (int trial = 0; trial < 8; ++trial)
-		CompareEvalJac<dbl>(sys, expanded, RandomVecD(2), 1e-13);
+		CompareEvalJac<complex_dbl>(sys, expanded, RandomVecD(2), 1e-13);
 
 	DefaultPrecision(50);
 	sys.precision(50);
 	expanded.precision(50);
 	for (int trial = 0; trial < 4; ++trial)
-		CompareEvalJac<mpfr_complex>(sys, expanded, RandomOfUnits<mpfr_complex>(2), 1e-40);
+		CompareEvalJac<complex_mp>(sys, expanded, RandomOfUnits<complex_mp>(2), 1e-40);
 }
 
 
@@ -124,14 +124,14 @@ BOOST_AUTO_TEST_CASE(products_of_linears_block_matches)
 	sys.AddVariableGroup(VariableGroup{x, y});
 
 	// f0 = (2x + 3y - 1)(x - y + 4);  f1 = (x + 5)( -y + 2)( x + y )   (3 factors)
-	std::vector<Mat<mpfr_complex>> factors;
+	std::vector<Mat<complex_mp>> factors;
 	{
-		Mat<mpfr_complex> M0(2, 3); // rows = factors, cols = (x, y, const)
+		Mat<complex_mp> M0(2, 3); // rows = factors, cols = (x, y, const)
 		M0(0,0) = 2; M0(0,1) = 3;  M0(0,2) = -1;
 		M0(1,0) = 1; M0(1,1) = -1; M0(1,2) = 4;
 		factors.push_back(M0);
 
-		Mat<mpfr_complex> M1(3, 3);
+		Mat<complex_mp> M1(3, 3);
 		M1(0,0) = 1; M1(0,1) = 0;  M1(0,2) = 5;
 		M1(1,0) = 0; M1(1,1) = -1; M1(1,2) = 2;
 		M1(2,0) = 1; M1(2,1) = 1;  M1(2,2) = 0;
@@ -142,13 +142,13 @@ BOOST_AUTO_TEST_CASE(products_of_linears_block_matches)
 	System expanded = sys.ExpandToFunctionTree();
 
 	for (int trial = 0; trial < 8; ++trial)
-		CompareEvalJac<dbl>(sys, expanded, RandomVecD(2), 1e-12);
+		CompareEvalJac<complex_dbl>(sys, expanded, RandomVecD(2), 1e-12);
 
 	DefaultPrecision(50);
 	sys.precision(50);
 	expanded.precision(50);
 	for (int trial = 0; trial < 4; ++trial)
-		CompareEvalJac<mpfr_complex>(sys, expanded, RandomOfUnits<mpfr_complex>(2), 1e-40);
+		CompareEvalJac<complex_mp>(sys, expanded, RandomOfUnits<complex_mp>(2), 1e-40);
 }
 
 
@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(blend_block_matches)
 
 	for (int trial = 0; trial < 8; ++trial)
 	{
-		dbl tau = dbl(0.3, -0.2) * dbl(trial + 1);
-		CompareEvalJac<dbl>(H, expanded, RandomVecD(2), tau, 1e-12);
+		complex_dbl tau = complex_dbl(0.3, -0.2) * complex_dbl(trial + 1);
+		CompareEvalJac<complex_dbl>(H, expanded, RandomVecD(2), tau, 1e-12);
 	}
 
 	DefaultPrecision(50);
@@ -197,9 +197,9 @@ BOOST_AUTO_TEST_CASE(blend_block_matches)
 	expanded.precision(50);
 	for (int trial = 0; trial < 4; ++trial)
 	{
-		Vec<mpfr_complex> p = RandomOfUnits<mpfr_complex>(2);
-		mpfr_complex tau = RandomOfUnits<mpfr_complex>(1)(0);
-		CompareEvalJac<mpfr_complex>(H, expanded, p, tau, 1e-40);
+		Vec<complex_mp> p = RandomOfUnits<complex_mp>(2);
+		complex_mp tau = RandomOfUnits<complex_mp>(1)(0);
+		CompareEvalJac<complex_mp>(H, expanded, p, tau, 1e-40);
 	}
 }
 

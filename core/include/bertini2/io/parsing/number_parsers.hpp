@@ -37,7 +37,7 @@ namespace bertini{
 
 		namespace classic{
 			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct MpfrFloatParser : qi::grammar<Iterator, mpfr_float(), boost::spirit::ascii::space_type>
+			struct MpfrFloatParser : qi::grammar<Iterator, real_mp(), boost::spirit::ascii::space_type>
 			{
 				MpfrFloatParser() : MpfrFloatParser::base_type(root_rule_,"MpfrFloatParser")
 				{
@@ -49,11 +49,11 @@ namespace bertini{
 					using qi::_4;
 					using qi::_val;
 
-					root_rule_.name("mpfr_float");
+					root_rule_.name("real_mp");
 					root_rule_ = mpfr_rules_.number_string_
 									[ phx::bind( 
 											[]
-											(mpfr_float & B, std::string const& P)
+											(real_mp & B, std::string const& P)
 											{
 												using std::max;
 												auto prev_prec = DefaultPrecision();
@@ -61,7 +61,7 @@ namespace bertini{
 												auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
 
 												B.precision(static_cast<unsigned>(digits));
-												B = mpfr_float(P,static_cast<unsigned>(digits));
+												B = real_mp(P,static_cast<unsigned>(digits));
 											},
 											_val,_1
 										)
@@ -73,13 +73,13 @@ namespace bertini{
 					);
 				}
 
-				qi::rule<Iterator, mpfr_float(), Skipper > root_rule_;
+				qi::rule<Iterator, real_mp(), Skipper > root_rule_;
 				rules::LongNum<Iterator> mpfr_rules_;
 			};
 
 
 			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct MpfrComplexParser : qi::grammar<Iterator, mpfr_complex(), boost::spirit::ascii::space_type>
+			struct MpfrComplexParser : qi::grammar<Iterator, complex_mp(), boost::spirit::ascii::space_type>
 			{
 				MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
 				{
@@ -93,7 +93,7 @@ namespace bertini{
 					(mpfr_float_ >> mpfr_float_)
 					[ phx::bind(
 								[]
-								(mpfr_complex & B, mpfr_float const& P, mpfr_float const& Q)
+								(complex_mp & B, real_mp const& P, real_mp const& Q)
 								{
 									auto digits = max(P.precision(),Q.precision());
 									
@@ -107,7 +107,7 @@ namespace bertini{
 					 ];
 				}
 				
-				qi::rule<Iterator, mpfr_complex(), Skipper > root_rule_;
+				qi::rule<Iterator, complex_mp(), Skipper > root_rule_;
 				MpfrFloatParser<Iterator> mpfr_float_;
 			};
 
@@ -164,7 +164,7 @@ namespace bertini{
 			
 			
 			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, mpfr_float& c)
+			static bool parse(Iterator first, Iterator last, real_mp& c)
 			{
 				using boost::spirit::qi::double_;
 				using boost::spirit::qi::_1;
@@ -174,7 +174,7 @@ namespace bertini{
 				
 				MpfrFloatParser<Iterator> S;
 				
-				mpfr_float rN {0};
+				real_mp rN {0};
 				bool r = phrase_parse(first, last,
 									  S,
 									  space,
@@ -193,7 +193,7 @@ namespace bertini{
 			
 			
 			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, mpfr_complex& c)
+			static bool parse(Iterator first, Iterator last, complex_mp& c)
 			{
 				using boost::spirit::qi::double_;
 				using boost::spirit::qi::_1;
@@ -203,7 +203,7 @@ namespace bertini{
 				
 				MpfrComplexParser<Iterator> S;
 				
-				mpfr_complex rN {};
+				complex_mp rN {};
 				bool r = phrase_parse(first, last,
 									  S,
 									  space,

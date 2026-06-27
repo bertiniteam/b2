@@ -11,7 +11,7 @@
 namespace bertini{
 	namespace python{
 
-		using dbl = std::complex<double>;
+		using complex_dbl = std::complex<double>;
 
 		// pickle via boost serialization -- so Slice / WitnessSet / NID result round-trip through
 		// pickle, copy, and deepcopy (and, in C++, through MPI / threads).  Mirrors the suites in
@@ -44,7 +44,7 @@ namespace bertini{
 		void ExportSlice(){
 			class_<Slice>("Slice", "A linear slice of affine/projective space: a stack of linear forms M [x ; 1].", init<>())
 			.def("from_coefficients",
-				+[](VariableGroup const& v, bertini::Mat<mpfr_complex> const& aug, bool homogeneous){
+				+[](VariableGroup const& v, bertini::Mat<complex_mp> const& aug, bool homogeneous){
 					return Slice::FromCoefficients(v, aug, homogeneous);
 				},
 				(arg("variables"), arg("coefficients"), arg("homogeneous")=false),
@@ -65,17 +65,17 @@ namespace bertini{
 				"A random real linear slice of `dim` dimensions (forms) on the given variables.")
 			.staticmethod("random_real")
 			.def("coefficients",
-				+[](Slice const& s){ return bertini::Mat<mpfr_complex>(s.Coefficients()); },
+				+[](Slice const& s){ return bertini::Mat<complex_mp>(s.Coefficients()); },
 				(arg("self")),
 				"The augmented coefficient matrix (one row per linear form, num_variables+1 columns; the trailing column is the constant term).  These rows are ready-made factors for a products-of-linears block.")
 			.def("dimension", &Slice::Dimension, (arg("self")), "the dimension of the slice -- the number of linear forms")
 			.def("num_variables", &Slice::NumVariables, (arg("self")), "the number of variables the slice is a function of")
 			.def("is_homogeneous", &Slice::IsHomogeneous, (arg("self")), "whether the slice was authored without constant terms")
 			.def("eval",
-				+[](Slice const& s, bertini::Vec<dbl> const& x){ return s.Eval(x); },
+				+[](Slice const& s, bertini::Vec<complex_dbl> const& x){ return s.Eval(x); },
 				(arg("self"), arg("x")), "evaluate the linear forms at x, in double precision")
 			.def("eval",
-				+[](Slice const& s, bertini::Vec<mpfr_complex> const& x){ return s.Eval(x); },
+				+[](Slice const& s, bertini::Vec<complex_mp> const& x){ return s.Eval(x); },
 				(arg("self"), arg("x")), "evaluate the linear forms at x, in multiple precision")
 			.def("add_to", &Slice::AddTo, (arg("self"), arg("system")), "add this slice's linear forms to a System as a linear-forms block")
 			.def("as_system", &Slice::AsSystem, (arg("self")), "a standalone System whose functions are exactly this slice's linear forms")
@@ -158,10 +158,10 @@ namespace bertini{
 
 		void ExportNIDDataTypes(){
 			ExportSlice();
-			ExportWitnessSet<dbl_complex>("WitnessSetDoublePrecision");
-			ExportWitnessSet<mpfr_complex>("WitnessSetMultiplePrecision");
-			ExportNIDResult<dbl_complex>("NumericalIrreducibleDecompositionDoublePrecision");
-			ExportNIDResult<mpfr_complex>("NumericalIrreducibleDecompositionMultiplePrecision");
+			ExportWitnessSet<complex_dbl>("WitnessSetDoublePrecision");
+			ExportWitnessSet<complex_mp>("WitnessSetMultiplePrecision");
+			ExportNIDResult<complex_dbl>("NumericalIrreducibleDecompositionDoublePrecision");
+			ExportNIDResult<complex_mp>("NumericalIrreducibleDecompositionMultiplePrecision");
 		}
 
 }} // namespaces

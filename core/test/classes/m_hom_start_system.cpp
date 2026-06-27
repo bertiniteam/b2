@@ -38,10 +38,10 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 using mpq_rational = bertini::mpq_rational;
-using mpfr_float = bertini::mpfr_float;
+using real_mp = bertini::real_mp;
 using mpz_int = bertini::mpz_int;
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
 template<typename NumT> using Vec = bertini::Vec<NumT>;
 template<typename NumT> using Mat = bertini::Mat<NumT>;
 
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(start_points_are_roots_of_the_start_system)
 	const auto n = mhom.NumStartPoints();
 	for (unsigned long long i = 0; i < n; ++i)
 	{
-		auto sp = mhom.StartPoint<dbl>(i);
+		auto sp = mhom.StartPoint<complex_dbl>(i);
 		BOOST_CHECK_EQUAL(static_cast<size_t>(sp.size()), mhom.NumVariables());
 		auto v = mhom.Eval(sp);
 		for (Eigen::Index j = 0; j < v.size(); ++j)
@@ -162,16 +162,16 @@ BOOST_AUTO_TEST_CASE(start_points_are_roots_of_the_start_system)
 
 	for (unsigned long long i = 0; i < n; ++i)
 	{
-		auto Hval = H.Eval(mhom.StartPoint<dbl>(i), dbl(1));
+		auto Hval = H.Eval(mhom.StartPoint<complex_dbl>(i), complex_dbl(1));
 		for (Eigen::Index j = 0; j < Hval.size(); ++j)
 			BOOST_CHECK(std::abs(Hval(j)) < 1e-9);
 	}
 
-	bertini::Vec<dbl> xq(H.NumVariables());
+	bertini::Vec<complex_dbl> xq(H.NumVariables());
 	for (Eigen::Index k = 0; k < xq.size(); ++k)
-		xq(k) = dbl(0.37 * static_cast<double>(k + 1) + 0.11, -0.19 * static_cast<double>(k) + 0.07);
-	const dbl tv(0.42, -0.13);
-	const dbl hstep(1e-6, 0);
+		xq(k) = complex_dbl(0.37 * static_cast<double>(k + 1) + 0.11, -0.19 * static_cast<double>(k) + 0.07);
+	const complex_dbl tv(0.42, -0.13);
+	const complex_dbl hstep(1e-6, 0);
 
 	auto J = H.Jacobian(xq, tv);
 	auto f0 = H.Eval(xq, tv);

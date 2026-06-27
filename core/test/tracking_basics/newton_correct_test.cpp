@@ -34,7 +34,7 @@
 
 
 extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
+extern bertini::real_mp threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
@@ -51,9 +51,9 @@ using NewtonCorrector = bertini::tracking::correct::NewtonCorrector;
 
 
 
-using dbl = std::complex<double>;
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using complex_dbl = std::complex<double>;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 using mpq_rational = bertini::mpq_rational;
 
 template<typename NumT> using Vec = bertini::Vec<NumT>;
@@ -67,11 +67,11 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 {
 	
 	// Starting point in spacetime step
-	Vec<dbl> current_space(2);
-	current_space << dbl(2.3,0.2), dbl(1.1, 1.87);
+	Vec<complex_dbl> current_space(2);
+	current_space << complex_dbl(2.3,0.2), complex_dbl(1.1, 1.87);
 	
 	// Starting time
-	dbl current_time(0.9);
+	complex_dbl current_time(0.9);
 	// Time step
 	
 	
@@ -98,11 +98,11 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	double tracking_tolerance(1e-5);
 	
 	
-	Vec<dbl> corrected(2);
-	corrected << dbl(1.36296628875178620892887063382866,0.135404746200380445814213878747082),
-	dbl(0.448147673035459113010161338024478, -0.0193435351714829208306019826781546);
+	Vec<complex_dbl> corrected(2);
+	corrected << complex_dbl(1.36296628875178620892887063382866,0.135404746200380445814213878747082),
+	complex_dbl(0.448147673035459113010161338024478, -0.0193435351714829208306019826781546);
 	
-	Vec<dbl> newton_correction_result;
+	Vec<complex_dbl> newton_correction_result;
 	
 	tracking_tolerance = 1e1;
 	unsigned max_num_newton_iterations = 1;
@@ -191,11 +191,11 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	{
 		
 		// Starting point in spacetime step
-		Vec<dbl> current_space(2);
-		current_space << dbl(2.3,0.2), dbl(1.1, 1.87);
+		Vec<complex_dbl> current_space(2);
+		current_space << complex_dbl(2.3,0.2), complex_dbl(1.1, 1.87);
 		
 		// Starting time
-		dbl current_time(0.9);
+		complex_dbl current_time(0.9);
 		// Time step
 		
 		
@@ -222,11 +222,11 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		double tracking_tolerance(1e-5);
 		
 		
-		Vec<dbl> corrected(2);
-		corrected << dbl(1.14542104415948767661671388923986, 0.0217584797792294631577151109622764),
-		dbl(0.47922556512007318905475515868002, -0.00310835425417563759395930156603948);
+		Vec<complex_dbl> corrected(2);
+		corrected << complex_dbl(1.14542104415948767661671388923986, 0.0217584797792294631577151109622764),
+		complex_dbl(0.47922556512007318905475515868002, -0.00310835425417563759395930156603948);
 		
-		Vec<dbl> newton_correction_result;
+		Vec<complex_dbl> newton_correction_result;
 		
 		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 2;
@@ -321,12 +321,12 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		 Have trimmed current_space to have 16 digits after decimal point. Also, saftey_digits_1 has been set to 32000
 		 to set off the AMPCriterionB condition.
 		 */
-		Vec<dbl> current_space(2);
-		current_space << dbl(25.4088532364492429,-38.0519122331723744),
-		dbl(-0.0212298348984663,-0.1778146465316983);
+		Vec<complex_dbl> current_space(2);
+		current_space << complex_dbl(25.4088532364492429,-38.0519122331723744),
+		complex_dbl(-0.0212298348984663,-0.1778146465316983);
 		
-		dbl current_time(0);
-		dbl delta_t(.1);
+		complex_dbl current_time(0);
+		complex_dbl delta_t(.1);
 		
 		current_time += delta_t;
 		
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		AMP.safety_digits_1 = 32000;
 		
 		
-		Vec<dbl> newton_correction_result;
+		Vec<complex_dbl> newton_correction_result;
 		
 		double tracking_tolerance = double(10);
 		unsigned max_num_newton_iterations = 1;

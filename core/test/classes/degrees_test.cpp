@@ -59,13 +59,13 @@ using bertini::DefaultPrecision;
 namespace {
 
 // augmented coefficient matrix (rows x (num_vars+1)), last column the constant term.
-Mat<mpfr_complex> AugMat(std::vector<std::vector<int>> const& rows)
+Mat<complex_mp> AugMat(std::vector<std::vector<int>> const& rows)
 {
-	Mat<mpfr_complex> M(static_cast<Eigen::Index>(rows.size()),
+	Mat<complex_mp> M(static_cast<Eigen::Index>(rows.size()),
 	                    static_cast<Eigen::Index>(rows.front().size()));
 	for (Eigen::Index i = 0; i < M.rows(); ++i)
 		for (Eigen::Index j = 0; j < M.cols(); ++j)
-			M(i, j) = mpfr_complex(rows[static_cast<size_t>(i)][static_cast<size_t>(j)]);
+			M(i, j) = complex_mp(rows[static_cast<size_t>(i)][static_cast<size_t>(j)]);
 	return M;
 }
 
@@ -186,9 +186,9 @@ BOOST_AUTO_TEST_CASE(products_of_linears_degree_is_factor_count)
 {
 	DefaultPrecision(30);
 	// f0 = product of 2 linear factors (degree 2); f1 = product of 3 (degree 3).
-	Mat<mpfr_complex> f0 = AugMat({{2, 3, 1}, {1, -1, 4}});
-	Mat<mpfr_complex> f1 = AugMat({{1, 0, 1}, {0, 1, -2}, {1, 1, 0}});
-	ProductsOfLinearsBlock block(2, std::vector<Mat<mpfr_complex>>{f0, f1});
+	Mat<complex_mp> f0 = AugMat({{2, 3, 1}, {1, -1, 4}});
+	Mat<complex_mp> f1 = AugMat({{1, 0, 1}, {0, 1, -2}, {1, 1, 0}});
+	ProductsOfLinearsBlock block(2, std::vector<Mat<complex_mp>>{f0, f1});
 
 	std::vector<int> expected{2, 3};
 	BOOST_CHECK(block.Degrees() == expected);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(products_of_linears_degree_is_factor_count)
 	System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y");
 	sys.AddVariableGroup(VariableGroup{x, y});
-	sys.AddBlock(ProductsOfLinearsBlock(2, std::vector<Mat<mpfr_complex>>{f0, f1}));
+	sys.AddBlock(ProductsOfLinearsBlock(2, std::vector<Mat<complex_mp>>{f0, f1}));
 	BOOST_CHECK(sys.Degrees() == expected);
 	BOOST_CHECK_EQUAL(sys.DegreeBound(), 3);
 }

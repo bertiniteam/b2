@@ -104,14 +104,14 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<dbl> GenerateStartPoint(dbl,unsigned long long index) const override;
+			Vec<complex_dbl> GenerateStartPoint(complex_dbl,unsigned long long index) const override;
 
 			/**
 			Get the ith start point, in current default precision.
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const override;
+			Vec<complex_mp> GenerateStartPoint(complex_mp,unsigned long long index) const override;
 			
 			/**
 			 A local version of GenerateStartPoint that can be templated
@@ -130,11 +130,11 @@ namespace bertini
 			/// constant (0 for projective groups -- their factors are homogeneous).  This is the
 			/// data the retired node::LinearProduct used to hold; the products-of-linears block
 			/// and the start-point solve read it directly.
-			Mat<Mat<mpfr_complex>> linear_coeffs_;
+			Mat<Mat<complex_mp>> linear_coeffs_;
 			std::vector< std::vector<size_t> > variable_cols_; ///< The columns associated with each variable.  The first index is the variable group, the second index is the particular variable in the group.
 			size_t num_hom_groups_ = 0; ///< how many of the leading entries of var_groups_ are projective (homogeneous) groups; the rest are affine.  A projective group of size k spans P^{k-1}: dimension k-1, so it takes k-1 functions and its start-point component is a homogeneous vector.
 
-			mutable Vec<mpfr_complex> temp_v_mp_;
+			mutable Vec<complex_mp> temp_v_mp_;
 
 			friend class boost::serialization::access;
 

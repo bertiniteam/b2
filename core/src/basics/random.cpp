@@ -123,7 +123,7 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
 
 
 
-	mpfr_float RandomMp()
+	real_mp RandomMp()
 	{
 		// ThreadPrecision (thread-local) rather than DefaultPrecision (global):
 		// random numbers are generated during tracking, which may run on a
@@ -131,10 +131,10 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
 		return RandomMp(bertini::ThreadPrecision());
 	}
 
-	mpfr_float RandomMp(unsigned num_digits)
+	real_mp RandomMp(unsigned num_digits)
 	{
 		
-		mpfr_float a;
+		real_mp a;
 		if (num_digits<=50)
 			a = RandomMp<50>();
 		else if (num_digits<=100)
@@ -174,11 +174,11 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
 	}
 
 
-	void RandomMpAssign(mpfr_float & a, unsigned num_digits)
+	void RandomMpAssign(real_mp & a, unsigned num_digits)
 	{
 		
 
-		mpfr_float temp;
+		real_mp temp;
 		temp = RandomMp(num_digits);
 		a = std::move(temp);
 	}
@@ -186,16 +186,16 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
 
 
 
-	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
+	real_mp RandomMp(const real_mp & a, const real_mp & b)
 	{
 		// see RandomMp() above for why ThreadPrecision rather than DefaultPrecision
 		return RandomMp(a,b,bertini::ThreadPrecision());
 	}
 
-	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b, unsigned num_digits)
+	real_mp RandomMp(const real_mp & a, const real_mp & b, unsigned num_digits)
 	{
 		
-		mpfr_float result;
+		real_mp result;
 		if (num_digits<=50)
 			result = RandomMp<50>(a,b);
 		else if (num_digits<=100)
