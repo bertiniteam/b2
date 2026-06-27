@@ -79,16 +79,37 @@ namespace Eigen {
 		// tolerances are consumed inside tracking (LU solves, norms, convergence
 		// checks), which may run on std::thread workers whose precision is set
 		// thread-locally.  On the main thread the two agree.
+		// epsilon() and dummy_precision() are pow(10, -precision): expensive (transcendental,
+		// heap-allocating) yet a pure function of the thread precision.  They are called per
+		// LU-diagonal element, per Newton iteration, per predictor stage, per step, so recomputing
+		// them dominated the multiprecision path.  Memoize per thread, keyed on the current
+		// precision -- the cached value is bit-identical to a fresh pow at that precision.
 		inline static Real dummy_precision()
 		{
 			using bertini::ThreadPrecision;
-			return pow( mpfr_real(10),-int(ThreadPrecision()-3));
+			thread_local unsigned cached_prec = 0;
+			thread_local Real cached_val;
+			const unsigned p = ThreadPrecision();
+			if (p != cached_prec)
+			{
+				cached_val = pow(mpfr_real(10), -int(p-3));
+				cached_prec = p;
+			}
+			return cached_val;
 		}
 
 		inline static Real epsilon()
 		{
 			using bertini::ThreadPrecision;
-			return pow(mpfr_real(10),-int(ThreadPrecision()));
+			thread_local unsigned cached_prec = 0;
+			thread_local Real cached_val;
+			const unsigned p = ThreadPrecision();
+			if (p != cached_prec)
+			{
+				cached_val = pow(mpfr_real(10), -int(p));
+				cached_prec = p;
+			}
+			return cached_val;
 		}
 
 		static inline int digits10()
