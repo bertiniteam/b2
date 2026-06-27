@@ -183,19 +183,22 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 	.def(ObservableVisitor<AlgoT>())
 	.def("solve",
 		+[](AlgoT& self, boost::python::object comm) -> void {
-			// Release the GIL for the whole solve: the worker threads run pure C++ numerics
-			// (no Python objects), so dropping the GIL gives true multicore parallelism on a
-			// stock CPython -- no free-threaded build needed.  Python observer callbacks
-			// re-acquire the GIL in the observer trampoline (see generic_observer.hpp).
-			bertini::python::ScopedGILRelease unlock_gil;
+			// The GIL must be HELD while touching Python objects (e.g. extracting the mpi4py
+			// communicator), and RELEASED only around the actual C++ solve so the worker threads
+			// run truly in parallel on stock CPython (no free-threaded build needed).  Python
+			// observer callbacks re-acquire the GIL in the observer trampoline (generic_observer.hpp).
 #ifdef BERTINI2_HAVE_MPI
 			if (comm.is_none()) {
+				bertini::python::ScopedGILRelease unlock_gil;
 				self.Run();
 			} else {
-				MPI_Fint f = boost::python::extract<MPI_Fint>(comm.attr("py2f")());
-				self.RunParallel(MPI_Comm_f2c(f));
+				// Extract the communicator with the GIL held, then release it for RunParallel.
+				MPI_Comm c = MPI_Comm_f2c(boost::python::extract<MPI_Fint>(comm.attr("py2f")()));
+				bertini::python::ScopedGILRelease unlock_gil;
+				self.RunParallel(c);
 			}
 #else
+			bertini::python::ScopedGILRelease unlock_gil;
 			self.Solve();
 #endif
 		},
