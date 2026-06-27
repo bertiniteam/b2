@@ -114,8 +114,68 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	}
 
 
+	// --- Bertini 1.7 machine-readable solution files -------------------------------------
+	//
+	// These mirror the classic solution-file format so that tooling written against Bertini 1.7
+	// reads Bertini 2's output unchanged: the first line is the solution count, then each
+	// solution is a block of NumVariables coordinate lines ("re im", scientific), blocks
+	// separated by a blank line.  Byte-for-byte equality with Bertini 1 is neither sought nor
+	// possible (different implementations and RNG); the contract is *machine-readable* parity.
+	// Coordinates are in user (dehomogenized) coordinates, as Bertini 1 reports them.
+
+	// Write a count-led list of solution points (each a Vec): "<count>\n\n" then, per point,
+	// the coordinate lines followed by a blank-line separator.
+	template <typename OutT, typename SolListT>
+	static void SolutionList(OutT & out, SolListT const& sols)
+	{
+		out << sols.size() << "\n\n";
+		for (auto const& v : sols)
+		{
+			generators::Classic::generate(boost::spirit::ostream_iterator(out), v);
+			out << "\n";
+		}
+	}
+
 	template <typename OutT>
-	static 
+	static void FiniteSolutions(OutT & out, ZDT const& zd)      { SolutionList(out, zd.FiniteSolutions()); }
+
+	template <typename OutT>
+	static void RealFiniteSolutions(OutT & out, ZDT const& zd)  { SolutionList(out, zd.RealSolutions()); }
+
+	template <typename OutT>
+	static void NonsingularSolutions(OutT & out, ZDT const& zd) { SolutionList(out, zd.NonsingularSolutions()); }
+
+	template <typename OutT>
+	static void SingularSolutions(OutT & out, ZDT const& zd)    { SolutionList(out, zd.SingularSolutions()); }
+
+	// raw_solutions: every successful endpoint, each preceded by its path number (Bertini 1 lists
+	// the raw endpoints before finite/infinite classification, tagged by path).
+	template <typename OutT>
+	static void RawSolutions(OutT & out, ZDT const& zd)
+	{
+		auto const& md   = zd.FinalSolutionMetadata();
+		auto const& sols = zd.SolutionsUserCoords();
+		const auto m = std::min(md.size(), sols.size());
+
+		std::size_t count{0};
+		for (std::size_t ii{0}; ii<m; ++ii)
+			if (md[ii].endgame_success == SuccessCode::Success)
+				++count;
+
+		out << count << "\n\n";
+		for (std::size_t ii{0}; ii<m; ++ii)
+		{
+			if (md[ii].endgame_success != SuccessCode::Success)
+				continue;
+			out << md[ii].path_index << "\n";
+			generators::Classic::generate(boost::spirit::ostream_iterator(out), sols[ii]);
+			out << "\n";
+		}
+	}
+
+
+	template <typename OutT>
+	static
 	void NumVariables(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& sys = zd.TargetSystem();
