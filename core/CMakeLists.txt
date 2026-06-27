@@ -776,6 +776,7 @@ if (ENABLE_UNIT_TESTING)
 	set(B2_NAG_ALGORITHMS_TEST
 		test/nag_algorithms/nag_algorithms_test.cpp
 		test/nag_algorithms/zero_dim.cpp
+		test/nag_algorithms/threaded_solve.cpp
 		test/nag_algorithms/numerical_irreducible_decomposition.cpp
 		test/nag_algorithms/trace.cpp
 	)

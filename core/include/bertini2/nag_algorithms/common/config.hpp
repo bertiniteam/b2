@@ -181,6 +181,12 @@ struct ZeroDimConfig
 	unsigned initial_ambient_precision = DefaultPrecision();
 	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 
+	/// Number of worker threads for a shared-memory (non-MPI) solve.  0 = auto
+	/// (std::thread::hardware_concurrency); 1 = serial (no thread pool).  Overridden by the
+	/// OMP_NUM_THREADS environment variable when set.  See parallel::EffectiveThreadCount.
+	/// Under MPI the per-rank thread count comes from OMP_NUM_THREADS, not this field.
+	unsigned num_threads = 0;
+
 	mpq_rational start_time{1};          ///< Homotopy start time (t=1).
 	mpq_rational endgame_boundary{1, 10}; ///< Time at which tracking hands off to the endgame (t=1/10).
 	mpq_rational target_time{0};         ///< Homotopy target time (t=0).
