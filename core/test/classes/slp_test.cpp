@@ -562,12 +562,32 @@ BOOST_AUTO_TEST_CASE(tier_speedup_benchmark)
 	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
 
 	using real_mp = bertini::real_mp;
-	const std::string dense =
-		"function f1,f2,f3,f4; variable_group x,y,z,w; "
-		"f1 = 3*x^4 + 5*y^3 + 7*z^2 + 11*w^5 + 2*x*y*z - 13*z*w + 17*x - 19; "
-		"f2 = 23*y^4 + 29*z^3 + 31*x^2 + 37*w + 41*x*z*w - 43*x*y + 47; "
-		"f3 = 53*z^4 + 59*w^3 + 61*x^2 + 67*y^5 + 71*y*z*w - 73*x*w + 79; "
-		"f4 = 83*w^4 + 89*x^3 + 97*y^2 + 101*z^4 + 103*x*y*w - 107*y*z + 109;";
+	// Generate an nv-variable, nv-function dense integer-coefficient system (degree up to `deg`),
+	// so the benchmark can scale: bigger systems do more arithmetic per eval, shrinking the fixed
+	// per-eval overhead (allocations, output extraction) relative to the tiered arithmetic.
+	const char* nvenv = std::getenv("BERTINI_SLP_BENCH_NVARS");
+	const int nv  = nvenv ? std::atoi(nvenv) : 4;
+	const int deg = 5;
+	// zero-padded names (x00, x01, ...) so no name is a prefix of another (x1 vs x10 confuses the parser)
+	auto vn = [](int i){ char b[8]; std::snprintf(b, sizeof b, "x%03d", i); return std::string(b); };
+	auto fn = [](int i){ char b[8]; std::snprintf(b, sizeof b, "f%03d", i); return std::string(b); };
+	auto make_system = [&]() -> std::string {
+		std::string s = "function ";
+		for (int i = 0; i < nv; ++i) s += fn(i) + (i + 1 < nv ? "," : "; ");
+		s += "variable_group ";
+		for (int i = 0; i < nv; ++i) s += vn(i) + (i + 1 < nv ? "," : "; ");
+		int c = 2;
+		for (int i = 0; i < nv; ++i) {
+			s += fn(i) + " = ";
+			for (int j = 0; j < nv; ++j)  // one power term per variable
+				s += std::to_string(c++) + "*" + vn(j) + "^" + std::to_string((j % deg) + 2) + " + ";
+			for (int j = 0; j + 1 < nv; ++j)  // cross terms
+				s += std::to_string(c++) + "*" + vn(j) + "*" + vn(j + 1) + " + ";
+			s += std::to_string(c++) + "; ";
+		}
+		return s;
+	};
+	const std::string dense = make_system();
 
 	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
 	const char* nenv = std::getenv("BERTINI_SLP_BENCH_N");
@@ -581,8 +601,8 @@ BOOST_AUTO_TEST_CASE(tier_speedup_benchmark)
 		SLP slp(sys);
 		slp.precision(prec);
 
-		Vec<complex_mp> pt(4);
-		for (int j = 0; j < 4; ++j) pt(j) = complex_mp(real_mp(j + 2), real_mp(j + 1));
+		Vec<complex_mp> pt(nv);
+		for (int j = 0; j < nv; ++j) pt(j) = complex_mp(real_mp(j + 2), real_mp(j + 1));
 		slp.Eval(pt); (void)slp.GetFuncVals<complex_mp>();  // warm the frozen prologue
 
 		complex_mp sink(0);
@@ -608,8 +628,8 @@ BOOST_AUTO_TEST_CASE(tier_speedup_benchmark)
 		bertini::SLPProgram::tiers_enabled_ = tiers;
 		auto sys = ParseSLPSys(dense);
 		SLP slp(sys);
-		Vec<complex_dbl> pt(4);
-		for (int j = 0; j < 4; ++j) pt(j) = complex_dbl(j + 2, j + 1);
+		Vec<complex_dbl> pt(nv);
+		for (int j = 0; j < nv; ++j) pt(j) = complex_dbl(j + 2, j + 1);
 		slp.Eval(pt); (void)slp.GetFuncVals<complex_dbl>();
 
 		complex_dbl sink(0);
@@ -640,6 +660,47 @@ BOOST_AUTO_TEST_CASE(tier_speedup_benchmark)
 	          << "  MPFR prec=" << prec << " digits (N=" << N << " evals of f+J):\n"
 	          << "    tiers OFF: " << off << " s    tiers ON: " << on
 	          << " s    speedup: " << (off / on) << "x\n\n";
+	BOOST_CHECK(true);
+}
+
+// Probe the user's hypothesis: is real_mp * complex_mp actually cheaper than complex*complex, or
+// does Boost.Multiprecision promote the real operand to complex first (4 muls, no saving)?  And how
+// much of mpfr cost is the multiply vs. number management?  Opt-in via BERTINI_SLP_BENCH.
+BOOST_AUTO_TEST_CASE(mpfr_raw_op_microbench)
+{
+	if (!std::getenv("BERTINI_SLP_BENCH")) { BOOST_CHECK(true); return; }
+	using real_mp = bertini::real_mp;
+	const char* penv = std::getenv("BERTINI_SLP_BENCH_PREC");
+	const unsigned prec = penv ? static_cast<unsigned>(std::atoi(penv)) : 256;
+	const char* menv = std::getenv("BERTINI_SLP_BENCH_M");
+	const long M = menv ? std::atol(menv) : 1000000;
+	bertini::DefaultPrecision(prec);
+
+	complex_mp ac(real_mp("1.2345"), real_mp("5.6789"));
+	complex_mp bc(real_mp("9.8765"), real_mp("4.3210"));
+	complex_mp zc(0); bertini::Precision(zc, prec);
+	real_mp ar("3.14159"), br("2.71828"), zr(0);
+
+	complex_mp sink(0); bertini::Precision(sink, prec);
+	real_mp rsink(0);
+	auto timeit = [&](auto&& f){
+		auto t0 = std::chrono::steady_clock::now();
+		for (long i = 0; i < M; ++i) f();
+		return std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+	};
+
+	const double t_cc = timeit([&]{ zc = ac * bc; sink += zc; });  // complex * complex
+	const double t_rc = timeit([&]{ zc = ar * bc; sink += zc; });  // real * complex (tier hot path)
+	const double t_rr = timeit([&]{ zr = ar * br; rsink += zr; }); // real * real
+
+	std::cout << "\n=== raw mpfr multiply microbench (prec=" << prec << ", M=" << M
+	          << ", sink=" << sink.real() << "/" << rsink << ") ===\n"
+	          << "  complex*complex: " << t_cc << " s\n"
+	          << "  real*complex:    " << t_rc << " s   (rc/cc = " << (t_rc / t_cc) << ")\n"
+	          << "  real*real:       " << t_rr << " s   (rr/cc = " << (t_rr / t_cc) << ")\n"
+	          << "  => " << (t_rc / t_cc < 0.8 ? "real*complex IS cheaper -- tier helps arithmetic"
+	                                           : "real*complex ~ complex*complex -- Boost promotes; no arithmetic win")
+	          << "\n\n";
 	BOOST_CHECK(true);
 }
 
