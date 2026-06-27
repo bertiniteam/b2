@@ -52,3 +52,4 @@ Each ADR follows the template:
 | [0032](0032-slice-is-a-thin-wrapper-over-linear-forms-block.md) | A witness set's Slice is a thin wrapper over LinearFormsBlock; LinearSlice retired | Core / nag_datatypes |
 | [0033](0033-slice-shape-contract-we-own-dimensionality.md) | Slice shape is OUR accessors' contract, not eigenpy's: coefficients() always 2-D, slice[i] a form vector, slice[i:j] a sub-Slice | Python bindings |
 | [0034](0034-tiered-slp-arithmetic.md) | SLP evaluates in the narrowest sufficient numeric tier (integer<real<complex), orthogonal to precision; widen only when an op demands it; measurement-gated | Core / SLP |
+| [0035](0035-slp-eval-is-allocation-free.md) | The SLP eval loop is allocation-free — lower integer powers to multiplies (exp-by-squaring), fold differentiated exponents to literals, no by-value temporaries; ~10x faster mp eval, 0 allocs/eval ≤256 digits | Core / SLP / performance |
