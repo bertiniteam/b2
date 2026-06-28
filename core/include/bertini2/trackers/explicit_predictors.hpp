@@ -616,8 +616,10 @@ namespace bertini{
 					temp.setZero();
 					for(unsigned ii = 0; ii < s_; ++ii)
 						temp += bref(ii)*Kref.col(ii);
-										
-					next_space = current_space + delta_t*temp;
+
+					// next_space is a distinct buffer from current_space/temp, so noalias avoids a
+					// materialized temporary for the axpy.
+					next_space.noalias() = current_space + delta_t*temp;
 					
 					return SuccessCode::Success;
 				};
