@@ -180,7 +180,7 @@ namespace bertini{
 						if(success_code != SuccessCode::Success)
 							return success_code;
 						
-						next_space += step_ref;
+						next_space -= step_ref;  // step_ref = +J^{-1}f = -(Newton step); see EvalIterationStep
 						
 						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
@@ -238,7 +238,7 @@ namespace bertini{
 						if(success_code != SuccessCode::Success)
 							return success_code;
 						
-						next_space += step_ref;
+						next_space -= step_ref;  // step_ref = +J^{-1}f = -(Newton step); see EvalIterationStep
 						
 						Mat<ComplexT>& J_temp_ref = std::get< Mat<ComplexT> >(J_temp_);
 						Eigen::PartialPivLU< Mat<ComplexT> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexT> > >(LU_);
@@ -316,7 +316,7 @@ namespace bertini{
 						if(success_code != SuccessCode::Success)
 							return success_code;
 						
-						next_space += step_ref;
+						next_space -= step_ref;  // step_ref = +J^{-1}f = -(Newton step); see EvalIterationStep
 						
 						Mat<ComplexT>& J_temp_ref = std::get< Mat<ComplexT> >(J_temp_);
 						Eigen::PartialPivLU< Mat<ComplexT> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexT> > >(LU_);
@@ -390,8 +390,12 @@ namespace bertini{
 					if (LUPartialPivotDecompositionSuccessful(LU_ref.matrixLU())!=MatrixSuccessCode::Success)
 						return SuccessCode::MatrixSolveFailure;
 					
-					newton_step = LU_ref.solve(-f_temp_ref);
-					
+					// Solve J*newton_step = f (NOT -f): this lets us skip materializing the negated RHS
+					// temporary.  newton_step therefore holds +J^{-1}f = -(true Newton step), so callers
+					// SUBTRACT it (next_space -= newton_step).  The convergence test uses lpNorm, which is
+					// sign-insensitive, so it is unaffected.
+					newton_step = LU_ref.solve(f_temp_ref);
+
 					return SuccessCode::Success;
 					
 				}

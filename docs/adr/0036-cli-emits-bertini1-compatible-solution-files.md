@@ -1,7 +1,10 @@
-# ADR-0034: The CLI emits Bertini 1.7-compatible machine-readable solution files
+# ADR-0036: The CLI emits Bertini 1.7-compatible machine-readable solution files
 
 **Status:** Accepted
 **Date:** 2026-06-27
+
+<!-- Renumbered 0034 -> 0036: 0034/0035 were claimed by the tiered-SLP work (PR #40) that merged
+concurrently with this one (PR #39). -->
 
 ## Context
 
