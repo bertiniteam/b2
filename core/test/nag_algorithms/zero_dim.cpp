@@ -573,6 +573,12 @@ BOOST_AUTO_TEST_CASE(infinite_solutions_at_infinity)
 
 	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System, start_system::TotalDegree>(sys);
 	zd.DefaultSetup();
+	// SecurityLevel <= 0 truncates paths heading to infinity as failures (SecurityMaxNormReached);
+	// this test wants the at-infinity path actually computed, so raise the level to keep tracking it
+	// to its (infinite) endpoint, where it is classified as a divergence.
+	endgame::SecurityConfig sec;
+	sec.level = 1;
+	zd.GetEndgame().Set(sec);
 	zd.Solve();
 
 	auto r = zd.Report();
