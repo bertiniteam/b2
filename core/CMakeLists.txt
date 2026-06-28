@@ -535,6 +535,18 @@ target_precompile_headers(bertini2_exe PRIVATE
 # todo: this should be made a devmode thing
 #target_compile_options(bertini2 PRIVATE -Wall -Wextra)
 
+# auditwheel rejects the wheel ("depends on unsupported ISA extensions") because the
+# *executable* -- unlike a .so -- links the manylinux/AlmaLinux 9 CRT startup objects
+# (Scrt1.o etc.), which carry a GNU_PROPERTY note declaring an x86-64-v2 ISA requirement.
+# Our own code is compiled to the v1 baseline (the _pybertini .so, built from the same
+# sources, passes auditwheel), so that note is a spurious artifact of the distro CRT.
+# Strip it from the exe so auditwheel sees the true (v1) requirement.  Wheel/Linux only.
+if(SKBUILD AND UNIX AND NOT APPLE AND CMAKE_OBJCOPY)
+  add_custom_command(TARGET bertini2_exe POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} --remove-section .note.gnu.property $<TARGET_FILE:bertini2_exe>
+    COMMENT "Stripping .note.gnu.property from bertini2 CLI (drops the distro CRT's x86-64-v2 ISA marking)")
+endif()
+
 # Ship the blackbox CLI inside the Python wheel so `pip install bertini2` puts a
 # `bertini2` command on PATH (see the [project.scripts] shim in pyproject.toml and
 # python/bertini/_cli.py).  Under scikit-build (SKBUILD) the whole install tree is
