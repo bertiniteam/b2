@@ -1054,7 +1054,7 @@ namespace bertini{
 				           					  this->last_step_.norm_J_inverse,
 				           					  Get<NewtonConfig>().max_num_newton_iterations,
 				           					  tracking_tolerance_,
-				           					  this->last_step_.size_proportion,
+				           					  this->last_step_.norm_delta_z,
 				           					  Get<PrecConf>()), NumErrorT(0));
 			}
 
@@ -1072,7 +1072,7 @@ namespace bertini{
 			* the most recent estimate of the norm of \f$J^{-1}\f$,
 			* the number of allowed newton iterations,
 			* the tracking tolerance,
-			* the size_proportion of the latest prediction,
+			* the norm of the latest Newton residual (norm_delta_z),
 			* the AMP configuration.
 
 			*/
