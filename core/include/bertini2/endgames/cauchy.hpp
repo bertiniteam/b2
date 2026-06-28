@@ -1134,7 +1134,7 @@ public:
 				return SuccessCode::Success;
 			}
 
-			if (this->SecuritySettings().level)
+			if (this->SecuritySettings().level <= 0)
 			{//we are too large, break out of loop to return error.
 				norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(latest_approx);
 
