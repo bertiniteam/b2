@@ -479,6 +479,12 @@ if(BERTINI2_FAST_ALLOC)
     set(MI_BUILD_STATIC ON  CACHE BOOL "" FORCE)
     set(MI_BUILD_OBJECT OFF CACHE BOOL "" FORCE)
     set(MI_BUILD_TESTS  OFF CACHE BOOL "" FORCE)
+    # CRITICAL for the dlopen-ed Python extension on glibc Linux: mimalloc otherwise builds with
+    # -ftls-model=initial-exec, whose TLS must come from the limited static-TLS surplus.  When
+    # _pybertini.so (with mimalloc statically linked) is dlopen-ed, that surplus is exhausted and
+    # import fails with "cannot allocate memory in static TLS block".  Local-dynamic TLS is the
+    # dlopen-compatible model.  (Windows/macOS are unaffected, but the option is harmless there.)
+    set(MI_LOCAL_DYNAMIC_TLS ON CACHE BOOL "" FORCE)
     FetchContent_Declare(mimalloc
         GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
         GIT_TAG        v2.1.7)
