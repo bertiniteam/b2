@@ -16,6 +16,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(ENABLE_UNIT_TESTING "Turn on building and running of unit tests while compiling" OFF)
 option(BMP_EXPRESSION_TEMPLATES "Enable Boost.Multiprecision expression templates for mpfr_float, mpfr_complex, mpz_int, mpq_rational" ON)
+# Route GMP/MPFR/MPC limb allocation through mimalloc (static, NON-override) for a large
+# multiprecision speedup.  OFF = system allocator, no extra dependency, InstallFastAllocator()
+# becomes a no-op -- the build-time escape hatch if a platform's CI dislikes mimalloc.
+option(BERTINI2_FAST_ALLOC "Use a bundled fast allocator (mimalloc) for multiprecision limb allocation" ON)
 
 find_package(MPI)
 option(ENABLE_MPI "Enable MPI parallelism (requires OpenMPI or MPICH; no Boost.MPI needed)" ${MPI_FOUND})
@@ -339,6 +343,7 @@ set(BERTINI2_LIBRARY_HEADERS
 set(basics_sources
     src/basics/random.cpp
     src/basics/have_bertini.cpp
+    src/basics/fast_allocator.cpp
 )
 
 set(function_tree_sources
@@ -461,6 +466,30 @@ target_link_libraries(bertini2 PUBLIC ${MPFR_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPC_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC Eigen3::Eigen)
 target_link_libraries(bertini2 PUBLIC ${Boost_LIBRARIES})
+
+# Faster multiprecision: route GMP/MPFR/MPC limb allocation through mimalloc (static, NON-override).
+# We never replace the process malloc; bertini::InstallFastAllocator() installs an ownership-aware
+# GMP memory hook that calls mi_*.  See bertini2/fast_allocator.hpp.  mimalloc is fetched + built
+# from source (MIT license), so no system dependency is added and the wheel stays self-contained.
+# Escape hatch: -DBERTINI2_FAST_ALLOC=OFF builds exactly as before (hook is a no-op).
+if(BERTINI2_FAST_ALLOC)
+    include(FetchContent)
+    set(MI_OVERRIDE     OFF CACHE BOOL "" FORCE)  # do NOT hijack the process malloc; we call mi_* explicitly
+    set(MI_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(MI_BUILD_STATIC ON  CACHE BOOL "" FORCE)
+    set(MI_BUILD_OBJECT OFF CACHE BOOL "" FORCE)
+    set(MI_BUILD_TESTS  OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(mimalloc
+        GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+        GIT_TAG        v2.1.7)
+    FetchContent_MakeAvailable(mimalloc)
+    set_target_properties(mimalloc-static PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(bertini2 PUBLIC mimalloc-static)
+    target_compile_definitions(bertini2 PUBLIC BERTINI2_HAVE_MIMALLOC)
+    message(STATUS "bertini2: multiprecision allocator = mimalloc (static, non-override)")
+else()
+    message(STATUS "bertini2: multiprecision allocator = system (BERTINI2_FAST_ALLOC=OFF)")
+endif()
 
 if(ENABLE_MPI)
     # We use only the MPI C API.  Including <mpi.h> from C++ otherwise pulls in the deprecated
