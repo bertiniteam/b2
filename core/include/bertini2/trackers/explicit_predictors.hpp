@@ -345,6 +345,11 @@ namespace bertini{
 					std::get< Vec<complex_dbl> >(solve_temp_).resize(numVariables_);
 					std::get< Vec<complex_mp> >(solve_temp_).resize(numVariables_);
 
+					std::get< Vec<complex_dbl> >(stage_pt_temp_).resize(numVariables_);
+					std::get< Vec<complex_mp> >(stage_pt_temp_).resize(numVariables_);
+					std::get< Vec<complex_dbl> >(err_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(err_temp_).resize(numTotalFunctions_);
+
 					ResizeK();
 				}
 				
@@ -380,6 +385,8 @@ namespace bertini{
 					Precision(std::get< Vec<complex_mp> >(step_temp_),new_precision);
 					Precision(std::get< Vec<complex_mp> >(rand_temp_),new_precision);
 					Precision(std::get< Vec<complex_mp> >(solve_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(stage_pt_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(err_temp_),new_precision);
 
 					Precision(std::get< Mat<real_mp> >(a_),new_precision);
 					Precision(std::get< Vec<real_mp> >(b_),new_precision);
@@ -679,13 +686,18 @@ namespace bertini{
 						return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 					}
 					
+					Vec<ComplexT>& stage_pt = std::get< Vec<ComplexT> >(stage_pt_temp_);
 					for(unsigned ii = 1; ii < s_; ++ii)
 					{
 						temp.setZero(); // see https://github.com/bertiniteam/b2/issues/198
 						for(unsigned jj = 0; jj < ii; ++jj)
 							temp += aref(ii,jj)*Kref.col(jj);
 
-						if(EvalRHS<ComplexT>(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
+						// Evaluate into the preallocated stage-point scratch rather than passing the
+						// expression (current_space + delta_t*temp) to EvalRHS's const Vec& param, which
+						// would materialize a fresh temporary Vec every stage.
+						stage_pt.noalias() = current_space + delta_t*temp;
+						if(EvalRHS<ComplexT>(S, stage_pt, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
 							return SuccessCode::MatrixSolveFailure;
 					}
 					
@@ -743,15 +755,14 @@ namespace bertini{
 					Mat<ComplexT>& Kref = std::get< Mat<ComplexT> >(K_);
 					Vec<RealT>& b_minus_bstar_ref = std::get< Vec<RealT> >(b_minus_bstar_);
 					
-					auto numFuncs = Kref.rows();
-					Vec<ComplexT> err(numFuncs);
-					
+					Vec<ComplexT>& err = std::get< Vec<ComplexT> >(err_temp_);  // reused scratch, not a fresh per-step alloc
+
 					err.setZero();
 					for(unsigned ii = 0; ii < s_; ++ii)
 					{
 						err += (b_minus_bstar_ref(ii))*Kref.col(ii);
 					}
-					
+
 					err *= delta_t;
 					
 					error_estimate = NumErrorT(err.norm());
@@ -1022,6 +1033,8 @@ namespace bertini{
 				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > step_temp_;  // reused scratch for FullStep stage accumulation
 				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
 				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > solve_temp_; // reused scratch: LU solve result
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > stage_pt_temp_; // reused scratch: RK stage point (current_space + delta_t*temp)
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > err_temp_;   // reused scratch: embedded-RK error estimate vector
 				
 				
 				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods )

@@ -45,6 +45,7 @@
 #include "function_tree_export.hpp"  // SetupFunctionTree() + light function_tree headers
 #include "eigenpy_interaction.hpp"   // EnableEigenPy()
 #include "parallel_export.hpp"       // ExportParallel()
+#include "bertini2/fast_allocator.hpp"  // InstallFastAllocator()
 
 namespace bertini { namespace python {
 
@@ -75,6 +76,11 @@ namespace bertini
 
 		BOOST_PYTHON_MODULE(_pybertini) // this name must match the name of the generated .so file.
 		{
+			// Route GMP/MPFR/MPC limb allocation through mimalloc (if built with BERTINI2_FAST_ALLOC).
+			// Done first, before any multiprecision work; ownership-aware so it is safe even if
+			// another GMP user (e.g. gmpy2) was imported first.  No-op if disabled.
+			InstallFastAllocator();
+
 			// see https://stackoverflow.com/questions/6114462/how-to-override-the-automatically-created-docstring-data-for-boostpython
 			docstring_options docopt;
 			docopt.enable_all();

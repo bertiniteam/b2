@@ -1303,13 +1303,15 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 				// next path would crawl from the start time with that tiny step (effectively a hang).
 				ctx.tracker.ReinitializeInitialStepSize(true);
 
-				// Begin tracking at the intended ambient precision rather than the start point's
-				// incidental precision.  Total-degree start points are generated at
-				// LowestMultiplePrecision (the generator's arithmetic widens past the requested
-				// digits, see issue #308), so without this the AMP tracker would start every
-				// well-conditioned path in multiprecision and never drop to double.
+				// Begin every AMP path in hardware double precision; the AMP step criteria escalate to
+				// multiprecision only where a path actually needs it (and the endgame, which clears
+				// this override below, manages its own precision).  Total-degree start points are born
+				// at LowestMultiplePrecision (the generator's arithmetic widens past the requested
+				// digits, see issue #308), and initial_ambient_precision is itself a multiprecision
+				// value, so without forcing double here the tracker starts -- and, in practice, stays
+				// -- in multiprecision on every path, even trivially well-conditioned ones.
 				if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-					ctx.tracker.SetStartPrecision(initial_prec);
+					ctx.tracker.SetStartPrecision(DoublePrecision());
 
 				Vec<BaseComplexT> result;
 				auto tracking_success = ctx.tracker.TrackPath(result, t_start, t_endgame_boundary, start_point);

@@ -36,7 +36,7 @@ column and flags any disagreement.
 
 Both solvers are parsed with **one** parser: the Bertini 2 CLI now writes Bertini 1.7-compatible
 machine-readable solution files (`finite_solutions`, `real_finite_solutions`,
-`nonsingular_solutions`, `singular_solutions`, `raw_solutions` — each count-led; see ADR-0034), so
+`nonsingular_solutions`, `singular_solutions`, `raw_solutions` — each count-led; see ADR-0036), so
 the count comes from `finite_solutions` for both. Byte-for-byte equality with Bertini 1 is *not*
 expected (different implementations and RNG); only the file format and the solution *count* match.
 

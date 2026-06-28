@@ -79,16 +79,37 @@ namespace Eigen {
 		// tolerances are consumed inside tracking (LU solves, norms, convergence
 		// checks), which may run on std::thread workers whose precision is set
 		// thread-locally.  On the main thread the two agree.
+		// epsilon() and dummy_precision() are pow(10, -precision): expensive (transcendental,
+		// heap-allocating) yet a pure function of the thread precision.  They are called per
+		// LU-diagonal element, per Newton iteration, per predictor stage, per step, so recomputing
+		// them dominated the multiprecision path.  Memoize per thread, keyed on the current
+		// precision -- the cached value is bit-identical to a fresh pow at that precision.
 		inline static Real dummy_precision()
 		{
 			using bertini::ThreadPrecision;
-			return pow( mpfr_real(10),-int(ThreadPrecision()-3));
+			thread_local unsigned cached_prec = 0;
+			thread_local Real cached_val;
+			const unsigned p = ThreadPrecision();
+			if (p != cached_prec)
+			{
+				cached_val = pow(mpfr_real(10), -int(p-3));
+				cached_prec = p;
+			}
+			return cached_val;
 		}
 
 		inline static Real epsilon()
 		{
 			using bertini::ThreadPrecision;
-			return pow(mpfr_real(10),-int(ThreadPrecision()));
+			thread_local unsigned cached_prec = 0;
+			thread_local Real cached_val;
+			const unsigned p = ThreadPrecision();
+			if (p != cached_prec)
+			{
+				cached_val = pow(mpfr_real(10), -int(p));
+				cached_prec = p;
+			}
+			return cached_val;
 		}
 
 		static inline int digits10()
@@ -358,8 +379,13 @@ namespace bertini {
 	inline
 	bool IsSmallValue(T const& testme)
 	{
-		using std::abs;
-		return abs(testme) <= Eigen::NumTraits<T>::epsilon()*100;
+		// |testme| <= eps*100  <=>  abs2(testme) <= (eps*100)^2.  Comparing squared magnitudes uses
+		// abs2 (re^2+im^2 for complex; see abs2_impl<complex_mp>) and avoids the allocating, sqrt-based
+		// std::abs/hypot on the multiprecision complex type.  eps*100 is non-negative, so the squared
+		// comparison is exactly equivalent.
+		using Real = typename Eigen::NumTraits<T>::Real;
+		const Real thresh = Eigen::NumTraits<T>::epsilon() * 100;
+		return Eigen::numext::abs2(testme) <= thresh * thresh;
 	}
 
 	/**
@@ -397,8 +423,14 @@ namespace bertini {
 	bool IsLargeChange(T const& numerator, T const& denomenator)
 	{
 		static_assert(!Eigen::NumTraits<T>::IsInteger, "IsLargeChange cannot be used safely on non-integral types");
-		using std::abs;
-		return abs(numerator/denomenator) >= 1/Eigen::NumTraits<T>::dummy_precision();
+		// |num/den| >= 1/dummy  <=>  |num|*dummy >= |den|  <=>  abs2(num)*dummy^2 >= abs2(den).
+		// The squared form drops BOTH the complex division (num/den) and the sqrt-based abs/hypot --
+		// each of which allocates multiprecision temporaries -- and is exact since all quantities are
+		// non-negative.  (In its hot caller, LUPartialPivotDecompositionSuccessful, the denominator has
+		// already passed IsSmallValue, so it is non-tiny here.)
+		using Real = typename Eigen::NumTraits<T>::Real;
+		const Real d = Eigen::NumTraits<T>::dummy_precision();
+		return Eigen::numext::abs2(numerator) * (d * d) >= Eigen::numext::abs2(denomenator);
 	}
 
 	enum class MatrixSuccessCode
