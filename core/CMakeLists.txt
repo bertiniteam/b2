@@ -293,19 +293,15 @@ set(trackers_HEADERS
 	include/bertini2/trackers/adaptive_precision_utilities.hpp
 	include/bertini2/trackers/amp_criteria.hpp
 	include/bertini2/trackers/amp_tracker.hpp
-	include/bertini2/trackers/base_predictor.hpp
 	include/bertini2/trackers/base_tracker.hpp
 	include/bertini2/trackers/config.hpp
 	include/bertini2/trackers/events.hpp
 	include/bertini2/trackers/explicit_predictors.hpp
 	include/bertini2/trackers/fixed_precision_tracker.hpp
 	include/bertini2/trackers/fixed_precision_utilities.hpp
-	include/bertini2/trackers/newton_correct.hpp
 	include/bertini2/trackers/newton_corrector.hpp
 	include/bertini2/trackers/observers.hpp
 	include/bertini2/trackers/ode_predictors.hpp
-	include/bertini2/trackers/predict.hpp
-	include/bertini2/trackers/step.hpp
 	include/bertini2/trackers/tracker.hpp
 )
 
