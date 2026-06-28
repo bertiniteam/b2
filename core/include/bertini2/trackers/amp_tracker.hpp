@@ -1050,11 +1050,11 @@ namespace bertini{
 			template<typename ComplexT>
 			NumErrorT B_RHS() const
 			{
-				return max(amp::CriterionBRHS(this->norm_J_,
-				           					  this->norm_J_inverse_,
+				return max(amp::CriterionBRHS(this->last_step_.norm_J,
+				           					  this->last_step_.norm_J_inverse,
 				           					  Get<NewtonConfig>().max_num_newton_iterations,
 				           					  tracking_tolerance_,
-				           					  this->size_proportion_,
+				           					  this->last_step_.size_proportion,
 				           					  Get<PrecConf>()), NumErrorT(0));
 			}
 
@@ -1093,8 +1093,8 @@ namespace bertini{
 			template<typename ComplexT>
 			NumErrorT C_RHS() const
 			{	
-				return max(amp::CriterionCRHS(this->norm_J_inverse_, 
-				                              NumErrorT(std::get<Vec<ComplexT> > (current_space_).norm()), 
+				return max(amp::CriterionCRHS(this->last_step_.norm_J_inverse,
+				                              NumErrorT(std::get<Vec<ComplexT> > (current_space_).norm()),
 				                              tracking_tolerance_, 
 				                              Get<PrecConf>()), NumErrorT(0));
 			}
@@ -1206,33 +1206,15 @@ namespace bertini{
 			              				"underlying complex type and the type for comparisons must match");
 
 
-				if (predictor_.HasErrorEstimate())
-					return predictor_.Predict(predicted_space,
-									this->error_estimate_,
-									this->size_proportion_,
-									this->norm_J_,
-									this->norm_J_inverse_,
-									tracked_system_,
-									current_space, current_time, 
-									delta_t,
-									this->condition_number_estimate_,
-									num_steps_since_last_condition_number_computation_, 
-									Get<Stepping>().frequency_of_CN_estimation, 
-									tracking_tolerance_,
-									Get<PrecConf>());
-				else
-					return predictor_.Predict(predicted_space,
-									this->size_proportion_,
-									this->norm_J_,
-									this->norm_J_inverse_,
-									tracked_system_,
-									current_space, current_time, 
-									delta_t,
-									this->condition_number_estimate_,
-									num_steps_since_last_condition_number_computation_, 
-									Get<Stepping>().frequency_of_CN_estimation, 
-									tracking_tolerance_,
-									Get<PrecConf>());
+				return predictor_.Predict(predicted_space,
+								this->last_step_,
+								tracked_system_,
+								current_space, current_time,
+								delta_t,
+								num_steps_since_last_condition_number_computation_,
+								Get<Stepping>().frequency_of_CN_estimation,
+								tracking_tolerance_,
+								&Get<PrecConf>());
 			}
 
 
@@ -1264,17 +1246,14 @@ namespace bertini{
 
 
 				return corrector_.Correct(corrected_space,
-									this->norm_delta_z_,
-									this->norm_J_,
-									this->norm_J_inverse_,
-									this->condition_number_estimate_,
+									this->last_step_,
 									tracked_system_,
 									current_space,
 									current_time,
 									tracking_tolerance_,
 									Get<NewtonConfig>().min_num_newton_iterations,
 									Get<NewtonConfig>().max_num_newton_iterations,
-									Get<PrecConf>());
+									&Get<PrecConf>());
 			}
 
 
@@ -1339,17 +1318,14 @@ namespace bertini{
 
 
 				return corrector_.Correct(new_space,
-										   this->norm_delta_z_,
-										   this->norm_J_,
-										   this->norm_J_inverse_,
-										   this->condition_number_estimate_,
+										   this->last_step_,
 										   tracked_system_,
 										   start_point,
 										   current_time,
 										   tracking_tolerance_,
 										   Get<NewtonConfig>().min_num_newton_iterations,
 										   Get<NewtonConfig>().max_num_newton_iterations,
-										   Get<PrecConf>());
+										   &Get<PrecConf>());
 			}
 
 
@@ -1383,17 +1359,14 @@ namespace bertini{
 				Precision(new_space,target_precision);
 
 				return corrector_.Correct(new_space,
-										this->norm_delta_z_,
-										this->norm_J_,
-										this->norm_J_inverse_,
-										this->condition_number_estimate_,
+										this->last_step_,
 										tracked_system_,
 										start_point,
-										current_time, 
+										current_time,
 										tolerance,
 										1,
 										max_iterations,
-										Get<PrecConf>());
+										&Get<PrecConf>());
 			}
 
 

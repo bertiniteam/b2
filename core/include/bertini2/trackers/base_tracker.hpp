@@ -230,6 +230,9 @@ namespace bertini{
 			void RefreshConditionDirection()
 			{
 				corrector_.RefreshRandomDirection();
+				// Share the SAME per-path probe with the predictor, so the predictor's and
+				// corrector's ||J^{-1}|| estimates use one consistent direction (ADR-0024).
+				predictor_.SetConditionProbe(corrector_.ConditionProbe());
 			}
 
 
@@ -629,12 +632,10 @@ namespace bertini{
 			mutable TupOfVec temporary_space_; ///< After prediction, the tentative next space value.
 
 
-			mutable NumErrorT condition_number_estimate_; ///< An estimate on the condition number of the Jacobian
-			mutable NumErrorT error_estimate_; ///< An estimate on the error of a step.
-			mutable NumErrorT norm_J_; ///< An estimate on the norm of the Jacobian
-			mutable NumErrorT norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
-			mutable NumErrorT norm_delta_z_; ///< The norm of the change in space resulting from a step.
-			mutable NumErrorT size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
+			/// Metadata from the most recent predict or correct step (norms, condition number,
+			/// size proportion, error estimate, norm of the Newton step).  Filled by the
+			/// predictor/corrector via their StepMetadata out-parameter.
+			mutable StepMetadata last_step_;
 
 
 
@@ -644,19 +645,19 @@ namespace bertini{
 
 			NumErrorT LatestConditionNumber() const
 			{
-				return this->condition_number_estimate_;
+				return this->last_step_.condition_number_estimate;
 			}
 
 
 			NumErrorT LatestErrorEstimate() const
 			{
-				return this->error_estimate_;
+				return this->last_step_.error_estimate;
 			}
 
 
 			NumErrorT LatestNormOfStep() const
 			{
-				return this->norm_delta_z_;
+				return this->last_step_.norm_delta_z;
 			}
 
 			void SetInfiniteTruncation(bool b)

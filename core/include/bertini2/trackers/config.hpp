@@ -73,6 +73,26 @@ namespace tracking{
 	
 
 
+	/**
+	\brief Metadata produced by a single predict or correct step.
+
+	Collapses the formerly hand-threaded out-parameters (norm_J, norm_J_inverse,
+	condition_number_estimate, size_proportion, error_estimate, norm_delta_z) into one
+	struct.  Not every field is written by every step: size_proportion/error_estimate are
+	predictor-only (and error_estimate only for embedded methods); norm_delta_z is
+	corrector-only.  Unwritten fields keep their default of 0.
+	*/
+	struct StepMetadata
+	{
+		NumErrorT norm_J = 0;                    ///< ||J|| (Frobenius) at the step.
+		NumErrorT norm_J_inverse = 0;            ///< estimate of ||J^{-1}|| via the condition probe.
+		NumErrorT condition_number_estimate = 0; ///< norm_J * norm_J_inverse (refreshed per frequency_of_CN_estimation).
+		NumErrorT size_proportion = 0;           ///< AMP "a" (predictor only).
+		NumErrorT error_estimate = 0;            ///< embedded-method error estimate (predictor, embedded only).
+		NumErrorT norm_delta_z = 0;              ///< ||latest Newton step|| (corrector only).
+	};
+
+
 	struct SteppingConfig
 	{
 		// mpq_rational: exact rationals with no MPFR precision state — safe in DefaultConstruct<T>::value statics.
