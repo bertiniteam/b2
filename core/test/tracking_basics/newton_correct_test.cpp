@@ -107,16 +107,10 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	tracking_tolerance = 1e1;
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
+	bertini::tracking::StepMetadata meta;
 	std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
 
-	auto success_code = corrector->Correct(newton_correction_result,
-											  sys,
-											  current_space,
-											  current_time,
-											  tracking_tolerance,
-											  min_num_newton_iterations,
-											  max_num_newton_iterations,
-											  AMP);
+	auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 	
 	BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
@@ -169,15 +163,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations,
-												  AMP);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 		
 		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
@@ -231,15 +219,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 2;
 		unsigned min_num_newton_iterations = 2;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations,
-												  AMP);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 		
 		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
@@ -295,15 +277,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 2;
 		unsigned min_num_newton_iterations = 2;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations,
-												  AMP);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 		
 		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
@@ -356,15 +332,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		double tracking_tolerance = double(10);
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations,
-												  AMP);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
@@ -415,15 +385,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations,
-												  AMP);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
@@ -482,15 +446,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations,
-												  AMP);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
@@ -548,15 +506,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations,
-												  AMP);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
@@ -607,15 +559,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations,
-												  AMP);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		BOOST_CHECK(success_code==bertini::SuccessCode::MatrixSolveFailure);
@@ -664,15 +610,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations,
-												  AMP);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations, &AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		BOOST_CHECK(success_code==bertini::SuccessCode::MatrixSolveFailure);
@@ -721,14 +661,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned min_num_newton_iterations = 1;
 		
 		Vec<mpfr> newton_correction_result;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		BOOST_CHECK(success_code==bertini::SuccessCode::FailedToConverge);
@@ -774,14 +709,9 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		double tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
+		bertini::tracking::StepMetadata meta;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->Correct(newton_correction_result,
-												  sys,
-												  current_space,
-												  current_time,
-												  tracking_tolerance,
-												  min_num_newton_iterations,
-												  max_num_newton_iterations);
+		auto success_code = corrector->Correct(newton_correction_result, meta, sys, current_space, current_time, tracking_tolerance, min_num_newton_iterations, max_num_newton_iterations);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		BOOST_CHECK(success_code==bertini::SuccessCode::FailedToConverge);

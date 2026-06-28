@@ -303,10 +303,10 @@ namespace bertini{
 
 				return this->predictor_.Predict(
 			                predicted_space,
+							this->last_step_,
 							this->tracked_system_,
 							current_space, current_time,
 							delta_t,
-							this->condition_number_estimate_,
 							this->num_steps_since_last_condition_number_computation_,
 							Get<Stepping>().frequency_of_CN_estimation,
 							this->tracking_tolerance_);
@@ -330,9 +330,10 @@ namespace bertini{
 								ComplexT const& current_time) const
 			{
 				return this->corrector_.Correct(corrected_space,
+												this->last_step_,
 												this->tracked_system_,
 												current_space,
-												current_time, 
+												current_time,
 												this->tracking_tolerance_,
 												Get<Newton>().min_num_newton_iterations,
 												Get<Newton>().max_num_newton_iterations);
@@ -356,9 +357,10 @@ namespace bertini{
 								Vec<ComplexT> const& start_point, ComplexT const& current_time) const
 			{
 				return this->corrector_.Correct(new_space,
+							   this->last_step_,
 							   this->tracked_system_,
 							   start_point,
-							   current_time, 
+							   current_time,
 							   this->tracking_tolerance_,
 							   Get<Newton>().min_num_newton_iterations,
 							   Get<Newton>().max_num_newton_iterations);
@@ -388,9 +390,10 @@ namespace bertini{
 								NumErrorT const& tolerance, unsigned max_iterations) const
 			{
 				return this->corrector_.Correct(new_space,
+							   this->last_step_,
 							   this->tracked_system_,
 							   start_point,
-							   current_time, 
+							   current_time,
 							   tolerance,
 							   1,
 							   max_iterations);

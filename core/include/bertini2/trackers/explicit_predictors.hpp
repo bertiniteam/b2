@@ -451,146 +451,43 @@ namespace bertini{
 				
 				template<typename ComplexT>
 				SuccessCode Predict(Vec<ComplexT> & next_space,
+									StepMetadata & meta,
 									System const& S,
 									const Vec<ComplexT>& current_space, ComplexT current_time,
 									ComplexT const& delta_t,
-									NumErrorT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
-									NumErrorT const& /*tracking_tolerance*/)
+									NumErrorT const& tracking_tolerance,
+									AdaptiveMultiplePrecisionConfig const* AMP_config = nullptr)
 				{
-
 					auto step_success = FullStep(next_space, S, current_space, current_time, delta_t);
 
-					NumErrorT norm_J, norm_J_inverse;
-					SetNormsCond<ComplexT>(norm_J, norm_J_inverse, condition_number_estimate, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
+					// Condition estimate (norm_J, norm_J_inverse, condition_number_estimate) is always
+					// computed -- it is reported and used by the fixed-precision path too.
+					SetNormsCond<ComplexT>(meta.norm_J, meta.norm_J_inverse, meta.condition_number_estimate,
+					                       num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
+
+					// Fixed-precision (nullptr): just the prediction + condition estimate, no AMP criteria.
+					if (AMP_config == nullptr)
+						return step_success;
+
+					SetSizeProportion<ComplexT>(meta.size_proportion, delta_t);
+					if (predict::HasErrorEstimate(predictor_))
+						SetErrorEstimate<ComplexT>(meta.error_estimate, delta_t);
+
+					if (step_success != SuccessCode::Success)
+						return step_success;
+
+					if (!amp::CriterionA<ComplexT>(meta.norm_J, meta.norm_J_inverse, *AMP_config))
+						return SuccessCode::HigherPrecisionNecessary;
+					if (!amp::CriterionC<ComplexT>(meta.norm_J_inverse, current_space, tracking_tolerance, *AMP_config))
+						return SuccessCode::HigherPrecisionNecessary;
 
 					return step_success;
 				}
 				
 				
 				
-				/**
-				 \brief Perform a generic predictor step and return size_proportion and condition number information
-				 
-				 \param next_space The computed prediction.
-				 \param method An enum class selecting the predictor method to use.
-				 \param size_proportion $a$ in AMP2 paper.
-				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
-				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
-				 \param S The system being solved.
-				 \param current_space The current space variable vector.
-				 \param current_time The current time.
-				 \param delta_t The size of the time step.
-				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
-				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
-				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
-				 \param prec_type The operating precision type.
-				 \param tracking_tolerance How tightly to track the path.
-				 \param AMP_config The settings for adaptive multiple precision.
-
-				 \return SuccessCode indicating how the prediction went.
-				 */
-				
-				template<typename ComplexT>
-				SuccessCode Predict(Vec<ComplexT> & next_space,
-									NumErrorT & size_proportion,
-									NumErrorT & norm_J,
-									NumErrorT & norm_J_inverse,
-									System const& S,
-									const Vec<ComplexT>& current_space, ComplexT current_time,
-									ComplexT const& delta_t,
-									NumErrorT & condition_number_estimate,
-									unsigned & num_steps_since_last_condition_number_computation,
-									unsigned frequency_of_CN_estimation,
-									NumErrorT const& tracking_tolerance,
-									AdaptiveMultiplePrecisionConfig const& AMP_config)
-				{
-
-					
-					auto success_code = Predict<ComplexT>(next_space, S, current_space, current_time, delta_t,
-										   condition_number_estimate, num_steps_since_last_condition_number_computation,
-										   frequency_of_CN_estimation, tracking_tolerance);
-
-					SetNormsCond<ComplexT>(norm_J, norm_J_inverse, condition_number_estimate, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
-					
-					// Set size_proportion
-					SetSizeProportion(size_proportion, delta_t);
-
-					if(success_code != SuccessCode::Success)
-						return success_code;
-					
-					
-					
-					//AMP Criteria
-					if (!amp::CriterionA<ComplexT>(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
-					{
-						return SuccessCode::HigherPrecisionNecessary;
-					}
-					else if (!amp::CriterionC<ComplexT>(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
-					{
-						return SuccessCode::HigherPrecisionNecessary;
-					}
-					
-					
-					return success_code;
-				}
-				
-				
-				/**
-				 \brief Perform a generic predictor step and return error estimate, size_proportion and condition number information
-				 
-				 \param next_space The computed prediction.
-				 \param method An enum class selecting the predictor method to use.
-				 \param error_estimate Estimate of the error from an embedded method.
-				 \param size_proportion $a$ in AMP2 paper.
-				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
-				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
-				 \param S The system being solved.
-				 \param current_space The current space variable vector.
-				 \param current_time The current time.
-				 \param delta_t The size of the time step.
-				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
-				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
-				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
-				 \param prec_type The operating precision type.
-				 \param tracking_tolerance How tightly to track the path.
-				 \param AMP_config The settings for adaptive multiple precision.
-
-				 \return SuccessCode indicating how the prediction went.
-				 */
-				
-				template<typename ComplexT>
-				SuccessCode Predict(Vec<ComplexT> & next_space,
-									NumErrorT & error_estimate,
-									NumErrorT & size_proportion,
-									NumErrorT & norm_J,
-									NumErrorT & norm_J_inverse,
-									System const& S,
-									const Vec<ComplexT>& current_space, ComplexT current_time,
-									ComplexT const& delta_t,
-									NumErrorT & condition_number_estimate,
-									unsigned & num_steps_since_last_condition_number_computation,
-									unsigned frequency_of_CN_estimation,
-									NumErrorT const& tracking_tolerance,
-									AdaptiveMultiplePrecisionConfig const& AMP_config)
-				{
-
-					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
-					
-					if(!predict::HasErrorEstimate(predictor_))
-						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
-					
-
-					auto success_code = Predict(next_space, size_proportion, norm_J, norm_J_inverse,
-											  S, current_space, current_time, delta_t,
-											  condition_number_estimate, num_steps_since_last_condition_number_computation,
-											  frequency_of_CN_estimation, tracking_tolerance, AMP_config);
-					
-					SetErrorEstimate(error_estimate, delta_t);
-					
-					return success_code;
-				}
 				
 				
 				
@@ -1134,29 +1031,11 @@ namespace bertini{
 		// NumErrorT = double (from bertini2/common/config.hpp).
 
 		extern template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
-		    Vec<complex_dbl>&, System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
-		    double&, unsigned&, unsigned, double const&);
+		    Vec<complex_dbl>&, StepMetadata&, System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
+		    unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
 		extern template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
-		    Vec<complex_mp>&, System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
-		    double&, unsigned&, unsigned, double const&);
-
-		extern template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
-		    Vec<complex_dbl>&, double&, double&, double&,
-		    System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
-		extern template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
-		    Vec<complex_mp>&, double&, double&, double&,
-		    System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
-
-		extern template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
-		    Vec<complex_dbl>&, double&, double&, double&, double&,
-		    System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
-		extern template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
-		    Vec<complex_mp>&, double&, double&, double&, double&,
-		    System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
+		    Vec<complex_mp>&, StepMetadata&, System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
+		    unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
 
 		extern template SuccessCode ExplicitRKPredictor::FullStep<complex_dbl>(
 		    Vec<complex_dbl>&, System const&, Vec<complex_dbl> const&, complex_dbl const&, complex_dbl const&);

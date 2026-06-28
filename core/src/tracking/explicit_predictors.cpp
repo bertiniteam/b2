@@ -302,29 +302,11 @@ const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor::cRKV67_(cRKV67Ptr_);
 		// and prevent each including TU from emitting its own copy.
 
 		template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
-		    Vec<complex_dbl>&, System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
-		    double&, unsigned&, unsigned, double const&);
+		    Vec<complex_dbl>&, StepMetadata&, System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
+		    unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
 		template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
-		    Vec<complex_mp>&, System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
-		    double&, unsigned&, unsigned, double const&);
-
-		template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
-		    Vec<complex_dbl>&, double&, double&, double&,
-		    System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
-		template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
-		    Vec<complex_mp>&, double&, double&, double&,
-		    System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
-
-		template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
-		    Vec<complex_dbl>&, double&, double&, double&, double&,
-		    System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
-		template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
-		    Vec<complex_mp>&, double&, double&, double&, double&,
-		    System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
-		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
+		    Vec<complex_mp>&, StepMetadata&, System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
+		    unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
 
 		template SuccessCode ExplicitRKPredictor::FullStep<complex_dbl>(
 		    Vec<complex_dbl>&, System const&, Vec<complex_dbl> const&, complex_dbl const&, complex_dbl const&);
