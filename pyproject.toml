@@ -15,6 +15,9 @@ description = "Software for numerical algebraic geometry"
 [project.optional-dependencies]
 test = ["pytest"]
 
+[project.scripts]
+bertini2 = "bertini._cli:main"
+
 [project.urls]
 Repository = "https://github.com/bertiniteam/b2"
 

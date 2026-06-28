@@ -535,6 +535,30 @@ target_precompile_headers(bertini2_exe PRIVATE
 # todo: this should be made a devmode thing
 #target_compile_options(bertini2 PRIVATE -Wall -Wextra)
 
+# Ship the blackbox CLI inside the Python wheel so `pip install bertini2` puts a
+# `bertini2` command on PATH (see the [project.scripts] shim in pyproject.toml and
+# python/bertini/_cli.py).  Under scikit-build (SKBUILD) the whole install tree is
+# rooted at the `bertini` package (wheel.install-dir = "bertini"), so RUNTIME
+# DESTINATION _bin lands the exe at bertini/_bin/bertini2 -- next to _pybertini and
+# the libs that auditwheel/delocate vendor.  We set INSTALL_RPATH so the exe finds
+# those vendored shared libs even if the repair tool does not patch executables:
+#   - auditwheel  -> vendored libs in top-level bertini2.libs/  ($ORIGIN/../../bertini2.libs)
+#   - delocate    -> vendored libs in bertini/.dylibs           (@loader_path/../.dylibs)
+#   - $ORIGIN/.. and ../lib cover libbertini2 installed into the package tree itself.
+# A normal (non-wheel) `cmake --install` keeps the usual bin/ location.
+if(SKBUILD)
+  install(TARGETS bertini2_exe RUNTIME DESTINATION _bin)
+  if(APPLE)
+    set_target_properties(bertini2_exe PROPERTIES
+      INSTALL_RPATH "@loader_path/../../bertini2.libs;@loader_path/../.dylibs;@loader_path/..;@loader_path/../lib")
+  elseif(UNIX)
+    set_target_properties(bertini2_exe PROPERTIES
+      INSTALL_RPATH "$ORIGIN/../../bertini2.libs;$ORIGIN/..;$ORIGIN/../lib")
+  endif()
+else()
+  install(TARGETS bertini2_exe RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
 install(
   TARGETS bertini2
   EXPORT ${TARGETS_EXPORT_NAME}
