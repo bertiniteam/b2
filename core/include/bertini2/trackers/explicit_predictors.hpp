@@ -359,6 +359,20 @@ namespace bertini{
 					std::get< Mat<complex_dbl> >(K_).resize(numTotalFunctions_, s_);
 					std::get< Mat<complex_mp> >(K_).resize(numTotalFunctions_, s_);
 				}
+
+
+				/**
+				 \brief Adopt an externally-owned condition-number probe direction (both precisions).
+
+				 The tracker calls this once per path so the predictor estimates ||J^{-1}|| against the
+				 SAME random direction as the corrector (ADR-0024: one tracker-owned, per-path probe).
+				 Standalone use (e.g. unit tests with no tracker) keeps the per-system probe drawn in
+				 ChangeSystem.
+				 */
+				void SetConditionProbe(std::tuple< Vec<complex_dbl>, Vec<complex_mp> > const& probe)
+				{
+					rand_temp_ = probe;
+				}
 				
 				
 				/**

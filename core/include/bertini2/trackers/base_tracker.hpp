@@ -230,6 +230,9 @@ namespace bertini{
 			void RefreshConditionDirection()
 			{
 				corrector_.RefreshRandomDirection();
+				// Share the SAME per-path probe with the predictor, so the predictor's and
+				// corrector's ||J^{-1}|| estimates use one consistent direction (ADR-0024).
+				predictor_.SetConditionProbe(corrector_.ConditionProbe());
 			}
 
 

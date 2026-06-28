@@ -134,6 +134,16 @@ namespace bertini{
 					std::get< Vec<complex_mp> >(rand_temp_) = RandomOfUnits<complex_mp>(numVariables_);
 				}
 
+				/**
+				 \brief The condition-number probe direction (both precisions), so the tracker can share
+				 the SAME per-path probe with the predictor -- making the predictor's and corrector's
+				 ||J^{-1}|| estimates use one consistent direction.  \see RefreshRandomDirection.
+				 */
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > const& ConditionProbe() const
+				{
+					return rand_temp_;
+				}
+
 				
 				
 				
