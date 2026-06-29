@@ -4,7 +4,7 @@
 ``ZeroDimSolver`` is the algorithm for the most common task: given a polynomial system, find all of
 its **isolated complex solutions**.  You hand it a system; it forms a start system and a homotopy,
 tracks the paths, and classifies the endpoints.  (If you instead already have a homotopy and a list
-of start points -- the parameter-homotopy workflow -- reach for :class:`~bertini.nag_algorithm.HomotopySolver`.)
+of start points -- the parameter-homotopy workflow -- reach for :func:`~bertini.nag_algorithm.HomotopySolver`.)
 
 This tutorial shows ``ZeroDimSolver`` on the three shapes of input you will meet: a well-posed
 **square** system, an **over-determined** system (more equations than unknowns), and an
