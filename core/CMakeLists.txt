@@ -736,6 +736,7 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/named_expression_test.cpp
 		test/classes/homogenization_test.cpp
 		test/classes/start_system_test.cpp
+		test/classes/start_system_interop_test.cpp
 		test/classes/node_serialization_test.cpp
 		test/classes/patch_test.cpp
 		test/classes/slice_test.cpp
