@@ -145,6 +145,21 @@ public:
 	}
 
 
+	/**
+	Hardware-double fast-lane refine for the adaptive-numeric-type (double-first) endgame.
+
+	Pure-(i) escalation: this does NOT raise precision in place.  The endgame is computing in the
+	complex_dbl slot, with the tracker and system already at double precision; we refine there.  If
+	double cannot reach the tolerance the tracker returns HigherPrecisionNecessary / FailedToConverge,
+	and we hand that code straight back to RunImplAMP, which migrates every container to mpfr and
+	retries in the complex_mp slot (where the in-place mp->higher-mp escalation above takes over).
+	*/
+	SuccessCode RefineSampleImpl(Vec<complex_dbl> & result, Vec<complex_dbl> const& current_sample, complex_dbl const& current_time, NumErrorT tol, unsigned max_iterations) const
+	{
+		return this->GetTracker().Refine(result, current_sample, current_time, tol, max_iterations);
+	}
+
+
 
 
 	explicit

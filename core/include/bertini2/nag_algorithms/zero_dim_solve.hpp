@@ -1048,7 +1048,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					{
 						// A path that failed before or during the endgame leaves its endpoint
 						// slot default-constructed (zero coordinates); keep index alignment with
-						// FinalSolutionMetadata (output filters on it) by emitting an empty
+						// SolutionMetadata (output filters on it) by emitting an empty
 						// placeholder rather than trying to dehomogenize an unset point.
 						if (s.size() == 0)
 							solutions_user_coords_.emplace_back();
@@ -1087,7 +1087,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			SolnCont<Vec<BaseComplexT>> SolutionsWhere(Pred pred, bool user_coords = true) const
 			{
 				auto const& sols = user_coords ? SolutionsUserCoords() : SolutionsInternalCoords();
-				auto const& md   = FinalSolutionMetadata();
+				auto const& md   = SolutionMetadata();
 				SolnCont<Vec<BaseComplexT>> out;
 				for (size_t i = 0; i < md.size() && i < sols.size(); ++i)
 					if (pred(md[i]))
@@ -1148,7 +1148,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			\note A path that FAILED before the endgame also leaves is_finite at its default (false) and
 			so appears here; its stored point is not a meaningful solution at infinity.  Consult the
-			endgame_success in FinalSolutionMetadata (or Report()) to distinguish a true divergence from a
+			endgame_success in SolutionMetadata (or Report()) to distinguish a true divergence from a
 			tracking failure.  \see FiniteSolutions
 			*/
 			SolnCont<Vec<BaseComplexT>> InfiniteSolutions(bool user_coords = true) const
@@ -1159,7 +1159,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			/**
 			\brief Get the metadat associated with the final computed solutions
 			*/
-			const auto& FinalSolutionMetadata() const
+			const auto& SolutionMetadata() const
 			{
 				return solution_final_metadata_;
 			}
@@ -1192,7 +1192,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			*/
 			SolveReport Report() const
 			{
-				return SummarizeSolve(FinalSolutionMetadata(), EndgameBoundaryMetadata());
+				return SummarizeSolve(SolutionMetadata(), EndgameBoundaryMetadata());
 			}
 
 		private:

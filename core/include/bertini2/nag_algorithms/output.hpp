@@ -80,7 +80,7 @@ struct Classic <HomotopySolver<A,B,C>>
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
 			// only successful endgames have a final approximation to report
-			if (zd.FinalSolutionMetadata()[ii].endgame_success != SuccessCode::Success)
+			if (zd.SolutionMetadata()[ii].endgame_success != SuccessCode::Success)
 				continue;
 
 			EndPointMDFull(ii, out, zd);
@@ -104,7 +104,7 @@ struct Classic <HomotopySolver<A,B,C>>
 		for (decltype(zd.SolutionsInternalCoords().size()) ii{0}; ii<n; ++ii)
 		{
 			// only successful endgames have a final approximation to report
-			if (zd.FinalSolutionMetadata()[ii].endgame_success != SuccessCode::Success)
+			if (zd.SolutionMetadata()[ii].endgame_success != SuccessCode::Success)
 				continue;
 			EndPointMDRaw(ii,out,zd,"\n\n");
 		}
@@ -153,7 +153,7 @@ struct Classic <HomotopySolver<A,B,C>>
 	template <typename OutT>
 	static void RawSolutions(OutT & out, ZDT const& zd)
 	{
-		auto const& md   = zd.FinalSolutionMetadata();
+		auto const& md   = zd.SolutionMetadata();
 		auto const& sols = zd.SolutionsUserCoords();
 		const auto m = std::min(md.size(), sols.size());
 
@@ -238,7 +238,7 @@ struct Classic <HomotopySolver<A,B,C>>
 	static
 	void EndPointMDFull(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
-		const auto& data = zd.FinalSolutionMetadata()[ind];
+		const auto& data = zd.SolutionMetadata()[ind];
 		out << data.path_index << '\n'
 			<< data.solution_index << '\n'
 			<< data.condition_number << '\n'
@@ -263,7 +263,7 @@ struct Classic <HomotopySolver<A,B,C>>
 	void EndPointMDRaw(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& pt = zd.SolutionsInternalCoords()[ind];
-		const auto& data = zd.FinalSolutionMetadata()[ind];
+		const auto& data = zd.SolutionMetadata()[ind];
 		out << data.path_index << '\n'
 			<< Precision(pt) << '\n';
 		EndPoint(ind, out, zd);
@@ -302,7 +302,7 @@ struct NonsingularSolutions
 		SampCont<BCT> solns;
 
 		const auto& s = alg.SolutionsUserCoords();
-		const auto& m = alg.FinalSolutionMetadata();
+		const auto& m = alg.SolutionMetadata();
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{

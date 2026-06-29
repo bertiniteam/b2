@@ -456,7 +456,7 @@ public:
 
 		assert((samples.size() == times.size()) && "must have same number of times and samples");
 
-		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
+		if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
 		{
 			auto max_precision = this->EnsureAtUniformPrecision(times, samples);
 			this->GetSystem().precision(max_precision);
@@ -746,6 +746,22 @@ public:
 		return SuccessCode::Success;
 
 	} //end PSEG
+
+
+	/**
+	\brief Adaptive-numeric-type entry point, called by base Run() for adaptive-precision trackers.
+
+	The double-first numeric-type rewrite has not yet been applied to the PowerSeries endgame (it is the
+	immediate follow-on sprint, sharing all of the base machinery the Cauchy flavor builds).  Until then
+	PSEG keeps running entirely in mpfr, exactly as before: forward straight to RunImpl<BCT>.  The
+	adaptive-numeric-type escalation hooks are never armed here (adaptive_numeric_type_active_ stays
+	false), so the shared phase methods behave identically to today.
+	*/
+	template<typename Dummy = void>
+	SuccessCode RunImplAMP(BCT const& start_time, Vec<BCT> const& start_point, BCT const& target_time)
+	{
+		return this->template RunImpl<BCT>(start_time, start_point, target_time);
+	}
 
 
 	virtual ~PowerSeriesEndgame() = default;

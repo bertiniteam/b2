@@ -111,8 +111,14 @@ protected:
 	using Configs = typename AlgoTraits<FlavorT>::NeededConfigs;
 	using ConfigsAsTuple = typename Configs::ToTuple;
 
-	// a list of all the needed arithemtic types (complex for complex trackers)
-	using NeededTypes = detail::TypeList<BCT>;
+	// The list of arithmetic types this endgame may compute in.  Sourced from the tracker, so it
+	// matches the tracker's own dual/single-slot tuple machinery exactly:
+	//   AMP        -> TypeList<complex_dbl, complex_mp>  (hardware-double fast lane + mpfr authority)
+	//   fixed dbl  -> TypeList<complex_dbl>
+	//   fixed mp   -> TypeList<complex_mp>
+	// For AMP this makes every container (TupOfVec/TupleOfTimes/TupleOfSamps) dual-slot; the existing
+	// type-indexed std::get<...ComplexT...>(member) access then works for complex_dbl for free.
+	using NeededTypes = typename tracking::TrackerTraits<TrackerType>::NeededTypes;
 	using TupOfVec = typename NeededTypes::ToTupleOfVec;
 	using TupOfReal = typename NeededTypes::ToTupleOfReal;
 	using TupleOfTimes = typename NeededTypes::template ToTupleOfCont<TimeCont>;
@@ -125,6 +131,16 @@ protected:
 	mutable Vec<BCT> previous_approximation_;
 	mutable unsigned int cycle_number_ = 0;
 	mutable NumErrorT approximate_error_;
+
+	// Adaptive-numeric-type endgame state (AMP only; see RunImplAMP in the Cauchy flavor).
+	// current_endgame_precision_ is the precision the endgame is *currently computing in*:
+	// DoublePrecision() means the hardware-complex_dbl fast lane, higher means the mpfr slot.
+	// adaptive_numeric_type_active_ gates the escalation hooks in the shared phase methods so they
+	// fire ONLY while the double-first driver is orchestrating -- never for fixed precision (where
+	// they are compile-time elided via if constexpr) nor for the AMP-PowerSeries path that stays
+	// all-mpfr this sprint (its RunImplAMP forwards straight to RunImpl<BCT>).
+	mutable unsigned current_endgame_precision_ = DoublePrecision();
+	mutable bool adaptive_numeric_type_active_ = false;
 
 	BCT start_time_{};   // endgame boundary; set via SetBoundaryTime()
 	BCT target_time_{};  // final target (default 0); set via SetTargetTime()
@@ -172,7 +188,14 @@ public:
 		auto prec = Precision(start_point);
 		BCT t  = start_time_;   Precision(t,  prec);
 		BCT t0 = target_time_;  Precision(t0, prec);
-		return this->AsFlavor().RunImpl(t, start_point, t0);
+		// Fixed precision runs today's straight-line RunImpl<BCT> verbatim (untouched).  Adaptive
+		// precision takes the separate double-first driver, RunImplAMP, which lives in the flavor.
+		// RunImplAMP is a member template (template<typename=void>) so the explicit fixed-precision
+		// class instantiations never force-compile it -- hence the .template disambiguator here.
+		if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+			return this->AsFlavor().template RunImplAMP<>(t, start_point, t0);
+		else
+			return this->AsFlavor().RunImpl(t, start_point, t0);
 	}
 
 
@@ -192,7 +215,7 @@ public:
 			NotifyObservers(SampleRefined<EmitterType>(AsFlavor()));
 		}
 
-		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
+		if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
 		{
 			auto max_precision = this->EnsureAtUniformPrecision(times, samples);
 			this->GetSystem().precision(max_precision);
@@ -203,11 +226,62 @@ public:
 
 
 	/**
-	A function passed off to the precision-specific endgame part
+	A function passed off to the precision-specific endgame part.
+
+	Templated on ComplexT so the adaptive-numeric-type endgame can refine in the hardware-complex_dbl
+	fast lane as well as in complex_mp.  The precision policy (FixedPrecEndgame / AMPEndgame) provides
+	the matching RefineSampleImpl overload(s).  Fixed precision only ever instantiates this at BCT.
 	*/
-	SuccessCode RefineSample(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, NumErrorT tol, unsigned max_iterations) const
+	template<typename ComplexT>
+	SuccessCode RefineSample(Vec<ComplexT> & result, Vec<ComplexT> const& current_sample, ComplexT const& current_time, NumErrorT tol, unsigned max_iterations) const
 	{
 		return this->RefineSampleImpl(result, current_sample, current_time, tol, max_iterations);
+	}
+
+
+	/**
+	\brief Track through the tracker, adapting at the numeric-type boundary.
+
+	The tracker's TrackPath I/O is fixed to BaseComplexT (its TrackerLoopInitialization / CopySolution
+	are non-templatable virtuals).  When the adaptive-numeric-type endgame is computing in the hardware
+	complex_dbl fast lane (ComplexT != BCT, i.e. the AMP case), we convert at the boundary: hand the tracker
+	mpfr points at DoublePrecision -- so the AMP tracker uses its hardware-double slot internally -- then
+	downcast the result back to complex_dbl.  If the tracker escalated internally
+	(GetCurrentPrecision() > DoublePrecision()), the caller's escalation hook discards this result and
+	migrates the endgame to mpfr, so the truncating downcast is harmless.
+
+	When ComplexT == BCT (every fixed-precision tracker, and the AMP endgame's mpfr lane) this is a direct,
+	zero-overhead call to the tracker -- byte-identical to calling TrackPath itself.
+
+	MICRO-OPT (future): a native complex_dbl TrackPath overload on the AMP tracker would remove the boundary
+	conversion churn (~1-2% of a track).  Deferred -- see the sprint notes.
+	*/
+	template<typename ComplexT>
+	SuccessCode EndgameTrackPath(Vec<ComplexT> & result, ComplexT const& start_time, ComplexT const& end_time, Vec<ComplexT> const& start_point) const
+	{
+		if constexpr (std::is_same<ComplexT, BCT>::value)
+		{
+			return this->GetTracker().TrackPath(result, start_time, end_time, start_point);
+		}
+		else
+		{
+			using bertini::Precision;
+			Vec<BCT> mp_start(start_point.size());
+			for (Eigen::Index i = 0; i < start_point.size(); ++i) mp_start(i) = BCT(start_point(i));
+			Precision(mp_start, DoublePrecision());
+
+			BCT mp_t0(start_time); Precision(mp_t0, DoublePrecision());
+			BCT mp_t1(end_time);   Precision(mp_t1, DoublePrecision());
+
+			Vec<BCT> mp_result(start_point.size());
+			auto code = this->GetTracker().TrackPath(mp_result, mp_t0, mp_t1, mp_start);
+			if (code != SuccessCode::Success)
+				return code;
+
+			result.resize(mp_result.size());
+			for (Eigen::Index i = 0; i < mp_result.size(); ++i) result(i) = complex_dbl(mp_result(i));
+			return code;
+		}
 	}
 
 	// note: a ChangePrecision(unsigned) lived here until 2026-06-12; it called
@@ -361,7 +435,7 @@ public:
 		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		assert(this->template Get<EndgameConfig>().num_sample_points>0 && "number of sample points must be positive");
 
-		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+		if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
 			assert(Precision(start_time)==Precision(x_endgame_start) && "Computing initial samples requires input time and space with uniform precision");
 		}
@@ -379,7 +453,7 @@ public:
 			times.emplace_back((times[ii-1] + target_time) * RealT(this->template Get<EndgameConfig>().sample_factor)); // next time is a point between the previous time and target time.
 			samples.emplace_back(Vec<ComplexT>(num_vars));											   // sample_factor gives us some point between the two, usually the midpoint.		
 
-			auto tracking_success = this->GetTracker().TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
+			auto tracking_success = this->EndgameTrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
 			this->EnsureAtPrecision(times[ii],Precision(samples[ii]));
 
 			if (tracking_success!=SuccessCode::Success)

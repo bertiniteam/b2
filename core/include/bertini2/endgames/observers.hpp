@@ -111,5 +111,71 @@ virtual ObserveResult Observe(AnyEvent const& e) override
 }; // gory detail
 
 
+
+/**
+\brief Counts endgame events and captures their payloads, for tests and diagnostics.
+
+Records how many of each event type were delivered, and captures the most-recent CircleAdvanced
+point/time and the Converged approximation -- reading each payload (and the state accessors LatestTime /
+FinalApproximation / ApproximateError) the way a real observer would.  This deliberately exercises the
+full event-delivery path, including the numeric-type conversion the adaptive-numeric-type endgame
+performs when it emits from its hardware-complex_dbl fast lane, and the slot-aware state accessors.
+
+\ingroup observer
+*/
+template <typename EndgameT>
+struct EventRecorder : public Observer<EndgameT>
+{BOOST_TYPE_INDEX_REGISTER_CLASS
+
+using EmitterT = EndgameT;
+using BCT = typename EndgameT::BaseComplexT;
+
+unsigned num_events            = 0;
+unsigned num_time_advanced     = 0;
+unsigned num_sample_refined    = 0;
+unsigned num_circle_advanced   = 0;
+unsigned num_closed_loop       = 0;
+unsigned num_approximated_root = 0;
+unsigned num_in_eg_zone        = 0;
+unsigned num_converged         = 0;
+unsigned num_precision_changed = 0;
+
+Vec<BCT> last_circle_point;
+BCT      last_circle_time;
+Vec<BCT> converged_point;
+
+virtual ObserveResult Observe(AnyEvent const& e) override
+{
+	++num_events;
+	if (auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
+	{ ++num_time_advanced; (void)p->Get().LatestTime(); }
+
+	else if (dynamic_cast<const SampleRefined<EmitterT>*>(&e))
+	{ ++num_sample_refined; }
+
+	else if (auto p = dynamic_cast<const CircleAdvanced<EmitterT>*>(&e))
+	{ ++num_circle_advanced; last_circle_point = p->NewSample(); last_circle_time = p->NewTime(); }
+
+	else if (dynamic_cast<const ClosedLoop<EmitterT>*>(&e))
+	{ ++num_closed_loop; }
+
+	else if (auto p = dynamic_cast<const ApproximatedRoot<EmitterT>*>(&e))
+	{ ++num_approximated_root; (void)p->Get().template FinalApproximation<BCT>(); (void)p->Get().ApproximateError(); }
+
+	else if (dynamic_cast<const InEGOperatingZone<EmitterT>*>(&e))
+	{ ++num_in_eg_zone; }
+
+	else if (auto p = dynamic_cast<const Converged<EmitterT>*>(&e))
+	{ ++num_converged; converged_point = p->Get().template FinalApproximation<BCT>(); (void)p->Get().LatestTime(); }
+
+	else if (dynamic_cast<const PrecisionChanged<AMPEndgame>*>(&e))
+	{ ++num_precision_changed; }
+
+	return ObserveResult::KeepObserving;
+}
+
+}; // EventRecorder
+
+
 	} //re: namespace endgames
 }// re: namespace bertini

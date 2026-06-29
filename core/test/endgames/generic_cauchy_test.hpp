@@ -2069,3 +2069,75 @@ BOOST_AUTO_TEST_CASE(gory_detail_logging)
 }// end cauchy_endgame_test_cycle_num_greater_than_1
 
 
+/**
+	Checks that endgame events are actually delivered to an observer, with readable payloads.
+
+	For the adaptive-numeric-type (AMP) endgame this exercises the complex_dbl fast lane WHILE observed:
+	the event-payload numeric-type conversion and the slot-aware state accessors (LatestTime, etc.) --
+	which previously read an empty mpfr slot and crashed the moment an observer was attached.  It runs
+	for fixed-double, fixed-multiple, and AMP, so all three precision policies are covered.
+*/
+BOOST_AUTO_TEST_CASE(observer_event_delivery)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	newton_preferences.max_num_newton_iterations = 2;
+	newton_preferences.min_num_newton_iterations = 1;
+
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+	tracker.ReinitializeInitialStepSize(false);
+
+	BCT time(1);
+	Vec<BCT> sample(1);
+	Vec<BCT> x_origin(1);
+
+	time = ComplexFromString("0.1");
+	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
+	x_origin << BCT(1,0);
+
+	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(time);
+
+	bertini::endgame::EventRecorder<TestedEGType> recorder;
+	my_endgame.AddObserver(recorder);
+
+	auto cauchy_endgame_success = my_endgame.Run(sample);
+
+	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
+
+	// Events were actually delivered to the observer (no observer attached previously meant the
+	// complex_dbl event-emission path was never exercised).
+	BOOST_CHECK_GT(recorder.num_events, 0u);
+	// Cauchy loops were tracked and their circle-advances observed.
+	BOOST_CHECK_GT(recorder.num_circle_advanced, 0u);
+	// It reached the endgame operating zone and converged exactly once.
+	BOOST_CHECK_GE(recorder.num_in_eg_zone, 1u);
+	BOOST_CHECK_EQUAL(recorder.num_converged, 1u);
+	BOOST_CHECK_GT(recorder.num_approximated_root, 0u);
+
+	// The payload captured THROUGH the observer (read at BaseComplexT, converted from the fast lane if
+	// needed) matches the endgame's own final result, and is the correct root.
+	BOOST_CHECK(recorder.converged_point.size()==1);
+	BOOST_CHECK((recorder.converged_point - my_endgame.FinalApproximation<BCT>()).template lpNorm<Eigen::Infinity>() < 1e-10);
+	BOOST_CHECK((recorder.converged_point - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
+	BOOST_CHECK(recorder.last_circle_point.size()==1);
+}// end observer_event_delivery
+
+
