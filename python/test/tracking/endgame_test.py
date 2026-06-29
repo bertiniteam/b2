@@ -136,4 +136,10 @@ def test_using_total_degree_ss():
     exact_soln = np.array([mpfr_complex(1), mpfr_complex(1)])
 
     for soln in dehomogenized_solns:
-        assert mp.abs(np.sqrt(np.sum((exact_soln - soln)**2))) < 1e-10
+        diff = exact_soln - soln
+        # NB: np.sum / np.prod / np.mean over multiprecision (mpfr/mpc) arrays can raise
+        # SystemError on some numpy + eigenpy builds -- numpy cannot construct the reduction
+        # identity element for these custom dtypes.  See the "Known gotchas" page in the docs.
+        # np.dot(diff, diff) == sum(diff_i**2) (numpy's dot does not conjugate) and goes through
+        # the dtype's dot slot, which works everywhere; it preserves this assertion exactly.
+        assert mp.abs(np.sqrt(np.dot(diff, diff))) < 1e-10
