@@ -64,6 +64,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 
+		/// \brief Construct (and intern) a Differential node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<Differential> Make(Ts&& ...ts){ 
@@ -81,6 +82,7 @@ namespace node{
 
 
 
+		/// \return The variable this differential is taken with respect to.
 		const std::shared_ptr<const Variable>& GetVariable() const;
 
 

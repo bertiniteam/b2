@@ -83,6 +83,7 @@ namespace bertini {
 
 
 	namespace node{
+		/// \brief Register all concrete Node types with a Boost.Serialization archive.
 		template <typename Archive>
 		void register_derived_node_types(Archive& ar)
 		{

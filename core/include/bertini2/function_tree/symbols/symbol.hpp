@@ -83,14 +83,17 @@ namespace node {
 	primary base (e.g. special_number::Pi, which is a Number) inherit this
 	without creating a diamond in the Node hierarchy.
 	*/
+	/// \brief Mixin holding a name, shared by named nodes without forming a diamond in the hierarchy.
 	class NameHolder
 	{
 	public:
+		/// \return The name.
 		const std::string& name() const
 		{
 			return name_;
 		}
 
+		/// \brief Set the name.
 		void name(const std::string& new_name)
 		{
 			name_ = new_name;
@@ -101,10 +104,11 @@ namespace node {
 
 		NameHolder() = default;
 
+		/// \brief Construct holding the given name.
 		explicit NameHolder(std::string new_name) : name_(std::move(new_name))
 		{}
 
-		std::string name_;
+		std::string name_;  ///< The stored name.
 
 	private:
 		friend class boost::serialization::access;
@@ -152,7 +156,7 @@ namespace node {
 	protected:
 		NamedSymbol() = default;
 
-		std::string name_;
+		std::string name_;  ///< The stored name.
 
 	private:
 
