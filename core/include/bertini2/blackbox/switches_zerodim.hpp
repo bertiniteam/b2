@@ -87,9 +87,9 @@ inline type::Start InferStartType(System const& sys)
 template <typename TrackerType, typename EndgameType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyComplete(ConstTs const& ...ts)
 {
-	// the blackbox always clones (default CloneGiven policy); ts... = (target, start_factory).
+	// the blackbox always clones + builds (ZeroDimSolver); ts... = (target, start_factory).
 	return std::make_unique<
-			algorithm::ZeroDim<TrackerType, EndgameType, System>
+			algorithm::ZeroDimSolver<TrackerType, EndgameType, System>
 			>(ts...);
 }
 

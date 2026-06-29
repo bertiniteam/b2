@@ -57,22 +57,33 @@ namespace bertini {
 
 
 /**
-forward declare of ZeroDim algorithm
+\brief The continuation primitive: given a homotopy + a source of start points, track each path
+through the tracker and endgame, resolve crossings, classify the endpoints, and report.
+
+This is the engine.  It holds the homotopy, the start system (which supplies the start points), and
+a target system (for dehomogenize / residual / classification) by *reference* -- the caller owns
+them.  ZeroDimSolver is the algorithm built on top: it owns and builds those systems, then drives
+this engine (see below).
 */
-template<	typename TrackerType, typename EndgameType,
-			typename SystemType,
-			template<typename> class SystemManagementP = policy::CloneGiven >
-struct ZeroDim;
+template<typename TrackerType, typename EndgameType, typename SystemType>
+struct HomotopySolver;
+
+/**
+\brief The zero-dimensional solve algorithm: given a polynomial system, form a start system and a
+homotopy, then run the continuation engine.  Owns its systems; is-a HomotopySolver.
+*/
+template<typename TrackerType, typename EndgameType, typename SystemType>
+struct ZeroDimSolver;
 
 
 
 /**
-specify the traits for the algorithm.  this is why we need the forward declare
+specify the traits for the algorithm.  this is why we need the forward declare.  ZeroDimSolver
+derives from HomotopySolver (and so inherits its Configured base), so only HomotopySolver needs
+traits specialized here.
 */
-template<typename TrackerType, typename EndgameType,
-			typename SystemType,
-			template<typename> class SystemManagementP>
-struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, SystemManagementP>>
+template<typename TrackerType, typename EndgameType, typename SystemType>
+struct AlgoTraits <HomotopySolver<TrackerType, EndgameType, SystemType>>
 {
 	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
 	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
@@ -400,27 +411,26 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 }
 
 /**
-\brief the basic zero dim algorithm, which solves a system.
+\brief The continuation engine -- track a set of start points through a (caller-owned) homotopy,
+run the endgame, classify the endpoints, report.  See the forward-declare doc above.
 */
-		template<	typename TrackerType, typename EndgameType,
-					typename SystemType,
-					template<typename> class SystemManagementP>
-		struct ZeroDim :
+		template<typename TrackerType, typename EndgameType, typename SystemType>
+		struct HomotopySolver :
 							public virtual AnyZeroDim,
 							public Observable,
-							public SystemManagementP<SystemType>,
 							public detail::Configured<
-								typename AlgoTraits< ZeroDim<TrackerType, EndgameType, SystemType, SystemManagementP>>::NeededConfigs>
+								typename AlgoTraits< HomotopySolver<TrackerType, EndgameType, SystemType>>::NeededConfigs>
 		{
 			// these usings are for getters in python
 			using TrackerT          = TrackerType;
 			using EndgameT          = EndgameType;
 			using SystemT           = SystemType;
-			// the algorithm sees the start system only through the polymorphic base
+			// the engine sees the start system only through the polymorphic base
 			using StartSystemT       = bertini::start_system::StartSystem;
+			using StartSystemBaseT   = bertini::start_system::StartSystem;
 
-			// This algorithm emits its lifecycle events on the AnyZeroDim base, so a
-			// single observer type can watch any templated ZeroDim.  Accept observers
+			// This engine emits its lifecycle events on the AnyZeroDim base, so a
+			// single observer type can watch any templated solver.  Accept observers
 			// declared for AnyZeroDim (in addition to the exact concrete type).
 			bool ObservableIsA(std::type_index t) const override
 			{
@@ -438,14 +448,9 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 			using SolnIndT 			= typename SolnCont<BaseComplexT>::size_type;
 
-			using SystemManagementPolicy = SystemManagementP<SystemType>;
-
-			using StoredSystemT = typename SystemManagementPolicy::StoredSystemT;
-			using StoredStartSystemT = typename SystemManagementPolicy::StoredStartSystemT;
-
 
 			using Config = detail::Configured<
-								typename AlgoTraits<ZeroDim<TrackerType, EndgameType, SystemType, SystemManagementP>>::NeededConfigs>;
+								typename AlgoTraits<HomotopySolver<TrackerType, EndgameType, SystemType>>::NeededConfigs>;
 			using Config::Get;
 
 
@@ -463,25 +468,54 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 			using MidpathType = MidpathChecker<BaseRealT, BaseComplexT, EGBoundaryMetaData<BaseComplexT>>;
 
-			using SystemManagementPolicy::TargetSystem;
-			using SystemManagementPolicy::StartSystem;
-			using SystemManagementPolicy::Homotopy;
+			// --- system storage ---------------------------------------------------------------
+			// The engine holds the homotopy, start system, and target by REFERENCE; the caller
+			// (a user, or ZeroDimSolver) owns them and guarantees they outlive the engine.  This
+			// is the old policy::RefToGiven layout, now the engine's only layout.
+		protected:
+			std::reference_wrapper<const SystemType>        target_system_;
+			std::reference_wrapper<const StartSystemBaseT>  start_system_;
+			std::reference_wrapper<const SystemType>        homotopy_;
+
+			// Re-seat the system references.  ZeroDimSolver calls this after an MPI broadcast
+			// re-materializes rank 0's authoritative systems into its owned storage.
+			void ResetSystems(SystemType const& hom, StartSystemBaseT const& start, SystemType const& target)
+			{
+				homotopy_      = std::cref(hom);
+				start_system_  = std::cref(start);
+				target_system_ = std::cref(target);
+			}
+
+#ifdef BERTINI2_HAVE_MPI
+			// Hook: install rank 0's authoritative systems on every rank before a distributed solve.
+			// A user-supplied homotopy (plain HomotopySolver) is the user's responsibility across
+			// ranks, so this is a no-op here; ZeroDimSolver, which owns its systems, overrides it.
+			virtual void DistributeSystems(MPI_Comm /*comm*/) {}
+#endif
+
+		public:
+			const SystemType&       TargetSystem() const { return target_system_.get(); }
+			const StartSystemBaseT& StartSystem()  const { return start_system_.get();  }
+			const SystemType&       Homotopy()     const { return homotopy_.get();      }
 
 
 
 /// constructors
 
 			/**
-			Construct a ZeroDim algorithm object.
+			Construct the continuation engine over a caller-owned homotopy, start system, and target.
 
-			You must at least pass in the system used to track, though the particular arguments required depend on the policies used in your instantiation of ZeroDim.
-
-			\see RefToGiven, CloneGiven
+			- `target`:   the system the solutions satisfy at target time -- dehomogenize / residual /
+			              classification reference it.
+			- `start`:    supplies the start points (StartSystem::StartPoint), polymorphically.
+			- `homotopy`: the system with a path variable, tracked from start to target time.
+			None are owned; all three must outlive the engine.  (ZeroDimSolver builds and owns them.)
+			Argument order matches the old user-homotopy constructor (target, start, homotopy).
 			*/
-			template<typename ... SysTs>
-			ZeroDim(SysTs const& ...sys) : SystemManagementPolicy(sys...), tracker_(TargetSystem()), endgame_(tracker_)
+			HomotopySolver(SystemType const& target, StartSystemBaseT const& start, SystemType const& homotopy)
+			 : target_system_(std::cref(target)), start_system_(std::cref(start)), homotopy_(std::cref(homotopy)),
+			   tracker_(homotopy), endgame_(tracker_)
 			{
-				ConsistencyCheck();
 				DefaultSetup();
 			}
 
@@ -542,20 +576,11 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 					MPI_Bcast(&seed, 1, MPI_UNSIGNED_LONG, 0, comm);
 					SetGlobalSeed(seed);
 
-					// When this policy owns its systems (CloneGiven), install rank 0's authoritative
-					// systems on every rank.  For RefToGiven the user manages the systems and is
-					// responsible for their consistency across ranks, so we leave them untouched
-					// (matching the old no-op SystemSetup for that policy).
-					if constexpr (SystemManagementPolicy::OwnsSystems)
-					{
-						parallel::mpi_broadcast_serialized(comm, TargetSystem(), 0);
-						// broadcast the OWNING shared_ptr<StartSystem> so the concrete derived type
-						// (TotalDegree/MHom/RootsOfUnity, all default-constructible) is carried
-						// polymorphically via its BOOST_CLASS_EXPORT key -- a base reference would
-						// serialize only the System slice and drop the start-point data.
-						parallel::mpi_broadcast_serialized(comm, this->StartSystemPtr(), 0);
-						parallel::mpi_broadcast_serialized(comm, Homotopy(),    0);
-					}
+					// Install rank 0's authoritative systems on every rank.  The plain engine over a
+					// user-supplied homotopy does nothing here (the user owns cross-rank consistency);
+					// ZeroDimSolver, which owns its systems, overrides DistributeSystems to broadcast
+					// rank 0's target / start / homotopy and re-seat the engine's references.
+					DistributeSystems(comm);
 
 					num_start_points_ = StartSystem().NumStartPoints();
 					GetTracker().SetSystem(Homotopy());
@@ -706,34 +731,10 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			void WriteRawSolutions(std::ostream& out)         const override;
 			void ApplyParsedConfigs(std::string const& config_str) override;
 
-			virtual ~ZeroDim() = default;
+			virtual ~HomotopySolver() = default;
 /// setup functions
-
-
-			/**
-			\brief Check to ensure that target system is valid for solving.
-			*/
-			void ConsistencyCheck() const
-			{
-				if (TargetSystem().HavePathVariable())
-					throw std::runtime_error("unable to perform zero dim solve on target system -- has path variable, use user homotopy instead.");
-
-				// A square zero-dim system needs one equation per dimension.  Each projective
-				// (homogeneous) variable group of size k spans P^{k-1}: its k coordinates carry
-				// only k-1 dimensions because scale is free, so it needs one fewer equation than
-				// it has variables.  Subtract that free scale per projective group before
-				// comparing -- otherwise a genuinely square multiprojective system (e.g. the
-				// eigenvalue problem (A - lam I)x = 0 with x projective, lam affine) is wrongly
-				// rejected.  Affine-only systems have no hom variable groups, so this is a no-op
-				// for them.  (Patches, which would also enter NumTotalFunctions, are added later
-				// during system preparation; this check runs on the as-supplied system.)
-				if (TargetSystem().NumVariables() - TargetSystem().NumHomVariableGroups() > TargetSystem().NumTotalFunctions())
-					throw std::runtime_error("unable to perform zero dim solve on target system -- underconstrained, so has no zero dimensional solutions.");
-
-				if (!TargetSystem().IsPolynomial())
-					throw std::runtime_error("unable to perform zero dim solve on target system -- system is non-polynomial, use user homotopy instead.");
-			}
-
+			// NOTE: feasibility checking (ConsistencyCheck) and start-system construction live in
+			// ZeroDimSolver, which owns the systems; the engine is handed a ready homotopy.
 
 
 			void DefaultSetup()
@@ -749,7 +750,8 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 			void DefaultSystemSetup()
 			{
-				SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
+				// The systems are already built and referenced (the engine does not form them);
+				// just read off the number of start points the start system will produce.
 				num_start_points_ = StartSystem().NumStartPoints(); // populate the internal variable
 			}
 
@@ -1876,22 +1878,130 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			SolnCont<SolutionMetaDataT> solution_final_metadata_;
 
 
-		}; // struct ZeroDim
+		}; // struct HomotopySolver
 
 
-		// --- public spellings of the two distinct roles of the zero-dim machinery ----------------
-		// The continuation primitive vs. the zero-dim algorithm are, for now, the same templated
-		// body selected by its system-management policy.  These aliases give each role its own,
-		// honest name (used by the Python bindings and the rest of the surface); a later refactor
-		// turns them into two concrete, composed classes and retires the policy.  See the split ADR.
-		//
-		//   HomotopySolver : given a homotopy + start points, track/endgame/classify (RefToGiven).
-		//   ZeroDimSolver  : given a system, build a start system + homotopy, then solve (CloneGiven).
+		// impl namespace deliberately NOT named `detail`: bertini::detail (TypeList, Configured)
+		// is referenced unqualified throughout this file, and a bertini::algorithm::detail would
+		// shadow it for any code defined after this point (e.g. ApplyParsedConfigs).
+		namespace zero_dim_detail {
+
+		/**
+		\brief Owns and builds the target / start system / homotopy for a zero-dim solve.
+
+		Constructed as the FIRST base of ZeroDimSolver -- before the HomotopySolver engine base, which
+		holds references into these systems -- so the homotopy is fully formed before the engine reads
+		it.  This is the old policy::CloneGiven, folded in, plus the feasibility / rank checks the
+		algorithm owns.  Members carry an `owned_` prefix so they do not collide with the engine base's
+		reference members.
+		*/
+		template<typename SystemType>
+		struct OwnedHomotopy
+		{
+			using StartSystemBaseT = bertini::start_system::StartSystem;
+			using FactoryT = bertini::policy::StartSystemFactory<SystemType>;
+
+			OwnedHomotopy(SystemType const& target, FactoryT factory, std::string const& path_variable_name)
+			 : owned_target_(Clone(target)), owned_factory_(std::move(factory))
+			{
+				ConsistencyCheck();              // feasibility BEFORE homogenizing (on the as-supplied target)
+				PrepareTarget(owned_target_);    // homogenize + auto-patch
+				RankCheck();                     // can isolated solutions even exist?
+				SquareUp();                      // randomize an over-determined system down to square
+				owned_start_    = owned_factory_(owned_target_);                         // start system over the prepared target
+				owned_homotopy_ = MakeHomotopy(owned_target_, *owned_start_, path_variable_name);
+			}
+
+			SystemType const&       BuiltTarget()   const { return owned_target_;   }
+			StartSystemBaseT const& BuiltStart()    const { return *owned_start_;   }
+			SystemType const&       BuiltHomotopy() const { return owned_homotopy_; }
+
+		protected:
+			SystemType                        owned_target_;
+			std::shared_ptr<StartSystemBaseT> owned_start_;
+			SystemType                        owned_homotopy_;
+			FactoryT                          owned_factory_;
+
+			/**
+			\brief Reject targets that cannot have isolated solutions for structural reasons.
+			*/
+			void ConsistencyCheck() const
+			{
+				if (owned_target_.HavePathVariable())
+					throw std::runtime_error("unable to perform zero dim solve on target system -- has path variable, use a HomotopySolver instead.");
+
+				// A square zero-dim system needs one equation per dimension.  Each projective
+				// (homogeneous) variable group of size k spans P^{k-1}: its k coordinates carry only
+				// k-1 dimensions because scale is free, so it needs one fewer equation than it has
+				// variables.  Subtract that free scale per projective group before comparing.
+				if (owned_target_.NumVariables() - owned_target_.NumHomVariableGroups() > owned_target_.NumTotalFunctions())
+					throw std::runtime_error("unable to perform zero dim solve on target system -- underconstrained, so has no zero dimensional solutions.");
+
+				if (!owned_target_.IsPolynomial())
+					throw std::runtime_error("unable to perform zero dim solve on target system -- system is non-polynomial, use a HomotopySolver instead.");
+			}
+
+			static void PrepareTarget(SystemType& target)
+			{
+				target.Homogenize(); // work over projective coordinates
+				target.AutoPatch();  // then patch if needed
+			}
+
+			// TODO(split): the rank / existence check and the over-determined square-up are planned
+			// in-scope behaviors (the tooling -- System::Randomize, SLP eval + linalg -- exists).
+			// Stubbed for now so the structural refactor lands first; current behavior (the caller
+			// randomizes an over-determined system itself) is preserved.
+			void RankCheck() const {}
+			void SquareUp() {}
+		};
+
+		} // ns zero_dim_detail
+
+
+		/**
+		\brief The zero-dimensional solve algorithm.
+
+		Owns its systems: it clones the user's target, homogenizes/patches it, builds a start system
+		(via the injected factory) and a homotopy, then drives the continuation engine.  It IS-A
+		HomotopySolver -- the engine machinery (tracking, endgame, crossing resolution, classification,
+		reporting) is reused, not duplicated -- with an OwnedHomotopy base supplying the systems the
+		engine references.
+		*/
 		template<typename TrackerType, typename EndgameType, typename SystemType>
-		using HomotopySolver = ZeroDim<TrackerType, EndgameType, SystemType, policy::RefToGiven>;
+		struct ZeroDimSolver :
+			private zero_dim_detail::OwnedHomotopy<SystemType>,
+			public  HomotopySolver<TrackerType, EndgameType, SystemType>
+		{
+			using OwnedT   = zero_dim_detail::OwnedHomotopy<SystemType>;
+			using EngineT  = HomotopySolver<TrackerType, EndgameType, SystemType>;
+			using FactoryT = typename OwnedT::FactoryT;
 
-		template<typename TrackerType, typename EndgameType, typename SystemType>
-		using ZeroDimSolver = ZeroDim<TrackerType, EndgameType, SystemType, policy::CloneGiven>;
+			/**
+			Build the start system + homotopy from `target`, then construct the engine over them.
+			Base initialization order is declaration order: OwnedHomotopy (which builds) runs before
+			the HomotopySolver engine (which references the freshly built systems).  The factory
+			defaults to RootsOfUnity (the interim default start system).
+			*/
+			ZeroDimSolver(SystemType const& target,
+			              FactoryT factory = bertini::policy::MakeStartFactory<bertini::start_system::RootsOfUnity, SystemType>())
+			 : OwnedT(target, std::move(factory), ZeroDimConfig{}.path_variable_name),
+			   EngineT(OwnedT::BuiltTarget(), OwnedT::BuiltStart(), OwnedT::BuiltHomotopy())
+			{}
+
+#ifdef BERTINI2_HAVE_MPI
+			// Broadcast rank 0's authoritative owned systems to every rank, then re-seat the engine's
+			// references and let the caller (RunParallel) re-point the tracker at the homotopy.
+			void DistributeSystems(MPI_Comm comm) override
+			{
+				parallel::mpi_broadcast_serialized(comm, this->owned_target_,   0);
+				// the OWNING shared_ptr<StartSystem> carries the concrete derived type polymorphically
+				// (BOOST_CLASS_EXPORT); a base reference would serialize only the System slice.
+				parallel::mpi_broadcast_serialized(comm, this->owned_start_,    0);
+				parallel::mpi_broadcast_serialized(comm, this->owned_homotopy_, 0);
+				this->ResetSystems(this->owned_homotopy_, *this->owned_start_, this->owned_target_);
+			}
+#endif
+		};
 
 	} // ns algo
 
@@ -1906,67 +2016,53 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 namespace bertini {
 namespace algorithm {
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteMainData(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteMainData(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::MainData(out, *this);
+	output::Classic<HomotopySolver>::MainData(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteRawData(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteRawData(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::RawData(out, *this);
+	output::Classic<HomotopySolver>::RawData(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteFiniteSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteFiniteSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::FiniteSolutions(out, *this);
+	output::Classic<HomotopySolver>::FiniteSolutions(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteRealFiniteSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteRealFiniteSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::RealFiniteSolutions(out, *this);
+	output::Classic<HomotopySolver>::RealFiniteSolutions(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteNonsingularSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteNonsingularSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::NonsingularSolutions(out, *this);
+	output::Classic<HomotopySolver>::NonsingularSolutions(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteSingularSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteSingularSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::SingularSolutions(out, *this);
+	output::Classic<HomotopySolver>::SingularSolutions(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteRawSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteRawSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::RawSolutions(out, *this);
+	output::Classic<HomotopySolver>::RawSolutions(out, *this);
 }
 
 } // ns algorithm
@@ -1987,16 +2083,14 @@ void InjectParsedTuple(Target& target, std::tuple<Ts...> const& t) {
 	(target.template Set<Ts>(std::get<Ts>(t)), ...);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>
+HomotopySolver<TrackerType,EndgameType,SystemType>
     ::ApplyParsedConfigs(std::string const& config_str)
 {
 	using namespace parsing::classic;
 
-	// 1. ZeroDim-owned configs (Tolerances, PostProcessing, ZeroDimConf, AutoRetrack)
+	// 1. solver-owned configs (Tolerances, PostProcessing, ZeroDimConf, AutoRetrack)
 	using ZDConfs = typename Config::UsedConfigs;
 	auto zd = ConfigParser<ZDConfs>::Parse(config_str);
 	InjectParsedTuple(*this, zd);
@@ -2041,30 +2135,28 @@ ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>
 } // ns bertini
 
 
-// Explicit instantiation declarations — suppress re-instantiation of the production
-// ZeroDim types in every including TU.  Since ZeroDim is no longer templated on the
-// start-system type (it holds the start system polymorphically), there are just six
-// CloneGiven combos that cover EVERY clone-owned start system (TotalDegree, MHom,
-// RootsOfUnity, future Polyhedral, ...), plus six RefToGiven combos for user homotopies.
-// Definitions in core/src/eti/zero_dim_eti.cpp + zero_dim_blackbox_eti.cpp; see ADR-0014.
+// Explicit instantiation declarations — suppress re-instantiation of the production solver types in
+// every including TU.  Six ZeroDimSolver combos (Tracker x Endgame) cover EVERY clone-owned start
+// system (the start system is held polymorphically), plus six HomotopySolver combos for user
+// homotopies.  Definitions in core/src/eti/zero_dim_eti.cpp + zero_dim_blackbox_eti.cpp; see ADR-0014.
 #include "bertini2/endgames.hpp"
 #include "bertini2/system/start_systems.hpp"
 
 namespace bertini{ namespace algorithm{
 
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System>;
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System>;
+extern template struct ZeroDimSolver<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System>;
+extern template struct ZeroDimSolver<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System>;
+extern template struct ZeroDimSolver<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System>;
+extern template struct ZeroDimSolver<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System>;
+extern template struct ZeroDimSolver<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System>;
+extern template struct ZeroDimSolver<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System>;
 
-// user homotopies: the user owns the systems, so RefToGiven; definitions in zero_dim_blackbox_eti.cpp
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System, policy::RefToGiven>;
+// user homotopies: the engine over caller-owned systems.  definitions in zero_dim_blackbox_eti.cpp
+extern template struct HomotopySolver<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System>;
+extern template struct HomotopySolver<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System>;
+extern template struct HomotopySolver<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System>;
+extern template struct HomotopySolver<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System>;
+extern template struct HomotopySolver<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System>;
+extern template struct HomotopySolver<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System>;
 
 }} // namespaces

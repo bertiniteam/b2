@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 
 	auto sys = system::Precon::GriewankOsborn();
 
-	auto zd = algorithm::ZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
 
 	zd.DefaultSetup();
 	
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 
 	auto sys = system::Precon::GriewankOsborn();
 
-	auto zd = algorithm::ZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
 
 	zd.DefaultSetup();
 	
@@ -135,13 +135,12 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO_nonhom)
 	auto h = (1-t)* sys + t*TD;
 	h.AddPathVariable(t);
 
-	auto zd = algorithm::ZeroDim<
-				TrackerT, 
-				bertini::endgame::EndgameSelector<TrackerT>::PSEG, 
-				decltype(sys),
-				policy::RefToGiven
+	auto zd = algorithm::HomotopySolver<
+				TrackerT,
+				bertini::endgame::EndgameSelector<TrackerT>::PSEG,
+				decltype(sys)
 					>
-			(sys, TD, h); 
+			(sys, TD, h);
 	// have to pass in all three to the constructor, because using references. 
 
 	zd.DefaultSetup();
@@ -173,13 +172,12 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 	auto h = (1-t)* sys + t*TD;
 	h.AddPathVariable(t);
 
-	auto zd = algorithm::ZeroDim<
-				TrackerT, 
-				bertini::endgame::EndgameSelector<TrackerT>::PSEG, 
-				decltype(sys),
-				policy::RefToGiven
+	auto zd = algorithm::HomotopySolver<
+				TrackerT,
+				bertini::endgame::EndgameSelector<TrackerT>::PSEG,
+				decltype(sys)
 					>
-			(sys, TD, h); 
+			(sys, TD, h);
 	// have to pass in all three to the constructor, because using references. 
 
 	zd.DefaultSetup();
@@ -233,11 +231,10 @@ BOOST_AUTO_TEST_CASE(user_homotopy_parameter_homotopy_solves)
 
 	auto user_start = start_system::User(target, start_points);
 
-	auto zd = algorithm::ZeroDim<
+	auto zd = algorithm::HomotopySolver<
 				AMPTracker,
 				bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
-				System,
-				policy::RefToGiven>
+				System>
 			(target, user_start, H); // (target, start, homotopy) -- references, so all three
 
 	zd.DefaultSetup();
@@ -287,7 +284,7 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 	sys.AddFunction(x*y - 1);
 	sys.AddFunction(x + y);
 
-	auto zd = algorithm::ZeroDim<AMPTracker,
+	auto zd = algorithm::ZeroDimSolver<AMPTracker,
 	                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
 	                             decltype(sys)>(sys, bertini::policy::MakeStartFactory<bertini::start_system::MHomogeneous>());
 	zd.DefaultSetup();
@@ -340,7 +337,7 @@ BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
 	sys.AddFunction(x*y - 1);
 	sys.AddFunction(x + y);
 
-	auto zd = algorithm::ZeroDim<AMPTracker,
+	auto zd = algorithm::ZeroDimSolver<AMPTracker,
 	                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
 	                             decltype(sys)>(sys, bertini::policy::MakeStartFactory<bertini::start_system::MHomogeneous>());
 	zd.DefaultSetup();
@@ -480,7 +477,7 @@ BOOST_AUTO_TEST_CASE(solve_report_from_a_real_solve)
 	sys.AddFunction(pow(y, 2) - 1);
 	sys.AddVariableGroup(VariableGroup{x, y});
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -534,7 +531,7 @@ BOOST_AUTO_TEST_CASE(cyclic5_amp_does_not_overescalate_precision)
 	sys.AddFunction(prod - 1);
 	sys.AddVariableGroup(x);
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -561,7 +558,7 @@ BOOST_AUTO_TEST_CASE(filtered_solution_accessors)
 	sys.AddFunction(pow(y, 2) - 1);
 	sys.AddVariableGroup(VariableGroup{x, y});
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -600,7 +597,7 @@ BOOST_AUTO_TEST_CASE(classic_solution_file_output)
 	sys.AddFunction(pow(y, 2) - 1);
 	sys.AddVariableGroup(VariableGroup{x, y});
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -647,7 +644,7 @@ BOOST_AUTO_TEST_CASE(infinite_solutions_at_infinity)
 	sys.AddFunction(x - 1);
 	sys.AddVariableGroup(VariableGroup{x, y});
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
 	zd.DefaultSetup();
 	// SecurityLevel <= 0 truncates paths heading to infinity as failures (SecurityMaxNormReached);
 	// this test wants the at-infinity path actually computed, so raise the level to keep tracking it
@@ -688,7 +685,7 @@ BOOST_AUTO_TEST_CASE(multiplicity_representative_marks_one_per_cluster)
 	sys.AddFunction(pow(y, 2));
 	sys.AddVariableGroup(VariableGroup{x, y});
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -714,7 +711,7 @@ BOOST_AUTO_TEST_CASE(multiplicity_representative_marks_one_per_cluster)
 	simple.AddFunction(pow(x, 2) - 1);
 	simple.AddFunction(pow(y, 2) - 1);
 	simple.AddVariableGroup(VariableGroup{x, y});
-	auto zd2 = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(simple);
+	auto zd2 = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(simple);
 	zd2.DefaultSetup();
 	zd2.Solve();
 	unsigned reps2 = 0;
@@ -741,7 +738,7 @@ BOOST_AUTO_TEST_CASE(fixed_multiple_precision_solves_uniformly)
 		System sys;
 		sys.AddFunction(pow(x, 2) - 1);
 		sys.AddVariableGroup(VariableGroup{x});
-		auto zd = algorithm::ZeroDim<MPTracker, endgame::EndgameSelector<MPTracker>::Cauchy,
+		auto zd = algorithm::ZeroDimSolver<MPTracker, endgame::EndgameSelector<MPTracker>::Cauchy,
 		                             System>(sys);
 		zd.DefaultSetup();
 		zd.Solve();                                  // used to throw on the precision mismatch
@@ -769,7 +766,7 @@ BOOST_AUTO_TEST_CASE(fixed_multiple_precision_set_via_config)
 	System sys;
 	sys.AddFunction(pow(x, 2) - 1);
 	sys.AddVariableGroup(VariableGroup{x});
-	auto zd = algorithm::ZeroDim<MPTracker, endgame::EndgameSelector<MPTracker>::Cauchy,
+	auto zd = algorithm::ZeroDimSolver<MPTracker, endgame::EndgameSelector<MPTracker>::Cauchy,
 	                             System>(sys);
 	zd.DefaultSetup();
 
@@ -955,7 +952,7 @@ BOOST_AUTO_TEST_CASE(clean_solve_reports_no_crossings)
 	using TrackerT = tracking::DoublePrecisionTracker;
 
 	auto sys = system::Precon::GriewankOsborn();
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -1008,7 +1005,7 @@ BOOST_AUTO_TEST_CASE(finite_real_nonsingular)
 	sys.AddVariableGroup(VariableGroup{x});
 	sys.AddFunction(x*x - 1);
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -1032,7 +1029,7 @@ BOOST_AUTO_TEST_CASE(finite_complex_not_real)
 	sys.AddVariableGroup(VariableGroup{x});
 	sys.AddFunction(x*x + 1);
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -1053,7 +1050,7 @@ BOOST_AUTO_TEST_CASE(singular_double_root)
 	sys.AddVariableGroup(VariableGroup{x});
 	sys.AddFunction(x*x);
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -1079,7 +1076,7 @@ BOOST_AUTO_TEST_CASE(endpoint_finite_threshold_is_applied)
 	sys.AddVariableGroup(VariableGroup{x});
 	sys.AddFunction(x*x - 1);                    // roots +/-1, infinity norm 1
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
 	zd.DefaultSetup();
 	auto pp = zd.Get<PostProcessing>();
 	pp.endpoint_finite_threshold = 0.5;          // 1 > 0.5 -> "at infinity"
@@ -1102,7 +1099,7 @@ BOOST_AUTO_TEST_CASE(condition_number_threshold_is_applied)
 	sys.AddVariableGroup(VariableGroup{x});
 	sys.AddFunction(x*x - 1);                    // simple, well-conditioned roots
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
 	zd.DefaultSetup();
 	auto pp = zd.Get<PostProcessing>();
 	pp.condition_number_threshold = 1e-3;        // any condition number exceeds this
@@ -1124,7 +1121,7 @@ BOOST_AUTO_TEST_CASE(postprocessing_config_roundtrip)
 	sys.AddVariableGroup(VariableGroup{x});
 	sys.AddFunction(x*x - 1);
 
-	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
 	zd.DefaultSetup();
 
 	auto pp = zd.Get<PostProcessing>();
@@ -1182,7 +1179,7 @@ BOOST_AUTO_TEST_CASE(zerodim_emits_lifecycle_events)
 	using namespace tracking;
 
 	auto sys = system::Precon::GriewankOsborn();
-	auto zd = algorithm::ZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
+	auto zd = algorithm::ZeroDimSolver<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
 	                             decltype(sys)>(sys);
 	zd.DefaultSetup();
 
@@ -1204,7 +1201,7 @@ BOOST_AUTO_TEST_CASE(zerodim_rejects_a_tracker_observer)
 	using namespace tracking;
 
 	auto sys = system::Precon::GriewankOsborn();
-	auto zd = algorithm::ZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
+	auto zd = algorithm::ZeroDimSolver<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
 	                             decltype(sys)>(sys);
 
 	// a tracker observer is for a tracker, not the ZeroDim -> rejected
