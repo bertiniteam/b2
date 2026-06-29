@@ -186,6 +186,7 @@ protected:
 
 	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
 	using TupleOfSamps = typename BaseEGT::TupleOfSamps;
+	using TupOfVec = typename BaseEGT::TupOfVec;
 
 	using BCT = BaseComplexT;
 	using BRT = BaseRealT;
@@ -214,9 +215,13 @@ protected:
 	mutable TupleOfSamps derivatives_;
 
 	/**
-	\brief Random vector used in computing an upper bound on the cycle number. 
+	\brief Random vector used in computing an upper bound on the cycle number.
+
+	Dual-slot (TupOfVec) so the adaptive-numeric-type endgame can form the cycle-number dot products in
+	the active type (it is multiplied against Vec<ComplexT> sample differences, which must match scalar
+	type).  Single-slot for fixed precision, as before.
 	*/
-	mutable Vec<BCT> rand_vector_;
+	mutable TupOfVec rand_vector_;
 
 	template<typename ComplexT>
 	void AssertSizesTimeSpace() const
@@ -267,8 +272,23 @@ public:
 	const auto& GetTimes() const {return std::get<TimeCont<ComplexT> >(times_);}
 
 
+	// Scratch for LatestTimeImpl to return a BCT reference when computing in the complex_dbl fast lane.
+	mutable BCT latest_time_cache_;
+
 	const BCT& LatestTimeImpl() const
 	{
+		// In the adaptive-numeric-type endgame the latest time may live in the complex_dbl slot, with
+		// the BCT slot empty.  Dispatch on which slot holds data so this is correct in either lane and
+		// both during and after the run.  Fixed precision compiles to the original BCT read.
+		if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+		{
+			if (GetTimes<BCT>().empty())
+			{
+				auto const& dbl_times = GetTimes<complex_dbl>();
+				latest_time_cache_ = dbl_times.empty() ? BCT(0) : BCT(dbl_times.back());
+				return latest_time_cache_;
+			}
+		}
 		return GetTimes<BCT>().back();
 	}
 
@@ -290,9 +310,10 @@ public:
 	template<typename ComplexT>
 	void SetRandVec(int size)
 	{
-		rand_vector_.resize(size);
+		auto& rv = std::get<Vec<ComplexT> >(rand_vector_);
+		rv.resize(size);
 		for (int ii = 0; ii < size; ++ii)
-			rand_vector_(ii) = RandomUnit<ComplexT>();
+			rv(ii) = RandomUnit<ComplexT>();
 	}
 
 
@@ -340,8 +361,9 @@ public:
 
 
 // should this only be if the system is homogenized?
-		ComplexT rand_sum1 = ((sample1 - sample0).transpose()*rand_vector_).sum();
-		ComplexT rand_sum2 = ((sample2 - sample1).transpose()*rand_vector_).sum();
+		const auto& rand_vector = std::get<Vec<ComplexT> >(rand_vector_);
+		ComplexT rand_sum1 = ((sample1 - sample0).transpose()*rand_vector).sum();
+		ComplexT rand_sum2 = ((sample2 - sample1).transpose()*rand_vector).sum();
 
 		if ( abs(rand_sum1)==0 || abs(rand_sum2)==0) // avoid division by 0
 		{
@@ -589,26 +611,43 @@ public:
   			return SuccessCode::MinTrackTimeReached;
   		}
 
-		SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,times.back(),next_time,samples.back());
+		SuccessCode tracking_success = this->EndgameTrackPath(next_sample,times.back(),next_time,samples.back());
 			if (tracking_success != SuccessCode::Success)
 				return tracking_success;
+
+		// Pure-(i) escalation: return BEFORE pushing the new sample so the window stays an untouched
+		// checkpoint; the driver migrates to mpfr and retries this advance.  Elided for fixed precision.
+		if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+			if (this->adaptive_numeric_type_active_ &&
+			    this->GetTracker().GetCurrentPrecision() > this->current_endgame_precision_)
+				return SuccessCode::HigherPrecisionNecessary;
 
 		NotifyObservers(InEGOperatingZone<EmitterType>(*this));
 
 		this->EnsureAtPrecision(next_time,Precision(next_sample));
-	
+
 
 		times.push_back(next_time);
 		samples.push_back(next_sample);
 
-	
 
 
-		auto refine_success = this->RefineSample(samples.back(), next_sample,  times.back(), 
+
+		auto refine_success = this->RefineSample(samples.back(), next_sample,  times.back(),
 										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
 										this->EndgameSettings().max_num_newton_iterations);
 		if (refine_success != SuccessCode::Success)
 		{
+			// Adaptive-numeric-type: a refine that double cannot satisfy is a request to cross to mpfr.
+			// Roll back the just-pushed sample so the window is a clean checkpoint, then signal the driver.
+			if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+				if (this->adaptive_numeric_type_active_ &&
+				    (refine_success == SuccessCode::HigherPrecisionNecessary || refine_success == SuccessCode::FailedToConverge))
+				{
+					times.pop_back();
+					samples.pop_back();
+					return SuccessCode::HigherPrecisionNecessary;
+				}
 			NotifyObservers(RefiningFailed<EmitterType>(*this));
 			return refine_success;
 		}
@@ -748,19 +787,214 @@ public:
 	} //end PSEG
 
 
-	/**
-	\brief Adaptive-numeric-type entry point, called by base Run() for adaptive-precision trackers.
+	// ================================================================================================
+	//   Adaptive-numeric-type (double-first) PowerSeries endgame.  Mirrors the Cauchy flavor: compute in
+	//   the hardware complex_dbl fast lane while the tracker's authoritative precision stays double, and
+	//   cross to complex_mp only when the tracker escalates (pure-(i)).  Member templates so the explicit
+	//   fixed-precision class instantiations never force-compile them.  Fixed precision uses RunImpl<BCT>.
+	// ================================================================================================
 
-	The double-first numeric-type rewrite has not yet been applied to the PowerSeries endgame (it is the
-	immediate follow-on sprint, sharing all of the base machinery the Cauchy flavor builds).  Until then
-	PSEG keeps running entirely in mpfr, exactly as before: forward straight to RunImpl<BCT>.  The
-	adaptive-numeric-type escalation hooks are never armed here (adaptive_numeric_type_active_ stays
-	false), so the shared phase methods behave identically to today.
-	*/
 	template<typename Dummy = void>
 	SuccessCode RunImplAMP(BCT const& start_time, Vec<BCT> const& start_point, BCT const& target_time)
 	{
-		return this->template RunImpl<BCT>(start_time, start_point, target_time);
+		using bertini::Precision;
+		using RealT = typename Eigen::NumTraits<BCT>::Real;
+
+		if (start_point.size()!=static_cast<Eigen::Index>(this->GetSystem().NumVariables()))
+		{
+			std::stringstream err_msg;
+			err_msg << "number of variables in start point for PSEG, " << start_point.size() << ", must match the number of variables in the system, " << this->GetSystem().NumVariables();
+			throw std::runtime_error(err_msg.str());
+		}
+
+		this->adaptive_numeric_type_active_ = true;
+		struct Disarmer { bool& flag; ~Disarmer(){ flag = false; } } disarm{this->adaptive_numeric_type_active_};
+
+		this->current_endgame_precision_ = std::max(DoublePrecision(), Precision(start_point));
+
+		// ---- SETUP (restart-in-mpfr on escalation; bounded) ----
+		while (true)
+		{
+			SuccessCode code = (this->current_endgame_precision_==DoublePrecision())
+				? SetupSegmentT<complex_dbl>(complex_dbl(start_time), this->DowncastToDouble(start_point), complex_dbl(target_time))
+				: SetupSegmentT<complex_mp>(this->AtActivePrecisionScalar(start_time), this->AtActivePrecisionVec(start_point), this->AtActivePrecisionScalar(target_time));
+			if (code == SuccessCode::HigherPrecisionNecessary)
+			{
+				this->current_endgame_precision_ = this->NextEscalatedPrecision();
+				SetThreadPrecision(this->current_endgame_precision_);
+				this->GetSystem().precision(this->current_endgame_precision_);
+				continue;
+			}
+			if (code != SuccessCode::Success)
+				return code;
+			break;
+		}
+
+		// previous_approximation_ (BCT) holds the first extrapolation, set by SetupSegmentT.
+		RealT norm_prev(0), norm_latest(0);
+		if (this->SecuritySettings().level <= 0)
+			norm_prev = this->GetSystem().InfinityNormOfDehomogenized(this->previous_approximation_);
+
+		this->approximate_error_ = 1;
+
+		// ---- MAIN LOOP: each tracker-touching phase self-heals (migrate-and-retry in mpfr) ----
+		while (this->approximate_error_ > this->FinalTolerance())
+		{
+			auto adv = AdvanceTimeAMP(target_time);
+			if (adv != SuccessCode::Success) { NotifyObservers(EndgameFailure<EmitterType>(*this)); return adv; }
+
+			auto ref = RefineAllSamplesAMP();
+			if (ref != SuccessCode::Success) return ref;
+
+			ComputeAllDerivativesAMP();
+
+			auto ext = ComputeApproxAMP(target_time);   // -> final_approximation_ (BCT)
+			if (ext != SuccessCode::Success) { NotifyObservers(EndgameFailure<EmitterType>(*this)); return ext; }
+
+			Precision(this->previous_approximation_, Precision(this->final_approximation_));
+			this->approximate_error_ = static_cast<NumErrorT>((this->final_approximation_ - this->previous_approximation_).template lpNorm<Eigen::Infinity>());
+			NotifyObservers(ApproximatedRoot<EmitterType>(*this));
+
+			if (this->SecuritySettings().level <= 0)
+			{
+				norm_latest = this->GetSystem().InfinityNormOfDehomogenized(this->final_approximation_);
+				if (norm_latest > this->SecuritySettings().max_norm && norm_prev > this->SecuritySettings().max_norm)
+				{
+					NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
+					return SuccessCode::SecurityMaxNormReached;
+				}
+				norm_prev = norm_latest;
+			}
+
+			this->previous_approximation_ = this->final_approximation_;
+		}
+
+		NotifyObservers(Converged<EmitterType>(*this));
+		return SuccessCode::Success;
+	}
+
+
+	// Pre-loop work + first extrapolation, at one numeric type.  Reports HigherPrecisionNecessary up to
+	// the driver (which restarts setup in mpfr) on escalation.
+	template<typename ComplexT>
+	SuccessCode SetupSegmentT(ComplexT const& start_time, Vec<ComplexT> const& start_point, ComplexT const& target_time)
+	{
+		SetThreadPrecision(Precision(start_point));
+		ClearTimesAndSamples<ComplexT>();
+
+		auto& samples = std::get<SampCont<ComplexT> >(samples_);
+		auto& times   = std::get<TimeCont<ComplexT> >(times_);
+
+		SetRandVec<ComplexT>(static_cast<int>(start_point.size()));
+
+		auto init = this->ComputeInitialSamples(start_time, target_time, start_point, times, samples);
+		if (init != SuccessCode::Success) { NotifyObservers(EndgameFailure<EmitterType>(*this)); return init; }
+		if (this->GetTracker().GetCurrentPrecision() > this->current_endgame_precision_)
+			return SuccessCode::HigherPrecisionNecessary;
+
+		auto ref = this->template RefineAllSamples<ComplexT>(samples, times);
+		if (ref == SuccessCode::HigherPrecisionNecessary || ref == SuccessCode::FailedToConverge)
+			return SuccessCode::HigherPrecisionNecessary;
+		if (ref != SuccessCode::Success) return ref;
+
+		ComputeAllDerivatives<ComplexT>();
+
+		Vec<ComplexT> first_approx;
+		auto ext = ComputeApproximationOfXAtT0<ComplexT>(first_approx, target_time);
+		if (ext != SuccessCode::Success) return ext;
+		this->previous_approximation_ = this->ToBCT(first_approx, this->current_endgame_precision_);
+		return SuccessCode::Success;
+	}
+
+
+	template<typename Dummy = void>
+	SuccessCode AdvanceTimeAMP(BCT const& target_time)
+	{
+		unsigned guard = 0;
+		while (true)
+		{
+			SuccessCode code = (this->current_endgame_precision_==DoublePrecision())
+				? AdvanceTime<complex_dbl>(complex_dbl(target_time))
+				: AdvanceTime<complex_mp>(this->AtActivePrecisionScalar(target_time));
+			if (code == SuccessCode::HigherPrecisionNecessary)
+			{
+				if (this->template EscalateAndMigrate<>(++guard) != SuccessCode::Success) return SuccessCode::HigherPrecisionNecessary;
+				continue;
+			}
+			return code;
+		}
+	}
+
+	template<typename Dummy = void>
+	SuccessCode RefineAllSamplesAMP()
+	{
+		unsigned guard = 0;
+		while (true)
+		{
+			SuccessCode code = (this->current_endgame_precision_==DoublePrecision())
+				? this->template RefineAllSamples<complex_dbl>(std::get<SampCont<complex_dbl> >(samples_), std::get<TimeCont<complex_dbl> >(times_))
+				: this->template RefineAllSamples<complex_mp>(std::get<SampCont<complex_mp> >(samples_), std::get<TimeCont<complex_mp> >(times_));
+			if (code == SuccessCode::HigherPrecisionNecessary || code == SuccessCode::FailedToConverge)
+			{
+				if (this->template EscalateAndMigrate<>(++guard) != SuccessCode::Success) return SuccessCode::HigherPrecisionNecessary;
+				continue;
+			}
+			return code;
+		}
+	}
+
+	template<typename Dummy = void>
+	void ComputeAllDerivativesAMP()
+	{
+		if (this->current_endgame_precision_==DoublePrecision())
+			ComputeAllDerivatives<complex_dbl>();
+		else
+			ComputeAllDerivatives<complex_mp>();
+	}
+
+	template<typename Dummy = void>
+	SuccessCode ComputeApproxAMP(BCT const& target_time)
+	{
+		if (this->current_endgame_precision_==DoublePrecision())
+		{
+			Vec<complex_dbl> r;
+			auto code = ComputeApproximationOfXAtT0<complex_dbl>(r, complex_dbl(target_time));
+			if (code == SuccessCode::Success)
+				this->final_approximation_ = this->ToBCT(r, this->current_endgame_precision_);
+			return code;
+		}
+		else
+		{
+			return ComputeApproximationOfXAtT0<complex_mp>(this->final_approximation_, this->AtActivePrecisionScalar(target_time));
+		}
+	}
+
+
+	// Flavor-specific: cross every PowerSeries container from the complex_dbl slot to complex_mp (or, if
+	// already mpfr, raise its precision uniformly), via the shared AMP-policy Cross* / SetPrecision
+	// helpers.  Called by the base EscalateAndMigrate.
+	template<typename Dummy = void>
+	void MigrateContainersToPrecision(unsigned newprec)
+	{
+		using bertini::Precision;
+		if (this->current_endgame_precision_ == DoublePrecision())
+		{
+			this->CrossTimesUp(times_,       newprec);
+			this->CrossSampsUp(samples_,     newprec);
+			this->CrossSampsUp(derivatives_, newprec);
+			this->CrossVecUp  (rand_vector_, newprec);
+		}
+		else
+		{
+			tracking::adaptive::SetPrecision(std::get<TimeCont<complex_mp> >(times_),       newprec);
+			tracking::adaptive::SetPrecision(std::get<SampCont<complex_mp> >(samples_),     newprec);
+			tracking::adaptive::SetPrecision(std::get<SampCont<complex_mp> >(derivatives_), newprec);
+			auto& rv = std::get<Vec<complex_mp> >(rand_vector_);
+			if (rv.size() > 0) Precision(rv, newprec);
+		}
+		if (this->final_approximation_.size()    > 0) Precision(this->final_approximation_,    newprec);
+		if (this->previous_approximation_.size() > 0) Precision(this->previous_approximation_, newprec);
+		this->GetSystem().precision(newprec);
 	}
 
 

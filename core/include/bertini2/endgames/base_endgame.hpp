@@ -48,6 +48,7 @@
 #include "bertini2/detail/enable_permuted_arguments.hpp"
 
 #include "bertini2/trackers/config.hpp"
+#include "bertini2/trackers/adaptive_precision_utilities.hpp"  // tracking::adaptive::SetPrecision, for the shared container-migration helpers
 #include "bertini2/endgames/config.hpp"
 #include "bertini2/endgames/interpolation.hpp"
 #include "bertini2/endgames/events.hpp"
@@ -132,15 +133,8 @@ protected:
 	mutable unsigned int cycle_number_ = 0;
 	mutable NumErrorT approximate_error_;
 
-	// Adaptive-numeric-type endgame state (AMP only; see RunImplAMP in the Cauchy flavor).
-	// current_endgame_precision_ is the precision the endgame is *currently computing in*:
-	// DoublePrecision() means the hardware-complex_dbl fast lane, higher means the mpfr slot.
-	// adaptive_numeric_type_active_ gates the escalation hooks in the shared phase methods so they
-	// fire ONLY while the double-first driver is orchestrating -- never for fixed precision (where
-	// they are compile-time elided via if constexpr) nor for the AMP-PowerSeries path that stays
-	// all-mpfr this sprint (its RunImplAMP forwards straight to RunImpl<BCT>).
-	mutable unsigned current_endgame_precision_ = DoublePrecision();
-	mutable bool adaptive_numeric_type_active_ = false;
+	// The adaptive-numeric-type state (current_endgame_precision_, adaptive_numeric_type_active_) lives in
+	// the AMP precision policy, AMPEndgame -- the flavors reach it through this-> (it is a base via PrecT).
 
 	BCT start_time_{};   // endgame boundary; set via SetBoundaryTime()
 	BCT target_time_{};  // final target (default 0); set via SetTargetTime()
@@ -283,6 +277,25 @@ public:
 			return code;
 		}
 	}
+
+
+	// EscalateAndMigrate bridges the AMP precision policy (NextEscalatedPrecision and the Cross* helpers,
+	// all in AMPEndgame) with the flavor's container list (its MigrateContainersToPrecision).  It lives
+	// here, not in AMPEndgame, because it needs AsFlavor(), which the precision-policy base lacks.  Member
+	// template so the explicit fixed-precision class instantiations never force-compile it.  Raises the
+	// working precision and migrates every durable container up to it; bounded by a runaway guard.
+	template<typename Dummy = void>
+	SuccessCode EscalateAndMigrate(unsigned guard)
+	{
+		if (guard > 64)
+			return SuccessCode::HigherPrecisionNecessary;
+		unsigned newprec = this->NextEscalatedPrecision();
+		this->AsFlavor().template MigrateContainersToPrecision<>(newprec);
+		this->current_endgame_precision_ = newprec;
+		SetThreadPrecision(newprec);
+		return SuccessCode::Success;
+	}
+
 
 	// note: a ChangePrecision(unsigned) lived here until 2026-06-12; it called
 	// flavor-level ChangePrecision methods that have never existed, so it could

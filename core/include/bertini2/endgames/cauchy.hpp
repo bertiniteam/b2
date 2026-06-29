@@ -1307,13 +1307,13 @@ public:
 		{
 			SuccessCode init_code;
 			if (this->current_endgame_precision_ == DoublePrecision())
-				init_code = RunInitSegmentT<complex_dbl>(complex_dbl(start_time), DowncastToDouble(start_point), complex_dbl(target_time));
+				init_code = RunInitSegmentT<complex_dbl>(complex_dbl(start_time), this->DowncastToDouble(start_point), complex_dbl(target_time));
 			else
-				init_code = RunInitSegmentT<complex_mp>(AtActivePrecisionScalar(start_time), AtActivePrecisionVec(start_point), AtActivePrecisionScalar(target_time));
+				init_code = RunInitSegmentT<complex_mp>(this->AtActivePrecisionScalar(start_time), this->AtActivePrecisionVec(start_point), this->AtActivePrecisionScalar(target_time));
 
 			if (init_code == SuccessCode::HigherPrecisionNecessary)
 			{
-				this->current_endgame_precision_ = NextEscalatedPrecision();
+				this->current_endgame_precision_ = this->NextEscalatedPrecision();
 				SetThreadPrecision(this->current_endgame_precision_);
 				this->GetSystem().precision(this->current_endgame_precision_);
 				continue;
@@ -1388,7 +1388,7 @@ public:
 	{
 		ClearTimesAndSamples<ComplexT>();
 		this->CycleNumber(0);
-		this->previous_approximation_ = ToBCT(start_point, this->current_endgame_precision_);
+		this->previous_approximation_ = this->ToBCT(start_point, this->current_endgame_precision_);
 
 		auto init_success = GetIntoEGZone(start_time, start_point, target_time);
 		if (init_success != SuccessCode::Success)
@@ -1411,7 +1411,7 @@ public:
 				Vec<complex_dbl> r;
 				code = ComputeCauchyApproximationOfXAtT0<complex_dbl>(r);
 				if (code == SuccessCode::Success)
-					this->final_approximation_ = ToBCT(r, this->current_endgame_precision_);
+					this->final_approximation_ = this->ToBCT(r, this->current_endgame_precision_);
 			}
 			else
 			{
@@ -1420,7 +1420,7 @@ public:
 
 			if (code == SuccessCode::HigherPrecisionNecessary || code == SuccessCode::FailedToConverge)
 			{
-				if (EscalateAndMigrate(++guard) != SuccessCode::Success)
+				if (this->template EscalateAndMigrate<>(++guard) != SuccessCode::Success)
 					return SuccessCode::HigherPrecisionNecessary;
 				continue;
 			}
@@ -1440,11 +1440,11 @@ public:
 		{
 			SuccessCode code = (this->current_endgame_precision_ == DoublePrecision())
 				? AdvanceTime<complex_dbl>(complex_dbl(target_time))
-				: AdvanceTime<complex_mp>(AtActivePrecisionScalar(target_time));
+				: AdvanceTime<complex_mp>(this->AtActivePrecisionScalar(target_time));
 
 			if (code == SuccessCode::HigherPrecisionNecessary)
 			{
-				if (EscalateAndMigrate(++guard) != SuccessCode::Success)
+				if (this->template EscalateAndMigrate<>(++guard) != SuccessCode::Success)
 					return SuccessCode::HigherPrecisionNecessary;
 				continue;
 			}
@@ -1465,11 +1465,11 @@ public:
 		{
 			SuccessCode code = (this->current_endgame_precision_ == DoublePrecision())
 				? ComputeCauchySamples<complex_dbl>(complex_dbl(target_time))
-				: ComputeCauchySamples<complex_mp>(AtActivePrecisionScalar(target_time));
+				: ComputeCauchySamples<complex_mp>(this->AtActivePrecisionScalar(target_time));
 
 			if (code == SuccessCode::HigherPrecisionNecessary)
 			{
-				if (EscalateAndMigrate(++guard) != SuccessCode::Success)
+				if (this->template EscalateAndMigrate<>(++guard) != SuccessCode::Success)
 					return SuccessCode::HigherPrecisionNecessary;
 				continue;
 			}
@@ -1478,60 +1478,24 @@ public:
 	}
 
 
-	// Choose the next (higher) working precision: at least LowestMultiplePrecision(), following the
-	// tracker's authority if it climbed higher, and strictly above the current precision.
-	template<typename Dummy = void>
-	unsigned NextEscalatedPrecision() const
-	{
-		using std::max;
-		unsigned from_tracker = this->GetTracker().GetCurrentPrecision();
-		unsigned newprec = max(static_cast<unsigned>(LowestMultiplePrecision()), from_tracker);
-		if (newprec <= this->current_endgame_precision_)
-			newprec = this->current_endgame_precision_ + PrecisionIncrement();
-		return newprec;
-	}
-
-
-	// Raise the working precision and migrate every durable container up to it.  Bounded by a runaway
-	// guard so a pathological path cannot loop forever; exceeding it surfaces as a genuine failure.
-	template<typename Dummy = void>
-	SuccessCode EscalateAndMigrate(unsigned guard)
-	{
-		if (guard > 64)
-			return SuccessCode::HigherPrecisionNecessary;
-		unsigned newprec = NextEscalatedPrecision();
-		MigrateContainersToPrecision(newprec);   // reads current_endgame_precision_ to pick dbl-cross vs mp-raise
-		this->current_endgame_precision_ = newprec;
-		SetThreadPrecision(newprec);
-		return SuccessCode::Success;
-	}
-
-
-	// The one piece with no pre-existing analog: cross every endgame container from the complex_dbl slot
-	// to the complex_mp slot (or, if already mpfr, raise its precision uniformly).  Widen-only by
-	// default -- retained samples were already tracked/refined to final_tolerance (pure-(i)/B).
+	// Flavor-specific: cross every Cauchy container from the complex_dbl slot to complex_mp (or, if
+	// already mpfr, raise its precision uniformly), via the shared base Cross* / SetPrecision helpers.
+	// Widen-only by default -- retained samples were already tracked/refined to final_tolerance
+	// (pure-(i)/B).  Called by the base EscalateAndMigrate.
 	template<typename Dummy = void>
 	void MigrateContainersToPrecision(unsigned newprec)
 	{
 		using bertini::Precision;
 		if (this->current_endgame_precision_ == DoublePrecision())
 		{
-			CrossTimesUp(pseg_times_,     newprec);
-			CrossSampsUp(pseg_samples_,   newprec);
-			CrossTimesUp(cauchy_times_,   newprec);
-			CrossSampsUp(cauchy_samples_, newprec);
-			{
-				auto& pd = std::get<Vec<complex_dbl>>(c_over_k_probe_);
-				auto& pm = std::get<Vec<complex_mp>>(c_over_k_probe_);
-				pm.resize(pd.size());
-				for (Eigen::Index i = 0; i < pd.size(); ++i) pm(i) = complex_mp(pd(i));
-				if (pm.size() > 0) Precision(pm, newprec);
-				pd.resize(0);
-			}
+			this->template CrossTimesUp<>(pseg_times_,     newprec);
+			this->template CrossSampsUp<>(pseg_samples_,   newprec);
+			this->template CrossTimesUp<>(cauchy_times_,   newprec);
+			this->template CrossSampsUp<>(cauchy_samples_, newprec);
+			this->template CrossVecUp<>  (c_over_k_probe_, newprec);
 		}
 		else
 		{
-			// already mpfr -> raise uniformly with the existing deque precision helpers.
 			tracking::adaptive::SetPrecision(std::get<TimeCont<complex_mp>>(pseg_times_),     newprec);
 			tracking::adaptive::SetPrecision(std::get<SampCont<complex_mp>>(pseg_samples_),   newprec);
 			tracking::adaptive::SetPrecision(std::get<TimeCont<complex_mp>>(cauchy_times_),   newprec);
@@ -1551,63 +1515,6 @@ public:
 			if (!cau_s.empty())
 				this->template RefineAllSamples<complex_mp>(cau_s, cau_t);
 		}
-	}
-
-
-	// --- small numeric-type conversion helpers used by the driver above ---
-
-	// The complex_dbl -> complex_mp element crossing is the same one the AMP tracker performs
-	// (amp_tracker.hpp CopyToCurrentSpace / CopySolution); there is no library Vec-cast for these
-	// types.  We do the type crossing element-wise, then hand the deque's precision to the existing
-	// SetPrecision helper rather than re-implementing per-element precision setting.
-	template<typename Dummy = void>
-	void CrossTimesUp(TupleOfTimes& times, unsigned newprec)
-	{
-		auto& from = std::get<TimeCont<complex_dbl>>(times);
-		auto& to   = std::get<TimeCont<complex_mp>>(times);
-		to.clear();
-		for (auto const& t : from) to.push_back(complex_mp(t));
-		from.clear();
-		tracking::adaptive::SetPrecision(to, newprec);
-	}
-
-	template<typename Dummy = void>
-	void CrossSampsUp(TupleOfSamps& samps, unsigned newprec)
-	{
-		auto& from = std::get<SampCont<complex_dbl>>(samps);
-		auto& to   = std::get<SampCont<complex_mp>>(samps);
-		to.clear();
-		for (auto const& v : from)
-		{
-			Vec<complex_mp> w(v.size());
-			for (Eigen::Index i = 0; i < v.size(); ++i) w(i) = complex_mp(v(i));
-			to.push_back(std::move(w));
-		}
-		from.clear();
-		tracking::adaptive::SetPrecision(to, newprec);
-	}
-
-	static Vec<complex_dbl> DowncastToDouble(Vec<BCT> const& v)
-	{
-		Vec<complex_dbl> out(v.size());
-		for (Eigen::Index i = 0; i < v.size(); ++i) out(i) = complex_dbl(v(i));
-		return out;
-	}
-
-	BCT AtActivePrecisionScalar(BCT const& x) const
-	{ using bertini::Precision; BCT r = x; Precision(r, this->current_endgame_precision_); return r; }
-
-	Vec<BCT> AtActivePrecisionVec(Vec<BCT> const& v) const
-	{ using bertini::Precision; Vec<BCT> r = v; if (r.size() > 0) Precision(r, this->current_endgame_precision_); return r; }
-
-	template<typename ComplexT>
-	static Vec<BCT> ToBCT(Vec<ComplexT> const& v, unsigned prec)
-	{
-		using bertini::Precision;
-		Vec<BCT> out(v.size());
-		for (Eigen::Index i = 0; i < v.size(); ++i) out(i) = BCT(v(i));
-		if (out.size() > 0) Precision(out, prec);
-		return out;
 	}
 
 };
