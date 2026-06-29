@@ -93,6 +93,8 @@ void ExposeSolutionMetaData(std::string const& class_name){
 		"The time value at which precision first increased on this path (adaptive precision only).")
 	.def_readwrite("max_precision_used",&MDT::max_precision_used,
 		"The highest precision (in digits) used while tracking this path (adaptive precision only).")
+	.def_readwrite("path_time_seconds",&MDT::path_time_seconds,
+		"Wall-clock time (seconds) to execute this whole path: pre-endgame tracking plus endgame.")
 	.def_readwrite("pre_endgame_success",&MDT::pre_endgame_success,
 		"The SuccessCode from tracking this path up to the endgame boundary. 0 means Success.")
 	.def_readwrite("condition_number",&MDT::condition_number,

@@ -122,6 +122,9 @@ struct FullPathResult
 	ComplexT      time_of_first_prec_increase;
 	unsigned      max_precision_used             = 0;
 
+	// wall-clock time to execute the whole path (pre-endgame + endgame), in seconds
+	double        path_time_seconds              = 0;
+
 	template<class Archive>
 	void serialize(Archive& ar, unsigned const)
 	{
@@ -142,6 +145,7 @@ struct FullPathResult
 		ar & precision_changed;
 		ar & time_of_first_prec_increase;
 		ar & max_precision_used;
+		ar & path_time_seconds;
 	}
 };
 

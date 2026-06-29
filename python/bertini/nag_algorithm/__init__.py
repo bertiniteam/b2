@@ -256,6 +256,7 @@ _SOLUTION_METADATA_FIELDS = (
     'accuracy_estimate', 'accuracy_estimate_user_coords',
     'cycle_num', 'endgame_success', 'pre_endgame_success', 'final_time_used',
     'precision_changed', 'max_precision_used', 'time_of_first_prec_increase',
+    'path_time_seconds',
 )
 
 
