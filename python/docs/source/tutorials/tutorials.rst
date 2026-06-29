@@ -30,3 +30,6 @@
    tracking_nonsingular
    manual_endgame_usage
    observers_and_path_data
+   homotopy_cartoon_from_real_data
+   classic_continuation_cartoon
+   bertini1_vs_bertini2_timing

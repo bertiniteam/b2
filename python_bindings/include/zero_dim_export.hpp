@@ -324,7 +324,15 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 template<typename TrackerT, typename EndgameT, typename SystemT, typename StartSystemT>
 void ExportZeroDimSpecific(std::string const& class_name){
 	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, SystemT, StartSystemT>;
-	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(), init<SystemT>())
+	// with_custodian_and_ward<1,2>: keep the Python System (arg 2) alive as long as the solver
+	// (self, arg 1).  The solver's internal system is a SHALLOW copy that shares the function-tree
+	// nodes' shared_ptrs with the user's System; those shared_ptrs carry boost.python deleters tied
+	// to the Python node wrappers, so if the user passes a temporary System and lets it die, the
+	// endgame's Differentiate() drops a node and the deleter touches an already-freed Python object
+	// -> crash.  Tying the System's lifetime to the solver makes the documented `ZeroDim(sys)` usage
+	// safe even when the caller keeps no reference to `sys` (e.g. building it in a helper function).
+	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(),
+		init<SystemT>()[with_custodian_and_ward<1, 2>()])
 	.def(ZDVisitor<ZeroDimT>())
 	;
 }
@@ -368,9 +376,13 @@ inline void ExportUserStartSystem(){
 template<typename TrackerT, typename EndgameT>
 void ExportZeroDimUserHomotopy(std::string const& class_name){
 	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System, start_system::User, policy::RefToGiven>;
+	// RefToGiven: this solver holds REFERENCES to all three given systems, so each must outlive the
+	// solver.  Chain with_custodian_and_ward to keep target (arg 2), start (arg 3) and homotopy
+	// (arg 4) alive as long as the solver (self, arg 1).
 	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(),
 		init<System const&, start_system::User const&, System const&>(
-			(boost::python::arg("target"), boost::python::arg("start"), boost::python::arg("homotopy"))))
+			(boost::python::arg("target"), boost::python::arg("start"), boost::python::arg("homotopy")))
+			[with_custodian_and_ward<1, 2, with_custodian_and_ward<1, 3, with_custodian_and_ward<1, 4> > >()])
 	.def(ZDVisitor<ZeroDimT>())
 	;
 }

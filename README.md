@@ -60,6 +60,10 @@ pip install bertini2
 
 Once it's installed, you `import bertini` (not `import bertini2`!)
 
+Installing the wheel also puts the classic blackbox command-line solver on your PATH as
+`bertini2` (threads-only -- run `bertini2 --help`).  For MPI / multi-rank cluster
+parallelism, build the CLI from source.
+
 * Linux: Python 3.10-3.14
 * MacOS (Apple Silicon): Python 3.10-3.14
 * MacOS (Intel): not currently supported
