@@ -33,10 +33,47 @@
 
 #include "bertini2/system/system.hpp"
 
+#include <functional>
+#include <memory>
 
-namespace bertini 
+
+namespace bertini
 {
 	namespace start_system{
+
+		// forward declare so the StartSystemFactory alias / MakeStartFactory below can be defined
+		// here (they only need the StartSystem base, declared just below).
+		class StartSystem;
+
+		/**
+		\brief A factory that builds a start system from a (prepared) target system.
+
+		The zero-dim algorithm holds its start system polymorphically through the StartSystem base;
+		the construction site (which knows the concrete start-system type) hands ZeroDimSolver one of
+		these factories, which it calls on the homogenized/patched target to mint the start system.
+		Adding a new start system therefore costs no new solver instantiation -- just a factory.
+		*/
+		template<typename SystemType>
+		using StartSystemFactory =
+			std::function<std::shared_ptr<StartSystem>(SystemType const&)>;
+
+		/**
+		\brief Build a StartSystemFactory that mints a concrete start system from the target.
+
+		The single place a concrete start-system type is named when wiring up a ZeroDimSolver.
+		`MakeStartFactory<start_system::TotalDegree>()` yields a factory that `make_shared`s a
+		TotalDegree from the (prepared) target.  Used by the blackbox switch ladder, the python
+		bindings, ZeroDimSolver's default, and the C++ tests.  This template is only instantiated
+		where the concrete StartType is complete, so start_base.hpp need not include the concrete
+		start systems.
+		*/
+		template<typename StartType, typename SystemType = bertini::System>
+		StartSystemFactory<SystemType> MakeStartFactory()
+		{
+			return [](SystemType const& target) -> std::shared_ptr<StartSystem> {
+				return std::make_shared<StartType>(target);
+			};
+		}
 
 		/**
 		\brief Abstract base class for other start systems.

@@ -323,20 +323,20 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 
 // Map a Start enum choice to a clone factory -- the one place a concrete start-system type is named
 // on the binding side.  User is rejected: it needs the user_homotopy path (RefToGiven).
-inline policy::StartSystemFactory<System> StartFactoryFor(blackbox::type::Start which)
+inline start_system::StartSystemFactory<System> StartFactoryFor(blackbox::type::Start which)
 {
 	switch (which)
 	{
 		case blackbox::type::Start::MHom:
-			return policy::MakeStartFactory<start_system::MHomogeneous>();
+			return start_system::MakeStartFactory<start_system::MHomogeneous>();
 		case blackbox::type::Start::RootsOfUnity:
-			return policy::MakeStartFactory<start_system::RootsOfUnity>();
+			return start_system::MakeStartFactory<start_system::RootsOfUnity>();
 		case blackbox::type::Start::User:
 			throw std::runtime_error("the User start system is not a clone-owned start; build the "
 			                         "homotopy with nag_algorithm.user_homotopy(...) instead");
 		case blackbox::type::Start::TotalDegree:
 		default:
-			return policy::MakeStartFactory<start_system::TotalDegree>();
+			return start_system::MakeStartFactory<start_system::TotalDegree>();
 	}
 }
 
@@ -357,7 +357,7 @@ inline void ExportStartSystemEnum()
 // these factories as the solver constructor's second argument.
 inline void ExportStartSystemFactory()
 {
-	class_<policy::StartSystemFactory<System>>("StartSystemFactory",
+	class_<start_system::StartSystemFactory<System>>("StartSystemFactory",
 		"Opaque factory that builds a start system for a ZeroDim solver.  Get one from "
 		"start_system_factory(StartSystemType.X) and pass it as the solver's second constructor arg.",
 		no_init);
@@ -385,7 +385,7 @@ void ExportZeroDimSpecific(std::string const& class_name){
 	// a non-default start (e.g. MHomogeneous) -- the factory is a value, copied into the solver.
 	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(),
 		init<System const&>()[with_custodian_and_ward<1, 2>()])
-	.def(init<System const&, policy::StartSystemFactory<System> const&>(
+	.def(init<System const&, start_system::StartSystemFactory<System> const&>(
 			(boost::python::arg("system"), boost::python::arg("start_factory")))
 			[with_custodian_and_ward<1, 2>()])
 	.def(ZDVisitor<ZeroDimT>())
@@ -397,7 +397,7 @@ void ExportZeroDimSpecific(std::string const& class_name){
 //
 // This is the SAME ZeroDim template (same Solve / pre-endgame / midpath / endgame /
 // post-processing), instantiated with start_system::User (start points come from the supplied
-// list) and policy::RefToGiven (the homotopy is taken as-is, not formed).  Nothing about the
+// list) and a user-supplied homotopy (taken as-is, not formed).  Nothing about the
 // solve loop is re-implemented here -- this only registers the class + a constructor.
 
 // Build a start_system::User from a target system + a Python list of start-point vectors

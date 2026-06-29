@@ -240,7 +240,6 @@ set(nag_algorithms_headers
 set(nag_algorithms_common_headers
     include/bertini2/nag_algorithms/common/algorithm_base.hpp
     include/bertini2/nag_algorithms/common/config.hpp
-    include/bertini2/nag_algorithms/common/policies.hpp
 )
 
 set(nag_datatypes_headers

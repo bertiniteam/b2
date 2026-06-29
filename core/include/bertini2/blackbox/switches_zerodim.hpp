@@ -80,7 +80,7 @@ inline type::Start InferStartType(System const& sys)
 
 
 // The concrete start-system type appears only at the construction site, via
-// policy::MakeStartFactory<StartType>() (see common/policies.hpp); ZeroDim downstream is a
+// start_system::MakeStartFactory<StartType>() (see start_base.hpp); ZeroDim downstream is a
 // single type that holds the start system polymorphically.  Add a start system => add a
 // case in ZeroDimSpecifyStart, no new ZeroDim instantiation.
 
@@ -128,15 +128,15 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyTracker(ZeroDimRT const& rt
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyStart(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
-	// append the start-system factory to the argument pack; CloneGiven consumes (target, factory).
+	// append the start-system factory to the argument pack; ZeroDimSolver consumes (target, factory).
 	switch (rt.start)
 	{
 		case type::Start::TotalDegree:
-			return ZeroDimSpecifyTracker(rt, ts..., policy::MakeStartFactory<start_system::TotalDegree>());
+			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegree>());
 		case type::Start::RootsOfUnity:
-			return ZeroDimSpecifyTracker(rt, ts..., policy::MakeStartFactory<start_system::RootsOfUnity>());
+			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::RootsOfUnity>());
 		case type::Start::MHom:
-			return ZeroDimSpecifyTracker(rt, ts..., policy::MakeStartFactory<start_system::MHomogeneous>());
+			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::MHomogeneous>());
 		case type::Start::User:
 			throw std::runtime_error("trying to use generic zero dim with user homotopy.  use the specific UserBlaBla instead");
 	}

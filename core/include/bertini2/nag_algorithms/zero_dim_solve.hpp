@@ -43,7 +43,7 @@
 #include "bertini2/nag_algorithms/common/algorithm_base.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
 #include "bertini2/nag_algorithms/events.hpp"
-#include "bertini2/nag_algorithms/common/policies.hpp"
+#include "bertini2/system/start_base.hpp"   // start_system::StartSystem + StartSystemFactory / MakeStartFactory
 #include "bertini2/parallel.hpp"
 #include <chrono>
 #include <mutex>
@@ -52,6 +52,11 @@
 
 
 namespace bertini {
+
+	// forward-declare the interim default start system so ZeroDimSolver's default factory argument
+	// (MakeStartFactory<RootsOfUnity>) can name it; the concrete type rides in via start_systems.hpp
+	// at every call site that actually constructs a ZeroDimSolver.
+	namespace start_system { class RootsOfUnity; }
 
 	namespace algorithm {
 
@@ -471,7 +476,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			// --- system storage ---------------------------------------------------------------
 			// The engine holds the homotopy, start system, and target by REFERENCE; the caller
 			// (a user, or ZeroDimSolver) owns them and guarantees they outlive the engine.  This
-			// is the old policy::RefToGiven layout, now the engine's only layout.
+			// references, not owned: the engine never forms its systems (ZeroDimSolver / the user does).
 		protected:
 			std::reference_wrapper<const SystemType>        target_system_;
 			std::reference_wrapper<const StartSystemBaseT>  start_system_;
@@ -1891,7 +1896,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 		Constructed as the FIRST base of ZeroDimSolver -- before the HomotopySolver engine base, which
 		holds references into these systems -- so the homotopy is fully formed before the engine reads
-		it.  This is the old policy::CloneGiven, folded in, plus the feasibility / rank checks the
+		it.  This holds the system-building half of the algorithm, plus the feasibility / rank checks the
 		algorithm owns.  Members carry an `owned_` prefix so they do not collide with the engine base's
 		reference members.
 		*/
@@ -1899,7 +1904,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 		struct OwnedHomotopy
 		{
 			using StartSystemBaseT = bertini::start_system::StartSystem;
-			using FactoryT = bertini::policy::StartSystemFactory<SystemType>;
+			using FactoryT = bertini::start_system::StartSystemFactory<SystemType>;
 
 			OwnedHomotopy(SystemType const& target, FactoryT factory, std::string const& path_variable_name)
 			 : owned_target_(Clone(target)), owned_factory_(std::move(factory))
@@ -1983,7 +1988,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			defaults to RootsOfUnity (the interim default start system).
 			*/
 			ZeroDimSolver(SystemType const& target,
-			              FactoryT factory = bertini::policy::MakeStartFactory<bertini::start_system::RootsOfUnity, SystemType>())
+			              FactoryT factory = bertini::start_system::MakeStartFactory<bertini::start_system::RootsOfUnity, SystemType>())
 			 : OwnedT(target, std::move(factory), ZeroDimConfig{}.path_variable_name),
 			   EngineT(OwnedT::BuiltTarget(), OwnedT::BuiltStart(), OwnedT::BuiltHomotopy())
 			{}

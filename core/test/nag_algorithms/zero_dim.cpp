@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 // Run ZeroDim from a USER-CONSTRUCTED homotopy and a GIVEN list of start points -- the
 // parameter-homotopy workflow.  Crucially this reuses the ENTIRE ZeroDim solve pipeline
 // (pre-endgame tracking, the midpath check, the endgame, post-processing) UNCHANGED: it is the
-// same ZeroDim class template, merely instantiated with start_system::User (start points come
-// from the supplied list, not generated) and policy::RefToGiven (the homotopy is taken as-is,
+// same engine, merely driven from start_system::User (start points come
+// from the supplied list, not generated) and a user-supplied homotopy (taken as-is,
 // not formed by homogenizing + coupling a start system).
 //
 // Parameter homotopy H(x,t) = x^2 - (9 - 5 t).  At t = 1 the roots are +/-2 (the given start
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 
 	auto zd = algorithm::ZeroDimSolver<AMPTracker,
 	                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
-	                             decltype(sys)>(sys, bertini::policy::MakeStartFactory<bertini::start_system::MHomogeneous>());
+	                             decltype(sys)>(sys, bertini::start_system::MakeStartFactory<bertini::start_system::MHomogeneous>());
 	zd.DefaultSetup();
 	zd.Solve();
 
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
 
 	auto zd = algorithm::ZeroDimSolver<AMPTracker,
 	                             bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
-	                             decltype(sys)>(sys, bertini::policy::MakeStartFactory<bertini::start_system::MHomogeneous>());
+	                             decltype(sys)>(sys, bertini::start_system::MakeStartFactory<bertini::start_system::MHomogeneous>());
 	zd.DefaultSetup();
 
 	System const& H = zd.Homotopy();          // the block-composed blend homotopy
