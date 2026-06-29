@@ -18,7 +18,7 @@ Take the unit circle and the hyperbola :math:`xy = 1`
 
     import numpy as np
     import bertini as bertini
-    from bertini.nag_algorithm import ZeroDim
+    from bertini.nag_algorithm import ZeroDimSolver
 
     x, y = bertini.Variable('x'), bertini.Variable('y')
 
@@ -32,15 +32,15 @@ Newton solver returns nothing useful.  But over the complex numbers they meet in
 :math:`2 \times 2 = 4` points (the product of the degrees -- the total-degree Bézout
 number).
 
-Solve, and collect the finite solutions.  ``ZeroDim`` is a small factory over the bound
-solver classes: ``ZeroDim(sys)`` is the Cauchy endgame in adaptive precision with a total-degree
+Solve, and collect the finite solutions.  ``ZeroDimSolver`` is a small factory over the bound
+solver classes: ``ZeroDimSolver(sys)`` is the Cauchy endgame in adaptive precision with a total-degree
 start system, and you pick the rest with strings -- ``endgame=`` (``'cauchy'`` / ``'powerseries'``),
 ``mptype=`` (``'double'`` / ``'multiple'`` / ``'adaptive'``), and ``startsystem=`` (``'totaldegree'``
 / ``'mhom'``).  Here we ask for adaptive precision explicitly so ill-conditioned paths still succeed:
 
 .. testcode::
 
-    solver = ZeroDim(sys, mptype='adaptive')
+    solver = ZeroDimSolver(sys, mptype='adaptive')
     solver.solve()
 
     good = solver.finite_solutions()      # successful, finite endpoints -- the actual points

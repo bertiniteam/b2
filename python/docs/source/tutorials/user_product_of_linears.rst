@@ -112,12 +112,12 @@ blend block instead:
     gamma = linalg.coefficient(multiprec.Complex('0.6', '0.8'))   # exact, off the real axis
     H = nag_algorithm.blend_homotopy(target, start, gamma=gamma)
 
-    solver = nag_algorithm.user_homotopy(H, start_points, target)
+    solver = nag_algorithm.HomotopySolver(H, start_points, target)
     solver.solve()
     solutions = solver.all_solutions()
 
 At :math:`t=1` the homotopy is :math:`\gamma\,\text{start}`, so our four points are its roots; at
-:math:`t=0` it is the target.  :func:`~bertini.nag_algorithm.user_homotopy` runs the full zero-dim
+:math:`t=0` it is the target.  :func:`~bertini.nag_algorithm.HomotopySolver` runs the full zero-dim
 pipeline -- pre-endgame tracking, the midpath check, the endgame, post-processing -- on the
 homotopy and start points you supplied, rather than ones it generated.
 

@@ -7,11 +7,11 @@ namespace bertini{
 
 		void ExportZDAMP(){
 			using TrackerT = bertini::tracking::AMPTracker;
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimPowerSeriesAdaptivePrecision");
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimCauchyAdaptivePrecision");
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimSolverPowerSeriesAdaptivePrecision");
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimSolverCauchyAdaptivePrecision");
 
-			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimPowerSeriesAdaptivePrecisionUserHomotopy");
-			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimCauchyAdaptivePrecisionUserHomotopy");
+			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("HomotopySolverPowerSeriesAdaptivePrecision");
+			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("HomotopySolverCauchyAdaptivePrecision");
 		}
 
 }} // namespaces

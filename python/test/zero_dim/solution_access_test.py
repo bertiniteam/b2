@@ -1,4 +1,4 @@
-"""Solution-access ergonomics on ZeroDim: all_solutions / infinite_solutions / to_dataframe.
+"""Solution-access ergonomics on ZeroDimSolver: all_solutions / infinite_solutions / to_dataframe.
 
 These are binding-layer / Python-sugar interface tests (the numerical correctness of the solve
 itself is gated by the C++ suite).  The system {x*y - 1, x - 1} has Bezout number 2 but exactly
@@ -11,7 +11,7 @@ import sys
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDim
+from bertini.nag_algorithm import ZeroDimSolver
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def two_circles_solver():
     sys.add_function(x**2 + y**2 - 1)
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    solver = ZeroDim(sys)
+    solver = ZeroDimSolver(sys)
     solver.solve()
     return solver
 
@@ -35,7 +35,7 @@ def one_finite_one_infinite_solver():
     sys.add_function(x * y - 1)
     sys.add_function(x - 1)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    solver = ZeroDim(sys)
+    solver = ZeroDimSolver(sys)
     solver.solve()
     return solver
 
@@ -46,9 +46,9 @@ def test_all_solutions_is_the_accessor(two_circles_solver):
     assert len(two_circles_solver.all_solutions()) == 2
 
 
-def test_old_solutions_name_is_gone(two_circles_solver):
-    """The rename is a hard break: the old name must not silently still work."""
-    assert not hasattr(two_circles_solver, 'solutions')
+def test_solutions_is_finite_by_default(two_circles_solver):
+    # solutions() is the filtered getter: finite genuine solutions by default (here all 2 are finite).
+    assert len(two_circles_solver.solutions()) == 2
 
 
 # --- infinite_solutions: the at-infinity complement of finite_solutions ---
@@ -119,7 +119,7 @@ def four_root_solver():
     sys_.add_function(x * x - 1)
     sys_.add_function(y * y - 1)
     sys_.add_variable_group(pb.VariableGroup([x, y]))
-    solver = ZeroDim(sys_)
+    solver = ZeroDimSolver(sys_)
     solver.solve()
     return solver
 
@@ -165,7 +165,7 @@ def multiplicity_solver():
     sys_.add_function(x * x)
     sys_.add_function(y * y)
     sys_.add_variable_group(pb.VariableGroup([x, y]))
-    solver = ZeroDim(sys_)
+    solver = ZeroDimSolver(sys_)
     solver.solve()
     return solver
 

@@ -6,7 +6,7 @@ solver.report().
 """
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDim
+from bertini.nag_algorithm import ZeroDimSolver
 
 
 def _one_var_solver(build):
@@ -14,7 +14,7 @@ def _one_var_solver(build):
     sys = pb.System()
     sys.add_variable_group(pb.VariableGroup([x]))
     sys.add_function(build(x))
-    s = ZeroDim(sys, mptype='double')
+    s = ZeroDimSolver(sys, mptype='double')
     s.solve()
     return s
 

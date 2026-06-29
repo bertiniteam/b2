@@ -54,3 +54,7 @@ Each ADR follows the template:
 | [0034](0034-tiered-slp-arithmetic.md) | SLP evaluates in the narrowest sufficient numeric tier (integer<real<complex), orthogonal to precision; widen only when an op demands it; measurement-gated | Core / SLP |
 | [0035](0035-slp-eval-is-allocation-free.md) | The SLP eval loop is allocation-free — lower integer powers to multiplies (exp-by-squaring), fold differentiated exponents to literals, no by-value temporaries; ~10x faster mp eval, 0 allocs/eval ≤256 digits | Core / SLP / performance |
 | [0036](0036-cli-emits-bertini1-compatible-solution-files.md) | The zero-dim CLI emits Bertini 1.7-compatible machine-readable solution files (finite/real_finite/nonsingular/singular/raw_solutions, count-led); machine-readable parity, not byte-equality | Core / blackbox / IO |
+| [0037](0037-cauchy-endgame-securitylevel-guard-inverted.md) | The Cauchy endgame's SecurityLevel guard was inverted (diverging paths ground at escalating precision) | Core / endgames |
+| [0038](0038-amp-criterion-b-uses-newton-residual-not-size-proportion.md) | AMP Criterion B (cost model) must use the latest Newton residual, not size_proportion | Numerics / trackers |
+| [0039](0039-zerodim-binding-keeps-system-alive.md) | The Python solver binding must keep the given System alive (custodian-and-ward) | Python bindings |
+| [0040](0040-split-zerodimsolver-homotopysolver.md) | Split ZeroDim into HomotopySolver (continuation engine) + ZeroDimSolver (algorithm); retire the system-management policy | Core / nag_algorithms |

@@ -51,7 +51,7 @@ def solve(seed, resolve_attempts, tol=1e-4):
     boundary; 0 means "detect and report only".  Returns (report, distinct_finite_count).
     """
     pb.random.set_random_seed(seed)
-    solver = pb.nag_algorithm.ZeroDimCauchyDoublePrecisionTotalDegree(cyclic_system(CYCLIC_N))
+    solver = pb.nag_algorithm.ZeroDimSolver(cyclic_system(CYCLIC_N), endgame='cauchy', mptype='double', startsystem='rootsofunity')
 
     # The deliberate culprit: a first-order predictor.
     solver.get_tracker().predictor(pb.tracking.Predictor.Euler)

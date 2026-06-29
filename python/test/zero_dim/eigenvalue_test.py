@@ -21,7 +21,7 @@ import pytest
 
 import bertini as pb
 from bertini import linalg
-from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionMHomogeneous
+from bertini.nag_algorithm import ZeroDimSolver
 
 OK = int(pb.tracking.SuccessCode.Success)
 
@@ -69,7 +69,7 @@ def _recovered_eigenvalues(solver):
 def test_symmetric_3x3_eigenvalues_match_numpy(make_system):
     A = np.array([[2, 1, 0], [1, 3, 1], [0, 1, 4]])  # distinct real eigenvalues
 
-    solver = ZeroDimCauchyAdaptivePrecisionMHomogeneous(make_system(A))
+    solver = ZeroDimSolver(make_system(A), endgame='cauchy', mptype='adaptive', startsystem='mhom')
     solver.solve()
 
     got = _recovered_eigenvalues(solver)

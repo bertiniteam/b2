@@ -40,7 +40,6 @@
 
 #include "bertini2/nag_algorithms/common/algorithm_base.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
-#include "bertini2/nag_algorithms/common/policies.hpp"
 
 #include "bertini2/nag_datatypes/numerical_irreducible_decomposition.hpp"
 
@@ -56,12 +55,12 @@ namespace bertini {
 forward declare of the NumericalIrreducibleDecomposition algorithm.
 
 Unlike ZeroDim, NID has no start system -- the regenerative cascade is a
-fundamentally different way of solving a polynomial system -- so it is managed by
-a single-system management policy, and carries no StartSystem template parameter.
+fundamentally different way of solving a polynomial system -- so it carries no
+StartSystem template parameter.  It owns a cloned target system directly (no
+system-management policy: this is placeholder scaffolding whose Solve() throws).
 */
 template<	typename TrackerType, typename EndgameType,
-			typename SystemType = System,
-			template<typename> class SystemManagementP = policy::CloneTarget >
+			typename SystemType = System >
 struct NumericalIrreducibleDecomposition;
 
 
@@ -73,9 +72,8 @@ The NeededConfigs typelist is what drives the (reusable) Python config interface
 the ConfiguredVisitor reflects over exactly these types.
 */
 template<	typename TrackerType, typename EndgameType,
-			typename SystemType,
-			template<typename> class SystemManagementP >
-struct AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType, SystemManagementP> >
+			typename SystemType >
+struct AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >
 {
 	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
 	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
@@ -107,14 +105,12 @@ NeededConfigs typelist) and observation, and exposes a Tracker and Endgame, so i
 slots into the existing Python config interface with no extra plumbing.
 */
 template<	typename TrackerType, typename EndgameType,
-			typename SystemType,
-			template<typename> class SystemManagementP >
+			typename SystemType >
 struct NumericalIrreducibleDecomposition :
 					public virtual AnyNID,
 					public Observable,
-					public SystemManagementP<SystemType>,
 					public detail::Configured<
-						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType, SystemManagementP> >::NeededConfigs>
+						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >::NeededConfigs>
 {
 	// these usings are for getters in python
 	using TrackerT = TrackerType;
@@ -126,10 +122,8 @@ struct NumericalIrreducibleDecomposition :
 	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
 	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
 
-	using SystemManagementPolicy = SystemManagementP<SystemType>;
-
 	using Config = detail::Configured<
-						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType, SystemManagementP> >::NeededConfigs>;
+						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >::NeededConfigs>;
 	using Config::Get;
 
 
@@ -140,7 +134,9 @@ struct NumericalIrreducibleDecomposition :
 
 	using ResultT = nag_datatype::NumericalIrreducibleDecomposition<BaseComplexT>;
 
-	using SystemManagementPolicy::TargetSystem;
+	// NID owns a cloned target system directly (no policy).
+	const SystemType& TargetSystem() const { return target_system_; }
+	SystemType&       TargetSystem()       { return target_system_; }
 
 
 /// constructors
@@ -149,7 +145,7 @@ struct NumericalIrreducibleDecomposition :
 	Construct a NumericalIrreducibleDecomposition algorithm object from the system to be decomposed.
 	*/
 	NumericalIrreducibleDecomposition(SystemType const& target)
-	 : SystemManagementPolicy(target), tracker_(TargetSystem()), endgame_(tracker_)
+	 : target_system_(Clone(target)), tracker_(TargetSystem()), endgame_(tracker_)
 	{
 		DefaultSetup();
 	}
@@ -240,11 +236,15 @@ struct NumericalIrreducibleDecomposition :
 
 	void DefaultSystemSetup()
 	{
-		SystemManagementPolicy::SystemSetup();
+		// homogenize + patch the owned target (the old CloneTarget::SystemSetup; a no-op of effect
+		// since Solve() throws, but kept so the prepared target is consistent if ever inspected).
+		target_system_.Homogenize();
+		target_system_.AutoPatch();
 	}
 
 
 private:
+	SystemType  target_system_;   ///< the cloned, owned system to be decomposed
 	TrackerType tracker_;
 	EndgameType endgame_;
 	ResultT decomposition_;

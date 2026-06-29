@@ -43,11 +43,11 @@ using DPT  = tracking::DoublePrecisionTracker;
 using MPT  = tracking::MultiplePrecisionTracker;
 using AMPT = tracking::AMPTracker;
 
-template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::PSEG,    System, policy::RefToGiven>;
-template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::Cauchy,  System, policy::RefToGiven>;
-template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::PSEG,    System, policy::RefToGiven>;
-template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::Cauchy,  System, policy::RefToGiven>;
-template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::PSEG,   System, policy::RefToGiven>;
-template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::Cauchy, System, policy::RefToGiven>;
+template struct HomotopySolver<DPT,  typename endgame::EndgameSelector<DPT>::PSEG,    System>;
+template struct HomotopySolver<DPT,  typename endgame::EndgameSelector<DPT>::Cauchy,  System>;
+template struct HomotopySolver<MPT,  typename endgame::EndgameSelector<MPT>::PSEG,    System>;
+template struct HomotopySolver<MPT,  typename endgame::EndgameSelector<MPT>::Cauchy,  System>;
+template struct HomotopySolver<AMPT, typename endgame::EndgameSelector<AMPT>::PSEG,   System>;
+template struct HomotopySolver<AMPT, typename endgame::EndgameSelector<AMPT>::Cauchy, System>;
 
 }} // namespaces

@@ -62,7 +62,7 @@ def test_unequal_degree_single_group_solves_and_filters():
     assert sorted(randomized.degrees()) == [2, 2]          # product 4 = the path count
     assert original.num_functions() == 3                    # original untouched
 
-    zd = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(randomized)
+    zd = pb.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     zd.solve()
     sols = zd.all_solutions()
     assert len(sols) == 4                                   # Bezout 2*2: two true + two extraneous
@@ -86,7 +86,7 @@ def test_equal_degree_conics_solves_and_filters():
     randomized = linalg.randomize(original)
     assert randomized.num_functions() == 2
 
-    zd = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(randomized)
+    zd = pb.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     zd.solve()
     sols = zd.all_solutions()
     assert len(sols) == 4
@@ -111,7 +111,7 @@ def test_multihomogeneous_bilinear_solves_and_filters():
     randomized = linalg.randomize(original)
     assert randomized.num_functions() == 2
 
-    zd = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionMHomogeneous(randomized)
+    zd = pb.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='mhom')
     zd.solve()
     sols = zd.all_solutions()
     assert len(sols) >= 1

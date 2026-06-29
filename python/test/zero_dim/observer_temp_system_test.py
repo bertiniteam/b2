@@ -1,7 +1,7 @@
 """Regression for ADR-0039: solving with an observer must not crash when the System was passed as
 a temporary (e.g. built in a helper function and not kept in a variable).
 
-Before the fix, the ZeroDim binding did not keep the given System alive: the solver's internal
+Before the fix, the ZeroDimSolver binding did not keep the given System alive: the solver's internal
 (shallow) copy shared function-tree nodes whose shared_ptr deleters are tied to the Python wrappers,
 so once the temporary System was collected, the endgame's Differentiate() dropped a node and the
 deleter touched a freed Python object -> SIGSEGV.  The binding now ties the System's lifetime to the
@@ -10,7 +10,7 @@ solver (with_custodian_and_ward), so this idiomatic usage is safe.
 import importlib.util
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDim, observers as nobs
+from bertini.nag_algorithm import ZeroDimSolver, observers as nobs
 
 _HAS_PANDAS = importlib.util.find_spec("pandas") is not None
 
@@ -32,7 +32,7 @@ def _build_small_system():
 def test_observer_with_temporary_system_does_not_crash():
     pb.random.set_random_seed(1)
     # System built in a function and passed straight in -- no Python reference retained.
-    zd = ZeroDim(_build_small_system(), mptype='adaptive')
+    zd = ZeroDimSolver(_build_small_system(), mptype='adaptive')
     collector = nobs.SolutionPathCollector()
     zd.add_observer(collector)
     zd.solve()                                   # must not segfault

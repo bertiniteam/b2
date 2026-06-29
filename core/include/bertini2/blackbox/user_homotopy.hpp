@@ -52,7 +52,7 @@ template <typename TrackerType, typename EndgameType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> UserHomSpecifyComplete(ConstTs const& ...ts)
 {
 	return std::make_unique<
-			algorithm::ZeroDim<TrackerType, EndgameType, System, policy::RefToGiven>
+			algorithm::HomotopySolver<TrackerType, EndgameType, System>
 			>(ts...);
 }
 

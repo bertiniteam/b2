@@ -71,7 +71,7 @@ keep the ones with a tiny residual.
 .. testcode::
 
    bertini.random.set_random_seed(1)               # reproducible generic coefficients + gamma
-   zd = bertini.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(randomized)
+   zd = bertini.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
    zd.solve()
    solutions = zd.all_solutions()
    assert len(solutions) == 4                       # the two we want, plus two extraneous
@@ -123,7 +123,7 @@ a total-degree start would track :math:`2^2 = 4`. Same answer, half the work.
 .. testcode::
 
    bertini.random.set_random_seed(3)
-   zd = bertini.nag_algorithm.ZeroDimCauchyAdaptivePrecisionMHomogeneous(randomized)
+   zd = bertini.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='mhom')
    zd.solve()
 
    def satisfies(point):

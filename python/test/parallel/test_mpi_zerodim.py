@@ -19,7 +19,7 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-"""MPI tests for ZeroDim parallel solving.
+"""MPI tests for ZeroDimSolver parallel solving.
 
 Tests are skipped automatically if mpi4py is not available.
 Run with: mpirun -n <N> python -m pytest python/test/parallel/test_mpi_zerodim.py -v
@@ -33,8 +33,7 @@ pytest.importorskip("mpi4py")
 from mpi4py import MPI
 import bertini as pb
 from bertini.nag_algorithm import (
-    ZeroDimCauchyAdaptivePrecisionTotalDegree,
-    ZeroDimCauchyDoublePrecisionTotalDegree,
+    ZeroDimSolver,
 )
 
 OK = int(pb.tracking.SuccessCode.Success)
@@ -48,7 +47,7 @@ def circle_intersection_solver():
     sys.add_function(x**2 + y**2 - 1)
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    return ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
+    return ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
 
 
 def _cyclic_system(n):
@@ -145,7 +144,7 @@ def _solve_cyclic5(solver_cls):
 
 
 def test_distributed_cyclic5_double_matches_known_count():
-    solver = _solve_cyclic5(ZeroDimCauchyDoublePrecisionTotalDegree)
+    solver = _solve_cyclic5(ZeroDimSolver)
     if pb.parallel.is_manager():
         assert len(solver.all_solutions()) == 120
         assert _distinct_finite(solver) == CYCLIC5_FINITE
@@ -154,7 +153,7 @@ def test_distributed_cyclic5_double_matches_known_count():
 def test_distributed_cyclic5_adaptive_matches_known_count():
     # Guards the endgame-boundary precision-transfer fix: adaptive-precision distributed solve must
     # recover all 70 finite solutions, not a precision-degraded subset.
-    solver = _solve_cyclic5(ZeroDimCauchyAdaptivePrecisionTotalDegree)
+    solver = _solve_cyclic5(ZeroDimSolver)
     if pb.parallel.is_manager():
         assert len(solver.all_solutions()) == 120
         assert _distinct_finite(solver) == CYCLIC5_FINITE

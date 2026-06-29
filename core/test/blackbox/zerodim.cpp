@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(make_zero_dim_honors_endgame_choice)
 
 	// the start system is no longer in the ZeroDim type, but the endgame still is, so these
 	// dynamic_casts still discriminate PowerSeries vs Cauchy.
-	using PSEGZD   = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::PSEG,   System>;
-	using CauchyZD = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::Cauchy, System>;
+	using PSEGZD   = algorithm::ZeroDimSolver<AMPTracker, typename EndgameSelector<AMPTracker>::PSEG,   System>;
+	using CauchyZD = algorithm::ZeroDimSolver<AMPTracker, typename EndgameSelector<AMPTracker>::Cauchy, System>;
 
 	rt.endgame = blackbox::type::Endgame::PowerSeries;
 	auto zd_pseg = blackbox::MakeZeroDim(rt, sys);

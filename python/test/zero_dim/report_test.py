@@ -6,7 +6,7 @@ fields, the human-readable __str__, and that failures_by_reason is keyed by the 
 """
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDim
+from bertini.nag_algorithm import ZeroDimSolver
 
 
 def _two_circles_solver():
@@ -16,7 +16,7 @@ def _two_circles_solver():
     sys.add_function(x**2 - 1)
     sys.add_function(y**2 - 1)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    solver = ZeroDim(sys, mptype='double')
+    solver = ZeroDimSolver(sys, mptype='double')
     solver.solve()
     return solver
 
