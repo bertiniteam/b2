@@ -110,6 +110,14 @@ void ExposeSolutionMetaData(std::string const& class_name){
 		"Accuracy estimate in natural (dehomogenized) coordinates.")
 	.def_readwrite("cycle_num",&MDT::cycle_num,
 		"The cycle number used by the endgame's extrapolation.")
+	.def_readwrite("precision_digits",&MDT::precision_digits,
+		"The working precision (in digits) the endgame finished this solution in.  For an adaptive "
+		"solve, this is DoublePrecision (~16) for a path that stayed in the hardware-double fast lane, "
+		"and the higher mpfr precision for a path that had to escalate.")
+	.def_readwrite("accuracy_digits",&MDT::accuracy_digits,
+		"How many digits of this solution are trustworthy (a digit count), from the convergence "
+		"agreement: floor(-log10(accuracy_estimate)), clamped to [0, precision_digits].  Read with "
+		"precision_digits as 'computed in N digits, good to M of them'.")
 	.def_readwrite("endgame_success",&MDT::endgame_success,
 		"The SuccessCode from the endgame. 0 means Success; anything else means the path did not "
 		"converge to a finite solution (e.g. GoingToInfinity, SecurityMaxNormReached).")

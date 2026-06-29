@@ -162,6 +162,14 @@ struct SolutionMetaData
 	NumErrorT accuracy_estimate; 			// accuracy estimate between extrapolations
 	NumErrorT accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
 	unsigned cycle_num;    						// cycle number used in extrapolations
+	// Honest precision/accuracy of the computed solution, as DIGIT COUNTS.  precision_digits is the
+	// working precision the endgame actually finished in (DoublePrecision() ~16 for a path that stayed in
+	// the adaptive-numeric-type endgame's hardware-double fast lane; the mpfr precision for one that
+	// escalated).  accuracy_digits is how many of those digits are trustworthy, from the convergence
+	// agreement: floor(-log10(accuracy_estimate)), clamped to [0, precision_digits].  Read together:
+	// "computed in precision_digits digits, good to accuracy_digits of them."
+	unsigned precision_digits = 0;
+	unsigned accuracy_digits = 0;
 	SuccessCode endgame_success = SuccessCode::NeverStarted;      // success code
 
 
@@ -195,6 +203,8 @@ struct SolutionMetaData
 			 && this->accuracy_estimate == other.accuracy_estimate
 			 && this->accuracy_estimate_user_coords == other.accuracy_estimate_user_coords
 			 && this->cycle_num == other.cycle_num
+			 && this->precision_digits == other.precision_digits
+			 && this->accuracy_digits == other.accuracy_digits
 			 && this->endgame_success == other.endgame_success
 			 && this->function_residual == other.function_residual
 			 && this->multiplicity == other.multiplicity
@@ -226,6 +236,8 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 	out << "final_time_used = " << meta.final_time_used << std::endl;
 	out << "accuracy_estimate = " << meta.accuracy_estimate << std::endl;
 	out << "accuracy_estimate_user_coords = " << meta.accuracy_estimate_user_coords << std::endl;
+	out << "precision_digits = " << meta.precision_digits << std::endl;
+	out << "accuracy_digits = " << meta.accuracy_digits << std::endl;
 	out << "cycle_num = " << meta.cycle_num << std::endl;
 	out << "endgame_success = " << meta.endgame_success << std::endl;
 
@@ -1691,6 +1703,21 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					static_cast<NumErrorT>( (ctx.target_sys.DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
 					ctx.target_sys.DehomogenizePoint(ctx.endgame.template PreviousApproximation<BaseComplexT>())).template lpNorm<Eigen::Infinity>() );
 				smd.cycle_num = ctx.endgame.CycleNumber();
+
+				// Honest precision/accuracy of this solution, as digit counts.  precision_digits is the
+				// precision the endgame actually finished in -- which is exactly the precision of the
+				// stored solution point (DoublePrecision() for a fast-lane path, the mpfr precision for an
+				// escalated one).  accuracy_digits is how many of those digits the convergence agreement
+				// supports: floor(-log10(accuracy_estimate)), clamped to [0, precision_digits].
+				smd.precision_digits = static_cast<unsigned>(Precision(solutions_post_endgame_[soln_ind]));
+				{
+					using std::log10; using std::floor; using std::min; using std::max;
+					double err = static_cast<double>(smd.accuracy_estimate);
+					unsigned acc = (err > 0.0)
+						? static_cast<unsigned>(max(0.0, floor(-log10(err))))
+						: smd.precision_digits;
+					smd.accuracy_digits = min(acc, smd.precision_digits);
+				}
 			}
 
 
@@ -1863,6 +1890,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				r.accuracy_estimate = smd.accuracy_estimate;
 				r.accuracy_estimate_user_coords = smd.accuracy_estimate_user_coords;
 				r.cycle_num         = smd.cycle_num;
+				r.precision_digits = smd.precision_digits;
+				r.accuracy_digits  = smd.accuracy_digits;
 				r.precision_changed = smd.precision_changed;
 				r.time_of_first_prec_increase = smd.time_of_first_prec_increase;
 				r.max_precision_used = smd.max_precision_used;
@@ -1891,6 +1920,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				smd.accuracy_estimate   = r.accuracy_estimate;
 				smd.accuracy_estimate_user_coords = r.accuracy_estimate_user_coords;
 				smd.cycle_num           = r.cycle_num;
+				smd.precision_digits  = r.precision_digits;
+				smd.accuracy_digits   = r.accuracy_digits;
 				smd.precision_changed   = r.precision_changed;
 				smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
 				smd.max_precision_used  = r.max_precision_used;

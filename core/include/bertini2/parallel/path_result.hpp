@@ -116,6 +116,8 @@ struct FullPathResult
 	double        accuracy_estimate              = 0;
 	double        accuracy_estimate_user_coords  = 0;
 	unsigned      cycle_num                      = 0;
+	unsigned      precision_digits             = 0;   // digits the endgame finished in (= solution point's precision)
+	unsigned      accuracy_digits              = 0;   // trustworthy digit count, from the convergence agreement
 
 	// precision metadata (spans the whole path)
 	bool          precision_changed              = false;
@@ -142,6 +144,8 @@ struct FullPathResult
 		ar & accuracy_estimate;
 		ar & accuracy_estimate_user_coords;
 		ar & cycle_num;
+		ar & precision_digits;
+		ar & accuracy_digits;
 		ar & precision_changed;
 		ar & time_of_first_prec_increase;
 		ar & max_precision_used;

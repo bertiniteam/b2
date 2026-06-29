@@ -254,6 +254,7 @@ _SOLUTION_METADATA_FIELDS = (
     'is_finite', 'is_real', 'is_singular', 'is_nonsolution', 'multiplicity', 'multiplicity_representative',
     'condition_number', 'function_residual', 'newton_residual',
     'accuracy_estimate', 'accuracy_estimate_user_coords',
+    'precision_digits', 'accuracy_digits',
     'cycle_num', 'endgame_success', 'pre_endgame_success', 'final_time_used',
     'precision_changed', 'max_precision_used', 'time_of_first_prec_increase',
     'path_time_seconds',
