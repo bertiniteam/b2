@@ -70,8 +70,10 @@ BOOST_AUTO_TEST_CASE(make_zero_dim_honors_endgame_choice)
 	blackbox::ZeroDimRT rt;
 	rt.tracker = blackbox::type::Tracker::Adaptive;
 
-	using PSEGZD   = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::PSEG,   System, start_system::TotalDegree>;
-	using CauchyZD = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::Cauchy, System, start_system::TotalDegree>;
+	// the start system is no longer in the ZeroDim type, but the endgame still is, so these
+	// dynamic_casts still discriminate PowerSeries vs Cauchy.
+	using PSEGZD   = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::PSEG,   System>;
+	using CauchyZD = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::Cauchy, System>;
 
 	rt.endgame = blackbox::type::Endgame::PowerSeries;
 	auto zd_pseg = blackbox::MakeZeroDim(rt, sys);
@@ -104,7 +106,7 @@ BOOST_AUTO_TEST_CASE(single_affine_group_infers_total_degree)
 	sys.AddFunction(x*x + y*y - 1);
 	sys.AddFunction(x + y);
 
-	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::TotalDegree);
+	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::RootsOfUnity);
 }
 
 BOOST_AUTO_TEST_CASE(two_affine_groups_infer_mhom)
@@ -135,7 +137,7 @@ BOOST_AUTO_TEST_CASE(homogeneous_group_infers_mhom)
 BOOST_AUTO_TEST_CASE(griewank_osborn_single_group_infers_total_degree)
 {
 	auto sys = system::Precon::GriewankOsborn();
-	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::TotalDegree);
+	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::RootsOfUnity);
 }
 
 // DISABLED pending the block-composed MHom start system (plan
@@ -166,12 +168,16 @@ BOOST_AUTO_TEST_CASE(inferred_mhom_builds_an_mhomogeneous_zerodim,
 	rt.endgame = blackbox::type::Endgame::Cauchy;
 	BOOST_CHECK(rt.start == blackbox::type::Start::MHom);
 
-	using MHomZD = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::Cauchy, System, start_system::MHomogeneous>;
-	using TotDegZD = algorithm::ZeroDim<AMPTracker, typename EndgameSelector<AMPTracker>::Cauchy, System, start_system::TotalDegree>;
+	// After the de-templating refactor the start system is held polymorphically -- it is no
+	// longer part of the ZeroDim type -- so MHom and TotalDegree solves are the SAME type and
+	// cannot be told apart by dynamic_cast.  Verify the choice behaviorally instead: building
+	// the inferred (MHom) solver succeeds on this two-variable-group system, whereas forcing
+	// TotalDegree throws, because its start system requires a single affine variable group.
+	BOOST_CHECK_NO_THROW(blackbox::MakeZeroDim(rt, sys));
 
-	auto zd = blackbox::MakeZeroDim(rt, sys);
-	BOOST_CHECK(dynamic_cast<MHomZD*>(zd.get()) != nullptr);
-	BOOST_CHECK(dynamic_cast<TotDegZD*>(zd.get()) == nullptr);
+	blackbox::ZeroDimRT rt_forced_td = rt;
+	rt_forced_td.start = blackbox::type::Start::TotalDegree;
+	BOOST_CHECK_THROW(blackbox::MakeZeroDim(rt_forced_td, sys), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // end the start_system_inference sub-suite

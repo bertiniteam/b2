@@ -51,10 +51,10 @@ struct Classic
 {};
 
 
-template <typename A, typename B, typename C, typename D, template<typename, typename> class E>
-struct Classic <ZeroDim<A,B,C,D,E>>
+template <typename A, typename B, typename C, template<typename> class D>
+struct Classic <ZeroDim<A,B,C,D>>
 {
-	using ZDT = ZeroDim<A,B,C,D,E>;
+	using ZDT = ZeroDim<A,B,C,D>;
 
 	template <typename OutT>
 	static

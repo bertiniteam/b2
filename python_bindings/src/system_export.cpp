@@ -348,6 +348,7 @@ namespace bertini{
 
 				ExportStartSystemBase();
 				ExportTotalDegree();
+				ExportRootsOfUnity();
 			}
 		}
 
@@ -366,13 +367,22 @@ namespace bertini{
 
 		void ExportTotalDegree()
 		{
-			class_<start_system::TotalDegree, bases<start_system::StartSystem>, std::shared_ptr<start_system::TotalDegree> >("TotalDegree",init<System const&>())//,"Only constructor for a TotalDegree start system, requires a system.  You cannot construct one without.  If this is a problem, please contact the authors for help.")
-			.def("random_value", &start_system::TotalDegree::RandomValue<complex_dbl>,(arg("self"), arg("index")), "Get the k-th random value, in double precision")
-			.def("random_value", &start_system::TotalDegree::RandomValue<mpfr>,(arg("self"), arg("index")), "Get the k-th random value, in current multiple precision")
-			.def("random_values", &start_system::TotalDegree::RandomValues,(arg("self")), return_value_policy<copy_const_reference>(), "Get (a reference to) the random values for the start system, as Nodes")
+			// The total-degree start system is now built from random linear products (generic
+			// position); it has no per-variable "random value" (that was the roots-of-unity start,
+			// now RootsOfUnity).  It evaluates through a products-of-linears block.
+			class_<start_system::TotalDegree, bases<start_system::StartSystem>, std::shared_ptr<start_system::TotalDegree> >("TotalDegree",init<System const&>())
 			;
+		}
 
-			
+		void ExportRootsOfUnity()
+		{
+			// The roots-of-unity start system: x_i^{d_i} - r_i (formerly misnamed "TotalDegree").
+			// A structured, teaching/novelty start; kept reachable but not the default.
+			class_<start_system::RootsOfUnity, bases<start_system::StartSystem>, std::shared_ptr<start_system::RootsOfUnity> >("RootsOfUnity",init<System const&>())
+			.def("random_value", &start_system::RootsOfUnity::RandomValue<complex_dbl>,(arg("self"), arg("index")), "Get the k-th random value, in double precision")
+			.def("random_value", &start_system::RootsOfUnity::RandomValue<mpfr>,(arg("self"), arg("index")), "Get the k-th random value, in current multiple precision")
+			.def("random_values", &start_system::RootsOfUnity::RandomValues,(arg("self")), return_value_policy<copy_const_reference>(), "Get (a reference to) the random values for the start system, as Nodes")
+			;
 		}
 	}
 }

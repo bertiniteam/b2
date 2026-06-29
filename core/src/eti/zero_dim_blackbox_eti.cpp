@@ -25,11 +25,12 @@
 /**
 \file zero_dim_blackbox_eti.cpp
 
-Explicit instantiation definitions for the ZeroDim combos reachable through
-the blackbox switch ladder beyond the TotalDegree six (see zero_dim_eti.cpp):
-MHomogeneous start (CloneGiven) and User start (RefToGiven), per
-blackbox/config.hpp's StorageSelector.  Pairs with the extern block at the
-bottom of bertini2/nag_algorithms/zero_dim_solve.hpp.  See ADR-0014.
+Explicit instantiation definitions for the User-homotopy ZeroDim combos, which
+use the RefToGiven policy (the user owns the systems).  The clone-owned starts
+(TotalDegree, MHomogeneous, RootsOfUnity, ...) are ALL covered by the six default
+CloneGiven combos in zero_dim_eti.cpp now that ZeroDim is not templated on the
+start-system type.  Pairs with the extern block at the bottom of
+bertini2/nag_algorithms/zero_dim_solve.hpp.  See ADR-0014.
 */
 
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
@@ -42,18 +43,11 @@ using DPT  = tracking::DoublePrecisionTracker;
 using MPT  = tracking::MultiplePrecisionTracker;
 using AMPT = tracking::AMPTracker;
 
-template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::PSEG,    System, start_system::MHomogeneous>;
-template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::Cauchy,  System, start_system::MHomogeneous>;
-template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::PSEG,    System, start_system::MHomogeneous>;
-template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::Cauchy,  System, start_system::MHomogeneous>;
-template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::PSEG,   System, start_system::MHomogeneous>;
-template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::Cauchy, System, start_system::MHomogeneous>;
-
-template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::PSEG,    System, start_system::User, policy::RefToGiven>;
-template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::Cauchy,  System, start_system::User, policy::RefToGiven>;
-template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::PSEG,    System, start_system::User, policy::RefToGiven>;
-template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::Cauchy,  System, start_system::User, policy::RefToGiven>;
-template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::PSEG,   System, start_system::User, policy::RefToGiven>;
-template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::Cauchy, System, start_system::User, policy::RefToGiven>;
+template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::PSEG,    System, policy::RefToGiven>;
+template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::Cauchy,  System, policy::RefToGiven>;
+template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::PSEG,    System, policy::RefToGiven>;
+template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::Cauchy,  System, policy::RefToGiven>;
+template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::PSEG,   System, policy::RefToGiven>;
+template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::Cauchy, System, policy::RefToGiven>;
 
 }} // namespaces

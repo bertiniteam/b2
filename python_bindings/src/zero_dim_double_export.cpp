@@ -7,10 +7,12 @@ namespace bertini{
 
 		void ExportZDDouble(){
 			using TrackerT = bertini::tracking::DoublePrecisionTracker;
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesDoublePrecisionTotalDegree");
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyDoublePrecisionTotalDegree");
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::MHomogeneous>("ZeroDimPowerSeriesDoublePrecisionMHomogeneous");
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::MHomogeneous>("ZeroDimCauchyDoublePrecisionMHomogeneous");
+			// the start-system selector enum + factory are not tracker-specific; register them once,
+			// here, and BEFORE the ZeroDim classes (whose 2nd constructor takes a StartSystemFactory).
+			ExportStartSystemEnum();
+			ExportStartSystemFactory();
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimPowerSeriesDoublePrecision");
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimCauchyDoublePrecision");
 
 			// the User start system is not tracker-specific; register it once, here.
 			ExportUserStartSystem();

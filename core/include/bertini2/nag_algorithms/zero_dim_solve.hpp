@@ -60,8 +60,8 @@ namespace bertini {
 forward declare of ZeroDim algorithm
 */
 template<	typename TrackerType, typename EndgameType,
-			typename SystemType, typename StartSystemType,
-			template<typename,typename> class SystemManagementP = policy::CloneGiven >
+			typename SystemType,
+			template<typename> class SystemManagementP = policy::CloneGiven >
 struct ZeroDim;
 
 
@@ -70,9 +70,9 @@ struct ZeroDim;
 specify the traits for the algorithm.  this is why we need the forward declare
 */
 template<typename TrackerType, typename EndgameType,
-			typename SystemType, typename StartSystemType,
-			template<typename,typename> class SystemManagementP>
-struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>
+			typename SystemType,
+			template<typename> class SystemManagementP>
+struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, SystemManagementP>>
 {
 	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
 	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
@@ -403,20 +403,21 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 \brief the basic zero dim algorithm, which solves a system.
 */
 		template<	typename TrackerType, typename EndgameType,
-					typename SystemType, typename StartSystemType,
-					template<typename,typename> class SystemManagementP>
+					typename SystemType,
+					template<typename> class SystemManagementP>
 		struct ZeroDim :
 							public virtual AnyZeroDim,
 							public Observable,
-							public SystemManagementP<SystemType, StartSystemType>,
+							public SystemManagementP<SystemType>,
 							public detail::Configured<
-								typename AlgoTraits< ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>::NeededConfigs>
+								typename AlgoTraits< ZeroDim<TrackerType, EndgameType, SystemType, SystemManagementP>>::NeededConfigs>
 		{
 			// these usings are for getters in python
 			using TrackerT          = TrackerType;
 			using EndgameT          = EndgameType;
 			using SystemT           = SystemType;
-			using StartSystemT       = StartSystemType;
+			// the algorithm sees the start system only through the polymorphic base
+			using StartSystemT       = bertini::start_system::StartSystem;
 
 			// This algorithm emits its lifecycle events on the AnyZeroDim base, so a
 			// single observer type can watch any templated ZeroDim.  Accept observers
@@ -437,14 +438,14 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 			using SolnIndT 			= typename SolnCont<BaseComplexT>::size_type;
 
-			using SystemManagementPolicy = SystemManagementP<SystemType, StartSystemType>;
+			using SystemManagementPolicy = SystemManagementP<SystemType>;
 
 			using StoredSystemT = typename SystemManagementPolicy::StoredSystemT;
 			using StoredStartSystemT = typename SystemManagementPolicy::StoredStartSystemT;
 
 
 			using Config = detail::Configured<
-								typename AlgoTraits<ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>::NeededConfigs>;
+								typename AlgoTraits<ZeroDim<TrackerType, EndgameType, SystemType, SystemManagementP>>::NeededConfigs>;
 			using Config::Get;
 
 
@@ -548,7 +549,11 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 					if constexpr (SystemManagementPolicy::OwnsSystems)
 					{
 						parallel::mpi_broadcast_serialized(comm, TargetSystem(), 0);
-						parallel::mpi_broadcast_serialized(comm, StartSystem(), 0);
+						// broadcast the OWNING shared_ptr<StartSystem> so the concrete derived type
+						// (TotalDegree/MHom/RootsOfUnity, all default-constructible) is carried
+						// polymorphically via its BOOST_CLASS_EXPORT key -- a base reference would
+						// serialize only the System slice and drop the start-point data.
+						parallel::mpi_broadcast_serialized(comm, this->StartSystemPtr(), 0);
 						parallel::mpi_broadcast_serialized(comm, Homotopy(),    0);
 					}
 
@@ -1887,64 +1892,64 @@ namespace bertini {
 namespace algorithm {
 
 template<typename TrackerType, typename EndgameType,
-         typename SystemType, typename StartSystemType,
-         template<typename,typename> class SystemManagementP>
+         typename SystemType,
+         template<typename> class SystemManagementP>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteMainData(std::ostream& out) const
+ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteMainData(std::ostream& out) const
 {
 	output::Classic<ZeroDim>::MainData(out, *this);
 }
 
 template<typename TrackerType, typename EndgameType,
-         typename SystemType, typename StartSystemType,
-         template<typename,typename> class SystemManagementP>
+         typename SystemType,
+         template<typename> class SystemManagementP>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteRawData(std::ostream& out) const
+ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteRawData(std::ostream& out) const
 {
 	output::Classic<ZeroDim>::RawData(out, *this);
 }
 
 template<typename TrackerType, typename EndgameType,
-         typename SystemType, typename StartSystemType,
-         template<typename,typename> class SystemManagementP>
+         typename SystemType,
+         template<typename> class SystemManagementP>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteFiniteSolutions(std::ostream& out) const
+ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteFiniteSolutions(std::ostream& out) const
 {
 	output::Classic<ZeroDim>::FiniteSolutions(out, *this);
 }
 
 template<typename TrackerType, typename EndgameType,
-         typename SystemType, typename StartSystemType,
-         template<typename,typename> class SystemManagementP>
+         typename SystemType,
+         template<typename> class SystemManagementP>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteRealFiniteSolutions(std::ostream& out) const
+ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteRealFiniteSolutions(std::ostream& out) const
 {
 	output::Classic<ZeroDim>::RealFiniteSolutions(out, *this);
 }
 
 template<typename TrackerType, typename EndgameType,
-         typename SystemType, typename StartSystemType,
-         template<typename,typename> class SystemManagementP>
+         typename SystemType,
+         template<typename> class SystemManagementP>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteNonsingularSolutions(std::ostream& out) const
+ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteNonsingularSolutions(std::ostream& out) const
 {
 	output::Classic<ZeroDim>::NonsingularSolutions(out, *this);
 }
 
 template<typename TrackerType, typename EndgameType,
-         typename SystemType, typename StartSystemType,
-         template<typename,typename> class SystemManagementP>
+         typename SystemType,
+         template<typename> class SystemManagementP>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteSingularSolutions(std::ostream& out) const
+ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteSingularSolutions(std::ostream& out) const
 {
 	output::Classic<ZeroDim>::SingularSolutions(out, *this);
 }
 
 template<typename TrackerType, typename EndgameType,
-         typename SystemType, typename StartSystemType,
-         template<typename,typename> class SystemManagementP>
+         typename SystemType,
+         template<typename> class SystemManagementP>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteRawSolutions(std::ostream& out) const
+ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteRawSolutions(std::ostream& out) const
 {
 	output::Classic<ZeroDim>::RawSolutions(out, *this);
 }
@@ -1968,10 +1973,10 @@ void InjectParsedTuple(Target& target, std::tuple<Ts...> const& t) {
 }
 
 template<typename TrackerType, typename EndgameType,
-         typename SystemType, typename StartSystemType,
-         template<typename,typename> class SystemManagementP>
+         typename SystemType,
+         template<typename> class SystemManagementP>
 void
-ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>
+ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>
     ::ApplyParsedConfigs(std::string const& config_str)
 {
 	using namespace parsing::classic;
@@ -2021,36 +2026,30 @@ ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>
 } // ns bertini
 
 
-// Explicit instantiation declarations — suppress re-instantiation of the six
-// production ZeroDim types in every including TU.  Definitions live in
-// core/src/eti/zero_dim_eti.cpp; see ADR-0014.  Other combos (different start
-// systems, RefToGiven policy) simply instantiate implicitly as before.
+// Explicit instantiation declarations — suppress re-instantiation of the production
+// ZeroDim types in every including TU.  Since ZeroDim is no longer templated on the
+// start-system type (it holds the start system polymorphically), there are just six
+// CloneGiven combos that cover EVERY clone-owned start system (TotalDegree, MHom,
+// RootsOfUnity, future Polyhedral, ...), plus six RefToGiven combos for user homotopies.
+// Definitions in core/src/eti/zero_dim_eti.cpp + zero_dim_blackbox_eti.cpp; see ADR-0014.
 #include "bertini2/endgames.hpp"
 #include "bertini2/system/start_systems.hpp"
 
 namespace bertini{ namespace algorithm{
 
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System, start_system::TotalDegree>;
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System, start_system::TotalDegree>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System, start_system::TotalDegree>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System, start_system::TotalDegree>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System, start_system::TotalDegree>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System, start_system::TotalDegree>;
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System>;
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System>;
 
-// the blackbox switch ladder additionally reaches MHomogeneous (CloneGiven) and
-// User (RefToGiven) starts; definitions in core/src/eti/zero_dim_blackbox_eti.cpp
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System, start_system::MHomogeneous>;
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System, start_system::MHomogeneous>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System, start_system::MHomogeneous>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System, start_system::MHomogeneous>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System, start_system::MHomogeneous>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System, start_system::MHomogeneous>;
-
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System, start_system::User, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System, start_system::User, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System, start_system::User, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System, start_system::User, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System, start_system::User, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System, start_system::User, policy::RefToGiven>;
+// user homotopies: the user owns the systems, so RefToGiven; definitions in zero_dim_blackbox_eti.cpp
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System, policy::RefToGiven>;
+extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System, policy::RefToGiven>;
 
 }} // namespaces

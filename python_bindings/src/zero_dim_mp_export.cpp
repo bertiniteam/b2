@@ -7,10 +7,8 @@ namespace bertini{
 
 		void ExportZDMP(){
 			using TrackerT = bertini::tracking::MultiplePrecisionTracker;
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesFixedMultiplePrecisionTotalDegree");
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyFixedMultiplePrecisionTotalDegree");
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::MHomogeneous>("ZeroDimPowerSeriesFixedMultiplePrecisionMHomogeneous");
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::MHomogeneous>("ZeroDimCauchyFixedMultiplePrecisionMHomogeneous");
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimPowerSeriesFixedMultiplePrecision");
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimCauchyFixedMultiplePrecision");
 
 			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimPowerSeriesFixedMultiplePrecisionUserHomotopy");
 			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimCauchyFixedMultiplePrecisionUserHomotopy");

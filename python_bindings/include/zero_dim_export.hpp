@@ -43,6 +43,7 @@
 #include <bertini2/nag_algorithms/zero_dim_solve.hpp>
 #include <bertini2/nag_algorithms/events.hpp>
 #include <bertini2/system/start_systems.hpp>
+#include <bertini2/blackbox/config.hpp>   // blackbox::type::Start (start-system selector enum)
 #include <bertini2/io/classic_writer.hpp>
 
 #include <boost/python/stl_iterator.hpp>
@@ -320,19 +321,73 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 }
 
 
-// Helper template — defined here so all split TUs can use it without duplication.
-template<typename TrackerT, typename EndgameT, typename SystemT, typename StartSystemT>
+// Map a Start enum choice to a clone factory -- the one place a concrete start-system type is named
+// on the binding side.  User is rejected: it needs the user_homotopy path (RefToGiven).
+inline policy::StartSystemFactory<System> StartFactoryFor(blackbox::type::Start which)
+{
+	switch (which)
+	{
+		case blackbox::type::Start::MHom:
+			return policy::MakeStartFactory<start_system::MHomogeneous>();
+		case blackbox::type::Start::RootsOfUnity:
+			return policy::MakeStartFactory<start_system::RootsOfUnity>();
+		case blackbox::type::Start::User:
+			throw std::runtime_error("the User start system is not a clone-owned start; build the "
+			                         "homotopy with nag_algorithm.user_homotopy(...) instead");
+		case blackbox::type::Start::TotalDegree:
+		default:
+			return policy::MakeStartFactory<start_system::TotalDegree>();
+	}
+}
+
+// Expose the blackbox start-system selector enum to Python (call once).
+inline void ExportStartSystemEnum()
+{
+	boost::python::enum_<blackbox::type::Start>("StartSystemType",
+		"Which start system a ZeroDim solver builds: total_degree (default) or mhomogeneous. "
+		"User homotopies use nag_algorithm.user_homotopy(...) instead.")
+		.value("total_degree", blackbox::type::Start::TotalDegree)
+		.value("roots_of_unity", blackbox::type::Start::RootsOfUnity)
+		.value("mhomogeneous", blackbox::type::Start::MHom)
+		;
+}
+
+// Register the opaque start-system factory type + a producer function (call once).  ZeroDim no
+// longer bakes the start system into its type; a non-default start is selected by passing one of
+// these factories as the solver constructor's second argument.
+inline void ExportStartSystemFactory()
+{
+	class_<policy::StartSystemFactory<System>>("StartSystemFactory",
+		"Opaque factory that builds a start system for a ZeroDim solver.  Get one from "
+		"start_system_factory(StartSystemType.X) and pass it as the solver's second constructor arg.",
+		no_init);
+	def("start_system_factory", &StartFactoryFor,
+		(boost::python::arg("which")),
+		"start_system_factory(which): the start-system factory for a StartSystemType, to pass as the "
+		"second argument of a ZeroDim solver constructor (the default constructor uses total_degree).");
+}
+
+// Helper template — defined here so all split TUs can use it without duplication.  ZeroDim is no
+// longer templated on the start system; the concrete start system is chosen at construction (default
+// TotalDegree, or an explicit factory) and held polymorphically.
+template<typename TrackerT, typename EndgameT>
 void ExportZeroDimSpecific(std::string const& class_name){
-	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, SystemT, StartSystemT>;
-	// with_custodian_and_ward<1,2>: keep the Python System (arg 2) alive as long as the solver
-	// (self, arg 1).  The solver's internal system is a SHALLOW copy that shares the function-tree
-	// nodes' shared_ptrs with the user's System; those shared_ptrs carry boost.python deleters tied
-	// to the Python node wrappers, so if the user passes a temporary System and lets it die, the
-	// endgame's Differentiate() drops a node and the deleter touches an already-freed Python object
-	// -> crash.  Tying the System's lifetime to the solver makes the documented `ZeroDim(sys)` usage
-	// safe even when the caller keeps no reference to `sys` (e.g. building it in a helper function).
+	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System>;
+	// with_custodian_and_ward<1,2>: keep the Python System (ctor arg, index 2) alive as long as the
+	// solver (self, index 1).  The solver's internal system is a SHALLOW copy that shares the
+	// function-tree nodes' shared_ptrs with the user's System; those shared_ptrs carry boost.python
+	// deleters tied to the Python node wrappers, so if the user passes a temporary System and lets it
+	// die, the endgame's Differentiate() drops a node and the deleter touches an already-freed Python
+	// object -> crash.  Tying the System's lifetime to the solver makes the documented `ZeroDim(sys)`
+	// usage safe even when the caller keeps no reference to `sys`.
+	//
+	// Two constructors: (system) defaults to the TotalDegree start; (system, start_factory) selects
+	// a non-default start (e.g. MHomogeneous) -- the factory is a value, copied into the solver.
 	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(),
-		init<SystemT>()[with_custodian_and_ward<1, 2>()])
+		init<System const&>()[with_custodian_and_ward<1, 2>()])
+	.def(init<System const&, policy::StartSystemFactory<System> const&>(
+			(boost::python::arg("system"), boost::python::arg("start_factory")))
+			[with_custodian_and_ward<1, 2>()])
 	.def(ZDVisitor<ZeroDimT>())
 	;
 }
@@ -375,7 +430,7 @@ inline void ExportUserStartSystem(){
 // reference (RefToGiven); the Python wrapper retains all three so the references stay valid.
 template<typename TrackerT, typename EndgameT>
 void ExportZeroDimUserHomotopy(std::string const& class_name){
-	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System, start_system::User, policy::RefToGiven>;
+	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System, policy::RefToGiven>;
 	// RefToGiven: this solver holds REFERENCES to all three given systems, so each must outlive the
 	// solver.  Chain with_custodian_and_ward to keep target (arg 2), start (arg 3) and homotopy
 	// (arg 4) alive as long as the solver (self, arg 1).

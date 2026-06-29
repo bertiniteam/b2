@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 	sys.AddFunction(x - real_mp("0.5")*y - 1);
 
 
-	bertini::start_system::TotalDegree TD(sys);
+	bertini::start_system::RootsOfUnity TD(sys);
 
 	auto d = TD.Degrees();
 
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 	sys.AddFunction(x*x - real_mp("0.5")*y - x*y);
 
 
-	bertini::start_system::TotalDegree TD(sys);
+	bertini::start_system::RootsOfUnity TD(sys);
 
 	auto d = TD.Degrees();
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	sys.AddFunction(y+1);
 	sys.AddFunction(x+y+bertini::node::Pi());
 
-	bertini::start_system::TotalDegree TD(sys);
+	bertini::start_system::RootsOfUnity TD(sys);
 
 	auto deg = TD.Degrees();
 
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	bertini::start_system::TotalDegree TD(sys);
+	bertini::start_system::RootsOfUnity TD(sys);
 
 	auto deg = TD.Degrees();
 
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	bertini::start_system::TotalDegree TD(sys);
+	bertini::start_system::RootsOfUnity TD(sys);
 
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	bertini::start_system::TotalDegree TD(sys);
+	bertini::start_system::RootsOfUnity TD(sys);
 	TD.Homogenize();
 
 	BOOST_CHECK(TD.IsHomogeneous());
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_precision_16)
 	sys.AddFunction(pow(x-1,3));
 	sys.AddFunction(pow(y-1,2));
 
-	auto TD = bertini::start_system::TotalDegree(sys);
+	auto TD = bertini::start_system::RootsOfUnity(sys);
 
 	BOOST_CHECK(!sys.IsHomogeneous());
 	BOOST_CHECK(!sys.IsPatched());
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 	BOOST_CHECK(sys.IsHomogeneous());
 	BOOST_CHECK(sys.IsPatched());
 
-	auto TD = bertini::start_system::TotalDegree(sys);
+	auto TD = bertini::start_system::RootsOfUnity(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	bertini::start_system::TotalDegree TD(sys);
+	bertini::start_system::RootsOfUnity TD(sys);
 
 	Var t = Variable::Make("t");
 
@@ -615,7 +615,7 @@ BOOST_AUTO_TEST_CASE(start_system_total_degree_nonpolynomial_should_throw)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	BOOST_CHECK_THROW(bertini::start_system::TotalDegree TD(sys), std::runtime_error);
+	BOOST_CHECK_THROW(bertini::start_system::RootsOfUnity TD(sys), std::runtime_error);
 }
 
 
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_coefficient_bound_degree_bound)
 
 
 
-	auto TD = bertini::start_system::TotalDegree(sys);
+	auto TD = bertini::start_system::RootsOfUnity(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());

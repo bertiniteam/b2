@@ -1146,7 +1146,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	
 
-	auto TD = bertini::start_system::TotalDegree(sys);
+	auto TD = bertini::start_system::RootsOfUnity(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());
