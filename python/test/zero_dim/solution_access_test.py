@@ -46,9 +46,9 @@ def test_all_solutions_is_the_accessor(two_circles_solver):
     assert len(two_circles_solver.all_solutions()) == 2
 
 
-def test_old_solutions_name_is_gone(two_circles_solver):
-    """The rename is a hard break: the old name must not silently still work."""
-    assert not hasattr(two_circles_solver, 'solutions')
+def test_solutions_is_finite_by_default(two_circles_solver):
+    # solutions() is the filtered getter: finite genuine solutions by default (here all 2 are finite).
+    assert len(two_circles_solver.solutions()) == 2
 
 
 # --- infinite_solutions: the at-infinity complement of finite_solutions ---

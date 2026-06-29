@@ -172,8 +172,15 @@ struct SolutionMetaData
 	bool is_real = false;       		// real flag: whether the (dehomogenized) endpoint is real
 	bool is_finite = false;     		// finite flag: whether the endpoint is finite (not at infinity)
 	bool is_singular = false;       		// singular flag: whether the endpoint is singular (multiple, or ill-conditioned)
+	// nonsolution flag: a finite, successful endpoint that is NOT a solution of the actual target
+	// system -- a junk point.  ZeroDimSolver sets this when it squares up an over-determined system:
+	// the randomized square system has extraneous roots that satisfy the random combinations but not
+	// the original equations.  Orthogonal to is_finite (a nonsolution is finite); the finite / real /
+	// singular accessors exclude nonsolutions, and they are exposed on their own (Nonsolutions()).
+	// Load-bearing for the regeneration cascade, which must identify and discard junk endpoints.
+	bool is_nonsolution = false;
 
-	bool operator==(const SolutionMetaData<ComplexT> & other){ 
+	bool operator==(const SolutionMetaData<ComplexT> & other){
 		bool result = 
 			this->path_index == other.path_index
 			 && this->solution_index == other.solution_index
@@ -194,6 +201,7 @@ struct SolutionMetaData
 			 && this->is_real == other.is_real
 			 && this->is_finite == other.is_finite
 			 && this->is_singular == other.is_singular
+			 && this->is_nonsolution == other.is_nonsolution
 		;
 
 		return result; }
@@ -226,6 +234,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 	out << "is_real = " << meta.is_real << std::endl;
 	out << "is_finite = " << meta.is_finite << std::endl;
 	out << "is_singular = " << meta.is_singular << std::endl;
+	out << "is_nonsolution = " << meta.is_nonsolution << std::endl;
 
 	return out;
 }
@@ -328,6 +337,7 @@ struct SolveReport
 	unsigned long long num_failed = 0;           ///< paths the tracker could not resolve (no solution, no clean divergence)
 	unsigned long long num_singular = 0;         ///< finite solutions flagged singular (multiple / ill-conditioned)
 	unsigned long long num_real = 0;             ///< finite solutions flagged real
+	unsigned long long num_nonsolutions = 0;     ///< finite endpoints that are NOT solutions of the target (squaring-up junk)
 	std::map<SuccessCode, unsigned long long> failures_by_reason; ///< histogram of the failed paths' SuccessCodes
 	double max_condition_number = 0;             ///< largest condition number among finite solutions
 	unsigned max_precision_used = 0;             ///< highest working precision any path needed (digits)
@@ -361,7 +371,9 @@ SolveReport SummarizeSolve(std::vector<SolutionMetaData<ComplexT>> const& metada
 		              || m.endgame_success == SuccessCode::SecurityMaxNormReached);
 		if (m.endgame_success == SuccessCode::Success)
 		{
-			if (m.is_finite)
+			if (m.is_nonsolution)
+				++r.num_nonsolutions;       // finite, but not a solution of the target (squaring junk)
+			else if (m.is_finite)
 			{
 				++r.num_finite_endpoints;
 				finite_distinct += 1.0 / m.multiplicity;
@@ -407,6 +419,8 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 	out << "\n  ----\n";
 	out << "  singular solutions  " << r.num_singular << "\n";
 	out << "  real solutions      " << r.num_real << "\n";
+	if (r.num_nonsolutions)
+		out << "  nonsolutions        " << r.num_nonsolutions << "   (filtered: squaring-up junk)\n";
 	out << "  path crossings      " << r.midpath.num_crossings_detected
 	    << (r.midpath.passed ? " (resolved)" : " (UNRESOLVED)") << "\n";
 	out << "  max condition num   " << r.max_condition_number << "\n";
@@ -1080,35 +1094,48 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 			/**
-			\brief The finite solutions: successful endpoints the library calls FINITE (is_finite
-			applies the configured endpoint_finite_threshold).  Includes singular, nonsingular, and
-			real solutions alike.  \see RealSolutions, SingularSolutions, NonsingularSolutions
+			\brief The finite solutions: successful, finite endpoints that ARE solutions of the target
+			(is_finite applies the configured endpoint_finite_threshold; nonsolutions are excluded).
+			Includes singular, nonsingular, and real solutions alike.
+			\see RealSolutions, SingularSolutions, NonsingularSolutions, Nonsolutions
 			*/
 			SolnCont<Vec<BaseComplexT>> FiniteSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite; }, user_coords);
+					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution; }, user_coords);
 			}
 
 			/// \brief The real finite solutions (is_real applies the configured tolerance).
 			SolnCont<Vec<BaseComplexT>> RealSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && m.is_real; }, user_coords);
+					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_real; }, user_coords);
 			}
 
 			/// \brief The nonsingular finite solutions (simple, well-conditioned roots).
 			SolnCont<Vec<BaseComplexT>> NonsingularSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_singular; }, user_coords);
+					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution && !m.is_singular; }, user_coords);
 			}
 
 			/// \brief The singular finite solutions (multiple or ill-conditioned roots).
 			SolnCont<Vec<BaseComplexT>> SingularSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && m.is_singular; }, user_coords);
+					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_singular; }, user_coords);
+			}
+
+			/**
+			\brief The NONSOLUTIONS: finite, successful endpoints that are NOT solutions of the target
+			system -- the extraneous (junk) points squaring up an over-determined system introduces.
+			Empty for a system solved without randomization.  These are excluded from FiniteSolutions /
+			RealSolutions / etc.; a regeneration cascade reads them to discard junk.  \see is_nonsolution
+			*/
+			SolnCont<Vec<BaseComplexT>> Nonsolutions(bool user_coords = true) const
+			{
+				return SolutionsWhere([](auto const& m){
+					return m.endgame_success == SuccessCode::Success && m.is_nonsolution; }, user_coords);
 			}
 
 			/**
@@ -2060,10 +2087,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			Squaring replaces N equations by n generic combinations, so the square system's isolated
 			solutions are the genuine ones PLUS spurious points that satisfy the combinations but not
 			the original system.  Re-evaluate the ORIGINAL (un-randomized) system at each finite
-			endpoint; a residual above a solve-accuracy threshold marks the point as not a real
-			solution (is_finite -> false, so it drops out of finite_solutions / real / singular), and
-			the reported function_residual is updated to that meaningful value.  A no-op unless the
-			system was squared up.
+			endpoint; a residual above a solve-accuracy threshold flags the point `is_nonsolution`
+			(it stays geometrically finite, but drops out of FiniteSolutions / Real / Singular and is
+			surfaced by Nonsolutions()), and the reported function_residual is updated to that
+			meaningful value.  A no-op unless the system was squared up.
 			*/
 			void PostEGAction() override
 			{
@@ -2095,7 +2122,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 						this->original_natural_target_.template Eval<complex_dbl>(pt_d).template lpNorm<Eigen::Infinity>());
 					smd.function_residual = residual;            // report residual against the ORIGINAL system
 					if (static_cast<double>(residual) > threshold)
-						smd.is_finite = false;                   // extraneous: not a solution of the original system
+						smd.is_nonsolution = true;               // extraneous: finite, but not a solution of the original system
 				}
 			}
 

@@ -70,15 +70,22 @@ Three equations in two variables, whose only common solutions are :math:`(1, 1)`
     solver.solve()
 
 The squared system has more endpoints than there are genuine solutions (the extras satisfy the
-random combinations but not the original equations).  ``all_solutions`` shows them all;
-``finite_solutions`` returns only the genuine roots, the extraneous ones having been filtered out:
+random combinations but not the original equations).  ``all_solutions()`` shows them all;
+``solutions()`` returns only the genuine roots, and the extraneous ones -- flagged
+``is_nonsolution`` in the metadata -- are surfaced separately by ``nonsolutions()``:
 
 .. testcode::
 
-    assert len(solver.all_solutions()) > 2     # the squared system's full path count
-    assert len(solver.finite_solutions()) == 2 # only the two true common solutions remain
+    n_all = len(solver.all_solutions())        # the squared system's full path count
+    assert n_all > 2
+    assert len(solver.solutions()) == 2        # only the two true common solutions
+    assert len(solver.nonsolutions()) == n_all - 2   # the extraneous, junk points
 
-You can inspect the exact combinations used with ``solver.randomization_matrix()``.
+``solutions()`` is the general getter: by default the finite genuine solutions, with keywords to
+filter by category -- ``solutions(real=False)`` for the complex ones, ``solutions(singular=False)``
+for the nonsingular ones, ``solutions(infinite=True)`` to also include the at-infinity endpoints,
+``solutions(nonsolution=True)`` to opt the junk back in.  You can inspect the exact combinations the
+squaring used with ``solver.randomization_matrix()``.
 
 An under-determined system: a helpful refusal
 =============================================

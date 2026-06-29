@@ -134,6 +134,11 @@ void ExposeSolutionMetaData(std::string const& class_name){
 	.def_readwrite("is_singular",&MDT::is_singular,
 		"Whether the endpoint is singular: multiplicity > 1, or the condition-number estimate exceeds "
 		"PostProcessingConfig.condition_number_threshold. Only meaningful for successful endpoints.")
+	.def_readwrite("is_nonsolution",&MDT::is_nonsolution,
+		"Whether the endpoint is a NONSOLUTION: a finite, successful point that is not a solution of "
+		"the target system -- the extraneous junk introduced when ZeroDimSolver squares up an "
+		"over-determined system.  Orthogonal to is_finite; excluded from the finite/real/singular "
+		"solution accessors and surfaced by nonsolutions().  Load-bearing for regeneration cascades.")
 	;
 }
 
@@ -223,7 +228,40 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		},
 		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
 		return_internal_reference<>(),
-		"get ALL the computed solutions, one per tracked path (finite, at-infinity, and failed alike).  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.  for just the finite ones see finite_solutions; for the at-infinity ones see infinite_solutions.")
+		"get ALL the computed solutions, one per tracked path (finite, at-infinity, and failed alike).  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.  for the filtered view see solutions(); for the at-infinity ones see infinite_solutions.")
+	.def("solutions",
+		+[](AlgoT const& self, bool singular, bool real, bool nonreal, bool nonsingular,
+		    bool infinite, bool nonsolution, bool user_coords){
+			boost::python::list out;
+			// Each category flag toggles inclusion of one kind of endpoint.  A genuine finite
+			// solution is returned iff its singular-class AND its real-class are both enabled; the
+			// at-infinity and nonsolution endpoints are opt-in.  Default = every finite genuine
+			// solution (real + complex, simple + multiple), no at-infinity, no junk.
+			auto pred = [=](auto const& m) -> bool {
+				if (m.is_nonsolution) return nonsolution;   // finite, but not a solution of the target
+				if (!m.is_finite)     return infinite;      // at infinity (or a failed path's placeholder)
+				bool sing_ok = m.is_singular ? singular : nonsingular;
+				bool real_ok = m.is_real    ? real     : nonreal;
+				return sing_ok && real_ok;
+			};
+			for (auto const& p : self.SolutionsWhere(pred, user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"),
+		 boost::python::arg("singular") = true, boost::python::arg("real") = true,
+		 boost::python::arg("nonreal") = true, boost::python::arg("nonsingular") = true,
+		 boost::python::arg("infinite") = false, boost::python::arg("nonsolution") = false,
+		 boost::python::arg("user_coords") = true),
+		"the solutions, filtered by category (returns points, not metadata).  By DEFAULT every finite "
+		"genuine solution -- real and complex, simple and multiple -- and nothing else.  Each keyword "
+		"toggles a category: singular / nonsingular select by conditioning, real / nonreal by realness "
+		"(a finite solution is returned only if BOTH its conditioning class and its realness class are "
+		"enabled), infinite=True also returns the at-infinity endpoints, and nonsolution=True also "
+		"returns the squaring-up junk.  E.g. solutions(real=False) -> complex finite solutions only; "
+		"solutions(singular=False) -> nonsingular finite solutions; solutions(infinite=True) adds the "
+		"divergent paths.  user_coords=False gives the solver's internal coordinates.  See also "
+		"real_solutions / nonsingular_solutions / singular_solutions / infinite_solutions / nonsolutions "
+		"for the common single-category views, and all_solutions for the raw per-path list.")
 	.def("finite_solutions",
 		+[](AlgoT const& self, bool user_coords){
 			boost::python::list out;
@@ -256,6 +294,16 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		},
 		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
 		"the SINGULAR finite solutions (multiple or ill-conditioned roots).")
+	.def("nonsolutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.Nonsolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the NONSOLUTIONS: finite, successful endpoints that are NOT solutions of the target system "
+		"-- the extraneous junk a squared-up over-determined system introduces (empty otherwise).  "
+		"Excluded from finite_solutions/real/singular; a regeneration cascade reads these to discard junk.")
 	.def("infinite_solutions",
 		+[](AlgoT const& self, bool user_coords){
 			boost::python::list out;

@@ -41,10 +41,44 @@ def test_overdetermined_system_is_squared_and_filtered():
     solver.solve()
 
     # the randomized (square) system has MORE endpoints than genuine solutions ...
-    assert len(solver.all_solutions()) > 2
-    # ... but finite_solutions returns only the two that satisfy the ORIGINAL system.
-    finite = solver.finite_solutions()
-    assert len(finite) == 2
+    n_all = len(solver.all_solutions())
+    assert n_all > 2
+    # ... but solutions() / finite_solutions returns only the two that satisfy the ORIGINAL system,
+    # and the extraneous ones are the nonsolutions.
+    assert len(solver.solutions()) == 2
+    assert len(solver.finite_solutions()) == 2
+    assert len(solver.nonsolutions()) == n_all - 2
+    assert len(solver.solutions(nonsolution=True)) == n_all   # opt the junk back in
+    # the nonsolution endpoints are flagged is_nonsolution but remain geometrically finite
+    md = solver.solution_metadata()
+    assert sum(1 for m in md if m.is_nonsolution) == n_all - 2
+    assert all(m.is_finite for m in md if m.is_nonsolution)
+
+
+def test_solutions_filter_by_realness():
+    # circle meeting the line x = y: two REAL solutions
+    x, y = _xy()
+    real_sys = pb.System()
+    real_sys.add_variable_group(pb.VariableGroup([x, y]))
+    real_sys.add_function(x * x + y * y - 1)
+    real_sys.add_function(x - y)
+    rl = ZeroDimSolver(real_sys, mptype='adaptive')
+    rl.solve()
+    assert len(rl.solutions()) == 2                       # both, by default
+    assert len(rl.solutions(nonreal=False)) == 2          # real only
+    assert len(rl.solutions(real=False)) == 0             # complex only
+
+    # circle meeting the hyperbola xy = 1: four COMPLEX (non-real) solutions
+    x, y = _xy()
+    cx_sys = pb.System()
+    cx_sys.add_variable_group(pb.VariableGroup([x, y]))
+    cx_sys.add_function(x * x + y * y - 1)
+    cx_sys.add_function(x * y - 1)
+    cx = ZeroDimSolver(cx_sys, mptype='adaptive')
+    cx.solve()
+    assert len(cx.solutions()) == 4                       # all four
+    assert len(cx.solutions(nonreal=False)) == 0          # none are real
+    assert len(cx.solutions(real=False)) == 4             # all complex
 
 
 def test_underdetermined_system_raises_helpful_error():
