@@ -147,8 +147,8 @@ namespace bertini
 	 
 	 \tparam length_in_digits The length of the desired random number
 	 
-	 \param a The left bound.
-	 \param b The right bound.
+	 \param left The left bound.
+	 \param right The right bound.
 	 */
 	template <unsigned int length_in_digits>
 	real_mp RandomMp(const real_mp & left, const real_mp & right)

@@ -126,10 +126,12 @@ namespace bertini{
 			/**
 			 \brief Checks the solution data at the endgame boundary to see if any paths have crossed during tracking before the endgame.
 			 
-			 \param boundary_data Solution data at the endgame boundary
-			 
-			 \returns A Data object which stores data about crossed paths
-			 
+			 \tparam StartSystemT The start system type.
+			 \param boundary_data Solution data at the endgame boundary.
+			 \param start_system The start system used for tracking.
+
+			 \returns True if no paths crossed during tracking, false otherwise.
+
 			*/
 			template <typename StartSystemT>
 			bool Check(BoundaryData const& boundary_data, StartSystemT const& start_system)

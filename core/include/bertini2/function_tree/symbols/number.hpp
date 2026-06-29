@@ -362,7 +362,7 @@ namespace node{
 	/**
 	\brief The Rational number type for Bertini2 expression trees.
 
-	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a complex_mp at evaluate time.
+	The Rational number type for Bertini2 expression trees.  The "true value" is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a complex_mp at evaluate time.
 	*/
 	class Rational : public Number
 	{

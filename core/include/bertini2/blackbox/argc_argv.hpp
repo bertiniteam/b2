@@ -43,8 +43,8 @@ struct ParsedArgs {
 Parse command-line arguments and return a ParsedArgs struct.
 
 Recognized flags:
-  -f <file>   use <file> as the input file (overrides default "input")
-  <file>      bare positional argument treated as input file path
+  -f `<file>`   use `<file>` as the input file (overrides default "input")
+  `<file>`      bare positional argument treated as input file path
   --help      print usage and exit
   --version   print version and exit
 

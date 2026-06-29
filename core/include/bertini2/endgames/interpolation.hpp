@@ -51,11 +51,12 @@ Details:
 		Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we 
 		say we have converged. 
 
-\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
-\param endgame_time The time value at which we start the endgame. 
-\param x_endgame_start The current space point at endgame_time.
-\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
-\param samples a deque that will hold all the samples corresponding to the time values in times. 
+\param target_time The time value that we wish to interpolate at.
+\param num_sample_points The number of (time, sample) points used in the interpolation.
+\param times The time values of the samples used for interpolation.
+\param samples The space values corresponding to the time values in \p times.
+\param derivatives The dx/dt (or dx/ds) values at the (time, sample) points.
+\param shift_from Which end of the sample containers to interpolate from.
 
 \tparam ComplexT The complex number type.
 */			

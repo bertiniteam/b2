@@ -34,7 +34,7 @@
 
 \brief Contains base class, Endgame.
 
-\defgroup endgame
+\defgroup endgame Endgames
 */
 
 #include <iostream>

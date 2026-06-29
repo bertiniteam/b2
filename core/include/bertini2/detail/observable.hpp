@@ -28,7 +28,7 @@
 
 \brief Contains the observable base types
 
-\defgroup observable
+\defgroup observable Observables
 */
 
 #ifndef BERTINI_DETAIL_OBSERVABLE_HPP

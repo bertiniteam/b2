@@ -319,7 +319,7 @@ namespace bertini{
 
 			Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
 
-			\param corrected_space[out] The spatial result of the correction loop.
+			\param[out] corrected_space The spatial result of the correction loop.
 			\param current_space The start point in space for running the corrector loop.
 			\param current_time The current time value.
 

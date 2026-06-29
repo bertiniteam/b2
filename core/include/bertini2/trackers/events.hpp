@@ -303,7 +303,7 @@ namespace bertini {
 
 		\param obs The observed object, the tracker.  `*this` probably.
 		\param start_time The time \f$t_0\f$ at which tracking is starting.
-		\param end_time The target time for tracking.
+		\param endtime The target time for tracking.
 		\param start_point The space point \f$x_0\f$ for starting tracking.
 		*/
 		Initializing(const ObservedT & obs, 

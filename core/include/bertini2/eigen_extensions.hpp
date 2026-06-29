@@ -391,8 +391,12 @@ namespace bertini {
 	/**
 	\brief Check whether two values are very close to each other.
 
-	\e The tolerance for being close
-	See \url http://www.boost.org/doc/libs/1_34_0/libs/test/doc/components/test_tools/floating_point_comparison.html, for example.
+	\tparam T The numeric type.
+	\param a The first value.
+	\param b The second value.
+	\param e The tolerance for being close.
+
+	See http://www.boost.org/doc/libs/1_34_0/libs/test/doc/components/test_tools/floating_point_comparison.html, for example.
 	*/
 	template<typename T>
 	inline

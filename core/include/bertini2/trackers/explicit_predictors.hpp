@@ -449,16 +449,15 @@ namespace bertini{
 				 \brief Perform a generic predictor step.
 				 
 				 \param next_space The computed prediction.
-				 \param method An enum class selecting the predictor method to use.
+				 \param meta Step metadata, populated during the step with the Jacobian norms and condition number estimate.
 				 \param S The system being solved.
 				 \param current_space The current space variable vector.
 				 \param current_time The current time.
 				 \param delta_t The size of the time step.
-				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
-				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
+				 \param num_steps_since_last_condition_number_computation Updated in this function.
 				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
-				 \param prec_type The operating precision type.
 				 \param tracking_tolerance How tightly to track the path.
+				 \param AMP_config Optional adaptive-multiple-precision configuration; when null, fixed-precision behaviour is used.
 
 				 \return SuccessCode indicating how the prediction went.
 				 */
@@ -1041,6 +1040,7 @@ namespace bertini{
 			
 			
 			
+		/// \cond INTERNAL
 		// Explicit instantiation declarations — suppress re-instantiation in every
 		// including TU.  The definitions live in core/src/tracking/explicit_predictors.cpp.
 		// Concrete types: complex_dbl = std::complex<double>, complex_mp (multiprecision).
@@ -1085,6 +1085,7 @@ namespace bertini{
 		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
 		extern template void ExplicitRKPredictor::FillButcherTable<real_mp>(
 		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+		/// \endcond
 
 		} // re: predict
 	}// re: tracking

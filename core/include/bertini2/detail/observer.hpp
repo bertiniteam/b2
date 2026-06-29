@@ -28,7 +28,7 @@
 
 \brief Contains the observer base types.
 
-\defgroup observer
+\defgroup observer Observers
 
 */
 

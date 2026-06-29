@@ -472,11 +472,14 @@ public:
 
 
 	/**
-	\param c The cycle number you want to use
+	\brief Transform the stored times and derivatives into the S-plane, scaled by the cycle number.
 
-	This function transforms the times and derivatives into the S-plane, scaled by the cycle number.
+	This function transforms the times and derivatives into the S-plane, scaled by the cycle number, and maps them into the interval [0, 1].
 
-	this function also transforms them into the interval [0 1]
+	\param cycle_num The cycle number to use.
+	\param t0 The base time value of the transform.
+	\param num_pts The number of points to transform.
+	\param shift_from Which end of the sample containers to transform from.
 	*/
 	template <typename ComplexT>
 	std::tuple<TimeCont<ComplexT>, SampCont<ComplexT>> TransformToSPlane(int cycle_num, ComplexT const& t0, unsigned num_pts, ContStart shift_from)

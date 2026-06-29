@@ -603,16 +603,6 @@ namespace bertini {
 		}
 
 
-		/**
-		\brief assignts the computed values of functions into the given vector
-
-		\tparam NumT numeric type
-
-		\param result The vector you're going to store the values into
-
-		the function will NOT automatically resize your vector for you to be the correct size
-
-		 */
 		/// Number of slots the compiler inferred as NumType::Real (ADR-0034).  >0 means real-valued
 		/// subexpressions are being evaluated in the cheaper real banks; used by tests to confirm the
 		/// tier inference is live (not silently all-Complex).

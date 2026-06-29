@@ -228,8 +228,8 @@ public:
 	std::vector<std::vector<int>> const& TargetMultidegrees() const { return target_multidegrees_; }
 	std::vector<std::vector<int>> const& OperandMultidegrees() const { return operand_multidegrees_; }
 
-	/// Human-facing description: terse shows `f_a..f_b = R . g  (R: nxN)` then the underlying
-	/// functions `g_j` indented (they are the interesting part); verbose additionally prints R's
+	/// Human-facing description: terse shows 'f_a..f_b = R . g  (R: nxN)' then the underlying
+	/// functions 'g_j' indented (they are the interesting part); verbose additionally prints R's
 	/// entries.
 	void Describe(std::ostream& out, size_t& row, VariableGroup const& /*vars*/, bool verbose) const
 	{

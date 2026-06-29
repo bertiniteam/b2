@@ -98,10 +98,10 @@ namespace bertini {
 		\brief The constructor for a CircleAdvanced Event.
 
 		\param obs The observable emitting the event.
-		\param previous The precision before changing.
-		\param next The precision after changing.
+		\param new_point The space point reached after advancing around the circle.
+		\param new_time The time value reached after advancing around the circle.
 		*/
-		CircleAdvanced(const ObservedT & obs, 
+		CircleAdvanced(const ObservedT & obs,
 		               Vec<ComplexT> const& new_point,
 		               ComplexT const& new_time) : EndgameEvent<ObservedT>(obs),
 													new_point_(new_point),

@@ -163,8 +163,8 @@ namespace bertini {
 
 		It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
 
-		\return The function values of the system
-		*/ 
+		\param function_values The vector to write the function values into.
+		*/
 		template<typename T>
 		void EvalInPlace(Vec<T> & function_values) const
 		{
@@ -217,6 +217,7 @@ namespace bertini {
 		 
 		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
 		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
+		 \param function_values The vector to write the function values into.
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
 		template<typename T, typename Derived>
@@ -279,6 +280,7 @@ namespace bertini {
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
 		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 
+		 \param function_values The vector to write the function values into.
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
 
@@ -397,7 +399,8 @@ namespace bertini {
 		 
 		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
 		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
-		 
+
+		 \param J The matrix to write the Jacobian into.
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
 		template<typename T>
@@ -449,12 +452,12 @@ namespace bertini {
 		 Evaluate the Jacobian of the system, provided a path variable is defined for the system, in place.
 		 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
-		 \return The Jacobian matrix.
-		 
-		 \param variable_values The values of the variables, for the evaluation.
-		 \param path_variable_value The current value of the path variable.
 
 		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
+
+		 \param J The matrix to write the Jacobian into.
+		 \param variable_values The values of the variables, for the evaluation.
+		 \param path_variable_value The current value of the path variable.
 		 */
 		template<typename Derived, typename T>
 		void JacobianInPlace(Mat<T> & J, const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
@@ -955,24 +958,6 @@ namespace bertini {
 
 
 		/**
-		 Add a subfunction to the system.
-
-		 Tacks them onto the end of the system.
-
-		 \param F The subfunction to add.
-		 */
-
-		/**
-		 Add some subfunctions to the system.
-
-		 Tacks them onto the end of the system.
-
-		 \param F The subfunctions to add.
-		 */
-
-
-
-		/**
 		 Add a function to the system, as a bare expression.
 
 		 \param F The function to add.
@@ -1323,7 +1308,7 @@ namespace bertini {
 		 for (int jj = 0; jj < num_vars; ++jj)
 			for (int ii = 0; ii < num_functions; ++ii)
 				space_derivatives_[ii+jj*num_functions] = functions_[ii]->Differentiate(vars[jj]);
-		 ```		
+		 ```
 		 */
 		std::vector< Nd > GetSpaceDerivatives() const;
 
@@ -1956,6 +1941,9 @@ namespace bertini {
 	exposed so a user-authored start system can be turned into a trackable homotopy for the
 	user-homotopy solve path.
 
+	\param target The target system (H at t=0).
+	\param start The start system whose solutions seed the homotopy (H at t=1).
+	\param path_variable_name The name to give the homotopy's path variable.
 	\param gamma The gamma coefficient (a node).  If null, a random rational gamma is generated.
 	*/
 	System MakeHomotopy(System const& target, System const& start,
@@ -1982,6 +1970,10 @@ namespace bertini {
 	pipeline) as `fixed` concatenated with `end_moving`, and the start points as the roots of `fixed`
 	together with `start_moving`.
 
+	\param fixed The equations that do not move (evaluated once per point).
+	\param start_moving The moving rows at t=1 (their roots, with `fixed`, are the start points).
+	\param end_moving The moving rows at t=0 (the target rows).
+	\param path_variable_name The name to give the homotopy's path variable.
 	\param gamma The gamma coefficient (a node).  If null, a random rational gamma is generated.
 	*/
 	System MakeMovingHomotopy(System const& fixed, System const& start_moving, System const& end_moving,
@@ -1998,6 +1990,7 @@ namespace bertini {
 	*/
 	void Simplify(System & sys);
 
+	/// \cond INTERNAL
 	// Explicit instantiation declarations for the two concrete numeric types.
 	// Definitions live in core/src/system/system.cpp.
 	// Suppresses re-instantiation of the heavy Eval/Jacobian/Set template bodies
@@ -2038,6 +2031,7 @@ namespace bertini {
 
 	extern template void System::SetAndReset<complex_dbl>(Vec<complex_dbl> const&) const;
 	extern template void System::SetAndReset<complex_mp>(Vec<complex_mp> const&) const;
+	/// \endcond
 
 }
 
