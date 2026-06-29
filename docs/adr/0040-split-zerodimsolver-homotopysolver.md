@@ -59,13 +59,22 @@ not depend on `ZeroDimSolver`.
     friendly "positive-dimensional, not zero-dimensional" message).
   - `SquareUp` randomizes an over-determined target down to square (`System::Randomize`), keeping the
     original; after the solve it overrides the now-virtual `PostEGAction` to re-evaluate the original
-    system at each finite endpoint **in double precision** and drop the extraneous solutions the
-    squaring introduces (`is_finite → false`). Exposed as `was_randomized()` / `randomization_matrix()`.
+    system at each finite endpoint **in double precision** and flag the extraneous solutions the
+    squaring introduces. These are marked with a dedicated **`is_nonsolution`** metadata flag
+    (orthogonal to `is_finite`, so they stay geometrically finite rather than masquerading as
+    at-infinity); they are excluded from the finite/real/singular accessors, surfaced by
+    `Nonsolutions()`, and counted in `SolveReport.num_nonsolutions`. `is_nonsolution` is load-bearing
+    for the regeneration cascade, which must identify and discard nonsolutions. Exposed as
+    `was_randomized()` / `randomization_matrix()`.
   - `RankCheck` rejects a square-by-count-but-positive-dimensional target via a generic-point
     Jacobian rank test.
 
 To support the filter, `PostEGAction` is protected + virtual and the per-endpoint metadata/endpoints
 are protected.
+
+The Python surface gains a `solutions(**flags)` getter on both classes (finite genuine by default,
+with `singular`/`nonsingular`, `real`/`nonreal`, `infinite`, `nonsolution` toggles); `all_solutions()`
+remains the raw per-path list, so this is additive.
 
 ## Consequences
 
