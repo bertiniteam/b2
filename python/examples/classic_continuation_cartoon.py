@@ -23,7 +23,7 @@ import os
 import sys
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDim, observers as nobs
+from bertini.nag_algorithm import ZeroDimSolver, observers as nobs
 
 ENDGAME_BOUNDARY = 0.1
 HOMVAR_INDEX = 0   # homogenize() prepends the homogenizing coordinate; affine coord = z[k]/z[0]
@@ -62,7 +62,7 @@ def classify(meta):
 def collect():
     """Solve and return [(flavor, DataFrame), ...], one per path."""
     pb.random.set_random_seed(1)
-    zd = ZeroDim(target_system(), mptype="adaptive")
+    zd = ZeroDimSolver(target_system(), mptype="adaptive")
     coll = nobs.SolutionPathCollector()
     zd.add_observer(coll)
     zd.solve()

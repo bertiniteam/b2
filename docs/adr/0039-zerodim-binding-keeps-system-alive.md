@@ -63,3 +63,10 @@ reference to `sys`.
   the binding keep-alive is the minimal, correct fix and matches what a careful caller already does.
 - Other bindings that take a `System`/start system by reference and outlive the call (e.g. NID) should
   be audited for the same keep-alive need; out of scope here.
+
+## Update (ADR-0040)
+
+The `ZeroDim` class was split into `ZeroDimSolver` (the algorithm) and `HomotopySolver` (the engine).
+This keep-alive is unchanged in spirit and still applied: `ZeroDimSolver(system)` keeps the system
+alive (`with_custodian_and_ward<1,2>`), and `HomotopySolver(target, start, homotopy)` — which holds
+all three by reference — keeps all three alive via chained custodian-and-ward.

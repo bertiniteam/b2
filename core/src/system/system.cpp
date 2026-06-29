@@ -1595,7 +1595,7 @@ namespace bertini
 			// carries target's variable structure and patch; the blend contributes the natural
 			// rows.  ClearBlocks drops the shell's own function blocks (a structured target's rows
 			// live in a structured block, not a PolynomialBlock, so ClearFunctions would leave them
-			// to be evaluated a second time alongside the blend).  Mirrors policy::CloneGiven::FormHomotopy.
+			// to be evaluated a second time alongside the blend).  Mirrors ZeroDimSolver homotopy formation (MakeHomotopy).
 			homotopy = target;
 			homotopy.ClearBlocks();
 			homotopy.AddPathVariable(t);

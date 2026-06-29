@@ -20,7 +20,7 @@ and the two endpoints of the **moving** rows, and it returns
    H \;=\; \bigl[\; \text{fixed's blocks} \;;\; (1-t)\,\text{end} + \gamma\,t\,\text{start} \;\bigr],
 
 keeping the fixed equations as their own evaluation blocks and moving only the rest. Pair it with
-:func:`~bertini.nag_algorithm.user_homotopy` and the start points you already know.
+:func:`~bertini.nag_algorithm.HomotopySolver` and the start points you already know.
 
 Move one slice
 ==============
@@ -54,7 +54,7 @@ intersections with it, :math:`(\pm 1, 0)`; at :math:`t=0` the slice is the diago
     start_points = [np.array([bertini.multiprec.Complex('1'),  bertini.multiprec.Complex('0')]),
                     np.array([bertini.multiprec.Complex('-1'), bertini.multiprec.Complex('0')])]
 
-    solver = nag_algorithm.user_homotopy(H, start_points, target)
+    solver = nag_algorithm.HomotopySolver(H, start_points, target)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
                    for s in solver.all_solutions())
@@ -94,7 +94,7 @@ slice); only the moving slice carries :math:`t`:
     start_points = [np.array([bertini.multiprec.Complex(str(a)), bertini.multiprec.Complex('0'),
                               bertini.multiprec.Complex('0')]) for a in (1, -1)]
 
-    solver = nag_algorithm.user_homotopy(H, start_points, target)
+    solver = nag_algorithm.HomotopySolver(H, start_points, target)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4), round(complex(s[2]).real, 4))
                    for s in solver.all_solutions())
@@ -143,7 +143,7 @@ moving row is :math:`\gamma\,(x-1)(x+1)`, whose roots on the slice are :math:`(\
     start_points = [np.array([bertini.multiprec.Complex(str(a)), bertini.multiprec.Complex('0.5')])
                     for a in (1, -1)]
 
-    solver = nag_algorithm.user_homotopy(H, start_points, target)
+    solver = nag_algorithm.HomotopySolver(H, start_points, target)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
                    for s in solver.all_solutions())

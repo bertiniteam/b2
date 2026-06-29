@@ -233,7 +233,7 @@ void ThreadedMatchesSerial(MakeSys make_sys, std::size_t expected_finite)
 	auto sys_serial = make_sys();
 	auto sys_thread = make_sys();
 
-	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+	using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
 	                              System>;
 
 	ZD zd_serial(sys_serial);  zd_serial.DefaultSetup();
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(num_threads_one_equals_default_solve)
 {
 	using namespace bertini;
 	auto sys = TwoQuadrics();
-	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+	using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
 	                              System>;
 	ZD zd(sys); zd.DefaultSetup();
 	auto one = SolveWith(zd, 1);
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(event_tracker_is_member_tracker_when_serial)
 {
 	using namespace bertini;
 	auto sys = TwoCubics();
-	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+	using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
 	                              System>;
 	ZD zd(sys); zd.DefaultSetup();
 
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(event_tracker_is_a_clone_when_threaded)
 		return;
 	}
 	auto sys = TwoCubics();
-	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+	using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
 	                              System>;
 	ZD zd(sys); zd.DefaultSetup();
 

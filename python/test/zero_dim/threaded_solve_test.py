@@ -1,4 +1,4 @@
-"""MPI-less shared-memory threading for the ZeroDim solve, exercised from Python.
+"""MPI-less shared-memory threading for the ZeroDimSolver solve, exercised from Python.
 
 The contract: a threaded solve returns the SAME solutions as a serial one, Python observers
 fire safely from worker threads (the GIL is released for the C++ solve and re-acquired in the
@@ -12,7 +12,7 @@ import pytest
 
 import bertini as pb
 import bertini.tracking as tk
-from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
+from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
 
 
 def _two_cubics():
@@ -26,7 +26,7 @@ def _two_cubics():
 
 
 def _solve_with(num_threads):
-    solver = ZeroDim(_two_cubics(), mptype='amp')
+    solver = ZeroDimSolver(_two_cubics(), mptype='amp')
     cfg = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
     cfg.num_threads = num_threads
     solver.set_config(cfg)
@@ -46,7 +46,7 @@ def _solution_key_set(solver, tol=6):
 
 
 def test_num_threads_config_roundtrips():
-    solver = ZeroDim(_two_cubics(), mptype='amp')
+    solver = ZeroDimSolver(_two_cubics(), mptype='amp')
     cfg = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
     assert cfg.num_threads == 0          # default: auto
     cfg.num_threads = 3
@@ -70,7 +70,7 @@ def test_lifecycle_observer_fires_under_threads():
     notifications are serialized (no lost/garbled counts)."""
     from bertini._pybertini import nag_algorithms as nag
 
-    solver = ZeroDim(_two_cubics(), mptype='amp')
+    solver = ZeroDimSolver(_two_cubics(), mptype='amp')
     cfg = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
     cfg.num_threads = 4
     solver.set_config(cfg)
@@ -100,7 +100,7 @@ def test_event_tracker_is_attachable_and_distinct_under_threads():
     solver's member tracker (it's the thread-local clone)."""
     from bertini._pybertini import nag_algorithms as nag
 
-    solver = ZeroDim(_two_cubics(), mptype='amp')
+    solver = ZeroDimSolver(_two_cubics(), mptype='amp')
     cfg = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
     cfg.num_threads = 4
     solver.set_config(cfg)
@@ -127,7 +127,7 @@ def test_event_tracker_is_attachable_and_distinct_under_threads():
 def test_solution_path_collector_under_threads():
     """The two-level meta-observer collects exactly one series per path under threading, because
     it now attaches to event.tracker() (the clone that actually runs the path)."""
-    solver = ZeroDim(_two_cubics(), mptype='amp')
+    solver = ZeroDimSolver(_two_cubics(), mptype='amp')
     cfg = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
     cfg.num_threads = 4
     solver.set_config(cfg)

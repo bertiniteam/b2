@@ -27,7 +27,7 @@ from mpi4py import MPI
 
 import bertini as pb
 from bertini import linalg
-from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionMHomogeneous
+from bertini.nag_algorithm import ZeroDimSolver
 
 OK = int(pb.tracking.SuccessCode.Success)
 
@@ -85,7 +85,7 @@ def main():
     comm = MPI.COMM_WORLD
     pb.random.set_random_seed(args.seed)        # reproducible homotopy (same on every rank)
     A = random_symmetric_integer_matrix(args.size, args.seed)
-    solver = ZeroDimCauchyAdaptivePrecisionMHomogeneous(eigen_system(A))
+    solver = ZeroDimSolver(eigen_system(A), endgame='cauchy', mptype='adaptive', startsystem='mhom')
 
     start = time.time()
     if comm.Get_size() > 1:

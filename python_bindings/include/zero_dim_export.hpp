@@ -136,6 +136,11 @@ void ExposeSolutionMetaData(std::string const& class_name){
 	.def_readwrite("is_singular",&MDT::is_singular,
 		"Whether the endpoint is singular: multiplicity > 1, or the condition-number estimate exceeds "
 		"PostProcessingConfig.condition_number_threshold. Only meaningful for successful endpoints.")
+	.def_readwrite("is_nonsolution",&MDT::is_nonsolution,
+		"Whether the endpoint is a NONSOLUTION: a finite, successful point that is not a solution of "
+		"the target system -- the extraneous nonsolutions introduced when ZeroDimSolver squares up an "
+		"over-determined system.  Orthogonal to is_finite; excluded from the finite/real/singular "
+		"solution accessors and surfaced by nonsolutions().  Load-bearing for regeneration cascades.")
 	;
 }
 
@@ -225,7 +230,40 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		},
 		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
 		return_internal_reference<>(),
-		"get ALL the computed solutions, one per tracked path (finite, at-infinity, and failed alike).  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.  for just the finite ones see finite_solutions; for the at-infinity ones see infinite_solutions.")
+		"get ALL the computed solutions, one per tracked path (finite, at-infinity, and failed alike).  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.  for the filtered view see solutions(); for the at-infinity ones see infinite_solutions.")
+	.def("solutions",
+		+[](AlgoT const& self, bool singular, bool real, bool nonreal, bool nonsingular,
+		    bool infinite, bool nonsolution, bool user_coords){
+			boost::python::list out;
+			// Each category flag toggles inclusion of one kind of endpoint.  A genuine finite
+			// solution is returned iff its singular-class AND its real-class are both enabled; the
+			// at-infinity and nonsolution endpoints are opt-in.  Default = every finite genuine
+			// solution (real + complex, simple + multiple), no at-infinity, no nonsolutions.
+			auto pred = [=](auto const& m) -> bool {
+				if (m.is_nonsolution) return nonsolution;   // finite, but not a solution of the target
+				if (!m.is_finite)     return infinite;      // at infinity (or a failed path's placeholder)
+				bool sing_ok = m.is_singular ? singular : nonsingular;
+				bool real_ok = m.is_real    ? real     : nonreal;
+				return sing_ok && real_ok;
+			};
+			for (auto const& p : self.SolutionsWhere(pred, user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"),
+		 boost::python::arg("singular") = true, boost::python::arg("real") = true,
+		 boost::python::arg("nonreal") = true, boost::python::arg("nonsingular") = true,
+		 boost::python::arg("infinite") = false, boost::python::arg("nonsolution") = false,
+		 boost::python::arg("user_coords") = true),
+		"the solutions, filtered by category (returns points, not metadata).  By DEFAULT every finite "
+		"genuine solution -- real and complex, simple and multiple -- and nothing else.  Each keyword "
+		"toggles a category: singular / nonsingular select by conditioning, real / nonreal by realness "
+		"(a finite solution is returned only if BOTH its conditioning class and its realness class are "
+		"enabled), infinite=True also returns the at-infinity endpoints, and nonsolution=True also "
+		"returns the nonsolutions.  E.g. solutions(real=False) -> complex finite solutions only; "
+		"solutions(singular=False) -> nonsingular finite solutions; solutions(infinite=True) adds the "
+		"divergent paths.  user_coords=False gives the solver's internal coordinates.  See also "
+		"real_solutions / nonsingular_solutions / singular_solutions / infinite_solutions / nonsolutions "
+		"for the common single-category views, and all_solutions for the raw per-path list.")
 	.def("finite_solutions",
 		+[](AlgoT const& self, bool user_coords){
 			boost::python::list out;
@@ -258,6 +296,16 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		},
 		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
 		"the SINGULAR finite solutions (multiple or ill-conditioned roots).")
+	.def("nonsolutions",
+		+[](AlgoT const& self, bool user_coords){
+			boost::python::list out;
+			for (auto const& p : self.Nonsolutions(user_coords)) out.append(p);
+			return out;
+		},
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
+		"the NONSOLUTIONS: finite, successful endpoints that are NOT solutions of the target system "
+		"-- the extraneous nonsolutions a squared-up over-determined system introduces (empty otherwise).  "
+		"Excluded from finite_solutions/real/singular; a regeneration cascade reads these to discard them.")
 	.def("infinite_solutions",
 		+[](AlgoT const& self, bool user_coords){
 			boost::python::list out;
@@ -325,20 +373,20 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 
 // Map a Start enum choice to a clone factory -- the one place a concrete start-system type is named
 // on the binding side.  User is rejected: it needs the user_homotopy path (RefToGiven).
-inline policy::StartSystemFactory<System> StartFactoryFor(blackbox::type::Start which)
+inline start_system::StartSystemFactory<System> StartFactoryFor(blackbox::type::Start which)
 {
 	switch (which)
 	{
 		case blackbox::type::Start::MHom:
-			return policy::MakeStartFactory<start_system::MHomogeneous>();
+			return start_system::MakeStartFactory<start_system::MHomogeneous>();
 		case blackbox::type::Start::RootsOfUnity:
-			return policy::MakeStartFactory<start_system::RootsOfUnity>();
+			return start_system::MakeStartFactory<start_system::RootsOfUnity>();
 		case blackbox::type::Start::User:
 			throw std::runtime_error("the User start system is not a clone-owned start; build the "
 			                         "homotopy with nag_algorithm.user_homotopy(...) instead");
 		case blackbox::type::Start::TotalDegree:
 		default:
-			return policy::MakeStartFactory<start_system::TotalDegree>();
+			return start_system::MakeStartFactory<start_system::TotalDegree>();
 	}
 }
 
@@ -359,7 +407,7 @@ inline void ExportStartSystemEnum()
 // these factories as the solver constructor's second argument.
 inline void ExportStartSystemFactory()
 {
-	class_<policy::StartSystemFactory<System>>("StartSystemFactory",
+	class_<start_system::StartSystemFactory<System>>("StartSystemFactory",
 		"Opaque factory that builds a start system for a ZeroDim solver.  Get one from "
 		"start_system_factory(StartSystemType.X) and pass it as the solver's second constructor arg.",
 		no_init);
@@ -374,7 +422,7 @@ inline void ExportStartSystemFactory()
 // TotalDegree, or an explicit factory) and held polymorphically.
 template<typename TrackerT, typename EndgameT>
 void ExportZeroDimSpecific(std::string const& class_name){
-	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System>;
+	using ZeroDimT = algorithm::ZeroDimSolver<TrackerT, EndgameT, System>;
 	// with_custodian_and_ward<1,2>: keep the Python System (ctor arg, index 2) alive as long as the
 	// solver (self, index 1).  The solver's internal system is a SHALLOW copy that shares the
 	// function-tree nodes' shared_ptrs with the user's System; those shared_ptrs carry boost.python
@@ -387,10 +435,18 @@ void ExportZeroDimSpecific(std::string const& class_name){
 	// a non-default start (e.g. MHomogeneous) -- the factory is a value, copied into the solver.
 	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(),
 		init<System const&>()[with_custodian_and_ward<1, 2>()])
-	.def(init<System const&, policy::StartSystemFactory<System> const&>(
+	.def(init<System const&, start_system::StartSystemFactory<System> const&>(
 			(boost::python::arg("system"), boost::python::arg("start_factory")))
 			[with_custodian_and_ward<1, 2>()])
 	.def(ZDVisitor<ZeroDimT>())
+	// ZeroDimSolver-specific (the engine HomotopySolver has no system to square up):
+	.def("was_randomized", &ZeroDimT::WasRandomized,
+		"True if the supplied system was over-determined and was squared up by randomization "
+		"(so the extraneous solutions the squaring introduces have been filtered out of "
+		"finite_solutions).  False for a square system.")
+	.def("randomization_matrix", &ZeroDimT::RandomizationMatrix, return_value_policy<copy_const_reference>(),
+		"The exact n x N coefficient matrix used to square up an over-determined system "
+		"(empty if the system was already square).")
 	;
 }
 
@@ -399,7 +455,7 @@ void ExportZeroDimSpecific(std::string const& class_name){
 //
 // This is the SAME ZeroDim template (same Solve / pre-endgame / midpath / endgame /
 // post-processing), instantiated with start_system::User (start points come from the supplied
-// list) and policy::RefToGiven (the homotopy is taken as-is, not formed).  Nothing about the
+// list) and a user-supplied homotopy (taken as-is, not formed).  Nothing about the
 // solve loop is re-implemented here -- this only registers the class + a constructor.
 
 // Build a start_system::User from a target system + a Python list of start-point vectors
@@ -432,7 +488,7 @@ inline void ExportUserStartSystem(){
 // reference (RefToGiven); the Python wrapper retains all three so the references stay valid.
 template<typename TrackerT, typename EndgameT>
 void ExportZeroDimUserHomotopy(std::string const& class_name){
-	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System, policy::RefToGiven>;
+	using ZeroDimT = algorithm::HomotopySolver<TrackerT, EndgameT, System>;
 	// RefToGiven: this solver holds REFERENCES to all three given systems, so each must outlive the
 	// solver.  Chain with_custodian_and_ward to keep target (arg 2), start (arg 3) and homotopy
 	// (arg 4) alive as long as the solver (self, arg 1).

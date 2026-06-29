@@ -31,7 +31,7 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionTotalDegree
+from bertini.nag_algorithm import ZeroDimSolver
 
 
 def _draw_sequence(n=6):
@@ -95,7 +95,7 @@ def _solve_circle_line(seed):
     sys.add_function(x**2 + y**2 - 1)
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    solver = ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
+    solver = ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     solver.solve()
     return solver
 

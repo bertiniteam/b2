@@ -60,6 +60,10 @@ pip install bertini2
 
 Once it's installed, you `import bertini` (not `import bertini2`!)
 
+Installing the wheel also puts the classic blackbox command-line solver on your PATH as
+`bertini2` (threads-only -- run `bertini2 --help`).  For MPI / multi-rank cluster
+parallelism, build the CLI from source.
+
 * Linux: Python 3.10-3.14
 * MacOS (Apple Silicon): Python 3.10-3.14
 * MacOS (Intel): not currently supported
@@ -69,6 +73,25 @@ Once it's installed, you `import bertini` (not `import bertini2`!)
 ## Building from source
 
 Please see [the Wiki compiling section](https://github.com/bertiniteam/b2/wiki/Installation) for instructions on compiling Bertini 2.
+
+## The `bertini2` command-line solver
+
+The classic blackbox CLI (`bertini2 input`, with a `CONFIG`/`INPUT` file) is a **pure C++**
+program -- it does not depend on Python -- and every build path delivers it:
+
+| You want... | Do this | You get |
+| --- | --- | --- |
+| The easy way (threads-only) | `pip install bertini2` | `bertini2` on PATH + the `bertini` Python package |
+| From source, with Python | `pip install .` (in a clone) | same as the wheel, built locally |
+| From source, with Python, editable | `pip install -e .` | `bertini2` resolves to the in-tree build |
+| **Just the solver, no Python** | `cmake -B build -S . && cmake --build build --target bertini2_exe && cmake --install build --component cli --prefix <prefix>` | only `<prefix>/bin/bertini2` |
+| Full C++ dev install | `cmake --install build` | `bin/bertini2` + `libbertini2` + headers |
+
+A plain `cmake` build skips the Python bindings (`BUILD_PYTHON_BINDINGS` is off by default), so the
+CLI-only path never needs a Python interpreter. The binary statically links our code but still needs
+the usual shared libraries on the system (Boost, GMP, MPFR, MPC, and MPI for multi-rank runs) -- the
+wheel vendors these; a from-source build expects them present (e.g. via your HPC modules or a conda
+env). The wheel CLI is **threads-only**; for MPI / multi-rank cluster parallelism, build from source.
 
 ---
 

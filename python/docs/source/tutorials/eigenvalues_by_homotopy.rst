@@ -34,7 +34,7 @@ We need ``numpy`` for the matrix and the cross-check, ``bertini`` for the solve,
     import numpy as np
     import bertini as bertini
     from bertini import linalg
-    from bertini.nag_algorithm import ZeroDim
+    from bertini.nag_algorithm import ZeroDimSolver
 
 Pick a small symmetric matrix (real, distinct eigenvalues make the check easy to read):
 
@@ -115,7 +115,7 @@ eigenvector):
 .. testcode::
 
     def eigenvalues_of(system):
-        solver = ZeroDim(system, mptype='adaptive', startsystem='mhom')
+        solver = ZeroDimSolver(system, mptype='adaptive', startsystem='mhom')
         solver.solve()
         good = solver.finite_solutions()                 # the n eigenpairs (lam is the last coord)
         assert len(good) == n                            # one path per eigenvalue

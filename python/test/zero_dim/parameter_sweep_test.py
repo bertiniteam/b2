@@ -45,12 +45,12 @@ def test_collect_reduces_each_solve():
 
 def test_sweep_matches_a_direct_solve():
     """A swept target must give the same solution set as solving that member from scratch."""
-    from bertini.nag_algorithm import ZeroDim
+    from bertini.nag_algorithm import ZeroDimSolver
 
     target = (C("4", "0"), C("9", "0"))
     swept = parameter_sweep(_make_system, _GENERIC, [target])[0]
 
-    direct = ZeroDim(_make_system(target), mptype='adaptive')
+    direct = ZeroDimSolver(_make_system(target), mptype='adaptive')
     direct.solve()
 
     def key(solver):

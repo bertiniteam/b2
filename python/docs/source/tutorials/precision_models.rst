@@ -6,7 +6,7 @@
    import numpy as np
    import bertini
 
-Bertini can track in three precision models, and ``ZeroDim`` selects between them with ``mptype``:
+Bertini can track in three precision models, and ``ZeroDimSolver`` selects between them with ``mptype``:
 
 * ``'double'`` -- hardware double precision (≈16 digits). Fastest; fine when the paths are
   well-conditioned.
@@ -26,11 +26,11 @@ story), see :doc:`precision_matters`.
    system.add_function(x + y)
    system.add_variable_group(bertini.VariableGroup([x, y]))
 
-   names = {mptype: type(bertini.nag_algorithm.ZeroDim(system, mptype=mptype)).__name__
+   names = {mptype: type(bertini.nag_algorithm.ZeroDimSolver(system, mptype=mptype)).__name__
             for mptype in ('double', 'multiple', 'adaptive')}
-   assert names['double']   == 'ZeroDimCauchyDoublePrecision'
-   assert names['multiple'] == 'ZeroDimCauchyFixedMultiplePrecision'
-   assert names['adaptive'] == 'ZeroDimCauchyAdaptivePrecision'
+   assert names['double']   == 'ZeroDimSolverCauchyDoublePrecision'
+   assert names['multiple'] == 'ZeroDimSolverCauchyFixedMultiplePrecision'
+   assert names['adaptive'] == 'ZeroDimSolverCauchyAdaptivePrecision'
 
    # The solver type encodes the endgame and the precision model, but NOT the start system -- that is
    # a construction choice now (the algorithm holds the start system polymorphically), so it no longer
@@ -48,10 +48,10 @@ coordinate with :func:`complex`:
 
    bertini.random.set_random_seed(2)
 
-   dbl = bertini.nag_algorithm.ZeroDim(system, mptype='double'); dbl.solve()
+   dbl = bertini.nag_algorithm.ZeroDimSolver(system, mptype='double'); dbl.solve()
    assert dbl.all_solutions()[0].dtype == np.complex128
 
-   amp = bertini.nag_algorithm.ZeroDim(system, mptype='adaptive'); amp.solve()
+   amp = bertini.nag_algorithm.ZeroDimSolver(system, mptype='adaptive'); amp.solve()
    assert str(amp.all_solutions()[0].dtype) == 'Complex'        # bertini.multiprec.Complex
 
    # the same code reads either one:
@@ -73,7 +73,7 @@ solver:
 
    bertini.default_precision(40)                  # 40 digits for this solve
    system.precision(40)                           # the system must match
-   m = bertini.nag_algorithm.ZeroDim(system, mptype='multiple')
+   m = bertini.nag_algorithm.ZeroDimSolver(system, mptype='multiple')
    m.solve()
    assert len(m.all_solutions()) == 2
 
@@ -89,7 +89,7 @@ An **adaptive** solve manages precision itself; its knobs live in the AMP config
 .. testcode::
 
    from bertini.tracking import AMPConfig
-   amp = bertini.nag_algorithm.ZeroDim(system, mptype='adaptive')
+   amp = bertini.nag_algorithm.ZeroDimSolver(system, mptype='adaptive')
    assert amp.get_tracker().get_config(AMPConfig).maximum_precision == 300
    amp.get_tracker().update(maximum_precision=200)     # tighten the ceiling
    assert amp.get_tracker().get_config(AMPConfig).maximum_precision == 200
@@ -106,7 +106,7 @@ and so on are not precision-stamped. That is exactly why a settings bundle carri
 
    shared = {'tolerances', 'zero_dim', 'post_processing', 'auto_retrack'}
    for mptype in ('double', 'multiple', 'adaptive'):
-       names = set(bertini.nag_algorithm.ZeroDim(system, mptype=mptype).config_names())
+       names = set(bertini.nag_algorithm.ZeroDimSolver(system, mptype=mptype).config_names())
        assert shared <= names
 
 So the rule of thumb: reach for ``'adaptive'`` by default; drop to ``'double'`` for speed when the
