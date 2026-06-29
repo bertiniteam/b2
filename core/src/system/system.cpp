@@ -27,6 +27,7 @@
 #include <type_traits>
 
 #include "bertini2/system/system.hpp"
+#include "bertini2/system/slice.hpp"   // for System::Slices() (needs the full Slice type)
 #include "bertini2/function_tree/find.hpp"
 
 #include <algorithm>
@@ -1038,6 +1039,40 @@ namespace bertini
 			}, blk);
 		}
 
+		return out;
+	}
+
+
+	std::vector<Slice> System::Slices() const
+	{
+		// Recover one Slice per LinearFormsBlock.  The block's columns are indexed by the system's
+		// variable ordering (see Slice::AddTo), so the slice is rebuilt over Variables().
+		std::vector<Slice> out;
+		auto const& vars = Variables();
+
+		for (auto const& blk : blocks_)
+		{
+			auto* p = std::get_if<blocks::LinearFormsBlock>(&blk);
+			if (!p)
+				continue;
+
+			auto const& M = p->Coefficients();
+			if (!p->IsHomogenized())
+			{
+				// affine: M is already augmented (trailing column is each form's constant).
+				out.push_back(Slice::FromCoefficients(vars, M, /*homogeneous=*/false));
+			}
+			else
+			{
+				// homogenized: M has one column per variable and no separate constant column.
+				// Re-augment with a zero constant so the recovered (homogeneous) slice evaluates
+				// identically (the old constant already rides on the homogenizing variable's column).
+				Mat<complex_mp> aug(M.rows(), M.cols() + 1);
+				aug.leftCols(M.cols()) = M;
+				aug.col(M.cols()).setZero();
+				out.push_back(Slice::FromCoefficients(vars, aug, /*homogeneous=*/true));
+			}
+		}
 		return out;
 	}
 
