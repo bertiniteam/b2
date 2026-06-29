@@ -173,11 +173,11 @@ struct SolutionMetaData
 	bool is_finite = false;     		// finite flag: whether the endpoint is finite (not at infinity)
 	bool is_singular = false;       		// singular flag: whether the endpoint is singular (multiple, or ill-conditioned)
 	// nonsolution flag: a finite, successful endpoint that is NOT a solution of the actual target
-	// system -- a junk point.  ZeroDimSolver sets this when it squares up an over-determined system:
+	// system -- a nonsolution.  ZeroDimSolver sets this when it squares up an over-determined system:
 	// the randomized square system has extraneous roots that satisfy the random combinations but not
 	// the original equations.  Orthogonal to is_finite (a nonsolution is finite); the finite / real /
 	// singular accessors exclude nonsolutions, and they are exposed on their own (Nonsolutions()).
-	// Load-bearing for the regeneration cascade, which must identify and discard junk endpoints.
+	// Load-bearing for the regeneration cascade, which must identify and discard nonsolutions.
 	bool is_nonsolution = false;
 
 	bool operator==(const SolutionMetaData<ComplexT> & other){
@@ -337,7 +337,7 @@ struct SolveReport
 	unsigned long long num_failed = 0;           ///< paths the tracker could not resolve (no solution, no clean divergence)
 	unsigned long long num_singular = 0;         ///< finite solutions flagged singular (multiple / ill-conditioned)
 	unsigned long long num_real = 0;             ///< finite solutions flagged real
-	unsigned long long num_nonsolutions = 0;     ///< finite endpoints that are NOT solutions of the target (squaring-up junk)
+	unsigned long long num_nonsolutions = 0;     ///< finite endpoints that are NOT solutions of the target (nonsolutions of an over-determined, squared-up system)
 	std::map<SuccessCode, unsigned long long> failures_by_reason; ///< histogram of the failed paths' SuccessCodes
 	double max_condition_number = 0;             ///< largest condition number among finite solutions
 	unsigned max_precision_used = 0;             ///< highest working precision any path needed (digits)
@@ -372,7 +372,7 @@ SolveReport SummarizeSolve(std::vector<SolutionMetaData<ComplexT>> const& metada
 		if (m.endgame_success == SuccessCode::Success)
 		{
 			if (m.is_nonsolution)
-				++r.num_nonsolutions;       // finite, but not a solution of the target (squaring junk)
+				++r.num_nonsolutions;       // a nonsolution: finite, but not a solution of the target
 			else if (m.is_finite)
 			{
 				++r.num_finite_endpoints;
@@ -420,7 +420,7 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 	out << "  singular solutions  " << r.num_singular << "\n";
 	out << "  real solutions      " << r.num_real << "\n";
 	if (r.num_nonsolutions)
-		out << "  nonsolutions        " << r.num_nonsolutions << "   (filtered: squaring-up junk)\n";
+		out << "  nonsolutions        " << r.num_nonsolutions << "   (finite, but not solutions of the target)\n";
 	out << "  path crossings      " << r.midpath.num_crossings_detected
 	    << (r.midpath.passed ? " (resolved)" : " (UNRESOLVED)") << "\n";
 	out << "  max condition num   " << r.max_condition_number << "\n";
@@ -1128,9 +1128,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			/**
 			\brief The NONSOLUTIONS: finite, successful endpoints that are NOT solutions of the target
-			system -- the extraneous (junk) points squaring up an over-determined system introduces.
+			system -- the extraneous nonsolutions squaring up an over-determined system introduces.
 			Empty for a system solved without randomization.  These are excluded from FiniteSolutions /
-			RealSolutions / etc.; a regeneration cascade reads them to discard junk.  \see is_nonsolution
+			RealSolutions / etc.; a regeneration cascade reads them to discard nonsolutions.  \see is_nonsolution
 			*/
 			SolnCont<Vec<BaseComplexT>> Nonsolutions(bool user_coords = true) const
 			{

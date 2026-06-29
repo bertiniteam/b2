@@ -79,12 +79,14 @@ random combinations but not the original equations).  ``all_solutions()`` shows 
     n_all = len(solver.all_solutions())        # the squared system's full path count
     assert n_all > 2
     assert len(solver.solutions()) == 2        # only the two true common solutions
-    assert len(solver.nonsolutions()) == n_all - 2   # the extraneous, junk points
+    # the remaining endpoints are nonsolutions (finite, not solutions) or diverged to infinity; every endpoint
+    # is exactly one of genuine solution / nonsolution / at-infinity:
+    assert len(solver.solutions()) + len(solver.nonsolutions()) + len(solver.infinite_solutions()) == n_all
 
 ``solutions()`` is the general getter: by default the finite genuine solutions, with keywords to
 filter by category -- ``solutions(real=False)`` for the complex ones, ``solutions(singular=False)``
 for the nonsingular ones, ``solutions(infinite=True)`` to also include the at-infinity endpoints,
-``solutions(nonsolution=True)`` to opt the junk back in.  You can inspect the exact combinations the
+``solutions(nonsolution=True)`` to opt the nonsolutions back in.  You can inspect the exact combinations the
 squaring used with ``solver.randomization_matrix()``.
 
 An under-determined system: a helpful refusal

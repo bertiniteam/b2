@@ -136,7 +136,7 @@ void ExposeSolutionMetaData(std::string const& class_name){
 		"PostProcessingConfig.condition_number_threshold. Only meaningful for successful endpoints.")
 	.def_readwrite("is_nonsolution",&MDT::is_nonsolution,
 		"Whether the endpoint is a NONSOLUTION: a finite, successful point that is not a solution of "
-		"the target system -- the extraneous junk introduced when ZeroDimSolver squares up an "
+		"the target system -- the extraneous nonsolutions introduced when ZeroDimSolver squares up an "
 		"over-determined system.  Orthogonal to is_finite; excluded from the finite/real/singular "
 		"solution accessors and surfaced by nonsolutions().  Load-bearing for regeneration cascades.")
 	;
@@ -236,7 +236,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 			// Each category flag toggles inclusion of one kind of endpoint.  A genuine finite
 			// solution is returned iff its singular-class AND its real-class are both enabled; the
 			// at-infinity and nonsolution endpoints are opt-in.  Default = every finite genuine
-			// solution (real + complex, simple + multiple), no at-infinity, no junk.
+			// solution (real + complex, simple + multiple), no at-infinity, no nonsolutions.
 			auto pred = [=](auto const& m) -> bool {
 				if (m.is_nonsolution) return nonsolution;   // finite, but not a solution of the target
 				if (!m.is_finite)     return infinite;      // at infinity (or a failed path's placeholder)
@@ -257,7 +257,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		"toggles a category: singular / nonsingular select by conditioning, real / nonreal by realness "
 		"(a finite solution is returned only if BOTH its conditioning class and its realness class are "
 		"enabled), infinite=True also returns the at-infinity endpoints, and nonsolution=True also "
-		"returns the squaring-up junk.  E.g. solutions(real=False) -> complex finite solutions only; "
+		"returns the nonsolutions.  E.g. solutions(real=False) -> complex finite solutions only; "
 		"solutions(singular=False) -> nonsingular finite solutions; solutions(infinite=True) adds the "
 		"divergent paths.  user_coords=False gives the solver's internal coordinates.  See also "
 		"real_solutions / nonsingular_solutions / singular_solutions / infinite_solutions / nonsolutions "
@@ -302,8 +302,8 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		},
 		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
 		"the NONSOLUTIONS: finite, successful endpoints that are NOT solutions of the target system "
-		"-- the extraneous junk a squared-up over-determined system introduces (empty otherwise).  "
-		"Excluded from finite_solutions/real/singular; a regeneration cascade reads these to discard junk.")
+		"-- the extraneous nonsolutions a squared-up over-determined system introduces (empty otherwise).  "
+		"Excluded from finite_solutions/real/singular; a regeneration cascade reads these to discard them.")
 	.def("infinite_solutions",
 		+[](AlgoT const& self, bool user_coords){
 			boost::python::list out;

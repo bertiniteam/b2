@@ -1267,13 +1267,17 @@ BOOST_AUTO_TEST_CASE(overdetermined_system_is_squared_and_filtered)
 	BOOST_CHECK(has_nn);
 
 	// the filtered-out points are flagged is_nonsolution (not is_finite=false) and surfaced by
-	// Nonsolutions(); they stay geometrically finite and out of the finite/infinite accessors.
-	BOOST_CHECK_EQUAL(zd.Nonsolutions().size(), zd.SolutionsUserCoords().size() - 2u);
+	// Nonsolutions(); they stay geometrically finite.  How many of the squaring's extra roots land
+	// finite vs. diverge is RNG-dependent, so assert the ROBUST invariants, not an exact count:
 	unsigned num_nonsol = 0;
 	for (auto const& m : zd.FinalSolutionMetadata())
 		if (m.is_nonsolution) { ++num_nonsol; BOOST_CHECK(m.is_finite); }   // a nonsolution is finite
 	BOOST_CHECK_EQUAL(num_nonsol, zd.Nonsolutions().size());
 	BOOST_CHECK_EQUAL(zd.Report().num_nonsolutions, num_nonsol);
+	// every endpoint is exactly one of: a genuine finite solution, a finite nonsolution, or at
+	// infinity -- so the three accessors partition the full per-path list.
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size() + zd.Nonsolutions().size() + zd.InfiniteSolutions().size(),
+	                  zd.SolutionsUserCoords().size());
 }
 
 // An UNDER-determined system has a positive-dimensional solution set, so ZeroDimSolver refuses it
