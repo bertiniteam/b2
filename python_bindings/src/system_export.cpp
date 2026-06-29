@@ -40,6 +40,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include "system_export.hpp"
+#include <bertini2/system/slice.hpp>   // for System::Slices() -> list of Slice
 #include <bertini2/io/classic_writer.hpp>
 
 
@@ -158,6 +159,15 @@ namespace bertini{
 				},
 				(arg("self"), arg("num_vars"), arg("factors")),
 				"Add a block of products-of-linear-forms f_i(x) = prod_r ( c_{i,r} . [x;1] ) to the System, evaluated as matrix-multiplies-then-row-products rather than as scalar expressions.  factors is a list with one entry per function; entry i is an complex_mp matrix with one row per linear factor and num_vars+1 columns (the trailing column carries each factor's constant term).  Each function's degree is its number of factors.")
+			.def("slices",
+				+[](SystemBaseT const& self) {
+					boost::python::list out;
+					for (auto const& s : self.Slices())
+						out.append(s);
+					return out;
+				},
+				(arg("self")),
+				"The linear-form slices embedded in this system, one per linear-forms block (an empty list if none).  Lets you back out the slice structure of a system that was built from a slice -- the inverse of Slice.as_system().")
 			// .def("add_ungrouped_variable", &SystemBaseT::AddUngroupedVariable,"Add an ungrouped variable to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_ungrouped_variables", &SystemBaseT::AddUngroupedVariables,"Add some ungrouped variables to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_implicit_parameter", &SystemBaseT::AddImplicitParameter)

@@ -65,6 +65,9 @@ namespace bertini {
 
 	// (included above) so the evaluation blocks can see them.
 
+	class Slice;  // system/slice.hpp -- a thin wrapper over a LinearFormsBlock; System::Slices()
+	              // recovers them from a slice-derived system without binding the block variant.
+
 	/**
 	\brief The fundamental polynomial system class for Bertini2.
 	
@@ -998,6 +1001,12 @@ namespace bertini {
 		/// itself stays out of the Python surface.
 		std::vector<Block> const& Blocks() const { return blocks_; }
 
+		/// \brief Recover the linear-form slices embedded in this system, one per LinearFormsBlock
+		/// (empty if the system has none).  Lets a user back out the slice structure of a system
+		/// built from a slice -- the Python-facing alternative to exposing the Block variant.
+		/// Defined in system.cpp (needs the full Slice type).
+		std::vector<Slice> Slices() const;
+
 		/// Remove the polynomial block (the System's natural functions), leaving any structured
 		/// blocks and the variable structure / patch intact.  Used to turn a copy of a System
 		/// into a homotopy shell whose rows come from a blend block rather than its own
@@ -1252,24 +1261,32 @@ namespace bertini {
 
 
 		/**
-		 \brief Get a function by its index.  
+		 \brief Get a function by its index, as a function-tree node.
 
-		 This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
+		 Works for every block type: structured blocks (linear forms, products of linears,
+		 randomization, blend) are expanded to their node form on demand, so this is in sync with
+		 NumNaturalFunctions().  Throws std::out_of_range if the index is past the end (rather than
+		 dereferencing past it -- the old un-checked version segfaulted on slice-derived systems
+		 that have no PolynomialBlock).
 		*/
 		auto Function(unsigned index) const
 		{
-			return PolyBlockPtr()->Functions()[index];
+			auto fns = NaturalFunctionsAsNodes();
+			if (index >= fns.size())
+				throw std::out_of_range("System::Function index out of range");
+			return fns[index];
 		}
 
 
 		/**
-		 \brief Get the functions.
+		 \brief Get the functions, as function-tree nodes.
+
+		 Expands any structured block (so it agrees with NumNaturalFunctions() and Function(i),
+		 even for systems built purely from a slice / start-system block).
 		*/
 		std::vector<Nd> GetNaturalFunctions() const
 		{
-			if (auto* p = PolyBlockPtr())
-				return p->Functions();
-			return {};
+			return NaturalFunctionsAsNodes();
 		}
 
 
