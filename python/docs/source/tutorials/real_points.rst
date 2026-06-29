@@ -69,7 +69,7 @@ configured ``real_threshold``, so there is no hand-picked epsilon in the tutoria
 
 .. testcode::
 
-    solver = nag_algorithm.ZeroDim(crit_system, mptype='adaptive')
+    solver = nag_algorithm.ZeroDimSolver(crit_system, mptype='adaptive')
     solver.solve()
 
     crit = [(complex(s[0]).real, complex(s[1]).real)

@@ -1878,6 +1878,21 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 		}; // struct ZeroDim
 
+
+		// --- public spellings of the two distinct roles of the zero-dim machinery ----------------
+		// The continuation primitive vs. the zero-dim algorithm are, for now, the same templated
+		// body selected by its system-management policy.  These aliases give each role its own,
+		// honest name (used by the Python bindings and the rest of the surface); a later refactor
+		// turns them into two concrete, composed classes and retires the policy.  See the split ADR.
+		//
+		//   HomotopySolver : given a homotopy + start points, track/endgame/classify (RefToGiven).
+		//   ZeroDimSolver  : given a system, build a start system + homotopy, then solve (CloneGiven).
+		template<typename TrackerType, typename EndgameType, typename SystemType>
+		using HomotopySolver = ZeroDim<TrackerType, EndgameType, SystemType, policy::RefToGiven>;
+
+		template<typename TrackerType, typename EndgameType, typename SystemType>
+		using ZeroDimSolver = ZeroDim<TrackerType, EndgameType, SystemType, policy::CloneGiven>;
+
 	} // ns algo
 
 } // ns bertini

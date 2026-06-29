@@ -34,7 +34,7 @@ import pytest
 import bertini as pb
 from bertini.tracking import AMPTracker
 from bertini.tracking import SteppingConfig, NewtonConfig
-from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionTotalDegree, TolerancesConfig
+from bertini.nag_algorithm import ZeroDimSolver, TolerancesConfig
 
 
 def _square_system():
@@ -138,7 +138,7 @@ def test_zero_dim_config_is_precision_agnostic():
     s.add_function(x * x + y * y - 1); s.add_function(x + y)
     s.add_variable_group(pb.VariableGroup([x, y]))
     for mptype in ('double', 'multiple', 'adaptive'):
-        names = pb.nag_algorithm.ZeroDim(s, mptype=mptype).config_names()
+        names = pb.nag_algorithm.ZeroDimSolver(s, mptype=mptype).config_names()
         assert 'zero_dim' in names, names
 
 
@@ -169,7 +169,7 @@ def test_regeneration_slice_tolerances_are_prefixed():
 def test_no_field_name_collisions_across_configs():
     # The slice_ rename leaves every config field name unique across all of an owner's configs, which
     # is what lets a field be routed to its owning config unambiguously.
-    from bertini.nag_algorithm import (ZeroDimCauchyAdaptivePrecisionTotalDegree as ZD,
+    from bertini.nag_algorithm import (ZeroDimSolver as ZD,
                                        TolerancesConfig, RegenerationConfig)
     from bertini.config import writable_fields
     tol = set(writable_fields(TolerancesConfig))
@@ -227,7 +227,7 @@ def test_get_stepping_internal_ref_updates_in_place(tracker):
 
 @pytest.fixture
 def solver():
-    return ZeroDimCauchyAdaptivePrecisionTotalDegree(_square_system())
+    return ZeroDimSolver(_square_system(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
 
 
 def test_algorithm_exposes_its_configs(solver):
@@ -293,7 +293,7 @@ def _square():
 
 
 def test_get_settings_is_a_named_dict_of_configs():
-    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     settings = a.get_settings()
     assert set(settings) == set(a.config_names())
     assert isinstance(settings['tolerances'], TolerancesConfig)
@@ -301,10 +301,10 @@ def test_get_settings_is_a_named_dict_of_configs():
 
 def test_settings_round_trip_onto_another_solver():
     from bertini.nag_algorithm import ZeroDimConfig
-    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     a.update(final_tolerance="1e-12", max_num_crossed_path_resolve_attempts=4)
 
-    b = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    b = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     b.set_settings(a.get_settings())
     assert b.get_config(TolerancesConfig).final_tolerance == 1e-12
     assert b.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 4
@@ -314,27 +314,27 @@ def test_settings_carry_across_precision_models():
     # the de-templated, precision-agnostic configs are what make this work: a bundle from a multiple-
     # precision solver applies unchanged to a double or adaptive one.  This is the cross-stage carry
     # an NID-style workflow needs.
-    src = pb.nag_algorithm.ZeroDim(_square(), mptype='multiple')
+    src = pb.nag_algorithm.ZeroDimSolver(_square(), mptype='multiple')
     src.update(final_tolerance="1e-11")
     for mptype in ('double', 'adaptive'):
-        dst = pb.nag_algorithm.ZeroDim(_square(), mptype=mptype)
+        dst = pb.nag_algorithm.ZeroDimSolver(_square(), mptype=mptype)
         dst.set_settings(src.get_settings())
         assert dst.get_config(TolerancesConfig).final_tolerance == 1e-11
 
 
 def test_settings_bundle_is_picklable():
     import pickle
-    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     a.update(final_tolerance="1e-9")
     restored = pickle.loads(pickle.dumps(a.get_settings()))
-    b = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    b = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     b.set_settings(restored)
     assert b.get_config(TolerancesConfig).final_tolerance == 1e-9
 
 
 def test_set_settings_skips_inapplicable_by_default_strict_raises():
     from bertini.tracking import AMPTracker
-    settings = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square()).get_settings()
+    settings = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity').get_settings()
     trk = AMPTracker(_square())            # a tracker has no 'tolerances' / 'zero_dim'
     trk.set_settings(settings)             # non-strict: silently skips them
     with pytest.raises(KeyError):
@@ -342,7 +342,7 @@ def test_set_settings_skips_inapplicable_by_default_strict_raises():
 
 
 def test_set_settings_accepts_dict_of_fields():
-    a = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square())
+    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     a.set_settings({'tolerances': {'final_tolerance': '1e-10'}})
     assert a.get_config(TolerancesConfig).final_tolerance == 1e-10
 
@@ -357,7 +357,7 @@ def test_fixed_multiple_precision_set_via_config():
     b.default_precision(30)
     x = b.Variable('x'); s = b.System()
     s.add_function(x * x - 1); s.add_variable_group(b.VariableGroup([x]))
-    solver = b.nag_algorithm.ZeroDim(s, mptype='multiple')
+    solver = b.nag_algorithm.ZeroDimSolver(s, mptype='multiple')
     assert solver.get_tracker().get_config(FixedPrecisionConfig).precision == 30   # honest report
     solver.get_tracker().update(precision=70)
     solver.solve()
@@ -370,7 +370,7 @@ def test_double_precision_rejects_a_different_precision():
     from bertini.tracking import FixedPrecisionConfig
     x = b.Variable('x'); s = b.System()
     s.add_function(x * x - 1); s.add_variable_group(b.VariableGroup([x]))
-    solver = b.nag_algorithm.ZeroDim(s, mptype='double')
+    solver = b.nag_algorithm.ZeroDimSolver(s, mptype='double')
     assert solver.get_tracker().get_config(FixedPrecisionConfig).precision == 16
     solver.get_tracker().update(precision=50)
     with pytest.raises(RuntimeError):

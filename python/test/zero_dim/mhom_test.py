@@ -1,7 +1,7 @@
 """Multihomogeneous zero-dim solving from Python.
 
 Exercises the products-of-linears MHom start system + blend-block homotopy through the bound
-ZeroDim solver -- the Python side of the block-composed System work.
+ZeroDimSolver solver -- the Python side of the block-composed System work.
 
 These pin a fixed seed (``set_random_seed`` -- RandomMp is reseedable now), so the homotopy is the
 same every run: the tests pass or fail deterministically, with no gamma-retry loop.  (An earlier
@@ -12,9 +12,7 @@ import pytest
 
 import bertini as pb
 from bertini.nag_algorithm import (
-    ZeroDimCauchyDoublePrecisionMHomogeneous,
-    ZeroDimPowerSeriesDoublePrecisionMHomogeneous,
-    ZeroDimCauchyAdaptivePrecisionMHomogeneous,
+    ZeroDimSolver,
 )
 
 # Compare success codes by integer value: the enhance machinery's config __eq__ can be
@@ -56,7 +54,7 @@ def _successful_roots(solver):
 
 def test_mhom_solves_adaptive_precision():
     """AMP is the robust MHom path; with a fixed seed it solves this system deterministically."""
-    good = _successful_roots(_solve(ZeroDimCauchyAdaptivePrecisionMHomogeneous))
+    good = _successful_roots(_solve(ZeroDimSolver))
     assert len(good) == 2, "adaptive-precision MHom did not solve"
 
     # both paths converged to genuine roots, and to the two *distinct* solutions
@@ -68,8 +66,7 @@ def test_mhom_solves_adaptive_precision():
 
 
 @pytest.mark.parametrize("solver_cls", [
-    ZeroDimCauchyDoublePrecisionMHomogeneous,
-    ZeroDimPowerSeriesDoublePrecisionMHomogeneous,
+    ZeroDimSolver,
 ])
 def test_fixed_double_mhom_solves(solver_cls):
     """Fixed-double MHom solves this system at the fixed seed -- both paths reach the two genuine

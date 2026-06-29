@@ -13,11 +13,11 @@ import bertini.tracking as tk
 from bertini.multiprec import Complex as mpfr_complex
 from bertini import System, VariableGroup, Variable
 from bertini.tracking import amp_config_from
-from bertini.nag_algorithm import ZeroDim
+from bertini.nag_algorithm import ZeroDimSolver
 
 
 def _force_serial(solver):
-    """Pin a ZeroDim solver to a single thread (no pool).
+    """Pin a ZeroDimSolver solver to a single thread (no pool).
 
     The default solve is multi-threaded, where each path runs on a thread-local tracker clone --
     so an observer attached to the solver's MEMBER tracker sees nothing.  Tests that exercise the
@@ -135,7 +135,7 @@ def test_no_observers_leak_after_run(amp_tracker):
 
 
 # ---------------------------------------------------------------------------
-# Whole ZeroDim solve: the dream -- collect every path of a multi-path run.
+# Whole ZeroDimSolver solve: the dream -- collect every path of a multi-path run.
 # ---------------------------------------------------------------------------
 
 def _circle_meets_line():
@@ -149,13 +149,13 @@ def _circle_meets_line():
 
 
 def test_zerodim_lifecycle_events():
-    """A nag observer attached to the ZeroDim itself sees AlgorithmStarted once,
+    """A nag observer attached to the ZeroDimSolver itself sees AlgorithmStarted once,
     AlgorithmComplete once, and a PathStarted/PathComplete per path. event.solver()
     resolves (via RTTI) to the concrete solver with its full API."""
     from bertini._pybertini import nag_algorithms as nag
 
     sys = _circle_meets_line()
-    solver = ZeroDim(sys, mptype='amp')
+    solver = ZeroDimSolver(sys, mptype='amp')
 
     started = []
     completed = []
@@ -175,7 +175,7 @@ def test_zerodim_lifecycle_events():
             elif isinstance(e, nag.observers.PathComplete):
                 ends.append(e.path_index())
 
-    solver.add_observer(Lifecycle())   # attached to the ZeroDim, co-owned (no ref kept)
+    solver.add_observer(Lifecycle())   # attached to the ZeroDimSolver, co-owned (no ref kept)
     solver.solve()
 
     assert len(started) == 1
@@ -191,7 +191,7 @@ def test_nag_observer_rejected_on_tracker_and_vice_versa():
     from bertini._pybertini import nag_algorithms as nag
 
     sys = _circle_meets_line()
-    solver = ZeroDim(sys, mptype='amp')
+    solver = ZeroDimSolver(sys, mptype='amp')
 
     with pytest.raises(TypeError):
         solver.get_tracker().add_observer(nag.observers.CustomObserver())
@@ -206,7 +206,7 @@ def test_solution_path_collector_one_series_per_solution_path():
     from bertini.nag_algorithm import SolutionPathCollector
 
     sys = _circle_meets_line()
-    solver = ZeroDim(sys, mptype='amp')
+    solver = ZeroDimSolver(sys, mptype='amp')
 
     a = SolutionPathCollector()
     solver.add_observer(a)
@@ -236,7 +236,7 @@ def test_solution_path_collector_captures_more_than_the_main_track():
     # (solver2 below), which only runs the paths in serial mode.  The default solve is threaded,
     # where paths run on thread-local clones -- see threaded_solve_test.py for the threaded path,
     # which collects via event.tracker().
-    solver = ZeroDim(sys, mptype='amp')
+    solver = ZeroDimSolver(sys, mptype='amp')
     _force_serial(solver)
     a = SolutionPathCollector()
     solver.add_observer(a)
@@ -244,7 +244,7 @@ def test_solution_path_collector_captures_more_than_the_main_track():
     whole_path_steps = sum(len(p) for p in a.series)
 
     # tracker-level collector keeps only the main tracks (|t| start > 0.5)
-    solver2 = ZeroDim(sys, mptype='amp')
+    solver2 = ZeroDimSolver(sys, mptype='amp')
     _force_serial(solver2)
     b = tk.observers.amp.PathCollectionObserver()
     solver2.get_tracker().add_observer(b)
@@ -256,7 +256,7 @@ def test_solution_path_collector_captures_more_than_the_main_track():
 
 def test_zerodim_solve_collects_all_paths():
     sys = _circle_meets_line()
-    solver = ZeroDim(sys, mptype='amp')
+    solver = ZeroDimSolver(sys, mptype='amp')
     # Attaching to the solver's member tracker collects only in serial mode; the default solve is
     # threaded (paths run on clones).  For threaded collection use SolutionPathCollector /
     # event.tracker() -- see threaded_solve_test.py.

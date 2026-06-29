@@ -53,7 +53,7 @@ solutions are the start points we will reuse forever after:
 .. testcode::
 
     generic = member(1)                                # the line y = 1/2
-    first = nag_algorithm.ZeroDim(generic, mptype='adaptive')
+    first = nag_algorithm.ZeroDimSolver(generic, mptype='adaptive')
     first.solve()
     start_points = first.all_solutions()                   # (+/- sqrt(3)/2, 1/2)
 

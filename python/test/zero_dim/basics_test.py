@@ -2,8 +2,7 @@ import pytest
 
 import bertini as pb
 from bertini.nag_algorithm import (
-    ZeroDimCauchyAdaptivePrecisionTotalDegree,
-    ZeroDimPowerSeriesAdaptivePrecisionTotalDegree,
+    ZeroDimSolver,
     TolerancesConfig,
 )
 
@@ -16,7 +15,7 @@ def circle_intersection_solver():
     sys.add_function(x**2 + y**2 - 1)
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    return ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
+    return ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
 
 
 @pytest.fixture
@@ -65,7 +64,7 @@ def test_custom_tolerances(circle_intersection_solver):
 
 
 def test_power_series_endgame_variant():
-    """ZeroDimPowerSeriesAdaptivePrecisionTotalDegree solves a simple system.
+    """ZeroDimSolver solves a simple system.
 
     Mirrors zero_dim/can_run_griewank_osborn (PSEG variant).
     """
@@ -75,7 +74,7 @@ def test_power_series_endgame_variant():
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
 
-    solver = ZeroDimPowerSeriesAdaptivePrecisionTotalDegree(sys)
+    solver = ZeroDimSolver(sys, endgame='powerseries', mptype='adaptive', startsystem='rootsofunity')
     solver.solve()
     solns = solver.all_solutions()
     assert len(solns) == 2
@@ -113,7 +112,7 @@ def solved():
     sys.add_function(x**2 + y**2 - 1)
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    solver = ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
+    solver = ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     solver.solve()
     return sys, solver
 

@@ -30,7 +30,7 @@ paths leading to them are ill-conditioned -- the kind double precision struggles
 
    import numpy as np
    import bertini
-   from bertini.nag_algorithm import ZeroDim
+   from bertini.nag_algorithm import ZeroDimSolver
 
    n = 5
    x = [bertini.Variable('x{}'.format(i)) for i in range(n)]
@@ -49,7 +49,7 @@ user should -- not by trusting the raw endpoint count, but by asking the solver 
 
 .. testcode::
 
-   solver = ZeroDim(sys, mptype='adaptive')
+   solver = ZeroDimSolver(sys, mptype='adaptive')
    solver.solve()
    report = solver.report()
 
@@ -82,7 +82,7 @@ size and abandons it -- and the finite count quietly comes back **69**:
 
 .. testcode::
 
-   solver_d = ZeroDim(sys, mptype='double')
+   solver_d = ZeroDimSolver(sys, mptype='double')
    solver_d.solve()
    report_d = solver_d.report()
 

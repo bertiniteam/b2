@@ -338,9 +338,9 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_m
 
 
 def _attach_to_dataframe():
-    """Give every bound ZeroDim class a to_dataframe method (idempotent)."""
+    """Give every bound solver class (ZeroDimSolver*, HomotopySolver*) a to_dataframe method (idempotent)."""
     for name in dir(_pybnalag):
-        if not name.startswith('ZeroDim'):
+        if not name.startswith(('ZeroDimSolver', 'HomotopySolver')):
             continue
         cls = getattr(_pybnalag, name)
         if isinstance(cls, type) and not getattr(cls, '_b2_has_to_dataframe', False):
@@ -351,9 +351,9 @@ def _attach_to_dataframe():
 _attach_to_dataframe()
 
 
-# --- ZeroDim: a friendly factory over the 18 bound ZeroDim<endgame x precision x start> classes ---
+# --- ZeroDimSolver: a friendly factory over the bound ZeroDimSolver<endgame x precision> classes ---
 
-# Each bound solver class is named ZeroDim<Endgame><Precision>Precision (the start system is NO
+# Each bound solver class is named ZeroDimSolver<Endgame><Precision> (the start system is NO
 # longer part of the type -- it is chosen at construction).  Select endgame + precision by string to
 # pick the class, then pick the start system separately (default total_degree, else a factory).
 _ZD_ENDGAMES = {
@@ -378,7 +378,7 @@ def _zd_select(value, table, kind):
     key = str(value).strip().lower().replace('-', '_')
     frag = table.get(key) or table.get(key.replace('_', ''))
     if frag is None:
-        raise ValueError("ZeroDim: unknown {} {!r}; choose from {}"
+        raise ValueError("ZeroDimSolver: unknown {} {!r}; choose from {}"
                          .format(kind, value, sorted({k for k in table})))
     return frag
 
@@ -400,16 +400,16 @@ def _infer_start_system(system):
     return 'mhom'
 
 
-def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
-            precision=None):
+def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
+                  precision=None):
     """Construct a zero-dim solver by name, with friendly defaults.
 
-    ``ZeroDim(system)`` is the Cauchy endgame in adaptive precision with the start system **inferred
-    from the system's variable-group structure** -- total degree for a single affine group,
+    ``ZeroDimSolver(system)`` is the Cauchy endgame in adaptive precision with the start system
+    **inferred from the system's variable-group structure** -- total degree for a single affine group,
     multihomogeneous otherwise -- so a multi-group (e.g. eigenvalue) system gets MHom automatically
     rather than an over-counting total-degree start.  Override any piece with a string::
 
-        ZeroDim(system, endgame='cauchy', mptype='amp', startsystem='mhom')
+        ZeroDimSolver(system, endgame='cauchy', mptype='amp', startsystem='mhom')
 
     Parameters
     ----------
@@ -419,7 +419,7 @@ def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
     precision : an alias for ``mptype``; if given (not ``None``) it overrides ``mptype``.
     startsystem : ``'infer'`` (default -- choose from the variable-group structure, matching the
         C++ blackbox), or force it with ``'totaldegree'`` / ``'mhom'``.  To run from a homotopy you
-        built yourself with given start points, use :func:`user_homotopy` / :func:`blend_homotopy`
+        built yourself with given start points, use :class:`HomotopySolver` / :func:`blend_homotopy`
         instead (their construction needs the homotopy and start points, not just a system).
 
     Returns a solver; call ``.solve()`` then ``.all_solutions()`` as for any zero-dim solver.
@@ -429,16 +429,16 @@ def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
     The default infers the start system; strings pick the rest::
 
         >>> import bertini
-        >>> from bertini.nag_algorithm import ZeroDim
+        >>> from bertini.nag_algorithm import ZeroDimSolver
         >>> x = bertini.Variable('x')
         >>> sys = bertini.System()
         >>> sys.add_variable_group(bertini.VariableGroup([x]))
         >>> sys.add_function(x * x - 1)
-        >>> type(ZeroDim(sys)).__name__
-        'ZeroDimCauchyAdaptivePrecision'
-        >>> type(ZeroDim(sys, mptype='amp', startsystem='mhom')).__name__
-        'ZeroDimCauchyAdaptivePrecision'
-        >>> solver = ZeroDim(sys, mptype='adaptive')   # robust path
+        >>> type(ZeroDimSolver(sys)).__name__
+        'ZeroDimSolverCauchyAdaptivePrecision'
+        >>> type(ZeroDimSolver(sys, mptype='amp', startsystem='mhom')).__name__
+        'ZeroDimSolverCauchyAdaptivePrecision'
+        >>> solver = ZeroDimSolver(sys, mptype='adaptive')   # robust path
         >>> solver.solve()                             # doctest: +SKIP
         >>> solver.all_solutions()                         # doctest: +SKIP
     """
@@ -448,14 +448,14 @@ def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
     # user-homotopy can't be built from a system alone -- point at the right entry point.
     if start_key in ('user', 'userhomotopy'):
         raise ValueError(
-            "ZeroDim does not build the user-homotopy solver (its construction needs a homotopy "
+            "ZeroDimSolver does not build the homotopy solver (its construction needs a homotopy "
             "and start points, not just a system); build the homotopy with "
             "nag_algorithm.blend_homotopy / coefficient_parameter_homotopy and solve it with "
-            "nag_algorithm.user_homotopy(homotopy, start_points, target).")
+            "nag_algorithm.HomotopySolver(homotopy, start_points, target).")
     if start_key == 'infer':
         startsystem = _infer_start_system(system)
     # the solver class encodes only endgame + precision now; the start system is a constructor choice.
-    cls_name = ('ZeroDim'
+    cls_name = ('ZeroDimSolver'
                 + _zd_select(endgame, _ZD_ENDGAMES, 'endgame')
                 + _zd_select(mptype, _ZD_PRECISIONS, 'mptype'))
     cls = getattr(_pybnalag, cls_name)
@@ -467,57 +467,28 @@ def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
     return cls(system, _pybnalag.start_system_factory(start_enum))
 
 
-# --- backward-compatible solver-name shims -----------------------------------------------------
-# Before ZeroDim was de-templated off the start-system type, every (endgame, precision, start)
-# combination was its own bound class, e.g. ``ZeroDimCauchyAdaptivePrecisionTotalDegree``.  The start
-# system is no longer part of the solver type (it is a construction choice), so those classes are
-# gone.  These thin shims delegate to the ``ZeroDim(...)`` facade so existing code -- including the
-# many places that import a name and pass it around as a callable -- keeps working.  Prefer
-# ``ZeroDim(system, endgame=..., mptype=..., startsystem=...)`` in new code.
-def _install_legacy_zerodim_aliases():
-    import sys as _sys
-    _EG = {'Cauchy': 'cauchy', 'PowerSeries': 'powerseries'}
-    _PR = {'DoublePrecision': 'double', 'FixedMultiplePrecision': 'multiple',
-           'AdaptivePrecision': 'adaptive'}
-    # NOTE: the legacy ``...TotalDegree`` classes were the OLD total-degree start system, which was
-    # really roots of unity -- so map them to 'rootsofunity' to preserve their historical behavior
-    # (and to avoid the new linear-product TotalDegree's current Cauchy-endgame stall).
-    _SS = {'TotalDegree': 'rootsofunity', 'MHomogeneous': 'mhom'}
-    _mod = _sys.modules[__name__]
-    for eg_name, eg in _EG.items():
-        for pr_name, pr in _PR.items():
-            for ss_name, ss in _SS.items():
-                name = 'ZeroDim{}{}{}'.format(eg_name, pr_name, ss_name)
-                def _shim(system, *, _eg=eg, _pr=pr, _ss=ss):
-                    return ZeroDim(system, endgame=_eg, mptype=_pr, startsystem=_ss)
-                _shim.__name__ = _shim.__qualname__ = name
-                _shim.__doc__ = ("Deprecated alias for ZeroDim(system, endgame={!r}, mptype={!r}, "
-                                 "startsystem={!r}); the start system is no longer baked into the "
-                                 "solver type.".format(eg, pr, ss))
-                setattr(_mod, name, _shim)
+# --- HomotopySolver: track a homotopy YOU built, from start points YOU have ----------------------
+#
+# The continuation primitive: given a homotopy with a path variable and a list of start points,
+# track each path through the endgame and classify the endpoints.  This is the SAME machinery the
+# zero-dim solve uses, with the homotopy + start points supplied rather than generated.
 
-
-_install_legacy_zerodim_aliases()
-
-
-# --- user homotopy: run the zero-dim solver on a homotopy YOU built, from start points YOU have ---
-
-_USER_HOMOTOPY_CLASSES = {
-    ('double',   'cauchy'):      'ZeroDimCauchyDoublePrecisionUserHomotopy',
-    ('double',   'powerseries'): 'ZeroDimPowerSeriesDoublePrecisionUserHomotopy',
-    ('multiple', 'cauchy'):      'ZeroDimCauchyFixedMultiplePrecisionUserHomotopy',
-    ('multiple', 'powerseries'): 'ZeroDimPowerSeriesFixedMultiplePrecisionUserHomotopy',
-    ('adaptive', 'cauchy'):      'ZeroDimCauchyAdaptivePrecisionUserHomotopy',
-    ('adaptive', 'powerseries'): 'ZeroDimPowerSeriesAdaptivePrecisionUserHomotopy',
+_HOMOTOPY_SOLVER_CLASSES = {
+    ('double',   'cauchy'):      'HomotopySolverCauchyDoublePrecision',
+    ('double',   'powerseries'): 'HomotopySolverPowerSeriesDoublePrecision',
+    ('multiple', 'cauchy'):      'HomotopySolverCauchyFixedMultiplePrecision',
+    ('multiple', 'powerseries'): 'HomotopySolverPowerSeriesFixedMultiplePrecision',
+    ('adaptive', 'cauchy'):      'HomotopySolverCauchyAdaptivePrecision',
+    ('adaptive', 'powerseries'): 'HomotopySolverPowerSeriesAdaptivePrecision',
 }
 
 
-class _UserHomotopySolver:
-    """A thin holder around a user-homotopy ZeroDim solver.
+class _HomotopySolverHolder:
+    """A thin holder around a bound HomotopySolver.
 
     The underlying solver keeps *references* to the homotopy, the target system, and the start
     system, so this holder retains all three to keep them alive, and forwards every attribute
-    and method (``solve``, ``solutions``, ``solution_metadata``, ``get_tracker``, ...) to the
+    and method (``solve``, ``all_solutions``, ``solution_metadata``, ``get_tracker``, ...) to the
     wrapped solver.
     """
 
@@ -529,13 +500,13 @@ class _UserHomotopySolver:
         return getattr(object.__getattribute__(self, '_solver'), name)
 
 
-def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endgame='cauchy'):
-    """Run the zero-dim solver on a homotopy you constructed, from a list of start points you
-    already have (e.g. the solutions of an earlier solve) -- the parameter-homotopy workflow.
+def HomotopySolver(homotopy, start_points, target, *, precision='adaptive', endgame='cauchy'):
+    """Track a homotopy you constructed, from a list of start points you already have (e.g. the
+    solutions of an earlier solve) -- the continuation primitive (parameter-homotopy workflow).
 
-    This reuses the entire zero-dim pipeline (pre-endgame tracking, the midpath check, the
-    endgame, post-processing); it differs from the ``...TotalDegree`` / ``...MHomogeneous``
-    entries only in that the homotopy and the start points are supplied, not generated.
+    This reuses the entire tracking pipeline (pre-endgame tracking, the midpath check, the
+    endgame, post-processing); it differs from :func:`ZeroDimSolver` only in that the homotopy and
+    the start points are supplied, not generated.
 
     Parameters
     ----------
@@ -543,7 +514,7 @@ def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endga
         The homotopy to track, with a path variable; tracked from the start time (default 1)
         down to 0.  Its t=1 slice must vanish at the given ``start_points``.
     start_points : iterable of vectors
-        The start points (at the start time).  An earlier solve's ``solutions()`` works directly
+        The start points (at the start time).  An earlier solve's ``all_solutions()`` works directly
         when the variable coordinates line up (e.g. an affine homotopy).
     target : System
         The system the solutions satisfy at t=0 -- used for dehomogenize / residual and for the
@@ -552,35 +523,40 @@ def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endga
         'adaptive' (default) is the robust path.
     endgame : {'cauchy', 'powerseries'}
 
-    Returns a solver: call ``.solve()`` then ``.all_solutions()`` as for any zero-dim solver.
+    Returns a solver: call ``.solve()`` then ``.all_solutions()`` as for any solver.
     """
     prec = {'double': 'double', 'multiple': 'multiple', 'fixed_multiple': 'multiple',
             'adaptive': 'adaptive'}.get(precision, precision)
     eg = {'cauchy': 'cauchy', 'powerseries': 'powerseries',
           'power_series': 'powerseries'}.get(endgame, endgame)
     try:
-        cls_name = _USER_HOMOTOPY_CLASSES[(prec, eg)]
+        cls_name = _HOMOTOPY_SOLVER_CLASSES[(prec, eg)]
     except KeyError:
         raise ValueError(
-            "user_homotopy: unknown (precision, endgame) = ({!r}, {!r}); "
+            "HomotopySolver: unknown (precision, endgame) = ({!r}, {!r}); "
             "precision in {{'adaptive','double','multiple'}}, endgame in {{'cauchy','powerseries'}}"
             .format(precision, endgame))
     solver_cls = getattr(_pybnalag, cls_name)
     # A frequent mix-up (issue #258): passing the start-point *solver* instead of its
-    # start *points*.  A ZeroDim solver is not iterable, so list(start_points) below would
+    # start *points*.  A solver is not iterable, so list(start_points) below would
     # raise a cryptic "object is not iterable" naming an opaque class.  Catch it here and
     # say what to do.  (A list / numpy array / tuple of vectors has no .all_solutions/.get_tracker.)
     if hasattr(start_points, 'all_solutions') and hasattr(start_points, 'get_tracker'):
         raise TypeError(
-            "user_homotopy: start_points must be the actual start *points* (an iterable of "
+            "HomotopySolver: start_points must be the actual start *points* (an iterable of "
             "solution vectors), but a {} solver was passed.  Call its .solve() and then pass "
             "its .all_solutions():\n"
             "    start_solver.solve()\n"
-            "    nag_algorithm.user_homotopy(homotopy, start_solver.all_solutions(), target)"
+            "    nag_algorithm.HomotopySolver(homotopy, start_solver.all_solutions(), target)"
             .format(type(start_points).__name__))
     user_start = _pybnalag.UserStartSystem(target, list(start_points))
     solver = solver_cls(target, user_start, homotopy)
-    return _UserHomotopySolver(solver, homotopy, target, user_start)
+    return _HomotopySolverHolder(solver, homotopy, target, user_start)
+
+
+def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endgame='cauchy'):
+    """Thin forwarder to :func:`HomotopySolver`, kept for back-compatibility."""
+    return HomotopySolver(homotopy, start_points, target, precision=precision, endgame=endgame)
 
 
 def coefficient_parameter_homotopy(target, generic, path_variable='t'):
@@ -591,10 +567,10 @@ def coefficient_parameter_homotopy(target, generic, path_variable='t'):
     it with :func:`user_homotopy`: solve ``generic`` once, then reuse its solutions to move to
     ``target`` (and to any number of further targets that share ``generic``)::
 
-        gen_solver = nag_algorithm.ZeroDim(generic, mptype='adaptive')
+        gen_solver = nag_algorithm.ZeroDimSolver(generic, mptype='adaptive')
         gen_solver.solve()
         H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
-        solver = nag_algorithm.user_homotopy(H, gen_solver.all_solutions(), target)
+        solver = nag_algorithm.HomotopySolver(H, gen_solver.all_solutions(), target)
         solver.solve()
 
     ``target`` and ``generic`` must be built over the SAME variable objects (the interpolation
@@ -742,7 +718,7 @@ def parameter_sweep(make_system, generic_parameters, target_parameters,
         my_indices = range(comm.Get_rank(), len(targets), comm.Get_size())
 
     generic = make_system(generic_parameters)
-    gen_solver = ZeroDim(generic, mptype=mptype, endgame=endgame)
+    gen_solver = ZeroDimSolver(generic, mptype=mptype, endgame=endgame)
     gen_solver.solve()
     start_points = gen_solver.all_solutions()
 
@@ -750,7 +726,7 @@ def parameter_sweep(make_system, generic_parameters, target_parameters,
     for i in my_indices:
         target = make_system(targets[i])
         H = coefficient_parameter_homotopy(target, generic)
-        solver = user_homotopy(H, start_points, target, precision=mptype, endgame=endgame)
+        solver = HomotopySolver(H, start_points, target, precision=mptype, endgame=endgame)
         solver.solve()
         local.append((i, collect(solver) if collect is not None else solver))
 
@@ -817,7 +793,8 @@ _pybnalag.observers.SolutionPathCollector = SolutionPathCollector
 
 
 __all__ = dir(_pybnalag)
-__all__.append('ZeroDim')
+__all__.append('ZeroDimSolver')
+__all__.append('HomotopySolver')
 __all__.append('user_homotopy')
 __all__.append('coefficient_parameter_homotopy')
 __all__.append('parameter_sweep')

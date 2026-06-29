@@ -170,13 +170,13 @@ def test_round_trip_bertini_to_sympy_to_bertini():
 # --- the acceptance test: define in sympy, solve with bertini ---
 
 def test_end_to_end_solve_matches_sympy(sxy):
-    from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionTotalDegree
+    from bertini.nag_algorithm import ZeroDimSolver
 
     sx, sy = sxy
     eqs = [sx**2 + sy**2 - 1, sx + sy]
 
     sys = system_from_sympy(eqs, [sx, sy])
-    solver = ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
+    solver = ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
     solver.solve()
     got = [np.array([complex(s[i]) for i in range(len(s))]) for s in solver.all_solutions()]
 

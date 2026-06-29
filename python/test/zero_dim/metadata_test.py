@@ -10,7 +10,7 @@ never applied).
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDimCauchyDoublePrecisionTotalDegree
+from bertini.nag_algorithm import ZeroDimSolver
 
 OK = int(pb.tracking.SuccessCode.Success)
 
@@ -21,7 +21,7 @@ def _one_var_solver(build_function):
     sys = pb.System()
     sys.add_variable_group(pb.VariableGroup([x]))
     sys.add_function(build_function(x))
-    return ZeroDimCauchyDoublePrecisionTotalDegree(sys)
+    return ZeroDimSolver(sys, endgame='cauchy', mptype='double', startsystem='rootsofunity')
 
 
 def _tally(solver):

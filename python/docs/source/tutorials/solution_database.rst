@@ -25,7 +25,7 @@ that self-crossing is a *node*, a singular point of the curve.  The second is an
 .. testcode::
 
    import bertini
-   from bertini.nag_algorithm import ZeroDim
+   from bertini.nag_algorithm import ZeroDimSolver
 
    x, y = bertini.Variable('x'), bertini.Variable('y')
    sys = bertini.System()
@@ -33,7 +33,7 @@ that self-crossing is a *node*, a singular point of the curve.  The second is an
    sys.add_function(y - x**3 + 2*x)        # second cubic  y = x^3 - 2x     (passes through it)
    sys.add_variable_group(bertini.VariableGroup([x, y]))
 
-   solver = ZeroDim(sys, mptype='adaptive')
+   solver = ZeroDimSolver(sys, mptype='adaptive')
    solver.solve()
 
 Because the second curve runs through the node -- where the first curve's gradient vanishes -- the

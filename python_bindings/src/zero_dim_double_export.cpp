@@ -11,13 +11,13 @@ namespace bertini{
 			// here, and BEFORE the ZeroDim classes (whose 2nd constructor takes a StartSystemFactory).
 			ExportStartSystemEnum();
 			ExportStartSystemFactory();
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimPowerSeriesDoublePrecision");
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimCauchyDoublePrecision");
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimSolverPowerSeriesDoublePrecision");
+			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimSolverCauchyDoublePrecision");
 
 			// the User start system is not tracker-specific; register it once, here.
 			ExportUserStartSystem();
-			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimPowerSeriesDoublePrecisionUserHomotopy");
-			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimCauchyDoublePrecisionUserHomotopy");
+			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("HomotopySolverPowerSeriesDoublePrecision");
+			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("HomotopySolverCauchyDoublePrecision");
 		}
 
 }} // namespaces

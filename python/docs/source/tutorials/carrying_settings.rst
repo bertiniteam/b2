@@ -31,7 +31,7 @@ config owns it.
    system.add_function(x + y)
    system.add_variable_group(bertini.VariableGroup([x, y]))
 
-   solver = bertini.nag_algorithm.ZeroDim(system)
+   solver = bertini.nag_algorithm.ZeroDimSolver(system)
    solver.update(final_tolerance="1e-11",                 # -> TolerancesConfig
                  max_num_crossed_path_resolve_attempts=3) # -> ZeroDimConfig
 
@@ -63,13 +63,13 @@ stamp every subsequent solver with the same settings.
 
 .. testcode::
 
-   reference = bertini.nag_algorithm.ZeroDim(system)
+   reference = bertini.nag_algorithm.ZeroDimSolver(system)
    reference.update(final_tolerance="1e-11", newton_before_endgame="1e-6")
    settings = reference.get_settings()
    assert set(settings) == set(reference.config_names())     # one entry per config
 
    # ... later, for each related solve ...
-   next_solver = bertini.nag_algorithm.ZeroDim(system)
+   next_solver = bertini.nag_algorithm.ZeroDimSolver(system)
    next_solver.set_settings(settings)
    assert next_solver.get_config(TolerancesConfig).final_tolerance == 1e-11
 
@@ -80,7 +80,7 @@ settings then drive a worker's solves as drive the manager's.
 
    import pickle
    carried = pickle.loads(pickle.dumps(settings))
-   worker_solver = bertini.nag_algorithm.ZeroDim(system)
+   worker_solver = bertini.nag_algorithm.ZeroDimSolver(system)
    worker_solver.set_settings(carried)
    assert worker_solver.get_config(TolerancesConfig).final_tolerance == 1e-11
 
@@ -93,12 +93,12 @@ re-solve -- while carrying one set of tracking tolerances through all of them.
 
 .. testcode::
 
-   tuned = bertini.nag_algorithm.ZeroDim(system, mptype='double')
+   tuned = bertini.nag_algorithm.ZeroDimSolver(system, mptype='double')
    tuned.update(final_tolerance="1e-10")
    bundle = tuned.get_settings()
 
    for mptype in ('multiple', 'adaptive'):
-       solver = bertini.nag_algorithm.ZeroDim(system, mptype=mptype)
+       solver = bertini.nag_algorithm.ZeroDimSolver(system, mptype=mptype)
        solver.set_settings(bundle)                       # drops on cleanly, any precision model
        assert solver.get_config(TolerancesConfig).final_tolerance == 1e-10
 

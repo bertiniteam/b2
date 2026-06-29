@@ -372,7 +372,7 @@ inline void ExportStartSystemFactory()
 // TotalDegree, or an explicit factory) and held polymorphically.
 template<typename TrackerT, typename EndgameT>
 void ExportZeroDimSpecific(std::string const& class_name){
-	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System>;
+	using ZeroDimT = algorithm::ZeroDimSolver<TrackerT, EndgameT, System>;
 	// with_custodian_and_ward<1,2>: keep the Python System (ctor arg, index 2) alive as long as the
 	// solver (self, index 1).  The solver's internal system is a SHALLOW copy that shares the
 	// function-tree nodes' shared_ptrs with the user's System; those shared_ptrs carry boost.python
@@ -430,7 +430,7 @@ inline void ExportUserStartSystem(){
 // reference (RefToGiven); the Python wrapper retains all three so the references stay valid.
 template<typename TrackerT, typename EndgameT>
 void ExportZeroDimUserHomotopy(std::string const& class_name){
-	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, System, policy::RefToGiven>;
+	using ZeroDimT = algorithm::HomotopySolver<TrackerT, EndgameT, System>;
 	// RefToGiven: this solver holds REFERENCES to all three given systems, so each must outlive the
 	// solver.  Chain with_custodian_and_ward to keep target (arg 2), start (arg 3) and homotopy
 	// (arg 4) alive as long as the solver (self, arg 1).
