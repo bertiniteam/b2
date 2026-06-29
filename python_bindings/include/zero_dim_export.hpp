@@ -389,6 +389,14 @@ void ExportZeroDimSpecific(std::string const& class_name){
 			(boost::python::arg("system"), boost::python::arg("start_factory")))
 			[with_custodian_and_ward<1, 2>()])
 	.def(ZDVisitor<ZeroDimT>())
+	// ZeroDimSolver-specific (the engine HomotopySolver has no system to square up):
+	.def("was_randomized", &ZeroDimT::WasRandomized,
+		"True if the supplied system was over-determined and was squared up by randomization "
+		"(so the extraneous solutions the squaring introduces have been filtered out of "
+		"finite_solutions).  False for a square system.")
+	.def("randomization_matrix", &ZeroDimT::RandomizationMatrix, return_value_policy<copy_const_reference>(),
+		"The exact n x N coefficient matrix used to square up an over-determined system "
+		"(empty if the system was already square).")
 	;
 }
 

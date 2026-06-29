@@ -1655,7 +1655,13 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 
-			void PostEGAction()
+		protected:
+			// virtual so ZeroDimSolver can append its extraneous-solution filter after the engine's
+			// classification (it overrides this to call the base, then filter against the original
+			// over-determined system).  Everything from here down -- the classification helpers, the
+			// pack/store helpers, and the data members -- is protected so the derived algorithm can
+			// read the per-endpoint metadata and endpoints it needs for that filter.
+			virtual void PostEGAction()
 			{
 				ComputePostTrackMetadata();
 			}
@@ -1909,10 +1915,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			OwnedHomotopy(SystemType const& target, FactoryT factory, std::string const& path_variable_name)
 			 : owned_target_(Clone(target)), owned_factory_(std::move(factory))
 			{
-				ConsistencyCheck();              // feasibility BEFORE homogenizing (on the as-supplied target)
-				PrepareTarget(owned_target_);    // homogenize + auto-patch
-				RankCheck();                     // can isolated solutions even exist?
+				ConsistencyCheck();              // feasibility (no path var; not under-constrained; polynomial)
 				SquareUp();                      // randomize an over-determined system down to square
+				RankCheck();                     // square, but can isolated solutions even exist?
+				PrepareTarget(owned_target_);    // homogenize + auto-patch the (now square) target
 				owned_start_    = owned_factory_(owned_target_);                         // start system over the prepared target
 				owned_homotopy_ = MakeHomotopy(owned_target_, *owned_start_, path_variable_name);
 			}
@@ -1927,6 +1933,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			SystemType                        owned_homotopy_;
 			FactoryT                          owned_factory_;
 
+			// When the user's system was over-determined, SquareUp randomizes it down to square for
+			// tracking and keeps the ORIGINAL (natural, un-homogenized) system here so ZeroDimSolver
+			// can discard the extraneous solutions the squaring introduces.  was_randomized_ gates
+			// that filter; randomization_matrix_ records the (exact) coefficient matrix used.
+			bool                  was_randomized_ = false;
+			SystemType            original_natural_target_;
+			Mat<complex_mp>       randomization_matrix_;
+
 			/**
 			\brief Reject targets that cannot have isolated solutions for structural reasons.
 			*/
@@ -1938,12 +1952,59 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// A square zero-dim system needs one equation per dimension.  Each projective
 				// (homogeneous) variable group of size k spans P^{k-1}: its k coordinates carry only
 				// k-1 dimensions because scale is free, so it needs one fewer equation than it has
-				// variables.  Subtract that free scale per projective group before comparing.
+				// variables.  Subtract that free scale per projective group before comparing.  An
+				// UNDER-determined system has a positive-dimensional solution set, so no isolated
+				// solutions to compute -- raise a helpful error rather than tracking garbage.
 				if (owned_target_.NumVariables() - owned_target_.NumHomVariableGroups() > owned_target_.NumTotalFunctions())
-					throw std::runtime_error("unable to perform zero dim solve on target system -- underconstrained, so has no zero dimensional solutions.");
+					throw std::runtime_error("unable to perform zero dim solve on target system -- it is under-determined (fewer equations than variables), so its solution set is positive-dimensional, not zero-dimensional.  ZeroDimSolver computes isolated solutions only; add equations, or use a positive-dimensional method.");
 
 				if (!owned_target_.IsPolynomial())
 					throw std::runtime_error("unable to perform zero dim solve on target system -- system is non-polynomial, use a HomotopySolver instead.");
+			}
+
+			/**
+			\brief If the target is over-determined (more equations than the affine dimension), replace
+			it with n generic combinations (System::Randomize) so a start system can track it.  The
+			randomized system's isolated solutions contain the original's plus extraneous ones; the
+			original system is kept (original_natural_target_) so ZeroDimSolver can filter those out.
+			*/
+			void SquareUp()
+			{
+				auto const dimension = owned_target_.NumVariables() - owned_target_.NumHomVariableGroups();
+				if (owned_target_.NumTotalFunctions() <= dimension)
+					return; // already square (or under-determined, which ConsistencyCheck already rejected)
+
+				original_natural_target_ = Clone(owned_target_);   // keep the original N-function system
+				owned_target_            = owned_target_.Randomize();
+				randomization_matrix_    = owned_target_.RandomizationMatrix();
+				was_randomized_          = true;
+			}
+
+			/**
+			\brief Reject a square target whose solution set is still positive-dimensional.
+
+			ConsistencyCheck only counts equations; a system can be square yet positive-dimensional
+			(e.g. a repeated equation).  At a generic point a zero-dimensional system has a full-rank
+			n x n Jacobian, so a rank-deficient Jacobian there means no isolated solutions.  Runs only
+			when the (natural, pre-homogenize) system is square; projective/structured inputs whose
+			Jacobian is not n x n are left to ConsistencyCheck.
+			*/
+			void RankCheck() const
+			{
+				if (owned_target_.HavePathVariable())
+					return;
+				auto const n = static_cast<Eigen::Index>(owned_target_.NumVariables());
+				if (static_cast<Eigen::Index>(owned_target_.NumTotalFunctions()) != n || n == 0)
+					return; // not a square map: ConsistencyCheck governs feasibility here
+
+				// a generic complex sample point: a zero-dimensional variety misses it almost surely,
+				// where the Jacobian attains its generic (full) rank.
+				Vec<complex_dbl> pt = Vec<complex_dbl>::Random(n);
+				Mat<complex_dbl> J  = owned_target_.template Jacobian<complex_dbl>(pt);
+				Eigen::FullPivLU<Mat<complex_dbl>> lu(J);
+				lu.setThreshold(1e-10);
+				if (lu.rank() < n)
+					throw std::runtime_error("unable to perform zero dim solve on target system -- the Jacobian is rank-deficient at a generic point, so the solution set is positive-dimensional, not zero-dimensional.  ZeroDimSolver computes isolated solutions only.");
 			}
 
 			static void PrepareTarget(SystemType& target)
@@ -1951,13 +2012,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				target.Homogenize(); // work over projective coordinates
 				target.AutoPatch();  // then patch if needed
 			}
-
-			// TODO(split): the rank / existence check and the over-determined square-up are planned
-			// in-scope behaviors (the tooling -- System::Randomize, SLP eval + linalg -- exists).
-			// Stubbed for now so the structural refactor lands first; current behavior (the caller
-			// randomizes an over-determined system itself) is preserved.
-			void RankCheck() const {}
-			void SquareUp() {}
 		};
 
 		} // ns zero_dim_detail
@@ -1992,6 +2046,51 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			 : OwnedT(target, std::move(factory), ZeroDimConfig{}.path_variable_name),
 			   EngineT(OwnedT::BuiltTarget(), OwnedT::BuiltStart(), OwnedT::BuiltHomotopy())
 			{}
+
+			/// \brief Whether the supplied system was over-determined and squared-up by randomization.
+			bool WasRandomized() const { return this->was_randomized_; }
+			/// \brief The randomization matrix used to square up (empty if the system was already square).
+			Mat<complex_mp> const& RandomizationMatrix() const { return this->randomization_matrix_; }
+
+		protected:
+			/**
+			\brief After the engine classifies the endpoints, discard the extraneous solutions that
+			squaring an over-determined system introduces.
+
+			Squaring replaces N equations by n generic combinations, so the square system's isolated
+			solutions are the genuine ones PLUS spurious points that satisfy the combinations but not
+			the original system.  Re-evaluate the ORIGINAL (un-randomized) system at each finite
+			endpoint; a residual above a solve-accuracy threshold marks the point as not a real
+			solution (is_finite -> false, so it drops out of finite_solutions / real / singular), and
+			the reported function_residual is updated to that meaningful value.  A no-op unless the
+			system was squared up.
+			*/
+			void PostEGAction() override
+			{
+				EngineT::PostEGAction();   // the engine's finite/real/multiplicity/singular classification
+
+				if (!this->was_randomized_)
+					return;
+
+				// genuine roots satisfy the original system to ~solve accuracy; spurious ones miss it
+				// by O(1).  A generous multiple of the endgame tolerance separates the two cleanly.
+				const double threshold =
+					1e3 * static_cast<double>(this->template Get<TolerancesConfig>().newton_during_endgame);
+
+				for (decltype(this->num_start_points_) ii{0}; ii < this->num_start_points_; ++ii)
+				{
+					auto& smd = this->solution_final_metadata_[ii];
+					if (smd.endgame_success != SuccessCode::Success || !smd.is_finite)
+						continue;
+
+					auto user_pt = this->TargetSystem().DehomogenizePoint(this->solutions_post_endgame_[ii]);
+					auto residual = static_cast<NumErrorT>(
+						this->original_natural_target_.Eval(user_pt).template lpNorm<Eigen::Infinity>());
+					smd.function_residual = residual;            // report residual against the ORIGINAL system
+					if (static_cast<double>(residual) > threshold)
+						smd.is_finite = false;                   // extraneous: not a solution of the original system
+				}
+			}
 
 #ifdef BERTINI2_HAVE_MPI
 			// Broadcast rank 0's authoritative owned systems to every rank, then re-seat the engine's

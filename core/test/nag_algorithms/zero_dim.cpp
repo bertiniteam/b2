@@ -1210,4 +1210,99 @@ BOOST_AUTO_TEST_CASE(zerodim_rejects_a_tracker_observer)
 }
 
 
+// --- ZeroDimSolver feasibility + square-up behaviors (the new in-scope features) ----------------
+
+// A pleasant SQUARE system solves directly, with no randomization.
+BOOST_AUTO_TEST_CASE(square_system_solves_without_randomization)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*x + y*y - 1);   // unit circle
+	sys.AddFunction(x - y);           // meets the line x = y in two points
+
+	auto zd = algorithm::ZeroDimSolver<AMPTracker, endgame::EndgameSelector<AMPTracker>::Cauchy, System>(sys);
+	BOOST_CHECK(!zd.WasRandomized());
+	zd.Solve();
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(), 2u);
+}
+
+// An OVER-determined system is squared up by randomization, and the extraneous solutions the
+// squaring introduces are filtered out -- finite_solutions returns only the genuine roots.
+BOOST_AUTO_TEST_CASE(overdetermined_system_is_squared_and_filtered)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*x + y*y - 2);   // three equations, two variables -> over-determined
+	sys.AddFunction(x - y);
+	sys.AddFunction(x*y - 1);
+	// the only common (genuine) solutions are (1,1) and (-1,-1).
+
+	auto zd = algorithm::ZeroDimSolver<AMPTracker, endgame::EndgameSelector<AMPTracker>::Cauchy, System>(sys);
+	BOOST_CHECK(zd.WasRandomized());
+	zd.Solve();
+
+	// the randomized (square) system had MORE endpoints than genuine solutions ...
+	BOOST_CHECK_GT(zd.SolutionsUserCoords().size(), 2u);
+	// ... but after filtering against the original system, exactly the two genuine roots remain.
+	auto fin = zd.FiniteSolutions();
+	BOOST_CHECK_EQUAL(fin.size(), 2u);
+	bool has_pp = false, has_nn = false;
+	for (auto const& p : fin)
+	{
+		auto a = complex_dbl(p(0)), b = complex_dbl(p(1));
+		if (std::abs(a - complex_dbl(1))  < 1e-6 && std::abs(b - complex_dbl(1))  < 1e-6) has_pp = true;
+		if (std::abs(a - complex_dbl(-1)) < 1e-6 && std::abs(b - complex_dbl(-1)) < 1e-6) has_nn = true;
+	}
+	BOOST_CHECK(has_pp);
+	BOOST_CHECK(has_nn);
+}
+
+// An UNDER-determined system has a positive-dimensional solution set, so ZeroDimSolver refuses it
+// at construction with a helpful error (ConsistencyCheck).
+BOOST_AUTO_TEST_CASE(underdetermined_system_raises)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*x + y*y - 1);   // one equation, two variables -> under-determined
+
+	BOOST_CHECK_THROW(
+		(algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys)),
+		std::runtime_error);
+}
+
+// A system that is SQUARE by equation count but whose variety is still positive-dimensional (here a
+// repeated equation) is rejected by the generic-point Jacobian rank check.
+BOOST_AUTO_TEST_CASE(positive_dimensional_square_system_raises)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*y);   // two copies: square count (2 eqns, 2 vars) but {xy = 0} is a curve
+	sys.AddFunction(x*y);
+
+	BOOST_CHECK_THROW(
+		(algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys)),
+		std::runtime_error);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
