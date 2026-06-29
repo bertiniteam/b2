@@ -573,8 +573,14 @@ endif()
 #   - delocate    -> vendored libs in bertini/.dylibs           (@loader_path/../.dylibs)
 #   - $ORIGIN/.. and ../lib cover libbertini2 installed into the package tree itself.
 # A normal (non-wheel) `cmake --install` keeps the usual bin/ location.
+#
+# The exe install is tagged COMPONENT cli so a user who wants ONLY the solver -- no Python, no
+# library/headers -- can `cmake --install build --component cli` and get just bin/bertini2.  The exe
+# statically links libbertini2.a, so the CLI-only install is self-contained re: our code (it still
+# needs Boost/GMP/MPFR/MPC/MPI shared libs, as any from-source build does).  A plain `cmake --install`
+# (no --component) still installs everything.
 if(SKBUILD)
-  install(TARGETS bertini2_exe RUNTIME DESTINATION _bin)
+  install(TARGETS bertini2_exe RUNTIME DESTINATION _bin COMPONENT cli)
   if(APPLE)
     set_target_properties(bertini2_exe PROPERTIES
       INSTALL_RPATH "@loader_path/../../bertini2.libs;@loader_path/../.dylibs;@loader_path/..;@loader_path/../lib")
@@ -583,7 +589,7 @@ if(SKBUILD)
       INSTALL_RPATH "$ORIGIN/../../bertini2.libs;$ORIGIN/..;$ORIGIN/../lib")
   endif()
 else()
-  install(TARGETS bertini2_exe RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  install(TARGETS bertini2_exe RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT cli)
 endif()
 
 install(
