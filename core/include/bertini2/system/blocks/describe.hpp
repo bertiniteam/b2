@@ -37,15 +37,35 @@ namespace bertini {
 namespace blocks {
 namespace describe_detail {
 
+/// How many function rows a block lists in *terse* (non-verbose) describe before truncating with a
+/// `... (k more ...)` line.  Keeps a large system (e.g. a slice with many forms) from flooding the
+/// terminal now that the terse output carries actual coefficients; verbose prints every row.
+inline constexpr size_t kTerseRowCap = 10;
+
+/// Format one multiprecision real part.  `sig > 0` renders that many significant digits (the terse
+/// default -- short and legible); `sig <= 0` renders full precision (verbose / round-trippable).
+template <typename R>
+inline std::string FmtReal(R const& r, int sig)
+{
+	return (sig > 0) ? r.str(sig) : r.str();
+}
+
 /// Print one (complex_mp) coefficient compactly: a real prints as its real part, a pure imaginary
-/// as `b*i`, otherwise as `(a+b*i)`.
-inline void PrintCoeff(std::ostream& out, complex_mp const& c)
+/// as `b*i`, otherwise as `(a+b*i)`.  `sig` controls the digit count (see FmtReal); the default of
+/// 0 keeps full precision for any caller that does not opt into the short form.
+inline void PrintCoeff(std::ostream& out, complex_mp const& c, int sig = 0)
 {
 	const bool re0 = (c.real() == 0), im0 = (c.imag() == 0);
-	if (im0)            out << c.real();
-	else if (re0)       out << c.imag() << "*i";
-	else                out << "(" << c.real() << "+" << c.imag() << "*i)";
+	if (im0)            out << FmtReal(c.real(), sig);
+	else if (re0)       out << FmtReal(c.imag(), sig) << "*i";
+	else                out << "(" << FmtReal(c.real(), sig) << "+" << FmtReal(c.imag(), sig) << "*i)";
 }
+
+/// The significant-digit count for coefficient printing: 4 for terse (short and legible), the
+/// current working precision for verbose (every digit the system actually carries -- the master
+/// coefficient matrix is stored at a much higher precision than that, so printing its full string
+/// would dump thousands of digits).
+inline int CoeffSig(bool verbose) { return verbose ? static_cast<int>(DefaultPrecision()) : 4; }
 
 /// `f_k` for a single row, or `f_a..f_b` for a contiguous range of `n` rows starting at `row`.
 inline void PrintRowLabel(std::ostream& out, size_t row, size_t n)

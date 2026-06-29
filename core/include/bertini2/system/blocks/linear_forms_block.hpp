@@ -127,21 +127,46 @@ public:
 	/// Whether Homogenize has folded the constant column onto a homogenizing variable.
 	bool IsHomogenized() const { return homogeneous_; }
 
-	/// Human-facing description: terse shows the placeholder `c.[x, y, 1]` (a linear form whose
-	/// coefficients are hidden); verbose shows the actual affine combination `2*x + 1*y - 1`.
+	/// Human-facing description: each form prints as the placeholder `f_k = c.[x, y, 1]` (structure
+	/// stays legible) followed by its actual coefficient row in a `c =` legend below -- short (4
+	/// significant figures) in terse, full precision in verbose.  Terse truncates after kTerseRowCap
+	/// forms so a large slice does not flood the terminal.
 	void Describe(std::ostream& out, size_t& row, VariableGroup const& vars, bool verbose) const
 	{
-		for (Eigen::Index r = 0; r < coefficients_highest_precision_.rows(); ++r)
+		auto const& M = coefficients_highest_precision_;
+		const Eigen::Index n = M.rows();
+		if (n == 0)
+			return;
+		const Eigen::Index cap   = static_cast<Eigen::Index>(describe_detail::kTerseRowCap);
+		const Eigen::Index shown = (verbose || n <= cap) ? n : cap;
+
+		// placeholder line per form: f_k = c.[x, y, 1]
+		for (Eigen::Index r = 0; r < shown; ++r)
 		{
-			out << "  f_" << row++ << " = ";
-			if (verbose)
-				describe_detail::PrintLinearFormVerbose(out, coefficients_highest_precision_, r, vars, num_vars_, homogeneous_);
-			else
-			{
-				out << "c.";
-				describe_detail::PrintAugmentedVars(out, vars, num_vars_, homogeneous_);
-			}
+			out << "  f_" << row++ << " = c.";
+			describe_detail::PrintAugmentedVars(out, vars, num_vars_, homogeneous_);
 			out << "\n";
+		}
+
+		// the actual coefficients below, as a named-expression-style legend (row r <-> f_k above)
+		const int sig = describe_detail::CoeffSig(verbose);
+		out << "    c =\n";
+		for (Eigen::Index r = 0; r < shown; ++r)
+		{
+			out << "      [ ";
+			for (Eigen::Index c = 0; c < M.cols(); ++c)
+			{
+				if (c) out << ", ";
+				describe_detail::PrintCoeff(out, M(r, c), sig);
+			}
+			out << " ]\n";
+		}
+
+		if (shown < n)
+		{
+			row += static_cast<size_t>(n - shown);     // keep the global row index correct
+			out << "    ... (" << (n - shown) << " more form" << (n - shown == 1 ? "" : "s")
+			    << "; describe(verbose=True) for all)\n";
 		}
 	}
 

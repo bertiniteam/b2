@@ -1,10 +1,12 @@
 """Human-facing printing of block-composed systems.
 
-print(system) / str(system) describes the system block by block, with placeholder symbols for the
-structured blocks' coefficients (terse, the default) or the actual numbers and underlying functions
-(system.describe(verbose=True)).  The old debugging leftovers -- the working-vector dump, the
-differentiated flag, the 'unnamed_function' names -- are gone, and structured-block rows are no
-longer invisible.
+print(system) / str(system) describes the system block by block.  A structured block keeps its
+placeholder symbol for legibility (a linear form prints as ``c.[x, y, 1]``, a randomization as
+``R . g``) and shows the actual coefficients just below it -- short (4 significant figures) in the
+default/terse form, full working precision with system.describe(verbose=True).  Terse truncates a
+block's listing after the first several rows so a large system does not flood the terminal.  The old
+debugging leftovers -- the working-vector dump, the differentiated flag, the 'unnamed_function'
+names -- are gone, and structured-block rows are no longer invisible.
 """
 
 import numpy as np
@@ -40,21 +42,21 @@ def test_randomization_shows_placeholder_and_underlying_functions():
     r = linalg.randomize(o)
 
     terse = str(r)
-    assert 'R . g' in terse                       # placeholder, not the matrix
+    assert 'R . g' in terse                       # placeholder label
     assert '(R: 2x3 randomization matrix)' in terse
     assert 'g_0 = x*x+y*y-1' in terse              # the underlying functions, indented and shown
     assert 'g_1 = x*y' in terse
     assert 'g_2 = x*x+y*y-x-y' in terse
-    assert 'R =' not in terse                      # the actual matrix is NOT in the terse form
+    assert 'R =' in terse                          # the actual matrix is shown by default now
+    assert terse.count('[') >= 2                   # its two rows
 
     verbose = r.describe(verbose=True)
-    assert 'R =' in verbose                        # ... but it is in verbose
-    assert verbose.count('[') >= 2                 # the two matrix rows
+    assert 'R =' in verbose                        # same layout, full precision
     for n in NOISE:
         assert n not in verbose
 
 
-def test_linear_forms_block_placeholder_vs_actual():
+def test_linear_forms_block_placeholder_and_coefficients():
     x, y = pb.Variable('x'), pb.Variable('y')
     m = pb.System(); m.add_variable_group(_vg(x, y))
     m.add_function(x*x + y*y - 1)
@@ -62,10 +64,40 @@ def test_linear_forms_block_placeholder_vs_actual():
 
     terse = str(m)
     assert 'f_0 = x*x+y*y-1' in terse              # poly row
-    assert 'f_1 = c.[x, y, 1]' in terse            # linear-forms row: placeholder, both rows visible
+    assert 'f_1 = c.[x, y, 1]' in terse            # linear-forms placeholder kept (legible structure)
+    assert 'c =' in terse                          # ... with the coefficients in a legend below
+    assert '2' in terse and '-1' in terse          # the actual values (here exact integers)
 
     verbose = m.describe(verbose=True)
-    assert '(2)*x' in verbose and '(1)*y' in verbose and '(-1)' in verbose   # actual coefficients
+    assert 'c.[x, y, 1]' in verbose and 'c =' in verbose   # same layout, full precision
+    assert '2' in verbose
+
+
+def test_linear_form_coefficients_short_in_terse_full_in_verbose():
+    import re
+    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    s = na.Slice.random_complex(_vg(x, y, z), 1).as_system()   # irrational random coefficients
+
+    terse, verbose = s.describe(), s.describe(verbose=True)
+    assert 'c.[x, y, z, 1]' in terse and 'c =' in terse
+
+    def longest_decimal(text):
+        return max((len(t) for t in re.findall(r'\d+\.\d+', text)), default=0)
+
+    assert longest_decimal(terse) <= 8             # ~4 significant figures, e.g. 0.3163 / 0.04692
+    assert longest_decimal(verbose) >= 12          # full working precision (~30 digits)
+
+
+def test_terse_truncates_many_forms_but_verbose_shows_all():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    coeffs = [[i + 1, i + 2, i + 3] for i in range(12)]        # 12 affine forms on (x, y), > the cap of 10
+    s = linalg.slice_from_coefficients(coeffs, [x, y]).as_system()
+
+    terse, verbose = s.describe(), s.describe(verbose=True)
+    assert terse.count('c.[') == 10                # capped at kTerseRowCap
+    assert 'more form' in terse                    # with a truncation note
+    assert verbose.count('c.[') == 12              # verbose shows every form
+    assert 'more form' not in verbose
 
 
 def test_products_of_linears_block():
