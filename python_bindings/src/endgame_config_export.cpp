@@ -37,6 +37,7 @@ namespace bertini{
 				.def_readwrite("maximum_cauchy_ratio", &endgame::CauchyConfig::maximum_cauchy_ratio)
 				.def_readwrite("num_needed_for_stabilization", &endgame::CauchyConfig::num_needed_for_stabilization,"When running stabilization testing for the cycle number when entering the endgame, this is the number of consecutive points for which the test must pass.")
 				.def_readwrite("fail_safe_maximum_cycle_number", &endgame::CauchyConfig::fail_safe_maximum_cycle_number, "max number of loops before giving up." )
+				.def_readwrite("num_consecutive_same_cycle_number", &endgame::CauchyConfig::num_consecutive_same_cycle_number, "Number of consecutive Cauchy approximations that must report the same cycle number before a converged approximation is trusted." )
 				;
 		}
 

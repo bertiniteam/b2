@@ -132,7 +132,17 @@ namespace bertini{ namespace endgame{
 		T minimum_for_c_over_k_stabilization = T(3)/T(4);
 		unsigned int num_needed_for_stabilization = 3;
 		T maximum_cauchy_ratio = T(1)/T(2);
-		unsigned int fail_safe_maximum_cycle_number = 250; //max number of loops before giving up. 
+		unsigned int fail_safe_maximum_cycle_number = 250; //max number of loops before giving up.
+
+		// Number of consecutive circle-tracked Cauchy approximations that must report the SAME cycle
+		// number before a converged approximation is trusted.  Guards against an UNRELIABLE cycle
+		// number: when the working precision is too low to close the loop accurately (the circle of
+		// radius |t| has enough path variation that tracking error breaks closure -- NOT monodromy:
+		// at high precision a nonsingular endpoint closes at cycle 1 for every radius), the
+		// loop-closing count thrashes (e.g. 41, 14, 36).  Requiring N consecutive identical cycle
+		// numbers refuses to accept convergence until the estimate has genuinely settled.
+		// See z_notes/20260629_endgame_stepsize_reset_rootcause.
+		unsigned int num_consecutive_same_cycle_number = 2;
 
 	};
 
