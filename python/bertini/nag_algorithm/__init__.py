@@ -353,8 +353,9 @@ _attach_to_dataframe()
 
 # --- ZeroDim: a friendly factory over the 18 bound ZeroDim<endgame x precision x start> classes ---
 
-# Each bound class is named ZeroDim<Endgame><Precision>Precision<StartSystem>; rather than type
-# ZeroDimCauchyFixedMultiplePrecisionTotalDegree, select the pieces by string.
+# Each bound solver class is named ZeroDim<Endgame><Precision>Precision (the start system is NO
+# longer part of the type -- it is chosen at construction).  Select endgame + precision by string to
+# pick the class, then pick the start system separately (default total_degree, else a factory).
 _ZD_ENDGAMES = {
     'cauchy': 'Cauchy',
     'powerseries': 'PowerSeries', 'power_series': 'PowerSeries', 'pseg': 'PowerSeries',
@@ -365,9 +366,11 @@ _ZD_PRECISIONS = {
     'fixed_multiple': 'FixedMultiplePrecision', 'multiprecision': 'FixedMultiplePrecision',
     'adaptive': 'AdaptivePrecision', 'amp': 'AdaptivePrecision',
 }
+# string -> the StartSystemType enum value name on _pybnalag (the C++ blackbox::type::Start).
 _ZD_START_SYSTEMS = {
-    'totaldegree': 'TotalDegree', 'total_degree': 'TotalDegree', 'td': 'TotalDegree',
-    'mhom': 'MHomogeneous', 'mhomogeneous': 'MHomogeneous', 'multihomogeneous': 'MHomogeneous',
+    'totaldegree': 'total_degree', 'total_degree': 'total_degree', 'td': 'total_degree',
+    'rootsofunity': 'roots_of_unity', 'roots_of_unity': 'roots_of_unity', 'rou': 'roots_of_unity',
+    'mhom': 'mhomogeneous', 'mhomogeneous': 'mhomogeneous', 'multihomogeneous': 'mhomogeneous',
 }
 
 
@@ -384,12 +387,16 @@ def _infer_start_system(system):
     """Pick the start system from the system's variable-group structure.
 
     Mirrors the C++ blackbox ``InferStartType`` (core/.../blackbox/switches_zerodim.hpp): a single
-    affine variable group with no homogeneous/projective groups is the 1-homogeneous (total-degree)
-    case; anything else -- two or more variable groups, or any homogeneous group -- is
-    multihomogeneous, and total degree would be the wrong (over-counting) start system there.
+    affine variable group with no homogeneous/projective groups is the 1-homogeneous case; anything
+    else -- two or more variable groups, or any homogeneous group -- is multihomogeneous (total
+    degree / roots of unity would be the wrong, over-counting start system there).
+
+    INTERIM: the single-affine-group case infers ``rootsofunity`` (the safe default).  The eventual
+    inference is the linear-product ``totaldegree`` (general position), gated on the Cauchy-endgame
+    fix; see core/.../nag_algorithms/common/policies.hpp.
     """
     if system.num_variable_groups() == 1 and system.num_hom_variable_groups() == 0:
-        return 'totaldegree'
+        return 'rootsofunity'
     return 'mhom'
 
 
@@ -428,9 +435,9 @@ def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
         >>> sys.add_variable_group(bertini.VariableGroup([x]))
         >>> sys.add_function(x * x - 1)
         >>> type(ZeroDim(sys)).__name__
-        'ZeroDimCauchyAdaptivePrecisionTotalDegree'
+        'ZeroDimCauchyAdaptivePrecision'
         >>> type(ZeroDim(sys, mptype='amp', startsystem='mhom')).__name__
-        'ZeroDimCauchyAdaptivePrecisionMHomogeneous'
+        'ZeroDimCauchyAdaptivePrecision'
         >>> solver = ZeroDim(sys, mptype='adaptive')   # robust path
         >>> solver.solve()                             # doctest: +SKIP
         >>> solver.all_solutions()                         # doctest: +SKIP
@@ -447,11 +454,50 @@ def ZeroDim(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
             "nag_algorithm.user_homotopy(homotopy, start_points, target).")
     if start_key == 'infer':
         startsystem = _infer_start_system(system)
+    # the solver class encodes only endgame + precision now; the start system is a constructor choice.
     cls_name = ('ZeroDim'
                 + _zd_select(endgame, _ZD_ENDGAMES, 'endgame')
-                + _zd_select(mptype, _ZD_PRECISIONS, 'mptype')
-                + _zd_select(startsystem, _ZD_START_SYSTEMS, 'startsystem'))
-    return getattr(_pybnalag, cls_name)(system)
+                + _zd_select(mptype, _ZD_PRECISIONS, 'mptype'))
+    cls = getattr(_pybnalag, cls_name)
+    start_enum = getattr(_pybnalag.StartSystemType,
+                         _zd_select(startsystem, _ZD_START_SYSTEMS, 'startsystem'))
+    # total_degree is the default constructor; any other start is selected with a factory.
+    if start_enum == _pybnalag.StartSystemType.total_degree:
+        return cls(system)
+    return cls(system, _pybnalag.start_system_factory(start_enum))
+
+
+# --- backward-compatible solver-name shims -----------------------------------------------------
+# Before ZeroDim was de-templated off the start-system type, every (endgame, precision, start)
+# combination was its own bound class, e.g. ``ZeroDimCauchyAdaptivePrecisionTotalDegree``.  The start
+# system is no longer part of the solver type (it is a construction choice), so those classes are
+# gone.  These thin shims delegate to the ``ZeroDim(...)`` facade so existing code -- including the
+# many places that import a name and pass it around as a callable -- keeps working.  Prefer
+# ``ZeroDim(system, endgame=..., mptype=..., startsystem=...)`` in new code.
+def _install_legacy_zerodim_aliases():
+    import sys as _sys
+    _EG = {'Cauchy': 'cauchy', 'PowerSeries': 'powerseries'}
+    _PR = {'DoublePrecision': 'double', 'FixedMultiplePrecision': 'multiple',
+           'AdaptivePrecision': 'adaptive'}
+    # NOTE: the legacy ``...TotalDegree`` classes were the OLD total-degree start system, which was
+    # really roots of unity -- so map them to 'rootsofunity' to preserve their historical behavior
+    # (and to avoid the new linear-product TotalDegree's current Cauchy-endgame stall).
+    _SS = {'TotalDegree': 'rootsofunity', 'MHomogeneous': 'mhom'}
+    _mod = _sys.modules[__name__]
+    for eg_name, eg in _EG.items():
+        for pr_name, pr in _PR.items():
+            for ss_name, ss in _SS.items():
+                name = 'ZeroDim{}{}{}'.format(eg_name, pr_name, ss_name)
+                def _shim(system, *, _eg=eg, _pr=pr, _ss=ss):
+                    return ZeroDim(system, endgame=_eg, mptype=_pr, startsystem=_ss)
+                _shim.__name__ = _shim.__qualname__ = name
+                _shim.__doc__ = ("Deprecated alias for ZeroDim(system, endgame={!r}, mptype={!r}, "
+                                 "startsystem={!r}); the start system is no longer baked into the "
+                                 "solver type.".format(eg, pr, ss))
+                setattr(_mod, name, _shim)
+
+
+_install_legacy_zerodim_aliases()
 
 
 # --- user homotopy: run the zero-dim solver on a homotopy YOU built, from start points YOU have ---

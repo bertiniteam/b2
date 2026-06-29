@@ -71,7 +71,7 @@ bertini::System HomotopyTotalDegreeTestSystem(){
 
 	Var t = Variable::Make("t");
 
-	bertini::start_system::TotalDegree start(sys);
+	bertini::start_system::RootsOfUnity start(sys);
 
 	auto homotopy = (1-t)*sys + t*start;
 

@@ -15,15 +15,15 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
 // silviana amethyst, university of wisconsin eau claire
 
 /**
-\file total_degree.hpp 
+\file total_degree.hpp
 
 \brief Defines the TotalDegree start system type.
 */
@@ -33,56 +33,45 @@
 #include "bertini2/system/start_base.hpp"
 #include "bertini2/system/start/utility.hpp"
 
-namespace bertini 
+namespace bertini
 {
 	namespace start_system{
 
 
 		/**
-		\brief Total degree start system for 1-homogeneous polynomial systems.
+		\brief Total degree start system for 1-homogeneous polynomial systems, built from random linear products.
 
-		The most basic and easy-to-construct start system in Numerical Algebraic Geometry.  
+		The standard, well-conditioned total-degree start system in Numerical Algebraic Geometry.
 
-		The total degree start system uses functions of the form \f$x_i^{d_i} - r_i\f$, where \f$i\f$ is the index of the function relative to the system, \f$d_i\f$ is the degree of that function, and \f$r_i\f$ is a random complex number.  This is very similar to the roots of unity, except that they are moved away from being centered around the origin, to being centered around a random complex number.  
+		For a square target system with a single affine variable group of \f$n\f$ variables, the
+		start function for a degree-\f$d_i\f$ target function is a product of \f$d_i\f$ random affine
+		linear forms, \f$\prod_{j=1}^{d_i} (a_{ij}\cdot x + b_{ij})\f$.  Its start points are generic
+		intersections (in general position), found by linear algebra -- NOT a roots-of-unity lattice.
+		The number of start points is the Bezout bound \f$\prod_i d_i\f$.  For the (cheaper, structured)
+		roots-of-unity start, see RootsOfUnity.
 
-		Note that the corresponding target system MUST be square -- have the same number of functions and variables.  The start system cannot be constructed otherwise, particularly because it is written to throw at the moment if not square.
+		This is the single-affine-variable-group specialization of MHomogeneous: like MHom, the start
+		system evaluates through a products-of-linears block (the SLP compiler cannot compile
+		linear-product node trees), and each start point is the solution of an \f$n\times n\f$ linear
+		system formed from one chosen linear factor per function.
 
-		The start points are accesses by index (unsigned long long), instead of being generated all at once.
+		Note that the corresponding target system MUST be square -- have the same number of functions
+		and variables.  The start system cannot be constructed otherwise; it throws if not square.
+
+		The start points are accessed by index (unsigned long long), instead of being generated all at once.
 		*/
 		class TotalDegree : public StartSystem
 		{
 		public:
 			TotalDegree() = default;
 			virtual ~TotalDegree() = default;
-			
+
 			/**
 			 Constructor for making a total degree start system from a polynomial system
 
 			 \throws std::runtime_error, if the input target system is not square, is not polynomial, has a path variable already, has more than one variable group, or has any homogeneous variable groups.
 			*/
 			TotalDegree(System const& s);
-
-
-			/**
-			Get the random value for start function with index
-
-			\param index The index of the start function for which you want the corresponding random value.
-			*/
-			template<typename NumT>
-			NumT RandomValue(size_t index) const
-			{
-				// A direct read of the literal constant --- no node-level evaluation.
-				return random_values_[index]->Value<NumT>();
-			}
-
-
-			/**
-			Get all the random values, in their Node form.
-			*/
-			std::vector<std::shared_ptr<node::Rational> > const& RandomValues()
-			{
-				return random_values_;
-			}
 
 
 			/**
@@ -93,7 +82,7 @@ namespace bertini
 			TotalDegree& operator*=(Nd const& n);
 
 			TotalDegree& operator+=(System const& sys) = delete;
-			
+
 			void SanityChecks(System const& s);
 
 		private:
@@ -104,14 +93,18 @@ namespace bertini
 			void CopyDegrees(System const& s);
 
 			/**
-			Populate the random values of this system.
+			Populate the random linear-factor coefficients of this start system.  For each function i
+			(degree d_i) this fills linear_coeffs_[i], a (d_i) x (n+1) matrix whose rows are the random
+			affine linear factors (the trailing column being each factor's constant term).
 			*/
-			void SeedRandomValues(int num_functions);
+			void SeedLinearCoeffs(System const& s);
 
 			/**
-			Generate the functions for this total degree start system.  Assumes the random values, degrees, and variables are already g2g.
+			Build the products-of-linears evaluation block from linear_coeffs_ (so the start system
+			evaluates via the block, as MHomogeneous does).  Assumes the variable structure is set up
+			(homogenized/patched as appropriate) and the coefficients are seeded.
 			*/
-			void GenerateFunctions();
+			void BuildBlock(System const& s);
 
 
 			/**
@@ -128,8 +121,19 @@ namespace bertini
 			*/
 			Vec<complex_mp> GenerateStartPoint(complex_mp,unsigned long long index) const override;
 
-			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
+			/**
+			 A local version of GenerateStartPoint that can be templated.
+			*/
+			template<typename T>
+			void GenerateStartPointT(Vec<T>& start_point, unsigned long long index) const;
+
 			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.
+			/// Random linear-factor coefficients, one matrix per function.  Entry i is a
+			/// (degrees_[i]) x (NumNaturalVariables()+1) matrix: each row is an affine linear factor
+			/// over the variables, the trailing column being the factor's constant term.  Generated at
+			/// MaxPrecisionAllowed so the block's master is precision-faithful.  This is the
+			/// single-group analogue of MHomogeneous::linear_coeffs_.
+			std::vector<Mat<complex_mp>> linear_coeffs_;
 
 
 			friend class boost::serialization::access;
@@ -137,13 +141,12 @@ namespace bertini
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<StartSystem>(*this);
-				ar & random_values_;
 				ar & degrees_;
+				// serialize the coefficients too (unlike MHomogeneous, which persists only degrees_):
+				// a round-tripped TotalDegree can then regenerate its start points, not merely evaluate.
+				ar & linear_coeffs_;
 			}
 
 		};
 	}
 }
-
-
-

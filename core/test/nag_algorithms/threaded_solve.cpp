@@ -234,7 +234,7 @@ void ThreadedMatchesSerial(MakeSys make_sys, std::size_t expected_finite)
 	auto sys_thread = make_sys();
 
 	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
-	                              System, start_system::TotalDegree>;
+	                              System>;
 
 	ZD zd_serial(sys_serial);  zd_serial.DefaultSetup();
 	ZD zd_thread(sys_thread);  zd_thread.DefaultSetup();
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(num_threads_one_equals_default_solve)
 	using namespace bertini;
 	auto sys = TwoQuadrics();
 	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
-	                              System, start_system::TotalDegree>;
+	                              System>;
 	ZD zd(sys); zd.DefaultSetup();
 	auto one = SolveWith(zd, 1);
 	BOOST_CHECK_EQUAL(one.size(), 4u);
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(event_tracker_is_member_tracker_when_serial)
 	using namespace bertini;
 	auto sys = TwoCubics();
 	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
-	                              System, start_system::TotalDegree>;
+	                              System>;
 	ZD zd(sys); zd.DefaultSetup();
 
 	TrackerCapture cap;
@@ -323,9 +323,21 @@ BOOST_AUTO_TEST_CASE(event_tracker_is_member_tracker_when_serial)
 BOOST_AUTO_TEST_CASE(event_tracker_is_a_clone_when_threaded)
 {
 	using namespace bertini;
+	// OMP_NUM_THREADS overrides the requested thread count (parallel::EffectiveThreadCount), so under
+	// OMP_NUM_THREADS=1 a "threaded" solve actually runs serially on the member tracker, and the
+	// clone-per-thread expectation below does not hold.  CI runs the test suite both with and without
+	// OMP_NUM_THREADS=1; the threaded path is exercised in the non-serial leg, so skip here when the
+	// environment forces serial.
+	if (parallel::EffectiveThreadCount(4) <= 1)
+	{
+		BOOST_TEST_MESSAGE("event_tracker_is_a_clone_when_threaded: skipped -- OMP_NUM_THREADS forces "
+		                   "a serial run (threaded clone behavior is covered by the OMP_NUM_THREADS!=1 "
+		                   "CI leg).");
+		return;
+	}
 	auto sys = TwoCubics();
 	using ZD = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
-	                              System, start_system::TotalDegree>;
+	                              System>;
 	ZD zd(sys); zd.DefaultSetup();
 
 	TrackerCapture cap;

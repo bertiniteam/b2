@@ -32,10 +32,59 @@ You can also provide your own, that's the point of these policies.
 
 #pragma once
 
+#include "bertini2/system/start_base.hpp"   // start_system::StartSystem (polymorphic base)
+
+#include <functional>
+#include <memory>
+
 
 namespace bertini {
 
+	// forward decl so CloneGiven can default its start-system factory without pulling the concrete
+	// header in here.  The default is only instantiated at call sites, where the start systems are
+	// in scope (start_systems.hpp rides in at the bottom of zero_dim_solve.hpp, which every ZeroDim
+	// user includes).
+	//
+	// INTERIM DEFAULT = RootsOfUnity.  The eventual default is the linear-product TotalDegree (it is
+	// in general position; roots of unity has a clustering problem at t=1), but TotalDegree currently
+	// drives the Cauchy endgame into a corrector-roundoff-floor stall on harder systems (e.g. cyclic5)
+	// -- a known issue being worked separately.  Until that lands, the canonical default stays
+	// RootsOfUnity so the default solve never hangs.
+	namespace start_system { class RootsOfUnity; }
+
 	namespace policy{
+
+		/**
+		\brief A factory that builds a start system from a (prepared) target system.
+
+		The zero-dim algorithm is no longer templated on the concrete start-system type --
+		it holds the start system polymorphically through the `start_system::StartSystem`
+		base.  The CloneGiven policy is handed one of these factories at construction (by the
+		blackbox switch or the python bindings, which know the concrete type there) and calls
+		it on the homogenized/patched target to mint the start system.  Adding a new start
+		system therefore costs no new ZeroDim instantiation -- just a factory.
+		*/
+		template<typename SystemType>
+		using StartSystemFactory =
+			std::function<std::shared_ptr<bertini::start_system::StartSystem>(SystemType const&)>;
+
+		/**
+		\brief Build a StartSystemFactory that mints a concrete start system from the target.
+
+		The single place a concrete start-system type is named when wiring up a CloneGiven
+		ZeroDim.  `policy::MakeStartFactory<start_system::TotalDegree>()` yields a factory that
+		`std::make_shared`s a TotalDegree from the (prepared) target.  Used by the blackbox
+		switch ladder, the python bindings, and the C++ tests.  This template is only
+		instantiated where the concrete StartType is complete, so policies.hpp need not include
+		the concrete start systems.
+		*/
+		template<typename StartType, typename SystemType = bertini::System>
+		StartSystemFactory<SystemType> MakeStartFactory()
+		{
+			return [](SystemType const& target) -> std::shared_ptr<bertini::start_system::StartSystem> {
+				return std::make_shared<StartType>(target);
+			};
+		}
 
 
 
@@ -43,13 +92,15 @@ namespace bertini {
 		\brief A base class for system management for the zero-dim algorithm.
 		*/
 		template<	 typename D,
-					 typename SystemType, typename StartSystemType
+					 typename SystemType
 					,typename StoredSystemType, typename StoredStartSystemType>
 		struct SysMgmtPolicy
 		{
 
 			using SystemT = SystemType;
-			using StartSystemT = StartSystemType;
+			// The algorithm sees every start system through the polymorphic base; concrete
+			// start-system types live only at the construction site (factory).
+			using StartSystemT = bertini::start_system::StartSystem;
 
 			using StoredSystemT = StoredSystemType;
 			using StoredStartSystemT = StoredStartSystemType;
@@ -84,14 +135,10 @@ public:
 				return AsDerived().homotopy_;
 			}
 
-			/**
-			A getter for the start system being used.
-			*/
-			const StartSystemT & StartSystem() const
-			{
-				return AsDerived().start_system_;
-			}
-
+			// NOTE: StartSystem() get/set live on the derived policies, not here: the storage
+			// differs irreconcilably -- CloneGiven owns a shared_ptr<StartSystem> (needs *p),
+			// RefToGiven holds reference_wrapper<const StartSystem> (needs .get()) -- and neither
+			// converts to a common StoredStartSystemT& the way the old by-value/by-ref storage did.
 
 
 			/**
@@ -109,14 +156,6 @@ public:
 			{
 				AsDerived().homotopy_ = sys;
 			}
-
-			/**
-			A setter for the start system being used.
-			*/
-			void StartSystem(StoredStartSystemT const& sys)
-			{
-				AsDerived().start_system_ = sys;
-			}
 		};
 
 
@@ -129,22 +168,25 @@ public:
 
 		\see RefToGiven
 		*/
-		template<typename SystemType, typename StartSystemType>
-		struct CloneGiven : public SysMgmtPolicy<CloneGiven<SystemType, StartSystemType>, SystemType, StartSystemType, SystemType, StartSystemType>
+		template<typename SystemType>
+		struct CloneGiven : public SysMgmtPolicy<CloneGiven<SystemType>, SystemType, SystemType,
+		                                         std::shared_ptr<bertini::start_system::StartSystem>>
 		{
 
-			using SMP = SysMgmtPolicy<CloneGiven<SystemType, StartSystemType>, SystemType, StartSystemType, SystemType, StartSystemType>;
+			using SMP = SysMgmtPolicy<CloneGiven<SystemType>, SystemType, SystemType,
+			                          std::shared_ptr<bertini::start_system::StartSystem>>;
 			friend SMP;
 
 			using StoredSystemT = typename SMP::StoredSystemT;
 			using StoredStartSystemT = typename SMP::StoredStartSystemT;
 
 			using SMP::TargetSystem;
-			using SMP::StartSystem;
 			using SMP::Homotopy;
 
 			using SystemT = SystemType;
-			using StartSystemT = StartSystemType;
+			using StartSystemBaseT = bertini::start_system::StartSystem;
+			using StartSystemT = StartSystemBaseT;
+			using FactoryT = StartSystemFactory<SystemType>;
 
 			// This policy owns (deep-copies) its systems, so in a distributed solve rank 0's
 			// systems can be broadcast and installed authoritatively on every rank.  RefToGiven,
@@ -153,15 +195,21 @@ public:
 
 private:
 			StoredSystemT target_system_;
-			StoredStartSystemT start_system_;
+			StoredStartSystemT start_system_;   ///< shared_ptr<StartSystem>, polymorphic + owned
 			StoredSystemT homotopy_;
+			FactoryT start_factory_;            ///< mints the start system from the prepared target
 
 
 public:
 			/**
-			Simply forward on the systems for the constructor.  The AtConstruct function is to be called by the user of this policy, at construct time.
+			Construct from the target system and a factory that builds the start system from it.
+			The factory is invoked in SystemSetup, AFTER the target is homogenized/patched, so the
+			start system is built over the same (prepared) coordinates -- identical to the old
+			`start = StartSystemType(target)` after PrepareTarget.
 			*/
-			CloneGiven(SystemType const& target) : target_system_(AtConstruct(target))
+			CloneGiven(SystemType const& target,
+			           FactoryT factory = MakeStartFactory<bertini::start_system::RootsOfUnity, SystemType>())
+			 : target_system_(AtConstruct(target)), start_factory_(std::move(factory))
 			{}
 
 
@@ -186,7 +234,7 @@ public:
 			/**
 			Homogenize and patch the target system.
 			*/
-			static 
+			static
 			void PrepareTarget(SystemType & target)
 			{
 				// target system came from the constructor
@@ -194,29 +242,31 @@ public:
 				target.AutoPatch(); // then patch if needed
 			}
 
-			static void FormStart(StartSystemType & start, SystemType const& target)
+			/// Build the start system from the (already-prepared) target via the injected factory.
+			void FormStart()
 			{
-				start = StartSystemType(target);	
+				start_system_ = start_factory_(TargetSystem());
 			}
 
 			static
-			void FormHomotopy(SystemType & homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
+			void FormHomotopy(SystemType & homotopy, SystemType const& target, StartSystemBaseT const& start, std::string const& path_variable_name)
 			{
 				// MakeHomotopy builds H = (1-t)*target + gamma*t*start with a random gamma,
 				// choosing a blend block when the start system carries structured blocks (e.g.
 				// the MHom products-of-linears start) and node arithmetic otherwise.  The same
 				// construction is exposed to Python as system.make_homotopy so a user-authored
-				// start system can be turned into a trackable homotopy.
+				// start system can be turned into a trackable homotopy.  MakeHomotopy takes the
+				// start as a System const& -- the polymorphic StartSystem binds directly.
 				homotopy = MakeHomotopy(target, start, path_variable_name);
 			}
 
 			/**
 			\brief Sets up the homotopy for the system to be solved.
-			
-			1. Homogenizes the system, 
-			2. patches it, 
-			3. constructs the start system,
-			4. stores the number of start points, 
+
+			1. Homogenizes the system,
+			2. patches it,
+			3. constructs the start system (via the factory, over the prepared target),
+			4. stores the number of start points,
 			5. makes a path variable,
 			6. forms the straight line homotopy between target and start, with the gamma trick
 
@@ -226,8 +276,8 @@ public:
 			{
 				PrepareTarget(TargetSystem());
 
-				// now we populate the start system
-				FormStart(StartSystem(), TargetSystem());
+				// now we populate the start system (factory consumes the prepared target)
+				FormStart();
 
 				FormHomotopy(Homotopy(), TargetSystem(), StartSystem(), path_variable_name);
 			}
@@ -236,7 +286,7 @@ public:
 			/**
 			A getter for the system to be tracked to.
 			*/
-			SystemT& TargetSystem() 
+			SystemT& TargetSystem()
 			{
 				return target_system_;
 			}
@@ -244,15 +294,26 @@ public:
 			/**
 			A getter for the homotopy being used.
 			*/
-			SystemT& Homotopy() 
+			SystemT& Homotopy()
 			{
 				return homotopy_;
 			}
 
 			/**
-			A getter for the start system being used.
+			A getter for the start system being used (through the polymorphic base).
 			*/
-			StartSystemT & StartSystem() 
+			StartSystemBaseT & StartSystem()
+			{
+				return *start_system_;
+			}
+			StartSystemBaseT const& StartSystem() const
+			{
+				return *start_system_;
+			}
+
+			/// The owning shared_ptr, so a distributed solve can broadcast the start system
+			/// polymorphically (boost serializes the concrete type via BOOST_CLASS_EXPORT).
+			StoredStartSystemT & StartSystemPtr()
 			{
 				return start_system_;
 			}
@@ -266,19 +327,22 @@ public:
 
 		\see CloneGiven
 		*/
-		template<typename SystemType, typename StartSystemType>
-		struct RefToGiven : public SysMgmtPolicy<RefToGiven<SystemType, StartSystemType>, SystemType, StartSystemType, 
-								std::reference_wrapper< const SystemType>, std::reference_wrapper< const StartSystemType>>
+		template<typename SystemType>
+		struct RefToGiven : public SysMgmtPolicy<RefToGiven<SystemType>, SystemType,
+								std::reference_wrapper< const SystemType>,
+								std::reference_wrapper< const bertini::start_system::StartSystem>>
 		{
-			using SMP = SysMgmtPolicy<RefToGiven<SystemType, StartSystemType>, SystemType, StartSystemType, 
-								std::reference_wrapper< const SystemType>, std::reference_wrapper< const StartSystemType>>;
+			using StartSystemBaseT = bertini::start_system::StartSystem;
+			using SMP = SysMgmtPolicy<RefToGiven<SystemType>, SystemType,
+								std::reference_wrapper< const SystemType>,
+								std::reference_wrapper< const StartSystemBaseT>>;
 			friend SMP;
 
 			using StoredSystemT = typename SMP::StoredSystemT;
 			using StoredStartSystemT = typename SMP::StoredStartSystemT;
+			using StartSystemT = StartSystemBaseT;
 
 			using SMP::TargetSystem;
-			using SMP::StartSystem;
 			using SMP::Homotopy;
 
 			// The user owns these systems (we only hold references); a distributed solve must not
@@ -288,18 +352,19 @@ public:
 
 private:
 			StoredSystemT target_system_; ///< The target system which we track to.
-			StoredStartSystemT start_system_; ///< The start system, which produces start points.
+			StoredStartSystemT start_system_; ///< The start system, which produces start points (held through the base).
 			StoredSystemT homotopy_; ///< homotopy, on which we wish the path vanishes.
 
 
 public:
 			/**
-			Simply forward references to the given systems on the stored systems.
+			Simply forward references to the given systems on the stored systems.  A concrete
+			start system (e.g. start_system::User) binds to the StartSystem base reference (is-a).
 			*/
-			RefToGiven(SystemType const& target, StartSystemType const& start, SystemType const& hom)
-			 : 
-			 	target_system_(std::ref(target)), 
-			 	start_system_(std::ref(start)), 
+			RefToGiven(SystemType const& target, StartSystemBaseT const& start, SystemType const& hom)
+			 :
+			 	target_system_(std::ref(target)),
+			 	start_system_(std::ref(start)),
 			 	homotopy_(std::ref(hom))
 			{}
 
@@ -321,6 +386,14 @@ public:
 			T AtSet(T const& sys)
 			{
 				return std::ref(sys);
+			}
+
+			/**
+			A getter for the start system being used (through the polymorphic base).
+			*/
+			StartSystemBaseT const& StartSystem() const
+			{
+				return start_system_.get();
 			}
 
 			void SystemSetup(std::string const& /*path_variable_name*/) const

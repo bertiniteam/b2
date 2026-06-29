@@ -37,25 +37,57 @@
 #include "bertini2/endgames.hpp"
 
 #include "bertini2/blackbox/config.hpp"
+#include "bertini2/blackbox/switches_zerodim.hpp"   // ZeroDimRT
 
 
 namespace bertini{
 namespace blackbox{
 
 
+// User homotopies use the RefToGiven policy (the user owns target/start/homotopy), so they
+// get their own tracker/endgame dispatch chain -- distinct from the generic ZeroDimSpecify*
+// ladder, which always clones.  ts... = (target, start_system, homotopy).
 
+template <typename TrackerType, typename EndgameType, typename ... ConstTs>
+std::unique_ptr<algorithm::AnyZeroDim> UserHomSpecifyComplete(ConstTs const& ...ts)
+{
+	return std::make_unique<
+			algorithm::ZeroDim<TrackerType, EndgameType, System, policy::RefToGiven>
+			>(ts...);
+}
 
+template <typename TrackerType, typename ... ConstTs>
+std::unique_ptr<algorithm::AnyZeroDim> UserHomSpecifyEndgame(ZeroDimRT const& rt, ConstTs const& ...ts)
+{
+	switch (rt.endgame)
+	{
+		case type::Endgame::PowerSeries:
+			return UserHomSpecifyComplete<TrackerType, typename endgame::EndgameSelector<TrackerType>::PSEG>(ts...);
+		case type::Endgame::Cauchy:
+			return UserHomSpecifyComplete<TrackerType, typename endgame::EndgameSelector<TrackerType>::Cauchy>(ts...);
+	}
+	throw std::runtime_error("unrecognized endgame type in UserHomSpecifyEndgame");
+}
 
 template <typename ... ConstTs>
-std::unique_ptr<algorithm::AnyZeroDim> UserHomSpecifyStart(ZeroDimRT const& rt, ConstTs const& ...ts)
+std::unique_ptr<algorithm::AnyZeroDim> UserHomSpecifyTracker(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
-	return ZeroDimSpecifyTracker<start_system::User>(rt, ts...);
+	switch (rt.tracker)
+	{
+		case type::Tracker::FixedDouble:
+			return UserHomSpecifyEndgame<tracking::DoublePrecisionTracker>(rt, ts...);
+		case type::Tracker::FixedMultiple:
+			return UserHomSpecifyEndgame<tracking::MultiplePrecisionTracker>(rt, ts...);
+		case type::Tracker::Adaptive:
+			return UserHomSpecifyEndgame<tracking::AMPTracker>(rt, ts...);
+	}
+	throw std::runtime_error("unrecognized tracker type in UserHomSpecifyTracker");
 }
 
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> MakeUserHom(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
-	return UserHomSpecifyStart(rt, ts...);
+	return UserHomSpecifyTracker(rt, ts...);
 }
 
 

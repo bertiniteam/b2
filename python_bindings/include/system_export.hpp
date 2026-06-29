@@ -69,6 +69,7 @@ namespace bertini{
 		void ExportStartSystems();
 		void ExportStartSystemBase();
 		void ExportTotalDegree();
+		void ExportRootsOfUnity();
 		
 		
 		

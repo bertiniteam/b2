@@ -1728,7 +1728,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	BOOST_CHECK(griewank_osborn_sys.IsHomogeneous());
 	BOOST_CHECK(griewank_osborn_sys.IsPatched());	
 
-	auto griewank_TD = bertini::start_system::TotalDegree(griewank_osborn_sys);
+	auto griewank_TD = bertini::start_system::RootsOfUnity(griewank_osborn_sys);
 	griewank_TD.Homogenize();
 	BOOST_CHECK(griewank_TD.IsHomogeneous());
 	BOOST_CHECK(griewank_TD.IsPatched());
@@ -1903,7 +1903,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	
 
-	auto TD = bertini::start_system::TotalDegree(sys);
+	auto TD = bertini::start_system::RootsOfUnity(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());

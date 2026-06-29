@@ -1,7 +1,12 @@
 """The friendly ZeroDim(...) factory selects the right bound solver class by string.
 
-Instead of typing ZeroDimCauchyAdaptivePrecisionTotalDegree, you say ZeroDim(system) (the
-defaults) or ZeroDim(system, endgame=..., mptype=..., startsystem=...).
+Instead of typing ZeroDimCauchyAdaptivePrecision, you say ZeroDim(system) (the defaults) or
+ZeroDim(system, endgame=..., mptype=..., startsystem=...).
+
+Note: after ZeroDim was de-templated off the start-system type, the bound solver class encodes only
+the endgame and precision (e.g. ``ZeroDimCauchyAdaptivePrecision``); the start system is chosen at
+construction and held polymorphically, so it is NO LONGER part of the class name.  Start-system
+selection is therefore verified behaviorally here, not by the type.
 """
 
 import pytest
@@ -21,26 +26,27 @@ def _system():
     return sys
 
 
-def test_defaults_are_cauchy_adaptive_totaldegree():
+def test_defaults_are_cauchy_adaptive():
+    # default endgame + precision; start system (total degree) is not in the type name anymore.
     solver = ZeroDim(_system())
-    assert isinstance(solver, _n.ZeroDimCauchyAdaptivePrecisionTotalDegree)
+    assert isinstance(solver, _n.ZeroDimCauchyAdaptivePrecision)
 
 
 @pytest.mark.parametrize("kwargs, expected", [
-    (dict(),                                                   'ZeroDimCauchyAdaptivePrecisionTotalDegree'),
-    (dict(mptype='double'),                                   'ZeroDimCauchyDoublePrecisionTotalDegree'),
-    (dict(mptype='dbl'),                                      'ZeroDimCauchyDoublePrecisionTotalDegree'),
-    (dict(mptype='multiple'),                                 'ZeroDimCauchyFixedMultiplePrecisionTotalDegree'),
-    (dict(mptype='amp'),                                      'ZeroDimCauchyAdaptivePrecisionTotalDegree'),
-    (dict(mptype='adaptive'),                                 'ZeroDimCauchyAdaptivePrecisionTotalDegree'),
-    (dict(endgame='powerseries'),                             'ZeroDimPowerSeriesAdaptivePrecisionTotalDegree'),
-    (dict(endgame='power_series'),                            'ZeroDimPowerSeriesAdaptivePrecisionTotalDegree'),
-    (dict(startsystem='mhom'),                                'ZeroDimCauchyAdaptivePrecisionMHomogeneous'),
-    (dict(startsystem='td'),                                  'ZeroDimCauchyAdaptivePrecisionTotalDegree'),
-    # the docstring's headline example, and a fully-specified power-series/double/total-degree:
-    (dict(endgame='cauchy', mptype='amp', startsystem='mhom'),'ZeroDimCauchyAdaptivePrecisionMHomogeneous'),
+    (dict(),                                                   'ZeroDimCauchyAdaptivePrecision'),
+    (dict(mptype='double'),                                   'ZeroDimCauchyDoublePrecision'),
+    (dict(mptype='dbl'),                                      'ZeroDimCauchyDoublePrecision'),
+    (dict(mptype='multiple'),                                 'ZeroDimCauchyFixedMultiplePrecision'),
+    (dict(mptype='amp'),                                      'ZeroDimCauchyAdaptivePrecision'),
+    (dict(mptype='adaptive'),                                 'ZeroDimCauchyAdaptivePrecision'),
+    (dict(endgame='powerseries'),                             'ZeroDimPowerSeriesAdaptivePrecision'),
+    (dict(endgame='power_series'),                            'ZeroDimPowerSeriesAdaptivePrecision'),
+    # the start system no longer changes the type -- only endgame + precision do:
+    (dict(startsystem='mhom'),                                'ZeroDimCauchyAdaptivePrecision'),
+    (dict(startsystem='td'),                                  'ZeroDimCauchyAdaptivePrecision'),
+    (dict(endgame='cauchy', mptype='amp', startsystem='mhom'),'ZeroDimCauchyAdaptivePrecision'),
     (dict(endgame='power_series', mptype='dbl', startsystem='td'),
-                                                              'ZeroDimPowerSeriesDoublePrecisionTotalDegree'),
+                                                              'ZeroDimPowerSeriesDoublePrecision'),
 ])
 def test_factory_selects_expected_class(kwargs, expected):
     solver = ZeroDim(_system(), **kwargs)
@@ -68,10 +74,10 @@ def test_factory_returns_a_real_solver():
 
 def test_precision_is_an_alias_for_mptype():
     assert isinstance(ZeroDim(_system(), precision='amp'),
-                      _n.ZeroDimCauchyAdaptivePrecisionTotalDegree)
+                      _n.ZeroDimCauchyAdaptivePrecision)
     # precision overrides mptype when both are given
     assert isinstance(ZeroDim(_system(), mptype='double', precision='adaptive'),
-                      _n.ZeroDimCauchyAdaptivePrecisionTotalDegree)
+                      _n.ZeroDimCauchyAdaptivePrecision)
 
 
 def test_user_startsystem_points_at_user_homotopy():
@@ -100,14 +106,21 @@ def _projective_system():
 
 def test_startsystem_inferred_from_variable_groups():
     # default startsystem='infer' mirrors the C++ blackbox InferStartType: a single affine group is
-    # total degree; two-or-more groups, or any projective group, is multihomogeneous.  This matters
-    # because total degree THROWS ("more than one affine variable group") on a multi-group system.
-    assert isinstance(ZeroDim(_system()),
-                      _n.ZeroDimCauchyAdaptivePrecisionTotalDegree)
-    assert isinstance(ZeroDim(_two_affine_group_system()),
-                      _n.ZeroDimCauchyAdaptivePrecisionMHomogeneous)
-    assert isinstance(ZeroDim(_projective_system()),
-                      _n.ZeroDimCauchyAdaptivePrecisionMHomogeneous)
+    # total degree; two-or-more groups, or any projective group, is multihomogeneous.  Since the start
+    # system is no longer in the solver type, we verify the inference BEHAVIORALLY: a multi-group /
+    # projective system would THROW ("more than one affine variable group") if total degree were
+    # (wrongly) inferred, so successfully constructing AND solving it proves MHom was chosen.
+    single = ZeroDim(_system())
+    single.solve()
+    assert len(single.finite_solutions()) == 2
+
+    multi = ZeroDim(_two_affine_group_system())     # total degree would throw here
+    multi.solve()
+    assert len(multi.finite_solutions()) == 2       # x*y=1, x+y=0 -> (i,-i) and (-i,i)
+
+    proj = ZeroDim(_projective_system())            # projective group -> MHom
+    proj.solve()
+    assert len(proj.all_solutions()) >= 1
 
 
 def test_fixed_multiple_precision_solves():
