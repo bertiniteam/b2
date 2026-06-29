@@ -240,7 +240,6 @@ set(nag_algorithms_headers
 set(nag_algorithms_common_headers
     include/bertini2/nag_algorithms/common/algorithm_base.hpp
     include/bertini2/nag_algorithms/common/config.hpp
-    include/bertini2/nag_algorithms/common/policies.hpp
 )
 
 set(nag_datatypes_headers
@@ -549,6 +548,20 @@ if(SKBUILD AND UNIX AND NOT APPLE AND CMAKE_OBJCOPY)
     COMMENT "Stripping .note.gnu.property from bertini2 CLI (drops the distro CRT's x86-64-v2 ISA marking)")
 endif()
 
+# From-source DEV / editable builds (NOT the wheel): mirror the freshly-built CLI into the
+# source-tree package at python/bertini/_bin/bertini2, so the console-script shim
+# (python/bertini/_cli.py, which an editable `pip install -e .` redirects to the source tree)
+# finds the binary.  The wheel build (SKBUILD) instead uses the install(TARGETS ... DESTINATION
+# _bin) rule below.  Together these keep EVERY build path delivering the `bertini2` command:
+# wheel (`pip install .`), editable (`pip install -e .`), and plain in-tree builds.  Guarded on the
+# package dir existing so a stand-alone `core/` build does not create a stray tree.
+if(NOT SKBUILD AND EXISTS ${CMAKE_SOURCE_DIR}/python/bertini)
+  add_custom_command(TARGET bertini2_exe POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/python/bertini/_bin
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:bertini2_exe> ${CMAKE_SOURCE_DIR}/python/bertini/_bin/bertini2
+    COMMENT "Syncing bertini2 CLI into python/bertini/_bin (editable / from-source dev installs)")
+endif()
+
 # Ship the blackbox CLI inside the Python wheel so `pip install bertini2` puts a
 # `bertini2` command on PATH (see the [project.scripts] shim in pyproject.toml and
 # python/bertini/_cli.py).  Under scikit-build (SKBUILD) the whole install tree is
@@ -560,8 +573,14 @@ endif()
 #   - delocate    -> vendored libs in bertini/.dylibs           (@loader_path/../.dylibs)
 #   - $ORIGIN/.. and ../lib cover libbertini2 installed into the package tree itself.
 # A normal (non-wheel) `cmake --install` keeps the usual bin/ location.
+#
+# The exe install is tagged COMPONENT cli so a user who wants ONLY the solver -- no Python, no
+# library/headers -- can `cmake --install build --component cli` and get just bin/bertini2.  The exe
+# statically links libbertini2.a, so the CLI-only install is self-contained re: our code (it still
+# needs Boost/GMP/MPFR/MPC/MPI shared libs, as any from-source build does).  A plain `cmake --install`
+# (no --component) still installs everything.
 if(SKBUILD)
-  install(TARGETS bertini2_exe RUNTIME DESTINATION _bin)
+  install(TARGETS bertini2_exe RUNTIME DESTINATION _bin COMPONENT cli)
   if(APPLE)
     set_target_properties(bertini2_exe PROPERTIES
       INSTALL_RPATH "@loader_path/../../bertini2.libs;@loader_path/../.dylibs;@loader_path/..;@loader_path/../lib")
@@ -570,7 +589,7 @@ if(SKBUILD)
       INSTALL_RPATH "$ORIGIN/../../bertini2.libs;$ORIGIN/..;$ORIGIN/../lib")
   endif()
 else()
-  install(TARGETS bertini2_exe RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  install(TARGETS bertini2_exe RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT cli)
 endif()
 
 install(

@@ -21,7 +21,10 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
+#include <stdexcept>
+
 #include "bertini2/system/system.hpp"
+#include "bertini2/system/slice.hpp"
 #include "bertini2/system/blocks/products_of_linears_block.hpp"
 #include "bertini2/system/blocks/linear_forms_block.hpp"
 #include "bertini2/system/blocks/blend_block.hpp"
@@ -99,6 +102,48 @@ BOOST_AUTO_TEST_CASE(eval_mpfr)
 	auto v = sys.Eval(x);
 
 	BOOST_CHECK(abs(v(0) - complex_mp(24)) < real_mp("1e-25"));
+}
+
+// issue #263: Function(i) on a system with no PolynomialBlock used to dereference a null
+// PolyBlockPtr() and segfault.  It now expands the structured block to a node on demand.
+BOOST_AUTO_TEST_CASE(function_accessor_on_structured_block)
+{
+	DefaultPrecision(30);
+	auto sys = MakeBlockSystem();                 // a single products-of-linears function, no PolynomialBlock
+
+	BOOST_CHECK_EQUAL(sys.GetNaturalFunctions().size(), 1u);  // not empty, in sync with NumNaturalFunctions
+	auto f = sys.Function(0);
+	BOOST_CHECK(f != nullptr);                                // a real function-tree node
+	BOOST_CHECK_THROW(sys.Function(1), std::out_of_range);    // past the end raises, no segfault
+}
+
+// issue #263: Slices() recovers the linear-form slices embedded in a system (inverse of AsSystem).
+BOOST_AUTO_TEST_CASE(slices_round_trip_linear_forms)
+{
+	DefaultPrecision(30);
+	Var x = node::Variable::Make("x"), y = node::Variable::Make("y");
+	VariableGroup vars{x, y};
+
+	bertini::Mat<complex_mp> M(2, 3);             // 2x+3y+1 ; x-y+4  (augmented, last col = constant)
+	M << complex_mp(2), complex_mp(3),  complex_mp(1),
+	     complex_mp(1), complex_mp(-1), complex_mp(4);
+
+	System sys;
+	sys.AddVariableGroup(vars);
+	sys.AddBlock(LinearFormsBlock(2, M));
+
+	auto slices = sys.Slices();
+	BOOST_REQUIRE_EQUAL(slices.size(), 1u);
+	auto const& C = slices[0].Coefficients();
+	BOOST_CHECK_EQUAL(C.rows(), 2);
+	BOOST_CHECK_EQUAL(C.cols(), 3);
+	BOOST_CHECK(abs(C(0, 0) - complex_mp(2)) < real_mp("1e-25"));
+	BOOST_CHECK(abs(C(1, 2) - complex_mp(4)) < real_mp("1e-25"));
+
+	System empty;                                  // a system with no linear-forms block has no slices
+	empty.AddVariableGroup(vars);
+	empty.AddFunction(x * x - y);
+	BOOST_CHECK(empty.Slices().empty());
 }
 
 // round-trip a System through a boost text archive, returning the deserialized copy.

@@ -43,7 +43,7 @@
 #include "bertini2/nag_algorithms/common/algorithm_base.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
 #include "bertini2/nag_algorithms/events.hpp"
-#include "bertini2/nag_algorithms/common/policies.hpp"
+#include "bertini2/system/start_base.hpp"   // start_system::StartSystem + StartSystemFactory / MakeStartFactory
 #include "bertini2/parallel.hpp"
 #include <chrono>
 #include <mutex>
@@ -53,26 +53,42 @@
 
 namespace bertini {
 
+	// forward-declare the interim default start system so ZeroDimSolver's default factory argument
+	// (MakeStartFactory<RootsOfUnity>) can name it; the concrete type rides in via start_systems.hpp
+	// at every call site that actually constructs a ZeroDimSolver.
+	namespace start_system { class RootsOfUnity; }
+
 	namespace algorithm {
 
 
 /**
-forward declare of ZeroDim algorithm
+\brief The continuation primitive: given a homotopy + a source of start points, track each path
+through the tracker and endgame, resolve crossings, classify the endpoints, and report.
+
+This is the engine.  It holds the homotopy, the start system (which supplies the start points), and
+a target system (for dehomogenize / residual / classification) by *reference* -- the caller owns
+them.  ZeroDimSolver is the algorithm built on top: it owns and builds those systems, then drives
+this engine (see below).
 */
-template<	typename TrackerType, typename EndgameType,
-			typename SystemType,
-			template<typename> class SystemManagementP = policy::CloneGiven >
-struct ZeroDim;
+template<typename TrackerType, typename EndgameType, typename SystemType>
+struct HomotopySolver;
+
+/**
+\brief The zero-dimensional solve algorithm: given a polynomial system, form a start system and a
+homotopy, then run the continuation engine.  Owns its systems; is-a HomotopySolver.
+*/
+template<typename TrackerType, typename EndgameType, typename SystemType>
+struct ZeroDimSolver;
 
 
 
 /**
-specify the traits for the algorithm.  this is why we need the forward declare
+specify the traits for the algorithm.  this is why we need the forward declare.  ZeroDimSolver
+derives from HomotopySolver (and so inherits its Configured base), so only HomotopySolver needs
+traits specialized here.
 */
-template<typename TrackerType, typename EndgameType,
-			typename SystemType,
-			template<typename> class SystemManagementP>
-struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, SystemManagementP>>
+template<typename TrackerType, typename EndgameType, typename SystemType>
+struct AlgoTraits <HomotopySolver<TrackerType, EndgameType, SystemType>>
 {
 	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
 	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
@@ -157,8 +173,15 @@ struct SolutionMetaData
 	bool is_real = false;       		// real flag: whether the (dehomogenized) endpoint is real
 	bool is_finite = false;     		// finite flag: whether the endpoint is finite (not at infinity)
 	bool is_singular = false;       		// singular flag: whether the endpoint is singular (multiple, or ill-conditioned)
+	// nonsolution flag: a finite, successful endpoint that is NOT a solution of the actual target
+	// system -- a nonsolution.  ZeroDimSolver sets this when it squares up an over-determined system:
+	// the randomized square system has extraneous roots that satisfy the random combinations but not
+	// the original equations.  Orthogonal to is_finite (a nonsolution is finite); the finite / real /
+	// singular accessors exclude nonsolutions, and they are exposed on their own (Nonsolutions()).
+	// Load-bearing for the regeneration cascade, which must identify and discard nonsolutions.
+	bool is_nonsolution = false;
 
-	bool operator==(const SolutionMetaData<ComplexT> & other){ 
+	bool operator==(const SolutionMetaData<ComplexT> & other){
 		bool result = 
 			this->path_index == other.path_index
 			 && this->solution_index == other.solution_index
@@ -179,6 +202,7 @@ struct SolutionMetaData
 			 && this->is_real == other.is_real
 			 && this->is_finite == other.is_finite
 			 && this->is_singular == other.is_singular
+			 && this->is_nonsolution == other.is_nonsolution
 		;
 
 		return result; }
@@ -212,6 +236,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 	out << "is_real = " << meta.is_real << std::endl;
 	out << "is_finite = " << meta.is_finite << std::endl;
 	out << "is_singular = " << meta.is_singular << std::endl;
+	out << "is_nonsolution = " << meta.is_nonsolution << std::endl;
 
 	return out;
 }
@@ -314,6 +339,7 @@ struct SolveReport
 	unsigned long long num_failed = 0;           ///< paths the tracker could not resolve (no solution, no clean divergence)
 	unsigned long long num_singular = 0;         ///< finite solutions flagged singular (multiple / ill-conditioned)
 	unsigned long long num_real = 0;             ///< finite solutions flagged real
+	unsigned long long num_nonsolutions = 0;     ///< finite endpoints that are NOT solutions of the target (nonsolutions of an over-determined, squared-up system)
 	std::map<SuccessCode, unsigned long long> failures_by_reason; ///< histogram of the failed paths' SuccessCodes
 	double max_condition_number = 0;             ///< largest condition number among finite solutions
 	unsigned max_precision_used = 0;             ///< highest working precision any path needed (digits)
@@ -347,7 +373,9 @@ SolveReport SummarizeSolve(std::vector<SolutionMetaData<ComplexT>> const& metada
 		              || m.endgame_success == SuccessCode::SecurityMaxNormReached);
 		if (m.endgame_success == SuccessCode::Success)
 		{
-			if (m.is_finite)
+			if (m.is_nonsolution)
+				++r.num_nonsolutions;       // a nonsolution: finite, but not a solution of the target
+			else if (m.is_finite)
 			{
 				++r.num_finite_endpoints;
 				finite_distinct += 1.0 / m.multiplicity;
@@ -393,6 +421,8 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 	out << "\n  ----\n";
 	out << "  singular solutions  " << r.num_singular << "\n";
 	out << "  real solutions      " << r.num_real << "\n";
+	if (r.num_nonsolutions)
+		out << "  nonsolutions        " << r.num_nonsolutions << "   (finite, but not solutions of the target)\n";
 	out << "  path crossings      " << r.midpath.num_crossings_detected
 	    << (r.midpath.passed ? " (resolved)" : " (UNRESOLVED)") << "\n";
 	out << "  max condition num   " << r.max_condition_number << "\n";
@@ -402,27 +432,26 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 }
 
 /**
-\brief the basic zero dim algorithm, which solves a system.
+\brief The continuation engine -- track a set of start points through a (caller-owned) homotopy,
+run the endgame, classify the endpoints, report.  See the forward-declare doc above.
 */
-		template<	typename TrackerType, typename EndgameType,
-					typename SystemType,
-					template<typename> class SystemManagementP>
-		struct ZeroDim :
+		template<typename TrackerType, typename EndgameType, typename SystemType>
+		struct HomotopySolver :
 							public virtual AnyZeroDim,
 							public Observable,
-							public SystemManagementP<SystemType>,
 							public detail::Configured<
-								typename AlgoTraits< ZeroDim<TrackerType, EndgameType, SystemType, SystemManagementP>>::NeededConfigs>
+								typename AlgoTraits< HomotopySolver<TrackerType, EndgameType, SystemType>>::NeededConfigs>
 		{
 			// these usings are for getters in python
 			using TrackerT          = TrackerType;
 			using EndgameT          = EndgameType;
 			using SystemT           = SystemType;
-			// the algorithm sees the start system only through the polymorphic base
+			// the engine sees the start system only through the polymorphic base
 			using StartSystemT       = bertini::start_system::StartSystem;
+			using StartSystemBaseT   = bertini::start_system::StartSystem;
 
-			// This algorithm emits its lifecycle events on the AnyZeroDim base, so a
-			// single observer type can watch any templated ZeroDim.  Accept observers
+			// This engine emits its lifecycle events on the AnyZeroDim base, so a
+			// single observer type can watch any templated solver.  Accept observers
 			// declared for AnyZeroDim (in addition to the exact concrete type).
 			bool ObservableIsA(std::type_index t) const override
 			{
@@ -440,14 +469,9 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 			using SolnIndT 			= typename SolnCont<BaseComplexT>::size_type;
 
-			using SystemManagementPolicy = SystemManagementP<SystemType>;
-
-			using StoredSystemT = typename SystemManagementPolicy::StoredSystemT;
-			using StoredStartSystemT = typename SystemManagementPolicy::StoredStartSystemT;
-
 
 			using Config = detail::Configured<
-								typename AlgoTraits<ZeroDim<TrackerType, EndgameType, SystemType, SystemManagementP>>::NeededConfigs>;
+								typename AlgoTraits<HomotopySolver<TrackerType, EndgameType, SystemType>>::NeededConfigs>;
 			using Config::Get;
 
 
@@ -465,25 +489,54 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 			using MidpathType = MidpathChecker<BaseRealT, BaseComplexT, EGBoundaryMetaData<BaseComplexT>>;
 
-			using SystemManagementPolicy::TargetSystem;
-			using SystemManagementPolicy::StartSystem;
-			using SystemManagementPolicy::Homotopy;
+			// --- system storage ---------------------------------------------------------------
+			// The engine holds the homotopy, start system, and target by REFERENCE; the caller
+			// (a user, or ZeroDimSolver) owns them and guarantees they outlive the engine.  This
+			// references, not owned: the engine never forms its systems (ZeroDimSolver / the user does).
+		protected:
+			std::reference_wrapper<const SystemType>        target_system_;
+			std::reference_wrapper<const StartSystemBaseT>  start_system_;
+			std::reference_wrapper<const SystemType>        homotopy_;
+
+			// Re-seat the system references.  ZeroDimSolver calls this after an MPI broadcast
+			// re-materializes rank 0's authoritative systems into its owned storage.
+			void ResetSystems(SystemType const& hom, StartSystemBaseT const& start, SystemType const& target)
+			{
+				homotopy_      = std::cref(hom);
+				start_system_  = std::cref(start);
+				target_system_ = std::cref(target);
+			}
+
+#ifdef BERTINI2_HAVE_MPI
+			// Hook: install rank 0's authoritative systems on every rank before a distributed solve.
+			// A user-supplied homotopy (plain HomotopySolver) is the user's responsibility across
+			// ranks, so this is a no-op here; ZeroDimSolver, which owns its systems, overrides it.
+			virtual void DistributeSystems(MPI_Comm /*comm*/) {}
+#endif
+
+		public:
+			const SystemType&       TargetSystem() const { return target_system_.get(); }
+			const StartSystemBaseT& StartSystem()  const { return start_system_.get();  }
+			const SystemType&       Homotopy()     const { return homotopy_.get();      }
 
 
 
 /// constructors
 
 			/**
-			Construct a ZeroDim algorithm object.
+			Construct the continuation engine over a caller-owned homotopy, start system, and target.
 
-			You must at least pass in the system used to track, though the particular arguments required depend on the policies used in your instantiation of ZeroDim.
-
-			\see RefToGiven, CloneGiven
+			- `target`:   the system the solutions satisfy at target time -- dehomogenize / residual /
+			              classification reference it.
+			- `start`:    supplies the start points (StartSystem::StartPoint), polymorphically.
+			- `homotopy`: the system with a path variable, tracked from start to target time.
+			None are owned; all three must outlive the engine.  (ZeroDimSolver builds and owns them.)
+			Argument order matches the old user-homotopy constructor (target, start, homotopy).
 			*/
-			template<typename ... SysTs>
-			ZeroDim(SysTs const& ...sys) : SystemManagementPolicy(sys...), tracker_(TargetSystem()), endgame_(tracker_)
+			HomotopySolver(SystemType const& target, StartSystemBaseT const& start, SystemType const& homotopy)
+			 : target_system_(std::cref(target)), start_system_(std::cref(start)), homotopy_(std::cref(homotopy)),
+			   tracker_(homotopy), endgame_(tracker_)
 			{
-				ConsistencyCheck();
 				DefaultSetup();
 			}
 
@@ -544,20 +597,11 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 					MPI_Bcast(&seed, 1, MPI_UNSIGNED_LONG, 0, comm);
 					SetGlobalSeed(seed);
 
-					// When this policy owns its systems (CloneGiven), install rank 0's authoritative
-					// systems on every rank.  For RefToGiven the user manages the systems and is
-					// responsible for their consistency across ranks, so we leave them untouched
-					// (matching the old no-op SystemSetup for that policy).
-					if constexpr (SystemManagementPolicy::OwnsSystems)
-					{
-						parallel::mpi_broadcast_serialized(comm, TargetSystem(), 0);
-						// broadcast the OWNING shared_ptr<StartSystem> so the concrete derived type
-						// (TotalDegree/MHom/RootsOfUnity, all default-constructible) is carried
-						// polymorphically via its BOOST_CLASS_EXPORT key -- a base reference would
-						// serialize only the System slice and drop the start-point data.
-						parallel::mpi_broadcast_serialized(comm, this->StartSystemPtr(), 0);
-						parallel::mpi_broadcast_serialized(comm, Homotopy(),    0);
-					}
+					// Install rank 0's authoritative systems on every rank.  The plain engine over a
+					// user-supplied homotopy does nothing here (the user owns cross-rank consistency);
+					// ZeroDimSolver, which owns its systems, overrides DistributeSystems to broadcast
+					// rank 0's target / start / homotopy and re-seat the engine's references.
+					DistributeSystems(comm);
 
 					num_start_points_ = StartSystem().NumStartPoints();
 					GetTracker().SetSystem(Homotopy());
@@ -708,34 +752,10 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			void WriteRawSolutions(std::ostream& out)         const override;
 			void ApplyParsedConfigs(std::string const& config_str) override;
 
-			virtual ~ZeroDim() = default;
+			virtual ~HomotopySolver() = default;
 /// setup functions
-
-
-			/**
-			\brief Check to ensure that target system is valid for solving.
-			*/
-			void ConsistencyCheck() const
-			{
-				if (TargetSystem().HavePathVariable())
-					throw std::runtime_error("unable to perform zero dim solve on target system -- has path variable, use user homotopy instead.");
-
-				// A square zero-dim system needs one equation per dimension.  Each projective
-				// (homogeneous) variable group of size k spans P^{k-1}: its k coordinates carry
-				// only k-1 dimensions because scale is free, so it needs one fewer equation than
-				// it has variables.  Subtract that free scale per projective group before
-				// comparing -- otherwise a genuinely square multiprojective system (e.g. the
-				// eigenvalue problem (A - lam I)x = 0 with x projective, lam affine) is wrongly
-				// rejected.  Affine-only systems have no hom variable groups, so this is a no-op
-				// for them.  (Patches, which would also enter NumTotalFunctions, are added later
-				// during system preparation; this check runs on the as-supplied system.)
-				if (TargetSystem().NumVariables() - TargetSystem().NumHomVariableGroups() > TargetSystem().NumTotalFunctions())
-					throw std::runtime_error("unable to perform zero dim solve on target system -- underconstrained, so has no zero dimensional solutions.");
-
-				if (!TargetSystem().IsPolynomial())
-					throw std::runtime_error("unable to perform zero dim solve on target system -- system is non-polynomial, use user homotopy instead.");
-			}
-
+			// NOTE: feasibility checking (ConsistencyCheck) and start-system construction live in
+			// ZeroDimSolver, which owns the systems; the engine is handed a ready homotopy.
 
 
 			void DefaultSetup()
@@ -751,7 +771,8 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 
 			void DefaultSystemSetup()
 			{
-				SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
+				// The systems are already built and referenced (the engine does not form them);
+				// just read off the number of start points the start system will produce.
 				num_start_points_ = StartSystem().NumStartPoints(); // populate the internal variable
 			}
 
@@ -1075,35 +1096,48 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			}
 
 			/**
-			\brief The finite solutions: successful endpoints the library calls FINITE (is_finite
-			applies the configured endpoint_finite_threshold).  Includes singular, nonsingular, and
-			real solutions alike.  \see RealSolutions, SingularSolutions, NonsingularSolutions
+			\brief The finite solutions: successful, finite endpoints that ARE solutions of the target
+			(is_finite applies the configured endpoint_finite_threshold; nonsolutions are excluded).
+			Includes singular, nonsingular, and real solutions alike.
+			\see RealSolutions, SingularSolutions, NonsingularSolutions, Nonsolutions
 			*/
 			SolnCont<Vec<BaseComplexT>> FiniteSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite; }, user_coords);
+					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution; }, user_coords);
 			}
 
 			/// \brief The real finite solutions (is_real applies the configured tolerance).
 			SolnCont<Vec<BaseComplexT>> RealSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && m.is_real; }, user_coords);
+					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_real; }, user_coords);
 			}
 
 			/// \brief The nonsingular finite solutions (simple, well-conditioned roots).
 			SolnCont<Vec<BaseComplexT>> NonsingularSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_singular; }, user_coords);
+					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution && !m.is_singular; }, user_coords);
 			}
 
 			/// \brief The singular finite solutions (multiple or ill-conditioned roots).
 			SolnCont<Vec<BaseComplexT>> SingularSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && m.is_singular; }, user_coords);
+					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_singular; }, user_coords);
+			}
+
+			/**
+			\brief The NONSOLUTIONS: finite, successful endpoints that are NOT solutions of the target
+			system -- the extraneous nonsolutions squaring up an over-determined system introduces.
+			Empty for a system solved without randomization.  These are excluded from FiniteSolutions /
+			RealSolutions / etc.; a regeneration cascade reads them to discard nonsolutions.  \see is_nonsolution
+			*/
+			SolnCont<Vec<BaseComplexT>> Nonsolutions(bool user_coords = true) const
+			{
+				return SolutionsWhere([](auto const& m){
+					return m.endgame_success == SuccessCode::Success && m.is_nonsolution; }, user_coords);
 			}
 
 			/**
@@ -1660,7 +1694,13 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			}
 
 
-			void PostEGAction()
+		protected:
+			// virtual so ZeroDimSolver can append its extraneous-solution filter after the engine's
+			// classification (it overrides this to call the base, then filter against the original
+			// over-determined system).  Everything from here down -- the classification helpers, the
+			// pack/store helpers, and the data members -- is protected so the derived algorithm can
+			// read the per-endpoint metadata and endpoints it needs for that filter.
+			virtual void PostEGAction()
 			{
 				ComputePostTrackMetadata();
 			}
@@ -1890,7 +1930,230 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 			SolnCont<SolutionMetaDataT> solution_final_metadata_;
 
 
-		}; // struct ZeroDim
+		}; // struct HomotopySolver
+
+
+		// impl namespace deliberately NOT named `detail`: bertini::detail (TypeList, Configured)
+		// is referenced unqualified throughout this file, and a bertini::algorithm::detail would
+		// shadow it for any code defined after this point (e.g. ApplyParsedConfigs).
+		namespace zero_dim_detail {
+
+		/**
+		\brief Owns and builds the target / start system / homotopy for a zero-dim solve.
+
+		Constructed as the FIRST base of ZeroDimSolver -- before the HomotopySolver engine base, which
+		holds references into these systems -- so the homotopy is fully formed before the engine reads
+		it.  This holds the system-building half of the algorithm, plus the feasibility / rank checks the
+		algorithm owns.  Members carry an `owned_` prefix so they do not collide with the engine base's
+		reference members.
+		*/
+		template<typename SystemType>
+		struct OwnedHomotopy
+		{
+			using StartSystemBaseT = bertini::start_system::StartSystem;
+			using FactoryT = bertini::start_system::StartSystemFactory<SystemType>;
+
+			OwnedHomotopy(SystemType const& target, FactoryT factory, std::string const& path_variable_name)
+			 : owned_target_(Clone(target)), owned_factory_(std::move(factory))
+			{
+				ConsistencyCheck();              // feasibility (no path var; not under-constrained; polynomial)
+				SquareUp();                      // randomize an over-determined system down to square
+				RankCheck();                     // square, but can isolated solutions even exist?
+				PrepareTarget(owned_target_);    // homogenize + auto-patch the (now square) target
+				owned_start_    = owned_factory_(owned_target_);                         // start system over the prepared target
+				owned_homotopy_ = MakeHomotopy(owned_target_, *owned_start_, path_variable_name);
+			}
+
+			SystemType const&       BuiltTarget()   const { return owned_target_;   }
+			StartSystemBaseT const& BuiltStart()    const { return *owned_start_;   }
+			SystemType const&       BuiltHomotopy() const { return owned_homotopy_; }
+
+		protected:
+			SystemType                        owned_target_;
+			std::shared_ptr<StartSystemBaseT> owned_start_;
+			SystemType                        owned_homotopy_;
+			FactoryT                          owned_factory_;
+
+			// When the user's system was over-determined, SquareUp randomizes it down to square for
+			// tracking and keeps the ORIGINAL (natural, un-homogenized) system here so ZeroDimSolver
+			// can discard the extraneous solutions the squaring introduces.  was_randomized_ gates
+			// that filter; randomization_matrix_ records the (exact) coefficient matrix used.
+			bool                  was_randomized_ = false;
+			SystemType            original_natural_target_;
+			Mat<complex_mp>       randomization_matrix_;
+
+			/**
+			\brief Reject targets that cannot have isolated solutions for structural reasons.
+			*/
+			void ConsistencyCheck() const
+			{
+				if (owned_target_.HavePathVariable())
+					throw std::runtime_error("unable to perform zero dim solve on target system -- has path variable, use a HomotopySolver instead.");
+
+				// A square zero-dim system needs one equation per dimension.  Each projective
+				// (homogeneous) variable group of size k spans P^{k-1}: its k coordinates carry only
+				// k-1 dimensions because scale is free, so it needs one fewer equation than it has
+				// variables.  Subtract that free scale per projective group before comparing.  An
+				// UNDER-determined system has a positive-dimensional solution set, so no isolated
+				// solutions to compute -- raise a helpful error rather than tracking garbage.
+				if (owned_target_.NumVariables() - owned_target_.NumHomVariableGroups() > owned_target_.NumTotalFunctions())
+					throw std::runtime_error("unable to perform zero dim solve on target system -- it is under-determined (fewer equations than variables), so its solution set is positive-dimensional, not zero-dimensional.  ZeroDimSolver computes isolated solutions only; add equations, or use a positive-dimensional method.");
+
+				if (!owned_target_.IsPolynomial())
+					throw std::runtime_error("unable to perform zero dim solve on target system -- system is non-polynomial, use a HomotopySolver instead.");
+			}
+
+			/**
+			\brief If the target is over-determined (more equations than the affine dimension), replace
+			it with n generic combinations (System::Randomize) so a start system can track it.  The
+			randomized system's isolated solutions contain the original's plus extraneous ones; the
+			original system is kept (original_natural_target_) so ZeroDimSolver can filter those out.
+			*/
+			void SquareUp()
+			{
+				auto const dimension = owned_target_.NumVariables() - owned_target_.NumHomVariableGroups();
+				if (owned_target_.NumTotalFunctions() <= dimension)
+					return; // already square (or under-determined, which ConsistencyCheck already rejected)
+
+				original_natural_target_ = Clone(owned_target_);   // keep the original N-function system
+				owned_target_            = owned_target_.Randomize();
+				randomization_matrix_    = owned_target_.RandomizationMatrix();
+				was_randomized_          = true;
+			}
+
+			/**
+			\brief Reject a square target whose solution set is still positive-dimensional.
+
+			ConsistencyCheck only counts equations; a system can be square yet positive-dimensional
+			(e.g. a repeated equation).  At a generic point a zero-dimensional system has a full-rank
+			n x n Jacobian, so a rank-deficient Jacobian there means no isolated solutions.  Runs only
+			when the (natural, pre-homogenize) system is square; projective/structured inputs whose
+			Jacobian is not n x n are left to ConsistencyCheck.
+			*/
+			void RankCheck() const
+			{
+				if (owned_target_.HavePathVariable())
+					return;
+				auto const n = static_cast<Eigen::Index>(owned_target_.NumVariables());
+				if (static_cast<Eigen::Index>(owned_target_.NumTotalFunctions()) != n || n == 0)
+					return; // not a square map: ConsistencyCheck governs feasibility here
+
+				// a generic complex sample point: a zero-dimensional variety misses it almost surely,
+				// where the Jacobian attains its generic (full) rank.
+				Vec<complex_dbl> pt = Vec<complex_dbl>::Random(n);
+				Mat<complex_dbl> J  = owned_target_.template Jacobian<complex_dbl>(pt);
+				Eigen::FullPivLU<Mat<complex_dbl>> lu(J);
+				lu.setThreshold(1e-10);
+				if (lu.rank() < n)
+					throw std::runtime_error("unable to perform zero dim solve on target system -- the Jacobian is rank-deficient at a generic point, so the solution set is positive-dimensional, not zero-dimensional.  ZeroDimSolver computes isolated solutions only.");
+			}
+
+			static void PrepareTarget(SystemType& target)
+			{
+				target.Homogenize(); // work over projective coordinates
+				target.AutoPatch();  // then patch if needed
+			}
+		};
+
+		} // ns zero_dim_detail
+
+
+		/**
+		\brief The zero-dimensional solve algorithm.
+
+		Owns its systems: it clones the user's target, homogenizes/patches it, builds a start system
+		(via the injected factory) and a homotopy, then drives the continuation engine.  It IS-A
+		HomotopySolver -- the engine machinery (tracking, endgame, crossing resolution, classification,
+		reporting) is reused, not duplicated -- with an OwnedHomotopy base supplying the systems the
+		engine references.
+		*/
+		template<typename TrackerType, typename EndgameType, typename SystemType>
+		struct ZeroDimSolver :
+			private zero_dim_detail::OwnedHomotopy<SystemType>,
+			public  HomotopySolver<TrackerType, EndgameType, SystemType>
+		{
+			using OwnedT   = zero_dim_detail::OwnedHomotopy<SystemType>;
+			using EngineT  = HomotopySolver<TrackerType, EndgameType, SystemType>;
+			using FactoryT = typename OwnedT::FactoryT;
+
+			/**
+			Build the start system + homotopy from `target`, then construct the engine over them.
+			Base initialization order is declaration order: OwnedHomotopy (which builds) runs before
+			the HomotopySolver engine (which references the freshly built systems).  The factory
+			defaults to RootsOfUnity (the interim default start system).
+			*/
+			ZeroDimSolver(SystemType const& target,
+			              FactoryT factory = bertini::start_system::MakeStartFactory<bertini::start_system::RootsOfUnity, SystemType>())
+			 : OwnedT(target, std::move(factory), ZeroDimConfig{}.path_variable_name),
+			   EngineT(OwnedT::BuiltTarget(), OwnedT::BuiltStart(), OwnedT::BuiltHomotopy())
+			{}
+
+			/// \brief Whether the supplied system was over-determined and squared-up by randomization.
+			bool WasRandomized() const { return this->was_randomized_; }
+			/// \brief The randomization matrix used to square up (empty if the system was already square).
+			Mat<complex_mp> const& RandomizationMatrix() const { return this->randomization_matrix_; }
+
+		protected:
+			/**
+			\brief After the engine classifies the endpoints, discard the extraneous solutions that
+			squaring an over-determined system introduces.
+
+			Squaring replaces N equations by n generic combinations, so the square system's isolated
+			solutions are the genuine ones PLUS spurious points that satisfy the combinations but not
+			the original system.  Re-evaluate the ORIGINAL (un-randomized) system at each finite
+			endpoint; a residual above a solve-accuracy threshold flags the point `is_nonsolution`
+			(it stays geometrically finite, but drops out of FiniteSolutions / Real / Singular and is
+			surfaced by Nonsolutions()), and the reported function_residual is updated to that
+			meaningful value.  A no-op unless the system was squared up.
+			*/
+			void PostEGAction() override
+			{
+				EngineT::PostEGAction();   // the engine's finite/real/multiplicity/singular classification
+
+				if (!this->was_randomized_)
+					return;
+
+				// genuine roots satisfy the original system to ~solve accuracy; spurious ones miss it
+				// by O(1).  A generous multiple of the endgame tolerance separates the two cleanly.
+				const double threshold =
+					1e3 * static_cast<double>(this->template Get<TolerancesConfig>().newton_during_endgame);
+
+				for (decltype(this->num_start_points_) ii{0}; ii < this->num_start_points_; ++ii)
+				{
+					auto& smd = this->solution_final_metadata_[ii];
+					if (smd.endgame_success != SuccessCode::Success || !smd.is_finite)
+						continue;
+
+					auto user_pt = this->TargetSystem().DehomogenizePoint(this->solutions_post_endgame_[ii]);
+					// Evaluate the original system in DOUBLE precision: the filter only needs to tell a
+					// genuine root (tiny residual) from an extraneous one (O(1)), and a double residual
+					// does that robustly without a precision mismatch between the (possibly AMP/high
+					// precision) solution point and the original system's working precision.
+					Vec<complex_dbl> pt_d(user_pt.size());
+					for (Eigen::Index k = 0; k < user_pt.size(); ++k)
+						pt_d(k) = complex_dbl(user_pt(k));
+					auto residual = static_cast<NumErrorT>(
+						this->original_natural_target_.template Eval<complex_dbl>(pt_d).template lpNorm<Eigen::Infinity>());
+					smd.function_residual = residual;            // report residual against the ORIGINAL system
+					if (static_cast<double>(residual) > threshold)
+						smd.is_nonsolution = true;               // extraneous: finite, but not a solution of the original system
+				}
+			}
+
+#ifdef BERTINI2_HAVE_MPI
+			// Broadcast rank 0's authoritative owned systems to every rank, then re-seat the engine's
+			// references and let the caller (RunParallel) re-point the tracker at the homotopy.
+			void DistributeSystems(MPI_Comm comm) override
+			{
+				parallel::mpi_broadcast_serialized(comm, this->owned_target_,   0);
+				// the OWNING shared_ptr<StartSystem> carries the concrete derived type polymorphically
+				// (BOOST_CLASS_EXPORT); a base reference would serialize only the System slice.
+				parallel::mpi_broadcast_serialized(comm, this->owned_start_,    0);
+				parallel::mpi_broadcast_serialized(comm, this->owned_homotopy_, 0);
+				this->ResetSystems(this->owned_homotopy_, *this->owned_start_, this->owned_target_);
+			}
+#endif
+		};
 
 	} // ns algo
 
@@ -1905,67 +2168,53 @@ std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 namespace bertini {
 namespace algorithm {
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteMainData(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteMainData(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::MainData(out, *this);
+	output::Classic<HomotopySolver>::MainData(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteRawData(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteRawData(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::RawData(out, *this);
+	output::Classic<HomotopySolver>::RawData(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteFiniteSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteFiniteSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::FiniteSolutions(out, *this);
+	output::Classic<HomotopySolver>::FiniteSolutions(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteRealFiniteSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteRealFiniteSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::RealFiniteSolutions(out, *this);
+	output::Classic<HomotopySolver>::RealFiniteSolutions(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteNonsingularSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteNonsingularSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::NonsingularSolutions(out, *this);
+	output::Classic<HomotopySolver>::NonsingularSolutions(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteSingularSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteSingularSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::SingularSolutions(out, *this);
+	output::Classic<HomotopySolver>::SingularSolutions(out, *this);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 inline void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>::WriteRawSolutions(std::ostream& out) const
+HomotopySolver<TrackerType,EndgameType,SystemType>::WriteRawSolutions(std::ostream& out) const
 {
-	output::Classic<ZeroDim>::RawSolutions(out, *this);
+	output::Classic<HomotopySolver>::RawSolutions(out, *this);
 }
 
 } // ns algorithm
@@ -1986,16 +2235,14 @@ void InjectParsedTuple(Target& target, std::tuple<Ts...> const& t) {
 	(target.template Set<Ts>(std::get<Ts>(t)), ...);
 }
 
-template<typename TrackerType, typename EndgameType,
-         typename SystemType,
-         template<typename> class SystemManagementP>
+template<typename TrackerType, typename EndgameType, typename SystemType>
 void
-ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>
+HomotopySolver<TrackerType,EndgameType,SystemType>
     ::ApplyParsedConfigs(std::string const& config_str)
 {
 	using namespace parsing::classic;
 
-	// 1. ZeroDim-owned configs (Tolerances, PostProcessing, ZeroDimConf, AutoRetrack)
+	// 1. solver-owned configs (Tolerances, PostProcessing, ZeroDimConf, AutoRetrack)
 	using ZDConfs = typename Config::UsedConfigs;
 	auto zd = ConfigParser<ZDConfs>::Parse(config_str);
 	InjectParsedTuple(*this, zd);
@@ -2040,30 +2287,28 @@ ZeroDim<TrackerType,EndgameType,SystemType,SystemManagementP>
 } // ns bertini
 
 
-// Explicit instantiation declarations — suppress re-instantiation of the production
-// ZeroDim types in every including TU.  Since ZeroDim is no longer templated on the
-// start-system type (it holds the start system polymorphically), there are just six
-// CloneGiven combos that cover EVERY clone-owned start system (TotalDegree, MHom,
-// RootsOfUnity, future Polyhedral, ...), plus six RefToGiven combos for user homotopies.
-// Definitions in core/src/eti/zero_dim_eti.cpp + zero_dim_blackbox_eti.cpp; see ADR-0014.
+// Explicit instantiation declarations — suppress re-instantiation of the production solver types in
+// every including TU.  Six ZeroDimSolver combos (Tracker x Endgame) cover EVERY clone-owned start
+// system (the start system is held polymorphically), plus six HomotopySolver combos for user
+// homotopies.  Definitions in core/src/eti/zero_dim_eti.cpp + zero_dim_blackbox_eti.cpp; see ADR-0014.
 #include "bertini2/endgames.hpp"
 #include "bertini2/system/start_systems.hpp"
 
 namespace bertini{ namespace algorithm{
 
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System>;
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System>;
+extern template struct ZeroDimSolver<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System>;
+extern template struct ZeroDimSolver<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System>;
+extern template struct ZeroDimSolver<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System>;
+extern template struct ZeroDimSolver<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System>;
+extern template struct ZeroDimSolver<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System>;
+extern template struct ZeroDimSolver<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System>;
 
-// user homotopies: the user owns the systems, so RefToGiven; definitions in zero_dim_blackbox_eti.cpp
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System, policy::RefToGiven>;
-extern template struct ZeroDim<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System, policy::RefToGiven>;
+// user homotopies: the engine over caller-owned systems.  definitions in zero_dim_blackbox_eti.cpp
+extern template struct HomotopySolver<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::PSEG,     System>;
+extern template struct HomotopySolver<tracking::DoublePrecisionTracker,   typename endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,   System>;
+extern template struct HomotopySolver<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::PSEG,   System>;
+extern template struct HomotopySolver<tracking::MultiplePrecisionTracker, typename endgame::EndgameSelector<tracking::MultiplePrecisionTracker>::Cauchy, System>;
+extern template struct HomotopySolver<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::PSEG,                 System>;
+extern template struct HomotopySolver<tracking::AMPTracker,               typename endgame::EndgameSelector<tracking::AMPTracker>::Cauchy,               System>;
 
 }} // namespaces

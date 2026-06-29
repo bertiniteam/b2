@@ -15,7 +15,7 @@ print(sys)
 sys.homogenize()
 sys.auto_patch()
 
-solver = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
+solver = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
 solver.solve()
 
 print('\nsolutions in homogeneous space:')

@@ -51,10 +51,10 @@ struct Classic
 {};
 
 
-template <typename A, typename B, typename C, template<typename> class D>
-struct Classic <ZeroDim<A,B,C,D>>
+template <typename A, typename B, typename C>
+struct Classic <HomotopySolver<A,B,C>>
 {
-	using ZDT = ZeroDim<A,B,C,D>;
+	using ZDT = HomotopySolver<A,B,C>;
 
 	template <typename OutT>
 	static
@@ -280,6 +280,13 @@ struct Classic <ZeroDim<A,B,C,D>>
 
 
 };
+
+
+// ZeroDimSolver is-a HomotopySolver, so it reuses the engine's classic output verbatim: the static
+// methods take a HomotopySolver const&, to which a ZeroDimSolver const& binds (public derivation).
+template <typename A, typename B, typename C>
+struct Classic <ZeroDimSolver<A,B,C>> : Classic <HomotopySolver<A,B,C>>
+{};
 
 
 struct NonsingularSolutions

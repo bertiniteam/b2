@@ -45,14 +45,15 @@ using DPT  = tracking::DoublePrecisionTracker;
 using MPT  = tracking::MultiplePrecisionTracker;
 using AMPT = tracking::AMPTracker;
 
-// ZeroDim no longer carries the start-system type, so these six default-CloneGiven
-// instantiations cover EVERY clone-owned start system (TotalDegree, MHomogeneous,
-// RootsOfUnity, future Polyhedral, ...).  Adding a start system costs zero ETI.
-template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::PSEG,    System>;
-template struct ZeroDim<DPT,  typename endgame::EndgameSelector<DPT>::Cauchy,  System>;
-template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::PSEG,    System>;
-template struct ZeroDim<MPT,  typename endgame::EndgameSelector<MPT>::Cauchy,  System>;
-template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::PSEG,   System>;
-template struct ZeroDim<AMPT, typename endgame::EndgameSelector<AMPT>::Cauchy, System>;
+// ZeroDimSolver holds its start system polymorphically, so these six instantiations cover EVERY
+// clone-owned start system (TotalDegree, MHomogeneous, RootsOfUnity, future Polyhedral, ...).
+// Adding a start system costs zero ETI.  Each ZeroDimSolver instantiation also instantiates its
+// HomotopySolver base.
+template struct ZeroDimSolver<DPT,  typename endgame::EndgameSelector<DPT>::PSEG,    System>;
+template struct ZeroDimSolver<DPT,  typename endgame::EndgameSelector<DPT>::Cauchy,  System>;
+template struct ZeroDimSolver<MPT,  typename endgame::EndgameSelector<MPT>::PSEG,    System>;
+template struct ZeroDimSolver<MPT,  typename endgame::EndgameSelector<MPT>::Cauchy,  System>;
+template struct ZeroDimSolver<AMPT, typename endgame::EndgameSelector<AMPT>::PSEG,   System>;
+template struct ZeroDimSolver<AMPT, typename endgame::EndgameSelector<AMPT>::Cauchy, System>;
 
 }} // namespaces

@@ -141,7 +141,7 @@ We will solve a degree-six univariate polynomial -- a total-degree homotopy with
     import numpy as np
     import matplotlib.pyplot as plt
     import bertini
-    from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
+    from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
 
     bertini.random.set_random_seed(2)   # so you get exactly this picture
 
@@ -150,7 +150,7 @@ We will solve a degree-six univariate polynomial -- a total-degree homotopy with
     sys.add_variable_group(bertini.VariableGroup([z]))
     sys.add_function(z**6 - 2*z**2 + 2)
 
-    solver = ZeroDim(sys, mptype='adaptive')
+    solver = ZeroDimSolver(sys, mptype='adaptive')
 
     A = SolutionPathCollector()
     solver.add_observer(A)
@@ -220,7 +220,7 @@ the path finishes, B hands its haul back to A.
     import numpy as np
     import bertini
     import bertini.tracking as tracking
-    from bertini.nag_algorithm import ZeroDim, observers as nag_observers
+    from bertini.nag_algorithm import ZeroDimSolver, observers as nag_observers
 
     class PathRecorder(tracking.observers.amp.CustomObserver):
         def __init__(self, parent, path_index):
@@ -276,7 +276,7 @@ Attach **A** to the solver and run -- one entry in ``A.paths`` per solution path
     sys.add_variable_group(bertini.VariableGroup([z]))
     sys.add_function(z**6 - 2*z**2 + 2)
 
-    solver = ZeroDim(sys, mptype='adaptive')
+    solver = ZeroDimSolver(sys, mptype='adaptive')
     A = MyPathCollector()
     solver.add_observer(A)
     solver.solve()
@@ -329,7 +329,7 @@ Two more things to expect under threads:
 
 .. testcode::
 
-    from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
+    from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
     import bertini
 
     z = bertini.Variable('z')
@@ -337,7 +337,7 @@ Two more things to expect under threads:
     sys.add_variable_group(bertini.VariableGroup([z]))
     sys.add_function(z**6 - 2*z**2 + 2)
 
-    solver = ZeroDim(sys, mptype='adaptive')
+    solver = ZeroDimSolver(sys, mptype='adaptive')
     cfg = solver.get_config(bertini.nag_algorithm.ZeroDimConfig)
     cfg.num_threads = 1                 # 0 = auto (all cores), 1 = serial, N = N threads
     solver.set_config(cfg)
@@ -374,7 +374,7 @@ got hard:
     import matplotlib.colors as mcolors
     from mpl_toolkits.mplot3d.art3d import Line3DCollection
     import bertini
-    from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
+    from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
 
     bertini.random.set_random_seed(3)
 
@@ -385,7 +385,7 @@ got hard:
     sys.add_function(x*y + y*z + z*x)
     sys.add_function(x*y*z - 1)
 
-    solver = ZeroDim(sys, mptype='adaptive')
+    solver = ZeroDimSolver(sys, mptype='adaptive')
     A = SolutionPathCollector()
     solver.add_observer(A)
     solver.solve()
@@ -455,7 +455,7 @@ whose only solution is a triple point at the origin:
     from matplotlib.collections import LineCollection
     import bertini
     from bertini import linalg
-    from bertini.nag_algorithm import ZeroDim, SolutionPathCollector
+    from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
 
     bertini.random.set_random_seed(1)
 
@@ -465,7 +465,7 @@ whose only solution is a triple point at the origin:
     sys.add_function(linalg.coefficient(Fraction(29, 16)) * x**3 - 2*x*y)  # exact rational coeff
     sys.add_function(y - x**2)
 
-    solver = ZeroDim(sys, mptype='adaptive')
+    solver = ZeroDimSolver(sys, mptype='adaptive')
     A = SolutionPathCollector()
     solver.add_observer(A)
     solver.solve()
