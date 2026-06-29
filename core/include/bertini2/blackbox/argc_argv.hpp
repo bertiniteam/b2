@@ -36,7 +36,7 @@ namespace bertini{
 \brief Parsed results of the command-line arguments.
 */
 struct ParsedArgs {
-	boost::filesystem::path input_file{"input"}; // Bertini1 default filename
+	boost::filesystem::path input_file{"input"}; ///< Path to the input file (Bertini1 default: "input").
 };
 
 /**
