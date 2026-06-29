@@ -239,23 +239,36 @@ public:
 		describe_detail::PrintRowLabel(out, row, n);
 		out << " = R . g   (R: " << n << "x" << N << " randomization matrix)\n";
 		row += n;
+
+		const size_t cap = describe_detail::kTerseRowCap;
+
 		auto g = operand_->NaturalFunctionsAsNodes();
-		for (size_t j = 0; j < g.size(); ++j)
+		const size_t gshown = (verbose || g.size() <= cap) ? g.size() : cap;
+		for (size_t j = 0; j < gshown; ++j)
 			out << "      g_" << j << " = " << g[j] << "\n";
-		if (verbose)
+		if (gshown < g.size())
+			out << "      ... (" << (g.size() - gshown) << " more; describe(verbose=True) for all)\n";
+
+		// the actual randomization matrix below -- 4 significant figures in terse (the default),
+		// full precision in verbose.  Shown always (not gated behind verbose) so the numbers a
+		// randomize() produced are visible at a glance.
+		auto const& R   = coefficients_highest_precision_;
+		const int   sig = describe_detail::CoeffSig(verbose);
+		const Eigen::Index rcap   = static_cast<Eigen::Index>(cap);
+		const Eigen::Index rshown = (verbose || R.rows() <= rcap) ? R.rows() : rcap;
+		out << "    R =\n";
+		for (Eigen::Index i = 0; i < rshown; ++i)
 		{
-			out << "    R =\n";
-			for (Eigen::Index i = 0; i < coefficients_highest_precision_.rows(); ++i)
+			out << "      [ ";
+			for (Eigen::Index j = 0; j < R.cols(); ++j)
 			{
-				out << "      [ ";
-				for (Eigen::Index j = 0; j < coefficients_highest_precision_.cols(); ++j)
-				{
-					if (j) out << ", ";
-					describe_detail::PrintCoeff(out, coefficients_highest_precision_(i, j));
-				}
-				out << " ]\n";
+				if (j) out << ", ";
+				describe_detail::PrintCoeff(out, R(i, j), sig);
 			}
+			out << " ]\n";
 		}
+		if (rshown < R.rows())
+			out << "      ... (" << (R.rows() - rshown) << " more rows; describe(verbose=True) for all)\n";
 	}
 
 	unsigned Precision() const { return precision_; }
