@@ -1,0 +1,43 @@
+name: Documentation lint 📑
+
+# Cheap, fast doc-correctness gate -- runs Doxygen only (no compilation, no wheel,
+# no graphviz) so it can run on every PR in well under a minute.  This is the first
+# foothold of a broader linting initiative; future linters (clang-format,
+# clang-tidy, include-what-you-use, ...) can be added as additional jobs here.
+#
+# It does NOT belong in build_and_test.yml: that workflow is the expensive
+# build/test matrix, and it already `paths-ignore`s Doxyfile/doc_resources/docs, so
+# doc-only changes skip it and hit only this lint -- exactly the fast feedback we want.
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+  workflow_dispatch:
+
+# The undocumented-entity ratchet count in tools/doc_undocumented_baseline.txt is
+# specific to this Doxygen version; CI must use the same one that seeded the
+# baseline, not whatever the runner's apt happens to ship.  Bump both together.
+env:
+  DOXYGEN_VERSION: "1.13.2"
+
+jobs:
+  doc_lint:
+    name: Doxygen doc lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install pinned Doxygen
+        run: |
+          url="https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz"
+          curl -sSL "$url" | tar -xz
+          echo "$PWD/doxygen-${DOXYGEN_VERSION}/bin" >> "$GITHUB_PATH"
+
+      - name: Show Doxygen version
+        run: doxygen --version
+
+      - name: Lint C++ documentation
+        run: bash tools/doclint.sh
