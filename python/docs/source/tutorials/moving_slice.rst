@@ -107,10 +107,13 @@ never differentiated as the slice moves -- while only the moving row is nonzero:
 
 .. testcode::
 
-    dHdt = H.eval_time_derivative(np.array([bertini.multiprec.Complex('0.3'),
-                                            bertini.multiprec.Complex('0.4'),
-                                            bertini.multiprec.Complex('0.5')]),
-                                  bertini.multiprec.Complex('0.5'))
+    pt = np.array([bertini.multiprec.Complex('0.3'),
+                   bertini.multiprec.Complex('0.4'),
+                   bertini.multiprec.Complex('0.5')])
+    # the adaptive solve above left H at double precision; match it to the evaluation point's
+    # precision before evaluating the homotopy directly.
+    H.precision(pt[0].precision)
+    dHdt = H.eval_time_derivative(pt, bertini.multiprec.Complex('0.5'))
     assert abs(complex(dHdt[0])) == 0.0      # sphere row: out of dH/dt
     assert abs(complex(dHdt[1])) == 0.0      # static slice row: out of dH/dt
     assert abs(complex(dHdt[2])) > 0.0       # only the moving slice carries t
