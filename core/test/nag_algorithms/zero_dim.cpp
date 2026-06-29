@@ -437,6 +437,37 @@ BOOST_AUTO_TEST_CASE(solve_report_buckets_metadata_and_flags_failures)
 	BOOST_CHECK(rc.all_paths_resolved);
 }
 
+// Regression: a path the security check truncated near infinity (SecurityMaxNormReached) is a
+// divergence, not a failure.  With infinite-path truncation on by default, cyclic-n's infinite
+// paths come back as SecurityMaxNormReached; before this fix they were bucketed as num_failed,
+// which (wrongly) cleared all_paths_resolved and broke the cyclic-5 example's `num_failed == 0` gate.
+BOOST_AUTO_TEST_CASE(solve_report_security_truncation_counts_as_diverged)
+{
+	using bertini::algorithm::SolutionMetaData;
+	using bertini::algorithm::SummarizeSolve;
+	using bertini::algorithm::MidpathCheckReport;
+	using SC = bertini::SuccessCode;
+	using CT = bertini::complex_dbl;
+
+	auto set = [](SolutionMetaData<CT>& m, SC code, bool finite){
+		m.endgame_success = code; m.is_finite = finite; m.multiplicity = 1;
+		m.is_real = false; m.is_singular = false; m.condition_number = 1e3; m.max_precision_used = 16;
+	};
+
+	std::vector<SolutionMetaData<CT>> md(4);
+	set(md[0], SC::Success,                true);   // finite
+	set(md[1], SC::GoingToInfinity,        false);  // diverged (clean)
+	set(md[2], SC::SecurityMaxNormReached, false);  // diverged (security-truncated near infinity)
+	set(md[3], SC::SecurityMaxNormReached, false);  // diverged (security-truncated near infinity)
+
+	auto r = SummarizeSolve(md, MidpathCheckReport{});
+	BOOST_CHECK_EQUAL(r.num_finite_endpoints, 1u);
+	BOOST_CHECK_EQUAL(r.num_diverged,         3u);   // 1 GoingToInfinity + 2 SecurityMaxNormReached
+	BOOST_CHECK_EQUAL(r.num_failed,           0u);   // truncations are NOT failures
+	BOOST_CHECK(r.failures_by_reason.find(SC::SecurityMaxNormReached) == r.failures_by_reason.end());
+	BOOST_CHECK(r.all_paths_resolved);
+}
+
 // A real solve: x^2-1, y^2-1 -> exactly 4 finite roots, no losses.
 BOOST_AUTO_TEST_CASE(solve_report_from_a_real_solve)
 {

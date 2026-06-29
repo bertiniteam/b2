@@ -7,8 +7,12 @@ so once the temporary System was collected, the endgame's Differentiate() droppe
 deleter touched a freed Python object -> SIGSEGV.  The binding now ties the System's lifetime to the
 solver (with_custodian_and_ward), so this idiomatic usage is safe.
 """
+import importlib.util
+
 import bertini as pb
 from bertini.nag_algorithm import ZeroDim, observers as nobs
+
+_HAS_PANDAS = importlib.util.find_spec("pandas") is not None
 
 
 def _build_small_system():
@@ -35,7 +39,9 @@ def test_observer_with_temporary_system_does_not_crash():
 
     assert len(zd.finite_solutions()) == 4       # (1,1) [singular], (-2,4), (4,16)
     assert len(collector.series) == 6            # every path collected
-    # the collected per-path data is usable after the solve (touches the shared nodes again)
+    # the collected per-path data is usable after the solve (touches the shared nodes again).
+    # as_dataframe() needs the optional pandas dependency (absent in CI); fall back to the
+    # pandas-free points() accessor, which re-touches the same collected data.
     for series in collector.series:
         assert len(series) >= 1
-        series.as_dataframe()
+        series.as_dataframe() if _HAS_PANDAS else series.points()

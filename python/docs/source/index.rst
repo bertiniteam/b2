@@ -23,6 +23,7 @@ The Python bindings for Bertini 2
    :maxdepth: 2
 
    detailed/detailed
+   known_gotchas
    zbib
 
 🔀 Indices and tables
