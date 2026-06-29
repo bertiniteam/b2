@@ -472,6 +472,56 @@ BOOST_AUTO_TEST_CASE(solve_report_from_a_real_solve)
 	BOOST_CHECK(!oss.str().empty());
 }
 
+// ADR-0038 regression: AMP Criterion B in the tracker cost model must use the latest Newton residual
+// (norm_delta_z), NOT size_proportion.  size_proportion = err_est/|dt|^(p+1) blows up to ~1e51 in the
+// endgame roundoff regime; passed raw into Criterion B it added ~25 spurious digits and forced ~39 of
+// cyclic5's 70 finite paths into multiprecision even though all 70 converge in pure double.  After the
+// fix only a couple paths need MP.  Guard: solve cyclic5 with AMP and assert almost every path stays
+// in double.
+BOOST_AUTO_TEST_CASE(cyclic5_amp_does_not_overescalate_precision)
+{
+	using namespace bertini;
+	const int N = 5;
+
+	VariableGroup x;
+	for (int i = 0; i < N; ++i)
+		x.push_back(node::Variable::Make("x" + std::to_string(i)));
+
+	System sys;
+	// f_k = sum_i prod_{j=0}^{k-1} x_{(i+j) mod N},  for k = 1 .. N-1
+	for (int k = 1; k < N; ++k)
+	{
+		std::shared_ptr<node::Node> f;
+		for (int i = 0; i < N; ++i)
+		{
+			std::shared_ptr<node::Node> term = x[i];
+			for (int j = 1; j < k; ++j)
+				term = term * x[(i + j) % N];
+			f = (i == 0) ? term : (f + term);
+		}
+		sys.AddFunction(f);
+	}
+	// closing relation: (prod_i x_i) - 1
+	std::shared_ptr<node::Node> prod = x[0];
+	for (int i = 1; i < N; ++i)
+		prod = prod * x[i];
+	sys.AddFunction(prod - 1);
+	sys.AddVariableGroup(x);
+
+	auto zd = algorithm::ZeroDim<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System, start_system::TotalDegree>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(), 70u);
+
+	unsigned escalated = 0;
+	for (auto const& m : zd.FinalSolutionMetadata())
+		if (m.precision_changed)
+			++escalated;
+	BOOST_TEST_MESSAGE("cyclic5 AMP finite paths that escalated to multiprecision: " << escalated << " / 70");
+	BOOST_CHECK_LT(escalated, 10u);   // ~39 before the ADR-0038 fix; ~2 after
+}
+
 // The filtered-solution convenience accessors, on the same x^2-1, y^2-1 solve: all four roots
 // (+-1, +-1) are finite, real, and nonsingular.
 BOOST_AUTO_TEST_CASE(filtered_solution_accessors)

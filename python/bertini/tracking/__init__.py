@@ -167,7 +167,12 @@ def _make_path_observers(obs_mod):
             self._diag = []     # list[[abs_t, cond, prec, stepsize]]
 
         def Observe(self, event):
-            if not isinstance(event, obs_mod.SuccessfulStep):
+            # Record every accepted step, AND the path's start point: the first TrackingStarted fires
+            # at the start time (e.g. t=1) before any step, so a step-only collector would begin one
+            # step in (the start-system roots would be missing).  Only the first TrackingStarted is
+            # taken (the solver reuses one tracker for the main track + endgame sub-tracks).
+            is_start = isinstance(event, obs_mod.TrackingStarted) and not self._t
+            if not (is_start or isinstance(event, obs_mod.SuccessfulStep)):
                 return
             trk = event.tracker()
             tval = complex(trk.current_time())
