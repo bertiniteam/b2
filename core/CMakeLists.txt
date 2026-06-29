@@ -548,6 +548,20 @@ if(SKBUILD AND UNIX AND NOT APPLE AND CMAKE_OBJCOPY)
     COMMENT "Stripping .note.gnu.property from bertini2 CLI (drops the distro CRT's x86-64-v2 ISA marking)")
 endif()
 
+# From-source DEV / editable builds (NOT the wheel): mirror the freshly-built CLI into the
+# source-tree package at python/bertini/_bin/bertini2, so the console-script shim
+# (python/bertini/_cli.py, which an editable `pip install -e .` redirects to the source tree)
+# finds the binary.  The wheel build (SKBUILD) instead uses the install(TARGETS ... DESTINATION
+# _bin) rule below.  Together these keep EVERY build path delivering the `bertini2` command:
+# wheel (`pip install .`), editable (`pip install -e .`), and plain in-tree builds.  Guarded on the
+# package dir existing so a stand-alone `core/` build does not create a stray tree.
+if(NOT SKBUILD AND EXISTS ${CMAKE_SOURCE_DIR}/python/bertini)
+  add_custom_command(TARGET bertini2_exe POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/python/bertini/_bin
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:bertini2_exe> ${CMAKE_SOURCE_DIR}/python/bertini/_bin/bertini2
+    COMMENT "Syncing bertini2 CLI into python/bertini/_bin (editable / from-source dev installs)")
+endif()
+
 # Ship the blackbox CLI inside the Python wheel so `pip install bertini2` puts a
 # `bertini2` command on PATH (see the [project.scripts] shim in pyproject.toml and
 # python/bertini/_cli.py).  Under scikit-build (SKBUILD) the whole install tree is
