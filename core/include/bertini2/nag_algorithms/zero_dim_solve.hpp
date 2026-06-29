@@ -308,7 +308,7 @@ struct SolveReport
 	unsigned long long num_paths_tracked = 0;    ///< total paths tracked (the Bezout / start count)
 	unsigned long long num_finite_solutions = 0; ///< DISTINCT finite solutions (round of sum 1/multiplicity)
 	unsigned long long num_finite_endpoints = 0; ///< raw count of finite, successful endpoints
-	unsigned long long num_diverged = 0;         ///< paths ending at infinity (Success & !finite, or GoingToInfinity)
+	unsigned long long num_diverged = 0;         ///< paths ending at infinity (Success & !finite, GoingToInfinity, or SecurityMaxNormReached truncation)
 	unsigned long long num_failed = 0;           ///< paths the tracker could not resolve (no solution, no clean divergence)
 	unsigned long long num_singular = 0;         ///< finite solutions flagged singular (multiple / ill-conditioned)
 	unsigned long long num_real = 0;             ///< finite solutions flagged real
@@ -336,7 +336,13 @@ SolveReport SummarizeSolve(std::vector<SolutionMetaData<ComplexT>> const& metada
 		if (m.max_precision_used > r.max_precision_used)
 			r.max_precision_used = m.max_precision_used;
 
-		bool diverged = (m.endgame_success == SuccessCode::GoingToInfinity);
+		// A path the endgame's security check truncated near infinity (SecurityMaxNormReached) is
+		// diverging, not failing -- it is the security/max-norm heuristic catching a path on its way
+		// to infinity, exactly like a clean GoingToInfinity.  (The endgame tests classify the two
+		// together too.)  With infinite-path truncation on by default, these are expected, so they
+		// must not inflate num_failed / clear all_paths_resolved.
+		bool diverged = (m.endgame_success == SuccessCode::GoingToInfinity
+		              || m.endgame_success == SuccessCode::SecurityMaxNormReached);
 		if (m.endgame_success == SuccessCode::Success)
 		{
 			if (m.is_finite)
