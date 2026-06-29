@@ -42,13 +42,23 @@ namespace bertini{
 	namespace algorithm{
 
 		
+		/**
+		\brief Detects whether any solution paths crossed during tracking, before the endgame.
+
+		Compares the solution points at the endgame boundary (with a relaxed tolerance) and records
+		the paths that coincide, so the caller can rerun the offending paths.
+
+		\tparam RealT The real number type.
+		\tparam ComplexT The complex number type.
+		\tparam MetaDataType The per-solution metadata type carried in the boundary data.
+		*/
 		template<typename RealT, typename ComplexT, typename MetaDataType>
 		struct MidpathChecker : public detail::Configured<MidPathConfig>
 		{
-			using MidPathConfT = MidPathConfig;
-			using AlgConf = detail::Configured<MidPathConfig>;
-			using BoundaryData = SolnCont< MetaDataType >;
-			using PathIndT = unsigned long long;
+			using MidPathConfT = MidPathConfig;                 ///< The configuration type this checker reads.
+			using AlgConf = detail::Configured<MidPathConfig>;  ///< The Configured base alias.
+			using BoundaryData = SolnCont< MetaDataType >;      ///< Container of solution data at the endgame boundary.
+			using PathIndT = unsigned long long;                ///< Integer type indexing solution paths.
 			
 
 			MidpathChecker() = default;
@@ -72,30 +82,46 @@ namespace bertini{
 				starting point as a path it crosses with.
 			 */
 			struct CrossedPath{
-				
+
+				/**
+				\brief Record a path crossing.
+				\param index The index of this path.
+				\param crossed_with The index of a path it crosses with.
+				\param same_start Whether the two paths share the same starting point.
+				*/
 				CrossedPath(PathIndT index, PathIndT crossed_with, bool same_start)
 				{
 					index_ = index;
 					crossed_with_.push_back( std::make_pair(crossed_with, same_start) );
 					rerun_ = !same_start;
 				}
-				
-				
+
+
+				/// \return The index of this path.
 				PathIndT index() const
 				{
 					return index_;
 				}
-				
+
+				/**
+				\brief Record an additional path that this one crosses with.
+				\param crossed The (path index, same-start) pair to add.
+				*/
 				void crossed_with(std::pair<PathIndT, bool> crossed)
 				{
 					crossed_with_.push_back(crossed);
 				}
-				
+
+				/**
+				\brief Update whether this path needs rerunning, given another crossing.
+				\param same_start Whether the crossing path shares the same starting point.
+				*/
 				void rerun(bool same_start)
 				{
 					rerun_ = rerun_ || !same_start;
 				}
-				
+
+				/// \return Whether this path needs to be rerun.
 				bool rerun() const
 				{
 					return rerun_;
@@ -112,12 +138,14 @@ namespace bertini{
 
 
 			
+			/// \return True if no paths crossed (the check passed).
 			bool Passed() const
 			{
 				return passed_;
 			}
-			
-			
+
+
+			/// \return The tolerance below which two points are considered the same.
 			const auto& SamePointTol() const
 			{
 				return this->template Get<MidPathConfT>().same_point_tolerance;
@@ -219,6 +247,7 @@ namespace bertini{
 			};
 			
 			
+			/// \return The list of paths found to have crossed.
 			const std::vector<CrossedPath> GetCrossedPaths() const
 			{
 				return crossed_paths_;
