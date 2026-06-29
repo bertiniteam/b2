@@ -149,6 +149,7 @@ struct SolutionMetaData
 	bool precision_changed = false;
 	ComplexT time_of_first_prec_increase;    // time value of the first increase in precision
 	decltype(DefaultPrecision()) max_precision_used = 0;
+	double path_time_seconds = 0.0;          // wall-clock time to execute the whole path (pre-endgame + endgame), seconds.  NOT an identity field (excluded from operator==).
 
 	///// things computed in pre-endgame only
 	SuccessCode pre_endgame_success = SuccessCode::NeverStarted;     // success code
@@ -216,6 +217,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 	out << "precision_changed = " << meta.precision_changed << std::endl;
 	out << "time_of_first_prec_increase = " << meta.time_of_first_prec_increase << std::endl;
 	out << "max_precision_used = " << meta.max_precision_used << std::endl;
+	out << "path_time_seconds = " << meta.path_time_seconds << std::endl;
 
 	out << "pre_endgame_success = " << meta.pre_endgame_success << std::endl;
 
@@ -1533,6 +1535,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// attaches its per-path sub-observer to the tracker that actually runs this path.
 				Observable const* exec_tracker = &ctx.tracker;
 
+				// wall-clock the whole path (pre-endgame + endgame).  steady_clock: monotonic, safe on
+				// the worker thread; written to this path's own metadata slot, so no cross-path race.
+				auto const path_start_clock = std::chrono::steady_clock::now();
+				auto stamp_path_time = [&]{
+					solution_final_metadata_[soln_ind].path_time_seconds =
+						std::chrono::duration<double>(std::chrono::steady_clock::now() - path_start_clock).count();
+				};
+
 				this->NotifyObservers(PathStarted<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 
 				ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
@@ -1540,6 +1550,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 				if (solution_final_metadata_[soln_ind].pre_endgame_success != SuccessCode::Success)
 				{
+					stamp_path_time();
 					this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 					return;
 				}
@@ -1547,6 +1558,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				ctx.tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
 				ExecuteDuringEG(ctx, soln_ind);
 
+				stamp_path_time();
 				this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 			}
 
@@ -1854,6 +1866,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				r.precision_changed = smd.precision_changed;
 				r.time_of_first_prec_increase = smd.time_of_first_prec_increase;
 				r.max_precision_used = smd.max_precision_used;
+				r.path_time_seconds = smd.path_time_seconds;
 				return r;
 			}
 
@@ -1881,6 +1894,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				smd.precision_changed   = r.precision_changed;
 				smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
 				smd.max_precision_used  = r.max_precision_used;
+				smd.path_time_seconds   = r.path_time_seconds;
 			}
 
 

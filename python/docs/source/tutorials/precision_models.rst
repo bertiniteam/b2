@@ -28,9 +28,13 @@ story), see :doc:`precision_matters`.
 
    names = {mptype: type(bertini.nag_algorithm.ZeroDimSolver(system, mptype=mptype)).__name__
             for mptype in ('double', 'multiple', 'adaptive')}
-   assert names['double']   == 'ZeroDimSolver'
-   assert names['multiple'] == 'ZeroDimSolver'
-   assert names['adaptive'] == 'ZeroDimSolver'
+   assert names['double']   == 'ZeroDimSolverCauchyDoublePrecision'
+   assert names['multiple'] == 'ZeroDimSolverCauchyFixedMultiplePrecision'
+   assert names['adaptive'] == 'ZeroDimSolverCauchyAdaptivePrecision'
+
+   # The solver type encodes the endgame and the precision model, but NOT the start system -- that is
+   # a construction choice now (the algorithm holds the start system polymorphically), so it no longer
+   # appears as a suffix on the class name.
 
 Reading solutions: convert with ``complex()``
 =============================================

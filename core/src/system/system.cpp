@@ -1459,11 +1459,29 @@ namespace bertini
 		// rewrites that system's functions too — e.g. forming the homotopy
 		// (1-t)*target + gamma*t*start used to corrupt both the target and the
 		// start system (observed 2026-06-06).
+		if (!this->HasStructuredBlocks() && !rhs.HasStructuredBlocks())
 		{
 			auto& lhsf = PolyBlock().Functions();
 			auto const& rhsf = rhs.PolyFunctions();
 			for (size_t ii = 0; ii < lhsf.size(); ++ii)
 				lhsf[ii] = rhsf[ii] + lhsf[ii];
+		}
+		else
+		{
+			// One (or both) operands evaluate via a STRUCTURED block (products-of-linears, blend, ...)
+			// -- e.g. the linear-product TotalDegree or MHom start systems.  Their functions do NOT
+			// live in the PolynomialBlock, so the pure-poly path above read rhs.PolyFunctions()
+			// (empty) out of bounds and SEGFAULTED.  Expand every block to function-tree nodes on both
+			// sides, blend pairwise, and store the result as a single PolynomialBlock (a function-tree
+			// system, which evaluates and tracks correctly).
+			auto lhsf = this->NaturalFunctionsAsNodes();
+			auto rhsf = rhs.NaturalFunctionsAsNodes();
+			if (lhsf.size() != rhsf.size())
+				throw std::runtime_error("System+=System: natural function counts differ after expanding structured blocks");
+			for (size_t ii = 0; ii < lhsf.size(); ++ii)
+				lhsf[ii] = rhsf[ii] + lhsf[ii];
+			blocks_.clear();
+			PolyBlock().Functions() = std::move(lhsf);
 		}
 
 		InvalidateDifferentiation();
@@ -1479,9 +1497,22 @@ namespace bertini
 	System& System::operator*=(std::shared_ptr<node::Node> const& N)
 	{
 		// new wrappers, not SetRoot — see comment in operator+= above.
-		for (auto& f : PolyBlock().Functions())
+		if (!HasStructuredBlocks())
 		{
-			f = N * f;
+			for (auto& f : PolyBlock().Functions())
+				f = N * f;
+		}
+		else
+		{
+			// Structured-block system (e.g. linear-product TotalDegree / MHom): its functions are NOT
+			// in the PolynomialBlock, so multiplying only PolyBlock().Functions() would silently
+			// no-op (a WRONG result -- e.g. gamma*t*TotalDegree leaving the start system unscaled).
+			// Expand every block to function-tree nodes, scale, and store as a pure PolynomialBlock.
+			auto fns = NaturalFunctionsAsNodes();
+			for (auto& f : fns)
+				f = N * f;
+			blocks_.clear();
+			PolyBlock().Functions() = std::move(fns);
 		}
 		InvalidateDifferentiation();
 		return *this;

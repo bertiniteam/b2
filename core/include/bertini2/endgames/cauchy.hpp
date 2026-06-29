@@ -189,6 +189,7 @@ protected:
 
 	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
 	using TupleOfSamps = typename BaseEGT::TupleOfSamps;
+	using TupOfVec = typename BaseEGT::TupOfVec;
 
 	using BCT = BaseComplexT;
 	using BRT = BaseRealT;
@@ -213,6 +214,14 @@ protected:
 	*/
 	mutable TupleOfSamps cauchy_samples_;
 
+	/**
+	\brief A fixed random probe vector used by ComputeCOverK to project sample differences to scalars.
+	Generated ONCE (per precision) and reused across the whole endgame, so the c/k estimate is
+	deterministic and consecutive estimates differ only because the samples differ -- not because the
+	probe changed.  A fresh random probe every call made CheckForCOverKStabilization noisy (it could
+	certify the operating zone spuriously) and churned mpfr allocations.  See z_notes/20260629.
+	*/
+	mutable TupOfVec c_over_k_probe_;
 
 
 
@@ -470,6 +479,28 @@ public:
 	}
 
 	/**
+		\brief Lazily generate (once) and return the fixed random probe vector used by ComputeCOverK.
+		The probe is generated the first time it is needed at a given size, then reused for the life of
+		the endgame so the c/k estimate is deterministic.  For adaptive precision it is re-precisioned
+		in place to match the working samples (the random direction is preserved).
+	*/
+	template<typename ComplexT>
+	Vec<ComplexT> const& GetCOverKProbe(unsigned size, unsigned prec) const
+	{
+		using bertini::Precision;
+		auto& probe = std::get<Vec<ComplexT> >(c_over_k_probe_);
+		if (static_cast<unsigned>(probe.size()) != size)
+		{
+			probe.resize(size);
+			for (unsigned ii = 0; ii < size; ++ii)
+				probe(ii) = RandomUnit<ComplexT>();
+		}
+		if (Precision(probe) != prec)
+			Precision(probe, prec);
+		return probe;
+	}
+
+	/**
 		\brief A function that uses the assumption of being in the endgame operating zone to compute an approximation of the ratio c over k.
 			When the cycle number stabilizes we will see that the different approximations of c over k will stabilize.
 			Returns the computed value of c over k.
@@ -500,10 +531,10 @@ public:
 		const Vec<ComplexT> & sample1 = pseg_samples[1];
 		const Vec<ComplexT> & sample2 = pseg_samples[2];
 
-		Vec<ComplexT> rand_vector(sample0.size());
-		for (int ii = 0; ii < (int)sample0.size(); ++ii)
-			rand_vector(ii) = RandomUnit<ComplexT>();
-
+		// Use a fixed random probe vector, generated once and reused across the whole endgame, so this
+		// estimate is deterministic.  A fresh random vector per call made consecutive c/k estimates
+		// disagree by probe noise alone, which could trip (or stall) CheckForCOverKStabilization.
+		const Vec<ComplexT> & rand_vector = GetCOverKProbe<ComplexT>(static_cast<unsigned>(sample0.size()), Precision(sample0));
 
 		// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
 		// //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type.
@@ -1117,6 +1148,14 @@ public:
 		if(this->SecuritySettings().level <= 0)
 			norm_of_dehom_prev = this->GetSystem().InfinityNormOfDehomogenized(prev_approx);
 
+		// Cycle-number consistency: refuse to accept a converged approximation until the cycle number
+		// has reported the SAME value for num_consecutive_same_cycle_number consecutive approximations.
+		// When the working precision is too low to close the loop accurately (NOT monodromy -- a
+		// nonsingular endpoint is cycle 1 at every radius in high precision), the cycle number thrashes
+		// (41, 14, 36, ...) and a coincidental approx_error dip must not be mistaken for convergence.
+		// prev_cycle == 0 means "no prior measurement".
+		unsigned prev_cycle = 0, same_cycle_count = 0;
+
 		do
 		{
 			//Compute a cauchy approximation.  Uses the previously computed samples,
@@ -1125,10 +1164,18 @@ public:
 			if (extrapolation_success!=SuccessCode::Success)
 				return extrapolation_success;
 
+			unsigned cur_cycle = this->CycleNumber();
+			if (cur_cycle == prev_cycle)
+				++same_cycle_count;
+			else
+				same_cycle_count = 1;
+			prev_cycle = cur_cycle;
+
 			approx_error = static_cast<NumErrorT>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
 			NotifyObservers(ApproximatedRoot<EmitterType>(*this));
 
-			if (approx_error < this->FinalTolerance())
+			if (approx_error < this->FinalTolerance()
+			    && same_cycle_count >= GetCauchySettings().num_consecutive_same_cycle_number)
 			{
 				NotifyObservers(Converged<EmitterType>(*this));
 				return SuccessCode::Success;
