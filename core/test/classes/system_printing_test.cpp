@@ -76,11 +76,11 @@ BOOST_AUTO_TEST_CASE(randomization_placeholder_and_underlying)
 	BOOST_CHECK(Has(t, "(R: 2x3 randomization matrix)"));
 	BOOST_CHECK(Has(t, "g_0 = "));
 	BOOST_CHECK(Has(t, "g_2 = "));
-	BOOST_CHECK(!Has(t, "R =\n"));               // the matrix is not in the terse form
+	BOOST_CHECK(Has(t, "R ="));                  // the matrix is shown by default now
 	NoNoise(t);
 
 	std::string v = Verbose(r);
-	BOOST_CHECK(Has(v, "R ="));                  // ... but it is in verbose
+	BOOST_CHECK(Has(v, "R ="));                  // ... and in verbose too (full precision)
 }
 
 BOOST_AUTO_TEST_CASE(linear_forms_placeholder_vs_actual)
@@ -94,10 +94,12 @@ BOOST_AUTO_TEST_CASE(linear_forms_placeholder_vs_actual)
 
 	std::string t = Terse(m);
 	BOOST_CHECK(Has(t, "f_0 = "));
-	BOOST_CHECK(Has(t, "f_1 = c.[x, y, 1]"));    // both rows visible; structured row is a placeholder
+	BOOST_CHECK(Has(t, "f_1 = c.[x, y, 1]"));    // both rows visible; structured row keeps its placeholder
+	BOOST_CHECK(Has(t, "c ="));                  // ... with the coefficient legend below it
+	BOOST_CHECK(Has(t, "2") && Has(t, "-1"));    // the actual coefficient values (exact integers here)
 
 	std::string v = Verbose(m);
-	BOOST_CHECK(Has(v, "*x") && Has(v, "*y"));   // actual coefficients shown
+	BOOST_CHECK(Has(v, "c.[x, y, 1]") && Has(v, "c ="));   // same layout, full precision
 }
 
 BOOST_AUTO_TEST_CASE(moving_homotopy_blend)
