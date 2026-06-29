@@ -46,16 +46,26 @@ Run it (needs ``matplotlib``; Bertini 1 optional)::
 
 How to read it (for the run shown — see the caption for date/versions/machine):
 
-* On these problems Bertini 2 is currently **slower** than Bertini 1 — by ~2× on the tiny diagonal
-  system up to ~20× on the larger ones.  This is honest: Bertini 1 is hand-tuned C with its own
-  linear algebra; Bertini 2 trades some constant-factor speed for a templated, observable,
-  arbitrary-precision design.
+* Bertini 2 is still **slower** than Bertini 1 on these problems — from a small factor on the tiny
+  diagonal system to ~25× on cyclic-5.  This is honest: Bertini 1 is hand-tuned C with its own linear
+  algebra; Bertini 2 trades constant-factor speed for a templated, observable, arbitrary-precision
+  design.
 * The diagonal family ``diag-3/5/6`` is **well-conditioned** (every path stays in double precision),
-  so its growing slowdown is pure **per-step machinery overhead** scaling with problem size — the
-  current top performance lever.
-* ``cyclic-5`` exercises the endgame; its ratio reflects the adaptive-precision path *after* the
-  Criterion-B fix (ADR-0038), which cut this solve from ~11 s to ~3 s.  Re-running this
-  tutorial after each performance change is exactly how that progress gets tracked.
+  so its growing slowdown is pure **per-step tracking overhead** scaling with problem size — a
+  standing performance lever, independent of the endgame.
+* ``cyclic-5`` exercises the **endgame**.  The adaptive-numeric-type endgame (the Cauchy and
+  PowerSeries endgames now compute in hardware ``complex_dbl`` while a path's conditioning allows,
+  escalating to mpfr only when the tracker's authority demands it) cut the endgame's **per-operation**
+  cost by roughly 10×.  Where a path's endgame stays in double — e.g. the default RootsOfUnity start
+  system — cyclic-5 in adaptive precision is now ~Bertini-1 speed (~0.4 s serial, with **0 of 70**
+  finite paths needing to escalate above double).
+
+  The bar shown here is **larger** than that, because this benchmark hands both solvers a
+  **total-degree** classic input, and that start system currently makes Bertini 2's endgame *stall*
+  near :math:`t = 0` (it takes far too many tiny steps).  The run stays mostly in double — so the
+  per-step speedup does apply — but the step *count* is the problem.  That stall, not precision and
+  not the endgame's arithmetic, is the current top lever for this particular path, and is tracked
+  separately from this endgame work.
 
 Both solvers report the **same solution counts** (shown under the bars), so this is a like-for-like
 comparison, not a speed/accuracy trade.
