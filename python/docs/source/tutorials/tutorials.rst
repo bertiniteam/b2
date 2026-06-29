@@ -9,6 +9,7 @@
    :caption: Available tutorials.
 
 
+   zerodim_solver
    all_solutions
    solution_database
    concatenate_systems

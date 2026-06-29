@@ -2084,8 +2084,15 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 						continue;
 
 					auto user_pt = this->TargetSystem().DehomogenizePoint(this->solutions_post_endgame_[ii]);
+					// Evaluate the original system in DOUBLE precision: the filter only needs to tell a
+					// genuine root (tiny residual) from an extraneous one (O(1)), and a double residual
+					// does that robustly without a precision mismatch between the (possibly AMP/high
+					// precision) solution point and the original system's working precision.
+					Vec<complex_dbl> pt_d(user_pt.size());
+					for (Eigen::Index k = 0; k < user_pt.size(); ++k)
+						pt_d(k) = complex_dbl(user_pt(k));
 					auto residual = static_cast<NumErrorT>(
-						this->original_natural_target_.Eval(user_pt).template lpNorm<Eigen::Infinity>());
+						this->original_natural_target_.template Eval<complex_dbl>(pt_d).template lpNorm<Eigen::Infinity>());
 					smd.function_residual = residual;            // report residual against the ORIGINAL system
 					if (static_cast<double>(residual) > threshold)
 						smd.is_finite = false;                   // extraneous: not a solution of the original system
