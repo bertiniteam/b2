@@ -320,6 +320,58 @@ using bertini::RandomMp;
 		return a;
 	}
 
+
+	/**
+	 Produce a random REAL number whose modulus is pulled toward 1, to default precision.
+
+	 The real-line analog of rand_bounded_modulus: draw x box-uniform in [-1,1] (imaginary part 0)
+	 and divide by sqrt(|x|), giving sign(x)*sqrt(|x|) -- bounded away from both 0 and infinity, the
+	 same Bertini-1 recipe the (complex) start-system and patch coefficients use, but kept REAL so a
+	 real patch does not complexify a real path.
+	 */
+	inline complex rand_real_bounded_modulus()
+	{
+		complex z( RandomMp(real_mp(-1),real_mp(1)) );   // imaginary part 0
+		auto m = abs(z);
+		while (m == 0)   // measure-zero, but a zero coefficient is degenerate -- redraw
+		{
+			z = complex( RandomMp(real_mp(-1),real_mp(1)) );
+			m = abs(z);
+		}
+		return z / sqrt(m);   // stays real (imag 0 / real = 0)
+	}
+
+	inline complex RandomRealBoundedModulus()
+	{
+		return rand_real_bounded_modulus();
+	}
+
+	inline
+	void RandomRealBoundedModulusAssign(complex & a, unsigned num_digits)
+	{
+		auto cached = ThreadPrecision();
+		SetThreadPrecision(num_digits);
+		a.precision(num_digits);
+
+		complex z( RandomMp(real_mp(-1),real_mp(1),num_digits) );   // imaginary part 0
+		auto m = abs(z);
+		while (m == 0)
+		{
+			z = complex( RandomMp(real_mp(-1),real_mp(1),num_digits) );
+			m = abs(z);
+		}
+		a = std::move(z / sqrt(m));   // stays real
+		SetThreadPrecision(cached);
+	}
+
+	inline
+	complex RandomRealBoundedModulus(unsigned num_digits)
+	{
+		complex a;
+		RandomRealBoundedModulusAssign(a, num_digits);
+		return a;
+	}
+
 	inline 
 	void rand_assign(complex & a, unsigned num_digits)
 	{
