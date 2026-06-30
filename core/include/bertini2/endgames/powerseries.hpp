@@ -171,27 +171,27 @@ class PowerSeriesEndgame :
 	public virtual EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>
 {
 public:
-	using BaseEGT = EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>;
-	using FinalEGT = PowerSeriesEndgame<PrecT>;
-	using TrackerType = typename BaseEGT::TrackerType;
+	using BaseEGT = EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>;  ///< The base endgame type.
+	using FinalEGT = PowerSeriesEndgame<PrecT>;  ///< The final (derived) endgame type.
+	using TrackerType = typename BaseEGT::TrackerType;  ///< The path-tracker type.
 
-	using BaseComplexT = typename BaseEGT::BaseComplexT;
-	using BaseRealT = typename BaseEGT::BaseRealT;
+	using BaseComplexT = typename BaseEGT::BaseComplexT;  ///< The complex number type.
+	using BaseRealT = typename BaseEGT::BaseRealT;  ///< The real number type.
 
-	using EmitterType = PowerSeriesEndgame<PrecT>;
+	using EmitterType = PowerSeriesEndgame<PrecT>;  ///< The event-emitter type.
 
 protected:
 	
 	using EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>::NotifyObservers;
 
-	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
-	using TupleOfSamps = typename BaseEGT::TupleOfSamps;
+	using TupleOfTimes = typename BaseEGT::TupleOfTimes;  ///< A tuple of time containers, one per precision.
+	using TupleOfSamps = typename BaseEGT::TupleOfSamps;  ///< A tuple of sample containers, one per precision.
 
-	using BCT = BaseComplexT;
-	using BRT = BaseRealT;
+	using BCT = BaseComplexT;  ///< The complex number type.
+	using BRT = BaseRealT;  ///< The real number type.
 
-	using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;
-	using ConfigsAsTuple = typename Configs::ToTuple;
+	using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;  ///< The configuration bundle (Configured base).
+	using ConfigsAsTuple = typename Configs::ToTuple;  ///< The configuration structs as a tuple.
 
 	/**
 	\brief State variable representing a computed upper bound on the cycle number.
@@ -218,6 +218,7 @@ protected:
 	*/
 	mutable Vec<BCT> rand_vector_;
 
+	/// \brief Debug-assert that the stored time and sample containers have consistent, sufficient sizes.
 	template<typename ComplexT>
 	void AssertSizesTimeSpace() const
 	{
@@ -228,6 +229,7 @@ protected:
 #endif
 	}
 
+	/// \brief Debug-assert that the time, sample, and derivative containers have consistent, sufficient sizes.
 	template<typename ComplexT>
 	void AssertSizesTimeSpaceDeriv() const
 	{
@@ -241,6 +243,7 @@ protected:
 
 public:
 
+	/// \return The computed upper bound on the cycle number.
 	auto UpperBoundOnCycleNumber() const { return upper_bound_on_cycle_number_;}
 
 
@@ -267,6 +270,7 @@ public:
 	const auto& GetTimes() const {return std::get<TimeCont<ComplexT> >(times_);}
 
 
+	/// \return The most recent time value in the sample sequence.
 	const BCT& LatestTimeImpl() const
 	{
 		return GetTimes<BCT>().back();
@@ -299,14 +303,16 @@ public:
 
 
 
-	explicit PowerSeriesEndgame(TrackerType const& tr, 
+	/// \brief Construct the power-series endgame for a tracker, with its configuration as a tuple.
+	explicit PowerSeriesEndgame(TrackerType const& tr,
 	                            const ConfigsAsTuple& settings )
       : EndgamePrecPolicyBase<TrackerType>(tr), BaseEGT(tr, settings)
    	{}
 
+	/// \brief Construct the power-series endgame for a tracker, with configs given in any order.
     template< typename... Ts >
 	explicit
-	PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Configs::Unpermute( ts... ) ) 
+	PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Configs::Unpermute( ts... ) )
 		{}
 
 

@@ -51,9 +51,10 @@ namespace bertini{ namespace endgame {
 class AMPEndgame : public virtual EndgamePrecPolicyBase<tracking::AMPTracker>
 {
 public:
-	using TrackerT = tracking::AMPTracker;
-	using EmitterType = AMPEndgame;
+	using TrackerT = tracking::AMPTracker;  ///< The path-tracker type.
+	using EmitterType = AMPEndgame;  ///< The event-emitter type.
 
+	/// \brief Bring a set of values to a common (highest) precision.
 	template<typename... T>
 	static
 	unsigned EnsureAtUniformPrecision(T& ...args)
@@ -61,6 +62,7 @@ public:
 		return tracking::adaptive::EnsureAtUniformPrecision(args...);
 	}
 
+	/// \brief No-op precision check for a double (throws if asked for non-double precision).
 	static
 	void EnsureAtPrecision(double & /*obj*/, unsigned prec)
 	{
@@ -68,6 +70,7 @@ public:
 			throw std::runtime_error("attempting to adjust precision of double to non-double precision");
 	}
 
+	/// \brief No-op precision check for a std::complex<double> (throws if asked for non-double precision).
 	static
 	void EnsureAtPrecision(std::complex<double> & /*obj*/, unsigned prec)
 	{
@@ -75,6 +78,7 @@ public:
 			throw std::runtime_error("attempting to adjust precision of std::complex<double> to non-double precision");
 	}
 
+	/// \brief Set a multiprecision real to the given precision.
 	static
 	void EnsureAtPrecision(real_mp & obj, unsigned prec)
 	{
@@ -82,6 +86,7 @@ public:
 		Precision(obj,prec);
 	}
 
+	/// \brief Set a multiprecision complex to the given precision.
 	static
 	void EnsureAtPrecision(complex_mp & obj, unsigned prec)
 	{
@@ -91,6 +96,7 @@ public:
 
 
 
+	/// \brief Refine a single sample point, escalating precision if Newton refinement needs it.
 	SuccessCode RefineSampleImpl(Vec<complex_mp> & result, Vec<complex_mp> const& current_sample, complex_mp const& current_time, NumErrorT tol, unsigned max_iterations) const
 	{
 
@@ -147,6 +153,7 @@ public:
 
 
 
+	/// \brief Construct the AMP endgame precision policy for a tracker.
 	explicit
 	AMPEndgame(TrackerT const& new_tracker) : EndgamePrecPolicyBase<TrackerT>(new_tracker)
 	{}
@@ -154,12 +161,13 @@ public:
 	virtual ~AMPEndgame() = default;
 
 }; // re: class AMPEndgame
-		
 
+
+/// \brief Selects the AMP endgame precision policy for the adaptive-precision tracker.
 template<>
 struct EGPrecSelector<tracking::AMPTracker>
 {
-	using type = AMPEndgame;
+	using type = AMPEndgame;  ///< The endgame precision-policy type for this tracker.
 };
 
 
