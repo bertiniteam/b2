@@ -92,13 +92,14 @@ System = system.System
 default_precision = multiprec.default_precision
 
 from ._calculus import jacobian
+from .random import random_matrix
 
 
 
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
 __all__ = ['Variable','variables','gather_variables','VariableGroup','Named','system','System',
-           'jacobian',
+           'jacobian','random_matrix',
            'nag_algorithm','container','default_precision',
            'tracking','endgame','logging','function_tree','parse','multiprec','random','parallel',
            'linalg',
