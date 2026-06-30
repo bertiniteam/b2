@@ -86,7 +86,7 @@ namespace bertini {
 			auto two_i_pi = boost::math::constants::pi<double>() * complex_dbl(0,2);
 
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(static_cast<Eigen::Index>(ii+offset)) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(random_values_[ii]->Value<complex_dbl>(), 1.0 / static_cast<double>(degrees_[ii]));
+				start_point(static_cast<Eigen::Index>(ii+offset)) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(RandomValue<complex_dbl>(ii), 1.0 / static_cast<double>(degrees_[ii]));
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);
@@ -117,7 +117,7 @@ namespace bertini {
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
 			{
 				complex_mp a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
-				complex_mp b = pow(random_values_[ii]->Value<complex_mp>(), one / degrees_[ii]);
+				complex_mp b = pow(RandomValue<complex_mp>(ii), one / degrees_[ii]);
 
 				Precision(a,ThreadPrecision());
 				Precision(b,ThreadPrecision());
@@ -166,9 +166,20 @@ namespace bertini {
 
 		void RootsOfUnity::SeedRandomValues(int num_functions)
 		{
+			// Draw each r_i the same way the linear-product TotalDegree draws its coefficients:
+			// a box-uniform complex divided by sqrt(|z|), so the modulus sits near 1 (away from 0
+			// and infinity) -- NOT the heavy-tailed ratio-of-integers (RandomRat) we used before.
+			// Stored as a Complex node (a literal complex_mp, like gamma), not hidden as a rational.
+			// A Complex node caps at its creation precision, so generate at the AMP ceiling.
+			auto const saved_prec = DefaultPrecision();
+			DefaultPrecision(MaxPrecisionAllowed());
+
 			random_values_.resize(static_cast<size_t>(num_functions));
 			for (int ii = 0; ii < num_functions; ++ii)
-				random_values_[static_cast<size_t>(ii)] = Rational::Make(node::Rational::Rand());
+				random_values_[static_cast<size_t>(ii)] =
+					node::Complex::Make(multiprecision::RandomComplexBoundedModulus());
+
+			DefaultPrecision(saved_prec);
 		}
 
 		void RootsOfUnity::GenerateFunctions()

@@ -71,15 +71,20 @@ namespace bertini
 			template<typename NumT>
 			NumT RandomValue(size_t index) const
 			{
-				// A direct read of the literal constant --- no node-level evaluation.
-				return random_values_[index]->Value<NumT>();
+				// A direct read of the literal constant --- no node-level evaluation.  The Complex
+				// node stores a complex_mp at its (max) creation precision; convert to NumT.
+				auto const& v = random_values_[index]->GetValue();
+				if constexpr (std::is_same<NumT, complex_dbl>::value)
+					return complex_dbl(double(v.real()), double(v.imag()));
+				else
+					return NumT(v);
 			}
 
 
 			/**
 			Get all the random values, in their Node form.
 			*/
-			std::vector<std::shared_ptr<node::Rational> > const& RandomValues()
+			std::vector<std::shared_ptr<node::Complex> > const& RandomValues()
 			{
 				return random_values_;
 			}
@@ -128,7 +133,7 @@ namespace bertini
 			*/
 			Vec<complex_mp> GenerateStartPoint(complex_mp,unsigned long long index) const override;
 
-			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
+			std::vector<std::shared_ptr<node::Complex> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector (a literal complex_mp, modulus near 1).
 			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.
 
 

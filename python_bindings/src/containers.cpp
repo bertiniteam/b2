@@ -99,6 +99,12 @@ void ExportContainers()
 	.def(ListVisitor<T1>())
 	;
 
+	// std::vector of Complex Node ptrs (RootsOfUnity's random values are Complex nodes)
+	using T1c = std::vector<std::shared_ptr< bertini::node::Complex > >;
+	class_< T1c >("ListOfComplex")
+	.def(ListVisitor<T1c>())
+	;
+
 	// The VariableGroup vector container
 	using T2 = bertini::VariableGroup;
 	class_< T2 >("VariableGroup")
