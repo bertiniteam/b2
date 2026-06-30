@@ -476,6 +476,7 @@ namespace bertini {
 		}
 
 
+		/// \brief Stream-insertion for a Patch, summarizing its variable groups and coefficients.
 		friend std::ostream& operator<<(std::ostream & out, Patch const& p)
 		{
 			out << p.NumVariableGroups() << " variable groups being patched\n";

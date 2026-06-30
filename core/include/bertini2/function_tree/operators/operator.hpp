@@ -84,6 +84,7 @@ namespace node{
 	{
 	public:
 		
+		/// \brief Construct a unary operator over a single operand node.
 		UnaryOperator(const std::shared_ptr<Node> & n) : operand_(n)
 		{}
 		
@@ -98,11 +99,12 @@ namespace node{
 
 		
 		
+		/// \brief Set the single child (operand) of this unary operator.
 		void SetOperand(std::shared_ptr<Node> n);
-		
-		
-		
-		//Return the only child for the unary operator
+
+
+
+		/// \return The only child (operand) of this unary operator.
 		std::shared_ptr<Node> Operand() const;
 		
 		
@@ -131,17 +133,12 @@ namespace node{
 		
 
 
-		/**
-		 Change the precision of this variable-precision tree node.
-		 
-		 \param prec the number of digits to change precision to.
-		 */
 
 
 
 	protected:
 		//Stores the single child of the unary operator
-		std::shared_ptr<Node> operand_;
+		std::shared_ptr<Node> operand_;  ///< The single child (operand) of the unary operator.
 		UnaryOperator(){}
 	private:
 		friend class boost::serialization::access;
@@ -171,17 +168,20 @@ namespace node{
 		
 		
 		
-		// Add an operand onto the container for this operator
+		/// \brief Add an operand (child) onto this operator.
 		virtual void AddOperand(std::shared_ptr<Node> n);
 		
 		
+		/// \return The number of operands (children).
 		size_t NumOperands() const;
-		
+
+		/// \return The container of operands (children).
 		inline auto const& Operands() const{
 			return operands_;
 		}
 		
 		
+		/// \return The first operand (child).
 		std::shared_ptr<Node> FirstOperand() const;
 		
 		 /**

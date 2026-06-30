@@ -158,6 +158,7 @@ namespace node{
 
 
 
+		/// \brief Defaulted copy constructor.
 		Integer(Integer const&) = default;
 
 		~Integer() = default;
@@ -203,6 +204,7 @@ namespace node{
 			return o && true_value_ == o->true_value_;
 		}
 
+		/// \brief Construct (and intern) a Integer node.
 		template<typename... Ts>
 		static
 		std::shared_ptr<Integer> Make(Ts&& ...ts){
@@ -317,6 +319,7 @@ namespace node{
 				&& highest_precision_value_.imag() == o->highest_precision_value_.imag();
 		}
 
+		/// \brief Construct (and intern) a Complex node.
 		template<typename... Ts>
 		static
 		std::shared_ptr<Complex> Make(Ts&& ...ts){
@@ -362,14 +365,14 @@ namespace node{
 	/**
 	\brief The Rational number type for Bertini2 expression trees.
 
-	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a complex_mp at evaluate time.
+	The Rational number type for Bertini2 expression trees.  The "true value" is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a complex_mp at evaluate time.
 	*/
 	class Rational : public Number
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		using mpq_rational = bertini::mpq_rational;
+		using mpq_rational = bertini::mpq_rational;  ///< The exact rational type this node stores.
 
 		
 
@@ -479,6 +482,7 @@ namespace node{
 
 
 
+		/// \brief Construct (and intern) a Rational node.
 		template<typename... Ts>
 		static
 		std::shared_ptr<Rational> Make(Ts&& ...ts){

@@ -28,7 +28,7 @@
 
 \brief Contains the observer base types.
 
-\defgroup observer
+\defgroup observer Observers
 
 */
 
@@ -168,7 +168,7 @@ namespace bertini{
 		    return keep ? ObserveResult::KeepObserving : ObserveResult::Unsubscribe;
 		}
 
-		std::tuple<ObserverTypes<ObservedT>...> observers_;
+		std::tuple<ObserverTypes<ObservedT>...> observers_;  ///< The held sub-observers, one per observer type.
 		virtual ~MultiObserver() = default;
 	};
 

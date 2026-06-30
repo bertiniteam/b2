@@ -44,9 +44,10 @@ enum class EndgameChoice
 	Cauchy = 2
 };
 
+/// \brief Selects which endgame to use (classic input).
 struct EndgameChoiceConfig
 {
-	EndgameChoice endgame = EndgameChoice::Cauchy;
+	EndgameChoice endgame = EndgameChoice::Cauchy;  ///< The chosen endgame.
 };
 
 enum class AlgoChoice
@@ -68,40 +69,44 @@ enum class AlgoChoice
 
 
 
+/// \brief Newton and path-tracking tolerances.
 struct TolerancesConfig
-{	
-	using T = NumErrorT;
+{
+	using T = NumErrorT;  ///< The numeric (error) type.
 
-	T newton_before_endgame = T(1)/T(100000); //E.4.1
-	T newton_during_endgame = T(1)/T(1000000); //E.4.2
+	T newton_before_endgame = T(1)/T(100000); ///< Newton tolerance before the endgame (E.4.1).
+	T newton_during_endgame = T(1)/T(1000000); ///< Newton tolerance during the endgame (E.4.2).
 
-	T final_tolerance = T(1)/T(100000000000); //E.5.1
+	T final_tolerance = T(1)/T(100000000000); ///< Final tracking tolerance (E.5.1).
 
-	T path_truncation_threshold = T(100000); //E.4.13
+	T path_truncation_threshold = T(100000); ///< Path-truncation threshold; the tracker dies if a coordinate exceeds it (E.4.13).
 };
-		
-	
+
+
+/// \brief Configuration for the midpath (path-crossing) check.
 struct MidPathConfig
 {
-	using T = NumErrorT;
+	using T = NumErrorT;  ///< The numeric (error) type.
 
-	T same_point_tolerance = T(1)/T(100000);
+	T same_point_tolerance = T(1)/T(100000);  ///< Two boundary points are "the same" if within this tolerance.
 };
 
 
 
+/// \brief Configuration for auto-retracking paths flagged as crossed.
 struct AutoRetrackConfig
 {
-	using T = NumErrorT;
+	using T = NumErrorT;  ///< The numeric (error) type.
 
-	T midpath_decrease_tolerance_factor = T(1)/T(2);
+	T midpath_decrease_tolerance_factor = T(1)/T(2);  ///< Factor by which tracking tolerances are tightened when re-tracking a crossed path.
 };
 
 
 
+/// \brief Configuration for sharpening computed solutions.
 struct SharpeningConfig
 {
-	using T = NumErrorT;
+	using T = NumErrorT;  ///< The numeric (error) type.
 
 	unsigned sharpendigits; ///< how many digits should be correct after sharpening.
 	
@@ -114,14 +119,15 @@ struct SharpeningConfig
 
 
 
+/// \brief Configuration for the regeneration cascade.
 struct RegenerationConfig
 {
-	using T = NumErrorT;
+	using T = NumErrorT;  ///< The numeric (error) type.
 
 	bool remove_infinite_endpoints = true; ///<  Bool indicating whether endpoints during the regeneration start point buildup step which are infinite should be discarded.  If you are not interested in infinite solutions, ensure this is true.  RegenRemoveInf
 
 	bool higher_dimension_check = true; ///< RegenHigherDimTest
-	unsigned start_level = 0;
+	unsigned start_level = 0;  ///< The regeneration level to start from.
 	// These are the SLICE-moving tracking tolerances (Bertini 1's SliceTol* family) -- the tolerances
 	// for moving the linear slices during regeneration, kept separate from the main tracking
 	// tolerances in TolerancesConfig.  The slice_ prefix makes every config field name unique across
@@ -134,9 +140,10 @@ struct RegenerationConfig
 
 
 
+/// \brief Configuration for post-processing solutions (reality/finiteness/singularity classification).
 struct PostProcessingConfig{
-	using T = NumErrorT;
-	
+	using T = NumErrorT;  ///< The numeric (error) type.
+
 	T real_threshold = T(1)/T(100000000); ///< Bertini 1's `ImagThreshold`.  Threshold on the imaginary part of a (dehomogenized) solution coordinate being 0: a point is real if the infinity norm of the imaginary parts is below this.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.  B1 default 1e-8.
 
 	T endpoint_finite_threshold = T(100000);  ///< Bertini 1's `EndpointFiniteThreshold`.  An endpoint is considered to be at infinity if the infinity norm of its *dehomogenized* coordinates is larger than this value.  This uses the same dehomogenize-then-infinity-norm computation the endgame uses for its `Security::max_norm` divergence check (a separate, smaller threshold for bailing out *during* the endgame).  There is also `path_truncation_threshold` in Tolerances, which tells the path tracker to die if exceeded.  B1 default 1e5.
@@ -173,11 +180,12 @@ inline unsigned DefaultInitialAmbientPrecision()
 //
 // The times are real because a zero-dim solve tracks along the real t-axis (1 -> 0).  Complex
 // homotopy times remain available at the endgame level (set directly), just not through this config.
+/// \brief Top-level configuration for a zero-dimensional solve (times, precision, threading).
 struct ZeroDimConfig
 {
 	// Per-complex-type default; the ZeroDim algorithm overwrites this in DefaultSettingsSetup with
 	// DefaultInitialAmbientPrecision<BaseComplexT>() (it knows its tracking type, this struct does not).
-	unsigned initial_ambient_precision = DefaultPrecision();
+	unsigned initial_ambient_precision = DefaultPrecision();  ///< Initial ambient (working) precision for the solve.
 	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 
 	/// Number of worker threads for a shared-memory (non-MPI) solve.  0 = auto
@@ -190,12 +198,13 @@ struct ZeroDimConfig
 	mpq_rational endgame_boundary{1, 10}; ///< Time at which tracking hands off to the endgame (t=1/10).
 	mpq_rational target_time{0};         ///< Homotopy target time (t=0).
 
-	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";
+	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";  ///< Name given to the homotopy's path variable.
 };
 
+/// \brief Top-level meta configuration: which algorithm to run.
 struct MetaConfig
 {
-	classic::AlgoChoice tracktype = classic::AlgoChoice::ZeroDim;
+	classic::AlgoChoice tracktype = classic::AlgoChoice::ZeroDim;  ///< Which algorithm (track type) to run.
 };
 
 /**
@@ -206,7 +215,7 @@ in Python.  Must be applied before system construction (gamma, patch, TD-constan
 */
 struct RandomConfig
 {
-	unsigned long random_seed = 0;
+	unsigned long random_seed = 0;  ///< The RNG seed; 0 draws from std::random_device and reports the effective seed.
 };
 
 

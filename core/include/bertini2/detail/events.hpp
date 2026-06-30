@@ -153,9 +153,11 @@ namespace bertini {
 		ObsT& current_observable_;
 	};
 
+	/// \brief An event holding a const reference to its observable.
 	template<typename ObsT>
 	using ConstEvent = Event<ObsT,true>;
 
+	/// \brief An event holding a mutable reference to its observable.
 	template<typename ObsT>
 	using MutableEvent = Event<ObsT,false>;
 

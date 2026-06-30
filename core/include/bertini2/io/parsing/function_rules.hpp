@@ -102,6 +102,7 @@ namespace {
 
 
 
+/// \cond FUNCTION_RULES_PHOENIX
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, cos_lazy, cos, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sin_lazy, sin, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, tan_lazy, tan, 1);
@@ -109,6 +110,7 @@ BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, tan_lazy, tan
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, log_lazy, log, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, exp_lazy, exp, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sqrt_lazy, sqrt, 1);
+/// \endcond
 
 
 
@@ -141,11 +143,12 @@ namespace bertini {
 			template<typename Iterator>
 			struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>
 			{
-				using Node = node::Node;
-				using Complex = node::Complex;
-				using Integer = node::Integer;
-				using Rational = node::Rational;
-				
+				using Node = node::Node;  ///< The generic expression-tree node type.
+				using Complex = node::Complex;  ///< The complex-number node type.
+				using Integer = node::Integer;  ///< The integer node type.
+				using Rational = node::Rational;  ///< The rational-number node type.
+
+				/// \brief Construct the function parser, given the table of already-encountered symbols.
 				FunctionParser(qi::symbols<char,std::shared_ptr<Node> > * encountered_symbols) : FunctionParser::base_type(root_rule_,"FunctionParser")
 				{
 					namespace phx = boost::phoenix;
@@ -275,6 +278,7 @@ namespace bertini {
 				
 				
 				
+				/// \cond FUNCTION_RULES_GRAMMAR
 				qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type > root_rule_;
 				// the rule for kicking the entire thing off
 				
@@ -292,6 +296,7 @@ namespace bertini {
 				qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
 				
 				parsing::rules::LongNum<Iterator> mpfr_rules_;
+				/// \endcond
 			};
 			
 		} // re: namespace classic

@@ -169,6 +169,7 @@ namespace bertini {
 	enum class NumType : uint8_t { Real = 0, Complex = 1 };  // Integer added in a later stage
 
 
+	/// \brief The opcodes for the operations a straight-line program instruction can perform.
 	enum Operation { // we'll start with the binary ones
 		Add=      1 << 0,
 		Subtract= 1 << 1,
@@ -189,20 +190,23 @@ namespace bertini {
 		IntPower= 1 << 16,
 	};
 
-	const int BinaryOperations = Add|Subtract | Multiply|Divide | Power | IntPower;
-	const int TrigOperations   = Sin|Cos|Tan | Asin|Acos|Atan;
-	const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations | Sqrt;
+	const int BinaryOperations = Add|Subtract | Multiply|Divide | Power | IntPower;  ///< Bit-mask of the two-operand operations.
+	const int TrigOperations   = Sin|Cos|Tan | Asin|Acos|Atan;  ///< Bit-mask of the trigonometric operations.
+	const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations | Sqrt;  ///< Bit-mask of the one-operand operations.
 
+	/// \brief Query whether an operation takes a single operand.
 	constexpr bool IsUnary(Operation op)
 	{
 		return op & UnaryOperations;
 	}
 
+	/// \brief Query whether an operation takes two operands.
 	constexpr bool IsBinary(Operation op)
 	{
 		return op & BinaryOperations;
 	}
 
+	/// \brief Get a human-readable name for an opcode.
 	std::string OpcodeToString(Operation op);
 
 	// Compile-time bank selectors (ADR-0034).  After NumType inference, each instruction's opcode word
@@ -210,10 +214,10 @@ namespace bertini {
 	// in, so the hot eval loop reads the banks inline from the instruction it has already loaded instead
 	// of looking up slot_numtype_[slot] per operand.  The base Operation occupies bits 0..16, so these
 	// sit well clear of it; masking with kOpcodeMask recovers the base op for the switch and for IsUnary.
-	constexpr size_t kOpcodeMask = (static_cast<size_t>(1) << 17) - 1;
-	constexpr size_t kArg0Real   =  static_cast<size_t>(1) << 20;  // first operand slot is NumType::Real
-	constexpr size_t kArg1Real   =  static_cast<size_t>(1) << 21;  // second operand slot is Real (binary, not IntPower)
-	constexpr size_t kOutReal    =  static_cast<size_t>(1) << 22;  // result slot is NumType::Real
+	constexpr size_t kOpcodeMask = (static_cast<size_t>(1) << 17) - 1;  ///< Mask recovering the base opcode from an instruction word.
+	constexpr size_t kArg0Real   =  static_cast<size_t>(1) << 20;  ///< High bit: first operand slot is NumType::Real.
+	constexpr size_t kArg1Real   =  static_cast<size_t>(1) << 21;  ///< High bit: second operand slot is Real (binary, not IntPower).
+	constexpr size_t kOutReal    =  static_cast<size_t>(1) << 22;  ///< High bit: result slot is NumType::Real.
 
 
 	/**
@@ -222,18 +226,20 @@ namespace bertini {
 	 A struct encapsulating the starting locations of outputs in the SLP's memory layout.
 	 */
 	struct SLPOutputLocations{
-		size_t Functions{0};
-		size_t Jacobian{0};
-		size_t TimeDeriv{0};
+		size_t Functions{0};  ///< Memory offset of the function-value outputs.
+		size_t Jacobian{0};   ///< Memory offset of the Jacobian outputs.
+		size_t TimeDeriv{0};  ///< Memory offset of the time-derivative outputs.
 
 		friend class boost::serialization::access;
 
+		/// \cond SLP_SERIALIZATION
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & Functions;
 			ar & Jacobian;
 			ar & TimeDeriv;
 		}
+		/// \endcond
 	};
 
 	/**
@@ -242,16 +248,18 @@ namespace bertini {
 	 A struct encapsulating the starting locations of inputs in the SLP's memory layout.
 	 */
 	struct SLPInputLocations{
-		size_t Variables{0};
-		size_t Time{0};
+		size_t Variables{0};  ///< Memory offset of the variable inputs.
+		size_t Time{0};       ///< Memory offset of the path-variable (time) input.
 
 		friend class boost::serialization::access;
 
+		/// \cond SLP_SERIALIZATION
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & Variables;
 			ar & Time;
 		}
+		/// \endcond
 	};
 
 	/**
@@ -260,13 +268,14 @@ namespace bertini {
 	 A struct encapsulating the numbers of things appearing in the SLP.
 	 */
 	struct SLPNumberOf{
-		size_t Functions{0};
-		size_t Variables{0};
-		size_t Jacobian{0};
-		size_t TimeDeriv{0};
+		size_t Functions{0};  ///< The number of functions in the system.
+		size_t Variables{0};  ///< The number of variables in the system.
+		size_t Jacobian{0};   ///< The number of Jacobian entries.
+		size_t TimeDeriv{0};  ///< The number of time-derivative entries.
 
 		friend class boost::serialization::access;
 
+		/// \cond SLP_SERIALIZATION
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & Functions;
@@ -274,6 +283,7 @@ namespace bertini {
 			ar & Jacobian;
 			ar & TimeDeriv;
 		}
+		/// \endcond
 	};
 
 
@@ -289,13 +299,15 @@ namespace bertini {
 	 authored-precision value (its inherent ceiling).
 	 */
 	struct ConstantRecipe{
+		/// \brief Which kind of constant this recipe produces.
 		enum class Kind : int { Integer, Rational, Complex, Pi, E };
 
-		Kind kind = Kind::Integer;
-		mpz_int      int_value;             //< Kind::Integer  (exact)
-		mpq_rational rat_real, rat_imag;    //< Kind::Rational (exact)
-		complex_mp float_value;           //< Kind::Complex (authored-precision literal; also a fixed variable's value)
-		size_t slot = 0;                    //< where this constant lives in the register file
+		Kind kind = Kind::Integer;          ///< Which kind of constant this is.
+		mpz_int      int_value;             ///< Kind::Integer  (exact)
+		mpq_rational rat_real;              ///< Kind::Rational real part (exact).
+		mpq_rational rat_imag;              ///< Kind::Rational imaginary part (exact).
+		complex_mp float_value;             ///< Kind::Complex (authored-precision literal; also a fixed variable's value)
+		size_t slot = 0;                    ///< where this constant lives in the register file
 
 		/// Produce the constant's value at the ambient working precision (ThreadPrecision), matching
 		/// the corresponding number node's FreshEval exactly.  Definition + instantiations in the cpp.
@@ -316,6 +328,7 @@ namespace bertini {
 		}
 
 		friend class boost::serialization::access;
+		/// \cond SLP_SERIALIZATION
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
 			int k = static_cast<int>(kind);
@@ -327,6 +340,7 @@ namespace bertini {
 			ar & float_value;
 			ar & slot;
 		}
+		/// \endcond
 	};
 
 
@@ -340,29 +354,32 @@ namespace bertini {
 	 */
 	class SLPMemory{
 	public:
+		/// \brief Get a mutable reference to the register bank for number type NumT.
 		template<typename NumT>
 		std::vector<NumT>& Get() { return std::get<std::vector<NumT>>(registers_); }
 
+		/// \brief Get a const reference to the register bank for number type NumT.
 		template<typename NumT>
 		std::vector<NumT> const& Get() const { return std::get<std::vector<NumT>>(registers_); }
 
-		//< The register file (ADR-0034): one bank per (precision, NumType).  A slot lives in exactly
-		//  one bank, chosen by its NumType; the real banks are the real companions of the complex ones
-		//  (real_dbl for complex_dbl, real_mp for complex_mp).  Get<NumT>() selects a bank by type.
+		/// The register file (ADR-0034): one bank per (precision, NumType).  A slot lives in exactly
+		/// one bank, chosen by its NumType; the real banks are the real companions of the complex ones
+		/// (real_dbl for complex_dbl, real_mp for complex_mp).  Get<NumT>() selects a bank by type.
 		mutable std::tuple< std::vector<real_dbl>, std::vector<complex_dbl>,
 		                    std::vector<real_mp>,  std::vector<complex_mp> > registers_;
 
-		mutable unsigned precision_ = 16; //< The current working number of digits
-		mutable bool is_evaluated_ = false;
+		mutable unsigned precision_ = 16; ///< The current working number of digits.
+		mutable bool is_evaluated_ = false;  ///< Whether the program has been evaluated against this memory.
 
 		// Whether the frozen prologue's results in memory are valid.  Tracked per number type: the
 		// double constants never change once computed; the mpfr constants are valid only while the
 		// working precision is unchanged.  Transient (recomputed on first eval; not serialized).
-		mutable bool frozen_valid_dbl_ = false;
-		mutable unsigned frozen_valid_mp_precision_ = 0;
+		mutable bool frozen_valid_dbl_ = false;  ///< Whether the frozen prologue's double results in memory are valid.
+		mutable unsigned frozen_valid_mp_precision_ = 0;  ///< Precision at which the frozen prologue's mp results are valid (0 = none).
 
 		friend class boost::serialization::access;
 
+		/// \cond SLP_SERIALIZATION
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & std::get<std::vector<real_dbl>>(registers_);
@@ -373,6 +390,7 @@ namespace bertini {
 			ar & is_evaluated_;
 			// frozen_valid_* are transient (recomputed on first eval); not serialized.
 		}
+		/// \endcond
 	};
 
 
@@ -394,19 +412,23 @@ namespace bertini {
 		using Nd = std::shared_ptr<const node::Node>;
 
 	public:
-		using IntT = int;  // this needs to co-vary on the stored type inside the node.  node should stop using mpz, it's slow.
+		using IntT = int;  ///< The integer type used for the program's integer bank.
 
 		SLPProgram() = default;
 
-		// ADR-0034 A/B switch: when false, ComputeSlotNumTypes leaves every slot Complex, reproducing
-		// the pre-tier all-complex evaluation.  Read at compile time (SLP construction).  Default true;
-		// the benchmark flips it to measure tiers-on vs tiers-off.  Not for production toggling.
+		/// \brief ADR-0034 A/B switch: when false, leave every slot Complex (pre-tier all-complex eval).
+		///        Read at compile time; default true.  For benchmarking only, not production toggling.
 		static bool tiers_enabled_;
 
+		/// \brief Query whether the program has a path variable.
 		bool HavePathVariable() const { return has_path_variable_; }
+		/// \brief Get the number of functions in the program.
 		inline unsigned NumFunctions() const{ return static_cast<unsigned>(number_of_.Functions);}
+		/// \brief Get the number of variables in the program.
 		inline unsigned NumVariables() const{ return static_cast<unsigned>(number_of_.Variables);}
+		/// \brief Get the total number of memory slots (per register bank) the program needs.
 		inline size_t NumSlots() const { return num_slots_; }
+		/// \brief Get the word offset into the tape where the live (post-frozen-prologue) segment begins.
 		inline size_t FirstLiveInstructionOffset() const { return first_live_instruction_; }
 
 		/**
@@ -463,16 +485,16 @@ namespace bertini {
 		void SpecializeInstructions();
 
 
-		bool has_path_variable_ = false; //< Does this SLP have a path variable?
+		bool has_path_variable_ = false; ///< Does this SLP have a path variable?
 
-		SLPNumberOf number_of_;  //< Quantities of things
-		SLPOutputLocations output_locations_; //< Where to find outputs, like functions and derivatives
-		SLPInputLocations input_locations_; //< Where to find inputs, like variables and time
+		SLPNumberOf number_of_;  ///< Quantities of things.
+		SLPOutputLocations output_locations_; ///< Where to find outputs, like functions and derivatives.
+		SLPInputLocations input_locations_; ///< Where to find inputs, like variables and time.
 
-		std::vector<IntT> integers_;
+		std::vector<IntT> integers_;  ///< The program's integer bank.
 
-		std::vector<size_t> instructions_; //< The instructions.  The opcodes are  stored as size_t's, as well as the locations of operands and results.
-		std::vector<ConstantRecipe> constant_recipes_; //< the exact constants, each carrying the slot to downsample into.
+		std::vector<size_t> instructions_; ///< The instructions.  The opcodes are stored as size_t's, as well as the locations of operands and results.
+		std::vector<ConstantRecipe> constant_recipes_; ///< the exact constants, each carrying the slot to downsample into.
 
 		// Freeze-set tape partition (ADR-0027).  After compilation the instructions are stably
 		// reordered so every "frozen" instruction (one whose result depends only on frozen input
@@ -481,18 +503,19 @@ namespace bertini {
 		// live segment begins.  The frozen prologue depends only on precision, so a point-only change
 		// re-runs from `first_live_instruction_` and reuses the frozen slots already in memory; the
 		// whole tape runs only when the frozen values are not yet valid for the working precision.
-		size_t first_live_instruction_ = 0;
+		size_t first_live_instruction_ = 0;  ///< Word offset where the live segment of the tape begins.
 
-		size_t num_slots_ = 0; //< Total number of memory slots the program needs (per number bank).
+		size_t num_slots_ = 0; ///< Total number of memory slots the program needs (per number bank).
 
 		// The NumType of each slot (ADR-0034), indexed by global slot number; sized to num_slots_.
 		// Selects which register bank a slot lives in.  Default Complex (filled by the compiler);
 		// an all-Complex table reproduces the pre-tier behavior exactly.
-		std::vector<NumType> slot_numtype_;
+		std::vector<NumType> slot_numtype_;  ///< The NumType (register bank) of each slot, indexed by slot number.
 
 
 		friend class boost::serialization::access;
 
+		/// \cond SLP_SERIALIZATION
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & has_path_variable_;
@@ -506,6 +529,7 @@ namespace bertini {
 			ar & num_slots_;
 			ar & slot_numtype_;
 		}
+		/// \endcond
 	};
 
 
@@ -547,6 +571,9 @@ namespace bertini {
 
 		StraightLineProgram() : program_(std::make_shared<const SLPProgram>()) {}
 
+		/// \brief Evaluate the program at the given variable values (no path variable).
+		/// \tparam Derived The Eigen expression type of the variable values.
+		/// \param variable_values The values of the variables.
 		template<typename Derived>
 		void Eval(Eigen::MatrixBase<Derived> const& variable_values) const
 		{
@@ -582,6 +609,7 @@ namespace bertini {
 
 
 		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
+		/// \brief Evaluate the program's functions (currently a synonym for the full Eval).
 		template <typename T>
 		void EvalFunctions() const{
 			program_->Eval<T>(memory_);
@@ -590,6 +618,7 @@ namespace bertini {
 
 
 		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
+		/// \brief Evaluate the program's Jacobian (currently a synonym for the full Eval).
 		template <typename T>
 		void EvalJacobian() const{
 			program_->Eval<T>(memory_);
@@ -597,22 +626,13 @@ namespace bertini {
 
 
 		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
+		/// \brief Evaluate the program's time derivative (currently a synonym for the full Eval).
 		template <typename T>
 		void EvalTimeDeriv() const{
 			program_->Eval<T>(memory_);
 		}
 
 
-		/**
-		\brief assignts the computed values of functions into the given vector
-
-		\tparam NumT numeric type
-
-		\param result The vector you're going to store the values into
-
-		the function will NOT automatically resize your vector for you to be the correct size
-
-		 */
 		/// Number of slots the compiler inferred as NumType::Real (ADR-0034).  >0 means real-valued
 		/// subexpressions are being evaluated in the cheaper real banks; used by tests to confirm the
 		/// tier inference is live (not silently all-Complex).
@@ -624,6 +644,7 @@ namespace bertini {
 
 		// Read a slot's value as NumT (complex), pulling from the real or complex bank per its NumType
 		// (ADR-0034).  Used to copy outputs out, since a function/derivative slot could be Real-typed.
+		/// \brief Read a slot's value as a complex NumT, pulling from its real or complex bank per its NumType.
 		template<typename NumT>
 		NumT ReadSlotAsComplex(size_t slot) const {
 			using RealT = typename NumTraits<NumT>::Real;
@@ -632,6 +653,9 @@ namespace bertini {
 			return memory_.template Get<NumT>()[slot];
 		}
 
+		/// \brief Copy the computed function values into the provided vector (does not resize it).
+		/// \tparam NumT The number type.
+		/// \param[out] result The vector to write the function values into.
 		template<typename NumT>
 		void GetFuncValsInPlace(Eigen::Ref<Vec<NumT>> result) const{
 			if (!memory_.is_evaluated_)
@@ -727,8 +751,10 @@ namespace bertini {
 		}
 
 
+		/// \brief Get the number of functions in the program.
 		inline unsigned NumFunctions() const{ return program_->NumFunctions();}
 
+		/// \brief Get the number of variables in the program.
 		inline unsigned NumVariables() const{ return program_->NumVariables();}
 
 		/// Number of memory slots: one per distinct value the program holds (inputs, constants,
@@ -843,7 +869,7 @@ namespace bertini {
 
 
 
-		using IntT = int;  // this needs to co-vary on the stored type inside the node.  node should stop using mpz, it's slow.
+		using IntT = int;  ///< The integer type used for the program's integer bank.
 
 		private:
 
@@ -851,16 +877,19 @@ namespace bertini {
 		// by the compiler once the program is built and memory_.precision_ is set.
 		void SetupMemory();
 
+		/// \brief Downsample the exact constant recipes into the working memory at number type NumT.
 		template<typename NumT>
 		void CopyNumbersIntoMemory() const;
 
 
-		std::shared_ptr<const SLPProgram> program_; //< The immutable compiled program (shareable).
-		mutable SLPMemory memory_;                  //< The per-thread mutable working state.
+		std::shared_ptr<const SLPProgram> program_; ///< The immutable compiled program (shareable).
+		mutable SLPMemory memory_;                  ///< The per-thread mutable working state.
 
 
 
 		friend class boost::serialization::access;
+
+		/// \cond SLP_SERIALIZATION
 
 		// The program is serialized by value through the (owning, this-stage) shared_ptr, sidestepping
 		// boost's shared_ptr<const T> handling.  Clone (system.cpp) recompiles the SLP after a round
@@ -881,10 +910,13 @@ namespace bertini {
 		}
 
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		/// \endcond
 
 	};
 
 
+	/// \brief Compiles a System (or polynomial block) into a StraightLineProgram by visiting its
+	///        function-tree nodes and emitting tape instructions (with common-subexpression sharing).
 	class SLPCompiler : public VisitorBase,
 
 			// IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
@@ -938,12 +970,17 @@ namespace bertini {
 			// Compile from any source exposing the variable-ordering / functions / derivatives /
 			// path-variable accessors -- both System and blocks::PolynomialBlock qualify.
 			// Definition + explicit instantiations live in straight_line_program.cpp.
+			/// \brief Compile a source (a System or polynomial block) into a StraightLineProgram.
+			/// \tparam SourceT A type exposing variable-ordering / functions / derivatives / path-variable accessors.
+			/// \param source The system or block to compile.
+			/// \return The compiled straight-line program.
 			template <typename SourceT>
 			SLP Compile(SourceT const& source);
 
 
 			// IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
 
+			/// \cond SLP_COMPILER_VISIT
 			// symbols and roots
 			virtual void Visit(node::Variable const& n);
 			virtual void Visit(node::Integer const& n);
@@ -974,6 +1011,7 @@ namespace bertini {
 			virtual void Visit(node::special_number::Pi const& n);
 			virtual void Visit(node::special_number::E const& n);
 			// missing -- linear and difflinear
+			/// \endcond
 		private:
 
 
@@ -990,15 +1028,15 @@ namespace bertini {
 			 */
 			void Clear();
 
-			size_t next_available_complex_ = 0; //< Where should the next complex number go in memory?
-			size_t next_available_int_ = 0; //< Where should the next integer go?
+			size_t next_available_complex_ = 0; ///< Where should the next complex number go in memory?
+			size_t next_available_int_ = 0; ///< Where should the next integer go?
 
-			using IntT = int;  // this needs to co-vary on the stored type inside the node.  node should stop using mpz, it's slow.
+			using IntT = int;  ///< The integer type used for the program's integer bank.
 
-			std::map<Nd, size_t> locations_encountered_nodes_; //< A registry of pointers-to-nodes and location in memory on where to find *their results*
-			std::map<IntT, size_t> locations_integers_;
+			std::map<Nd, size_t> locations_encountered_nodes_; ///< A registry of pointers-to-nodes and location in memory on where to find *their results*.
+			std::map<IntT, size_t> locations_integers_;  ///< A registry mapping integer values to their memory slots.
 
-			SLPProgram program_under_construction_; //< the under-construction program.  wrapped into an SLP and returned at end of `Compile`
+			SLPProgram program_under_construction_; ///< the under-construction program.  wrapped into an SLP and returned at end of `Compile`.
 	};
 
 

@@ -44,14 +44,20 @@ namespace blackbox{
 
 
 
+/**
+\brief Runtime options selecting which ZeroDim algorithm to instantiate.
+
+Holds the runtime (enum) choices -- start system, tracker, and endgame -- that the
+ZeroDimSpecify* switch chain resolves into concrete compile-time template parameters.
+*/
 struct ZeroDimRT
 {
 	// INTERIM default = RootsOfUnity (see policies.hpp): the linear-product TotalDegree is the
 	// eventual default but currently stalls the Cauchy endgame on harder systems, so the safe
 	// default stays roots of unity until that is fixed.
-	type::Start start = type::Start::RootsOfUnity;
-	type::Tracker tracker = type::Tracker::Adaptive;
-	type::Endgame endgame = type::Endgame::Cauchy;
+	type::Start start = type::Start::RootsOfUnity;    ///< Which start system to use.
+	type::Tracker tracker = type::Tracker::Adaptive;  ///< Which path tracker to use.
+	type::Endgame endgame = type::Endgame::Cauchy;    ///< Which endgame to use.
 };
 
 
@@ -84,6 +90,18 @@ inline type::Start InferStartType(System const& sys)
 // single type that holds the start system polymorphically.  Add a start system => add a
 // case in ZeroDimSpecifyStart, no new ZeroDim instantiation.
 
+/**
+\brief Instantiate the fully-specified ZeroDim solver -- the end of the switch chain.
+
+By this point every algorithm choice is a compile-time template parameter, so the concrete
+ZeroDimSolver can be constructed.  The blackbox always clones and builds its own system.
+
+\tparam TrackerType The resolved path-tracker type.
+\tparam EndgameType The resolved endgame type.
+\tparam ConstTs The forwarded construction-argument types.
+\param ts The construction arguments forwarded to the solver (target system and start-system factory).
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
 template <typename TrackerType, typename EndgameType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyComplete(ConstTs const& ...ts)
 {
@@ -93,6 +111,15 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyComplete(ConstTs const& ...
 			>(ts...);
 }
 
+/**
+\brief Resolve the runtime endgame choice (rt.endgame) into a compile-time endgame type, then continue.
+
+\tparam TrackerType The already-resolved path-tracker type.
+\tparam ConstTs The forwarded construction-argument types.
+\param rt The runtime options carrying the endgame selection.
+\param ts The construction arguments forwarded down the chain.
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
 template <typename TrackerType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyEndgame(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
@@ -110,6 +137,14 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyEndgame(ZeroDimRT const& rt
 	throw std::runtime_error("unrecognized endgame type in ZeroDimSpecifyEndgame");
 }
 
+/**
+\brief Resolve the runtime tracker choice (rt.tracker) into a compile-time tracker type, then continue.
+
+\tparam ConstTs The forwarded construction-argument types.
+\param rt The runtime options carrying the tracker selection.
+\param ts The construction arguments forwarded down the chain.
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyTracker(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
@@ -125,6 +160,17 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyTracker(ZeroDimRT const& rt
 	throw std::runtime_error("unrecognized tracker type in ZeroDimSpecifyTracker");
 }
 
+/**
+\brief Resolve the runtime start-system choice (rt.start) into a start-system factory, then continue.
+
+Appends the chosen start-system factory to the argument pack before continuing down the chain
+(ZeroDimSolver consumes the target system and that factory).
+
+\tparam ConstTs The forwarded construction-argument types.
+\param rt The runtime options carrying the start-system selection.
+\param ts The construction arguments forwarded down the chain.
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyStart(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
@@ -143,6 +189,17 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyStart(ZeroDimRT const& rt, 
 	throw std::runtime_error("unrecognized start system type in ZeroDimSpecifyStart");
 }
 
+/**
+\brief Build a ZeroDim solver from runtime options -- the entry point of the switch chain.
+
+Enters the ZeroDimSpecify* chain, which resolves each runtime option (start, tracker, endgame)
+into the corresponding compile-time template parameter and constructs the solver.
+
+\tparam ConstTs The forwarded construction-argument types.
+\param rt The runtime options selecting start system, tracker, and endgame.
+\param ts The construction arguments (the target system, ...).
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> MakeZeroDim(ZeroDimRT const& rt, ConstTs const& ...ts)
 {

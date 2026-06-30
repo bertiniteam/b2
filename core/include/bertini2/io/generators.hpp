@@ -41,6 +41,7 @@ BOOST_MATH_STD_USING
 #include <boost/fusion/adapted.hpp>
 #include <boost/fusion/include/adapted.hpp>
 
+/// \brief Select Boost.Phoenix V3 for the Spirit grammars in this header.
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
 
 #include <boost/spirit/include/qi.hpp>
@@ -75,23 +76,27 @@ namespace bertini{
 
 		namespace karma = boost::spirit::karma;
 
+		/// \brief Karma real-number formatting policy: always scientific, at the type's full precision.
 		template <typename Num>
 		struct BertiniNumPolicy : public karma::real_policies<Num>
 		{
-		    // we want the numbers always to be in scientific format
+		    /// \brief Always format in scientific notation.
 		    static int floatfield(Num /*n*/) { return std::ios_base::scientific; }
 
+		    /// \brief Use the type's maximum decimal digits.
 		    static unsigned int precision(Num) {
 		        return std::numeric_limits<Num>::max_digits10;
 		      }
 		};
 
+		/// \brief BertiniNumPolicy specialization for multiprecision reals (precision follows the value).
 		template<>
 		struct BertiniNumPolicy<real_mp>  : public karma::real_policies<real_mp>
 		{
-		    // we want the numbers always to be in scientific format
+		    /// \brief Always format in scientific notation.
 		    static int floatfield(real_mp /*n*/) { return std::ios_base::scientific; }
 
+		    /// \brief Use the value's own precision.
 		    static unsigned int precision(real_mp const& x) {
 		        return x.precision();
 		      }
@@ -99,15 +104,18 @@ namespace bertini{
 
 
 
+		/// \brief A Karma real generator that emits at full precision using BertiniNumPolicy.
 		template<typename Num>
 		using FullPrec = boost::spirit::karma::real_generator<Num, BertiniNumPolicy<Num> >;
 
-		FullPrec<double> const full_prec_d = FullPrec<double>();
-		FullPrec<real_mp> const full_prec_mp = FullPrec<real_mp>();
+		FullPrec<double> const full_prec_d = FullPrec<double>();  ///< Full-precision generator for double.
+		FullPrec<real_mp> const full_prec_mp = FullPrec<real_mp>();  ///< Full-precision generator for real_mp.
 
 
+		/// \brief Generators emitting numbers and vectors in classic Bertini format (real then imaginary).
 		struct Classic{
 
+			/// \brief Emit a double as a classic-format complex (imaginary part zero).
 			template <typename OutputIterator>
 			static bool generate(OutputIterator sink, double const& c)
 			{
@@ -127,6 +135,7 @@ namespace bertini{
 			}
 
 
+			/// \brief Emit a double-precision complex number in classic format.
 			template <typename OutputIterator>
 			static bool generate(OutputIterator sink, std::complex<double> const& c)
 			{
@@ -147,6 +156,7 @@ namespace bertini{
 
 
 
+			/// \brief Emit a multiprecision real in classic format.
 			template <typename OutputIterator>
 			static bool generate(OutputIterator sink, real_mp const& c)
 			{
@@ -166,6 +176,7 @@ namespace bertini{
 			}
 
 
+			/// \brief Emit a multiprecision complex number in classic format.
 			template <typename OutputIterator>
 			static bool generate(OutputIterator sink, complex_mp const& c)
 			{
@@ -185,6 +196,7 @@ namespace bertini{
 			}
 
 
+			/// \brief Emit a vector, one entry per line, in classic format.
 			template <typename OutputIterator, typename T>
 			static bool generate(OutputIterator sink, Vec<T> const& c)
 			{
@@ -203,8 +215,10 @@ namespace bertini{
 
 
 
+		/// \brief Generators emitting numbers in C++ source literal format.
 		struct CPlusPlus{
 
+			/// \brief Emit a double-precision complex number as a C++ complex literal.
 			template <typename OutputIterator>
 			static bool generate(OutputIterator sink, std::complex<double> const& c)
 			{

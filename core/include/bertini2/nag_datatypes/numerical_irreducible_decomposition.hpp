@@ -48,8 +48,8 @@ namespace bertini {
 		class NumericalIrreducibleDecomposition
 		{
 		public:
-			using WS = WitnessSet<ComplexT, SystemT, ObjManagementP>;
-			using WSCont = std::vector<WS>;
+			using WS = WitnessSet<ComplexT, SystemT, ObjManagementP>;  ///< The witness set type.
+			using WSCont = std::vector<WS>;                            ///< Container of witness sets.
 
 		private:
 			WSCont finished_witness_sets_;
@@ -68,6 +68,7 @@ namespace bertini {
 				return codims;
 			}
 
+			/// \return All stored witness sets.
 			const WSCont& GetWitnessSets() const
 			{
 				return finished_witness_sets_;
@@ -90,6 +91,11 @@ namespace bertini {
 				return finished_witness_sets_.at(i);
 			}
 
+			/**
+			\brief Get all stored witness sets of a given dimension.
+			\param dim The dimension to filter by.
+			\return The witness sets whose dimension equals \p dim.
+			*/
 			WSCont WitnessSetsOfDim(int dim)
 			{
 				WSCont w_correct_dim;

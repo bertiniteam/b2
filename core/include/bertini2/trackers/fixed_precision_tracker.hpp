@@ -50,32 +50,33 @@ namespace bertini{
 
 
 
-		/** 
-		\class FixedPrecisionTracker<prec>
+		/**
+		\class FixedPrecisionTracker
 
-		\brief Functor-like class for tracking paths on a system
+		\brief CRTP base for trackers that work at a single fixed precision (double or fixed multiple).
 		*/
 		template<class DerivedT>
 		class FixedPrecisionTracker : public Tracker<FixedPrecisionTracker<DerivedT>>
 		{	
 		public:
 
-			using BaseComplexT = typename TrackerTraits<DerivedT>::BaseComplexT;
-			using BaseRealT = typename TrackerTraits<DerivedT>::BaseRealT;
+			using BaseComplexT = typename TrackerTraits<DerivedT>::BaseComplexT;  ///< The complex number type.
+			using BaseRealT = typename TrackerTraits<DerivedT>::BaseRealT;  ///< The real number type.
 
-			using ComplexT = BaseComplexT;
-			using RealT = BaseRealT;
+			using ComplexT = BaseComplexT;  ///< The complex number type.
+			using RealT = BaseRealT;  ///< The real number type.
 
 			virtual ~FixedPrecisionTracker() = default;
 
-			using EmitterType = FixedPrecisionTracker<DerivedT>;
-			using Base = Tracker<FixedPrecisionTracker<DerivedT>>;
+			using EmitterType = FixedPrecisionTracker<DerivedT>;  ///< The event-emitter type for this tracker.
+			using Base = Tracker<FixedPrecisionTracker<DerivedT>>;  ///< The base tracker type.
 
-			using Config =  typename Base::Config;
+			using Config =  typename Base::Config;  ///< The configuration-holding base type.
 			FORWARD_GET_CONFIGURED
-			using Stepping = typename Base::Stepping;
-			using Newton = typename Base::Newton;
+			using Stepping = typename Base::Stepping;  ///< The stepping configuration type.
+			using Newton = typename Base::Newton;  ///< The Newton corrector configuration type.
 
+			/// \brief Construct a fixed-precision tracker for a system.
 			FixedPrecisionTracker(System const& sys) : Base(sys){}
 
 			/**
@@ -85,6 +86,7 @@ namespace bertini{
 			{ }
 
 
+			/// \brief Get the current space point of the track.
 			Vec<ComplexT> CurrentPoint() const override
 			{
 				return std::get<Vec<ComplexT>>(this->current_space_);
@@ -274,6 +276,7 @@ namespace bertini{
 
 
 
+			/// \brief React to a path being truncated for going to infinity, by notifying observers.
 			void OnInfiniteTruncation() const override
 			{
 				this->NotifyObservers(InfinitePathTruncation<EmitterType>(*this));
@@ -319,7 +322,7 @@ namespace bertini{
 
 			Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
 
-			\param corrected_space[out] The spatial result of the correction loop.
+			\param[out] corrected_space The spatial result of the correction loop.
 			\param current_space The start point in space for running the corrector loop.
 			\param current_time The current time value.
 
@@ -415,13 +418,14 @@ namespace bertini{
 
 
 
+		/// \brief A tracker that works entirely in hardware double precision.
 		class DoublePrecisionTracker : public FixedPrecisionTracker<DoublePrecisionTracker>
 		{
 		public:
-			using BaseComplexT = complex_dbl;
-			using BaseRealT = double;
+			using BaseComplexT = complex_dbl;  ///< The complex number type.
+			using BaseRealT = double;  ///< The real number type.
 
-			using EmitterType = typename TrackerTraits<DoublePrecisionTracker>::EventEmitterType;
+			using EmitterType = typename TrackerTraits<DoublePrecisionTracker>::EventEmitterType;  ///< The event-emitter type for this tracker.
 
 
 			/**
@@ -441,6 +445,7 @@ namespace bertini{
 			virtual ~DoublePrecisionTracker() = default;
 
 
+			/// \brief Get the current working precision (always DoublePrecision() for this tracker).
 			unsigned CurrentPrecision() const override
 			{
 				return DoublePrecision();
@@ -494,13 +499,14 @@ namespace bertini{
 		}; // re: DoublePrecisionTracker
 
 
+		/// \brief A tracker that works at a fixed multiprecision (set from the default precision at construction).
 		class MultiplePrecisionTracker : public FixedPrecisionTracker<MultiplePrecisionTracker>
 		{
 		public:
-			using BaseComplexT = complex_mp;
-			using BaseRealT = real_mp;
+			using BaseComplexT = complex_mp;  ///< The complex number type.
+			using BaseRealT = real_mp;  ///< The real number type.
 
-			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
+			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;  ///< The event-emitter type for this tracker.
 
 
 			/**
@@ -519,6 +525,7 @@ namespace bertini{
 			virtual ~MultiplePrecisionTracker() = default;
 
 
+			/// \brief Get the current (fixed multiple) working precision of this tracker.
 			unsigned CurrentPrecision() const override
 			{
 				return precision_;
@@ -615,8 +622,9 @@ namespace bertini{
 				return SuccessCode::Success;
 			}
 
+			/// \brief Check that the system, thread precision, and all tracker state are at the expected precision.
 			bool PrecisionSanityCheck() const
-			{	
+			{
 				return GetSystem().precision() == precision_ &&
 						ThreadPrecision()==precision_ &&
 						std::get<Vec<complex_mp> >(current_space_)(0).precision() == precision_ &&
@@ -636,7 +644,7 @@ namespace bertini{
 				this->template Set<FixedPrecisionConfig>(c);
 			}
 
-			unsigned precision_;
+			unsigned precision_;  ///< The fixed working precision (number of digits) this tracker operates at.
 		}; // re: MultiplePrecisionTracker
 	} // namespace tracking
 } // namespace bertini

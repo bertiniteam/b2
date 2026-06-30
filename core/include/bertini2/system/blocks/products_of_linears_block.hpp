@@ -92,20 +92,24 @@ public:
 		for (auto const& M : factors_highest_precision_) d.push_back(static_cast<int>(M.rows()));
 		return d;
 	}
+	/// \brief Per-function degrees with respect to a given variable group (same as the total degrees).
 	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
 
 	// The products-of-linears block is the m-homogeneous start system, constructed already
 	// homogenized (each factor carries its group's homogenizing variable).  So Homogenize is a
 	// no-op and it reports homogeneous + polynomial.
+	/// \brief No-op: the block is constructed already homogenized.
 	void Homogenize(VariableGroup const&, std::shared_ptr<node::Variable> const&) {}
+	/// \brief Always true: a products-of-linears block is homogeneous.
 	bool IsHomogeneous(VariableGroup const&) const { return true; }
+	/// \brief Always true: a products-of-linears block is polynomial.
 	bool IsPolynomial(VariableGroup const&) const { return true; }
 
 	/// Number of variables the block expects in the input vector.
 	size_t NumVariables() const { return num_vars_; }
 
 	/// The master (highest-precision) coefficient matrices, one per function; matrix i is
-	/// (#factors_i) x (num_vars+1), the last column being the constant/augmenting term.  Exposed
+	/// (number of factors of f_i) x (num_vars+1), the last column being the constant/augmenting term.  Exposed
 	/// so the function-tree expansion (System::ExpandToFunctionTree) can rebuild f_i = prod_r L_r.
 	std::vector<Mat<complex_mp>> const& Factors() const { return factors_highest_precision_; }
 
@@ -147,6 +151,7 @@ public:
 	/// Analytic block: nothing symbolic to differentiate.
 	void Differentiate() const {}
 
+	/// \brief Get the block's current working precision.
 	unsigned Precision() const { return precision_; }
 
 	/// Set the working precision; recasts the mpfr working coefficients from the master.
@@ -170,9 +175,10 @@ public:
 	/**
 	\brief Evaluate the block's function values into a caller-provided segment.
 
+	The path variable is ignored (products of linears are autonomous).
+
 	\param result Length-NumFunctions() segment to write into.
 	\param vars   Length-NumVariables() current variable values.
-	\param path_value The path-variable value (ignored: products of linears are autonomous).
 	*/
 	template <typename T>
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
@@ -198,9 +204,10 @@ public:
 	/**
 	\brief Evaluate the block's Jacobian (d f_i / d x_j) into a caller-provided block.
 
+	The path variable is ignored (products of linears are autonomous).
+
 	\param J  A NumFunctions() x NumVariables() block to write into.
 	\param vars Length-NumVariables() current variable values.
-	\param path_value The path-variable value (ignored: products of linears are autonomous).
 	*/
 	template <typename T>
 	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& /*path_value*/) const

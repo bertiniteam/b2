@@ -104,6 +104,7 @@ inline unsigned EffectiveThreadCount(unsigned configured = 0)
 }
 
 
+/// \brief A simple thread-safe (mutex + condition-variable) FIFO queue.
 template<typename T>
 class ThreadSafeQueue
 {
@@ -112,6 +113,7 @@ class ThreadSafeQueue
 	std::condition_variable cv_;
 
 public:
+	/// \brief Push an item onto the queue and wake one waiter.
 	void push(T item)
 	{
 		{
@@ -121,6 +123,7 @@ public:
 		cv_.notify_one();
 	}
 
+	/// \brief Block until an item is available, then pop and return it.
 	T pop()
 	{
 		std::unique_lock<std::mutex> lock(mutex_);
@@ -130,6 +133,7 @@ public:
 		return item;
 	}
 
+	/// \brief Pop and return an item if one is ready, otherwise std::nullopt (non-blocking).
 	std::optional<T> try_pop()
 	{
 		std::lock_guard<std::mutex> lock(mutex_);
@@ -170,6 +174,10 @@ class WorkerThreadPool
 	int                        n_threads_;
 
 public:
+	/// \brief Construct the pool and start n_threads worker threads, each with its own state.
+	/// \param n_threads The number of worker threads to start.
+	/// \param state_factory Callable building each thread's per-thread state.
+	/// \param track_fn Callable tracking one path using the thread-local state.
 	WorkerThreadPool(int n_threads, StateFactory state_factory, TrackFn track_fn)
 		: n_threads_(n_threads)
 	{
@@ -196,25 +204,25 @@ public:
 		}
 	}
 
+	/// \brief Submit a task to be tracked by a worker thread.
 	void submit(TaskT task)
 	{
 		task_queue_.push(WorkItem{std::move(task)});
 	}
 
-	// Block until one result is available, then return it.
+	/// \brief Block until one result is available, then return it.
 	ResultT collect()
 	{
 		return result_queue_.pop();
 	}
 
-	// Non-blocking: return a result if one is ready, otherwise std::nullopt.
+	/// \brief Return a result if one is ready, otherwise std::nullopt (non-blocking).
 	std::optional<ResultT> try_collect()
 	{
 		return result_queue_.try_pop();
 	}
 
-	// Signal all threads to exit and join. Call only after all submitted tasks
-	// have been collected (result_queue_ empty).
+	/// \brief Signal all threads to exit and join (call only after all results are collected).
 	void shutdown()
 	{
 		for (int i = 0; i < n_threads_; ++i)

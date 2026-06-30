@@ -73,13 +73,15 @@ block operand is a shared follow-up with BlendBlock).
 namespace bertini {
 namespace blocks {
 
+/// \brief A block that randomizes an overdetermined operand system down to a square one (with a constant coefficient matrix).
 template <typename SystemT>
 class RandomizationBlock
 {
 public:
-	using Var = std::shared_ptr<node::Variable>;
-	using OperandPtr = std::shared_ptr<SystemT>;
+	using Var = std::shared_ptr<node::Variable>;  ///< Shorthand for a shared pointer to a variable node.
+	using OperandPtr = std::shared_ptr<SystemT>;  ///< Shorthand for a shared pointer to the operand system.
 
+	/// \brief Construct an empty randomization block at the current default precision.
 	RandomizationBlock() : num_groups_(0), precision_(DefaultPrecision()) {}
 
 	/**
@@ -111,6 +113,7 @@ public:
 	// gives it its own per-thread evaluation Memory.  Everything else (the coefficient matrices,
 	// multidegrees, working buffers) is value state, copied per copy.  This lets path tracking
 	// Clone a System into per-thread copies that share no mutable state.
+	/// \brief Memory-isolating copy constructor (deep-copies the operand system; ADR-0027).
 	RandomizationBlock(RandomizationBlock const& other)
 		: operand_(other.operand_ ? std::make_shared<SystemT>(*other.operand_) : nullptr),
 		  coefficients_highest_precision_(other.coefficients_highest_precision_),
@@ -124,6 +127,7 @@ public:
 		  precision_(other.precision_)
 	{}
 
+	/// \brief Memory-isolating copy assignment (deep-copies the operand system; ADR-0027).
 	RandomizationBlock& operator=(RandomizationBlock const& other)
 	{
 		if (this != &other)
@@ -142,7 +146,9 @@ public:
 		return *this;
 	}
 
+	/// \brief Move constructor.
 	RandomizationBlock(RandomizationBlock&&) = default;
+	/// \brief Move assignment.
 	RandomizationBlock& operator=(RandomizationBlock&&) = default;
 
 	/// Number of randomized functions (rows this block contributes) = n.
@@ -175,7 +181,9 @@ public:
 
 	/// The randomized system is polynomial / homogeneous exactly when the operand is (System's
 	/// IsPolynomial/IsHomogeneous are whole-system, no-argument checks -- as BlendBlock delegates).
+	/// \brief Query whether the randomized system is polynomial (iff the operand is).
 	bool IsPolynomial(VariableGroup const& /*vars*/) const { return operand_->IsPolynomial(); }
+	/// \brief Query whether the randomized system is homogeneous (iff homogenized and the operand is).
 	bool IsHomogeneous(VariableGroup const& /*vars*/) const { return homogenized_ ? operand_->IsHomogeneous() : false; }
 
 	/**
@@ -223,13 +231,17 @@ public:
 
 	// Accessors for the function-tree expansion oracle (System::NaturalFunctionsAsNodes), which
 	// rebuilds g_i = sum_j c_ij * node(f_j) * prod_g h_g^{(D_{i,g}-d_{j,g})}.
+	/// \brief Query whether the operand has been homogenized.
 	bool IsHomogenized() const { return homogenized_; }
+	/// \brief Get the homogenizing variables accumulated, one per affine variable group.
 	std::vector<Var> const& HomVars() const { return hom_vars_; }
+	/// \brief Get the target multidegrees (per randomized row, per variable group).
 	std::vector<std::vector<int>> const& TargetMultidegrees() const { return target_multidegrees_; }
+	/// \brief Get the operand multidegrees (per operand function, per variable group).
 	std::vector<std::vector<int>> const& OperandMultidegrees() const { return operand_multidegrees_; }
 
-	/// Human-facing description: terse shows `f_a..f_b = R . g  (R: nxN)` then the underlying
-	/// functions `g_j` indented (they are the interesting part); verbose additionally prints R's
+	/// Human-facing description: terse shows 'f_a..f_b = R . g  (R: nxN)' then the underlying
+	/// functions 'g_j' indented (they are the interesting part); verbose additionally prints R's
 	/// entries.
 	void Describe(std::ostream& out, size_t& row, VariableGroup const& /*vars*/, bool verbose) const
 	{
@@ -271,6 +283,7 @@ public:
 			out << "      ... (" << (R.rows() - rshown) << " more rows; describe(verbose=True) for all)\n";
 	}
 
+	/// \brief Get the block's current working precision.
 	unsigned Precision() const { return precision_; }
 
 	/// Set the working precision: recast the mpfr working coefficients from the master and bring

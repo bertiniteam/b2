@@ -51,11 +51,19 @@ struct Classic
 {};
 
 
+/**
+\brief Writes a solver's results in the classic Bertini output format.
+
+A collection of static formatting helpers, each writing one section of classic
+Bertini output (main data, raw data, solution lists, the systems, per-endpoint
+metadata) to a stream.  ZeroDimSolver reuses this verbatim via its HomotopySolver base.
+*/
 template <typename A, typename B, typename C>
 struct Classic <HomotopySolver<A,B,C>>
 {
-	using ZDT = HomotopySolver<A,B,C>;
+	using ZDT = HomotopySolver<A,B,C>;  ///< The solver type whose results are formatted.
 
+	/// \brief Write both the main-data and raw-data sections.
 	template <typename OutT>
 	static
 	void All(OutT & out, ZDT const& zd)
@@ -68,6 +76,7 @@ struct Classic <HomotopySolver<A,B,C>>
 	}
 
 	
+	/// \brief Write the human-readable "main data" section (variables, endpoints, and systems).
 	template <typename OutT>
 	static
 	void MainData(OutT & out, ZDT const& zd)
@@ -95,8 +104,9 @@ struct Classic <HomotopySolver<A,B,C>>
 		Homotopy(out,zd,"\n\n");
 	}
 
+	/// \brief Write the "raw data" section (per-endpoint raw metadata and the target system).
 	template <typename OutT>
-	static 
+	static
 	void RawData(OutT & out, ZDT const& zd)
 	{
 		const auto n = zd.SolutionsInternalCoords().size();
@@ -125,6 +135,7 @@ struct Classic <HomotopySolver<A,B,C>>
 
 	// Write a count-led list of solution points (each a Vec): "<count>\n\n" then, per point,
 	// the coordinate lines followed by a blank-line separator.
+	/// \brief Write a count-led, blank-line-separated list of solution points (Bertini 1.7 format).
 	template <typename OutT, typename SolListT>
 	static void SolutionList(OutT & out, SolListT const& sols)
 	{
@@ -136,20 +147,25 @@ struct Classic <HomotopySolver<A,B,C>>
 		}
 	}
 
+	/// \brief Write the finite solutions as a classic solution list.
 	template <typename OutT>
 	static void FiniteSolutions(OutT & out, ZDT const& zd)      { SolutionList(out, zd.FiniteSolutions()); }
 
+	/// \brief Write the real finite solutions as a classic solution list.
 	template <typename OutT>
 	static void RealFiniteSolutions(OutT & out, ZDT const& zd)  { SolutionList(out, zd.RealSolutions()); }
 
+	/// \brief Write the nonsingular solutions as a classic solution list.
 	template <typename OutT>
 	static void NonsingularSolutions(OutT & out, ZDT const& zd) { SolutionList(out, zd.NonsingularSolutions()); }
 
+	/// \brief Write the singular solutions as a classic solution list.
 	template <typename OutT>
 	static void SingularSolutions(OutT & out, ZDT const& zd)    { SolutionList(out, zd.SingularSolutions()); }
 
 	// raw_solutions: every successful endpoint, each preceded by its path number (Bertini 1 lists
 	// the raw endpoints before finite/infinite classification, tagged by path).
+	/// \brief Write every successful raw endpoint, each tagged by its path number (Bertini 1 order).
 	template <typename OutT>
 	static void RawSolutions(OutT & out, ZDT const& zd)
 	{
@@ -174,6 +190,7 @@ struct Classic <HomotopySolver<A,B,C>>
 	}
 
 
+	/// \brief Write the number of variables in the target system.
 	template <typename OutT>
 	static
 	void NumVariables(OutT & out, ZDT const& zd, std::string const& additional = "\n")
@@ -183,8 +200,9 @@ struct Classic <HomotopySolver<A,B,C>>
 	}
 
 
+	/// \brief Write the names of the target system's variables, in order.
 	template <typename OutT>
-	static 
+	static
 	void Variables(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& sys = zd.TargetSystem();
@@ -195,45 +213,51 @@ struct Classic <HomotopySolver<A,B,C>>
 	}
 
 
+	/// \brief Write the target system.
 	template <typename OutT>
-	static 
+	static
 	void TargetSystem(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		out << zd.TargetSystem() << additional;
 	}
 
+	/// \brief Write the start system.
 	template <typename OutT>
-	static 
+	static
 	void StartSystem(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		out << zd.StartSystem() << additional;
 	}
 
+	/// \brief Write the homotopy.
 	template <typename OutT>
-	static 
+	static
 	void Homotopy(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		out << zd.Homotopy() << additional;
 	}
 
+	/// \brief Write one endpoint in internal (homogeneous) coordinates.
 	template <typename IndexT, typename OutT>
 	static
 	void EndPoint(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
-	{	
+	{
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.SolutionsInternalCoords()[ind]);
 		out << additional;
 	}
 
+	/// \brief Write one endpoint in user (dehomogenized) coordinates.
 	template <typename IndexT, typename OutT>
 	static
 	void EndPointDehom(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
-	{	
+	{
 		DefaultPrecision(Precision(zd.SolutionsInternalCoords()[ind]));
 
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.SolutionsUserCoords()[ind]);
 		out << additional;
 	}
 
+	/// \brief Write one endpoint's full metadata block (main-data form).
 	template <typename IndexT, typename OutT>
 	static
 	void EndPointMDFull(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
@@ -258,6 +282,7 @@ struct Classic <HomotopySolver<A,B,C>>
 
 
 
+	/// \brief Write one endpoint's metadata block (raw-data form).
 	template <typename IndexT, typename OutT>
 	static
 	void EndPointMDRaw(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
@@ -289,10 +314,11 @@ struct Classic <ZeroDimSolver<A,B,C>> : Classic <HomotopySolver<A,B,C>>
 {};
 
 
+/// \brief Extracts the nonsingular (multiplicity-one) solutions from a solver's results.
 struct NonsingularSolutions
 {
 
-	
+	/// \brief Collect the user-coordinate points of every successful, multiplicity-one solution.
 	template<typename AlgoT>
 	static
 	auto Extract(AlgoT const& alg)
@@ -319,10 +345,11 @@ struct NonsingularSolutions
 };
 
 
+/// \brief Extracts all solutions from a solver's results.
 struct AllSolutions
 {
 
-	
+	/// \brief Collect the user-coordinate points of every solution.
 	template<typename AlgoT>
 	static
 	auto Extract(AlgoT const& alg)

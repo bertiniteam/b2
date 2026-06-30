@@ -36,6 +36,7 @@
 #include <boost/fusion/adapted.hpp>
 #include <boost/fusion/include/adapted.hpp>
 
+/// \brief Select Boost.Phoenix V3 for the Spirit grammars in this header.
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
 
 

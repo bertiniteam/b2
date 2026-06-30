@@ -46,8 +46,10 @@ namespace bertini{ namespace start_system{
 
 // forward declare the function, so we can friend it below.
 namespace boost { namespace serialization {
+/// \cond USER_SERIALIZATION
 template<class Archive>
 inline void save_construct_data(Archive & ar, const bertini::start_system::User * t, const unsigned int file_version);
+/// \endcond
 }}
 // end nonsense for friends.  so lonely, but c++ friends don't solve the irl problem at all.  
 
@@ -71,6 +73,7 @@ namespace bertini
 			 Constructor for making a user-provided start system from another.
 			*/
 			User(System const& s, SampCont<complex_dbl> const& solns);
+			/// \brief Construct a user-provided start system from a system and its multiprecision solutions.
 			User(System const& s, SampCont<complex_mp> const& solns);
 
 
@@ -117,6 +120,7 @@ namespace bertini
 }
 
 namespace boost { namespace serialization {
+/// \cond USER_SERIALIZATION
 template<class Archive>
 inline void save_construct_data(
     Archive & ar, const bertini::start_system::User * t, const unsigned int /*file_version*/
@@ -154,4 +158,5 @@ inline void load_construct_data(
 		::new(t)bertini::start_system::User(sys, solns);
 	}
 }
+/// \endcond
 }}

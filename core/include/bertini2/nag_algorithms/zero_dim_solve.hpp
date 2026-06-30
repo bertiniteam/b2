@@ -90,9 +90,10 @@ traits specialized here.
 template<typename TrackerType, typename EndgameType, typename SystemType>
 struct AlgoTraits <HomotopySolver<TrackerType, EndgameType, SystemType>>
 {
-	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
-	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
+	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;        ///< The real number type of the tracker.
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;  ///< The complex number type of the tracker.
 
+	/// The config types this algorithm reads (drives the reusable Python config interface).
 	using NeededConfigs = detail::TypeList<
 								TolerancesConfig,
 								PostProcessingConfig,
@@ -102,16 +103,25 @@ struct AlgoTraits <HomotopySolver<TrackerType, EndgameType, SystemType>>
 };
 
 
+/// \brief Type-erased base for a zero-dimensional solve, exposing output and config entry points.
 struct AnyZeroDim : public virtual AnyAlgorithm
 {
+	/// \brief Write the human-readable main-data report to \p out.
 	virtual void WriteMainData(std::ostream& out) const = 0;
+	/// \brief Write the raw-data report to \p out.
 	virtual void WriteRawData(std::ostream& out)  const = 0;
 	// Bertini 1.7-compatible machine-readable solution files (count-led coordinate blocks).
+	/// \brief Write the finite solutions (Bertini 1.7 format) to \p out.
 	virtual void WriteFiniteSolutions(std::ostream& out)      const = 0;
+	/// \brief Write the real finite solutions (Bertini 1.7 format) to \p out.
 	virtual void WriteRealFiniteSolutions(std::ostream& out)  const = 0;
+	/// \brief Write the nonsingular solutions (Bertini 1.7 format) to \p out.
 	virtual void WriteNonsingularSolutions(std::ostream& out) const = 0;
+	/// \brief Write the singular solutions (Bertini 1.7 format) to \p out.
 	virtual void WriteSingularSolutions(std::ostream& out)    const = 0;
+	/// \brief Write the raw solutions (Bertini 1.7 format) to \p out.
 	virtual void WriteRawSolutions(std::ostream& out)         const = 0;
+	/// \brief Apply configuration settings parsed from a classic-input config string.
 	virtual void ApplyParsedConfigs(std::string const& config_str) = 0;
 	virtual ~AnyZeroDim() = default;
 };
@@ -119,70 +129,74 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 
 
+/// Index type for solutions/paths (over a double-precision solution container).
 using SolnIndT = typename SolnCont<complex_dbl>::size_type;
 
 
 /// metadata structs
 
+/// \brief Solve-wide bookkeeping: path counts and timing.
 struct AlgorithmMetaData
-{	
-	
-	SolnIndT number_path_failures = 0;
-	SolnIndT number_path_successes = 0;
-	SolnIndT number_paths_tracked = 0;
+{
 
-	std::chrono::system_clock::time_point start_time;
-	std::chrono::microseconds elapsed_time;
+	SolnIndT number_path_failures = 0;   ///< Number of paths that failed.
+	SolnIndT number_path_successes = 0;  ///< Number of paths that succeeded.
+	SolnIndT number_paths_tracked = 0;   ///< Total number of paths tracked.
+
+	std::chrono::system_clock::time_point start_time;  ///< Wall-clock time the solve started.
+	std::chrono::microseconds elapsed_time;            ///< Total wall-clock time the solve took.
 };
 
 
+/// \brief Per-solution metadata gathered during and after a path track.
 template<typename ComplexT>
 struct SolutionMetaData
 {
-	using SolnIndT = typename SolnCont<ComplexT>::size_type;
+	using SolnIndT = typename SolnCont<ComplexT>::size_type;  ///< Index type for solutions/paths.
 
 	// only vaguely metadata.  artifacts of randomness or ordering
-	SolnIndT path_index;     		// path number of the solution
-	SolnIndT solution_index;      	// solution number
+	SolnIndT path_index;     		///< Path number of the solution.
+	SolnIndT solution_index;      	///< Solution number.
 
 	///// things computed across all of the solve
-	bool precision_changed = false;
-	ComplexT time_of_first_prec_increase;    // time value of the first increase in precision
-	decltype(DefaultPrecision()) max_precision_used = 0;
-	double path_time_seconds = 0.0;          // wall-clock time to execute the whole path (pre-endgame + endgame), seconds.  NOT an identity field (excluded from operator==).
+	bool precision_changed = false;          ///< Whether the working precision changed during the path.
+	ComplexT time_of_first_prec_increase;    ///< Time value of the first increase in precision.
+	decltype(DefaultPrecision()) max_precision_used = 0;  ///< Highest precision used on the path.
+	double path_time_seconds = 0.0;          ///< Wall-clock time for the whole path (pre-endgame + endgame), seconds.  Not an identity field (excluded from operator==).
 
 	///// things computed in pre-endgame only
-	SuccessCode pre_endgame_success = SuccessCode::NeverStarted;     // success code
+	SuccessCode pre_endgame_success = SuccessCode::NeverStarted;     ///< Success code of the pre-endgame track.
 
 
 	///// things computed in endgame only
-	NumErrorT condition_number; 				// the latest estimate on the condition number
-	NumErrorT newton_residual; 				// the latest newton residual
-	ComplexT final_time_used;   			// the final value of time tracked to
-	NumErrorT accuracy_estimate; 			// accuracy estimate between extrapolations
-	NumErrorT accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
-	unsigned cycle_num;    						// cycle number used in extrapolations
-	SuccessCode endgame_success = SuccessCode::NeverStarted;      // success code
+	NumErrorT condition_number; 				///< The latest estimate of the condition number.
+	NumErrorT newton_residual; 				///< The latest Newton residual.
+	ComplexT final_time_used;   			///< The final value of time tracked to.
+	NumErrorT accuracy_estimate; 			///< Accuracy estimate between extrapolations.
+	NumErrorT accuracy_estimate_user_coords;	///< Accuracy estimate between extrapolations, in natural coordinates.
+	unsigned cycle_num;    						///< Cycle number used in extrapolations.
+	SuccessCode endgame_success = SuccessCode::NeverStarted;      ///< Success code of the endgame.
 
 
 	///// things added by post-processing
-	NumErrorT function_residual; 	// the latest function residual
+	NumErrorT function_residual; 	///< The latest function residual.
 
-	int multiplicity = 1; 		// multiplicity
-	bool multiplicity_representative = true; // is this the chosen single representative of its multiplicity cluster? (the m copies of a multiplicity-m point share one point; exactly one is the representative, the rest are false)
-	bool is_real = false;       		// real flag: whether the (dehomogenized) endpoint is real
-	bool is_finite = false;     		// finite flag: whether the endpoint is finite (not at infinity)
-	bool is_singular = false;       		// singular flag: whether the endpoint is singular (multiple, or ill-conditioned)
+	int multiplicity = 1; 		///< Multiplicity of the solution.
+	bool multiplicity_representative = true; ///< Whether this is the chosen single representative of its multiplicity cluster (the m copies share one point; exactly one is the representative).
+	bool is_real = false;       		///< Whether the (dehomogenized) endpoint is real.
+	bool is_finite = false;     		///< Whether the endpoint is finite (not at infinity).
+	bool is_singular = false;       		///< Whether the endpoint is singular (multiple, or ill-conditioned).
 	// nonsolution flag: a finite, successful endpoint that is NOT a solution of the actual target
 	// system -- a nonsolution.  ZeroDimSolver sets this when it squares up an over-determined system:
 	// the randomized square system has extraneous roots that satisfy the random combinations but not
 	// the original equations.  Orthogonal to is_finite (a nonsolution is finite); the finite / real /
 	// singular accessors exclude nonsolutions, and they are exposed on their own (Nonsolutions()).
 	// Load-bearing for the regeneration cascade, which must identify and discard nonsolutions.
-	bool is_nonsolution = false;
+	bool is_nonsolution = false;  ///< Whether this finite, successful endpoint is not a solution of the actual target system (an extraneous root from squaring up an over-determined system).
 
+	/// \brief Equality comparison over the identity fields (path_time_seconds is excluded).
 	bool operator==(const SolutionMetaData<ComplexT> & other){
-		bool result = 
+		bool result =
 			this->path_index == other.path_index
 			 && this->solution_index == other.solution_index
 			 && this->precision_changed == other.precision_changed
@@ -208,6 +222,7 @@ struct SolutionMetaData
 		return result; }
 };
 
+/// \brief Stream insertion: write the metadata fields one per line (used by the Python bindings).
 // this is for interoperability with vectors of these in the Python bindings, for better or for worse.
 template<typename NumT>
 std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta){
@@ -242,29 +257,34 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 }
 
 
+/// \brief State captured at the endgame boundary, handed off to start the endgame.
 template<typename ComplexT>
 struct EGBoundaryMetaData
-{	
-	using RealT = typename NumTraits<ComplexT>::Real;
+{
+	using RealT = typename NumTraits<ComplexT>::Real;  ///< The real number type.
 
-	Vec<ComplexT> path_point;
-	SuccessCode success_code = SuccessCode::NeverStarted;
-	RealT last_used_stepsize;
+	Vec<ComplexT> path_point;                            ///< The path point at the endgame boundary.
+	SuccessCode success_code = SuccessCode::NeverStarted; ///< Success code of the pre-endgame track.
+	RealT last_used_stepsize;                            ///< The last step size used before the boundary.
 	// The precision the tracker was actually using when it reached the endgame boundary.
 	// Carried explicitly (rather than inferred from Precision(path_point)) because the
 	// path_point is always stored as the tracker's BaseComplexT (multiprecision for AMP);
 	// a path that tracked in double gets widened on output, so its mantissa precision no
 	// longer reflects the precision that was in use.  The endgame should resume at this
 	// precision.  See zero_dim_solve TrackSinglePathDuringEG.
-	unsigned precision = DoublePrecision();
+	unsigned precision = DoublePrecision();  ///< The precision the tracker was using at the endgame boundary (carried explicitly; see note above).
 
+	/// \cond
 	EGBoundaryMetaData() = default;
 	EGBoundaryMetaData(EGBoundaryMetaData const&) = default;
 	EGBoundaryMetaData& operator=(EGBoundaryMetaData const&) = default;
+	/// \endcond
+	/// \brief Construct from the boundary point, its success code, the last step size, and the precision in use.
 	EGBoundaryMetaData(Vec<ComplexT> const& pt, SuccessCode const& code, RealT const& ss, unsigned prec) :
 		path_point(pt), success_code(code), last_used_stepsize(ss), precision(prec)
 	{}
 
+	/// \brief Equality comparison (compares all fields).
 	bool operator==(const EGBoundaryMetaData<ComplexT> & other){
 		bool result =
 			this->path_point == other.path_point
@@ -277,6 +297,7 @@ struct EGBoundaryMetaData
 	}
 };
 
+/// \brief Stream insertion: write the boundary metadata fields one per line (used by the Python bindings).
 // this is for interoperability with vectors of these in the Python bindings, for better or for worse.
 template<typename NumT>
 std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & meta){
@@ -307,6 +328,7 @@ struct MidpathCheckReport
 	std::vector<unsigned long long> crossed_path_indices;  ///< Indices of the paths flagged as crossed on the first check.
 };
 
+/// \brief Stream insertion: write the midpath-check report fields one per line.
 inline
 std::ostream& operator<<(std::ostream & out, const MidpathCheckReport & r){
 	out << "passed = " << std::boolalpha << r.passed << std::endl;
@@ -401,6 +423,7 @@ SolveReport SummarizeSolve(std::vector<SolutionMetaData<ComplexT>> const& metada
 	return r;
 }
 
+/// \brief Stream insertion: write a human-readable summary of the solve report.
 inline
 std::ostream& operator<<(std::ostream & out, const SolveReport & r)
 {
@@ -443,12 +466,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 								typename AlgoTraits< HomotopySolver<TrackerType, EndgameType, SystemType>>::NeededConfigs>
 		{
 			// these usings are for getters in python
-			using TrackerT          = TrackerType;
-			using EndgameT          = EndgameType;
-			using SystemT           = SystemType;
+			using TrackerT          = TrackerType;   ///< The path-tracker type.
+			using EndgameT          = EndgameType;   ///< The endgame type.
+			using SystemT           = SystemType;    ///< The system type.
 			// the engine sees the start system only through the polymorphic base
-			using StartSystemT       = bertini::start_system::StartSystem;
-			using StartSystemBaseT   = bertini::start_system::StartSystem;
+			using StartSystemT       = bertini::start_system::StartSystem;  ///< The start-system type (seen polymorphically).
+			using StartSystemBaseT   = bertini::start_system::StartSystem;  ///< The start-system base type.
 
 			// This engine emits its lifecycle events on the AnyZeroDim base, so a
 			// single observer type can watch any templated solver.  Accept observers
@@ -462,44 +485,47 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 
 /// a bunch of using statements to reduce typing.
-			using BaseComplexT 	= typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
-			using BaseRealT    	= typename tracking::TrackerTraits<TrackerType>::BaseRealT;
+			using BaseComplexT 	= typename tracking::TrackerTraits<TrackerType>::BaseComplexT;  ///< The complex number type of the tracker.
+			using BaseRealT    	= typename tracking::TrackerTraits<TrackerType>::BaseRealT;     ///< The real number type of the tracker.
 
-			using PrecisionConfig 	= typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
+			using PrecisionConfig 	= typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;  ///< The tracker's precision-configuration type.
 
-			using SolnIndT 			= typename SolnCont<BaseComplexT>::size_type;
+			using SolnIndT 			= typename SolnCont<BaseComplexT>::size_type;  ///< Index type for solutions/paths.
 
 
+			/// The Configured base storing this solver's configuration structs.
 			using Config = detail::Configured<
 								typename AlgoTraits<HomotopySolver<TrackerType, EndgameType, SystemType>>::NeededConfigs>;
+			/// Retrieve a stored configuration struct by type (inherited from Configured).
 			using Config::Get;
 
 
-			using Tolerances = TolerancesConfig;
-			using PostProcessing = PostProcessingConfig;
-			using ZeroDimConf = ZeroDimConfig;
-			using AutoRetrack = AutoRetrackConfig;
+			using Tolerances = TolerancesConfig;          ///< Tolerances configuration type.
+			using PostProcessing = PostProcessingConfig;  ///< Post-processing configuration type.
+			using ZeroDimConf = ZeroDimConfig;            ///< Zero-dim configuration type.
+			using AutoRetrack = AutoRetrackConfig;        ///< Auto-retrack configuration type.
 
 
-			using EGBoundaryMetaDataT = EGBoundaryMetaData<BaseComplexT>;
-			using SolutionMetaDataT = SolutionMetaData<BaseComplexT>;
+			using EGBoundaryMetaDataT = EGBoundaryMetaData<BaseComplexT>;  ///< Endgame-boundary metadata type.
+			using SolutionMetaDataT = SolutionMetaData<BaseComplexT>;      ///< Per-solution metadata type.
 
 
 // a few more using statements
 
-			using MidpathType = MidpathChecker<BaseRealT, BaseComplexT, EGBoundaryMetaData<BaseComplexT>>;
+			using MidpathType = MidpathChecker<BaseRealT, BaseComplexT, EGBoundaryMetaData<BaseComplexT>>;  ///< The midpath (path-crossing) checker type.
 
 			// --- system storage ---------------------------------------------------------------
 			// The engine holds the homotopy, start system, and target by REFERENCE; the caller
 			// (a user, or ZeroDimSolver) owns them and guarantees they outlive the engine.  This
 			// references, not owned: the engine never forms its systems (ZeroDimSolver / the user does).
 		protected:
-			std::reference_wrapper<const SystemType>        target_system_;
-			std::reference_wrapper<const StartSystemBaseT>  start_system_;
-			std::reference_wrapper<const SystemType>        homotopy_;
+			std::reference_wrapper<const SystemType>        target_system_;  ///< Reference to the caller-owned target system.
+			std::reference_wrapper<const StartSystemBaseT>  start_system_;   ///< Reference to the caller-owned start system.
+			std::reference_wrapper<const SystemType>        homotopy_;       ///< Reference to the caller-owned homotopy.
 
 			// Re-seat the system references.  ZeroDimSolver calls this after an MPI broadcast
 			// re-materializes rank 0's authoritative systems into its owned storage.
+			/// \brief Re-seat the system references (used after an MPI broadcast re-materializes the owned systems).
 			void ResetSystems(SystemType const& hom, StartSystemBaseT const& start, SystemType const& target)
 			{
 				homotopy_      = std::cref(hom);
@@ -515,8 +541,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 #endif
 
 		public:
+			/// \return The target system being solved.
 			const SystemType&       TargetSystem() const { return target_system_.get(); }
+			/// \return The start system.
 			const StartSystemBaseT& StartSystem()  const { return start_system_.get();  }
+			/// \return The homotopy.
 			const SystemType&       Homotopy()     const { return homotopy_.get();      }
 
 
@@ -769,6 +798,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 
 
+			/// \brief Read off the number of start points the (already-built) start system will produce.
 			void DefaultSystemSetup()
 			{
 				// The systems are already built and referenced (the engine does not form them);
@@ -800,11 +830,13 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				this->template Set<AutoRetrack>(AutoRetrack());
 			}
 
+			/// \brief Set the tolerance used when re-tracking paths flagged by the midpath check.
 			void SetMidpathRetrackTol(NumErrorT const& rt)
 			{
 				midpath_retrack_tolerance_ = rt;
 			}
 
+			/// \return The tolerance used when re-tracking paths flagged by the midpath check.
 			const auto& MidpathRetrackTol() const
 			{
 				return midpath_retrack_tolerance_;
@@ -822,6 +854,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				start_point_precision_set_by_user_ = true;
 			}
 
+			/// \return The precision at which start points are computed.
 			unsigned StartPointPrecision() const
 			{
 				return start_point_precision_;
@@ -837,6 +870,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 
+			/// \brief Apply a configuration to the midpath (path-crossing) checker.
 			void SetMidpath(MidPathConfig const& mp)
 			{
 				midpath_.Set(mp);
@@ -929,12 +963,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 
+			/// \brief Get a configuration struct of type \p T from the endgame.
 			template<typename T>
 			const T & GetFromEndgame() const
 			{
 				return endgame_.template Get<T>();
 			}
 
+			/// \brief Set a configuration struct of type \p T on the endgame.
 			template<typename T>
 			void SetToEndgame(T const& t)
 			{
@@ -1700,6 +1736,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			// over-determined system).  Everything from here down -- the classification helpers, the
 			// pack/store helpers, and the data members -- is protected so the derived algorithm can
 			// read the per-endpoint metadata and endpoints it needs for that filter.
+			/// \brief Action taken after the endgame: compute post-track metadata (ZeroDimSolver overrides to also filter extraneous solutions).
 			virtual void PostEGAction()
 			{
 				ComputePostTrackMetadata();
@@ -1844,6 +1881,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			// standalone threaded solve (a worker thread packs, the main thread installs via
 			// StoreFullPathResult) -- the compute/install split is what keeps shared result arrays
 			// race-free when several threads run distinct paths.
+			/// \brief Pack everything computed for one whole path into a single result value (thread/MPI handoff).
+			/// \param idx The path index to pack.
+			/// \return The packed whole-path result.
 			parallel::FullPathResult<BaseComplexT> PackFullPathResult(SolnIndT idx) const
 			{
 				parallel::FullPathResult<BaseComplexT> r;
@@ -1872,6 +1912,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			// Install a whole-path result on the manager.  Overwrites cleanly, so re-dispatching a
 			// crossed path in a later resolve round simply replaces its earlier (crossed) result.
+			/// \brief Install a whole-path result (from PackFullPathResult) into the shared result arrays.
+			/// \param r The packed whole-path result to store.
 			void StoreFullPathResult(parallel::FullPathResult<BaseComplexT> const& r)
 			{
 				auto idx = static_cast<SolnIndT>(r.path_index);
@@ -1902,32 +1944,32 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 		//	private data members
 		///////
 
-			unsigned long long num_start_points_;
-			NumErrorT midpath_retrack_tolerance_;
+			unsigned long long num_start_points_;  ///< Number of start points the start system produces.
+			NumErrorT midpath_retrack_tolerance_;  ///< Tolerance used when re-tracking paths flagged by the midpath check.
 			MidpathCheckReport midpath_report_; ///< populated by EGBoundaryAction; exposed via EndgameBoundaryMetadata()
 			unsigned start_point_precision_ = DoublePrecision(); ///< precision at which start points are computed; defaults to initial ambient precision (see PreSolveSetup)
-			bool start_point_precision_set_by_user_ = false;
+			bool start_point_precision_set_by_user_ = false;  ///< Whether the start-point precision was set explicitly by the user.
 
 
 			/// observers used during tracking
 			// i feel like these should be factored out into some policy class which prescribes how they are used, so that the actions taken are customizable.
-			tracking::FirstPrecisionRecorder<TrackerType> first_prec_rec_;
-			tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec_;
+			tracking::FirstPrecisionRecorder<TrackerType> first_prec_rec_;   ///< Records the time of the first precision increase on each path.
+			tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec_;    ///< Records the min/max precision used on each path.
 
 
 			/// function objects used during the algorithm
-			TrackerType tracker_;
-			EndgameType endgame_;
-			MidpathType midpath_;
+			TrackerType tracker_;    ///< The path tracker.
+			EndgameType endgame_;    ///< The endgame.
+			MidpathType midpath_;    ///< The midpath (path-crossing) checker.
 
 
 
 			/// computed data
-			SolnCont< EGBoundaryMetaDataT > solutions_at_endgame_boundary_; // the BaseRealT is the last used stepsize
-			SolnCont<Vec<BaseComplexT> > solutions_post_endgame_;
+			SolnCont< EGBoundaryMetaDataT > solutions_at_endgame_boundary_; ///< Per-path state captured at the endgame boundary.
+			SolnCont<Vec<BaseComplexT> > solutions_post_endgame_;          ///< Solution points after the endgame (internal coordinates).
 			mutable SolnCont<Vec<BaseComplexT> > solutions_user_coords_; ///< lazy cache for SolutionsUserCoords; serial post-solve access assumed
-			mutable bool solutions_user_coords_fresh_ = false;
-			SolnCont<SolutionMetaDataT> solution_final_metadata_;
+			mutable bool solutions_user_coords_fresh_ = false;            ///< Whether the user-coordinate cache is up to date.
+			SolnCont<SolutionMetaDataT> solution_final_metadata_;        ///< Final per-solution metadata.
 
 
 		}; // struct HomotopySolver
@@ -1950,9 +1992,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 		template<typename SystemType>
 		struct OwnedHomotopy
 		{
-			using StartSystemBaseT = bertini::start_system::StartSystem;
-			using FactoryT = bertini::start_system::StartSystemFactory<SystemType>;
+			using StartSystemBaseT = bertini::start_system::StartSystem;                  ///< The start-system base type.
+			using FactoryT = bertini::start_system::StartSystemFactory<SystemType>;       ///< The start-system factory type.
 
+			/// \brief Build and own the target, start system, and homotopy from a target system and factory.
 			OwnedHomotopy(SystemType const& target, FactoryT factory, std::string const& path_variable_name)
 			 : owned_target_(Clone(target)), owned_factory_(std::move(factory))
 			{
@@ -1964,23 +2007,26 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				owned_homotopy_ = MakeHomotopy(owned_target_, *owned_start_, path_variable_name);
 			}
 
+			/// \return The built (cloned, prepared) target system.
 			SystemType const&       BuiltTarget()   const { return owned_target_;   }
+			/// \return The built start system.
 			StartSystemBaseT const& BuiltStart()    const { return *owned_start_;   }
+			/// \return The built homotopy.
 			SystemType const&       BuiltHomotopy() const { return owned_homotopy_; }
 
 		protected:
-			SystemType                        owned_target_;
-			std::shared_ptr<StartSystemBaseT> owned_start_;
-			SystemType                        owned_homotopy_;
-			FactoryT                          owned_factory_;
+			SystemType                        owned_target_;    ///< The owned (cloned, prepared) target system.
+			std::shared_ptr<StartSystemBaseT> owned_start_;     ///< The owned start system.
+			SystemType                        owned_homotopy_;  ///< The owned homotopy.
+			FactoryT                          owned_factory_;   ///< The start-system factory used to build the start system.
 
 			// When the user's system was over-determined, SquareUp randomizes it down to square for
 			// tracking and keeps the ORIGINAL (natural, un-homogenized) system here so ZeroDimSolver
 			// can discard the extraneous solutions the squaring introduces.  was_randomized_ gates
 			// that filter; randomization_matrix_ records the (exact) coefficient matrix used.
-			bool                  was_randomized_ = false;
-			SystemType            original_natural_target_;
-			Mat<complex_mp>       randomization_matrix_;
+			bool                  was_randomized_ = false;       ///< Whether an over-determined target was squared up by randomization.
+			SystemType            original_natural_target_;      ///< The original (natural, un-homogenized) target, kept to discard extraneous solutions.
+			Mat<complex_mp>       randomization_matrix_;         ///< The exact coefficient matrix used to square up the system.
 
 			/**
 			\brief Reject targets that cannot have isolated solutions for structural reasons.
@@ -2048,6 +2094,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					throw std::runtime_error("unable to perform zero dim solve on target system -- the Jacobian is rank-deficient at a generic point, so the solution set is positive-dimensional, not zero-dimensional.  ZeroDimSolver computes isolated solutions only.");
 			}
 
+			/// \brief Homogenize and auto-patch the (already square) target system in place.
+			/// \param target The target system to prepare.
 			static void PrepareTarget(SystemType& target)
 			{
 				target.Homogenize(); // work over projective coordinates
@@ -2072,9 +2120,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			private zero_dim_detail::OwnedHomotopy<SystemType>,
 			public  HomotopySolver<TrackerType, EndgameType, SystemType>
 		{
-			using OwnedT   = zero_dim_detail::OwnedHomotopy<SystemType>;
-			using EngineT  = HomotopySolver<TrackerType, EndgameType, SystemType>;
-			using FactoryT = typename OwnedT::FactoryT;
+			using OwnedT   = zero_dim_detail::OwnedHomotopy<SystemType>;            ///< The system-owning base.
+			using EngineT  = HomotopySolver<TrackerType, EndgameType, SystemType>;  ///< The continuation-engine base.
+			using FactoryT = typename OwnedT::FactoryT;  ///< The start-system factory type.
 
 			/**
 			Build the start system + homotopy from `target`, then construct the engine over them.
@@ -2228,6 +2276,11 @@ HomotopySolver<TrackerType,EndgameType,SystemType>::WriteRawSolutions(std::ostre
 namespace bertini {
 namespace algorithm {
 
+/// \brief Inject every element of a tuple of config structs into a Configured-derived target via Set<T>.
+/// \tparam Target The Configured-derived target type.
+/// \tparam Ts The config struct types in the tuple.
+/// \param target The target to set the configs on.
+/// \param t The tuple of config structs to inject.
 // Injects every element of a std::tuple<Ts...> into `target` via Set<T>.
 // Works for any Configured<>-derived target whose typelist contains all Ts.
 template<typename Target, typename... Ts>

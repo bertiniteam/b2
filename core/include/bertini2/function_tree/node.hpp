@@ -75,15 +75,17 @@ namespace bertini {
 		class Variable;
 	}
 
+/// An ordered group of variables (the unit of homogenization / variable grouping).
 using VariableGroup = std::vector< std::shared_ptr<node::Variable> >;
 
 
 
+/// \brief How a variable group participates in homogenization.
 enum class VariableGroupType
 {
-	Homogeneous,
-	Affine,
-	Ungrouped
+	Homogeneous,  ///< A projective (homogeneous) variable group.
+	Affine,       ///< An affine variable group (to be homogenized).
+	Ungrouped     ///< Variables not assigned to any group.
 };
 
 
@@ -205,6 +207,7 @@ public:
 	there is no reference cycle.  Transient: not serialized; a clone recompiles on demand.
 	*/
 	std::shared_ptr<const void> EvalProgram() const { return eval_program_; }
+	/// \brief Stash a compiled evaluator for this expression (type-erased; see EvalProgram()).
 	void SetEvalProgram(std::shared_ptr<const void> p) const { eval_program_ = p; }
 
 	/**
@@ -349,6 +352,7 @@ private:
 		return out;
 	}
 	
+	/// \brief Stream insertion for a Node pointer: dispatches to the node's virtual print().
 	inline std::ostream& operator<<(std::ostream & out, const std::shared_ptr<Node>& N)
 	{
 		N->print(out);

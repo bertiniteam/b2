@@ -25,8 +25,6 @@
 /**
 \file base_tracker.hpp
 
-\brief
-
 \brief Contains the abstract base Tracker type, from which all other Trackers inherit.
 */
 
@@ -148,11 +146,12 @@ namespace bertini{
 
 
 		public:
-			using Config = detail::Configured< typename TrackerTraits< D >::NeededConfigs >;
-			using Stepping = SteppingConfig;
-			using Newton = NewtonConfig;
-			using PrecConf = typename TrackerTraits< D >::PrecisionConfig;
+			using Config = detail::Configured< typename TrackerTraits< D >::NeededConfigs >;  ///< The configuration-holding base, carrying the config types this tracker needs.
+			using Stepping = SteppingConfig;  ///< The stepping (step-size adjustment) configuration type.
+			using Newton = NewtonConfig;  ///< The Newton corrector configuration type.
+			using PrecConf = typename TrackerTraits< D >::PrecisionConfig;  ///< The precision configuration type for this tracker.
 
+			/// \brief Construct a tracker associated to a system to be tracked.
 			Tracker(System const& sys) : tracked_system_(std::ref(sys)),
 				predictor_(predict::DefaultPredictor(), sys),
 				corrector_(sys)
@@ -188,6 +187,7 @@ namespace bertini{
 			}
 
 
+			/// \brief Bring the configuration getter into scope, for querying config settings.
 			using Config::Get;
 
 
@@ -209,6 +209,8 @@ namespace bertini{
 			}
 
 
+			/// \brief Set the threshold beyond which a path is judged to be going to infinity (and truncated).
+			/// \param tol The new (strictly positive) truncation threshold.
 			void SetInfiniteTruncationTolerance(double const& tol)
 			{
 				if (tol <= 0)
@@ -427,11 +429,13 @@ namespace bertini{
 
 			virtual ~Tracker() = default;
 
+			/// \brief Get the currently set tracking tolerance.
 			auto TrackingTolerance() const
 			{
 				return tracking_tolerance_;
 			}
 
+			/// \brief Get the currently set infinite-truncation (path) threshold.
 			auto InfiniteTruncationTolerance() const
 			{
 				return path_truncation_threshold_;
@@ -490,6 +494,9 @@ namespace bertini{
 
 
 
+			/// \brief Check, at a given complex type, whether the current space value exceeds the truncation threshold.
+			/// \tparam ComplexT The complex number type at which to perform the check.
+			/// \return SuccessCode::GoingToInfinity if the dehomogenized norm exceeds the threshold, else SuccessCode::Success.
 			template <typename ComplexT>
 			SuccessCode CheckGoingToInfinity() const
 			{
@@ -519,6 +526,7 @@ namespace bertini{
 
 
 
+			/// \brief Reset the base-class step counters (successes, failures, consecutive runs, total) to zero.
 			void ResetCountersBase() const
 			{
 				// reset a bunch of counters to 0.
@@ -543,6 +551,7 @@ namespace bertini{
 				num_consecutive_failed_steps_ = 0;
 			}
 
+			/// \brief Hook invoked after a successful tracker iteration; derived types update their own state here.
 			virtual
 			void OnStepSuccess() const = 0;
 
@@ -560,6 +569,7 @@ namespace bertini{
 			}
 
 
+			/// \brief Hook invoked after a failed tracker iteration; derived types update their own state here.
 			virtual
 			void OnStepFail() const = 0;
 
@@ -571,13 +581,14 @@ namespace bertini{
 			virtual
 			SuccessCode CheckGoingToInfinity() const = 0;
 
+			/// \brief Hook invoked when a path is truncated for going to infinity; derived types react here.
 			virtual
 			void OnInfiniteTruncation() const = 0;
 
 
 			std::reference_wrapper<const System> tracked_system_; ///< Reference to the system being tracked.
 
-			bool infinite_path_truncation_ = true; /// Whether should check if the path is going to infinity while tracking.  On by default.
+			bool infinite_path_truncation_ = true; ///< Whether should check if the path is going to infinity while tracking.  On by default.
 			bool reinitialize_stepsize_ = true; ///< Whether should re-initialize the stepsize with each call to Trackpath.  On by default.
 
 			// tracking the numbers of things
@@ -597,10 +608,10 @@ namespace bertini{
 			// store no reference to the System, so plain memberwise copy is correct.
 			// They are mutable for the same reason as the state members above: they
 			// hold scratch space mutated during the logically-const TrackPath.
-			mutable predict::ExplicitRKPredictor predictor_; // The predictor to use while tracking
+			mutable predict::ExplicitRKPredictor predictor_; ///< The predictor to use while tracking.
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
-			mutable correct::NewtonCorrector corrector_;
+			mutable correct::NewtonCorrector corrector_;  ///< The Newton corrector used to refine predicted points.
 
 
 
@@ -616,7 +627,7 @@ namespace bertini{
 
 
 			// permanent temporaries
-			mutable RealT next_stepsize_; /// The next stepsize
+			mutable RealT next_stepsize_; ///< The next stepsize.
 			mutable SuccessCode step_success_code_; ///< The code for step success.
 
 
@@ -624,8 +635,8 @@ namespace bertini{
 			mutable unsigned num_steps_since_last_condition_number_computation_; ///< How many steps have passed since the most recent condition number estimate.
 			mutable unsigned num_successful_steps_since_stepsize_increase_; ///< How many successful steps have been taken since increased stepsize.
 
-			using TupOfVec = typename NeededTypes::ToTupleOfVec;
-			using TupOfReal = typename NeededTypes::ToTupleOfReal;
+			using TupOfVec = typename NeededTypes::ToTupleOfVec;  ///< A tuple of complex vectors, one per numeric type the tracker uses.
+			using TupOfReal = typename NeededTypes::ToTupleOfReal;  ///< A tuple of real vectors, one per numeric type the tracker uses.
 
 			mutable TupOfVec current_space_; ///< The current space value.
 			mutable TupOfVec tentative_space_; ///< After correction, the tentative next space value
@@ -643,57 +654,68 @@ namespace bertini{
 			public:
 
 
+			/// \brief Get the condition-number estimate from the most recent predict/correct step.
 			NumErrorT LatestConditionNumber() const
 			{
 				return this->last_step_.condition_number_estimate;
 			}
 
 
+			/// \brief Get the error estimate from the most recent predict/correct step.
 			NumErrorT LatestErrorEstimate() const
 			{
 				return this->last_step_.error_estimate;
 			}
 
 
+			/// \brief Get the norm of the Newton step from the most recent predict/correct step.
 			NumErrorT LatestNormOfStep() const
 			{
 				return this->last_step_.norm_delta_z;
 			}
 
+			/// \brief Turn the going-to-infinity path truncation check on or off.
 			void SetInfiniteTruncation(bool b)
 			{
 				infinite_path_truncation_ = b;
 			}
 
+			/// \brief Query whether the going-to-infinity path truncation check is enabled.
 			auto InfiniteTruncation()
 			{
 				return infinite_path_truncation_;
 			}
 
+			/// \brief Get the number of variables in the system being tracked.
 			unsigned NumVariables() const
 			{
 				return static_cast<unsigned>(GetSystem().NumVariables());
 			}
 
+			/// \brief Get the current time value of the track.
 			auto CurrentTime() const
 			{
 				return current_time_;
 			}
 
+			/// \brief Get the current time-step increment (delta t).
 			auto DeltaT() const
 			{
 				return delta_t_;
 			}
 
+			/// \brief Get the current step size.
 			auto CurrentStepsize() const
 			{
 				return current_stepsize_;
 			}
 
 
+			/// \brief Get the current space point of the track (in the derived tracker's working type).
 			virtual Vec<ComplexT> CurrentPoint() const = 0;
 
 
+			/// \brief Get the current working precision of the tracker.
 			virtual unsigned CurrentPrecision() const = 0;
 		};
 

@@ -28,7 +28,7 @@
 
 \brief Contains the observable base types
 
-\defgroup observable
+\defgroup observable Observables
 */
 
 #ifndef BERTINI_DETAIL_OBSERVABLE_HPP
@@ -81,6 +81,7 @@ namespace bertini{
 		Copy-assignment likewise leaves the target's own watchers untouched.
 		*/
 		Observable(Observable const&) {}
+		/// \brief Copy-assignment: leaves the target's own watcher list untouched (see the copy ctor note).
 		Observable& operator=(Observable const&) { return *this; }
 
 
@@ -190,6 +191,7 @@ namespace bertini{
 			DispatchEvent(e);
 		}
 
+		/// \brief Notify all observers of a (mutable) event.
 		void NotifyObservers(AnyEvent& e) const
 		{
 			DispatchEvent(e);
