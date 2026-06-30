@@ -49,7 +49,7 @@ def _successful_roots(solver):
     sols = solver.all_solutions()
     md = solver.solution_metadata()
     return [sols[i] for i in range(len(sols))
-            if int(md[i].endgame_success) == OK and len(sols[i]) == 2]
+            if int(md[i].endgame_success_code) == OK and len(sols[i]) == 2]
 
 
 def test_mhom_solves_adaptive_precision():

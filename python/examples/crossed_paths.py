@@ -69,7 +69,7 @@ def solve(seed, resolve_attempts, tol=1e-4):
 
     report = solver.endgame_boundary_metadata()
     finite = [m for m in solver.solution_metadata()
-              if int(m.endgame_success) == OK and m.is_finite]
+              if int(m.endgame_success_code) == OK and m.is_finite]
     distinct = round(sum(1.0 / m.multiplicity for m in finite))
     return report, distinct
 

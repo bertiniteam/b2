@@ -255,7 +255,7 @@ _SOLUTION_METADATA_FIELDS = (
     'condition_number', 'function_residual', 'newton_residual',
     'accuracy_estimate', 'accuracy_estimate_user_coords',
     'precision_digits', 'accuracy_digits',
-    'cycle_num', 'endgame_success', 'pre_endgame_success', 'final_time_used',
+    'cycle_num', 'endgame_success_code', 'pre_endgame_success_code', 'final_time_used',
     'precision_changed', 'max_precision_used', 'time_of_first_prec_increase',
     'path_time_seconds',
 )
@@ -266,7 +266,7 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_m
 
     Columns are ``solution`` -- the whole solution point, kept in a single cell -- then every
     per-solution metadata field (``is_finite``, ``is_real``, ``is_singular``, ``multiplicity``,
-    ``condition_number``, ``endgame_success``, ``max_precision_used``, ...), and finally ``system``,
+    ``condition_number``, ``endgame_success_code``, ``max_precision_used``, ...), and finally ``system``,
     a reference to the (target) system these solutions satisfy (so rows accumulated from several
     solves stay identifiable).  Each category is then a one-line filter, e.g.
     ``df[df.is_real & ~df.is_singular]`` (nonsingular real) or ``df[~df.is_finite]`` (at infinity).

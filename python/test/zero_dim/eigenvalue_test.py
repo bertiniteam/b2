@@ -58,7 +58,7 @@ def _recovered_eigenvalues(solver):
     return sorted(
         complex(sols[i][len(sols[i]) - 1]).real
         for i in range(len(sols))
-        if int(md[i].endgame_success) == OK and len(sols[i]) > 0
+        if int(md[i].endgame_success_code) == OK and len(sols[i]) > 0
     )
 
 

@@ -95,7 +95,7 @@ void ExposeSolutionMetaData(std::string const& class_name){
 		"The highest precision (in digits) used while tracking this path (adaptive precision only).")
 	.def_readwrite("path_time_seconds",&MDT::path_time_seconds,
 		"Wall-clock time (seconds) to execute this whole path: pre-endgame tracking plus endgame.")
-	.def_readwrite("pre_endgame_success",&MDT::pre_endgame_success,
+	.def_readwrite("pre_endgame_success_code",&MDT::pre_endgame_success_code,
 		"The SuccessCode from tracking this path up to the endgame boundary. 0 means Success.")
 	.def_readwrite("condition_number",&MDT::condition_number,
 		"The latest estimate of the condition number (spectral norm) near the endpoint. Used, "
@@ -118,7 +118,7 @@ void ExposeSolutionMetaData(std::string const& class_name){
 		"How many digits of this solution are trustworthy (a digit count), from the convergence "
 		"agreement: floor(-log10(accuracy_estimate)), clamped to [0, precision_digits].  Read with "
 		"precision_digits as 'computed in N digits, good to M of them'.")
-	.def_readwrite("endgame_success",&MDT::endgame_success,
+	.def_readwrite("endgame_success_code",&MDT::endgame_success_code,
 		"The SuccessCode from the endgame. 0 means Success; anything else means the path did not "
 		"converge to a finite solution (e.g. GoingToInfinity, SecurityMaxNormReached).")
 	.def_readwrite("function_residual",&MDT::function_residual,

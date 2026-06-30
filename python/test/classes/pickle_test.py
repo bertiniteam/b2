@@ -21,7 +21,7 @@ What is pickleable, and how:
   * Boost.Python enums (``SuccessCode``, ``Predictor``, ...) -- via a ``copyreg`` registration that
     reconstructs the member from its int value (their built-in ``__reduce_ex__`` is broken);
   * result metadata (``SolutionMetaData*``) -- enhanced like a config, and now round-trips because
-    its enum fields (e.g. ``endgame_success``) are pickleable.
+    its enum fields (e.g. ``endgame_success_code``) are pickleable.
 
 (System pickling lives in ``clone_concatenate_test.py``, next to the clone serialization tests.)
 """
@@ -100,8 +100,8 @@ def test_config_struct_round_trips(cls):
 ])
 def test_solution_metadata_round_trips_including_enum_field(cls):
     m = cls()
-    m.endgame_success = pb.tracking.SuccessCode.GoingToInfinity
+    m.endgame_success_code = pb.tracking.SuccessCode.GoingToInfinity
     m.condition_number = 12.5
     r = pickle.loads(pickle.dumps(m))
-    assert r.endgame_success == m.endgame_success
+    assert r.endgame_success_code == m.endgame_success_code
     assert r == m

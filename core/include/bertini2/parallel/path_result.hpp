@@ -101,13 +101,13 @@ struct FullPathResult
 	SolnIndT      path_index             = 0;
 
 	// boundary (pre-endgame) data
-	SuccessCode   pre_endgame_success    = SuccessCode::NeverStarted;
+	SuccessCode   pre_endgame_success_code    = SuccessCode::NeverStarted;
 	Vec<ComplexT> boundary_point;
 	RealT         boundary_stepsize      = RealT(0);
 	unsigned      boundary_precision     = DoublePrecision();
 
 	// endgame data
-	SuccessCode   endgame_success        = SuccessCode::NeverStarted;
+	SuccessCode   endgame_success_code        = SuccessCode::NeverStarted;
 	Vec<ComplexT> final_solution;
 	double        function_residual              = 0;
 	double        condition_number               = 0;
@@ -131,11 +131,11 @@ struct FullPathResult
 	void serialize(Archive& ar, unsigned const)
 	{
 		ar & path_index;
-		ar & pre_endgame_success;
+		ar & pre_endgame_success_code;
 		ar & boundary_point;
 		ar & boundary_stepsize;
 		ar & boundary_precision;
-		ar & endgame_success;
+		ar & endgame_success_code;
 		ar & final_solution;
 		ar & function_residual;
 		ar & condition_number;

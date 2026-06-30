@@ -25,7 +25,7 @@ def _one_var_solver(build_function):
 
 
 def _tally(solver):
-    succ = [m for m in solver.solution_metadata() if int(m.endgame_success) == OK]
+    succ = [m for m in solver.solution_metadata() if int(m.endgame_success_code) == OK]
     return {
         'success': len(succ),
         'finite': sum(1 for m in succ if m.is_finite),
@@ -39,7 +39,7 @@ def test_finite_real_nonsingular():
     solver.solve()
     assert _tally(solver) == {'success': 2, 'finite': 2, 'real': 2, 'singular': 0}
     assert all(m.multiplicity == 1 for m in solver.solution_metadata()
-               if int(m.endgame_success) == OK)
+               if int(m.endgame_success_code) == OK)
 
 
 def test_finite_complex_not_real():
@@ -52,7 +52,7 @@ def test_finite_complex_not_real():
 def test_singular_double_root():
     solver = _one_var_solver(lambda x: x * x)            # double root at 0
     solver.solve()
-    succ = [m for m in solver.solution_metadata() if int(m.endgame_success) == OK]
+    succ = [m for m in solver.solution_metadata() if int(m.endgame_success_code) == OK]
     assert len(succ) >= 1
     assert all(m.is_finite for m in succ)
     assert all(m.is_singular for m in succ)             # multiple and/or ill-conditioned

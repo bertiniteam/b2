@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(user_homotopy_parameter_homotopy_solves)
 	auto const& md   = zd.SolutionMetadata();
 	std::vector<complex_dbl> ends;
 	for (size_t i = 0; i < sols.size(); ++i)
-		if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 1)
+		if (md[i].endgame_success_code == SuccessCode::Success && sols[i].size() == 1)
 			ends.push_back(complex_dbl(sols[i](0)));
 
 	BOOST_CHECK_EQUAL(ends.size(), 2u);
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 	using SolVec = std::decay_t<decltype(sols[0])>;
 	std::vector<SolVec> good;
 	for (size_t i = 0; i < sols.size(); ++i)
-		if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 2)
+		if (md[i].endgame_success_code == SuccessCode::Success && sols[i].size() == 2)
 			good.push_back(sols[i]);
 
 	BOOST_REQUIRE_EQUAL(good.size(), 2u); // both MHom paths solved (the m-homogeneous Bezout number)
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(solve_report_buckets_metadata_and_flags_failures)
 
 	auto set = [](SolutionMetaData<CT>& m, SC code, bool finite, int mult,
 	              bool real, bool sing, double cond){
-		m.endgame_success = code; m.is_finite = finite; m.multiplicity = mult;
+		m.endgame_success_code = code; m.is_finite = finite; m.multiplicity = mult;
 		m.is_real = real; m.is_singular = sing; m.condition_number = cond; m.max_precision_used = 16;
 	};
 
@@ -447,7 +447,7 @@ BOOST_AUTO_TEST_CASE(solve_report_security_truncation_counts_as_diverged)
 	using CT = bertini::complex_dbl;
 
 	auto set = [](SolutionMetaData<CT>& m, SC code, bool finite){
-		m.endgame_success = code; m.is_finite = finite; m.multiplicity = 1;
+		m.endgame_success_code = code; m.is_finite = finite; m.multiplicity = 1;
 		m.is_real = false; m.is_singular = false; m.condition_number = 1e3; m.max_precision_used = 16;
 	};
 
@@ -987,7 +987,7 @@ Counts Tally(MDVec const& md)
 	Counts c;
 	for (auto const& m : md)
 	{
-		if (m.endgame_success != bertini::SuccessCode::Success) continue;
+		if (m.endgame_success_code != bertini::SuccessCode::Success) continue;
 		++c.success;
 		if (m.is_finite)   ++c.finite;
 		if (m.is_real)     ++c.real;
@@ -1015,7 +1015,7 @@ BOOST_AUTO_TEST_CASE(finite_real_nonsingular)
 	BOOST_CHECK_EQUAL(c.real, 2);
 	BOOST_CHECK_EQUAL(c.singular, 0);
 	for (auto const& m : zd.SolutionMetadata())
-		if (m.endgame_success == SuccessCode::Success)
+		if (m.endgame_success_code == SuccessCode::Success)
 			BOOST_CHECK_EQUAL(m.multiplicity, 1);
 }
 
@@ -1061,7 +1061,7 @@ BOOST_AUTO_TEST_CASE(singular_double_root)
 	BOOST_CHECK_EQUAL(c.finite, c.success);      // ... and finite (at 0)
 	if (c.success == 2)                          // both paths clustered -> multiplicity 2
 		for (auto const& m : md)
-			if (m.endgame_success == SuccessCode::Success)
+			if (m.endgame_success_code == SuccessCode::Success)
 				BOOST_CHECK_EQUAL(m.multiplicity, 2);
 }
 

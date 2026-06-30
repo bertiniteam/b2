@@ -80,7 +80,7 @@ struct Classic <HomotopySolver<A,B,C>>
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
 			// only successful endgames have a final approximation to report
-			if (zd.SolutionMetadata()[ii].endgame_success != SuccessCode::Success)
+			if (zd.SolutionMetadata()[ii].endgame_success_code != SuccessCode::Success)
 				continue;
 
 			EndPointMDFull(ii, out, zd);
@@ -104,7 +104,7 @@ struct Classic <HomotopySolver<A,B,C>>
 		for (decltype(zd.SolutionsInternalCoords().size()) ii{0}; ii<n; ++ii)
 		{
 			// only successful endgames have a final approximation to report
-			if (zd.SolutionMetadata()[ii].endgame_success != SuccessCode::Success)
+			if (zd.SolutionMetadata()[ii].endgame_success_code != SuccessCode::Success)
 				continue;
 			EndPointMDRaw(ii,out,zd,"\n\n");
 		}
@@ -159,13 +159,13 @@ struct Classic <HomotopySolver<A,B,C>>
 
 		std::size_t count{0};
 		for (std::size_t ii{0}; ii<m; ++ii)
-			if (md[ii].endgame_success == SuccessCode::Success)
+			if (md[ii].endgame_success_code == SuccessCode::Success)
 				++count;
 
 		out << count << "\n\n";
 		for (std::size_t ii{0}; ii<m; ++ii)
 		{
-			if (md[ii].endgame_success != SuccessCode::Success)
+			if (md[ii].endgame_success_code != SuccessCode::Success)
 				continue;
 			out << md[ii].path_index << "\n";
 			generators::Classic::generate(boost::spirit::ostream_iterator(out), sols[ii]);
@@ -252,7 +252,7 @@ struct Classic <HomotopySolver<A,B,C>>
 			<< data.accuracy_estimate_user_coords << '\n'
 			<< data.cycle_num << '\n'
 			<< data.multiplicity << '\n'
-			<< data.pre_endgame_success << ' ' << data.endgame_success << '\n';
+			<< data.pre_endgame_success_code << ' ' << data.endgame_success_code << '\n';
 		out << additional;
 	}
 
@@ -274,7 +274,7 @@ struct Classic <HomotopySolver<A,B,C>>
 		out << '\n' << data.accuracy_estimate << '\n';
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), data.time_of_first_prec_increase);
 		out << '\n' << data.cycle_num << '\n'
-			<< data.endgame_success << '\n'
+			<< data.endgame_success_code << '\n'
 			<< additional;
 	}
 
@@ -307,7 +307,7 @@ struct NonsingularSolutions
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
 			const auto& d = m[ii];
-			if (d.endgame_success == SuccessCode::Success &&
+			if (d.endgame_success_code == SuccessCode::Success &&
 				d.multiplicity==1)
 			{
 				solns.push_back(s[ii]);

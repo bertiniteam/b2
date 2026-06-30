@@ -152,7 +152,7 @@ struct SolutionMetaData
 	double path_time_seconds = 0.0;          // wall-clock time to execute the whole path (pre-endgame + endgame), seconds.  NOT an identity field (excluded from operator==).
 
 	///// things computed in pre-endgame only
-	SuccessCode pre_endgame_success = SuccessCode::NeverStarted;     // success code
+	SuccessCode pre_endgame_success_code = SuccessCode::NeverStarted;     // success code
 
 
 	///// things computed in endgame only
@@ -170,7 +170,7 @@ struct SolutionMetaData
 	// "computed in precision_digits digits, good to accuracy_digits of them."
 	unsigned precision_digits = 0;
 	unsigned accuracy_digits = 0;
-	SuccessCode endgame_success = SuccessCode::NeverStarted;      // success code
+	SuccessCode endgame_success_code = SuccessCode::NeverStarted;      // success code
 
 
 	///// things added by post-processing
@@ -196,7 +196,7 @@ struct SolutionMetaData
 			 && this->precision_changed == other.precision_changed
 			 && this->time_of_first_prec_increase == other.time_of_first_prec_increase
 			 && this->max_precision_used == other.max_precision_used
-			 && this->pre_endgame_success == other.pre_endgame_success
+			 && this->pre_endgame_success_code == other.pre_endgame_success_code
 			 && this->condition_number == other.condition_number
 			 && this->newton_residual == other.newton_residual
 			 && this->final_time_used == other.final_time_used
@@ -205,7 +205,7 @@ struct SolutionMetaData
 			 && this->cycle_num == other.cycle_num
 			 && this->precision_digits == other.precision_digits
 			 && this->accuracy_digits == other.accuracy_digits
-			 && this->endgame_success == other.endgame_success
+			 && this->endgame_success_code == other.endgame_success_code
 			 && this->function_residual == other.function_residual
 			 && this->multiplicity == other.multiplicity
 			 && this->multiplicity_representative == other.multiplicity_representative
@@ -229,7 +229,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 	out << "max_precision_used = " << meta.max_precision_used << std::endl;
 	out << "path_time_seconds = " << meta.path_time_seconds << std::endl;
 
-	out << "pre_endgame_success = " << meta.pre_endgame_success << std::endl;
+	out << "pre_endgame_success_code = " << meta.pre_endgame_success_code << std::endl;
 
 	out << "condition_number = " << meta.condition_number << std::endl;
 	out << "newton_residual = " << meta.newton_residual << std::endl;
@@ -239,7 +239,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 	out << "precision_digits = " << meta.precision_digits << std::endl;
 	out << "accuracy_digits = " << meta.accuracy_digits << std::endl;
 	out << "cycle_num = " << meta.cycle_num << std::endl;
-	out << "endgame_success = " << meta.endgame_success << std::endl;
+	out << "endgame_success_code = " << meta.endgame_success_code << std::endl;
 
 	out << "function_residual = " << meta.function_residual << std::endl;
 
@@ -381,9 +381,9 @@ SolveReport SummarizeSolve(std::vector<SolutionMetaData<ComplexT>> const& metada
 		// to infinity, exactly like a clean GoingToInfinity.  (The endgame tests classify the two
 		// together too.)  With infinite-path truncation on by default, these are expected, so they
 		// must not inflate num_failed / clear all_paths_resolved.
-		bool diverged = (m.endgame_success == SuccessCode::GoingToInfinity
-		              || m.endgame_success == SuccessCode::SecurityMaxNormReached);
-		if (m.endgame_success == SuccessCode::Success)
+		bool diverged = (m.endgame_success_code == SuccessCode::GoingToInfinity
+		              || m.endgame_success_code == SuccessCode::SecurityMaxNormReached);
+		if (m.endgame_success_code == SuccessCode::Success)
 		{
 			if (m.is_nonsolution)
 				++r.num_nonsolutions;       // a nonsolution: finite, but not a solution of the target
@@ -402,10 +402,10 @@ SolveReport SummarizeSolve(std::vector<SolutionMetaData<ComplexT>> const& metada
 
 		if (diverged)
 			++r.num_diverged;
-		else if (m.endgame_success != SuccessCode::Success)   // neither a solution nor a clean divergence
+		else if (m.endgame_success_code != SuccessCode::Success)   // neither a solution nor a clean divergence
 		{
 			++r.num_failed;
-			++r.failures_by_reason[m.endgame_success];
+			++r.failures_by_reason[m.endgame_success_code];
 		}
 	}
 	r.num_finite_solutions = static_cast<unsigned long long>(finite_distinct + 0.5);
@@ -1116,28 +1116,28 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			SolnCont<Vec<BaseComplexT>> FiniteSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution; }, user_coords);
+					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution; }, user_coords);
 			}
 
 			/// \brief The real finite solutions (is_real applies the configured tolerance).
 			SolnCont<Vec<BaseComplexT>> RealSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_real; }, user_coords);
+					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_real; }, user_coords);
 			}
 
 			/// \brief The nonsingular finite solutions (simple, well-conditioned roots).
 			SolnCont<Vec<BaseComplexT>> NonsingularSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution && !m.is_singular; }, user_coords);
+					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution && !m.is_singular; }, user_coords);
 			}
 
 			/// \brief The singular finite solutions (multiple or ill-conditioned roots).
 			SolnCont<Vec<BaseComplexT>> SingularSolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_singular; }, user_coords);
+					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_singular; }, user_coords);
 			}
 
 			/**
@@ -1149,7 +1149,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			SolnCont<Vec<BaseComplexT>> Nonsolutions(bool user_coords = true) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success == SuccessCode::Success && m.is_nonsolution; }, user_coords);
+					return m.endgame_success_code == SuccessCode::Success && m.is_nonsolution; }, user_coords);
 			}
 
 			/**
@@ -1160,7 +1160,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			\note A path that FAILED before the endgame also leaves is_finite at its default (false) and
 			so appears here; its stored point is not a meaningful solution at infinity.  Consult the
-			endgame_success in SolutionMetadata (or Report()) to distinguish a true divergence from a
+			endgame_success_code in SolutionMetadata (or Report()) to distinguish a true divergence from a
 			tracking failure.  \see FiniteSolutions
 			*/
 			SolnCont<Vec<BaseComplexT>> InfiniteSolutions(bool user_coords = true) const
@@ -1383,7 +1383,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					ctx.tracker.SetStartPrecision(std::nullopt);
 
-				smd.pre_endgame_success = tracking_success;
+				smd.pre_endgame_success_code = tracking_success;
 
 				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 				{
@@ -1560,7 +1560,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
 				ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind, start_point);
 
-				if (solution_final_metadata_[soln_ind].pre_endgame_success != SuccessCode::Success)
+				if (solution_final_metadata_[soln_ind].pre_endgame_success_code != SuccessCode::Success)
 				{
 					stamp_path_time();
 					this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
@@ -1658,7 +1658,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 				solutions_post_endgame_[soln_ind] = ctx.endgame.template FinalApproximation<BaseComplexT>();
 
-				smd.endgame_success = eg_success;
+				smd.endgame_success_code = eg_success;
 
 				// an unsuccessful endgame has no final approximation, so the final-point-dependent
 				// metadata cannot be computed.
@@ -1766,13 +1766,13 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				{
 					auto& smd = solution_final_metadata_[ii];
 
-					if (smd.endgame_success==SuccessCode::GoingToInfinity ||
-					    smd.endgame_success==SuccessCode::SecurityMaxNormReached)
+					if (smd.endgame_success_code==SuccessCode::GoingToInfinity ||
+					    smd.endgame_success_code==SuccessCode::SecurityMaxNormReached)
 					{
 						smd.is_finite = false; // the endgame already decided this path diverges
 						continue;
 					}
-					if (smd.endgame_success!=SuccessCode::Success)
+					if (smd.endgame_success_code!=SuccessCode::Success)
 						continue;              // failed otherwise: leave defaults (not finite/real/singular)
 
 					auto user_pt = this->TargetSystem().DehomogenizePoint(solutions_post_endgame_[ii]);
@@ -1815,7 +1815,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
 					auto const& smd = solution_final_metadata_[ii];
-					if (smd.endgame_success==SuccessCode::Success && smd.is_finite)
+					if (smd.endgame_success_code==SuccessCode::Success && smd.is_finite)
 					{
 						user_pts[ii] = this->TargetSystem().DehomogenizePoint(solutions_post_endgame_[ii]);
 						eligible[ii] = 1;
@@ -1854,7 +1854,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
 					auto& smd = solution_final_metadata_[ii];
-					if (smd.endgame_success!=SuccessCode::Success)
+					if (smd.endgame_success_code!=SuccessCode::Success)
 						continue;
 					smd.is_singular = (smd.multiplicity > 1) || (smd.condition_number > cond_threshold);
 				}
@@ -1875,13 +1875,13 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			{
 				parallel::FullPathResult<BaseComplexT> r;
 				r.path_index          = idx;
-				r.pre_endgame_success = solutions_at_endgame_boundary_[idx].success_code;
+				r.pre_endgame_success_code = solutions_at_endgame_boundary_[idx].success_code;
 				r.boundary_point      = solutions_at_endgame_boundary_[idx].path_point;
 				r.boundary_stepsize   = solutions_at_endgame_boundary_[idx].last_used_stepsize;
 				r.boundary_precision  = solutions_at_endgame_boundary_[idx].precision;
 
 				auto const& smd = solution_final_metadata_[idx];
-				r.endgame_success   = smd.endgame_success;
+				r.endgame_success_code   = smd.endgame_success_code;
 				r.final_solution    = solutions_post_endgame_[idx];
 				r.function_residual = smd.function_residual;
 				r.condition_number  = smd.condition_number;
@@ -1905,14 +1905,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			{
 				auto idx = static_cast<SolnIndT>(r.path_index);
 				solutions_at_endgame_boundary_[idx] =
-					EGBoundaryMetaDataT{ r.boundary_point, r.pre_endgame_success, r.boundary_stepsize, r.boundary_precision };
+					EGBoundaryMetaDataT{ r.boundary_point, r.pre_endgame_success_code, r.boundary_stepsize, r.boundary_precision };
 				solutions_post_endgame_[idx] = r.final_solution;
 
 				auto& smd = solution_final_metadata_[idx];
 				smd.path_index          = idx;
 				smd.solution_index      = idx;
-				smd.pre_endgame_success = r.pre_endgame_success;
-				smd.endgame_success     = r.endgame_success;
+				smd.pre_endgame_success_code = r.pre_endgame_success_code;
+				smd.endgame_success_code     = r.endgame_success_code;
 				smd.function_residual   = r.function_residual;
 				smd.condition_number    = r.condition_number;
 				smd.newton_residual     = r.newton_residual;
@@ -2152,7 +2152,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				for (decltype(this->num_start_points_) ii{0}; ii < this->num_start_points_; ++ii)
 				{
 					auto& smd = this->solution_final_metadata_[ii];
-					if (smd.endgame_success != SuccessCode::Success || !smd.is_finite)
+					if (smd.endgame_success_code != SuccessCode::Success || !smd.is_finite)
 						continue;
 
 					auto user_pt = this->TargetSystem().DehomogenizePoint(this->solutions_post_endgame_[ii]);

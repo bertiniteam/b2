@@ -63,7 +63,7 @@ def _cyclic_system(n):
 
 def _distinct_finite(solver):
     finite = [m for m in solver.solution_metadata()
-              if int(m.endgame_success) == OK and m.is_finite]
+              if int(m.endgame_success_code) == OK and m.is_finite]
     return round(sum(1.0 / m.multiplicity for m in finite))
 
 
