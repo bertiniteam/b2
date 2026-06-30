@@ -54,6 +54,7 @@ namespace bertini
 		swap(a.variable_groups_,b.variable_groups_);
 		swap(a.hom_variable_groups_,b.hom_variable_groups_);
 		swap(a.homogenizing_variables_,b.homogenizing_variables_);
+		swap(a.pre_homogenization_functions_,b.pre_homogenization_functions_);
 
 		swap(a.time_order_of_variable_groups_,b.time_order_of_variable_groups_);
 
@@ -269,6 +270,68 @@ namespace bertini
 		return {};
 	}
 
+
+	NodeMatrix SymbolicJacobian(std::vector<Nd> const& functions, VariableGroup const& variables)
+	{
+		NodeMatrix J;
+		J.rows = functions.size();
+		J.cols = variables.size();
+		J.entries.reserve(J.rows * J.cols);
+		for (auto const& f : functions)
+			for (auto const& v : variables)
+				J.entries.push_back(f->Differentiate(v));   // J[i,j] = d f_i / d v_j, row-major
+		return J;
+	}
+
+
+	NodeMatrix System::SymbolicJacobian(bool usercoordinates) const
+	{
+		if (usercoordinates)
+		{
+			// Differentiate the functions as the user authored them (natural, pre-homogenization
+			// if the system has since been homogenized) w.r.t. the user-declared variables.  The
+			// solver-added homogenizing variables never appear; patches are omitted.
+			std::vector<Nd> funcs = pre_homogenization_functions_.empty()
+			                          ? NaturalFunctionsAsNodes()
+			                          : pre_homogenization_functions_;
+			VariableGroup vars;
+			for (auto const& g : variable_groups_)
+				for (auto const& v : g) vars.push_back(v);
+			for (auto const& g : hom_variable_groups_)
+				for (auto const& v : g) vars.push_back(v);
+			for (auto const& v : ungrouped_variables_) vars.push_back(v);
+			return bertini::SymbolicJacobian(funcs, vars);
+		}
+
+		// Internal coordinates: differentiate the functions as currently stored (possibly
+		// homogenized) w.r.t. the full variable ordering (homogenizing variables included), then
+		// append the patch's Jacobian rows (the patch is linear, so its rows are constant).
+		std::vector<Nd> funcs = NaturalFunctionsAsNodes();
+		VariableGroup const& vars = Variables();
+		NodeMatrix J = bertini::SymbolicJacobian(funcs, vars);
+
+		if (is_patched_)
+		{
+			auto const& coeffs = patch_.Coefficients();         // one Vec<complex_mp> per group
+			auto const& sizes  = patch_.VariableGroupSizes();   // sizes line up with the ordering
+			size_t const ncols = J.cols;
+			Nd const zero = Integer::Make(0);
+			unsigned counter = 0;                               // walks the variable ordering, as Patch::EvalInPlace does
+			for (size_t ii = 0; ii < sizes.size(); ++ii)
+			{
+				std::vector<Nd> row(ncols, zero);
+				for (unsigned jj = 0; jj < sizes[ii]; ++jj)
+				{
+					row[counter] = Complex::Make(coeffs[ii](static_cast<Eigen::Index>(jj)));
+					++counter;
+				}
+				for (auto const& e : row) J.entries.push_back(e);
+				++J.rows;
+			}
+		}
+		return J;
+	}
+
 	void System::Homogenize()
 	{
 
@@ -303,6 +366,10 @@ namespace bertini
 		if (!already_had_homvars)
 		{
 			homogenizing_variables_.resize(NumVariableGroups());
+			// snapshot the natural (affine) functions before any block homogenizes itself, so
+			// SymbolicJacobian(usercoordinates=true) can differentiate them without the
+			// homogenizing variables ever appearing.  Immutable nodes -> shared ownership, free.
+			pre_homogenization_functions_ = NaturalFunctionsAsNodes();
 		}
 
 
@@ -373,6 +440,8 @@ namespace bertini
 			throw std::runtime_error("Homogenize(provided homogenizing variables): need exactly one homogenizing variable per affine variable group.");
 
 		homogenizing_variables_.resize(NumVariableGroups());
+		// snapshot the natural (affine) functions before homogenizing (see Homogenize()).
+		pre_homogenization_functions_ = NaturalFunctionsAsNodes();
 
 		auto group_counter = 0;
 		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
