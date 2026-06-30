@@ -92,13 +92,17 @@ public:
 		for (auto const& M : factors_highest_precision_) d.push_back(static_cast<int>(M.rows()));
 		return d;
 	}
+	/// \brief Per-function degrees with respect to a given variable group (same as the total degrees).
 	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
 
 	// The products-of-linears block is the m-homogeneous start system, constructed already
 	// homogenized (each factor carries its group's homogenizing variable).  So Homogenize is a
 	// no-op and it reports homogeneous + polynomial.
+	/// \brief No-op: the block is constructed already homogenized.
 	void Homogenize(VariableGroup const&, std::shared_ptr<node::Variable> const&) {}
+	/// \brief Always true: a products-of-linears block is homogeneous.
 	bool IsHomogeneous(VariableGroup const&) const { return true; }
+	/// \brief Always true: a products-of-linears block is polynomial.
 	bool IsPolynomial(VariableGroup const&) const { return true; }
 
 	/// Number of variables the block expects in the input vector.
@@ -147,6 +151,7 @@ public:
 	/// Analytic block: nothing symbolic to differentiate.
 	void Differentiate() const {}
 
+	/// \brief Get the block's current working precision.
 	unsigned Precision() const { return precision_; }
 
 	/// Set the working precision; recasts the mpfr working coefficients from the master.

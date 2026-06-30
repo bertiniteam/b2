@@ -90,10 +90,12 @@ namespace bertini
 			*/
 			unsigned long long NumStartPoints() const override;
 
+			/// \brief Multiply this start system in place by an expression node.
 			RootsOfUnity& operator*=(Nd const& n);
 
 			RootsOfUnity& operator+=(System const& sys) = delete;
 
+			/// \brief Check that the target system is suitable for a roots-of-unity start system.
 			void SanityChecks(System const& s);
 
 		private:

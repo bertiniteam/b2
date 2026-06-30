@@ -80,8 +80,10 @@ namespace bertini
 			*/
 			unsigned long long NumStartPoints() const override;
 
+			/// \brief Get the number of start points contributed by a given variable-group partition.
 			unsigned long long NumStartPointsForPartition(Vec<int> partition) const;
 
+			/// \brief Multiply this start system in place by an expression node.
 			MHomogeneous& operator*=(Nd const& n);
 
 			MHomogeneous& operator+=(System const& sys) = delete;

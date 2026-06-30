@@ -88,8 +88,13 @@ namespace bertini
 		public:
 			
 
+			/// \brief Get the number of start points (an upper bound on the number of target solutions).
 			virtual unsigned long long NumStartPoints() const = 0;
 
+			/// \brief Get the start point at the given index, in the requested number type.
+			/// \tparam T The number type (complex_dbl or complex_mp).
+			/// \param index The index of the start point.
+			/// \return The start point.
 			template<typename T>
 			Vec<T> StartPoint(unsigned long long index) const
 			{
@@ -97,17 +102,19 @@ namespace bertini
 			}
 
 			virtual ~StartSystem() = default;
-			
+
 		private:
 			virtual Vec<complex_dbl> GenerateStartPoint(complex_dbl,unsigned long long index) const = 0;
 			virtual Vec<complex_mp> GenerateStartPoint(complex_mp,unsigned long long index) const = 0;
 
 			friend class boost::serialization::access;
 
+			/// \cond START_SERIALIZATION
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<System>(*this);
 			}
+			/// \endcond
 
 		};
 

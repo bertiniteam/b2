@@ -79,9 +79,9 @@ namespace bertini {
 	
 	public:
 		// a few local using statements to reduce typing etc.
-		using NE = std::shared_ptr<node::NamedExpression>;
-		using Var = std::shared_ptr<node::Variable>;
-		using Nd = std::shared_ptr<node::Node>;
+		using NE = std::shared_ptr<node::NamedExpression>;  ///< Shorthand for a shared pointer to a named expression (a function of the system).
+		using Var = std::shared_ptr<node::Variable>;  ///< Shorthand for a shared pointer to a variable node.
+		using Nd = std::shared_ptr<node::Node>;  ///< Shorthand for a shared pointer to a generic expression-tree node.
 
 		/**
 		\brief The default constructor for a system.
@@ -262,6 +262,13 @@ namespace bertini {
 
 		}
 
+		/**
+		\brief Evaluate the system at the given variable values (no path variable defined).
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param variable_values The values of the variables, for the evaluation.
+		\return The vector of function values.
+		*/
 		template<typename T>
 		Vec<T> Eval(const Vec<T> & variable_values) const
 		{
@@ -331,6 +338,14 @@ namespace bertini {
 		}
 
 
+		/**
+		\brief Evaluate the system at the given variable values and path-variable value.
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param variable_values The values of the variables, for the evaluation.
+		\param path_variable_value The current value of the path variable.
+		\return The vector of function values.
+		*/
 		template<typename T>
 		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
@@ -507,6 +522,14 @@ namespace bertini {
 		}
 
 
+		/**
+		\brief Compute the Jacobian of the system at the given variable and path-variable values.
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param variable_values The values of the variables.
+		\param path_variable_value The current value of the path variable.
+		\return The Jacobian matrix.
+		*/
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
@@ -572,8 +595,15 @@ namespace bertini {
 
 
 
+		/**
+		\brief Compute the time-derivative of the system in place, after setting the variable values.
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param[out] ds_dt The vector into which to write dS/dt.
+		\param variable_values The values of the variables.
+		*/
 		template<typename Derived, typename T>
-		void TimeDerivativeInPlace(Vec<T> & ds_dt, 
+		void TimeDerivativeInPlace(Vec<T> & ds_dt,
 							const Eigen::MatrixBase<Derived> & variable_values) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
@@ -606,6 +636,13 @@ namespace bertini {
 		}
 
 
+		/**
+		\brief Compute the time-derivative of the system in place, using the currently set variable values.
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param[out] ds_dt The vector into which to write dS/dt.
+		\throws std::runtime_error if no path variable is defined.
+		*/
 		template<typename T>
 		void TimeDerivativeInPlace(Vec<T> & ds_dt) const
 		{
@@ -853,9 +890,16 @@ namespace bertini {
 		}
 
 
-		// Stage the system's current point (variables, and optionally the path value) for a
-		// subsequent Eval/Jacobian.  (Formerly also reset the function-tree node caches; node-level
-		// evaluation is gone, so there is nothing to reset -- the SLP carries its own state.)
+		/**
+		\brief Stage the system's current point (variables and path value) for a subsequent Eval/Jacobian.
+
+		Formerly also reset the function-tree node caches; node-level evaluation is gone, so there is
+		nothing to reset -- the SLP carries its own state.
+
+		\tparam T The number type.
+		\param new_space The new variable values.
+		\param new_time The new path-variable value.
+		*/
 		template<typename T>
 		void SetAndReset(Vec<T> const& new_space, T const& new_time) const
 		{
@@ -863,6 +907,12 @@ namespace bertini {
 			SetPathVariable(new_time);
 		}
 
+		/**
+		\brief Stage the system's current point (variables only) for a subsequent Eval/Jacobian.
+
+		\tparam T The number type.
+		\param new_space The new variable values.
+		*/
 		template<typename T>
 		void SetAndReset(Vec<T> const& new_space) const
 		{
@@ -1114,6 +1164,7 @@ namespace bertini {
 		*/
 		bool HavePathVariable() const;
 
+		/// \brief Get the system's path variable (throws if none is defined).
 		const Var& GetPathVariable() const;
 
 		/**
@@ -1293,6 +1344,7 @@ namespace bertini {
 		}
 
 
+		/// \brief Get the system's path variable node (the raw stored pointer; may be null if unset).
 		const Var& PathVariable() const
 		{
 			return path_variable_;
@@ -1403,6 +1455,7 @@ namespace bertini {
 		void CopyPatches(System const& other);
 
 
+		/// \brief Get a copy of the system's patch.
 		Patch GetPatch() const
 		{
 			return patch_;
@@ -1417,6 +1470,10 @@ namespace bertini {
 		}
 
 
+		/// \brief Rescale a point so it lies on the system's patch, returning the rescaled copy.
+		/// \tparam T The number type.
+		/// \param x The point to rescale.
+		/// \return The rescaled point.
 		template <typename T>
 		Vec<T> RescalePointToFitPatch(Vec<T> const& x) const
 		{
@@ -1424,6 +1481,9 @@ namespace bertini {
 		}
 
 
+		/// \brief Rescale a point in place so it lies on the system's patch.
+		/// \tparam T The number type.
+		/// \param[in,out] x The point to rescale.
 		template<typename T>
 		void RescalePointToFitPatchInPlace(Vec<T> & x) const
 		{

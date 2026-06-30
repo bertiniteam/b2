@@ -87,6 +87,7 @@ public:
 
 	/// Linear forms are degree 1.
 	std::vector<int> Degrees() const { return std::vector<int>(NumFunctions(), 1); }
+	/// \brief Per-function degrees with respect to a given variable group (all 1).
 	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
 
 	/// Linear forms are polynomial.
@@ -179,6 +180,7 @@ public:
 	/// Analytic block: nothing symbolic to differentiate.
 	void Differentiate() const {}
 
+	/// \brief Get the block's current working precision.
 	unsigned Precision() const { return precision_; }
 
 	/// Set the working precision; recasts the mpfr working coefficients from the master.
