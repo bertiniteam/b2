@@ -32,6 +32,7 @@ namespace bertini {
 		namespace classic {
 
 			template<typename Iterator, typename Skipper>
+			/// \brief Parser for the RandomConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::RandomConfig, Skipper>
 				: qi::grammar<Iterator, algorithm::RandomConfig(), Skipper>
 			{

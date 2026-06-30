@@ -42,6 +42,7 @@ namespace bertini {
 		
 		
 		
+			/// \brief Parse a polynomial system from the iterator range into a System.
 			template <typename Iterator>
 			static bool parse(Iterator first, Iterator last, System& sys)
 			{

@@ -44,9 +44,11 @@
 
 #include <sstream>
 
+/// \brief The URL of the Bertini2 source repository.
 #define BERTINI2_PACKAGE_URL "https://github.com/bertiniteam/b2"
 namespace bertini{
 
+/// \brief Get a short description of Bertini2's licensing.
 inline
 std::string LicenseInfo()
 {
@@ -90,25 +92,29 @@ std::string LicenseInfo()
 	return ss.str();
 }
 
-inline 
+/// \brief Get the URL of the Bertini2 source repository.
+inline
 std::string SourceURL()
 {
 	return BERTINI2_PACKAGE_URL;
 }
 
+/// \brief Get the URL of the Bertini2 wiki.
 inline
 std::string WikiURL()
 {
 	return "https://github.com/bertiniteam/b2/wiki";
 }
 
+/// \brief Get the Bertini2 version string.
 inline
 std::string Version()
 {
 	return BERTINI2_VERSION;
 }
 
-inline 
+/// \brief Get the names of the Bertini trademark owners.
+inline
 std::string Owners()
 {
 	std::stringstream ss;
@@ -116,7 +122,8 @@ std::string Owners()
 	return ss.str();
 }
 
-inline 
+/// \brief Get the names of the Bertini2 code authors.
+inline
 std::string Authors()
 {
 	std::stringstream ss;
@@ -124,6 +131,7 @@ std::string Authors()
 	return ss.str();
 }
 
+/// \brief Get the multi-line splash screen text (trademark, authors, URLs, version, license).
 inline
 std::string SplashScreen()
 {
@@ -140,13 +148,15 @@ std::string SplashScreen()
 }
 
 
-inline 
+/// \brief Get the generic help text (currently empty).
+inline
 std::string GenericHelp()
 {
 	return "";
 }
 
 
+/// \brief Get the version of the Eigen headers compiled against.
 inline
 std::string EigenHeaderVersion()
 {
@@ -157,18 +167,21 @@ std::string EigenHeaderVersion()
     return ss.str();
 }
 
+/// \brief Get the version of the GMP library linked against.
 inline
 std::string GMPVersion()
 {
     return gmp_version;
 }
 
+/// \brief Get the version of the MPFR library linked against.
 inline
 std::string MPFRVersion()
 {
     return mpfr_get_version();
 }
 
+/// \brief Get the version of the MPI library linked against (or a note if serial).
 inline
 std::string MPIVersion()
 {
@@ -182,6 +195,7 @@ std::string MPIVersion()
 #endif
 }
 
+/// \brief Get the version of the Boost headers compiled against.
 inline
 std::string BoostHeaderVersion()
 {
@@ -194,7 +208,8 @@ std::string BoostHeaderVersion()
 
 
 
-inline 
+/// \brief Get a multi-line summary of the versions of Bertini2's dependencies (Boost, Eigen, GMP, MPFR).
+inline
 std::string DependencyVersions()
 {
     std::stringstream ss;

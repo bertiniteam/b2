@@ -43,9 +43,10 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the SecurityConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::SecurityConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::SecurityConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "SecurityConfig")
 				{
@@ -132,10 +133,11 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the EndgameConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::EndgameConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::EndgameConfig(), Skipper>
 			{
-				using T = double;
-				using R = mpq_rational; // exact decimal-to-rational, no floating-point precision to go stale
+				using T = double;  ///< The number type used by this parser.
+				using R = mpq_rational; ///< Exact rational type (decimal-to-rational, no floating-point precision to go stale).
 
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "EndgameConfig")
@@ -237,9 +239,10 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the PowerSeriesConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::PowerSeriesConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::PowerSeriesConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "bertini::endgame::PowerSeriesConfigType")
 				{
@@ -313,9 +316,10 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the CauchyConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::CauchyConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::CauchyConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "bertini::endgame::CauchyConfig")
 				{
@@ -399,9 +403,10 @@ namespace bertini {
 			
 
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the TrackBackConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::TrackBackConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::TrackBackConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "bertini::endgame::TrackBackConfig")
 				{

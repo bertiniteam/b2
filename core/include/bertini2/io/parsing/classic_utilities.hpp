@@ -60,38 +60,45 @@ namespace bertini {
 			public:
 				
 				
+				/// \brief Get the config portion of the split input file.
 				std::string Config() const
 				{
 					return config_;
 				}
-				
+
+				/// \brief Get the input portion of the split input file.
 				std::string Input() const
 				{
 					return input_;
 				}
-				
+
+				/// \brief Query whether the input file was readable.
 				bool Readable() const
 				{
 					return readable_;
 				}
-				
-				
+
+
+				/// \brief Set the input portion.
 				void SetInput(std::string new_input)
 				{
 					input_ = new_input;
 				}
-				
+
+				/// \brief Set the config portion.
 				void SetConfig(std::string new_config)
 				{
 					config_ = new_config;
 				}
-				
+
+				/// \brief Set both the config and input portions.
 				void SetConfigInput(std::string c, std::string i)
 				{
 					config_ = c;
 					input_ = i;
 				}
-				
+
+				/// \brief Set whether the input file was readable.
 				void SetReadable(bool read)
 				{
 					readable_ = read;
@@ -115,6 +122,7 @@ namespace bertini {
 				//            }
 				
 				
+				/// \brief Stream-insertion for a SplitInputFile, printing its config and input portions.
 				friend std::ostream& operator<<(std::ostream & out, SplitInputFile const& printme)
 				{
 					out << "--------config-----------\n\n" << printme.Config() << "\n\n-------input--------\n\n" << printme.Input();
@@ -360,6 +368,7 @@ namespace bertini {
 			
 			
 			
+			/// \brief Split a classic Bertini input file's contents into its config and input portions.
 			SplitInputFile ParseInputFile(std::string str_input_file)
 			{
 				std::string::const_iterator iter = str_input_file.begin();

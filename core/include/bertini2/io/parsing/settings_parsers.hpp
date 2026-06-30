@@ -147,6 +147,7 @@ namespace bertini {
 			template<typename ...Ts>
 			struct ConfigParser<detail::TypeList<Ts...>>
 			{	
+				/// \brief Parse all the config types in the list from a classic-format config string.
 				static
 				auto Parse(std::string const& config)
 				{
