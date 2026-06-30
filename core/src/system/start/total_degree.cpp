@@ -120,7 +120,7 @@ namespace bertini {
 				Mat<complex_mp> C(d, n + 1);
 				for (Eigen::Index f = 0; f < d; ++f)
 					for (Eigen::Index k = 0; k < n + 1; ++k)   // includes the trailing constant column
-						C(f, k) = complex_mp(real_mp(RandomRat()), real_mp(RandomRat()));
+						C(f, k) = multiprecision::RandomComplexBoundedModulus();
 				linear_coeffs_.push_back(std::move(C));
 			}
 

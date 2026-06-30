@@ -267,6 +267,59 @@ using bertini::RandomMp;
 		return rand_unit();
 	}
 
+
+	/**
+	 Produce a random complex number whose modulus is pulled toward 1, to default precision.
+
+	 Draw a box-uniform complex z (real, imag each in [-1,1]) and divide by sqrt(|z|), so the
+	 result has modulus sqrt(|z|): bounded away from both 0 and infinity, but NOT collapsed onto
+	 the unit circle (that would be z/abs(z) -- see rand_unit).  This is how Bertini 1 generates
+	 linear-form coefficients, and it avoids the heavy-tailed scaling of a ratio-of-integers draw
+	 (RandomRat: numerator/denominator each uniform, so the modulus has fat log-tails).
+	 */
+	inline complex rand_bounded_modulus()
+	{
+		complex z( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+		auto m = abs(z);
+		while (m == 0)   // measure-zero, but a zero coefficient is degenerate -- redraw
+		{
+			z = complex( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+			m = abs(z);
+		}
+		return z / sqrt(m);
+	}
+
+	inline complex RandomComplexBoundedModulus()
+	{
+		return rand_bounded_modulus();
+	}
+
+	inline
+	void RandomComplexBoundedModulusAssign(complex & a, unsigned num_digits)
+	{
+		auto cached = ThreadPrecision();
+		SetThreadPrecision(num_digits);
+		a.precision(num_digits);
+
+		complex z( RandomMp(real_mp(-1),real_mp(1),num_digits), RandomMp(real_mp(-1),real_mp(1),num_digits) );
+		auto m = abs(z);
+		while (m == 0)
+		{
+			z = complex( RandomMp(real_mp(-1),real_mp(1),num_digits), RandomMp(real_mp(-1),real_mp(1),num_digits) );
+			m = abs(z);
+		}
+		a = std::move(z / sqrt(m));
+		SetThreadPrecision(cached);
+	}
+
+	inline
+	complex RandomComplexBoundedModulus(unsigned num_digits)
+	{
+		complex a;
+		RandomComplexBoundedModulusAssign(a, num_digits);
+		return a;
+	}
+
 	inline 
 	void rand_assign(complex & a, unsigned num_digits)
 	{
