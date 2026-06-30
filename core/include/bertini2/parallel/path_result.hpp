@@ -44,9 +44,9 @@ serialization for Eigen vectors and arbitrary-precision types.
 namespace bertini {
 namespace parallel {
 
-constexpr int TAG_WORK_ITEM = 1;
-constexpr int TAG_RESULT    = 2;
-constexpr int TAG_CAPACITY  = 3;  // worker -> manager: int, max tasks in flight on that rank
+constexpr int TAG_WORK_ITEM = 1;  ///< MPI message tag: manager -> worker work item.
+constexpr int TAG_RESULT    = 2;  ///< MPI message tag: worker -> manager result.
+constexpr int TAG_CAPACITY  = 3;  ///< MPI message tag: worker -> manager, max tasks in flight on that rank.
 
 
 
@@ -60,27 +60,31 @@ identical across serial and distributed runs).
 template<typename ComplexT>
 struct StartPointTask
 {
-	using SolnIndT = std::size_t;
+	using SolnIndT = std::size_t;  ///< The path-index type.
 
-	SolnIndT      path_index = std::numeric_limits<SolnIndT>::max();  // max = sentinel
-	Vec<ComplexT> start_point;
+	SolnIndT      path_index = std::numeric_limits<SolnIndT>::max();  ///< The path index (max value marks a sentinel).
+	Vec<ComplexT> start_point;  ///< The authoritative start point for this path.
 
+	/// \brief Query whether this is the sentinel "no more work" task.
 	bool is_sentinel() const
 	{
 		return path_index == std::numeric_limits<SolnIndT>::max();
 	}
 
+	/// \brief Make the sentinel "no more work" task.
 	static StartPointTask sentinel()
 	{
 		return StartPointTask{};  // default path_index == max
 	}
 
+	/// \cond PATH_RESULT_SERIALIZATION
 	template<class Archive>
 	void serialize(Archive& ar, unsigned const)
 	{
 		ar & path_index;
 		ar & start_point;
 	}
+	/// \endcond
 };
 
 
@@ -95,36 +99,37 @@ that produces it is a StartPointTask (path index + rank 0's start point).
 template<typename ComplexT>
 struct FullPathResult
 {
-	using SolnIndT = std::size_t;
-	using RealT    = typename NumTraits<ComplexT>::Real;
+	using SolnIndT = std::size_t;  ///< The path-index type.
+	using RealT    = typename NumTraits<ComplexT>::Real;  ///< The real companion of the complex type.
 
-	SolnIndT      path_index             = 0;
+	SolnIndT      path_index             = 0;  ///< The index of the path this result is for.
 
 	// boundary (pre-endgame) data
-	SuccessCode   pre_endgame_success    = SuccessCode::NeverStarted;
-	Vec<ComplexT> boundary_point;
-	RealT         boundary_stepsize      = RealT(0);
-	unsigned      boundary_precision     = DoublePrecision();
+	SuccessCode   pre_endgame_success    = SuccessCode::NeverStarted;  ///< Outcome of pre-endgame tracking to the boundary.
+	Vec<ComplexT> boundary_point;  ///< The space point at the endgame boundary.
+	RealT         boundary_stepsize      = RealT(0);  ///< The step size at the endgame boundary.
+	unsigned      boundary_precision     = DoublePrecision();  ///< The precision at the endgame boundary.
 
 	// endgame data
-	SuccessCode   endgame_success        = SuccessCode::NeverStarted;
-	Vec<ComplexT> final_solution;
-	double        function_residual              = 0;
-	double        condition_number               = 0;
-	double        newton_residual                = 0;
-	ComplexT      final_time_used;
-	double        accuracy_estimate              = 0;
-	double        accuracy_estimate_user_coords  = 0;
-	unsigned      cycle_num                      = 0;
+	SuccessCode   endgame_success        = SuccessCode::NeverStarted;  ///< Outcome of the endgame.
+	Vec<ComplexT> final_solution;  ///< The final solution point.
+	double        function_residual              = 0;  ///< Residual of the system at the final solution.
+	double        condition_number               = 0;  ///< Condition-number estimate at the final solution.
+	double        newton_residual                = 0;  ///< Final Newton residual.
+	ComplexT      final_time_used;  ///< The time value the endgame finished at.
+	double        accuracy_estimate              = 0;  ///< Estimated accuracy of the final solution.
+	double        accuracy_estimate_user_coords  = 0;  ///< Estimated accuracy in the user's coordinates.
+	unsigned      cycle_num                      = 0;  ///< The estimated cycle number at the endpoint.
 
 	// precision metadata (spans the whole path)
-	bool          precision_changed              = false;
-	ComplexT      time_of_first_prec_increase;
-	unsigned      max_precision_used             = 0;
+	bool          precision_changed              = false;  ///< Whether precision changed during the path.
+	ComplexT      time_of_first_prec_increase;  ///< The time of the first precision increase (if any).
+	unsigned      max_precision_used             = 0;  ///< The highest precision used over the whole path.
 
 	// wall-clock time to execute the whole path (pre-endgame + endgame), in seconds
-	double        path_time_seconds              = 0;
+	double        path_time_seconds              = 0;  ///< Wall-clock seconds to execute the whole path.
 
+	/// \cond PATH_RESULT_SERIALIZATION
 	template<class Archive>
 	void serialize(Archive& ar, unsigned const)
 	{
@@ -147,6 +152,7 @@ struct FullPathResult
 		ar & max_precision_used;
 		ar & path_time_seconds;
 	}
+	/// \endcond
 };
 
 namespace detail {
@@ -154,22 +160,26 @@ namespace detail {
 // Sentinel detection and factory for the work-item type.  The work item is a StartPointTask whose
 // max path_index marks "no more work".  (The plain-size_t overloads remain for any other caller.)
 
+/// \brief Query whether a plain index value is the sentinel.
 inline bool is_sentinel(std::size_t v)
 {
 	return v == std::numeric_limits<std::size_t>::max();
 }
 
+/// \brief Make the sentinel index value.
 inline std::size_t make_sentinel(std::size_t)
 {
 	return std::numeric_limits<std::size_t>::max();
 }
 
+/// \brief Query whether a work-item task is the sentinel.
 template<typename ComplexT>
 bool is_sentinel(StartPointTask<ComplexT> const& t)
 {
 	return t.is_sentinel();
 }
 
+/// \brief Make the sentinel work-item task.
 template<typename ComplexT>
 StartPointTask<ComplexT> make_sentinel(StartPointTask<ComplexT> const&)
 {
