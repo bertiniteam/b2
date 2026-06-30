@@ -164,5 +164,28 @@ lands on:
    these are the extreme landing spots, where the image :math:`\pi\cdot x` stops moving as you
    travel along a circle.
 
+What a critical point *is*: where the fiber count jumps
+======================================================
+
+There is a more illuminating way to read these points than "the tangent is :math:`\pi`-critical" --
+one that makes even the two points on the orange circle obvious.  A projection has **fibers**: the
+preimages :math:`\pi^{-1}(c)`, one level set per value :math:`c`.  Sweep :math:`c` and count how
+many points of the curve sit in the fiber.  For the orange circle :math:`x^2+y^2=1` a generic fiber
+meets it in **two** points; push :math:`c` to an extreme and those two **collide into one** (the
+fiber becomes tangent); push past it and there are **none**.  The values where the count changes --
+:math:`2 \to 1 \to 0` -- are exactly the **critical points**.  They are the *branch points* of the
+projection, where the sheets of :math:`\pi^{-1}` come together:
+
+.. figure:: critical_points_fibers.svg
+   :align: center
+   :width: 60%
+
+   The orange circle seen along :math:`\pi`.  A generic fiber (grey) meets it in two points; the
+   two critical fibers (red, tangent) meet it in one -- the two collide -- and a fiber past them
+   (dotted) meets it in none.  The critical points are precisely where the fiber count jumps.
+
+This is why the count of critical points is a genuine invariant of the curve-and-projection, and
+why criticality is the workhorse it is: branch points organize how a curve sits over its image.
+
 The recipe needs nothing special of the curve: differentiate *your* :math:`f` into a Jacobian,
 stack a random projection row, dot with a null vector, patch it, and solve.
