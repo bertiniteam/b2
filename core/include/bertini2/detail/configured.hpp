@@ -87,40 +87,47 @@ namespace bertini {
 		template<typename ...Ts>
 		struct Configured
 		{
-			std::tuple<Ts...> configuration_;
+			std::tuple<Ts...> configuration_;  ///< The held configuration objects, one per config type.
 
+			/// \brief Construct, forwarding the given values into the held configuration tuple.
 			template<typename ... T>
 			Configured(T const& ...t) : configuration_(t...)
 			{}
 
 
+			/// \brief Get the held configuration object of type T.
 			template<typename T, typename = typename std::enable_if<IsTemplateParameter<T,Ts...>::value>::type>
 			const T& Get() const
 			{
 				return std::get<T>(configuration_);
 			}
 
+			/// \brief Set the held configuration object of type T.
 			template<typename T, typename = typename std::enable_if<IsTemplateParameter<T,Ts...>::value>::type>
 			void Set(T const& t)
 			{
 				std::get<T>(configuration_) = t;
 			}
 
-			using UsedConfigs = TypeList<Ts...>;
+			using UsedConfigs = TypeList<Ts...>;  ///< The list of configuration types this object holds.
 
 		}; // Configured
 
+		/// \brief Configured specialization accepting the config types packaged in a TypeList.
 		template<typename ...Ts>
 		struct Configured<TypeList<Ts...>> : public Configured<Ts...>
 		{
+			/// \brief Construct, forwarding the given values to the base Configured.
 			template<typename ... T>
 			Configured(T const& ...t) : Configured<Ts...>(t...)
 			{}
 
+			/// \brief Default-construct the held configuration objects.
 			Configured() : Configured<Ts...>() {}
 
 		};
 
+		/// \brief Macro injecting a Get<T>() that forwards to the class's Config base (for Configured users).
 		#define FORWARD_GET_CONFIGURED \
 		template <typename T> \
 		const T& Get() const \
