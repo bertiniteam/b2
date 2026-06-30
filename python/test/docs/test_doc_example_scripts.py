@@ -62,12 +62,11 @@ def test_solve_eigenvalues_runs():
     _run("solve_eigenvalues.py", "--size", "5")
 
 
-@pytest.mark.skipif(
-    not os.environ.get("BERTINI_RUN_SLOW_DOC_EXAMPLES"),
-    reason="crossed_paths.py runs two full cyclic-5 solves (~30s locally, minutes on slow CI -- "
-           "it deliberately under-resolves paths); set BERTINI_RUN_SLOW_DOC_EXAMPLES=1 to run it. "
-           "The cyclic/eigenvalue tests above already cover 'the example scripts run'.",
-)
+# Two full cyclic-5 solves with a re-track repair.  This used to be gated behind
+# BERTINI_RUN_SLOW_DOC_EXAMPLES (~30s locally, minutes on slow CI), but the adaptive-numeric-type
+# endgame + well-conditioned start coefficients made it run in a few seconds, so it now runs by
+# default.  The timeout is a slow-CI ceiling, matching test_solve_cyclic_runs.
+@pytest.mark.timeout(600)
 def test_crossed_paths_runs():
     # No size knob: it always provokes a crossing on cyclic-5 and shows the re-track repair.
-    _run("crossed_paths.py", timeout=600)
+    _run("crossed_paths.py", timeout=540)
