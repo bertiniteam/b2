@@ -102,7 +102,10 @@ namespace bertini {
 		static Slice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
 			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
-			funtype gen = bertini::multiprecision::RandomRealAssign;
+			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems;
+			// kept REAL so a real slice stays real.  (A deeper pass on slice generation -- the constant
+			// column and the orthogonal=false path -- is still TODO.)
+			funtype gen = bertini::multiprecision::RandomRealBoundedModulusAssign;
 			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
@@ -112,7 +115,8 @@ namespace bertini {
 		static Slice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
 			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
-			funtype gen = bertini::multiprecision::RandomComplexAssign;
+			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems.
+			funtype gen = bertini::multiprecision::RandomComplexBoundedModulusAssign;
 			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
