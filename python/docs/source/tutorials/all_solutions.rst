@@ -35,8 +35,8 @@ number).
 Solve, and collect the finite solutions.  ``ZeroDimSolver`` is a small factory over the bound
 solver classes: ``ZeroDimSolver(sys)`` is the Cauchy endgame in adaptive precision with a total-degree
 start system, and you pick the rest with strings -- ``endgame=`` (``'cauchy'`` / ``'powerseries'``),
-``mptype=`` (``'double'`` / ``'multiple'`` / ``'adaptive'``), and ``startsystem=`` (``'totaldegree'``
-/ ``'mhom'``).  Here we ask for adaptive precision explicitly so ill-conditioned paths still succeed:
+``mptype=`` (``'double'`` / ``'multiple'`` / ``'adaptive'``), and ``startsystem=`` (``'binomial'``
+/ ``'linearproduct'`` / ``'mhom'``).  Here we ask for adaptive precision explicitly so ill-conditioned paths still succeed:
 
 .. testcode::
 
@@ -97,7 +97,7 @@ The database of solutions
 For bookkeeping across a whole solve -- or many solves -- ``to_dataframe()`` returns the solve as a
 :mod:`pandas` DataFrame: **one row per solution**, with a column per coordinate (``x0``, ``x1``,
 ...) followed by every field of the per-solution metadata (``is_finite``, ``is_real``,
-``is_singular``, ``multiplicity``, ``condition_number``, ``endgame_success``, ...).  Each category
+``is_singular``, ``multiplicity``, ``condition_number``, ``endgame_success_code``, ...).  Each category
 is then a one-line filter on the frame, and you have the metadata right alongside the points::
 
     df = solver.to_dataframe()                  # finite solutions only, by default

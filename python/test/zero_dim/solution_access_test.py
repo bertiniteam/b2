@@ -79,7 +79,7 @@ def test_to_dataframe_finite_only_by_default(one_finite_one_infinite_solver):
     assert 'solution' in df.columns
     assert 'x0' not in df.columns and 'x1' not in df.columns
     assert len(df['solution'].iloc[0]) == 2          # a 2-vector for this 2-variable system
-    for col in ('is_finite', 'is_real', 'is_singular', 'multiplicity', 'endgame_success'):
+    for col in ('is_finite', 'is_real', 'is_singular', 'multiplicity', 'endgame_success_code'):
         assert col in df.columns
 
 

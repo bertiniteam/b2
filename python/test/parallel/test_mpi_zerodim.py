@@ -47,7 +47,7 @@ def circle_intersection_solver():
     sys.add_function(x**2 + y**2 - 1)
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    return ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    return ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
 
 
 def _cyclic_system(n):
@@ -63,7 +63,7 @@ def _cyclic_system(n):
 
 def _distinct_finite(solver):
     finite = [m for m in solver.solution_metadata()
-              if int(m.endgame_success) == OK and m.is_finite]
+              if int(m.endgame_success_code) == OK and m.is_finite]
     return round(sum(1.0 / m.multiplicity for m in finite))
 
 

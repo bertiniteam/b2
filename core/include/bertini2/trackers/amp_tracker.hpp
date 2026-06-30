@@ -646,7 +646,7 @@ namespace bertini{
 
 			\param[out] solution_at_endtime The solution at the end time
 			*/
-			void CopyFinalSolution(Vec<complex_mp> & solution_at_endtime) const override
+			void CopySolution(Vec<complex_mp> & solution_at_endtime) const override
 			{
 
 				// the current precision is the precision of the output solution point.

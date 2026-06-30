@@ -15,7 +15,7 @@ sys.add_variable_group(pb.VariableGroup([x,y]))
 sys.homogenize()
 sys.auto_patch()
 
-# solver = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+# solver = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
 
 
 import cProfile
@@ -28,7 +28,7 @@ with cProfile.Profile() as pr:
     for n in range(10000):
         print(n)
         print(sys)
-        solver = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+        solver = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
         solver.solve()
     pr.dump_stats('profile_stats')
     # pr.sort_stats('cumulative')

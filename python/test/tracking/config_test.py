@@ -227,7 +227,7 @@ def test_get_stepping_internal_ref_updates_in_place(tracker):
 
 @pytest.fixture
 def solver():
-    return ZeroDimSolver(_square_system(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    return ZeroDimSolver(_square_system(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
 
 
 def test_algorithm_exposes_its_configs(solver):
@@ -293,7 +293,7 @@ def _square():
 
 
 def test_get_settings_is_a_named_dict_of_configs():
-    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
     settings = a.get_settings()
     assert set(settings) == set(a.config_names())
     assert isinstance(settings['tolerances'], TolerancesConfig)
@@ -301,10 +301,10 @@ def test_get_settings_is_a_named_dict_of_configs():
 
 def test_settings_round_trip_onto_another_solver():
     from bertini.nag_algorithm import ZeroDimConfig
-    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
     a.update(final_tolerance="1e-12", max_num_crossed_path_resolve_attempts=4)
 
-    b = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    b = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
     b.set_settings(a.get_settings())
     assert b.get_config(TolerancesConfig).final_tolerance == 1e-12
     assert b.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 4
@@ -324,17 +324,17 @@ def test_settings_carry_across_precision_models():
 
 def test_settings_bundle_is_picklable():
     import pickle
-    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
     a.update(final_tolerance="1e-9")
     restored = pickle.loads(pickle.dumps(a.get_settings()))
-    b = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    b = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
     b.set_settings(restored)
     assert b.get_config(TolerancesConfig).final_tolerance == 1e-9
 
 
 def test_set_settings_skips_inapplicable_by_default_strict_raises():
     from bertini.tracking import AMPTracker
-    settings = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity').get_settings()
+    settings = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial').get_settings()
     trk = AMPTracker(_square())            # a tracker has no 'tolerances' / 'zero_dim'
     trk.set_settings(settings)             # non-strict: silently skips them
     with pytest.raises(KeyError):
@@ -342,7 +342,7 @@ def test_set_settings_skips_inapplicable_by_default_strict_raises():
 
 
 def test_set_settings_accepts_dict_of_fields():
-    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
     a.set_settings({'tolerances': {'final_tolerance': '1e-10'}})
     assert a.get_config(TolerancesConfig).final_tolerance == 1e-10
 

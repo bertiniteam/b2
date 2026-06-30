@@ -93,7 +93,7 @@ The project has three layers, built in order:
 
 1. **`core/`** -- C++ shared library (`libbertini2`). Header-only-heavy design under `core/include/bertini2/`. Key subsystems:
    - `function_tree/` -- Expression tree (nodes, operators, symbols) for *building and representing* polynomial systems. Nodes no longer evaluate: node-level recursive evaluation was removed -- the **SLP (`straight_line_program`) is the sole evaluator** (compile a system once, evaluate the compiled program). `Function`/`Handle` are gone; `NamedExpression` is the sole root node. See ADR-0027 (SLP: immutable Program + per-thread Memory) and ADR-0028 (named-node taxonomy).
-   - `system/` -- Polynomial system construction, start systems (`start/total_degree.hpp`, `start/mhom.hpp`), patches, slices
+   - `system/` -- Polynomial system construction, start systems (`start/total_degree_linear_product.hpp`, `start/mhom.hpp`), patches, slices
    - `trackers/` -- Path tracking (fixed-precision and adaptive-precision trackers, predictors, Newton correctors)
    - `endgames/` -- Power series and Cauchy endgames for singular endpoint handling
    - `nag_algorithms/` -- Higher-level algorithms (zero-dim solve; numerical irreducible decomposition is *framework scaffolding* -- not yet implemented, its `Solve()` throws)

@@ -94,9 +94,9 @@ namespace bertini
 						for (Eigen::Index f = 0; f < d; ++f)
 						{
 							for (Eigen::Index k = 0; k < gsize; ++k)
-								C(f, k) = complex_mp(real_mp(RandomRat()), real_mp(RandomRat()));
+								C(f, k) = multiprecision::RandomComplexBoundedModulus();
 							C(f, gsize) = projective ? complex_mp(0)
-							                         : complex_mp(real_mp(RandomRat()), real_mp(RandomRat()));
+							                         : multiprecision::RandomComplexBoundedModulus();
 						}
 						linear_coeffs_(ii, jj) = std::move(C);
 					}

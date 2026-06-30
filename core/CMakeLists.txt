@@ -278,8 +278,8 @@ set(system_headers
 )
 
 set(system_start_headers
-	include/bertini2/system/start/total_degree.hpp
-	include/bertini2/system/start/roots_of_unity.hpp
+	include/bertini2/system/start/total_degree_linear_product.hpp
+	include/bertini2/system/start/total_degree_binomial.hpp
 	include/bertini2/system/start/mhom.hpp
 	include/bertini2/system/start/user.hpp
 	include/bertini2/system/start/utility.hpp
@@ -370,8 +370,8 @@ set(system_source_files
     src/system/start_base.cpp
     src/system/system.cpp
     src/system/straight_line_program.cpp
-    src/system/start/total_degree.cpp
-    src/system/start/roots_of_unity.cpp
+    src/system/start/total_degree_linear_product.cpp
+    src/system/start/total_degree_binomial.cpp
     src/system/start/mhom.cpp
     src/system/start/user.cpp
 )

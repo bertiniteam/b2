@@ -254,7 +254,8 @@ _SOLUTION_METADATA_FIELDS = (
     'is_finite', 'is_real', 'is_singular', 'is_nonsolution', 'multiplicity', 'multiplicity_representative',
     'condition_number', 'function_residual', 'newton_residual',
     'accuracy_estimate', 'accuracy_estimate_user_coords',
-    'cycle_num', 'endgame_success', 'pre_endgame_success', 'final_time_used',
+    'precision_digits', 'accuracy_digits',
+    'cycle_num', 'endgame_success_code', 'pre_endgame_success_code', 'final_time_used',
     'precision_changed', 'max_precision_used', 'time_of_first_prec_increase',
     'path_time_seconds',
 )
@@ -265,7 +266,7 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_m
 
     Columns are ``solution`` -- the whole solution point, kept in a single cell -- then every
     per-solution metadata field (``is_finite``, ``is_real``, ``is_singular``, ``multiplicity``,
-    ``condition_number``, ``endgame_success``, ``max_precision_used``, ...), and finally ``system``,
+    ``condition_number``, ``endgame_success_code``, ``max_precision_used``, ...), and finally ``system``,
     a reference to the (target) system these solutions satisfy (so rows accumulated from several
     solves stay identifiable).  Each category is then a one-line filter, e.g.
     ``df[df.is_real & ~df.is_singular]`` (nonsingular real) or ``df[~df.is_finite]`` (at infinity).
@@ -356,7 +357,7 @@ _attach_to_dataframe()
 
 # Each bound solver class is named ZeroDimSolver<Endgame><Precision> (the start system is NO
 # longer part of the type -- it is chosen at construction).  Select endgame + precision by string to
-# pick the class, then pick the start system separately (default total_degree, else a factory).
+# pick the class, then pick the start system separately (default total_degree_binomial, else a factory).
 _ZD_ENDGAMES = {
     'cauchy': 'Cauchy',
     'powerseries': 'PowerSeries', 'power_series': 'PowerSeries', 'pseg': 'PowerSeries',
@@ -369,8 +370,8 @@ _ZD_PRECISIONS = {
 }
 # string -> the StartSystemType enum value name on _pybnalag (the C++ blackbox::type::Start).
 _ZD_START_SYSTEMS = {
-    'totaldegree': 'total_degree', 'total_degree': 'total_degree', 'td': 'total_degree',
-    'rootsofunity': 'roots_of_unity', 'roots_of_unity': 'roots_of_unity', 'rou': 'roots_of_unity',
+    'totaldegreebinomial': 'total_degree_binomial', 'binomial': 'total_degree_binomial', 'tdb': 'total_degree_binomial',
+    'totaldegreelinearproduct': 'total_degree_linear_product', 'linearproduct': 'total_degree_linear_product', 'tdlp': 'total_degree_linear_product',
     'mhom': 'mhomogeneous', 'mhomogeneous': 'mhomogeneous', 'multihomogeneous': 'mhomogeneous',
 }
 
@@ -389,15 +390,15 @@ def _infer_start_system(system):
 
     Mirrors the C++ blackbox ``InferStartType`` (core/.../blackbox/switches_zerodim.hpp): a single
     affine variable group with no homogeneous/projective groups is the 1-homogeneous case; anything
-    else -- two or more variable groups, or any homogeneous group -- is multihomogeneous (total
-    degree / roots of unity would be the wrong, over-counting start system there).
+    else -- two or more variable groups, or any homogeneous group -- is multihomogeneous (a
+    total-degree start would be the wrong, over-counting choice there).
 
-    INTERIM: the single-affine-group case infers ``rootsofunity`` (the safe default).  The eventual
-    inference is the linear-product ``totaldegree`` (general position), gated on the Cauchy-endgame
-    fix; see core/.../nag_algorithms/common/policies.hpp.
+    The single-affine-group case infers ``total_degree_binomial`` -- the default: it is as reliable
+    as the linear-product total-degree start and faster, so it stays the default for 1-homogeneous /
+    1-affine systems.  See core/.../nag_algorithms/common/policies.hpp.
     """
     if system.num_variable_groups() == 1 and system.num_hom_variable_groups() == 0:
-        return 'rootsofunity'
+        return 'binomial'
     return 'mhom'
 
 
@@ -419,7 +420,7 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
     mptype : the precision -- ``'double'``, ``'multiple'``, or ``'adaptive'`` (``'amp'``, the default).
     precision : an alias for ``mptype``; if given (not ``None``) it overrides ``mptype``.
     startsystem : ``'infer'`` (default -- choose from the variable-group structure, matching the
-        C++ blackbox), or force it with ``'totaldegree'`` / ``'mhom'``.  To run from a homotopy you
+        C++ blackbox), or force it with ``'binomial'`` / ``'linearproduct'`` / ``'mhom'``.  To run from a homotopy you
         built yourself with given start points, use :class:`HomotopySolver` / :func:`blend_homotopy`
         instead (their construction needs the homotopy and start points, not just a system).
 
@@ -462,9 +463,9 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
     cls = getattr(_pybnalag, cls_name)
     start_enum = getattr(_pybnalag.StartSystemType,
                          _zd_select(startsystem, _ZD_START_SYSTEMS, 'startsystem'))
-    # total_degree is the default constructor; any other start is selected with a factory.
-    if start_enum == _pybnalag.StartSystemType.total_degree:
-        return cls(system)
+    # Every start system is built through its explicit factory.  (Previously total_degree
+    # short-circuited to the default constructor, which silently substituted the *default* start
+    # system -- the facade quirk that made startsystem='totaldegree' secretly solve the default.)
     return cls(system, _pybnalag.start_system_factory(start_enum))
 
 

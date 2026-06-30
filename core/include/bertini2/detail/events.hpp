@@ -104,9 +104,9 @@ namespace bertini {
 
 		Event() = delete;
 
-		using HeldT = const ObsT&;
+		using HeldT = const ObsT&;  ///< How the observable is held: by const reference.
 	protected:
-		const ObsT& current_observable_;
+		const ObsT& current_observable_;  ///< The observable object this event carries.
 	};
 
 
@@ -148,9 +148,9 @@ namespace bertini {
 
 		Event() = delete;
 
-		using HeldT = ObsT&;
+		using HeldT = ObsT&;  ///< How the observable is held: by mutable reference.
 	protected:
-		ObsT& current_observable_;
+		ObsT& current_observable_;  ///< The observable object this event carries.
 	};
 
 	/// \brief An event holding a const reference to its observable.

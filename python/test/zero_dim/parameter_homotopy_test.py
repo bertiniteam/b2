@@ -21,7 +21,7 @@ def test_solve_once_then_sweep_a_parameter():
     xg = pb.Variable('x')
     generic.add_variable_group(pb.VariableGroup([xg]))
     generic.add_function(xg * xg - 4)
-    zd0 = pb.nag_algorithm.ZeroDimSolver(generic, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    zd0 = pb.nag_algorithm.ZeroDimSolver(generic, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     zd0.solve()
     start_points = zd0.all_solutions()
     assert _roots_real(start_points) == [-2.0, 2.0]
@@ -75,7 +75,7 @@ def test_coefficient_parameter_homotopy_helper():
     generic = pb.System(); generic.add_variable_group(pb.VariableGroup([x])); generic.add_function(x * x - 4)
     target = pb.System(); target.add_variable_group(pb.VariableGroup([x])); target.add_function(x * x - 9)
 
-    gen_solver = pb.nag_algorithm.ZeroDimSolver(generic, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    gen_solver = pb.nag_algorithm.ZeroDimSolver(generic, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     gen_solver.solve()
 
     H = pb.nag_algorithm.coefficient_parameter_homotopy(target, generic)

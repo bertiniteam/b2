@@ -27,7 +27,7 @@
 
 Explicit instantiation definitions for the User-homotopy ZeroDim combos, which
 use the RefToGiven policy (the user owns the systems).  The clone-owned starts
-(TotalDegree, MHomogeneous, RootsOfUnity, ...) are ALL covered by the six default
+(TotalDegreeLinearProduct, MHomogeneous, TotalDegreeBinomial, ...) are ALL covered by the six default
 CloneGiven combos in zero_dim_eti.cpp now that ZeroDim is not templated on the
 start-system type.  Pairs with the extern block at the bottom of
 bertini2/nag_algorithms/zero_dim_solve.hpp.  See ADR-0014.

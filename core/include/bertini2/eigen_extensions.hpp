@@ -550,6 +550,35 @@ namespace bertini {
 		return Mat<NumberType>(rows,cols).unaryExpr([](NumberType const& /*x*/) { return RandomUnit<NumberType>(); });
 	}
 
+
+	/**
+	\brief Make a random conjugate-orthonormal matrix (orthonormal rows when rows<=cols, orthonormal
+	columns when rows>=cols), to the current default precision.
+
+	Bertini 1 builds every random complex matrix conjugate-orthonormal (unitary), and when it needs a
+	non-square shape it generates a SQUARE one and truncates.  This mirrors that: draw a square random
+	matrix of the larger dimension, QR-factor it to a unitary Q, and return the leading rows x cols
+	block.  The QR launders the seed draw away -- the result is conjugate-orthonormal regardless of how
+	the seed was drawn -- and perfectly conditioned, which is the point: genericity without scaling
+	trouble.  Use it for every random *matrix* (slices, the randomization tail) the way the
+	bounded-modulus scalar draw is used for individual coefficients (ADR-0041).
+
+	\param rows The number of rows of the returned matrix.
+	\param cols The number of columns of the returned matrix.
+	\tparam NumberType the (complex) number type to fill the matrix with.
+	*/
+	template <typename NumberType>
+	inline
+	Mat<NumberType> RandomConjugateOrthonormalMatrix(unsigned int rows, unsigned int cols)
+	{
+		using std::max;
+		const unsigned int dim = max(rows, cols);   // generate square, then truncate -- Bertini 1's recipe
+		Mat<NumberType> seed = RandomOfUnits<NumberType>(dim, dim);
+		Eigen::HouseholderQR<Mat<NumberType> > qr(seed);
+		Mat<NumberType> Q = qr.householderQ() * Mat<NumberType>::Identity(dim, dim);
+		return Q.topLeftCorner(rows, cols);
+	}
+
 	/**
 	\brief Make a random vector of units (numbers with norm 1).
 

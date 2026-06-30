@@ -51,7 +51,7 @@ def solve(seed, resolve_attempts, tol=1e-4):
     boundary; 0 means "detect and report only".  Returns (report, distinct_finite_count).
     """
     pb.random.set_random_seed(seed)
-    solver = pb.nag_algorithm.ZeroDimSolver(cyclic_system(CYCLIC_N), endgame='cauchy', mptype='double', startsystem='rootsofunity')
+    solver = pb.nag_algorithm.ZeroDimSolver(cyclic_system(CYCLIC_N), endgame='cauchy', mptype='double', startsystem='binomial')
 
     # The deliberate culprit: a first-order predictor.
     solver.get_tracker().predictor(pb.tracking.Predictor.Euler)
@@ -69,7 +69,7 @@ def solve(seed, resolve_attempts, tol=1e-4):
 
     report = solver.endgame_boundary_metadata()
     finite = [m for m in solver.solution_metadata()
-              if int(m.endgame_success) == OK and m.is_finite]
+              if int(m.endgame_success_code) == OK and m.is_finite]
     distinct = round(sum(1.0 / m.multiplicity for m in finite))
     return report, distinct
 

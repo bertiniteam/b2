@@ -41,7 +41,7 @@ sys.auto_patch();
 assert (sys.is_patched() == 1)
 assert (sys.is_homogeneous() == 1)
 
-td = ss.TotalDegree(sys);
+td = ss.TotalDegreeLinearProduct(sys);
 
 assert (td.is_patched() == 1)
 assert (td.is_homogeneous() == 1)

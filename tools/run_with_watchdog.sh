@@ -3,7 +3,7 @@
 # process group) if it exceeds the limit.
 #
 # WHY THIS EXISTS: some Bertini 2 solves can spin or churn for a very long time (notably the
-# linear-product TotalDegree start system, whose Cauchy endgame can stall near t=0 -- see
+# linear-product TotalDegreeLinearProduct start system, whose Cauchy endgame can stall near t=0 -- see
 # z_notes/20260629_endgame_stepsize_reset_rootcause).  Running such a solve directly from an agent
 # session (or CI) can peg a core indefinitely and starve everything else.  macOS has no `timeout(1)`,
 # so use this wrapper for ANY command that might hang -- especially `... python -c 'zd.solve()'` and

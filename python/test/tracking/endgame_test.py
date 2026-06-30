@@ -76,7 +76,7 @@ def test_using_total_degree_ss():
     assert sys.is_patched() == 1
     assert sys.is_homogeneous() == 1
 
-    td = ss.RootsOfUnity(sys)
+    td = ss.TotalDegreeBinomial(sys)
 
     assert td.is_patched() == 1
     assert td.is_homogeneous() == 1

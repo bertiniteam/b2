@@ -53,7 +53,7 @@ def load_trusted():
 
 def solve_finite():
     pb.random.set_random_seed(1)   # deterministic homotopy for a stable test
-    solver = pb.nag_algorithm.ZeroDimSolver(cyclic_system(N), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    solver = pb.nag_algorithm.ZeroDimSolver(cyclic_system(N), endgame='cauchy', mptype='adaptive', startsystem='binomial')
     final_tol = float(solver.get_config(TolerancesConfig).final_tolerance)
     solver.solve()
     ours = np.array([[complex(c) for c in s] for s in solver.finite_solutions()])

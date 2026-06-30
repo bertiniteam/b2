@@ -100,11 +100,11 @@ To solve our algebraic system ``sys``, we need a corresponding start system -- o
 
 
 Above, we formed a target system, ``sys``.  Now, let's make a start system ``td``.  Later, we will couple it to ``sys``.
-It's trivial to make a total degree start system (:class:`~bertini.system.start_system.TotalDegree`):
+It's trivial to make a total degree start system (:class:`~bertini.system.start_system.TotalDegreeLinearProduct`):
 
 .. testcode::
 
-	td = bertini.system.start_system.TotalDegree(sys)
+	td = bertini.system.start_system.TotalDegreeLinearProduct(sys)
 
 Note that you have to pass in the target system into the constructor of the total degree, or you get an error.
 
@@ -235,7 +235,7 @@ Now that we've tracked a single path, you might want to loop over all start poin
 	grp.append(y)
 	sys.add_variable_group(grp)
 
-	td = bertini.system.start_system.TotalDegree(sys)
+	td = bertini.system.start_system.TotalDegreeLinearProduct(sys)
 
 	t = bertini.Variable("t")
 	homotopy = (1-t)*sys + t*td

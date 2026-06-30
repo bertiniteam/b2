@@ -102,7 +102,10 @@ namespace bertini {
 		static Slice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
 			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
-			funtype gen = bertini::multiprecision::RandomRealAssign;
+			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems;
+			// kept REAL so a real slice stays real.  (A deeper pass on slice generation -- the constant
+			// column and the orthogonal=false path -- is still TODO.)
+			funtype gen = bertini::multiprecision::RandomRealBoundedModulusAssign;
 			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
@@ -112,7 +115,8 @@ namespace bertini {
 		static Slice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
 			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
-			funtype gen = bertini::multiprecision::RandomComplexAssign;
+			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems.
+			funtype gen = bertini::multiprecision::RandomComplexBoundedModulusAssign;
 			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
@@ -129,29 +133,12 @@ namespace bertini {
 
 			if (orthogonal)
 			{
-				using std::min;
-				using std::max;
-
-				auto mindim = min(dim, num_vars);
-				auto maxdim = max(dim, num_vars);
-
-				bool need_transpose = dim < num_vars;
-
-				coeffs.resize(maxdim, mindim);
-
-				for (unsigned ii(0); ii < maxdim; ++ii)
-					for (unsigned jj(0); jj < mindim; ++jj)
-						gen(coeffs(ii, jj), MaxPrecisionAllowed());
-
+				// conjugate-orthonormal coefficient matrix (orthonormal linear forms), drawn the b1 way
+				// via RandomConjugateOrthonormalMatrix (ADR-0041) -- it generates square and truncates,
+				// so the old transpose dance is gone.  Built at max precision, like the rest of the slice.
 				auto prev_precision = DefaultPrecision();
 				DefaultPrecision(MaxPrecisionAllowed());
-
-				auto QR_factorization = Eigen::HouseholderQR<Mat<complex_mp> >(coeffs);
-				coeffs = QR_factorization.householderQ() * Mat<complex_mp>::Identity(maxdim, mindim);
-
-				if (need_transpose)
-					coeffs.transposeInPlace();
-
+				coeffs = bertini::RandomConjugateOrthonormalMatrix<complex_mp>(dim, num_vars);
 				DefaultPrecision(prev_precision);
 			}
 			else

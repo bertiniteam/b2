@@ -21,7 +21,7 @@ f.add_function(5*x**3 + 16*x*y**4 - 17*x*y*z - z**3)
 
 f.add_variable_group(vg)
 
-g = pb.system.start_system.TotalDegree(f)
+g = pb.system.start_system.TotalDegreeLinearProduct(f)
 
 homotopy = t*g + (1-t)*f
 

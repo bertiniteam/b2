@@ -89,7 +89,7 @@ struct Classic <HomotopySolver<A,B,C>>
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
 			// only successful endgames have a final approximation to report
-			if (zd.FinalSolutionMetadata()[ii].endgame_success != SuccessCode::Success)
+			if (zd.SolutionMetadata()[ii].endgame_success_code != SuccessCode::Success)
 				continue;
 
 			EndPointMDFull(ii, out, zd);
@@ -114,7 +114,7 @@ struct Classic <HomotopySolver<A,B,C>>
 		for (decltype(zd.SolutionsInternalCoords().size()) ii{0}; ii<n; ++ii)
 		{
 			// only successful endgames have a final approximation to report
-			if (zd.FinalSolutionMetadata()[ii].endgame_success != SuccessCode::Success)
+			if (zd.SolutionMetadata()[ii].endgame_success_code != SuccessCode::Success)
 				continue;
 			EndPointMDRaw(ii,out,zd,"\n\n");
 		}
@@ -169,19 +169,19 @@ struct Classic <HomotopySolver<A,B,C>>
 	template <typename OutT>
 	static void RawSolutions(OutT & out, ZDT const& zd)
 	{
-		auto const& md   = zd.FinalSolutionMetadata();
+		auto const& md   = zd.SolutionMetadata();
 		auto const& sols = zd.SolutionsUserCoords();
 		const auto m = std::min(md.size(), sols.size());
 
 		std::size_t count{0};
 		for (std::size_t ii{0}; ii<m; ++ii)
-			if (md[ii].endgame_success == SuccessCode::Success)
+			if (md[ii].endgame_success_code == SuccessCode::Success)
 				++count;
 
 		out << count << "\n\n";
 		for (std::size_t ii{0}; ii<m; ++ii)
 		{
-			if (md[ii].endgame_success != SuccessCode::Success)
+			if (md[ii].endgame_success_code != SuccessCode::Success)
 				continue;
 			out << md[ii].path_index << "\n";
 			generators::Classic::generate(boost::spirit::ostream_iterator(out), sols[ii]);
@@ -262,7 +262,7 @@ struct Classic <HomotopySolver<A,B,C>>
 	static
 	void EndPointMDFull(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
-		const auto& data = zd.FinalSolutionMetadata()[ind];
+		const auto& data = zd.SolutionMetadata()[ind];
 		out << data.path_index << '\n'
 			<< data.solution_index << '\n'
 			<< data.condition_number << '\n'
@@ -276,7 +276,7 @@ struct Classic <HomotopySolver<A,B,C>>
 			<< data.accuracy_estimate_user_coords << '\n'
 			<< data.cycle_num << '\n'
 			<< data.multiplicity << '\n'
-			<< data.pre_endgame_success << ' ' << data.endgame_success << '\n';
+			<< data.pre_endgame_success_code << ' ' << data.endgame_success_code << '\n';
 		out << additional;
 	}
 
@@ -288,7 +288,7 @@ struct Classic <HomotopySolver<A,B,C>>
 	void EndPointMDRaw(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& pt = zd.SolutionsInternalCoords()[ind];
-		const auto& data = zd.FinalSolutionMetadata()[ind];
+		const auto& data = zd.SolutionMetadata()[ind];
 		out << data.path_index << '\n'
 			<< Precision(pt) << '\n';
 		EndPoint(ind, out, zd);
@@ -299,7 +299,7 @@ struct Classic <HomotopySolver<A,B,C>>
 		out << '\n' << data.accuracy_estimate << '\n';
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), data.time_of_first_prec_increase);
 		out << '\n' << data.cycle_num << '\n'
-			<< data.endgame_success << '\n'
+			<< data.endgame_success_code << '\n'
 			<< additional;
 	}
 
@@ -328,12 +328,12 @@ struct NonsingularSolutions
 		SampCont<BCT> solns;
 
 		const auto& s = alg.SolutionsUserCoords();
-		const auto& m = alg.FinalSolutionMetadata();
+		const auto& m = alg.SolutionMetadata();
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
 			const auto& d = m[ii];
-			if (d.endgame_success == SuccessCode::Success &&
+			if (d.endgame_success_code == SuccessCode::Success &&
 				d.multiplicity==1)
 			{
 				solns.push_back(s[ii]);

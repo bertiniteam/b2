@@ -281,7 +281,7 @@ def _enable_enum_pickling(cls):
     """Make a Boost.Python enum picklable (its built-in ``__reduce_ex__`` is broken).
 
     Registered via ``copyreg`` so the pickler reconstructs the member from its int value; this also
-    lets structs that *contain* enum fields (e.g. ``SolutionMetaData.endgame_success``) round-trip.
+    lets structs that *contain* enum fields (e.g. ``SolutionMetaData.endgame_success_code``) round-trip.
     """
     copyreg.pickle(cls, _reduce_enum)
     return cls

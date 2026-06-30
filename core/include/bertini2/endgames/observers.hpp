@@ -111,5 +111,71 @@ virtual ObserveResult Observe(AnyEvent const& e) override
 }; // gory detail
 
 
+
+/**
+\brief Counts endgame events and captures their payloads, for tests and diagnostics.
+
+Records how many of each event type were delivered, and captures the most-recent CircleAdvanced
+point/time and the Converged approximation -- reading each payload (and the state accessors LatestTime /
+FinalApproximation / ApproximateError) the way a real observer would.  This deliberately exercises the
+full event-delivery path, including the numeric-type conversion the adaptive-numeric-type endgame
+performs when it emits from its hardware-complex_dbl fast lane, and the slot-aware state accessors.
+
+\ingroup observer
+*/
+template <typename EndgameT>
+struct EventRecorder : public Observer<EndgameT>
+{BOOST_TYPE_INDEX_REGISTER_CLASS
+
+using EmitterT = EndgameT;                     ///< The endgame type emitting the observed events.
+using BCT = typename EndgameT::BaseComplexT;    ///< The boundary complex type of the observed endgame.
+
+unsigned num_events            = 0;            ///< Total number of events observed.
+unsigned num_time_advanced     = 0;            ///< Number of TimeAdvanced events observed.
+unsigned num_sample_refined    = 0;            ///< Number of SampleRefined events observed.
+unsigned num_circle_advanced   = 0;            ///< Number of circle-advanced events observed.
+unsigned num_closed_loop       = 0;            ///< Number of closed-loop events observed.
+unsigned num_approximated_root = 0;            ///< Number of approximated-root events observed.
+unsigned num_in_eg_zone        = 0;            ///< Number of in-endgame-zone events observed.
+unsigned num_converged         = 0;            ///< Number of converged events observed.
+unsigned num_precision_changed = 0;            ///< Number of precision-changed events observed.
+
+Vec<BCT> last_circle_point;                    ///< The most-recent circle sample point captured from an event.
+BCT      last_circle_time;                     ///< The most-recent circle sample time captured from an event.
+Vec<BCT> converged_point;                      ///< The converged root point captured from a converged event.
+
+virtual ObserveResult Observe(AnyEvent const& e) override
+{
+	++num_events;
+	if (auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
+	{ ++num_time_advanced; (void)p->Get().LatestTime(); }
+
+	else if (dynamic_cast<const SampleRefined<EmitterT>*>(&e))
+	{ ++num_sample_refined; }
+
+	else if (auto p = dynamic_cast<const CircleAdvanced<EmitterT>*>(&e))
+	{ ++num_circle_advanced; last_circle_point = p->NewSample(); last_circle_time = p->NewTime(); }
+
+	else if (dynamic_cast<const ClosedLoop<EmitterT>*>(&e))
+	{ ++num_closed_loop; }
+
+	else if (auto p = dynamic_cast<const ApproximatedRoot<EmitterT>*>(&e))
+	{ ++num_approximated_root; (void)p->Get().template FinalApproximation<BCT>(); (void)p->Get().ApproximateError(); }
+
+	else if (dynamic_cast<const InEGOperatingZone<EmitterT>*>(&e))
+	{ ++num_in_eg_zone; }
+
+	else if (auto p = dynamic_cast<const Converged<EmitterT>*>(&e))
+	{ ++num_converged; converged_point = p->Get().template FinalApproximation<BCT>(); (void)p->Get().LatestTime(); }
+
+	else if (dynamic_cast<const PrecisionChanged<AMPEndgame>*>(&e))
+	{ ++num_precision_changed; }
+
+	return ObserveResult::KeepObserving;
+}
+
+}; // EventRecorder
+
+
 	} //re: namespace endgames
 }// re: namespace bertini

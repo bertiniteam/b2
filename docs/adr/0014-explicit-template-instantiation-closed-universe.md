@@ -17,7 +17,7 @@ The instantiation universe is **closed and small**: number types
 `{dbl, mpfr_complex}`; trackers `{DoublePrecisionTracker,
 MultiplePrecisionTracker, AMPTracker}`; endgames `{PowerSeries, Cauchy}` ×
 those trackers' precision policies; ZeroDim = those six with `System`,
-`TotalDegree`, and the default `CloneGiven` policy — exactly what the python
+`TotalDegreeLinearProduct`, and the default `CloneGiven` policy — exactly what the python
 bindings and blackbox construct.
 
 Precedent: `ExplicitRKPredictor` already used this pattern

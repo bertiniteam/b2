@@ -1175,26 +1175,25 @@ namespace bertini
 			// The identity block makes g_i carry f_i with coefficient 1 (degree d_i); the random tail
 			// C folds the lower-degree functions in, padded by hom-var powers.  deg g_i = d_i, so the
 			// total-degree path count is the product of the n largest degrees -- optimal.
+			//
+			// Only the C tail is random, and it is drawn conjugate-orthonormal (ADR-0041) -- matching
+			// Bertini 1, which builds every random complex matrix unitary.  C being dense leaves the
+			// degree-optimal structure intact: after the descending sort every tail function is lower
+			// degree than row i's leading f_i, so target_md[i] stays d_i regardless of C's nonzeros.
 			operand->ReorderFunctionsByDegreeDecreasing();
-			for (size_t i = 0; i < n; ++i)
-				for (size_t j = 0; j < N; ++j)
-				{
-					if (j < n)
-						R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) =
-							(i == j) ? complex_mp(1) : complex_mp(0);
-					else
-						R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) =
-							bertini::multiprecision::RandomComplex(DefaultPrecision());
-				}
+			R.leftCols(static_cast<Eigen::Index>(n)).setIdentity();
+			if (N > n)
+				R.rightCols(static_cast<Eigen::Index>(N - n)) =
+					bertini::RandomConjugateOrthonormalMatrix<complex_mp>(
+						static_cast<unsigned>(n), static_cast<unsigned>(N - n));
 		}
 		else
 		{
 			// several variable groups: multidegrees are only partially ordered, so use a dense random
 			// R with a common (componentwise-max) target multidegree -- correct, and optimal when the
-			// functions share a multidegree.
-			for (Eigen::Index r = 0; r < R.rows(); ++r)
-				for (Eigen::Index c = 0; c < R.cols(); ++c)
-					R(r, c) = bertini::multiprecision::RandomComplex(DefaultPrecision());
+			// functions share a multidegree.  Drawn conjugate-orthonormal (ADR-0041), like b1.
+			R = bertini::RandomConjugateOrthonormalMatrix<complex_mp>(
+				static_cast<unsigned>(n), static_cast<unsigned>(N));
 		}
 
 		return AssembleRandomized(operand, std::move(R));
@@ -1504,7 +1503,7 @@ namespace bertini
 		else
 		{
 			// One (or both) operands evaluate via a STRUCTURED block (products-of-linears, blend, ...)
-			// -- e.g. the linear-product TotalDegree or MHom start systems.  Their functions do NOT
+			// -- e.g. the linear-product TotalDegreeLinearProduct or MHom start systems.  Their functions do NOT
 			// live in the PolynomialBlock, so the pure-poly path above read rhs.PolyFunctions()
 			// (empty) out of bounds and SEGFAULTED.  Expand every block to function-tree nodes on both
 			// sides, blend pairwise, and store the result as a single PolynomialBlock (a function-tree
@@ -1539,9 +1538,9 @@ namespace bertini
 		}
 		else
 		{
-			// Structured-block system (e.g. linear-product TotalDegree / MHom): its functions are NOT
+			// Structured-block system (e.g. linear-product TotalDegreeLinearProduct / MHom): its functions are NOT
 			// in the PolynomialBlock, so multiplying only PolyBlock().Functions() would silently
-			// no-op (a WRONG result -- e.g. gamma*t*TotalDegree leaving the start system unscaled).
+			// no-op (a WRONG result -- e.g. gamma*t*TotalDegreeLinearProduct leaving the start system unscaled).
 			// Expand every block to function-tree nodes, scale, and store as a pure PolynomialBlock.
 			auto fns = NaturalFunctionsAsNodes();
 			for (auto& f : fns)

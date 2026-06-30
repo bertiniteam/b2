@@ -6,7 +6,7 @@
 ## Context
 
 An overdetermined system (N functions, n variables, N > n) with isolated solutions cannot be fed
-to a total-degree start system, which requires a square target (`system/start/total_degree.hpp`
+to a total-degree start system, which requires a square target (`system/start/total_degree_linear_product.hpp`
 throws otherwise). The standard fix is **randomization**: replace the N functions with n generic
 combinations `G = R·F` whose isolated solutions still contain the target's; solve the square
 system and discard the extraneous solutions. This is the squaring-up the regeneration roadmap

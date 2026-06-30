@@ -111,7 +111,7 @@ namespace bertini{
 		SuccessCode TrackerIteration() override
 		{}
 
-		void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const override
+		void CopySolution(Vec<mpfr> & solution_at_endtime) const override
 		{}
 
 		\endcode
@@ -301,7 +301,7 @@ namespace bertini{
 				}// re: while
 
 
-				CopyFinalSolution(solution_at_endtime);
+				CopySolution(solution_at_endtime);
 				PostTrackCleanup();
 				return SuccessCode::Success;
 			}
@@ -482,10 +482,10 @@ namespace bertini{
 			\param solution_at_endtime The output variable into which to copy the final solution.
 			*/
 			virtual
-			void CopyFinalSolution(Vec<ComplexT> & solution_at_endtime) const = 0;
+			void CopySolution(Vec<ComplexT> & solution_at_endtime) const = 0;
 
 			// virtual
-			// void CopyFinalSolution(Vec<complex_dbl> & solution_at_endtime) const = 0;
+			// void CopySolution(Vec<complex_dbl> & solution_at_endtime) const = 0;
 
 
 		protected:

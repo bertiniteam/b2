@@ -168,7 +168,10 @@ namespace bertini {
 				coefficients_highest_precision_[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
 				{
-					multiprecision::RandomComplexAssign(coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
+					// bounded-modulus draw (away from 0 and infinity), matching the linear-product /
+					// mhom / binomial start-system coefficients -- a heavy-tailed coefficient here scales
+					// the patch equation badly and feeds the same near-t=0 conditioning trouble.
+					multiprecision::RandomComplexBoundedModulusAssign(coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
 				}
 
 				coefficients_dbl[ii].resize(sizes[ii]);
@@ -225,7 +228,9 @@ namespace bertini {
 			{
 				p.coefficients_highest_precision_[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-					multiprecision::RandomRealAssign(p.coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
+					// real bounded-modulus draw: away from 0 and infinity (same recipe as the complex
+					// patch / start systems) but kept REAL, so a real patch keeps a real path real.
+					multiprecision::RandomRealBoundedModulusAssign(p.coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
 
 				coefficients_mpfr[ii] = p.coefficients_highest_precision_[ii]; 
 				Precision(coefficients_mpfr[ii],DefaultPrecision());

@@ -105,14 +105,14 @@ struct FullPathResult
 	SolnIndT      path_index             = 0;  ///< The index of the path this result is for.
 
 	// boundary (pre-endgame) data
-	SuccessCode   pre_endgame_success    = SuccessCode::NeverStarted;  ///< Outcome of pre-endgame tracking to the boundary.
+	SuccessCode   pre_endgame_success_code    = SuccessCode::NeverStarted;  ///< Outcome of pre-endgame tracking to the boundary.
 	Vec<ComplexT> boundary_point;  ///< The space point at the endgame boundary.
 	RealT         boundary_stepsize      = RealT(0);  ///< The step size at the endgame boundary.
 	unsigned      boundary_precision     = DoublePrecision();  ///< The precision at the endgame boundary.
 
 	// endgame data
-	SuccessCode   endgame_success        = SuccessCode::NeverStarted;  ///< Outcome of the endgame.
-	Vec<ComplexT> final_solution;  ///< The final solution point.
+	SuccessCode   endgame_success_code        = SuccessCode::NeverStarted;  ///< Outcome of the endgame.
+	Vec<ComplexT> solution;  ///< The solution point (final endpoint of the path).
 	double        function_residual              = 0;  ///< Residual of the system at the final solution.
 	double        condition_number               = 0;  ///< Condition-number estimate at the final solution.
 	double        newton_residual                = 0;  ///< Final Newton residual.
@@ -120,6 +120,8 @@ struct FullPathResult
 	double        accuracy_estimate              = 0;  ///< Estimated accuracy of the final solution.
 	double        accuracy_estimate_user_coords  = 0;  ///< Estimated accuracy in the user's coordinates.
 	unsigned      cycle_num                      = 0;  ///< The estimated cycle number at the endpoint.
+	unsigned      precision_digits             = 0;   ///< Digits the endgame finished in (= solution point's precision).
+	unsigned      accuracy_digits              = 0;   ///< Trustworthy digit count, from the convergence agreement.
 
 	// precision metadata (spans the whole path)
 	bool          precision_changed              = false;  ///< Whether precision changed during the path.
@@ -134,12 +136,12 @@ struct FullPathResult
 	void serialize(Archive& ar, unsigned const)
 	{
 		ar & path_index;
-		ar & pre_endgame_success;
+		ar & pre_endgame_success_code;
 		ar & boundary_point;
 		ar & boundary_stepsize;
 		ar & boundary_precision;
-		ar & endgame_success;
-		ar & final_solution;
+		ar & endgame_success_code;
+		ar & solution;
 		ar & function_residual;
 		ar & condition_number;
 		ar & newton_residual;
@@ -147,6 +149,8 @@ struct FullPathResult
 		ar & accuracy_estimate;
 		ar & accuracy_estimate_user_coords;
 		ar & cycle_num;
+		ar & precision_digits;
+		ar & accuracy_digits;
 		ar & precision_changed;
 		ar & time_of_first_prec_increase;
 		ar & max_precision_used;

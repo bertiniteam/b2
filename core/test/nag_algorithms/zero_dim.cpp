@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO_nonhom)
 	using namespace tracking;
 
 	auto sys = system::Precon::GriewankOsborn();
-	auto TD = start_system::RootsOfUnity(sys);
+	auto TD = start_system::TotalDegreeBinomial(sys);
 
 	auto t = Variable::Make("t");
 	auto h = (1-t)* sys + t*TD;
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	auto TD = start_system::RootsOfUnity(sys);
+	auto TD = start_system::TotalDegreeBinomial(sys);
 
 	auto t = Variable::Make("t");
 	auto h = (1-t)* sys + t*TD;
@@ -241,10 +241,10 @@ BOOST_AUTO_TEST_CASE(user_homotopy_parameter_homotopy_solves)
 	zd.Solve();
 
 	auto const& sols = zd.SolutionsUserCoords();
-	auto const& md   = zd.FinalSolutionMetadata();
+	auto const& md   = zd.SolutionMetadata();
 	std::vector<complex_dbl> ends;
 	for (size_t i = 0; i < sols.size(); ++i)
-		if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 1)
+		if (md[i].endgame_success_code == SuccessCode::Success && sols[i].size() == 1)
 			ends.push_back(complex_dbl(sols[i](0)));
 
 	BOOST_CHECK_EQUAL(ends.size(), 2u);
@@ -292,11 +292,11 @@ BOOST_AUTO_TEST_CASE(mhom_solves_two_variable_group_system)
 
 	// Collect the successfully-tracked solutions (a failed path leaves an empty placeholder).
 	auto const& sols = zd.SolutionsUserCoords();
-	auto const& md   = zd.FinalSolutionMetadata();
+	auto const& md   = zd.SolutionMetadata();
 	using SolVec = std::decay_t<decltype(sols[0])>;
 	std::vector<SolVec> good;
 	for (size_t i = 0; i < sols.size(); ++i)
-		if (md[i].endgame_success == SuccessCode::Success && sols[i].size() == 2)
+		if (md[i].endgame_success_code == SuccessCode::Success && sols[i].size() == 2)
 			good.push_back(sols[i]);
 
 	BOOST_REQUIRE_EQUAL(good.size(), 2u); // both MHom paths solved (the m-homogeneous Bezout number)
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(solve_report_buckets_metadata_and_flags_failures)
 
 	auto set = [](SolutionMetaData<CT>& m, SC code, bool finite, int mult,
 	              bool real, bool sing, double cond){
-		m.endgame_success = code; m.is_finite = finite; m.multiplicity = mult;
+		m.endgame_success_code = code; m.is_finite = finite; m.multiplicity = mult;
 		m.is_real = real; m.is_singular = sing; m.condition_number = cond; m.max_precision_used = 16;
 	};
 
@@ -447,7 +447,7 @@ BOOST_AUTO_TEST_CASE(solve_report_security_truncation_counts_as_diverged)
 	using CT = bertini::complex_dbl;
 
 	auto set = [](SolutionMetaData<CT>& m, SC code, bool finite){
-		m.endgame_success = code; m.is_finite = finite; m.multiplicity = 1;
+		m.endgame_success_code = code; m.is_finite = finite; m.multiplicity = 1;
 		m.is_real = false; m.is_singular = false; m.condition_number = 1e3; m.max_precision_used = 16;
 	};
 
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(solve_report_from_a_real_solve)
 	zd.DefaultSetup();
 	zd.Solve();
 
-	auto const& meta = zd.FinalSolutionMetadata();
+	auto const& meta = zd.SolutionMetadata();
 	auto r = zd.Report();
 
 	BOOST_CHECK_EQUAL(r.num_paths_tracked, meta.size());                       // total degree 2*2 = 4
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(cyclic5_amp_does_not_overescalate_precision)
 	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(), 70u);
 
 	unsigned escalated = 0;
-	for (auto const& m : zd.FinalSolutionMetadata())
+	for (auto const& m : zd.SolutionMetadata())
 		if (m.precision_changed)
 			++escalated;
 	BOOST_TEST_MESSAGE("cyclic5 AMP finite paths that escalated to multiprecision: " << escalated << " / 70");
@@ -655,14 +655,14 @@ BOOST_AUTO_TEST_CASE(infinite_solutions_at_infinity)
 	zd.Solve();
 
 	auto r = zd.Report();
-	BOOST_CHECK_EQUAL(zd.FinalSolutionMetadata().size(), 2u);   // Bezout 2
+	BOOST_CHECK_EQUAL(zd.SolutionMetadata().size(), 2u);   // Bezout 2
 	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(),       1u);
 	BOOST_CHECK_EQUAL(zd.InfiniteSolutions().size(),     1u);
 
 	// finite + infinite partition the whole list (no failed paths on this clean solve)
 	BOOST_CHECK_EQUAL(r.num_failed, 0u);
 	BOOST_CHECK_EQUAL(zd.FiniteSolutions().size() + zd.InfiniteSolutions().size(),
-	                  zd.FinalSolutionMetadata().size());
+	                  zd.SolutionMetadata().size());
 
 	// the at-infinity count matches the report's diverged bucket
 	BOOST_CHECK_EQUAL(zd.InfiniteSolutions().size(), r.num_diverged);
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE(multiplicity_representative_marks_one_per_cluster)
 	zd.DefaultSetup();
 	zd.Solve();
 
-	auto const& md = zd.FinalSolutionMetadata();
+	auto const& md = zd.SolutionMetadata();
 	BOOST_CHECK_EQUAL(md.size(), 4u);                                // Bezout 2*2 = 4 paths
 
 	unsigned representatives = 0, duplicates = 0;
@@ -715,7 +715,7 @@ BOOST_AUTO_TEST_CASE(multiplicity_representative_marks_one_per_cluster)
 	zd2.DefaultSetup();
 	zd2.Solve();
 	unsigned reps2 = 0;
-	for (auto const& m : zd2.FinalSolutionMetadata())
+	for (auto const& m : zd2.SolutionMetadata())
 		if (m.is_finite && m.multiplicity_representative) ++reps2;
 	BOOST_CHECK_EQUAL(reps2, 4u);
 }
@@ -987,7 +987,7 @@ Counts Tally(MDVec const& md)
 	Counts c;
 	for (auto const& m : md)
 	{
-		if (m.endgame_success != bertini::SuccessCode::Success) continue;
+		if (m.endgame_success_code != bertini::SuccessCode::Success) continue;
 		++c.success;
 		if (m.is_finite)   ++c.finite;
 		if (m.is_real)     ++c.real;
@@ -1009,13 +1009,13 @@ BOOST_AUTO_TEST_CASE(finite_real_nonsingular)
 	zd.DefaultSetup();
 	zd.Solve();
 
-	auto c = Tally(zd.FinalSolutionMetadata());
+	auto c = Tally(zd.SolutionMetadata());
 	BOOST_CHECK_EQUAL(c.success, 2);
 	BOOST_CHECK_EQUAL(c.finite, 2);
 	BOOST_CHECK_EQUAL(c.real, 2);
 	BOOST_CHECK_EQUAL(c.singular, 0);
-	for (auto const& m : zd.FinalSolutionMetadata())
-		if (m.endgame_success == SuccessCode::Success)
+	for (auto const& m : zd.SolutionMetadata())
+		if (m.endgame_success_code == SuccessCode::Success)
 			BOOST_CHECK_EQUAL(m.multiplicity, 1);
 }
 
@@ -1033,7 +1033,7 @@ BOOST_AUTO_TEST_CASE(finite_complex_not_real)
 	zd.DefaultSetup();
 	zd.Solve();
 
-	auto c = Tally(zd.FinalSolutionMetadata());
+	auto c = Tally(zd.SolutionMetadata());
 	BOOST_CHECK_EQUAL(c.success, 2);
 	BOOST_CHECK_EQUAL(c.finite, 2);
 	BOOST_CHECK_EQUAL(c.real, 0);     // +/- i are not real
@@ -1054,14 +1054,14 @@ BOOST_AUTO_TEST_CASE(singular_double_root)
 	zd.DefaultSetup();
 	zd.Solve();
 
-	auto const& md = zd.FinalSolutionMetadata();
+	auto const& md = zd.SolutionMetadata();
 	auto c = Tally(md);
 	BOOST_CHECK(c.success >= 1);                 // the endgame should reach the singular endpoint
 	BOOST_CHECK_EQUAL(c.singular, c.success);    // every successful endpoint here is singular
 	BOOST_CHECK_EQUAL(c.finite, c.success);      // ... and finite (at 0)
 	if (c.success == 2)                          // both paths clustered -> multiplicity 2
 		for (auto const& m : md)
-			if (m.endgame_success == SuccessCode::Success)
+			if (m.endgame_success_code == SuccessCode::Success)
 				BOOST_CHECK_EQUAL(m.multiplicity, 2);
 }
 
@@ -1083,7 +1083,7 @@ BOOST_AUTO_TEST_CASE(endpoint_finite_threshold_is_applied)
 	zd.Set(pp);
 	zd.Solve();
 
-	auto c = Tally(zd.FinalSolutionMetadata());
+	auto c = Tally(zd.SolutionMetadata());
 	BOOST_CHECK_EQUAL(c.success, 2);
 	BOOST_CHECK_EQUAL(c.finite, 0);              // the lowered threshold reclassifies both as infinite
 }
@@ -1106,7 +1106,7 @@ BOOST_AUTO_TEST_CASE(condition_number_threshold_is_applied)
 	zd.Set(pp);
 	zd.Solve();
 
-	auto c = Tally(zd.FinalSolutionMetadata());
+	auto c = Tally(zd.SolutionMetadata());
 	BOOST_CHECK_EQUAL(c.success, 2);
 	BOOST_CHECK_EQUAL(c.singular, 2);            // reclassified singular purely by the lowered threshold
 }
@@ -1270,7 +1270,7 @@ BOOST_AUTO_TEST_CASE(overdetermined_system_is_squared_and_filtered)
 	// Nonsolutions(); they stay geometrically finite.  How many of the squaring's extra roots land
 	// finite vs. diverge is RNG-dependent, so assert the ROBUST invariants, not an exact count:
 	unsigned num_nonsol = 0;
-	for (auto const& m : zd.FinalSolutionMetadata())
+	for (auto const& m : zd.SolutionMetadata())
 		if (m.is_nonsolution) { ++num_nonsol; BOOST_CHECK(m.is_finite); }   // a nonsolution is finite
 	BOOST_CHECK_EQUAL(num_nonsol, zd.Nonsolutions().size());
 	BOOST_CHECK_EQUAL(zd.Report().num_nonsolutions, num_nonsol);

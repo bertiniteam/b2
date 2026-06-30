@@ -70,7 +70,7 @@ def recovered_eigenvalues(solver):
     return [
         complex(sols[i][len(sols[i]) - 1]).real
         for i in range(len(sols))
-        if int(md[i].endgame_success) == OK and md[i].is_finite and len(sols[i]) > 0
+        if int(md[i].endgame_success_code) == OK and md[i].is_finite and len(sols[i]) > 0
     ]
 
 

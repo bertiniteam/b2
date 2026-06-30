@@ -115,6 +115,13 @@ namespace bertini{ namespace endgame{
 		unsigned max_num_newton_iterations = 15; ///< Maximum Newton iterations when refining endgame sample points.
 
 		T final_tolerance = 1e-11;///< The tolerance to which to compute the endpoint using the endgame.
+
+		// When the adaptive-numeric-type (double-first) endgame crosses a sample set from double up into
+		// mpfr, the retained samples are widened (zero-padded) -- they were already tracked/refined to
+		// final_tolerance, so by default we do NOT spend a Newton refine to sharpen them.  Set true to
+		// refine every retained sample to the new (higher) precision immediately after a precision
+		// increase.  No effect on fixed-precision endgames.
+		bool refine_when_increasing_precision = false; ///< When true, re-refine retained samples after the endgame migrates to higher precision (default false).
 	};
 
 

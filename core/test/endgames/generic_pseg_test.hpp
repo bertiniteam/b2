@@ -1120,7 +1120,7 @@ values we have.
 BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
 	using namespace bertini::tracking;
-	// Deterministic RNG: random TotalDegree start system + endgame draws.  See ADR-0003.
+	// Deterministic RNG: random TotalDegreeLinearProduct start system + endgame draws.  See ADR-0003.
 	bertini::SetGlobalSeed(1u);
 	DefaultPrecision(ambient_precision);
 
@@ -1146,7 +1146,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	
 
-	auto TD = bertini::start_system::RootsOfUnity(sys);
+	auto TD = bertini::start_system::TotalDegreeBinomial(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());

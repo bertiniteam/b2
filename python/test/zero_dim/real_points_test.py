@@ -32,7 +32,7 @@ def test_real_point_on_every_trott_component():
     sys = _trott_critical_system(Fraction(41, 100), Fraction(23, 100))
     assert list(sys.degrees()) == [4, 4]            # 16 paths
 
-    solver = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    solver = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     solver.solve()
 
     # keep the real solutions by the solver's own classification (is_real applies the configured

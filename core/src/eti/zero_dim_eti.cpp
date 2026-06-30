@@ -27,7 +27,7 @@
 
 Explicit instantiation definitions for the closed universe of ZeroDim
 algorithm types: {PowerSeries, Cauchy} x {double, multiple, AMP} trackers,
-TotalDegree start, CloneGiven system management (the default; both the python
+TotalDegreeLinearProduct start, CloneGiven system management (the default; both the python
 bindings and blackbox use exactly these six).  Pairs with the extern template
 declarations at the bottom of bertini2/nag_algorithms/zero_dim_solve.hpp.
 See ADR-0014.
@@ -46,7 +46,7 @@ using MPT  = tracking::MultiplePrecisionTracker;
 using AMPT = tracking::AMPTracker;
 
 // ZeroDimSolver holds its start system polymorphically, so these six instantiations cover EVERY
-// clone-owned start system (TotalDegree, MHomogeneous, RootsOfUnity, future Polyhedral, ...).
+// clone-owned start system (TotalDegreeLinearProduct, MHomogeneous, TotalDegreeBinomial, future Polyhedral, ...).
 // Adding a start system costs zero ETI.  Each ZeroDimSolver instantiation also instantiates its
 // HomotopySolver base.
 template struct ZeroDimSolver<DPT,  typename endgame::EndgameSelector<DPT>::PSEG,    System>;

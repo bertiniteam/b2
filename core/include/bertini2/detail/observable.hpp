@@ -197,6 +197,24 @@ namespace bertini{
 			DispatchEvent(e);
 		}
 
+		/**
+		\brief Whether anyone is currently observing (conservative).
+
+		Lets an emitter skip constructing an event -- and any work needed to build its payload, such as a
+		numeric-type conversion -- when there is no observer to receive it.  Conservative: returns true if
+		any watcher list is non-empty (even if a stale, emptied typed bucket lingers), so it never wrongly
+		suppresses a real observer.
+		*/
+		bool HasObservers() const
+		{
+			if (!untyped_watchers_.empty())
+				return true;
+			for (auto const& kv : typed_watchers_)
+				if (!kv.second.empty())
+					return true;
+			return false;
+		}
+
 	private:
 
 		/**

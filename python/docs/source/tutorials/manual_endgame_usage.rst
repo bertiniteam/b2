@@ -63,7 +63,7 @@ Next, we make the total degree start system for `gw`, and couple it using the ga
 .. testcode::
 
     t = bertini.Variable('t')
-    td = bertini.system.start_system.TotalDegree(gw)
+    td = bertini.system.start_system.TotalDegreeLinearProduct(gw)
     gamma = bertini.function_tree.symbol.Rational.rand()
     hom = (1-t)*gw + t*gamma*td
     hom.add_path_variable(t)

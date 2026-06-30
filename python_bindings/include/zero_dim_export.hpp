@@ -95,7 +95,7 @@ void ExposeSolutionMetaData(std::string const& class_name){
 		"The highest precision (in digits) used while tracking this path (adaptive precision only).")
 	.def_readwrite("path_time_seconds",&MDT::path_time_seconds,
 		"Wall-clock time (seconds) to execute this whole path: pre-endgame tracking plus endgame.")
-	.def_readwrite("pre_endgame_success",&MDT::pre_endgame_success,
+	.def_readwrite("pre_endgame_success_code",&MDT::pre_endgame_success_code,
 		"The SuccessCode from tracking this path up to the endgame boundary. 0 means Success.")
 	.def_readwrite("condition_number",&MDT::condition_number,
 		"The latest estimate of the condition number (spectral norm) near the endpoint. Used, "
@@ -110,7 +110,15 @@ void ExposeSolutionMetaData(std::string const& class_name){
 		"Accuracy estimate in natural (dehomogenized) coordinates.")
 	.def_readwrite("cycle_num",&MDT::cycle_num,
 		"The cycle number used by the endgame's extrapolation.")
-	.def_readwrite("endgame_success",&MDT::endgame_success,
+	.def_readwrite("precision_digits",&MDT::precision_digits,
+		"The working precision (in digits) the endgame finished this solution in.  For an adaptive "
+		"solve, this is DoublePrecision (~16) for a path that stayed in the hardware-double fast lane, "
+		"and the higher mpfr precision for a path that had to escalate.")
+	.def_readwrite("accuracy_digits",&MDT::accuracy_digits,
+		"How many digits of this solution are trustworthy (a digit count), from the convergence "
+		"agreement: floor(-log10(accuracy_estimate)), clamped to [0, precision_digits].  Read with "
+		"precision_digits as 'computed in N digits, good to M of them'.")
+	.def_readwrite("endgame_success_code",&MDT::endgame_success_code,
 		"The SuccessCode from the endgame. 0 means Success; anything else means the path did not "
 		"converge to a finite solution (e.g. GoingToInfinity, SecurityMaxNormReached).")
 	.def_readwrite("function_residual",&MDT::function_residual,
@@ -318,7 +326,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		+[](AlgoT& self) -> decltype(self.TargetSystem()) { return self.TargetSystem(); },
 		return_internal_reference<>(),
 		"get the prepared target system: the homogenized, auto-patched clone of the system you supplied.  its patch is the one internal-coordinate solutions lie on; use its dehomogenize_point/homogenize_point/variable_ordering to move between representations.")
-	.def("solution_metadata", &AlgoT::FinalSolutionMetadata, return_internal_reference<>(), "get the metadata for the solutions at the target time")
+	.def("solution_metadata", &AlgoT::SolutionMetadata, return_internal_reference<>(), "get the metadata for the solutions at the target time")
 	.def("endgame_boundary_solutions", &AlgoT::EndgameBoundarySolutions, return_internal_reference<>(), "get the solutions (per-path point data) at the endgame boundary, where regular tracking switches to the endgame")
 	.def("endgame_boundary_metadata", &AlgoT::EndgameBoundaryMetadata, return_internal_reference<>(), "get the MidpathCheckReport from the path-crossing check at the endgame boundary: how many crossings were detected, which paths, how many re-track attempts were made, and whether the check ultimately passed")
 	.def("report", &AlgoT::Report, "a concise end-of-solve diagnostic summary (a SolveReport): how every path ended up -- finite solutions, diverged, or FAILED (by named reason) -- plus singular/real counts, max condition number, the path-crossing outcome, and all_paths_resolved.  print(solver.report()) for a human-readable summary; a count alone can hide a path the tracker silently lost.")
@@ -379,14 +387,14 @@ inline start_system::StartSystemFactory<System> StartFactoryFor(blackbox::type::
 	{
 		case blackbox::type::Start::MHom:
 			return start_system::MakeStartFactory<start_system::MHomogeneous>();
-		case blackbox::type::Start::RootsOfUnity:
-			return start_system::MakeStartFactory<start_system::RootsOfUnity>();
+		case blackbox::type::Start::TotalDegreeBinomial:
+			return start_system::MakeStartFactory<start_system::TotalDegreeBinomial>();
 		case blackbox::type::Start::User:
 			throw std::runtime_error("the User start system is not a clone-owned start; build the "
 			                         "homotopy with nag_algorithm.user_homotopy(...) instead");
-		case blackbox::type::Start::TotalDegree:
+		case blackbox::type::Start::TotalDegreeLinearProduct:
 		default:
-			return start_system::MakeStartFactory<start_system::TotalDegree>();
+			return start_system::MakeStartFactory<start_system::TotalDegreeLinearProduct>();
 	}
 }
 
@@ -394,10 +402,11 @@ inline start_system::StartSystemFactory<System> StartFactoryFor(blackbox::type::
 inline void ExportStartSystemEnum()
 {
 	boost::python::enum_<blackbox::type::Start>("StartSystemType",
-		"Which start system a ZeroDim solver builds: total_degree (default) or mhomogeneous. "
+		"Which start system a ZeroDim solver builds: total_degree_binomial (the default for "
+		"1-homogeneous systems), total_degree_linear_product, or mhomogeneous. "
 		"User homotopies use nag_algorithm.user_homotopy(...) instead.")
-		.value("total_degree", blackbox::type::Start::TotalDegree)
-		.value("roots_of_unity", blackbox::type::Start::RootsOfUnity)
+		.value("total_degree_linear_product", blackbox::type::Start::TotalDegreeLinearProduct)
+		.value("total_degree_binomial", blackbox::type::Start::TotalDegreeBinomial)
 		.value("mhomogeneous", blackbox::type::Start::MHom)
 		;
 }
@@ -414,12 +423,12 @@ inline void ExportStartSystemFactory()
 	def("start_system_factory", &StartFactoryFor,
 		(boost::python::arg("which")),
 		"start_system_factory(which): the start-system factory for a StartSystemType, to pass as the "
-		"second argument of a ZeroDim solver constructor (the default constructor uses total_degree).");
+		"second argument of a ZeroDim solver constructor (the default constructor uses total_degree_linear_product).");
 }
 
 // Helper template — defined here so all split TUs can use it without duplication.  ZeroDim is no
 // longer templated on the start system; the concrete start system is chosen at construction (default
-// TotalDegree, or an explicit factory) and held polymorphically.
+// TotalDegreeLinearProduct, or an explicit factory) and held polymorphically.
 template<typename TrackerT, typename EndgameT>
 void ExportZeroDimSpecific(std::string const& class_name){
 	using ZeroDimT = algorithm::ZeroDimSolver<TrackerT, EndgameT, System>;
@@ -431,7 +440,7 @@ void ExportZeroDimSpecific(std::string const& class_name){
 	// object -> crash.  Tying the System's lifetime to the solver makes the documented `ZeroDim(sys)`
 	// usage safe even when the caller keeps no reference to `sys`.
 	//
-	// Two constructors: (system) defaults to the TotalDegree start; (system, start_factory) selects
+	// Two constructors: (system) defaults to the TotalDegreeLinearProduct start; (system, start_factory) selects
 	// a non-default start (e.g. MHomogeneous) -- the factory is a value, copied into the solver.
 	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(),
 		init<System const&>()[with_custodian_and_ward<1, 2>()])
