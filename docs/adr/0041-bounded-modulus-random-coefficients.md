@@ -1,4 +1,4 @@
-# ADR-0041: Random linear-form / scaling coefficients use a bounded-modulus draw (matching Bertini 1)
+# ADR-0041: Random coefficients are well-conditioned — bounded-modulus scalars, conjugate-orthonormal matrices (matching Bertini 1)
 
 **Status:** Accepted
 **Date:** 2026-06-30
@@ -30,23 +30,45 @@ not the endgame and not runaway precision.
 
 ## Decision
 
-**All random linear-form / scaling coefficients are drawn with a bounded-modulus draw.** Draw a
-box-uniform complex `z` (real, imag each in `[-1,1]`) and divide by `sqrt(|z|)`, so the result has
-modulus `sqrt(|z|)`: pulled toward 1, bounded away from both 0 and infinity, but **not** collapsed onto
-the unit circle (that would be `z/|z|`). This is exactly how **Bertini 1** generates its coefficients
-(confirmed from b1 source). It lives in `core/include/bertini2/random.hpp` as
-`multiprecision::RandomComplexBoundedModulus` / `RandomComplexBoundedModulusAssign`.
+Two mechanisms, by what is being drawn. Both come from the same principle Bertini 1 follows: a random
+object should be generic *and* well-scaled, never relying on luck to avoid a wild or near-degenerate
+value.
 
-For objects that must stay **real** — a real patch exists precisely to keep a real path real (a complex
-patch would complexify it), and likewise a real slice — there is a real-line analog
+### Individual scalar coefficients — bounded modulus
+
+A scalar coefficient (one entry of a linear form, a patch/slice constant) is drawn **bounded-modulus**:
+draw a box-uniform complex `z` (real, imag each in `[-1,1]`) and divide by `sqrt(|z|)`, so the result
+has modulus `sqrt(|z|)` — pulled toward 1, bounded away from both 0 and infinity, but **not** collapsed
+onto the unit circle (that would be `z/|z|`). This is how Bertini 1 draws its scalars. It lives in
+`core/include/bertini2/random.hpp` as `multiprecision::RandomComplexBoundedModulus` /
+`…Assign`. For objects that must stay **real** — a real patch exists precisely to keep a real path real
+(a complex patch would complexify it), likewise a real slice — there is a real-line analog
 `RandomRealBoundedModulus` / `…Assign`: the same recipe with imaginary part 0.
+
+### Whole random matrices — conjugate-orthonormal
+
+Whenever an entire random *matrix* is needed (a slice's coefficient block, a randomization tail), it is
+drawn **conjugate-orthonormal** (unitary rows/columns), not entry-by-entry. Bertini 1 builds every
+random complex matrix this way, and when it needs a non-square shape it generates a *square* one and
+truncates. We mirror that in `bertini::RandomConjugateOrthonormalMatrix(rows, cols)`
+(`core/include/bertini2/eigen_extensions.hpp`): draw a square seed of the larger dimension, QR-factor it
+to a unitary `Q`, return the leading `rows × cols` block. The QR launders the seed draw away, so the
+result is conjugate-orthonormal regardless of how the seed was drawn — and perfectly conditioned
+(condition number 1), which is the whole point.
 
 Applied to:
 
-- **Start systems** — `TotalDegreeBinomial` (coefficients *and* the binomial constants),
+- **Start systems** (scalars) — `TotalDegreeBinomial` (coefficients *and* the binomial constants),
   `TotalDegreeLinearProduct`, and `MHom`.
-- **Patches** — the complex `Patch` constructor and `Patch::RandomReal`.
-- **Slices** — `Slice::RandomComplex` and `Slice::RandomReal`.
+- **Patches** (scalars) — the complex `Patch` constructor and `Patch::RandomReal`.
+- **Slices** — the constant column and the `orthogonal=false` coefficients are **bounded-modulus
+  scalars**; the `orthogonal=true` coefficient matrix is **conjugate-orthonormal**
+  (`RandomConjugateOrthonormalMatrix`, which also retired the old transpose-dance QR).
+- **Randomization** (matrix) — the `RandomizationBlock` squaring-up matrix in `System::Randomize`
+  (ADR-0025) is **conjugate-orthonormal**: the dense multi-group `R`, and the random tail `C` of the
+  single-affine-group `R = [I | C]`. Only `C` is randomized; the identity block is left exact, which
+  keeps the degree-optimal structure — after the descending-degree sort every tail function is lower
+  degree than row `i`'s leading `f_i`, so `target_md[i]` stays `d_i` even though `C` is dense.
 
 ## Consequences
 
@@ -61,9 +83,7 @@ Applied to:
 
 ## Still open (follow-ups, not done here)
 
-- **`System::Randomize`** — the `RandomizationBlock` squaring-up matrix (ADR-0025) still draws its
-  entries with `multiprecision::RandomComplex` (box-uniform) at `core/src/system/system.cpp:1187,1197`.
-  It is the same class of draw and should adopt the bounded-modulus version.
 - **Slice generation, deeper pass** — a slice's constant column is drawn directly (never orthogonalized)
   and the `orthogonal=false` path uses the raw coefficients; whether these want different treatment
-  (and exactly how b1 builds slices) is still to be worked out.
+  (and exactly how b1 builds slices) is still to be worked out. Bertini 1's slice generation is hard to
+  read; this is deferred until that's understood.

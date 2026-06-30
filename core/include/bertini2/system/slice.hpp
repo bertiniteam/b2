@@ -133,29 +133,12 @@ namespace bertini {
 
 			if (orthogonal)
 			{
-				using std::min;
-				using std::max;
-
-				auto mindim = min(dim, num_vars);
-				auto maxdim = max(dim, num_vars);
-
-				bool need_transpose = dim < num_vars;
-
-				coeffs.resize(maxdim, mindim);
-
-				for (unsigned ii(0); ii < maxdim; ++ii)
-					for (unsigned jj(0); jj < mindim; ++jj)
-						gen(coeffs(ii, jj), MaxPrecisionAllowed());
-
+				// conjugate-orthonormal coefficient matrix (orthonormal linear forms), drawn the b1 way
+				// via RandomConjugateOrthonormalMatrix (ADR-0041) -- it generates square and truncates,
+				// so the old transpose dance is gone.  Built at max precision, like the rest of the slice.
 				auto prev_precision = DefaultPrecision();
 				DefaultPrecision(MaxPrecisionAllowed());
-
-				auto QR_factorization = Eigen::HouseholderQR<Mat<complex_mp> >(coeffs);
-				coeffs = QR_factorization.householderQ() * Mat<complex_mp>::Identity(maxdim, mindim);
-
-				if (need_transpose)
-					coeffs.transposeInPlace();
-
+				coeffs = bertini::RandomConjugateOrthonormalMatrix<complex_mp>(dim, num_vars);
 				DefaultPrecision(prev_precision);
 			}
 			else
