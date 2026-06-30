@@ -119,3 +119,104 @@ def test_internal_coordinates_includes_homvar_and_patch_rows():
     Jint = S.jacobian(usercoordinates=False)
     assert Jint.shape[1] == S.num_variables()       # homogenizing variable is a column (3)
     assert Jint.shape[0] == Juser.shape[0] + 1      # the two functions plus one patch row (one variable group)
+
+
+# ---- the symbolic Jacobian must work for every block type, not just polynomials -------------
+#
+# SymbolicJacobian differentiates NaturalFunctionsAsNodes(), which expands every block variant
+# (polynomial, linear-forms / slice, products-of-linears, randomization, blend) to nodes.  The
+# oracle below evaluates the symbolic Jacobian and checks it against the numeric eval_jacobian,
+# so each block type is covered end to end.
+
+def _assert_symbolic_matches_numeric(S, **point):
+    """The symbolic user-coordinate Jacobian, evaluated, equals the numeric eval_jacobian."""
+    order = [v.name for g in S.variable_groups() for v in g]
+    vec = np.array([complex(point[name]) for name in order], dtype=complex)
+    J = S.jacobian(usercoordinates=True)
+    # numeric eval_jacobian collapses to 1-D for a single-function system; our symbolic Jacobian is
+    # always 2-D, so reshape the numeric one to compare element-for-element.
+    Jn = np.array(S.eval_jacobian(vec)).reshape(J.shape)
+    for i in range(J.shape[0]):
+        for j in range(J.shape[1]):
+            got = complex(eval_at(J[i, j], **point))
+            assert abs(got - complex(Jn[i, j])) < 1e-9, (i, j, got, Jn[i, j])
+
+
+def test_jacobian_linear_forms_block():
+    from bertini import linalg
+    x, y = pb.Variable('x'), pb.Variable('y')
+    S = pb.System()
+    S.add_variable_group(pb.VariableGroup([x, y]))
+    linalg.add_linear(S, np.array([[2, 1]]), np.array([x, y]), [-1])   # 2x + y - 1
+    J = S.jacobian()
+    assert J.shape == (1, 2)
+    assert eval_at(J[0, 0], x=9, y=9) == 2 and eval_at(J[0, 1], x=9, y=9) == 1   # constant coefficients
+    _assert_symbolic_matches_numeric(S, x=1.3, y=-0.7)
+
+
+def test_jacobian_slice_block():
+    from bertini import linalg
+    x, y = pb.Variable('x'), pb.Variable('y')
+    S = pb.System()
+    S.add_variable_group(pb.VariableGroup([x, y]))
+    sl = linalg.slice_from_coefficients([[2, 1, -1]], [x, y])          # a slice is a linear-forms block
+    sl.add_to(S)
+    J = S.jacobian()
+    assert J.shape == (1, 2)
+    _assert_symbolic_matches_numeric(S, x=0.4, y=2.1)
+
+
+def test_jacobian_products_of_linears_block():
+    from bertini import linalg
+    x, y = pb.Variable('x'), pb.Variable('y')
+    S = pb.System()
+    S.add_variable_group(pb.VariableGroup([x, y]))
+    linalg.add_products_of_linears(S, [
+        [[1, 0, -1], [1, 0, 1]],     # (x - 1)(x + 1)
+        [[0, 1, -1], [0, 1, -2]],    # (y - 1)(y - 2)
+    ])
+    J = S.jacobian()
+    assert J.shape == (2, 2)
+    assert eval_at(J[0, 0], x=3, y=5) == 6     # d/dx (x^2 - 1) = 2x = 6
+    assert eval_at(J[0, 1], x=3, y=5) == 0
+    _assert_symbolic_matches_numeric(S, x=3.0, y=5.0)
+
+
+def test_jacobian_randomization_block():
+    from bertini import linalg
+    pb.random.set_random_seed(91)
+    x, y = pb.Variable('x'), pb.Variable('y')
+    S = pb.System()
+    S.add_variable_group(pb.VariableGroup([x, y]))
+    S.add_function(x * x + y * y - 1)
+    S.add_function(x * y)
+    S.add_function(x * x + y * y - x - y)       # overdetermined: 3 functions, 2 variables
+    R = linalg.randomize(S)                       # a randomization block
+    J = R.jacobian()
+    assert J.shape == (2, 2)
+    _assert_symbolic_matches_numeric(R, x=0.7, y=-1.2)
+
+
+def test_jacobian_blend_block_homotopy():
+    import bertini.system as bsys
+    x, y = pb.Variable('x'), pb.Variable('y')
+    target = pb.System()
+    target.add_variable_group(pb.VariableGroup([x, y]))
+    target.add_function(x * x - 1)
+    target.add_function(y - 2)
+    start = pb.System()
+    start.add_variable_group(pb.VariableGroup([x, y]))
+    start.add_function(x - 1)
+    start.add_function(y - 1)
+    H = bsys.make_homotopy(target, start)         # a blend block, with a path variable t
+
+    J = H.jacobian(usercoordinates=True)          # space Jacobian: differentiates w.r.t. x, y only (not t)
+    assert J.shape == (2, 2)
+    # compare against the numeric space Jacobian at a fixed (space, time)
+    order = [v.name for g in H.variable_groups() for v in g]
+    pt = dict(x=0.5, y=1.5, t=0.3)
+    vec = np.array([complex(pt[name]) for name in order], dtype=complex)
+    Jn = np.array(H.eval_jacobian(vec, complex(pt['t'])))
+    for i in range(2):
+        for j in range(2):
+            assert abs(complex(eval_at(J[i, j], **pt)) - complex(Jn[i, j])) < 1e-9
