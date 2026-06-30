@@ -34,8 +34,11 @@ namespace bertini{
 
 
 namespace type{
+/// \brief Which start system the zero-dim solve should use.
 enum class Start{ TotalDegreeLinearProduct, TotalDegreeBinomial, MHom, User};
+/// \brief Which path tracker the zero-dim solve should use.
 enum class Tracker{ FixedDouble, FixedMultiple, Adaptive};
+/// \brief Which endgame the zero-dim solve should use.
 enum class Endgame{ PowerSeries, Cauchy};
 }
 

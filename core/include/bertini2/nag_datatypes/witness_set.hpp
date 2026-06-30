@@ -42,10 +42,11 @@ namespace bertini {
 
 	namespace nag_datatype {
 
-		template <typename T> 
+		/// \brief The container type used to hold points (a deque).
+		template <typename T>
 		using PointCont = std::deque<T>;
 
-		using IndexT = typename PointCont<int>::size_type;
+		using IndexT = typename PointCont<int>::size_type;  ///< The index type for point containers.
 
 		/**
 		\brief The main way to represent a positive dimensional component in numerical algebraic geometry.

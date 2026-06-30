@@ -147,8 +147,8 @@ namespace bertini
 	 
 	 \tparam length_in_digits The length of the desired random number
 	 
-	 \param a The left bound.
-	 \param b The right bound.
+	 \param left The left bound.
+	 \param right The right bound.
 	 */
 	template <unsigned int length_in_digits>
 	real_mp RandomMp(const real_mp & left, const real_mp & right)
@@ -200,7 +200,7 @@ namespace bertini{
 namespace multiprecision{
 
 
-using complex = bertini::complex_mp;
+using complex = bertini::complex_mp;  ///< Shorthand for the multiprecision complex type within this namespace.
 using bertini::RandomMp;
 
 
@@ -262,6 +262,7 @@ using bertini::RandomMp;
 		return returnme / abs(returnme);   // normalize to modulus 1 (NOT sqrt(abs), which left modulus sqrt|z|)
 	}
 
+	/// \brief Produce a random unit-modulus complex number, to default precision.
 	inline complex RandomUnit()
 	{
 		return rand_unit();
@@ -372,7 +373,8 @@ using bertini::RandomMp;
 		return a;
 	}
 
-	inline 
+	/// \brief Assign a random complex number to a, at the given precision.
+	inline
 	void rand_assign(complex & a, unsigned num_digits)
 	{
 		auto cached = ThreadPrecision();
@@ -383,13 +385,15 @@ using bertini::RandomMp;
 		SetThreadPrecision(cached);
 	}
 
-	inline 
+	/// \brief Assign a random complex number to a, at the given precision.
+	inline
 	void RandomComplexAssign(complex & a, unsigned num_digits)
 	{
 		rand_assign(a,num_digits);
 	}
 
-	inline 
+	/// \brief Produce a random complex number, at the given precision.
+	inline
 	complex RandomComplex(unsigned num_digits)
 	{
 		complex z;
@@ -397,7 +401,8 @@ using bertini::RandomMp;
 		return z;
 	}
 
-	inline 
+	/// \brief Assign a random unit-modulus complex number to a, at the given precision.
+	inline
 	void RandomUnitAssign(complex & a, unsigned num_digits)
 	{
 		auto cached = ThreadPrecision();
@@ -409,7 +414,8 @@ using bertini::RandomMp;
 		SetThreadPrecision(cached);
 	}
 
-	inline 
+	/// \brief Produce a random unit-modulus complex number, at the given precision.
+	inline
 	complex RandomUnit(unsigned num_digits)
 	{
 		complex a;

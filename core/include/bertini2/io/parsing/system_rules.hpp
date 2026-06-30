@@ -43,12 +43,12 @@ namespace bertini {
 	namespace parsing {
 		namespace classic {
 			// a few local using statements to reduce typing etc.
-			using Variable = node::Variable;
-			using Node = node::Node;
+			using Variable = node::Variable;  ///< The variable node type.
+			using Node = node::Node;  ///< The generic expression-tree node type.
 
 
-			using Var = std::shared_ptr<Variable>;
-			using Nd = std::shared_ptr<Node>;
+			using Var = std::shared_ptr<Variable>;  ///< Shorthand for a shared pointer to a variable node.
+			using Nd = std::shared_ptr<Node>;  ///< Shorthand for a shared pointer to a generic node.
 			
 			/**
 			 Qi Parser object for parsing text into the System class.  This ensures we can provide backwards compatibility with Bertini Classic input files.
@@ -371,15 +371,19 @@ namespace bertini {
 				// is parsed we emit them to the System (EmitDeclaredFunctions): the System receives
 				// bare, fully-built expressions -- no Function declaration box is ever created.
 			public:
+				/// \brief Record the declared function names (in declaration order).
 				void CollectFunctionNames(std::vector<std::string> const& names)
 				{ for (auto const& n : names) declared_function_names_.push_back(n); }
+				/// \brief Record the declared constant names.
 				void CollectConstantNames(std::vector<std::string> const& names)
 				{ for (auto const& n : names) declared_constant_names_.push_back(n); }
+				/// \brief Record the declared parameter names.
 				void CollectParameterNames(std::vector<std::string> const& names)
 				{ for (auto const& n : names) declared_parameter_names_.push_back(n); }
 
 				// Bind a declared name to its (immutable) NamedExpression: makes references to the
 				// name resolve, and records the definition for emission to the System.
+				/// \brief Bind a declared name to its (immutable) NamedExpression definition.
 				void DefineNamed(std::string const& name, Nd const& expr)
 				{
 					auto ne = node::NamedExpression::Make(expr, name);
@@ -387,6 +391,7 @@ namespace bertini {
 					definitions_[name] = ne;
 				}
 
+				/// \brief Emit the collected declared functions/constants/parameters to the System.
 				void EmitDeclaredFunctions(System& s) const
 				{
 					for (auto const& n : declared_function_names_)

@@ -85,6 +85,7 @@ namespace node{
 		
 		std::shared_ptr<Node> Simplified() const override;
 
+		/// \brief Construct (and intern) a SumOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<SumOperator> Make(Ts&& ...ts){ 
@@ -124,12 +125,14 @@ namespace node{
 		
 	public:
 		
+		/// \brief Add a term in place (operand added with positive sign).
 		SumOperator& operator+=(const std::shared_ptr<Node> & rhs)
 		{
 			this->AddOperand(rhs);
 			return *this;
 		}
-		
+
+		/// \brief Subtract a term in place (operand added with negative sign).
 		SumOperator& operator-=(const std::shared_ptr<Node> & rhs)
 		{
 			this->AddOperand(rhs,false);
@@ -191,6 +194,7 @@ namespace node{
 		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
+		/// \return The per-term signs (true = added, false = subtracted), parallel to the operands.
 		inline
 		const auto& GetSigns() const{ return this-> signs_;}
 
@@ -276,6 +280,7 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
+		/// \brief Construct (and intern) a NegateOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<NegateOperator> Make(Ts&& ...ts){ 
@@ -341,6 +346,7 @@ namespace node{
 	};
 	
 	
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(const std::shared_ptr<Node> & rhs)
 	{
 		return NegateOperator::Make(rhs);
@@ -370,6 +376,7 @@ namespace node{
 		std::shared_ptr<Node> Simplified() const override;
 
 
+		/// \brief Construct (and intern) a MultOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<MultOperator> Make(Ts&& ...ts){ 
@@ -427,6 +434,7 @@ namespace node{
 		
 		
 		
+		/// \brief Add a factor; pass the bool to choose multiply (true) or divide (false).
 		//Special Behaviour: Pass bool to set sign of term: true = mult, false = divide
 		void AddOperand(std::shared_ptr<Node> child, bool mult) // not an override
 		{
@@ -546,6 +554,7 @@ namespace node{
 
 		std::shared_ptr<Node> Simplified() const override;
 
+		/// \brief Construct (and intern) a PowerOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<PowerOperator> Make(Ts&& ...ts){ 
@@ -562,21 +571,25 @@ namespace node{
 		
 		
 		
+		/// \brief Set the base of the power.
 		void SetBase(std::shared_ptr<Node> new_base)
 		{
 			base_ = new_base;
 		}
-		
+
+		/// \brief Set the exponent of the power.
 		void SetExponent(std::shared_ptr<Node> new_exponent)
 		{
 			exponent_ = new_exponent;
 		}
-		
+
+		/// \return The base of the power.
 		std::shared_ptr<Node> GetBase() const
 		{
 			return base_;
 		}
-		
+
+		/// \return The exponent of the power.
 		std::shared_ptr<Node> GetExponent() const
 		{
 			return exponent_;
@@ -749,6 +762,7 @@ namespace node{
 		virtual ~IntegerPowerOperator() = default;
 		
 		
+		/// \brief Construct (and intern) a IntegerPowerOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<IntegerPowerOperator> Make(Ts&& ...ts){ 
@@ -819,6 +833,7 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
+		/// \brief Construct (and intern) a SqrtOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<SqrtOperator> Make(Ts&& ...ts){ 
@@ -871,6 +886,7 @@ namespace node{
 	
 	
 	
+	/// \brief Build a square-root expression-tree node.
 	inline std::shared_ptr<Node> sqrt(const std::shared_ptr<Node> & N)
 	{
 		return SqrtOperator::Make(N);
@@ -892,6 +908,7 @@ namespace node{
 		std::shared_ptr<Node> Simplified() const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
+		/// \brief Construct (and intern) a ExpOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ExpOperator> Make(Ts&& ...ts){ 
@@ -953,6 +970,7 @@ namespace node{
 		std::shared_ptr<Node> Simplified() const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
+		/// \brief Construct (and intern) a LogOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<LogOperator> Make(Ts&& ...ts){ 
@@ -1005,40 +1023,49 @@ namespace node{
 
 	// begin the overload of operators
 
+	/// \brief Build an exponential (e raised to the node) expression-tree node.
 	inline std::shared_ptr<Node> exp(const std::shared_ptr<Node> & N)
 	{
 		return ExpOperator::Make(N);
 	}
 	
+	/// \brief Build a natural-logarithm expression-tree node.
 	inline std::shared_ptr<Node> log(const std::shared_ptr<Node> & N)
 	{
 		return LogOperator::Make(N);
 	}
 	
+	/// \brief Build a power expression-tree node.
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, const std::shared_ptr<Node> & p)
 	{
 		return PowerOperator::Make(N,p);
 	}
 
+	/// \brief Build a power expression-tree node.
 	inline std::shared_ptr<Node> pow(std::shared_ptr<Node> const& base, int power)
 	{
 		return IntegerPowerOperator::Make(base,power);
 	}
 
+	/// \brief Build a power expression-tree node.
 	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p) = delete;
 	
+	/// \brief Build a power expression-tree node.
 	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, complex_dbl p) = delete;
 
+	/// \brief Build a power expression-tree node.
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, real_mp p)
 	{
 		return PowerOperator::Make(N,Complex::Make(p));
 	}
 
+	/// \brief Build a power expression-tree node.
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, complex_mp p)
 	{
 		return PowerOperator::Make(N,Complex::Make(p));
 	}
 
+	/// \brief Build a power expression-tree node.
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpq_rational const& p)
 	{
 		return PowerOperator::Make(N,Rational::Make(p,0));
@@ -1094,13 +1121,15 @@ namespace node{
 	
 	
 	
+
 	///////////////
 	//
 	//  addition operators
 	//
 	///////////////
-	
-	
+
+
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node>& operator+=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 		std::shared_ptr<Node> temp = SumOperator::Make(lhs,rhs);		
@@ -1112,56 +1141,67 @@ namespace node{
 	
 	
 	
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
 		return SumOperator::Make(lhs,rhs);
 	}
 	
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, real_mp const& rhs)
 	{
 		return SumOperator::Make(lhs,Complex::Make(rhs));
 	}
 
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, complex_mp const& rhs)
 	{
 		return SumOperator::Make(lhs,Complex::Make(rhs));
 	}
 	
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(real_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Complex::Make(lhs), rhs);
 	}
 
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Complex::Make(lhs), rhs);
 	}
 
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, int rhs)
 	{
 		return SumOperator::Make(lhs,Integer::Make(rhs));
 	}
 	
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(int lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Integer::Make(lhs), rhs);
 	}
 
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpz_int const& rhs)
 	{
 		return SumOperator::Make(lhs,Integer::Make(rhs));
 	}
 	
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Integer::Make(lhs), rhs);
 	}
 
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
 		return SumOperator::Make(lhs,Rational::Make(rhs,0));
 	}
 	
+	/// \brief Build a sum expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator+(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Rational::Make(lhs,0), rhs);
@@ -1176,6 +1216,7 @@ namespace node{
 	///////////////
 	
 	
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node>& operator-=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 		std::shared_ptr<Node> temp = SumOperator::Make(lhs,true,rhs,false);
@@ -1184,56 +1225,67 @@ namespace node{
 	}
 		
 	
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
 		return SumOperator::Make(lhs,true,rhs,false);
 	}
 	
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, real_mp const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(real_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, complex_mp const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, int rhs)
 	{
 		return SumOperator::Make(lhs, true, Integer::Make(rhs), false);
 	}
 	
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(int lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Integer::Make(lhs), true, rhs, false);
 	}
 
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpz_int const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Integer::Make(rhs), false);
 	}
 	
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Integer::Make(lhs), true, rhs, false);
 	}
 
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Rational::Make(rhs,0), false);
 	}
 	
+	/// \brief Build a difference expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator-(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Rational::Make(lhs,0), true, rhs, false);
@@ -1244,6 +1296,7 @@ namespace node{
 	/*
 	 multiplication operators
 	 */
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*=(std::shared_ptr<MultOperator> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 		lhs->AddOperand(rhs);
@@ -1251,51 +1304,61 @@ namespace node{
 	}
 	
 	
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, real_mp const& rhs)
 	{
 		return MultOperator::Make(lhs,Complex::Make(rhs));
 	}
 
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, complex_mp const& rhs)
 	{
 		return MultOperator::Make(lhs,Complex::Make(rhs));
 	}
 	
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(real_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Complex::Make(lhs), rhs);
 	}
 
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Complex::Make(lhs), rhs);
 	}
 
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, int rhs)
 	{
 		return MultOperator::Make(lhs,Integer::Make(rhs));
 	}
 	
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(int lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Integer::Make(lhs), rhs);
 	}
 	
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpz_int const& rhs)
 	{
 		return MultOperator::Make(lhs,Integer::Make(rhs));
 	}
 	
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Integer::Make(lhs), rhs);
 	}
 	
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
 		return MultOperator::Make(lhs,Rational::Make(rhs,0));
 	}
 	
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Rational::Make(lhs,0), rhs);
@@ -1303,6 +1366,7 @@ namespace node{
 
 
 	// this function provides an optimization for combining two power operators with the same base.
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node>& operator*=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 		
@@ -1331,6 +1395,7 @@ namespace node{
 
 	}
 	
+	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
 		return lhs*=rhs;
@@ -1346,6 +1411,7 @@ namespace node{
 	 */
 	
 	
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node>& operator/=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 
@@ -1368,6 +1434,7 @@ namespace node{
 		return lhs;
 	}
 	
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/=(std::shared_ptr<MultOperator> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 		lhs->AddOperand(rhs,false);
@@ -1376,56 +1443,67 @@ namespace node{
 	
 	
 	
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
 		return lhs/=rhs;
 	}
 	
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, real_mp rhs)
 	{
 		return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, complex_mp rhs)
 	{
 		return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
 	}
 	
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(real_mp lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(complex_mp lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
 	}
 
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, int rhs)
 	{
 		return MultOperator::Make(lhs, true, Integer::Make(rhs), false);
 	}
 	
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(int lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Integer::Make(lhs), true, rhs, false);
 	}
 
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpz_int const& rhs)
 	{
 		return MultOperator::Make(lhs, true, Integer::Make(rhs), false);
 	}
 	
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Integer::Make(lhs), true, rhs, false);
 	}
 
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
 		return MultOperator::Make(lhs, true, Rational::Make(rhs,0), false);
 	}
 	
+	/// \brief Build a quotient expression-tree node from its operands.
 	inline std::shared_ptr<Node> operator/(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Rational::Make(lhs,0), true, rhs, false);
@@ -1433,7 +1511,7 @@ namespace node{
 
 
 
-} // re: namespace node	
+} // re: namespace node
 } // re: namespace bertini
 
 

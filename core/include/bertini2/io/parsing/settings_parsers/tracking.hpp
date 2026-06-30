@@ -65,6 +65,7 @@ namespace bertini {
 			 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the PrecisionType settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, PrecisionType, Skipper> : qi::grammar<Iterator, PrecisionType(), Skipper>
 			{
 				
@@ -137,6 +138,7 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the Predictor settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, Predictor, Skipper> : qi::grammar<Iterator, Predictor(), Skipper>
 			{
 				
@@ -227,12 +229,13 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the SteppingConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, SteppingConfig, Skipper> : qi::grammar<Iterator, SteppingConfig(), Skipper>
 			{
 
 			private:
 					using T = mpq_rational; // exact rational: no MPFR precision state to go stale
-					using R = mpq_rational;
+					using R = mpq_rational;  ///< The real type used by this parser.
 
 			public:
 				
@@ -359,6 +362,7 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the NewtonConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, NewtonConfig, Skipper> : qi::grammar<Iterator, NewtonConfig(), Skipper>
 			{
 				
@@ -434,6 +438,7 @@ namespace bertini {
 			so this parser is ... empty
 			*/
 			template<typename Iterator, typename Skipper>
+			/// \brief Parser for the FixedPrecisionConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, FixedPrecisionConfig, Skipper> : qi::grammar<Iterator, FixedPrecisionConfig(), Skipper>
 			{
 				
@@ -477,14 +482,16 @@ namespace bertini {
 
 
 
+			/// \brief Alias bringing the AMP config type into this scope for the parser specialization below.
 			using AdaptiveMultiplePrecisionConfig = AdaptiveMultiplePrecisionConfig;
 			template<typename Iterator, typename Skipper> 
+			/// \brief Parser for the AdaptiveMultiplePrecisionConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, AdaptiveMultiplePrecisionConfig, Skipper> : qi::grammar<Iterator, AdaptiveMultiplePrecisionConfig(), Skipper>
 			{
 				
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "AdaptiveMultiplePrecisionConfig")
 				{
-					using T = double;
+					using T = double;  ///< The number type used by this parser.
 
 					namespace phx = boost::phoenix;
 					using qi::_1;

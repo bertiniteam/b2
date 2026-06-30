@@ -79,10 +79,12 @@ namespace bertini
 			*/
 			unsigned long long NumStartPoints() const override;
 
+			/// \brief Multiply this start system in place by an expression node.
 			TotalDegreeLinearProduct& operator*=(Nd const& n);
 
 			TotalDegreeLinearProduct& operator+=(System const& sys) = delete;
 
+			/// \brief Check that the target system is suitable for a total-degree start system.
 			void SanityChecks(System const& s);
 
 		private:

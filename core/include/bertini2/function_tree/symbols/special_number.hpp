@@ -70,6 +70,7 @@ namespace node{
 
 			virtual ~Pi() = default;
 
+			/// \brief Construct (and intern) a Pi node.
 			template<typename... Ts>
 			static
 			std::shared_ptr<Pi> Make(Ts&& ...ts){
@@ -120,6 +121,7 @@ namespace node{
 			virtual ~E() = default;
 
 
+			/// \brief Construct (and intern) a E node.
 			template<typename... Ts>
 			static
 			std::shared_ptr<E> Make(Ts&& ...ts){

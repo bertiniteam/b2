@@ -95,10 +95,12 @@ namespace bertini
 			*/
 			unsigned long long NumStartPoints() const override;
 
+			/// \brief Multiply this start system in place by an expression node.
 			TotalDegreeBinomial& operator*=(Nd const& n);
 
 			TotalDegreeBinomial& operator+=(System const& sys) = delete;
 
+			/// \brief Check that the target system is suitable for a roots-of-unity start system.
 			void SanityChecks(System const& s);
 
 		private:

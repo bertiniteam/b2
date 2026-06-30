@@ -60,6 +60,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 
+		/// \brief Construct (and intern) a Variable node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<Variable> Make(Ts&& ...ts){ 
@@ -90,6 +91,7 @@ namespace node{
 		}
 
 
+		/// \brief Convert to the variable's name string.
 		explicit operator std::string(){return name();}
 		
 		

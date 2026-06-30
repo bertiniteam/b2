@@ -34,7 +34,7 @@
 
 \brief Contains base class, Endgame.
 
-\defgroup endgame
+\defgroup endgame Endgames
 */
 
 #include <iostream>
@@ -62,7 +62,7 @@ namespace bertini{ namespace endgame {
 
 			
 /**
-\class Endgame
+\class EndgameBase
 
 \brief Base endgame class for all endgames offered in Bertini2.
 
@@ -95,22 +95,22 @@ class EndgameBase :
 	public virtual Observable
 {
 public:
-	using TrackerType = typename PrecT::TrackerType;
+	using TrackerType = typename PrecT::TrackerType;  ///< The path-tracker type.
 
-	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
-	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;  ///< The complex number type.
+	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;  ///< The real number type.
 
-	using EmitterType = FlavorT;
+	using EmitterType = FlavorT;  ///< The event-emitter type.
 
 protected:
 
-	using BCT = BaseComplexT;
-	using BRT = BaseRealT;
+	using BCT = BaseComplexT;  ///< The complex number type.
+	using BRT = BaseRealT;  ///< The real number type.
 
 
-	using Configured = detail::Configured< typename AlgoTraits<FlavorT>::NeededConfigs >;
-	using Configs = typename AlgoTraits<FlavorT>::NeededConfigs;
-	using ConfigsAsTuple = typename Configs::ToTuple;
+	using Configured = detail::Configured< typename AlgoTraits<FlavorT>::NeededConfigs >;  ///< The Configured base type.
+	using Configs = typename AlgoTraits<FlavorT>::NeededConfigs;  ///< The configuration bundle (Configured base).
+	using ConfigsAsTuple = typename Configs::ToTuple;  ///< The configuration structs as a tuple.
 
 	// The list of arithmetic types this endgame may compute in.  Sourced from the tracker, so it
 	// matches the tracker's own dual/single-slot tuple machinery exactly:
@@ -119,25 +119,25 @@ protected:
 	//   fixed mp   -> TypeList<complex_mp>
 	// For AMP this makes every container (TupOfVec/TupleOfTimes/TupleOfSamps) dual-slot; the existing
 	// type-indexed std::get<...ComplexT...>(member) access then works for complex_dbl for free.
-	using NeededTypes = typename tracking::TrackerTraits<TrackerType>::NeededTypes;
-	using TupOfVec = typename NeededTypes::ToTupleOfVec;
-	using TupOfReal = typename NeededTypes::ToTupleOfReal;
-	using TupleOfTimes = typename NeededTypes::template ToTupleOfCont<TimeCont>;
-	using TupleOfSamps = typename NeededTypes::template ToTupleOfCont<SampCont>;
+	using NeededTypes = typename tracking::TrackerTraits<TrackerType>::NeededTypes;  ///< Arithmetic types this endgame may compute in (sourced from the tracker).
+	using TupOfVec = typename NeededTypes::ToTupleOfVec;  ///< A tuple of vector containers, one per numeric type.
+	using TupOfReal = typename NeededTypes::ToTupleOfReal;  ///< A tuple of real values, one per numeric type.
+	using TupleOfTimes = typename NeededTypes::template ToTupleOfCont<TimeCont>;  ///< A tuple of time containers, one per numeric type.
+	using TupleOfSamps = typename NeededTypes::template ToTupleOfCont<SampCont>;  ///< A tuple of sample containers, one per numeric type.
 
 
 
 	// universal endgame state variables
-	mutable Vec<BCT> final_approximation_;
-	mutable Vec<BCT> previous_approximation_;
-	mutable unsigned int cycle_number_ = 0;
-	mutable NumErrorT approximate_error_;
+	mutable Vec<BCT> final_approximation_;       ///< The latest computed approximation of the endpoint.
+	mutable Vec<BCT> previous_approximation_;     ///< The previous approximation of the endpoint.
+	mutable unsigned int cycle_number_ = 0;       ///< The current estimate of the cycle number.
+	mutable NumErrorT approximate_error_;         ///< The error estimate between successive approximations.
 
 	// The adaptive-numeric-type state (current_endgame_precision_, adaptive_numeric_type_active_) lives in
 	// the AMP precision policy, AMPEndgame -- the flavors reach it through this-> (it is a base via PrecT).
 
-	BCT start_time_{};   // endgame boundary; set via SetBoundaryTime()
-	BCT target_time_{};  // final target (default 0); set via SetTargetTime()
+	BCT start_time_{};   ///< The endgame boundary time; set via SetBoundaryTime().
+	BCT target_time_{};  ///< The final target time (default 0); set via SetTargetTime().
 
 
 
@@ -163,9 +163,13 @@ protected:
 
 public:
 
+	/// \brief Set the endgame boundary (start) time.
 	void SetBoundaryTime(BCT const& t) { start_time_ = t; }
+	/// \brief Set the final target time.
 	void SetTargetTime  (BCT const& t) { target_time_ = t; }
+	/// \return The endgame boundary (start) time.
 	BCT const& BoundaryTime() const { return start_time_; }
+	/// \return The final target time.
 	BCT const& TargetTime()   const { return target_time_; }
 
 	/**
@@ -193,6 +197,7 @@ public:
 	}
 
 
+	/// \brief Refine every sample point to the endgame's refinement tolerance.
 	template<typename ComplexT>
 	SuccessCode RefineAllSamples(SampCont<ComplexT> & samples, TimeCont<ComplexT> & times)
 	{
@@ -313,25 +318,31 @@ public:
 		return Configured::template Get<EndgameConfig>();
 	}
 	
+	/// \return The security (divergence-bailout) settings.
 	inline
 	const auto & SecuritySettings() const
 	{
 		return this->template Get<SecurityConfig>();
 	}
 
+	/// \brief Construct the endgame for a tracker, with its configuration as a tuple.
 	explicit EndgameBase(TrackerType const& tr, const ConfigsAsTuple& settings ) :
       	EndgamePrecPolicyBase<TrackerType>(tr), Configured( settings ), PrecT(tr)
    	{}
 
 
+	/// \brief Construct the endgame for a tracker, with configs given in any order.
     template< typename... Ts >
     explicit
-	EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Configs::Unpermute( ts... ) ) 
+	EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Configs::Unpermute( ts... ) )
 	{}
 
 
+	/// \return The current cycle number.
 	inline unsigned CycleNumber() const { return cycle_number_;}
+	/// \brief Set the cycle number.
 	inline void CycleNumber(unsigned c) { cycle_number_ = c;}
+	/// \brief Increase the cycle number by the given increment.
 	inline void IncrementCycleNumber(unsigned inc) { cycle_number_ += inc;}
 
 	

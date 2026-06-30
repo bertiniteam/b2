@@ -88,29 +88,31 @@ namespace bertini{ namespace endgame{
 	template<typename TrackerT>
 	struct EndgameSelector
 	{ 
-		using EGPrecT = typename EGPrecSelector<TrackerT>::type;
+		using EGPrecT = typename EGPrecSelector<TrackerT>::type;  ///< The precision policy type for the tracker.
 
-		using PSEG = endgame::PowerSeriesEndgame<EGPrecT>;
-		using Cauchy = endgame::CauchyEndgame<EGPrecT>;
+		using PSEG = endgame::PowerSeriesEndgame<EGPrecT>;   ///< The power-series endgame for this tracker.
+		using Cauchy = endgame::CauchyEndgame<EGPrecT>;      ///< The Cauchy endgame for this tracker.
 	};
 
+	/// \brief Security (divergence-bailout) configuration for an endgame.
 	struct SecurityConfig
 	{
-		int level = 0; //SecurityLevel
-		NumErrorT max_norm = NumErrorT(1e4); //SecurityMaxNorm wrong default value
+		int level = 0; ///< Security level; >0 disables the max-norm divergence check.
+		NumErrorT max_norm = NumErrorT(1e4); ///< A path diverges if its norm exceeds this during the endgame.
 	};
 
-	
+
+	/// \brief Configuration common to all endgames (sampling and final-approximation tolerances).
 	struct EndgameConfig
 	{
-		using T = NumErrorT;
-		T sample_point_refinement_factor = 1e-2; ///* Extra amount of tolerance for refining before computing the final approximation, during endgame.
-		unsigned num_sample_points = 3; //NumSamplePoints default = 2
-		T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
+		using T = NumErrorT;  ///< The numeric (error) type.
+		T sample_point_refinement_factor = 1e-2; ///< Extra tolerance for refining sample points before computing the final approximation.
+		unsigned num_sample_points = 3; ///< Number of sample points used per approximation.
+		T min_track_time = T(1e-100); ///< Smallest time the endgame will track to (the neighborhood radius).
 
-		mpq_rational sample_factor{1, 2}; //SampleFactor — mpq_rational: exact, no floating-point precision to go stale
-		
-		unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
+		mpq_rational sample_factor{1, 2}; ///< Geometric factor between successive sample times (exact rational).
+
+		unsigned max_num_newton_iterations = 15; ///< Maximum Newton iterations when refining endgame sample points.
 
 		T final_tolerance = 1e-11;///< The tolerance to which to compute the endpoint using the endgame.
 
@@ -123,23 +125,25 @@ namespace bertini{ namespace endgame{
 	};
 
 
+	/// \brief Power-series-endgame configuration.
 	struct PowerSeriesConfig
 	{
-		unsigned max_cycle_number = 6; //MaxCycleNum
-		unsigned cycle_number_amplification = 5;
+		unsigned max_cycle_number = 6; ///< Largest cycle number to consider.
+		unsigned cycle_number_amplification = 5; ///< Multiplier bounding the search for the cycle number.
 	};
 
-	
+
+	/// \brief Cauchy-endgame configuration.
 	struct CauchyConfig
 	{
-		using T = NumErrorT;
+		using T = NumErrorT;  ///< The numeric (error) type.
 
-		T cycle_cutoff_time = T(1)/T(100000000); //CycleTimeCutoff
-		T ratio_cutoff_time = T(1)/T(100000000000000); //RatioTimeCutoff
-		T minimum_for_c_over_k_stabilization = T(3)/T(4);
-		unsigned int num_needed_for_stabilization = 3;
-		T maximum_cauchy_ratio = T(1)/T(2);
-		unsigned int fail_safe_maximum_cycle_number = 250; //max number of loops before giving up.
+		T cycle_cutoff_time = T(1)/T(100000000); ///< Time below which the cycle-number heuristic stops.
+		T ratio_cutoff_time = T(1)/T(100000000000000); ///< Time below which the c/k ratio test stops.
+		T minimum_for_c_over_k_stabilization = T(3)/T(4); ///< Minimum c/k ratio accepted as stabilized.
+		unsigned int num_needed_for_stabilization = 3; ///< Consecutive samples needed for c/k stabilization.
+		T maximum_cauchy_ratio = T(1)/T(2); ///< Maximum accepted Cauchy ratio.
+		unsigned int fail_safe_maximum_cycle_number = 250; ///< Max number of loops before giving up.
 
 		// Number of consecutive circle-tracked Cauchy approximations that must report the SAME cycle
 		// number before a converged approximation is trusted.  Guards against an UNRELIABLE cycle
@@ -149,16 +153,17 @@ namespace bertini{ namespace endgame{
 		// loop-closing count thrashes (e.g. 41, 14, 36).  Requiring N consecutive identical cycle
 		// numbers refuses to accept convergence until the estimate has genuinely settled.
 		// See z_notes/20260629_endgame_stepsize_reset_rootcause.
-		unsigned int num_consecutive_same_cycle_number = 2;
+		unsigned int num_consecutive_same_cycle_number = 2; ///< Consecutive identical cycle-number estimates required before trusting convergence (guards against an unreliable cycle number at too-low precision).
 
 	};
 
 
+	/// \brief Track-back endgame configuration.
 	struct TrackBackConfig
 	{
-		unsigned minimum_cycle = 4; //MinCycleTrackback, default = 4
-		bool junk_removal_test = 1; //JunkRemovalTest, default = 1
-		unsigned max_depth_LDT = 3; //MaxLDTDepth, default = 3
+		unsigned minimum_cycle = 4; ///< Minimum cycle number for track-back.
+		bool junk_removal_test = 1; ///< Whether to run the junk-removal test.
+		unsigned max_depth_LDT = 3; ///< Maximum depth of the local dimension test.
 	};
 
 
@@ -172,13 +177,14 @@ namespace bertini{ namespace endgame{
 	template<typename PrecT>
 	struct AlgoTraits< PowerSeriesEndgame<PrecT>>
 	{
+		/// The config types this endgame reads.
 		using NeededConfigs = detail::TypeList<
 			PowerSeriesConfig,
 			EndgameConfig,
 			SecurityConfig
 			>;
 
-		using EmitterType = PowerSeriesEndgame<PrecT>;
+		using EmitterType = PowerSeriesEndgame<PrecT>;  ///< The event-emitter type for this endgame.
 	};
 
 
@@ -188,6 +194,7 @@ namespace bertini{ namespace endgame{
 	template<typename PrecT>
 	struct AlgoTraits< CauchyEndgame<PrecT>>
 	{
+		/// The config types this endgame reads.
 		using NeededConfigs = detail::TypeList<
 			CauchyConfig,
 			EndgameConfig,

@@ -58,11 +58,12 @@ namespace bmp = boost::multiprecision;
 using bmp::backends::mpc_complex_backend;
 
 #ifdef BMP_EXPRESSION_TEMPLATES
-	using complex_mp = bmp::number<mpc_complex_backend<0>, bmp::et_on >;
+	using complex_mp = bmp::number<mpc_complex_backend<0>, bmp::et_on >;  ///< The arbitrary-precision complex number type.
 #else
-	using complex_mp = bmp::number<mpc_complex_backend<0>, bmp::et_off >;
+	using complex_mp = bmp::number<mpc_complex_backend<0>, bmp::et_off >;  ///< The arbitrary-precision complex number type.
 #endif
 
+	/// \brief The default Boost.Multiprecision variable-precision policy used by bertini.
 	inline auto DefaultPrecisionPolicy(){
 		return bmp::variable_precision_options::preserve_related_precision;
 	}
@@ -70,12 +71,14 @@ using bmp::backends::mpc_complex_backend;
 
 
 
+	/// \brief RAII guard setting the multiprecision variable-precision options for the current thread, restoring on scope exit.
 	// shamelessly adapted from the documentation for variable precision in Boost.Multiprecision.
 	// see https://www.boost.org/doc/libs/1_82_0/libs/multiprecision/doc/html/boost_multiprecision/tut/variable.html
 	struct scoped_mpfr_precision_options_this_thread
 	{
-	   boost::multiprecision::variable_precision_options saved_options;
+	   boost::multiprecision::variable_precision_options saved_options;  ///< The options to restore on destruction.
 
+	   /// \brief Save the current thread options and set the given ones.
 	   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(real_mp::thread_default_variable_precision_options())
 	   {
 	      real_mp::thread_default_variable_precision_options(opts);
@@ -86,6 +89,7 @@ using bmp::backends::mpc_complex_backend;
 	      real_mp::thread_default_variable_precision_options(saved_options);
 	   }
 
+	   /// \brief Set the thread options again (without changing what will be restored).
 	   void reset(boost::multiprecision::variable_precision_options opts)
 	   {
 	      real_mp::thread_default_variable_precision_options(opts);
@@ -95,11 +99,13 @@ using bmp::backends::mpc_complex_backend;
 
 
 
+	/// \brief RAII guard setting the multiprecision variable-precision options for all threads, restoring on scope exit.
 	struct scoped_mpfr_precision_options_all_threads
 	{
-	   boost::multiprecision::variable_precision_options saved_options_all_threads;
-	   boost::multiprecision::variable_precision_options saved_options_this_thread;
+	   boost::multiprecision::variable_precision_options saved_options_all_threads;  ///< The all-thread options to restore.
+	   boost::multiprecision::variable_precision_options saved_options_this_thread;  ///< The current-thread options to restore.
 
+	   /// \brief Save the current global and thread options and set the given ones for both.
 	   scoped_mpfr_precision_options_all_threads(boost::multiprecision::variable_precision_options opts) :
 	   		saved_options_all_threads(real_mp::default_variable_precision_options()),
 	   		saved_options_this_thread(real_mp::default_variable_precision_options())
@@ -114,6 +120,7 @@ using bmp::backends::mpc_complex_backend;
 	      real_mp::thread_default_variable_precision_options(saved_options_this_thread);
 	   }
 
+	   /// \brief Set both the global and thread options again (without changing what will be restored).
 	   void reset(boost::multiprecision::variable_precision_options opts)
 	   {
 	      real_mp::default_variable_precision_options(opts);
@@ -127,6 +134,7 @@ using bmp::backends::mpc_complex_backend;
 
 
 
+	/// \brief Get the global default precision (digits) for multiprecision numbers.
 	inline auto DefaultPrecision()
 	{
 		auto p = real_mp::default_precision();
@@ -134,6 +142,7 @@ using bmp::backends::mpc_complex_backend;
 		return p;
 	}
 
+	/// \brief Set the global default precision (digits) for multiprecision numbers, on this thread and globally.
 	inline void DefaultPrecision(unsigned prec)
 	{
 		real_mp::default_precision(prec);
@@ -166,12 +175,14 @@ using bmp::backends::mpc_complex_backend;
 	// Sets thread-local precision only — does NOT write the global default_precision.
 	// Safe to call concurrently from multiple std::thread workers tracking at different
 	// precisions. Use instead of DefaultPrecision() inside per-thread tracking loops.
+	/// \brief Set the precision (digits) for the current thread only (does not touch the global default).
 	inline void SetThreadPrecision(unsigned prec)
 	{
 		real_mp::thread_default_precision(prec);
 		complex_mp::thread_default_precision(prec);
 	}
 
+	/// \brief Get the current thread's precision (digits).
 	inline unsigned ThreadPrecision()
 	{
 		return static_cast<unsigned>(real_mp::thread_default_precision());
@@ -210,7 +221,9 @@ namespace boost { namespace serialization {
 }} // re: namespace boost::serialization
 
 
+/// \cond MPC_SERIALIZATION
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpc_complex_backend<0>);
+/// \endcond
 
 
 
@@ -241,6 +254,7 @@ namespace bertini{
 		num.precision(prec);
 	}
 
+	/// \brief Query whether either component of a multiprecision complex number is NaN.
 	inline
 	bool isnan(complex_mp const& num){return isnan(num.real()) || isnan(num.imag());};
 

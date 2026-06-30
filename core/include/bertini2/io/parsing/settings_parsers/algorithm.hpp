@@ -42,9 +42,10 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> 
+			/// \brief Parser for the TolerancesConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::TolerancesConfig, Skipper> : qi::grammar<Iterator, algorithm::TolerancesConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::TolerancesType")
 				{
@@ -164,6 +165,7 @@ namespace bertini {
 			
 
 			template<typename Iterator, typename Skipper>
+			/// \brief Parser for the ZeroDimConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::ZeroDimConfig, Skipper> : qi::grammar<Iterator, algorithm::ZeroDimConfig(), Skipper>
 			{
 
@@ -302,9 +304,10 @@ namespace bertini {
 			}; //re: ZeroDim
 
 			template<typename Iterator, typename Skipper> 
+			/// \brief Parser for the MidPathConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::MidPathConfig, Skipper> : qi::grammar<Iterator, algorithm::MidPathConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::MidPath")
 				{
@@ -378,9 +381,10 @@ namespace bertini {
 
 
 			template<typename Iterator, typename Skipper> 
+			/// \brief Parser for the AutoRetrackConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::AutoRetrackConfig, Skipper> : qi::grammar<Iterator, algorithm::AutoRetrackConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::AutoRetrack")
 				{
@@ -454,9 +458,10 @@ namespace bertini {
 
 
 			template<typename Iterator, typename Skipper> 
+			/// \brief Parser for the SharpeningConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::SharpeningConfig, Skipper> : qi::grammar<Iterator, algorithm::SharpeningConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::config::Sharpening")
 				{
@@ -556,9 +561,10 @@ namespace bertini {
 			}; //re: Sharpening
 
 			template<typename Iterator, typename Skipper> 
+			/// \brief Parser for the RegenerationConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::RegenerationConfig, Skipper> : qi::grammar<Iterator, algorithm::RegenerationConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::config::Regeneration")
 				{
@@ -689,9 +695,10 @@ namespace bertini {
 
 
 			template<typename Iterator, typename Skipper> 
+			/// \brief Parser for the PostProcessingConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::PostProcessingConfig, Skipper> : qi::grammar<Iterator, algorithm::PostProcessingConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::PostProcessingConfig")
 				{
@@ -803,9 +810,10 @@ namespace bertini {
 
 
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the AlgoChoice settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::classic::AlgoChoice, Skipper> : qi::grammar<Iterator, algorithm::classic::AlgoChoice(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::classic::AlgoChoice")
 				{
@@ -877,6 +885,7 @@ namespace bertini {
 
 
 		template<typename Iterator, typename Skipper>
+			/// \brief Parser for the EndgameChoiceConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, algorithm::classic::EndgameChoiceConfig, Skipper> : qi::grammar<Iterator, algorithm::classic::EndgameChoiceConfig(), Skipper>
 			{
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::classic::EndgameChoiceConfig")

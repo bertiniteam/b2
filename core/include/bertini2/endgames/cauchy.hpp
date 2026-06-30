@@ -172,14 +172,14 @@ class CauchyEndgame :
 	public virtual EndgameBase<CauchyEndgame<PrecT>, PrecT>
 {
 public:
-	using BaseEGT = EndgameBase<CauchyEndgame<PrecT>, PrecT>;
-	using FinalEGT = CauchyEndgame<PrecT>;
-	using TrackerType = typename PrecT::TrackerType;
+	using BaseEGT = EndgameBase<CauchyEndgame<PrecT>, PrecT>;  ///< The base endgame type.
+	using FinalEGT = CauchyEndgame<PrecT>;  ///< The final (derived) endgame type.
+	using TrackerType = typename PrecT::TrackerType;  ///< The path-tracker type.
 
-	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
-	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;  ///< The complex number type.
+	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;  ///< The real number type.
 
-	using EmitterType = CauchyEndgame<PrecT>;
+	using EmitterType = CauchyEndgame<PrecT>;  ///< The event-emitter type.
 
 protected:
 
@@ -188,15 +188,15 @@ protected:
 
 
 
-	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
-	using TupleOfSamps = typename BaseEGT::TupleOfSamps;
-	using TupOfVec = typename BaseEGT::TupOfVec;
+	using TupleOfTimes = typename BaseEGT::TupleOfTimes;  ///< A tuple of time containers, one per precision.
+	using TupleOfSamps = typename BaseEGT::TupleOfSamps;  ///< A tuple of sample containers, one per precision.
+	using TupOfVec = typename BaseEGT::TupOfVec;  ///< A tuple of vector containers, one per precision.
 
-	using BCT = BaseComplexT;
-	using BRT = BaseRealT;
+	using BCT = BaseComplexT;  ///< The complex number type.
+	using BRT = BaseRealT;  ///< The real number type.
 
-	using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;
-	using ConfigsAsTuple = typename Configs::ToTuple;
+	using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;  ///< The configuration bundle (Configured base).
+	using ConfigsAsTuple = typename Configs::ToTuple;  ///< The configuration structs as a tuple.
 
 	/**
 	\brief A deque of times that are specifically used to compute the power series approximation for the Cauchy endgame.
@@ -259,6 +259,7 @@ public:
 	*/
 	template<typename ComplexT>
 	TimeCont<ComplexT>& GetPSEGTimes() {return std::get<TimeCont<ComplexT> >(pseg_times_);}
+	/// \brief Const overload returning the power-series time values.
 	template<typename ComplexT>
 	const TimeCont<ComplexT>& GetPSEGTimes() const {return std::get<TimeCont<ComplexT> >(pseg_times_);}
 
@@ -275,6 +276,7 @@ public:
 	*/
 	template<typename ComplexT>
 	SampCont<ComplexT>& GetPSEGSamples() {return std::get<SampCont<ComplexT> >(pseg_samples_);}
+	/// \brief Const overload returning the power-series sample values.
 	template<typename ComplexT>
 	const SampCont<ComplexT>& GetPSEGSamples() const {return std::get<SampCont<ComplexT> >(pseg_samples_);}
 	/**
@@ -296,6 +298,7 @@ public:
 	{
 		return std::get<SampCont<ComplexT> >(cauchy_samples_);
 	}
+	/// \brief Const overload returning the Cauchy sample values.
 	template<typename ComplexT>
 	const SampCont<ComplexT>& GetCauchySamples() const { return std::get<SampCont<ComplexT> >(cauchy_samples_); }
 
@@ -317,6 +320,7 @@ public:
 	{
 		return std::get<TimeCont<ComplexT> >(cauchy_times_);
 	}
+	/// \brief Const overload returning the Cauchy time values.
 	template<typename ComplexT>
 	const TimeCont<ComplexT>& GetCauchyTimes() const
 	{
@@ -324,6 +328,7 @@ public:
 	}
 
 
+	/// \return The most recent power-series time value.
 	const BCT& LatestTimeImpl() const
 	{
 		// In the adaptive-numeric-type endgame the latest time may live in the complex_dbl slot (the
@@ -360,11 +365,13 @@ public:
 	}
 
 
+	/// \brief Construct the Cauchy endgame for a tracker, with its configuration as a tuple.
 	explicit CauchyEndgame(TrackerType const& tr,
                             const ConfigsAsTuple& settings )
       : EndgamePrecPolicyBase<TrackerType>(tr), BaseEGT(tr, settings)
    	{ }
 
+	/// \brief Construct the Cauchy endgame for a tracker, with configs given in any order.
     template< typename... Ts >
 		CauchyEndgame(TrackerType const& tr, const Ts&... ts ) : CauchyEndgame(tr, Configs::Unpermute( ts... ) )
 		{}
@@ -372,6 +379,7 @@ public:
 
 	virtual ~CauchyEndgame() = default;
 
+	/// \brief Validate the endgame configuration (e.g. require >= 3 sample points for circle tracking).
 	void ValidateConfigs()
 	{
 		if (this->EndgameSettings().num_sample_points < 3) // need to make sure we won't track right through the origin.
@@ -504,6 +512,7 @@ public:
 
 	}//end CircleTrack
 
+	/// \brief Append a (time, sample) pair to the Cauchy data containers.
 	template<typename ComplexT>
 	void AddToCauchyData(ComplexT const& time, Vec<ComplexT> const& sample)
 	{
@@ -511,6 +520,7 @@ public:
 		std::get<SampCont<ComplexT>>(cauchy_samples_).push_back(sample);
 	}
 
+	/// \brief Append a (time, sample) pair to the power-series data containers.
 	template<typename ComplexT>
 	void AddToPSData(ComplexT const& time, Vec<ComplexT> const& sample)
 	{
@@ -869,6 +879,7 @@ public:
 
 
 
+	/// \brief Shift the power-series sample window forward by one (time, sample) pair.
 	template <typename ComplexT>
 	void RotateOntoPS(ComplexT const& next_time, Vec<ComplexT> const& next_sample)
 	{
@@ -882,6 +893,7 @@ public:
 		ps_samples.push_back(next_sample);
 	}
 
+	/// \brief Clear the Cauchy data and re-seed it from the current power-series samples.
 	template <typename ComplexT>
 	void ClearAndSeedCauchyData()
 	{
@@ -938,6 +950,7 @@ public:
 
 
 
+	/// \brief Track from the boundary inward until the path enters the endgame (Cauchy) operating zone.
 	template<typename ComplexT>
 	SuccessCode GetIntoEGZone(ComplexT const& start_time, Vec<ComplexT> const& start_point, ComplexT const& target_time)
 	{

@@ -46,8 +46,9 @@ class EndgamePrecPolicyBase : public virtual Observable
 {
 public:
 
-	using TrackerType = TrackerT;
+	using TrackerType = TrackerT;  ///< The path-tracker type.
 
+	/// \brief Construct the precision policy holding a reference to the given tracker.
 	explicit
 	EndgamePrecPolicyBase(TrackerT const& new_tracker) : tracker_(std::ref(new_tracker))
 	{}
@@ -82,6 +83,7 @@ public:
 	const System& GetSystem() const 
 	{ return GetTracker().GetSystem();}
 
+	/// \brief Change the working precision of the underlying tracker.
 	void ChangePrecision(unsigned p)
 	{
 		// .get(): tracker_ is a reference_wrapper (never instantiated pre-ETI)

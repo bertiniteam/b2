@@ -57,6 +57,7 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
+		/// \brief Construct a trigonometric operator over a single operand node.
 		TrigOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 
@@ -98,6 +99,7 @@ namespace node{
 		std::shared_ptr<Node> Simplified() const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
+		/// \brief Construct (and intern) a SinOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<SinOperator> Make(Ts&& ...ts){ 
@@ -155,6 +157,7 @@ namespace node{
 		std::shared_ptr<Node> Simplified() const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
+		/// \brief Construct (and intern) a ArcSinOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ArcSinOperator> Make(Ts&& ...ts){ 
@@ -216,6 +219,7 @@ namespace node{
 		std::shared_ptr<Node> Simplified() const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
+		/// \brief Construct (and intern) a CosOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<CosOperator> Make(Ts&& ...ts){ 
@@ -276,6 +280,7 @@ namespace node{
 		std::shared_ptr<Node> Simplified() const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
+		/// \brief Construct (and intern) a ArcCosOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ArcCosOperator> Make(Ts&& ...ts){ 
@@ -342,6 +347,7 @@ namespace node{
 		std::shared_ptr<Node> Simplified() const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
+		/// \brief Construct (and intern) a TanOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<TanOperator> Make(Ts&& ...ts){ 
@@ -399,6 +405,7 @@ namespace node{
 		std::shared_ptr<Node> Simplified() const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
+		/// \brief Construct (and intern) a ArcTanOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ArcTanOperator> Make(Ts&& ...ts){ 
@@ -443,11 +450,13 @@ namespace node{
 	
 	// begin the overload of operators
 
+	/// \brief Build a sine expression-tree node.
 	inline std::shared_ptr<Node> sin(const std::shared_ptr<Node> & N)
 	{
 		return SinOperator::Make(N);
 	}
 	
+	/// \brief Build a arcsine expression-tree node.
 	inline std::shared_ptr<Node> asin(const std::shared_ptr<Node> & N)
 	{
 		return ArcSinOperator::Make(N);
@@ -455,6 +464,7 @@ namespace node{
 	
 
 
+	/// \brief Build a cosine expression-tree node.
 	inline std::shared_ptr<Node> cos(const std::shared_ptr<Node> & N)
 	{
 		return CosOperator::Make(N);
@@ -462,6 +472,7 @@ namespace node{
 
 
 
+	/// \brief Build a arccosine expression-tree node.
 	inline std::shared_ptr<Node> acos(const std::shared_ptr<Node> & N)
 	{
 		return ArcCosOperator::Make(N);
@@ -469,6 +480,7 @@ namespace node{
 
 
 
+	/// \brief Build a tangent expression-tree node.
 	inline std::shared_ptr<Node> tan(const std::shared_ptr<Node> & N)
 	{
 		return TanOperator::Make(N);
@@ -476,6 +488,7 @@ namespace node{
 
 
 	
+	/// \brief Build a arctangent expression-tree node.
 	inline std::shared_ptr<Node> atan(const std::shared_ptr<Node> & N)
 	{
 		return ArcTanOperator::Make(N);

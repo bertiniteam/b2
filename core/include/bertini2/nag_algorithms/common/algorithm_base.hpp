@@ -34,10 +34,12 @@ namespace bertini{
 
 namespace algorithm {
 
+	/// \brief Type-erased base for all nag algorithms, exposing a single Run() entry point.
 	struct AnyAlgorithm
 	{
 
-		virtual 
+		/// \brief Run the algorithm.
+		virtual
 		void Run() = 0;
 
 		virtual ~AnyAlgorithm() = default;

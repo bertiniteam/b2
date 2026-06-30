@@ -44,6 +44,7 @@ namespace bertini {
 	namespace tracking{
 
 
+		/// \brief Observer that records the starting precision and the first precision increase during a track.
 		template<class TrackerT>
 		class FirstPrecisionRecorder
 			: public TypedObserver< FirstPrecisionRecorder<TrackerT>, TrackerT,
@@ -55,6 +56,7 @@ namespace bertini {
 
 		public:
 
+			/// \brief On tracking start, record the starting precision.
 			ObserveResult OnEvent(TrackingStarted<EmitterT> const& e)
 			{
 				precision_increased_ = false;
@@ -62,6 +64,7 @@ namespace bertini {
 				return ObserveResult::KeepObserving;
 			}
 
+			/// \brief On a precision increase, record it and unsubscribe (only the first increase is wanted).
 			ObserveResult OnEvent(PrecisionChanged<EmitterT> const& e)
 			{
 				auto next = e.Next();
@@ -76,21 +79,25 @@ namespace bertini {
 				return ObserveResult::KeepObserving;
 			}
 
+			/// \brief Get the precision tracking started at.
 			unsigned  StartPrecision() const
 			{
 				return starting_precision_;
 			}
 
+			/// \brief Get the precision after the first increase.
 			unsigned NextPrecision() const
 			{
 				return next_precision_;
 			}
 
+			/// \brief Query whether precision increased at all during the track.
 			bool DidPrecisionIncrease() const
 			{
 				return precision_increased_;
 			}
 
+			/// \brief Get the time value at which precision first increased.
 			typename TrackerTraits<TrackerT>::BaseComplexT TimeOfIncrease() const
 			{
 				return time_of_first_increase_;
@@ -107,6 +114,7 @@ namespace bertini {
 		};
 
 
+		/// \brief Observer that records the minimum and maximum precision reached during a track.
 		template<class TrackerT>
 		class MinMaxPrecisionRecorder
 			: public TypedObserver< MinMaxPrecisionRecorder<TrackerT>, TrackerT,
@@ -118,6 +126,7 @@ namespace bertini {
 
 		public:
 
+			/// \brief On tracking start, seed the min and max with the starting precision.
 			ObserveResult OnEvent(TrackingStarted<EmitterT> const& e)
 			{
 				min_precision_ = e.Get().CurrentPrecision();
@@ -125,6 +134,7 @@ namespace bertini {
 				return ObserveResult::KeepObserving;
 			}
 
+			/// \brief On a precision change, update the running min and max.
 			ObserveResult OnEvent(PrecisionChanged<EmitterT> const& e)
 			{
 				auto next_precision = e.Next();
@@ -135,19 +145,23 @@ namespace bertini {
 				return ObserveResult::KeepObserving;
 			}
 
+			/// \brief Get the minimum precision observed.
 			unsigned MinPrecision() const
 			{
 				return min_precision_;
 			}
 
+			/// \brief Get the maximum precision observed.
 			unsigned MaxPrecision() const
 			{
 				return max_precision_;
 			}
 
+			/// \brief Set the recorded minimum precision.
 			void MinPrecision(unsigned m)
 			{ min_precision_ = m;}
 
+			/// \brief Set the recorded maximum precision.
 			void MaxPrecision(unsigned m)
 			{ max_precision_ = m;}
 
@@ -160,6 +174,7 @@ namespace bertini {
 		};
 
 
+		/// \brief Observer that collects the precision at every tracking event into a vector.
 		template<class TrackerT>
 		class PrecisionAccumulator : public Observer<TrackerT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
@@ -178,6 +193,7 @@ namespace bertini {
 
 
 		public:
+			/// \brief Get the recorded sequence of precisions.
 			const std::vector<unsigned>& Precisions() const
 			{
 				return precisions_;
@@ -193,6 +209,7 @@ namespace bertini {
 		Example usage:
 		PathAccumulator<AMPTracker> path_accumulator;
 		*/
+		/// \brief Observer that accumulates the current space point at each event of type EventT.
 		template<class TrackerT, template<class> class EventT = SuccessfulStep>
 		class AMPPathAccumulator
 			: public TypedObserver< AMPPathAccumulator<TrackerT,EventT>, TrackerT,
@@ -203,12 +220,14 @@ namespace bertini {
 
 		public:
 
+			/// \brief On each observed event, append the tracker's current point to the path.
 			ObserveResult OnEvent(EventT<EmitterT> const& e)
 			{
 				path_.push_back(e.Get().CurrentPoint());
 				return ObserveResult::KeepObserving;
 			}
 
+			/// \brief Get the accumulated path of space points.
 			const std::vector<Vec<complex_mp> >& Path() const
 			{
 				return path_;
@@ -222,15 +241,17 @@ namespace bertini {
 
 
 
+		/// \brief Observer that logs verbose ("gory detail") diagnostics for every tracking event.
 		template<class TrackerT>
 		class GoryDetailLogger : public Observer<TrackerT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
 
-			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;  ///< The event-emitter type.
 
 			virtual ~GoryDetailLogger() = default;
 
+			/// \brief Log a human-readable description of the event, dispatching on its dynamic type.
 			virtual ObserveResult Observe(AnyEvent const& e) override
 			{
 
@@ -339,6 +360,7 @@ namespace bertini {
 
 
 
+		/// \brief Observer that prints a message to standard out whenever a step fails.
 		template<class TrackerT>
 		class StepFailScreenPrinter
 			: public TypedObserver< StepFailScreenPrinter<TrackerT>, TrackerT,
@@ -346,8 +368,9 @@ namespace bertini {
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
 
-			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;  ///< The event-emitter type.
 
+			/// \brief On a failed step, print a notice to standard out.
 			ObserveResult OnEvent(FailedStep<EmitterT> const& /*e*/)
 			{
 				std::cout << "observed step failure" << std::endl;

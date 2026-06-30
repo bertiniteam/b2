@@ -103,10 +103,7 @@ unsigned MaxPrecision(TimeCont<complex_mp> const& times)
 /**
 \brief Does not a thing, because cannot.
 
-Cannot change precision of fixed precision hardware doubles.  This function is provided for template lookup, and interface completeness.
-
-\param times Some times \f$\in \mathbb{C}\f$.
-\param samples Some space samples \f$\in \mathbb{C}^n\f$.
+Cannot change precision of fixed precision hardware doubles.  This function is provided for template lookup, and interface completeness; its arguments (some times \f$\in \mathbb{C}\f$ and space samples \f$\in \mathbb{C}^n\f$) are intentionally ignored.
 
 \return The precision, which is now uniform.
 */

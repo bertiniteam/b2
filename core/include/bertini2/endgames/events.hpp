@@ -93,15 +93,15 @@ namespace bertini {
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 
-		using ComplexT = typename ObservedT::BaseComplexT;
+		using ComplexT = typename ObservedT::BaseComplexT;  ///< The complex number type.
 		/**
 		\brief The constructor for a CircleAdvanced Event.
 
 		\param obs The observable emitting the event.
-		\param previous The precision before changing.
-		\param next The precision after changing.
+		\param new_point The space point reached after advancing around the circle.
+		\param new_time The time value reached after advancing around the circle.
 		*/
-		CircleAdvanced(const ObservedT & obs, 
+		CircleAdvanced(const ObservedT & obs,
 		               Vec<ComplexT> const& new_point,
 		               ComplexT const& new_time) : EndgameEvent<ObservedT>(obs),
 													new_point_(new_point),
@@ -112,8 +112,10 @@ namespace bertini {
 		virtual ~CircleAdvanced() = default;
 		CircleAdvanced() = delete;
 		
+		/// \return The space point reached after advancing around the circle.
 		const auto& NewSample() const {return new_point_;}
 
+		/// \return The time value reached after advancing around the circle.
 		const auto& NewTime() const {return new_time_;}
 
 	private:
@@ -148,6 +150,7 @@ namespace bertini {
 	ADD_BERTINI_EVENT_TYPE(InEGOperatingZone,EndgameEvent);
 	
 
+	/// \brief Event emitted when the endgame's working precision changes.
 	template<class ObservedT>
 	class PrecisionChanged : public EndgameEvent<ObservedT>
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS

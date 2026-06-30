@@ -38,9 +38,9 @@ namespace bertini{
 
 	namespace fs = boost::filesystem;
 
-	using Path = fs::path;
+	using Path = fs::path;  ///< Shorthand for a filesystem path.
 
-	using ifstream = std::ifstream;
+	using ifstream = std::ifstream;  ///< Shorthand for an input file stream.
 	/**
 	\brief Try to open a file, and throw if it doesn't exist, or is a directory.
 	*/

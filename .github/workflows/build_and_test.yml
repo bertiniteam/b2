@@ -64,6 +64,14 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  # Cheap, Doxygen-only gate (no compilation).  Every job that actually builds
+  # the C++ core `needs` this, so a documentation error fails the run in ~1 minute
+  # and NO expensive build/test job ever starts.  Surfacing this late (e.g. only at
+  # docs-publish time) would waste the whole build matrix on a doc typo.
+  doc_lint:
+    name: Documentation lint
+    uses: ./.github/workflows/doc_lint.yml
+
   set_matrix:
     name: Set OS matrix
     runs-on: ubuntu-latest
@@ -93,7 +101,7 @@ jobs:
   test_cpp_unix:
     name: C++ tests on ${{ matrix.os }}
     if: ${{ inputs.minimal != true }}
-    needs: [set_matrix]
+    needs: [doc_lint, set_matrix]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30   # backstop against a hang; healthy runs are ~7 min
     strategy:
@@ -218,6 +226,7 @@ jobs:
   test_cpp_windows:
     name: C++ tests on Windows
     if: ${{ inputs.minimal != true }}
+    needs: [doc_lint]
     runs-on: windows-latest
     timeout-minutes: 40   # backstop against a hang; the clang-cl build+test is ~22 min
     env:

@@ -59,32 +59,43 @@ namespace blocks {
 class PolynomialBlock
 {
 public:
-	using NE  = std::shared_ptr<node::NamedExpression>;
-	using Nd  = std::shared_ptr<node::Node>;
-	using Var = std::shared_ptr<node::Variable>;
+	using NE  = std::shared_ptr<node::NamedExpression>;  ///< Shorthand for a shared pointer to a named expression.
+	using Nd  = std::shared_ptr<node::Node>;  ///< Shorthand for a shared pointer to a generic node.
+	using Var = std::shared_ptr<node::Variable>;  ///< Shorthand for a shared pointer to a variable node.
 
+	/// \brief Construct an empty polynomial block at the current default precision.
 	PolynomialBlock() : precision_(DefaultPrecision()) {}
 
 	// ---- construction (System forwards AddFunction / AddSubFunction here) ----
+	/// \brief Add a function (one row of the block).
 	void AddFunction(Nd const& f)    { functions_.push_back(f);    Invalidate(); }
+	/// \brief Add a named constant subfunction.
 	void AddConstant(NE const& f)    { constant_subfunctions_.push_back(f); Invalidate(); }
 
 	/// The variable ordering + path variable the function trees are evaluated against; the
 	/// owning System keeps these in sync (they change as variable groups are added / the
 	/// system is homogenized).
 	void SetVariableOrdering(VariableGroup const& vars) const { variables_ = vars; Invalidate(); }
+	/// \brief Set the path variable the function trees are evaluated against.
 	void SetPathVariable(Var const& t) const { path_variable_ = t; Invalidate(); }
+	/// \brief Clear the path variable.
 	void ClearPathVariable() const { path_variable_.reset(); Invalidate(); }
 
 	// Mutable access for the owning System's construction-time manipulations (Homogenize walks
 	// the trees in place; Reorder/Simplify reassign entries).  The System keeps the variable
 	// groups / ordering; the block keeps the functions and their derivatives.
+	/// \brief Get mutable access to the block's functions.
 	std::vector<Nd>&       Functions()       { return functions_; }
+	/// \brief Get const access to the block's functions.
 	std::vector<Nd> const& Functions() const { return functions_; }
+	/// \brief Get the block's constant subfunctions.
 	std::vector<NE> const& ConstantSubfunctions() const { return constant_subfunctions_; }
+	/// \brief Get the number of constant subfunctions.
 	size_t NumConstants() const { return constant_subfunctions_.size(); }
 
+	/// \brief Query whether the block's derivatives have been computed.
 	bool IsDifferentiated() const { return is_differentiated_; }
+	/// \brief Mark the block's derivatives as stale (to be recomputed on next use).
 	void Invalidate() const { is_differentiated_ = false; }
 
 	/// Per-function degrees (total, and with respect to a variable group).
@@ -94,6 +105,7 @@ public:
 		for (auto const& f : functions_) d.push_back(f->Degree());
 		return d;
 	}
+	/// \brief Per-function degrees with respect to a given variable group.
 	std::vector<int> Degrees(VariableGroup const& vars) const
 	{
 		std::vector<int> d; d.reserve(functions_.size());
@@ -110,11 +122,13 @@ public:
 			f = f->Homogenized(group, hom_var);
 		Invalidate();
 	}
+	/// \brief Query whether every function is homogeneous with respect to a variable group.
 	bool IsHomogeneous(VariableGroup const& vars) const
 	{
 		for (auto const& f : functions_) if (!f->IsHomogeneous(vars)) return false;
 		return true;
 	}
+	/// \brief Query whether every function is polynomial in a variable group.
 	bool IsPolynomial(VariableGroup const& vars) const
 	{
 		for (auto const& f : functions_) if (!f->IsPolynomial(vars)) return false;
@@ -122,7 +136,9 @@ public:
 	}
 
 	// ---- block contract: metadata ----
+	/// \brief Get the number of functions in the block.
 	size_t NumFunctions() const { return functions_.size(); }
+	/// \brief Query whether the block depends on the path variable.
 	bool DependsOnPathVariable() const { return static_cast<bool>(path_variable_); }
 
 	/// Human-facing description: one line per function, `f_k = <expression>`.  Polynomials are the
@@ -133,7 +149,9 @@ public:
 			out << "  f_" << row++ << " = " << f << "\n";
 	}
 
+	/// \brief Get the block's current working precision.
 	unsigned Precision() const { return precision_; }
+	/// \brief Set the block's working precision (delegated to the compiled SLP).
 	void Precision(unsigned new_precision) const
 	{
 		// The SLP (its per-thread Memory) is the sole evaluator and carries its own precision; the
@@ -146,6 +164,7 @@ public:
 	// ---- block contract: evaluation (value-in) ----
 	// The compiled SLP is the sole evaluator; the function/derivative trees survive only as the
 	// thing the SLP is compiled from (and that Simplify/Differentiate operate on).
+	/// \brief Evaluate the block's functions in place at the given variable and path-variable values.
 	template <typename T>
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& path_value) const
 	{
@@ -154,6 +173,7 @@ public:
 		slp_.template GetFuncValsInPlace<T>(result);
 	}
 
+	/// \brief Evaluate the block's Jacobian in place at the given variable and path-variable values.
 	template <typename T>
 	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& path_value) const
 	{
@@ -162,6 +182,7 @@ public:
 		slp_.template GetJacobianInPlace<T>(J);
 	}
 
+	/// \brief Evaluate the block's time derivative in place (zero if there is no path variable).
 	template <typename T>
 	void TimeDerivInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& path_value) const
 	{
@@ -172,18 +193,25 @@ public:
 	}
 
 	// ---- accessors the SLP compiler reads (mirror the System names) ----
+	/// \brief Get the variable ordering the functions are evaluated against.
 	VariableGroup const& VariableOrdering() const { return variables_; }
+	/// \brief Query whether the block has a path variable.
 	bool HavePathVariable() const { return static_cast<bool>(path_variable_); }
+	/// \brief Get the block's path variable (may be null).
 	Var GetPathVariable() const { return path_variable_; }
+	/// \brief Get the number of natural (pre-randomization) functions.
 	size_t NumNaturalFunctions() const { return functions_.size(); }
+	/// \brief Get the block's natural function trees.
 	std::vector<Nd> const& GetNaturalFunctions() const { return functions_; }
 	// The SLP is built from the explicit per-variable derivative trees (space/time derivatives).
+	/// \brief Get the per-variable space-derivative trees (computing them if needed).
 	std::vector<Nd> const& GetSpaceDerivatives() const
 	{
 		if (space_derivatives_.empty())
 			DifferentiateUsingDerivatives();
 		return space_derivatives_;
 	}
+	/// \brief Get the time-derivative trees (computing them if needed).
 	std::vector<Nd> const& GetTimeDerivatives() const
 	{
 		if (path_variable_ && time_derivatives_.empty())

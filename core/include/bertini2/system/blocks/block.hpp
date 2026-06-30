@@ -108,6 +108,7 @@ struct is_block<B, std::void_t<
 		std::declval<Eigen::Ref<Vec<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>()))
 >> : std::true_type {};
 
+/// \brief Convenience variable template: true iff B satisfies the polynomial-block evaluation interface.
 template <typename B>
 inline constexpr bool is_block_v = is_block<B>::value;
 

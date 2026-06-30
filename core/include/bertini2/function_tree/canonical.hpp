@@ -57,11 +57,13 @@ enum class MonomialOrder { Lex, RevLex, GrevLex };
 /// The monomial order currently used for canonicalization (session-global -- it must be
 /// consistent session-wide, since it determines interned identity).
 MonomialOrder CurrentMonomialOrder();
+/// \brief Set the session-wide monomial order (determines interned identity).
 void SetMonomialOrder(MonomialOrder order);
 
 /// Whether Sum/Mult construction canonicalizes operand order by default.  (Per-expression
 /// opt-out is a future refinement; for now this is the session switch.)
 bool CanonicalizeByDefault();
+/// \brief Set whether Sum/Mult construction canonicalizes operand order by default.
 void SetCanonicalizeByDefault(bool on);
 
 /**

@@ -79,7 +79,10 @@ jobs:
       - name: Install system dependencies (Doxygen)
         run: |
           sudo apt-get update
-          sudo apt-get install -y doxygen graphviz
+          # texlive-binaries provides bibtex, which Doxygen needs to number and
+          # render the \cite references (CITE_BIB_FILES in the Doxyfile) into a
+          # bibliography in the published C++ docs.
+          sudo apt-get install -y doxygen graphviz texlive-binaries
 
       - name: Fetch doxygen-awesome-css
         run: |

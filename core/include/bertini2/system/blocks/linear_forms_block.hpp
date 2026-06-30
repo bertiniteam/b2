@@ -87,6 +87,7 @@ public:
 
 	/// Linear forms are degree 1.
 	std::vector<int> Degrees() const { return std::vector<int>(NumFunctions(), 1); }
+	/// \brief Per-function degrees with respect to a given variable group (all 1).
 	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
 
 	/// Linear forms are polynomial.
@@ -127,8 +128,8 @@ public:
 	/// Whether Homogenize has folded the constant column onto a homogenizing variable.
 	bool IsHomogenized() const { return homogeneous_; }
 
-	/// Human-facing description: each form prints as the placeholder `f_k = c.[x, y, 1]` (structure
-	/// stays legible) followed by its actual coefficient row in a `c =` legend below -- short (4
+	/// Human-facing description: each form prints as the placeholder 'f_k = c.[x, y, 1]' (structure
+	/// stays legible) followed by its actual coefficient row in a 'c =' legend below -- short (4
 	/// significant figures) in terse, full precision in verbose.  Terse truncates after kTerseRowCap
 	/// forms so a large slice does not flood the terminal.
 	void Describe(std::ostream& out, size_t& row, VariableGroup const& vars, bool verbose) const
@@ -179,6 +180,7 @@ public:
 	/// Analytic block: nothing symbolic to differentiate.
 	void Differentiate() const {}
 
+	/// \brief Get the block's current working precision.
 	unsigned Precision() const { return precision_; }
 
 	/// Set the working precision; recasts the mpfr working coefficients from the master.
@@ -201,9 +203,10 @@ public:
 	/**
 	\brief Evaluate the block's function values into a caller-provided segment.
 
+	The path variable is ignored (linear forms are autonomous).
+
 	\param result Length-NumFunctions() segment to write into.
 	\param vars   Length-NumVariables() current variable values.
-	\param path_value The path-variable value (ignored: linear forms are autonomous).
 	*/
 	template <typename T>
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
@@ -221,10 +224,9 @@ public:
 	\brief Evaluate the block's Jacobian (d f_i / d x_j) into a caller-provided block.
 
 	The Jacobian of f(x) = M x + b is simply M (its variable columns) -- constant in x.
+	The variable values and path variable are unused (constant Jacobian; autonomous).
 
 	\param J  A NumFunctions() x NumVariables() block to write into.
-	\param vars Length-NumVariables() current variable values (unused: constant Jacobian).
-	\param path_value The path-variable value (ignored: linear forms are autonomous).
 	*/
 	template <typename T>
 	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& /*vars*/, T const& /*path_value*/) const

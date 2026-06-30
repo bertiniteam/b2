@@ -73,14 +73,16 @@ follow-up (block-operand Clone semantics).
 namespace bertini {
 namespace blocks {
 
+/// \brief A block forming the blend (coupling homotopy) H = sum_i c_i(t) * operand_i of several systems.
 template <typename SystemT>
 class BlendBlock
 {
 public:
-	using Nd = std::shared_ptr<node::Node>;
-	using Var = std::shared_ptr<node::Variable>;
-	using OperandPtr = std::shared_ptr<const SystemT>;
+	using Nd = std::shared_ptr<node::Node>;  ///< Shorthand for a shared pointer to a generic node.
+	using Var = std::shared_ptr<node::Variable>;  ///< Shorthand for a shared pointer to a variable node.
+	using OperandPtr = std::shared_ptr<const SystemT>;  ///< Shorthand for a shared pointer to a (const) operand system.
 
+	/// \brief Construct an empty blend block at the current default precision.
 	BlendBlock() : precision_(DefaultPrecision()) {}
 
 	/**
@@ -107,6 +109,7 @@ public:
 	// lazily per copy).  The coefficient nodes / path variable are shared --- they are never written
 	// during evaluation.  This lets path tracking Clone a System into per-thread copies that share
 	// no mutable state.
+	/// \brief Memory-isolating copy constructor (deep-copies each operand system; ADR-0027).
 	BlendBlock(BlendBlock const& other)
 		: path_variable_(other.path_variable_),
 		  coefficients_(other.coefficients_),
@@ -119,6 +122,7 @@ public:
 		// coefficient_system_ deliberately left null: rebuilt lazily per copy
 	}
 
+	/// \brief Memory-isolating copy assignment (deep-copies each operand system; ADR-0027).
 	BlendBlock& operator=(BlendBlock const& other)
 	{
 		if (this != &other)
@@ -136,7 +140,9 @@ public:
 		return *this;
 	}
 
+	/// \brief Move constructor.
 	BlendBlock(BlendBlock&&) = default;
+	/// \brief Move assignment.
 	BlendBlock& operator=(BlendBlock&&) = default;
 
 	/// The number of (natural) functions the blend contributes; the owning System adds any patch.
@@ -149,7 +155,9 @@ public:
 	/// H = sum_i coefficients_[i](t) * operands_[i], so the expansion needs the coefficient nodes,
 	/// the operand systems (each itself expanded), and the shared path variable.
 	std::vector<Nd> const& Coefficients() const { return coefficients_; }
+	/// \brief Get the operand systems being blended.
 	std::vector<OperandPtr> const& Operands() const { return operands_; }
+	/// \brief Get the shared path variable the coefficients are functions of.
 	Var const& PathVariable() const { return path_variable_; }
 
 	/// Human-facing description: terse shows the blend `f_a..f_b = c_0(t)*A + c_1(t)*B`, with the
@@ -189,6 +197,7 @@ public:
 		}
 		return d;
 	}
+	/// \brief Per-function degrees with respect to a given variable group.
 	std::vector<int> Degrees(VariableGroup const& vars) const
 	{
 		std::vector<int> d(NumFunctions(), 0);
@@ -203,27 +212,34 @@ public:
 	// A blend is the coupling homotopy, built from already-prepared (homogenized) operands; its
 	// operands are shared_ptr<const System> and cannot be mutated, so Homogenize is a no-op.  It
 	// is homogeneous/polynomial iff all its operands are.
+	/// \brief No-op: a blend's operands are already-prepared and cannot be homogenized.
 	void Homogenize(VariableGroup const&, std::shared_ptr<node::Variable> const&) {}
+	/// \brief Query whether the blend is homogeneous (iff all operands are).
 	bool IsHomogeneous(VariableGroup const&) const
 	{
 		for (auto const& op : operands_) if (!op->IsHomogeneous()) return false;
 		return true;
 	}
+	/// \brief Query whether the blend is polynomial (iff all operands are).
 	bool IsPolynomial(VariableGroup const&) const
 	{
 		for (auto const& op : operands_) if (!op->IsPolynomial()) return false;
 		return true;
 	}
 
+	/// \brief A blend always depends on the path variable (through its coefficients).
 	bool DependsOnPathVariable() const { return true; }
 
+	/// \brief A blend does not have a constant Jacobian.
 	bool HasConstantJacobian() const { return false; }
 
 	/// Analytic block: nothing symbolic to differentiate.
 	void Differentiate() const {}
 
+	/// \brief Get the block's current working precision.
 	unsigned Precision() const { return precision_; }
 
+	/// \brief Set the block's working precision (propagated to the operand systems).
 	void Precision(unsigned new_precision) const
 	{
 		for (auto const& op : operands_)

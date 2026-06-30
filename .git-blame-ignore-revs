@@ -1,0 +1,13 @@
+# Commits listed here are skipped by `git blame` so that large, purely mechanical
+# changes (whitespace, indentation, reformatting) do not obscure the real authorship
+# of each line.  GitHub honours this file automatically.  Locally, run once:
+#
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# RULES:
+#   * Only add commits that are PURELY formatting -- no behavioural or semantic
+#     change, no documentation-content change.  Keep such passes in their own
+#     isolated commit so the whole commit can be safely ignored.
+#   * Add the full 40-character commit SHA, with a comment naming what it did.
+#
+# (No revisions yet -- add the whitespace/indentation pass SHA here when it lands.)

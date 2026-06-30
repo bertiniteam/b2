@@ -54,6 +54,7 @@ namespace node{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
+		/// \brief Construct (and intern) a NamedExpression node.
 		template<typename... Ts>
 		static
 		std::shared_ptr<NamedExpression> Make(Ts&& ...ts){
@@ -111,7 +112,7 @@ namespace node{
 		NamedExpression() = default;
 
 
-		std::shared_ptr<Node> entry_node_ = nullptr;
+		std::shared_ptr<Node> entry_node_ = nullptr;  ///< The root node of the named expression.
 
 	private:
 		NamedExpression(std::shared_ptr<Node> const& entry, std::string const& name)

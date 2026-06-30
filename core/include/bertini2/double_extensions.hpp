@@ -45,8 +45,8 @@ std::mt19937& ThreadEngine();
 
 	// The two double-precision scalar types, named to parallel real_mp / complex_mp.
 	// real_dbl is an explicit alias for double so a future change lives in one place.
-	using real_dbl = double;
-	using complex_dbl = std::complex<double>;
+	using real_dbl = double;  ///< The double-precision real number type.
+	using complex_dbl = std::complex<double>;  ///< The double-precision complex number type.
 
 	/**
 	\brief Overload * for unsigned * complex<double>

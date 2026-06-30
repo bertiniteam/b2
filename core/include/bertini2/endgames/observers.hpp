@@ -51,8 +51,8 @@ template <typename EndgameT>
 struct GoryDetailLogger : public Observer<EndgameT>
 {BOOST_TYPE_INDEX_REGISTER_CLASS
 
-using EmitterT = EndgameT;
-using BCT = typename EndgameT::BaseComplexT;
+using EmitterT = EndgameT;  ///< The event-emitter type.
+using BCT = typename EndgameT::BaseComplexT;  ///< The complex number type.
 
 virtual ~GoryDetailLogger() = default;
 

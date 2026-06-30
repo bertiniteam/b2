@@ -45,14 +45,16 @@ namespace bertini
 namespace tracking{
 
 	
+	/// \brief The precision regime a tracker operates in: fixed double, fixed multiple, or adaptive.
 	enum class PrecisionType //E.2.1
 	{
 		Fixed,
 		FixedMultiple,
 		Adaptive
 	};
-	
 
+
+	/// \brief The predictor (ODE integration) method used during path tracking.
 	enum class Predictor //E.4.3
 	{
 		Constant,
@@ -93,6 +95,7 @@ namespace tracking{
 	};
 
 
+	/// \brief Settings governing step-size adjustment during tracking.
 	struct SteppingConfig
 	{
 		// mpq_rational: exact rationals with no MPFR precision state — safe in DefaultConstruct<T>::value statics.
@@ -115,10 +118,11 @@ namespace tracking{
 
 
 	
+	/// \brief Settings governing the Newton corrector's iteration bounds.
 	struct NewtonConfig
 	{
-		unsigned max_num_newton_iterations = 2; //MaxNewtonIts
-		unsigned min_num_newton_iterations = 1;
+		unsigned max_num_newton_iterations = 2; ///< The maximum number of Newton iterations per correction.  MaxNewtonIts
+		unsigned min_num_newton_iterations = 1; ///< The minimum number of Newton iterations per correction.
 	};
 
 
@@ -128,9 +132,10 @@ namespace tracking{
 	
 
 
+	/// \brief Settings for a fixed-precision tracker (carries the single working precision in effect).
 	struct FixedPrecisionConfig
 	{
-		using RealT = double;
+		using RealT = double;  ///< The real number type.
 
 		/**
 		\brief The number of digits to always work at.
@@ -155,6 +160,7 @@ namespace tracking{
 	};
 
 
+	/// \brief Stream-insertion for FixedPrecisionConfig (a no-op; the config carries no printable state).
 	inline
 	std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig const& /*fpc*/)
 	{
@@ -237,21 +243,25 @@ namespace tracking{
 		 * Phi becomes \f$ D*(D-1)*B \f$.
 		 * Psi is set as \f$ D*B \f$.
 		*/
+		/// \brief Set Phi and Psi from the degree and coefficient bounds.
 		void SetPhiPsiFromBounds()
-		{	
+		{
 			Phi = degree_bound*(degree_bound-NumErrorT(1))*coefficient_bound;
 		    Psi = degree_bound*coefficient_bound;  //Psi from the AMP paper.
 		}
 
+		/// \brief Set all AMP criteria (bounds, epsilon, Phi, Psi) from a system.
 		void SetAMPConfigFrom(System const& sys)
 		{
 			SetBoundsAndEpsilonFrom(sys);
 			SetPhiPsiFromBounds();
 		}
 
-		AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
+		/// \brief Construct with default AMP bounds and safety digits.
+		AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), safety_digits_1(1), safety_digits_2(1), maximum_precision(300)
 		{}
 
+		/// \brief Construct AMP settings derived from a system's bounds.
 		explicit
 		AdaptiveMultiplePrecisionConfig(System const& sys) : AdaptiveMultiplePrecisionConfig()
 		{
@@ -259,6 +269,7 @@ namespace tracking{
 		}
 	}; // re: AdaptiveMultiplePrecisionConfig
 
+	/// \brief Stream-insertion for AdaptiveMultiplePrecisionConfig, printing its bounds and safety digits.
 	inline
 	std::ostream& operator<<(std::ostream & out, AdaptiveMultiplePrecisionConfig const& AMP)
 	{
@@ -302,12 +313,14 @@ namespace tracking{
 	
 
 // now for the TrackerTraits structs, which enable lookup of correct settings objects and types, etc.
+	/// \brief Trait lookup mapping a tracker type to its numeric types, event-emitter type, precision
+	///        config, and the type/config lists it needs.  Specialized per concrete tracker type.
 	template<class T>
 	struct TrackerTraits
 	{};
 
 
-	
+	/// \cond TRACKER_TRAITS_SPECIALIZATIONS
 
 	template<>
 	struct TrackerTraits<DoublePrecisionTracker>
@@ -395,6 +408,8 @@ namespace tracking{
 		using NeededTypes = typename TrackerTraits<D>::NeededTypes;
 		using NeededConfigs = typename TrackerTraits<D>::NeededConfigs;
 	};
+
+	/// \endcond
 
 } // re: namespace tracking 
 } // re: namespace bertini

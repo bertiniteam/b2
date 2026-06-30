@@ -69,11 +69,19 @@ namespace bertini {
 		class PathStarted : public AlgorithmEvent<ObservedT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
+			/// The held-observer type the event carries.
 			using HeldT = typename AlgorithmEvent<ObservedT>::HeldT;
+			/**
+			\brief Construct the event for the path at the given index.
+			\param obs The observed object emitting the event.
+			\param path_index The index of the solution path being started.
+			\param tracker The tracker that will execute this path (see Tracker()); may be null.
+			*/
 			PathStarted(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr)
 				: AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker)
 			{}
 
+			/// \return The index of the solution path this event concerns.
 			std::size_t PathIndex() const { return path_index_; }
 
 			/**
@@ -102,11 +110,19 @@ namespace bertini {
 		class PathComplete : public AlgorithmEvent<ObservedT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
+			/// The held-observer type the event carries.
 			using HeldT = typename AlgorithmEvent<ObservedT>::HeldT;
+			/**
+			\brief Construct the event for the path at the given index.
+			\param obs The observed object emitting the event.
+			\param path_index The index of the solution path that has completed.
+			\param tracker The tracker that executed this path (see Tracker()); may be null.
+			*/
 			PathComplete(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr)
 				: AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker)
 			{}
 
+			/// \return The index of the solution path this event concerns.
 			std::size_t PathIndex() const { return path_index_; }
 
 			/// The tracker that executed this path -- see PathStarted::Tracker().  A meta-observer

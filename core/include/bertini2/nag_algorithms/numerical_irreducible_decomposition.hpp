@@ -75,9 +75,10 @@ template<	typename TrackerType, typename EndgameType,
 			typename SystemType >
 struct AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >
 {
-	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
-	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
+	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;     ///< The real number type of the tracker.
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;  ///< The complex number type of the tracker.
 
+	/// The config types this algorithm reads (drives the reusable Python config interface).
 	using NeededConfigs = detail::TypeList<
 								RegenerationConfig,
 								TolerancesConfig,
@@ -88,6 +89,7 @@ struct AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, S
 
 
 
+/// \brief Type-erased base for the Numerical Irreducible Decomposition algorithm.
 struct AnyNID : public virtual AnyAlgorithm
 {
 	virtual ~AnyNID() = default;
@@ -113,29 +115,33 @@ struct NumericalIrreducibleDecomposition :
 						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >::NeededConfigs>
 {
 	// these usings are for getters in python
-	using TrackerT = TrackerType;
-	using EndgameT = EndgameType;
-	using SystemT  = SystemType;
+	using TrackerT = TrackerType;   ///< The path-tracker type.
+	using EndgameT = EndgameType;   ///< The endgame type.
+	using SystemT  = SystemType;    ///< The system type.
 
 
 /// a bunch of using statements to reduce typing.
-	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
-	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;  ///< The complex number type of the tracker.
+	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;     ///< The real number type of the tracker.
 
+	/// The Configured base storing this algorithm's configuration structs.
 	using Config = detail::Configured<
 						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >::NeededConfigs>;
+	/// Retrieve a stored configuration struct by type (inherited from Configured).
 	using Config::Get;
 
 
-	using Regeneration   = RegenerationConfig;
-	using Tolerances     = TolerancesConfig;
-	using Sharpening     = SharpeningConfig;
-	using PostProcessing = PostProcessingConfig;
+	using Regeneration   = RegenerationConfig;    ///< Regeneration configuration type.
+	using Tolerances     = TolerancesConfig;      ///< Tolerances configuration type.
+	using Sharpening     = SharpeningConfig;      ///< Sharpening configuration type.
+	using PostProcessing = PostProcessingConfig;  ///< Post-processing configuration type.
 
-	using ResultT = nag_datatype::NumericalIrreducibleDecomposition<BaseComplexT>;
+	using ResultT = nag_datatype::NumericalIrreducibleDecomposition<BaseComplexT>;  ///< The decomposition result type.
 
 	// NID owns a cloned target system directly (no policy).
+	/// \return The target system being decomposed.
 	const SystemType& TargetSystem() const { return target_system_; }
+	/// \return The target system being decomposed.
 	SystemType&       TargetSystem()       { return target_system_; }
 
 
@@ -194,21 +200,25 @@ struct NumericalIrreducibleDecomposition :
 
 /// tracker / endgame access
 
+	/// \return The path tracker used by the algorithm.
 	const TrackerType& GetTracker() const
 	{
 		return tracker_;
 	}
 
+	/// \return The path tracker used by the algorithm.
 	TrackerType& GetTracker()
 	{
 		return tracker_;
 	}
 
+	/// \return The endgame used by the algorithm.
 	const EndgameType& GetEndgame() const
 	{
 		return endgame_;
 	}
 
+	/// \return The endgame used by the algorithm.
 	EndgameType& GetEndgame()
 	{
 		return endgame_;
@@ -234,6 +244,7 @@ struct NumericalIrreducibleDecomposition :
 		this->template Set<PostProcessing>(PostProcessing());
 	}
 
+	/// \brief Homogenize and patch the owned target system to its default working form.
 	void DefaultSystemSetup()
 	{
 		// homogenize + patch the owned target (the old CloneTarget::SystemSetup; a no-op of effect

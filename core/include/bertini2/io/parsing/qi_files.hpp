@@ -28,6 +28,7 @@
 
 #pragma once
 
+/// \brief Select Boost.Phoenix V3 for the Spirit grammars in this header.
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
 
 #include <boost/fusion/adapted.hpp>
@@ -62,6 +63,7 @@ namespace bertini {
 namespace parsing {
 namespace classic {
 
+/// \brief Format a human-readable parse-error message (line, column, expected, and found text).
 inline std::string FormatParseError(
     std::string::const_iterator begin,
     std::string::const_iterator end,
@@ -88,6 +90,7 @@ inline std::string FormatParseError(
     return oss.str();
 }
 
+/// \brief Report a parse error (via FormatParseError) to the log, for use in a Spirit on_error handler.
 inline void ReportParseError(
     std::string::const_iterator begin,
     std::string::const_iterator end,

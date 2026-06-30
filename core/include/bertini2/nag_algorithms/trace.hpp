@@ -41,6 +41,14 @@ namespace bertini {
 	namespace algorithms {
 
 
+		/**
+		\brief Compute the trace of a witness set (placeholder: not yet implemented, returns 0).
+
+		The witness set argument is currently ignored.
+
+		\tparam ComplexT The complex number type.
+		\return The trace value (currently always zero).
+		*/
 		template <typename ComplexT>
 		ComplexT Trace(nag_datatype::WitnessSet<ComplexT> const& /*w*/)
 		{

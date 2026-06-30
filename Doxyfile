@@ -11,6 +11,10 @@ INPUT                  = core/include README.md
 RECURSIVE              = YES
 USE_MDFILE_AS_MAINPAGE = README.md
 
+# Resolve \cite commands in the headers against the shared bibliography
+# (Sphinx already uses this same file via bibtex_bibfiles).
+CITE_BIB_FILES         = doc_resources/bertini2.bib
+
 EXTRACT_ALL            = YES
 EXTRACT_PRIVATE        = NO
 EXTRACT_STATIC         = YES
