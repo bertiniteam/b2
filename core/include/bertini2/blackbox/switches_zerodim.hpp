@@ -46,10 +46,10 @@ namespace blackbox{
 
 struct ZeroDimRT
 {
-	// INTERIM default = RootsOfUnity (see policies.hpp): the linear-product TotalDegree is the
+	// INTERIM default = TotalDegreeBinomial (see policies.hpp): the linear-product TotalDegreeLinearProduct is the
 	// eventual default but currently stalls the Cauchy endgame on harder systems, so the safe
 	// default stays roots of unity until that is fixed.
-	type::Start start = type::Start::RootsOfUnity;
+	type::Start start = type::Start::TotalDegreeBinomial;
 	type::Tracker tracker = type::Tracker::Adaptive;
 	type::Endgame endgame = type::Endgame::Cauchy;
 };
@@ -70,10 +70,10 @@ User-defined homotopies are not inferred here; they come with their own start sy
 */
 inline type::Start InferStartType(System const& sys)
 {
-	// INTERIM: a single affine group infers RootsOfUnity (the safe default).  The eventual choice
-	// here is TotalDegree (general position), gated on the Cauchy-endgame fix; see policies.hpp.
+	// INTERIM: a single affine group infers TotalDegreeBinomial (the safe default).  The eventual choice
+	// here is TotalDegreeLinearProduct (general position), gated on the Cauchy-endgame fix; see policies.hpp.
 	if (sys.NumVariableGroups() == 1 && sys.NumHomVariableGroups() == 0)
-		return type::Start::RootsOfUnity;
+		return type::Start::TotalDegreeBinomial;
 	else
 		return type::Start::MHom;
 }
@@ -131,10 +131,10 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyStart(ZeroDimRT const& rt, 
 	// append the start-system factory to the argument pack; ZeroDimSolver consumes (target, factory).
 	switch (rt.start)
 	{
-		case type::Start::TotalDegree:
-			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegree>());
-		case type::Start::RootsOfUnity:
-			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::RootsOfUnity>());
+		case type::Start::TotalDegreeLinearProduct:
+			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegreeLinearProduct>());
+		case type::Start::TotalDegreeBinomial:
+			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegreeBinomial>());
 		case type::Start::MHom:
 			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::MHomogeneous>());
 		case type::Start::User:

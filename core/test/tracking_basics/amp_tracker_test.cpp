@@ -800,7 +800,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 
 	
 
-	auto TD = bertini::start_system::RootsOfUnity(sys);
+	auto TD = bertini::start_system::TotalDegreeBinomial(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());
@@ -855,7 +855,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 
 
 
-std::vector<Vec<mpfr> > track_total_degree(bertini::tracking::AMPTracker const& tracker, bertini::start_system::RootsOfUnity const& TD)
+std::vector<Vec<mpfr> > track_total_degree(bertini::tracking::AMPTracker const& tracker, bertini::start_system::TotalDegreeBinomial const& TD)
 {
 	[[maybe_unused]] auto initial_precision = DefaultPrecision();
 	using namespace bertini::tracking;
@@ -901,7 +901,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 
 	
 
-	auto TD = bertini::start_system::RootsOfUnity(sys);
+	auto TD = bertini::start_system::TotalDegreeBinomial(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());

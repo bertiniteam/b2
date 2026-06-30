@@ -43,9 +43,9 @@ def test_defaults_are_cauchy_adaptive():
     (dict(endgame='power_series'),                            'ZeroDimSolverPowerSeriesAdaptivePrecision'),
     # the start system no longer changes the type -- only endgame + precision do:
     (dict(startsystem='mhom'),                                'ZeroDimSolverCauchyAdaptivePrecision'),
-    (dict(startsystem='td'),                                  'ZeroDimSolverCauchyAdaptivePrecision'),
+    (dict(startsystem='binomial'),                            'ZeroDimSolverCauchyAdaptivePrecision'),
     (dict(endgame='cauchy', mptype='amp', startsystem='mhom'),'ZeroDimSolverCauchyAdaptivePrecision'),
-    (dict(endgame='power_series', mptype='dbl', startsystem='td'),
+    (dict(endgame='power_series', mptype='dbl', startsystem='linearproduct'),
                                                               'ZeroDimSolverPowerSeriesDoublePrecision'),
 ])
 def test_factory_selects_expected_class(kwargs, expected):

@@ -34,7 +34,7 @@ namespace bertini{
 
 
 namespace type{
-enum class Start{ TotalDegree, RootsOfUnity, MHom, User};
+enum class Start{ TotalDegreeLinearProduct, TotalDegreeBinomial, MHom, User};
 enum class Tracker{ FixedDouble, FixedMultiple, Adaptive};
 enum class Endgame{ PowerSeries, Cauchy};
 }

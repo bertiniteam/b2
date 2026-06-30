@@ -47,7 +47,7 @@ def circle_intersection_solver():
     sys.add_function(x**2 + y**2 - 1)
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    return ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    return ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
 
 
 def _cyclic_system(n):

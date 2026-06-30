@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//roots_of_unity.cpp is free software: you can redistribute it and/or modify
+//total_degree_binomial.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//roots_of_unity.cpp is distributed in the hope that it will be useful,
+//total_degree_binomial.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with roots_of_unity.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with total_degree_binomial.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) Bertini2 Development Team
 //
@@ -22,12 +22,12 @@
 // individual authors of this file include:
 // silviana amethyst, university of wisconsin eau claire
 
-#include "bertini2/system/start/roots_of_unity.hpp"
+#include "bertini2/system/start/total_degree_binomial.hpp"
 
 #include <boost/math/constants/constants.hpp>
 
 
-BOOST_CLASS_EXPORT(bertini::start_system::RootsOfUnity);
+BOOST_CLASS_EXPORT(bertini::start_system::TotalDegreeBinomial);
 
 
 namespace bertini {
@@ -35,8 +35,8 @@ namespace bertini {
 
 	namespace start_system {
 
-		// constructor for RootsOfUnity start system, from any other *suitable* system.
-		RootsOfUnity::RootsOfUnity(System const& s)
+		// constructor for TotalDegreeBinomial start system, from any other *suitable* system.
+		TotalDegreeBinomial::TotalDegreeBinomial(System const& s)
 		{
 			SanityChecks(s);
 			CopyDegrees(s);
@@ -52,7 +52,7 @@ namespace bertini {
 		}// roots of unity constructor
 
 
-		RootsOfUnity& RootsOfUnity::operator*=(Nd const& n)
+		TotalDegreeBinomial& TotalDegreeBinomial::operator*=(Nd const& n)
 		{
 			System::operator*=(n);
 			return *this;
@@ -60,7 +60,7 @@ namespace bertini {
 
 
 
-		unsigned long long RootsOfUnity::NumStartPoints() const
+		unsigned long long TotalDegreeBinomial::NumStartPoints() const
 		{
 			unsigned long long num_start_points = 1;
 			for (const auto& iter : degrees_)
@@ -70,7 +70,7 @@ namespace bertini {
 
 
 
-		Vec<complex_dbl> RootsOfUnity::GenerateStartPoint(complex_dbl,unsigned long long index) const
+		Vec<complex_dbl> TotalDegreeBinomial::GenerateStartPoint(complex_dbl,unsigned long long index) const
 		{
 			Vec<complex_dbl> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
@@ -95,7 +95,7 @@ namespace bertini {
 		}
 
 
-		Vec<complex_mp> RootsOfUnity::GenerateStartPoint(complex_mp,unsigned long long index) const
+		Vec<complex_mp> TotalDegreeBinomial::GenerateStartPoint(complex_mp,unsigned long long index) const
 		{
 			using bertini::ThreadPrecision;
 
@@ -132,13 +132,13 @@ namespace bertini {
 		}
 
 		inline
-		RootsOfUnity operator*(RootsOfUnity td, std::shared_ptr<node::Node> const& n)
+		TotalDegreeBinomial operator*(TotalDegreeBinomial td, std::shared_ptr<node::Node> const& n)
 		{
 			td *= n;
 			return td;
 		}
 
-		void RootsOfUnity::SanityChecks(System const& s)
+		void TotalDegreeBinomial::SanityChecks(System const& s)
 		{
 			if (s.NumHomVariableGroups() > 0)
 				throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
@@ -156,7 +156,7 @@ namespace bertini {
 				throw std::runtime_error("attempting to construct roots-of-unity start system from non-polynomial target system");
 		}
 
-		void RootsOfUnity::CopyDegrees(System const& s)
+		void TotalDegreeBinomial::CopyDegrees(System const& s)
 		{
 			auto deg = s.Degrees();
 			for (const auto& d : deg)
@@ -164,9 +164,9 @@ namespace bertini {
 		}
 
 
-		void RootsOfUnity::SeedRandomValues(int num_functions)
+		void TotalDegreeBinomial::SeedRandomValues(int num_functions)
 		{
-			// Draw each r_i the same way the linear-product TotalDegree draws its coefficients:
+			// Draw each r_i the same way the linear-product TotalDegreeLinearProduct draws its coefficients:
 			// a box-uniform complex divided by sqrt(|z|), so the modulus sits near 1 (away from 0
 			// and infinity) -- NOT the heavy-tailed ratio-of-integers (RandomRat) we used before.
 			// Stored as a Complex node (a literal complex_mp, like gamma), not hidden as a rational.
@@ -182,7 +182,7 @@ namespace bertini {
 			DefaultPrecision(saved_prec);
 		}
 
-		void RootsOfUnity::GenerateFunctions()
+		void TotalDegreeBinomial::GenerateFunctions()
 		{
 			// by hypothesis, the system has a single variable group.
 			auto v = this->AffineVariableGroup(0);

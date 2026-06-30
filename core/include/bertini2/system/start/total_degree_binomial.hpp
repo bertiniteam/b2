@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//roots_of_unity.hpp is free software: you can redistribute it and/or modify
+//total_degree_binomial.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//roots_of_unity.hpp is distributed in the hope that it will be useful,
+//total_degree_binomial.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with roots_of_unity.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with total_degree_binomial.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) Bertini2 Development Team
 //
@@ -23,9 +23,9 @@
 // silviana amethyst, university of wisconsin eau claire
 
 /**
-\file roots_of_unity.hpp
+\file total_degree_binomial.hpp
 
-\brief Defines the RootsOfUnity start system type.
+\brief Defines the TotalDegreeBinomial start system type.
 */
 
 #pragma once
@@ -43,24 +43,24 @@ namespace bertini
 
 		A basic and easy-to-construct start system in Numerical Algebraic Geometry.
 
-		This start system uses functions of the form \f$x_i^{d_i} - r_i\f$, where \f$i\f$ is the index of the function relative to the system, \f$d_i\f$ is the degree of that function, and \f$r_i\f$ is a random complex number.  Its start points are \f$r_i^{1/d_i}\f$ times the \f$d_i\f$-th roots of unity -- a structured (roots-of-unity) grid, only the overall scale/phase per variable being randomized.  For start points in *generic* position (random linear products), use TotalDegree instead.
+		This start system uses functions of the form \f$x_i^{d_i} - r_i\f$, where \f$i\f$ is the index of the function relative to the system, \f$d_i\f$ is the degree of that function, and \f$r_i\f$ is a random complex number.  Its start points are \f$r_i^{1/d_i}\f$ times the \f$d_i\f$-th roots of unity -- a structured (roots-of-unity) grid, only the overall scale/phase per variable being randomized.  For start points in *generic* position (random linear products), use TotalDegreeLinearProduct instead.
 
 		Note that the corresponding target system MUST be square -- have the same number of functions and variables.  The start system cannot be constructed otherwise, particularly because it is written to throw at the moment if not square.
 
 		The start points are accesses by index (unsigned long long), instead of being generated all at once.
 		*/
-		class RootsOfUnity : public StartSystem
+		class TotalDegreeBinomial : public StartSystem
 		{
 		public:
-			RootsOfUnity() = default;
-			virtual ~RootsOfUnity() = default;
+			TotalDegreeBinomial() = default;
+			virtual ~TotalDegreeBinomial() = default;
 
 			/**
 			 Constructor for making a roots-of-unity start system from a polynomial system
 
 			 \throws std::runtime_error, if the input target system is not square, is not polynomial, has a path variable already, has more than one variable group, or has any homogeneous variable groups.
 			*/
-			RootsOfUnity(System const& s);
+			TotalDegreeBinomial(System const& s);
 
 
 			/**
@@ -95,9 +95,9 @@ namespace bertini
 			*/
 			unsigned long long NumStartPoints() const override;
 
-			RootsOfUnity& operator*=(Nd const& n);
+			TotalDegreeBinomial& operator*=(Nd const& n);
 
-			RootsOfUnity& operator+=(System const& sys) = delete;
+			TotalDegreeBinomial& operator+=(System const& sys) = delete;
 
 			void SanityChecks(System const& s);
 

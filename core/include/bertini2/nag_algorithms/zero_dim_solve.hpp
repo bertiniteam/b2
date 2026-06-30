@@ -54,9 +54,9 @@
 namespace bertini {
 
 	// forward-declare the interim default start system so ZeroDimSolver's default factory argument
-	// (MakeStartFactory<RootsOfUnity>) can name it; the concrete type rides in via start_systems.hpp
+	// (MakeStartFactory<TotalDegreeBinomial>) can name it; the concrete type rides in via start_systems.hpp
 	// at every call site that actually constructs a ZeroDimSolver.
-	namespace start_system { class RootsOfUnity; }
+	namespace start_system { class TotalDegreeBinomial; }
 
 	namespace algorithm {
 
@@ -2111,10 +2111,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			Build the start system + homotopy from `target`, then construct the engine over them.
 			Base initialization order is declaration order: OwnedHomotopy (which builds) runs before
 			the HomotopySolver engine (which references the freshly built systems).  The factory
-			defaults to RootsOfUnity (the interim default start system).
+			defaults to TotalDegreeBinomial (the interim default start system).
 			*/
 			ZeroDimSolver(SystemType const& target,
-			              FactoryT factory = bertini::start_system::MakeStartFactory<bertini::start_system::RootsOfUnity, SystemType>())
+			              FactoryT factory = bertini::start_system::MakeStartFactory<bertini::start_system::TotalDegreeBinomial, SystemType>())
 			 : OwnedT(target, std::move(factory), ZeroDimConfig{}.path_variable_name),
 			   EngineT(OwnedT::BuiltTarget(), OwnedT::BuiltStart(), OwnedT::BuiltHomotopy())
 			{}

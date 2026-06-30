@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO_nonhom)
 	using namespace tracking;
 
 	auto sys = system::Precon::GriewankOsborn();
-	auto TD = start_system::RootsOfUnity(sys);
+	auto TD = start_system::TotalDegreeBinomial(sys);
 
 	auto t = Variable::Make("t");
 	auto h = (1-t)* sys + t*TD;
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	auto TD = start_system::RootsOfUnity(sys);
+	auto TD = start_system::TotalDegreeBinomial(sys);
 
 	auto t = Variable::Make("t");
 	auto h = (1-t)* sys + t*TD;

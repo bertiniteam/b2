@@ -82,5 +82,5 @@ wiggle is a real tracked path of an actual homotopy.
 
    The total-degree start points being *scaled roots of unity* (a structured set, not generic) is
    exactly why a naive single-coordinate height collapses them.  That structure is a known wart in
-   the current ``TotalDegree`` start system; a genuinely randomized (linear-product) total-degree
+   the current ``TotalDegreeLinearProduct`` start system; a genuinely randomized (linear-product) total-degree
    start would put them in general position.

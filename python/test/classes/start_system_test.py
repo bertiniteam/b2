@@ -21,7 +21,7 @@
 # individual authors of this file include:
 #   silviana amethyst
 
-"""Tests for the TotalDegree start system.
+"""Tests for the TotalDegreeLinearProduct start system.
 
 Mirrors C++ tests in core/test/classes/start_system_test.cpp:
   - system_class/make_total_degree_system_linear
@@ -80,7 +80,7 @@ def test_total_degree_linear(linear_system):
 
     Mirrors start_system_test.cpp/make_total_degree_system_linear.
     """
-    td = ss.RootsOfUnity(linear_system)
+    td = ss.TotalDegreeBinomial(linear_system)
     assert td.num_start_points() == 1
     assert list(td.degrees()) == [1]
 
@@ -92,7 +92,7 @@ def test_total_degree_quad_cubic_quartic(quad_cubic_quartic_system):
     (generalised to the 3-variable case).
     """
     s, *_ = quad_cubic_quartic_system
-    td = ss.RootsOfUnity(s)
+    td = ss.TotalDegreeBinomial(s)
     assert list(td.degrees()) == [2, 3, 4]
     assert td.num_start_points() == 24
 
@@ -107,7 +107,7 @@ def test_start_points_evaluate_to_zero_double(quad_cubic_quartic_system):
     Mirrors start_system_test.cpp/quadratic_cubic_quartic_start_points.
     """
     s, *_ = quad_cubic_quartic_system
-    td = ss.RootsOfUnity(s)
+    td = ss.TotalDegreeBinomial(s)
     n = td.num_start_points()
     assert n == 24
     for i in range(n):
@@ -124,7 +124,7 @@ def test_total_degree_jacobian_at_111(quad_cubic_quartic_system):
     are d_i * x_i^{d_i - 1}.
     """
     s, *_ = quad_cubic_quartic_system
-    td = ss.RootsOfUnity(s)
+    td = ss.TotalDegreeBinomial(s)
     td.differentiate()
     pt = np.array([complex(1, 0)] * 3)
     J = td.eval_jacobian(pt)
@@ -143,7 +143,7 @@ def test_start_points_evaluate_to_zero_mp(quad_cubic_quartic_system):
     Mirrors start_system_test.cpp/quadratic_cubic_quartic_start_points (mp variant).
     """
     s, *_ = quad_cubic_quartic_system
-    td = ss.RootsOfUnity(s)
+    td = ss.TotalDegreeBinomial(s)
     n = td.num_start_points()
     for i in range(n):
         p = td.start_point_mp(i)
@@ -167,7 +167,7 @@ def test_total_degree_homogenized_patched(quad_cubic_quartic_system):
     assert s.is_homogeneous()
     assert s.is_patched()
 
-    td = ss.RootsOfUnity(s)
+    td = ss.TotalDegreeBinomial(s)
     td.homogenize()
     assert td.is_homogeneous()
     assert td.is_patched()
@@ -192,7 +192,7 @@ def test_start_point_precision_16(quad_cubic_quartic_system):
     bertini.default_precision(16)
 
     s, *_ = quad_cubic_quartic_system
-    td = ss.RootsOfUnity(s)
+    td = ss.TotalDegreeBinomial(s)
     n = td.num_start_points()
     for i in range(n):
         p = td.start_point_mp(i)

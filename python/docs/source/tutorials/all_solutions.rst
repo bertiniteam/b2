@@ -35,8 +35,8 @@ number).
 Solve, and collect the finite solutions.  ``ZeroDimSolver`` is a small factory over the bound
 solver classes: ``ZeroDimSolver(sys)`` is the Cauchy endgame in adaptive precision with a total-degree
 start system, and you pick the rest with strings -- ``endgame=`` (``'cauchy'`` / ``'powerseries'``),
-``mptype=`` (``'double'`` / ``'multiple'`` / ``'adaptive'``), and ``startsystem=`` (``'totaldegree'``
-/ ``'mhom'``).  Here we ask for adaptive precision explicitly so ill-conditioned paths still succeed:
+``mptype=`` (``'double'`` / ``'multiple'`` / ``'adaptive'``), and ``startsystem=`` (``'binomial'``
+/ ``'linearproduct'`` / ``'mhom'``).  Here we ask for adaptive precision explicitly so ill-conditioned paths still succeed:
 
 .. testcode::
 

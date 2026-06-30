@@ -88,7 +88,7 @@ namespace demo{
 
 	auto ConstructStart(bertini::System const& sys)
 	{
-	    return bertini::start_system::TotalDegree(sys);
+	    return bertini::start_system::TotalDegreeLinearProduct(sys);
 	}
 
 	template <typename StartT>

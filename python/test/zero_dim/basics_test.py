@@ -15,7 +15,7 @@ def circle_intersection_solver():
     sys.add_function(x**2 + y**2 - 1)
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    return ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    return ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
 
 
 @pytest.fixture
@@ -74,7 +74,7 @@ def test_power_series_endgame_variant():
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
 
-    solver = ZeroDimSolver(sys, endgame='powerseries', mptype='adaptive', startsystem='rootsofunity')
+    solver = ZeroDimSolver(sys, endgame='powerseries', mptype='adaptive', startsystem='binomial')
     solver.solve()
     solns = solver.all_solutions()
     assert len(solns) == 2
@@ -112,7 +112,7 @@ def solved():
     sys.add_function(x**2 + y**2 - 1)
     sys.add_function(x + y)
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    solver = ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    solver = ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     solver.solve()
     return sys, solver
 

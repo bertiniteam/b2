@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(single_affine_group_infers_total_degree)
 	sys.AddFunction(x*x + y*y - 1);
 	sys.AddFunction(x + y);
 
-	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::RootsOfUnity);
+	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::TotalDegreeBinomial);
 }
 
 BOOST_AUTO_TEST_CASE(two_affine_groups_infer_mhom)
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(homogeneous_group_infers_mhom)
 BOOST_AUTO_TEST_CASE(griewank_osborn_single_group_infers_total_degree)
 {
 	auto sys = system::Precon::GriewankOsborn();
-	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::RootsOfUnity);
+	BOOST_CHECK(blackbox::InferStartType(sys) == blackbox::type::Start::TotalDegreeBinomial);
 }
 
 // DISABLED pending the block-composed MHom start system (plan
@@ -169,14 +169,14 @@ BOOST_AUTO_TEST_CASE(inferred_mhom_builds_an_mhomogeneous_zerodim,
 	BOOST_CHECK(rt.start == blackbox::type::Start::MHom);
 
 	// After the de-templating refactor the start system is held polymorphically -- it is no
-	// longer part of the ZeroDim type -- so MHom and TotalDegree solves are the SAME type and
+	// longer part of the ZeroDim type -- so MHom and TotalDegreeLinearProduct solves are the SAME type and
 	// cannot be told apart by dynamic_cast.  Verify the choice behaviorally instead: building
 	// the inferred (MHom) solver succeeds on this two-variable-group system, whereas forcing
-	// TotalDegree throws, because its start system requires a single affine variable group.
+	// TotalDegreeLinearProduct throws, because its start system requires a single affine variable group.
 	BOOST_CHECK_NO_THROW(blackbox::MakeZeroDim(rt, sys));
 
 	blackbox::ZeroDimRT rt_forced_td = rt;
-	rt_forced_td.start = blackbox::type::Start::TotalDegree;
+	rt_forced_td.start = blackbox::type::Start::TotalDegreeLinearProduct;
 	BOOST_CHECK_THROW(blackbox::MakeZeroDim(rt_forced_td, sys), std::runtime_error);
 }
 

@@ -21,7 +21,7 @@ auto StepOne(bertini::System const& sys)
 	using EndgameT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 	
 
-	auto zd = bertini::algorithm::ZeroDimSolver<TrackerT, EndgameT, bertini::System, bertini::start_system::TotalDegree>(sys);
+	auto zd = bertini::algorithm::ZeroDimSolver<TrackerT, EndgameT, bertini::System, bertini::start_system::TotalDegreeLinearProduct>(sys);
 
 	zd.DefaultSetup();
 	

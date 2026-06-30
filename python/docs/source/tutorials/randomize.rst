@@ -71,7 +71,7 @@ keep the ones with a tiny residual.
 .. testcode::
 
    bertini.random.set_random_seed(1)               # reproducible generic coefficients + gamma
-   zd = bertini.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+   zd = bertini.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='binomial')
    zd.solve()
    solutions = zd.all_solutions()
    assert len(solutions) == 4                       # the two we want, plus two extraneous

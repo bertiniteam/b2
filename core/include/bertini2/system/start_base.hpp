@@ -61,8 +61,8 @@ namespace bertini
 		\brief Build a StartSystemFactory that mints a concrete start system from the target.
 
 		The single place a concrete start-system type is named when wiring up a ZeroDimSolver.
-		`MakeStartFactory<start_system::TotalDegree>()` yields a factory that `make_shared`s a
-		TotalDegree from the (prepared) target.  Used by the blackbox switch ladder, the python
+		`MakeStartFactory<start_system::TotalDegreeLinearProduct>()` yields a factory that `make_shared`s a
+		TotalDegreeLinearProduct from the (prepared) target.  Used by the blackbox switch ladder, the python
 		bindings, ZeroDimSolver's default, and the C++ tests.  This template is only instantiated
 		where the concrete StartType is complete, so start_base.hpp need not include the concrete
 		start systems.

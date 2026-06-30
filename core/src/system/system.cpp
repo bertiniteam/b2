@@ -1504,7 +1504,7 @@ namespace bertini
 		else
 		{
 			// One (or both) operands evaluate via a STRUCTURED block (products-of-linears, blend, ...)
-			// -- e.g. the linear-product TotalDegree or MHom start systems.  Their functions do NOT
+			// -- e.g. the linear-product TotalDegreeLinearProduct or MHom start systems.  Their functions do NOT
 			// live in the PolynomialBlock, so the pure-poly path above read rhs.PolyFunctions()
 			// (empty) out of bounds and SEGFAULTED.  Expand every block to function-tree nodes on both
 			// sides, blend pairwise, and store the result as a single PolynomialBlock (a function-tree
@@ -1539,9 +1539,9 @@ namespace bertini
 		}
 		else
 		{
-			// Structured-block system (e.g. linear-product TotalDegree / MHom): its functions are NOT
+			// Structured-block system (e.g. linear-product TotalDegreeLinearProduct / MHom): its functions are NOT
 			// in the PolynomialBlock, so multiplying only PolyBlock().Functions() would silently
-			// no-op (a WRONG result -- e.g. gamma*t*TotalDegree leaving the start system unscaled).
+			// no-op (a WRONG result -- e.g. gamma*t*TotalDegreeLinearProduct leaving the start system unscaled).
 			// Expand every block to function-tree nodes, scale, and store as a pure PolynomialBlock.
 			auto fns = NaturalFunctionsAsNodes();
 			for (auto& f : fns)

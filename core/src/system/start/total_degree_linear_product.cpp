@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//total_degree.cpp is free software: you can redistribute it and/or modify
+//total_degree_linear_product.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//total_degree.cpp is distributed in the hope that it will be useful,
+//total_degree_linear_product.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with total_degree.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with total_degree_linear_product.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) Bertini2 Development Team
 //
@@ -22,7 +22,7 @@
 // individual authors of this file include:
 // silviana amethyst, university of wisconsin eau claire
 
-#include "bertini2/system/start/total_degree.hpp"
+#include "bertini2/system/start/total_degree_linear_product.hpp"
 
 #include "bertini2/system/blocks/block.hpp"
 #include "bertini2/random.hpp"
@@ -30,7 +30,7 @@
 #include <map>
 
 
-BOOST_CLASS_EXPORT(bertini::start_system::TotalDegree);
+BOOST_CLASS_EXPORT(bertini::start_system::TotalDegreeLinearProduct);
 
 
 namespace bertini {
@@ -38,10 +38,10 @@ namespace bertini {
 
 	namespace start_system {
 
-		// constructor for TotalDegree start system, from any other *suitable* system.
+		// constructor for TotalDegreeLinearProduct start system, from any other *suitable* system.
 		// This is the single-affine-variable-group specialization of MHomogeneous: one variable
 		// group, no homogeneous groups, no partitions.  See mhom.cpp for the multi-group version.
-		TotalDegree::TotalDegree(System const& s)
+		TotalDegreeLinearProduct::TotalDegreeLinearProduct(System const& s)
 		{
 			SanityChecks(s);
 			CopyDegrees(s);
@@ -58,14 +58,14 @@ namespace bertini {
 		}// total degree constructor
 
 
-		TotalDegree& TotalDegree::operator*=(Nd const& n)
+		TotalDegreeLinearProduct& TotalDegreeLinearProduct::operator*=(Nd const& n)
 		{
 			System::operator*=(n);
 			return *this;
 		}
 
 
-		unsigned long long TotalDegree::NumStartPoints() const
+		unsigned long long TotalDegreeLinearProduct::NumStartPoints() const
 		{
 			unsigned long long num_start_points = 1;
 			for (const auto& iter : degrees_)
@@ -74,7 +74,7 @@ namespace bertini {
 		}
 
 
-		void TotalDegree::SanityChecks(System const& s)
+		void TotalDegreeLinearProduct::SanityChecks(System const& s)
 		{
 			if (s.NumHomVariableGroups() > 0)
 				throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
@@ -93,7 +93,7 @@ namespace bertini {
 		}
 
 
-		void TotalDegree::CopyDegrees(System const& s)
+		void TotalDegreeLinearProduct::CopyDegrees(System const& s)
 		{
 			auto deg = s.Degrees();
 			for (const auto& d : deg)
@@ -106,7 +106,7 @@ namespace bertini {
 		// d_i x (n+1) matrix: each row is an affine linear factor over the n natural variables, the
 		// trailing column being the factor's constant.  Generated at MaxPrecisionAllowed so the
 		// block's master is precision-faithful.
-		void TotalDegree::SeedLinearCoeffs(System const& s)
+		void TotalDegreeLinearProduct::SeedLinearCoeffs(System const& s)
 		{
 			auto const saved_prec = DefaultPrecision();
 			DefaultPrecision(MaxPrecisionAllowed());
@@ -136,7 +136,7 @@ namespace bertini {
 		// when the system is homogeneous (so it goes in that variable's column), else it is the
 		// augmented constant in the trailing column.  This is mhom.cpp's block assembly with a single
 		// affine group (no projective groups).  Built at MaxPrecisionAllowed.
-		void TotalDegree::BuildBlock(System const& /*s*/)
+		void TotalDegreeLinearProduct::BuildBlock(System const& /*s*/)
 		{
 			auto const saved_prec = DefaultPrecision();
 			DefaultPrecision(MaxPrecisionAllowed());
@@ -185,7 +185,7 @@ namespace bertini {
 
 
 		template<typename T>
-		void TotalDegree::GenerateStartPointT(Vec<T>& start_point, unsigned long long index) const
+		void TotalDegreeLinearProduct::GenerateStartPointT(Vec<T>& start_point, unsigned long long index) const
 		{
 			// Decompose the flat index into one chosen linear factor per function.  (Single group =>
 			// no partition search, unlike MHomogeneous.)
@@ -235,7 +235,7 @@ namespace bertini {
 		}
 
 
-		Vec<complex_dbl> TotalDegree::GenerateStartPoint(complex_dbl,unsigned long long index) const
+		Vec<complex_dbl> TotalDegreeLinearProduct::GenerateStartPoint(complex_dbl,unsigned long long index) const
 		{
 			Vec<complex_dbl> start_point(NumVariables());
 			GenerateStartPointT(start_point, index);
@@ -243,7 +243,7 @@ namespace bertini {
 		}
 
 
-		Vec<complex_mp> TotalDegree::GenerateStartPoint(complex_mp,unsigned long long index) const
+		Vec<complex_mp> TotalDegreeLinearProduct::GenerateStartPoint(complex_mp,unsigned long long index) const
 		{
 			Vec<complex_mp> start_point(NumVariables());
 			GenerateStartPointT(start_point, index);
@@ -251,7 +251,7 @@ namespace bertini {
 		}
 
 		inline
-		TotalDegree operator*(TotalDegree td, std::shared_ptr<node::Node> const& n)
+		TotalDegreeLinearProduct operator*(TotalDegreeLinearProduct td, std::shared_ptr<node::Node> const& n)
 		{
 			td *= n;
 			return td;

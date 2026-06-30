@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 	sys.AddFunction(x - real_mp("0.5")*y - 1);
 
 
-	bertini::start_system::RootsOfUnity TD(sys);
+	bertini::start_system::TotalDegreeBinomial TD(sys);
 
 	auto d = TD.Degrees();
 
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 	sys.AddFunction(x*x - real_mp("0.5")*y - x*y);
 
 
-	bertini::start_system::RootsOfUnity TD(sys);
+	bertini::start_system::TotalDegreeBinomial TD(sys);
 
 	auto d = TD.Degrees();
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	sys.AddFunction(y+1);
 	sys.AddFunction(x+y+bertini::node::Pi());
 
-	bertini::start_system::RootsOfUnity TD(sys);
+	bertini::start_system::TotalDegreeBinomial TD(sys);
 
 	auto deg = TD.Degrees();
 
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 {
-	bertini::SetGlobalSeed(1u); // deterministic random TotalDegree values; see ADR-0003
+	bertini::SetGlobalSeed(1u); // deterministic random TotalDegreeLinearProduct values; see ADR-0003
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	bertini::start_system::RootsOfUnity TD(sys);
+	bertini::start_system::TotalDegreeBinomial TD(sys);
 
 	auto deg = TD.Degrees();
 
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 {
-	bertini::SetGlobalSeed(1u); // deterministic random TotalDegree values; see ADR-0003
+	bertini::SetGlobalSeed(1u); // deterministic random TotalDegreeLinearProduct values; see ADR-0003
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::System sys;
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	bertini::start_system::RootsOfUnity TD(sys);
+	bertini::start_system::TotalDegreeBinomial TD(sys);
 
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 			BOOST_CHECK(abs(function_values(jj)) <
-				abs(vs[static_cast<size_t>(jj)]->Value<complex_dbl>())*relaxed_threshold_clearance_d);
+				abs(TD.RandomValue<complex_dbl>(static_cast<size_t>(jj)))*relaxed_threshold_clearance_d);
 	}
 
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 // this one differs from the above only in that the target system was homogenized and patched
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 {
-	bertini::SetGlobalSeed(1u); // deterministic random TotalDegree values; see ADR-0003
+	bertini::SetGlobalSeed(1u); // deterministic random TotalDegreeLinearProduct values; see ADR-0003
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::System sys;
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	bertini::start_system::RootsOfUnity TD(sys);
+	bertini::start_system::TotalDegreeBinomial TD(sys);
 	TD.Homogenize();
 
 	BOOST_CHECK(TD.IsHomogeneous());
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 			// a fixed absolute threshold is scale-naive and flakes when a random r happens
 			// to be large.  Rows with jj >= vs.size() are patch/homogenization equations of
 			// O(1) scale, so a unit scale (absolute floor) is correct for them.
-			double scale = (static_cast<size_t>(jj) < vs.size()) ? abs(vs[static_cast<size_t>(jj)]->Value<complex_dbl>()) : 1.0;
+			double scale = (static_cast<size_t>(jj) < vs.size()) ? abs(TD.RandomValue<complex_dbl>(static_cast<size_t>(jj))) : 1.0;
 			if (scale < 1.0) scale = 1.0;
 			BOOST_CHECK(abs(function_values(jj)) < scale*1000*relaxed_threshold_clearance_d);
 		}
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 		{
 			// scale-relative, as in the double-precision loop above
-			real_mp scale = (static_cast<size_t>(jj) < vs.size()) ? abs(vs[static_cast<size_t>(jj)]->Value<mpfr>()) : real_mp(1);
+			real_mp scale = (static_cast<size_t>(jj) < vs.size()) ? abs(TD.RandomValue<mpfr>(static_cast<size_t>(jj))) : real_mp(1);
 			if (scale < 1) scale = real_mp(1);
 			BOOST_CHECK(abs(function_values(jj)) < scale*threshold_clearance_mp);
 		}
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_precision_16)
 	sys.AddFunction(pow(x-1,3));
 	sys.AddFunction(pow(y-1,2));
 
-	auto TD = bertini::start_system::RootsOfUnity(sys);
+	auto TD = bertini::start_system::TotalDegreeBinomial(sys);
 
 	BOOST_CHECK(!sys.IsHomogeneous());
 	BOOST_CHECK(!sys.IsPatched());
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 	BOOST_CHECK(sys.IsHomogeneous());
 	BOOST_CHECK(sys.IsPatched());
 
-	auto TD = bertini::start_system::RootsOfUnity(sys);
+	auto TD = bertini::start_system::TotalDegreeBinomial(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 {
-	bertini::SetGlobalSeed(1u); // deterministic random TotalDegree values; see ADR-0003
+	bertini::SetGlobalSeed(1u); // deterministic random TotalDegreeLinearProduct values; see ADR-0003
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	bertini::start_system::RootsOfUnity TD(sys);
+	bertini::start_system::TotalDegreeBinomial TD(sys);
 
 	Var t = Variable::Make("t");
 
@@ -615,7 +615,7 @@ BOOST_AUTO_TEST_CASE(start_system_total_degree_nonpolynomial_should_throw)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	BOOST_CHECK_THROW(bertini::start_system::RootsOfUnity TD(sys), std::runtime_error);
+	BOOST_CHECK_THROW(bertini::start_system::TotalDegreeBinomial TD(sys), std::runtime_error);
 }
 
 
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_coefficient_bound_degree_bound)
 
 
 
-	auto TD = bertini::start_system::RootsOfUnity(sys);
+	auto TD = bertini::start_system::TotalDegreeBinomial(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());

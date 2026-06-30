@@ -30,7 +30,7 @@ def test_circle_intersect_line_via_add_linear_solves():
 
     assert list(sys.degrees()) == [2, 1]
 
-    zd = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    zd = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     zd.solve()
     got = _roots_xy(zd.all_solutions())
 
@@ -49,7 +49,7 @@ def test_circle_intersect_line_via_add_linear_forms_solves():
     sys.add(x * x + y * y - 1)
     linalg.add_linear_forms(sys, [[2, 1, -1]])
 
-    zd = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    zd = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     zd.solve()
     got = _roots_xy(zd.all_solutions())
 

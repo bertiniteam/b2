@@ -387,14 +387,14 @@ inline start_system::StartSystemFactory<System> StartFactoryFor(blackbox::type::
 	{
 		case blackbox::type::Start::MHom:
 			return start_system::MakeStartFactory<start_system::MHomogeneous>();
-		case blackbox::type::Start::RootsOfUnity:
-			return start_system::MakeStartFactory<start_system::RootsOfUnity>();
+		case blackbox::type::Start::TotalDegreeBinomial:
+			return start_system::MakeStartFactory<start_system::TotalDegreeBinomial>();
 		case blackbox::type::Start::User:
 			throw std::runtime_error("the User start system is not a clone-owned start; build the "
 			                         "homotopy with nag_algorithm.user_homotopy(...) instead");
-		case blackbox::type::Start::TotalDegree:
+		case blackbox::type::Start::TotalDegreeLinearProduct:
 		default:
-			return start_system::MakeStartFactory<start_system::TotalDegree>();
+			return start_system::MakeStartFactory<start_system::TotalDegreeLinearProduct>();
 	}
 }
 
@@ -402,10 +402,11 @@ inline start_system::StartSystemFactory<System> StartFactoryFor(blackbox::type::
 inline void ExportStartSystemEnum()
 {
 	boost::python::enum_<blackbox::type::Start>("StartSystemType",
-		"Which start system a ZeroDim solver builds: total_degree (default) or mhomogeneous. "
+		"Which start system a ZeroDim solver builds: total_degree_binomial (the default for "
+		"1-homogeneous systems), total_degree_linear_product, or mhomogeneous. "
 		"User homotopies use nag_algorithm.user_homotopy(...) instead.")
-		.value("total_degree", blackbox::type::Start::TotalDegree)
-		.value("roots_of_unity", blackbox::type::Start::RootsOfUnity)
+		.value("total_degree_linear_product", blackbox::type::Start::TotalDegreeLinearProduct)
+		.value("total_degree_binomial", blackbox::type::Start::TotalDegreeBinomial)
 		.value("mhomogeneous", blackbox::type::Start::MHom)
 		;
 }
@@ -422,12 +423,12 @@ inline void ExportStartSystemFactory()
 	def("start_system_factory", &StartFactoryFor,
 		(boost::python::arg("which")),
 		"start_system_factory(which): the start-system factory for a StartSystemType, to pass as the "
-		"second argument of a ZeroDim solver constructor (the default constructor uses total_degree).");
+		"second argument of a ZeroDim solver constructor (the default constructor uses total_degree_linear_product).");
 }
 
 // Helper template — defined here so all split TUs can use it without duplication.  ZeroDim is no
 // longer templated on the start system; the concrete start system is chosen at construction (default
-// TotalDegree, or an explicit factory) and held polymorphically.
+// TotalDegreeLinearProduct, or an explicit factory) and held polymorphically.
 template<typename TrackerT, typename EndgameT>
 void ExportZeroDimSpecific(std::string const& class_name){
 	using ZeroDimT = algorithm::ZeroDimSolver<TrackerT, EndgameT, System>;
@@ -439,7 +440,7 @@ void ExportZeroDimSpecific(std::string const& class_name){
 	// object -> crash.  Tying the System's lifetime to the solver makes the documented `ZeroDim(sys)`
 	// usage safe even when the caller keeps no reference to `sys`.
 	//
-	// Two constructors: (system) defaults to the TotalDegree start; (system, start_factory) selects
+	// Two constructors: (system) defaults to the TotalDegreeLinearProduct start; (system, start_factory) selects
 	// a non-default start (e.g. MHomogeneous) -- the factory is a value, copied into the solver.
 	class_<ZeroDimT, std::shared_ptr<ZeroDimT>, bases<algorithm::AnyZeroDim> >(class_name.c_str(),
 		init<System const&>()[with_custodian_and_ward<1, 2>()])

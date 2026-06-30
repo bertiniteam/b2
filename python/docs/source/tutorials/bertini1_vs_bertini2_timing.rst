@@ -56,7 +56,7 @@ How to read it (for the run shown — see the caption for date/versions/machine)
 * ``cyclic-5`` exercises the **endgame**.  The adaptive-numeric-type endgame (the Cauchy and
   PowerSeries endgames now compute in hardware ``complex_dbl`` while a path's conditioning allows,
   escalating to mpfr only when the tracker's authority demands it) cut the endgame's **per-operation**
-  cost by roughly 10×.  Where a path's endgame stays in double — e.g. the default RootsOfUnity start
+  cost by roughly 10×.  Where a path's endgame stays in double — e.g. the default TotalDegreeBinomial start
   system — cyclic-5 in adaptive precision is now ~Bertini-1 speed (~0.4 s serial, with **0 of 70**
   finite paths needing to escalate above double).
 

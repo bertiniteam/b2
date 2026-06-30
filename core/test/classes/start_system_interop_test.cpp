@@ -22,14 +22,14 @@
 /**
 \file start_system_interop_test.cpp
 
-\brief Cross-cutting "sanity" tests for the start systems: TotalDegree (the linear-product
-Bezout start), MHomogeneous (its multi-group generalization), and RootsOfUnity, exercised on the
+\brief Cross-cutting "sanity" tests for the start systems: TotalDegreeLinearProduct (the linear-product
+Bezout start), MHomogeneous (its multi-group generalization), and TotalDegreeBinomial, exercised on the
 SAME targets so their homogenization, patch-fitting, start-point validity, and homotopy
 interoperability can be compared.  These deliberately hammer the corners:
 
   * EVERY start point of each system is checked to be a root of that start system, on its patch,
     in both double and (high) multiprecision -- not a sampled few.
-  * MHomogeneous on a single affine variable group must reproduce TotalDegree's Bezout count
+  * MHomogeneous on a single affine variable group must reproduce TotalDegreeLinearProduct's Bezout count
     (MHom is a generalization of total degree).
   * The blend homotopy H = (1-t) target + gamma t start is zero at every start point at t=1.
   * Patch-fit is checked at HIGH precision, where any rescale-then-truncate precision slip would
@@ -97,7 +97,7 @@ static double WorstStartPointResidual(StartT const& s)
 	return worst;
 }
 
-// ---- TotalDegree: every start point is a root, on the patch -----------------------------------
+// ---- TotalDegreeLinearProduct: every start point is a root, on the patch -----------------------------------
 
 BOOST_AUTO_TEST_CASE(total_degree_all_start_points_on_patch_double)
 {
@@ -108,13 +108,13 @@ BOOST_AUTO_TEST_CASE(total_degree_all_start_points_on_patch_double)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	ss::TotalDegree td(sys);
+	ss::TotalDegreeLinearProduct td(sys);
 	BOOST_CHECK(td.IsHomogeneous());
 	BOOST_CHECK(td.IsPatched());
 	BOOST_CHECK_EQUAL(td.NumStartPoints(), 24ull);   // 2*3*4
 
 	// EVERY start point a root (incl. patch + homogenization rows), in double.
-	BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegree, complex_dbl>(td)), 1e-9);
+	BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegreeLinearProduct, complex_dbl>(td)), 1e-9);
 }
 
 // The patch-fit must survive at HIGH precision: rescale-then-truncate would leave a residual at
@@ -128,20 +128,20 @@ BOOST_AUTO_TEST_CASE(total_degree_all_start_points_on_patch_high_precision)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	ss::TotalDegree td(sys);
+	ss::TotalDegreeLinearProduct td(sys);
 
 	// every MP start point is at the requested precision...
 	for (auto ii = decltype(td.NumStartPoints())(0); ii < td.NumStartPoints(); ++ii)
 		BOOST_CHECK_EQUAL(Precision(td.StartPoint<mpfr>(ii)), 100u);
 
 	// ...and is a root on the patch to (nearly) full working precision.
-	BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegree, mpfr>(td)), 1e-90);
+	BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegreeLinearProduct, mpfr>(td)), 1e-90);
 }
 
-// ---- MHomogeneous is a generalization of TotalDegree -----------------------------------------
+// ---- MHomogeneous is a generalization of TotalDegreeLinearProduct -----------------------------------------
 
 // On a SINGLE affine variable group, the m-homogeneous Bezout count collapses to the total-degree
-// Bezout count == product of the function degrees.  MHom and TotalDegree must agree.
+// Bezout count == product of the function degrees.  MHom and TotalDegreeLinearProduct must agree.
 BOOST_AUTO_TEST_CASE(mhom_single_affine_group_matches_total_degree_count)
 {
 	bertini::SetGlobalSeed(1u);
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(mhom_single_affine_group_matches_total_degree_count)
 		auto sys = SquareSingleGroup(degs);
 		// pre-homogenization construction is where MHom builds its degree matrix
 		ss::MHomogeneous mhom(sys);
-		ss::TotalDegree   td(sys);
+		ss::TotalDegreeLinearProduct   td(sys);
 
 		unsigned long long prod = 1;
 		for (auto d : degs) prod *= d;
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(mhom_single_affine_group_matches_total_degree_count)
 	}
 }
 
-// MHom start points are roots on the patch too (double + MP), same as TotalDegree.
+// MHom start points are roots on the patch too (double + MP), same as TotalDegreeLinearProduct.
 BOOST_AUTO_TEST_CASE(mhom_all_start_points_on_patch)
 {
 	bertini::SetGlobalSeed(1u);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(mhom_all_start_points_on_patch)
 // ---- homotopy interoperability: H(start, t=1) == 0 -------------------------------------------
 
 // Build the blend homotopy the way FormHomotopy does and check it vanishes at every start point at
-// t = 1, for BOTH TotalDegree and MHomogeneous on the same target.
+// t = 1, for BOTH TotalDegreeLinearProduct and MHomogeneous on the same target.
 template<typename StartT>
 static void CheckHomotopyZeroAtStartPoints(System const& target_hp, StartT const& start)
 {
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(total_degree_and_mhom_homotopies_vanish_at_start_points)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	ss::TotalDegree  td(sys);
+	ss::TotalDegreeLinearProduct  td(sys);
 	ss::MHomogeneous mhom(sys);
 	CheckHomotopyZeroAtStartPoints(sys, td);
 	CheckHomotopyZeroAtStartPoints(sys, mhom);
@@ -239,14 +239,14 @@ BOOST_AUTO_TEST_CASE(total_degree_single_variable_degree_d)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	ss::TotalDegree td(sys);
+	ss::TotalDegreeLinearProduct td(sys);
 	BOOST_CHECK_EQUAL(td.NumStartPoints(), 5ull);
 	// degree-5 root via a double linear solve: residual is conditioning-limited (~1e-10), so use a
 	// scale-tolerant double threshold rather than a machine-epsilon one.
-	BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegree, complex_dbl>(td)), 1e-8);
+	BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegreeLinearProduct, complex_dbl>(td)), 1e-8);
 }
 
-// HomogenizePoint/DehomogenizePoint roundtrip on a TotalDegree start point: dehomogenizing then
+// HomogenizePoint/DehomogenizePoint roundtrip on a TotalDegreeLinearProduct start point: dehomogenizing then
 // re-homogenizing returns the same (patch-fit) point.
 BOOST_AUTO_TEST_CASE(total_degree_dehomogenize_homogenize_roundtrip)
 {
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(total_degree_dehomogenize_homogenize_roundtrip)
 	auto sys = SquareSingleGroup({2, 3});
 	sys.Homogenize();
 	sys.AutoPatch();
-	ss::TotalDegree td(sys);
+	ss::TotalDegreeLinearProduct td(sys);
 
 	for (auto ii = decltype(td.NumStartPoints())(0); ii < td.NumStartPoints(); ++ii)
 	{
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(total_degree_dehomogenize_homogenize_roundtrip)
 	}
 }
 
-// Non-square single-group target must be rejected by TotalDegree (same guard family as MHom).
+// Non-square single-group target must be rejected by TotalDegreeLinearProduct (same guard family as MHom).
 BOOST_AUTO_TEST_CASE(total_degree_non_square_throws)
 {
 	System sys;
@@ -274,10 +274,10 @@ BOOST_AUTO_TEST_CASE(total_degree_non_square_throws)
 	sys.AddVariableGroup(VariableGroup{x});
 	sys.AddFunction(pow(x, 2));
 	sys.AddFunction(pow(x, 2) - 1);   // 2 functions, 1 variable
-	BOOST_CHECK_THROW(ss::TotalDegree{sys}, std::runtime_error);
+	BOOST_CHECK_THROW(ss::TotalDegreeLinearProduct{sys}, std::runtime_error);
 }
 
-// A homogeneous variable group is not single-affine-group total degree: TotalDegree must reject it
+// A homogeneous variable group is not single-affine-group total degree: TotalDegreeLinearProduct must reject it
 // (it is MHom's domain).
 BOOST_AUTO_TEST_CASE(total_degree_rejects_homogeneous_group)
 {
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(total_degree_rejects_homogeneous_group)
 	auto y = Variable::Make("y");
 	sys.AddHomVariableGroup(VariableGroup{x, y});
 	sys.AddFunction(pow(x, 2) + pow(y, 2));
-	BOOST_CHECK_THROW(ss::TotalDegree{sys}, std::runtime_error);
+	BOOST_CHECK_THROW(ss::TotalDegreeLinearProduct{sys}, std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

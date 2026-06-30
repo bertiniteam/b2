@@ -56,7 +56,7 @@ def collect_paths():
     DataFrames.
     """
     pb.random.set_random_seed(1)   # deterministic homotopy
-    solver = pb.nag_algorithm.ZeroDimSolver(cyclic_system(N), endgame='cauchy', mptype='adaptive', startsystem='rootsofunity')
+    solver = pb.nag_algorithm.ZeroDimSolver(cyclic_system(N), endgame='cauchy', mptype='adaptive', startsystem='binomial')
 
     collector = pb.nag_algorithm.observers.SolutionPathCollector()
     solver.add_observer(collector)

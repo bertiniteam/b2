@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//total_degree.hpp is free software: you can redistribute it and/or modify
+//total_degree_linear_product.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//total_degree.hpp is distributed in the hope that it will be useful,
+//total_degree_linear_product.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with total_degree.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with total_degree_linear_product.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) Bertini2 Development Team
 //
@@ -23,9 +23,9 @@
 // silviana amethyst, university of wisconsin eau claire
 
 /**
-\file total_degree.hpp
+\file total_degree_linear_product.hpp
 
-\brief Defines the TotalDegree start system type.
+\brief Defines the TotalDegreeLinearProduct start system type.
 */
 
 #pragma once
@@ -48,7 +48,7 @@ namespace bertini
 		linear forms, \f$\prod_{j=1}^{d_i} (a_{ij}\cdot x + b_{ij})\f$.  Its start points are generic
 		intersections (in general position), found by linear algebra -- NOT a roots-of-unity lattice.
 		The number of start points is the Bezout bound \f$\prod_i d_i\f$.  For the (cheaper, structured)
-		roots-of-unity start, see RootsOfUnity.
+		roots-of-unity start, see TotalDegreeBinomial.
 
 		This is the single-affine-variable-group specialization of MHomogeneous: like MHom, the start
 		system evaluates through a products-of-linears block (the SLP compiler cannot compile
@@ -60,18 +60,18 @@ namespace bertini
 
 		The start points are accessed by index (unsigned long long), instead of being generated all at once.
 		*/
-		class TotalDegree : public StartSystem
+		class TotalDegreeLinearProduct : public StartSystem
 		{
 		public:
-			TotalDegree() = default;
-			virtual ~TotalDegree() = default;
+			TotalDegreeLinearProduct() = default;
+			virtual ~TotalDegreeLinearProduct() = default;
 
 			/**
 			 Constructor for making a total degree start system from a polynomial system
 
 			 \throws std::runtime_error, if the input target system is not square, is not polynomial, has a path variable already, has more than one variable group, or has any homogeneous variable groups.
 			*/
-			TotalDegree(System const& s);
+			TotalDegreeLinearProduct(System const& s);
 
 
 			/**
@@ -79,9 +79,9 @@ namespace bertini
 			*/
 			unsigned long long NumStartPoints() const override;
 
-			TotalDegree& operator*=(Nd const& n);
+			TotalDegreeLinearProduct& operator*=(Nd const& n);
 
-			TotalDegree& operator+=(System const& sys) = delete;
+			TotalDegreeLinearProduct& operator+=(System const& sys) = delete;
 
 			void SanityChecks(System const& s);
 
@@ -143,7 +143,7 @@ namespace bertini
 				ar & boost::serialization::base_object<StartSystem>(*this);
 				ar & degrees_;
 				// serialize the coefficients too (unlike MHomogeneous, which persists only degrees_):
-				// a round-tripped TotalDegree can then regenerate its start points, not merely evaluate.
+				// a round-tripped TotalDegreeLinearProduct can then regenerate its start points, not merely evaluate.
 				ar & linear_coeffs_;
 			}
 

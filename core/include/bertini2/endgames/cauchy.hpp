@@ -80,7 +80,7 @@ sys.Homogenize();
 sys.AutoPatch();
 
 // 2. Create a start system, for us we will use a total degree start system.
-auto TD_start_sys = bertini::start_system::TotalDegree(target_sys);
+auto TD_start_sys = bertini::start_system::TotalDegreeLinearProduct(target_sys);
 
 // 2b. Creating homotopy between the start system and system we wish to solve.
 auto my_homotopy = (1-t)*target_sys + t*TD_start_sys*Rational::Rand(); //the random number is our gamma for a random path between t = 1 and t = 0.

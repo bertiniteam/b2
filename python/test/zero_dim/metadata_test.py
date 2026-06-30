@@ -21,7 +21,7 @@ def _one_var_solver(build_function):
     sys = pb.System()
     sys.add_variable_group(pb.VariableGroup([x]))
     sys.add_function(build_function(x))
-    return ZeroDimSolver(sys, endgame='cauchy', mptype='double', startsystem='rootsofunity')
+    return ZeroDimSolver(sys, endgame='cauchy', mptype='double', startsystem='binomial')
 
 
 def _tally(solver):
