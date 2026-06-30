@@ -1922,7 +1922,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 				auto const& smd = solution_final_metadata_[idx];
 				r.endgame_success_code   = smd.endgame_success_code;
-				r.final_solution    = solutions_post_endgame_[idx];
+				r.solution    = solutions_post_endgame_[idx];
 				r.function_residual = smd.function_residual;
 				r.condition_number  = smd.condition_number;
 				r.newton_residual   = smd.newton_residual;
@@ -1948,7 +1948,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				auto idx = static_cast<SolnIndT>(r.path_index);
 				solutions_at_endgame_boundary_[idx] =
 					EGBoundaryMetaDataT{ r.boundary_point, r.pre_endgame_success_code, r.boundary_stepsize, r.boundary_precision };
-				solutions_post_endgame_[idx] = r.final_solution;
+				solutions_post_endgame_[idx] = r.solution;
 
 				auto& smd = solution_final_metadata_[idx];
 				smd.path_index          = idx;

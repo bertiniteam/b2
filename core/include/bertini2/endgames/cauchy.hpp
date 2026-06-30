@@ -226,7 +226,7 @@ protected:
 
 	// Scratch for LatestTimeImpl to return a BCT reference when the endgame is computing in the
 	// complex_dbl fast lane (the latest time then lives in the complex_dbl slot, not the BCT slot).
-	mutable BCT latest_time_cache_;
+	mutable BCT latest_time_cache_; ///< Scratch so LatestTimeImpl can return a BCT reference while in the double fast lane.
 
 
 
@@ -1290,6 +1290,7 @@ public:
 	//   pre-existing analog; mpfr->higher-mpfr co-vary already happens via EnsureAtUniformPrecision.
 	// ================================================================================================
 
+	/// \brief Run the Cauchy endgame via the double-first adaptive-numeric-type driver, migrating up to mpfr only on tracker escalation.
 	template<typename Dummy = void>
 	SuccessCode RunImplAMP(BCT const& start_time, Vec<BCT> const& start_point, BCT const& target_time)
 	{
@@ -1396,6 +1397,7 @@ public:
 
 	// Initialization at one numeric type: seed the PSEG window and reach the EG operating zone, exactly
 	// as the head of RunImpl does, but reporting HigherPrecisionNecessary up to the driver on escalation.
+	/// \brief Run the initialization segment (seed the PSEG window and reach the EG zone) in a given numeric type.
 	template<typename ComplexT>
 	SuccessCode RunInitSegmentT(ComplexT const& start_time, Vec<ComplexT> const& start_point, ComplexT const& target_time)
 	{
@@ -1412,6 +1414,7 @@ public:
 
 
 	// Cauchy mean (extrapolation) at the active numeric type, written into final_approximation_ (BCT).
+	/// \brief Compute the Cauchy mean (extrapolation) at the active numeric type, migrating-and-retrying in mpfr on escalation.
 	template<typename Dummy = void>
 	SuccessCode ComputeCauchyApproxAMP()
 	{
@@ -1445,6 +1448,7 @@ public:
 	// Advance time at the active numeric type; migrate-and-retry in mpfr on escalation.  AdvanceTime
 	// returns HigherPrecisionNecessary BEFORE it rotates the PSEG window, so the window stays a clean
 	// checkpoint and the retry continues from the widened window with no double-advance.
+	/// \brief Advance time at the active numeric type, migrating-and-retrying in mpfr on escalation.
 	template<typename Dummy = void>
 	SuccessCode AdvanceTimeAMP(BCT const& target_time)
 	{
@@ -1470,6 +1474,7 @@ public:
 	// escalation.  ComputeCauchySamples clears and re-seeds its cauchy data from the PSEG window, so the
 	// mpfr retry simply re-tracks the circle from the (migrated) window -- it never reuses the lossy,
 	// double-tracked partial circle that triggered the escalation.
+	/// \brief Build a closed Cauchy loop's samples at the active numeric type, migrating-and-retrying in mpfr on escalation.
 	template<typename Dummy = void>
 	SuccessCode ComputeCauchySamplesAMP(BCT const& target_time)
 	{
@@ -1495,6 +1500,7 @@ public:
 	// already mpfr, raise its precision uniformly), via the shared base Cross* / SetPrecision helpers.
 	// Widen-only by default -- retained samples were already tracked/refined to final_tolerance
 	// (pure-(i)/B).  Called by the base EscalateAndMigrate.
+	/// \brief Widen this flavor's Cauchy containers from the complex_dbl slot up to complex_mp at the new precision.
 	template<typename Dummy = void>
 	void MigrateContainersToPrecision(unsigned newprec)
 	{

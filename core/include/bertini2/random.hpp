@@ -290,11 +290,13 @@ using bertini::RandomMp;
 		return z / sqrt(m);
 	}
 
+	/// \brief Produce a random complex number whose modulus is pulled toward 1 (away from 0 and infinity), at default precision.
 	inline complex RandomComplexBoundedModulus()
 	{
 		return rand_bounded_modulus();
 	}
 
+	/// \brief Assign to a a random complex number whose modulus is pulled toward 1, at the given precision.
 	inline
 	void RandomComplexBoundedModulusAssign(complex & a, unsigned num_digits)
 	{
@@ -313,6 +315,7 @@ using bertini::RandomMp;
 		SetThreadPrecision(cached);
 	}
 
+	/// \brief Produce a random complex number whose modulus is pulled toward 1, at the given precision.
 	inline
 	complex RandomComplexBoundedModulus(unsigned num_digits)
 	{
@@ -342,11 +345,13 @@ using bertini::RandomMp;
 		return z / sqrt(m);   // stays real (imag 0 / real = 0)
 	}
 
+	/// \brief Produce a random REAL number (imaginary part 0) whose modulus is pulled toward 1, at default precision.
 	inline complex RandomRealBoundedModulus()
 	{
 		return rand_real_bounded_modulus();
 	}
 
+	/// \brief Assign to a a random REAL number (imaginary part 0) whose modulus is pulled toward 1, at the given precision.
 	inline
 	void RandomRealBoundedModulusAssign(complex & a, unsigned num_digits)
 	{
@@ -365,6 +370,7 @@ using bertini::RandomMp;
 		SetThreadPrecision(cached);
 	}
 
+	/// \brief Produce a random REAL number (imaginary part 0) whose modulus is pulled toward 1, at the given precision.
 	inline
 	complex RandomRealBoundedModulus(unsigned num_digits)
 	{

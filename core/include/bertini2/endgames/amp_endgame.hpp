@@ -179,11 +179,12 @@ public:
 	// is the hardware-complex_dbl fast lane, higher is the mpfr slot.  adaptive_numeric_type_active_ gates
 	// the escalation hooks in the flavors' shared phase methods so they fire only while the double-first
 	// driver is orchestrating (never for the AMP-PowerSeries forwarding path, were one to exist).
-	mutable unsigned current_endgame_precision_ = DoublePrecision();
-	mutable bool     adaptive_numeric_type_active_ = false;
+	mutable unsigned current_endgame_precision_ = DoublePrecision(); ///< The endgame's current working precision (double = fast lane, higher = mpfr slot).
+	mutable bool     adaptive_numeric_type_active_ = false; ///< When true, the double-first adaptive-numeric-type lane is armed.
 
 	// Choose the next (higher) working precision: at least LowestMultiplePrecision(), following the
 	// tracker's authority if it climbed higher, and strictly above the current precision.
+	/// \brief Return the next (higher) precision to escalate to, following the tracker's authority and strictly above the current precision.
 	unsigned NextEscalatedPrecision() const
 	{
 		using std::max;
@@ -198,6 +199,7 @@ public:
 	// slot, then set the mpfr precision via the existing SetPrecision helper.  Templated on the tuple type
 	// so this header need not name the endgames' TupleOfTimes / TupleOfSamps / TupOfVec aliases.  The
 	// element crossing is the same one the AMP tracker performs; no library Vec-cast exists for these types.
+	/// \brief Widen a times container's complex_dbl slot into the complex_mp slot at the new precision.
 	template<typename TimesTuple>
 	void CrossTimesUp(TimesTuple& times, unsigned newprec) const
 	{
@@ -209,6 +211,7 @@ public:
 		tracking::adaptive::SetPrecision(to, newprec);
 	}
 
+	/// \brief Widen a samples container's complex_dbl slot into the complex_mp slot at the new precision.
 	template<typename SampsTuple>
 	void CrossSampsUp(SampsTuple& samps, unsigned newprec) const
 	{
@@ -225,6 +228,7 @@ public:
 		tracking::adaptive::SetPrecision(to, newprec);
 	}
 
+	/// \brief Widen a vector container's complex_dbl slot into the complex_mp slot at the new precision.
 	template<typename VecTuple>
 	void CrossVecUp(VecTuple& vec, unsigned newprec) const
 	{
@@ -238,6 +242,7 @@ public:
 	}
 
 	// Downcast a complex_mp vector to the hardware complex_dbl fast lane.
+	/// \brief Convert an mp vector down to the hardware complex_dbl fast lane.
 	Vec<complex_dbl> DowncastToDouble(Vec<complex_mp> const& v) const
 	{
 		Vec<complex_dbl> out(v.size());
@@ -246,14 +251,17 @@ public:
 	}
 
 	// Copy a complex_mp scalar / vector at the endgame's current working precision.
+	/// \brief Copy a complex_mp scalar set to the endgame's active working precision.
 	complex_mp AtActivePrecisionScalar(complex_mp const& x) const
 	{ using bertini::Precision; complex_mp r = x; Precision(r, current_endgame_precision_); return r; }
 
+	/// \brief Copy a complex_mp vector set to the endgame's active working precision.
 	Vec<complex_mp> AtActivePrecisionVec(Vec<complex_mp> const& v) const
 	{ using bertini::Precision; Vec<complex_mp> r = v; if (r.size() > 0) Precision(r, current_endgame_precision_); return r; }
 
 	// Widen an active-type vector (a fast-lane extrapolation result) to complex_mp at the given precision:
 	// the single boundary conversion of an approximation back to the ambient type.
+	/// \brief Widen a vector to the boundary complex type (complex_mp) at the given precision.
 	template<typename ComplexT>
 	Vec<complex_mp> ToBCT(Vec<ComplexT> const& v, unsigned prec) const
 	{

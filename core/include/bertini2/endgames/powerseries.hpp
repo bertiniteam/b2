@@ -802,6 +802,7 @@ public:
 	//   fixed-precision class instantiations never force-compile them.  Fixed precision uses RunImpl<BCT>.
 	// ================================================================================================
 
+	/// \brief Run the power-series endgame via the double-first adaptive-numeric-type driver, migrating up to mpfr only on tracker escalation.
 	template<typename Dummy = void>
 	SuccessCode RunImplAMP(BCT const& start_time, Vec<BCT> const& start_point, BCT const& target_time)
 	{
@@ -884,6 +885,7 @@ public:
 
 	// Pre-loop work + first extrapolation, at one numeric type.  Reports HigherPrecisionNecessary up to
 	// the driver (which restarts setup in mpfr) on escalation.
+	/// \brief Run the pre-loop setup and first extrapolation in a given numeric type, reporting escalation up to the driver.
 	template<typename ComplexT>
 	SuccessCode SetupSegmentT(ComplexT const& start_time, Vec<ComplexT> const& start_point, ComplexT const& target_time)
 	{
@@ -915,6 +917,7 @@ public:
 	}
 
 
+	/// \brief Advance time at the active numeric type, migrating-and-retrying in mpfr on escalation.
 	template<typename Dummy = void>
 	SuccessCode AdvanceTimeAMP(BCT const& target_time)
 	{
@@ -933,6 +936,7 @@ public:
 		}
 	}
 
+	/// \brief Refine all retained samples at the active numeric type, migrating-and-retrying in mpfr on escalation.
 	template<typename Dummy = void>
 	SuccessCode RefineAllSamplesAMP()
 	{
@@ -951,6 +955,7 @@ public:
 		}
 	}
 
+	/// \brief Compute all sample derivatives at the active numeric type.
 	template<typename Dummy = void>
 	void ComputeAllDerivativesAMP()
 	{
@@ -960,6 +965,7 @@ public:
 			ComputeAllDerivatives<complex_mp>();
 	}
 
+	/// \brief Compute the power-series extrapolation at the active numeric type, writing into final_approximation_ (BCT).
 	template<typename Dummy = void>
 	SuccessCode ComputeApproxAMP(BCT const& target_time)
 	{
@@ -981,6 +987,7 @@ public:
 	// Flavor-specific: cross every PowerSeries container from the complex_dbl slot to complex_mp (or, if
 	// already mpfr, raise its precision uniformly), via the shared AMP-policy Cross* / SetPrecision
 	// helpers.  Called by the base EscalateAndMigrate.
+	/// \brief Widen this flavor's PowerSeries containers from the complex_dbl slot up to complex_mp at the new precision.
 	template<typename Dummy = void>
 	void MigrateContainersToPrecision(unsigned newprec)
 	{

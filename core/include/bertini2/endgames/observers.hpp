@@ -127,22 +127,22 @@ template <typename EndgameT>
 struct EventRecorder : public Observer<EndgameT>
 {BOOST_TYPE_INDEX_REGISTER_CLASS
 
-using EmitterT = EndgameT;
-using BCT = typename EndgameT::BaseComplexT;
+using EmitterT = EndgameT;                     ///< The endgame type emitting the observed events.
+using BCT = typename EndgameT::BaseComplexT;    ///< The boundary complex type of the observed endgame.
 
-unsigned num_events            = 0;
-unsigned num_time_advanced     = 0;
-unsigned num_sample_refined    = 0;
-unsigned num_circle_advanced   = 0;
-unsigned num_closed_loop       = 0;
-unsigned num_approximated_root = 0;
-unsigned num_in_eg_zone        = 0;
-unsigned num_converged         = 0;
-unsigned num_precision_changed = 0;
+unsigned num_events            = 0;            ///< Total number of events observed.
+unsigned num_time_advanced     = 0;            ///< Number of TimeAdvanced events observed.
+unsigned num_sample_refined    = 0;            ///< Number of SampleRefined events observed.
+unsigned num_circle_advanced   = 0;            ///< Number of circle-advanced events observed.
+unsigned num_closed_loop       = 0;            ///< Number of closed-loop events observed.
+unsigned num_approximated_root = 0;            ///< Number of approximated-root events observed.
+unsigned num_in_eg_zone        = 0;            ///< Number of in-endgame-zone events observed.
+unsigned num_converged         = 0;            ///< Number of converged events observed.
+unsigned num_precision_changed = 0;            ///< Number of precision-changed events observed.
 
-Vec<BCT> last_circle_point;
-BCT      last_circle_time;
-Vec<BCT> converged_point;
+Vec<BCT> last_circle_point;                    ///< The most-recent circle sample point captured from an event.
+BCT      last_circle_time;                     ///< The most-recent circle sample time captured from an event.
+Vec<BCT> converged_point;                      ///< The converged root point captured from a converged event.
 
 virtual ObserveResult Observe(AnyEvent const& e) override
 {

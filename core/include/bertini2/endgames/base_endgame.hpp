@@ -289,6 +289,7 @@ public:
 	// here, not in AMPEndgame, because it needs AsFlavor(), which the precision-policy base lacks.  Member
 	// template so the explicit fixed-precision class instantiations never force-compile it.  Raises the
 	// working precision and migrates every durable container up to it; bounded by a runaway guard.
+	/// \brief Raise the endgame to the next precision and migrate the containers' complex_dbl slot up to complex_mp when the tracker's authority escalates.
 	template<typename Dummy = void>
 	SuccessCode EscalateAndMigrate(unsigned guard)
 	{

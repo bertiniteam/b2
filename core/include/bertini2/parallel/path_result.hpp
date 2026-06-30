@@ -112,7 +112,7 @@ struct FullPathResult
 
 	// endgame data
 	SuccessCode   endgame_success_code        = SuccessCode::NeverStarted;  ///< Outcome of the endgame.
-	Vec<ComplexT> final_solution;  ///< The final solution point.
+	Vec<ComplexT> solution;  ///< The solution point (final endpoint of the path).
 	double        function_residual              = 0;  ///< Residual of the system at the final solution.
 	double        condition_number               = 0;  ///< Condition-number estimate at the final solution.
 	double        newton_residual                = 0;  ///< Final Newton residual.
@@ -141,7 +141,7 @@ struct FullPathResult
 		ar & boundary_stepsize;
 		ar & boundary_precision;
 		ar & endgame_success_code;
-		ar & final_solution;
+		ar & solution;
 		ar & function_residual;
 		ar & condition_number;
 		ar & newton_residual;

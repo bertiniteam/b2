@@ -74,10 +74,10 @@ namespace bertini {
 	   return std::get< J >( absent_args );
 	}
 
-	// the other half of the get by index function
-	template< std::size_t I, std::size_t J, 
+	/// \brief Get the value of type T from the present args when T is among the present types (the I != sizeof... overload).
+	template< std::size_t I, std::size_t J,
 	        typename T, typename... PresentT, typename... GivenT >
-	auto GetByIndex(const std::tuple< PresentT... >& present_args, 
+	auto GetByIndex(const std::tuple< PresentT... >& present_args,
 	                const std::tuple< GivenT... >& ) // these arguments will have to be default constructed
 	   -> typename std::enable_if< I != sizeof...( PresentT ), const T& >::type /* remember, `I != sizeof...( PresentT )` means it found T in PresentT */
 	{
