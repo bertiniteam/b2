@@ -46,6 +46,7 @@ namespace bertini{
 			public:
 				
 				
+				/// \brief Construct a Newton corrector for a system, at the current default precision.
 				NewtonCorrector(const System& S) : current_precision_(DefaultPrecision())
 				{
 					ChangeSystem(S);
@@ -74,7 +75,7 @@ namespace bertini{
 				
 				
 				/**
-				 /brief Change the precision of the predictor variables and reassign the Butcher table variables.
+				 \brief Change the precision of the predictor variables and reassign the Butcher table variables.
 				 
 				 \param new_precision The new precision.
 				 
@@ -91,6 +92,7 @@ namespace bertini{
 				}
 
 
+				/// \brief Get the corrector's current working precision.
 				unsigned precision() const
 				{
 					return current_precision_;

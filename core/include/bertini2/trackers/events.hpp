@@ -137,6 +137,7 @@ namespace bertini {
 	*/
 	ADD_BERTINI_EVENT_TYPE(PrecisionEvent,TrackingEvent);
 
+	/// \brief Event emitted when the tracker's working precision changes.
 	template<class ObservedT>
 	class PrecisionChanged : public PrecisionEvent<ObservedT>
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS

@@ -354,6 +354,7 @@ namespace bertini{
 				}
 				
 				
+				/// \brief Resize the internal Runge-Kutta stage matrix K to match the current system and stage count.
 				void ResizeK()
 				{
 					std::get< Mat<complex_dbl> >(K_).resize(numTotalFunctions_, s_);
@@ -414,6 +415,7 @@ namespace bertini{
 					PrecisionSanityCheck();
 				}
 				
+				/// \brief Assert (in debug builds) that the predictor's state is all at the expected precision.
 				void PrecisionSanityCheck() const
 				{
 #ifndef NDEBUG
@@ -624,6 +626,13 @@ namespace bertini{
 				};
 
 				
+				/// \brief Compute and (when due) refresh the Jacobian norms and condition-number estimate.
+				/// \tparam ComplexT The complex number type to compute at.
+				/// \param[out] norm_J Set to ||J||.
+				/// \param[out] norm_J_inverse Set to the estimate of ||J^{-1}||.
+				/// \param[out] condition_number_estimate Set to the product of the two norms.
+				/// \param num_steps_since_last_condition_number_computation Steps elapsed since the last estimate.
+				/// \param frequency_of_CN_estimation Recompute the estimate once this many steps have passed.
 				template<typename ComplexT>
 				void SetNormsCond(NumErrorT & norm_J, NumErrorT & norm_J_inverse, NumErrorT & condition_number_estimate, unsigned num_steps_since_last_condition_number_computation, unsigned frequency_of_CN_estimation)
 				{

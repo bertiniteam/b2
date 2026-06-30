@@ -414,13 +414,14 @@ namespace bertini{
 			friend class Tracker<AMPTracker>;
 		public:
 			
-			typedef Tracker<AMPTracker> Base;
-			typedef typename TrackerTraits<AMPTracker>::EventEmitterType EmitterType;
+			typedef Tracker<AMPTracker> Base;  ///< The base tracker type.
+			typedef typename TrackerTraits<AMPTracker>::EventEmitterType EmitterType;  ///< The event-emitter type.
 
+			/// \brief Whether to refine after upsampling precision.
 			enum UpsampleRefinementOption
 			{
-			   upsample_refine_off  = 0,
-			   upsample_refine_on   = 1
+			   upsample_refine_off  = 0,  ///< Do not refine after upsampling.
+			   upsample_refine_on   = 1   ///< Refine after upsampling.
 			};
 		
 
@@ -442,6 +443,7 @@ namespace bertini{
 			}
 
 
+			/// \brief Get the current working precision of the adaptive tracker.
 			unsigned GetCurrentPrecision() const
 			{
 				return current_precision_;
@@ -473,6 +475,7 @@ namespace bertini{
 			virtual ~AMPTracker() = default;
 
 
+			/// \brief Get the current space point, returned in multiprecision regardless of the working type.
 			Vec<complex_mp> CurrentPoint() const override
 			{
 				if (this->CurrentPrecision()==DoublePrecision())
@@ -1726,10 +1729,11 @@ namespace bertini{
 			mutable unsigned initial_precision_; ///< The precision at the start of tracking.
 			mutable unsigned num_successful_steps_since_precision_decrease_; ///< Consecutive successful steps since precision last decreased; gated by B1's StepsForIncrease.
 
-			mutable complex_mp endtime_highest_precision_;
+			mutable complex_mp endtime_highest_precision_;  ///< The target time, held at the highest precision used.
 
 		public:
 
+			/// \brief Get the current working precision of the tracker.
 			unsigned CurrentPrecision() const override
 			{
 				return current_precision_;
