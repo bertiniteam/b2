@@ -90,6 +90,36 @@ def _system_add(self, *objects):
 
 System.add = _system_add
 
+
+def _system_jacobian(self, usercoordinates=True):
+    """The symbolic Jacobian of the system, as a 2-D numpy object array of expression nodes.
+
+    ``J[i, j]`` is the partial derivative of function ``i`` with respect to variable ``j`` -- an
+    expression tree, not a number (contrast :meth:`eval_jacobian`, which is numeric).  Ready to
+    ``numpy.vstack`` onto a coefficient row and ``@`` a vector of variables.
+
+    Parameters
+    ----------
+    usercoordinates : bool, default True
+        When True, differentiate the functions *as authored* (the natural, pre-homogenization
+        functions) with respect to the user-declared affine/projective variable groups: the
+        solver-added homogenizing variables never appear and patches are omitted.  When False,
+        differentiate the functions *as currently stored* (possibly homogenized) with respect to
+        the full internal variable ordering (homogenizing variables included), with the patch's
+        rows appended when the system is patched.
+
+    Notes
+    -----
+    For a system that has *already* been homogenized, the user-coordinate Jacobian relies on the
+    natural functions snapshotted at homogenization time.  Build the system affinely and call
+    ``jacobian`` before homogenizing/solving for the cleanest result.
+    """
+    rows = self.symbolic_jacobian(usercoordinates)
+    return _np.array(rows, dtype=object)
+
+
+System.jacobian = _system_jacobian
+
 # Override C++ submodule reference with the Python wrapper (which has AbstractStartSystem removed).
 # Can't use 'from . import start_system': the star import already set that name to the C++ submodule.
 import importlib as _importlib
