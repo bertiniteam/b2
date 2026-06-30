@@ -365,11 +365,14 @@ namespace bertini
 
 		if (!already_had_homvars)
 		{
-			homogenizing_variables_.resize(NumVariableGroups());
 			// snapshot the natural (affine) functions before any block homogenizes itself, so
 			// SymbolicJacobian(usercoordinates=true) can differentiate them without the
 			// homogenizing variables ever appearing.  Immutable nodes -> shared ownership, free.
+			// Must precede the resize below: resizing homogenizing_variables_ would make the
+			// variable ordering include an (empty) homogenizing slot, which the structured
+			// blocks' node-expansion rejects as a variable-count mismatch.
 			pre_homogenization_functions_ = NaturalFunctionsAsNodes();
+			homogenizing_variables_.resize(NumVariableGroups());
 		}
 
 
@@ -439,9 +442,10 @@ namespace bertini
 		if (provided_hom_vars.size()!=NumVariableGroups())
 			throw std::runtime_error("Homogenize(provided homogenizing variables): need exactly one homogenizing variable per affine variable group.");
 
-		homogenizing_variables_.resize(NumVariableGroups());
-		// snapshot the natural (affine) functions before homogenizing (see Homogenize()).
+		// snapshot the natural (affine) functions before homogenizing (see Homogenize()); must
+		// precede the resize so the ordering does not yet include an empty homogenizing slot.
 		pre_homogenization_functions_ = NaturalFunctionsAsNodes();
+		homogenizing_variables_.resize(NumVariableGroups());
 
 		auto group_counter = 0;
 		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
