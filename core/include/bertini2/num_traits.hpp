@@ -42,103 +42,121 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 
 namespace bertini
 {
+	/// \brief Get a random complex number of unit modulus, in number type T.
 	template<typename T>
 	T RandomUnit();
 
+	/// \brief Numeric traits for a bertini number type: digit counts, conversions, and companion types.
 	template<typename T>
 	struct NumTraits
 	{};
 
 
 
-	template <> struct NumTraits<double> 
+	/// \brief Numeric traits for the built-in double type.
+	template <> struct NumTraits<double>
 	{
+		/// \brief The number of significant digits (16 for double).
 		inline static unsigned NumDigits()
 		{
 			return 16;
 		}
 
+		/// \brief The number of digits to trust for fuzzy comparisons.
 		inline static unsigned NumFuzzyDigits()
 		{
 			return 14;
 		}
 
+		/// \brief Convert a tracking tolerance to a number of significant digits.
 		inline
 		static unsigned TolToDigits(double tol)
 		{
 			return static_cast<unsigned>(ceil(-log10(tol)));
 		}
 
-		inline static 
+		/// \brief Parse a double from a string.
+		inline static
 		double FromString(std::string const& s)
 		{
 			return boost::lexical_cast<double>(s);
 		}
 
+		/// \brief Convert an exact rational to a double (precision ignored).
 		inline static
 		double FromRational(mpq_rational const& n, unsigned /* precision */)
 		{
 			return double(n);
 		}
 
-		using Real = double;
-		using Complex = complex_dbl;
+		using Real = double;  ///< The real companion type.
+		using Complex = complex_dbl;  ///< The complex companion type.
 	};
 
 
-	template <> struct NumTraits<complex_dbl > 
+	/// \brief Numeric traits for double-precision complex numbers.
+	template <> struct NumTraits<complex_dbl >
 	{
+		/// \brief The number of significant digits (16).
 		inline static unsigned NumDigits()
 		{
 			return 16;
 		}
 
+		/// \brief The number of digits to trust for fuzzy comparisons.
 		inline static unsigned NumFuzzyDigits()
 		{
 			return 14;
 		}
 
-		inline static 
+		/// \brief Parse a complex number from a single string.
+		inline static
 		complex_dbl FromString(std::string const& s)
 		{
 			return boost::lexical_cast<complex_dbl>(s);
 		}
 
-		inline static 
+		/// \brief Build a complex number from real and imaginary string parts.
+		inline static
 		complex_dbl FromString(std::string const& s, std::string const& t)
 		{
 			return complex_dbl(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
 		}
 
+		/// \brief Convert an exact rational to a complex double (precision ignored).
 		inline static
 		complex_dbl FromRational(mpq_rational const& n, unsigned /* precision */)
 		{
 			return complex_dbl(static_cast<double>(n),0);
 		}
 
-		using Real = double;
-		using Complex = complex_dbl;
+		using Real = double;  ///< The real companion type.
+		using Complex = complex_dbl;  ///< The complex companion type.
 	};
 
 
+	/// \brief The number of digits by which adaptive precision is increased at each step.
 	inline
 	unsigned PrecisionIncrement()
 	{
 		return 10;
 	}
 
+	/// \brief The number of digits considered "double precision" (16).
 	constexpr
 	unsigned DoublePrecision()
 	{
 		return 16;
 	}
 
+	/// \brief The lowest multiple-precision digit count used (20).
 	constexpr
 	unsigned LowestMultiplePrecision()
 	{
 		return 20;
 	}
 
+	/// \brief The maximum precision (digits) the library will escalate to.
 	constexpr
 	unsigned MaxPrecisionAllowed()
 	{
@@ -195,6 +213,7 @@ namespace bertini
 		}
 	}
 
+	/// \brief Get a random double-precision complex number (not unit modulus; see RandomUnit).
 	inline
 	complex_dbl rand_complex()
 	{
@@ -205,6 +224,7 @@ namespace bertini
 		return returnme / sqrt( abs(returnme));
 	}
 
+	/// \brief Get a random double-precision complex number of unit modulus.
 	template <> inline
 	complex_dbl RandomUnit<complex_dbl >()
 	{
@@ -213,8 +233,9 @@ namespace bertini
 		return returnme / abs(returnme);
 	}
 
-	template <> 
-	inline 
+	/// \brief Get a random multiprecision complex number of unit modulus.
+	template <>
+	inline
 	complex_mp RandomUnit<complex_mp>()
 	{
 		return multiprecision::RandomUnit();
@@ -236,18 +257,22 @@ namespace bertini {
 
 	
 	
-	template <> struct NumTraits<real_mp> 
+	/// \brief Numeric traits for multiprecision reals (digit counts follow the thread precision).
+	template <> struct NumTraits<real_mp>
 	{
+		/// \brief The number of significant digits (the current thread precision).
 		inline static unsigned NumDigits()
 		{
 			return ThreadPrecision();
 		}
 
+		/// \brief The number of digits to trust for fuzzy comparisons.
 		inline static unsigned NumFuzzyDigits()
 		{
 			return ThreadPrecision()-3;
 		}
 
+		/// \brief Convert a tracking tolerance to a number of significant digits.
 		inline
 		static unsigned TolToDigits(real_mp tol)
 		{
@@ -255,53 +280,61 @@ namespace bertini {
 			return b.convert_to<unsigned int>();
 		}
 
-		inline static 
+		/// \brief Parse a multiprecision real from a string.
+		inline static
 		real_mp FromString(std::string const& s)
 		{
 			return real_mp(s);
 		}
 
+		/// \brief Convert an exact rational to a multiprecision real at the given precision.
 		inline static
 		real_mp FromRational(mpq_rational const& n, unsigned precision)
 		{
 			return real_mp(n,precision);
 		}
 
-		using Real = real_mp;
-		using Complex = complex_mp;
-	};	
+		using Real = real_mp;  ///< The real companion type.
+		using Complex = complex_mp;  ///< The complex companion type.
+	};
 
 
 
-	template <> struct NumTraits<complex_mp> 
+	/// \brief Numeric traits for multiprecision complex numbers (digit counts follow the thread precision).
+	template <> struct NumTraits<complex_mp>
 	{
+		/// \brief The number of significant digits (the current thread precision).
 		inline static unsigned NumDigits()
 		{
 			return ThreadPrecision();
 		}
 
-		inline static 
+		/// \brief Parse a complex number from a single string.
+		inline static
 		complex_mp FromString(std::string const& s)
 		{
 			return complex_mp(s);
 		}
 
-		inline static 
+		/// \brief Build a complex number from real and imaginary string parts.
+		inline static
 		complex_mp FromString(std::string const& s, std::string const& t)
 		{
 			return complex_mp(s,t);
 		}
 
+		/// \brief Convert an exact rational to a multiprecision complex number at the given precision.
 		inline static
 		complex_mp FromRational(mpq_rational const& n, unsigned precision)
 		{
 			return complex_mp(n,0,precision);
 		}
 
-		using Real = real_mp;
-		using Complex = complex_mp;
+		using Real = real_mp;  ///< The real companion type.
+		using Complex = complex_mp;  ///< The complex companion type.
 	};
 
+	/// \brief Numeric traits for exact rationals (provides decimal-string parsing).
 	template <> struct NumTraits<mpq_rational>
 	{
 		/**

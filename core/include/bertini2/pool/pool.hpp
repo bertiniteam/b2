@@ -117,7 +117,9 @@ namespace bertini {
 		PoolHolderType held_data_;  ///< The pool's held pointers.
 	};
 
+	/// \cond POOL_STATIC_DEFINITION
 	template<typename ObjT, class Policy> typename Pool<ObjT,Policy>::PoolHolderType Pool<ObjT,Policy>::held_data_;
+	/// \endcond
 	} // re: detail
 } // re: bertini
 

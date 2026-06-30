@@ -38,6 +38,7 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/split_member.hpp>
 
+/// \brief Tell Eigen to mix a Boost.serialization addon into every dense matrix/array.
 #define EIGEN_DENSEBASE_PLUGIN "bertini2/eigen_serialization_addon.hpp"
 
 #include <Eigen/Core>
@@ -49,6 +50,7 @@ using complex_mp = bertini::complex_mp;
 
 namespace Eigen {
 
+/// \cond EIGEN_GLUE
 	template<> struct NumTraits<mpfr_real> : GenericNumTraits<mpfr_real> // permits to get the epsilon, dummy_precision, lowest, highest functions
 	{
 
@@ -281,6 +283,7 @@ namespace Eigen {
 		};
 
 	} // re: namespace internal
+/// \endcond
 } // re: namespace Eigen
 
 
@@ -292,7 +295,9 @@ namespace Eigen {
 
 namespace bertini {
 
+	/// \brief A dynamically-sized column vector of NumT.
 	template<typename NumT> using Vec = Eigen::Matrix<NumT, Eigen::Dynamic, 1>;
+	/// \brief A dynamically-sized matrix of NumT.
 	template<typename NumT> using Mat = Eigen::Matrix<NumT, Eigen::Dynamic, Eigen::Dynamic>;
 
 
@@ -437,11 +442,12 @@ namespace bertini {
 		return Eigen::numext::abs2(numerator) * (d * d) >= Eigen::numext::abs2(denomenator);
 	}
 
+	/// \brief Outcome of a matrix-decomposition sanity check (e.g. LU pivot magnitude).
 	enum class MatrixSuccessCode
 	{
-		Success,
-		LargeChange,
-		SmallValue
+		Success,      ///< The decomposition looks healthy.
+		LargeChange,  ///< A pivot changed by a suspiciously large amount.
+		SmallValue    ///< A pivot is suspiciously small (near-singular).
 	};
 
 	/**
