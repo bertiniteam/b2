@@ -58,3 +58,4 @@ Each ADR follows the template:
 | [0038](0038-amp-criterion-b-uses-newton-residual-not-size-proportion.md) | AMP Criterion B (cost model) must use the latest Newton residual, not size_proportion | Numerics / trackers |
 | [0039](0039-zerodim-binding-keeps-system-alive.md) | The Python solver binding must keep the given System alive (custodian-and-ward) | Python bindings |
 | [0040](0040-split-zerodimsolver-homotopysolver.md) | Split ZeroDim into HomotopySolver (continuation engine) + ZeroDimSolver (algorithm); retire the system-management policy | Core / nag_algorithms |
+| [0041](0041-bounded-modulus-random-coefficients.md) | Random linear-form / scaling coefficients (start systems, patches, slices) use a bounded-modulus draw, matching Bertini 1 | Numerics / core |
