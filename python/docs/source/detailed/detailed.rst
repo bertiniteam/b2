@@ -2,39 +2,20 @@
 *******************
 
 
-This page acts to point you to more specific places in the documentation.  Table of contents below 🔽.  
-
-🖍 Highlights
---------------------
-
-.. toctree::
-   :maxdepth: 2
-
-   configs
+This page points you into the API documentation.  Table of contents below 🔽.
 
 
-⚙️ Modules
--------------
+⚙️ API reference
+-------------------
+
+The full reference is **auto-generated** by walking the :mod:`bertini` package, so it always tracks
+the code.  (A curated "everyday API" tier -- the common types and functions, with real prose -- is
+coming; for now, everything lives in the auto-generated index.)
 
 .. toctree::
    :maxdepth: 2
 
-   top_level
-   nag_algorithm
-   linalg
-   multiprec
-   function_tree
-   system
-   start_system
-   tracking
-   endgame
-   parse
-   sympy_bridge
-   containers
-   logging
-   parallel
-   random
-   config_module
+   api
 
 
 🎱 Things you probably don't need
@@ -43,12 +24,4 @@ This page acts to point you to more specific places in the documentation.  Table
 .. toctree::
   :maxdepth: 1
 
-  cpp_side
   🕸 Bertini 2 Python documentation archives <https://doc.bertini2.org/pybertini_archives>
-
-
-
-
-
-
-

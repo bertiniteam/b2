@@ -1,27 +1,44 @@
 #!/usr/bin/env python
-"""Re-measure the distributed-solve timings and rewrite the tables in ``solving_at_scale.rst``.
+"""Re-measure the distributed-solve timings behind the ``solving_at_scale`` tutorial.
 
-The tutorial ``python/docs/source/tutorials/solving_at_scale.rst`` shows wall-clock + speedup
-tables for the ``solve_cyclic.py`` and ``solve_eigenvalues.py`` example scripts at several
+The tutorial ``python/docs/source/tutorials/solving_at_scale/index.rst`` shows wall-clock +
+speedup tables for the ``solve_cyclic.py`` and ``solve_eigenvalues.py`` example scripts at several
 rank/thread layouts.  Those numbers are hardware- and version-specific and go stale -- especially
-after performance work -- so this tool re-runs the scripts and rewrites the tables in place.
+after performance work -- so this tool re-runs the scripts and regenerates the data behind the
+tables.
+
+The numbers do **not** live in the prose.  This tool writes them as *data*:
+
+* one CSV per table (``cyclic_timings.csv``, ``eigen_timings.csv``, ``hybrid_timings.csv``) that
+  the tutorial pulls in with ``.. csv-table:: :file:``; and
+* ``_timing_data.txt``, a set of ``.. |tw-...| replace::`` substitution definitions the tutorial
+  ``.. include::``s, carrying every scalar the prose quotes (paths, finite count, top speedups,
+  the eigenvalue plateau, the host description, core counts, the date).
+
+so re-running this tool updates every table cell *and* every number in the surrounding sentences at
+once -- there is no number to hand-edit in the ``.rst``.
 
 Run it **from the repository root, inside the bertini environment**::
 
-    python tools/update_scaling_timings.py             # full sweep, rewrite the tables
-    python tools/update_scaling_timings.py --dry-run   # measure + print, do NOT edit the file
-    python tools/update_scaling_timings.py --only eigen # refresh just one table
+    python tools/update_scaling_timings.py             # full sweep, rewrite the data files
+    python tools/update_scaling_timings.py --dry-run   # measure + print, do NOT write
+    python tools/update_scaling_timings.py --only eigen # refresh just one table's data
     python tools/update_scaling_timings.py --quick      # tiny problems, to smoke-test this tool
 
-Each configuration is run **alone** (sequentially), so the wall-clock numbers are not polluted by
-contention; the full default sweep is a few minutes on a fast 12+-core machine.  The tool **aborts without editing**
-if any run fails its built-in correctness check, so it can never write numbers from a broken solve.
+The host description (``|tw-host|``, e.g. "a 16-core Apple M3 Max (12 performance + 4 efficiency
+cores)") and the performance-core count (``|tw-perf-cores|``) are **preserved** across runs unless
+you override them with ``--host`` / ``--perf-cores`` -- they describe the reference machine, which
+this tool cannot fully introspect.  The core count and date come from the machine and the clock.
 
-This script is the single source of truth for the layouts shown in the tutorial: change the ladder
-here and re-run, and the page follows.
+Each configuration is run **alone** (sequentially), so wall-clock numbers are not polluted by
+contention; the full default sweep is a few minutes on a fast 12+-core machine.  The tool **aborts
+without writing** if any run fails its built-in correctness check, so it can never publish numbers
+from a broken solve.  Prefer driving it through ``tools/refresh_doc_artifacts.py`` (the single
+artifact entry point).
 """
 
 import argparse
+import csv
 import datetime
 import os
 import re
@@ -30,13 +47,23 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-RST = REPO / "python" / "docs" / "source" / "tutorials" / "solving_at_scale.rst"
+OUT = REPO / "python" / "docs" / "source" / "tutorials" / "solving_at_scale"
+SUBS_FILE = OUT / "_timing_data.txt"
 CYCLIC = "python/examples/solve_cyclic.py"
 EIGEN = "python/examples/solve_eigenvalues.py"
 
 WALL_RE = re.compile(r"wall=([0-9.]+)s")
 CYCLIC_PATHS_RE = re.compile(r"paths tracked=(\d+)")
 CYCLIC_FINITE_RE = re.compile(r"finite solutions=(\d+)")
+
+# Canonical order + full set of substitutions the tutorial references.  A partial run (--only ...)
+# updates just the keys it measures and PRESERVES the rest from the existing file, so the page is
+# never left half-defined.
+SUBS_ORDER = [
+    "tw-host", "tw-cores", "tw-perf-cores", "tw-date",
+    "tw-cyclic-paths", "tw-cyclic-finite", "tw-cyclic-top-speedup",
+    "tw-eigen-paths", "tw-eigen-floor-wall", "tw-eigen-floor-speedup", "tw-eigen-12w-speedup",
+]
 
 _cache = {}                       # (script, args, nprocs, omp, bind) -> (wall_seconds, output_text)
 
@@ -100,45 +127,69 @@ def speedup(serial, t):
     return f"{serial / t:.1f}x"
 
 
-def render_table(caption, widths, header, rows):
-    """Render a reStructuredText ``list-table`` (alignment-free, robust to editing)."""
-    out = [
-        f".. list-table:: {caption}",
-        "   :header-rows: 1",
-        f"   :widths: {' '.join(str(w) for w in widths)}",
-        "",
-    ]
-    for row in (header, *rows):
-        for i, cell in enumerate(row):
-            out.append(("   * - " if i == 0 else "     - ") + cell)
-    return "\n".join(out)
-
-
-def splice(text, key, block):
-    """Replace the content between ``.. BEGIN-TIMING <key>`` and ``.. END-TIMING <key>``."""
-    begin, end = f".. BEGIN-TIMING {key}", f".. END-TIMING {key}"
-    pat = re.compile(re.escape(begin) + r"\n.*?\n" + re.escape(end), re.DOTALL)
-    text, n = pat.subn(f"{begin}\n\n{block}\n\n{end}", text, count=1)
-    if n != 1:
-        sys.exit(f"ABORT: could not find the '{key}' timing region (markers) in {RST}")
-    return text
-
-
-def rank_table(script, args, problem_caption):
+def ladder_rows(script, args):
     """The serial -> 2/4/8/12-worker ladder shared by the cyclic and eigenvalue tables.
 
-    The top rung (12 workers, ``-n 13``) targets a 12-performance-core machine (e.g. Apple
-    M3 Max: 12 performance + 4 efficiency cores); the near-idle manager rides an efficiency
-    core.  On a smaller box the wide rungs oversubscribe -- measure() adds ``:OVERSUBSCRIBE``
-    automatically -- and the speedup simply plateaus, which is the honest result.
+    Returns ``(serial_wall, rows, by_workers)`` where ``rows`` are the CSV rows
+    ``[launch, workers, wall, speedup]`` and ``by_workers`` maps worker count -> (wall, speedup).
+
+    The top rung (12 workers, ``-n 13``) targets a 12-performance-core machine (e.g. Apple M3 Max);
+    on a smaller box the wide rungs oversubscribe -- measure() adds ``:OVERSUBSCRIBE`` -- and the
+    speedup simply plateaus, which is the honest result.
     """
     serial, _ = measure(script, args, 1)
     rows = [["serial", "--", f"{serial:.1f}", "1.0x"]]
+    by_workers = {}
     for nprocs, workers in ((3, 2), (5, 4), (9, 8), (13, 12)):
         t, _ = measure(script, args, nprocs)
-        rows.append([f"``-n {nprocs}``", str(workers), f"{t:.1f}", speedup(serial, t)])
-    header = ["launch", "workers", "wall-clock (s)", "speedup"]
-    return render_table(problem_caption, [20, 15, 25, 15], header, rows)
+        sp = speedup(serial, t)
+        rows.append([f"``-n {nprocs}``", str(workers), f"{t:.1f}", sp])
+        by_workers[workers] = (t, sp)
+    return serial, rows, by_workers
+
+
+def write_csv(path, header, rows, dry_run):
+    print(f"  -> {os.path.relpath(path, REPO)}")
+    for row in rows:
+        print("     " + " | ".join(row))
+    if dry_run:
+        return
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        # csv.writer quotes only the fields that need it (the hybrid 'layout' cells contain commas),
+        # matching what csv-table's RFC4180 reader expects.
+        w = csv.writer(fh, lineterminator="\n")
+        w.writerow(header)
+        w.writerows(rows)
+
+
+def load_subs(path):
+    """Parse an existing ``_timing_data.txt`` into {name: value} so a partial run preserves the rest."""
+    subs = {}
+    if not path.exists():
+        return subs
+    for line in path.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"\.\. \|([\w-]+)\| replace:: (.*)", line)
+        if m:
+            subs[m.group(1)] = m.group(2)
+    return subs
+
+
+def write_subs(path, subs, dry_run):
+    lines = [
+        ".. Machine-generated by tools/update_scaling_timings.py -- do not hand-edit.",
+        "   These substitutions carry every measured number in solving_at_scale out of the prose.",
+        "",
+    ]
+    for name in SUBS_ORDER:
+        if name in subs:
+            lines.append(f".. |{name}| replace:: {subs[name]}")
+    body = "\n".join(lines) + "\n"
+    print(f"  -> {os.path.relpath(path, REPO)}")
+    for name in SUBS_ORDER:
+        if name in subs:
+            print(f"     |{name}| = {subs[name]}")
+    if not dry_run:
+        path.write_text(body, encoding="utf-8")
 
 
 def main():
@@ -147,16 +198,19 @@ def main():
     parser.add_argument("--cyclic-n", type=int, default=6, help="which cyclic-n (default 6)")
     parser.add_argument("--eigen-size", type=int, default=24, help="matrix size n (default 24)")
     parser.add_argument("--only", choices=["all", "cyclic", "eigen", "hybrid"], default="all",
-                        help="refresh just one table (default all)")
+                        help="refresh just one table's data (default all)")
     parser.add_argument("--quick", action="store_true",
                         help="tiny problems (cyclic-5, eigen-6) to smoke-test this tool")
     parser.add_argument("--seed", type=int, default=1,
                         help="RNG seed passed to both scripts (default 1).  A fixed seed makes "
                              "every rank/thread layout solve the IDENTICAL homotopy, so the "
-                             "speedups compare like with like -- without it each run draws a "
-                             "different gamma and the timings are not comparable.")
+                             "speedups compare like with like.")
+    parser.add_argument("--host", default=None,
+                        help="reference-machine description for |tw-host| (preserved if omitted)")
+    parser.add_argument("--perf-cores", type=int, default=None,
+                        help="performance-core count for |tw-perf-cores| (preserved if omitted)")
     parser.add_argument("--dry-run", action="store_true",
-                        help="measure and print, but do not edit the .rst")
+                        help="measure and print, but do not write the data files")
     args = parser.parse_args()
 
     if args.quick:
@@ -165,60 +219,60 @@ def main():
     cyclic_args = ["--n", str(args.cyclic_n), "--seed", str(args.seed)]
     eigen_args = ["--size", str(args.eigen_size), "--seed", str(args.seed)]
     cores = os.cpu_count()
-    stamp = datetime.date.today().isoformat()
-    refresh = "run tools/update_scaling_timings.py to refresh"
     want = {args.only} if args.only != "all" else {"cyclic", "eigen", "hybrid"}
 
-    blocks = {}
+    # start from what is on disk so a partial run preserves the other keys / the descriptive host
+    subs = load_subs(SUBS_FILE)
+    subs["tw-date"] = datetime.date.today().isoformat()
+    subs["tw-cores"] = str(cores)
+    if args.host is not None:
+        subs["tw-host"] = args.host
+    subs.setdefault("tw-host", f"a {cores}-core machine")
+    if args.perf_cores is not None:
+        subs["tw-perf-cores"] = str(args.perf_cores)
+    subs.setdefault("tw-perf-cores", str(cores))
+
+    header4 = ["launch", "workers", "wall-clock (s)", "speedup"]
 
     if "cyclic" in want or "hybrid" in want:
-        # the cyclic serial + ladder; needed by the cyclic table and (for the speedup base) hybrid
+        # cyclic serial + ladder; needed by the cyclic table and (for the speedup base) the hybrid one
         _, serial_out = measure(CYCLIC, cyclic_args, 1)
-        paths = CYCLIC_PATHS_RE.search(serial_out).group(1)
-        finite = CYCLIC_FINITE_RE.search(serial_out).group(1)
+        subs["tw-cyclic-paths"] = CYCLIC_PATHS_RE.search(serial_out).group(1)
+        subs["tw-cyclic-finite"] = CYCLIC_FINITE_RE.search(serial_out).group(1)
 
     if "cyclic" in want:
-        cap = (f"cyclic-{args.cyclic_n} ({paths} paths, {finite} finite solutions), "
-               f"measured on {cores} cores, {stamp} -- {refresh}")
-        blocks["cyclic"] = rank_table(CYCLIC, cyclic_args, cap)
+        serial, rows, by_workers = ladder_rows(CYCLIC, cyclic_args)
+        subs["tw-cyclic-top-speedup"] = by_workers[12][1]
+        write_csv(OUT / "cyclic_timings.csv", header4, rows, args.dry_run)
 
     if "eigen" in want:
-        cap = (f"eigenvalues of a {args.eigen_size}x{args.eigen_size} symmetric matrix "
-               f"({args.eigen_size} paths), measured on {cores} cores, {stamp} -- {refresh}")
-        blocks["eigen"] = rank_table(EIGEN, eigen_args, cap)
+        serial, rows, by_workers = ladder_rows(EIGEN, eigen_args)
+        subs["tw-eigen-paths"] = str(args.eigen_size)
+        # the floor is the fastest rung (highest speedup); the plateau the prose quotes
+        floor_workers = max(by_workers, key=lambda w: float(by_workers[w][1].rstrip("x")))
+        floor_wall, floor_sp = by_workers[floor_workers]
+        subs["tw-eigen-floor-wall"] = f"{floor_wall:.1f}"
+        subs["tw-eigen-floor-speedup"] = floor_sp
+        subs["tw-eigen-12w-speedup"] = by_workers[12][1]
+        write_csv(OUT / "eigen_timings.csv", header4, rows, args.dry_run)
 
     if "hybrid" in want:
         serial, _ = measure(CYCLIC, cyclic_args, 1)
         # 12 worker-cores split every way the factors of 12 allow: ranks x threads = 12.
         t12_1, _ = measure(CYCLIC, cyclic_args, 13, omp=1)                # == cyclic -n 13 row
-        t6_2, _  = measure(CYCLIC, cyclic_args, 7, omp=2, bind_none=True)
-        t4_3, _  = measure(CYCLIC, cyclic_args, 5, omp=3, bind_none=True)
-        t2_6, _  = measure(CYCLIC, cyclic_args, 3, omp=6, bind_none=True)
+        t6_2, _ = measure(CYCLIC, cyclic_args, 7, omp=2, bind_none=True)
+        t4_3, _ = measure(CYCLIC, cyclic_args, 5, omp=3, bind_none=True)
+        t2_6, _ = measure(CYCLIC, cyclic_args, 3, omp=6, bind_none=True)
         rows = [
             ["``-n 13``, 12 workers x 1 thread", f"{t12_1:.1f}", speedup(serial, t12_1)],
-            ["``-n 7``, 6 workers x 2 threads",  f"{t6_2:.1f}",  speedup(serial, t6_2)],
-            ["``-n 5``, 4 workers x 3 threads",  f"{t4_3:.1f}",  speedup(serial, t4_3)],
-            ["``-n 3``, 2 workers x 6 threads",  f"{t2_6:.1f}",  speedup(serial, t2_6)],
+            ["``-n 7``, 6 workers x 2 threads", f"{t6_2:.1f}", speedup(serial, t6_2)],
+            ["``-n 5``, 4 workers x 3 threads", f"{t4_3:.1f}", speedup(serial, t4_3)],
+            ["``-n 3``, 2 workers x 6 threads", f"{t2_6:.1f}", speedup(serial, t2_6)],
         ]
-        cap = (f"cyclic-{args.cyclic_n} at 12 worker-cores, ranks x threads, "
-               f"measured on {cores} cores, {stamp} -- {refresh}")
-        blocks["hybrid"] = render_table(cap, [40, 25, 15],
-                                        ["layout", "wall-clock (s)", "speedup"], rows)
+        write_csv(OUT / "hybrid_timings.csv", ["layout", "wall-clock (s)", "speedup"], rows, args.dry_run)
 
-    print("\n=== measured tables ===")
-    for key in ("cyclic", "eigen", "hybrid"):
-        if key in blocks:
-            print(f"\n{blocks[key]}")
-
-    if args.dry_run:
-        print("\n--dry-run: not editing", RST)
-        return
-
-    text = RST.read_text(encoding="utf-8")
-    for key, block in blocks.items():
-        text = splice(text, key, block)
-    RST.write_text(text, encoding="utf-8")
-    print(f"\nUpdated {len(blocks)} table(s) in {RST}")
+    write_subs(SUBS_FILE, subs, args.dry_run)
+    print("\n(dry run: nothing written)" if args.dry_run else f"\nWrote data files under {os.path.relpath(OUT, REPO)}")
 
 
 if __name__ == "__main__":
