@@ -686,6 +686,48 @@ namespace bertini{
 	}
 
 
+	namespace {
+		// session-global value-numbering switch (instruction-level CSE).  ON by default.
+		bool& TheValueNumberingFlag(){ static bool on = true; return on; }
+		// operands may be given in either order for these; used to canonicalize the VN key.
+		bool IsCommutative(Operation op){ return op == Add || op == Multiply; }
+	}
+
+	bool SLPValueNumbering()          { return TheValueNumberingFlag(); }
+	void SetSLPValueNumbering(bool on){ TheValueNumberingFlag() = on; }
+
+	size_t SLPCompiler::EmitBinary(Operation op, size_t a, size_t b){
+		if (TheValueNumberingFlag()){
+			size_t x = a, y = b;
+			if (IsCommutative(op) && x > y) std::swap(x, y);   // a*b and b*a are the same computation
+			auto key = std::make_tuple(op, x, y);
+			auto it = vn_binary_.find(key);
+			if (it != vn_binary_.end()) return it->second;    // identical computation already emitted
+			const size_t out = next_available_complex_++;
+			program_under_construction_.AddInstruction(op, a, b, out);
+			vn_binary_.emplace(key, out);
+			return out;
+		}
+		const size_t out = next_available_complex_++;
+		program_under_construction_.AddInstruction(op, a, b, out);
+		return out;
+	}
+
+	size_t SLPCompiler::EmitUnary(Operation op, size_t a){
+		if (TheValueNumberingFlag()){
+			auto key = std::make_pair(op, a);
+			auto it = vn_unary_.find(key);
+			if (it != vn_unary_.end()) return it->second;
+			const size_t out = next_available_complex_++;
+			program_under_construction_.AddInstruction(op, a, out);
+			vn_unary_.emplace(key, out);
+			return out;
+		}
+		const size_t out = next_available_complex_++;
+		program_under_construction_.AddInstruction(op, a, out);
+		return out;
+	}
+
 	void SLPCompiler::RegisterConstant(Nd const& nd, ConstantRecipe recipe){
 		recipe.slot = next_available_complex_;
 		program_under_construction_.AddConstant(std::move(recipe));
@@ -787,22 +829,14 @@ namespace bertini{
 		// seed the loop.
 		if (signs[0])
 			prev_result_loc = operand_locations[0];
-		else{
-			program_under_construction_.AddInstruction(Negate, operand_locations[0], next_available_complex_);
-			prev_result_loc = next_available_complex_++;
-		}
+		else
+			prev_result_loc = EmitUnary(Negate, operand_locations[0]);
 
 
 		// this loop
 		// does the additions for the rest of the operands
-		for (size_t ii{1}; ii<n.Operands().size(); ++ii){
-			if (signs[ii])
-				program_under_construction_.AddInstruction(Add,prev_result_loc,operand_locations[ii],next_available_complex_);
-			else
-				program_under_construction_.AddInstruction(Subtract,prev_result_loc,operand_locations[ii],next_available_complex_);
-
-			prev_result_loc = next_available_complex_++;
-		}
+		for (size_t ii{1}; ii<n.Operands().size(); ++ii)
+			prev_result_loc = EmitBinary(signs[ii] ? Add : Subtract, prev_result_loc, operand_locations[ii]);
 
 		this->locations_encountered_nodes_[as_ptr] =  prev_result_loc;
 
@@ -851,21 +885,14 @@ namespace bertini{
 			this->RegisterConstant(one, RecipeFor(*one));
 			auto location_one  = locations_encountered_nodes_[one];
 
-			program_under_construction_.AddInstruction(Divide, location_one, operand_locations[0], next_available_complex_);
-			prev_result_loc = next_available_complex_++;
+			prev_result_loc = EmitBinary(Divide, location_one, operand_locations[0]);
 		}
 
 
 		// this loop
 		// does the additions for the rest of the operands
-		for (size_t ii{1}; ii<n.Operands().size(); ++ii){
-			if (mult_or_div[ii])
-				program_under_construction_.AddInstruction(Multiply,prev_result_loc,operand_locations[ii],next_available_complex_);
-			else
-				program_under_construction_.AddInstruction(Divide,prev_result_loc,operand_locations[ii],next_available_complex_);
-
-			prev_result_loc = next_available_complex_++;
-		}
+		for (size_t ii{1}; ii<n.Operands().size(); ++ii)
+			prev_result_loc = EmitBinary(mult_or_div[ii] ? Multiply : Divide, prev_result_loc, operand_locations[ii]);
 
 		this->locations_encountered_nodes_[as_ptr] =  prev_result_loc;
 
@@ -892,9 +919,7 @@ namespace bertini{
 		// preallocated slot is allocation-free, and the SLP's hash-consing already shares repeated
 		// powers across terms, so this is both faster and the right layer for a known exponent.
 		auto emit_mul = [&](size_t l, size_t r) -> size_t {
-			const size_t out = next_available_complex_++;
-			program_under_construction_.AddInstruction(Multiply, l, r, out);
-			return out;
+			return EmitBinary(Multiply, l, r);
 		};
 		auto one_loc = [&]() -> size_t {
 			auto one = Integer::Make(1);
@@ -915,9 +940,7 @@ namespace bertini{
 			// running square into a distinct slot and only ever multiply distinct slots.  The loop also
 			// covers m==1 (yields base_loc, emitting nothing).
 			auto emit_copy = [&](size_t s) -> size_t {
-				const size_t out = next_available_complex_++;
-				program_under_construction_.AddInstruction(Assign, s, out);
-				return out;
+				return EmitUnary(Assign, s);
 			};
 			size_t sq = base_loc;                            // sq = base^(2^bit)
 			size_t acc = 0; bool have = false;
@@ -932,11 +955,8 @@ namespace bertini{
 				}
 			}
 			result_loc = acc;                                // base^m
-			if (expo < 0) {                                  // x^-k = 1 / x^k
-				const size_t recip = next_available_complex_++;
-				program_under_construction_.AddInstruction(Divide, one_loc(), result_loc, recip);
-				result_loc = recip;
-			}
+			if (expo < 0)                                    // x^-k = 1 / x^k
+				result_loc = EmitBinary(Divide, one_loc(), result_loc);
 		}
 
 		this->locations_encountered_nodes_[as_ptr] = result_loc;
@@ -970,8 +990,7 @@ namespace bertini{
 		auto loc_base = locations_encountered_nodes_[base];
 		auto loc_exponent = locations_encountered_nodes_[exponent];
 
-		this->locations_encountered_nodes_[as_ptr] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Power, loc_base, loc_exponent, next_available_complex_++);
+		this->locations_encountered_nodes_[as_ptr] = EmitBinary(Power, loc_base, loc_exponent);
 	}
 
 	void SLPCompiler::Visit(node::ExpOperator const& n){
@@ -982,8 +1001,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ExpOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Exp,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ExpOperator const>(n.shared_from_this())] = EmitUnary(Exp, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::LogOperator const& n){
@@ -994,8 +1012,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::LogOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Log,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::LogOperator const>(n.shared_from_this())] = EmitUnary(Log, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::NegateOperator const& n){
@@ -1006,8 +1023,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::NegateOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Negate,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::NegateOperator const>(n.shared_from_this())] = EmitUnary(Negate, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::SqrtOperator const& n){
@@ -1018,8 +1034,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SqrtOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Sqrt,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SqrtOperator const>(n.shared_from_this())] = EmitUnary(Sqrt, location_operand);
 	}
 
 
@@ -1032,8 +1047,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SinOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Sin,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SinOperator const>(n.shared_from_this())] = EmitUnary(Sin, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::ArcSinOperator const& n){
@@ -1044,8 +1058,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcSinOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Asin,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcSinOperator const>(n.shared_from_this())] = EmitUnary(Asin, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::CosOperator const& n){
@@ -1056,8 +1069,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::CosOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Cos,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::CosOperator const>(n.shared_from_this())] = EmitUnary(Cos, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::ArcCosOperator const& n){
@@ -1068,8 +1080,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcCosOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Acos,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcCosOperator const>(n.shared_from_this())] = EmitUnary(Acos, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::TanOperator const& n){
@@ -1080,8 +1091,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::TanOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Tan,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::TanOperator const>(n.shared_from_this())] = EmitUnary(Tan, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::ArcTanOperator const& n){
@@ -1092,8 +1102,7 @@ namespace bertini{
 			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcTanOperator const>(n.shared_from_this())] =  next_available_complex_;
-		program_under_construction_.AddInstruction(Atan,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcTanOperator const>(n.shared_from_this())] = EmitUnary(Atan, location_operand);
 	}
 
 
@@ -1233,6 +1242,8 @@ namespace bertini{
 		next_available_int_ = 0;
 
 		locations_encountered_nodes_.clear();
+		vn_binary_.clear();
+		vn_unary_.clear();
 		program_under_construction_ = SLPProgram();
 	}
 

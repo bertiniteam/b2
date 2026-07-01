@@ -430,6 +430,38 @@ BOOST_AUTO_TEST_CASE(cse_benchmark_squaring_chain)
 	std::cout << "CSE_TABLE_END\n" << std::endl;
 }
 
+// Instruction-level value-numbering (SLP-compiler CSE): a computation that only coincides AFTER
+// power-lowering -- e.g. the x^2 computed as an intermediate of x^3, and a standalone x^2 factor
+// -- is emitted once and shared.  Node-level hash-consing alone cannot see this (the two x^2 live
+// inside different IntegerPower nodes).  Fold stays ON; we toggle only value-numbering.
+BOOST_AUTO_TEST_CASE(value_numbering_shares_lowered_intermediates)
+{
+	using bertini::SetSLPValueNumbering;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+
+	// x^3*y^2 + x^2*y^2 : x^2 appears both inside x^3's squaring lowering and as a standalone factor.
+	Nd f = x*x*x*y*y + x*x*y*y;
+
+	auto compile_slots = [&](bool vn) {
+		SetSLPValueNumbering(vn);
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup{x, y});
+		sys.AddFunction(f);
+		bertini::StraightLineProgram slp(sys);
+		std::cerr << "\n----- value-numbering " << (vn ? "ON" : "OFF")
+		          << " : " << PrintOfNode(f) << " -----\n"
+		          << slp << "memory slots (fn+Jac) = " << slp.NumMemorySlots() << "\n";
+		return slp.NumMemorySlots();
+	};
+
+	const auto slots_off = compile_slots(false);
+	const auto slots_on  = compile_slots(true);
+	SetSLPValueNumbering(true);   // restore default
+
+	BOOST_CHECK_LT(slots_on, slots_off);   // value-numbering strictly shrinks this program
+}
+
 BOOST_AUTO_TEST_SUITE_END() // SLP_cse
 
 
