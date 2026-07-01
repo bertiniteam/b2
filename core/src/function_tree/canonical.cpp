@@ -128,12 +128,17 @@ namespace {
 			const bool f = stack.back().second;
 			stack.pop_back();
 
-			if (auto mo = std::dynamic_pointer_cast<MultOperator>(node))
+			// Splice a nested product only when it is a MULTIPLICAND.  A divisor sub-product like
+			// x/(y*z) must stay atomic: splicing it would distribute the division into x/y/z (two
+			// divides) instead of one multiply plus one divide -- a pessimization, division being the
+			// costliest op.  Multiplicand nesting (the common y*x*x case) still fully flattens.
+			auto mo = std::dynamic_pointer_cast<MultOperator>(node);
+			if (mo && f)
 			{
 				auto const& kids   = mo->Operands();
 				auto const& kflags = mo->GetMultOrDiv();
 				for (std::size_t j = kids.size(); j-- > 0; )
-					stack.emplace_back(kids[j], f == kflags[j]);
+					stack.emplace_back(kids[j], kflags[j]);   // f is true here, so f==kflags[j] == kflags[j]
 			}
 			else
 			{
