@@ -184,7 +184,7 @@ curve so nothing is hidden:
    projection-critical points (●) and the singular crossings (✕) where components meet.
 
 What a smooth critical point *is*: where the fiber count jumps
-=============================================================
+==============================================================
 
 For the smooth points there is an illuminating reading.  A projection reads off the coordinate
 :math:`\pi\cdot x`; its **fibers** are the level sets, and you *project along* them (the projection
@@ -208,3 +208,12 @@ They are the *branch points* of the projection:
 The recipe needs nothing special of the curve: differentiate *your* :math:`f` into a Jacobian,
 stack a random projection row, dot with a null vector, patch it, and solve.  What comes back is
 every critical point -- and, on the smooth pieces, every branch point of the projection.
+
+Complete example
+================
+
+The full runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: critical_points.py
+   :language: python
+   :caption: critical_points.py

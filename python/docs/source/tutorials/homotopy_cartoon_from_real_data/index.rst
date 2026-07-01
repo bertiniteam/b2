@@ -8,7 +8,7 @@ right at :math:`t=1`, paths flowing left to the solutions of the target at :math
 This tutorial makes that picture from a **real solve** — and uses the same machinery to *see* the
 one thing the cartoon never shows: where an adaptive-precision tracker decides double precision is
 no longer enough and raises its working precision.  It builds directly on
-:doc:`observers_and_path_data` (read that first for how observers and ``PathDataCollector`` work).
+:doc:`/tutorials/observers_and_path_data/index` (read that first for how observers and ``PathDataCollector`` work).
 
 The idea
 ========
@@ -19,7 +19,7 @@ tracker actually runs each path, and harvests the **whole journey to** :math:`t 
 included) into one pandas DataFrame per path.  Each row is one accepted step, with the time, the
 space point, and the per-step diagnostics ``condition_number`` and ``precision``.
 
-.. literalinclude:: ../../../examples/amp_precision_cartoon.py
+.. literalinclude:: amp_precision_cartoon.py
    :language: python
    :start-after: from bertini.tracking import observers
    :end-at: return [s.as_dataframe() for s in collector.series if len(s) > 0]
@@ -49,14 +49,14 @@ We plot, for every path:
 The full plotting routine is in the example script; the heart of it is coloring each path by its
 condition number with a ``LineCollection`` and scattering a marker at each precision increase:
 
-.. literalinclude:: ../../../examples/amp_precision_cartoon.py
+.. literalinclude:: amp_precision_cartoon.py
    :language: python
    :start-at: pts = np.array([x, y]).T.reshape(-1, 1, 2)
    :end-at: esc_x.extend(x[inc]); esc_y.extend(y[inc])
 
 Run the whole thing (needs ``matplotlib`` and ``pandas``)::
 
-    python python/examples/amp_precision_cartoon.py .
+    python python/docs/source/tutorials/homotopy_cartoon_from_real_data/amp_precision_cartoon.py .
 
 .. image:: amp_precision_cartoon_cyclic5.png
    :width: 100%

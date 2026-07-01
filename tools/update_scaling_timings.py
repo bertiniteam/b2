@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-RST = REPO / "python" / "docs" / "source" / "tutorials" / "solving_at_scale.rst"
+RST = REPO / "python" / "docs" / "source" / "tutorials" / "solving_at_scale" / "index.rst"
 CYCLIC = "python/examples/solve_cyclic.py"
 EIGEN = "python/examples/solve_eigenvalues.py"
 

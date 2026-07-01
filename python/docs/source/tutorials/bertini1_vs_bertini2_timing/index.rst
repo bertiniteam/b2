@@ -15,7 +15,7 @@ mode, predictor, tolerances, step cadence).  Both solvers read that one file, ea
 random start system, and solves.  We time only the solver subprocess (never parsing/IO) and keep the
 fastest of a few repeats, serial (``OMP_NUM_THREADS=1``):
 
-.. literalinclude:: ../../../examples/b1_vs_b2_timing.py
+.. literalinclude:: b1_vs_b2_timing.py
    :language: python
    :pyobject: time_solver
 
@@ -28,7 +28,7 @@ Record the provenance
 Timing numbers are meaningless without context, and they go stale.  We capture the date, both solver
 versions (with the Bertini 2 git commit), and the machine, and stamp them onto the figure:
 
-.. literalinclude:: ../../../examples/b1_vs_b2_timing.py
+.. literalinclude:: b1_vs_b2_timing.py
    :language: python
    :pyobject: provenance
 
@@ -37,7 +37,7 @@ The result
 
 Run it (needs ``matplotlib``; Bertini 1 optional)::
 
-    python python/examples/b1_vs_b2_timing.py \
+    python python/docs/source/tutorials/bertini1_vs_bertini2_timing/b1_vs_b2_timing.py \
         --bertini2 ./build/core/bertini2 --bertini1 /usr/local/bin/bertini --out .
 
 .. image:: b1_vs_b2_timing.png

@@ -6,13 +6,13 @@ Every introduction to homotopy continuation draws the same picture: smooth start
 *endgame boundary*; the endpoints come in three flavors — **nonsingular**, **singular**, and "at
 **infinity**" (paths that diverge).  Here is the hand-drawn version:
 
-.. image:: ../../../../doc_resources/images/homotopycontinuation_generic.png
+.. image:: ../../../../../doc_resources/images/homotopycontinuation_generic.png
    :width: 90%
    :alt: the classic (hand-drawn) homotopy-continuation cartoon
 
 This tutorial reproduces that drawing from a **real solve** — every curve is genuine tracked data —
 with each path styled by the kind of endpoint it reaches.  It builds on the observer machinery from
-:doc:`observers_and_path_data`.
+:doc:`/tutorials/observers_and_path_data/index`.
 
 A small system with one of each flavor
 ======================================
@@ -36,7 +36,7 @@ Attach a ``SolutionPathCollector`` to the solver; it captures each path (the who
 :math:`t \to 0`).  After solving, the per-path ``solution_metadata()`` tells us each endpoint's
 flavor, so we can style each curve:
 
-.. literalinclude:: ../../../examples/classic_continuation_cartoon.py
+.. literalinclude:: classic_continuation_cartoon.py
    :language: python
    :start-at: def classify(meta):
    :end-at: return out
@@ -68,7 +68,7 @@ A few choices turn the data into the cartoon:
 
 Run it (needs ``matplotlib``)::
 
-    python python/examples/classic_continuation_cartoon.py .
+    python python/docs/source/tutorials/classic_continuation_cartoon/classic_continuation_cartoon.py .
 
 .. image:: classic_continuation_cartoon.png
    :width: 100%
