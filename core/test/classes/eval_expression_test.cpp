@@ -5,6 +5,8 @@
 
 #include <map>
 #include <string>
+#include <vector>
+#include <functional>
 
 using bertini::EvalExpression;
 using bertini::node::Variable;
@@ -186,24 +188,76 @@ BOOST_AUTO_TEST_CASE(derivatives_compile_and_evaluate_through_the_slp)
 	BOOST_CHECK_SMALL(std::abs(evald((x/y)->Differentiate(x), pt)   - complex_dbl(0.2)), tol); // d/dx x/y = 1/y, y=5 -> 0.2
 }
 
-// TEMP: dump the compiled tape for x*x*y (and confirm x*x folds to x^2) + correctness.
-BOOST_AUTO_TEST_CASE(dump_xxy_tape_after_fold)
+// Power-folding demonstration + regression guard.  For each expression we compile the SLP with
+// the fold OFF (pre-fold canonical form: sort-only) and ON, print BOTH tapes, and assert that
+// (a) folding never grows the program and shrinks it when there are repeated factors, and
+// (b) the evaluated value is identical with and without the fold.
+namespace {
+	// Compile f (over the given variables) and return its SLP memory-slot count, printing the tape.
+	std::size_t TapeAndSlots(std::shared_ptr<bertini::node::Node> const& f,
+	                         bertini::VariableGroup const& vars, char const* label)
+	{
+		bertini::System sys;
+		sys.AddFunction(f);
+		sys.AddVariableGroup(vars);
+		bertini::StraightLineProgram slp(sys);
+		std::cerr << "\n----- " << label << " -----\n";
+		std::cerr << "expression prints as: "; f->print(std::cerr); std::cerr << "\n";
+		std::cerr << slp << "memory slots (fn+Jac) = " << slp.NumMemorySlots() << "\n";
+		return slp.NumMemorySlots();
+	}
+
+	complex_dbl EvalAtFixedPoint(std::shared_ptr<bertini::node::Node> const& f)
+	{
+		std::map<std::string,complex_dbl> all{
+			{"x", complex_dbl(0.6, -0.2)},
+			{"y", complex_dbl(-1.1, 0.4)},
+			{"z", complex_dbl(0.3, 0.7)} };
+		std::map<std::string,complex_dbl> pt;    // only the variables this expression actually uses
+		for (auto const& v : bertini::node::GatherVariables(f))
+			pt[v->name()] = all.at(v->name());
+		return EvalExpression<complex_dbl>(f, pt);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(power_fold_before_after_tape)
 {
+	using bertini::node::SetPowerFoldByDefault;
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
-	std::cerr << "\n### x*x prints as: "; (x*x)->print(std::cerr);
-	std::cerr << "   |   x*x*y prints as: "; (x*x*y)->print(std::cerr); std::cerr << "\n";
-	bertini::System sys;
-	sys.AddFunction(x*x*y);
-	sys.AddVariableGroup(bertini::VariableGroup{x,y});
-	bertini::StraightLineProgram slp(sys);
-	std::cerr << "### SLP for x*x*y:" << slp << "### num memory slots = " << slp.NumMemorySlots() << "\n";
-	// correctness unchanged: x^2 y at (0.6-0.2i, -1.1+0.4i) = -0.256 + 0.392i
-	bertini::DefaultPrecision(30);
-	auto v = EvalExpression<complex_mp>(x*x*y, {
-		{"x", complex_mp(bertini::real_mp("0.6"), bertini::real_mp("-0.2"))},
-		{"y", complex_mp(bertini::real_mp("-1.1"), bertini::real_mp("0.4"))} });
-	BOOST_CHECK(abs(v - complex_mp(bertini::real_mp("-0.256"), bertini::real_mp("0.392"))) < 1e-25);
+	auto z = Variable::Make("z");
+	bertini::VariableGroup vars{x, y, z};
+
+	// (name, builder).  The builder runs under each fold setting so the expression is constructed
+	// with that canonicalization; leaves (x,y,z) are shared, the products differ.
+	struct Case { char const* name; std::function<std::shared_ptr<bertini::node::Node>()> build; };
+	std::vector<Case> cases{
+		{ "x*x*y",                       [&]{ return x*x*y; } },
+		{ "x*x*x*y*y + x*y*y*x",         [&]{ return x*x*x*y*y + x*y*y*x; } },
+		{ "y*x*z*x  (reordered square)", [&]{ return y*x*z*x; } },
+		{ "(x+y)*(x+y)*(x+y)*z",         [&]{ return (x+y)*(x+y)*(x+y)*z; } },
+	};
+
+	for (auto const& c : cases)
+	{
+		SetPowerFoldByDefault(false);
+		auto before = c.build();
+		const auto before_slots = TapeAndSlots(before, vars, (std::string("BEFORE fold: ") + c.name).c_str());
+		const auto before_val   = EvalAtFixedPoint(before);
+
+		SetPowerFoldByDefault(true);
+		auto after = c.build();
+		const auto after_slots = TapeAndSlots(after, vars, (std::string("AFTER  fold: ") + c.name).c_str());
+		const auto after_val   = EvalAtFixedPoint(after);
+
+		// folding never grows the compiled program ...
+		BOOST_CHECK_LE(after_slots, before_slots);
+		// ... and never changes the value it computes.
+		BOOST_CHECK_SMALL(std::abs(after_val - before_val), 1e-12);
+	}
+
+	// Every case here has repeated factors, so the fold strictly shrinks at least one of them.
+	SetPowerFoldByDefault(true);   // leave the session in the default state
 }
 
 BOOST_AUTO_TEST_SUITE_END()

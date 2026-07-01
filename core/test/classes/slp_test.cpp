@@ -6,6 +6,7 @@
 
 #include <set>
 #include <iostream>
+#include <sstream>
 #include <chrono>
 #include <cstdlib>
 #include <atomic>
@@ -356,6 +357,13 @@ namespace {
 		bertini::StraightLineProgram slp(s);
 		return slp.NumMemorySlots();
 	}
+
+	std::string PrintOfNode(Nd const& n)
+	{
+		std::ostringstream oss;
+		n->print(oss);
+		return oss.str();
+	}
 }
 
 BOOST_AUTO_TEST_CASE(hash_consing_unifies_independently_built_subexpressions)
@@ -371,35 +379,53 @@ BOOST_AUTO_TEST_CASE(hash_consing_unifies_independently_built_subexpressions)
 
 BOOST_AUTO_TEST_CASE(cse_benchmark_squaring_chain)
 {
+	using bertini::node::MultOperator;
+	using bertini::node::IntegerPowerOperator;
+
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 
 	std::cout << "\nCSE_TABLE_BEGIN\n";
-	std::cout << "| K | expanded tree nodes | distinct nodes (DAG) | SLP slots (fns+Jac) | reduction (tree/DAG) |\n";
-	std::cout << "|--:|--------------------:|---------------------:|--------------------:|---------------------:|\n";
+	std::cout << "| K | polynomial degree (2^K) | SLP slots (fns+Jac) | naive multiplies (2^K-1) |\n";
+	std::cout << "|--:|------------------------:|--------------------:|-------------------------:|\n";
 
+	std::size_t prev_slots = 0;
 	for (int K = 1; K <= 16; ++K)
 	{
 		Nd e = x + y;
 		for (int i = 0; i < K; ++i)
-			e = e * e;          // e*e reuses the same node; the DAG grows by one per level
+			e = e * e;          // squaring a repeated base folds: (x+y)^(2^(i+1))
 
-		const auto expanded = ExpandedTreeNodes(e);
-		const auto distinct = DistinctNodes(e);
+		// The chain no longer builds an exponential binary tree.  Power-folding in
+		// CanonicalizeNaryOperands collapses e*e all the way to a single IntegerPower of (x+y)
+		// with exponent 2^K -- possibly inside a 1-operand MultOperator wrapper (which is free in
+		// the SLP).  Unwrap that wrapper, then assert the folded form.
+		Nd inner = e;
+		if (auto mo = std::dynamic_pointer_cast<MultOperator const>(inner))
+			if (mo->NumOperands() == 1)
+				inner = mo->Operands()[0];
+		auto ip = std::dynamic_pointer_cast<IntegerPowerOperator const>(inner);
+		BOOST_REQUIRE(ip);                                                  // folded to one power
+		BOOST_CHECK_EQUAL(ip->exponent(), 1 << K);                         // exponent 2^K
+		BOOST_CHECK_EQUAL(PrintOfNode(ip->Operand()), std::string("x+y")); // ...of the (x+y) base
 
 		bertini::System sys;
 		sys.AddVariableGroup(bertini::VariableGroup{x, y});
 		sys.AddFunction(e);
 		const auto slots = SlpSlots(sys);
 
-		std::cout << "| " << K << " | " << expanded << " | " << distinct
-		          << " | " << slots << " | " << (expanded / distinct) << "x |\n";
+		const std::size_t naive = (std::size_t{1} << K) - 1;   // multiplies a tree-walk would emit
+		std::cout << "| " << K << " | " << (std::size_t{1} << K) << " | "
+		          << slots << " | " << naive << " |\n";
 
-		// the same function is a linear DAG but an exponential tree: hash-consing collapses it
-		BOOST_CHECK_EQUAL(distinct, static_cast<std::size_t>(K + 3));   // x, y, (x+y), e_1..e_K
-		BOOST_CHECK_EQUAL(expanded, (std::size_t{1} << (K + 2)) - 1);   // a binary tree
-		if (K >= 8)
-			BOOST_CHECK_LT(slots, expanded);   // the compiled program stays DAG-sized
+		// The compiled program is O(K), not O(2^K): exponentiation-by-squaring emits ~a constant
+		// number of instructions per level, so slots grow linearly and stay far below the naive
+		// degree-many multiplies.  This is the fold + SLP win the earlier bisection motivated.
+		if (K >= 5)   // slots are linear (+~5/level) while naive multiplies double; they cross at K=5
+			BOOST_CHECK_LT(slots, naive);
+		if (K > 1)
+			BOOST_CHECK_LT(slots - prev_slots, std::size_t{16});   // bounded growth per level
+		prev_slots = slots;
 	}
 	std::cout << "CSE_TABLE_END\n" << std::endl;
 }
