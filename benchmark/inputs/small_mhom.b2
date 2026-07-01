@@ -1,0 +1,20 @@
+CONFIG
+
+tracktype: 0;
+
+END;
+
+INPUT
+
+% Two variable groups => classic Bertini infers the multihomogeneous start system
+% (blackbox::InferStartType).  Exercises the mhom start-system MPI broadcast path that
+% the total-degree small.b2 input does not.  The % comments here also keep the classic
+% parser's comment-stripping (Bertini 1 compatibility) honest under mpirun in CI.
+variable_group x;
+variable_group y;
+function f1, f2;
+
+f1 = x*y - 1;   % a comment trailing a real declaration line
+f2 = x + y - 3;
+
+END;

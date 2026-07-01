@@ -27,8 +27,13 @@
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/system/blocks/block.hpp"
 #include "bertini2/system/blocks/blend_block.hpp"
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <memory>
+#include <sstream>
 
 using System = bertini::System;
 
@@ -636,6 +641,109 @@ BOOST_AUTO_TEST_CASE(variable_in_many_variable_groups_in_mhom_construction)
 
 	BOOST_CHECK_THROW(auto mhom_start_system = bertini::start_system::MHomogeneous(sys), std::runtime_error);
 
+}
+
+
+// --- serialization round-trip --------------------------------------------------------------
+//
+// Regression guard for the parallel-solve crash: ZeroDimSolver::DistributeSystems broadcasts the
+// owning shared_ptr<StartSystem> to MPI workers through a polymorphic boost archive.  If a derived
+// start system's serialize() drops a member, a worker deserializes a hollow object whose
+// NumStartPoints() is wrong, the per-path metadata sizes to nothing, and the solve segfaults.
+// MHomogeneous::serialize() used to persist only a vestigial degrees_ member, so this was silently
+// broken for the m-homogeneous start system (binomial/linear-product happened to be complete).
+//
+// Round-trip through the BASE pointer so we exercise exactly the path DistributeSystems uses, and
+// drive every generated start system through one helper so a future omission is caught everywhere.
+
+using bertini::start_system::StartSystem;
+
+static std::shared_ptr<StartSystem> RoundTripStart(std::shared_ptr<StartSystem> const& ss)
+{
+	std::stringstream buf;
+	{
+		boost::archive::text_oarchive oa(buf);
+		oa << ss;                         // serialized polymorphically as shared_ptr<StartSystem>
+	}
+	std::shared_ptr<StartSystem> out;
+	{
+		boost::archive::text_iarchive ia(buf);
+		ia >> out;
+	}
+	return out;
+}
+
+static void CheckStartRoundTrip(std::shared_ptr<StartSystem> const& orig)
+{
+	auto copy = RoundTripStart(orig);
+	BOOST_REQUIRE(copy);
+
+	// NumStartPoints() was the exact quantity that came back as 0 on a worker before the fix.
+	BOOST_CHECK_EQUAL(copy->NumStartPoints(), orig->NumStartPoints());
+	BOOST_REQUIRE(orig->NumStartPoints() > 0ull);
+
+	const auto n = std::min<unsigned long long>(orig->NumStartPoints(), 8ull);
+	for (unsigned long long i = 0; i < n; ++i)
+	{
+		auto a = orig->StartPoint<complex_dbl>(i);
+		auto b = copy->StartPoint<complex_dbl>(i);
+		BOOST_REQUIRE_EQUAL(a.size(), b.size());
+		for (Eigen::Index k = 0; k < a.size(); ++k)
+		{
+			BOOST_CHECK_CLOSE(a(k).real(), b(k).real(), 1e-10);
+			BOOST_CHECK_CLOSE(a(k).imag(), b(k).imag(), 1e-10);
+		}
+	}
+}
+
+BOOST_AUTO_TEST_CASE(mhomogeneous_survives_serialization_round_trip)
+{
+	DefaultPrecision(30);
+	bertini::SetGlobalSeed(1u);
+
+	System sys;
+	auto x  = Variable::Make("x");
+	auto y  = Variable::Make("y");
+	auto x1 = Variable::Make("x1");
+	auto y1 = Variable::Make("y1");
+	// size-2 hom groups (each P^1, dimension 1) so the target is square; see the small-example
+	// construction test above.
+	sys.AddHomVariableGroup(VariableGroup{x, x1});
+	sys.AddHomVariableGroup(VariableGroup{y, y1});
+	sys.AddFunction(x*y);
+	sys.AddFunction(pow(x,2)*pow(y,2));
+
+	CheckStartRoundTrip(std::make_shared<bertini::start_system::MHomogeneous>(sys));
+}
+
+BOOST_AUTO_TEST_CASE(total_degree_binomial_survives_serialization_round_trip)
+{
+	DefaultPrecision(30);
+	bertini::SetGlobalSeed(1u);
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*y + y - 1);
+	sys.AddFunction(x*x - real_mp("0.5")*y - x*y);
+
+	CheckStartRoundTrip(std::make_shared<bertini::start_system::TotalDegreeBinomial>(sys));
+}
+
+BOOST_AUTO_TEST_CASE(total_degree_linear_product_survives_serialization_round_trip)
+{
+	DefaultPrecision(30);
+	bertini::SetGlobalSeed(1u);
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*y + y - 1);
+	sys.AddFunction(x*x - real_mp("0.5")*y - x*y);
+
+	CheckStartRoundTrip(std::make_shared<bertini::start_system::TotalDegreeLinearProduct>(sys));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

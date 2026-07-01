@@ -124,7 +124,6 @@ namespace bertini
 			
 
 			
-			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.
 			std::vector< VariableGroup > var_groups_;
 			/// Random linear-factor coefficients, one matrix per (function, variable group).
 			/// Entry (i,j) is a (degree_matrix_(i,j)) x (group_j_size + 1) matrix: each row is
@@ -141,10 +140,22 @@ namespace bertini
 			friend class boost::serialization::access;
 
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned /*version*/) 
+			void serialize(Archive& ar, const unsigned /*version*/)
 			{
+				// Serialize ALL persistent state.  This object is broadcast to MPI workers via
+				// ZeroDimSolver::DistributeSystems (a polymorphic shared_ptr<StartSystem> archive);
+				// dropping any member leaves a worker with a hollow start system whose
+				// NumStartPoints() returns 0, sizing the per-path metadata to nothing and crashing
+				// the parallel solve.  Order base-first so Boost object tracking re-links the
+				// var_groups_ shared_ptr<Variable> entries to the same Variable nodes serialized in
+				// the base System (variable_groups_/hom_variable_groups_), preserving node identity.
 				ar & boost::serialization::base_object<StartSystem>(*this);
-				ar & degrees_;
+				ar & degree_matrix_;
+				ar & valid_partitions_;
+				ar & var_groups_;
+				ar & linear_coeffs_;   // random factor coefficients: PRIMARY data, not recomputable
+				ar & variable_cols_;
+				ar & num_hom_groups_;
 			}
 
 		};

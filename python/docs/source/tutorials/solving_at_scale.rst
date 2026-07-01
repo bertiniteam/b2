@@ -19,10 +19,11 @@ scheduler in opposite ways, and the same manager-worker pool handles both.
 
 .. note::
 
-   The timing tables below were **measured on an 8-core machine**.  Your numbers will differ; the
-   *shape* (speedup grows with workers, then flattens once the single slowest path dominates the
-   wall) is the point.  Run ``tools/update_scaling_timings.py`` to repopulate every table for your
-   own hardware -- it pins a fixed seed so every layout solves the identical problem.
+   The timing tables below were **measured on a 16-core Apple M3 Max** (12 performance + 4
+   efficiency cores).  Your numbers will differ; the *shape* (speedup grows with workers, then
+   flattens once the single slowest path dominates the wall) is the point.  Run
+   ``tools/update_scaling_timings.py`` to repopulate every table for your own hardware -- it pins
+   a fixed seed so every layout solves the identical problem.
 
 The manager-worker model
 ========================
@@ -143,10 +144,11 @@ Run the ladder (serial, then 2, 4, 8 workers):
     $ mpirun -n 3 python python/examples/solve_cyclic.py --n 6  # 2 workers
     $ mpirun -n 5 python python/examples/solve_cyclic.py --n 6  # 4 workers
     $ mpirun -n 9 python python/examples/solve_cyclic.py --n 6  # 8 workers
+    $ mpirun -n 13 python python/examples/solve_cyclic.py --n 6 # 12 workers
 
 .. BEGIN-TIMING cyclic
 
-.. list-table:: cyclic-6 (720 paths, 156 finite solutions), measured on 8 cores, 2026-06-14 -- run tools/update_scaling_timings.py to refresh
+.. list-table:: cyclic-6 (720 paths, 156 finite solutions), measured on 16 cores, 2026-06-30 -- run tools/update_scaling_timings.py to refresh
    :header-rows: 1
    :widths: 20 15 25 15
 
@@ -156,31 +158,37 @@ Run the ladder (serial, then 2, 4, 8 workers):
      - speedup
    * - serial
      - --
-     - 357.5
+     - 160.1
      - 1.0x
    * - ``-n 3``
      - 2
-     - 316.6
-     - 1.1x
+     - 89.5
+     - 1.8x
    * - ``-n 5``
      - 4
-     - 167.4
-     - 2.1x
+     - 46.0
+     - 3.5x
    * - ``-n 9``
      - 8
-     - 120.6
-     - 3.0x
+     - 29.4
+     - 5.4x
+   * - ``-n 13``
+     - 12
+     - 23.7
+     - 6.8x
 
 .. END-TIMING cyclic
 
-The speedup grows with the worker count but flattens out -- here to about 3x on eight cores, not
-the ideal 8x.  That is the *slowest single path* from the opening showing through: once there are
-enough workers, the wall-clock is bounded below by the most expensive path, and cyclic-6 at this
-tracking tolerance has a few near-singular paths that grind far longer than the rest.  The jump
-from 2 to 4 workers is the largest because with only two workers those few heavy paths cannot help
-but pile onto one of them; more workers spread them out.  (Note that ``-n 9`` puts nine processes
-on eight cores -- the manager only dispatches, so eight workers share the cores with the near-idle
-manager.)
+The speedup grows steadily with the worker count -- here to about 6.8x at 12 workers.  cyclic-6 is
+720 paths, so there is plenty to spread, and it keeps gaining well past the point where the
+eigenvalue solve below has flattened.  It still falls short of the ideal 12x for two reasons: the
+*slowest single path* from the opening (a few near-singular paths grind far longer than the rest,
+so once the workers outnumber the heavy paths the extra ones idle), and the hardware -- only 12 of
+the M3 Max's 16 cores are performance cores, so beyond a dozen workers the slower efficiency cores
+set the floor.  The largest jumps are early (2->4->8 workers), where spreading the few heavy paths
+off a shared worker buys the most; the 8->12 step gains less.  (Note that ``-n 13`` is 13 processes
+-- 12 workers plus the near-idle manager -- which fit the 16 cores without oversubscription; the
+manager, which only dispatches, costs essentially nothing.)
 
 Scaling the eigenvalue solve
 ============================
@@ -210,10 +218,11 @@ Run the same ladder on a sizable matrix:
     $ mpirun -n 3 python python/examples/solve_eigenvalues.py --size 24  # 2 workers
     $ mpirun -n 5 python python/examples/solve_eigenvalues.py --size 24  # 4 workers
     $ mpirun -n 9 python python/examples/solve_eigenvalues.py --size 24  # 8 workers
+    $ mpirun -n 13 python python/examples/solve_eigenvalues.py --size 24 # 12 workers
 
 .. BEGIN-TIMING eigen
 
-.. list-table:: eigenvalues of a 24x24 symmetric matrix (24 paths), measured on 8 cores, 2026-06-14 -- run tools/update_scaling_timings.py to refresh
+.. list-table:: eigenvalues of a 24x24 symmetric matrix (24 paths), measured on 16 cores, 2026-06-30 -- run tools/update_scaling_timings.py to refresh
    :header-rows: 1
    :widths: 20 15 25 15
 
@@ -223,19 +232,23 @@ Run the same ladder on a sizable matrix:
      - speedup
    * - serial
      - --
-     - 728.1
+     - 12.6
      - 1.0x
    * - ``-n 3``
      - 2
-     - 477.4
-     - 1.5x
+     - 7.2
+     - 1.8x
    * - ``-n 5``
      - 4
-     - 269.0
-     - 2.7x
+     - 4.5
+     - 2.8x
    * - ``-n 9``
      - 8
-     - 195.5
+     - 3.3
+     - 3.8x
+   * - ``-n 13``
+     - 12
+     - 3.4
      - 3.7x
 
 .. END-TIMING eigen
@@ -244,9 +257,12 @@ With only 24 paths the dynamic, demand-driven dispatch earns its keep: under ada
 per-path cost varies a lot -- a near-collision of eigenvalues makes one path linger at high
 precision -- and a *static* split would leave most workers idle while one grinds.  Demand-driven
 dispatch keeps the others busy, but it cannot split a *single* path: once enough workers are on
-hand, that one slowest eigenvalue sets the floor (here ~195 s, the 3.7x plateau).  Same lesson as
-the cyclic case -- distributing helps right up until you hit the longest path, which is exactly the
-bound the opening promised.
+hand, that one slowest eigenvalue sets the floor (here ~3.3 s, the 3.8x plateau).  The plateau is
+unmistakable in the table -- **12 workers is no faster than 8** (3.7x vs 3.8x): past the point where
+every path has a worker, handing out more workers changes nothing, because there is no 25th path to
+give them.  That is the sharp contrast with cyclic-6 above, which has 720 paths and so keeps
+gaining out to 12 workers.  Same lesson either way -- distributing helps right up until you hit the
+longest path, which is exactly the bound the opening promised.
 
 Threads within ranks: the hybrid model
 ======================================
@@ -268,31 +284,34 @@ process with its own copy of the system.  Threads share one process's memory and
 machine, so they add parallelism without the per-rank memory cost.  The usual recipe: **one rank
 per machine (or per NUMA node), threads to fill that machine's cores.**
 
-At a fixed budget of 8 cores, here is the same cyclic-6 solve split between ranks and threads:
+At a fixed budget of 12 worker-cores, here is the same cyclic-6 solve split between ranks and threads:
 
 .. BEGIN-TIMING hybrid
 
-.. list-table:: cyclic-6 at 8 worker-cores, ranks x threads, measured on 8 cores, 2026-06-14 -- run tools/update_scaling_timings.py to refresh
+.. list-table:: cyclic-6 at 12 worker-cores, ranks x threads, measured on 16 cores, 2026-06-30 -- run tools/update_scaling_timings.py to refresh
    :header-rows: 1
    :widths: 40 25 15
 
    * - layout
      - wall-clock (s)
      - speedup
-   * - ``-n 9``, 8 workers x 1 thread
-     - 120.6
-     - 3.0x
-   * - ``-n 5``, 4 workers x 2 threads
-     - 126.0
-     - 2.8x
-   * - ``-n 3``, 2 workers x 4 threads
-     - 120.0
-     - 3.0x
+   * - ``-n 13``, 12 workers x 1 thread
+     - 23.7
+     - 6.8x
+   * - ``-n 7``, 6 workers x 2 threads
+     - 21.8
+     - 7.3x
+   * - ``-n 5``, 4 workers x 3 threads
+     - 22.9
+     - 7.0x
+   * - ``-n 3``, 2 workers x 6 threads
+     - 22.7
+     - 7.1x
 
 .. END-TIMING hybrid
 
-On a single shared-memory machine the three layouts land within a few percent of each other -- you
-are using the same eight cores either way, and they all bottom out at the same slowest-path floor.
+On a single shared-memory machine the four layouts land within a few percent of each other -- you
+are using the same twelve worker-cores either way, and they all bottom out at the same slowest-path floor.
 The reason to prefer more *ranks* shows up only across machines (more reach) or under memory
 pressure (threads share, ranks duplicate); the reason to prefer more *threads* is to keep the
 per-machine process count -- and memory footprint -- low.
