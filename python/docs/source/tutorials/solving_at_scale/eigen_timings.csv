@@ -1,0 +1,6 @@
+launch,workers,wall-clock (s),speedup
+serial,--,12.6,1.0x
+``-n 3``,2,7.2,1.8x
+``-n 5``,4,4.5,2.8x
+``-n 9``,8,3.3,3.8x
+``-n 13``,12,3.4,3.7x

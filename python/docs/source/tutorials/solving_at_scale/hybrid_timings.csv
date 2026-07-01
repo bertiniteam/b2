@@ -1,0 +1,5 @@
+layout,wall-clock (s),speedup
+"``-n 13``, 12 workers x 1 thread",23.7,6.8x
+"``-n 7``, 6 workers x 2 threads",21.8,7.3x
+"``-n 5``, 4 workers x 3 threads",22.9,7.0x
+"``-n 3``, 2 workers x 6 threads",22.7,7.1x
