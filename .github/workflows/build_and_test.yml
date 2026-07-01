@@ -17,6 +17,10 @@ on:
       - '**/*.md'
       - '**/*.html'
       - '.github/workflows/build_docs.yml'
+      # A version-only bump (single source of truth) changes nothing that needs
+      # building/testing; the actual release reruns full CI via publish.yml's tag
+      # trigger (workflow_call). See CMakeLists.txt / pyproject.toml.
+      - 'VERSION'
   pull_request:
     paths-ignore:
       - 'python/docs/**'
@@ -25,6 +29,7 @@ on:
       - '**/*.md'
       - '**/*.html'
       - '.github/workflows/build_docs.yml'
+      - 'VERSION'
   workflow_call:
     inputs:
       minimal:

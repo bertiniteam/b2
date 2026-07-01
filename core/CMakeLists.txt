@@ -458,6 +458,12 @@ if(WIN32)
   target_compile_definitions(bertini2 PUBLIC "HAVE_SNPRINTF")
 endif()
 
+# The full PEP 440 version (e.g. 3.0.0.dev6), including any .devN/rc suffix.
+# jrl-cmakemodules' generated config.hpp bakes in the *stripped* numeric
+# BERTINI2_VERSION (for cmake/SOVERSION semantics); this carries the complete
+# string so bertini::Version() can report the dev-count. See CMakeLists.txt.
+target_compile_definitions(bertini2 PUBLIC "BERTINI2_VERSION_FULL=\"${BERTINI2_FULL_VERSION}\"")
+
 target_link_libraries(bertini2 PUBLIC ${GMP_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPFR_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPC_LIBRARIES})

@@ -107,10 +107,15 @@ std::string WikiURL()
 }
 
 /// \brief Get the Bertini2 version string.
+///
+/// Returns the full PEP 440 version including any prerelease suffix (e.g.
+/// `3.0.0.dev6`). This is `BERTINI2_VERSION_FULL`, defined at compile time from
+/// the top-level VERSION file, not the stripped numeric `BERTINI2_VERSION` that
+/// jrl-cmakemodules bakes into config.hpp for cmake/SOVERSION semantics.
 inline
 std::string Version()
 {
-	return BERTINI2_VERSION;
+	return BERTINI2_VERSION_FULL;
 }
 
 /// \brief Get the names of the Bertini trademark owners.

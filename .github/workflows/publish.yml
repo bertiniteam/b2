@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   check_version:
-    name: Check pyproject.toml version matches tag
+    name: Check VERSION file matches tag
     runs-on: ubuntu-latest
     outputs:
       is_prerelease: ${{ steps.check.outputs.is_prerelease }}
@@ -31,12 +31,14 @@ jobs:
             exit 1
           fi
           TAG_VERSION="${TAG#v}"
-          PYPROJECT_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-          if [ "$TAG_VERSION" != "$PYPROJECT_VERSION" ]; then
-            echo "Error: tag '$TAG' does not match pyproject.toml version '$PYPROJECT_VERSION'"
+          # The version is dynamic in pyproject.toml; its single source of truth
+          # is the top-level VERSION file (read by scikit-build-core and CMake).
+          FILE_VERSION=$(tr -d '[:space:]' < VERSION)
+          if [ "$TAG_VERSION" != "$FILE_VERSION" ]; then
+            echo "Error: tag '$TAG' does not match VERSION file '$FILE_VERSION'"
             exit 1
           fi
-          echo "OK: tag '$TAG' matches pyproject.toml version '$PYPROJECT_VERSION'"
+          echo "OK: tag '$TAG' matches VERSION file '$FILE_VERSION'"
           echo "$TAG" | grep -Eq '\.(dev|a|b|rc)[0-9]+$' && echo "is_prerelease=true" >> $GITHUB_OUTPUT || echo "is_prerelease=false" >> $GITHUB_OUTPUT
 
   build_and_test:
