@@ -185,6 +185,20 @@ namespace bertini{
 			.def("have_path_variable", &SystemBaseT::HavePathVariable, (arg("self")), "Asks whether the System has a path variable defined")
 			
 			.def("function", &SystemBaseT::Function, (arg("self"), arg("index")), "Get a function with a given index.  Problems ensue if out of range -- uses un-rangechecked version of underlying getter")
+			.def("symbolic_jacobian",
+				+[](SystemBaseT const& self, bool usercoordinates) {
+					auto J = self.SymbolicJacobian(usercoordinates);
+					boost::python::list rows;
+					for (std::size_t i = 0; i < J.rows; ++i) {
+						boost::python::list row;
+						for (std::size_t j = 0; j < J.cols; ++j)
+							row.append(J.entries[i*J.cols + j]);
+						rows.append(row);
+					}
+					return rows;
+				},
+				(arg("self"), arg("usercoordinates")=true),
+				"The symbolic Jacobian of the system, as a list of rows of expression nodes (NOT numeric -- contrast eval_jacobian).  usercoordinates=True (default): differentiate the natural (pre-homogenization) functions w.r.t. the user-declared affine/projective variable groups -- homogenizing variables never appear, patches omitted.  usercoordinates=False: differentiate the current (possibly homogenized) functions w.r.t. the full internal variable ordering (homogenizing variables included), with the patch's rows appended when patched.  Prefer bertini.System.jacobian(...), which returns a 2-D numpy object array.")
 			.def("variable_groups", &SystemBaseT::VariableGroups, (arg("self")), "Get the list of (affine) variable_groups from the system")
 			.def("hom_variable_groups", &SystemBaseT::HomVariableGroups, (arg("self")), "Get the list of projective / homogeneous variable_groups from the system")
 			.def("degrees", sysDeg1, (arg("self")), "Get a list of the degrees of the functions in the system, with respect to all variables in all groups (and in fact overall)")
@@ -341,7 +355,26 @@ namespace bertini{
 
 
 			def("simplify", &call_simplify,(arg("self")), "Perform all possible simplifications.  Has side effects of modifying your functions, if held separately.  Shared nodes between multiple systems may have adverse effects");
-			
+
+			def("symbolic_jacobian",
+				+[](boost::python::object functions, boost::python::object variables) {
+					boost::python::stl_input_iterator<std::shared_ptr<node::Node>> fbegin(functions), fend;
+					std::vector<std::shared_ptr<node::Node>> funcs(fbegin, fend);
+					boost::python::stl_input_iterator<std::shared_ptr<node::Variable>> vbegin(variables), vend;
+					bertini::VariableGroup vars(vbegin, vend);
+					auto J = bertini::SymbolicJacobian(funcs, vars);
+					boost::python::list rows;
+					for (std::size_t i = 0; i < J.rows; ++i) {
+						boost::python::list row;
+						for (std::size_t j = 0; j < J.cols; ++j)
+							row.append(J.entries[i*J.cols + j]);
+						rows.append(row);
+					}
+					return rows;
+				},
+				(arg("functions"), arg("variables")),
+				"The symbolic Jacobian of a list of functions with respect to a list of variables: J[i][j] = d functions[i] / d variables[j], as a list of rows of expression nodes.  Purely symbolic (no evaluation).  Prefer bertini.jacobian(...), which returns a 2-D numpy object array.");
+
 		}
 
 		void ExportStartSystems()

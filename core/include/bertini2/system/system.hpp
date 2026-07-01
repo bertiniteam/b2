@@ -69,6 +69,29 @@ namespace bertini {
 	              // recovers them from a slice-derived system without binding the block variant.
 
 	/**
+	\brief A matrix of expression-tree nodes (the *symbolic* Jacobian), stored row-major.
+
+	Unlike the numeric `Mat<T>` Jacobian, this carries the partial-derivative expressions
+	themselves (one `Node` per entry).  `entries` has `rows*cols` elements in row-major order
+	(`entries[i*cols + j]` is row i, column j).  See `SymbolicJacobian`.
+	*/
+	struct NodeMatrix
+	{
+		std::vector<std::shared_ptr<node::Node>> entries; ///< row-major, length rows*cols
+		size_t rows = 0; ///< the number of rows (functions)
+		size_t cols = 0; ///< the number of columns (variables)
+	};
+
+	/**
+	\brief The symbolic Jacobian of a list of functions w.r.t. a list of variables.
+
+	`J[i,j] = functions[i]` differentiated with respect to `variables[j]`, as an expression
+	tree (via `Node::Differentiate`).  No numeric evaluation occurs.  Returned row-major.
+	*/
+	NodeMatrix SymbolicJacobian(std::vector<std::shared_ptr<node::Node>> const& functions,
+	                            VariableGroup const& variables);
+
+	/**
 	\brief The fundamental polynomial system class for Bertini2.
 	
 	 The fundamental polynomial system class for Bertini2.
@@ -156,6 +179,25 @@ namespace bertini {
 		 \brief Compute and internally store the symbolic Jacobian of the system.
 		*/
 		void Differentiate() const;
+
+		/**
+		 \brief The symbolic Jacobian of the system, as a matrix of expression-tree nodes.
+
+		 \param usercoordinates  When true (the default), differentiate the functions *as the
+		 user authored them* with respect to the user-declared variables -- the natural
+		 (pre-homogenization) functions and the affine / projective variable groups.  The
+		 solver-added homogenizing variables never appear, and patch rows are omitted.  When
+		 false, differentiate the functions *as currently stored* (possibly homogenized) with
+		 respect to the full internal variable ordering (homogenizing variables included), and
+		 append the patch's Jacobian rows when the system is patched.
+
+		 This is purely symbolic -- it builds expression trees, it does not evaluate.  For a
+		 homogenized system the user-coordinate Jacobian relies on the natural functions stashed
+		 at homogenization time (see `pre_homogenization_functions_`).
+
+		 \return A `NodeMatrix` (row-major).
+		*/
+		NodeMatrix SymbolicJacobian(bool usercoordinates = true) const;
 
 
 		/**
@@ -1879,7 +1921,9 @@ namespace bertini {
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
 		std::vector< VariableGroup > hom_variable_groups_; ///< Homogeneous or projective variable groups.  System SHOULD be homogeneous with respect to these.  
 
-		VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.  
+		VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.
+
+		std::vector<Nd> pre_homogenization_functions_; ///< The system's functions as expression nodes, snapshotted just before the first Homogenize().  Empty until/unless the system is homogenized.  Used by SymbolicJacobian(usercoordinates=true) so the user-coordinate Jacobian of a homogenized system carries no homogenizing variables.  (Distinct from the polynomial block's GetNaturalFunctions(), which means "this block's own functions vs. structured-block expansions".)
 
 
 		bool have_path_variable_ = false; ///< Whether we have the variable or not.
@@ -1947,6 +1991,8 @@ namespace bertini {
 			ar & is_differentiated_;
 
 			ar & time_order_of_variable_groups_;
+
+			ar & pre_homogenization_functions_;
 
 			// if (Archive::is_loading::value == true){
 				// have_ordering_ = false;}

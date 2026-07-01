@@ -480,6 +480,25 @@ namespace bertini {
 			return num_vars;
 		}
 
+		/**
+		\brief The patch's highest-precision coefficients, one vector per variable group.
+
+		Coefficient `Coefficients()[ii](jj)` multiplies the jj-th variable of group ii (in the
+		system's variable ordering).  The patch function for group ii is
+		`sum_jj Coefficients()[ii](jj) * x_jj - 1`, so these are exactly the constant entries of
+		the patch's (symbolic) Jacobian rows.
+		*/
+		std::vector< Vec< complex_mp > > const& Coefficients() const
+		{
+			return coefficients_highest_precision_;
+		}
+
+		/// \brief The number of variables in each variable group (homogenizing variable included).
+		std::vector<unsigned> const& VariableGroupSizes() const
+		{
+			return variable_group_sizes_;
+		}
+
 
 		/// \brief Stream-insertion for a Patch, summarizing its variable groups and coefficients.
 		friend std::ostream& operator<<(std::ostream & out, Patch const& p)

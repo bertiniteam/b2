@@ -43,6 +43,7 @@
 #include "bertini2/io/parsing/system_parsers.hpp"
 
 #include "externs.hpp"
+#include "eval_helper.hpp"
 
 namespace utf = boost::unit_test;
 
@@ -1716,6 +1717,120 @@ BOOST_AUTO_TEST_CASE(system_set_variable_groups)
 
 	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 2);
 	BOOST_CHECK_EQUAL(sys.NumVariables(), 3);
+}
+
+
+// ---- Symbolic Jacobian (matrix of expression nodes) -------------------------------------------
+
+/**
+\class bertini::System
+\test \b symbolic_jacobian_free_function The free SymbolicJacobian(functions, variables) builds the
+matrix of partial-derivative expressions, row-major, with the right shape and entries.
+*/
+BOOST_AUTO_TEST_CASE(symbolic_jacobian_free_function)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	auto f0 = pow(x,2)*y;        // d/dx = 2xy,  d/dy = x^2
+	auto f1 = x*y - pow(y,2);    // d/dx = y,    d/dy = x - 2y
+
+	bertini::VariableGroup vars{x, y};
+	auto J = bertini::SymbolicJacobian(std::vector<std::shared_ptr<bertini::node::Node>>{f0, f1}, vars);
+
+	BOOST_CHECK_EQUAL(J.rows, 2u);
+	BOOST_CHECK_EQUAL(J.cols, 2u);
+	BOOST_CHECK_EQUAL(J.entries.size(), 4u);
+
+	std::map<std::string, complex_dbl> pt{{"x", complex_dbl(2)}, {"y", complex_dbl(3)}};
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[0], pt) - complex_dbl(12)), 1e-12); // 2*2*3
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[1], pt) - complex_dbl(4)),  1e-12); // 2^2
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[2], pt) - complex_dbl(3)),  1e-12); // y
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[3], pt) - complex_dbl(-4)), 1e-12); // 2 - 2*3
+}
+
+/**
+\class bertini::System
+\test \b system_symbolic_jacobian_usercoordinates System::SymbolicJacobian(true) differentiates the
+declared functions w.r.t. the affine variable groups, matching the free function.
+*/
+BOOST_AUTO_TEST_CASE(system_symbolic_jacobian_usercoordinates)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	auto f0 = pow(x,2)*y;
+	auto f1 = x*y - pow(y,2);
+
+	bertini::System S;
+	S.AddVariableGroup(bertini::VariableGroup{x, y});
+	S.AddFunction(f0);
+	S.AddFunction(f1);
+
+	auto J = S.SymbolicJacobian(true);
+	BOOST_CHECK_EQUAL(J.rows, 2u);
+	BOOST_CHECK_EQUAL(J.cols, 2u);
+
+	std::map<std::string, complex_dbl> pt{{"x", complex_dbl(2)}, {"y", complex_dbl(3)}};
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[0], pt) - complex_dbl(12)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[3], pt) - complex_dbl(-4)), 1e-12);
+}
+
+/**
+\class bertini::System
+\test \b system_symbolic_jacobian_usercoordinates_after_homogenize After homogenization, the
+user-coordinate Jacobian still differentiates the *natural* functions: no homogenizing variable
+appears, and the entries match the affine partials.
+*/
+BOOST_AUTO_TEST_CASE(system_symbolic_jacobian_usercoordinates_after_homogenize)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	auto f0 = pow(x,2)*y;
+	auto f1 = x*y - pow(y,2);
+
+	bertini::System S;
+	S.AddVariableGroup(bertini::VariableGroup{x, y});
+	S.AddFunction(f0);
+	S.AddFunction(f1);
+	S.Homogenize();
+
+	auto J = S.SymbolicJacobian(true);
+	BOOST_CHECK_EQUAL(J.rows, 2u);
+	BOOST_CHECK_EQUAL(J.cols, 2u);   // only x and y -- NOT the homogenizing variable
+
+	for (auto const& e : J.entries)
+		for (auto const& v : bertini::node::GatherVariables(e))
+			BOOST_CHECK(v->name() != "HOM_VAR_0");
+
+	std::map<std::string, complex_dbl> pt{{"x", complex_dbl(2)}, {"y", complex_dbl(3)}};
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[0], pt) - complex_dbl(12)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[1], pt) - complex_dbl(4)),  1e-12);
+}
+
+/**
+\class bertini::System
+\test \b system_symbolic_jacobian_internal_includes_patch The internal-coordinate Jacobian keeps the
+homogenizing variable as a column and appends one patch row per variable group.
+*/
+BOOST_AUTO_TEST_CASE(system_symbolic_jacobian_internal_includes_patch)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	auto f0 = pow(x,2)*y;
+	auto f1 = x*y - pow(y,2);
+
+	bertini::System S;
+	S.AddVariableGroup(bertini::VariableGroup{x, y});
+	S.AddFunction(f0);
+	S.AddFunction(f1);
+	S.Homogenize();
+	S.AutoPatch();
+
+	auto Juser = S.SymbolicJacobian(true);
+	BOOST_CHECK_EQUAL(Juser.cols, 2u);
+
+	auto Jint = S.SymbolicJacobian(false);
+	BOOST_CHECK_EQUAL(Jint.cols, static_cast<size_t>(S.NumVariables())); // includes the homogenizing variable
+	BOOST_CHECK_EQUAL(Jint.rows, 2u + 1u);                                // 2 functions + 1 patch row (one variable group)
 }
 
 

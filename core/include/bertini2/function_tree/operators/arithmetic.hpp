@@ -742,8 +742,10 @@ namespace node{
 		 Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
 		 */
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-		
+
+		int Degree(VariableGroup const& vars) const override;
+
+
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			return operand_->IsHomogeneous(v);

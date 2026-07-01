@@ -240,6 +240,17 @@ namespace bertini
 	{
 		return multiprecision::RandomUnit();
 	}
+
+	/// \brief Get a random multiprecision real number of unit modulus (i.e. +1 or -1).
+	/// The real analog of the complex unit draw, so RandomConjugateOrthonormalMatrix<real_mp>
+	/// (QR of a matrix of real units) yields a real orthogonal matrix.
+	template <>
+	inline
+	real_mp RandomUnit<real_mp>()
+	{
+		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		return real_mp( distribution(ThreadEngine()) < 0.0 ? -1 : 1 );
+	}
 }// re: namespace bertini
 
 

@@ -1167,7 +1167,22 @@ int IntegerPowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 		return base_deg;
 	else
 		return exponent_*base_deg;
-	
+
+}
+
+
+// The total degree of base^exponent is exponent * degree(base).  We must override the
+// group-degree here rather than inherit UnaryOperator's default (which sums the multidegree):
+// summing per-variable degrees only equals the total degree for a single monomial, so a power of
+// a *sum* -- e.g. (y+z)^2 -- would otherwise report degree 4 instead of 2, which in turn makes a
+// genuinely homogeneous function (a homogenized (y-1)^2 term) look inhomogeneous.
+int IntegerPowerOperator::Degree(VariableGroup const& vars) const
+{
+	auto base_deg = operand_->Degree(vars);
+	if (base_deg<0)
+		return base_deg;
+	else
+		return exponent_*base_deg;
 }
 
 

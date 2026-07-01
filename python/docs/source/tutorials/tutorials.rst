@@ -20,6 +20,7 @@
    intro_to_slices
    moving_slice
    real_points
+   critical_points
    solving_at_scale
    parallel_parameter_homotopy
    crossed_paths
