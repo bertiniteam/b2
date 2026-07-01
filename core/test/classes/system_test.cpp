@@ -1834,6 +1834,28 @@ BOOST_AUTO_TEST_CASE(system_symbolic_jacobian_internal_includes_patch)
 }
 
 
+// ---- variable-name validation ----
+// A Variable's name must be a well-formed identifier; an expression, operator,
+// whitespace, leading digit, or empty string is rejected at construction.
+
+BOOST_AUTO_TEST_CASE(variable_name_expression_is_rejected)
+{
+	BOOST_CHECK_THROW(Variable::Make("x^2+1"), std::runtime_error);
+	BOOST_CHECK_THROW(Variable::Make("2x"),    std::runtime_error);
+	BOOST_CHECK_THROW(Variable::Make("a b"),   std::runtime_error);
+	BOOST_CHECK_THROW(Variable::Make(""),      std::runtime_error);
+	BOOST_CHECK_THROW(Variable::Make(") ; x"), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(variable_name_valid_identifiers_accepted)
+{
+	BOOST_CHECK_NO_THROW(Variable::Make("x"));
+	BOOST_CHECK_NO_THROW(Variable::Make("x_1"));
+	BOOST_CHECK_NO_THROW(Variable::Make("x[0]"));
+	BOOST_CHECK_NO_THROW(Variable::Make("\xCE\xA9")); // Ω
+}
+
+
 // ---- path-variable / user-variable collision avoidance ----
 // An auto-constructed homotopy's path variable must never share a name with a user
 // variable.  UniquePathVariableName generates a collision-free name; AddPathVariable

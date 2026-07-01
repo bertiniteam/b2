@@ -49,28 +49,16 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/regex/pending/unicode_iterator.hpp>
-#include <boost/spirit/home/support/char_encoding/unicode.hpp>
+
+#include "bertini2/naming.hpp"   // IsIdentStart / IsIdentCont -- the shared name policy
 
 namespace bertini {
 namespace parsing {
 namespace classic {
 
-/// \brief True if code point \p cp may START an identifier: any Unicode letter
-///        (ASCII `A-Z a-z`, plus Ω, α, CJK, ...).  This is the single policy
-///        point for identifier starts; an "emoji" variant would additionally
-///        accept symbol-category code points here (intentionally off by default).
-inline bool IsIdentStart(char32_t cp)
-{
-	return boost::spirit::char_encoding::unicode::isalpha(cp);
-}
-
-/// \brief True if code point \p cp may CONTINUE an identifier: any Unicode
-///        alphanumeric, or one of the legacy continuation characters `[ ] _`.
-inline bool IsIdentCont(char32_t cp)
-{
-	return boost::spirit::char_encoding::unicode::isalnum(cp)
-	    || cp == U'[' || cp == U']' || cp == U'_';
-}
+// IsIdentStart / IsIdentCont live in namespace bertini (bertini2/naming.hpp) so the
+// grammar and the object model share one definition of a legal name; they resolve
+// here by enclosing-namespace lookup.
 
 /// \cond UNICODE_IDENT_PARSERS
 

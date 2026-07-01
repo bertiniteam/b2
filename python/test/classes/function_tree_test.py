@@ -101,6 +101,13 @@ def test_Variable_cjk_name():
     assert str(x) == "中"
 
 
+def test_Variable_expression_name_rejected():
+    # A variable name must be an identifier, not an expression / operator / junk.
+    for bad in ("x^2+1", "2x", "a b", ""):
+        with pytest.raises(RuntimeError):
+            Variable(bad)
+
+
 def test_variables_count():
     v = variables('x', 3)
     assert len(v) == 3
