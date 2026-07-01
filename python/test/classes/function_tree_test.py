@@ -108,6 +108,12 @@ def test_Variable_expression_name_rejected():
             Variable(bad)
 
 
+def test_Variable_emoji_name():
+    # Emoji are valid names, including multi-code-point ones (skin tone, ZWJ sequence).
+    for good in ("🎉", "👍🏽", "👩‍👩‍👧"):
+        assert str(Variable(good)) == good
+
+
 def test_variables_count():
     v = variables('x', 3)
     assert len(v) == 3

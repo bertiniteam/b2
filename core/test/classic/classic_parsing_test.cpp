@@ -708,7 +708,12 @@ namespace {
 	const std::string kOmega = "\xCE\xA9";         // U+03A9 GREEK CAPITAL LETTER OMEGA
 	const std::string kAlpha = "\xCE\xB1";         // U+03B1 GREEK SMALL LETTER ALPHA
 	const std::string kCJK   = "\xE4\xB8\xAD";     // U+4E2D
-	const std::string kParty = "\xF0\x9F\x8E\x89"; // U+1F389 PARTY POPPER (an emoji, not a letter)
+	const std::string kParty = "\xF0\x9F\x8E\x89"; // U+1F389 PARTY POPPER (single-code-point emoji)
+	// 👍🏽 = THUMBS UP (U+1F44D) + skin-tone modifier (U+1F3FD): a two-code-point emoji.
+	const std::string kThumbsToned = "\xF0\x9F\x91\x8D" "\xF0\x9F\x8F\xBD";
+	// 👩‍👩‍👧 = WOMAN + ZWJ + WOMAN + ZWJ + GIRL: a five-code-point ZWJ sequence.
+	const std::string kFamily = "\xF0\x9F\x91\xA9" "\xE2\x80\x8D" "\xF0\x9F\x91\xA9"
+	                            "\xE2\x80\x8D" "\xF0\x9F\x91\xA7";
 }
 
 BOOST_AUTO_TEST_CASE(unicode_variable_group_omega_parses)
@@ -781,14 +786,29 @@ BOOST_AUTO_TEST_CASE(utf8_bom_is_stripped)
 	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(emoji_variable_rejected_by_default)
+BOOST_AUTO_TEST_CASE(emoji_variable_parses)
 {
-	// Emoji are symbol-category code points, not letters, so they are NOT valid
-	// identifiers under the default policy.
-	std::string input = "variable_group " + kParty + ";\n"
+	// Single-code-point emoji are valid identifiers.
+	std::string input = "variable_group " + kParty + ", y;\n"
 	                    "function f;\n"
-	                    "f = " + kParty + ";\n";
-	BOOST_CHECK_THROW(bertini::System sys{ input }, std::runtime_error);
+	                    "f = " + kParty + " + y;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	BOOST_CHECK(sys.VariableNameSet().count(kParty) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(multipoint_emoji_variable_parses)
+{
+	// A multi-code-point emoji (skin-toned, and a ZWJ sequence) reads as ONE
+	// contiguous identifier -- the whole byte sequence is the variable's name.
+	std::string input = "variable_group " + kThumbsToned + ", " + kFamily + ";\n"
+	                    "function f;\n"
+	                    "f = " + kThumbsToned + " + " + kFamily + ";\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	auto names = sys.VariableNameSet();
+	BOOST_CHECK(names.count(kThumbsToned) == 1);   // not split at the skin-tone modifier
+	BOOST_CHECK(names.count(kFamily) == 1);        // not split at the ZWJs
 }
 
 

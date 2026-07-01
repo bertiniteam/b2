@@ -32,9 +32,19 @@
 
  These predicates are shared by the classic Qi grammar (see
  io/parsing/unicode_ident.hpp) and the object model (`node::Variable`), so the
- parser and direct construction agree on exactly what a name may be.  Emoji are
- symbol-category code points, not letters, so they are rejected by default; the
- two predicates below are the single opt-in point if that ever changes.
+ parser and direct construction agree on exactly what a name may be.
+
+ Emoji are allowed too (yes, really).  A "multipoint" emoji -- skin-toned (👍🏽),
+ ZWJ-joined (👩‍👩‍👧), a flag (🇺🇸), or variation-selected (❤️) -- is a *sequence*
+ of code points, not one character, in every encoding; UTF-16/UTF-32 would not
+ collapse it (we already decode to code points).  Rather than run full Unicode
+ grapheme segmentation (UAX #29, which needs break-property tables / ICU), we take
+ the pragmatic route: an emoji base code point may START a name, and the sequence
+ "glue" code points (ZWJ, variation selectors, skin-tone modifiers, regional
+ indicators, enclosing keycap) may CONTINUE one, so a whole emoji sequence reads
+ as a single contiguous identifier.  This is not strict UAX #29, but it is more
+ than good enough for variable names.  (Name identity is still by exact code-point
+ sequence; NFC normalization of names is a separate, deeper concern.)
  */
 
 #pragma once
@@ -47,19 +57,46 @@
 
 namespace bertini {
 
+namespace detail {
+
+/// \brief True if \p cp is in a primary emoji / pictographic range, so a name may
+///        start with it (🎉, 👍, ❤, ⭐, a regional-indicator letter, ...).
+inline bool IsEmojiBase(char32_t cp)
+{
+	return (cp >= 0x1F000 && cp <= 0x1FAFF)   // emoticons, pictographs, transport, supplemental & extended-A (incl. skin tones, regional indicators)
+	    || (cp >= 0x2600  && cp <= 0x27BF)    // miscellaneous symbols + dingbats (☀ ❤ ✨ ✅ ...)
+	    || (cp >= 0x2B00  && cp <= 0x2BFF);   // miscellaneous symbols and arrows (⭐ ⬅ ...)
+}
+
+/// \brief True if \p cp only *extends* an emoji cluster -- valid mid-name to glue a
+///        multi-code-point emoji, but not meaningful as a name's first character.
+inline bool IsEmojiGlue(char32_t cp)
+{
+	return cp == 0x200D              // ZERO WIDTH JOINER (👩‍👩‍👧)
+	    || cp == 0xFE0E || cp == 0xFE0F  // variation selectors 15 / 16 (❤️)
+	    || cp == 0x20E3;            // combining enclosing keycap
+	// skin-tone modifiers (U+1F3FB..FF) and regional indicators (U+1F1E6..FF) are
+	// already covered by IsEmojiBase, so they continue a name via that predicate.
+}
+
+} // namespace detail
+
 /// \brief True if code point \p cp may START an identifier: any Unicode letter
-///        (ASCII `A-Z a-z`, plus Ω, α, CJK, ...).
+///        (ASCII `A-Z a-z`, plus Ω, α, CJK, ...) or an emoji base code point.
 inline bool IsIdentStart(char32_t cp)
 {
-	return boost::spirit::char_encoding::unicode::isalpha(cp);
+	return boost::spirit::char_encoding::unicode::isalpha(cp)
+	    || detail::IsEmojiBase(cp);
 }
 
 /// \brief True if code point \p cp may CONTINUE an identifier: any Unicode
-///        alphanumeric, or one of the legacy continuation characters `[ ] _`.
+///        alphanumeric, one of the legacy continuation characters `[ ] _`, or an
+///        emoji base / sequence-glue code point (so a whole emoji reads as one name).
 inline bool IsIdentCont(char32_t cp)
 {
 	return boost::spirit::char_encoding::unicode::isalnum(cp)
-	    || cp == U'[' || cp == U']' || cp == U'_';
+	    || cp == U'[' || cp == U']' || cp == U'_'
+	    || detail::IsEmojiBase(cp) || detail::IsEmojiGlue(cp);
 }
 
 /// \brief True if \p s is a well-formed identifier: nonempty, a valid UTF-8

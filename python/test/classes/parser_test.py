@@ -70,6 +70,14 @@ def test_parse_utf8_bom():
     assert sys.num_variables() == 2
 
 
+def test_parse_emoji_variable():
+    # Emoji variable names parse and evaluate (multi-code-point ones stay intact).
+    sys = pp.system('variable_group 🎉, 👍🏽; function f; f = 🎉^2 + 👍🏽 - 1;')
+    assert sys.num_variables() == 2
+    vals = np.array((complex(0.5, 0.0), complex(0.25, 0.0)))  # 0.25 + 0.25 - 1 = -0.5
+    assert abs(sys.eval(vals)[0] - (-0.5)) < 1e-12
+
+
 def _f_eval(expr, vals):
     """Parse 'f = <expr>' over x,y,z and evaluate at vals."""
     return pp.system(f'function f; variable_group x,y,z; f = {expr};').eval(vals)[0]

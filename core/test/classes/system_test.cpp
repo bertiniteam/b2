@@ -1852,7 +1852,8 @@ BOOST_AUTO_TEST_CASE(variable_name_valid_identifiers_accepted)
 	BOOST_CHECK_NO_THROW(Variable::Make("x"));
 	BOOST_CHECK_NO_THROW(Variable::Make("x_1"));
 	BOOST_CHECK_NO_THROW(Variable::Make("x[0]"));
-	BOOST_CHECK_NO_THROW(Variable::Make("\xCE\xA9")); // Ω
+	BOOST_CHECK_NO_THROW(Variable::Make("\xCE\xA9"));         // Ω
+	BOOST_CHECK_NO_THROW(Variable::Make("\xF0\x9F\x8E\x89")); // 🎉 (emoji)
 }
 
 
