@@ -28,6 +28,7 @@
 #include <sstream>
 #include <numeric>
 #include <algorithm>
+#include <cstdlib>
 
 namespace bertini {
 namespace node {
@@ -37,7 +38,9 @@ namespace {
 	// order, so structurally-equal expressions dedup to one interned node.
 	MonomialOrder& TheOrder()        { static MonomialOrder o = MonomialOrder::GrevLex; return o; }
 	bool&          TheEnabledFlag()  { static bool on = true; return on; }
-	bool&          ThePowerFoldFlag(){ static bool on = true; return on; }
+	// Power-fold ON by default; set BERTINI2_NO_POWERFOLD in the environment to start it off (for
+	// A/B measurement, like BERTINI2_NO_FAST_ALLOC).  SetPowerFoldByDefault still overrides at runtime.
+	bool&          ThePowerFoldFlag(){ static bool on = (std::getenv("BERTINI2_NO_POWERFOLD") == nullptr); return on; }
 
 	bool AllNonNegative(std::vector<int> const& v)
 	{

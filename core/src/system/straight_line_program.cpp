@@ -29,6 +29,8 @@
 
 #include <boost/math/constants/constants.hpp>
 
+#include <cstdlib>
+
 
 
 BOOST_CLASS_EXPORT(bertini::StraightLineProgram);
@@ -687,8 +689,9 @@ namespace bertini{
 
 
 	namespace {
-		// session-global value-numbering switch (instruction-level CSE).  ON by default.
-		bool& TheValueNumberingFlag(){ static bool on = true; return on; }
+		// session-global value-numbering switch (instruction-level CSE).  ON by default; set
+		// BERTINI2_NO_VALUENUMBER in the environment to start it off (for A/B measurement).
+		bool& TheValueNumberingFlag(){ static bool on = (std::getenv("BERTINI2_NO_VALUENUMBER") == nullptr); return on; }
 		// operands may be given in either order for these; used to canonicalize the VN key.
 		bool IsCommutative(Operation op){ return op == Add || op == Multiply; }
 	}

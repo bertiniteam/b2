@@ -7,6 +7,8 @@
 #include <set>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
+#include <cstdlib>
 #include <chrono>
 #include <cstdlib>
 #include <atomic>
@@ -465,8 +467,122 @@ BOOST_AUTO_TEST_CASE(value_numbering_shares_lowered_intermediates)
 BOOST_AUTO_TEST_SUITE_END() // SLP_cse
 
 
-// (the SLP-vs-tree oracle suite lived here; removed when the FunctionTree eval method was
-// retired -- the SLP is now the sole system evaluator.)
+// ---------------------------------------------------------------------------------------------
+// Isolated SLP A/B benchmark: compile + eval time (double and mp) for the fold and value-numbering
+// toggles, on a squarefree system (cyclic-5, where the fold is a no-op and VN shares the symmetric
+// partial products) and a dense squared system (where the fold collapses powers).  Skipped unless
+// BERTINI2_BENCH is set in the environment, so it never slows the normal suite.
+BOOST_AUTO_TEST_SUITE(SLP_bench)
+
+namespace {
+	using bertini::node::SetPowerFoldByDefault;
+	using bertini::SetSLPValueNumbering;
+	using Nd = std::shared_ptr<bertini::node::Node>;
+	using Clock = std::chrono::steady_clock;
+
+	std::shared_ptr<bertini::node::Node> V(std::string const& n){ return Variable::Make(n); }
+
+	// cyclic-5: squarefree, symmetric -- exercises VN's partial-product sharing, not the fold.
+	bertini::System MakeCyclic5()
+	{
+		std::vector<std::shared_ptr<bertini::node::Variable>> x;
+		for (int i = 0; i < 5; ++i) x.push_back(Variable::Make("x" + std::to_string(i)));
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup(x.begin(), x.end()));
+		for (int k = 1; k <= 4; ++k) {
+			Nd s;
+			for (int i = 0; i < 5; ++i) {
+				Nd term = x[i];
+				for (int j = 1; j < k; ++j) term = term * x[(i + j) % 5];
+				s = (i == 0) ? term : Nd(s + term);
+			}
+			sys.AddFunction(s);
+		}
+		Nd p = x[0];
+		for (int i = 1; i < 5; ++i) p = p * x[i];
+		sys.AddFunction(p - bertini::node::Integer::Make(1));
+		return sys;
+	}
+
+	// a dense system with squared/high-power factors -- exercises the fold (x*x -> x^2) and the
+	// sharing of those powers between the functions and their Jacobian.
+	bertini::System MakeDenseSquared()
+	{
+		auto x = V("x"), y = V("y"), z = V("z");
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup{
+			std::dynamic_pointer_cast<bertini::node::Variable>(x),
+			std::dynamic_pointer_cast<bertini::node::Variable>(y),
+			std::dynamic_pointer_cast<bertini::node::Variable>(z)});
+		sys.AddFunction(x*x*x*x + y*y*y*y - z*z);
+		sys.AddFunction(x*x*y*y + x*x*x*y - z*z*z);
+		sys.AddFunction(x*y*y*z + x*x*z*z - y*y*y);
+		return sys;
+	}
+
+	template<typename NumT>
+	double TimeEvalNs(bertini::StraightLineProgram& slp, int nvars, std::size_t iters)
+	{
+		Vec<NumT> v(nvars);
+		for (int i = 0; i < nvars; ++i) v(i) = NumT(0.6 + 0.13 * i, -0.2 + 0.07 * i);
+		slp.Eval(v);                                   // warm up (first eval compiles/caches)
+		auto t0 = Clock::now();
+		for (std::size_t m = 0; m < iters; ++m) slp.Eval(v);
+		auto t1 = Clock::now();
+		return std::chrono::duration<double, std::nano>(t1 - t0).count() / double(iters);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(slp_ab_timing)
+{
+	if (!std::getenv("BERTINI2_BENCH")) return;
+
+	struct Case { const char* name; bertini::System (*build)(); int nvars; };
+	std::vector<Case> cases{
+		{ "cyclic-5     ", &MakeCyclic5,      5 },
+		{ "dense-squared", &MakeDenseSquared, 3 },
+	};
+	const std::size_t iters_d = 300000, iters_mp = 20000;
+	const unsigned mp_prec = 50;
+
+	std::cout << "\nSLP_BENCH_BEGIN  (double x" << iters_d << ", mp@" << mp_prec
+	          << "digits x" << iters_mp << "; ns/eval, lower=better)\n";
+	std::cout << "| system | fold | VN | slots | compile us | eval-double ns | eval-mp ns |\n";
+	std::cout << "|--------|------|----|------:|-----------:|---------------:|-----------:|\n";
+
+	for (auto const& c : cases)
+		for (int fold = 0; fold <= 1; ++fold)
+			for (int vn = 0; vn <= 1; ++vn)
+			{
+				SetPowerFoldByDefault(fold);
+				SetSLPValueNumbering(vn);
+
+				bertini::System sys = c.build();                 // built under the fold setting
+
+				auto tc0 = Clock::now();
+				bertini::StraightLineProgram slp(sys);           // compiled under the VN setting
+				auto tc1 = Clock::now();
+				const double compile_us = std::chrono::duration<double, std::micro>(tc1 - tc0).count();
+				const auto slots = slp.NumMemorySlots();
+
+				const double ns_d = TimeEvalNs<complex_dbl>(slp, c.nvars, iters_d);
+
+				bertini::DefaultPrecision(mp_prec);
+				const double ns_mp = TimeEvalNs<complex_mp>(slp, c.nvars, iters_mp);
+
+				std::cout << "| " << c.name << " | " << (fold ? "on " : "off")
+				          << "  | " << (vn ? "on" : "off") << " | " << slots
+				          << " | " << std::fixed << std::setprecision(1) << compile_us
+				          << " | " << std::setprecision(1) << ns_d
+				          << " | " << std::setprecision(0) << ns_mp << " |\n";
+			}
+	std::cout << "SLP_BENCH_END\n" << std::endl;
+
+	SetPowerFoldByDefault(true);
+	SetSLPValueNumbering(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // SLP_bench
 
 
 // ---- freeze-set tape partition (ADR-0027) ----
