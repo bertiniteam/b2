@@ -117,7 +117,7 @@ up among the solutions:
     assert all(recovered(q) for q in predicted)            # the two critical points on each circle
 
 Plotting the curve, the projection, and where the critical points land
-=====================================================================
+======================================================================
 
 A projection reads off the coordinate :math:`\pi\cdot x`.  Its **fibers** -- the sets of points
 with the same image -- are the level sets of :math:`\pi`, and you *project along* those fibers: the
@@ -169,7 +169,7 @@ those fibers):
    image :math:`\pi\cdot x` stops moving as you travel along a circle.
 
 What a critical point *is*: where the fiber count jumps
-======================================================
+=======================================================
 
 There is a more illuminating way to read these points than "the tangent is :math:`\pi`-critical" --
 one that makes even the two points on the orange circle obvious.  A projection has **fibers**: the
