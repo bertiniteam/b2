@@ -99,14 +99,18 @@ def _plots():
              argv=["--out", "{outdir}", "--bertini2", str(B1)],
              needs=("bertini2 CLI binary", B1),
              note="benchmark vs Bertini 1; needs the built CLI and (optionally) a `bertini` on PATH"),
+        Plot("critical_points",
+             TUT / "critical_points" / "critical_points_plot.py",
+             ["critical_points.svg", "critical_points.png"]),
     ]
 
 
-# critical_points has committed plots (critical_points.svg, critical_points_fibers.svg) but NO
-# regenerator: they come from the tutorial's inline testcode, and critical_points.py is a
-# solver-only demo.  Flagged so the gap is visible rather than silently uncovered.
+# critical_points_fibers.svg/.png is a DELIBERATE hand-authored illustration: it has no in-repo
+# source (no testcode, no script draws it) and depicts the projection-fiber cartoon by hand.  It is
+# listed here so `--plots` reports it as intentionally uncovered rather than a silent gap.  (The
+# other critical_points figure, critical_points.svg, now has a regenerator -- see _plots() above.)
 _NO_REGENERATOR = {
-    "critical_points": ["critical_points.svg", "critical_points_fibers.svg"],
+    "critical_points": ["critical_points_fibers.svg"],
 }
 
 
@@ -204,7 +208,7 @@ def main():
             rc |= run_plot(p, args.dry_run)
         for key, imgs in _NO_REGENERATOR.items():
             print(f"[plots] NOTE: {key} has no regenerator for {', '.join(imgs)} "
-                  f"(inline-testcode plot -- regenerate by hand from the tutorial if it changes)",
+                  f"(deliberate hand-authored illustration -- edit the image by hand if it changes)",
                   flush=True)
     sys.exit(rc)
 

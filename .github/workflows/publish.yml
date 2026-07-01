@@ -39,9 +39,21 @@ jobs:
           echo "OK: tag '$TAG' matches pyproject.toml version '$PYPROJECT_VERSION'"
           echo "$TAG" | grep -Eq '\.(dev|a|b|rc)[0-9]+$' && echo "is_prerelease=true" >> $GITHUB_OUTPUT || echo "is_prerelease=false" >> $GITHUB_OUTPUT
 
+  check_timing_freshness:
+    name: Check tutorial timings are fresh
+    # Only gate real releases -- prereleases (.dev/a/b/rc) are exactly when a timing refresh may not
+    # have happened yet.  A skipped job counts as satisfied for downstream `needs`.
+    if: needs.check_version.outputs.is_prerelease == 'false'
+    needs: check_version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify the scaling-tutorial timings are not stale
+        run: python tools/check_timing_freshness.py
+
   build_and_test:
     name: Build and test
-    needs: check_version
+    needs: [check_version, check_timing_freshness]
     uses: ./.github/workflows/build_and_test.yml
 
   publish-to-testpypi:
