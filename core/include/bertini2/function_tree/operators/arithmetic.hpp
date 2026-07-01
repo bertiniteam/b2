@@ -1367,34 +1367,16 @@ namespace node{
 	}
 
 
-	// this function provides an optimization for combining two power operators with the same base.
 	/// \brief Build a product expression-tree node from its operands.
+	///
+	/// Like-factor power-folding (x*x -> x^2, x^a*x^b -> x^(a+b)) and nested-product flattening
+	/// live centrally in CanonicalizeNaryOperands (called by the MultOperator constructor), so
+	/// every product-building route -- not just this adjacent binary one -- gets normalized.
 	inline std::shared_ptr<Node>& operator*=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		
-		// if the two nodes are integer power operators, and if they point the same place, then add the powers.
-
-		if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
-		{
-
-			auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs); // ugh, doing this cast twice?!?!?  fix this.
-			auto rhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
-
-			if (lhs_as_intpow->Operand()==rhs_as_intpow->Operand())
-			{
-				if (lhs_as_intpow->exponent()>=0 && rhs_as_intpow->exponent()>=0)
-				{
-					std::shared_ptr<Node> temp = pow(lhs_as_intpow->Operand(),lhs_as_intpow->exponent() + rhs_as_intpow->exponent());
-					lhs.swap(temp);
-					return lhs;
-				}
-			}
-		}
-
 		std::shared_ptr<Node> temp = MultOperator::Make(lhs,rhs);
 		lhs.swap(temp);
 		return lhs;
-
 	}
 	
 	/// \brief Build a product expression-tree node from its operands.

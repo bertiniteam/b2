@@ -6,6 +6,9 @@
 
 #include <set>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <cstdlib>
 #include <chrono>
 #include <cstdlib>
 #include <atomic>
@@ -356,6 +359,13 @@ namespace {
 		bertini::StraightLineProgram slp(s);
 		return slp.NumMemorySlots();
 	}
+
+	std::string PrintOfNode(Nd const& n)
+	{
+		std::ostringstream oss;
+		n->print(oss);
+		return oss.str();
+	}
 }
 
 BOOST_AUTO_TEST_CASE(hash_consing_unifies_independently_built_subexpressions)
@@ -371,44 +381,208 @@ BOOST_AUTO_TEST_CASE(hash_consing_unifies_independently_built_subexpressions)
 
 BOOST_AUTO_TEST_CASE(cse_benchmark_squaring_chain)
 {
+	using bertini::node::MultOperator;
+	using bertini::node::IntegerPowerOperator;
+
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 
 	std::cout << "\nCSE_TABLE_BEGIN\n";
-	std::cout << "| K | expanded tree nodes | distinct nodes (DAG) | SLP slots (fns+Jac) | reduction (tree/DAG) |\n";
-	std::cout << "|--:|--------------------:|---------------------:|--------------------:|---------------------:|\n";
+	std::cout << "| K | polynomial degree (2^K) | SLP slots (fns+Jac) | naive multiplies (2^K-1) |\n";
+	std::cout << "|--:|------------------------:|--------------------:|-------------------------:|\n";
 
+	std::size_t prev_slots = 0;
 	for (int K = 1; K <= 16; ++K)
 	{
 		Nd e = x + y;
 		for (int i = 0; i < K; ++i)
-			e = e * e;          // e*e reuses the same node; the DAG grows by one per level
+			e = e * e;          // squaring a repeated base folds: (x+y)^(2^(i+1))
 
-		const auto expanded = ExpandedTreeNodes(e);
-		const auto distinct = DistinctNodes(e);
+		// The chain no longer builds an exponential binary tree.  Power-folding in
+		// CanonicalizeNaryOperands collapses e*e all the way to a single IntegerPower of (x+y)
+		// with exponent 2^K -- possibly inside a 1-operand MultOperator wrapper (which is free in
+		// the SLP).  Unwrap that wrapper, then assert the folded form.
+		Nd inner = e;
+		if (auto mo = std::dynamic_pointer_cast<MultOperator const>(inner))
+			if (mo->NumOperands() == 1)
+				inner = mo->Operands()[0];
+		auto ip = std::dynamic_pointer_cast<IntegerPowerOperator const>(inner);
+		BOOST_REQUIRE(ip);                                                  // folded to one power
+		BOOST_CHECK_EQUAL(ip->exponent(), 1 << K);                         // exponent 2^K
+		BOOST_CHECK_EQUAL(PrintOfNode(ip->Operand()), std::string("x+y")); // ...of the (x+y) base
 
 		bertini::System sys;
 		sys.AddVariableGroup(bertini::VariableGroup{x, y});
 		sys.AddFunction(e);
 		const auto slots = SlpSlots(sys);
 
-		std::cout << "| " << K << " | " << expanded << " | " << distinct
-		          << " | " << slots << " | " << (expanded / distinct) << "x |\n";
+		const std::size_t naive = (std::size_t{1} << K) - 1;   // multiplies a tree-walk would emit
+		std::cout << "| " << K << " | " << (std::size_t{1} << K) << " | "
+		          << slots << " | " << naive << " |\n";
 
-		// the same function is a linear DAG but an exponential tree: hash-consing collapses it
-		BOOST_CHECK_EQUAL(distinct, static_cast<std::size_t>(K + 3));   // x, y, (x+y), e_1..e_K
-		BOOST_CHECK_EQUAL(expanded, (std::size_t{1} << (K + 2)) - 1);   // a binary tree
-		if (K >= 8)
-			BOOST_CHECK_LT(slots, expanded);   // the compiled program stays DAG-sized
+		// The compiled program is O(K), not O(2^K): exponentiation-by-squaring emits ~a constant
+		// number of instructions per level, so slots grow linearly and stay far below the naive
+		// degree-many multiplies.  This is the fold + SLP win the earlier bisection motivated.
+		if (K >= 5)   // slots are linear (+~5/level) while naive multiplies double; they cross at K=5
+			BOOST_CHECK_LT(slots, naive);
+		if (K > 1)
+			BOOST_CHECK_LT(slots - prev_slots, std::size_t{16});   // bounded growth per level
+		prev_slots = slots;
 	}
 	std::cout << "CSE_TABLE_END\n" << std::endl;
+}
+
+// Instruction-level value-numbering (SLP-compiler CSE): a computation that only coincides AFTER
+// power-lowering -- e.g. the x^2 computed as an intermediate of x^3, and a standalone x^2 factor
+// -- is emitted once and shared.  Node-level hash-consing alone cannot see this (the two x^2 live
+// inside different IntegerPower nodes).  Fold stays ON; we toggle only value-numbering.
+BOOST_AUTO_TEST_CASE(value_numbering_shares_lowered_intermediates)
+{
+	using bertini::SetSLPValueNumbering;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+
+	// x^3*y^2 + x^2*y^2 : x^2 appears both inside x^3's squaring lowering and as a standalone factor.
+	Nd f = x*x*x*y*y + x*x*y*y;
+
+	auto compile_slots = [&](bool vn) {
+		SetSLPValueNumbering(vn);
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup{x, y});
+		sys.AddFunction(f);
+		bertini::StraightLineProgram slp(sys);
+		std::cerr << "\n----- value-numbering " << (vn ? "ON" : "OFF")
+		          << " : " << PrintOfNode(f) << " -----\n"
+		          << slp << "memory slots (fn+Jac) = " << slp.NumMemorySlots() << "\n";
+		return slp.NumMemorySlots();
+	};
+
+	const auto slots_off = compile_slots(false);
+	const auto slots_on  = compile_slots(true);
+	SetSLPValueNumbering(true);   // restore default
+
+	BOOST_CHECK_LT(slots_on, slots_off);   // value-numbering strictly shrinks this program
 }
 
 BOOST_AUTO_TEST_SUITE_END() // SLP_cse
 
 
-// (the SLP-vs-tree oracle suite lived here; removed when the FunctionTree eval method was
-// retired -- the SLP is now the sole system evaluator.)
+// ---------------------------------------------------------------------------------------------
+// Isolated SLP A/B benchmark: compile + eval time (double and mp) for the fold and value-numbering
+// toggles, on a squarefree system (cyclic-5, where the fold is a no-op and VN shares the symmetric
+// partial products) and a dense squared system (where the fold collapses powers).  Skipped unless
+// BERTINI2_BENCH is set in the environment, so it never slows the normal suite.
+BOOST_AUTO_TEST_SUITE(SLP_bench)
+
+namespace {
+	using bertini::node::SetPowerFoldByDefault;
+	using bertini::SetSLPValueNumbering;
+	using Nd = std::shared_ptr<bertini::node::Node>;
+	using Clock = std::chrono::steady_clock;
+
+	std::shared_ptr<bertini::node::Node> V(std::string const& n){ return Variable::Make(n); }
+
+	// cyclic-5: squarefree, symmetric -- exercises VN's partial-product sharing, not the fold.
+	bertini::System MakeCyclic5()
+	{
+		std::vector<std::shared_ptr<bertini::node::Variable>> x;
+		for (int i = 0; i < 5; ++i) x.push_back(Variable::Make("x" + std::to_string(i)));
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup(x.begin(), x.end()));
+		for (int k = 1; k <= 4; ++k) {
+			Nd s;
+			for (int i = 0; i < 5; ++i) {
+				Nd term = x[i];
+				for (int j = 1; j < k; ++j) term = term * x[(i + j) % 5];
+				s = (i == 0) ? term : Nd(s + term);
+			}
+			sys.AddFunction(s);
+		}
+		Nd p = x[0];
+		for (int i = 1; i < 5; ++i) p = p * x[i];
+		sys.AddFunction(p - bertini::node::Integer::Make(1));
+		return sys;
+	}
+
+	// a dense system with squared/high-power factors -- exercises the fold (x*x -> x^2) and the
+	// sharing of those powers between the functions and their Jacobian.
+	bertini::System MakeDenseSquared()
+	{
+		auto x = V("x"), y = V("y"), z = V("z");
+		bertini::System sys;
+		sys.AddVariableGroup(bertini::VariableGroup{
+			std::dynamic_pointer_cast<bertini::node::Variable>(x),
+			std::dynamic_pointer_cast<bertini::node::Variable>(y),
+			std::dynamic_pointer_cast<bertini::node::Variable>(z)});
+		sys.AddFunction(x*x*x*x + y*y*y*y - z*z);
+		sys.AddFunction(x*x*y*y + x*x*x*y - z*z*z);
+		sys.AddFunction(x*y*y*z + x*x*z*z - y*y*y);
+		return sys;
+	}
+
+	template<typename NumT>
+	double TimeEvalNs(bertini::StraightLineProgram& slp, int nvars, std::size_t iters)
+	{
+		Vec<NumT> v(nvars);
+		for (int i = 0; i < nvars; ++i) v(i) = NumT(0.6 + 0.13 * i, -0.2 + 0.07 * i);
+		slp.Eval(v);                                   // warm up (first eval compiles/caches)
+		auto t0 = Clock::now();
+		for (std::size_t m = 0; m < iters; ++m) slp.Eval(v);
+		auto t1 = Clock::now();
+		return std::chrono::duration<double, std::nano>(t1 - t0).count() / double(iters);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(slp_ab_timing)
+{
+	if (!std::getenv("BERTINI2_BENCH")) return;
+
+	struct Case { const char* name; bertini::System (*build)(); int nvars; };
+	std::vector<Case> cases{
+		{ "cyclic-5     ", &MakeCyclic5,      5 },
+		{ "dense-squared", &MakeDenseSquared, 3 },
+	};
+	const std::size_t iters_d = 300000, iters_mp = 20000;
+	const unsigned mp_prec = 50;
+
+	std::cout << "\nSLP_BENCH_BEGIN  (double x" << iters_d << ", mp@" << mp_prec
+	          << "digits x" << iters_mp << "; ns/eval, lower=better)\n";
+	std::cout << "| system | fold | VN | slots | compile us | eval-double ns | eval-mp ns |\n";
+	std::cout << "|--------|------|----|------:|-----------:|---------------:|-----------:|\n";
+
+	for (auto const& c : cases)
+		for (int fold = 0; fold <= 1; ++fold)
+			for (int vn = 0; vn <= 1; ++vn)
+			{
+				SetPowerFoldByDefault(fold);
+				SetSLPValueNumbering(vn);
+
+				bertini::System sys = c.build();                 // built under the fold setting
+
+				auto tc0 = Clock::now();
+				bertini::StraightLineProgram slp(sys);           // compiled under the VN setting
+				auto tc1 = Clock::now();
+				const double compile_us = std::chrono::duration<double, std::micro>(tc1 - tc0).count();
+				const auto slots = slp.NumMemorySlots();
+
+				const double ns_d = TimeEvalNs<complex_dbl>(slp, c.nvars, iters_d);
+
+				bertini::DefaultPrecision(mp_prec);
+				const double ns_mp = TimeEvalNs<complex_mp>(slp, c.nvars, iters_mp);
+
+				std::cout << "| " << c.name << " | " << (fold ? "on " : "off")
+				          << "  | " << (vn ? "on" : "off") << " | " << slots
+				          << " | " << std::fixed << std::setprecision(1) << compile_us
+				          << " | " << std::setprecision(1) << ns_d
+				          << " | " << std::setprecision(0) << ns_mp << " |\n";
+			}
+	std::cout << "SLP_BENCH_END\n" << std::endl;
+
+	SetPowerFoldByDefault(true);
+	SetSLPValueNumbering(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // SLP_bench
 
 
 // ---- freeze-set tape partition (ADR-0027) ----

@@ -209,6 +209,15 @@ namespace bertini {
 	/// \brief Get a human-readable name for an opcode.
 	std::string OpcodeToString(Operation op);
 
+	/// Whether the SLP compiler value-numbers (instruction-level CSE) while emitting the tape:
+	/// an identical (op, operand-slots) computation reuses the earlier result slot instead of
+	/// recomputing.  Complements node-level hash-consing by sharing intermediates that only
+	/// coincide after lowering (e.g. the x^2 computed inside x^3 shared with a standalone x^2).
+	/// Session-global A/B switch, ON by default; off recovers the pre-VN tape for measurement.
+	bool SLPValueNumbering();
+	/// \brief Set whether the SLP compiler value-numbers while emitting the tape.
+	void SetSLPValueNumbering(bool on);
+
 	// Compile-time bank selectors (ADR-0034).  After NumType inference, each instruction's opcode word
 	// gets these high bits set to record which bank (real or complex) each operand and the result live
 	// in, so the hot eval loop reads the banks inline from the instruction it has already loaded instead
@@ -1024,6 +1033,17 @@ namespace bertini {
 			void RegisterConstant(Nd const& nd, ConstantRecipe recipe);
 
 			/**
+			 \brief Emit a compute instruction, value-numbered.  Allocates a fresh result slot and
+			 emits `op(a,b)` -- but if value-numbering is on and an identical instruction was already
+			 emitted (same op and operand slots; commutative ops match either operand order), returns
+			 that earlier result slot and emits nothing.  Returns the result slot either way.  Used
+			 for every allocating compute emission; the fixed-slot output Assigns bypass this.
+			 */
+			size_t EmitBinary(Operation op, size_t a, size_t b);
+			/// \brief Emit a value-numbered one-operand compute instruction.  \see EmitBinary
+			size_t EmitUnary(Operation op, size_t a);
+
+			/**
 			 \brief Reset the compiler to compile another SLP from another system.
 			 */
 			void Clear();
@@ -1035,6 +1055,12 @@ namespace bertini {
 
 			std::map<Nd, size_t> locations_encountered_nodes_; ///< A registry of pointers-to-nodes and location in memory on where to find *their results*.
 			std::map<IntT, size_t> locations_integers_;  ///< A registry mapping integer values to their memory slots.
+
+			// Value-numbering tables (instruction-level CSE): map an emitted computation to the slot
+			// holding its result, so an identical later computation reuses it.  Keyed by (op, operand
+			// slots); commutative ops canonicalize operand order before keying.  Reset per Compile.
+			std::map<std::tuple<Operation,size_t,size_t>, size_t> vn_binary_;
+			std::map<std::pair<Operation,size_t>, size_t>         vn_unary_;
 
 			SLPProgram program_under_construction_; ///< the under-construction program.  wrapped into an SLP and returned at end of `Compile`.
 	};

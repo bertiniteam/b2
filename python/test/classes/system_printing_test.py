@@ -28,7 +28,7 @@ def test_plain_polynomial_is_clean():
     s.add_function(x*x + y*y - 1); s.add_function(x - y)
     text = str(s)
 
-    assert 'f_0 = x*x+y*y-1' in text
+    assert 'f_0 = x^2+y^2-1' in text
     assert 'f_1 = x-y' in text
     for n in NOISE:
         assert n not in text          # debugging leftovers are gone
@@ -44,9 +44,9 @@ def test_randomization_shows_placeholder_and_underlying_functions():
     terse = str(r)
     assert 'R . g' in terse                       # placeholder label
     assert '(R: 2x3 randomization matrix)' in terse
-    assert 'g_0 = x*x+y*y-1' in terse              # the underlying functions, indented and shown
+    assert 'g_0 = x^2+y^2-1' in terse              # the underlying functions, indented and shown
     assert 'g_1 = x*y' in terse
-    assert 'g_2 = x*x+y*y-x-y' in terse
+    assert 'g_2 = x^2+y^2-x-y' in terse
     assert 'R =' in terse                          # the actual matrix is shown by default now
     assert terse.count('[') >= 2                   # its two rows
 
@@ -63,7 +63,7 @@ def test_linear_forms_block_placeholder_and_coefficients():
     linalg.add_linear(m, np.array([[2, 1]]), np.array([x, y]), [-1])   # 2x + y - 1, a LinearFormsBlock
 
     terse = str(m)
-    assert 'f_0 = x*x+y*y-1' in terse              # poly row
+    assert 'f_0 = x^2+y^2-1' in terse              # poly row
     assert 'f_1 = c.[x, y, 1]' in terse            # linear-forms placeholder kept (legible structure)
     assert 'c =' in terse                          # ... with the coefficients in a legend below
     assert '2' in terse and '-1' in terse          # the actual values (here exact integers)
@@ -152,7 +152,7 @@ def test_moving_homotopy_blend_and_path_variable():
     H = na.moving_homotopy(fx, sm, em, gamma=linalg.coefficient(pb.multiprec.Complex('0.6', '0.8')))
 
     terse = str(H)
-    assert 'f_0 = x*x+y*y-1' in terse              # the fixed row is a plain polynomial, shown
+    assert 'f_0 = x^2+y^2-1' in terse              # the fixed row is a plain polynomial, shown
     assert '(1-t)*A' in terse and 'blend of 2 systems' in terse
     assert 'path variable: t' in terse
     assert 'f_1..f_1' not in terse                 # a single moving row reads 'f_1', not 'f_1..f_1'

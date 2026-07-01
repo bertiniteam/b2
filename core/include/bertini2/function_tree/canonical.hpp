@@ -32,8 +32,14 @@ The order is a pluggable monomial order -- Lex / RevLex / GrevLex -- on the oper
 exponent vectors (via Node::MultiDegree), built on the global variable order BY NAME
 (node::GatherVariables already returns variables sorted alphabetically).  Non-polynomial
 operands sort after the polynomial ones, with a printed-form tie-break to stay total.
-This sorts operands but never combines them (no like-term folding; a full polynomial normal
-form is future work).
+
+For a Mult, before sorting the operands are also FLATTENED (nested products spliced into one
+factor list) and POWER-FOLDED (repeated bases collapsed into a single IntegerPower --
+x*x -> x^2, y*x*x -> x^2*y, x*x/x -> x).  This makes a squared factor the same interned
+IntegerPower node the differentiator emits, so the SLP computes it once and shares it between
+the function and its Jacobian.  Numeric constants are left alone (2*2 stays 2*2 -- constant
+folding is a separate pass).  Sums are still sort-only (like-term folding for sums -- a full
+polynomial normal form -- is future work).
 
 Nothing here changes Node::Hash()/IsSame(): canonicalization is a normalization applied at
 construction, and the existing order-sensitive predicates then see the normalized order.
@@ -65,6 +71,14 @@ void SetMonomialOrder(MonomialOrder order);
 bool CanonicalizeByDefault();
 /// \brief Set whether Sum/Mult construction canonicalizes operand order by default.
 void SetCanonicalizeByDefault(bool on);
+
+/// Whether Mult construction flattens + power-folds (x*x -> x^2) by default.  Session-global
+/// A/B switch (like the monomial order, it determines interned identity, so it must be
+/// consistent session-wide).  ON by default; turning it off recovers the pre-fold canonical
+/// form (sort-only) -- used to measure the fold's impact and to demonstrate before/after tapes.
+bool PowerFoldByDefault();
+/// \brief Set whether Mult construction flattens + power-folds by default.
+void SetPowerFoldByDefault(bool on);
 
 /**
 \brief Sort an n-ary operator's (operand, flag) pairs into canonical order, in place.

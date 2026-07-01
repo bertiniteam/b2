@@ -28,6 +28,7 @@
 #include <sstream>
 #include <numeric>
 #include <algorithm>
+#include <cstdlib>
 
 namespace bertini {
 namespace node {
@@ -37,6 +38,9 @@ namespace {
 	// order, so structurally-equal expressions dedup to one interned node.
 	MonomialOrder& TheOrder()        { static MonomialOrder o = MonomialOrder::GrevLex; return o; }
 	bool&          TheEnabledFlag()  { static bool on = true; return on; }
+	// Power-fold ON by default; set BERTINI2_NO_POWERFOLD in the environment to start it off (for
+	// A/B measurement, like BERTINI2_NO_FAST_ALLOC).  SetPowerFoldByDefault still overrides at runtime.
+	bool&          ThePowerFoldFlag(){ static bool on = (std::getenv("BERTINI2_NO_POWERFOLD") == nullptr); return on; }
 
 	bool AllNonNegative(std::vector<int> const& v)
 	{
@@ -91,12 +95,131 @@ namespace {
 		n->print(oss);
 		return oss.str();
 	}
+
+	// A product operand decomposed into (base, integer exponent): x -> (x,1), x^k -> (x,k).
+	std::pair<std::shared_ptr<Node>, int> BaseAndExponent(std::shared_ptr<Node> const& n)
+	{
+		if (auto ip = std::dynamic_pointer_cast<IntegerPowerOperator>(n))
+			return { ip->Operand(), ip->exponent() };
+		return { n, 1 };
+	}
+
+	// A base whose repeated occurrences we collapse into a single power.  Numeric constants are
+	// left alone (2*2 stays 2*2 -- constant folding is a separate pass, not 2^2); everything else
+	// (variables and compound subexpressions like (x+y) or sin(x)) folds -- that is the CSE win.
+	bool IsFoldableBase(std::shared_ptr<Node> const& n)
+	{
+		return !std::dynamic_pointer_cast<Number>(n);
+	}
+
+	// Flatten a product's operand list: splice any operand that is itself a MultOperator into this
+	// list, composing the mult/div flag (a child factor's flag cf under a parent slot flag pf
+	// becomes pf==cf, i.e. div-of-div = mult).  Fully recursive; single-operand MultOperator
+	// wrappers are unwrapped here too.
+	void FlattenProduct(std::vector<std::shared_ptr<Node>>& operands, std::vector<bool>& flags)
+	{
+		std::vector<std::shared_ptr<Node>> out_ops;
+		std::vector<bool>                  out_flags;
+		std::vector<std::pair<std::shared_ptr<Node>, bool>> stack;   // pre-order traversal
+		stack.reserve(operands.size());
+		for (std::size_t i = operands.size(); i-- > 0; )
+			stack.emplace_back(operands[i], flags[i]);
+
+		while (!stack.empty())
+		{
+			auto node   = stack.back().first;
+			const bool f = stack.back().second;
+			stack.pop_back();
+
+			// Splice a nested product only when it is a MULTIPLICAND.  A divisor sub-product like
+			// x/(y*z) must stay atomic: splicing it would distribute the division into x/y/z (two
+			// divides) instead of one multiply plus one divide -- a pessimization, division being the
+			// costliest op.  Multiplicand nesting (the common y*x*x case) still fully flattens.
+			auto mo = std::dynamic_pointer_cast<MultOperator>(node);
+			if (mo && f)
+			{
+				auto const& kids   = mo->Operands();
+				auto const& kflags = mo->GetMultOrDiv();
+				for (std::size_t j = kids.size(); j-- > 0; )
+					stack.emplace_back(kids[j], kflags[j]);   // f is true here, so f==kflags[j] == kflags[j]
+			}
+			else
+			{
+				out_ops.push_back(node);
+				out_flags.push_back(f);
+			}
+		}
+		operands.swap(out_ops);
+		flags.swap(out_flags);
+	}
+
+	// Fold like factors of a (flattened) product: group operands by base, sum the signed exponents
+	// (multiplicand +, divisor -), and emit one factor per base -- x*x -> x^2, x*x/x -> x, x/x -> 1.
+	// Numeric-constant operands are passed through untouched, each its own group.
+	void FoldLikeFactors(std::vector<std::shared_ptr<Node>>& operands, std::vector<bool>& flags)
+	{
+		struct Group {
+			std::shared_ptr<Node> base;      // foldable base (null for a passthrough constant)
+			std::string           key;       // printed form of base, for matching
+			int                   exp;       // net signed exponent
+			bool                  foldable;
+			std::shared_ptr<Node> passthru;  // the original operand, for constants
+			bool                  passflag;
+		};
+
+		std::vector<Group> groups;
+		for (std::size_t i = 0; i < operands.size(); ++i)
+		{
+			auto be = BaseAndExponent(operands[i]);
+			if (IsFoldableBase(be.first))
+			{
+				const int signed_exp = flags[i] ? be.second : -be.second;
+				std::string k = PrintOf(be.first);
+				bool merged = false;
+				for (auto& g : groups)
+					if (g.foldable && g.key == k) { g.exp += signed_exp; merged = true; break; }
+				if (!merged)
+					groups.push_back(Group{ be.first, std::move(k), signed_exp, true, nullptr, false });
+			}
+			else
+				groups.push_back(Group{ nullptr, std::string{}, 0, false, operands[i], flags[i] });
+		}
+
+		std::vector<std::shared_ptr<Node>> out_ops;
+		std::vector<bool>                  out_flags;
+		for (auto& g : groups)
+		{
+			if (!g.foldable)
+			{
+				out_ops.push_back(g.passthru);
+				out_flags.push_back(g.passflag);
+				continue;
+			}
+			if (g.exp == 0)                                 // net factor of 1 -- drops out
+				continue;
+			const int a = g.exp < 0 ? -g.exp : g.exp;
+			std::shared_ptr<Node> node = (a == 1)
+				? g.base
+				: std::static_pointer_cast<Node>(IntegerPowerOperator::Make(g.base, a));
+			out_ops.push_back(node);
+			out_flags.push_back(g.exp > 0);
+		}
+		if (out_ops.empty())                                // everything cancelled -> the product is 1
+		{
+			out_ops.push_back(std::static_pointer_cast<Node>(Integer::Make(1)));
+			out_flags.push_back(true);
+		}
+		operands.swap(out_ops);
+		flags.swap(out_flags);
+	}
 } // anon namespace
 
 MonomialOrder CurrentMonomialOrder()           { return TheOrder(); }
 void          SetMonomialOrder(MonomialOrder o){ TheOrder() = o; }
 bool          CanonicalizeByDefault()          { return TheEnabledFlag(); }
 void          SetCanonicalizeByDefault(bool on){ TheEnabledFlag() = on; }
+bool          PowerFoldByDefault()             { return ThePowerFoldFlag(); }
+void          SetPowerFoldByDefault(bool on)   { ThePowerFoldFlag() = on; }
 
 void CanonicalizeNaryOperands(std::vector<std::shared_ptr<Node>>& operands,
                               std::vector<bool>& flags,
@@ -104,6 +227,19 @@ void CanonicalizeNaryOperands(std::vector<std::shared_ptr<Node>>& operands,
 {
 	if (!CanonicalizeByDefault() || operands.size() < 2)
 		return;
+
+	// A product is normalized to a flat, power-folded form before sorting: flatten nested
+	// MultOperators into one factor list, then collapse repeated bases into IntegerPowers
+	// (x*x -> x^2, y*x*x -> x^2*y, x*x/x -> x).  This is what makes a squared factor the SAME
+	// interned IntegerPower node the differentiator emits, so the SLP computes it once and shares
+	// it between the function and its Jacobian.  Sums keep their existing sort-only behavior.
+	if (multiplicands_first && PowerFoldByDefault())
+	{
+		FlattenProduct(operands, flags);
+		FoldLikeFactors(operands, flags);
+		if (operands.size() < 2)   // fold may have collapsed the product to a single factor
+			return;
+	}
 
 	// global variable order: the union of the operands' variables, alphabetical by name
 	// (GatherVariables already sorts by name; variables are canonical-by-name post-3b).
