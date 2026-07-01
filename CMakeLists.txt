@@ -2,14 +2,22 @@ cmake_minimum_required(VERSION 3.22)
 
 set(PROJECT_NAME bertini2)
 
-file(READ "${CMAKE_SOURCE_DIR}/pyproject.toml" PYPROJECT_TOML)
-string(REGEX MATCH "\nversion = \"([^\"]+)\"" _ ${PYPROJECT_TOML})
-set(PROJECT_VERSION_FULL ${CMAKE_MATCH_1})
+# The version is the single source of truth in the top-level VERSION file
+# (also read by scikit-build-core; see pyproject.toml). Keep them in sync via
+# that one file rather than duplicating the string here.
+file(STRINGS "${CMAKE_SOURCE_DIR}/VERSION" PROJECT_VERSION_FULL LIMIT_COUNT 1)
+string(STRIP "${PROJECT_VERSION_FULL}" PROJECT_VERSION_FULL)
+
+# Keep the complete version under a project-owned name: jrl-cmakemodules'
+# project setup clobbers PROJECT_VERSION_FULL (it rewrites it to major.minor),
+# so anything downstream -- e.g. the BERTINI2_VERSION_FULL compile definition in
+# core/CMakeLists.txt -- must read BERTINI2_FULL_VERSION instead.
+set(BERTINI2_FULL_VERSION "${PROJECT_VERSION_FULL}")
 
 # Strip PEP 440 prerelease suffix for cmake VERSION field
 string(REGEX REPLACE "[._]?(dev|a|b|rc)[0-9]+.*$" "" PROJECT_VERSION ${PROJECT_VERSION_FULL})
 
-message(STATUS "Full version: ${PROJECT_VERSION_FULL}")
+message(STATUS "Full version: ${BERTINI2_FULL_VERSION}")
 message(STATUS "CMake version: ${PROJECT_VERSION}")
 
 

@@ -1,6 +1,9 @@
 [project]
 name = "bertini2"
-version = "3.0.0.dev6"
+# The version is the single source of truth in the top-level `VERSION` file.
+# It is declared dynamic here and read by scikit-build-core (see
+# [tool.scikit-build.metadata.version] below) and by CMake (see CMakeLists.txt).
+dynamic = ["version"]
 requires-python = ">= 3.10"
 readme = "README.md"
 dependencies = ["numpy"]
@@ -26,6 +29,12 @@ requires = [
     "scikit-build-core","numpy"
 ]
 build-backend = "scikit_build_core.build"
+
+[tool.scikit-build.metadata.version]
+# Read the project version from the top-level VERSION file (single source of truth).
+provider = "scikit_build_core.metadata.regex"
+input = "VERSION"
+regex = "(?P<value>.+)"
 
 [tool.scikit-build]
 wheel.packages = ["python/bertini"]
