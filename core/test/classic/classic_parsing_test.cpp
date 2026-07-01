@@ -30,6 +30,7 @@
 #include <bertini2/io/parsing/system_parsers.hpp>
 #include <bertini2/io/classic_writer.hpp>
 #include <string>
+#include <set>
 #include <fstream>
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
@@ -694,6 +695,100 @@ BOOST_AUTO_TEST_CASE(file_with_percent_comments_parses)
 	bertini::parsing::classic::parse(iter, end, sys);
 	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 2u);
 	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+}
+
+
+// ---- Unicode (UTF-8) identifier support ----
+// The classic grammar accepts Unicode *letters* as identifiers (Ω, α, CJK, ...),
+// storing names as their raw UTF-8 bytes.  UTF-8 is spelled with byte escapes so
+// the source stays plain ASCII (portable across compilers), and inputs are built
+// by std::string concatenation so a hex escape never swallows a following digit.
+// See io/parsing/unicode_ident.hpp.
+namespace {
+	const std::string kOmega = "\xCE\xA9";         // U+03A9 GREEK CAPITAL LETTER OMEGA
+	const std::string kAlpha = "\xCE\xB1";         // U+03B1 GREEK SMALL LETTER ALPHA
+	const std::string kCJK   = "\xE4\xB8\xAD";     // U+4E2D
+	const std::string kParty = "\xF0\x9F\x8E\x89"; // U+1F389 PARTY POPPER (an emoji, not a letter)
+}
+
+BOOST_AUTO_TEST_CASE(unicode_variable_group_omega_parses)
+{
+	std::string input = "variable_group " + kOmega + ", " + kAlpha + ";\n"
+	                    "function f;\n"
+	                    "f = " + kOmega + "^2 + " + kAlpha + "^2 - 1;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 1u);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	auto names = sys.VariableNameSet();
+	BOOST_CHECK(names.count(kOmega) == 1);
+	BOOST_CHECK(names.count(kAlpha) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_name_roundtrips_utf8)
+{
+	using namespace bertini;
+	std::string input = "variable_group " + kOmega + ";\n"
+	                    "function f;\n"
+	                    "f = " + kOmega + "^2 - 2;\n";
+	System sys{ input };
+	std::string emitted = classic::SystemToClassic(sys);   // the classic writer emits UTF-8
+	BOOST_CHECK(emitted.find(kOmega) != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_cjk_variable_parses)
+{
+	std::string input = "variable_group " + kCJK + ", y;\n"
+	                    "function f;\n"
+	                    "f = " + kCJK + " + y;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	BOOST_CHECK(sys.VariableNameSet().count(kCJK) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_mixed_ascii_unicode_identifier)
+{
+	// A single identifier mixing ASCII and Unicode letters/digits.
+	std::string ident = "x" + kOmega + "1";
+	std::string input = "variable_group " + ident + ", y;\n"
+	                    "function f;\n"
+	                    "f = " + ident + " + y;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	BOOST_CHECK(sys.VariableNameSet().count(ident) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_symbol_prefix_not_greedy)
+{
+	// Ω is declared but Ωα is not; the boundary guard stops the known symbol Ω from
+	// matching a prefix of Ωα, so referencing Ωα must fail to parse rather than
+	// silently becoming Ω (leaving α dangling).
+	std::string input = "variable_group " + kOmega + ";\n"
+	                    "function f;\n"
+	                    "f = " + kOmega + kAlpha + ";\n";
+	BOOST_CHECK_THROW(bertini::System sys{ input }, std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(utf8_bom_is_stripped)
+{
+	// A leading UTF-8 BOM must be dropped by System(std::string) so it is not seen
+	// as a stray leading character.
+	std::string input = std::string("\xEF\xBB\xBF") +
+	                    "variable_group x, y;\n"
+	                    "function f;\n"
+	                    "f = x^2 + y^2 - 1;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(emoji_variable_rejected_by_default)
+{
+	// Emoji are symbol-category code points, not letters, so they are NOT valid
+	// identifiers under the default policy.
+	std::string input = "variable_group " + kParty + ";\n"
+	                    "function f;\n"
+	                    "f = " + kParty + ";\n";
+	BOOST_CHECK_THROW(bertini::System sys{ input }, std::runtime_error);
 }
 
 

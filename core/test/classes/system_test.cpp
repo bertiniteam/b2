@@ -1834,6 +1834,83 @@ BOOST_AUTO_TEST_CASE(system_symbolic_jacobian_internal_includes_patch)
 }
 
 
+// ---- path-variable / user-variable collision avoidance ----
+// An auto-constructed homotopy's path variable must never share a name with a user
+// variable.  UniquePathVariableName generates a collision-free name; AddPathVariable
+// throws if a chosen name collides (the backstop all homotopy builders funnel through).
+
+BOOST_AUTO_TEST_CASE(unique_path_variable_name_passes_through_when_free)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	BOOST_CHECK_EQUAL(UniquePathVariableName(sys, "t"), std::string("t"));
+}
+
+BOOST_AUTO_TEST_CASE(unique_path_variable_name_avoids_existing_t)
+{
+	Var t  = Variable::Make("t");
+	Var t1 = Variable::Make("t_1");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{t});
+	BOOST_CHECK_EQUAL(UniquePathVariableName(sys, "t"), std::string("t_1"));
+
+	System sys2;
+	sys2.AddVariableGroup(VariableGroup{t, t1});
+	BOOST_CHECK_EQUAL(UniquePathVariableName(sys2, "t"), std::string("t_2"));
+}
+
+BOOST_AUTO_TEST_CASE(add_path_variable_colliding_name_throws)
+{
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+	System S;
+	S.AddVariableGroup(VariableGroup{x, t});   // user variable named "t"
+	Var collider = Variable::Make("t");
+	BOOST_CHECK_THROW(S.AddPathVariable(collider), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(add_path_variable_noncolliding_ok)
+{
+	Var x = Variable::Make("x");
+	System S;
+	S.AddVariableGroup(VariableGroup{x});
+	Var s = Variable::Make("s");
+	BOOST_CHECK_NO_THROW(S.AddPathVariable(s));
+	BOOST_CHECK(S.HavePathVariable());
+}
+
+BOOST_AUTO_TEST_CASE(make_homotopy_auto_names_a_safe_path_variable)
+{
+	Var x = Variable::Make("x");
+	System target;
+	target.AddVariableGroup(VariableGroup{x});
+	target.AddFunction(x*x - 1);
+	System start;
+	start.AddVariableGroup(VariableGroup{x});
+	start.AddFunction(x - 1);
+
+	auto H = MakeHomotopy(target, start);   // empty name -> auto-choose a safe one
+	BOOST_CHECK(H.HavePathVariable());
+	BOOST_CHECK_EQUAL(H.GetPathVariable()->name(), std::string("t")); // "t" is free (only variable is x)
+}
+
+BOOST_AUTO_TEST_CASE(make_homotopy_with_colliding_pathvar_throws)
+{
+	Var x = Variable::Make("x");
+	System target;
+	target.AddVariableGroup(VariableGroup{x});
+	target.AddFunction(x*x - 1);
+	System start;
+	start.AddVariableGroup(VariableGroup{x});
+	start.AddFunction(x - 1);
+
+	// Forcing the path variable to be "x" collides with the user variable x.
+	BOOST_CHECK_THROW(MakeHomotopy(target, start, "x"), std::runtime_error);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

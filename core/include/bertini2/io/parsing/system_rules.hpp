@@ -224,9 +224,12 @@ namespace bertini {
 					
 					
 					
-					// get a string which fits the naming rules.
+					// get a string which fits the naming rules.  Identifiers are
+					// UTF-8: they start with a Unicode letter and continue with
+					// Unicode alphanumerics or [ ] _ .  The matched raw bytes are
+					// the stored name (already UTF-8).  See io/parsing/unicode_ident.hpp.
 					valid_variable_name_.name("valid_variable_name_");
-					valid_variable_name_ = +qi::alpha >> *(qi::alnum | qi::char_("[]_") );
+					valid_variable_name_ = utf8_identifier_parser();
 					
 					
 					

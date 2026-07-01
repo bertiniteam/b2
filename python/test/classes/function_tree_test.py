@@ -90,6 +90,17 @@ def test_Variable_construct():
     x = Variable("x")
 
 
+def test_Variable_unicode_name():
+    # Names are arbitrary UTF-8; a Unicode letter round-trips through str().
+    x = Variable("Ω")  # Ω
+    assert str(x) == "Ω"
+
+
+def test_Variable_cjk_name():
+    x = Variable("中")  # 中
+    assert str(x) == "中"
+
+
 def test_variables_count():
     v = variables('x', 3)
     assert len(v) == 3

@@ -701,8 +701,35 @@ namespace bertini
 
 
 
+	std::set<std::string> System::VariableNameSet() const
+	{
+		std::set<std::string> names;
+		auto add_group = [&names](VariableGroup const& g) {
+			for (auto const& v : g)
+				if (v)
+					names.insert(v->name());
+		};
+		add_group(ungrouped_variables_);
+		for (auto const& g : variable_groups_)
+			add_group(g);
+		for (auto const& g : hom_variable_groups_)
+			add_group(g);
+		add_group(homogenizing_variables_);
+		add_group(implicit_parameters_);
+		return names;
+	}
+
+
 	void System::AddPathVariable(Var const& v)
 	{
+		// A homotopy's path variable must never share a name with a user variable
+		// (else references to the name are ambiguous, and it corrupts hash-consing).
+		// Auto-constructed homotopies avoid this via UniquePathVariableName; this is
+		// the backstop for any caller (all homotopy builders funnel through here).
+		if (v && VariableNameSet().count(v->name()))
+			throw std::runtime_error("System::AddPathVariable: path-variable name \"" + v->name()
+				+ "\" collides with an existing system variable.  Choose a different name "
+				  "(see UniquePathVariableName).");
 		path_variable_ = v;
 		InvalidateDifferentiation();
 		have_path_variable_ = true;
@@ -1683,11 +1710,30 @@ namespace bertini
 	}
 
 
+	std::string UniquePathVariableName(System const& target, std::string base)
+	{
+		auto const names = target.VariableNameSet();
+		if (!names.count(base))
+			return base;
+		for (unsigned long k = 1; ; ++k)
+		{
+			std::string candidate = base + "_" + std::to_string(k);
+			if (!names.count(candidate))
+				return candidate;
+		}
+	}
+
+
 	System MakeHomotopy(System const& target, System const& start,
 	                    std::string const& path_variable_name,
 	                    std::shared_ptr<node::Node> const& gamma)
 	{
-		auto t = node::Variable::Make(path_variable_name);
+		// Empty name means "choose a safe one": never inject a bare `t` that could
+		// collide with a user variable of the same name.
+		std::string const effective_name = path_variable_name.empty()
+			? UniquePathVariableName(target, "t")
+			: path_variable_name;
+		auto t = node::Variable::Make(effective_name);
 		auto g = gamma ? gamma
 		               : std::static_pointer_cast<node::Node>(node::Complex::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Complex node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
 
@@ -1771,7 +1817,11 @@ namespace bertini
 					+ "`) is identical in start_moving and end_moving, so it does not move; put "
 					"non-moving equations in `fixed` instead.");
 
-		auto t = node::Variable::Make(path_variable_name);
+		// Empty name means "choose a safe one" relative to the fixed system's variables.
+		std::string const effective_name = path_variable_name.empty()
+			? UniquePathVariableName(fixed, "t")
+			: path_variable_name;
+		auto t = node::Variable::Make(effective_name);
 		auto g = gamma ? gamma
 		               : std::static_pointer_cast<node::Node>(node::Complex::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Complex node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
 

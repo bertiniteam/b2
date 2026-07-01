@@ -59,9 +59,26 @@
 #include <stdexcept>
 #include <string>
 
+#include "bertini2/io/parsing/unicode_ident.hpp"
+
 namespace bertini {
 namespace parsing {
 namespace classic {
+
+/// \brief Strip a leading UTF-8 byte-order mark (`EF BB BF`) from \p s in place,
+///        if present.  Editors (notably on Windows) may prepend a BOM; the Qi
+///        grammar treats input as raw UTF-8, so the BOM must be removed at the
+///        read boundary or it would appear as a stray leading "character".
+inline void StripUTF8BOM(std::string& s)
+{
+	if (s.size() >= 3 &&
+	    static_cast<unsigned char>(s[0]) == 0xEF &&
+	    static_cast<unsigned char>(s[1]) == 0xBB &&
+	    static_cast<unsigned char>(s[2]) == 0xBF)
+	{
+		s.erase(0, 3);
+	}
+}
 
 /// \brief Format a human-readable parse-error message (line, column, expected, and found text).
 inline std::string FormatParseError(

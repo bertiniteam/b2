@@ -2035,7 +2035,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				RankCheck();                     // square, but can isolated solutions even exist?
 				PrepareTarget(owned_target_);    // homogenize + auto-patch the (now square) target
 				owned_start_    = owned_factory_(owned_target_);                         // start system over the prepared target
-				owned_homotopy_ = MakeHomotopy(owned_target_, *owned_start_, path_variable_name);
+				// Treat the configured name as a BASE: mangle it only if it would collide with a
+				// user variable, so the injected path variable can never overlap a user symbol.
+				owned_homotopy_ = MakeHomotopy(owned_target_, *owned_start_,
+				                               UniquePathVariableName(owned_target_, path_variable_name));
 			}
 
 			/// \return The built (cloned, prepared) target system.
@@ -2335,8 +2338,13 @@ HomotopySolver<TrackerType,EndgameType,SystemType>
 	// Only re-run setup in that case: re-running unconditionally re-randomizes
 	// gamma and the start system for no reason, and (before Homogenize() was made
 	// idempotent) re-corrupted the prepared target system.
+	// Compare against the collision-free name actually used at construction (the configured
+	// name is a base that UniquePathVariableName may have mangled), so an unchanged config
+	// does not spuriously look like a rename and force a rebuild.
+	auto const effective_path_variable_name =
+	    UniquePathVariableName(this->TargetSystem(), this->template Get<ZeroDimConf>().path_variable_name);
 	if (!Homotopy().HavePathVariable()
-	    || Homotopy().GetPathVariable()->name() != this->template Get<ZeroDimConf>().path_variable_name)
+	    || Homotopy().GetPathVariable()->name() != effective_path_variable_name)
 	{
 		DefaultSystemSetup();
 	}

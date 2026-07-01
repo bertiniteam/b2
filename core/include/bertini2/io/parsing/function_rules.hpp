@@ -200,7 +200,12 @@ namespace bertini {
 					
 					exp_elem_.name("exp_elem_");
 					exp_elem_ =
-					(symbol_  >> !qi::alnum) [_val = _1]
+					// The negative lookahead keeps a known symbol from matching a
+					// prefix of a longer identifier (e.g. `e` inside `exp`, or `x`
+					// inside `xy`).  It must use the UTF-8 continuation predicate so
+					// a following Unicode letter (e.g. `α` after a known `Ω`) also
+					// blocks the match -- a bare ASCII !qi::alnum would not.
+					(symbol_  >> utf8_ident_boundary_parser()) [_val = _1]
 					|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
 					// unary +/- bind a single factor_, NOT the whole expression_: "-y+x" is
 					// (-y)+x, and "-x^2" is -(x^2).  (Binding expression_ here made a leading

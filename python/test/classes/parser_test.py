@@ -56,6 +56,20 @@ def test_create_system():
     sysJac = sys.eval_jacobian(vals)
 
 
+def test_parse_unicode_variable():
+    # The classic parser accepts Unicode letters (Ω, α) as variable names.
+    sys = pp.system('variable_group Ω, α; function f; f = Ω^2 + α^2 - 1;')
+    assert sys.num_variables() == 2
+    vals = np.array((complex(0.3, 0.0), complex(0.4, 0.0)))  # 0.09 + 0.16 - 1 = -0.75
+    assert abs(sys.eval(vals)[0] - (-0.75)) < 1e-12
+
+
+def test_parse_utf8_bom():
+    # A leading UTF-8 BOM is stripped before parsing.
+    sys = pp.system('﻿variable_group x, y; function f; f = x^2 + y^2 - 1;')
+    assert sys.num_variables() == 2
+
+
 def _f_eval(expr, vals):
     """Parse 'f = <expr>' over x,y,z and evaluate at vals."""
     return pp.system(f'function f; variable_group x,y,z; f = {expr};').eval(vals)[0]

@@ -59,6 +59,8 @@ namespace bertini{
 		template <typename ResultT, typename ParserT>
 		ResultT Parser(std::string str)
 		{
+			// Treat input as UTF-8; drop a leading BOM so it is not parsed as a stray character.
+			bertini::parsing::classic::StripUTF8BOM(str);
 			ResultT res;
 			bertini::parsing::classic::parse(str.begin(), str.end(), res);
 			return res;

@@ -77,11 +77,16 @@ namespace bertini {
 	System::System(std::string const& input)
 	{
 		System sys;
-		
+
 		parsing::classic::SystemParser<std::string::const_iterator> S;
-		
-		std::string::const_iterator iter = input.begin();
-		std::string::const_iterator end = input.end();
+
+		// Treat the input as UTF-8; drop a leading BOM so it is not seen as a
+		// stray leading character by the grammar.
+		std::string cleaned = input;
+		parsing::classic::StripUTF8BOM(cleaned);
+
+		std::string::const_iterator iter = cleaned.begin();
+		std::string::const_iterator end = cleaned.end();
 		
 		bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
 		
