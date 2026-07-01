@@ -206,3 +206,12 @@ becomes one function that is the product of its hyperplanes:
    sb = linalg.slice_from_coefficients([[0, 1, -1], [0, 1, -2]], [x, y])   # (y - 1)(y - 2)
    linalg.add_slices_as_products(start, [sa, sb])
    assert list(start.degrees()) == [2, 2]
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: intro_to_slices.py
+   :language: python
+   :caption: intro_to_slices.py

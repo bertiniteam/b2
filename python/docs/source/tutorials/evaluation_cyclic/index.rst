@@ -100,3 +100,12 @@ Let's change the values of our vector, and re-evaluate.
 There is much more one can do, too!  Please write the authors, particularly Silviana, for more.
 
 .. [1] This is one of the reasons we wrote Bertini2's symbolic C++ core and exposed it to Python.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: evaluation_cyclic.py
+   :language: python
+   :caption: evaluation_cyclic.py

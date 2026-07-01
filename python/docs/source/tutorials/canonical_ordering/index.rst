@@ -82,3 +82,12 @@ do *not* opt out of stays canonicalized -- and keeps sharing.
    back in" (as above). Everything built while it is off keeps its authored order and is a
    distinct node from the canonical form; everything built while it is on is canonicalized and
    shared.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: canonical_ordering.py
+   :language: python
+   :caption: canonical_ordering.py

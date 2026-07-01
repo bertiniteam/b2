@@ -119,3 +119,12 @@ Pass ``strict=True`` to instead require every config in the bundle to be applica
 
 Put together, the pattern for any multi-solve workflow is: **tune one owner, ``get_settings()``, and
 ``set_settings()`` on each of the rest.**
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: carrying_settings.py
+   :language: python
+   :caption: carrying_settings.py

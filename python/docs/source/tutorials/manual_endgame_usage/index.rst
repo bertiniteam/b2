@@ -167,3 +167,12 @@ The following three papers (cited above) laid the foundation for endgames and co
 
 
 
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: manual_endgame_usage.py
+   :language: python
+   :caption: manual_endgame_usage.py
