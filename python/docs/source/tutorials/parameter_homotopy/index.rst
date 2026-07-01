@@ -105,3 +105,12 @@ values misses them.  In the example above the real path stays safely inside :mat
 generic member's coefficients to be **generic complex numbers**; then the path avoids the bad
 set with probability one.  And keep coefficients *exact* -- :mod:`bertini.linalg` refuses python
 floats so low-precision literals cannot silently cap your precision.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: parameter_homotopy.py
+   :language: python
+   :caption: parameter_homotopy.py

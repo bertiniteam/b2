@@ -175,3 +175,12 @@ The same idea extends to **matrices of variables** (``linalg.variable_matrix``),
 where problems like rank conditions and regeneration are headed.  Today the vector
 equations are expanded into scalar polynomials; a future evaluation block will carry the
 matrix structure all the way into the numerics for larger problems.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: eigenvalues_by_homotopy.py
+   :language: python
+   :caption: eigenvalues_by_homotopy.py

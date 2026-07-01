@@ -114,3 +114,12 @@ The same refusal protects you from a subtler case: a system that is square *by e
 whose solution set is still positive-dimensional (for instance a repeated equation).  ``ZeroDimSolver``
 checks the Jacobian rank at a generic point and raises if the solution set cannot be
 zero-dimensional.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: zerodim_solver.py
+   :language: python
+   :caption: zerodim_solver.py

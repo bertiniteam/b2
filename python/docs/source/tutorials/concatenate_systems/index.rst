@@ -128,3 +128,12 @@ block, concatenate, solve** -- scales to as many blocks as your problem comes in
    :math:`x_1` *is* the base's :math:`x_1`, so the blocks line up. If you instead need a fully
    independent serialized copy (for example to send a system to another process), use
    ``copy.deepcopy`` or :mod:`pickle`.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: concatenate_systems.py
+   :language: python
+   :caption: concatenate_systems.py

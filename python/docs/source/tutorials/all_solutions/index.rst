@@ -125,3 +125,12 @@ When a system has structure -- several groups of variables that each appear with
 degree -- the total-degree count above is wasteful.  The
 :doc:`/tutorials/eigenvalues_by_homotopy/index` tutorial shows the multihomogeneous start system, which
 tracks one path per *actual* solution instead.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: all_solutions.py
+   :language: python
+   :caption: all_solutions.py
