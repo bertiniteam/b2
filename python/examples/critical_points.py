@@ -22,7 +22,7 @@ from bertini.nag_algorithm import ZeroDimSolver
 
 
 def main():
-    pb.random.set_random_seed(2024)
+    pb.random.set_random_seed(165)
     x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
     f = x * (x**2 + y**2 - 1)
     g = z * ((y - 1)**2 + z**2 - 1)

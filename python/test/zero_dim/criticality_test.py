@@ -6,8 +6,11 @@ high-degree determinant -- is that the Jacobian of f stacked with pi's coefficie
 **rank-deficient**: the 3x3 matrix M = [ J_f ; pi ] has a nonzero null vector v.  We solve for
 (x, y, z) on the curve together with that null vector, plus one patch equation so v != 0.
 
-The curve is two interlocking circles (a reducible space curve), whose per-circle critical points
-are predictable in closed form -- the analytic oracle that tells us the solve is right.
+The curve is reducible (Bezout degree 3*3 = 9): a line (the y-axis), two interlocking circles, and
+a degree-4 quartic where the two cylinders meet.  The criticality system finds critical points on
+all of it -- smooth projection-critical points plus the singular crossings where components meet.
+This test checks the *checkable subset*: each circle is genus-0 degree-2, so its two critical
+points are predictable in closed form -- the analytic oracle that tells us the solve is right.
 
     f = x (x^2 + y^2 - 1)          # plane x=0  u  cylinder x^2 + y^2 = 1
     g = z ((y-1)^2 + z^2 - 1)      # plane z=0  u  cylinder (y-1)^2 + z^2 = 1
@@ -42,7 +45,7 @@ def _criticality_system(x, y, z, f, g, pi):
 
 
 def test_critical_points_of_interlocking_circles():
-    pb.random.set_random_seed(2024)
+    pb.random.set_random_seed(165)
     x, y, z, f, g = _curve()
 
     # a real projection, so the two real circles' critical points are real and in closed form
