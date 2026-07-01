@@ -139,3 +139,12 @@ a total-degree start would track :math:`2^2 = 4`. Same answer, half the work.
 One solution survives: :math:`(1, 1)`, exactly as read off by hand. The difference from Part 1 is
 the **grouping** -- declaring ``x`` and ``y`` as separate variable groups let the multihomogeneous
 start system see the bilinear structure and track fewer paths to the same answer.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: randomize.py
+   :language: python
+   :caption: randomize.py

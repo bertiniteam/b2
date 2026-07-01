@@ -164,3 +164,12 @@ That is the whole arc: an exact, hand-authored product-of-linears start system, 
 you wrote down yourself, blended into a homotopy and tracked through the same solver bertini uses
 for its generated start systems -- landing on the target's four roots, neatly split into real and
 complex.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: user_product_of_linears.py
+   :language: python
+   :caption: user_product_of_linears.py

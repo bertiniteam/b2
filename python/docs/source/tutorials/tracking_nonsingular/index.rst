@@ -282,3 +282,12 @@ Footnotes
 ---------
 
 .. [#]  Affinely-grouped variables live together in the same complex space, :math:`\mathbb{C}^N`.  The alternative is projectively-grouped variables, which live in a copy of :math:`\mathbb{P}^N`.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: tracking_nonsingular.py
+   :language: python
+   :caption: tracking_nonsingular.py

@@ -112,3 +112,12 @@ and so on are not precision-stamped. That is exactly why a settings bundle carri
 So the rule of thumb: reach for ``'adaptive'`` by default; drop to ``'double'`` for speed when the
 problem is well-conditioned; use ``'multiple'`` when you want a fixed, known precision throughout. And
 read every solution through :func:`complex` so your code does not care which model produced it.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: precision_models.py
+   :language: python
+   :caption: precision_models.py

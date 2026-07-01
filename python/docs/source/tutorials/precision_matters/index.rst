@@ -118,3 +118,12 @@ Two habits keep a solve honest:
 #. **Check** ``report().num_failed``\ **, not just the count.**  The solve report classifies every
    path; if any *failed to track*, ``num_failed`` is nonzero and ``failures_by_reason`` names the
    reason.  A count alone can hide a root the tracker silently lost.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- assemble nothing, just run it:
+
+.. literalinclude:: precision_matters.py
+   :language: python
+   :caption: precision_matters.py
