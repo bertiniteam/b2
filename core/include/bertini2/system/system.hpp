@@ -78,8 +78,8 @@ namespace bertini {
 	struct NodeMatrix
 	{
 		std::vector<std::shared_ptr<node::Node>> entries; ///< row-major, length rows*cols
-		size_t rows = 0;
-		size_t cols = 0;
+		size_t rows = 0; ///< the number of rows (functions)
+		size_t cols = 0; ///< the number of columns (variables)
 	};
 
 	/**

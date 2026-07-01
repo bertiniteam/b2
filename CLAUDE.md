@@ -122,6 +122,7 @@ The project has three layers, built in order:
 ## CI/CD
 
 - `.github/workflows/build_and_test.yml` -- Builds wheels on Ubuntu/macOS/Windows and runs tests. Triggered by pull requests and pushes to `develop`/`main`.
+- `.github/workflows/doc_lint.yml` -- A cheap Doxygen doc-correctness gate that **the build matrix depends on** (it runs first; if it fails, nothing compiles). **Run `bash tools/doclint.sh` locally before pushing any C++ change**, or CI will bounce the whole build. It needs `doxygen` on PATH (`brew install doxygen`). Two passes: (1) *correctness* — `@param` names must match signatures, no doc blocks on removed signatures, no unresolved `\ref`/`\cite` (zero tolerance); (2) *undocumented ratchet* — the count of undocumented public entities in `tools/doc_undocumented_baseline.txt` may only **decrease** (currently `0`, so **every new public C++ entity — including each struct data member — needs a Doxygen comment**, e.g. `///< ...`). If you legitimately reduce the count, run `bash tools/doclint.sh --update-baseline` to lock it in.
 - `.github/workflows/publish.yml` -- Publishes to TestPyPI on `develop` push, PyPI on version tags (`v*.*.*`) with Sigstore signing and GitHub Releases.
 
 ### Linux wheel test coverage
