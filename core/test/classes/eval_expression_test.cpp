@@ -186,4 +186,24 @@ BOOST_AUTO_TEST_CASE(derivatives_compile_and_evaluate_through_the_slp)
 	BOOST_CHECK_SMALL(std::abs(evald((x/y)->Differentiate(x), pt)   - complex_dbl(0.2)), tol); // d/dx x/y = 1/y, y=5 -> 0.2
 }
 
+// TEMP: dump the compiled tape for x*x*y (and confirm x*x folds to x^2) + correctness.
+BOOST_AUTO_TEST_CASE(dump_xxy_tape_after_fold)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	std::cerr << "\n### x*x prints as: "; (x*x)->print(std::cerr);
+	std::cerr << "   |   x*x*y prints as: "; (x*x*y)->print(std::cerr); std::cerr << "\n";
+	bertini::System sys;
+	sys.AddFunction(x*x*y);
+	sys.AddVariableGroup(bertini::VariableGroup{x,y});
+	bertini::StraightLineProgram slp(sys);
+	std::cerr << "### SLP for x*x*y:" << slp << "### num memory slots = " << slp.NumMemorySlots() << "\n";
+	// correctness unchanged: x^2 y at (0.6-0.2i, -1.1+0.4i) = -0.256 + 0.392i
+	bertini::DefaultPrecision(30);
+	auto v = EvalExpression<complex_mp>(x*x*y, {
+		{"x", complex_mp(bertini::real_mp("0.6"), bertini::real_mp("-0.2"))},
+		{"y", complex_mp(bertini::real_mp("-1.1"), bertini::real_mp("0.4"))} });
+	BOOST_CHECK(abs(v - complex_mp(bertini::real_mp("-0.256"), bertini::real_mp("0.392"))) < 1e-25);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

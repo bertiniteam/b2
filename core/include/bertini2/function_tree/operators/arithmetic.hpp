@@ -1369,24 +1369,29 @@ namespace node{
 	/// \brief Build a product expression-tree node from its operands.
 	inline std::shared_ptr<Node>& operator*=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		
-		// if the two nodes are integer power operators, and if they point the same place, then add the powers.
-
-		if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
+		// PROTOTYPE (power-fold): a product of two powers of the SAME variable base collapses to one
+		// IntegerPower --  x*x -> x^2,  x^a*x -> x^(a+1),  x*x^b -> x^(1+b),  x^a*x^b -> x^(a+b).
+		// "base" is the node itself (exponent 1), or an IntegerPower's operand (its exponent). We
+		// restrict the base to a *variable* so this stays a safe, targeted normalization (no
+		// constant 2*2 -> 2^2, no (x+y)^2 surprises yet). The payoff: the function's x*x becomes the
+		// SAME interned x^2 node the differentiator already emits, so hash-consing/CSE compute it
+		// once instead of the Jacobian recomputing it. Generalizes the old IntegerPower*IntegerPower
+		// special case that missed x*x and x^a*x.
+		auto base_exp = [](std::shared_ptr<Node> const& n) -> std::pair<std::shared_ptr<Node>, int> {
+			if (auto ip = std::dynamic_pointer_cast<IntegerPowerOperator>(n))
+				return { ip->Operand(), ip->exponent() };
+			return { n, 1 };
+		};
+		auto L = base_exp(lhs);
+		auto R = base_exp(rhs);
+		if (std::dynamic_pointer_cast<Variable>(L.first) && L.first->IsSame(*R.first))
 		{
-
-			auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs); // ugh, doing this cast twice?!?!?  fix this.
-			auto rhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
-
-			if (lhs_as_intpow->Operand()==rhs_as_intpow->Operand())
-			{
-				if (lhs_as_intpow->exponent()>=0 && rhs_as_intpow->exponent()>=0)
-				{
-					std::shared_ptr<Node> temp = pow(lhs_as_intpow->Operand(),lhs_as_intpow->exponent() + rhs_as_intpow->exponent());
-					lhs.swap(temp);
-					return lhs;
-				}
-			}
+			const int e = L.second + R.second;
+			std::shared_ptr<Node> temp = (e == 0) ? std::static_pointer_cast<Node>(Integer::Make(1))
+			                           : (e == 1) ? L.first
+			                                      : pow(L.first, e);
+			lhs.swap(temp);
+			return lhs;
 		}
 
 		std::shared_ptr<Node> temp = MultOperator::Make(lhs,rhs);
