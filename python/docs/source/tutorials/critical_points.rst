@@ -119,12 +119,14 @@ up among the solutions:
 Plotting the curve, the projection, and where the critical points land
 =====================================================================
 
-A projection :math:`\pi` is "look at the curve along the direction :math:`\pi` and read off the
-coordinate :math:`\pi\cdot x`."  Picture that as an **axis** in the direction of :math:`\pi`: every
-point of the curve drops onto it, and the **critical points are exactly the ones whose image stops
-moving** -- the nearest and farthest landing spots on each circle.  We draw the two circles, the
-:math:`\pi` direction, the projection axis, and a segment from each critical point to the spot it
-lands on:
+A projection reads off the coordinate :math:`\pi\cdot x`.  Its **fibers** -- the sets of points
+with the same image -- are the level sets of :math:`\pi`, and you *project along* those fibers: the
+projection direction is parallel to the fibers, i.e. **perpendicular** to the gradient
+:math:`\pi`.  (The gradient :math:`\pi` points along the *image axis*, the line the curve lands on;
+do not confuse the two.)  The **critical points are the ones whose image stops moving** -- the
+nearest and farthest landing spots on each circle.  We draw the two circles, the image axis, a
+dashed fiber from each critical point to the spot it lands on, and the projection direction (along
+those fibers):
 
 .. testcode::
 
@@ -143,12 +145,14 @@ lands on:
     ax.plot(np.zeros_like(th), 1 + np.cos(th), np.sin(th), 'C0', lw=1.2, label='circle in x=0')  # the curve
     ax.plot(np.cos(th), np.sin(th), np.zeros_like(th), 'C1', lw=1.2, label='circle in z=0')
     ax.scatter(crit[:, 0], crit[:, 1], crit[:, 2], c='C3', s=45, depthshade=False, label='critical points')
-    ax.plot(axis[:, 0], axis[:, 1], axis[:, 2], 'k--', lw=1, label='projection axis (direction π)')
+    ax.plot(axis[:, 0], axis[:, 1], axis[:, 2], 'k--', lw=1, label='image axis (∥ π)')
     ax.scatter(feet[:, 0], feet[:, 1], feet[:, 2], c='k', s=20)                 # the landing spots
     for i, (P, Ft) in enumerate(zip(crit, feet)):                                # each critical point's fiber
         ax.plot([P[0], Ft[0]], [P[1], Ft[1]], [P[2], Ft[2]], color='0.5', lw=0.9, ls='--',
                 label='projection fibers' if i == 0 else None)
-    ax.quiver(0, 0, 0, u[0], u[1], u[2], length=1.2, color='C2', lw=2, label='π direction')
+    P, D = crit[3], feet[3] - crit[3]              # collapse along a fiber (perpendicular to π)
+    ax.quiver(P[0], P[1], P[2], D[0], D[1], D[2], color='C2', lw=2.5, arrow_length_ratio=0.25,
+              label='projection direction (along fibers)')
     ax.set_xlabel('x'); ax.set_ylabel('y'); ax.set_zlabel('z')
     ax.legend(loc='upper left', fontsize=8)
     ax.set_title('Projection-critical points of two interlocking circles')
@@ -158,11 +162,11 @@ lands on:
    :align: center
    :width: 75%
 
-   The two interlocking circles (the curve), the projection direction :math:`\pi` (green arrow),
-   and a representative projection axis along :math:`\pi` (black dashed).  Each red critical point
-   is joined to its landing spot on the axis by a dashed **fiber** (a level set of :math:`\pi`);
-   these are the extreme landing spots, where the image :math:`\pi\cdot x` stops moving as you
-   travel along a circle.
+   The two interlocking circles (the curve), the image axis along the gradient :math:`\pi` (black
+   dashed), and the projection direction (green) -- which runs *along the fibers*, perpendicular to
+   :math:`\pi`.  Each red critical point is joined to its landing spot on the image axis by a
+   dashed **fiber** (a level set of :math:`\pi`); these are the extreme landing spots, where the
+   image :math:`\pi\cdot x` stops moving as you travel along a circle.
 
 What a critical point *is*: where the fiber count jumps
 ======================================================
@@ -180,9 +184,10 @@ projection, where the sheets of :math:`\pi^{-1}` come together:
    :align: center
    :width: 60%
 
-   The orange circle seen along :math:`\pi`.  A generic fiber (grey) meets it in two points; the
-   two critical fibers (red, tangent) meet it in one -- the two collide -- and a fiber past them
-   (dotted) meets it in none.  The critical points are precisely where the fiber count jumps.
+   The orange circle, projected along the green direction (its fibers are the parallel dashed
+   lines).  A generic fiber (grey) meets the circle in two points; the two critical fibers (red,
+   tangent) meet it in one -- the two collide -- and a fiber past them (dotted) meets it in none.
+   The critical points are precisely where the fiber count jumps.
 
 This is why the count of critical points is a genuine invariant of the curve-and-projection, and
 why criticality is the workhorse it is: branch points organize how a curve sits over its image.
