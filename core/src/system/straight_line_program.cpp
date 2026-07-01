@@ -425,7 +425,12 @@ namespace bertini{
 			const bool r0 = opw & kArg0Real;   // first operand in real bank
 			const bool r1 = opw & kArg1Real;   // second operand in real bank (binary, non-IntPower)
 			const bool ro = opw & kOutReal;    // result in real bank
-			const size_t a = instructions_[ii+1], b = instructions_[ii+2], c = instructions_[ii+3];
+			const size_t a = instructions_[ii+1], b = instructions_[ii+2];
+			// c (the second operand / result word) exists only for binary ops (4-word instructions).
+			// A unary op is 3 words, so reading instructions_[ii+3] there is the NEXT instruction --
+			// and one past the end of the tape when the unary op is the last instruction (a trailing
+			// Assign is the common case: output wiring ends every program). Guard the read.
+			const size_t c = IsUnary(op) ? 0 : instructions_[ii+3];
 
 			switch (op) {
 

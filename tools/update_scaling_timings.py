@@ -14,7 +14,7 @@ Run it **from the repository root, inside the bertini environment**::
     python tools/update_scaling_timings.py --quick      # tiny problems, to smoke-test this tool
 
 Each configuration is run **alone** (sequentially), so the wall-clock numbers are not polluted by
-contention; the full default sweep is ~20 minutes on 8 cores.  The tool **aborts without editing**
+contention; the full default sweep is a few minutes on a fast 12+-core machine.  The tool **aborts without editing**
 if any run fails its built-in correctness check, so it can never write numbers from a broken solve.
 
 This script is the single source of truth for the layouts shown in the tutorial: change the ladder
@@ -125,10 +125,16 @@ def splice(text, key, block):
 
 
 def rank_table(script, args, problem_caption):
-    """The serial -> 2/4/8-worker ladder shared by the cyclic and eigenvalue tables."""
+    """The serial -> 2/4/8/12-worker ladder shared by the cyclic and eigenvalue tables.
+
+    The top rung (12 workers, ``-n 13``) targets a 12-performance-core machine (e.g. Apple
+    M3 Max: 12 performance + 4 efficiency cores); the near-idle manager rides an efficiency
+    core.  On a smaller box the wide rungs oversubscribe -- measure() adds ``:OVERSUBSCRIBE``
+    automatically -- and the speedup simply plateaus, which is the honest result.
+    """
     serial, _ = measure(script, args, 1)
     rows = [["serial", "--", f"{serial:.1f}", "1.0x"]]
-    for nprocs, workers in ((3, 2), (5, 4), (9, 8)):
+    for nprocs, workers in ((3, 2), (5, 4), (9, 8), (13, 12)):
         t, _ = measure(script, args, nprocs)
         rows.append([f"``-n {nprocs}``", str(workers), f"{t:.1f}", speedup(serial, t)])
     header = ["launch", "workers", "wall-clock (s)", "speedup"]
@@ -183,15 +189,18 @@ def main():
 
     if "hybrid" in want:
         serial, _ = measure(CYCLIC, cyclic_args, 1)
-        t81, _ = measure(CYCLIC, cyclic_args, 9, omp=1)                  # == cyclic -n 9 row
-        t42, _ = measure(CYCLIC, cyclic_args, 5, omp=2, bind_none=True)
-        t24, _ = measure(CYCLIC, cyclic_args, 3, omp=4, bind_none=True)
+        # 12 worker-cores split every way the factors of 12 allow: ranks x threads = 12.
+        t12_1, _ = measure(CYCLIC, cyclic_args, 13, omp=1)                # == cyclic -n 13 row
+        t6_2, _  = measure(CYCLIC, cyclic_args, 7, omp=2, bind_none=True)
+        t4_3, _  = measure(CYCLIC, cyclic_args, 5, omp=3, bind_none=True)
+        t2_6, _  = measure(CYCLIC, cyclic_args, 3, omp=6, bind_none=True)
         rows = [
-            ["``-n 9``, 8 workers x 1 thread", f"{t81:.1f}", speedup(serial, t81)],
-            ["``-n 5``, 4 workers x 2 threads", f"{t42:.1f}", speedup(serial, t42)],
-            ["``-n 3``, 2 workers x 4 threads", f"{t24:.1f}", speedup(serial, t24)],
+            ["``-n 13``, 12 workers x 1 thread", f"{t12_1:.1f}", speedup(serial, t12_1)],
+            ["``-n 7``, 6 workers x 2 threads",  f"{t6_2:.1f}",  speedup(serial, t6_2)],
+            ["``-n 5``, 4 workers x 3 threads",  f"{t4_3:.1f}",  speedup(serial, t4_3)],
+            ["``-n 3``, 2 workers x 6 threads",  f"{t2_6:.1f}",  speedup(serial, t2_6)],
         ]
-        cap = (f"cyclic-{args.cyclic_n} at 8 worker-cores, ranks x threads, "
+        cap = (f"cyclic-{args.cyclic_n} at 12 worker-cores, ranks x threads, "
                f"measured on {cores} cores, {stamp} -- {refresh}")
         blocks["hybrid"] = render_table(cap, [40, 25, 15],
                                         ["layout", "wall-clock (s)", "speedup"], rows)

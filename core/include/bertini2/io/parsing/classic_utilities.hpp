@@ -396,14 +396,12 @@ namespace bertini {
 			 */
 			std::tuple<std::string, std::string> SplitIntoConfigAndInput(Path const& input_file)
 			{
-				auto file_as_string = FileToString(input_file);
-				
-				SplitInputFileParser<std::string::const_iterator> parser;
-				SplitInputFile config_and_input;
-				std::string::const_iterator iter = file_as_string.begin();
-				std::string::const_iterator end = file_as_string.end();
-				phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input);
-
+				// Route through ParseInputFile, which runs the CommentStripper pass BEFORE splitting.
+				// Bertini 1 uses '%' as its comment marker; calling the raw SplitInputFileParser here --
+				// as this used to -- left '%' comments in the text, and the downstream system/settings
+				// parsers then choked ("parser did not consume entire input").  A classic input file
+				// with comments must parse, for backwards compatibility.
+				auto config_and_input = ParseInputFile(FileToString(input_file));
 				return std::make_tuple(config_and_input.Config(), config_and_input.Input());
 			}
 

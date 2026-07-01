@@ -260,4 +260,46 @@ BOOST_AUTO_TEST_CASE(power_fold_before_after_tape)
 	SetPowerFoldByDefault(true);   // leave the session in the default state
 }
 
+// Regression: SLPProgram::Eval used to read instructions_[ii+3] unconditionally, over-reading the
+// instruction tape by one word for a *unary* op (3 words) that is the last instruction -- which is
+// the common case, since output wiring ends every program in a trailing Assign. It surfaced as a
+// heap-buffer-overflow (ASAN) / SIGSEGV under Guard Malloc for programs whose tape ends exactly on
+// an allocation boundary, e.g. the Jacobian of a squared-variable monomial like x*x*y. The value was
+// always correct (the stray word is discarded), so only a memory sanitizer/adverse allocator catches
+// it -- run this suite under ASAN. Both the bare-expression (EvalExpression) and the normal
+// System->StraightLineProgram solve path exercise the same evaluator.
+BOOST_AUTO_TEST_CASE(eval_of_trailing_unary_tape_is_memory_safe)
+{
+	bertini::DefaultPrecision(30);
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	std::map<std::string,complex_mp> values{
+		{"x", complex_mp(bertini::real_mp("0.6"), bertini::real_mp("-0.2"))},
+		{"y", complex_mp(bertini::real_mp("-1.1"), bertini::real_mp("0.4"))} };
+	// x^2*y at this point = -0.256 + 0.392i (over-read word never affected the result; check it holds)
+	auto v = EvalExpression<complex_mp>(x*x*y, values);
+	BOOST_CHECK(abs(v - complex_mp(bertini::real_mp("-0.256"), bertini::real_mp("0.392"))) < 1e-25);
+	// exercise several tapes that end in a trailing unary op after a squared-variable factor
+	for (Nd f : { Nd(x*x*y), Nd(x*y*y), Nd(x*x/y), Nd(x/(y*y)) })
+		EvalExpression<complex_mp>(f, values);
+}
+
+BOOST_AUTO_TEST_CASE(system_slp_of_squared_monomial_is_memory_safe)
+{
+	bertini::DefaultPrecision(30);
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	bertini::System sys;
+	sys.AddFunction(x*x*y);
+	sys.AddVariableGroup(bertini::VariableGroup{x,y});
+	bertini::StraightLineProgram slp(sys);      // compiles f + Jacobian; tape ends in a trailing Assign
+	bertini::Vec<complex_mp> point(2);
+	point << complex_mp(bertini::real_mp("0.6"), bertini::real_mp("-0.2")),
+	         complex_mp(bertini::real_mp("-1.1"), bertini::real_mp("0.4"));
+	slp.precision(30);
+	slp.Eval(point);
+	auto fv = slp.GetFuncVals<complex_mp>();
+	BOOST_CHECK(abs(fv(0) - complex_mp(bertini::real_mp("-0.256"), bertini::real_mp("0.392"))) < 1e-25);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
