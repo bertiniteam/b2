@@ -81,11 +81,45 @@ def test_linear_form_coefficients_short_in_terse_full_in_verbose():
     terse, verbose = s.describe(), s.describe(verbose=True)
     assert 'c.[x, y, z, 1]' in terse and 'c =' in terse
 
-    def longest_decimal(text):
-        return max((len(t) for t in re.findall(r'\d+\.\d+', text)), default=0)
+    # Count SIGNIFICANT FIGURES, not characters.  A character-width bound is magnitude-dependent
+    # and flaky: a 4-significant-figure coefficient below 1e-3 (e.g. 0.0003162) is 9 characters
+    # wide, so a `width <= 8` assertion fails on an unlucky small random draw.  Significant figures
+    # are magnitude-independent -- terse is 4 sig figs for ANY coefficient -- so this never flakes.
+    def most_sig_figs(text):
+        return max((len(t.replace('.', '').lstrip('0')) for t in re.findall(r'\d+\.\d+', text)),
+                   default=0)
 
-    assert longest_decimal(terse) <= 8             # ~4 significant figures, e.g. 0.3163 / 0.04692
-    assert longest_decimal(verbose) >= 12          # full working precision (~30 digits)
+    assert most_sig_figs(terse) <= 4               # terse: 4 significant figures, regardless of magnitude
+    assert most_sig_figs(verbose) >= 12            # verbose: full working precision (~30 digits)
+
+
+def test_terse_coefficient_width_varies_with_magnitude_but_sig_figs_do_not():
+    # Deterministic companion to the test above (which uses random coefficients): with KNOWN
+    # coefficients spanning magnitudes we pin the exact terse vs verbose rendering.  The small
+    # coefficient (< 1e-3) renders as `0.0003162` -- 9 characters but still 4 significant figures.
+    # This is the case that made the old `width <= 8` assertion flaky; it is correct behavior.
+    import re
+    pb.default_precision(30)
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = pb.System(); s.add_variable_group(_vg(x, y))
+    s.add_function(x*x + y*y - 1)
+    # exact decimal strings (add_linear rejects floats, which would cap block precision):
+    # one coefficient below 1e-3, one of order 1, with many digits so verbose stays long.
+    A = np.array([['0.00031622776601683794', '0.31622776601683794339']], dtype=object)
+    linalg.add_linear(s, A, np.array([x, y]))
+
+    terse, verbose = s.describe(), s.describe(verbose=True)
+
+    # terse: 4 significant figures for BOTH magnitudes ...
+    assert '0.0003162' in terse                    # small coeff: 9 characters wide, 4 sig figs
+    assert '0.3162' in terse                        # order-1 coeff: 6 characters wide, 4 sig figs
+    assert len('0.0003162') == 9                    # documents the width that broke `<= 8`
+    sig = lambda t: len(t.replace('.', '').lstrip('0'))
+    assert all(sig(t) <= 4 for t in re.findall(r'\d+\.\d+', terse))
+
+    # verbose: the full exact strings survive (full working precision, not 4 sig figs)
+    assert '0.00031622776601683794' in verbose
+    assert '0.31622776601683794339' in verbose
 
 
 def test_terse_truncates_many_forms_but_verbose_shows_all():

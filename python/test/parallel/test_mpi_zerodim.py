@@ -157,3 +157,41 @@ def test_distributed_cyclic5_adaptive_matches_known_count():
     if pb.parallel.is_manager():
         assert len(solver.all_solutions()) == 120
         assert _distinct_finite(solver) == CYCLIC5_FINITE
+
+
+# Guards the multihomogeneous-start-system MPI serialization fix.  MHomogeneous::serialize() used to
+# drop every member except a vestigial degrees_, so a broadcast start system arrived hollow on each
+# worker: NumStartPoints() came back 0, the per-path metadata sized to nothing, and the parallel
+# solve segfaulted.  The binomial cyclic tests above never exercised the mhom path.  Here we solve a
+# small eigenvalue system (projective eigenvector => hom variable group => mhom start system, exactly
+# what python/examples/solve_eigenvalues.py uses) and demand the manager recover all n eigenvalues.
+def _eigen_system(A):
+    # (A - lam I) x = 0 with x a projective group and lam affine -- the mhom Bezout number is n.
+    from bertini import linalg
+    x = linalg.variable_vector('x', A.shape[0])
+    lam = pb.Variable('lam')
+    sys = pb.System()
+    linalg.add_functions(sys, A @ x - lam * x)
+    sys.add_hom_variable_group(pb.VariableGroup(list(x)))   # eigenvector in P^{n-1}
+    sys.add_variable_group(pb.VariableGroup([lam]))
+    return sys
+
+
+def test_distributed_mhom_eigenvalues_match_known_count():
+    pb.random.set_random_seed(3)
+    # small symmetric integer matrix: real, generically distinct spectrum, n paths under mhom.
+    A = np.array([[2, -1, 0, 1],
+                  [-1, 3, 1, 0],
+                  [0, 1, 2, -1],
+                  [1, 0, -1, 4]], dtype=int)
+    n = A.shape[0]
+    solver = ZeroDimSolver(_eigen_system(A), endgame='cauchy', mptype='adaptive', startsystem='mhom')
+
+    comm = MPI.COMM_WORLD
+    if comm.Get_size() > 1:
+        solver.solve(communicator=comm)   # this is the broadcast path that used to crash
+    else:
+        solver.solve()
+
+    if pb.parallel.is_manager():
+        assert _distinct_finite(solver) == n   # all n distinct eigenvalues recovered

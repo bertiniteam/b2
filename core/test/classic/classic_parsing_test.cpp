@@ -30,6 +30,8 @@
 #include <bertini2/io/parsing/system_parsers.hpp>
 #include <bertini2/io/classic_writer.hpp>
 #include <string>
+#include <fstream>
+#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
 
@@ -644,6 +646,54 @@ BOOST_AUTO_TEST_CASE(classic_writer_round_trips_a_system)
 	BOOST_REQUIRE_EQUAL(a.size(), b.size());
 	for (Eigen::Index i = 0; i < a.size(); ++i)
 		BOOST_CHECK_SMALL(abs(a(i) - b(i)), 1e-12);
+}
+
+
+// Regression: a classic input FILE with '%' comments must parse.  The blackbox reads files via
+// the Path overload of SplitIntoConfigAndInput, which used to split the raw text WITHOUT running
+// the CommentStripper first -- so a '%' comment (Bertini 1's comment marker) survived into the
+// input section and the system parser choked ("did not consume entire input").  Comments appear
+// here both on their own line and trailing real declarations, in both CONFIG and INPUT.
+BOOST_AUTO_TEST_CASE(file_with_percent_comments_parses)
+{
+	namespace fs = boost::filesystem;
+	auto path = fs::temp_directory_path() / fs::unique_path("b2_comment_%%%%-%%%%.b2");
+
+	{
+		std::ofstream out(path.string());
+		out <<
+			"CONFIG\n"
+			"% a full-line comment in config\n"
+			"tracktype: 0;   % trailing comment after a real setting\n"
+			"END;\n"
+			"INPUT\n"
+			"% two groups => multihomogeneous; this comment must be stripped\n"
+			"variable_group x;\n"
+			"variable_group y;   % trailing comment on a declaration\n"
+			"function f1, f2;\n"
+			"f1 = x*y - 1;\n"
+			"f2 = x + y - 3;   % and another\n"
+			"END;\n";
+	}
+
+	std::string config, input;
+	bertini::parsing::classic::SplitIntoConfigAndInput(config, input, path);
+	fs::remove(path);
+
+	// the '%' comment text is gone from both sections...
+	BOOST_CHECK(config.find('%') == std::string::npos);
+	BOOST_CHECK(input.find('%')  == std::string::npos);
+	// ...while the real declarations survive...
+	BOOST_CHECK(input.find("variable_group x;") != std::string::npos);
+	BOOST_CHECK(input.find("f1 = x*y - 1;")     != std::string::npos);
+
+	// ...and the system parser actually consumes the comment-free input.
+	bertini::System sys;
+	auto iter = input.begin();
+	auto end  = input.end();
+	bertini::parsing::classic::parse(iter, end, sys);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 2u);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
 }
 
 
