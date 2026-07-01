@@ -130,7 +130,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Bertini'
-copyright = '2015-2025, Bertini Team'
+copyright = '2015-2026, Bertini Team'
 author = 'Bertini Team'
 
 
