@@ -90,6 +90,30 @@ def test_Variable_construct():
     x = Variable("x")
 
 
+def test_Variable_unicode_name():
+    # Names are arbitrary UTF-8; a Unicode letter round-trips through str().
+    x = Variable("Ω")  # Ω
+    assert str(x) == "Ω"
+
+
+def test_Variable_cjk_name():
+    x = Variable("中")  # 中
+    assert str(x) == "中"
+
+
+def test_Variable_expression_name_rejected():
+    # A variable name must be an identifier, not an expression / operator / junk.
+    for bad in ("x^2+1", "2x", "a b", ""):
+        with pytest.raises(RuntimeError):
+            Variable(bad)
+
+
+def test_Variable_emoji_name():
+    # Emoji are valid names, including multi-code-point ones (skin tone, ZWJ sequence).
+    for good in ("🎉", "👍🏽", "👩‍👩‍👧"):
+        assert str(Variable(good)) == good
+
+
 def test_variables_count():
     v = variables('x', 3)
     assert len(v) == 3

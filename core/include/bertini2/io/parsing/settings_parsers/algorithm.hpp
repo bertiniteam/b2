@@ -242,8 +242,13 @@ namespace bertini {
 
 
 
+					// UTF-8 identifier (same policy as the system parser): a Unicode
+					// letter start, then Unicode alphanumerics or [ ] _ .  The parser
+					// is self-contained (never sub-skips inside the identifier), so no
+					// lexeme is needed even on this skippered rule.  See
+					// io/parsing/unicode_ident.hpp.
 					valid_variable_name_.name("valid_variable_name_");
-					valid_variable_name_ = +qi::alpha >> *(qi::alnum | qi::char_("[]_") );
+					valid_variable_name_ = utf8_identifier_parser();
 
 
 					path_variable_name_.name("path_variable_name_");

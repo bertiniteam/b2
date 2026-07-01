@@ -33,6 +33,8 @@
 
 #include <assert.h>
 #include <vector>
+#include <set>
+#include <string>
 
 
 #include <boost/archive/text_oarchive.hpp>
@@ -1210,6 +1212,22 @@ namespace bertini {
 		const Var& GetPathVariable() const;
 
 		/**
+		 \brief Collect the names of every variable the user could reference.
+
+		 Gathers names from all variable groups (ungrouped, affine, projective),
+		 the homogenizing variables, and the implicit parameters.  Reads the raw
+		 group members directly, so it is safe on a partially-built or
+		 not-yet-homogenized system (unlike VariableOrdering, which throws on a
+		 hom-var/affine-group mismatch).  The path variable itself is not included.
+
+		 Used to guarantee an auto-constructed homotopy's path variable never
+		 collides with a user variable.  \see UniquePathVariableName, AddPathVariable.
+
+		 \return The set of variable/parameter names in the system.
+		 */
+		std::set<std::string> VariableNameSet() const;
+
+		/**
 		 Order the variables, by the order in which the groups were added.
 
 		 This function returns the variables in First In First Out (FIFO) ordering.
@@ -2036,6 +2054,22 @@ namespace bertini {
 
 
 	/**
+	\brief Produce a path-variable name guaranteed not to collide with any variable in `target`.
+
+	Returns `base` if `target` has no variable of that name; otherwise appends `_1`, `_2`, ...
+	to `base` and returns the first candidate absent from the system's VariableNameSet.  The
+	result is deterministic (depends only on `target`'s variable names and `base`), so a caller
+	that must recompute it later -- e.g. to decide whether a homotopy needs rebuilding -- gets the
+	same answer.  Used by the auto-construct homotopy path so a user variable named `t` (or even
+	the zero-dim sentinel name) can never clash with the injected path variable.
+
+	\param target The system whose variable names must be avoided.
+	\param base The desired path-variable name (mangled only if it collides).
+	\return A name not present in `target.VariableNameSet()`.
+	*/
+	std::string UniquePathVariableName(System const& target, std::string base = "t");
+
+	/**
 	\brief Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start.
 
 	The path variable `t` (named `path_variable_name`) is added to the returned homotopy, tracked
@@ -2049,11 +2083,14 @@ namespace bertini {
 
 	\param target The target system (H at t=0).
 	\param start The start system whose solutions seed the homotopy (H at t=1).
-	\param path_variable_name The name to give the homotopy's path variable.
+	\param path_variable_name The name to give the homotopy's path variable.  Defaults to empty,
+	       meaning "choose a safe name": a collision-free name based on `t` is generated via
+	       UniquePathVariableName(target).  Pass a non-empty name to force it (it must not collide
+	       with a variable in `target`, or AddPathVariable throws).
 	\param gamma The gamma coefficient (a node).  If null, a random rational gamma is generated.
 	*/
 	System MakeHomotopy(System const& target, System const& start,
-	                    std::string const& path_variable_name = "t",
+	                    std::string const& path_variable_name = "",
 	                    std::shared_ptr<node::Node> const& gamma = nullptr);
 
 	/**
@@ -2079,11 +2116,14 @@ namespace bertini {
 	\param fixed The equations that do not move (evaluated once per point).
 	\param start_moving The moving rows at t=1 (their roots, with `fixed`, are the start points).
 	\param end_moving The moving rows at t=0 (the target rows).
-	\param path_variable_name The name to give the homotopy's path variable.
+	\param path_variable_name The name to give the homotopy's path variable.  Defaults to empty,
+	       meaning "choose a safe name": a collision-free name based on `t` is generated via
+	       UniquePathVariableName(fixed).  Pass a non-empty name to force it (it must not collide
+	       with a variable in `fixed`, or AddPathVariable throws).
 	\param gamma The gamma coefficient (a node).  If null, a random rational gamma is generated.
 	*/
 	System MakeMovingHomotopy(System const& fixed, System const& start_moving, System const& end_moving,
-	                          std::string const& path_variable_name = "t",
+	                          std::string const& path_variable_name = "",
 	                          std::shared_ptr<node::Node> const& gamma = nullptr);
 
 	/**

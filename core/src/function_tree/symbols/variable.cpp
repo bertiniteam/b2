@@ -27,15 +27,22 @@
 #include "bertini2/function_tree/symbols/variable.hpp"
 
 #include "bertini2/eigen_extensions.hpp"
+#include "bertini2/naming.hpp"
 
 
 
 namespace bertini{
 	namespace node{
 		using ::pow;
-		
+
+// The single funnel for a named Variable (Make("...") reaches here): reject a name
+// that is not a well-formed identifier, so an expression/operator/whitespace/leading-
+// digit string can never become a variable.  The default ctor's placeholder and
+// serialization (which restores the name directly) do not pass through here.
 Variable::Variable(std::string new_name) : NamedSymbol(new_name)
-{ }
+{
+	ThrowIfInvalidVariableName(new_name);
+}
 
 Variable::Variable() : NamedSymbol("unnamed_variable_be_scared")
 { }
