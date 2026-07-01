@@ -114,3 +114,12 @@ segment from :math:`p` to each one so the distances are visible:
 The method needs nothing special of the curve: pick a random real :math:`p` (a generic choice
 avoids the measure-zero set where a component's nearest point is non-isolated), build the same
 two equations for *your* :math:`f`, solve, and keep the real solutions.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- it saves the figure(s) shown above:
+
+.. literalinclude:: real_points.py
+   :language: python
+   :caption: real_points.py

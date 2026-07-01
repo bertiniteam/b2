@@ -516,3 +516,12 @@ open out into an even spiral winding into the centre:
 From here you can collect anything the tracker exposes: plot the condition number along each path
 to see where tracking got hard, colour by precision to watch adaptive precision kick in, or feed
 ``as_dataframe()`` straight into your favourite analysis tools.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- it saves the three figures shown above:
+
+.. literalinclude:: observers_and_path_data.py
+   :language: python
+   :caption: observers_and_path_data.py

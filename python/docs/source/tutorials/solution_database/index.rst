@@ -180,3 +180,12 @@ and their classification together, so a category is a filter and a plot is the f
 The same table is the natural unit to **accumulate**: concatenate the frames from many related
 solves (a parameter sweep, the stages of a decomposition) and you have a growing database of
 solutions to query, group, and plot with the whole of pandas at hand.
+
+Complete example
+================
+
+The whole tutorial as one runnable script -- it saves the figure(s) shown above:
+
+.. literalinclude:: solution_database.py
+   :language: python
+   :caption: solution_database.py
