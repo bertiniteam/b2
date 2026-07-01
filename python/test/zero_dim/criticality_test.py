@@ -10,11 +10,7 @@ The curve is two interlocking circles (a reducible space curve), whose per-circl
 are predictable in closed form -- the analytic oracle that tells us the solve is right.
 
     f = x (x^2 + y^2 - 1)          # plane x=0  u  cylinder x^2 + y^2 = 1
-    g = z (y^2 - 2y + z^2)         # plane z=0  u  cylinder (y-1)^2 + z^2 = 1   (expanded form)
-
-(The cylinder is written expanded rather than as (y-1)**2 + z**2 - 1: a power of a homogenized
-binomial is not currently recognized as homogeneous, which blocks the start-system patch.  The two
-forms are algebraically identical: (y-1)^2 + z^2 - 1 = y^2 - 2y + z^2.)
+    g = z ((y-1)^2 + z^2 - 1)      # plane z=0  u  cylinder (y-1)^2 + z^2 = 1
 """
 
 import numpy as np
@@ -27,7 +23,7 @@ from bertini import linalg
 def _curve():
     x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
     f = x * (x**2 + y**2 - 1)
-    g = z * (y**2 - 2 * y + z**2)
+    g = z * ((y - 1)**2 + z**2 - 1)
     return x, y, z, f, g
 
 
@@ -91,7 +87,7 @@ def test_critical_points_of_interlocking_circles():
         # it lies on the curve
         px, py, pz = point
         assert abs(px * (px**2 + py**2 - 1)) < 1e-9
-        assert abs(pz * (py**2 - 2 * py + pz**2)) < 1e-9
+        assert abs(pz * ((py - 1)**2 + pz**2 - 1)) < 1e-9
 
     # --- every predicted point is genuinely critical: [ J_f(point) ; pi ] is rank-deficient -----
     fg = pb.System()

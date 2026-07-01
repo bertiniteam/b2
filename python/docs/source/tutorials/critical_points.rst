@@ -42,7 +42,7 @@ A curve we can check: two interlocking circles
 
 .. math::
 
-   f = x\,(x^2+y^2-1), \qquad g = z\,(y^2-2y+z^2).
+   f = x\,(x^2+y^2-1), \qquad g = z\,\bigl((y-1)^2+z^2-1\bigr).
 
 Each equation is one surface, and their intersection is a (reducible) space curve: :math:`f=0` is
 the plane :math:`x=0` together with the cylinder :math:`x^2+y^2=1`; :math:`g=0` is the plane
@@ -50,10 +50,6 @@ the plane :math:`x=0` together with the cylinder :math:`x^2+y^2=1`; :math:`g=0` 
 circles -- :math:`\{x=0,\ (y-1)^2+z^2=1\}` in the :math:`yz`-plane and :math:`\{z=0,\ x^2+y^2=1\}`
 in the :math:`xy`-plane -- and a circle has a **predictable** pair of critical points for any
 generic projection, which is how we know the answer is right.
-
-(We write the second cylinder expanded, :math:`y^2-2y+z^2`, rather than :math:`(y-1)^2+z^2-1`:
-the two are algebraically identical, but a power of a homogenized binomial is not currently
-recognized as homogeneous, which the start-system patch needs.)
 
 Building and solving it
 =======================
@@ -73,7 +69,7 @@ coefficient row), and :mod:`bertini.linalg` expresses the linear algebra:
     bertini.random.set_random_seed(2024)
     x, y, z = bertini.Variable('x'), bertini.Variable('y'), bertini.Variable('z')
     f = x * (x**2 + y**2 - 1)
-    g = z * (y**2 - 2*y + z**2)
+    g = z * ((y - 1)**2 + z**2 - 1)
 
     pi = bertini.random_matrix(1, 3, real=True, orthonormal=False)   # a random real projection row
 

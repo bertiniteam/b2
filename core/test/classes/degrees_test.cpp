@@ -325,4 +325,28 @@ BOOST_AUTO_TEST_CASE(mhom_start_system_has_factor_count_degrees)
 	BOOST_CHECK_GE(mhom.DegreeBound(), 1);                         // finite, no empty-range deref
 }
 
+
+/**
+\test \b integer_power_of_a_sum_group_degree The group-degree of base^exponent is
+exponent*degree(base) -- NOT the sum of per-variable degrees (which only equals the total degree
+for a monomial).  Regression: (y+z)^2 reported degree 4, so a homogenized power-of-binomial term
+looked inhomogeneous and blocked homogenization / auto-patch.
+*/
+BOOST_AUTO_TEST_CASE(integer_power_of_a_sum_group_degree)
+{
+	DefaultPrecision(30);
+	Var y = Variable::Make("y"), z = Variable::Make("z"), h = Variable::Make("h");
+	VariableGroup vars{y, z, h};
+
+	BOOST_CHECK_EQUAL(pow(y + z, 2)->Degree(vars), 2);   // was 4 before the fix
+	BOOST_CHECK_EQUAL(pow(y + z, 3)->Degree(vars), 3);   // was 6
+	BOOST_CHECK_EQUAL(pow(y, 2)->Degree(vars), 2);       // monomial base -- always was correct
+	BOOST_CHECK_EQUAL(pow(y * z, 2)->Degree(vars), 4);   // (y z)^2 = y^2 z^2 -- genuinely degree 4
+
+	// consequence: a homogenized power-of-binomial term is recognized as homogeneous
+	auto expr = pow(y - h, 2) + pow(z, 2) - pow(h, 2);   // (y-h)^2 + z^2 - h^2, homogeneous degree 2
+	BOOST_CHECK_EQUAL(expr->Degree(vars), 2);
+	BOOST_CHECK(expr->IsHomogeneous(vars));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

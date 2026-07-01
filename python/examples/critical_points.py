@@ -9,7 +9,7 @@ on the curve together with that null vector, plus one patch equation so ``v != 0
 The curve here is two interlocking circles (a reducible space curve):
 
     f = x (x^2 + y^2 - 1)       # plane x=0  u  cylinder x^2 + y^2 = 1
-    g = z (y^2 - 2y + z^2)      # plane z=0  u  cylinder (y-1)^2 + z^2 = 1   (expanded form)
+    g = z ((y-1)^2 + z^2 - 1)   # plane z=0  u  cylinder (y-1)^2 + z^2 = 1
 
 Run:  python critical_points.py
 """
@@ -25,7 +25,7 @@ def main():
     pb.random.set_random_seed(2024)
     x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
     f = x * (x**2 + y**2 - 1)
-    g = z * (y**2 - 2 * y + z**2)
+    g = z * ((y - 1)**2 + z**2 - 1)
 
     # a random real projection; its gradient row is just its (constant) coefficients
     pi = pb.random_matrix(1, 3, real=True, orthonormal=False)
