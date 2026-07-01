@@ -50,7 +50,6 @@ See the source at https://github.com/bertiniteam/b2
 from importlib.metadata import version
 __version__ = version("bertini2")
 
-import os
 import sys
 
 if sys.platform == "win32":
@@ -59,6 +58,8 @@ if sys.platform == "win32":
     _dll_manager.__enter__()
     for p in get_dll_paths():
         _dll_manager.add_dll_directory(p)
+
+del sys  # used only for the platform check above; don't leak it into the bertini.* namespace
 
 # put stuff in the bertini namespace
 
@@ -75,8 +76,6 @@ from . import logging
 from . import nag_algorithm
 from . import random
 from . import parallel
-
-from ._pybertini import info
 
 from . import multiprec
 
