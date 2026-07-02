@@ -57,5 +57,9 @@ def main():
     print("reused: %d   computed: %d" % (result.num_reused, result.num_computed))
 
 
+    print("\n--- what is on disk ---")
+    print(" ", ledger.describe())
+
+
 if __name__ == "__main__":
     main()

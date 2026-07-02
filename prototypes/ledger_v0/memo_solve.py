@@ -88,17 +88,16 @@ def ensure_solved(target, ledger: Ledger, config=None, crash_after=None):
     num_computed = 0
     if missing:
         homotopy = pickle.loads(ledger.get_object(run["homotopy_blob"]))
-        with ledger.open_journal(run_id) as journal:
-            for i in missing:
-                record = _track_one(target, homotopy, _decode_point(run["start_points"][i]), i, config)
-                record["run"] = run_id
-                record["start"] = {"kind": "start_label", "index": i}   # provenance bottoms out here
-                journal.append(record)
-                done[i] = record
-                num_computed += 1
-                if crash_after is not None and num_computed >= crash_after:
-                    raise SimulatedCrash(
-                        "simulated walltime kill after %d paths (run %s)" % (num_computed, run_id))
+        for i in missing:
+            record = _track_one(target, homotopy, _decode_point(run["start_points"][i]), i, config)
+            record["run"] = run_id
+            record["start"] = {"kind": "start_label", "index": i}   # provenance bottoms out here
+            ledger.append(record)
+            done[i] = record
+            num_computed += 1
+            if crash_after is not None and num_computed >= crash_after:
+                raise SimulatedCrash(
+                    "simulated walltime kill after %d paths (run %s)" % (num_computed, run_id))
 
     solutions = {i: _decode_point(rec["endpoint"])
                  for i, rec in done.items() if rec["status"] == "success"}
@@ -131,8 +130,7 @@ def _create_run(target, ledger: Ledger, ask: dict) -> dict:
         "num_paths": num_paths,
         "start_points": start_points,
     }
-    with ledger.open_journal(run["run"]) as journal:
-        journal.append(run)
+    ledger.append(run)
     return run
 
 
@@ -180,8 +178,7 @@ def ensure_continued(target, generic, ledger: Ledger, config=None, crash_after=N
             "start_indices": start_indices,
             "num_paths": len(start_indices),
         }
-        with ledger.open_journal(run["run"]) as journal:
-            journal.append(run)
+        ledger.append(run)
 
     run_id = run["run"]
     done = ledger.completed_paths(run_id)
@@ -191,20 +188,19 @@ def ensure_continued(target, generic, ledger: Ledger, config=None, crash_after=N
     if missing:
         homotopy = nag.coefficient_parameter_homotopy(target, generic)  # deterministic
         start_records = ledger.completed_paths(run["start_run"])
-        with ledger.open_journal(run_id) as journal:
-            for i in missing:
-                generic_index = run["start_indices"][i]
-                start_point = _decode_point(start_records[generic_index]["endpoint"])
-                record = _track_one(target, homotopy, start_point, i, config)
-                record["run"] = run_id
-                record["start"] = {"kind": "point_ref",
-                                   "run": run["start_run"], "index": generic_index}
-                journal.append(record)
-                done[i] = record
-                num_computed += 1
-                if crash_after is not None and num_computed >= crash_after:
-                    raise SimulatedCrash(
-                        "simulated walltime kill after %d paths (run %s)" % (num_computed, run_id))
+        for i in missing:
+            generic_index = run["start_indices"][i]
+            start_point = _decode_point(start_records[generic_index]["endpoint"])
+            record = _track_one(target, homotopy, start_point, i, config)
+            record["run"] = run_id
+            record["start"] = {"kind": "point_ref",
+                               "run": run["start_run"], "index": generic_index}
+            ledger.append(record)
+            done[i] = record
+            num_computed += 1
+            if crash_after is not None and num_computed >= crash_after:
+                raise SimulatedCrash(
+                    "simulated walltime kill after %d paths (run %s)" % (num_computed, run_id))
 
     solutions = {i: _decode_point(rec["endpoint"])
                  for i, rec in done.items() if rec["status"] == "success"}
@@ -222,13 +218,16 @@ def _find_run_solving(ledger: Ledger, target_digest: str):
     return found
 
 
-def annotate(ledger: Ledger, run_id: str, index: int, key: str, value):
-    """Attach metadata (e.g. a projection value) to a recorded point: one more
-    append-only line, keyed by point id -- queryable with jq/pandas, mergeable by
-    file append."""
-    with ledger.open_journal(run_id) as journal:
-        journal.append({"kind": "annotation", "point": {"run": run_id, "index": index},
-                        "key": key, "value": value})
+def annotate(ledger: Ledger, run_id: str, index: int, key=None, value=None, **many):
+    """Attach metadata (e.g. a projection value) to a recorded point: append-only lines
+    keyed by point id -- queryable with jq/pandas, mergeable by file append.  Pass one
+    key/value or several as keywords; all go into ONE journal file."""
+    items = dict(many)
+    if key is not None:
+        items[key] = value
+    for k, v in items.items():
+        ledger.append({"kind": "annotation", "point": {"run": run_id, "index": index},
+                       "key": k, "value": v})
 
 
 def annotations_for(ledger: Ledger, run_id: str, index: int) -> dict:

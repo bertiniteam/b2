@@ -57,19 +57,21 @@ def test_object_store_honors_external_ids(tmp_path):
 
 def test_journal_appends_and_scan_round_trips(tmp_path):
     lg = Ledger(tmp_path)
-    with lg.open_journal("runA") as j:
-        j.append({"kind": "run", "run": "runA", "n": 1})
-        j.append({"kind": "track", "run": "runA", "index": 0})
+    lg.append({"kind": "run", "run": "runA", "n": 1})
+    lg.append({"kind": "track", "run": "runA", "index": 0})
     recs = lg.scan()
     assert [r["kind"] for r in recs] == ["run", "track"]
+    # one session = one journal file, with a human-scannable date-stamped name
+    journals = list((tmp_path / "journals").glob("*.jsonl"))
+    assert len(journals) == 1
+    assert journals[0].name[:8].isdigit()     # YYYYMMDD prefix: `ls` reads as history
 
 
 def test_torn_final_line_is_tolerated(tmp_path):
     lg = Ledger(tmp_path)
-    with lg.open_journal("runB") as j:
-        j.append({"kind": "run", "run": "runB"})
+    lg.append({"kind": "run", "run": "runB"})
     # simulate a kill mid-append: a truncated JSON line at EOF
-    journal_file = next((tmp_path / "journals").glob("runB-*.jsonl"))
+    journal_file = next((tmp_path / "journals").glob("*.jsonl"))
     with open(journal_file, "a") as f:
         f.write('{"kind": "track", "ind')
     recs = lg.scan()

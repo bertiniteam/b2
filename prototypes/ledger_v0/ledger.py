@@ -12,6 +12,7 @@ are benign).  Journals are one-writer-per-file; the reader tolerates a torn fina
 import hashlib
 import json
 import os
+import time
 import uuid
 from pathlib import Path
 
@@ -62,11 +63,31 @@ class Ledger:
 
     # ---- journals -----------------------------------------------------------------
 
-    def open_journal(self, run_id: str):
-        """One writer per journal file, ever: the name embeds run + pid + nonce so
-        concurrent processes (job arrays) never share an append target."""
-        name = "%s-%d-%s.jsonl" % (run_id, os.getpid(), uuid.uuid4().hex[:8])
-        return Journal(self.root / "journals" / name)
+    def append(self, record: dict):
+        """Append one record to THIS session's journal (opened lazily, one per Ledger
+        instance / process session).  One writer per file, ever; the date-stamped name
+        makes `ls journals/` read as a history, not confetti."""
+        if getattr(self, "_journal", None) is None:
+            stamp = time.strftime("%Y%m%d_%H%M%S")
+            base = self.root / "journals"
+            for suffix in [""] + ["%c" % c for c in range(ord("b"), ord("z"))]:
+                path = base / ("%s-pid%d%s.jsonl" % (stamp, os.getpid(), suffix))
+                try:
+                    path.touch(exist_ok=False)   # claim the name exclusively
+                    break
+                except FileExistsError:
+                    continue
+            self._journal = Journal(path)
+        self._journal.append(record)
+
+    def describe(self) -> str:
+        """One human line: how much is here.  Printed by demos at exit so the records'
+        location is never a mystery."""
+        journals = list((self.root / "journals").glob("*.jsonl"))
+        n_objects = sum(1 for _ in (self.root / "objects").glob("*/*"))
+        n_records = len(self.scan())
+        return "%d records in %d journal file(s), %d object(s), at %s" % (
+            n_records, len(journals), n_objects, self.root.resolve())
 
     def scan(self):
         """Read every record from every journal.  Torn final lines are skipped (the

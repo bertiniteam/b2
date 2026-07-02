@@ -77,5 +77,9 @@ def main():
         print(" ", link)
 
 
+    print("\n--- what is on disk ---")
+    print(" ", ledger.describe())
+
+
 if __name__ == "__main__":
     main()

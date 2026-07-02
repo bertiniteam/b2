@@ -91,8 +91,8 @@ def decompose(ledger, crash_after=None):
         xval = num / den
         for i, sol in result.solutions.items():
             if not annotations_for(ledger, result.run_id, i):
-                annotate(ledger, result.run_id, i, "projection", xval)
-                annotate(ledger, result.run_id, i, "edge", edges.get(i, "?"))
+                annotate(ledger, result.run_id, i,
+                         projection=xval, edge=edges.get(i, "?"))
         print("    x = %+.1f: %d points  (reused %d, computed %d)"
               % (xval, len(result.solutions), result.num_reused, result.num_computed))
         sample_runs.append(result)
@@ -120,6 +120,10 @@ def main():
     print("\n--- its provenance, back to the beginning (4 links) ---")
     for link in provenance_chain(ledger, last.run_id, 0):
         print(" ", link)
+
+
+    print("\n--- what is on disk ---")
+    print(" ", ledger.describe())
 
 
 if __name__ == "__main__":
