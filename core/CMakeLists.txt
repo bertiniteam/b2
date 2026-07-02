@@ -148,6 +148,7 @@ set(detail_headers
     include/bertini2/detail/enable_permuted_arguments.hpp
     include/bertini2/detail/typelist.hpp
     include/bertini2/detail/sha256.hpp
+    include/bertini2/records/config_encoding.hpp
 )
 
 set(function_tree_headers
@@ -345,6 +346,7 @@ set(basics_sources
     src/basics/have_bertini.cpp
     src/basics/fast_allocator.cpp
     src/detail/sha256.cpp
+    src/records/config_encoding.cpp
 )
 
 set(function_tree_sources
@@ -792,6 +794,7 @@ if (ENABLE_UNIT_TESTING)
 
 	set(B2_CLASS_TEST_SOURCES
 		test/classes/sha256_test.cpp
+		test/classes/config_digest_test.cpp
 		test/classes/boost_multiprecision_test.cpp
 		test/classes/fundamentals_test.cpp
 		test/classes/precision_propagation_test.cpp
