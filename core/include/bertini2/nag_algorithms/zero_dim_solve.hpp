@@ -45,7 +45,12 @@
 #include "bertini2/nag_algorithms/events.hpp"
 #include "bertini2/system/start_base.hpp"   // start_system::StartSystem + StartSystemFactory / MakeStartFactory
 #include "bertini2/parallel.hpp"
+#include "bertini2/records/output_directory.hpp"
+#include "bertini2/records/solver_recording.hpp"
+#include "bertini2/records/config_encoding.hpp"
+#include "bertini2/io/classic_writer.hpp"
 #include <chrono>
+#include <cstdlib>
 #include <mutex>
 #include <iostream>
 #include <map>
@@ -671,9 +676,21 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 							[this](Result const& r){ StoreFullPathResult(r); });
 					};
 
-					std::queue<Task> queue;
+					// the records seam (ADR-0046): the manager is the sole writer; hydrate what
+					// is already recorded and dispatch only the rest
+					MaybeAttachAmbientRecords();
+					std::vector<SolnIndT> indices_to_run;
 					for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
-						queue.push(Task{ static_cast<SolnIndT>(ii), start_points[ii] });
+						indices_to_run.push_back(static_cast<SolnIndT>(ii));
+					if (records_)
+					{
+						EnsureRunRecorded();
+						indices_to_run = HydrateRecordedPaths(indices_to_run);
+					}
+
+					std::queue<Task> queue;
+					for (auto idx : indices_to_run)
+						queue.push(Task{ idx, start_points[idx] });
 					run_round(queue);
 
 					// Midpath/crossing check on the collected boundary points, then bounded parallel
@@ -1045,6 +1062,16 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					all_indices[ii]  = idx;
 				}
 
+				// the records seam (ADR-0046): ensure the run is on record, hydrate any paths
+				// already recorded (solve() is ensure-answered), and compute only the rest
+				MaybeAttachAmbientRecords();
+				std::vector<SolnIndT> indices_to_run = all_indices;
+				if (records_)
+				{
+					EnsureRunRecorded();
+					indices_to_run = HydrateRecordedPaths(all_indices);
+				}
+
 				// num_threads: 0 = auto (hardware_concurrency), 1 = serial, N = N threads;
 				// OMP_NUM_THREADS overrides.  n_threads <= 1 takes the pool-free serial path.
 				const unsigned n_threads =
@@ -1052,12 +1079,17 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 				if (n_threads <= 1)
 				{
-					for (auto idx : all_indices)
+					for (auto idx : indices_to_run)
+					{
 						ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
+						// the serial path installs results directly (no StoreFullPathResult),
+						// so emit its record here
+						RecordCompletedPath(PackFullPathResult(idx));
+					}
 				}
 				else
 				{
-					RunPathsThreaded(all_indices, start_points, n_threads);
+					RunPathsThreaded(indices_to_run, start_points, n_threads);
 				}
 
 				// Crossed-path re-tracks run on the main thread against the (escalated) member
@@ -1065,6 +1097,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// deferred optimization.
 				RunMidpathResolution([this, &start_points](SolnIndT idx){
 					ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
+					RecordCompletedPath(PackFullPathResult(idx));   // a re-track appends a fresh record (last wins)
 				});
 
 				PostEGAction();
@@ -1975,12 +2008,192 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
 				smd.max_precision_used  = r.max_precision_used;
 				smd.path_time_seconds   = r.path_time_seconds;
+
+				// the records seam (ADR-0046): every topology installs completed paths here on
+				// the main/manager thread, so emission is single-writer by construction
+				RecordCompletedPath(r);
 			}
 
+
+		////////////////////
+		//
+		//  the structured output directory seam (records; ADR-0046)
+		//
+		//////////////////
+
+		public:
+
+			/**
+			\brief Attach a structured output directory: this solve records to (and
+			memoizes/resumes from) it.  Null detaches.  See ADR-0046.
+			*/
+			void RecordTo(std::shared_ptr<records::OutputDirectory> directory)
+			{
+				records_ = std::move(directory);
+			}
+
+			/// \brief The attached output directory (null when not recording).
+			std::shared_ptr<records::OutputDirectory> const& Records() const { return records_; }
+
+			/// \brief How many paths the last Solve() hydrated from records instead of computing.
+			unsigned long long NumPathsHydrated() const { return num_hydrated_; }
+
+			/// \brief This solve's run id in the records (empty when not recording).
+			std::string const& RecordsRunId() const { return records_run_id_; }
+
+			/**
+			\brief Attach the ambient output directory if the BERTINI_RECORDS_DIR environment
+			variable is set (manager rank only; workers never touch the records).
+			*/
+			void MaybeAttachAmbientRecords()
+			{
+				if (records_ || !parallel::IsManager())
+					return;
+				if (char const* dir = std::getenv("BERTINI_RECORDS_DIR"))
+					records_ = std::make_shared<records::OutputDirectory>(dir);
+			}
+
+			/**
+			\brief The ask identity of this solve: op + tracker/endgame kind (stable record
+			names, never typeid) + target digest + settings digest + seed.
+
+			The settings digest composes, in this fixed documented order: ZeroDimConf,
+			Tolerances, AutoRetrack, PostProcessing (ADR-0043; extend by appending, never
+			reordering).
+			*/
+			boost::json::object RecordsAsk() const
+			{
+				auto const settings = records::SettingsDigest(
+					this->template Get<ZeroDimConf>(),
+					this->template Get<Tolerances>(),
+					this->template Get<AutoRetrack>(),
+					this->template Get<PostProcessing>());
+				boost::json::object ask;
+				ask["op"] = "zerodim";
+				ask["tracker"] = tracking::TrackerTraits<TrackerType>::kRecordName;
+				ask["endgame"] = endgame::AlgoTraits<EndgameType>::kRecordName;
+				ask["target"] = TargetSystem().ContentDigest().Hex();
+				ask["config"] = settings.Hex();
+				ask["seed"] = static_cast<std::int64_t>(GetGlobalSeed());
+				return ask;
+			}
+
+			/**
+			\brief Ensure this solve's run header is on record (appending it if absent) and
+			set the run id.  Requires an attached directory; call after PreSolveSetup.
+			*/
+			void EnsureRunRecorded()
+			{
+				auto const ask = RecordsAsk();
+				records_run_id_ = detail::Sha256(boost::json::serialize(ask)).Hex().substr(0, 16);
+
+				for (auto const& rec : records_->Scan())
+					if (auto const* k = rec.if_contains("kind");
+					    k && k->is_string() && k->get_string() == "run"
+					    && rec.if_contains("run") && rec.at("run").is_string()
+					    && rec.at("run").as_string() == records_run_id_)
+						return;   // header already on record (a resumed run)
+
+				auto const target_definition = records_->PutDefinition(
+					bertini::classic::SystemToClassic(TargetSystem()),
+					TargetSystem().ContentDigest().Hex());
+				boost::json::object header;
+				header["kind"] = "run";
+				header["schema"] = records::RecordSchemaVersion;
+				header["when"] = [] {
+					std::time_t now = std::time(nullptr);
+					char buffer[20];
+					std::tm tm_buf{};
+#ifdef _WIN32
+					localtime_s(&tm_buf, &now);
+#else
+					localtime_r(&now, &tm_buf);
+#endif
+					std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", &tm_buf);
+					return std::string(buffer);
+				}();
+				header["run"] = records_run_id_;
+				header["op"] = "zerodim";
+				header["ask"] = ask;
+				header["target_object"] = target_definition;
+				header["num_paths"] = static_cast<std::int64_t>(num_start_points_);
+				records_->Append(header);
+			}
+
+			/**
+			\brief Hydrate recorded paths into the solver's state and return the indices
+			still to compute.
+
+			Each recorded path is decoded to a FullPathResult and replayed through
+			StoreFullPathResult -- hydrated state is identical to computed state by
+			construction (boundary data included, so the midpath check works on resume).
+			*/
+			std::vector<SolnIndT> HydrateRecordedPaths(std::vector<SolnIndT> const& all_indices)
+			{
+				std::map<std::size_t, boost::json::object> recorded;   // last record per index wins
+				for (auto const& rec : records_->Scan())
+				{
+					auto const* k = rec.if_contains("kind");
+					if (!k || !k->is_string() || k->get_string() != "track")
+						continue;
+					if (!rec.if_contains("run") || !rec.at("run").is_string()
+					    || rec.at("run").as_string() != records_run_id_)
+						continue;
+					if (auto const* idx = rec.if_contains("index"); idx && idx->is_int64())
+						recorded[static_cast<std::size_t>(idx->as_int64())] = rec;
+				}
+
+				num_hydrated_ = 0;
+				hydrating_ = true;
+				std::vector<SolnIndT> missing;
+				for (auto const idx : all_indices)
+				{
+					auto const found = recorded.find(static_cast<std::size_t>(idx));
+					if (found == recorded.end())
+					{
+						missing.push_back(idx);
+						continue;
+					}
+					StoreFullPathResult(
+						records::DecodeFullPathResult<BaseComplexT>(found->second, idx));
+					++num_hydrated_;
+				}
+				hydrating_ = false;
+				return missing;
+			}
+
+			/**
+			\brief Emit the track record for one completed path (called from
+			StoreFullPathResult on the main/manager thread; no-op while hydrating or when
+			not recording).
+			*/
+			void RecordCompletedPath(parallel::FullPathResult<BaseComplexT> const& r)
+			{
+				if (!records_ || hydrating_ || records_run_id_.empty())
+					return;
+				auto record = records::EncodeFullPathResult(r);
+				record["kind"] = "track";
+				record["run"] = records_run_id_;
+				record["index"] = static_cast<std::int64_t>(r.path_index);
+				record["status"] = (r.endgame_success_code == SuccessCode::Success) ? "success" : "failed";
+				record["start"] = boost::json::object{{"kind", "start_label"},
+				                                      {"index", static_cast<std::int64_t>(r.path_index)}};
+				records_->Append(record);
+			}
+
+
+		protected:
+
+		protected:
 
 		///////
 		//	private data members
 		///////
+
+			std::shared_ptr<records::OutputDirectory> records_;  ///< The attached output directory (null = not recording).
+			std::string records_run_id_;      ///< This solve's run id in the records (ask hash prefix).
+			bool hydrating_ = false;          ///< True while replaying recorded paths (suppresses re-emission).
+			unsigned long long num_hydrated_ = 0;  ///< Paths hydrated from records in the last Solve().
 
 			unsigned long long num_start_points_;  ///< Number of start points the start system produces.
 			NumErrorT midpath_retrack_tolerance_;  ///< Tolerance used when re-tracking paths flagged by the midpath check.

@@ -177,6 +177,8 @@ namespace bertini{ namespace endgame{
 	template<typename PrecT>
 	struct AlgoTraits< PowerSeriesEndgame<PrecT>>
 	{
+		static constexpr char const* kRecordName = "powerseries";  ///< Stable endgame name for records (ledgerrec ask identity; never typeid).
+
 		/// The config types this endgame reads.
 		using NeededConfigs = detail::TypeList<
 			PowerSeriesConfig,
@@ -194,6 +196,8 @@ namespace bertini{ namespace endgame{
 	template<typename PrecT>
 	struct AlgoTraits< CauchyEndgame<PrecT>>
 	{
+		static constexpr char const* kRecordName = "cauchy";  ///< Stable endgame name for records (ledgerrec ask identity; never typeid).
+
 		/// The config types this endgame reads.
 		using NeededConfigs = detail::TypeList<
 			CauchyConfig,

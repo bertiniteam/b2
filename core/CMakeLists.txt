@@ -902,6 +902,7 @@ if (ENABLE_UNIT_TESTING)
 		test/nag_algorithms/nag_algorithms_test.cpp
 		test/nag_algorithms/zero_dim.cpp
 		test/nag_algorithms/threaded_solve.cpp
+		test/nag_algorithms/zero_dim_records.cpp
 		test/nag_algorithms/numerical_irreducible_decomposition.cpp
 		test/nag_algorithms/trace.cpp
 	)

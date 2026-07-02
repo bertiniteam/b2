@@ -325,6 +325,7 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<DoublePrecisionTracker>
 	{
+		static constexpr char const* kRecordName = "double";  ///< Stable tracker name for records (ledgerrec ask identity; never typeid).
 		using BaseComplexT = complex_dbl;
 		using BaseRealT = double;
 		using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
@@ -346,6 +347,7 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<MultiplePrecisionTracker>
 	{
+		static constexpr char const* kRecordName = "multiple";  ///< Stable tracker name for records (ledgerrec ask identity; never typeid).
 		using BaseComplexT = complex_mp;
 		using BaseRealT = real_mp;
 		using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
@@ -370,6 +372,7 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<AMPTracker>
 	{
+		static constexpr char const* kRecordName = "adaptive";  ///< Stable tracker name for records (ledgerrec ask identity; never typeid).
 		using BaseComplexT = complex_mp;
 		using BaseRealT = real_mp;
 		using EventEmitterType = AMPTracker;
