@@ -224,6 +224,7 @@ def _enhance_config_class(cls):
     fields = writable_fields(cls)
     cls._b2_fields = fields
     cls.update = _make_update(fields)
+    cls.set = cls.update           # `set` reads more naturally to many users; same behavior
     cls.to_dict = _make_to_dict(fields)
     cls.from_dict = _make_from_dict()
     try:
@@ -465,6 +466,7 @@ def _enhance_owner_class(cls):
     cls.configure = configure
     cls.config_names = config_names
     cls.update = update
+    cls.set = update               # `set` reads more naturally to many users; same behavior
     cls.get_settings = get_settings
     cls.set_settings = set_settings
     cls._b2_owner_enhanced = True
