@@ -440,6 +440,16 @@ namespace bertini {
 		/// \brief Get the word offset into the tape where the live (post-frozen-prologue) segment begins.
 		inline size_t FirstLiveInstructionOffset() const { return first_live_instruction_; }
 
+		/// In-process structural hash of the full immutable program content: the (specialized)
+		/// instruction tape, the exact constant recipes, the integer bank, and the memory layout.
+		/// Keys the program intern table (ADR-0027 E4).  NOT stable across runs or compilers --
+		/// persistent identity belongs to the owning System's ContentDigest (ADR-0042).
+		std::size_t ContentHash() const;
+
+		/// Exact content equality over every field ContentHash folds; disambiguates hash
+		/// collisions in the program intern table.  SameContent(a,b) implies equal ContentHash.
+		bool SameContent(SLPProgram const& other) const;
+
 		/**
 		\brief loops through the instructions in the tape and evaluates each operation against the
 		given memory.
@@ -544,6 +554,20 @@ namespace bertini {
 
 
 	/**
+	\brief Hash-cons a freshly-compiled program: return an existing content-equal SLPProgram if
+	one is live, otherwise register and return the candidate (ADR-0027 E4, ADR-0042).
+
+	The Program-level analogue of node::Intern: a process-global, weak (self-cleaning),
+	mutex-guarded table keyed by SLPProgram::ContentHash() and disambiguated by SameContent().
+	Facades (StraightLineProgram) sharing one interned Program each keep their own SLPMemory,
+	so the ADR-0027 threading contract is unchanged.  Wired into SLPCompiler::Compile and
+	StraightLineProgram deserialization, so identical compiled tapes -- including ones loaded
+	from archives -- collapse to a single shared immutable object.
+	*/
+	std::shared_ptr<const SLPProgram> InternProgram(std::shared_ptr<const SLPProgram> const& candidate);
+
+
+	/**
 	 \class StraightLineProgram
 
 	 An implementation of straight-line programs, implemented with strong inspiration from Bertini1's implementation.
@@ -641,6 +665,11 @@ namespace bertini {
 			program_->Eval<T>(memory_);
 		}
 
+
+		/// The immutable compiled program this facade runs.  Interned (ADR-0027 E4): facades
+		/// compiled from content-identical sources share one Program object (pointer equality is
+		/// meaningful), each with its own SLPMemory.
+		std::shared_ptr<const SLPProgram> Program() const { return program_; }
 
 		/// Number of slots the compiler inferred as NumType::Real (ADR-0034).  >0 means real-valued
 		/// subexpressions are being evaluated in the cheaper real banks; used by tests to confirm the
@@ -914,7 +943,9 @@ namespace bertini {
 		void load(Archive& ar, const unsigned /*version*/) {
 			auto prog = std::make_shared<SLPProgram>();
 			ar & *prog;
-			program_ = prog;
+			// Re-intern on load (ADR-0042): a deserialized program unifies with a content-equal
+			// live one instead of forking the intern universe.
+			program_ = InternProgram(std::shared_ptr<const SLPProgram>(std::move(prog)));
 			ar & memory_;
 		}
 

@@ -796,6 +796,7 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/interning_test.cpp
 		test/classes/system_test.cpp
 		test/classes/slp_test.cpp
+		test/classes/slp_intern_test.cpp
 		test/classes/eval_expression_test.cpp
 		test/classes/named_expression_test.cpp
 		test/classes/homogenization_test.cpp
