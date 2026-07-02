@@ -1,0 +1,347 @@
+# This file is part of Bertini 2 (prototypes/ledger_v0 -- experimental, unshipped).
+# GPL v3+; see the repository's licenses/ directory.
+
+"""solve(sys): the casual verb, with ensure-answered SEMANTICS -- memoized records.
+
+- complete run recorded -> return it (no tracking);
+- partial run -> adopt its recorded homotopy instance and finish the missing paths;
+- nothing -> create the run (fresh randomness), record everything as it completes.
+
+v0 stopgap: the homotopy instance (gamma, start coefficients) is persisted as a pickled
+blob and re-adopted on resume -- the manifest mechanism, standing in until seed-rooted
+randomness derivation exists (arc rung 2).
+"""
+
+import hashlib
+import json
+import os
+import pickle
+import time
+
+import numpy as np
+
+import bertini as pb
+from bertini import multiprec as mp
+from bertini.system import start_system as ss
+from bertini import nag_algorithm as nag
+
+from ledger import Ledger, SCHEMA
+
+
+_AMBIENT = None
+
+
+def ambient_ledger() -> Ledger:
+    """The records directory casual users never name: BERTINI_RECORDS_DIR if set, else
+    ./bertini_output, created on demand, one per process.  Every public function takes
+    an optional ledger= override; nobody is required to know the word 'ledger'."""
+    global _AMBIENT
+    if _AMBIENT is None:
+        _AMBIENT = Ledger(os.environ.get("BERTINI_RECORDS_DIR", "bertini_output"))
+    return _AMBIENT
+
+
+class SimulatedCrash(RuntimeError):
+    """Raised by solve(crash_after=N) after N paths, standing in for a walltime kill."""
+
+
+def _ask_digest(target, config: dict) -> dict:
+    """The ask: WHAT was requested -- target identity + config.  (Seed joins in rung 2.)"""
+    return {
+        "target": target.content_digest(),
+        "config": dict(sorted(config.items())),
+    }
+
+
+def _run_id(ask: dict) -> str:
+    return hashlib.sha256(json.dumps(ask, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def _encode_point(vec) -> list:
+    """Exact-ish text encoding of an endpoint: [re_str, im_str] per coordinate, at the
+    solution's own precision (str of an mpfr carries its digits)."""
+    out = []
+    for z in vec:
+        out.append([str(z.real), str(z.imag)])
+    return out
+
+
+def _decode_point(coords: list) -> np.ndarray:
+    return np.array([mp.complex_mp(re, im) for re, im in coords])
+
+
+class LedgerSolveResult:
+    """What solve returns: solutions plus a small accounting of reuse."""
+
+    def __init__(self, run_id, solutions, statuses, num_reused, num_computed):
+        self.run_id = run_id
+        self.solutions = solutions      # index -> np.ndarray (successful paths only)
+        self.statuses = statuses        # index -> "success" | "failed"
+        self.num_reused = num_reused
+        self.num_computed = num_computed
+
+    def all_solutions(self):
+        return [self.solutions[i] for i in sorted(self.solutions)]
+
+
+DEFAULT_CONFIG = {"precision": "adaptive", "endgame": "cauchy"}
+
+
+def solve(target, ledger: Ledger = None, config=None, crash_after=None):
+    """Ensure `target`'s total-degree zero-dim solve is answered (in the ambient records
+    directory unless a ledger is given)."""
+    ledger = ledger or ambient_ledger()
+    config = dict(DEFAULT_CONFIG if config is None else config)
+    ask = _ask_digest(target, config)
+    run = ledger.find_run(ask)
+
+    if run is None:
+        run = _create_run(target, ledger, ask)
+
+    run_id = run["run"]
+    done = ledger.completed_paths(run_id)
+    missing = [i for i in range(run["num_paths"]) if i not in done]
+
+    num_computed = 0
+    if missing:
+        homotopy = pickle.loads(ledger.get_object(run["homotopy_blob"]))
+        for i in missing:
+            record = _track_one(target, homotopy, _decode_point(run["start_points"][i]), i, config)
+            record["run"] = run_id
+            record["start"] = {"kind": "start_label", "index": i}   # provenance bottoms out here
+            ledger.append(record)
+            done[i] = record
+            num_computed += 1
+            if crash_after is not None and num_computed >= crash_after:
+                raise SimulatedCrash(
+                    "simulated walltime kill after %d paths (run %s)" % (num_computed, run_id))
+
+    solutions = {i: _decode_point(rec["endpoint"])
+                 for i, rec in done.items() if rec["status"] == "success"}
+    statuses = {i: rec["status"] for i, rec in done.items()}
+    return LedgerSolveResult(run_id, solutions, statuses,
+                             num_reused=len(done) - num_computed, num_computed=num_computed)
+
+
+def _create_run(target, ledger: Ledger, ask: dict) -> dict:
+    """Draw the instance (start system + homotopy, with their fresh randomness), persist
+    it to the object store, and append the run header."""
+    start = ss.TotalDegreeBinomial(target)
+    homotopy = pb.system.make_homotopy(target, start, "t", None)  # None -> random gamma
+
+    target_object = ledger.put_object(target.to_classic_input(), object_id=target.content_digest())
+    homotopy_blob = ledger.put_object(pickle.dumps(homotopy))
+
+    # the start points ARE provenance data (the canonical start labels' values), so they
+    # live in the run header as text -- no need to persist the start-system object itself
+    num_paths = start.num_start_points()
+    start_points = [_encode_point(start.start_point_mp(i)) for i in range(num_paths)]
+
+    run = {
+        "kind": "run",
+        "schema": SCHEMA,
+        "when": time.strftime("%Y-%m-%d %H:%M"),
+        "run": _run_id(ask),
+        "ask": ask,
+        "target_object": target_object,
+        "homotopy_blob": homotopy_blob,
+        "num_paths": num_paths,
+        "start_points": start_points,
+    }
+    ledger.append(run)
+    return run
+
+
+def continue_from(target, generic, ledger: Ledger = None, config=None, crash_after=None):
+    """The chain link: continue a previously-solved `generic` system's endpoints to
+    `target` via the (deterministic, gamma=1) coefficient parameter homotopy.
+
+    The generic's solve must already be on record (solve it first); its recorded
+    endpoints -- read back from the records, not from memory -- become this run's start
+    points, and each track record carries a `start` reference into the generic run:
+    a real two-link provenance chain, walkable back to the total-degree start labels.
+
+    No randomness enters here (gamma = 1), so the continuation homotopy is REBUILT from
+    target+generic rather than persisted: chained runs need no blob at all.
+    """
+    ledger = ledger or ambient_ledger()
+    config = dict(DEFAULT_CONFIG if config is None else config)
+    ask = {
+        "op": "continue",
+        "target": target.content_digest(),
+        "generic": generic.content_digest(),
+        "config": dict(sorted(config.items())),
+    }
+    run = ledger.find_run(ask)
+
+    if run is None:
+        # any run that SOLVED the generic will do -- a base solve or itself a
+        # continuation (chains nest: sample <- midpoint slice <- witness <- start)
+        generic_run = _find_run_solving(ledger, generic.content_digest())
+        if generic_run is None:
+            raise ValueError("continue_from: the generic system has no recorded solve; "
+                             "solve(generic, ledger) first")
+        generic_done = ledger.completed_paths(generic_run["run"])
+        start_indices = sorted(i for i, rec in generic_done.items() if rec["status"] == "success")
+
+        target_object = ledger.put_object(target.to_classic_input(),
+                                          object_id=target.content_digest())
+        run = {
+            "kind": "run",
+            "schema": SCHEMA,
+            "when": time.strftime("%Y-%m-%d %H:%M"),
+            "run": _run_id(ask),
+            "ask": ask,
+            "op": "continue",
+            "target_object": target_object,
+            "start_run": generic_run["run"],
+            "start_indices": start_indices,
+            "num_paths": len(start_indices),
+        }
+        ledger.append(run)
+
+    run_id = run["run"]
+    done = ledger.completed_paths(run_id)
+    missing = [i for i in range(run["num_paths"]) if i not in done]
+
+    num_computed = 0
+    if missing:
+        homotopy = nag.coefficient_parameter_homotopy(target, generic)  # deterministic
+        start_records = ledger.completed_paths(run["start_run"])
+        for i in missing:
+            generic_index = run["start_indices"][i]
+            start_point = _decode_point(start_records[generic_index]["endpoint"])
+            record = _track_one(target, homotopy, start_point, i, config)
+            record["run"] = run_id
+            record["start"] = {"kind": "point_ref",
+                               "run": run["start_run"], "index": generic_index}
+            ledger.append(record)
+            done[i] = record
+            num_computed += 1
+            if crash_after is not None and num_computed >= crash_after:
+                raise SimulatedCrash(
+                    "simulated walltime kill after %d paths (run %s)" % (num_computed, run_id))
+
+    solutions = {i: _decode_point(rec["endpoint"])
+                 for i, rec in done.items() if rec["status"] == "success"}
+    statuses = {i: rec["status"] for i, rec in done.items()}
+    return LedgerSolveResult(run_id, solutions, statuses,
+                             num_reused=len(done) - num_computed, num_computed=num_computed)
+
+
+def _find_run_solving(ledger: Ledger, target_digest: str):
+    """The most recent run (of any op) whose ask.target is this system."""
+    found = None
+    for rec in ledger.scan():
+        if rec.get("kind") == "run" and rec.get("ask", {}).get("target") == target_digest:
+            found = rec
+    return found
+
+
+def annotate(ledger: Ledger, run_id: str, index: int, key=None, value=None, **many):
+    """Attach metadata (e.g. a projection value) to a recorded point: append-only lines
+    keyed by point id -- queryable with jq/pandas, mergeable by file append.  Pass one
+    key/value or several as keywords; all go into ONE journal file."""
+    items = dict(many)
+    if key is not None:
+        items[key] = value
+    for k, v in items.items():
+        ledger.append({"kind": "annotation", "point": {"run": run_id, "index": index},
+                       "key": k, "value": v})
+
+
+def annotations_for(ledger: Ledger, run_id: str, index: int) -> dict:
+    """All annotations recorded against one point, as {key: value}."""
+    out = {}
+    for rec in ledger.scan():
+        if rec.get("kind") == "annotation" and rec.get("point") == {"run": run_id, "index": index}:
+            out[rec["key"]] = rec["value"]
+    return out
+
+
+def declare_result(ledger: Ledger, name: str, points: list, description: str = ""):
+    """Mark points as RESULTS -- the signal/noise line.  Everything in history/ is a
+    record; only declared results are 'what I cared about'.  Top-level solves declare
+    automatically; intermediate scaffolding never does.  `points` is a list of
+    (run_id, index) pairs.  Re-declaring a name replaces it (newest wins)."""
+    ledger.append({"kind": "result", "name": name, "description": description,
+                   "when": time.strftime("%Y-%m-%d %H:%M"),
+                   "points": [{"run": r, "index": i} for r, i in points]})
+    ledger.refresh_results()
+
+
+def save(*args, description: str = "", ledger: Ledger = None):
+    """The casual user's one verb: save(stuff) -- and magic happens.
+
+        save(sols)                      # auto-named by date/time
+        save("my solutions", sols)      # named
+        save("notes", {"count": 8})     # any JSON-able thing
+
+    A solve result (anything with .run_id/.solutions) is declared as results with full
+    provenance; any JSON-able value is recorded inline.  Both land in results.json /
+    RESULTS.txt in the ambient records directory; the user never names, sees, or learns
+    the word 'ledger'.
+    """
+    if len(args) == 1:
+        name, thing = "saved %s" % time.strftime("%Y-%m-%d %H:%M:%S"), args[0]
+    elif len(args) == 2:
+        name, thing = args
+    else:
+        raise TypeError("save(thing) or save(name, thing)")
+    ledger = ledger or ambient_ledger()
+    if hasattr(thing, "run_id") and hasattr(thing, "solutions"):
+        declare_result(ledger, name,
+                       [(thing.run_id, i) for i in sorted(thing.solutions)], description)
+        return
+    ledger.append({"kind": "result", "name": name, "description": description,
+                   "when": time.strftime("%Y-%m-%d %H:%M"),
+                   "points": [], "value": thing})
+    ledger.refresh_results()
+
+
+def saved(ledger: Ledger = None) -> dict:
+    """The declared results, decoded: {name: {(run, index): point}}.  Newest declaration
+    of each name wins."""
+    ledger = ledger or ambient_ledger()
+    declared = {}
+    for rec in ledger.scan():
+        if rec.get("kind") == "result":
+            declared[rec["name"]] = rec       # newest wins (scan is append-ordered)
+    out = {}
+    for name, rec in declared.items():
+        pts = {}
+        for ref in rec["points"]:
+            track = ledger.completed_paths(ref["run"]).get(ref["index"])
+            if track and track["status"] == "success":
+                pts[(ref["run"], ref["index"])] = _decode_point(track["endpoint"])
+        out[name] = pts
+    return out
+
+
+def provenance_chain(ledger: Ledger, run_id: str, index: int) -> list:
+    """Walk one endpoint's ancestry back to the beginning: the arc's 'all the way to the
+    start' promise, executed against nothing but the records."""
+    chain = []
+    while True:
+        rec = ledger.completed_paths(run_id).get(index)
+        if rec is None:
+            raise KeyError("no track record for (%s, %d)" % (run_id, index))
+        chain.append({"run": run_id, "index": index, "status": rec["status"]})
+        start = rec.get("start", {})
+        if start.get("kind") == "point_ref":
+            run_id, index = start["run"], start["index"]   # ascend one link
+        else:
+            chain.append({"run": run_id, "start_label": start.get("index", index)})
+            return chain
+
+
+def _track_one(target, homotopy, point, index: int, config: dict) -> dict:
+    """Track a single start point; one path per solver call keeps index -> endpoint exact."""
+    solver = nag.HomotopySolver(homotopy, [point], target,
+                                precision=config["precision"], endgame=config["endgame"])
+    solver.solve()
+    endpoints = solver.all_solutions()
+    if len(endpoints) == 1:
+        return {"kind": "track", "index": index, "status": "success",
+                "endpoint": _encode_point(endpoints[0])}
+    return {"kind": "track", "index": index, "status": "failed", "endpoint": None}
