@@ -20,7 +20,8 @@ from bertini import System, VariableGroup
 from bertini.function_tree.symbol import Variable
 
 from ledger import Ledger
-from memo_solve import ensure_solved, ensure_continued, provenance_chain, SimulatedCrash
+from memo_solve import (ensure_solved, ensure_continued, provenance_chain,
+                        annotate, annotations_for, SimulatedCrash)
 
 
 def circle_line():
@@ -191,6 +192,27 @@ def test_provenance_walks_back_to_the_beginning(tmp_path):
     assert chain[1]["run"] == base.run_id
     assert "start_label" in chain[-1]
     assert len(chain) == 3
+
+
+def test_chains_nest_and_provenance_reaches_depth(tmp_path):
+    """sample <- midpoint <- witness <- start label: continuation off a continuation."""
+    lg = Ledger(tmp_path)
+    ensure_solved(circle_family(13), lg)                                  # witness
+    ensure_continued(circle_family(5), circle_family(13), lg)             # midpoint
+    sample = ensure_continued(circle_family(3), circle_family(5), lg)     # sample off midpoint
+
+    chain = provenance_chain(lg, sample.run_id, 0)
+    assert len(chain) == 4                        # three track links + the start label
+    assert "start_label" in chain[-1]
+
+
+def test_annotations_round_trip(tmp_path):
+    lg = Ledger(tmp_path)
+    result = ensure_solved(circle_family(13), lg)
+    annotate(lg, result.run_id, 0, "projection", 1.5)
+    annotate(lg, result.run_id, 0, "edge", "top")
+    assert annotations_for(lg, result.run_id, 0) == {"projection": 1.5, "edge": "top"}
+    assert annotations_for(lg, result.run_id, 1) == {}
 
 
 def test_ledger_is_plain_text(tmp_path):

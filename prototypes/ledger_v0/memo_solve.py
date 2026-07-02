@@ -158,7 +158,9 @@ def ensure_continued(target, generic, ledger: Ledger, config=None, crash_after=N
     run = ledger.find_run(ask)
 
     if run is None:
-        generic_run = ledger.find_run(_ask_digest(generic, config))
+        # any run that SOLVED the generic will do -- a base solve or itself a
+        # continuation (chains nest: sample <- midpoint slice <- witness <- start)
+        generic_run = _find_run_solving(ledger, generic.content_digest())
         if generic_run is None:
             raise ValueError("ensure_continued: the generic system has no recorded solve; "
                              "ensure_solved(generic, ledger) first")
@@ -209,6 +211,33 @@ def ensure_continued(target, generic, ledger: Ledger, config=None, crash_after=N
     statuses = {i: rec["status"] for i, rec in done.items()}
     return LedgerSolveResult(run_id, solutions, statuses,
                              num_reused=len(done) - num_computed, num_computed=num_computed)
+
+
+def _find_run_solving(ledger: Ledger, target_digest: str):
+    """The most recent run (of any op) whose ask.target is this system."""
+    found = None
+    for rec in ledger.scan():
+        if rec.get("kind") == "run" and rec.get("ask", {}).get("target") == target_digest:
+            found = rec
+    return found
+
+
+def annotate(ledger: Ledger, run_id: str, index: int, key: str, value):
+    """Attach metadata (e.g. a projection value) to a recorded point: one more
+    append-only line, keyed by point id -- queryable with jq/pandas, mergeable by
+    file append."""
+    with ledger.open_journal(run_id) as journal:
+        journal.append({"kind": "annotation", "point": {"run": run_id, "index": index},
+                        "key": key, "value": value})
+
+
+def annotations_for(ledger: Ledger, run_id: str, index: int) -> dict:
+    """All annotations recorded against one point, as {key: value}."""
+    out = {}
+    for rec in ledger.scan():
+        if rec.get("kind") == "annotation" and rec.get("point") == {"run": run_id, "index": index}:
+            out[rec["key"]] = rec["value"]
+    return out
 
 
 def provenance_chain(ledger: Ledger, run_id: str, index: int) -> list:
