@@ -123,6 +123,23 @@ namespace bertini{
 			.def("homogenize", static_cast<void (SystemBaseT::*)()>(&SystemBaseT::Homogenize), (arg("self")),"Homogenize the system, adding new homogenizing variables if necessary.  This may change your polynomials; that is, it has side effects.")
 			.def("is_homogeneous", &SystemBaseT::IsHomogeneous, (arg("self")), "Determines whether all polynomials in the system have the same degree.  Non-polynomial functions are not homogeneous.")
 			.def("is_polynomial", &SystemBaseT::IsPolynomial, (arg("self")), "Determines whether all polynomials are polynomial.  Transcendental functions, e.g., are non-polynomial.  Returns a bool.")
+
+			.def("content_digest",
+				+[](SystemBaseT const& self){ return self.ContentDigest().Hex(); },
+				(arg("self")),
+				"The persistent content digest of the system: SHA-256 of its canonical exact encoding, as 64 lowercase hex characters.  Stable across sessions, machines, and versions of the encoding format (a format change bumps the version inside the encoding, changing digests loudly rather than silently).  Everything evaluation-relevant is identity -- functions, variable groups and ordering, path variable, patch and randomization coefficients, gamma; randomness included.  Transient state (precision, current variable values, differentiation) is not.  This is the key a database of solutions references systems and homotopies by.")
+			.def("is_same",
+				+[](SystemBaseT const& self, System const& other){ return self.IsSame(other); },
+				(arg("self"), arg("other")),
+				"Content equality: True iff the two systems have equal content digests (identical canonical encodings).  Independently built systems with the same mathematical content compare equal; systems differing in any identity-bearing way (functions, grouping, patch, gamma, ...) do not.  Does NOT change ==/hash semantics of the Python object.")
+			.def("seal",
+				+[](SystemBaseT& self){ self.Seal(); },
+				(arg("self")),
+				"Seal the system: memoize its content digest and forbid structural mutation (hashcons-on-freeze).  After sealing, structural mutators (add_function, homogenize, auto_patch, ...) raise; evaluation, precision changes, and differentiation still work.  Copying (clone / deepcopy) yields an unsealed copy.  Idempotent.")
+			.def("is_sealed",
+				+[](SystemBaseT const& self){ return self.IsSealed(); },
+				(arg("self")),
+				"Whether the system has been sealed against structural mutation.")
 			
 			.def("num_functions", &SystemBaseT::NumTotalFunctions, (arg("self")),"The total number of functions in the system.  Does not include patches.")
 			.def("num_variables", &SystemBaseT::NumVariables, (arg("self")),"the *total* number of variables in the system.  Includes homogenizing variables")
@@ -355,6 +372,20 @@ namespace bertini{
 
 
 			def("simplify", &call_simplify,(arg("self")), "Perform all possible simplifications.  Has side effects of modifying your functions, if held separately.  Shared nodes between multiple systems may have adverse effects");
+
+			def("intern_system",
+				+[](boost::python::object system_obj){
+					// Extract the HOLDER's shared_ptr, not a converter temporary: boost.python's
+					// from-python shared_ptr conversion mints an ephemeral control block that dies
+					// at end of call, which would immediately expire the intern table's weak_ptr.
+					// The holder's control block lives exactly as long as the Python object.
+					std::shared_ptr<System>& held = boost::python::extract<std::shared_ptr<System>&>(system_obj)();
+					// the representative is sealed, so its structural mutators raise; handing
+					// Python a non-const pointer is safe in the same sense the C++ const is
+					return std::const_pointer_cast<System>(InternSystem(held));
+				},
+				(arg("system")),
+				"Hash-cons a System: return the live SEALED representative with an equal content_digest() if one exists, else seal and register this one.  Two equal systems interned in one session come back as the SAME object (s1 is s2).  The representative is sealed -- structural mutators raise; clone() it to get a mutable copy.  The intern table holds systems weakly, so it never keeps them alive on its own.");
 
 			def("symbolic_jacobian",
 				+[](boost::python::object functions, boost::python::object variables) {
