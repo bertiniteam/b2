@@ -44,7 +44,7 @@ def _start():
 
 def _start_points():
     # one hyperplane per slot: x in {1, -1}, y in {1, 2} -- the four intersections, by hand.
-    return [np.array([mp.Complex(str(a)), mp.Complex(str(b))])
+    return [np.array([mp.complex_mp(str(a)), mp.complex_mp(str(b))])
             for a, b in itertools.product([1, -1], [1, 2])]
 
 
@@ -60,7 +60,7 @@ def _known_solutions():
 
 # exact gamma off the real axis (|gamma| = 1) -> a reproducible straight-line path that misses
 # the measure-zero singular locus.
-_GAMMA = mp.Complex('0.6', '0.8')
+_GAMMA = mp.complex_mp('0.6', '0.8')
 
 
 def test_user_authored_product_of_linears_solves_to_known_roots():
@@ -138,7 +138,7 @@ def test_multi_affine_group_products_of_linears_solves():
         [[0, 1, '-1'], [0, 1, '1']],   # (y - 1)(y + 1)
     ])
 
-    start_points = [np.array([mp.Complex(str(a)), mp.Complex(str(b))])
+    start_points = [np.array([mp.complex_mp(str(a)), mp.complex_mp(str(b))])
                     for a, b in itertools.product([1, -1], [1, -1])]
     H = nag_algorithm.blend_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
     solver = nag_algorithm.user_homotopy(H, start_points, T)

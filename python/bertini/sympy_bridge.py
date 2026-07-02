@@ -63,9 +63,11 @@ except ImportError as _e:
         "of bertini.  install it with: pip install sympy") from _e
 
 import bertini as _pb
-import bertini.function_tree as _ft
-from bertini.function_tree import operator as _op
-from bertini.function_tree import symbol as _sym
+# Point at the C++ submodules directly (stable, and they retain the internal-only nodes this bridge
+# needs -- e.g. Differential and the full operator taxonomy -- which the flat bertini.symbolics hides).
+import bertini._pybertini.function_tree as _ft
+from bertini._pybertini.function_tree import operator as _op
+from bertini._pybertini.function_tree import symbol as _sym
 from bertini import multiprec as _mp
 
 

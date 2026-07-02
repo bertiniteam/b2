@@ -43,65 +43,65 @@ SHAPE = (5, 10)
 
 def test_float_make_array_empty():
     """check that we can call `np.empty` using Float"""
-    A = np.empty(SHAPE, dtype=mp.Float)
-    A[0, 0] = mp.Float(0)
+    A = np.empty(SHAPE, dtype=mp.real_mp)
+    A[0, 0] = mp.real_mp(0)
 
 
 def test_float_make_array_zeros():
     """check that we can make variable precision real's directly using np.zeros"""
-    A = np.zeros(SHAPE, dtype=mp.Float)
-    A[0, 0] = mp.Float(1)
+    A = np.zeros(SHAPE, dtype=mp.real_mp)
+    A[0, 0] = mp.real_mp(1)
 
 
 def test_float_make_array_zeros_with_conversion():
     """check that we can make variable precision real's by converting from a previously
     constructed array of zeros, without specifying the type in the converted-from array"""
-    A = np.array(np.zeros(SHAPE), dtype=mp.Float)
+    A = np.array(np.zeros(SHAPE), dtype=mp.real_mp)
 
 
 def test_float_make_array_zeros_with_conversion_and_astype_int64():
     """check that we can make variable precision real's by converting from a previously
     constructed array of zeros, by first passing through int64"""
-    A = np.array(np.zeros(SHAPE).astype(np.int64), dtype=mp.Float)
+    A = np.array(np.zeros(SHAPE).astype(np.int64), dtype=mp.real_mp)
 
 
 def test_float_make_array_ones():
     """check that we can make variable precision real's directly using np.ones"""
-    A = np.ones(SHAPE, dtype=mp.Float)
-    A[0, 0] = mp.Float(2)
+    A = np.ones(SHAPE, dtype=mp.real_mp)
+    A[0, 0] = mp.real_mp(2)
 
 
 def test_float_make_array_ones_with_conversion():
     """check that we can make variable precision real's by converting from a previously
     constructed array of ones, without specifying the type in the converted-from array"""
-    A = np.array(np.ones(SHAPE), dtype=mp.Float)
+    A = np.array(np.ones(SHAPE), dtype=mp.real_mp)
 
 
 def test_float_make_array_ones_with_conversion_and_astype_int64():
     """check that we can make variable precision real's by converting from a previously
     constructed array of ones, by first passing through int64"""
-    A = np.array(np.ones(SHAPE).astype(np.int64), dtype=mp.Float)
+    A = np.array(np.ones(SHAPE).astype(np.int64), dtype=mp.real_mp)
 
 
 def test_float_make_array_point_one():
     """check that if we make an array of variable precision reals from double 0.1, we
     don't get the same thing as if we constructed the high-precision type from a string."""
-    A = np.array(0.1 * np.ones(SHAPE), dtype=mp.Float)
-    assert np.all(A != mp.Float('0.1'))
+    A = np.array(0.1 * np.ones(SHAPE), dtype=mp.real_mp)
+    assert np.all(A != mp.real_mp('0.1'))
 
 
 # ------------------------------------------------------------------------------- Complex
 
 def test_complex_make_array_empty():
     """check that we can call `np.empty` using Complex"""
-    A = np.empty(SHAPE, dtype=mp.Complex)
-    A[0, 0] = mp.Complex(0)
+    A = np.empty(SHAPE, dtype=mp.complex_mp)
+    A[0, 0] = mp.complex_mp(0)
 
 
 def test_complex_make_array_zeros():
     """check that we can make variable precision complex's directly using np.zeros"""
-    A = np.zeros(SHAPE, dtype=mp.Complex)
-    A[0, 0] = mp.Complex(1)
+    A = np.zeros(SHAPE, dtype=mp.complex_mp)
+    A[0, 0] = mp.complex_mp(1)
 
 
 def test_complex_make_array_zeros_with_conversion():
@@ -109,28 +109,28 @@ def test_complex_make_array_zeros_with_conversion():
     constructed array of zeros"""
     intermediary = np.zeros(SHAPE)
     assert isinstance(intermediary[0, 0], np.float64)
-    A = np.array(intermediary, dtype=mp.Complex)
+    A = np.array(intermediary, dtype=mp.complex_mp)
 
 
 def test_complex_make_array_zeros_with_conversion_and_astype_int64():
     """check that we can make variable precision complex's by converting from a previously
     constructed array of zeros, by first passing through int64"""
-    A = np.array(np.zeros(SHAPE).astype(np.int64), dtype=mp.Complex)
+    A = np.array(np.zeros(SHAPE).astype(np.int64), dtype=mp.complex_mp)
 
 
 def test_complex_make_array_ones():
     """check that we can make variable precision complex's directly using np.ones"""
-    A = np.ones(SHAPE, dtype=mp.Complex)
-    A[0, 0] = mp.Complex(2)
+    A = np.ones(SHAPE, dtype=mp.complex_mp)
+    A[0, 0] = mp.complex_mp(2)
 
 
 def test_complex_make_array_ones_with_conversion():
     """check that we can make variable precision complex's by converting from a previously
     constructed array of ones"""
-    A = np.array(np.ones(SHAPE), dtype=mp.Complex)
+    A = np.array(np.ones(SHAPE), dtype=mp.complex_mp)
 
 
 def test_complex_make_array_ones_with_conversion_and_astype_int64():
     """check that we can make variable precision complex's by converting from a previously
     constructed array of ones, by first passing through int64"""
-    A = np.array(np.ones(SHAPE).astype(np.int64), dtype=mp.Complex)
+    A = np.array(np.ones(SHAPE).astype(np.int64), dtype=mp.complex_mp)

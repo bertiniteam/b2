@@ -36,7 +36,7 @@ from bertini.nag_algorithm import WitnessSetMultiplePrecision
 
 
 def _mpvec(*entries):
-    return np.array([mp.Complex(str(e)) for e in entries], dtype=mp.Complex)
+    return np.array([mp.complex_mp(str(e)) for e in entries], dtype=mp.complex_mp)
 
 
 def _known_slice():

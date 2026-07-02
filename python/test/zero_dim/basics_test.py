@@ -138,7 +138,7 @@ def test_solutions_internal_coords_are_explicit_optout(solved):
         # precision-16 values, so the identity holds at the value's own
         # working precision -- hence 1e-12, not the ambient 30 digits.
         for j in range(2):
-            assert mp.abs(dehomed[j] - user[i][j]) < mp.Float('1e-12')
+            assert mp.abs(dehomed[j] - user[i][j]) < mp.real_mp('1e-12')
 
 
 def test_homogenize_point_reenters_internal_coordinates(solved):
@@ -156,7 +156,7 @@ def test_homogenize_point_reenters_internal_coordinates(solved):
         # at the value's own working precision (see note in the previous test)
         rescaled = ts.rescale_point_to_fit_patch(lifted)
         for j in range(3):
-            assert mp.abs(rescaled[j] - lifted[j]) < mp.Float('1e-12')
+            assert mp.abs(rescaled[j] - lifted[j]) < mp.real_mp('1e-12')
 
 
 def test_variable_orderings_label_the_representations(solved):

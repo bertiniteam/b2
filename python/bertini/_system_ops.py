@@ -26,7 +26,7 @@ arrays / lists of expressions or exact coefficient matrices and they do the flat
 coercion, and homogenization-aware block construction, delegating to the low-level C++ methods
 (``add_function``, ``add_linear_forms_block``, ``add_products_of_linears_block``, ``randomize``).
 
-They replace the old free functions in :mod:`bertini.linalg` (now a deprecated shim).  ``install``
+They replace the old free functions in ``bertini.linalg`` (now a deprecated shim).  ``install``
 captures the native ``randomize`` before overriding it, so the friendly ``randomize`` (which accepts
 an optional coefficient matrix) can still reach the C++ implementation without recursing.
 """

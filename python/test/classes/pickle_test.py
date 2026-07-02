@@ -41,7 +41,7 @@ import bertini.multiprec as mp
 def test_complex_pickles_exactly_at_high_precision(precision):
     # The whole point of multiprecision: a float pickle that drops low bits is silently wrong.  Use
     # a value with more significant digits than double can hold and demand exact equality.
-    z = mp.Complex("1.23456789012345678901234567890123456789",
+    z = mp.complex_mp("1.23456789012345678901234567890123456789",
                    "-9.87654321098765432109876543210987654321")
     assert pickle.loads(pickle.dumps(z)) == z
     assert copy.deepcopy(z) == z
@@ -49,7 +49,7 @@ def test_complex_pickles_exactly_at_high_precision(precision):
 
 @pytest.mark.parametrize("precision", [30, 50, 80], indirect=True)
 def test_float_pickles_exactly_at_high_precision(precision):
-    f = mp.Float("3.14159265358979323846264338327950288419716939937510")
+    f = mp.real_mp("3.14159265358979323846264338327950288419716939937510")
     assert pickle.loads(pickle.dumps(f)) == f
     assert copy.deepcopy(f) == f
 

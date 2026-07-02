@@ -48,15 +48,6 @@ import numpy as np
 
 from bertini._pybertini.multiprec import *
 
-# Deprecated back-compat aliases.  The canonical names are the lowercase _mp forms (complex_mp,
-# real_mp, int_mp, rational_mp -- matching numpy dtypes and the core C++ complex_mp); these old
-# CapWords names still resolve during the transition and are removed in the cleanup sweep.  They are
-# NOT in __all__, so they are unadvertised (out of `import *`, tab-completion, and the docs).
-Complex = complex_mp
-Float = real_mp
-Int = int_mp
-Rational = rational_mp
-
 def Vector(n=0):
 	"""DEPRECATED: a numpy array of multiprecision complexes.  Prefer a plain numpy array."""
 	return np.zeros((n,), dtype = complex_mp)

@@ -64,7 +64,6 @@ del sys  # used only for the platform check above; don't leak it into the bertin
 # put stuff in the bertini namespace
 
 from . import symbolics
-from . import function_tree   # deprecated alias for symbolics; still importable, not advertised
 from .symbolics import sin, cos, tan, asin, acos, atan, exp, log, sqrt
 from .symbolics import canonicalize, monomial_order, MonomialOrder
 
@@ -78,8 +77,6 @@ from . import random
 from . import parallel
 
 from . import multiprec
-
-from . import linalg
 
 # some convenience assignments
 Variable = symbolics.Variable
@@ -127,7 +124,7 @@ __all__ = ['Variable','variables','gather_variables','VariableGroup','Named','sy
            'complex_mp','real_mp','int_mp','rational_mp',
            'nag_algorithm','default_precision',
            'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
-           'linalg','operators',
+           'operators',
            # everyday classes hoisted to the top level
            'ZeroDimSolver','HomotopySolver','SolutionPathCollector','Slice',
            'AMPTracker','DoublePrecisionTracker','MultiplePrecisionTracker',

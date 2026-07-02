@@ -51,20 +51,20 @@ Implementation reference
 AMP Endgames
 -------------
 
-* :class:`~bertini.endgame.AMPCauchyEG`
-* :class:`~bertini.endgame.AMPPSEG`
+* :class:`~bertini.endgame.AMPCauchyEndgame`
+* :class:`~bertini.endgame.AMPPowerSeriesEndgame`
 
 Fixed Double Precision Endgames
 ---------------------------------
 
-* :class:`~bertini.endgame.FixedDoublePSEG`
-* :class:`~bertini.endgame.FixedDoublePSEG`
+* :class:`~bertini.endgame.FixedDoubleCauchyEndgame`
+* :class:`~bertini.endgame.FixedDoublePowerSeriesEndgame`
 
 Fixed Multiple Precision  Endgames
 -------------------------------------
 
-* :class:`~bertini.endgame.FixedMultiplePSEG`
-* :class:`~bertini.endgame.FixedMultiplePSEG`
+* :class:`~bertini.endgame.FixedMultipleCauchyEndgame`
+* :class:`~bertini.endgame.FixedMultiplePowerSeriesEndgame`
 
 """
 
@@ -126,16 +126,6 @@ class FixedMultipleCauchyEndgame(_EndgameBase):
 class FixedMultiplePowerSeriesEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
         super().__init__(_pybe.FixedMultiplePowerSeriesEndgame, tracker, boundary_time)
-
-
-# Deprecated aliases: EG -> Endgame, PS -> PowerSeries.  The old spellings still resolve during the
-# transition (unadvertised -- out of __all__); removed in the cleanup sweep.
-AMPCauchyEG = AMPCauchyEndgame
-AMPPSEG = AMPPowerSeriesEndgame
-FixedDoubleCauchyEG = FixedDoubleCauchyEndgame
-FixedDoublePSEG = FixedDoublePowerSeriesEndgame
-FixedMultipleCauchyEG = FixedMultipleCauchyEndgame
-FixedMultiplePSEG = FixedMultiplePowerSeriesEndgame
 
 
 __all__ = [

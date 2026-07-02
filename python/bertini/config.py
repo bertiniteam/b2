@@ -118,9 +118,9 @@ def _coerced_setattr(obj, key, value):
         if not isinstance(value, str):
             raise
 
-    from .multiprec import Float
+    from .multiprec import real_mp
     last_error = None
-    for convert in (Float, float, int):
+    for convert in (real_mp, float, int):
         try:
             converted = convert(value)      # e.g. int("1e-7") is a ValueError -- skip it
         except (ValueError, TypeError):

@@ -27,7 +27,7 @@ def random_matrix(rows, cols, real=False, units=False, orthonormal=True, symboli
         ``orthonormal`` takes precedence over ``units`` (orthonormal rows are already normalized).
     symbolic : bool, default False
         When True, return a numpy object array of coefficient *nodes*
-        (via :func:`bertini.linalg.as_coefficients`); otherwise numeric ``multiprec.Complex``.
+        (via :func:`bertini.coefficients`); otherwise numeric ``multiprec.complex_mp``.
 
     Notes
     -----
@@ -47,8 +47,8 @@ def random_matrix(rows, cols, real=False, units=False, orthonormal=True, symboli
     M = M.reshape(rows, cols)
 
     if symbolic:
-        from bertini import linalg
-        return linalg.as_coefficients(M)
+        from bertini._coefficients import coefficients
+        return coefficients(M)
     return M
 
 

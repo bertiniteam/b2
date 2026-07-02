@@ -33,7 +33,7 @@ def test_variable_matrix_names_and_shape():
 def test_coefficient_accepts_exact_values():
     # ints (python and numpy), Fractions, exact strings, and bertini multiprecision values
     for v in [2, np.int64(2), Fraction(3, 4), '2.5', '3/4',
-              mp.Complex('1.5', '2.5'), mp.Float('1.5')]:
+              mp.complex_mp('1.5', '2.5'), mp.real_mp('1.5')]:
         node = pb.coefficient(v)
         # the result is a usable function-tree node: it combines with a variable
         _ = node * pb.Variable('z')
@@ -98,7 +98,7 @@ def test_add_linear_forms_block_evaluates():
     sys.add_linear_forms([[2, 3, 1], [1, -1, 4]])
     assert sys.num_functions() == 2
 
-    v = sys.eval(np.array([mp.Complex('1'), mp.Complex('1')], dtype=mp.Complex))
+    v = sys.eval(np.array([mp.complex_mp('1'), mp.complex_mp('1')], dtype=mp.complex_mp))
     assert abs(complex(v[0]) - 6) < 1e-10
     assert abs(complex(v[1]) - 4) < 1e-10
 
@@ -109,7 +109,7 @@ def test_add_linear_forms_accepts_exact_nonintegers():
     sys.add_variable_group(pb.VariableGroup([x, y]))
     # 5/2 x + 1 y + 0   evaluated at (2, 1) = 5 + 1 = 6
     sys.add_linear_forms([['5/2', '1', '0']])
-    v = sys.eval(np.array([mp.Complex('2'), mp.Complex('1')], dtype=mp.Complex))
+    v = sys.eval(np.array([mp.complex_mp('2'), mp.complex_mp('1')], dtype=mp.complex_mp))
     assert abs(complex(v[0]) - 6) < 1e-10
 
 
@@ -141,7 +141,7 @@ def test_add_linear_matches_scalar_expansion():
     sys_block.add_variable_group(pb.VariableGroup(list(xb)))
     sys_block.add_linear(A, xb, b)
 
-    pt = np.array([mp.Complex('2'), mp.Complex('-1')], dtype=mp.Complex)
+    pt = np.array([mp.complex_mp('2'), mp.complex_mp('-1')], dtype=mp.complex_mp)
     v_scalar = sys_scalar.eval(pt)
     v_block = sys_block.eval(pt)
 
@@ -174,7 +174,7 @@ def test_add_products_of_linears_evaluates_and_degrees():
     # a product's degree is its number of factors -- the point of the products-of-linears block.
     assert list(sys.degrees()) == [2, 1]
 
-    v = sys.eval(np.array([mp.Complex('2'), mp.Complex('1')], dtype=mp.Complex))
+    v = sys.eval(np.array([mp.complex_mp('2'), mp.complex_mp('1')], dtype=mp.complex_mp))
     assert abs(complex(v[0]) - 3) < 1e-10   # (2 + 1)(2 - 1) = 3
     assert abs(complex(v[1]) - 8) < 1e-10   # 2*2 + 3*1 + 1 = 8
 
@@ -185,7 +185,7 @@ def test_add_products_of_linears_accepts_exact_nonintegers():
     sys = pb.System()
     sys.add_variable_group(pb.VariableGroup([x]))
     sys.add_products_of_linears([[['1/2', '3/4']]])
-    v = sys.eval(np.array([mp.Complex('1')], dtype=mp.Complex))
+    v = sys.eval(np.array([mp.complex_mp('1')], dtype=mp.complex_mp))
     assert abs(complex(v[0]) - 1.25) < 1e-10
 
 
@@ -212,7 +212,7 @@ def test_add_products_of_linears_survives_clone():
     clone = pb.system.clone(sys)
     assert list(clone.degrees()) == [2, 1]
 
-    pt = np.array([mp.Complex('2'), mp.Complex('1')], dtype=mp.Complex)
+    pt = np.array([mp.complex_mp('2'), mp.complex_mp('1')], dtype=mp.complex_mp)
     v0, v1 = sys.eval(pt), clone.eval(pt)
     assert len(v0) == len(v1) == 2
     for a, b in zip(v0, v1):
@@ -232,8 +232,8 @@ def test_add_products_of_linears_projective_homogeneous_forms():
     sys.add_hom_variable_group(pb.VariableGroup([x0, x1]))
     sys.add_products_of_linears([[[1, -1, 0], [1, 1, 0]]])
     assert list(sys.degrees()) == [2]
-    assert abs(complex(sys.eval(np.array([mp.Complex('1'), mp.Complex('1')], dtype=mp.Complex))[0])) < 1e-12
-    assert abs(complex(sys.eval(np.array([mp.Complex('3'), mp.Complex('1')], dtype=mp.Complex))[0]) - 8) < 1e-10
+    assert abs(complex(sys.eval(np.array([mp.complex_mp('1'), mp.complex_mp('1')], dtype=mp.complex_mp))[0])) < 1e-12
+    assert abs(complex(sys.eval(np.array([mp.complex_mp('3'), mp.complex_mp('1')], dtype=mp.complex_mp))[0]) - 8) < 1e-10
 
 
 # --- degrees of the linear-algebra evaluation paths ---------------------------------------
