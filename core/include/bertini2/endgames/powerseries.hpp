@@ -643,7 +643,7 @@ public:
 
 		auto refine_success = this->RefineSample(samples.back(), next_sample,  times.back(),
 										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
-										this->EndgameSettings().max_num_newton_iterations);
+										this->EndgameSettings().max_num_refinements);
 		if (refine_success != SuccessCode::Success)
 		{
 			// Adaptive-numeric-type: a refine that double cannot satisfy is a request to cross to mpfr.

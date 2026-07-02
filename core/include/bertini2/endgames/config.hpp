@@ -112,7 +112,7 @@ namespace bertini{ namespace endgame{
 
 		mpq_rational sample_factor{1, 2}; ///< Geometric factor between successive sample times (exact rational).
 
-		unsigned max_num_newton_iterations = 15; ///< Maximum Newton iterations when refining endgame sample points.
+		unsigned max_num_refinements = 15; ///< Maximum Newton refinements when sharpening endgame sample points.
 
 		T final_tolerance = 1e-11;///< The tolerance to which to compute the endpoint using the endgame.
 
