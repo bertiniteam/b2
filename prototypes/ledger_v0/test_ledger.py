@@ -269,8 +269,12 @@ def test_casual_user_never_says_ledger(tmp_path, monkeypatch):
     sols = ensure_solved(circle_family(2))                 # no ledger anywhere
     save("my solutions", sols)                             # done
 
+    save(sols)                                             # nameless: 'magic happens'
+
     out = json.loads((tmp_path / "my_output" / "results.json").read_text())
     assert len(out["my solutions"]["points"]) == 2
+    auto_named = [k for k in out if k.startswith("saved ")]
+    assert len(auto_named) == 1 and len(out[auto_named[0]]["points"]) == 2
     monkeypatch.setattr(memo_solve, "_AMBIENT", None)      # don't leak into other tests
 
 

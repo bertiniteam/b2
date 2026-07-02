@@ -270,15 +270,24 @@ def declare_result(ledger: Ledger, name: str, points: list, description: str = "
     ledger.refresh_results()
 
 
-def save(name: str, thing, description: str = "", ledger: Ledger = None):
-    """The casual user's one verb: save("my solutions", whatever).
+def save(*args, description: str = "", ledger: Ledger = None):
+    """The casual user's one verb: save(stuff) -- and magic happens.
 
-    - a solve result (anything with .run_id/.solutions): its points are declared as
-      results, with full provenance;
-    - any JSON-able value (dict, list, number, string): recorded inline as-is.
-    Both land in results.json / RESULTS.txt in the ambient records directory; the user
-    never names, sees, or learns the word 'ledger'.
+        save(sols)                      # auto-named by date/time
+        save("my solutions", sols)      # named
+        save("notes", {"count": 8})     # any JSON-able thing
+
+    A solve result (anything with .run_id/.solutions) is declared as results with full
+    provenance; any JSON-able value is recorded inline.  Both land in results.json /
+    RESULTS.txt in the ambient records directory; the user never names, sees, or learns
+    the word 'ledger'.
     """
+    if len(args) == 1:
+        name, thing = "saved %s" % time.strftime("%Y-%m-%d %H:%M:%S"), args[0]
+    elif len(args) == 2:
+        name, thing = args
+    else:
+        raise TypeError("save(thing) or save(name, thing)")
     ledger = ledger or ambient_ledger()
     if hasattr(thing, "run_id") and hasattr(thing, "solutions"):
         declare_result(ledger, name,
