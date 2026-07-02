@@ -68,6 +68,7 @@ follow-up (block-operand Clone semantics).
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/reintern.hpp"
 #include "bertini2/system/blocks/describe.hpp"
 
 namespace bertini {
@@ -235,6 +236,25 @@ public:
 
 	/// Analytic block: nothing symbolic to differentiate.
 	void Differentiate() const {}
+
+	/// Re-intern this block's nodes after deserialization (ADR-0042): path variable and
+	/// coefficient nodes (gamma) rebuild through the live intern tables via the shared memo;
+	/// derivative coefficients are re-derived from the rebuilt ones; operand systems recurse
+	/// (loaded objects are owned here, so the const is safely cast away).  Content unchanged.
+	void Reintern(node::ReinternMemo& memo)
+	{
+		if (path_variable_)
+			path_variable_ = std::static_pointer_cast<node::Variable>(node::Reintern(path_variable_, memo));
+		for (auto& c : coefficients_)
+			c = node::Reintern(c, memo);
+		derivative_coefficients_.clear();
+		derivative_coefficients_.reserve(coefficients_.size());
+		for (auto const& c : coefficients_)
+			derivative_coefficients_.push_back(c->Differentiate(path_variable_));
+		for (auto& op : operands_)
+			std::const_pointer_cast<SystemT>(op)->ReinternNodes(memo);
+		coefficient_system_.reset();  // rebuilt lazily against the reinterned coefficients
+	}
 
 	/// \brief Get the block's current working precision.
 	unsigned Precision() const { return precision_; }

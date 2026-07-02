@@ -82,6 +82,18 @@ namespace node{
 				target << name();
 			}
 
+			// All Pi nodes are the same number: type-based structural identity, so the
+			// intern table collapses every Pi() onto one shared node (and deserialized
+			// Pi's re-intern onto it, ADR-0042).
+			std::size_t HashImpl() const override
+			{
+				return typeid(Pi).hash_code();
+			}
+			bool IsSame(Node const& other) const override
+			{
+				return dynamic_cast<Pi const*>(&other) != nullptr;
+			}
+
 
 		private:
 
@@ -131,6 +143,16 @@ namespace node{
 			void print(std::ostream & target) const override
 			{
 				target << name();
+			}
+
+			// All E nodes are the same number: type-based structural identity (see Pi).
+			std::size_t HashImpl() const override
+			{
+				return typeid(E).hash_code();
+			}
+			bool IsSame(Node const& other) const override
+			{
+				return dynamic_cast<E const*>(&other) != nullptr;
 			}
 
 

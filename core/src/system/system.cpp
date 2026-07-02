@@ -101,6 +101,8 @@ namespace bertini
 
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
 
+		pre_homogenization_functions_ = other.pre_homogenization_functions_;
+
 		current_variable_values_ = other.current_variable_values_;
 
 		variable_ordering_ = other.variable_ordering_;
@@ -334,6 +336,7 @@ namespace bertini
 
 	void System::Homogenize()
 	{
+		ThrowIfSealed("Homogenize");
 
 		// first some checks to make sure the system is compatible with the act of homogenization
 		//
@@ -425,6 +428,7 @@ namespace bertini
 
 	void System::Homogenize(VariableGroup const& provided_hom_vars)
 	{
+		ThrowIfSealed("Homogenize");
 		// Like Homogenize(), but adopt the supplied homogenizing variables (one per affine variable
 		// group, in group order) instead of minting fresh ones.  Mirrors Homogenize()'s
 		// fresh-system branch exactly; the only difference is where the hom var comes from.
@@ -564,6 +568,7 @@ namespace bertini
 
 	void System::AddVariableGroup(VariableGroup const& v)
 	{
+		ThrowIfSealed("AddVariableGroup");
 		variable_groups_.push_back(v);
 		InvalidateDifferentiation();
 		have_ordering_ = false;
@@ -576,6 +581,7 @@ namespace bertini
 
 	void System::SetVariableGroups(std::vector<VariableGroup> const& groups)
 	{
+		ThrowIfSealed("SetVariableGroups");
 		// clear the existing variable structure, but preserve the path variable.
 		ungrouped_variables_.clear();
 		variable_groups_.clear();
@@ -598,6 +604,7 @@ namespace bertini
 
 	void System::AddHomVariableGroup(VariableGroup const& v)
 	{
+		ThrowIfSealed("AddHomVariableGroup");
 		hom_variable_groups_.push_back(v);
 		InvalidateDifferentiation();
 		have_ordering_ = false;
@@ -611,6 +618,7 @@ namespace bertini
 
 	void System::AddUngroupedVariable(Var const& v)
 	{
+		ThrowIfSealed("AddUngroupedVariable");
 		ungrouped_variables_.push_back(v);
 		InvalidateDifferentiation();
 		have_ordering_ = false;
@@ -623,6 +631,7 @@ namespace bertini
 
 	void System::AddUngroupedVariables(VariableGroup const& v)
 	{
+		ThrowIfSealed("AddUngroupedVariables");
 		ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
 		InvalidateDifferentiation();
 		have_ordering_ = false;
@@ -635,6 +644,7 @@ namespace bertini
  
 	void System::AddImplicitParameter(Var const& v)
 	{
+		ThrowIfSealed("AddImplicitParameter");
 		implicit_parameters_.push_back(v);
 		InvalidateDifferentiation();
 	}
@@ -644,6 +654,7 @@ namespace bertini
 
 	void System::AddImplicitParameters(VariableGroup const& v)
 	{
+		ThrowIfSealed("AddImplicitParameters");
 		implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
 		InvalidateDifferentiation();
 	}
@@ -658,6 +669,7 @@ namespace bertini
 
 	void System::AddParameter(NE const& F)
 	{
+		ThrowIfSealed("AddParameter");
 		explicit_parameters_.push_back(F);
 		InvalidateDifferentiation();
 	}
@@ -673,6 +685,7 @@ namespace bertini
 
 	void System::AddFunction(Nd const& N)
 	{
+		ThrowIfSealed("AddFunction");
 		PolyBlock().AddFunction(N);
 		InvalidateDifferentiation();
 	}
@@ -681,6 +694,7 @@ namespace bertini
 
 	void System::AddFunctions(std::vector<Nd> const& v)
 	{
+		ThrowIfSealed("AddFunctions");
 		for (auto const& f : v) PolyBlock().AddFunction(f);
 		InvalidateDifferentiation();
 	}
@@ -692,6 +706,7 @@ namespace bertini
 
 	void System::AddConstant(NE const& F)
 	{
+		ThrowIfSealed("AddConstant");
 		PolyBlock().AddConstant(F);
 		InvalidateDifferentiation();
 	}
@@ -722,6 +737,7 @@ namespace bertini
 
 	void System::AddPathVariable(Var const& v)
 	{
+		ThrowIfSealed("AddPathVariable");
 		// A homotopy's path variable must never share a name with a user variable
 		// (else references to the name are ambiguous, and it corrupts hash-consing).
 		// Auto-constructed homotopies avoid this via UniquePathVariableName; this is
@@ -841,6 +857,7 @@ namespace bertini
 
 	void System::CopyVariableStructure(System const& other)
 	{
+		ThrowIfSealed("CopyVariableStructure");
 		this->ClearVariables();
 
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
@@ -891,6 +908,7 @@ namespace bertini
 
 	void System::AutoPatchFIFO()
 	{
+		ThrowIfSealed("AutoPatch");
 		if (!IsHomogeneous())
 			throw std::runtime_error("requesting to AutoPatch a system which is not homogenized.  Homogenize it first.");
 		
@@ -903,6 +921,7 @@ namespace bertini
 
 	void System::CopyPatches(System const& other)
 	{
+		ThrowIfSealed("CopyPatches");
 		if (!other.IsPatched())
 			throw std::runtime_error("trying to copy patch from unpatched other system.  may only copy patch from a system which is already patched.");
 
@@ -1320,6 +1339,7 @@ namespace bertini
 
 	void System::ReorderFunctionsByDegreeDecreasing()
 	{
+		ThrowIfSealed("ReorderFunctionsByDegreeDecreasing");
 		auto degs = Degrees(Variables());
 
 		// now we sort a vector of the indexing numbers by the degrees contained in degs.
@@ -1348,6 +1368,7 @@ namespace bertini
 
 	void System::ReorderFunctionsByDegreeIncreasing()
 	{
+		ThrowIfSealed("ReorderFunctionsByDegreeIncreasing");
 		auto degs = Degrees(Variables());
 
 		// now we sort a vector of the indexing numbers by the degrees contained in degs.
@@ -1390,6 +1411,7 @@ namespace bertini
 
 	void System::ClearVariables()
 	{
+		ThrowIfSealed("ClearVariables");
 		ungrouped_variables_.clear();
 		variable_groups_.clear();
 		hom_variable_groups_.clear();
@@ -1409,6 +1431,7 @@ namespace bertini
 
 	void System::SimplifyFunctions()
 	{
+		ThrowIfSealed("SimplifyFunctions");
 		using bertini::Simplify;
 		if (auto* p = PolyBlockPtr())
 			p->SimplifyFunctions();
@@ -1432,6 +1455,7 @@ namespace bertini
 
 	void System::Simplify()
 	{
+		ThrowIfSealed("Simplify");
 		SimplifyFunctions();
 		SimplifyDerivatives();
 	}
@@ -1562,6 +1586,7 @@ namespace bertini
 
 	System& System::operator+=(System const& rhs)
 	{
+		ThrowIfSealed("operator+= (append functions)");
 		if (this->NumTotalFunctions()!=rhs.NumTotalFunctions())
 			throw std::runtime_error("cannot add two Systems with differing numbers of functions");
 
@@ -1630,6 +1655,7 @@ namespace bertini
 
 	System& System::operator*=(std::shared_ptr<node::Node> const& N)
 	{
+		ThrowIfSealed("operator*= (multiply functions)");
 		// new wrappers, not SetRoot — see comment in operator+= above.
 		if (!HasStructuredBlocks())
 		{

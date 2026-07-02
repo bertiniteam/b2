@@ -20,7 +20,9 @@
 > temporary `ConstantRecipe::Snapshot` kind handles fixed-variables-as-constants until then.
 > *Remaining **Track E** (see `z_notes/2026-06-22_roadmap_FE.md`):* **E2** retire the adapter
 > (real `Compile([outputs],…)` + on-node Program memo) → **E5** delete node-level eval [DEFERRED];
-> **E3** currying/freeze-set API → **E6** tutorial; **E4** intern identical Programs [optimization].
+> **E3** currying/freeze-set API → **E6** tutorial; **E4** intern identical Programs — **DONE**
+> (ADR-0042: `SLPProgram::ContentHash`/`SameContent` + `InternProgram` weak table, wired into
+> `SLPCompiler::Compile` and facade deserialization).
 
 ## Context
 

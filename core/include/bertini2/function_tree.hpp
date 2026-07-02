@@ -97,6 +97,7 @@ BOOST_CLASS_EXPORT_KEY(bertini::node::PowerOperator)
 BOOST_CLASS_EXPORT_KEY(bertini::node::IntegerPowerOperator)
 BOOST_CLASS_EXPORT_KEY(bertini::node::SqrtOperator)
 BOOST_CLASS_EXPORT_KEY(bertini::node::ExpOperator)
+BOOST_CLASS_EXPORT_KEY(bertini::node::LogOperator)
 
 
 

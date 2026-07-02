@@ -147,6 +147,7 @@ set(detail_headers
     include/bertini2/detail/is_template_parameter.hpp
     include/bertini2/detail/enable_permuted_arguments.hpp
     include/bertini2/detail/typelist.hpp
+    include/bertini2/detail/sha256.hpp
 )
 
 set(function_tree_headers
@@ -180,6 +181,9 @@ set(functiontreeinclude_HEADERS
 	include/bertini2/function_tree/factory.hpp
 	include/bertini2/function_tree/forward_declares.hpp
 	include/bertini2/function_tree/simplify.hpp
+	include/bertini2/function_tree/canonical.hpp
+	include/bertini2/function_tree/canonical_encoding.hpp
+	include/bertini2/function_tree/reintern.hpp
 )
 
 set(functiontree_operators_HEADERS
@@ -340,6 +344,7 @@ set(basics_sources
     src/basics/random.cpp
     src/basics/have_bertini.cpp
     src/basics/fast_allocator.cpp
+    src/detail/sha256.cpp
 )
 
 set(function_tree_sources
@@ -348,6 +353,8 @@ set(function_tree_sources
     src/function_tree/find.cpp
     src/function_tree/simplify.cpp
     src/function_tree/canonical.cpp
+    src/function_tree/canonical_encoding.cpp
+    src/function_tree/reintern.cpp
     src/function_tree/operators/arithmetic.cpp
     src/function_tree/operators/trig.cpp
     src/function_tree/operators/operator.cpp
@@ -369,6 +376,7 @@ set(system_source_files
     src/system/slice.cpp
     src/system/start_base.cpp
     src/system/system.cpp
+    src/system/content_identity.cpp
     src/system/straight_line_program.cpp
     src/system/start/total_degree_linear_product.cpp
     src/system/start/total_degree_binomial.cpp
@@ -783,6 +791,7 @@ install(
 if (ENABLE_UNIT_TESTING)
 
 	set(B2_CLASS_TEST_SOURCES
+		test/classes/sha256_test.cpp
 		test/classes/boost_multiprecision_test.cpp
 		test/classes/fundamentals_test.cpp
 		test/classes/precision_propagation_test.cpp
@@ -790,9 +799,13 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/complex_test.cpp
 		test/classes/function_tree_transform.cpp
 		test/classes/structural_hash_test.cpp
+		test/classes/canonical_encoding_test.cpp
+		test/classes/reintern_test.cpp
 		test/classes/interning_test.cpp
 		test/classes/system_test.cpp
+		test/classes/system_identity_test.cpp
 		test/classes/slp_test.cpp
+		test/classes/slp_intern_test.cpp
 		test/classes/eval_expression_test.cpp
 		test/classes/named_expression_test.cpp
 		test/classes/homogenization_test.cpp

@@ -58,6 +58,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::PowerOperator)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::IntegerPowerOperator)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::SqrtOperator)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::ExpOperator)
+BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::LogOperator)
 
 
 

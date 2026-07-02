@@ -48,6 +48,7 @@ variable, functions, and derivatives this block owns (see SLPCompiler::Compile).
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/reintern.hpp"
 #include "bertini2/system/straight_line_program.hpp"
 
 namespace bertini {
@@ -248,6 +249,25 @@ public:
 		using bertini::Simplify;
 		for (auto& n : space_derivatives_) n = Simplify(n);
 		for (auto& n : time_derivatives_)  n = Simplify(n);
+	}
+
+	/// Re-intern this block's nodes after deserialization (ADR-0042): functions, constant
+	/// subfunctions, variable ordering, and path variable are rebuilt through the live intern
+	/// tables via the shared memo; the derivative/SLP caches (which reference the old nodes)
+	/// are dropped and recompute on demand.  Content is unchanged.
+	void Reintern(node::ReinternMemo& memo)
+	{
+		for (auto& f : functions_)
+			f = node::Reintern(f, memo);
+		for (auto& c : constant_subfunctions_)
+			c = std::static_pointer_cast<node::NamedExpression>(node::Reintern(c, memo));
+		for (auto& v : variables_)
+			v = std::static_pointer_cast<node::Variable>(node::Reintern(v, memo));
+		if (path_variable_)
+			path_variable_ = std::static_pointer_cast<node::Variable>(node::Reintern(path_variable_, memo));
+		space_derivatives_.clear();
+		time_derivatives_.clear();
+		Invalidate();
 	}
 
 private:

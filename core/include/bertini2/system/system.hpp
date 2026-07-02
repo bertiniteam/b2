@@ -32,6 +32,7 @@
 #define BERTINI_SYSTEM_HPP
 
 #include <assert.h>
+#include <optional>
 #include <vector>
 #include <set>
 #include <string>
@@ -51,7 +52,9 @@
 #include "bertini2/eigen_extensions.hpp"
 
 
+#include "bertini2/detail/sha256.hpp"
 #include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/reintern.hpp"
 #include "bertini2/system/patch.hpp"
 
 #include "bertini2/system/straight_line_program.hpp"
@@ -66,6 +69,8 @@
 namespace bertini {
 
 	// (included above) so the evaluation blocks can see them.
+
+	namespace node { struct EncodingContext; }  // function_tree/canonical_encoding.hpp (ADR-0042)
 
 	class Slice;  // system/slice.hpp -- a thin wrapper over a LinearFormsBlock; System::Slices()
 	              // recovers them from a slice-derived system without binding the block variant.
@@ -1073,7 +1078,7 @@ namespace bertini {
 		function-tree / SLP functions; blocks contribute the leading "natural" rows, with
 		any patch appended after, exactly as for a classic system.
 		*/
-		void AddBlock(Block b) { blocks_.push_back(std::move(b)); }
+		void AddBlock(Block b) { ThrowIfSealed("AddBlock"); blocks_.push_back(std::move(b)); }
 
 		/// Read-only access to the system's evaluation blocks (in evaluation order).  For
 		/// introspection / testing -- e.g. reading a RandomizationBlock's matrix; the variant
@@ -1092,6 +1097,7 @@ namespace bertini {
 		/// functions (FormHomotopy): `h = target; h.ClearFunctions(); h.AddBlock(blend);`.
 		void ClearFunctions()
 		{
+			ThrowIfSealed("ClearFunctions");
 			for (auto it = blocks_.begin(); it != blocks_.end(); )
 			{
 				if (std::holds_alternative<blocks::PolynomialBlock>(*it))
@@ -1119,7 +1125,83 @@ namespace bertini {
 
 		/// \brief Remove all evaluation blocks (the system reverts to its function-tree
 		/// functions).  Mainly for testing the block path against the function-tree path.
-		void ClearBlocks() { blocks_.clear(); }
+		void ClearBlocks() { ThrowIfSealed("ClearBlocks"); blocks_.clear(); }
+
+
+		////////////////////
+		//
+		//  content identity (ADR-0042)
+		//
+		//////////////////
+
+		/**
+		\brief The canonical exact text encoding of this system -- the persistent-identity
+		substrate (ADR-0042).
+
+		Versioned (`b2sysenc/1` header, which also pins the session canonicalization settings),
+		exact (coefficients by their exact digits), and deterministic: everything
+		evaluation-relevant is included (functions, variable groups + types + time order, path
+		variable, parameters, patch and randomization/blend coefficients -- randomness is
+		identity), and only transient eval state is excluded.  Any change to what this emits is
+		digest-breaking: bump the version and the golden fixture in the same commit.
+		*/
+		std::string CanonicalEncodingText() const;
+
+		/**
+		\brief The persistent content digest: SHA-256 of CanonicalEncodingText().
+
+		Stable across runs, compilers, and sessions -- the L2 identity key a solutions
+		database references systems (and homotopies) by.
+		*/
+		detail::Digest256 ContentDigest() const;
+
+		/**
+		\brief In-process hash derived from ContentDigest() (its first 8 bytes).
+
+		IsSame(other) implies equal Hash() by construction.
+		*/
+		std::size_t Hash() const;
+
+		/**
+		\brief Content equality: equal ContentDigest().
+
+		\param other The system to compare against.
+		\return true iff the two systems have identical canonical encodings.
+		*/
+		bool IsSame(System const& other) const;
+
+		/**
+		\brief Seal this system: memoize its ContentDigest() and forbid structural mutation
+		(hashcons-on-freeze, ADR-0042).  Idempotent.
+
+		After sealing, structural mutators (AddFunction, Homogenize, AutoPatch, ...) throw
+		std::logic_error; transient operations (SetVariables, precision, Differentiate,
+		evaluation) remain allowed.  Copying a sealed system yields an UNSEALED copy -- the
+		copy-on-write escape hatch.  ("Seal", not "freeze": ADR-0027's freeze set is
+		evaluation-time input currying, a different concept; they compose.)
+		*/
+		void Seal();
+
+		/// \brief Whether this system has been sealed against structural mutation (ADR-0042).
+		bool IsSealed() const;
+
+		/**
+		\brief Re-intern every node this system holds after deserialization (ADR-0042).
+
+		Deserialization constructs nodes outside the intern tables, so a loaded system's
+		nodes would fork the intern universe.  This remaps functions, constant
+		subfunctions, variable groups, homogenizing variables, path variable, parameters,
+		the pre-homogenization snapshot, and every node-holding block (operand systems
+		recursively) through node::Reintern with ONE shared memo -- so group members and
+		in-tree variables remain the same objects.  Derived caches referencing old nodes
+		(derivatives, SLPs, the ordering cache) are dropped and recompute on demand.
+
+		Content is unchanged (the digest is invariant), so this is allowed on a sealed
+		system.  Prefer LoadSystemUnified, which packages load -> reintern -> intern.
+
+		\param memo The pass's memo; share it when re-interning several loaded objects.
+		*/
+		void ReinternNodes(node::ReinternMemo& memo);
 
 		/// \brief Build an equivalent **pure function-tree** System: every block's functions
 		/// expressed as function-tree nodes, gathered into a single PolynomialBlock, with the
@@ -1935,6 +2017,19 @@ namespace bertini {
 		}
 
 
+		// Append this system's canonical encoding to `out`, sharing `ctx` so operand systems
+		// (randomization / blend) and cross-function node sharing back-reference deterministically
+		// within one encoding unit.  The public CanonicalEncodingText() wraps this with a fresh
+		// context; the recursion for operand systems passes the same one.  (ADR-0042)
+		void EncodeCanonical(std::ostream& out, node::EncodingContext& ctx) const;
+
+		// Guard for structural mutators: throws std::logic_error naming `operation` if the
+		// system is sealed (ADR-0042).  First line of every structural mutator.
+		void ThrowIfSealed(char const* operation) const;
+
+		bool is_sealed_ = false; ///< Sealed against structural mutation (ADR-0042).  Copies are unsealed; serialization round-trips the flag.
+		mutable std::optional<detail::Digest256> sealed_digest_; ///< The digest memoized at Seal() (recomputed on demand after deserialization).  Not serialized.
+
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
 		std::vector< VariableGroup > hom_variable_groups_; ///< Homogeneous or projective variable groups.  System SHOULD be homogeneous with respect to these.  
@@ -2011,6 +2106,10 @@ namespace bertini {
 			ar & time_order_of_variable_groups_;
 
 			ar & pre_homogenization_functions_;
+
+			// seal flag round-trips; the memoized digest is recomputed on demand after load
+			// (guards against archives written under an older encoding version) (ADR-0042)
+			ar & is_sealed_;
 
 			// if (Archive::is_loading::value == true){
 				// have_ordering_ = false;}
@@ -2135,6 +2234,35 @@ namespace bertini {
 	\brief Free form function for simplifying systems.
 	*/
 	void Simplify(System & sys);
+
+	/**
+	\brief Hash-cons a System: return the live sealed representative with equal
+	ContentDigest() if one exists, else seal and register the candidate (ADR-0042).
+
+	The System-level analogue of node::Intern / InternProgram: a process-global,
+	mutex-guarded, weak (self-cleaning) table keyed by the full 256-bit content digest, so
+	no equality disambiguation chain is needed.  The candidate is sealed as a side effect
+	(an interned identity must not mutate); the returned handle is const -- interned
+	Systems are shared.  Copy an interned System to get an unsealed, mutable one.
+
+	\param candidate The system to intern; sealed if it becomes the representative.
+	\return The shared representative (the candidate itself on a table miss).
+	*/
+	std::shared_ptr<const System> InternSystem(std::shared_ptr<System> const& candidate);
+
+	/**
+	\brief Load a System from a text archive and unify it with the live intern universe
+	(ADR-0042): deserialize, ReinternNodes, InternSystem.
+
+	The returned handle is the live sealed representative: if an equal system already
+	exists in memory, THAT one comes back (its nodes shared with everything else); the
+	loaded copy is discarded.  This is the cross-session identity entry point -- the same
+	system loaded from two archives, or loaded and independently rebuilt, is one object.
+
+	\param in The stream holding a boost text archive written by `oa << system`.
+	\return The interned representative of the loaded system.
+	*/
+	std::shared_ptr<const System> LoadSystemUnified(std::istream& in);
 
 	/// \cond INTERNAL
 	// Explicit instantiation declarations for the two concrete numeric types.

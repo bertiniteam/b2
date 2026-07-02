@@ -30,6 +30,9 @@
 #include <boost/math/constants/constants.hpp>
 
 #include <cstdlib>
+#include <functional>
+#include <mutex>
+#include <unordered_map>
 
 
 
@@ -658,6 +661,140 @@ namespace bertini{
 		first_live_instruction_ = frozen_words;
 	}
 
+
+	// ---- program content identity + intern table (ADR-0027 E4, ADR-0042) ----
+
+	namespace {
+		// boost::hash_combine recipe (same as Node::HashCombine; that one is protected).
+		inline void CombineHash(std::size_t& seed, std::size_t value)
+		{
+			seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+		}
+
+		inline std::size_t StringHash(std::string const& s)
+		{
+			return std::hash<std::string>{}(s);
+		}
+
+		// Exact equality of everything identity-relevant in a recipe.  Value-equal Complex
+		// literals at DIFFERENT precisions compare unequal (their high-precision downsamples
+		// differ), consistent with ADR-0042's stance on stored precision.
+		bool SameRecipe(ConstantRecipe const& a, ConstantRecipe const& b)
+		{
+			return a.kind == b.kind
+				&& a.int_value == b.int_value
+				&& a.rat_real == b.rat_real
+				&& a.rat_imag == b.rat_imag
+				&& a.float_value.real() == b.float_value.real()
+				&& a.float_value.imag() == b.float_value.imag()
+				&& a.float_value.precision() == b.float_value.precision()
+				&& a.slot == b.slot;
+		}
+	}
+
+	std::size_t SLPProgram::ContentHash() const
+	{
+		std::size_t h = StringHash("SLPProgram");
+		CombineHash(h, has_path_variable_ ? 1u : 0u);
+		CombineHash(h, number_of_.Functions);
+		CombineHash(h, number_of_.Variables);
+		CombineHash(h, number_of_.Jacobian);
+		CombineHash(h, number_of_.TimeDeriv);
+		CombineHash(h, output_locations_.Functions);
+		CombineHash(h, output_locations_.Jacobian);
+		CombineHash(h, output_locations_.TimeDeriv);
+		CombineHash(h, input_locations_.Variables);
+		CombineHash(h, input_locations_.Time);
+		CombineHash(h, integers_.size());
+		for (auto const i : integers_)
+			CombineHash(h, static_cast<std::size_t>(static_cast<long long>(i)));
+		CombineHash(h, instructions_.size());
+		for (auto const w : instructions_)
+			CombineHash(h, w);
+		CombineHash(h, constant_recipes_.size());
+		for (auto const& r : constant_recipes_)
+		{
+			CombineHash(h, static_cast<std::size_t>(static_cast<int>(r.kind)));
+			CombineHash(h, StringHash(r.int_value.str()));
+			CombineHash(h, StringHash(r.rat_real.str()));
+			CombineHash(h, StringHash(r.rat_imag.str()));
+			CombineHash(h, StringHash(r.float_value.real().str()));
+			CombineHash(h, StringHash(r.float_value.imag().str()));
+			CombineHash(h, r.float_value.precision());
+			CombineHash(h, r.slot);
+		}
+		CombineHash(h, first_live_instruction_);
+		CombineHash(h, num_slots_);
+		for (auto const t : slot_numtype_)
+			CombineHash(h, static_cast<std::size_t>(t));
+		return h;
+	}
+
+	bool SLPProgram::SameContent(SLPProgram const& other) const
+	{
+		if (has_path_variable_ != other.has_path_variable_
+			|| number_of_.Functions != other.number_of_.Functions
+			|| number_of_.Variables != other.number_of_.Variables
+			|| number_of_.Jacobian != other.number_of_.Jacobian
+			|| number_of_.TimeDeriv != other.number_of_.TimeDeriv
+			|| output_locations_.Functions != other.output_locations_.Functions
+			|| output_locations_.Jacobian != other.output_locations_.Jacobian
+			|| output_locations_.TimeDeriv != other.output_locations_.TimeDeriv
+			|| input_locations_.Variables != other.input_locations_.Variables
+			|| input_locations_.Time != other.input_locations_.Time
+			|| integers_ != other.integers_
+			|| instructions_ != other.instructions_
+			|| first_live_instruction_ != other.first_live_instruction_
+			|| num_slots_ != other.num_slots_
+			|| slot_numtype_ != other.slot_numtype_
+			|| constant_recipes_.size() != other.constant_recipes_.size())
+			return false;
+
+		for (size_t ii = 0; ii < constant_recipes_.size(); ++ii)
+			if (!SameRecipe(constant_recipes_[ii], other.constant_recipes_[ii]))
+				return false;
+		return true;
+	}
+
+	namespace {
+		// Process-global program intern table: ContentHash -> live programs, held weakly so it
+		// self-cleans.  Same shape as the node intern table (node.cpp); lazy-init function-local
+		// statics avoid SIOF.
+		std::unordered_map<std::size_t, std::vector<std::weak_ptr<const SLPProgram>>>& ProgramInternBuckets()
+		{
+			static std::unordered_map<std::size_t, std::vector<std::weak_ptr<const SLPProgram>>> buckets;
+			return buckets;
+		}
+		std::mutex& ProgramInternMutex()
+		{
+			static std::mutex m;
+			return m;
+		}
+	}
+
+	std::shared_ptr<const SLPProgram> InternProgram(std::shared_ptr<const SLPProgram> const& candidate)
+	{
+		std::lock_guard<std::mutex> lock(ProgramInternMutex());
+		auto& bucket = ProgramInternBuckets()[candidate->ContentHash()];
+
+		std::shared_ptr<const SLPProgram> found;
+		// scan for a live, content-equal program; prune any expired weak_ptrs as we go
+		bucket.erase(
+			std::remove_if(bucket.begin(), bucket.end(),
+				[&](std::weak_ptr<const SLPProgram> const& wp) {
+					auto sp = wp.lock();
+					if (!sp) return true;                              // dead -> prune
+					if (!found && sp->SameContent(*candidate)) found = sp;
+					return false;
+				}),
+			bucket.end());
+
+		if (found)
+			return found;                                              // hit: discard the candidate
+		bucket.push_back(candidate);                                   // miss: register and keep
+		return candidate;
+	}
+
 }
 
 
@@ -1232,8 +1369,10 @@ namespace bertini{
 
 
 		// Wrap the now-immutable program in a facade and set up a per-thread memory for it.
+		// The program is hash-consed (ADR-0027 E4): identical compiled tapes collapse to one
+		// shared object, while each facade keeps its own SLPMemory.
 		SLP result;
-		result.program_ = std::make_shared<const SLPProgram>(std::move(program_under_construction_));
+		result.program_ = InternProgram(std::make_shared<const SLPProgram>(std::move(program_under_construction_)));
 		result.memory_.precision_ = prec;
 		result.SetupMemory();
 
