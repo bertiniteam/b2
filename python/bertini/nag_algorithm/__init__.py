@@ -794,7 +794,12 @@ class SolutionPathCollector(_pybnalag.observers.CustomObserver):
 _pybnalag.observers.SolutionPathCollector = SolutionPathCollector
 
 
-__all__ = dir(_pybnalag)
+# NID (numerical irreducible decomposition) is framework scaffolding whose Solve() is not yet
+# implemented, and its witness-set datatypes ride with it -- hide them from the public surface
+# (import * / tab-completion / docs) until it works.  They stay importable by explicit name.
+_HIDDEN = tuple(n for n in dir(_pybnalag)
+                if n.startswith(('NID', 'NumericalIrreducibleDecomposition', 'WitnessSet')))
+__all__ = [n for n in dir(_pybnalag) if n not in _HIDDEN]
 __all__.append('ZeroDimSolver')
 __all__.append('HomotopySolver')
 __all__.append('user_homotopy')

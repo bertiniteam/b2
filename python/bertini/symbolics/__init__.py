@@ -45,7 +45,11 @@ from bertini._pybertini.function_tree.root import *     # noqa: F401,F403  (Name
 # drop them so this namespace stays flat.  Also drop the abstract bases -- they exist in C++ only to
 # make isinstance-based tree walking possible, and are not part of the public surface.
 _HIDDEN = {'symbol', 'operator', 'root',
-           'AbstractNode', 'AbstractSymbol', 'AbstractNamedSymbol', 'AbstractNumber', 'AbstractOp'}
+           'AbstractNode', 'AbstractSymbol', 'AbstractNamedSymbol', 'AbstractNumber', 'AbstractOp',
+           # constants factories superseded by the bertini.E / bertini.Pi / bertini.I constants
+           'make_e', 'make_i', 'make_pi',
+           # Differential is an internal differentiation artifact, not a user-facing symbol
+           'Differential'}
 for _n in _HIDDEN:
     globals().pop(_n, None)
 del _n

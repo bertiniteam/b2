@@ -115,11 +115,11 @@ def from_sympy(expr, variables=None):
         if isinstance(e, _sp.Float):
             return _sym.Complex(str(e))
         if e is _sp.pi:
-            return _sym.make_pi()
+            return _sym.Pi()
         if e is _sp.E:
-            return _sym.make_e()
+            return _sym.E()
         if e is _sp.I:
-            return _sym.make_i()
+            return _sym.Complex(0, 1)          # the imaginary unit (make_i was Complex(0,1))
         if isinstance(e, _sp.Add):
             result = walk(e.args[0])
             for a in e.args[1:]:
