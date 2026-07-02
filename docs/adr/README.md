@@ -62,3 +62,4 @@ Each ADR follows the template:
 | [0042](0042-system-content-identity-seal-and-interning.md) | System content identity: versioned canonical encoding + SHA-256 digest, Seal(), System/Program interning, re-intern-on-load (ADR-0027 E4) | Core / system |
 | [0043](0043-config-canonical-encoding-and-digests.md) | Config canonical encodings + digests (b2cfgenc/1): bit-exact doubles, fixed enum names, SettingsDigest composition; seed and num_threads excluded from identity | Core / records |
 | [0044](0044-seed-rooted-randomness.md) | Seed-rooted randomness (b2rand/1): every identity-relevant draw derives from a pinned SHA-256 counter stream; same seed = digest-identical homotopies, cross-platform, forever | Core / records |
+| [0045](0045-structured-output-directory-ledgerrec1.md) | The structured output directory: record schema ledgerrec/1 + C++ OutputDirectory (JSONL history, content-addressed definitions, derived views, cross-impl tested) | Core / records |
