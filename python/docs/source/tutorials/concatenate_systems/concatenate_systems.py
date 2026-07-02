@@ -44,7 +44,7 @@ def stack(geometry, constraints):
 def solve_and_check(system):
     """Solve the square system and verify the four solutions."""
     bertini.random.set_random_seed(1)           # reproducible start system + gamma
-    zd = bertini.nag_algorithm.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+    zd = bertini.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     zd.solve()
 
     solutions = [np.array([complex(c) for c in s]) for s in zd.all_solutions()]
@@ -80,7 +80,7 @@ def build_with_clone(variables):
     assert system.num_functions() == 4
 
     bertini.random.set_random_seed(1)
-    zd = bertini.nag_algorithm.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+    zd = bertini.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     zd.solve()
     assert len(zd.all_solutions()) == 4
 

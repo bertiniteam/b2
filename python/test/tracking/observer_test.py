@@ -3,7 +3,7 @@ import pytest
 
 import bertini as b
 import bertini.multiprec as mp
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import complex_mp as mpfr_complex
 from bertini import System, VariableGroup, Variable
 from bertini.tracking import amp_config_from
 import bertini.tracking as t

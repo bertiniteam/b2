@@ -59,7 +59,7 @@ def simplify_system(sys):
 
 def evaluate_at_origin(sys):
     """Evaluate at the origin; all zeros except the last entry, which is -1."""
-    s = numpy.zeros((10,), dtype=bertini.multiprec.Complex)
+    s = numpy.zeros((10,), dtype=bertini.multiprec.complex_mp)
     result = sys.eval(s)
     assert complex(result[-1]) == -1                   # last cyclic function is (prod x) - 1
     assert all(complex(v) == 0 for v in result[:-1])   # the rest vanish at the origin
@@ -69,7 +69,7 @@ def evaluate_at_origin(sys):
 def evaluate_at_new_point(sys, s, num_vars=10):
     """Change the values of the vector and re-evaluate."""
     for ii in range(num_vars):
-        s[ii] = bertini.multiprec.Complex(ii)
+        s[ii] = bertini.multiprec.complex_mp(ii)
     result = sys.eval(s)
     return result
 

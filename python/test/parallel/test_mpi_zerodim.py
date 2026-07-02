@@ -32,11 +32,9 @@ pytest.importorskip("mpi4py")
 
 from mpi4py import MPI
 import bertini as pb
-from bertini.nag_algorithm import (
-    ZeroDimSolver,
-)
+from bertini import ZeroDimSolver
 
-OK = int(pb.tracking.SuccessCode.Success)
+OK = int(pb.SuccessCode.Success)
 
 
 @pytest.fixture
@@ -167,11 +165,10 @@ def test_distributed_cyclic5_adaptive_matches_known_count():
 # what python/examples/solve_eigenvalues.py uses) and demand the manager recover all n eigenvalues.
 def _eigen_system(A):
     # (A - lam I) x = 0 with x a projective group and lam affine -- the mhom Bezout number is n.
-    from bertini import linalg
-    x = linalg.variable_vector('x', A.shape[0])
+    x = np.array(pb.variables('x', A.shape[0]), dtype=object)
     lam = pb.Variable('lam')
     sys = pb.System()
-    linalg.add_functions(sys, A @ x - lam * x)
+    sys.add_functions(A @ x - lam * x)
     sys.add_hom_variable_group(pb.VariableGroup(list(x)))   # eigenvector in P^{n-1}
     sys.add_variable_group(pb.VariableGroup([lam]))
     return sys

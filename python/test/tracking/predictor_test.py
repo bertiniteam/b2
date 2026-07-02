@@ -38,13 +38,13 @@ import pytest
 
 import bertini
 from bertini import System, VariableGroup
-from bertini.function_tree.symbol import Variable
-from bertini.function_tree import *
-from bertini.tracking import AMPTracker, Predictor, SuccessCode
+from bertini.symbolics import Variable
+from bertini.symbolics import *
+from bertini import AMPTracker, Predictor, SuccessCode
 from bertini.tracking import SteppingConfig, NewtonConfig, amp_config_from
 
 import bertini.multiprec as mp
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import complex_mp as mpfr_complex
 
 
 AMP_PREDICTORS = [
@@ -121,7 +121,7 @@ def test_circle_line_double_only_predictors(circle_line_homotopy, predictor):
 
     Mirrors: higher_predictor_test/circle_line_RK4_double (and RKF45 variant).
     """
-    from bertini.tracking import DoublePrecisionTracker
+    from bertini import DoublePrecisionTracker
 
     s, x, y, t = circle_line_homotopy
 

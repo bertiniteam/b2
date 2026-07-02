@@ -18,7 +18,7 @@ Take the unit circle and the hyperbola :math:`xy = 1`
 
     import numpy as np
     import bertini as bertini
-    from bertini.nag_algorithm import ZeroDimSolver
+    from bertini import ZeroDimSolver
 
     x, y = bertini.Variable('x'), bertini.Variable('y')
 

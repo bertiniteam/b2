@@ -20,12 +20,12 @@ Endgames in Bertini 2
 
 An endgame is a computational tool that one does in the final stage of a path track to a possibly singular root.  There are two implemented endgames in Bertini:
 
-#. Power series (PSEG) -- uses `Hermite interpolation <https://en.wikipedia.org/wiki/Hermite_interpolation>`_ across a sequence of geometrically-spaced points (in time) to extrapolate to a target time :cite:`morgan1992power`. 
-#. Cauchy (CauchyEG)-- uses `Cauchy's integral formula <https://en.wikipedia.org/wiki/Cauchy's_integral_formula>`_ in a sequence of circles about the root you are computing.  
+#. Power series -- uses `Hermite interpolation <https://en.wikipedia.org/wiki/Hermite_interpolation>`_ across a sequence of geometrically-spaced points (in time) to extrapolate to a target time :cite:`morgan1992power`.
+#. Cauchy -- uses `Cauchy's integral formula <https://en.wikipedia.org/wiki/Cauchy's_integral_formula>`_ in a sequence of circles about the root you are computing.
 
-Both try to compute the cycle number :math:`c` for the root.  In PSEG, :math:`c` is used as the degree of a Hermite interpolant used to extrapolate to 0.  In CauchyEG,  it is used for the number of cycles to walk before returning to the same point, computing a trapezoid-rule integral along the way.
+Both try to compute the cycle number :math:`c` for the root.  In the power series endgame, :math:`c` is used as the degree of a Hermite interpolant used to extrapolate to 0.  In the Cauchy endgame,  it is used for the number of cycles to walk before returning to the same point, computing a trapezoid-rule integral along the way.
 
-Each is provided in the three precision modes, double, fixed multiple, and adaptive.  Since we are using the :class:`~bertini.tracking.AMPTracker` in this tutorial, we will of course use the adaptive endgame.  I really like the Cauchy endgame, so we're in the land of the :class:`~bertini.endgame.AMPCauchyEG`.
+Each is provided in the three precision modes, double, fixed multiple, and adaptive.  Since we are using the :class:`~bertini.AMPTracker` in this tutorial, we will of course use the adaptive endgame.  I really like the Cauchy endgame, so we're in the land of the :class:`~bertini.endgame.AMPCauchyEndgame`.
 
 
 Example
@@ -39,6 +39,7 @@ The Griewank-Osborne system has one multiplicity-three singular solution at the 
 
 .. testcode::
 
+    import numpy as np
     import bertini
 
     gw = bertini.System()
@@ -51,7 +52,7 @@ The Griewank-Osborne system has one multiplicity-three singular solution at the 
     vg.append(y)
     gw.add_variable_group(vg)
 
-    gw.add_function(bertini.multiprec.Rational(29,16)*x**3 - 2*x*y)
+    gw.add_function(bertini.multiprec.rational_mp(29,16)*x**3 - 2*x*y)
     gw.add_function(y - x**2)
 
 
@@ -64,7 +65,7 @@ Next, we make the total degree start system for `gw`, and couple it using the ga
 
     t = bertini.Variable('t')
     td = bertini.system.start_system.TotalDegreeLinearProduct(gw)
-    gamma = bertini.function_tree.symbol.Rational.rand()
+    gamma = bertini.symbolics.Rational.rand()
     hom = (1-t)*gw + t*gamma*td
     hom.add_path_variable(t)
 
@@ -77,16 +78,16 @@ Make a tracker.  I use adaptive precision a lot, so we'll roll with that.  There
 
 .. testcode::
 
-    tr = bertini.tracking.AMPTracker(hom)
+    tr = bertini.AMPTracker(hom)
 
-    start_time = bertini.multiprec.Complex("1")
-    eg_boundary = bertini.multiprec.Complex("0.1")
+    start_time = bertini.multiprec.complex_mp("1")
+    eg_boundary = bertini.multiprec.complex_mp("0.1")
 
     midpath_points = [None]*td.num_start_points()
     for ii in range(td.num_start_points()):
-        midpath_points[ii] = bertini.multiprec.Vector(gw.num_variables())   # result must be pre-sized
+        midpath_points[ii] = np.zeros(gw.num_variables(), dtype=bertini.complex_mp)   # result must be pre-sized
         code = tr.track_path(result=midpath_points[ii], start_time=start_time, end_time=eg_boundary, start_point=td.start_point_mp(ii))
-        assert code == bertini.tracking.SuccessCode.Success                 # every path reaches the boundary
+        assert code == bertini.SuccessCode.Success                 # every path reaches the boundary
 
 
 
@@ -101,7 +102,7 @@ above).  There are also config structs to play with, that control the way things
 
 .. testcode::
 
-    eg = bertini.endgame.AMPCauchyEG(tr, eg_boundary)
+    eg = bertini.endgame.AMPCauchyEndgame(tr, eg_boundary)
 
     # make an observer to be able to see what's going on inside
     ob = bertini.endgame.observers.amp_cauchy.GoryDetailLogger()

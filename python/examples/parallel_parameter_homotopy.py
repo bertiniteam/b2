@@ -53,7 +53,7 @@ def make_system(params):
 
 def real_coeff(value):
     """An exact real coefficient node (a complex literal with zero imaginary part)."""
-    return pb.multiprec.Complex(repr(float(value)), "0")
+    return pb.multiprec.complex_mp(repr(float(value)), "0")
 
 
 def positive_real_count(solver):
@@ -93,8 +93,8 @@ def main():
     k1s = np.linspace(3.5, 8.5, N)        # the X^2 rate
     k3s = np.linspace(1.0, 13.0, N)       # the influx term
     # one generic (complex) member, solved once; its solutions seed every track
-    generic = (pb.multiprec.Complex("0.7", "0.4"),  pb.multiprec.Complex("1", "0.3"),
-               pb.multiprec.Complex("0.31", "-0.52"), pb.multiprec.Complex("1.2", "0.9"))
+    generic = (pb.multiprec.complex_mp("0.7", "0.4"),  pb.multiprec.complex_mp("1", "0.3"),
+               pb.multiprec.complex_mp("0.31", "-0.52"), pb.multiprec.complex_mp("1.2", "0.9"))
     # the parameter grid, flattened row-major into one list of targets
     targets = [(real_coeff(k1), real_coeff(1), real_coeff(k3), real_coeff(11))
                for k3 in k3s for k1 in k1s]

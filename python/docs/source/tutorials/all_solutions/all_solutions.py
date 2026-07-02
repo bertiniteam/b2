@@ -8,7 +8,7 @@ Run:  python all_solutions.py
 
 import numpy as np
 import bertini as bertini
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
 
 def build_system():

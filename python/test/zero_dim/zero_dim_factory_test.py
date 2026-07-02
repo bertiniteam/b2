@@ -12,7 +12,7 @@ selection is therefore verified behaviorally here, not by the type.
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 from bertini._pybertini import nag_algorithms as _n
 
 

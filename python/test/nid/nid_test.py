@@ -33,14 +33,7 @@ and a result datatype, and that its (not-yet-implemented) compute entry point ra
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import (
-    NIDCauchyAdaptivePrecision,
-    NIDPowerSeriesDoublePrecision,
-    RegenerationConfig,
-    TolerancesConfig,
-    NumericalIrreducibleDecompositionMultiplePrecision,
-    WitnessSetMultiplePrecision,
-)
+from bertini.nag_algorithm import NIDCauchyAdaptivePrecision, NIDPowerSeriesDoublePrecision, RegenerationConfig, TolerancesConfig, NumericalIrreducibleDecompositionMultiplePrecision, WitnessSetMultiplePrecision
 
 
 def _square_system():

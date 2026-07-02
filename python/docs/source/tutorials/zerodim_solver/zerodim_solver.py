@@ -7,7 +7,7 @@ Run:  python zerodim_solver.py
 """
 
 import bertini
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
 
 def square_system():

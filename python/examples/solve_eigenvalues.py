@@ -26,10 +26,9 @@ import numpy as np
 from mpi4py import MPI
 
 import bertini as pb
-from bertini import linalg
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
-OK = int(pb.tracking.SuccessCode.Success)
+OK = int(pb.SuccessCode.Success)
 
 
 def random_symmetric_integer_matrix(n, seed, spread=9):
@@ -50,10 +49,10 @@ def eigen_system(A):
     no normalization equation, and the multihomogeneous Bezout number is exactly ``n``.
     """
     n = A.shape[0]
-    x = linalg.variable_vector('x', n)
+    x = np.array(pb.variables('x', n), dtype=object)
     lam = pb.Variable('lam')
     sys = pb.System()
-    linalg.add_functions(sys, A @ x - lam * x)                  # the rows of (A - lam I) x
+    sys.add_functions(A @ x - lam * x)                  # the rows of (A - lam I) x
     sys.add_hom_variable_group(pb.VariableGroup(list(x)))    # eigenvector in P^{n-1}
     sys.add_variable_group(pb.VariableGroup([lam]))
     return sys

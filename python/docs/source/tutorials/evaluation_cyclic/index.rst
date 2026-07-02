@@ -81,7 +81,7 @@ Now, let's evaluate it at the origin -- all zero's (0 is the default value for m
 
 .. testcode::
 
-	s = numpy.zeros((10,), dtype=bertini.multiprec.Complex)
+	s = numpy.zeros((10,), dtype=bertini.multiprec.complex_mp)
 	result = sys.eval(s)
 	assert complex(result[-1]) == -1                       # last cyclic function is (prod x) - 1
 	assert all(complex(v) == 0 for v in result[:-1])       # the rest vanish at the origin
@@ -93,7 +93,7 @@ Let's change the values of our vector, and re-evaluate.
 .. testcode::
 
 	for ii in range(num_vars):
-		s[ii] = bertini.multiprec.Complex(ii)
+		s[ii] = bertini.multiprec.complex_mp(ii)
 	result = sys.eval(s)
 
 

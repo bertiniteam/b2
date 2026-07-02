@@ -8,8 +8,9 @@ import pickle
 
 import numpy as np
 import bertini
+from bertini import AMPTracker
 from bertini.nag_algorithm import TolerancesConfig, ZeroDimConfig
-from bertini.tracking import SteppingConfig, AMPTracker
+from bertini.tracking import SteppingConfig
 
 
 def build_system():
@@ -24,7 +25,7 @@ def build_system():
 
 def set_fields_by_name(system):
     """Route fields by name onto whichever config owns them."""
-    solver = bertini.nag_algorithm.ZeroDimSolver(system)
+    solver = bertini.ZeroDimSolver(system)
     solver.update(final_tolerance="1e-11",                 # -> TolerancesConfig
                   max_num_crossed_path_resolve_attempts=3) # -> ZeroDimConfig
 
@@ -39,26 +40,26 @@ def set_fields_by_name(system):
         pass
 
     solver.get_tracker().update(max_step_size="0.05")   # set it where it lives
-    assert solver.get_tracker().get_config(SteppingConfig).max_step_size == bertini.multiprec.Float("0.05")
+    assert solver.get_tracker().get_config(SteppingConfig).max_step_size == bertini.multiprec.real_mp("0.05")
 
     return solver
 
 
 def carry_a_whole_bundle(system):
     """get_settings() -> plain picklable dict; set_settings() stamps another solver."""
-    reference = bertini.nag_algorithm.ZeroDimSolver(system)
+    reference = bertini.ZeroDimSolver(system)
     reference.update(final_tolerance="1e-11", newton_before_endgame="1e-6")
     settings = reference.get_settings()
     assert set(settings) == set(reference.config_names())     # one entry per config
 
     # ... later, for each related solve ...
-    next_solver = bertini.nag_algorithm.ZeroDimSolver(system)
+    next_solver = bertini.ZeroDimSolver(system)
     next_solver.set_settings(settings)
     assert next_solver.get_config(TolerancesConfig).final_tolerance == 1e-11
 
     # The bundle is an ordinary picklable value -- store it or ship it to a worker.
     carried = pickle.loads(pickle.dumps(settings))
-    worker_solver = bertini.nag_algorithm.ZeroDimSolver(system)
+    worker_solver = bertini.ZeroDimSolver(system)
     worker_solver.set_settings(carried)
     assert worker_solver.get_config(TolerancesConfig).final_tolerance == 1e-11
 
@@ -67,12 +68,12 @@ def carry_a_whole_bundle(system):
 
 def settings_are_precision_agnostic(system, settings):
     """One bundle drops cleanly onto any precision model, and across owner kinds."""
-    tuned = bertini.nag_algorithm.ZeroDimSolver(system, mptype='double')
+    tuned = bertini.ZeroDimSolver(system, mptype='double')
     tuned.update(final_tolerance="1e-10")
     bundle = tuned.get_settings()
 
     for mptype in ('multiple', 'adaptive'):
-        solver = bertini.nag_algorithm.ZeroDimSolver(system, mptype=mptype)
+        solver = bertini.ZeroDimSolver(system, mptype=mptype)
         solver.set_settings(bundle)                       # drops on cleanly, any precision model
         assert solver.get_config(TolerancesConfig).final_tolerance == 1e-10
 

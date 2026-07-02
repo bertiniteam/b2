@@ -10,7 +10,7 @@ import math
 import numpy as np
 
 import bertini
-from bertini import linalg, nag_algorithm
+from bertini import nag_algorithm
 from bertini import multiprec
 
 
@@ -29,7 +29,7 @@ def build_start(x, y):
     """A start system you can write down: each function a product of two linears."""
     start = bertini.System()
     start.add_variable_group(bertini.VariableGroup([x, y]))
-    linalg.add_products_of_linears(start, [
+    start.add_products_of_linears([
         [[1, 0, '-1'], [1, 0, '1']],     # s0 = (x - 1)(x + 1)
         [[0, 1, '-1'], [0, 1, '-2']],    # s1 = (y - 1)(y - 2)
     ])
@@ -40,7 +40,7 @@ def build_start(x, y):
 
 def build_start_points():
     """Start points are intersections of hyperplanes: the grid x in {1,-1} times y in {1,2}."""
-    start_points = [np.array([multiprec.Complex(str(a)), multiprec.Complex(str(b))])
+    start_points = [np.array([multiprec.complex_mp(str(a)), multiprec.complex_mp(str(b))])
                     for a, b in itertools.product([1, -1], [1, 2])]
     # (1, 1), (1, 2), (-1, 1), (-1, 2)
     return start_points
@@ -48,10 +48,10 @@ def build_start_points():
 
 def solve_homotopy(target, start, start_points):
     """Blend start into a homotopy with the gamma-trick and solve."""
-    gamma = linalg.coefficient(multiprec.Complex('0.6', '0.8'))   # exact, off the real axis
+    gamma = bertini.coefficient(multiprec.complex_mp('0.6', '0.8'))   # exact, off the real axis
     H = nag_algorithm.blend_homotopy(target, start, gamma=gamma)
 
-    solver = nag_algorithm.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(H, start_points, target)
     solver.solve()
     solutions = solver.all_solutions()
     return solver, solutions

@@ -20,19 +20,18 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
-OK = int(pb.tracking.SuccessCode.Success)
+OK = int(pb.SuccessCode.Success)
 
 
 def _eigen_system_affine(A, c):
     """(A - lam I)x = 0, c.x - 1 = 0 with x and lam as AFFINE variable groups."""
     n = A.shape[0]
-    x = linalg.variable_vector('x', n)
+    x = np.array(pb.variables('x', n), dtype=object)
     lam = pb.Variable('lam')
     sys = pb.System()
-    linalg.add_functions(sys, A @ x - lam * x)          # the rows of (A - lam I) x
+    sys.add_functions(A @ x - lam * x)          # the rows of (A - lam I) x
     sys.add_function(c @ x - 1)                       # fix the eigenvector scale
     sys.add_variable_group(pb.VariableGroup(list(x)))
     sys.add_variable_group(pb.VariableGroup([lam]))
@@ -42,10 +41,10 @@ def _eigen_system_affine(A, c):
 def _eigen_system_projective(A):
     """(A - lam I)x = 0 with x a PROJECTIVE group and lam affine -- no normalization."""
     n = A.shape[0]
-    x = linalg.variable_vector('x', n)
+    x = np.array(pb.variables('x', n), dtype=object)
     lam = pb.Variable('lam')
     sys = pb.System()
-    linalg.add_functions(sys, A @ x - lam * x)
+    sys.add_functions(A @ x - lam * x)
     sys.add_hom_variable_group(pb.VariableGroup(list(x)))   # eigenvector in P^{n-1}
     sys.add_variable_group(pb.VariableGroup([lam]))
     return sys

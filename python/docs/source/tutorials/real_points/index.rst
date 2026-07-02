@@ -37,7 +37,7 @@ Building and solving it
 =======================
 
 We let bertini differentiate :math:`f` for us, and keep every coefficient exact -- the random
-point's coordinates are exact rationals, since :mod:`bertini.linalg` (rightly) refuses python
+point's coordinates are exact rationals, since ``bertini`` (rightly) refuses python
 floats that would silently cap precision:
 
 .. testcode::
@@ -45,7 +45,6 @@ floats that would silently cap precision:
     import numpy as np
     from fractions import Fraction
     import bertini
-    from bertini import linalg, nag_algorithm
 
     x, y = bertini.Variable('x'), bertini.Variable('y')
     f = 144*(x**4 + y**4) - 225*(x**2 + y**2) + 350*x**2*y**2 + 81
@@ -55,7 +54,7 @@ floats that would silently cap precision:
 
     # a hardcoded "random" real point p, with exact rational coordinates
     PX, PY = Fraction(41, 100), Fraction(23, 100)
-    parallel = (x - linalg.coefficient(PX))*fy - (y - linalg.coefficient(PY))*fx
+    parallel = (x - bertini.coefficient(PX))*fy - (y - bertini.coefficient(PY))*fx
 
     crit_system = bertini.System()
     crit_system.add_variable_group(bertini.VariableGroup([x, y]))
@@ -69,7 +68,7 @@ configured ``real_threshold``, so there is no hand-picked epsilon in the tutoria
 
 .. testcode::
 
-    solver = nag_algorithm.ZeroDimSolver(crit_system, mptype='adaptive')
+    solver = bertini.ZeroDimSolver(crit_system, mptype='adaptive')
     solver.solve()
 
     crit = [(complex(s[0]).real, complex(s[1]).real)

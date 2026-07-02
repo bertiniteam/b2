@@ -17,12 +17,12 @@ First, gain access to bertini:
     import bertini
     import numpy as np
 
-Let's make a couple of :class:`~bertini.function_tree.symbol.Variable`'s:
+Let's make a couple of :class:`~bertini.symbolics.Variable`'s:
 
 .. testcode::
 
-	x = bertini.function_tree.symbol.Variable("x") #yes, you can make a variable not match its name...
-	y = bertini.function_tree.symbol.Variable("y")
+	x = bertini.symbolics.Variable("x") #yes, you can make a variable not match its name...
+	y = bertini.symbolics.Variable("y")
 
 Now, make a few symbolic expressions out of them:
 
@@ -41,7 +41,7 @@ Let's make an empty :class:`~bertini.system.System`, then build into it:
 	sys.add_function(f)
 	sys.add_function(g)
 
-``sys`` doesn't know its variables yet, so let's group them into an affine :class:`~bertini.container.VariableGroup` [#]_, and stuff it into ``sys``:
+``sys`` doesn't know its variables yet, so let's group them into an affine :class:`~bertini.VariableGroup` [#]_, and stuff it into ``sys``:
 
 .. testcode::
 
@@ -68,7 +68,7 @@ What happens if we add a non-polynomial function to our system?
 .. testcode::
 
 	sys.add_function(x**-1)  # happily accepts a non-polynomial function.
-	sys.add_function(bertini.function_tree.sin(x) )
+	sys.add_function(bertini.symbolics.sin(x) )
 	d = sys.degrees()
 	assert(d[2]==-1) # unsurprising, but actually a coincidence
 	assert(d[3]==-1) # also -1.  anything non-polynomial is a negative number.  
@@ -152,9 +152,9 @@ Tracking a single path
 There are three basic trackers available in Bertini 2:
 
 
-#. Fixed double precision: :class:`~bertini.tracking.DoublePrecisionTracker`
-#. Fixed multiple precision: :class:`~bertini.tracking.MultiplePrecisionTracker`
-#. Adaptive precision: :class:`~bertini.tracking.AMPTracker`
+#. Fixed double precision: :class:`~bertini.DoublePrecisionTracker`
+#. Fixed multiple precision: :class:`~bertini.MultiplePrecisionTracker`
+#. Adaptive precision: :class:`~bertini.AMPTracker`
 
 Each brings its own advantages and disadvantages.  And, each has its ambient numeric type.
 
@@ -164,12 +164,12 @@ We associate a system with a tracker when we make it.  You cannot make a tracker
 
 .. testcode::
 
-	tr = bertini.tracking.AMPTracker(homotopy)
+	tr = bertini.AMPTracker(homotopy)
 	tr.tracking_tolerance(1e-5) # track the path to 5 digits or so
 
 	# adjust some stepping settings
 	stepping = bertini.tracking.SteppingConfig()
-	stepping.max_step_size = bertini.multiprec.Float(1)/bertini.multiprec.Float(13)
+	stepping.max_step_size = bertini.multiprec.real_mp(1)/bertini.multiprec.real_mp(13)
 
 	#then, set the config into the tracker.
 	tr.set_stepping(stepping)
@@ -179,8 +179,8 @@ Once we feel comfortable with the configs (of which there are many, see the book
 
 .. testcode::
 
-	result = np.zeros((2,), dtype=bertini.multiprec.Complex)
-	tr.track_path(result,bertini.multiprec.Complex(1),bertini.multiprec.Complex(0), td.start_point_mp(0))
+	result = np.zeros((2,), dtype=bertini.multiprec.complex_mp)
+	tr.track_path(result,bertini.multiprec.complex_mp(1),bertini.multiprec.complex_mp(0), td.start_point_mp(0))
 
 Logging to inspect the path that was tracked
 ---------------------------------------------
@@ -200,7 +200,7 @@ Re-running it, you should find a ton of stuff printed to the screen.
 
 .. testcode::
 
-	tr.track_path(result,bertini.multiprec.Complex(1),bertini.multiprec.Complex(0), td.start_point_mp(0))
+	tr.track_path(result,bertini.multiprec.complex_mp(1),bertini.multiprec.complex_mp(0), td.start_point_mp(0))
 
 If you are going to keep tracking, but want to turn off the logging, remove the observer.
 
@@ -221,8 +221,8 @@ Now that we've tracked a single path, you might want to loop over all start poin
 	import bertini
 	import numpy as np
 
-	x = bertini.function_tree.symbol.Variable("x") #yes, you can make a variable not match its name...
-	y = bertini.function_tree.symbol.Variable("y")
+	x = bertini.symbolics.Variable("x") #yes, you can make a variable not match its name...
+	y = bertini.symbolics.Variable("y")
 	f = x**2 + y**2 -1
 	g = x+y
 
@@ -241,7 +241,7 @@ Now that we've tracked a single path, you might want to loop over all start poin
 	homotopy = (1-t)*sys + t*td
 	homotopy.add_path_variable(t)
 
-	tr = bertini.tracking.AMPTracker(homotopy)
+	tr = bertini.AMPTracker(homotopy)
 
 	#commented out for screen-saving.
 	#g = bertini.tracking.observers.amp.GoryDetailLogger()
@@ -251,19 +251,19 @@ Now that we've tracked a single path, you might want to loop over all start poin
 
 	tr.tracking_tolerance(1e-5) # track the path to 5 digits or so
 	tr.infinite_truncation_tolerance(1e5)
-	tr.predictor(bertini.tracking.Predictor.RK4)
+	tr.predictor(bertini.Predictor.RK4)
 	stepping = bertini.tracking.SteppingConfig()
-	stepping.max_step_size = bertini.multiprec.Float(1)/bertini.multiprec.Float(13)
+	stepping.max_step_size = bertini.multiprec.real_mp(1)/bertini.multiprec.real_mp(13)
 
 	# set the config into the tracker
 	tr.set_stepping(stepping)
 
 	results = [] # make an empty list into which to put the results
-	expected_code = bertini.tracking.SuccessCode.Success
+	expected_code = bertini.SuccessCode.Success
 	codes = []
 	for ii in range(td.num_start_points()):
-		results.append(np.zeros((2,),dtype=bertini.multiprec.Complex))
-		codes.append(tr.track_path(result=results[-1], start_time=bertini.multiprec.Complex(1), end_time=bertini.multiprec.Complex(0), start_point=td.start_point_mp(ii)))
+		results.append(np.zeros((2,),dtype=bertini.multiprec.complex_mp))
+		codes.append(tr.track_path(result=results[-1], start_time=bertini.multiprec.complex_mp(1), end_time=bertini.multiprec.complex_mp(0), start_point=td.start_point_mp(ii)))
 
 	#tr.remove_observer(g)
 

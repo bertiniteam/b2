@@ -61,6 +61,17 @@ void ListVisitor<T>::visit(PyClass& cl) const
 }
 
 
+// Construct a VariableGroup of `count` variables named name0, name1, ..., name{count-1}.
+// A convenience constructor that absorbs the old linalg.variable_vector(name, count).
+std::shared_ptr<bertini::VariableGroup> create_named_variable_group(std::string const& name, int count)
+{
+	auto vg = std::make_shared<bertini::VariableGroup>();
+	for (int i = 0; i < count; ++i)
+		vg->push_back(bertini::node::Variable::Make(name + std::to_string(i)));
+	return vg;
+}
+
+
 void ExportContainers()
 {
 	scope current_scope;
@@ -110,6 +121,8 @@ void ExportContainers()
 	class_< T2 >("VariableGroup")
 	.def(ListVisitor<T2>())
 	.def("__init__", boost::python::make_constructor(&create_MyClass<T2>))
+	.def("__init__", boost::python::make_constructor(&create_named_variable_group),
+	     "VariableGroup(name, count): the variables name0, name1, ..., name{count-1}")
 	;
 	
 	// std::vector of ints

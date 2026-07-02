@@ -30,19 +30,19 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg
 from bertini import multiprec as mp
-from bertini.nag_algorithm import Slice, WitnessSetMultiplePrecision
+from bertini import Slice
+from bertini.nag_algorithm import WitnessSetMultiplePrecision
 
 
 def _mpvec(*entries):
-    return np.array([mp.Complex(str(e)) for e in entries], dtype=mp.Complex)
+    return np.array([mp.complex_mp(str(e)) for e in entries], dtype=mp.complex_mp)
 
 
 def _known_slice():
     # f0 = 2x + 3y + 1,  f1 = x - y + 4   on (x, y)
     x, y = pb.Variable('x'), pb.Variable('y')
-    return linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
+    return pb.Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
 
 
 # ---- Slice ---------------------------------------------------------------------------------
@@ -141,14 +141,14 @@ def test_iterating_slice_yields_form_vectors():
 
 def test_coefficients_always_2d_even_for_one_form():
     x, y = pb.Variable('x'), pb.Variable('y')
-    one = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])
+    one = pb.Slice.from_coefficients([[2, 3, 1]], [x, y])
     assert one.coefficients().shape == (1, 3)     # NOT (3,): coefficients() never collapses
 
 
 def test_slice_concatenate_and_add_operator():
     x, y = pb.Variable('x'), pb.Variable('y')
-    sa = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])    # 2x + 3y + 1
-    sb = linalg.slice_from_coefficients([[1, -1, 4]], [x, y])   # x - y + 4
+    sa = pb.Slice.from_coefficients([[2, 3, 1]], [x, y])    # 2x + 3y + 1
+    sb = pb.Slice.from_coefficients([[1, -1, 4]], [x, y])   # x - y + 4
 
     combined = sa.concatenate(sb)
     assert combined.dimension() == 2
@@ -162,7 +162,7 @@ def test_slice_concatenate_and_add_operator():
 
 def test_slice_as_system_matches_eval():
     x, y = pb.Variable('x'), pb.Variable('y')
-    s = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
+    s = pb.Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
     sys = s.as_system()
     assert sys.num_functions() == 2
     pt = _mpvec(1, 1)
@@ -199,7 +199,7 @@ def test_slice_add_to_system_agrees_with_slice_eval():
     x, y = pb.Variable('x'), pb.Variable('y')
     sys = pb.System()
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    s = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
+    s = pb.Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
     s.add_to(sys)
     assert sys.num_functions() == 2
 
@@ -223,9 +223,9 @@ def test_add_slices_as_products_is_the_regen_bridge():
     x, y = pb.Variable('x'), pb.Variable('y')
     sys = pb.System()
     sys.add_variable_group(pb.VariableGroup([x, y]))
-    s1 = linalg.slice_from_coefficients([[1, 0, -1], [1, 0, 1]], [x, y])    # (x - 1)(x + 1)
-    s2 = linalg.slice_from_coefficients([[0, 1, -1], [0, 1, -2]], [x, y])   # (y - 1)(y - 2)
-    linalg.add_slices_as_products(sys, [s1, s2])
+    s1 = pb.Slice.from_coefficients([[1, 0, -1], [1, 0, 1]], [x, y])    # (x - 1)(x + 1)
+    s2 = pb.Slice.from_coefficients([[0, 1, -1], [0, 1, -2]], [x, y])   # (y - 1)(y - 2)
+    sys.add_slices_as_products([s1, s2])
     assert list(sys.degrees()) == [2, 2]
     # at (x, y) = (1, 1):  f0 = (0)(2) = 0,  f1 = (0)(-1) = 0
     v = sys.eval(_mpvec(1, 1))
@@ -277,7 +277,7 @@ def test_witness_set_from_parts_and_consistency():
 
 def test_slice_to_classic_input():
     x, y = pb.Variable('x'), pb.Variable('y')
-    s = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])     # 2x + 3y + 1
+    s = pb.Slice.from_coefficients([[2, 3, 1]], [x, y])     # 2x + 3y + 1
     text = s.to_classic_input()
     assert 'CONFIG' in text and 'INPUT' in text
     assert text.count('END;') == 2
@@ -293,7 +293,7 @@ def test_concatenate_accepts_a_slice_system():
     poly.add_variable_group(pb.VariableGroup([x, y]))
     poly.add_function(x * x + y * y - 1)
 
-    slice_sys = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y]).as_system()
+    slice_sys = pb.Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y]).as_system()
     combined = concatenate(poly, slice_sys)
     assert combined.num_functions() == 3
     v = combined.eval(_mpvec(1, 1))     # f0=1, f1=6, f2=4 at (1,1)
@@ -337,7 +337,7 @@ def test_witness_system_homogenizes_an_affine_slice_for_a_homogenized_system():
     assert sys.is_patched()
     assert sys.num_variables() == 3
 
-    s = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])   # an affine slice over the 2 natural vars
+    s = pb.Slice.from_coefficients([[2, 3, 1]], [x, y])   # an affine slice over the 2 natural vars
     w = WitnessSetMultiplePrecision([], s, sys)
 
     wsys = w.witness_system()        # clone + add_to: the slice's constant folds onto the hom var
@@ -351,7 +351,7 @@ def test_affine_slice_constant_rides_on_hom_var_after_homogenize():
     # form is homogenized, the form's constant term becomes the coefficient on the homogenizing
     # variable (LinearFormsBlock::Homogenize) -- so the slice stays unaware of homogenization.
     x, y = pb.Variable('x'), pb.Variable('y')
-    sys = linalg.slice_from_coefficients([[2, 3, 1]], [x, y]).as_system()   # 2x + 3y + 1
+    sys = pb.Slice.from_coefficients([[2, 3, 1]], [x, y]).as_system()   # 2x + 3y + 1
 
     # affine: at the origin the form is its constant term, 1.
     assert abs(complex(sys.eval(_mpvec(0, 0))[0]) - 1) < 1e-12

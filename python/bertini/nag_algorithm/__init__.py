@@ -79,10 +79,10 @@ def _slice_coefficients(self):
 
     Examples
     --------
-    >>> from bertini import linalg                                       # doctest: +SKIP
+    >>> import bertini                                                   # doctest: +SKIP
     >>> import bertini                                                   # doctest: +SKIP
     >>> x, y = bertini.Variable('x'), bertini.Variable('y')             # doctest: +SKIP
-    >>> linalg.slice_from_coefficients([[2, 3, 1]], [x, y]).coefficients().shape  # doctest: +SKIP
+    >>> bertini.Slice.from_coefficients([[2, 3, 1]], [x, y]).coefficients().shape  # doctest: +SKIP
     (1, 3)
     """
     import numpy as np
@@ -104,10 +104,10 @@ def _slice_getitem(self, key):
 
     Examples
     --------
-    >>> from bertini import linalg                                       # doctest: +SKIP
+    >>> import bertini                                                   # doctest: +SKIP
     >>> import bertini                                                   # doctest: +SKIP
     >>> x, y = bertini.Variable('x'), bertini.Variable('y')             # doctest: +SKIP
-    >>> s = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])  # doctest: +SKIP
+    >>> s = bertini.Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])  # doctest: +SKIP
     >>> s[0]                       # an ELEMENT: the first form's vector  # doctest: +SKIP
     array([2, 3, 1], dtype=object)
     >>> s[:1].dimension()          # a SUB-COLLECTION: a one-form Slice   # doctest: +SKIP
@@ -146,7 +146,7 @@ A slice does NOT own homogenization -- the system does.  ``slice.add_to(system)`
 to a system (folding the constant onto the homogenizing variable if the system was homogenized);
 ``slice.as_system()`` returns a standalone System of just the forms.  Build slices with
 ``Slice.random_complex`` / ``Slice.random_real`` / ``Slice.from_coefficients`` (or
-``bertini.linalg.slice_from_coefficients`` for exact numpy/list coefficients).
+``bertini.bertini.Slice.from_coefficients`` for exact numpy/list coefficients).
 """
 
 if hasattr(_pybnalag, 'Slice'):
@@ -272,7 +272,7 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_m
     ``df[df.is_real & ~df.is_singular]`` (nonsingular real) or ``df[~df.is_finite]`` (at infinity).
 
     The ``solution`` cell is an independent copy of the solution vector (a numpy array of Python
-    ``complex`` for a double solve, of :class:`bertini.multiprec.Complex` for a multiprecision one,
+    ``complex`` for a double solve, of :class:`bertini.complex_mp` for a multiprecision one,
     so no precision is lost).  Coordinates are deliberately **not** exploded into ``x0, x1, ...``
     columns; split them yourself if you want them, e.g.
     ``df['x'] = [v[0] for v in df.solution]``.
@@ -297,7 +297,7 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_m
     -------
     pandas.DataFrame
         One row per solution; the ``solution`` cell is a copied vector whose elements are Python
-        ``complex`` for a double-precision solve and :class:`bertini.multiprec.Complex` for a
+        ``complex`` for a double-precision solve and :class:`bertini.complex_mp` for a
         multiprecision one (kept native, so no precision is lost).
 
     Notes
@@ -588,7 +588,7 @@ def coefficient_parameter_homotopy(target, generic, path_variable='t'):
     # (a) keeps the (1-t)/t semantics (no gamma trick) and (b) lets a structured-block ``generic``
     # be blended rather than SILENTLY DROPPED by System node arithmetic, which only combines the
     # polynomial block (see ADR-0020).
-    from bertini.function_tree.symbol import Integer
+    from bertini.symbolics import Integer
     from bertini._pybertini import system as _system
     return _system.make_homotopy(target, generic, path_variable, Integer(1))
 
@@ -598,7 +598,7 @@ def blend_homotopy(target, start, *, path_variable='t', gamma=None):
 
     Unlike :func:`coefficient_parameter_homotopy` (node arithmetic, for two polynomial systems of the
     same shape), this also works when ``start`` carries a *structured evaluation block* -- e.g. a
-    products-of-linears start system built with :func:`bertini.linalg.add_products_of_linears`.  Such
+    products-of-linears start system built with :meth:`~bertini.System.add_products_of_linears`.  Such
     a block cannot be fused by node arithmetic, so the two systems are combined with a blend block
     that evaluates whole Systems; this is the same construction the zero-dim solver uses internally
     for its generated (total-degree / multihomogeneous) start systems.
@@ -614,7 +614,7 @@ def blend_homotopy(target, start, *, path_variable='t', gamma=None):
         Name of the path variable t added to the homotopy (default ``'t'``).
     gamma : node or None
         The gamma coefficient.  ``None`` (default) draws a random rational gamma.  Pass an exact
-        node (e.g. from :func:`bertini.linalg.coefficient`) off the real axis for a reproducible path.
+        node (e.g. from :func:`bertini.coefficient`) off the real axis for a reproducible path.
 
     Returns
     -------
@@ -794,7 +794,12 @@ class SolutionPathCollector(_pybnalag.observers.CustomObserver):
 _pybnalag.observers.SolutionPathCollector = SolutionPathCollector
 
 
-__all__ = dir(_pybnalag)
+# NID (numerical irreducible decomposition) is framework scaffolding whose Solve() is not yet
+# implemented, and its witness-set datatypes ride with it -- hide them from the public surface
+# (import * / tab-completion / docs) until it works.  They stay importable by explicit name.
+_HIDDEN = tuple(n for n in dir(_pybnalag)
+                if n.startswith(('NID', 'NumericalIrreducibleDecomposition', 'WitnessSet')))
+__all__ = [n for n in dir(_pybnalag) if n not in _HIDDEN]
 __all__.append('ZeroDimSolver')
 __all__.append('HomotopySolver')
 __all__.append('user_homotopy')

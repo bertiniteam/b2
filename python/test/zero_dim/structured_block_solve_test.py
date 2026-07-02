@@ -1,7 +1,7 @@
 """Structured blocks survive a zero-dim solve.
 
 The payoff of making the evaluation blocks homogenization-aware: a linear condition added as
-a bertini.linalg LinearFormsBlock (via add_linear / add_linear_forms) is no longer confined to
+a LinearFormsBlock (via add_linear / add_linear_forms) is no longer confined to
 direct evaluation -- it is homogenized alongside the polynomial functions when the zero-dim
 solver prepares the target, so a mixed poly + linear-forms system solves end to end.
 """
@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg
 
 
 def _roots_xy(solutions):
@@ -26,11 +25,11 @@ def test_circle_intersect_line_via_add_linear_solves():
     sys = pb.System()
     sys.add(pb.VariableGroup([x, y]))
     sys.add(x * x + y * y - 1)                                   # polynomial block, degree 2
-    linalg.add_linear(sys, np.array([[2, 1]]), np.array([x, y]), [-1])  # linear-forms block: 2x+y-1
+    sys.add_linear(np.array([[2, 1]]), np.array([x, y]), [-1])  # linear-forms block: 2x+y-1
 
     assert list(sys.degrees()) == [2, 1]
 
-    zd = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+    zd = pb.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     zd.solve()
     got = _roots_xy(zd.all_solutions())
 
@@ -47,9 +46,9 @@ def test_circle_intersect_line_via_add_linear_forms_solves():
     sys = pb.System()
     sys.add(pb.VariableGroup([x, y]))
     sys.add(x * x + y * y - 1)
-    linalg.add_linear_forms(sys, [[2, 1, -1]])
+    sys.add_linear_forms([[2, 1, -1]])
 
-    zd = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+    zd = pb.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     zd.solve()
     got = _roots_xy(zd.all_solutions())
 

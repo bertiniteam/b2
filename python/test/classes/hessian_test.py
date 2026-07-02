@@ -42,11 +42,11 @@ import pytest
 
 import bertini as pb
 import bertini.multiprec as mp
-from bertini.function_tree.symbol import Variable, Rational
-from bertini.function_tree import sin
+from bertini.symbolics import Variable, Rational
+from bertini.symbolics import sin
 
-from bertini.multiprec import Float as mpfr_float
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import real_mp as mpfr_float
+from bertini.multiprec import complex_mp as mpfr_complex
 
 from eval_helper import eval_at
 

@@ -63,15 +63,14 @@ del sys  # used only for the platform check above; don't leak it into the bertin
 
 # put stuff in the bertini namespace
 
-from . import function_tree
-from .function_tree import sin, cos, tan, asin, acos, atan, exp, log, sqrt
-from .function_tree import canonicalize, monomial_order, MonomialOrder
+from . import symbolics
+from .symbolics import sin, cos, tan, asin, acos, atan, exp, log, sqrt
+from .symbolics import canonicalize, monomial_order, MonomialOrder
 
 from . import system
 from . import tracking
 from . import endgame
 from . import parse
-from . import container
 from . import logging
 from . import nag_algorithm
 from . import random
@@ -79,31 +78,62 @@ from . import parallel
 
 from . import multiprec
 
-from . import linalg
-
 # some convenience assignments
-Variable = function_tree.symbol.Variable
-variables = function_tree.variables
-gather_variables = function_tree.gather_variables
-VariableGroup = function_tree.VariableGroup
-Named = function_tree.root.NamedExpression   # Named(expr, "a"): a user-named subexpression
+Variable = symbolics.Variable
+variables = symbolics.variables
+gather_variables = symbolics.gather_variables
+VariableGroup = symbolics.VariableGroup
+Named = symbolics.NamedExpression            # Named(expr, "a"): a user-named subexpression
 System = system.System
 default_precision = multiprec.default_precision
 
+# the multiprecision number types, hoisted to the top level (they also live in bertini.multiprec)
+from .multiprec import complex_mp, real_mp, int_mp, rational_mp
+
+# symbolic constants, ready to drop straight into expressions (bertini.E, bertini.Pi, bertini.I)
+E = symbolics.E()
+Pi = symbolics.Pi()
+I = symbolics.Complex(0, 1)                     # imaginary unit -- no dedicated node, a complex leaf
+
+# the everyday classes, hoisted to the top level for tab-completion.  They still live in their
+# submodules (nag_algorithm.*, tracking.*); this just spares users the deep path.
+from .nag_algorithm import ZeroDimSolver, HomotopySolver, SolutionPathCollector, Slice, StartSystemType
+from .tracking import (AMPTracker, DoublePrecisionTracker, MultiplePrecisionTracker,
+                       SuccessCode, Predictor)
+
 from ._calculus import jacobian
 from .random import random_matrix
+
+# exact-coefficient coercion at the top level (was bertini.linalg.coefficient / as_coefficients)
+from ._coefficients import coefficient, coefficients
+
+# attach the friendly system-building methods and Slice.from_coefficients (was bertini.linalg.*)
+from . import _system_ops as _system_ops
+_system_ops.install(system.System)
+from . import _slice_ops as _slice_ops
+_slice_ops.install(nag_algorithm.Slice)
+
+from . import operators                          # `from bertini.operators import *` -> just the math ops
 
 
 
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
 __all__ = ['Variable','variables','gather_variables','VariableGroup','Named','system','System',
-           'jacobian','random_matrix',
-           'nag_algorithm','container','default_precision',
-           'tracking','endgame','logging','function_tree','parse','multiprec','random','parallel',
-           'linalg',
+           'jacobian','random_matrix','coefficient','coefficients',
+           'complex_mp','real_mp','int_mp','rational_mp',
+           'nag_algorithm','default_precision',
+           'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
+           'operators',
+           # everyday classes hoisted to the top level
+           'ZeroDimSolver','HomotopySolver','SolutionPathCollector','Slice',
+           'AMPTracker','DoublePrecisionTracker','MultiplePrecisionTracker',
+           # enums at the root
+           'SuccessCode','Predictor','MonomialOrder','StartSystemType',
+           # symbolic constants
+           'E','Pi','I',
            'sin','cos','tan','asin','acos','atan','exp','log','sqrt',
-           'canonicalize','monomial_order','MonomialOrder']
+           'canonicalize','monomial_order']
 
 
 

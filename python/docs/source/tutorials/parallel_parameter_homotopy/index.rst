@@ -86,7 +86,7 @@ reduce each solve straight to its positive-real count with ``collect``:
 .. testcode::
 
    import numpy as np
-   C = bertini.multiprec.Complex
+   C = bertini.multiprec.complex_mp
    def real_coeff(v):  return C(repr(float(v)), "0")   # an exact real coefficient
 
    generic = (C("0.7","0.4"), C("1","0.3"), C("0.31","-0.52"), C("1.2","0.9"))

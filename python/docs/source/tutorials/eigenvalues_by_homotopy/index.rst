@@ -26,15 +26,14 @@ This is the payoff of Bertini's multihomogeneous start system: it tracks one pat
 Setting up the system
 =====================
 
-We need ``numpy`` for the matrix and the cross-check, ``bertini`` for the solve, and the
-:mod:`bertini.linalg` layer so we can write the equations as actual linear algebra:
+We need ``numpy`` for the matrix and the cross-check, and ``bertini`` for the solve and
+for writing the equations as actual linear algebra:
 
 .. testcode::
 
     import numpy as np
     import bertini as bertini
-    from bertini import linalg
-    from bertini.nag_algorithm import ZeroDimSolver
+    from bertini import ZeroDimSolver
 
 Pick a small symmetric matrix (real, distinct eigenvalues make the check easy to read):
 
@@ -51,16 +50,16 @@ is just ``A @ x - lam*x``:
 
 .. testcode::
 
-    x = linalg.variable_vector('x', n)        # array([x0, x1, x2], dtype=object)
+    x = np.array(bertini.variables('x', n), dtype=object)   # array([x0, x1, x2], dtype=object)
     lam = bertini.Variable('lam')
 
 .. note::
 
    The matrix ``A`` here is **integer**, so it enters the function tree exactly.
-   ``bertini.linalg`` deliberately refuses plain Python ``float`` entries -- a 64-bit float
+   ``bertini`` deliberately refuses plain Python ``float`` entries -- a 64-bit float
    would cap the precision of the whole arbitrary-precision computation at ~16 digits.  For
    non-integer coefficients pass exact values
-   (``linalg.as_coefficients([['5/2', '1'], ...])`` accepts fractions, exact decimal
+   (``bertini.coefficients([['5/2', '1'], ...])`` accepts fractions, exact decimal
    strings, and bertini multiprecision values).
 
 Two ways to make it zero-dimensional
@@ -76,11 +75,11 @@ add one generic linear equation :math:`c\cdot x = 1` to pin the scale:
 .. testcode::
 
     def build_affine():
-        x = linalg.variable_vector('x', n)
+        x = np.array(bertini.variables('x', n), dtype=object)
         lam = bertini.Variable('lam')
         c = np.array([5, 8, 3])                          # any generic integer vector
         sys = bertini.System()
-        linalg.add_functions(sys, A @ x - lam * x)       # the rows of (A - lam I) x
+        sys.add_functions(A @ x - lam * x)               # the rows of (A - lam I) x
         sys.add_function(c @ x - 1)                      # fix the eigenvector scale
         sys.add_variable_group(bertini.VariableGroup(list(x)))
         sys.add_variable_group(bertini.VariableGroup([lam]))
@@ -93,10 +92,10 @@ quotiented out, so **no normalization equation is needed**:
 .. testcode::
 
     def build_projective():
-        x = linalg.variable_vector('x', n)
+        x = np.array(bertini.variables('x', n), dtype=object)
         lam = bertini.Variable('lam')
         sys = bertini.System()
-        linalg.add_functions(sys, A @ x - lam * x)       # nothing else!
+        sys.add_functions(A @ x - lam * x)               # nothing else!
         sys.add_hom_variable_group(bertini.VariableGroup(list(x)))   # x in P^{n-1}
         sys.add_variable_group(bertini.VariableGroup([lam]))
         return sys
@@ -167,11 +166,11 @@ dedicated eigensolver -- the same machinery solves any polynomial system, and he
 multihomogeneous structure made it efficient (``n`` paths, not :math:`2^n`).  Second, we
 never built :math:`(A-\lambda I)x` entry by entry: with :math:`x` a vector of variables, the
 condition reads ``A @ x - lam*x`` -- the linear algebra you would write on paper.  That is
-:mod:`bertini.linalg`, whose motivating example is exactly this problem.  Coefficients on
-variables stay exact, so the precision of the solve is never silently capped by a stray
-floating-point literal.
+what ``bertini``'s linear-algebra support gives you, and this problem is its motivating
+example.  Coefficients on variables stay exact, so the precision of the solve is never
+silently capped by a stray floating-point literal.
 
-The same idea extends to **matrices of variables** (``linalg.variable_matrix``), which is
+The same idea extends to **matrices of variables** (a NumPy object array of ``Variable``), which is
 where problems like rank conditions and regeneration are headed.  Today the vector
 equations are expanded into scalar polynomials; a future evaluation block will carry the
 matrix structure all the way into the numerics for larger problems.

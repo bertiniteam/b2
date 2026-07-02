@@ -10,8 +10,8 @@ import numpy as np
 
 def form_system():
     """Build the target polynomial system sys = {x^2 + y^2 - 1, x + y}."""
-    x = bertini.function_tree.symbol.Variable("x")  # variable name need not match
-    y = bertini.function_tree.symbol.Variable("y")
+    x = bertini.symbolics.Variable("x")  # variable name need not match
+    y = bertini.symbolics.Variable("y")
 
     f = x**2 + y**2 - 1  # ** is exponentiation in Python.
     g = x + y
@@ -38,7 +38,7 @@ def explore_nonalgebraic(sys, grp, f, g):
     """Aside: adding non-polynomial functions, then rebuild an algebraic sys."""
     x = grp[0]  # recover x from the variable group for the aside
     sys.add_function(x**-1)  # happily accepts a non-polynomial function.
-    sys.add_function(bertini.function_tree.sin(x))
+    sys.add_function(bertini.symbolics.sin(x))
     d = sys.degrees()
     assert(d[2] == -1)  # unsurprising, but actually a coincidence
     assert(d[3] == -1)  # also -1.  anything non-polynomial is a negative number.
@@ -77,27 +77,27 @@ def form_homotopy(sys, td):
 
 def track_single_path(homotopy, td):
     """Configure an AMP tracker and track a single path, with logging demo."""
-    tr = bertini.tracking.AMPTracker(homotopy)
+    tr = bertini.AMPTracker(homotopy)
     tr.tracking_tolerance(1e-5)  # track the path to 5 digits or so
 
     # adjust some stepping settings
     stepping = bertini.tracking.SteppingConfig()
-    stepping.max_step_size = bertini.multiprec.Float(1) / bertini.multiprec.Float(13)
+    stepping.max_step_size = bertini.multiprec.real_mp(1) / bertini.multiprec.real_mp(13)
 
     # then, set the config into the tracker.
     tr.set_stepping(stepping)
 
-    result = np.zeros((2,), dtype=bertini.multiprec.Complex)
-    tr.track_path(result, bertini.multiprec.Complex(1),
-                  bertini.multiprec.Complex(0), td.start_point_mp(0))
+    result = np.zeros((2,), dtype=bertini.multiprec.complex_mp)
+    tr.track_path(result, bertini.multiprec.complex_mp(1),
+                  bertini.multiprec.complex_mp(0), td.start_point_mp(0))
 
     # make an observer to log details, and attach it
     g = bertini.tracking.observers.amp.GoryDetailLogger()
     tr.add_observer(g)
 
     # re-run: prints a ton of detail to the screen
-    tr.track_path(result, bertini.multiprec.Complex(1),
-                  bertini.multiprec.Complex(0), td.start_point_mp(0))
+    tr.track_path(result, bertini.multiprec.complex_mp(1),
+                  bertini.multiprec.complex_mp(0), td.start_point_mp(0))
 
     # turn logging back off
     tr.remove_observer(g)
@@ -107,8 +107,8 @@ def track_single_path(homotopy, td):
 
 def track_all_paths():
     """The 'grab the whole thing' block: track every start path."""
-    x = bertini.function_tree.symbol.Variable("x")  # variable name need not match
-    y = bertini.function_tree.symbol.Variable("y")
+    x = bertini.symbolics.Variable("x")  # variable name need not match
+    y = bertini.symbolics.Variable("y")
     f = x**2 + y**2 - 1
     g = x + y
 
@@ -127,7 +127,7 @@ def track_all_paths():
     homotopy = (1 - t) * sys + t * td
     homotopy.add_path_variable(t)
 
-    tr = bertini.tracking.AMPTracker(homotopy)
+    tr = bertini.AMPTracker(homotopy)
 
     # commented out for screen-saving.
     # g = bertini.tracking.observers.amp.GoryDetailLogger()
@@ -137,21 +137,21 @@ def track_all_paths():
 
     tr.tracking_tolerance(1e-5)  # track the path to 5 digits or so
     tr.infinite_truncation_tolerance(1e5)
-    tr.predictor(bertini.tracking.Predictor.RK4)
+    tr.predictor(bertini.Predictor.RK4)
     stepping = bertini.tracking.SteppingConfig()
-    stepping.max_step_size = bertini.multiprec.Float(1) / bertini.multiprec.Float(13)
+    stepping.max_step_size = bertini.multiprec.real_mp(1) / bertini.multiprec.real_mp(13)
 
     # set the config into the tracker
     tr.set_stepping(stepping)
 
     results = []  # make an empty list into which to put the results
-    expected_code = bertini.tracking.SuccessCode.Success
+    expected_code = bertini.SuccessCode.Success
     codes = []
     for ii in range(td.num_start_points()):
-        results.append(np.zeros((2,), dtype=bertini.multiprec.Complex))
+        results.append(np.zeros((2,), dtype=bertini.multiprec.complex_mp))
         codes.append(tr.track_path(result=results[-1],
-                                   start_time=bertini.multiprec.Complex(1),
-                                   end_time=bertini.multiprec.Complex(0),
+                                   start_time=bertini.multiprec.complex_mp(1),
+                                   end_time=bertini.multiprec.complex_mp(0),
                                    start_point=td.start_point_mp(ii)))
 
     # tr.remove_observer(g)

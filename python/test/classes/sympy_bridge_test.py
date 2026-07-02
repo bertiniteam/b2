@@ -39,8 +39,8 @@ sp = pytest.importorskip('sympy')
 
 import bertini as pb
 import bertini.multiprec as mp
-from bertini.function_tree import sin, gather_variables
-from bertini.function_tree.symbol import Rational
+from bertini.symbolics import sin, gather_variables
+from bertini.symbolics import Rational
 from bertini.sympy_bridge import from_sympy, to_sympy, system_from_sympy
 
 from eval_helper import eval_at
@@ -63,7 +63,7 @@ def test_forward_values_match(sxy):
     x0, y0 = complex(1.25, -0.3), complex(-0.5, 0.75)
 
     want_py = complex(expr.subs({sx: x0, sy: y0}).evalf())   # sympy oracle
-    want = mp.Complex(str(want_py.real), str(want_py.imag))
+    want = mp.complex_mp(str(want_py.real), str(want_py.imag))
     got = eval_at(tree, x=x0, y=y0)                          # bertini tree through the SLP
     assert mp.abs(got - want) / mp.abs(want) < 1e-13
 
@@ -74,8 +74,8 @@ def test_forward_reuses_supplied_variables(sxy):
     tree = from_sympy(sx**2, [x])
     # the supplied Variable is reused (not a fresh one), and the tree evaluates correctly
     assert {str(v) for v in gather_variables(tree)} == {'x'}
-    assert mp.abs(eval_at(tree, x=complex(3.0, 0)) - mp.Complex('9')) < mp.Float('1e-14')
-    assert mp.abs(eval_at(tree, x=complex(2.0, 0)) - mp.Complex('4')) < mp.Float('1e-14')
+    assert mp.abs(eval_at(tree, x=complex(3.0, 0)) - mp.complex_mp('9')) < mp.real_mp('1e-14')
+    assert mp.abs(eval_at(tree, x=complex(2.0, 0)) - mp.complex_mp('4')) < mp.real_mp('1e-14')
 
 
 def test_forward_exact_rational(sxy):
@@ -84,13 +84,13 @@ def test_forward_exact_rational(sxy):
     # the coefficient leaf is an exact bertini Rational, not a float64 dump
     leaf = next(tree.operand(i) for i in range(tree.num_operands())
                 if isinstance(tree.operand(i), Rational))
-    assert leaf.value_real() == mp.Rational('1/3')
+    assert leaf.value_real() == mp.rational_mp('1/3')
 
 
 def test_forward_big_integer():
     big = sp.Integer(10)**40 + 1
     tree = from_sympy(big)
-    assert tree.value() == mp.Int('1' + '0' * 39 + '1')
+    assert tree.value() == mp.int_mp('1' + '0' * 39 + '1')
 
 
 def test_forward_hyperbolic_raises(sxy):
@@ -139,7 +139,7 @@ def test_reverse_jacobian_form_raises():
 def test_reverse_float_precision_carry():
     mp.default_precision(50)
     fifty = '1.' + '3' * 49
-    from bertini.function_tree.symbol import Complex
+    from bertini.symbolics import Complex
     expr = to_sympy(Complex(fifty))
     # the mpfr precision rides into sympy's Complex; allow the last digits to round
     assert str(expr)[:48] == fifty[:48]
@@ -164,13 +164,13 @@ def test_round_trip_bertini_to_sympy_to_bertini():
     tree = x**2 * y - Rational('2/5') + sin(x)
     rebuilt = from_sympy(to_sympy(tree), [x, y])
     pt = dict(x=complex(0.6, -0.2), y=complex(-1.1, 0.4))
-    assert mp.abs(eval_at(rebuilt, **pt) - eval_at(tree, **pt)) <= mp.Float('1e-25')
+    assert mp.abs(eval_at(rebuilt, **pt) - eval_at(tree, **pt)) <= mp.real_mp('1e-25')
 
 
 # --- the acceptance test: define in sympy, solve with bertini ---
 
 def test_end_to_end_solve_matches_sympy(sxy):
-    from bertini.nag_algorithm import ZeroDimSolver
+    from bertini import ZeroDimSolver
 
     sx, sy = sxy
     eqs = [sx**2 + sy**2 - 1, sx + sy]

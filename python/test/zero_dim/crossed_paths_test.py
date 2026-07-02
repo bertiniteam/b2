@@ -31,11 +31,11 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini.function_tree.symbol import Rational
+from bertini.symbolics import Rational
 
-OK = int(pb.tracking.SuccessCode.Success)
+OK = int(pb.SuccessCode.Success)
 
-_CDT = pb.multiprec.Vector(1).dtype     # the numpy dtype of a multiprecision complex vector
+_CDT = np.zeros(1, dtype=pb.complex_mp).dtype     # the numpy dtype of a multiprecision complex vector
 
 # Geometry of the planted near-miss (see module docstring).  Exact rationals -> portable.
 B_ROOT, C_ROOT = 1, -2                   # the flat path and the far spectator path
@@ -70,12 +70,12 @@ def cubic_crossing_homotopy():
     target.add_function((x - a_at_0) * (x - _R(B_ROOT)) * (x - _R(C_ROOT)))
 
     a_at_1 = B_ROOT + DELTA_NUM / DELTA_DEN + KAPPA * (1 - T0_NUM / T0_DEN) ** 2
-    start_points = [np.array([pb.multiprec.Complex(repr(v))], dtype=_CDT)
+    start_points = [np.array([pb.multiprec.complex_mp(repr(v))], dtype=_CDT)
                     for v in (a_at_1, float(B_ROOT), float(C_ROOT))]
     return H, target, start_points
 
 
-def _solve(resolve_attempts, predictor=pb.tracking.Predictor.Euler, step=COARSE_STEP, tol=LOOSE_TOL):
+def _solve(resolve_attempts, predictor=pb.Predictor.Euler, step=COARSE_STEP, tol=LOOSE_TOL):
     """Track the planted cubic and return (report, sorted distinct real roots)."""
     H, target, start_points = cubic_crossing_homotopy()
     solver = pb.nag_algorithm.user_homotopy(H, start_points, target, precision='double')
@@ -125,7 +125,7 @@ def test_crossing_is_detected_then_resolved():
 
 def test_clean_solve_reports_no_crossings():
     """With a good (higher-order) predictor the curve is tracked correctly: no crossing at all."""
-    report, roots = _solve(resolve_attempts=0, predictor=pb.tracking.Predictor.RK4)
+    report, roots = _solve(resolve_attempts=0, predictor=pb.Predictor.RK4)
     assert report.passed
     assert report.num_crossings_detected == 0
     assert report.num_resolve_attempts == 0

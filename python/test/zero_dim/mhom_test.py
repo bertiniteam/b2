@@ -11,13 +11,11 @@ same every run: the tests pass or fail deterministically, with no gamma-retry lo
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import (
-    ZeroDimSolver,
-)
+from bertini import ZeroDimSolver
 
 # Compare success codes by integer value: the enhance machinery's config __eq__ can be
 # reached through nested comparisons and trips over enum members, so avoid enum-vs-enum ==.
-OK = int(pb.tracking.SuccessCode.Success)
+OK = int(pb.SuccessCode.Success)
 
 
 def _two_group_system():

@@ -10,7 +10,7 @@ namespace bertini{
 			using TrackerT = MultiplePrecisionTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::PSEG;
 
-			class_<EGT>("FixedMultiplePSEG",
+			class_<EGT>("FixedMultiplePowerSeriesEndgame",
 				"The fixed but arbitrary precision implementation of the power series endgame",
 				init<TrackerT const&>( (arg("self"),arg("tracker")), "Default construct with default settings"))
 			.def(EndgameBaseVisitor<EGT>())
@@ -22,7 +22,7 @@ namespace bertini{
 			using TrackerT = MultiplePrecisionTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 
-			class_<EGT>("FixedMultipleCauchyEG",
+			class_<EGT>("FixedMultipleCauchyEndgame",
 				"The fixed multiple precision implementation of the Cauchy endgame",
 				init<TrackerT const&>( (arg("self"),arg("tracker")), "Default construct with default settings"))
 			.def(EndgameBaseVisitor<EGT>())
