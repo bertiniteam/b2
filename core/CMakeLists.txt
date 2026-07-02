@@ -183,6 +183,7 @@ set(functiontreeinclude_HEADERS
 	include/bertini2/function_tree/simplify.hpp
 	include/bertini2/function_tree/canonical.hpp
 	include/bertini2/function_tree/canonical_encoding.hpp
+	include/bertini2/function_tree/reintern.hpp
 )
 
 set(functiontree_operators_HEADERS
@@ -353,6 +354,7 @@ set(function_tree_sources
     src/function_tree/simplify.cpp
     src/function_tree/canonical.cpp
     src/function_tree/canonical_encoding.cpp
+    src/function_tree/reintern.cpp
     src/function_tree/operators/arithmetic.cpp
     src/function_tree/operators/trig.cpp
     src/function_tree/operators/operator.cpp
@@ -798,6 +800,7 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/function_tree_transform.cpp
 		test/classes/structural_hash_test.cpp
 		test/classes/canonical_encoding_test.cpp
+		test/classes/reintern_test.cpp
 		test/classes/interning_test.cpp
 		test/classes/system_test.cpp
 		test/classes/system_identity_test.cpp
