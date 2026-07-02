@@ -299,7 +299,7 @@ def save(*args, description: str = "", ledger: Ledger = None):
     ledger.refresh_results()
 
 
-def results(ledger: Ledger = None) -> dict:
+def saved(ledger: Ledger = None) -> dict:
     """The declared results, decoded: {name: {(run, index): point}}.  Newest declaration
     of each name wins."""
     ledger = ledger or ambient_ledger()

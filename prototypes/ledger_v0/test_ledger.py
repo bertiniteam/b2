@@ -21,7 +21,7 @@ from bertini.function_tree.symbol import Variable
 
 from ledger import Ledger
 from memo_solve import (solve, continue_from, provenance_chain,
-                        annotate, annotations_for, declare_result, results, save,
+                        annotate, annotations_for, declare_result, saved, save,
                         SimulatedCrash)
 
 
@@ -226,7 +226,7 @@ def test_results_separate_signal_from_noise(tmp_path):
 
     declare_result(lg, "my solutions", [(final.run_id, i) for i in sorted(final.solutions)])
 
-    declared = results(lg)
+    declared = saved(lg)
     assert set(declared) == {"my solutions"}
     assert len(declared["my solutions"]) == 2               # only the deliverable points
     assert all(ref[0] == final.run_id for ref in declared["my solutions"])
@@ -238,7 +238,7 @@ def test_results_separate_signal_from_noise(tmp_path):
 
     # re-declaring the same name replaces (newest wins)
     declare_result(lg, "my solutions", [(final.run_id, 0)])
-    assert len(results(lg)["my solutions"]) == 1
+    assert len(saved(lg)["my solutions"]) == 1
 
 
 def test_save_is_the_casual_users_one_verb(tmp_path):
