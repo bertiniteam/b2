@@ -63,9 +63,10 @@ del sys  # used only for the platform check above; don't leak it into the bertin
 
 # put stuff in the bertini namespace
 
-from . import function_tree
-from .function_tree import sin, cos, tan, asin, acos, atan, exp, log, sqrt
-from .function_tree import canonicalize, monomial_order, MonomialOrder
+from . import symbolics
+from . import function_tree   # deprecated alias for symbolics; still importable, not advertised
+from .symbolics import sin, cos, tan, asin, acos, atan, exp, log, sqrt
+from .symbolics import canonicalize, monomial_order, MonomialOrder
 
 from . import system
 from . import tracking
@@ -81,18 +82,18 @@ from . import multiprec
 from . import linalg
 
 # some convenience assignments
-Variable = function_tree.symbol.Variable
-variables = function_tree.variables
-gather_variables = function_tree.gather_variables
-VariableGroup = function_tree.VariableGroup
-Named = function_tree.root.NamedExpression   # Named(expr, "a"): a user-named subexpression
+Variable = symbolics.Variable
+variables = symbolics.variables
+gather_variables = symbolics.gather_variables
+VariableGroup = symbolics.VariableGroup
+Named = symbolics.NamedExpression            # Named(expr, "a"): a user-named subexpression
 System = system.System
 default_precision = multiprec.default_precision
 
 # symbolic constants, ready to drop straight into expressions (bertini.E, bertini.Pi, bertini.I)
-E = function_tree.symbol.E()
-Pi = function_tree.symbol.Pi()
-I = function_tree.symbol.Complex(0, 1)          # imaginary unit -- no dedicated node, a complex leaf
+E = symbolics.E()
+Pi = symbolics.Pi()
+I = symbolics.Complex(0, 1)                     # imaginary unit -- no dedicated node, a complex leaf
 
 # the everyday classes, hoisted to the top level for tab-completion.  They still live in their
 # submodules (nag_algorithm.*, tracking.*); this just spares users the deep path.
@@ -112,7 +113,7 @@ from . import operators                          # `from bertini.operators impor
 __all__ = ['Variable','variables','gather_variables','VariableGroup','Named','system','System',
            'jacobian','random_matrix',
            'nag_algorithm','default_precision',
-           'tracking','endgame','logging','function_tree','parse','multiprec','random','parallel',
+           'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
            'linalg','operators',
            # everyday classes hoisted to the top level
            'ZeroDimSolver','HomotopySolver','SolutionPathCollector','Slice',
