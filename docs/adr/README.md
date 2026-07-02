@@ -59,3 +59,4 @@ Each ADR follows the template:
 | [0039](0039-zerodim-binding-keeps-system-alive.md) | The Python solver binding must keep the given System alive (custodian-and-ward) | Python bindings |
 | [0040](0040-split-zerodimsolver-homotopysolver.md) | Split ZeroDim into HomotopySolver (continuation engine) + ZeroDimSolver (algorithm); retire the system-management policy | Core / nag_algorithms |
 | [0041](0041-bounded-modulus-random-coefficients.md) | Well-conditioned random coefficients: bounded-modulus scalars, conjugate-orthonormal matrices (start systems, patches, slices, randomization), matching Bertini 1 | Numerics / core |
+| [0042](0042-system-content-identity-seal-and-interning.md) | System content identity: versioned canonical encoding + SHA-256 digest, Seal(), System/Program interning, re-intern-on-load (ADR-0027 E4) | Core / system |
