@@ -43,7 +43,7 @@ from bertini._pybertini.function_tree import AbstractNode as _AbstractNode
 # bertini multiprecision value types (not function-tree nodes) that we accept as exact
 # coefficients by wrapping them in a Complex node.
 _MP_VALUE_TYPES = tuple(
-    t for t in (getattr(_mp, n, None) for n in ('Float', 'Complex', 'Int', 'Rational'))
+    t for t in (getattr(_mp, n, None) for n in ('real_mp', 'complex_mp', 'int_mp', 'rational_mp'))
     if isinstance(t, type)
 )
 
@@ -64,11 +64,11 @@ def coefficient(value):
         >>> _ = bertini.coefficient('2.5')                      # exact decimal string
         >>> _ = bertini.coefficient('3/4')                      # exact rational string
         >>> _ = bertini.coefficient(Fraction(3, 4))             # a fractions.Fraction
-        >>> _ = bertini.coefficient(multiprec.Complex('0.1'))   # a full-precision multiprec value
+        >>> _ = bertini.coefficient(multiprec.complex_mp('0.1'))   # a full-precision multiprec value
 
     A Python ``float`` is refused: ``bertini.coefficient(0.1)`` raises ``TypeError``.  An exact
-    *complex* coefficient is a ``multiprec.Complex`` with real and imaginary parts:
-    ``bertini.coefficient(multiprec.Complex('0.6', '0.8'))``.
+    *complex* coefficient is a ``multiprec.complex_mp`` with real and imaginary parts:
+    ``bertini.coefficient(multiprec.complex_mp('0.6', '0.8'))``.
     """
     if isinstance(value, _AbstractNode):
         return value
@@ -115,24 +115,24 @@ def coefficients(array_like):
 
 
 def _exact_to_mpfr(value):
-    """Convert a single exact value to a multiprec.Complex (refusing Python floats).
+    """Convert a single exact value to a multiprec.complex_mp (refusing Python floats).
 
     Mirrors :func:`coefficient`'s exact-only rule, but produces a multiprecision *value*
     (for a coefficient matrix) rather than a function-tree node.
     """
     if _MP_VALUE_TYPES and isinstance(value, _MP_VALUE_TYPES):
-        return _mp.Complex(value)
+        return _mp.complex_mp(value)
     if isinstance(value, bool):
         raise TypeError("a bool is not a valid coefficient")
     if isinstance(value, (int, np.integer)):
-        return _mp.Complex(str(int(value)))
+        return _mp.complex_mp(str(int(value)))
     if isinstance(value, Fraction):
-        return _mp.Complex(str(value.numerator)) / _mp.Complex(str(value.denominator))
+        return _mp.complex_mp(str(value.numerator)) / _mp.complex_mp(str(value.denominator))
     if isinstance(value, str):
         if '/' in value:
             num, den = value.split('/')
-            return _mp.Complex(num) / _mp.Complex(den)
-        return _mp.Complex(value)
+            return _mp.complex_mp(num) / _mp.complex_mp(den)
+        return _mp.complex_mp(value)
     if isinstance(value, (float, complex, np.floating, np.complexfloating)):
         raise TypeError(
             f"refusing to use the Python {type(value).__name__} {value!r} as a coefficient: "
@@ -152,7 +152,7 @@ def _coerce_mpfr_matrix(coefficients, context):
     if not rows:
         raise ValueError(f"{context} must have at least one row")
     ncol = len(rows[0])
-    M = np.empty((len(rows), ncol), dtype=_mp.Complex)
+    M = np.empty((len(rows), ncol), dtype=_mp.complex_mp)
     for i, row in enumerate(rows):
         if len(row) != ncol:
             raise ValueError(f"{context} is ragged (rows of differing length)")

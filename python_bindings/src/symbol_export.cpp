@@ -182,12 +182,7 @@ namespace bertini{
 			.def("__init__", make_constructor(Differential::template Make<std::shared_ptr<Variable> const&,std::string const&>))
 			.def(DifferentialVisitor<Differential>())
 			;
-			
-			
-			def("make_pi", &Pi);
-			def("make_i", &I);
-			def("make_e", &E);
-			
+
 		};
 		
 		

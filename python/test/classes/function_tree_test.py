@@ -151,7 +151,7 @@ def test_Variable_funcs():
 def test_special_constants_construct():
     # Construction smoke for the special-number nodes; their values are verified through the SLP
     # (see eval_expression_test.py, which evaluates Pi).
-    Pi(); make_pi(); E(); make_e(); make_i()
+    Pi(); E(); Complex(0, 1)          # the imaginary unit (was make_i)
 
 
 # --------------------------------------------------------------------------- operators

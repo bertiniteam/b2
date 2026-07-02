@@ -103,40 +103,50 @@ class _EndgameBase:
         return getattr(self._eg, name)
 
 
-class AMPCauchyEG(_EndgameBase):
+class AMPCauchyEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.AMPCauchyEG, tracker, boundary_time)
+        super().__init__(_pybe.AMPCauchyEndgame, tracker, boundary_time)
 
-class AMPPSEG(_EndgameBase):
+class AMPPowerSeriesEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.AMPPSEG, tracker, boundary_time)
+        super().__init__(_pybe.AMPPowerSeriesEndgame, tracker, boundary_time)
 
-class FixedDoubleCauchyEG(_EndgameBase):
+class FixedDoubleCauchyEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.FixedDoubleCauchyEG, tracker, boundary_time)
+        super().__init__(_pybe.FixedDoubleCauchyEndgame, tracker, boundary_time)
 
-class FixedDoublePSEG(_EndgameBase):
+class FixedDoublePowerSeriesEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.FixedDoublePSEG, tracker, boundary_time)
+        super().__init__(_pybe.FixedDoublePowerSeriesEndgame, tracker, boundary_time)
 
-class FixedMultipleCauchyEG(_EndgameBase):
+class FixedMultipleCauchyEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.FixedMultipleCauchyEG, tracker, boundary_time)
+        super().__init__(_pybe.FixedMultipleCauchyEndgame, tracker, boundary_time)
 
-class FixedMultiplePSEG(_EndgameBase):
+class FixedMultiplePowerSeriesEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.FixedMultiplePSEG, tracker, boundary_time)
+        super().__init__(_pybe.FixedMultiplePowerSeriesEndgame, tracker, boundary_time)
+
+
+# Deprecated aliases: EG -> Endgame, PS -> PowerSeries.  The old spellings still resolve during the
+# transition (unadvertised -- out of __all__); removed in the cleanup sweep.
+AMPCauchyEG = AMPCauchyEndgame
+AMPPSEG = AMPPowerSeriesEndgame
+FixedDoubleCauchyEG = FixedDoubleCauchyEndgame
+FixedDoublePSEG = FixedDoublePowerSeriesEndgame
+FixedMultipleCauchyEG = FixedMultipleCauchyEndgame
+FixedMultiplePSEG = FixedMultiplePowerSeriesEndgame
 
 
 __all__ = [
-    'AMPCauchyEG',
-    'AMPPSEG',
+    'AMPCauchyEndgame',
+    'AMPPowerSeriesEndgame',
     'CauchyConfig',
     'EndgameConfig',
-    'FixedDoubleCauchyEG',
-    'FixedDoublePSEG',
-    'FixedMultipleCauchyEG',
-    'FixedMultiplePSEG',
+    'FixedDoubleCauchyEndgame',
+    'FixedDoublePowerSeriesEndgame',
+    'FixedMultipleCauchyEndgame',
+    'FixedMultiplePowerSeriesEndgame',
     'PowerSeriesConfig',
     'SecurityConfig',
     'observers',

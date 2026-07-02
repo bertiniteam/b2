@@ -72,7 +72,7 @@ def add_linear_forms(self, coefficients):
     if not rows:
         raise ValueError("coefficients must have at least one row")
     ncol = len(rows[0])
-    M = np.empty((len(rows), ncol), dtype=_mp.Complex)
+    M = np.empty((len(rows), ncol), dtype=_mp.complex_mp)
     for i, row in enumerate(rows):
         if len(row) != ncol:
             raise ValueError("coefficient matrix is ragged (rows of differing length)")
@@ -106,7 +106,7 @@ def add_linear(self, A, x, b=None):
     col_of = {v.name: i for i, v in enumerate(ordering)}
     num_vars = len(ordering)
 
-    M = np.zeros((m, num_vars + 1), dtype=_mp.Complex)
+    M = np.zeros((m, num_vars + 1), dtype=_mp.complex_mp)
     for i in range(m):
         if len(rows[i]) != n:
             raise ValueError("A is ragged (rows of differing length)")
@@ -140,7 +140,7 @@ def add_products_of_linears(self, factors):
             raise ValueError(f"function {fi} has no linear factors")
         if ncol is None:
             ncol = len(rows[0])
-        M = np.empty((len(rows), ncol), dtype=_mp.Complex)
+        M = np.empty((len(rows), ncol), dtype=_mp.complex_mp)
         for i, row in enumerate(rows):
             if len(row) != ncol:
                 raise ValueError("products-of-linears coefficient matrices are ragged: every factor "
@@ -167,7 +167,7 @@ def randomize(self, matrix=None):
     if not rows:
         raise ValueError("randomization matrix must have at least one row")
     ncol = len(rows[0])
-    M = np.empty((len(rows), ncol), dtype=_mp.Complex)
+    M = np.empty((len(rows), ncol), dtype=_mp.complex_mp)
     for i, row in enumerate(rows):
         if len(row) != ncol:
             raise ValueError("randomization matrix is ragged (rows of differing length)")

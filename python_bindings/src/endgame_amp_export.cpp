@@ -10,7 +10,7 @@ namespace bertini{
 			using TrackerT = AMPTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::PSEG;
 
-			class_<EGT>("AMPPSEG",
+			class_<EGT>("AMPPowerSeriesEndgame",
 				"The adaptive precision implementation of the power series endgame.",
 				init<TrackerT const&>( (arg("self"),arg("tracker")), "Default construct with default settings") )
 			.def(EndgameBaseVisitor<EGT>())
@@ -22,7 +22,7 @@ namespace bertini{
 			using TrackerT = AMPTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 
-			class_<EGT>("AMPCauchyEG",
+			class_<EGT>("AMPCauchyEndgame",
 				"The adaptive precision implementation of the Cauchy endgame",
 				init<TrackerT const&>( (arg("self"),arg("tracker")), "Default construct with default settings"))
 			.def(EndgameBaseVisitor<EGT>())

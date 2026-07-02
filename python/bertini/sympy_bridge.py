@@ -250,7 +250,7 @@ def to_sympy(node):
         digits = v.real.precision
         # repr is full-precision (str truncates to ostream's default 6 digits)
         re = _sp.Float(repr(v.real), digits)
-        if v.imag == _mp.Float(0):
+        if v.imag == _mp.real_mp(0):
             return re
         return re + _sp.I * _sp.Float(repr(v.imag), digits)
 

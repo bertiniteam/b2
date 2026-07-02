@@ -90,6 +90,9 @@ Named = symbolics.NamedExpression            # Named(expr, "a"): a user-named su
 System = system.System
 default_precision = multiprec.default_precision
 
+# the multiprecision number types, hoisted to the top level (they also live in bertini.multiprec)
+from .multiprec import complex_mp, real_mp, int_mp, rational_mp
+
 # symbolic constants, ready to drop straight into expressions (bertini.E, bertini.Pi, bertini.I)
 E = symbolics.E()
 Pi = symbolics.Pi()
@@ -121,6 +124,7 @@ from . import operators                          # `from bertini.operators impor
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
 __all__ = ['Variable','variables','gather_variables','VariableGroup','Named','system','System',
            'jacobian','random_matrix','coefficient','coefficients',
+           'complex_mp','real_mp','int_mp','rational_mp',
            'nag_algorithm','default_precision',
            'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
            'linalg','operators',

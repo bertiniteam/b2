@@ -118,7 +118,7 @@ def test_using_total_degree_ss():
         assert track_success_code == SuccessCode.Success
 
     tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, stepping_pref, newton_pref)
-    my_endgame = AMPCauchyEG(tracker, t_endgame_boundary)
+    my_endgame = AMPCauchyEndgame(tracker, t_endgame_boundary)
 
     final_homogenized_solutions = [np.empty(dtype=mpfr_complex, shape=(3,)) for i in range(n)]
 

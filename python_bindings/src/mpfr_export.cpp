@@ -327,7 +327,7 @@ namespace bertini{
 		{
 			using T = mpz_int;
 
-			class_<mpz_int>("Int", init<>("Default Construct an arbitrary-precision integer"))
+			class_<mpz_int>("int_mp", init<>("Default Construct an arbitrary-precision integer"))
 			.def(init<int>((arg("self"),arg("val")),"Construct an arbitrary-precision integer from an integer."))
 			.def(init<T>((arg("self"),arg("val")),"Construct an arbitrary-precision integer from another."))
 			.def(init<std::string>((arg("self"),arg("val")),"Construct an arbitrary-precision integer from a string of digits."))
@@ -352,7 +352,7 @@ namespace bertini{
 		{
 			using T = mpq_rational;
 
-			class_<mpq_rational>("Rational", init<>("Default Construct an arbitrary-precision rational number"))
+			class_<mpq_rational>("rational_mp", init<>("Default Construct an arbitrary-precision rational number"))
 			.def(init<int>((arg("self"),arg("val")),"Construct an arbitrary-precision rational number from an integer."))
 			.def(init<int, int>((arg("self"),arg("numerator"), arg("denominator")),"Construct an arbitrary-precision rational number from a pair of integers."))
 			.def(init<mpz_int>((arg("self"),arg("val")),"Construct an arbitrary-precision rational number from an arbitrary-precision integer."))
@@ -408,7 +408,7 @@ namespace bertini{
 		{
 			using T = real_mp;
 
-			class_<T>("Float", init<>("Default Construct a variable-precision float"))
+			class_<T>("real_mp", init<>("Default Construct a variable-precision float"))
 			.def_pickle(BoostArchivePickle<T>())
 			.def(init<std::string>((arg("self"),arg("val")),"Construct a variable-precision float from a string.  The best way."))
 			.def(init<long int>((arg("self"),arg("val")),"Construct a variable-precision float from a regular old integer."))
@@ -494,7 +494,7 @@ namespace bertini{
 
 			using T = bertini::complex_mp;
 
-			class_<T>("Complex", init<>())
+			class_<T>("complex_mp", init<>())
 			.def_pickle(BoostArchivePickle<T>())
 			.def(init<double>((arg("self"),arg("real")),"Construct variable-precision complex number from a double, with 0 imaginary part. do this with caution, as 0.1 is not what you think it is -- there's noise at the end.")) // this should probably be made an explicit constructor rather than implicit
 			.def(init<real_mp>((arg("self"),arg("real")),"Construct variable-precision complex number from a variable-precision float, with 0 imaginary part"))
