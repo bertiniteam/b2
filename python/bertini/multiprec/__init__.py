@@ -44,13 +44,11 @@ This namespace also includes the mathematical operators, like `cos`, etc.
 """
 
 from bertini._pybertini import multiprec as _pybmp
-import numpy as np
 
 from bertini._pybertini.multiprec import *
 
-def Vector(n=0):
-	"""DEPRECATED: a numpy array of multiprecision complexes.  Prefer a plain numpy array."""
-	return np.zeros((n,), dtype = complex_mp)
+# (no Vector helper: eigenpy makes the mp number types work as numpy dtypes directly, so a plain
+# numpy array -- e.g. np.zeros(n, dtype=bertini.complex_mp) -- is the vector.)
 
 __all__ = dir(_pybmp)
 

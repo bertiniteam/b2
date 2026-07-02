@@ -35,7 +35,7 @@ from bertini.symbolics import Rational
 
 OK = int(pb.SuccessCode.Success)
 
-_CDT = pb.multiprec.Vector(1).dtype     # the numpy dtype of a multiprecision complex vector
+_CDT = np.zeros(1, dtype=pb.complex_mp).dtype     # the numpy dtype of a multiprecision complex vector
 
 # Geometry of the planted near-miss (see module docstring).  Exact rationals -> portable.
 B_ROOT, C_ROOT = 1, -2                   # the flat path and the far spectator path

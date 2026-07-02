@@ -136,13 +136,11 @@ Set individual settings by name in one call: `owner.set(**kwargs)` — an alias 
 | removed | use instead |
 |---|---|
 | `bertini.container` (module) | `bertini.VariableGroup` (top level) |
+| `bertini.multiprec.Vector(n)` | a plain numpy array: `np.zeros(n, dtype=bertini.complex_mp)` (eigenpy makes the `_mp` types work as numpy dtypes directly, so no bespoke vector type is needed) |
 | `linalg.variable_matrix` | a numpy object array you build (e.g. `np.array([[Variable(f'm_{i}_{j}') ...]], dtype=object)`) |
 | `function_tree.symbol.make_e` / `make_i` / `make_pi` | the constants `bertini.E` / `bertini.I` / `bertini.Pi` |
 | `symbolics.Differential` (hidden) | differentiate with an explicit variable: `f.differentiate(x)` / `bertini.jacobian(...)` |
 | NID classes + `WitnessSetMultiplePrecision` (hidden) | not yet public — NID's `Solve()` is not implemented |
-
-`bertini.multiprec.Vector(n)` is **kept** (a pre-sized numpy array of the multiprecision-complex
-dtype, handy for result buffers); `np.zeros(n, dtype=bertini.complex_mp)` is the explicit equivalent.
 
 ## Notes
 - The auto-generated API reference re-walks the package, so it already reflects the flat surface; the

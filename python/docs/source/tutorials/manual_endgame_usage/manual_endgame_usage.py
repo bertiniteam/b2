@@ -4,6 +4,8 @@ Assembles every ``.. testcode::`` fragment from index.rst into one runnable prog
 Run:  python manual_endgame_usage.py
 """
 
+import numpy as np
+
 import bertini
 
 
@@ -45,7 +47,7 @@ def track_to_boundary(gw, hom, td):
 
     midpath_points = [None] * td.num_start_points()
     for ii in range(td.num_start_points()):
-        midpath_points[ii] = bertini.multiprec.Vector(gw.num_variables())   # result must be pre-sized
+        midpath_points[ii] = np.zeros(gw.num_variables(), dtype=bertini.complex_mp)   # result must be pre-sized
         code = tr.track_path(result=midpath_points[ii], start_time=start_time, end_time=eg_boundary, start_point=td.start_point_mp(ii))
         assert code == bertini.SuccessCode.Success                 # every path reaches the boundary
 
