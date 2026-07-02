@@ -38,7 +38,9 @@ ledgerrec/0).  It needs no software to read, and you are free to delete it -- th
 only consequence is recomputing.
 
 LAYOUT
-  RESULTS.txt   the declared results, with coordinates.  Most readers start AND END here.
+  RESULTS.txt   the declared results, for EYES (never parse this).
+  results.json  the same results, for CODE: one json.load away.
+                Most readers start AND END with these two.
   INDEX.txt     one line per run: when, what was solved, how many paths.
   history/      the records: JSON, one object per line (JSONL), one file per writing
                 session, named by date.  Read with eyes, grep, jq, or
@@ -47,6 +49,12 @@ LAYOUT
                 each in a file named by the SHA-256 of its content -- so records can
                 reference them exactly, and `sha256sum` verifies them.  Mostly
                 human-readable input files.
+
+HOW REFERENCES WORK (one direction, no cycles)
+  INDEX.txt names runs  ->  runs and their per-path `track` lines live in history/
+  ->  track lines reference ancestor points by {run, index} (that is the provenance
+  graph)  ->  and every record references its systems by hash into definitions/.
+  RESULTS.txt / results.json are DERIVED views of the above, rebuildable at will.
 
 RECORD FORMAT (schema ledgerrec/0) -- every history line is one JSON object:
   kind="run"        a solve: `ask` (what was requested: target system digest + config),
@@ -159,9 +167,14 @@ a start_label -- that is the complete provenance of any point recorded here.
         (self.root / "INDEX.txt").write_text("\n".join(lines) + "\n")
 
     def refresh_results(self):
-        """(Re)write RESULTS.txt: the declared results with their coordinates and
-        annotations -- 'what were my solutions?' answered in one file.  Derived and
-        rebuildable, like INDEX.txt; the humane analogue of bertini1's main_data."""
+        """(Re)write the two derived result views -- 'what were my solutions?':
+
+        - results.json  for CODE: one json.load away (coordinates keyed by variable
+          name, annotations, provenance refs, inline saved values).
+        - RESULTS.txt   for EYES only: pretty, never to be parsed.
+
+        Both derived and rebuildable, like INDEX.txt; together the humane analogue of
+        bertini1's main_data."""
         records = self.scan()
         runs = {r["run"]: r for r in records if r.get("kind") == "run" and "run" in r}
         tracks = {(r["run"], r["index"]): r for r in records if r.get("kind") == "track"}
@@ -175,27 +188,47 @@ a start_label -- that is the complete provenance of any point recorded here.
             if r.get("kind") == "result":
                 declared[r["name"]] = r        # newest declaration of a name wins
 
-        lines = ["the results declared here (full precision + provenance in history/):"]
+        machine = {}
+        lines = ["the results declared here (for eyes only -- code reads results.json;",
+                 "full precision + provenance in history/):"]
         for name, rec in declared.items():
+            entry = {"declared": rec.get("when"), "description": rec.get("description", "")}
             lines += ["", "== %s   (declared %s) ==" % (name, rec.get("when", "?"))]
             if rec.get("description"):
                 lines.append("   %s" % rec["description"])
-            for n, ref in enumerate(rec["points"], 1):
+
+            if "value" in rec:                 # an inline save(): arbitrary JSON-able thing
+                entry["value"] = rec["value"]
+                lines.append("  value: %s" % json.dumps(rec["value"]))
+
+            points = []
+            for n, ref in enumerate(rec.get("points", []), 1):
                 key = (ref["run"], ref["index"])
                 track = tracks.get(key)
                 if track is None or track.get("status") != "success":
                     lines.append("  point %d: (not computed / failed)" % n)
+                    points.append({"provenance": ref, "status": "missing"})
                     continue
-                note = notes.get(key)
+                note = notes.get(key, {})
+                var_names = self._variable_names(runs.get(ref["run"], {}).get("target_object"))
+                coords = {}
+                for k, (re_str, im_str) in enumerate(track["endpoint"]):
+                    var = var_names[k] if k < len(var_names) else "x%d" % k
+                    coords[var] = [re_str, im_str]
+                points.append({"coordinates": coords, "annotations": note,
+                               "provenance": ref, "status": "success"})
+
                 suffix = ("   " + ", ".join("%s=%s" % kv for kv in sorted(note.items()))
                           if note else "")
                 lines.append("  point %d  [run %s #%d]%s" % (n, ref["run"], ref["index"], suffix))
-                var_names = self._variable_names(runs.get(ref["run"], {}).get("target_object"))
-                for k, (re_str, im_str) in enumerate(track["endpoint"]):
-                    var = var_names[k] if k < len(var_names) else "x%d" % k
+                for var, (re_str, im_str) in coords.items():
                     lines.append("    %s = %.12s + %.12s i" % (var, re_str, im_str))
+            if points:
+                entry["points"] = points
+            machine[name] = entry
         if not declared:
             lines.append("(none declared yet)")
+        (self.root / "results.json").write_text(json.dumps(machine, indent=1) + "\n")
         (self.root / "RESULTS.txt").write_text("\n".join(lines) + "\n")
 
     def _variable_names(self, object_id) -> list:

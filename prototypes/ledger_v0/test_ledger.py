@@ -21,7 +21,7 @@ from bertini.function_tree.symbol import Variable
 
 from ledger import Ledger
 from memo_solve import (ensure_solved, ensure_continued, provenance_chain,
-                        annotate, annotations_for, declare_result, results,
+                        annotate, annotations_for, declare_result, results, save,
                         SimulatedCrash)
 
 
@@ -239,6 +239,39 @@ def test_results_separate_signal_from_noise(tmp_path):
     # re-declaring the same name replaces (newest wins)
     declare_result(lg, "my solutions", [(final.run_id, 0)])
     assert len(results(lg)["my solutions"]) == 1
+
+
+def test_save_is_the_casual_users_one_verb(tmp_path):
+    """save() takes a solve result (provenance-linked) OR any JSON-able thing."""
+    import json
+    lg = Ledger(tmp_path)
+    solved = ensure_solved(circle_family(2), lg)
+
+    save("my solutions", solved, ledger=lg)                       # a result object
+    save("notes to self", {"count": 2, "nice": True}, ledger=lg)  # arbitrary value
+
+    machine = json.loads((tmp_path / "results.json").read_text())
+    assert set(machine) == {"my solutions", "notes to self"}
+    assert machine["notes to self"]["value"] == {"count": 2, "nice": True}
+    pts = machine["my solutions"]["points"]
+    assert len(pts) == 2
+    assert set(pts[0]["coordinates"]) == {"x", "y"}        # coordinates keyed by variable
+    assert "provenance" in pts[0]                          # refs back into history/
+
+
+def test_casual_user_never_says_ledger(tmp_path, monkeypatch):
+    """The whole casual workflow, with the records directory ambient (env-resolved)."""
+    import json
+    import memo_solve
+    monkeypatch.setenv("BERTINI_RECORDS_DIR", str(tmp_path / "my_output"))
+    monkeypatch.setattr(memo_solve, "_AMBIENT", None)      # fresh ambient resolution
+
+    sols = ensure_solved(circle_family(2))                 # no ledger anywhere
+    save("my solutions", sols)                             # done
+
+    out = json.loads((tmp_path / "my_output" / "results.json").read_text())
+    assert len(out["my solutions"]["points"]) == 2
+    monkeypatch.setattr(memo_solve, "_AMBIENT", None)      # don't leak into other tests
 
 
 def test_ledger_is_plain_text(tmp_path):

@@ -14,6 +14,7 @@ randomness derivation exists (arc rung 2).
 
 import hashlib
 import json
+import os
 import pickle
 import time
 
@@ -25,6 +26,19 @@ from bertini.system import start_system as ss
 from bertini import nag_algorithm as nag
 
 from ledger import Ledger, SCHEMA
+
+
+_AMBIENT = None
+
+
+def ambient_ledger() -> Ledger:
+    """The records directory casual users never name: BERTINI_RECORDS_DIR if set, else
+    ./bertini_output, created on demand, one per process.  Every public function takes
+    an optional ledger= override; nobody is required to know the word 'ledger'."""
+    global _AMBIENT
+    if _AMBIENT is None:
+        _AMBIENT = Ledger(os.environ.get("BERTINI_RECORDS_DIR", "bertini_output"))
+    return _AMBIENT
 
 
 class SimulatedCrash(RuntimeError):
@@ -73,8 +87,10 @@ class LedgerSolveResult:
 DEFAULT_CONFIG = {"precision": "adaptive", "endgame": "cauchy"}
 
 
-def ensure_solved(target, ledger: Ledger, config=None, crash_after=None):
-    """Ensure `target`'s total-degree zero-dim solve is answered in `ledger`."""
+def ensure_solved(target, ledger: Ledger = None, config=None, crash_after=None):
+    """Ensure `target`'s total-degree zero-dim solve is answered (in the ambient records
+    directory unless a ledger is given)."""
+    ledger = ledger or ambient_ledger()
     config = dict(DEFAULT_CONFIG if config is None else config)
     ask = _ask_digest(target, config)
     run = ledger.find_run(ask)
@@ -136,7 +152,7 @@ def _create_run(target, ledger: Ledger, ask: dict) -> dict:
     return run
 
 
-def ensure_continued(target, generic, ledger: Ledger, config=None, crash_after=None):
+def ensure_continued(target, generic, ledger: Ledger = None, config=None, crash_after=None):
     """The chain link: continue a previously-solved `generic` system's endpoints to
     `target` via the (deterministic, gamma=1) coefficient parameter homotopy.
 
@@ -148,6 +164,7 @@ def ensure_continued(target, generic, ledger: Ledger, config=None, crash_after=N
     No randomness enters here (gamma = 1), so the continuation homotopy is REBUILT from
     target+generic rather than persisted: chained runs need no blob at all.
     """
+    ledger = ledger or ambient_ledger()
     config = dict(DEFAULT_CONFIG if config is None else config)
     ask = {
         "op": "continue",
@@ -253,9 +270,30 @@ def declare_result(ledger: Ledger, name: str, points: list, description: str = "
     ledger.refresh_results()
 
 
-def results(ledger: Ledger) -> dict:
+def save(name: str, thing, description: str = "", ledger: Ledger = None):
+    """The casual user's one verb: save("my solutions", whatever).
+
+    - a solve result (anything with .run_id/.solutions): its points are declared as
+      results, with full provenance;
+    - any JSON-able value (dict, list, number, string): recorded inline as-is.
+    Both land in results.json / RESULTS.txt in the ambient records directory; the user
+    never names, sees, or learns the word 'ledger'.
+    """
+    ledger = ledger or ambient_ledger()
+    if hasattr(thing, "run_id") and hasattr(thing, "solutions"):
+        declare_result(ledger, name,
+                       [(thing.run_id, i) for i in sorted(thing.solutions)], description)
+        return
+    ledger.append({"kind": "result", "name": name, "description": description,
+                   "when": time.strftime("%Y-%m-%d %H:%M"),
+                   "points": [], "value": thing})
+    ledger.refresh_results()
+
+
+def results(ledger: Ledger = None) -> dict:
     """The declared results, decoded: {name: {(run, index): point}}.  Newest declaration
     of each name wins."""
+    ledger = ledger or ambient_ledger()
     declared = {}
     for rec in ledger.scan():
         if rec.get("kind") == "result":
