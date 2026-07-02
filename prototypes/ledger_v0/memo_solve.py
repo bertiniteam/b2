@@ -15,6 +15,7 @@ randomness derivation exists (arc rung 2).
 import hashlib
 import json
 import pickle
+import time
 
 import numpy as np
 
@@ -123,6 +124,7 @@ def _create_run(target, ledger: Ledger, ask: dict) -> dict:
     run = {
         "kind": "run",
         "schema": SCHEMA,
+        "when": time.strftime("%Y-%m-%d %H:%M"),
         "run": _run_id(ask),
         "ask": ask,
         "target_object": target_object,
@@ -170,6 +172,7 @@ def ensure_continued(target, generic, ledger: Ledger, config=None, crash_after=N
         run = {
             "kind": "run",
             "schema": SCHEMA,
+            "when": time.strftime("%Y-%m-%d %H:%M"),
             "run": _run_id(ask),
             "ask": ask,
             "op": "continue",

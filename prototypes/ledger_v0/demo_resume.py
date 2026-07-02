@@ -9,7 +9,7 @@ Solves a degree-24 system (2*3*4 start points), dies a simulated walltime death 
 through, then re-invokes the SAME ensure_solved call, which resumes from the journal and
 finishes.  Poke the ledger afterward with nothing but standard tools:
 
-    jq .kind    <ledger>/journals/*.jsonl | sort | uniq -c
+    jq .kind    <ledger>/history/*.jsonl | sort | uniq -c
     cat <ledger>/objects/*/*            # the target system, readable classic input
 """
 

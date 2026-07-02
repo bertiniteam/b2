@@ -1,12 +1,17 @@
 # This file is part of Bertini 2 (prototypes/ledger_v0 -- experimental, unshipped).
 # GPL v3+; see the repository's licenses/ directory.
 
-"""Ledger v0: a content-addressed object store + append-only JSONL journals.
+"""Ledger v0: a content-addressed definition store + append-only JSONL history.
 
-Plain files are the source of truth (arc: structured-output-directory).  Objects are
-written atomically (tmp + rename) and idempotently (same content = same path, so races
-are benign).  Journals are one-writer-per-file; the reader tolerates a torn final line
-(the crash-mid-append case) and refuses torn lines anywhere else.
+Plain files are the source of truth (arc: structured-output-directory).  Layout is for
+humans first ("a mathematician is smart but lazy"): `history/` holds date-named record
+files, `definitions/` holds content-addressed definitions, README.txt explains the
+directory in place, and INDEX.txt summarizes every run -- `cat INDEX.txt` answers
+"what's in here?".
+
+Definitions are written atomically (tmp + rename) and idempotently (same content = same
+path, so races are benign).  History files are one-writer-per-file; the reader tolerates
+a torn final line (the crash-mid-append case) and refuses torn lines anywhere else.
 """
 
 import hashlib
@@ -24,17 +29,49 @@ def _sha256_hex(data: bytes) -> str:
 
 
 class Ledger:
-    """One ledger directory: objects/ (definitions) + journals/ (records)."""
+    """One structured output directory: definitions/ + history/ + README.txt + INDEX.txt."""
+
+    README = """This directory is a structured output directory: the durable, self-contained
+record of numerical algebraic geometry computations (polynomial-system solves by
+homotopy continuation).  Written by bertini2 (ledger v0 prototype, record schema
+ledgerrec/0).  It needs no software to read, and you are free to delete it -- the
+only consequence is recomputing.
+
+LAYOUT
+  INDEX.txt     one line per run: when, what was solved, how many paths.  Start here.
+  history/      the records: JSON, one object per line (JSONL), one file per writing
+                session, named by date.  Read with eyes, grep, jq, or
+                pandas.read_json(..., lines=True).
+  definitions/  the things records refer to (polynomial systems, etc.), stored once
+                each in a file named by the SHA-256 of its content -- so records can
+                reference them exactly, and `sha256sum` verifies them.  Mostly
+                human-readable input files.
+
+RECORD FORMAT (schema ledgerrec/0) -- every history line is one JSON object:
+  kind="run"        a solve: `ask` (what was requested: target system digest + config),
+                    `run` (this run's id), `when`, `num_paths`, and how start points
+                    arise (recorded values, or a reference to an ancestor run).
+  kind="track"      one continued path: `run`, `index`, `status`, `endpoint`
+                    (coordinates as [real, imaginary] decimal-string pairs, full
+                    precision), and `start` (its provenance: a start_label, or a
+                    point_ref {run, index} into an ancestor run's endpoint).
+  kind="annotation" metadata attached to a point: `point` {run, index}, `key`, `value`.
+Chains of runs are walkable: follow track records' `start` references backward until
+a start_label -- that is the complete provenance of any point recorded here.
+"""
 
     def __init__(self, root):
         self.root = Path(root)
-        (self.root / "objects").mkdir(parents=True, exist_ok=True)
-        (self.root / "journals").mkdir(parents=True, exist_ok=True)
+        (self.root / "definitions").mkdir(parents=True, exist_ok=True)
+        (self.root / "history").mkdir(parents=True, exist_ok=True)
+        readme = self.root / "README.txt"
+        if not readme.exists():
+            readme.write_text(self.README)
 
     # ---- object store -------------------------------------------------------------
 
     def _object_path(self, object_id: str) -> Path:
-        return self.root / "objects" / object_id[:2] / object_id[2:]
+        return self.root / "definitions" / object_id[:2] / object_id[2:]
 
     def put_object(self, data, object_id=None) -> str:
         """Store bytes/str content-addressed; returns the object id.
@@ -66,10 +103,10 @@ class Ledger:
     def append(self, record: dict):
         """Append one record to THIS session's journal (opened lazily, one per Ledger
         instance / process session).  One writer per file, ever; the date-stamped name
-        makes `ls journals/` read as a history, not confetti."""
+        makes `ls history/` read as a history, not confetti."""
         if getattr(self, "_journal", None) is None:
             stamp = time.strftime("%Y%m%d_%H%M%S")
-            base = self.root / "journals"
+            base = self.root / "history"
             for suffix in [""] + ["%c" % c for c in range(ord("b"), ord("z"))]:
                 path = base / ("%s-pid%d%s.jsonl" % (stamp, os.getpid(), suffix))
                 try:
@@ -79,21 +116,58 @@ class Ledger:
                     continue
             self._journal = Journal(path)
         self._journal.append(record)
+        if record.get("kind") == "run":
+            self.refresh_index()
 
     def describe(self) -> str:
         """One human line: how much is here.  Printed by demos at exit so the records'
         location is never a mystery."""
-        journals = list((self.root / "journals").glob("*.jsonl"))
-        n_objects = sum(1 for _ in (self.root / "objects").glob("*/*"))
+        self.refresh_index()
+        history = list((self.root / "history").glob("*.jsonl"))
+        n_defs = sum(1 for _ in (self.root / "definitions").glob("*/*"))
         n_records = len(self.scan())
-        return "%d records in %d journal file(s), %d object(s), at %s" % (
-            n_records, len(journals), n_objects, self.root.resolve())
+        return "%d records in %d history file(s), %d definition(s), at %s" % (
+            n_records, len(history), n_defs, self.root.resolve())
+
+    def refresh_index(self):
+        """(Re)write INDEX.txt: one line per run -- when, op, what, path counts.  Derived
+        from the records (rebuildable at will); the lazy mathematician's front door."""
+        records = self.scan()
+        runs = [r for r in records if r.get("kind") == "run"]
+        track_counts = {}
+        for r in records:
+            if r.get("kind") == "track":
+                counts = track_counts.setdefault(r["run"], {"success": 0, "failed": 0})
+                counts[r["status"]] = counts.get(r["status"], 0) + 1
+        lines = ["what has been solved here (newest last; details in history/):", ""]
+        for run in runs:
+            counts = track_counts.get(run.get("run"), {})
+            n_done = sum(counts.values())
+            status = "%d/%s paths done" % (n_done, run.get("num_paths", "?"))
+            if counts.get("failed"):
+                status += " (%d failed)" % counts["failed"]
+            lines.append("%s  %s  %-8s  %s   [run %s]" % (
+                run.get("when", "????-??-?? ??:??"),
+                status.rjust(22),
+                run.get("op", "solve"),
+                self._describe_target(run.get("target_object")),
+                run.get("run", "?")))
+        (self.root / "INDEX.txt").write_text("\n".join(lines) + "\n")
+
+    def _describe_target(self, object_id):
+        """A one-glance description of a run's target: its function lines, abbreviated."""
+        if not object_id or not self.has_object(object_id):
+            return "(unknown target)"
+        text = self.get_object(object_id).decode("utf-8", "replace")
+        functions = [ln.strip().rstrip(";") for ln in text.splitlines() if "=" in ln]
+        summary = "; ".join(functions)
+        return (summary[:57] + "...") if len(summary) > 60 else summary
 
     def scan(self):
         """Read every record from every journal.  Torn final lines are skipped (the
         crash-mid-append case); a torn line anywhere else raises (real corruption)."""
         records = []
-        for path in sorted((self.root / "journals").glob("*.jsonl")):
+        for path in sorted((self.root / "history").glob("*.jsonl")):
             lines = path.read_text(encoding="utf-8").splitlines()
             for lineno, line in enumerate(lines):
                 if not line.strip():

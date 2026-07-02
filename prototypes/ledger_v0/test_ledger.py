@@ -62,7 +62,7 @@ def test_journal_appends_and_scan_round_trips(tmp_path):
     recs = lg.scan()
     assert [r["kind"] for r in recs] == ["run", "track"]
     # one session = one journal file, with a human-scannable date-stamped name
-    journals = list((tmp_path / "journals").glob("*.jsonl"))
+    journals = list((tmp_path / "history").glob("*.jsonl"))
     assert len(journals) == 1
     assert journals[0].name[:8].isdigit()     # YYYYMMDD prefix: `ls` reads as history
 
@@ -71,7 +71,7 @@ def test_torn_final_line_is_tolerated(tmp_path):
     lg = Ledger(tmp_path)
     lg.append({"kind": "run", "run": "runB"})
     # simulate a kill mid-append: a truncated JSON line at EOF
-    journal_file = next((tmp_path / "journals").glob("*.jsonl"))
+    journal_file = next((tmp_path / "history").glob("*.jsonl"))
     with open(journal_file, "a") as f:
         f.write('{"kind": "track", "ind')
     recs = lg.scan()
@@ -80,7 +80,7 @@ def test_torn_final_line_is_tolerated(tmp_path):
 
 def test_torn_interior_line_is_an_error(tmp_path):
     lg = Ledger(tmp_path)
-    journal_file = tmp_path / "journals" / "bad-0-x.jsonl"
+    journal_file = tmp_path / "history" / "bad-0-x.jsonl"
     journal_file.write_text('{"kind": "run"\n{"kind": "track", "index": 0}\n')
     with pytest.raises(ValueError, match="corrupt"):
         lg.scan()
@@ -221,7 +221,7 @@ def test_ledger_is_plain_text(tmp_path):
     """The no-special-software property: grep-able journals, readable objects."""
     lg = Ledger(tmp_path)
     ensure_solved(circle_line(), lg)
-    journal_text = "".join(p.read_text() for p in (tmp_path / "journals").glob("*.jsonl"))
+    journal_text = "".join(p.read_text() for p in (tmp_path / "history").glob("*.jsonl"))
     assert '"kind":"run"' in journal_text
     assert '"kind":"track"' in journal_text
     # the target system object is its classic input -- readable by a human or bertini 1
