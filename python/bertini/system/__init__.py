@@ -65,12 +65,12 @@ def _system_add(self, *objects):
     Each argument may be:
       * a function-tree expression (e.g. ``x**2 + y - 1``, or a lone ``Variable``) -> added
         as a function;
-      * a :class:`~bertini.container.VariableGroup` -> added as an affine variable group;
+      * a :class:`~bertini.VariableGroup` -> added as an affine variable group;
       * a numpy array / list / tuple of the above -> each element is added (so
         ``sys.add(A @ x - lam*x)``, ``sys.add([f, g])``, and ``sys.add(grp, f, g)`` work).
 
     Projective groups still use :meth:`add_hom_variable_group`; structured blocks use
-    :func:`bertini.linalg.add_linear`.  Returns ``self`` for chaining.
+    :meth:`~bertini.System.add_linear`.  Returns ``self`` for chaining.
     """
     for obj in objects:
         if isinstance(obj, _AbstractNode):

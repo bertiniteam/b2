@@ -25,7 +25,7 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini._pybertini.function_tree import AbstractNode
+from bertini.symbolics import AbstractNode
 
 
 def _as_complex(M):

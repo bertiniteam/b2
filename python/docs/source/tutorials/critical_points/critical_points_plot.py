@@ -22,8 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import bertini
-from bertini import linalg
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
 _OUT = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,12 +37,12 @@ def solve_critical_points():
     pi = bertini.random_matrix(1, 3, real=True, orthonormal=False)   # a random real projection row
 
     J = bertini.jacobian([f, g], [x, y, z])               # 2 x 3 symbolic Jacobian of the curve
-    M = np.vstack([J, linalg.as_coefficients(pi)])        # 3 x 3: J_f stacked over the projection
-    v = linalg.variable_vector('v', 3)                    # the null-vector unknowns
+    M = np.vstack([J, bertini.coefficients(pi)])          # 3 x 3: J_f stacked over the projection
+    v = np.array(bertini.variables('v', 3), dtype=object) # the null-vector unknowns
 
     sys = bertini.System()
     sys.add(bertini.VariableGroup([x, y, z, *v]), f, g)   # curve equations
-    linalg.add_functions(sys, M @ v)                      # M v = 0   (rank deficiency)
+    sys.add_functions(M @ v)                              # M v = 0   (rank deficiency)
     sys.add_function((bertini.random_matrix(1, 3, symbolic=True) @ v)[0] - 1)   # de-zero patch h.v = 1
 
     solver = ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')

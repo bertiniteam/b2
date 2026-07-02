@@ -37,9 +37,9 @@ on named symbols.
 import pytest
 
 import bertini as pb
-import bertini.function_tree as ft
-from bertini.function_tree import operator as op
-from bertini.function_tree import symbol as sym
+import bertini.symbolics as ft
+import bertini.symbolics as op
+import bertini.symbolics as sym
 from bertini import multiprec as mp
 
 from eval_helper import eval_at
@@ -93,7 +93,7 @@ def test_power_base_and_exponent(xy):
     assert str(p.get_base()) == 'x'
     e = p.get_exponent()
     assert isinstance(e, sym.Rational)
-    assert e.value_real() == mp.Rational('1/2')
+    assert e.value_real() == mp.rational_mp('1/2')
 
 
 def test_integer_power_exponent(xy):
@@ -110,20 +110,20 @@ def test_integer_power_exponent(xy):
 
 def test_integer_value_exact():
     n = sym.Integer('123456789012345678901234567890')
-    assert n.value() == mp.Int('123456789012345678901234567890')
+    assert n.value() == mp.int_mp('123456789012345678901234567890')
 
 
 def test_rational_value_exact():
     n = sym.Rational('1/3')
-    assert n.value_real() == mp.Rational('1/3')
-    assert n.value_imag() == mp.Rational(0)
+    assert n.value_real() == mp.rational_mp('1/3')
+    assert n.value_imag() == mp.rational_mp(0)
 
 
 def test_float_value():
     n = sym.Complex('2.5')  # exactly representable in binary
     v = n.value()
-    assert v.real == mp.Float('2.5')
-    assert v.imag == mp.Float(0)
+    assert v.real == mp.real_mp('2.5')
+    assert v.imag == mp.real_mp(0)
 
 
 # --- names ---

@@ -39,16 +39,13 @@ import pytest
 
 import bertini
 from bertini import System, VariableGroup
-from bertini.function_tree.symbol import Variable
-from bertini.tracking import (
-    AMPTracker, DoublePrecisionTracker, MultiplePrecisionTracker,
-    Predictor, SuccessCode,
-)
+from bertini.symbolics import Variable
+from bertini import AMPTracker, DoublePrecisionTracker, MultiplePrecisionTracker, Predictor, SuccessCode
 from bertini.tracking import SteppingConfig, NewtonConfig, amp_config_from
-from bertini.endgame import AMPPSEG, FixedDoublePSEG, FixedMultiplePSEG
+from bertini.endgame import AMPPowerSeriesEndgame, FixedDoublePowerSeriesEndgame, FixedMultiplePowerSeriesEndgame
 
 import bertini.multiprec as mp
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import complex_mp as mpfr_complex
 
 
 # ---------------------------------------------------------------------------
@@ -80,11 +77,11 @@ def quadratic_homotopy():
 
 
 # ---------------------------------------------------------------------------
-# FixedDoublePSEG
+# FixedDoublePowerSeriesEndgame
 # ---------------------------------------------------------------------------
 
 def test_fixed_double_pseg_full_run(cubic_homotopy):
-    """Track to endgame boundary then run PSEG; should converge to x=1.
+    """Track to endgame boundary then run PowerSeriesEndgame; should converge to x=1.
 
     Mirrors generic_pseg_test.hpp/pseg_full_run with DoublePrecisionTracker.
     Start point (0.5, ~0i) at t=0.1 is pre-tracked from the C++ reference.
@@ -95,7 +92,7 @@ def test_fixed_double_pseg_full_run(cubic_homotopy):
     tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, SteppingConfig(), NewtonConfig())
 
     current_time = complex(0.1, 0)
-    eg = FixedDoublePSEG(tracker, current_time)
+    eg = FixedDoublePowerSeriesEndgame(tracker, current_time)
 
     # Pre-computed boundary point from the C++ test
     current_space = np.array([complex(5.000000000000001e-01, 9.084258952712920e-17)])
@@ -108,7 +105,7 @@ def test_fixed_double_pseg_full_run(cubic_homotopy):
 
 
 def test_fixed_double_pseg_full_run_track_to_boundary(cubic_homotopy):
-    """Track from t=1 to t=0.1 with DoublePrecisionTracker, then run PSEG.
+    """Track from t=1 to t=0.1 with DoublePrecisionTracker, then run PowerSeriesEndgame.
 
     Mirrors generic_pseg_test.hpp/pseg_full_run but derives boundary point
     from an actual tracking step rather than using a hard-coded value.
@@ -124,7 +121,7 @@ def test_fixed_double_pseg_full_run_track_to_boundary(cubic_homotopy):
     code = tracker.track_path(bdry, complex(1, 0), complex(0.1, 0), start)
     assert code == SuccessCode.Success
 
-    eg = FixedDoublePSEG(tracker, complex(0.1, 0))
+    eg = FixedDoublePowerSeriesEndgame(tracker, complex(0.1, 0))
     code = eg.run(bdry)
 
     fa = eg.final_approximation()
@@ -133,7 +130,7 @@ def test_fixed_double_pseg_full_run_track_to_boundary(cubic_homotopy):
 
 
 def test_fixed_double_pseg_cycle_num_1(quadratic_homotopy):
-    """PSEG with cycle number 1 (simple root).
+    """PowerSeriesEndgame with cycle number 1 (simple root).
 
     Mirrors generic_pseg_test.hpp/full_run_cycle_num_2 but the quadratic
     system has cycle number 1 for the x=1 component.
@@ -148,7 +145,7 @@ def test_fixed_double_pseg_cycle_num_1(quadratic_homotopy):
     code = tracker.track_path(bdry, complex(1, 0), complex(0.1, 0), start)
     assert code == SuccessCode.Success
 
-    eg = FixedDoublePSEG(tracker, complex(0.1, 0))
+    eg = FixedDoublePowerSeriesEndgame(tracker, complex(0.1, 0))
     code = eg.run(bdry)
 
     fa = eg.final_approximation()
@@ -158,7 +155,7 @@ def test_fixed_double_pseg_cycle_num_1(quadratic_homotopy):
 
 
 def test_fixed_double_pseg_multiple_variables():
-    """PSEG on a 2-variable decoupled system.
+    """PowerSeriesEndgame on a 2-variable decoupled system.
 
     Mirrors generic_pseg_test.hpp/full_run_multiple_variables.
     f1 = (x-1)^3*(1-t) + (x^3+1)*t,  f2 = (y-1)^2*(1-t) + (y^2+1)*t
@@ -179,7 +176,7 @@ def test_fixed_double_pseg_multiple_variables():
     code = tracker.track_path(bdry, complex(1, 0), complex(0.1, 0), start)
     assert code == SuccessCode.Success
 
-    eg = FixedDoublePSEG(tracker, complex(0.1, 0))
+    eg = FixedDoublePowerSeriesEndgame(tracker, complex(0.1, 0))
     code = eg.run(bdry)
 
     fa = eg.final_approximation()
@@ -189,12 +186,12 @@ def test_fixed_double_pseg_multiple_variables():
 
 
 # ---------------------------------------------------------------------------
-# FixedMultiplePSEG
+# FixedMultiplePowerSeriesEndgame
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("precision", [30, 50], indirect=True)
 def test_fixed_multiple_pseg_full_run(cubic_homotopy, precision):
-    """FixedMultiplePSEG converges to x=1 at several precisions.
+    """FixedMultiplePowerSeriesEndgame converges to x=1 at several precisions.
 
     Mirrors fixed_multiple_powerseries_test.cpp/pseg_full_run.
     """
@@ -209,7 +206,7 @@ def test_fixed_multiple_pseg_full_run(cubic_homotopy, precision):
     code = tracker.track_path(bdry, mpfr_complex(1), mpfr_complex("0.1"), start)
     assert code == SuccessCode.Success
 
-    eg = FixedMultiplePSEG(tracker, mpfr_complex("0.1"))
+    eg = FixedMultiplePowerSeriesEndgame(tracker, mpfr_complex("0.1"))
     code = eg.run(bdry)
 
     fa = eg.final_approximation()
@@ -220,12 +217,12 @@ def test_fixed_multiple_pseg_full_run(cubic_homotopy, precision):
 
 
 # ---------------------------------------------------------------------------
-# AMPPSEG
+# AMPPowerSeriesEndgame
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("precision", [16, 30, 50], indirect=True)
 def test_amp_pseg_full_run(cubic_homotopy, precision):
-    """AMPPSEG converges to x=1 starting from three ambient precisions.
+    """AMPPowerSeriesEndgame converges to x=1 starting from three ambient precisions.
 
     Mirrors amp_powerseries_test.cpp/generic_tests_ambient_precision_*.
     """
@@ -241,7 +238,7 @@ def test_amp_pseg_full_run(cubic_homotopy, precision):
     code = tracker.track_path(bdry, mpfr_complex(1), mpfr_complex("0.1"), start)
     assert code == SuccessCode.Success
 
-    eg = AMPPSEG(tracker, mpfr_complex("0.1"))
+    eg = AMPPowerSeriesEndgame(tracker, mpfr_complex("0.1"))
     code = eg.run(bdry)
 
     fa = eg.final_approximation()

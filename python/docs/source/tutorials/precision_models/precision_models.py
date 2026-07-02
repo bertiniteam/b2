@@ -21,7 +21,7 @@ def build_system():
 
 def solver_types(system):
     """mptype selects the solver class (endgame + precision model)."""
-    names = {mptype: type(bertini.nag_algorithm.ZeroDimSolver(system, mptype=mptype)).__name__
+    names = {mptype: type(bertini.ZeroDimSolver(system, mptype=mptype)).__name__
              for mptype in ('double', 'multiple', 'adaptive')}
     assert names['double']   == 'ZeroDimSolverCauchyDoublePrecision'
     assert names['multiple'] == 'ZeroDimSolverCauchyFixedMultiplePrecision'
@@ -32,11 +32,11 @@ def reading_solutions(system):
     """The model changes the type of the numbers; convert with complex()."""
     bertini.random.set_random_seed(2)
 
-    dbl = bertini.nag_algorithm.ZeroDimSolver(system, mptype='double'); dbl.solve()
+    dbl = bertini.ZeroDimSolver(system, mptype='double'); dbl.solve()
     assert dbl.all_solutions()[0].dtype == np.complex128
 
-    amp = bertini.nag_algorithm.ZeroDimSolver(system, mptype='adaptive'); amp.solve()
-    assert str(amp.all_solutions()[0].dtype) == 'Complex'        # bertini.multiprec.Complex
+    amp = bertini.ZeroDimSolver(system, mptype='adaptive'); amp.solve()
+    assert str(amp.all_solutions()[0].dtype) == 'complex_mp'     # bertini.complex_mp
 
     # the same code reads either one:
     def to_python(solution):
@@ -51,7 +51,7 @@ def setting_precision(system):
     """Fixed multiple works at one precision everywhere; adaptive manages its own."""
     bertini.default_precision(40)                  # 40 digits for this solve
     system.precision(40)                           # the system must match
-    m = bertini.nag_algorithm.ZeroDimSolver(system, mptype='multiple')
+    m = bertini.ZeroDimSolver(system, mptype='multiple')
     m.solve()
     assert len(m.all_solutions()) == 2
 
@@ -59,7 +59,7 @@ def setting_precision(system):
     system.precision(30)
 
     from bertini.tracking import AMPConfig
-    amp = bertini.nag_algorithm.ZeroDimSolver(system, mptype='adaptive')
+    amp = bertini.ZeroDimSolver(system, mptype='adaptive')
     assert amp.get_tracker().get_config(AMPConfig).maximum_precision == 300
     amp.get_tracker().update(maximum_precision=200)     # tighten the ceiling
     assert amp.get_tracker().get_config(AMPConfig).maximum_precision == 200
@@ -69,7 +69,7 @@ def shared_config_surface(system):
     """Apart from precision-specific knobs, the configs are the same across models."""
     shared = {'tolerances', 'zero_dim', 'post_processing', 'auto_retrack'}
     for mptype in ('double', 'multiple', 'adaptive'):
-        names = set(bertini.nag_algorithm.ZeroDimSolver(system, mptype=mptype).config_names())
+        names = set(bertini.ZeroDimSolver(system, mptype=mptype).config_names())
         assert shared <= names
 
 

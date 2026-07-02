@@ -27,11 +27,11 @@ expression must be supplied a value, and every keyword must name a variable of i
 import pytest
 import bertini as pb
 from bertini import Variable
-from bertini.function_tree.symbol import Integer, Pi
-from bertini.function_tree import sin, cos, tan, asin, acos, atan, exp, log, sqrt
+from bertini.symbolics import Integer, Pi
+from bertini.symbolics import sin, cos, tan, asin, acos, atan, exp, log, sqrt
 import bertini.multiprec as mp
-from bertini.multiprec import Float as mpfr_float
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import real_mp as mpfr_float
+from bertini.multiprec import complex_mp as mpfr_complex
 
 TOL = mpfr_float("1e-25")
 
@@ -91,7 +91,7 @@ def test_eval_positional_argument_is_an_error():
 
 def test_every_operator_evaluates_through_the_slp():
     """Each operator node compiles and evaluates through the SLP (f.eval).  Focused successor to the
-    node-level operator matrix removed from function_tree_test.py."""
+    node-level operator matrix removed from the old symbolics_test.py."""
     x, y = Variable('x'), Variable('y')
     tol = mpfr_float("1e-12")
     def close(got, want):

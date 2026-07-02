@@ -51,20 +51,20 @@ Implementation reference
 AMP Endgames
 -------------
 
-* :class:`~bertini.endgame.AMPCauchyEG`
-* :class:`~bertini.endgame.AMPPSEG`
+* :class:`~bertini.endgame.AMPCauchyEndgame`
+* :class:`~bertini.endgame.AMPPowerSeriesEndgame`
 
 Fixed Double Precision Endgames
 ---------------------------------
 
-* :class:`~bertini.endgame.FixedDoublePSEG`
-* :class:`~bertini.endgame.FixedDoublePSEG`
+* :class:`~bertini.endgame.FixedDoubleCauchyEndgame`
+* :class:`~bertini.endgame.FixedDoublePowerSeriesEndgame`
 
 Fixed Multiple Precision  Endgames
 -------------------------------------
 
-* :class:`~bertini.endgame.FixedMultiplePSEG`
-* :class:`~bertini.endgame.FixedMultiplePSEG`
+* :class:`~bertini.endgame.FixedMultipleCauchyEndgame`
+* :class:`~bertini.endgame.FixedMultiplePowerSeriesEndgame`
 
 """
 
@@ -103,40 +103,40 @@ class _EndgameBase:
         return getattr(self._eg, name)
 
 
-class AMPCauchyEG(_EndgameBase):
+class AMPCauchyEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.AMPCauchyEG, tracker, boundary_time)
+        super().__init__(_pybe.AMPCauchyEndgame, tracker, boundary_time)
 
-class AMPPSEG(_EndgameBase):
+class AMPPowerSeriesEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.AMPPSEG, tracker, boundary_time)
+        super().__init__(_pybe.AMPPowerSeriesEndgame, tracker, boundary_time)
 
-class FixedDoubleCauchyEG(_EndgameBase):
+class FixedDoubleCauchyEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.FixedDoubleCauchyEG, tracker, boundary_time)
+        super().__init__(_pybe.FixedDoubleCauchyEndgame, tracker, boundary_time)
 
-class FixedDoublePSEG(_EndgameBase):
+class FixedDoublePowerSeriesEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.FixedDoublePSEG, tracker, boundary_time)
+        super().__init__(_pybe.FixedDoublePowerSeriesEndgame, tracker, boundary_time)
 
-class FixedMultipleCauchyEG(_EndgameBase):
+class FixedMultipleCauchyEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.FixedMultipleCauchyEG, tracker, boundary_time)
+        super().__init__(_pybe.FixedMultipleCauchyEndgame, tracker, boundary_time)
 
-class FixedMultiplePSEG(_EndgameBase):
+class FixedMultiplePowerSeriesEndgame(_EndgameBase):
     def __init__(self, tracker, boundary_time):
-        super().__init__(_pybe.FixedMultiplePSEG, tracker, boundary_time)
+        super().__init__(_pybe.FixedMultiplePowerSeriesEndgame, tracker, boundary_time)
 
 
 __all__ = [
-    'AMPCauchyEG',
-    'AMPPSEG',
+    'AMPCauchyEndgame',
+    'AMPPowerSeriesEndgame',
     'CauchyConfig',
     'EndgameConfig',
-    'FixedDoubleCauchyEG',
-    'FixedDoublePSEG',
-    'FixedMultipleCauchyEG',
-    'FixedMultiplePSEG',
+    'FixedDoubleCauchyEndgame',
+    'FixedDoublePowerSeriesEndgame',
+    'FixedMultipleCauchyEndgame',
+    'FixedMultiplePowerSeriesEndgame',
     'PowerSeriesConfig',
     'SecurityConfig',
     'observers',

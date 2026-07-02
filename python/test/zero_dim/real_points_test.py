@@ -8,7 +8,6 @@ ovals, and a generic p yields its nearest + farthest point on each -- eight real
 from fractions import Fraction
 
 import bertini as pb
-from bertini import linalg
 
 
 def _trott_critical_system(px, py):
@@ -16,7 +15,7 @@ def _trott_critical_system(px, py):
     f = 144 * (x**4 + y**4) - 225 * (x**2 + y**2) + 350 * x**2 * y**2 + 81
     fx, fy = f.differentiate(x), f.differentiate(y)               # bertini differentiates the curve
     # gradient of f parallel to (x - p): the 2x2 determinant vanishes
-    parallel = (x - linalg.coefficient(px)) * fy - (y - linalg.coefficient(py)) * fx
+    parallel = (x - pb.coefficient(px)) * fy - (y - pb.coefficient(py)) * fx
     sys = pb.System()
     sys.add_variable_group(pb.VariableGroup([x, y]))
     sys.add_function(f)
@@ -32,7 +31,7 @@ def test_real_point_on_every_trott_component():
     sys = _trott_critical_system(Fraction(41, 100), Fraction(23, 100))
     assert list(sys.degrees()) == [4, 4]            # 16 paths
 
-    solver = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+    solver = pb.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     solver.solve()
 
     # keep the real solutions by the solver's own classification (is_real applies the configured

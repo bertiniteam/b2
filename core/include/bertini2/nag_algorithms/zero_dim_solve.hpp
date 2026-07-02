@@ -1287,6 +1287,13 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 				SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);
 
+				// The solver's Tolerances.final_tolerance is the single source of truth for how tightly
+				// a solve converges its endpoints.  Flow it into the endgame here (the endgame keeps its
+				// own EndgameConfig.final_tolerance for standalone, solver-independent use, but under a
+				// solve the solver wins).  Without this the endgame would silently ignore the solver's
+				// final_tolerance -- e.g. a classic-input FinalTol -- and use its own default instead.
+				endgame_.SetFinalTolerance(this->template Get<Tolerances>().final_tolerance);
+
 				// Default the start-point precision to the initial ambient precision.  A caller can
 				// override it via SetStartPointPrecision (e.g. to carry a higher precision forward
 				// from a previous solve whose output feeds this one).

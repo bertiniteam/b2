@@ -33,12 +33,12 @@ import pytest
 
 import bertini
 from bertini import System, VariableGroup
-from bertini.function_tree.symbol import Variable
-from bertini.tracking import DoublePrecisionTracker, MultiplePrecisionTracker, Predictor, SuccessCode
+from bertini.symbolics import Variable
+from bertini import DoublePrecisionTracker, MultiplePrecisionTracker, Predictor, SuccessCode
 from bertini.tracking import SteppingConfig, NewtonConfig, amp_config_from
 
 import bertini.multiprec as mp
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import complex_mp as mpfr_complex
 
 
 @pytest.fixture

@@ -6,7 +6,7 @@ fields, the human-readable __str__, and that failures_by_reason is keyed by the 
 """
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
 
 def _two_circles_solver():
@@ -49,4 +49,4 @@ def test_failures_keyed_by_named_success_code():
     fails = _two_circles_solver().report().failures_by_reason
     assert isinstance(fails, dict)
     for code in fails:
-        assert isinstance(code, pb.tracking.SuccessCode)
+        assert isinstance(code, pb.SuccessCode)

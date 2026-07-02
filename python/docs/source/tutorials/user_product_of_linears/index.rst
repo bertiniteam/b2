@@ -21,7 +21,7 @@ Each factor :math:`c_{i,r}\cdot[x;1] = 0` is a **hyperplane**, so a start soluti
 intersection of one hyperplane per function -- something you can write down and check by eye.  No
 opaque generated coefficients: you see exactly why the start points are what they are.  The
 machinery underneath is the same first-class evaluation block bertini's own multihomogeneous
-start system uses, exposed through :mod:`bertini.linalg`.
+start system uses, exposed through :mod:`bertini`.
 
 A target you can check by hand
 ==============================
@@ -33,7 +33,7 @@ solutions:
 
     import numpy as np
     import bertini
-    from bertini import linalg, nag_algorithm
+    from bertini import nag_algorithm
     from bertini import multiprec
 
     x, y = bertini.Variable('x'), bertini.Variable('y')
@@ -59,7 +59,7 @@ factors are coordinate-aligned:
 
     start = bertini.System()
     start.add_variable_group(bertini.VariableGroup([x, y]))
-    linalg.add_products_of_linears(start, [
+    start.add_products_of_linears([
         [[1, 0, '-1'], [1, 0, '1']],     # s0 = (x - 1)(x + 1)
         [[0, 1, '-1'], [0, 1, '-2']],    # s1 = (y - 1)(y - 2)
     ])
@@ -72,14 +72,14 @@ trailing column being that factor's constant term.  So ``[[1, 0, '-1'], [1, 0, '
 
 .. note::
 
-   **Coefficients must be exact.**  :func:`~bertini.linalg.add_products_of_linears` refuses
+   **Coefficients must be exact.**  :meth:`~bertini.System.add_products_of_linears` refuses
    Python floats: a 64-bit literal carries only ~16 digits and would cap the precision of every
    downstream computation.  Pass ints, :class:`fractions.Fraction`, exact strings (``'-1'``,
    ``'3/4'``), or :mod:`bertini.multiprec` values.
 
    This is a genuine *product* (degree = number of factors), the first-class C++
    ``ProductsOfLinearsBlock``.  It is **not** the same as
-   :func:`~bertini.linalg.add_linear_forms`, which adds a *stack* of degree-1 linear forms.
+   :meth:`~bertini.System.add_linear_forms`, which adds a *stack* of degree-1 linear forms.
 
 Start points are intersections of hyperplanes
 ==============================================
@@ -92,7 +92,7 @@ solves the resulting linear system.  Here that is just the grid :math:`x \in \{1
 .. testcode::
 
     import itertools
-    start_points = [np.array([multiprec.Complex(str(a)), multiprec.Complex(str(b))])
+    start_points = [np.array([multiprec.complex_mp(str(a)), multiprec.complex_mp(str(b))])
                     for a, b in itertools.product([1, -1], [1, 2])]
     # (1, 1), (1, 2), (-1, 1), (-1, 2)
 
@@ -109,15 +109,15 @@ blend block instead:
 
 .. testcode::
 
-    gamma = linalg.coefficient(multiprec.Complex('0.6', '0.8'))   # exact, off the real axis
+    gamma = bertini.coefficient(multiprec.complex_mp('0.6', '0.8'))   # exact, off the real axis
     H = nag_algorithm.blend_homotopy(target, start, gamma=gamma)
 
-    solver = nag_algorithm.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(H, start_points, target)
     solver.solve()
     solutions = solver.all_solutions()
 
 At :math:`t=1` the homotopy is :math:`\gamma\,\text{start}`, so our four points are its roots; at
-:math:`t=0` it is the target.  :func:`~bertini.nag_algorithm.HomotopySolver` runs the full zero-dim
+:math:`t=0` it is the target.  :func:`~bertini.HomotopySolver` runs the full zero-dim
 pipeline -- pre-endgame tracking, the midpath check, the endgame, post-processing -- on the
 homotopy and start points you supplied, rather than ones it generated.
 

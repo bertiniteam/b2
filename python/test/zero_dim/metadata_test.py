@@ -10,9 +10,9 @@ never applied).
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
-OK = int(pb.tracking.SuccessCode.Success)
+OK = int(pb.SuccessCode.Success)
 
 
 def _one_var_solver(build_function):

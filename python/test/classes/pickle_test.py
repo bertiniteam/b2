@@ -14,7 +14,7 @@
 
 What is pickleable, and how:
 
-  * ``multiprec.Float`` / ``multiprec.Complex`` -- C++ boost-archive pickle suite (exact, every bit
+  * ``multiprec.real_mp`` / ``multiprec.complex_mp`` -- C++ boost-archive pickle suite (exact, every bit
     of the mantissa survives -- see the precision-sensitive round-trip below);
   * config structs (stepping, newton, tolerances, the zero-dim configs, ...) -- via their
     ``to_dict``/``from_dict`` enhancement (``config.py``);
@@ -41,7 +41,7 @@ import bertini.multiprec as mp
 def test_complex_pickles_exactly_at_high_precision(precision):
     # The whole point of multiprecision: a float pickle that drops low bits is silently wrong.  Use
     # a value with more significant digits than double can hold and demand exact equality.
-    z = mp.Complex("1.23456789012345678901234567890123456789",
+    z = mp.complex_mp("1.23456789012345678901234567890123456789",
                    "-9.87654321098765432109876543210987654321")
     assert pickle.loads(pickle.dumps(z)) == z
     assert copy.deepcopy(z) == z
@@ -49,7 +49,7 @@ def test_complex_pickles_exactly_at_high_precision(precision):
 
 @pytest.mark.parametrize("precision", [30, 50, 80], indirect=True)
 def test_float_pickles_exactly_at_high_precision(precision):
-    f = mp.Float("3.14159265358979323846264338327950288419716939937510")
+    f = mp.real_mp("3.14159265358979323846264338327950288419716939937510")
     assert pickle.loads(pickle.dumps(f)) == f
     assert copy.deepcopy(f) == f
 
@@ -57,10 +57,10 @@ def test_float_pickles_exactly_at_high_precision(precision):
 # ----------------------------- enums -----------------------------
 
 @pytest.mark.parametrize("member", [
-    pb.tracking.SuccessCode.Success,
-    pb.tracking.SuccessCode.GoingToInfinity,
-    pb.tracking.Predictor.RK4,
-    pb.tracking.Predictor.Euler,
+    pb.SuccessCode.Success,
+    pb.SuccessCode.GoingToInfinity,
+    pb.Predictor.RK4,
+    pb.Predictor.Euler,
 ])
 def test_enum_members_pickle(member):
     r = pickle.loads(pickle.dumps(member))
@@ -72,7 +72,7 @@ def test_enum_members_pickle(member):
 def test_enum_is_not_config_enhanced():
     # Boost.Python enums subclass int; they must NOT be mistaken for config structs (that corrupts
     # their repr and pickling).  The clean enum repr is the tell.
-    SC = pb.tracking.SuccessCode
+    SC = pb.SuccessCode
     assert not getattr(SC, "_b2_config_enhanced", False)
     assert "SuccessCode.Success" in repr(SC.Success)
 
@@ -100,7 +100,7 @@ def test_config_struct_round_trips(cls):
 ])
 def test_solution_metadata_round_trips_including_enum_field(cls):
     m = cls()
-    m.endgame_success_code = pb.tracking.SuccessCode.GoingToInfinity
+    m.endgame_success_code = pb.SuccessCode.GoingToInfinity
     m.condition_number = 12.5
     r = pickle.loads(pickle.dumps(m))
     assert r.endgame_success_code == m.endgame_success_code

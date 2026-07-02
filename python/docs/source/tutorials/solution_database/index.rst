@@ -25,7 +25,7 @@ that self-crossing is a *node*, a singular point of the curve.  The second is an
 .. testcode::
 
    import bertini
-   from bertini.nag_algorithm import ZeroDimSolver
+   from bertini import ZeroDimSolver
 
    x, y = bertini.Variable('x'), bertini.Variable('y')
    sys = bertini.System()
@@ -104,7 +104,7 @@ solutions are genuine points of the real :math:`(x, y)` plane; the complex ones 
 all.  So we draw two different kinds of picture.
 
 To plot, pull the two coordinates out of the ``solution`` cell -- each is a
-:class:`bertini.multiprec.Complex` -- and lift them to Python ``complex`` so we can take real and
+:class:`bertini.complex_mp` -- and lift them to Python ``complex`` so we can take real and
 imaginary parts.  This is the "split it yourself" step: one column per coordinate, made on demand.
 
 .. testcode::

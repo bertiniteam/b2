@@ -69,7 +69,7 @@ product of the degrees, :math:`2 \times 2 \times 1 \times 1 = 4`.
 .. testcode::
 
    bertini.random.set_random_seed(1)           # reproducible start system + gamma
-   zd = bertini.nag_algorithm.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+   zd = bertini.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
    zd.solve()
 
    solutions = [np.array([complex(c) for c in s]) for s in zd.all_solutions()]
@@ -115,7 +115,7 @@ functions to one clone does not touch the others.
    assert system.num_functions() == 4
 
    bertini.random.set_random_seed(1)
-   zd = bertini.nag_algorithm.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+   zd = bertini.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
    zd.solve()
    assert len(zd.all_solutions()) == 4
 

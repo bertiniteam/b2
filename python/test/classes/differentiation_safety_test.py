@@ -37,8 +37,8 @@ derivative must not sprout variables that were not in f.
 import pytest
 
 import bertini as pb
-from bertini.function_tree.symbol import Variable, Rational
-from bertini.function_tree import sin, gather_variables
+from bertini.symbolics import Variable, Rational
+from bertini.symbolics import sin, gather_variables
 
 from eval_helper import eval_at
 

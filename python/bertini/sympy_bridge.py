@@ -63,9 +63,11 @@ except ImportError as _e:
         "of bertini.  install it with: pip install sympy") from _e
 
 import bertini as _pb
-import bertini.function_tree as _ft
-from bertini.function_tree import operator as _op
-from bertini.function_tree import symbol as _sym
+# Point at the C++ submodules directly (stable, and they retain the internal-only nodes this bridge
+# needs -- e.g. Differential and the full operator taxonomy -- which the flat bertini.symbolics hides).
+import bertini._pybertini.function_tree as _ft
+from bertini._pybertini.function_tree import operator as _op
+from bertini._pybertini.function_tree import symbol as _sym
 from bertini import multiprec as _mp
 
 
@@ -115,11 +117,11 @@ def from_sympy(expr, variables=None):
         if isinstance(e, _sp.Float):
             return _sym.Complex(str(e))
         if e is _sp.pi:
-            return _sym.make_pi()
+            return _sym.Pi()
         if e is _sp.E:
-            return _sym.make_e()
+            return _sym.E()
         if e is _sp.I:
-            return _sym.make_i()
+            return _sym.Complex(0, 1)          # the imaginary unit (make_i was Complex(0,1))
         if isinstance(e, _sp.Add):
             result = walk(e.args[0])
             for a in e.args[1:]:
@@ -250,7 +252,7 @@ def to_sympy(node):
         digits = v.real.precision
         # repr is full-precision (str truncates to ostream's default 6 digits)
         re = _sp.Float(repr(v.real), digits)
-        if v.imag == _mp.Float(0):
+        if v.imag == _mp.real_mp(0):
             return re
         return re + _sp.I * _sp.Float(repr(v.imag), digits)
 

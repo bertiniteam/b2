@@ -51,7 +51,7 @@ is::
     import bertini as pb
 
     comm = MPI.COMM_WORLD
-    solver = pb.nag_algorithm.ZeroDimSolver(my_system, mptype='double')
+    solver = pb.ZeroDimSolver(my_system, mptype='double')
 
     if comm.Get_size() > 1:
         solver.solve(communicator=comm)      # rank 0 dispatches; the others track

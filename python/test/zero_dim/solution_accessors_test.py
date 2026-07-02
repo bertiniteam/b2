@@ -6,7 +6,7 @@ solver.report().
 """
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
 
 def _one_var_solver(build):

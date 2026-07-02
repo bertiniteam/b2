@@ -32,15 +32,15 @@
 
 
 from bertini import *
-from bertini.function_tree.symbol import *
-from bertini.function_tree.root import *
-from bertini.function_tree import *
+from bertini.symbolics import *
+from bertini.symbolics import *
+from bertini.symbolics import *
 import numpy as np
 import pytest
 
 import bertini.multiprec as mp
-from bertini.multiprec import Float as mpfr_float
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import real_mp as mpfr_float
+from bertini.multiprec import complex_mp as mpfr_complex
 
 from eval_helper import eval_at
 

@@ -5,7 +5,6 @@
 
    import numpy as np
    import bertini
-   from bertini import linalg
 
 Most tutorials solve a **square** system -- as many equations as unknowns. But polynomial models
 are often **overdetermined**: more equations than unknowns. The common zeros are still (at most)
@@ -42,7 +41,7 @@ points you can read off by hand.
 
    assert list(original.degrees()) == [2, 1, 2]   # three equations, two unknowns: overdetermined
 
-:func:`~bertini.linalg.randomize` returns a **new** square system; the original is left untouched.
+:func:`~bertini.System.randomize` returns a **new** square system; the original is left untouched.
 For a single variable group it sorts the functions by descending degree and forms :math:`R = [\,I
 \mid C\,]` with a random block :math:`C`, so the randomized degrees are the :math:`n` **largest**
 original degrees and the total-degree path count is their product -- here :math:`2 \times 2 = 4`,
@@ -50,7 +49,7 @@ the minimum a randomization can achieve.
 
 .. testcode::
 
-   randomized = linalg.randomize(original)
+   randomized = original.randomize()
 
    assert randomized.num_functions() == 2          # squared up
    assert original.num_functions() == 3            # original unchanged
@@ -63,7 +62,7 @@ the minimum a randomization can achieve.
    inflate. The payoff grows with the degree spread -- for degrees :math:`(3, 2, 2)` randomization
    tracks :math:`3 \times 2 = 6` paths, where a degree-blind squaring (every row pushed to the
    maximum degree 3) would track :math:`3^2 = 9`. You may also pass your own exact matrix,
-   ``linalg.randomize(original, R)``, in which case the functions are kept in their given order.
+   ``original.randomize(R)``, in which case the functions are kept in their given order.
 
 Solve the square system, then filter: evaluate the **original** system at each computed point and
 keep the ones with a tiny residual.
@@ -71,7 +70,7 @@ keep the ones with a tiny residual.
 .. testcode::
 
    bertini.random.set_random_seed(1)               # reproducible generic coefficients + gamma
-   zd = bertini.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+   zd = bertini.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='binomial')
    zd.solve()
    solutions = zd.all_solutions()
    assert len(solutions) == 4                       # the two we want, plus two extraneous
@@ -112,7 +111,7 @@ indeed :math:`xy = 1`.
    original.add_function(x + y - 2)      # x + y = 2
    original.add_function(x - y)          # x = y
 
-   randomized = linalg.randomize(original)
+   randomized = original.randomize()
    assert randomized.num_functions() == 2
 
 Solve with the **multihomogeneous** start system, which exploits the grouping. Two bilinear
@@ -123,7 +122,7 @@ a total-degree start would track :math:`2^2 = 4`. Same answer, half the work.
 .. testcode::
 
    bertini.random.set_random_seed(3)
-   zd = bertini.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='mhom')
+   zd = bertini.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='mhom')
    zd.solve()
 
    def satisfies(point):

@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg
 
 
 def test_add_expression_and_group_with_chaining():
@@ -23,7 +22,7 @@ def test_add_expression_and_group_with_chaining():
 
 
 def test_add_array_of_expressions():
-    xs = linalg.variable_vector('x', 2)
+    xs = np.array(pb.variables('x', 2), dtype=object)
     A = np.array([[2, 1], [0, 3]])
     sys = pb.System()
     sys.add(pb.VariableGroup(list(xs)))

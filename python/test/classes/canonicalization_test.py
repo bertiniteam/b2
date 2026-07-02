@@ -26,7 +26,7 @@ selectable monomial order, and it can be turned off to preserve the authored ope
 import pytest
 import bertini as pb
 from bertini import Variable, MonomialOrder
-from bertini.function_tree.symbol import Integer
+from bertini.symbolics import Integer
 
 
 @pytest.fixture(autouse=True)

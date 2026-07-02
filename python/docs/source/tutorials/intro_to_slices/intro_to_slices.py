@@ -8,9 +8,9 @@ import pickle
 import numpy as np
 
 import bertini
-from bertini import linalg
+from bertini import Slice
 from bertini import multiprec as mp
-from bertini.nag_algorithm import Slice, WitnessSetMultiplePrecision
+from bertini.nag_algorithm import WitnessSetMultiplePrecision
 
 
 def build_slices():
@@ -18,7 +18,7 @@ def build_slices():
     x, y = bertini.Variable('x'), bertini.Variable('y')
 
     # two linear forms on (x, y):  2x + 3y + 1   and   x - y + 4
-    s = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
+    s = Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
 
     assert s.dimension() == 2        # two forms -> cuts a 2-dimensional component
     assert s.num_variables() == 2
@@ -52,7 +52,7 @@ def sequence_semantics(x, y, s):
     assert s.coefficients().shape == (2, 3)
 
     # a single-form slice never collapses to 1-D
-    one_form = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])
+    one_form = Slice.from_coefficients([[2, 3, 1]], [x, y])
     assert one_form.coefficients().shape == (1, 3)     # NOT (3,) -- it never collapses
     assert np.asarray(one_form[0]).shape == (3,)       # the vector view is explicit
 
@@ -74,7 +74,7 @@ def slice_rides_along(s, x0, x1, x2, vg, generic):
 def build_witness_set(x0, x1, x2, vg):
     """The witness set: assemble the triple."""
     def pt(*entries):
-        return np.array([mp.Complex(str(e)) for e in entries], dtype=mp.Complex)
+        return np.array([mp.complex_mp(str(e)) for e in entries], dtype=mp.complex_mp)
 
     sys = bertini.System()
     sys.add_variable_group(vg)
@@ -118,9 +118,9 @@ def start_from_slices(x, y):
     """Building start systems from slices (regeneration)."""
     start = bertini.System()
     start.add_variable_group(bertini.VariableGroup([x, y]))
-    sa = linalg.slice_from_coefficients([[1, 0, -1], [1, 0, 1]], [x, y])    # (x - 1)(x + 1)
-    sb = linalg.slice_from_coefficients([[0, 1, -1], [0, 1, -2]], [x, y])   # (y - 1)(y - 2)
-    linalg.add_slices_as_products(start, [sa, sb])
+    sa = Slice.from_coefficients([[1, 0, -1], [1, 0, 1]], [x, y])    # (x - 1)(x + 1)
+    sb = Slice.from_coefficients([[0, 1, -1], [0, 1, -2]], [x, y])   # (y - 1)(y - 2)
+    start.add_slices_as_products([sa, sb])
     assert list(start.degrees()) == [2, 2]
 
 

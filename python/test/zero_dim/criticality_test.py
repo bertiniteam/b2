@@ -20,7 +20,6 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg
 
 
 def _curve():
@@ -33,12 +32,12 @@ def _curve():
 def _criticality_system(x, y, z, f, g, pi):
     """The 6x6 nullvector criticality system for the projection with coefficient row ``pi``."""
     J = pb.jacobian([f, g], [x, y, z])                       # 2 x 3 symbolic
-    M = np.vstack([J, linalg.as_coefficients(pi)])           # 3 x 3: J_f over the projection gradient
-    v = linalg.variable_vector('v', 3)                       # the null-vector unknowns
+    M = np.vstack([J, pb.coefficients(pi)])           # 3 x 3: J_f over the projection gradient
+    v = np.array(pb.variables('v', 3), dtype=object)                       # the null-vector unknowns
 
     sys = pb.System()
     sys.add(pb.VariableGroup([x, y, z, *v]), f, g)           # curve equations
-    linalg.add_functions(sys, M @ v)                         # M v = 0   (3 equations)
+    sys.add_functions(M @ v)                         # M v = 0   (3 equations)
     patch = pb.random_matrix(1, 3, symbolic=True)            # h . v = 1 keeps v away from zero
     sys.add_function((patch @ v)[0] - 1)
     return sys
@@ -55,7 +54,7 @@ def test_critical_points_of_interlocking_circles():
     sys = _criticality_system(x, y, z, f, g, pi)
     assert list(sys.degrees()) == [3, 3, 3, 3, 1, 1]         # the criticality system, 6 eqns / 6 vars
 
-    solver = pb.nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive',
+    solver = pb.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive',
                                             startsystem='binomial')
     solver.solve()
 

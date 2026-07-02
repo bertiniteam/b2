@@ -16,7 +16,7 @@ namespace bertini{
 				.def_readwrite("num_sample_points", &endgame::EndgameConfig::num_sample_points,"The number of points to use for extrapolant calculation.  In the Power Series Endgame, the is the number of geometrically spaces points on the path.  For Cauchy, this is the number of points on each circle tracked around the target time value.")
 				.def_readwrite("min_track_time", &endgame::EndgameConfig::min_track_time,"The minimum distance from the target time to track to.  Decreasing this may help failing runs succeed, or maybe not, because you are, after all, tracking toward a singularity.")
 				.def_readwrite("sample_factor", &endgame::EndgameConfig::sample_factor,"The factor by which to space the geometrically spaced 'distance' between sample points, or sample circles for Cauchy.")
-				.def_readwrite("max_num_newton_iterations", &endgame::EndgameConfig::max_num_newton_iterations,"the maximum number of newton iterations to be taken during sample point sharpening.  Increasing this can help speed convergence, at the risk of path jumping.")
+				.def_readwrite("max_num_refinements", &endgame::EndgameConfig::max_num_refinements,"the maximum number of Newton refinements to be taken during sample point sharpening.  Increasing this can help speed convergence, at the risk of path jumping.")
 				.def_readwrite("final_tolerance", &endgame::EndgameConfig::final_tolerance, "The tolerance to which to track the path, using the endgame.  Endgames require two consecutive estimates to be this close to each other under the relative infinity norm.  Default value is 1e-11.")
 				;
 

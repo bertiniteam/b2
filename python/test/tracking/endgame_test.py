@@ -37,16 +37,16 @@ import pytest
 import numpy as np
 
 from bertini import *
-from bertini.function_tree.symbol import *
-from bertini.function_tree.root import *
-from bertini.function_tree import *
+from bertini.symbolics import *
+from bertini.symbolics import *
+from bertini.symbolics import *
 from bertini.tracking import *
 from bertini.endgame import *
 
 import bertini.system.start_system as ss
 import bertini.multiprec as mp
-from bertini.multiprec import Float as mpfr_float
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import real_mp as mpfr_float
+from bertini.multiprec import complex_mp as mpfr_complex
 
 
 AMBIENT_PRECISION = 50
@@ -118,7 +118,7 @@ def test_using_total_degree_ss():
         assert track_success_code == SuccessCode.Success
 
     tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, stepping_pref, newton_pref)
-    my_endgame = AMPCauchyEG(tracker, t_endgame_boundary)
+    my_endgame = AMPCauchyEndgame(tracker, t_endgame_boundary)
 
     final_homogenized_solutions = [np.empty(dtype=mpfr_complex, shape=(3,)) for i in range(n)]
 

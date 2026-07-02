@@ -44,7 +44,7 @@ one-variable homotopy :math:`y - t` (whose single path runs from :math:`y=1` at 
 .. testcode::
 
     import numpy as np
-    from bertini.multiprec import Complex
+    from bertini.multiprec import complex_mp
 
     y, t = bertini.Variable('y'), bertini.Variable('t')
     sys = bertini.System()
@@ -52,15 +52,15 @@ one-variable homotopy :math:`y - t` (whose single path runs from :math:`y=1` at 
     sys.add_path_variable(t)
     sys.add_variable_group(bertini.VariableGroup([y]))
 
-    tracker = tracking.AMPTracker(sys)
-    tracker.setup(tracking.Predictor.Euler, 1e-5, 1e5,
+    tracker = bertini.AMPTracker(sys)
+    tracker.setup(bertini.Predictor.Euler, 1e-5, 1e5,
                   tracking.SteppingConfig(), tracking.NewtonConfig())
     tracker.precision_setup(tracking.amp_config_from(sys))
 
     printer = StepPrinter()
     tracker.add_observer(printer)
-    end = np.zeros(sys.num_variables(), dtype=Complex)
-    tracker.track_path(end, Complex(1), Complex(0), np.array([Complex(1)]))
+    end = np.zeros(sys.num_variables(), dtype=complex_mp)
+    tracker.track_path(end, complex_mp(1), complex_mp(0), np.array([complex_mp(1)]))
     tracker.remove_observer(printer)
 
 .. testoutput::
@@ -101,8 +101,8 @@ plenty for a picture).  The result is offered as several typed arrays:
 
     b = tracking.observers.amp.PathDataCollector()
     tracker.add_observer(b)
-    end = np.zeros(sys.num_variables(), dtype=Complex)
-    tracker.track_path(end, Complex(1), Complex(0), np.array([Complex(1)]))
+    end = np.zeros(sys.num_variables(), dtype=complex_mp)
+    tracker.track_path(end, complex_mp(1), complex_mp(0), np.array([complex_mp(1)]))
     tracker.remove_observer(b)
 
     ts  = b.times()          # complex,  shape (n_steps,)
@@ -122,7 +122,7 @@ one ``PathDataCollector`` per solution path -- but a collector watches a tracker
 path are we on" is known only to the *solver*.  The elegant fix is an observer that, in response
 to the solver's events, attaches and detaches *other* observers: a meta-observer.
 
-That is exactly :class:`bertini.nag_algorithm.SolutionPathCollector`.  You attach it to the
+That is exactly :class:`bertini.SolutionPathCollector`.  You attach it to the
 **solver**.  The solver emits ``PathStarted``/``PathComplete`` around each path; on
 ``PathStarted`` the meta-observer spins up a fresh ``PathDataCollector`` and attaches it to the
 solver's tracker, and on ``PathComplete`` it harvests that collector into ``.series`` and detaches
@@ -141,7 +141,7 @@ We will solve a degree-six univariate polynomial -- a total-degree homotopy with
     import numpy as np
     import matplotlib.pyplot as plt
     import bertini
-    from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
+    from bertini import ZeroDimSolver, SolutionPathCollector
 
     bertini.random.set_random_seed(2)   # so you get exactly this picture
 
@@ -220,7 +220,8 @@ the path finishes, B hands its haul back to A.
     import numpy as np
     import bertini
     import bertini.tracking as tracking
-    from bertini.nag_algorithm import ZeroDimSolver, observers as nag_observers
+    from bertini import ZeroDimSolver
+    from bertini.nag_algorithm import observers as nag_observers
 
     class PathRecorder(tracking.observers.amp.CustomObserver):
         def __init__(self, parent, path_index):
@@ -329,7 +330,7 @@ Two more things to expect under threads:
 
 .. testcode::
 
-    from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
+    from bertini import ZeroDimSolver, SolutionPathCollector
     import bertini
 
     z = bertini.Variable('z')
@@ -374,7 +375,7 @@ got hard:
     import matplotlib.colors as mcolors
     from mpl_toolkits.mplot3d.art3d import Line3DCollection
     import bertini
-    from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
+    from bertini import ZeroDimSolver, SolutionPathCollector
 
     bertini.random.set_random_seed(3)
 
@@ -454,15 +455,14 @@ whose only solution is a triple point at the origin:
     import matplotlib.colors as mcolors
     from matplotlib.collections import LineCollection
     import bertini
-    from bertini import linalg
-    from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
+    from bertini import ZeroDimSolver, SolutionPathCollector
 
     bertini.random.set_random_seed(1)
 
     x, y = bertini.Variable('x'), bertini.Variable('y')
     sys = bertini.System()
     sys.add_variable_group(bertini.VariableGroup([x, y]))
-    sys.add_function(linalg.coefficient(Fraction(29, 16)) * x**3 - 2*x*y)  # exact rational coeff
+    sys.add_function(bertini.coefficient(Fraction(29, 16)) * x**3 - 2*x*y)  # exact rational coeff
     sys.add_function(y - x**2)
 
     solver = ZeroDimSolver(sys, mptype='adaptive')

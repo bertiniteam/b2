@@ -27,13 +27,9 @@ from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 import bertini
 import bertini.tracking as tracking
-from bertini import linalg
-from bertini.multiprec import Complex
-from bertini.nag_algorithm import (
-    ZeroDimSolver,
-    SolutionPathCollector,
-    observers as nag_observers,
-)
+from bertini import ZeroDimSolver, SolutionPathCollector
+from bertini.multiprec import complex_mp
+from bertini.nag_algorithm import observers as nag_observers
 
 _OUT = os.path.dirname(os.path.abspath(__file__))
 
@@ -57,15 +53,15 @@ def custom_observer():
     sys.add_path_variable(t)
     sys.add_variable_group(bertini.VariableGroup([y]))
 
-    tracker = tracking.AMPTracker(sys)
-    tracker.setup(tracking.Predictor.Euler, 1e-5, 1e5,
+    tracker = bertini.AMPTracker(sys)
+    tracker.setup(bertini.Predictor.Euler, 1e-5, 1e5,
                   tracking.SteppingConfig(), tracking.NewtonConfig())
     tracker.precision_setup(tracking.amp_config_from(sys))
 
     printer = StepPrinter()
     tracker.add_observer(printer)
-    end = np.zeros(sys.num_variables(), dtype=Complex)
-    tracker.track_path(end, Complex(1), Complex(0), np.array([Complex(1)]))
+    end = np.zeros(sys.num_variables(), dtype=complex_mp)
+    tracker.track_path(end, complex_mp(1), complex_mp(0), np.array([complex_mp(1)]))
     tracker.remove_observer(printer)
 
     # the ready-made CallbackObserver: attach a function without writing a class
@@ -84,8 +80,8 @@ def collect_one_path(tracker, sys):
     """PathDataCollector records one path's time, points, and diagnostics into numpy arrays."""
     b = tracking.observers.amp.PathDataCollector()
     tracker.add_observer(b)
-    end = np.zeros(sys.num_variables(), dtype=Complex)
-    tracker.track_path(end, Complex(1), Complex(0), np.array([Complex(1)]))
+    end = np.zeros(sys.num_variables(), dtype=complex_mp)
+    tracker.track_path(end, complex_mp(1), complex_mp(0), np.array([complex_mp(1)]))
     tracker.remove_observer(b)
 
     ts  = b.times()          # complex,  shape (n_steps,)
@@ -285,7 +281,7 @@ def solve_griewank_osborn():
     x, y = bertini.Variable('x'), bertini.Variable('y')
     sys = bertini.System()
     sys.add_variable_group(bertini.VariableGroup([x, y]))
-    sys.add_function(linalg.coefficient(Fraction(29, 16)) * x**3 - 2*x*y)  # exact rational coeff
+    sys.add_function(bertini.coefficient(Fraction(29, 16)) * x**3 - 2*x*y)  # exact rational coeff
     sys.add_function(y - x**2)
 
     solver = ZeroDimSolver(sys, mptype='adaptive')

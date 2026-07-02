@@ -10,10 +10,10 @@ import pytest
 
 import bertini as pb
 import bertini.tracking as tk
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import complex_mp as mpfr_complex
 from bertini import System, VariableGroup, Variable
 from bertini.tracking import amp_config_from
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
 
 def _force_serial(solver):
@@ -203,7 +203,7 @@ def test_solution_path_collector_one_series_per_solution_path():
     """The two-level meta-observer: attached to the SOLVER, it yields exactly one
     collector per solution path, each capturing the whole journey (main homotopy
     track AND endgame sub-tracks), with no start-time filtering."""
-    from bertini.nag_algorithm import SolutionPathCollector
+    from bertini import SolutionPathCollector
 
     sys = _circle_meets_line()
     solver = ZeroDimSolver(sys, mptype='amp')
@@ -228,7 +228,7 @@ def test_solution_path_collector_captures_more_than_the_main_track():
     """A SolutionPathCollector series (whole path incl. endgame) has at least as many
     steps as the bare main homotopy track alone -- it picks up the endgame sub-tracks
     that the tracker-level start-time filter discards."""
-    from bertini.nag_algorithm import SolutionPathCollector
+    from bertini import SolutionPathCollector
 
     sys = _circle_meets_line()
 

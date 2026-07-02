@@ -9,8 +9,8 @@ NumPy.  They are collected here with the idiom that works and the idiom that bit
 NumPy reductions over multiprecision arrays
 ============================================
 
-Bertini 2 exposes :class:`~bertini.multiprec.Float` (variable-precision real) and
-:class:`~bertini.multiprec.Complex` (variable-precision complex) as **custom NumPy
+Bertini 2 exposes :class:`~bertini.real_mp` (variable-precision real) and
+:class:`~bertini.complex_mp` (variable-precision complex) as **custom NumPy
 dtypes** (via eigenpy).  Element-wise math, indexing, ``@`` / :func:`numpy.dot`,
 :func:`numpy.linalg.norm`, :func:`numpy.cumsum` and friends all work on arrays of these
 dtypes.
@@ -21,8 +21,8 @@ The sharp edge is the **identity-seeded reductions** -- :func:`numpy.sum`,
 .. code-block:: python
 
     >>> import numpy as np
-    >>> from bertini.multiprec import Complex
-    >>> v = np.array([Complex(3), Complex(4)], dtype=Complex)
+    >>> from bertini.multiprec import complex_mp
+    >>> v = np.array([complex_mp(3), complex_mp(4)], dtype=complex_mp)
     >>> np.sum(v)                                    # ✗ DON'T -- may crash
     Traceback (most recent call last):
         ...
@@ -49,14 +49,14 @@ data (``dot`` / ``norm`` / a plain Python loop).  All of these are stable across
 .. doctest::
 
     >>> import numpy as np
-    >>> from bertini.multiprec import Float, Complex
-    >>> v = np.array([Complex(3), Complex(4)], dtype=Complex)
-    >>> w = np.array([Float(1), Float(2), Float(3)], dtype=Float)
+    >>> from bertini.multiprec import real_mp, complex_mp
+    >>> v = np.array([complex_mp(3), complex_mp(4)], dtype=complex_mp)
+    >>> w = np.array([real_mp(1), real_mp(2), real_mp(3)], dtype=real_mp)
 
     >>> # ✓ sum: hand ufunc.reduce an explicit, correctly-typed identity
-    >>> complex(np.add.reduce(v, initial=Complex(0)))
+    >>> complex(np.add.reduce(v, initial=complex_mp(0)))
     (7+0j)
-    >>> float(np.add.reduce(w, initial=Float(0)))
+    >>> float(np.add.reduce(w, initial=real_mp(0)))
     6.0
 
     >>> # ✓ sum: or just use Python's built-in sum()
@@ -72,10 +72,10 @@ data (``dot`` / ``norm`` / a plain Python loop).  All of these are stable across
     (25+0j)
 
     >>> # ✓ mean: reduce with an identity, then divide by the count
-    >>> float(np.add.reduce(w, initial=Float(0)) / w.size)
+    >>> float(np.add.reduce(w, initial=real_mp(0)) / w.size)
     2.0
 
 In short: anywhere you would reach for ``np.sum(a)`` / ``np.prod(a)`` / ``np.mean(a)`` on a
-``Float`` or ``Complex`` array, reach for ``np.add.reduce(a, initial=...)`` (or
+``real_mp`` or ``complex_mp`` array, reach for ``np.add.reduce(a, initial=...)`` (or
 ``np.multiply.reduce(a, initial=...)``), ``np.dot`` / ``np.linalg.norm``, or a plain Python
 ``sum`` instead.

@@ -10,8 +10,7 @@ import time
 
 import numpy as np
 import bertini as bertini
-from bertini import linalg
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
 
 def setup_matrix():
@@ -24,11 +23,11 @@ def setup_matrix():
 
 
 def build_affine(A, n):
-    x = linalg.variable_vector('x', n)
+    x = np.array(bertini.variables('x', n), dtype=object)
     lam = bertini.Variable('lam')
     c = np.array([5, 8, 3])                          # any generic integer vector
     sys = bertini.System()
-    linalg.add_functions(sys, A @ x - lam * x)       # the rows of (A - lam I) x
+    sys.add_functions(A @ x - lam * x)               # the rows of (A - lam I) x
     sys.add_function(c @ x - 1)                      # fix the eigenvector scale
     sys.add_variable_group(bertini.VariableGroup(list(x)))
     sys.add_variable_group(bertini.VariableGroup([lam]))
@@ -36,10 +35,10 @@ def build_affine(A, n):
 
 
 def build_projective(A, n):
-    x = linalg.variable_vector('x', n)
+    x = np.array(bertini.variables('x', n), dtype=object)
     lam = bertini.Variable('lam')
     sys = bertini.System()
-    linalg.add_functions(sys, A @ x - lam * x)       # nothing else!
+    sys.add_functions(A @ x - lam * x)               # nothing else!
     sys.add_hom_variable_group(bertini.VariableGroup(list(x)))   # x in P^{n-1}
     sys.add_variable_group(bertini.VariableGroup([lam]))
     return sys

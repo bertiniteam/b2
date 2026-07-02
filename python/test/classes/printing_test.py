@@ -41,9 +41,9 @@ import pytest
 import bertini as pb
 import bertini.parse as parse
 import bertini.multiprec as mp
-from bertini.multiprec import Complex as mpfr_complex
-from bertini.function_tree.symbol import Variable, Integer, Rational
-from bertini.function_tree import sin
+from bertini.multiprec import complex_mp as mpfr_complex
+from bertini.symbolics import Variable, Integer, Rational
+from bertini.symbolics import sin
 
 from eval_helper import eval_at
 

@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg, nag_algorithm as na
+from bertini import nag_algorithm as na
 
 NOISE = ('current variable values', 'not differentiated', 'is differentiated', 'unnamed_function')
 
@@ -39,7 +39,7 @@ def test_randomization_shows_placeholder_and_underlying_functions():
     x, y = pb.Variable('x'), pb.Variable('y')
     o = pb.System(); o.add_variable_group(_vg(x, y))
     o.add_function(x*x + y*y - 1); o.add_function(x*y); o.add_function(x*x + y*y - x - y)
-    r = linalg.randomize(o)
+    r = o.randomize()
 
     terse = str(r)
     assert 'R . g' in terse                       # placeholder label
@@ -60,7 +60,7 @@ def test_linear_forms_block_placeholder_and_coefficients():
     x, y = pb.Variable('x'), pb.Variable('y')
     m = pb.System(); m.add_variable_group(_vg(x, y))
     m.add_function(x*x + y*y - 1)
-    linalg.add_linear(m, np.array([[2, 1]]), np.array([x, y]), [-1])   # 2x + y - 1, a LinearFormsBlock
+    m.add_linear(np.array([[2, 1]]), np.array([x, y]), [-1])   # 2x + y - 1, a LinearFormsBlock
 
     terse = str(m)
     assert 'f_0 = x^2+y^2-1' in terse              # poly row
@@ -106,7 +106,7 @@ def test_terse_coefficient_width_varies_with_magnitude_but_sig_figs_do_not():
     # exact decimal strings (add_linear rejects floats, which would cap block precision):
     # one coefficient below 1e-3, one of order 1, with many digits so verbose stays long.
     A = np.array([['0.00031622776601683794', '0.31622776601683794339']], dtype=object)
-    linalg.add_linear(s, A, np.array([x, y]))
+    s.add_linear(A, np.array([x, y]))
 
     terse, verbose = s.describe(), s.describe(verbose=True)
 
@@ -125,7 +125,7 @@ def test_terse_coefficient_width_varies_with_magnitude_but_sig_figs_do_not():
 def test_terse_truncates_many_forms_but_verbose_shows_all():
     x, y = pb.Variable('x'), pb.Variable('y')
     coeffs = [[i + 1, i + 2, i + 3] for i in range(12)]        # 12 affine forms on (x, y), > the cap of 10
-    s = linalg.slice_from_coefficients(coeffs, [x, y]).as_system()
+    s = pb.Slice.from_coefficients(coeffs, [x, y]).as_system()
 
     terse, verbose = s.describe(), s.describe(verbose=True)
     assert terse.count('c.[') == 10                # capped at kTerseRowCap
@@ -137,7 +137,7 @@ def test_terse_truncates_many_forms_but_verbose_shows_all():
 def test_products_of_linears_block():
     x, y = pb.Variable('x'), pb.Variable('y')
     s = pb.System(); s.add_variable_group(_vg(x, y))
-    linalg.add_products_of_linears(s, [[[1, 0, -1], [1, 0, 1]]])    # (x-1)(x+1)
+    s.add_products_of_linears([[[1, 0, -1], [1, 0, 1]]])    # (x-1)(x+1)
 
     assert 'prod of 2 linear forms' in str(s)                       # terse placeholder
     verbose = s.describe(verbose=True)
@@ -149,7 +149,7 @@ def test_moving_homotopy_blend_and_path_variable():
     fx = pb.System(); fx.add_variable_group(_vg(x, y)); fx.add_function(x*x + y*y - 1)
     sm = pb.System(); sm.add_variable_group(_vg(x, y)); sm.add_function(y)
     em = pb.System(); em.add_variable_group(_vg(x, y)); em.add_function(y - x)
-    H = na.moving_homotopy(fx, sm, em, gamma=linalg.coefficient(pb.multiprec.Complex('0.6', '0.8')))
+    H = na.moving_homotopy(fx, sm, em, gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8')))
 
     terse = str(H)
     assert 'f_0 = x^2+y^2-1' in terse              # the fixed row is a plain polynomial, shown

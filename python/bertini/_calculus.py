@@ -45,7 +45,7 @@ def jacobian(functions, variables):
         A single expression node or a sequence of them (a list or numpy object array).
     variables : iterable of Variable
         The variables to differentiate with respect to (a list, a numpy object array such as
-        :func:`bertini.linalg.variable_vector`, or a :class:`~bertini.container.VariableGroup`).
+        :func:`bertini.variables`, or a :class:`~bertini.VariableGroup`).
 
     Examples
     --------

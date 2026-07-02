@@ -10,7 +10,8 @@ solver (with_custodian_and_ward), so this idiomatic usage is safe.
 import importlib.util
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDimSolver, observers as nobs
+from bertini import ZeroDimSolver
+from bertini.nag_algorithm import observers as nobs
 
 _HAS_PANDAS = importlib.util.find_spec("pandas") is not None
 
