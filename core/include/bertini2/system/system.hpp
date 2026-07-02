@@ -32,6 +32,7 @@
 #define BERTINI_SYSTEM_HPP
 
 #include <assert.h>
+#include <optional>
 #include <vector>
 #include <set>
 #include <string>
@@ -1076,7 +1077,7 @@ namespace bertini {
 		function-tree / SLP functions; blocks contribute the leading "natural" rows, with
 		any patch appended after, exactly as for a classic system.
 		*/
-		void AddBlock(Block b) { blocks_.push_back(std::move(b)); }
+		void AddBlock(Block b) { ThrowIfSealed("AddBlock"); blocks_.push_back(std::move(b)); }
 
 		/// Read-only access to the system's evaluation blocks (in evaluation order).  For
 		/// introspection / testing -- e.g. reading a RandomizationBlock's matrix; the variant
@@ -1095,6 +1096,7 @@ namespace bertini {
 		/// functions (FormHomotopy): `h = target; h.ClearFunctions(); h.AddBlock(blend);`.
 		void ClearFunctions()
 		{
+			ThrowIfSealed("ClearFunctions");
 			for (auto it = blocks_.begin(); it != blocks_.end(); )
 			{
 				if (std::holds_alternative<blocks::PolynomialBlock>(*it))
@@ -1122,7 +1124,7 @@ namespace bertini {
 
 		/// \brief Remove all evaluation blocks (the system reverts to its function-tree
 		/// functions).  Mainly for testing the block path against the function-tree path.
-		void ClearBlocks() { blocks_.clear(); }
+		void ClearBlocks() { ThrowIfSealed("ClearBlocks"); blocks_.clear(); }
 
 
 		////////////////////
@@ -1166,6 +1168,21 @@ namespace bertini {
 		\return true iff the two systems have identical canonical encodings.
 		*/
 		bool IsSame(System const& other) const;
+
+		/**
+		\brief Seal this system: memoize its ContentDigest() and forbid structural mutation
+		(hashcons-on-freeze, ADR-0042).  Idempotent.
+
+		After sealing, structural mutators (AddFunction, Homogenize, AutoPatch, ...) throw
+		std::logic_error; transient operations (SetVariables, precision, Differentiate,
+		evaluation) remain allowed.  Copying a sealed system yields an UNSEALED copy -- the
+		copy-on-write escape hatch.  ("Seal", not "freeze": ADR-0027's freeze set is
+		evaluation-time input currying, a different concept; they compose.)
+		*/
+		void Seal();
+
+		/// \brief Whether this system has been sealed against structural mutation (ADR-0042).
+		bool IsSealed() const;
 
 		/// \brief Build an equivalent **pure function-tree** System: every block's functions
 		/// expressed as function-tree nodes, gathered into a single PolynomialBlock, with the
@@ -1987,6 +2004,13 @@ namespace bertini {
 		// context; the recursion for operand systems passes the same one.  (ADR-0042)
 		void EncodeCanonical(std::ostream& out, node::EncodingContext& ctx) const;
 
+		// Guard for structural mutators: throws std::logic_error naming `operation` if the
+		// system is sealed (ADR-0042).  First line of every structural mutator.
+		void ThrowIfSealed(char const* operation) const;
+
+		bool is_sealed_ = false; ///< Sealed against structural mutation (ADR-0042).  Copies are unsealed; serialization round-trips the flag.
+		mutable std::optional<detail::Digest256> sealed_digest_; ///< The digest memoized at Seal() (recomputed on demand after deserialization).  Not serialized.
+
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
 		std::vector< VariableGroup > hom_variable_groups_; ///< Homogeneous or projective variable groups.  System SHOULD be homogeneous with respect to these.  
@@ -2063,6 +2087,10 @@ namespace bertini {
 			ar & time_order_of_variable_groups_;
 
 			ar & pre_homogenization_functions_;
+
+			// seal flag round-trips; the memoized digest is recomputed on demand after load
+			// (guards against archives written under an older encoding version) (ADR-0042)
+			ar & is_sealed_;
 
 			// if (Archive::is_loading::value == true){
 				// have_ordering_ = false;}
@@ -2187,6 +2215,21 @@ namespace bertini {
 	\brief Free form function for simplifying systems.
 	*/
 	void Simplify(System & sys);
+
+	/**
+	\brief Hash-cons a System: return the live sealed representative with equal
+	ContentDigest() if one exists, else seal and register the candidate (ADR-0042).
+
+	The System-level analogue of node::Intern / InternProgram: a process-global,
+	mutex-guarded, weak (self-cleaning) table keyed by the full 256-bit content digest, so
+	no equality disambiguation chain is needed.  The candidate is sealed as a side effect
+	(an interned identity must not mutate); the returned handle is const -- interned
+	Systems are shared.  Copy an interned System to get an unsealed, mutable one.
+
+	\param candidate The system to intern; sealed if it becomes the representative.
+	\return The shared representative (the candidate itself on a table miss).
+	*/
+	std::shared_ptr<const System> InternSystem(std::shared_ptr<System> const& candidate);
 
 	/// \cond INTERNAL
 	// Explicit instantiation declarations for the two concrete numeric types.
