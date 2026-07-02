@@ -37,9 +37,9 @@ on named symbols.
 import pytest
 
 import bertini as pb
-import bertini.function_tree as ft
-from bertini.function_tree import operator as op
-from bertini.function_tree import symbol as sym
+import bertini.symbolics as ft
+import bertini.symbolics as op
+import bertini.symbolics as sym
 from bertini import multiprec as mp
 
 from eval_helper import eval_at

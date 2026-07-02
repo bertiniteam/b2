@@ -11,9 +11,9 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg, nag_algorithm as na
+from bertini import nag_algorithm as na
 
-C = pb.multiprec.Complex
+C = pb.multiprec.complex_mp
 GAMMA = C('0.6', '0.8')   # exact, off the real axis -> reproducible path
 
 
@@ -26,7 +26,7 @@ def _roots(solutions, n):
 
 
 def _solve(fixed, start_moving, end_moving, start_points, nvars):
-    H = na.moving_homotopy(fixed, start_moving, end_moving, gamma=linalg.coefficient(GAMMA))
+    H = na.moving_homotopy(fixed, start_moving, end_moving, gamma=pb.coefficient(GAMMA))
     target = pb.system.concatenate(fixed, end_moving)
     solver = na.user_homotopy(H, start_points, target)
     solver.solve()
@@ -61,7 +61,7 @@ def test_static_and_moving_slice_3var():
     x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
     fixed = pb.System(); fixed.add_variable_group(_vg(x, y, z))
     fixed.add_function(x*x + y*y + z*z - 1)                                  # sphere (PolynomialBlock)
-    linalg.add_linear(fixed, np.array([[0, 0, 1]]), np.array([x, y, z]))    # static slice z=0 (LinearFormsBlock)
+    fixed.add_linear(np.array([[0, 0, 1]]), np.array([x, y, z]))    # static slice z=0 (LinearFormsBlock)
     start_moving = pb.System(); start_moving.add_variable_group(_vg(x, y, z)); start_moving.add_function(y)
     end_moving = pb.System(); end_moving.add_variable_group(_vg(x, y, z)); end_moving.add_function(y - x)
 
@@ -80,9 +80,9 @@ def test_deform_products_of_linears_into_polynomial():
     # static slice y=1/2 stays put.  start points are the product's roots on the slice: (±1, 1/2).
     x, y = pb.Variable('x'), pb.Variable('y')
     fixed = pb.System(); fixed.add_variable_group(_vg(x, y))
-    linalg.add_linear(fixed, np.array([[0, 1]]), np.array([x, y]), ['-1/2'])     # static slice y=1/2
+    fixed.add_linear(np.array([[0, 1]]), np.array([x, y]), ['-1/2'])     # static slice y=1/2
     start_moving = pb.System(); start_moving.add_variable_group(_vg(x, y))
-    linalg.add_products_of_linears(start_moving, [[[1, 0, -1], [1, 0, 1]]])      # (x-1)(x+1) as a block
+    start_moving.add_products_of_linears([[[1, 0, -1], [1, 0, 1]]])      # (x-1)(x+1) as a block
     end_moving = pb.System(); end_moving.add_variable_group(_vg(x, y)); end_moving.add_function(x*x + y*y - 1)
 
     sp = [np.array([C('1'), C('0.5')]), np.array([C('-1'), C('0.5')])]

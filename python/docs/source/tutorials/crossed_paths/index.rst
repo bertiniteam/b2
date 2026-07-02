@@ -45,7 +45,7 @@ The key knobs are three lines on the solver:
 
 .. code-block:: python
 
-    solver.get_tracker().predictor(pb.tracking.Predictor.Euler)   # order-1 predictor: the culprit
+    solver.get_tracker().predictor(pb.Predictor.Euler)   # order-1 predictor: the culprit
 
     tols = solver.get_config(pb.nag_algorithm.TolerancesConfig)
     tols.newton_before_endgame = 1e-4                              # loose tracking before the endgame

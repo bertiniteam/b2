@@ -1,10 +1,8 @@
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import (
-    ZeroDimSolver,
-    TolerancesConfig,
-)
+from bertini import ZeroDimSolver
+from bertini.nag_algorithm import TolerancesConfig
 
 
 @pytest.fixture
@@ -66,7 +64,7 @@ def test_custom_tolerances(circle_intersection_solver):
 def test_power_series_endgame_variant():
     """ZeroDimSolver solves a simple system.
 
-    Mirrors zero_dim/can_run_griewank_osborn (PSEG variant).
+    Mirrors zero_dim/can_run_griewank_osborn (PowerSeriesEndgame variant).
     """
     x, y = pb.Variable('x'), pb.Variable('y')
     sys = pb.System()

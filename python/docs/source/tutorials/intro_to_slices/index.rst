@@ -5,9 +5,9 @@
 
    import numpy as np
    import bertini
-   from bertini import linalg
+   from bertini import Slice
    from bertini import multiprec as mp
-   from bertini.nag_algorithm import Slice, WitnessSetMultiplePrecision
+   from bertini.nag_algorithm import WitnessSetMultiplePrecision
 
 A **witness set** is how numerical algebraic geometry represents a positive-dimensional component
 of a variety -- a curve, a surface, and so on. It is a triple:
@@ -25,16 +25,16 @@ it carries a fair amount of semantics -- so most of this tutorial is about slice
 The slice: a stack of linear forms
 ==================================
 
-A :class:`~bertini.nag_algorithm.Slice` is a stack of linear forms :math:`M\,[x ; 1]` -- one row per
+A :class:`~bertini.Slice` is a stack of linear forms :math:`M\,[x ; 1]` -- one row per
 form, the trailing column of each row holding that form's constant term. You build one from exact
-coefficients with :func:`~bertini.linalg.slice_from_coefficients`:
+coefficients with :meth:`~bertini.Slice.from_coefficients`:
 
 .. testcode::
 
    x, y = bertini.Variable('x'), bertini.Variable('y')
 
    # two linear forms on (x, y):  2x + 3y + 1   and   x - y + 4
-   s = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
+   s = Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
 
    assert s.dimension() == 2        # two forms -> cuts a 2-dimensional component
    assert s.num_variables() == 2
@@ -54,7 +54,7 @@ or generate a generic one (the usual case in practice -- a witness set's slice i
 
    Coefficients must be **exact** (ints, ``fractions.Fraction``, exact strings like ``'3/4'``, or
    ``bertini.multiprec`` values). A Python ``float`` is refused -- its ~16 digits would cap the
-   precision of the arbitrary-precision tree. See :func:`~bertini.linalg.coefficient`.
+   precision of the arbitrary-precision tree. See :func:`~bertini.coefficient`.
 
 A slice is a sequence of forms -- and the shape rules matter
 ============================================================
@@ -64,7 +64,7 @@ behaves like a **Python sequence of its linear forms**, with the usual list sema
 
 * an **integer index** selects an *element* -- the i-th form's coefficient **vector**;
 * a **slice** ``[i:j]`` (or a list of indices) selects a *sub-collection* -- a new (sub-)``Slice``;
-* the whole coefficient matrix is :meth:`~bertini.nag_algorithm.Slice.coefficients`, **always 2-D**.
+* the whole coefficient matrix is :meth:`~bertini.Slice.coefficients`, **always 2-D**.
 
 .. testcode::
 
@@ -94,7 +94,7 @@ even for one form, and the 1-D "vector" view is something you *ask for* by index
 
 .. testcode::
 
-   one_form = linalg.slice_from_coefficients([[2, 3, 1]], [x, y])
+   one_form = Slice.from_coefficients([[2, 3, 1]], [x, y])
    assert one_form.coefficients().shape == (1, 3)     # NOT (3,) -- it never collapses
    assert np.asarray(one_form[0]).shape == (3,)       # the vector view is explicit
 
@@ -135,7 +135,7 @@ you find them:
 .. testcode::
 
    def pt(*entries):
-       return np.array([mp.Complex(str(e)) for e in entries], dtype=mp.Complex)
+       return np.array([mp.complex_mp(str(e)) for e in entries], dtype=mp.complex_mp)
 
    sys = bertini.System()
    sys.add_variable_group(vg)
@@ -202,9 +202,9 @@ becomes one function that is the product of its hyperplanes:
 
    start = bertini.System()
    start.add_variable_group(bertini.VariableGroup([x, y]))
-   sa = linalg.slice_from_coefficients([[1, 0, -1], [1, 0, 1]], [x, y])    # (x - 1)(x + 1)
-   sb = linalg.slice_from_coefficients([[0, 1, -1], [0, 1, -2]], [x, y])   # (y - 1)(y - 2)
-   linalg.add_slices_as_products(start, [sa, sb])
+   sa = Slice.from_coefficients([[1, 0, -1], [1, 0, 1]], [x, y])    # (x - 1)(x + 1)
+   sb = Slice.from_coefficients([[0, 1, -1], [0, 1, -2]], [x, y])   # (y - 1)(y - 2)
+   start.add_slices_as_products([sa, sb])
    assert list(start.degrees()) == [2, 2]
 
 Complete example

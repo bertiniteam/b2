@@ -5,7 +5,7 @@
 
    import numpy as np
    import bertini
-   from bertini import linalg, nag_algorithm
+   from bertini import nag_algorithm
 
 Regeneration and witness-set work share a shape: most equations are **fixed** -- the polynomial
 system, plus "below" linear slices that cut the dimension -- and only a small part **moves** along
@@ -20,7 +20,7 @@ and the two endpoints of the **moving** rows, and it returns
    H \;=\; \bigl[\; \text{fixed's blocks} \;;\; (1-t)\,\text{end} + \gamma\,t\,\text{start} \;\bigr],
 
 keeping the fixed equations as their own evaluation blocks and moving only the rest. Pair it with
-:func:`~bertini.nag_algorithm.HomotopySolver` and the start points you already know.
+:func:`~bertini.HomotopySolver` and the start points you already know.
 
 Move one slice
 ==============
@@ -47,14 +47,14 @@ intersections with it, :math:`(\pm 1, 0)`; at :math:`t=0` the slice is the diago
 
 .. testcode::
 
-    gamma = linalg.coefficient(bertini.multiprec.Complex('0.6', '0.8'))   # off the real axis
+    gamma = bertini.coefficient(bertini.multiprec.complex_mp('0.6', '0.8'))   # off the real axis
     H = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma)
 
     target = bertini.system.concatenate(fixed, end_moving)   # the t=0 system: circle + diagonal
-    start_points = [np.array([bertini.multiprec.Complex('1'),  bertini.multiprec.Complex('0')]),
-                    np.array([bertini.multiprec.Complex('-1'), bertini.multiprec.Complex('0')])]
+    start_points = [np.array([bertini.multiprec.complex_mp('1'),  bertini.multiprec.complex_mp('0')]),
+                    np.array([bertini.multiprec.complex_mp('-1'), bertini.multiprec.complex_mp('0')])]
 
-    solver = nag_algorithm.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(H, start_points, target)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
                    for s in solver.all_solutions())
@@ -80,7 +80,7 @@ slice); only the moving slice carries :math:`t`:
     fixed = bertini.System()
     fixed.add_variable_group(bertini.VariableGroup([x, y, z]))
     fixed.add_function(x*x + y*y + z*z - 1)                                # the sphere
-    linalg.add_linear(fixed, np.array([[0, 0, 1]]), np.array([x, y, z]))   # static slice z = 0
+    fixed.add_linear(np.array([[0, 0, 1]]), np.array([x, y, z]))   # static slice z = 0
 
     start_moving = bertini.System(); start_moving.add_variable_group(bertini.VariableGroup([x, y, z]))
     start_moving.add_function(y)                                           # moving slice at t=1
@@ -91,10 +91,10 @@ slice); only the moving slice carries :math:`t`:
 
     H = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma)
     target = bertini.system.concatenate(fixed, end_moving)
-    start_points = [np.array([bertini.multiprec.Complex(str(a)), bertini.multiprec.Complex('0'),
-                              bertini.multiprec.Complex('0')]) for a in (1, -1)]
+    start_points = [np.array([bertini.multiprec.complex_mp(str(a)), bertini.multiprec.complex_mp('0'),
+                              bertini.multiprec.complex_mp('0')]) for a in (1, -1)]
 
-    solver = nag_algorithm.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(H, start_points, target)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4), round(complex(s[2]).real, 4))
                    for s in solver.all_solutions())
@@ -107,13 +107,13 @@ never differentiated as the slice moves -- while only the moving row is nonzero:
 
 .. testcode::
 
-    pt = np.array([bertini.multiprec.Complex('0.3'),
-                   bertini.multiprec.Complex('0.4'),
-                   bertini.multiprec.Complex('0.5')])
+    pt = np.array([bertini.multiprec.complex_mp('0.3'),
+                   bertini.multiprec.complex_mp('0.4'),
+                   bertini.multiprec.complex_mp('0.5')])
     # the adaptive solve above left H at double precision; match it to the evaluation point's
     # precision before evaluating the homotopy directly.
     H.precision(pt[0].precision)
-    dHdt = H.eval_time_derivative(pt, bertini.multiprec.Complex('0.5'))
+    dHdt = H.eval_time_derivative(pt, bertini.multiprec.complex_mp('0.5'))
     assert abs(complex(dHdt[0])) == 0.0      # sphere row: out of dH/dt
     assert abs(complex(dHdt[1])) == 0.0      # static slice row: out of dH/dt
     assert abs(complex(dHdt[2])) > 0.0       # only the moving slice carries t
@@ -131,10 +131,10 @@ moving row is :math:`\gamma\,(x-1)(x+1)`, whose roots on the slice are :math:`(\
     x, y = bertini.Variable('x'), bertini.Variable('y')
 
     fixed = bertini.System(); fixed.add_variable_group(bertini.VariableGroup([x, y]))
-    linalg.add_linear(fixed, np.array([[0, 1]]), np.array([x, y]), ['-1/2'])    # static slice y = 1/2
+    fixed.add_linear(np.array([[0, 1]]), np.array([x, y]), ['-1/2'])    # static slice y = 1/2
 
     start_moving = bertini.System(); start_moving.add_variable_group(bertini.VariableGroup([x, y]))
-    linalg.add_products_of_linears(start_moving, [[[1, 0, -1], [1, 0, 1]]])      # (x-1)(x+1), a structured block
+    start_moving.add_products_of_linears([[[1, 0, -1], [1, 0, 1]]])      # (x-1)(x+1), a structured block
 
     end_moving = bertini.System(); end_moving.add_variable_group(bertini.VariableGroup([x, y]))
     end_moving.add_function(x*x + y*y - 1)                                       # the polynomial
@@ -143,10 +143,10 @@ moving row is :math:`\gamma\,(x-1)(x+1)`, whose roots on the slice are :math:`(\
 
     H = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma)
     target = bertini.system.concatenate(fixed, end_moving)
-    start_points = [np.array([bertini.multiprec.Complex(str(a)), bertini.multiprec.Complex('0.5')])
+    start_points = [np.array([bertini.multiprec.complex_mp(str(a)), bertini.multiprec.complex_mp('0.5')])
                     for a in (1, -1)]
 
-    solver = nag_algorithm.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(H, start_points, target)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
                    for s in solver.all_solutions())

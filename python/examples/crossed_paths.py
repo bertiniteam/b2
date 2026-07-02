@@ -29,7 +29,7 @@ import bertini as pb
 
 CYCLIC_N = 5
 KNOWN_FINITE = 70            # distinct finite solutions of cyclic-5
-OK = int(pb.tracking.SuccessCode.Success)
+OK = int(pb.SuccessCode.Success)
 
 
 def cyclic_system(n):
@@ -51,10 +51,10 @@ def solve(seed, resolve_attempts, tol=1e-4):
     boundary; 0 means "detect and report only".  Returns (report, distinct_finite_count).
     """
     pb.random.set_random_seed(seed)
-    solver = pb.nag_algorithm.ZeroDimSolver(cyclic_system(CYCLIC_N), endgame='cauchy', mptype='double', startsystem='binomial')
+    solver = pb.ZeroDimSolver(cyclic_system(CYCLIC_N), endgame='cauchy', mptype='double', startsystem='binomial')
 
     # The deliberate culprit: a first-order predictor.
-    solver.get_tracker().predictor(pb.tracking.Predictor.Euler)
+    solver.get_tracker().predictor(pb.Predictor.Euler)
 
     tols = solver.get_config(pb.nag_algorithm.TolerancesConfig)
     tols.newton_before_endgame = tol

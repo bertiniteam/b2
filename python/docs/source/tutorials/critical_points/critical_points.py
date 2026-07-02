@@ -17,8 +17,7 @@ Run:  python critical_points.py
 import numpy as np
 
 import bertini as pb
-from bertini import linalg
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
 
 def main():
@@ -32,12 +31,12 @@ def main():
 
     # --- the three lines that state criticality -------------------------------------------------
     J = pb.jacobian([f, g], [x, y, z])                   # 2 x 3 symbolic Jacobian of the curve
-    M = np.vstack([J, linalg.as_coefficients(pi)])       # 3 x 3: J_f stacked over the projection
-    v = linalg.variable_vector('v', 3)                   # the null-vector unknowns v0, v1, v2
+    M = np.vstack([J, pb.coefficients(pi)])              # 3 x 3: J_f stacked over the projection
+    v = np.array(pb.variables('v', 3), dtype=object)     # the null-vector unknowns v0, v1, v2
 
     sys = pb.System()
     sys.add(pb.VariableGroup([x, y, z, *v]), f, g)       # curve equations
-    linalg.add_functions(sys, M @ v)                     # M v = 0   (rank deficiency)
+    sys.add_functions(M @ v)                             # M v = 0   (rank deficiency)
     sys.add_function((pb.random_matrix(1, 3, symbolic=True) @ v)[0] - 1)   # de-zero patch h.v = 1
 
     solver = ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')

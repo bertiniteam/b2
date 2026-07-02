@@ -6,7 +6,6 @@ Run:  python randomize.py
 
 import numpy as np
 import bertini
-from bertini import linalg
 
 
 def part1_one_block():
@@ -22,7 +21,7 @@ def part1_one_block():
     assert list(original.degrees()) == [2, 1, 2]   # three equations, two unknowns: overdetermined
 
     # randomize returns a new square system; the original is untouched
-    randomized = linalg.randomize(original)
+    randomized = original.randomize()
 
     assert randomized.num_functions() == 2          # squared up
     assert original.num_functions() == 3            # original unchanged
@@ -30,7 +29,7 @@ def part1_one_block():
 
     # solve the square system, then filter against the original
     bertini.random.set_random_seed(1)               # reproducible generic coefficients + gamma
-    zd = bertini.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+    zd = bertini.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     zd.solve()
     solutions = zd.all_solutions()
     assert len(solutions) == 4                       # the two we want, plus two extraneous
@@ -57,12 +56,12 @@ def part2_variable_groups():
     original.add_function(x + y - 2)      # x + y = 2
     original.add_function(x - y)          # x = y
 
-    randomized = linalg.randomize(original)
+    randomized = original.randomize()
     assert randomized.num_functions() == 2
 
     # solve with the multihomogeneous start system, which exploits the grouping
     bertini.random.set_random_seed(3)
-    zd = bertini.nag_algorithm.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='mhom')
+    zd = bertini.ZeroDimSolver(randomized, endgame='cauchy', mptype='adaptive', startsystem='mhom')
     zd.solve()
 
     def satisfies(point):

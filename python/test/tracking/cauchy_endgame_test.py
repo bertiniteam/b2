@@ -40,16 +40,13 @@ import pytest
 
 import bertini
 from bertini import System, VariableGroup
-from bertini.function_tree.symbol import Variable
-from bertini.tracking import (
-    AMPTracker, DoublePrecisionTracker, MultiplePrecisionTracker,
-    Predictor, SuccessCode,
-)
+from bertini.symbolics import Variable
+from bertini import AMPTracker, DoublePrecisionTracker, MultiplePrecisionTracker, Predictor, SuccessCode
 from bertini.tracking import SteppingConfig, NewtonConfig, amp_config_from
-from bertini.endgame import AMPCauchyEG, FixedDoubleCauchyEG, FixedMultipleCauchyEG
+from bertini.endgame import AMPCauchyEndgame, FixedDoubleCauchyEndgame, FixedMultipleCauchyEndgame
 
 import bertini.multiprec as mp
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import complex_mp as mpfr_complex
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +87,7 @@ def cubic_homotopy():
 
 
 # ---------------------------------------------------------------------------
-# FixedDoubleCauchyEG
+# FixedDoubleCauchyEndgame
 # ---------------------------------------------------------------------------
 
 def test_fixed_double_cauchy_cycle_num_1(linear_homotopy):
@@ -104,7 +101,7 @@ def test_fixed_double_cauchy_cycle_num_1(linear_homotopy):
     tracker = DoublePrecisionTracker(s)
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), NewtonConfig())
 
-    eg = FixedDoubleCauchyEG(tracker, complex(0.1, 0))
+    eg = FixedDoubleCauchyEndgame(tracker, complex(0.1, 0))
     # Pre-computed from C++ test at t=0.1
     sample = np.array([complex(7.999999999999999e-01, 2.168404344971009e-19)])
 
@@ -130,7 +127,7 @@ def test_fixed_double_cauchy_cycle_num_2(quadratic_homotopy):
     nc.min_num_newton_iterations = 1
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), nc)
 
-    eg = FixedDoubleCauchyEG(tracker, complex(0.1, 0))
+    eg = FixedDoubleCauchyEndgame(tracker, complex(0.1, 0))
     # Pre-computed from C++ test at t=0.1
     sample = np.array([complex(9.000000000000001e-01, 4.358898943540673e-01)])
 
@@ -158,7 +155,7 @@ def test_fixed_double_cauchy_track_to_boundary(cubic_homotopy):
     code = tracker.track_path(bdry, complex(1, 0), complex(0.1, 0), start)
     assert code == SuccessCode.Success
 
-    eg = FixedDoubleCauchyEG(tracker, complex(0.1, 0))
+    eg = FixedDoubleCauchyEndgame(tracker, complex(0.1, 0))
     code = eg.run(bdry)
 
     fa = eg.final_approximation()
@@ -167,7 +164,7 @@ def test_fixed_double_cauchy_track_to_boundary(cubic_homotopy):
 
 
 # ---------------------------------------------------------------------------
-# FixedMultipleCauchyEG
+# FixedMultipleCauchyEndgame
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("precision", [16, 30, 50], indirect=True)
@@ -182,7 +179,7 @@ def test_fixed_multiple_cauchy_cycle_num_1(linear_homotopy, precision):
     tracker = MultiplePrecisionTracker(s)
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), NewtonConfig())
 
-    eg = FixedMultipleCauchyEG(tracker, mpfr_complex("0.1"))
+    eg = FixedMultipleCauchyEndgame(tracker, mpfr_complex("0.1"))
     # Pre-computed sample (converted to mpfr_complex at the current precision)
     sample = np.array([mpfr_complex("7.999999999999999e-01")])
 
@@ -209,7 +206,7 @@ def test_fixed_multiple_cauchy_cycle_num_2(quadratic_homotopy, precision):
     nc.min_num_newton_iterations = 1
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), nc)
 
-    eg = FixedMultipleCauchyEG(tracker, mpfr_complex("0.1"))
+    eg = FixedMultipleCauchyEndgame(tracker, mpfr_complex("0.1"))
     sample = np.array([mpfr_complex("9.000000000000001e-01", "4.358898943540673e-01")])
 
     code = eg.run(sample)
@@ -221,12 +218,12 @@ def test_fixed_multiple_cauchy_cycle_num_2(quadratic_homotopy, precision):
 
 
 # ---------------------------------------------------------------------------
-# AMPCauchyEG
+# AMPCauchyEndgame
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("precision", [16, 30, 50], indirect=True)
 def test_amp_cauchy_cycle_num_1(linear_homotopy, precision):
-    """AMPCauchyEG on linear homotopy at three ambient precisions, cycle number 1.
+    """AMPCauchyEndgame on linear homotopy at three ambient precisions, cycle number 1.
 
     Mirrors amp_cauchy_test.cpp/generic_tests_ambient_precision_*.
     """
@@ -237,7 +234,7 @@ def test_amp_cauchy_cycle_num_1(linear_homotopy, precision):
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), NewtonConfig())
     tracker.precision_setup(ampconfig)
 
-    eg = AMPCauchyEG(tracker, mpfr_complex("0.1"))
+    eg = AMPCauchyEndgame(tracker, mpfr_complex("0.1"))
     sample = np.array([mpfr_complex("7.999999999999999e-01")])
 
     code = eg.run(sample)
@@ -250,7 +247,7 @@ def test_amp_cauchy_cycle_num_1(linear_homotopy, precision):
 
 @pytest.mark.parametrize("precision", [16, 30, 50], indirect=True)
 def test_amp_cauchy_cycle_num_2(quadratic_homotopy, precision):
-    """AMPCauchyEG on quadratic homotopy: cycle number 2.
+    """AMPCauchyEndgame on quadratic homotopy: cycle number 2.
 
     Mirrors amp_cauchy_test.cpp/generic_tests_ambient_precision_* (cycle>1 variant).
     """
@@ -264,7 +261,7 @@ def test_amp_cauchy_cycle_num_2(quadratic_homotopy, precision):
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), nc)
     tracker.precision_setup(ampconfig)
 
-    eg = AMPCauchyEG(tracker, mpfr_complex("0.1"))
+    eg = AMPCauchyEndgame(tracker, mpfr_complex("0.1"))
     sample = np.array([mpfr_complex("9.000000000000001e-01", "4.358898943540673e-01")])
 
     code = eg.run(sample)

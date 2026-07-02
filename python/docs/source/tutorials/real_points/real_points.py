@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fractions import Fraction
 import bertini
-from bertini import linalg, nag_algorithm
 
 _OUT = os.path.dirname(os.path.abspath(__file__))
 
@@ -31,7 +30,7 @@ def build_system():
 
     # a hardcoded "random" real point p, with exact rational coordinates
     PX, PY = Fraction(41, 100), Fraction(23, 100)
-    parallel = (x - linalg.coefficient(PX))*fy - (y - linalg.coefficient(PY))*fx
+    parallel = (x - bertini.coefficient(PX))*fy - (y - bertini.coefficient(PY))*fx
 
     crit_system = bertini.System()
     crit_system.add_variable_group(bertini.VariableGroup([x, y]))
@@ -43,7 +42,7 @@ def build_system():
 
 def solve_system(crit_system):
     """Solve and keep the real critical points -- the solver decides 'real'."""
-    solver = nag_algorithm.ZeroDimSolver(crit_system, mptype='adaptive')
+    solver = bertini.ZeroDimSolver(crit_system, mptype='adaptive')
     solver.solve()
 
     crit = [(complex(s[0]).real, complex(s[1]).real)

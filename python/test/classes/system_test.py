@@ -34,17 +34,17 @@
 __author__ = 'jcollins'
 
 from bertini import *
-from bertini.function_tree.symbol import *
-from bertini.function_tree.root import *
-from bertini.function_tree import *
+from bertini.symbolics import *
+from bertini.symbolics import *
+from bertini.symbolics import *
 import numpy as np
 import pytest
 
 import bertini as pb
 
 import bertini.multiprec as mp
-from bertini.multiprec import Float as mpfr_float
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import real_mp as mpfr_float
+from bertini.multiprec import complex_mp as mpfr_complex
 
 
 # global default precision is reset to a known baseline before every test by the

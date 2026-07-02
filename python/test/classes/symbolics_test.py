@@ -1,17 +1,17 @@
 # This file is part of Bertini 2.
 #
-# python/test/function_tree_test.py is free software: you can redistribute it and/or modify
+# python/test/classes/symbolics_test.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# python/test/function_tree_test.py is distributed in the hope that it will be useful,
+# python/test/classes/symbolics_test.py is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with python/test/function_tree_test.py.  If not, see <http://www.gnu.org/licenses/>.
+# along with python/test/classes/symbolics_test.py.  If not, see <http://www.gnu.org/licenses/>.
 #
 #  Copyright(C) Bertini2 Development Team
 #
@@ -32,15 +32,15 @@
 
 
 from bertini import *
-from bertini.function_tree.symbol import *
-from bertini.function_tree.root import *
-from bertini.function_tree import *
+from bertini.symbolics import *
+from bertini.symbolics import *
+from bertini.symbolics import *
 import numpy as np
 import pytest
 
 import bertini.multiprec as mp
-from bertini.multiprec import Float as mpfr_float
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import real_mp as mpfr_float
+from bertini.multiprec import complex_mp as mpfr_complex
 
 
 # global default precision is reset to 30 before every test by the autouse

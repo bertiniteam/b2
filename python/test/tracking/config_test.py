@@ -32,9 +32,10 @@ config_types()/get_config()/set_config()/configure() on owners."""
 import pytest
 
 import bertini as pb
-from bertini.tracking import AMPTracker
+from bertini import AMPTracker
 from bertini.tracking import SteppingConfig, NewtonConfig
-from bertini.nag_algorithm import ZeroDimSolver, TolerancesConfig
+from bertini import ZeroDimSolver
+from bertini.nag_algorithm import TolerancesConfig
 
 
 def _square_system():
@@ -84,12 +85,12 @@ def test_equality_by_value():
 def test_update_accepts_string_for_mpfr_field():
     # strings are the blessed noise-free input for numeric settings
     c = SteppingConfig().update(max_step_size="0.05")
-    assert c.max_step_size == pb.multiprec.Float("0.05")
+    assert c.max_step_size == pb.multiprec.real_mp("0.05")
 
 
 def test_update_accepts_mpfr_float_for_mpfr_field():
-    c = SteppingConfig().update(max_step_size=pb.multiprec.Float("0.25"))
-    assert c.max_step_size == pb.multiprec.Float("0.25")
+    c = SteppingConfig().update(max_step_size=pb.multiprec.real_mp("0.25"))
+    assert c.max_step_size == pb.multiprec.real_mp("0.25")
 
 
 def test_update_rejects_python_float_for_mpfr_field():
@@ -138,7 +139,7 @@ def test_zero_dim_config_is_precision_agnostic():
     s.add_function(x * x + y * y - 1); s.add_function(x + y)
     s.add_variable_group(pb.VariableGroup([x, y]))
     for mptype in ('double', 'multiple', 'adaptive'):
-        names = pb.nag_algorithm.ZeroDimSolver(s, mptype=mptype).config_names()
+        names = pb.ZeroDimSolver(s, mptype=mptype).config_names()
         assert 'zero_dim' in names, names
 
 
@@ -147,7 +148,7 @@ def test_zero_dim_config_times_accept_strings():
     # same string spelling as every other numeric field.
     from bertini.nag_algorithm import ZeroDimConfig
     c = ZeroDimConfig().update(endgame_boundary="0.05", start_time="1", target_time="0")
-    assert c.endgame_boundary == pb.multiprec.Float("0.05")
+    assert c.endgame_boundary == pb.multiprec.real_mp("0.05")
 
 
 def test_regeneration_slice_tolerances_are_prefixed():
@@ -169,8 +170,8 @@ def test_regeneration_slice_tolerances_are_prefixed():
 def test_no_field_name_collisions_across_configs():
     # The slice_ rename leaves every config field name unique across all of an owner's configs, which
     # is what lets a field be routed to its owning config unambiguously.
-    from bertini.nag_algorithm import (ZeroDimSolver as ZD,
-                                       TolerancesConfig, RegenerationConfig)
+    from bertini import ZeroDimSolver as ZD
+    from bertini.nag_algorithm import TolerancesConfig, RegenerationConfig
     from bertini.config import writable_fields
     tol = set(writable_fields(TolerancesConfig))
     regen = set(writable_fields(RegenerationConfig))
@@ -185,7 +186,7 @@ def test_update_rejects_garbage_string():
 def test_string_value_roundtrips_through_to_dict():
     c = SteppingConfig().update(max_step_size="0.125")
     d = c.to_dict()
-    assert d['max_step_size'] == pb.multiprec.Float("0.125")
+    assert d['max_step_size'] == pb.multiprec.real_mp("0.125")
     assert SteppingConfig.from_dict(d) == c
 
 
@@ -266,7 +267,7 @@ def test_owner_update_accepts_strings(solver):
 def test_tracker_update_routes_to_its_configs(tracker):
     from bertini.tracking import SteppingConfig, NewtonConfig
     tracker.update(max_step_size="0.05", max_num_newton_iterations=2)
-    assert tracker.get_config(SteppingConfig).max_step_size == pb.multiprec.Float("0.05")
+    assert tracker.get_config(SteppingConfig).max_step_size == pb.multiprec.real_mp("0.05")
     assert tracker.get_config(NewtonConfig).max_num_newton_iterations == 2
 
 
@@ -314,10 +315,10 @@ def test_settings_carry_across_precision_models():
     # the de-templated, precision-agnostic configs are what make this work: a bundle from a multiple-
     # precision solver applies unchanged to a double or adaptive one.  This is the cross-stage carry
     # an NID-style workflow needs.
-    src = pb.nag_algorithm.ZeroDimSolver(_square(), mptype='multiple')
+    src = pb.ZeroDimSolver(_square(), mptype='multiple')
     src.update(final_tolerance="1e-11")
     for mptype in ('double', 'adaptive'):
-        dst = pb.nag_algorithm.ZeroDimSolver(_square(), mptype=mptype)
+        dst = pb.ZeroDimSolver(_square(), mptype=mptype)
         dst.set_settings(src.get_settings())
         assert dst.get_config(TolerancesConfig).final_tolerance == 1e-11
 
@@ -333,7 +334,7 @@ def test_settings_bundle_is_picklable():
 
 
 def test_set_settings_skips_inapplicable_by_default_strict_raises():
-    from bertini.tracking import AMPTracker
+    from bertini import AMPTracker
     settings = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial').get_settings()
     trk = AMPTracker(_square())            # a tracker has no 'tolerances' / 'zero_dim'
     trk.set_settings(settings)             # non-strict: silently skips them
@@ -357,7 +358,7 @@ def test_fixed_multiple_precision_set_via_config():
     b.default_precision(30)
     x = b.Variable('x'); s = b.System()
     s.add_function(x * x - 1); s.add_variable_group(b.VariableGroup([x]))
-    solver = b.nag_algorithm.ZeroDimSolver(s, mptype='multiple')
+    solver = b.ZeroDimSolver(s, mptype='multiple')
     assert solver.get_tracker().get_config(FixedPrecisionConfig).precision == 30   # honest report
     solver.get_tracker().update(precision=70)
     solver.solve()
@@ -370,7 +371,7 @@ def test_double_precision_rejects_a_different_precision():
     from bertini.tracking import FixedPrecisionConfig
     x = b.Variable('x'); s = b.System()
     s.add_function(x * x - 1); s.add_variable_group(b.VariableGroup([x]))
-    solver = b.nag_algorithm.ZeroDimSolver(s, mptype='double')
+    solver = b.ZeroDimSolver(s, mptype='double')
     assert solver.get_tracker().get_config(FixedPrecisionConfig).precision == 16
     solver.get_tracker().update(precision=50)
     with pytest.raises(RuntimeError):

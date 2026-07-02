@@ -29,7 +29,6 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini import linalg
 
 
 TOL = 1e-12
@@ -108,7 +107,7 @@ def test_clone_of_linear_forms_block_preserves_eval_and_jacobian():
     s = pb.System()
     s.add_variable_group(pb.VariableGroup([x, y]))
     s.add_function(x * x + y * y - 1)
-    linalg.add_linear(s, np.array([[2, 1], [1, -3]]), np.array([x, y]), [-1, 4])
+    s.add_linear(np.array([[2, 1], [1, -3]]), np.array([x, y]), [-1, 4])
 
     c = pb.system.clone(s)
     assert list(c.degrees()) == list(s.degrees())

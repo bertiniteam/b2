@@ -34,7 +34,7 @@ arithmetic/equality/matmul tests below crashed the interpreter outright.
 import numpy as np
 import pytest
 
-from bertini.multiprec import Complex as mpfr_complex, Float as mpfr_float
+from bertini.multiprec import complex_mp as mpfr_complex, real_mp as mpfr_float
 
 
 @pytest.fixture(params=[mpfr_float, mpfr_complex], ids=["mpfr_float", "mpfr_complex"])

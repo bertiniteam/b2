@@ -66,13 +66,12 @@ The whole criticality statement is three lines: differentiate the curve into a J
 random projection's coefficient row on top, and dot the result with a null vector.  ``bertini``
 differentiates symbolically (:func:`bertini.jacobian`), :func:`bertini.random_matrix` draws the
 random projection (a projection is just a linear functional, so its gradient row *is* a random
-coefficient row), and :mod:`bertini.linalg` expresses the linear algebra:
+coefficient row), and ``bertini`` expresses the linear algebra:
 
 .. testcode::
 
     import numpy as np
     import bertini
-    from bertini import linalg, nag_algorithm
 
     bertini.random.set_random_seed(165)
     x, y, z = bertini.Variable('x'), bertini.Variable('y'), bertini.Variable('z')
@@ -82,15 +81,15 @@ coefficient row), and :mod:`bertini.linalg` expresses the linear algebra:
     pi = bertini.random_matrix(1, 3, real=True, orthonormal=False)   # a random real projection row
 
     J = bertini.jacobian([f, g], [x, y, z])               # 2 x 3 symbolic Jacobian of the curve
-    M = np.vstack([J, linalg.as_coefficients(pi)])        # 3 x 3: J_f stacked over the projection
-    v = linalg.variable_vector('v', 3)                    # the null-vector unknowns
+    M = np.vstack([J, bertini.coefficients(pi)])          # 3 x 3: J_f stacked over the projection
+    v = np.array(bertini.variables('v', 3), dtype=object) # the null-vector unknowns
 
     sys = bertini.System()
     sys.add(bertini.VariableGroup([x, y, z, *v]), f, g)   # curve equations
-    linalg.add_functions(sys, M @ v)                      # M v = 0   (rank deficiency)
+    sys.add_functions(M @ v)                              # M v = 0   (rank deficiency)
     sys.add_function((bertini.random_matrix(1, 3, symbolic=True) @ v)[0] - 1)   # de-zero patch h.v = 1
 
-    solver = nag_algorithm.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+    solver = bertini.ZeroDimSolver(sys, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     solver.solve()
 
     finite = []

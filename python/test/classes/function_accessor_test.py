@@ -35,9 +35,9 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini._pybertini.function_tree import AbstractNode
-from bertini import linalg, nag_algorithm as na
-from bertini.nag_algorithm import Slice
+from bertini.symbolics import AbstractNode
+from bertini import nag_algorithm as na
+from bertini import Slice
 
 
 def _vg(*vs):
@@ -80,7 +80,7 @@ def test_function_linear_forms_block_from_slice():
 def test_function_products_of_linears_block():
     x, y = pb.Variable('x'), pb.Variable('y')
     s = pb.System(); s.add_variable_group(_vg(x, y))
-    linalg.add_products_of_linears(s, [[[1, 0, -1], [1, 0, 1]]])   # (x-1)(x+1)
+    s.add_products_of_linears([[[1, 0, -1], [1, 0, 1]]])   # (x-1)(x+1)
     fns = _all_functions_are_nodes(s)
     assert 'x' in str(fns[0])
 
@@ -89,7 +89,7 @@ def test_function_randomization_block():
     x, y = pb.Variable('x'), pb.Variable('y')
     o = pb.System(); o.add_variable_group(_vg(x, y))
     o.add_function(x * x + y * y - 1); o.add_function(x * y); o.add_function(x * x - y)
-    r = linalg.randomize(o)                   # only a RandomizationBlock, no PolynomialBlock
+    r = o.randomize()                   # only a RandomizationBlock, no PolynomialBlock
     _all_functions_are_nodes(r)
 
 
@@ -99,16 +99,16 @@ def test_function_blend_block():
     sm = pb.System(); sm.add_variable_group(_vg(x, y)); sm.add_function(y)
     em = pb.System(); em.add_variable_group(_vg(x, y)); em.add_function(y - x)
     H = na.moving_homotopy(fx, sm, em,
-                           gamma=linalg.coefficient(pb.multiprec.Complex('0.6', '0.8')))
+                           gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8')))
     _all_functions_are_nodes(H)               # a BlendBlock row expands recursively
 
 
 def test_function_matches_eval_for_slice_system():
     # the node returned by function(i) must evaluate to the same value as the block.
     x, y = pb.Variable('x'), pb.Variable('y')
-    sys = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y]).as_system()
-    one = pb.multiprec.Complex('1')
-    pt = np.array([one, one], dtype=pb.multiprec.Complex)
+    sys = pb.Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y]).as_system()
+    one = pb.multiprec.complex_mp('1')
+    pt = np.array([one, one], dtype=pb.multiprec.complex_mp)
     from_block = sys.eval(pt)                  # System eval: a vector in variable order
     for i in range(sys.num_functions()):
         node_val = sys.function(i).eval(x=one, y=one)   # node eval: variable values by keyword
@@ -125,7 +125,7 @@ def test_slices_empty_for_polynomial_system():
 
 def test_slices_roundtrips_coefficients():
     x, y = pb.Variable('x'), pb.Variable('y')
-    s = linalg.slice_from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
+    s = pb.Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])
     recovered = s.as_system().slices()
     assert len(recovered) == 1
     orig = np.asarray(s.coefficients())
@@ -140,7 +140,7 @@ def test_slices_one_per_linear_forms_block():
     x, y = pb.Variable('x'), pb.Variable('y')
     m = pb.System(); m.add_variable_group(_vg(x, y))
     m.add_function(x * x + y * y - 1)
-    linalg.add_linear(m, np.array([[2, 1]]), np.array([x, y]), [-1])   # 2x + y - 1
+    m.add_linear(np.array([[2, 1]]), np.array([x, y]), [-1])   # 2x + y - 1
     slices = m.slices()
     assert len(slices) == 1
     assert slices[0].dimension() == 1

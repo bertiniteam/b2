@@ -39,12 +39,12 @@ import pytest
 
 import bertini
 from bertini import System, VariableGroup
-from bertini.function_tree.symbol import Variable
-from bertini.function_tree import *
+from bertini.symbolics import Variable
+from bertini.symbolics import *
 import bertini.system.start_system as ss
 
 import bertini.multiprec as mp
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import complex_mp as mpfr_complex
 
 
 @pytest.fixture

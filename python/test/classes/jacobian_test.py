@@ -25,7 +25,7 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini._pybertini.function_tree import AbstractNode
+from bertini.symbolics import AbstractNode
 
 from eval_helper import eval_at
 
@@ -52,8 +52,7 @@ def test_single_function_is_two_dimensional():
 
 
 def test_jacobian_accepts_variable_vector_and_numpy_functions():
-    from bertini import linalg
-    x = linalg.variable_vector('x', 3)            # numpy object array of Variables
+    x = np.array(pb.variables('x', 3), dtype=object)            # numpy object array of Variables
     F = np.array([x[0] * x[1], x[2] ** 2], dtype=object)
     J = pb.jacobian(F, x)
     assert J.shape == (2, 3)
@@ -143,11 +142,10 @@ def _assert_symbolic_matches_numeric(S, **point):
 
 
 def test_jacobian_linear_forms_block():
-    from bertini import linalg
     x, y = pb.Variable('x'), pb.Variable('y')
     S = pb.System()
     S.add_variable_group(pb.VariableGroup([x, y]))
-    linalg.add_linear(S, np.array([[2, 1]]), np.array([x, y]), [-1])   # 2x + y - 1
+    S.add_linear(np.array([[2, 1]]), np.array([x, y]), [-1])   # 2x + y - 1
     J = S.jacobian()
     assert J.shape == (1, 2)
     assert eval_at(J[0, 0], x=9, y=9) == 2 and eval_at(J[0, 1], x=9, y=9) == 1   # constant coefficients
@@ -155,11 +153,10 @@ def test_jacobian_linear_forms_block():
 
 
 def test_jacobian_slice_block():
-    from bertini import linalg
     x, y = pb.Variable('x'), pb.Variable('y')
     S = pb.System()
     S.add_variable_group(pb.VariableGroup([x, y]))
-    sl = linalg.slice_from_coefficients([[2, 1, -1]], [x, y])          # a slice is a linear-forms block
+    sl = pb.Slice.from_coefficients([[2, 1, -1]], [x, y])          # a slice is a linear-forms block
     sl.add_to(S)
     J = S.jacobian()
     assert J.shape == (1, 2)
@@ -167,11 +164,10 @@ def test_jacobian_slice_block():
 
 
 def test_jacobian_products_of_linears_block():
-    from bertini import linalg
     x, y = pb.Variable('x'), pb.Variable('y')
     S = pb.System()
     S.add_variable_group(pb.VariableGroup([x, y]))
-    linalg.add_products_of_linears(S, [
+    S.add_products_of_linears([
         [[1, 0, -1], [1, 0, 1]],     # (x - 1)(x + 1)
         [[0, 1, -1], [0, 1, -2]],    # (y - 1)(y - 2)
     ])
@@ -183,7 +179,6 @@ def test_jacobian_products_of_linears_block():
 
 
 def test_jacobian_randomization_block():
-    from bertini import linalg
     pb.random.set_random_seed(91)
     x, y = pb.Variable('x'), pb.Variable('y')
     S = pb.System()
@@ -191,7 +186,7 @@ def test_jacobian_randomization_block():
     S.add_function(x * x + y * y - 1)
     S.add_function(x * y)
     S.add_function(x * x + y * y - x - y)       # overdetermined: 3 functions, 2 variables
-    R = linalg.randomize(S)                       # a randomization block
+    R = S.randomize()                       # a randomization block
     J = R.jacobian()
     assert J.shape == (2, 2)
     _assert_symbolic_matches_numeric(R, x=0.7, y=-1.2)

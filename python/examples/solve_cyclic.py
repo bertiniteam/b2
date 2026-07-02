@@ -56,7 +56,7 @@ def main():
     if args.seed is not None:
         pb.random.set_random_seed(args.seed)
     system = cyclic_system(args.n)
-    solver = pb.nag_algorithm.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
+    solver = pb.ZeroDimSolver(system, endgame='cauchy', mptype='adaptive', startsystem='binomial')
 
     # Adaptive precision is what makes this reliable.  cyclic-n has a few near-singular paths that
     # sit right at the edge of double-precision tracking tolerance; in double precision one of them

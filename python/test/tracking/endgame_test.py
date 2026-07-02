@@ -37,16 +37,16 @@ import pytest
 import numpy as np
 
 from bertini import *
-from bertini.function_tree.symbol import *
-from bertini.function_tree.root import *
-from bertini.function_tree import *
+from bertini.symbolics import *
+from bertini.symbolics import *
+from bertini.symbolics import *
 from bertini.tracking import *
 from bertini.endgame import *
 
 import bertini.system.start_system as ss
 import bertini.multiprec as mp
-from bertini.multiprec import Float as mpfr_float
-from bertini.multiprec import Complex as mpfr_complex
+from bertini.multiprec import real_mp as mpfr_float
+from bertini.multiprec import complex_mp as mpfr_complex
 
 
 AMBIENT_PRECISION = 50

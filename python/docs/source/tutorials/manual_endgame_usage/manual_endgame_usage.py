@@ -19,7 +19,7 @@ def form_system():
     vg.append(y)
     gw.add_variable_group(vg)
 
-    gw.add_function(bertini.multiprec.Rational(29, 16) * x**3 - 2 * x * y)
+    gw.add_function(bertini.multiprec.rational_mp(29, 16) * x**3 - 2 * x * y)
     gw.add_function(y - x**2)
 
     return gw
@@ -29,7 +29,7 @@ def form_homotopy(gw):
     """Make the total degree start system and couple it via the gamma trick."""
     t = bertini.Variable('t')
     td = bertini.system.start_system.TotalDegreeLinearProduct(gw)
-    gamma = bertini.function_tree.symbol.Rational.rand()
+    gamma = bertini.symbolics.Rational.rand()
     hom = (1 - t) * gw + t * gamma * td
     hom.add_path_variable(t)
 
@@ -38,23 +38,23 @@ def form_homotopy(gw):
 
 def track_to_boundary(gw, hom, td):
     """Track every start point to the endgame boundary."""
-    tr = bertini.tracking.AMPTracker(hom)
+    tr = bertini.AMPTracker(hom)
 
-    start_time = bertini.multiprec.Complex("1")
-    eg_boundary = bertini.multiprec.Complex("0.1")
+    start_time = bertini.multiprec.complex_mp("1")
+    eg_boundary = bertini.multiprec.complex_mp("0.1")
 
     midpath_points = [None] * td.num_start_points()
     for ii in range(td.num_start_points()):
         midpath_points[ii] = bertini.multiprec.Vector(gw.num_variables())   # result must be pre-sized
         code = tr.track_path(result=midpath_points[ii], start_time=start_time, end_time=eg_boundary, start_point=td.start_point_mp(ii))
-        assert code == bertini.tracking.SuccessCode.Success                 # every path reaches the boundary
+        assert code == bertini.SuccessCode.Success                 # every path reaches the boundary
 
     return tr, eg_boundary, midpath_points
 
 
 def use_endgame(tr, eg_boundary, td, midpath_points):
     """Run the adaptive Cauchy endgame from the boundary down to t = 0."""
-    eg = bertini.endgame.AMPCauchyEG(tr, eg_boundary)
+    eg = bertini.endgame.AMPCauchyEndgame(tr, eg_boundary)
 
     # make an observer to be able to see what's going on inside
     ob = bertini.endgame.observers.amp_cauchy.GoryDetailLogger()

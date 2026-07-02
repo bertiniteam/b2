@@ -18,7 +18,7 @@ you already have.  This is bertini's "evaluate as little as possible" in action,
 pleasantly parallel across the parameter values.
 
 The tools are :func:`bertini.nag_algorithm.coefficient_parameter_homotopy` (builds the homotopy)
-and :func:`bertini.nag_algorithm.HomotopySolver` (runs the full zero-dim pipeline -- pre-endgame
+and :func:`bertini.HomotopySolver` (runs the full zero-dim pipeline -- pre-endgame
 tracking, the midpath check, the endgame, post-processing -- from a homotopy you constructed and
 a list of start points you already have).
 
@@ -53,7 +53,7 @@ solutions are the start points we will reuse forever after:
 .. testcode::
 
     generic = member(1)                                # the line y = 1/2
-    first = nag_algorithm.ZeroDimSolver(generic, mptype='adaptive')
+    first = bertini.ZeroDimSolver(generic, mptype='adaptive')
     first.solve()
     start_points = first.all_solutions()                   # (+/- sqrt(3)/2, 1/2)
 
@@ -67,7 +67,7 @@ and track the start points through it:
 
     target = member(0)                                 # the line y = 0
     H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
-    moved = nag_algorithm.HomotopySolver(H, start_points, target)
+    moved = bertini.HomotopySolver(H, start_points, target)
     moved.solve()
     # moved.all_solutions() are now (+/- 1, 0)
 
@@ -83,7 +83,7 @@ solving from scratch again:
     for s in [0, -1, 1]:                               # lines y = 0, -1/2, 1/2
         target = member(s)
         H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
-        solver = nag_algorithm.HomotopySolver(H, start_points, target)
+        solver = bertini.HomotopySolver(H, start_points, target)
         solver.solve()
         roots = [p for p in solver.all_solutions() if len(p) == 2]
         for p in roots:

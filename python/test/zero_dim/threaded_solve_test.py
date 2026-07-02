@@ -12,7 +12,7 @@ import pytest
 
 import bertini as pb
 import bertini.tracking as tk
-from bertini.nag_algorithm import ZeroDimSolver, SolutionPathCollector
+from bertini import ZeroDimSolver, SolutionPathCollector
 
 
 def _two_cubics():

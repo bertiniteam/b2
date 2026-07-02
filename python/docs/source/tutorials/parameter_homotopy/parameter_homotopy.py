@@ -24,7 +24,7 @@ def member(s):
 def solve_once():
     """Pick a generic member and solve it ab initio; its solutions are our start points."""
     generic = member(1)                                # the line y = 1/2
-    first = nag_algorithm.ZeroDimSolver(generic, mptype='adaptive')
+    first = bertini.ZeroDimSolver(generic, mptype='adaptive')
     first.solve()
     start_points = first.all_solutions()               # (+/- sqrt(3)/2, 1/2)
     return generic, start_points
@@ -34,7 +34,7 @@ def move_parameter(generic, start_points):
     """Move to another member via a parameter homotopy, without solving from scratch."""
     target = member(0)                                 # the line y = 0
     H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
-    moved = nag_algorithm.HomotopySolver(H, start_points, target)
+    moved = bertini.HomotopySolver(H, start_points, target)
     moved.solve()
     # moved.all_solutions() are now (+/- 1, 0)
     return moved
@@ -45,7 +45,7 @@ def sweep(generic, start_points):
     for s in [0, -1, 1]:                               # lines y = 0, -1/2, 1/2
         target = member(s)
         H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
-        solver = nag_algorithm.HomotopySolver(H, start_points, target)
+        solver = bertini.HomotopySolver(H, start_points, target)
         solver.solve()
         roots = [p for p in solver.all_solutions() if len(p) == 2]
         for p in roots:

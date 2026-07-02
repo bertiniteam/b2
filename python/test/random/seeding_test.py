@@ -31,7 +31,7 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import ZeroDimSolver
+from bertini import ZeroDimSolver
 
 
 def _draw_sequence(n=6):

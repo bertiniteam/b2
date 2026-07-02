@@ -39,8 +39,8 @@ sp = pytest.importorskip('sympy')
 
 import bertini as pb
 import bertini.multiprec as mp
-from bertini.function_tree import sin, gather_variables
-from bertini.function_tree.symbol import Rational
+from bertini.symbolics import sin, gather_variables
+from bertini.symbolics import Rational
 from bertini.sympy_bridge import from_sympy, to_sympy, system_from_sympy
 
 from eval_helper import eval_at
@@ -139,7 +139,7 @@ def test_reverse_jacobian_form_raises():
 def test_reverse_float_precision_carry():
     mp.default_precision(50)
     fifty = '1.' + '3' * 49
-    from bertini.function_tree.symbol import Complex
+    from bertini.symbolics import Complex
     expr = to_sympy(Complex(fifty))
     # the mpfr precision rides into sympy's Complex; allow the last digits to round
     assert str(expr)[:48] == fifty[:48]
@@ -170,7 +170,7 @@ def test_round_trip_bertini_to_sympy_to_bertini():
 # --- the acceptance test: define in sympy, solve with bertini ---
 
 def test_end_to_end_solve_matches_sympy(sxy):
-    from bertini.nag_algorithm import ZeroDimSolver
+    from bertini import ZeroDimSolver
 
     sx, sy = sxy
     eqs = [sx**2 + sy**2 - 1, sx + sy]
