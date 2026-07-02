@@ -54,8 +54,6 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 	using namespace tracking;
 
 	using Tolerances = algorithm::TolerancesConfig;
-	using EndgameConfT = endgame::EndgameConfig;
-	
 
 	auto sys = system::Precon::GriewankOsborn();
 
@@ -73,12 +71,17 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 	tr.AddObserver(logger);
 
 
-	auto eg = zd.GetFromEndgame<EndgameConfT>();
-	eg.final_tolerance = 1e-12;
-	zd.SetToEndgame(eg);
+	// Tolerances.final_tolerance is the single source of truth; the solver flows it into the
+	// endgame in PreSolveSetup (no need to poke the EndgameConfig directly any more).
+	tols.final_tolerance = 1e-12;
+	zd.Set(tols);
 
 	zd.Solve();
 
+	// The solver's Tolerances.final_tolerance is canonical: PreSolveSetup must have flowed it into
+	// the endgame (before this fix, the endgame ignored it and kept its own EndgameConfig default).
+	BOOST_CHECK_EQUAL(zd.GetFromEndgame<endgame::EndgameConfig>().final_tolerance,
+	                  zd.Get<Tolerances>().final_tolerance);
 
 	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
 }

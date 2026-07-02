@@ -494,7 +494,7 @@ public:
 
 			// auto refinement_success = this->RefineSample(next_sample, next_sample, next_time,
 			// 							this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
-			// 							this->EndgameSettings().max_num_newton_iterations);
+			// 							this->EndgameSettings().max_num_refinements);
 			// if (refinement_success != SuccessCode::Success)
 			// {
 			// 	return refinement_success;
@@ -721,8 +721,8 @@ public:
 			this->GetSystem().precision(new_precision);
 		}
 
-		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),this->FinalTolerance(),this->EndgameSettings().max_num_newton_iterations);
-		this->GetTracker().Refine(samples.back(),samples.back(),times.back(),this->FinalTolerance(),this->EndgameSettings().max_num_newton_iterations);
+		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),this->FinalTolerance(),this->EndgameSettings().max_num_refinements);
+		this->GetTracker().Refine(samples.back(),samples.back(),times.back(),this->FinalTolerance(),this->EndgameSettings().max_num_refinements);
 
 		if((samples.front() - samples.back()).template lpNorm<Eigen::Infinity>() < this->GetTracker().TrackingTolerance())
 		{
