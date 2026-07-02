@@ -67,7 +67,7 @@ def _encode_point(vec) -> list:
 
 
 def _decode_point(coords: list) -> np.ndarray:
-    return np.array([mp.Complex(re, im) for re, im in coords])
+    return np.array([mp.complex_mp(re, im) for re, im in coords])
 
 
 class LedgerSolveResult:

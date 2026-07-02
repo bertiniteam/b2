@@ -16,8 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from bertini import System, VariableGroup
-from bertini.function_tree.symbol import Variable
+from bertini import System, Variable, VariableGroup
 
 from ledger import Ledger
 from memo_solve import solve, continue_from, provenance_chain, SimulatedCrash
