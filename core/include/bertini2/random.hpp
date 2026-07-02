@@ -35,6 +35,7 @@
 
 
 #include "bertini2/mpfr_complex.hpp"
+#include "bertini2/records/derive.hpp"
 #include <boost/random.hpp>
 #include <random>
 #include <cstdint>
@@ -89,9 +90,8 @@ namespace bertini
 	inline
 	mpz_int RandomInt()
 	{
-		using namespace boost::random;
-		static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
-		return ui(ThreadEngine());
+		// pinned draw (b2rand/1, ADR-0044): uniform on [-2^(digits/log10(2)), +same]
+		return records::ThreadDrawStream().IntSymmetric(mpz_int(1) << digits*1000L/301L);
 	}
 
 
@@ -101,9 +101,15 @@ namespace bertini
 	template <unsigned long digits = 50>
 	mpq_rational RandomRat()
 	{
-		using namespace boost::random;
-		static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
-		return mpq_rational(ui(ThreadEngine()), ui(ThreadEngine()));
+		// pinned draws (b2rand/1, ADR-0044).  A zero denominator is redrawn (deterministically):
+		// the legacy draw could in principle hand mpq a denominator of 0.
+		mpz_int const bound = mpz_int(1) << digits*1000L/301L;
+		auto& stream = records::ThreadDrawStream();
+		mpz_int const num = stream.IntSymmetric(bound);
+		mpz_int den = stream.IntSymmetric(bound);
+		while (den == 0)
+			den = stream.IntSymmetric(bound);
+		return mpq_rational(num, den);
 	}
 
 
@@ -115,18 +121,11 @@ namespace bertini
 	template <unsigned int length_in_digits>
 	real_mp RandomMp()
 	{
-
-		using namespace boost::multiprecision;
-   		using namespace boost::random;
-
-   		static thread_local uniform_real_distribution<number<mpfr_float_backend<length_in_digits>, et_on> > distribution(0,1);
-
-		// Draw from the single per-thread engine shared by every random type
-		// (RandomInt/RandomRat, the double-typed draws, and now the multiprecision
-		// ones), so SetGlobalSeed()/ReseedThisThread() control them all uniformly.
-		// The distribution fills the full mp mantissa from the 32-bit engine via
-		// generate_canonical.
-		real_mp a{distribution(ThreadEngine())};
+		// Pinned draw (b2rand/1, ADR-0044) from the single per-thread stream shared by
+		// every random type, so SetGlobalSeed()/ReseedThisThread() control them all
+		// uniformly.  Uniform on [0,1) at length_in_digits digits, bit-identical on
+		// every platform.
+		real_mp a{records::ThreadDrawStream().UnitRealMp(length_in_digits)};
 		return a;
 	}
 	

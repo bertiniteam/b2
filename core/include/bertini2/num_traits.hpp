@@ -34,6 +34,7 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #define BERTINI_NUM_TRAITS_HPP
 
 #include <random>
+#include "bertini2/records/draw_functions.hpp"
 #include <complex>
 #include <cmath>
 #include "bertini2/mpfr_complex.hpp"
@@ -219,8 +220,7 @@ namespace bertini
 	{
 		using std::abs;
 		using std::sqrt;
-		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		complex_dbl returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
+		complex_dbl returnme(records::DrawSymmetricDouble(), records::DrawSymmetricDouble());
 		return returnme / sqrt( abs(returnme));
 	}
 
@@ -228,8 +228,7 @@ namespace bertini
 	template <> inline
 	complex_dbl RandomUnit<complex_dbl >()
 	{
-		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		complex_dbl returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
+		complex_dbl returnme(records::DrawSymmetricDouble(), records::DrawSymmetricDouble());
 		return returnme / abs(returnme);
 	}
 
@@ -248,8 +247,7 @@ namespace bertini
 	inline
 	real_mp RandomUnit<real_mp>()
 	{
-		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		return real_mp( distribution(ThreadEngine()) < 0.0 ? -1 : 1 );
+		return real_mp( records::DrawSymmetricDouble() < 0.0 ? -1 : 1 );
 	}
 }// re: namespace bertini
 

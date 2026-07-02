@@ -29,6 +29,7 @@
 */
 
 #include "bertini2/random.hpp"
+#include "bertini2/records/derive.hpp"
 
 #include <random>
 #include <atomic>
@@ -101,6 +102,9 @@ void SetGlobalSeed(unsigned long seed)
 	// the setup stream: domain = setup, index = 0.  Path/worker streams use other domains, so none
 	// of them can ever reproduce this stream (the old ReseedThisThread(0) == SetGlobalSeed collision).
 	SeedEngine(g_thread_engine, static_cast<uint64_t>(seed), kDomainSetup, 0);
+	// the pinned stream (b2rand/1, ADR-0044) is the actual source of identity-relevant
+	// draws; the mt19937 engine above remains only for legacy/non-identity consumers
+	records::ThreadDrawStream().Reseed(static_cast<uint64_t>(seed), kDomainSetup, 0);
 }
 
 void ReseedThisThread(uint64_t stream_key)
@@ -108,6 +112,7 @@ void ReseedThisThread(uint64_t stream_key)
 	// per-path / per-thread stream: domain = path, index = stream_key.  Deterministic from the global
 	// seed and distinct for every stream_key (and distinct from the setup stream).
 	SeedEngine(g_thread_engine, static_cast<uint64_t>(GetGlobalSeed()), kDomainPath, stream_key);
+	records::ThreadDrawStream().Reseed(static_cast<uint64_t>(GetGlobalSeed()), kDomainPath, stream_key);
 }
 
 // Derive a distinct, deterministic child seed for a worker rank, from the master seed.  The manager

@@ -61,3 +61,4 @@ Each ADR follows the template:
 | [0041](0041-bounded-modulus-random-coefficients.md) | Well-conditioned random coefficients: bounded-modulus scalars, conjugate-orthonormal matrices (start systems, patches, slices, randomization), matching Bertini 1 | Numerics / core |
 | [0042](0042-system-content-identity-seal-and-interning.md) | System content identity: versioned canonical encoding + SHA-256 digest, Seal(), System/Program interning, re-intern-on-load (ADR-0027 E4) | Core / system |
 | [0043](0043-config-canonical-encoding-and-digests.md) | Config canonical encodings + digests (b2cfgenc/1): bit-exact doubles, fixed enum names, SettingsDigest composition; seed and num_threads excluded from identity | Core / records |
+| [0044](0044-seed-rooted-randomness.md) | Seed-rooted randomness (b2rand/1): every identity-relevant draw derives from a pinned SHA-256 counter stream; same seed = digest-identical homotopies, cross-platform, forever | Core / records |

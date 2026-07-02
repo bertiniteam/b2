@@ -34,6 +34,7 @@
 #pragma once
 
 #include <random>
+#include "bertini2/records/draw_functions.hpp"
 #include <complex>
 
 
@@ -75,8 +76,8 @@ std::mt19937& ThreadEngine();
 	inline
 	double RandReal()
 	{
-		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		return distribution(ThreadEngine());
+		// pinned draw (b2rand/1, ADR-0044)
+		return records::DrawSymmetricDouble();
 	}
 
 	namespace{
