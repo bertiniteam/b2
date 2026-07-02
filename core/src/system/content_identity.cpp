@@ -44,6 +44,8 @@ derivable variable-ordering cache.
 #include "bertini2/function_tree/canonical_encoding.hpp"
 
 #include <cstring>
+#include <map>
+#include <mutex>
 #include <sstream>
 
 namespace bertini {
@@ -311,7 +313,88 @@ std::string System::CanonicalEncodingText() const
 
 detail::Digest256 System::ContentDigest() const
 {
-	return detail::Sha256(CanonicalEncodingText());
+	if (is_sealed_ && sealed_digest_)
+		return *sealed_digest_;
+
+	auto const digest = detail::Sha256(CanonicalEncodingText());
+	if (is_sealed_)
+		sealed_digest_ = digest;  // sealed-but-unmemoized happens after deserialization
+	return digest;
+}
+
+void System::Seal()
+{
+	if (is_sealed_)
+		return;
+	sealed_digest_ = detail::Sha256(CanonicalEncodingText());
+	is_sealed_ = true;
+}
+
+bool System::IsSealed() const
+{
+	return is_sealed_;
+}
+
+void System::ThrowIfSealed(char const* operation) const
+{
+	if (is_sealed_)
+		throw std::logic_error(std::string("cannot ") + operation
+			+ " on a sealed System (ADR-0042); copy it to get an unsealed, structurally mutable one");
+}
+
+
+// ---- the System intern table (ADR-0042) ----
+
+namespace {
+
+	// Process-global table: full content digest -> live sealed representative, held weakly so
+	// it self-cleans (expired entries pruned on touch).  The 256-bit key makes an equality
+	// disambiguation chain unnecessary.  Lazy-init function-local statics avoid SIOF.
+	std::map<detail::Digest256, std::weak_ptr<const System>>& SystemInternTable()
+	{
+		static std::map<detail::Digest256, std::weak_ptr<const System>> table;
+		return table;
+	}
+	std::mutex& SystemInternMutex()
+	{
+		static std::mutex m;
+		return m;
+	}
+
+} // unnamed namespace
+
+std::shared_ptr<const System> InternSystem(std::shared_ptr<System> const& candidate)
+{
+	if (!candidate)
+		throw std::invalid_argument("InternSystem: null candidate");
+
+	candidate->Seal();  // identity attaches at the freeze moment; also memoizes the digest
+	auto const digest = candidate->ContentDigest();
+
+	std::lock_guard<std::mutex> lock(SystemInternMutex());
+	auto& table = SystemInternTable();
+
+	// prune expired entries on touch, keeping the table proportional to live systems
+	for (auto it = table.begin(); it != table.end(); )
+	{
+		if (it->second.expired())
+			it = table.erase(it);
+		else
+			++it;
+	}
+
+	auto const found = table.find(digest);
+	if (found != table.end())
+	{
+		if (auto live = found->second.lock())
+		{
+			assert(live->CanonicalEncodingText() == candidate->CanonicalEncodingText()
+				&& "SHA-256 collision between structurally different Systems");
+			return live;                        // hit: discard the candidate
+		}
+	}
+	table[digest] = candidate;                  // miss: register and keep
+	return candidate;
 }
 
 std::size_t System::Hash() const

@@ -205,6 +205,159 @@ BOOST_AUTO_TEST_CASE(serialization_round_trip_preserves_digest)
 	BOOST_CHECK(original.IsSame(loaded));
 }
 
+// ---- Seal(): hashcons-on-freeze ----
+
+BOOST_AUTO_TEST_CASE(copy_is_same_as_original_including_prehom_snapshot)
+{
+	auto original = Parse(kCircleLine);
+	original.Homogenize();   // populates the pre-homogenization snapshot
+	System const copy(original);
+	BOOST_CHECK(copy.IsSame(original));   // regression: copy ctor must carry prehom functions
+}
+
+BOOST_AUTO_TEST_CASE(seal_memoizes_and_is_idempotent)
+{
+	auto sys = Parse(kCircleLine);
+	auto const fresh = sys.ContentDigest();
+	BOOST_CHECK(!sys.IsSealed());
+
+	sys.Seal();
+	BOOST_CHECK(sys.IsSealed());
+	BOOST_CHECK(fresh == sys.ContentDigest());   // memo agrees with fresh compute
+	sys.Seal();                                  // idempotent
+	BOOST_CHECK(fresh == sys.ContentDigest());
+}
+
+BOOST_AUTO_TEST_CASE(every_structural_mutator_throws_when_sealed)
+{
+	auto sys = Parse(kCircleLine);
+	sys.Seal();
+
+	auto x = bertini::node::Variable::Make("x");
+	auto w = bertini::node::Variable::Make("w");
+	auto other = Parse(kCircleLine);
+
+	BOOST_CHECK_THROW(sys.AddFunction(x + 1), std::logic_error);
+	BOOST_CHECK_THROW(sys.AddFunctions({x + 1}), std::logic_error);
+	BOOST_CHECK_THROW(sys.AddVariableGroup({w}), std::logic_error);
+	BOOST_CHECK_THROW(sys.AddHomVariableGroup({w}), std::logic_error);
+	BOOST_CHECK_THROW(sys.AddUngroupedVariable(w), std::logic_error);
+	BOOST_CHECK_THROW(sys.AddUngroupedVariables({w}), std::logic_error);
+	BOOST_CHECK_THROW(sys.AddImplicitParameter(w), std::logic_error);
+	BOOST_CHECK_THROW(sys.AddImplicitParameters({w}), std::logic_error);
+	BOOST_CHECK_THROW(sys.AddPathVariable(w), std::logic_error);
+	BOOST_CHECK_THROW(sys.Homogenize(), std::logic_error);
+	BOOST_CHECK_THROW(sys.AutoPatch(), std::logic_error);
+	BOOST_CHECK_THROW(sys.CopyPatches(other), std::logic_error);
+	BOOST_CHECK_THROW(sys.CopyVariableStructure(other), std::logic_error);
+	BOOST_CHECK_THROW(sys.ClearFunctions(), std::logic_error);
+	BOOST_CHECK_THROW(sys.ClearBlocks(), std::logic_error);
+	BOOST_CHECK_THROW(sys.ClearVariables(), std::logic_error);
+	BOOST_CHECK_THROW(sys.SimplifyFunctions(), std::logic_error);
+	BOOST_CHECK_THROW(sys.Simplify(), std::logic_error);
+	BOOST_CHECK_THROW(sys.ReorderFunctionsByDegreeDecreasing(), std::logic_error);
+	BOOST_CHECK_THROW(sys.ReorderFunctionsByDegreeIncreasing(), std::logic_error);
+	BOOST_CHECK_THROW(sys += other, std::logic_error);
+	BOOST_CHECK_THROW(sys *= (x + 1), std::logic_error);
+	BOOST_CHECK_THROW(sys.SetVariableGroups({{w}}), std::logic_error);
+	BOOST_CHECK_THROW(sys.AddBlock(bertini::blocks::PolynomialBlock{}), std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(transient_operations_work_on_a_sealed_system)
+{
+	auto sys = Parse(kCircleLine);
+	sys.Seal();
+	auto const digest = sys.ContentDigest();
+
+	sys.precision(50);      // transient
+	sys.Differentiate();    // derived cache
+
+	// evaluation on a sealed system
+	bertini::Vec<bertini::complex_dbl> values(2), point(2);
+	point << bertini::complex_dbl(1.0, 0.0), bertini::complex_dbl(0.0, 1.0);
+	sys.EvalInPlace(values, point);
+
+	BOOST_CHECK(digest == sys.ContentDigest());
+	BOOST_CHECK(sys.IsSealed());
+}
+
+BOOST_AUTO_TEST_CASE(copy_of_sealed_system_is_unsealed_and_mutable)
+{
+	auto sys = Parse(kCircleLine);
+	sys.Seal();
+
+	System copy(sys);
+	BOOST_CHECK(!copy.IsSealed());
+	BOOST_CHECK(copy.IsSame(sys));
+
+	auto w = bertini::node::Variable::Make("w");
+	BOOST_CHECK_NO_THROW(copy.AddUngroupedVariable(w));   // the copy-on-write escape hatch
+	BOOST_CHECK(!copy.IsSame(sys));
+
+	System assigned;
+	assigned = sys;
+	BOOST_CHECK(!assigned.IsSealed());
+}
+
+BOOST_AUTO_TEST_CASE(seal_flag_round_trips_serialization_and_digest_rememoizes)
+{
+	auto original = Parse(kCircleLine);
+	original.Seal();
+
+	std::stringstream archive_stream;
+	{
+		boost::archive::text_oarchive oa(archive_stream);
+		oa << original;
+	}
+	System loaded;
+	{
+		boost::archive::text_iarchive ia(archive_stream);
+		ia >> loaded;
+	}
+	BOOST_CHECK(loaded.IsSealed());
+	BOOST_CHECK(loaded.IsSame(original));   // digest recomputed on demand, then memoized
+	auto w = bertini::node::Variable::Make("w");
+	BOOST_CHECK_THROW(loaded.AddUngroupedVariable(w), std::logic_error);
+}
+
+// ---- InternSystem: the weak intern table ----
+
+BOOST_AUTO_TEST_CASE(intern_hit_returns_the_live_representative)
+{
+	auto first = std::make_shared<System>(Parse(kCircleLine));
+	auto second = std::make_shared<System>(Parse(kCircleLine));   // equal content, distinct object
+	BOOST_REQUIRE(first != second);
+
+	auto rep_a = bertini::InternSystem(first);
+	BOOST_CHECK(rep_a == first);            // miss: candidate becomes representative
+	BOOST_CHECK(first->IsSealed());         // interning seals
+
+	auto rep_b = bertini::InternSystem(second);
+	BOOST_CHECK(rep_b == rep_a);            // hit: the SAME shared object comes back
+}
+
+BOOST_AUTO_TEST_CASE(intern_distinguishes_different_content)
+{
+	auto a = std::make_shared<System>(Parse("function f; variable_group x; f = x^5-1;"));
+	auto b = std::make_shared<System>(Parse("function f; variable_group x; f = x^5-2;"));
+	BOOST_CHECK(bertini::InternSystem(a) != bertini::InternSystem(b));
+}
+
+BOOST_AUTO_TEST_CASE(intern_table_is_weak_and_self_cleans)
+{
+	std::string const recipe = "function f; variable_group x; f = x^7 - 42;";
+	{
+		auto ephemeral = std::make_shared<System>(Parse(recipe));
+		auto rep = bertini::InternSystem(ephemeral);
+		BOOST_CHECK(rep == ephemeral);
+	}   // last owner drops; the table's weak_ptr is now expired
+
+	// a fresh equal system becomes a NEW representative (no dangling resurrection)
+	auto fresh = std::make_shared<System>(Parse(recipe));
+	auto rep = bertini::InternSystem(fresh);
+	BOOST_CHECK(rep == fresh);
+}
+
 // ---- the golden fixture: cross-session digest stability ----
 
 BOOST_AUTO_TEST_CASE(golden_digests_match_committed_fixture)
