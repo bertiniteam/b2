@@ -51,6 +51,7 @@
 #include "bertini2/eigen_extensions.hpp"
 
 
+#include "bertini2/detail/sha256.hpp"
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system/patch.hpp"
 
@@ -66,6 +67,8 @@
 namespace bertini {
 
 	// (included above) so the evaluation blocks can see them.
+
+	namespace node { struct EncodingContext; }  // function_tree/canonical_encoding.hpp (ADR-0042)
 
 	class Slice;  // system/slice.hpp -- a thin wrapper over a LinearFormsBlock; System::Slices()
 	              // recovers them from a slice-derived system without binding the block variant.
@@ -1121,6 +1124,49 @@ namespace bertini {
 		/// functions).  Mainly for testing the block path against the function-tree path.
 		void ClearBlocks() { blocks_.clear(); }
 
+
+		////////////////////
+		//
+		//  content identity (ADR-0042)
+		//
+		//////////////////
+
+		/**
+		\brief The canonical exact text encoding of this system -- the persistent-identity
+		substrate (ADR-0042).
+
+		Versioned (`b2sysenc/1` header, which also pins the session canonicalization settings),
+		exact (coefficients by their exact digits), and deterministic: everything
+		evaluation-relevant is included (functions, variable groups + types + time order, path
+		variable, parameters, patch and randomization/blend coefficients -- randomness is
+		identity), and only transient eval state is excluded.  Any change to what this emits is
+		digest-breaking: bump the version and the golden fixture in the same commit.
+		*/
+		std::string CanonicalEncodingText() const;
+
+		/**
+		\brief The persistent content digest: SHA-256 of CanonicalEncodingText().
+
+		Stable across runs, compilers, and sessions -- the L2 identity key a solutions
+		database references systems (and homotopies) by.
+		*/
+		detail::Digest256 ContentDigest() const;
+
+		/**
+		\brief In-process hash derived from ContentDigest() (its first 8 bytes).
+
+		IsSame(other) implies equal Hash() by construction.
+		*/
+		std::size_t Hash() const;
+
+		/**
+		\brief Content equality: equal ContentDigest().
+
+		\param other The system to compare against.
+		\return true iff the two systems have identical canonical encodings.
+		*/
+		bool IsSame(System const& other) const;
+
 		/// \brief Build an equivalent **pure function-tree** System: every block's functions
 		/// expressed as function-tree nodes, gathered into a single PolynomialBlock, with the
 		/// same variables, path variable, and patch (the patch is reused, not re-expressed).
@@ -1934,6 +1980,12 @@ namespace bertini {
 				}, blk);
 		}
 
+
+		// Append this system's canonical encoding to `out`, sharing `ctx` so operand systems
+		// (randomization / blend) and cross-function node sharing back-reference deterministically
+		// within one encoding unit.  The public CanonicalEncodingText() wraps this with a fresh
+		// context; the recursion for operand systems passes the same one.  (ADR-0042)
+		void EncodeCanonical(std::ostream& out, node::EncodingContext& ctx) const;
 
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.

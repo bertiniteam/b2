@@ -374,6 +374,7 @@ set(system_source_files
     src/system/slice.cpp
     src/system/start_base.cpp
     src/system/system.cpp
+    src/system/content_identity.cpp
     src/system/straight_line_program.cpp
     src/system/start/total_degree_linear_product.cpp
     src/system/start/total_degree_binomial.cpp
@@ -799,6 +800,7 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/canonical_encoding_test.cpp
 		test/classes/interning_test.cpp
 		test/classes/system_test.cpp
+		test/classes/system_identity_test.cpp
 		test/classes/slp_test.cpp
 		test/classes/slp_intern_test.cpp
 		test/classes/eval_expression_test.cpp

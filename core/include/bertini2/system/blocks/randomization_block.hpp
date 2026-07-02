@@ -239,6 +239,8 @@ public:
 	std::vector<std::vector<int>> const& TargetMultidegrees() const { return target_multidegrees_; }
 	/// \brief Get the operand multidegrees (per operand function, per variable group).
 	std::vector<std::vector<int>> const& OperandMultidegrees() const { return operand_multidegrees_; }
+	/// \brief Get the number of variable groups the multidegree bookkeeping spans.
+	size_t NumGroups() const { return num_groups_; }
 
 	/// Human-facing description: terse shows 'f_a..f_b = R . g  (R: nxN)' then the underlying
 	/// functions 'g_j' indented (they are the interesting part); verbose additionally prints R's
