@@ -104,6 +104,15 @@ from .tracking import (AMPTracker, DoublePrecisionTracker, MultiplePrecisionTrac
 from ._calculus import jacobian
 from .random import random_matrix
 
+# exact-coefficient coercion at the top level (was bertini.linalg.coefficient / as_coefficients)
+from ._coefficients import coefficient, coefficients
+
+# attach the friendly system-building methods and Slice.from_coefficients (was bertini.linalg.*)
+from . import _system_ops as _system_ops
+_system_ops.install(system.System)
+from . import _slice_ops as _slice_ops
+_slice_ops.install(nag_algorithm.Slice)
+
 from . import operators                          # `from bertini.operators import *` -> just the math ops
 
 
@@ -111,7 +120,7 @@ from . import operators                          # `from bertini.operators impor
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
 __all__ = ['Variable','variables','gather_variables','VariableGroup','Named','system','System',
-           'jacobian','random_matrix',
+           'jacobian','random_matrix','coefficient','coefficients',
            'nag_algorithm','default_precision',
            'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
            'linalg','operators',
