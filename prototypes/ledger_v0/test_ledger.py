@@ -20,7 +20,7 @@ from bertini import System, VariableGroup
 from bertini.function_tree.symbol import Variable
 
 from ledger import Ledger
-from memo_solve import (ensure_solved, ensure_continued, provenance_chain,
+from memo_solve import (solve, continue_from, provenance_chain,
                         annotate, annotations_for, declare_result, results, save,
                         SimulatedCrash)
 
@@ -91,7 +91,7 @@ def test_torn_interior_line_is_an_error(tmp_path):
 
 def test_fresh_solve_records_everything(tmp_path):
     lg = Ledger(tmp_path)
-    result = ensure_solved(circle_line(), lg)
+    result = solve(circle_line(), lg)
     assert result.num_computed == 2           # total degree: circle(2) x line(1) = 2 paths
     assert result.num_reused == 0
     assert len(result.statuses) == result.num_computed
@@ -99,8 +99,8 @@ def test_fresh_solve_records_everything(tmp_path):
 
 def test_rerun_is_a_noop(tmp_path):
     lg = Ledger(tmp_path)
-    first = ensure_solved(circle_line(), lg)
-    again = ensure_solved(circle_line(), lg)  # independently built, equal content
+    first = solve(circle_line(), lg)
+    again = solve(circle_line(), lg)  # independently built, equal content
     assert again.num_computed == 0            # memo hit end to end
     assert again.num_reused == len(first.statuses)
     # and the answers are the recorded ones
@@ -113,9 +113,9 @@ def test_rerun_is_a_noop(tmp_path):
 def test_kill_and_rerun_resumes(tmp_path):
     lg = Ledger(tmp_path)
     with pytest.raises(SimulatedCrash):
-        ensure_solved(circle_line(), lg, crash_after=1)
+        solve(circle_line(), lg, crash_after=1)
 
-    resumed = ensure_solved(circle_line(), lg)
+    resumed = solve(circle_line(), lg)
     assert resumed.num_reused == 1            # the pre-crash path survived on disk
     assert resumed.num_computed == len(resumed.statuses) - 1
 
@@ -126,13 +126,13 @@ def test_kill_and_rerun_resumes(tmp_path):
 
 def test_different_systems_get_different_runs(tmp_path):
     lg = Ledger(tmp_path)
-    a = ensure_solved(circle_line(), lg)
+    a = solve(circle_line(), lg)
 
     x = Variable("x")
     other = System()
     other.add_variable_group(VariableGroup([x]))
     other.add_function(x**3 - 2)
-    b = ensure_solved(other, lg)
+    b = solve(other, lg)
 
     assert a.run_id != b.run_id
     assert b.num_computed == 3                # cube roots of 2
@@ -153,40 +153,40 @@ def circle_family(a):
 def test_continuation_chains_and_answers_correctly(tmp_path):
     lg = Ledger(tmp_path)
     generic = circle_family(13)
-    ensure_solved(generic, lg)
+    solve(generic, lg)
 
     target = circle_family(2)                     # solutions x = y = +-1
-    cont = ensure_continued(target, generic, lg)
+    cont = continue_from(target, generic, lg)
     assert cont.num_computed == 2
 
     values = sorted(complex(sol[0]).real for sol in cont.solutions.values())
     assert np.allclose(values, [-1.0, 1.0], atol=1e-10)
 
     # rerun of the whole chain is a no-op at every link
-    again = ensure_continued(circle_family(2), circle_family(13), lg)
+    again = continue_from(circle_family(2), circle_family(13), lg)
     assert again.num_computed == 0 and again.num_reused == 2
 
 
 def test_continuation_requires_recorded_generic(tmp_path):
     lg = Ledger(tmp_path)
     with pytest.raises(ValueError, match="no recorded solve"):
-        ensure_continued(circle_family(2), circle_family(13), lg)
+        continue_from(circle_family(2), circle_family(13), lg)
 
 
 def test_crash_mid_continuation_resumes(tmp_path):
     lg = Ledger(tmp_path)
-    ensure_solved(circle_family(13), lg)
+    solve(circle_family(13), lg)
     with pytest.raises(SimulatedCrash):
-        ensure_continued(circle_family(5), circle_family(13), lg, crash_after=1)
-    resumed = ensure_continued(circle_family(5), circle_family(13), lg)
+        continue_from(circle_family(5), circle_family(13), lg, crash_after=1)
+    resumed = continue_from(circle_family(5), circle_family(13), lg)
     assert resumed.num_reused == 1 and resumed.num_computed == 1
 
 
 def test_provenance_walks_back_to_the_beginning(tmp_path):
     lg = Ledger(tmp_path)
     generic = circle_family(13)
-    base = ensure_solved(generic, lg)
-    cont = ensure_continued(circle_family(7), generic, lg)
+    base = solve(generic, lg)
+    cont = continue_from(circle_family(7), generic, lg)
 
     chain = provenance_chain(lg, cont.run_id, 0)
     # link 1: the continuation's own track record; link 2: the generic run's track
@@ -200,9 +200,9 @@ def test_provenance_walks_back_to_the_beginning(tmp_path):
 def test_chains_nest_and_provenance_reaches_depth(tmp_path):
     """sample <- midpoint <- witness <- start label: continuation off a continuation."""
     lg = Ledger(tmp_path)
-    ensure_solved(circle_family(13), lg)                                  # witness
-    ensure_continued(circle_family(5), circle_family(13), lg)             # midpoint
-    sample = ensure_continued(circle_family(3), circle_family(5), lg)     # sample off midpoint
+    solve(circle_family(13), lg)                                  # witness
+    continue_from(circle_family(5), circle_family(13), lg)             # midpoint
+    sample = continue_from(circle_family(3), circle_family(5), lg)     # sample off midpoint
 
     chain = provenance_chain(lg, sample.run_id, 0)
     assert len(chain) == 4                        # three track links + the start label
@@ -211,7 +211,7 @@ def test_chains_nest_and_provenance_reaches_depth(tmp_path):
 
 def test_annotations_round_trip(tmp_path):
     lg = Ledger(tmp_path)
-    result = ensure_solved(circle_family(13), lg)
+    result = solve(circle_family(13), lg)
     annotate(lg, result.run_id, 0, "projection", 1.5)
     annotate(lg, result.run_id, 0, "edge", "top")
     assert annotations_for(lg, result.run_id, 0) == {"projection": 1.5, "edge": "top"}
@@ -221,8 +221,8 @@ def test_annotations_round_trip(tmp_path):
 def test_results_separate_signal_from_noise(tmp_path):
     """Everything is a record; only declared deliverables are results."""
     lg = Ledger(tmp_path)
-    scaffolding = ensure_solved(circle_family(13), lg)      # noise, to a regular user
-    final = ensure_continued(circle_family(2), circle_family(13), lg)
+    scaffolding = solve(circle_family(13), lg)      # noise, to a regular user
+    final = continue_from(circle_family(2), circle_family(13), lg)
 
     declare_result(lg, "my solutions", [(final.run_id, i) for i in sorted(final.solutions)])
 
@@ -245,7 +245,7 @@ def test_save_is_the_casual_users_one_verb(tmp_path):
     """save() takes a solve result (provenance-linked) OR any JSON-able thing."""
     import json
     lg = Ledger(tmp_path)
-    solved = ensure_solved(circle_family(2), lg)
+    solved = solve(circle_family(2), lg)
 
     save("my solutions", solved, ledger=lg)                       # a result object
     save("notes to self", {"count": 2, "nice": True}, ledger=lg)  # arbitrary value
@@ -266,7 +266,7 @@ def test_casual_user_never_says_ledger(tmp_path, monkeypatch):
     monkeypatch.setenv("BERTINI_RECORDS_DIR", str(tmp_path / "my_output"))
     monkeypatch.setattr(memo_solve, "_AMBIENT", None)      # fresh ambient resolution
 
-    sols = ensure_solved(circle_family(2))                 # no ledger anywhere
+    sols = solve(circle_family(2))                 # no ledger anywhere
     save("my solutions", sols)                             # done
 
     save(sols)                                             # nameless: 'magic happens'
@@ -281,7 +281,7 @@ def test_casual_user_never_says_ledger(tmp_path, monkeypatch):
 def test_ledger_is_plain_text(tmp_path):
     """The no-special-software property: grep-able journals, readable objects."""
     lg = Ledger(tmp_path)
-    ensure_solved(circle_line(), lg)
+    solve(circle_line(), lg)
     journal_text = "".join(p.read_text() for p in (tmp_path / "history").glob("*.jsonl"))
     assert '"kind":"run"' in journal_text
     assert '"kind":"track"' in journal_text

@@ -14,7 +14,7 @@ wheel.  Abandoning the experiment is `rm -rf prototypes/ledger_v0` + deleting th
   (target system classic input, pickled homotopy instances) stored once, referenced by id.
 - **Journals**: per-run append-only JSONL under `journals/` — one record per line,
   readable with grep/jq/pandas, torn-last-line tolerant.
-- **`ensure_solved(target, ledger)`** — solve() as "ensure answered":
+- **`solve(target, ledger)`** — solve() as "ensure answered":
   - a completed run for this ask → returns recorded solutions (no tracking);
   - a partial run (crashed) → adopts the recorded homotopy instance and finishes only
     the missing paths;

@@ -20,7 +20,7 @@ from bertini import System, VariableGroup
 from bertini.function_tree.symbol import Variable
 
 from ledger import Ledger
-from memo_solve import ensure_solved, ensure_continued, provenance_chain, SimulatedCrash
+from memo_solve import solve, continue_from, provenance_chain, SimulatedCrash
 
 
 def circle_family(a):
@@ -39,12 +39,12 @@ def sweep(ledger, crash_after_total=None):
     """The user's script: solve the generic, continue to each target.  Identical on
     first run, after a crash, and after completion -- ensure-answered all the way."""
     generic = circle_family(13)
-    base = ensure_solved(generic, ledger)
+    base = solve(generic, ledger)
     print("  generic a=13: reused %d, computed %d" % (base.num_reused, base.num_computed))
 
     budget = crash_after_total
     for a in SWEEP:
-        result = ensure_continued(circle_family(a), generic, ledger,
+        result = continue_from(circle_family(a), generic, ledger,
                                   crash_after=budget)
         print("  target a=%d: reused %d, computed %d" % (a, result.num_reused, result.num_computed))
         if budget is not None:
@@ -72,7 +72,7 @@ def main():
     sweep(ledger)
 
     print("\n--- provenance: one endpoint of the a=7 solve, back to the beginning ---")
-    last = ensure_continued(circle_family(7), circle_family(13), ledger)
+    last = continue_from(circle_family(7), circle_family(13), ledger)
     for link in provenance_chain(ledger, last.run_id, 0):
         print(" ", link)
 

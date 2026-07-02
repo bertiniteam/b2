@@ -30,7 +30,7 @@ from bertini import System, VariableGroup
 from bertini.function_tree.symbol import Variable, Rational
 
 from ledger import Ledger
-from memo_solve import (ensure_solved, ensure_continued, provenance_chain,
+from memo_solve import (solve, continue_from, provenance_chain,
                         annotate, annotations_for, declare_result, SimulatedCrash)
 
 
@@ -65,19 +65,19 @@ SAMPLE_XS = [(-3, 2), (-1, 2), (1, 2), (3, 2)]
 def decompose(ledger, crash_after=None):
     """The whole decomposition as one rerunnable script (ensure-answered throughout)."""
     print("  stage 1: critical points of the projection")
-    crit = ensure_solved(critical_system(), ledger)
+    crit = solve(critical_system(), ledger)
     crit_xs = sorted(complex(sol[0]).real for sol in crit.solutions.values()
                      if abs(complex(sol[0]).imag) < 1e-8)
     print("    critical x: %s   (reused %d, computed %d)"
           % (crit_xs, crit.num_reused, crit.num_computed))
 
     print("  stage 2: witness slice at generic c = 1/3")
-    witness = ensure_solved(slice_at(1, 3), ledger)
+    witness = solve(slice_at(1, 3), ledger)
     print("    %d points on the slice  (reused %d, computed %d)"
           % (len(witness.solutions), witness.num_reused, witness.num_computed))
 
     print("  stage 3: midpoint slice of the bounded interval (c = 0)")
-    midpoint = ensure_continued(slice_at(0), slice_at(1, 3), ledger)
+    midpoint = continue_from(slice_at(0), slice_at(1, 3), ledger)
     edges = {i: ("top" if complex(sol[1]).real > 0 else "bottom")
              for i, sol in midpoint.solutions.items()}
     print("    edges: %s  (reused %d, computed %d)"
@@ -86,7 +86,7 @@ def decompose(ledger, crash_after=None):
     print("  stage 4: sampling the edges")
     sample_runs = []
     for num, den in SAMPLE_XS:
-        result = ensure_continued(slice_at(num, den), slice_at(0), ledger,
+        result = continue_from(slice_at(num, den), slice_at(0), ledger,
                                   crash_after=crash_after)
         xval = num / den
         for i, sol in result.solutions.items():

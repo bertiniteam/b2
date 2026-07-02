@@ -1,7 +1,7 @@
 # This file is part of Bertini 2 (prototypes/ledger_v0 -- experimental, unshipped).
 # GPL v3+; see the repository's licenses/ directory.
 
-"""ensure_solved: solve() as "ensure this ask is answered" -- memoized against a Ledger.
+"""solve(sys): the casual verb, with ensure-answered SEMANTICS -- memoized records.
 
 - complete run recorded -> return it (no tracking);
 - partial run -> adopt its recorded homotopy instance and finish the missing paths;
@@ -42,7 +42,7 @@ def ambient_ledger() -> Ledger:
 
 
 class SimulatedCrash(RuntimeError):
-    """Raised by ensure_solved(crash_after=N) after N paths, standing in for a walltime kill."""
+    """Raised by solve(crash_after=N) after N paths, standing in for a walltime kill."""
 
 
 def _ask_digest(target, config: dict) -> dict:
@@ -71,7 +71,7 @@ def _decode_point(coords: list) -> np.ndarray:
 
 
 class LedgerSolveResult:
-    """What ensure_solved returns: solutions plus a small accounting of reuse."""
+    """What solve returns: solutions plus a small accounting of reuse."""
 
     def __init__(self, run_id, solutions, statuses, num_reused, num_computed):
         self.run_id = run_id
@@ -87,7 +87,7 @@ class LedgerSolveResult:
 DEFAULT_CONFIG = {"precision": "adaptive", "endgame": "cauchy"}
 
 
-def ensure_solved(target, ledger: Ledger = None, config=None, crash_after=None):
+def solve(target, ledger: Ledger = None, config=None, crash_after=None):
     """Ensure `target`'s total-degree zero-dim solve is answered (in the ambient records
     directory unless a ledger is given)."""
     ledger = ledger or ambient_ledger()
@@ -152,11 +152,11 @@ def _create_run(target, ledger: Ledger, ask: dict) -> dict:
     return run
 
 
-def ensure_continued(target, generic, ledger: Ledger = None, config=None, crash_after=None):
+def continue_from(target, generic, ledger: Ledger = None, config=None, crash_after=None):
     """The chain link: continue a previously-solved `generic` system's endpoints to
     `target` via the (deterministic, gamma=1) coefficient parameter homotopy.
 
-    The generic's solve must already be on record (ensure_solved it first); its recorded
+    The generic's solve must already be on record (solve it first); its recorded
     endpoints -- read back from the records, not from memory -- become this run's start
     points, and each track record carries a `start` reference into the generic run:
     a real two-link provenance chain, walkable back to the total-degree start labels.
@@ -179,8 +179,8 @@ def ensure_continued(target, generic, ledger: Ledger = None, config=None, crash_
         # continuation (chains nest: sample <- midpoint slice <- witness <- start)
         generic_run = _find_run_solving(ledger, generic.content_digest())
         if generic_run is None:
-            raise ValueError("ensure_continued: the generic system has no recorded solve; "
-                             "ensure_solved(generic, ledger) first")
+            raise ValueError("continue_from: the generic system has no recorded solve; "
+                             "solve(generic, ledger) first")
         generic_done = ledger.completed_paths(generic_run["run"])
         start_indices = sorted(i for i, rec in generic_done.items() if rec["status"] == "success")
 

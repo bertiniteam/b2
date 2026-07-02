@@ -6,7 +6,7 @@
     PYTHONPATH=python python prototypes/ledger_v0/demo_resume.py [ledger_dir]
 
 Solves a degree-24 system (2*3*4 start points), dies a simulated walltime death partway
-through, then re-invokes the SAME ensure_solved call, which resumes from the journal and
+through, then re-invokes the SAME solve call, which resumes from the journal and
 finishes.  Poke the ledger afterward with nothing but standard tools:
 
     jq .kind    <ledger>/history/*.jsonl | sort | uniq -c
@@ -22,7 +22,7 @@ from bertini import System, VariableGroup
 from bertini.function_tree.symbol import Variable
 
 from ledger import Ledger
-from memo_solve import ensure_solved, SimulatedCrash
+from memo_solve import solve, SimulatedCrash
 
 
 def build_target():
@@ -42,18 +42,18 @@ def main():
 
     print("\n--- run 1: dies after 9 of 24 paths (simulated walltime kill) ---")
     try:
-        ensure_solved(build_target(), ledger, crash_after=9)
+        solve(build_target(), ledger, crash_after=9)
     except SimulatedCrash as crash:
         print("CRASH:", crash)
 
     print("\n--- run 2: the same call again (this is 'resume': there is no resume) ---")
-    result = ensure_solved(build_target(), ledger)
+    result = solve(build_target(), ledger)
     print("reused from ledger: %d paths" % result.num_reused)
     print("computed now:       %d paths" % result.num_computed)
     print("total finite endpoints recorded: %d" % len(result.solutions))
 
     print("\n--- run 3: rerun of the completed ask is a no-op ---")
-    result = ensure_solved(build_target(), ledger)
+    result = solve(build_target(), ledger)
     print("reused: %d   computed: %d" % (result.num_reused, result.num_computed))
 
 
