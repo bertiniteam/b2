@@ -1,7 +1,7 @@
 # Ledger v0 — pure-Python prototype
 
 A walk-away-able pilot of the solution provenance ledger
-(`arcs/solution-provenance-ledger.md`): plain-text records, memoized solving, and
+(`arcs/structured-output-directory.md`): plain-text records, memoized solving, and
 invisible resume — built entirely on the public Python API (no C++ changes beyond what
 PR #64 already shipped, whose `content_digest()` this leans on).
 

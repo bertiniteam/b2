@@ -3,7 +3,7 @@
 
 """Ledger v0: a content-addressed object store + append-only JSONL journals.
 
-Plain files are the source of truth (arc: solution-provenance-ledger).  Objects are
+Plain files are the source of truth (arc: structured-output-directory).  Objects are
 written atomically (tmp + rename) and idempotently (same content = same path, so races
 are benign).  Journals are one-writer-per-file; the reader tolerates a torn final line
 (the crash-mid-append case) and refuses torn lines anywhere else.
