@@ -20,7 +20,7 @@ from bertini import System, VariableGroup
 from bertini.function_tree.symbol import Variable
 
 from ledger import Ledger
-from memo_solve import ensure_solved, SimulatedCrash
+from memo_solve import ensure_solved, ensure_continued, provenance_chain, SimulatedCrash
 
 
 def circle_line():
@@ -132,6 +132,65 @@ def test_different_systems_get_different_runs(tmp_path):
 
     assert a.run_id != b.run_id
     assert b.num_computed == 3                # cube roots of 2
+
+
+# ---- chains: the parameter-homotopy two-link lineage --------------------------------
+
+def circle_family(a):
+    """x^2 + y^2 = a intersect x = y: the family the parameter homotopy sweeps."""
+    x, y = Variable("x"), Variable("y")
+    s = System()
+    s.add_variable_group(VariableGroup([x, y]))
+    s.add_function(x**2 + y**2 - a)
+    s.add_function(x - y)
+    return s
+
+
+def test_continuation_chains_and_answers_correctly(tmp_path):
+    lg = Ledger(tmp_path)
+    generic = circle_family(13)
+    ensure_solved(generic, lg)
+
+    target = circle_family(2)                     # solutions x = y = +-1
+    cont = ensure_continued(target, generic, lg)
+    assert cont.num_computed == 2
+
+    values = sorted(complex(sol[0]).real for sol in cont.solutions.values())
+    assert np.allclose(values, [-1.0, 1.0], atol=1e-10)
+
+    # rerun of the whole chain is a no-op at every link
+    again = ensure_continued(circle_family(2), circle_family(13), lg)
+    assert again.num_computed == 0 and again.num_reused == 2
+
+
+def test_continuation_requires_recorded_generic(tmp_path):
+    lg = Ledger(tmp_path)
+    with pytest.raises(ValueError, match="no recorded solve"):
+        ensure_continued(circle_family(2), circle_family(13), lg)
+
+
+def test_crash_mid_continuation_resumes(tmp_path):
+    lg = Ledger(tmp_path)
+    ensure_solved(circle_family(13), lg)
+    with pytest.raises(SimulatedCrash):
+        ensure_continued(circle_family(5), circle_family(13), lg, crash_after=1)
+    resumed = ensure_continued(circle_family(5), circle_family(13), lg)
+    assert resumed.num_reused == 1 and resumed.num_computed == 1
+
+
+def test_provenance_walks_back_to_the_beginning(tmp_path):
+    lg = Ledger(tmp_path)
+    generic = circle_family(13)
+    base = ensure_solved(generic, lg)
+    cont = ensure_continued(circle_family(7), generic, lg)
+
+    chain = provenance_chain(lg, cont.run_id, 0)
+    # link 1: the continuation's own track record; link 2: the generic run's track
+    # record it started from; terminator: the total-degree start label.
+    assert chain[0]["run"] == cont.run_id
+    assert chain[1]["run"] == base.run_id
+    assert "start_label" in chain[-1]
+    assert len(chain) == 3
 
 
 def test_ledger_is_plain_text(tmp_path):

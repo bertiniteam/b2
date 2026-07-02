@@ -92,6 +92,7 @@ def ensure_solved(target, ledger: Ledger, config=None, crash_after=None):
             for i in missing:
                 record = _track_one(target, homotopy, _decode_point(run["start_points"][i]), i, config)
                 record["run"] = run_id
+                record["start"] = {"kind": "start_label", "index": i}   # provenance bottoms out here
                 journal.append(record)
                 done[i] = record
                 num_computed += 1
@@ -133,6 +134,98 @@ def _create_run(target, ledger: Ledger, ask: dict) -> dict:
     with ledger.open_journal(run["run"]) as journal:
         journal.append(run)
     return run
+
+
+def ensure_continued(target, generic, ledger: Ledger, config=None, crash_after=None):
+    """The chain link: continue a previously-solved `generic` system's endpoints to
+    `target` via the (deterministic, gamma=1) coefficient parameter homotopy.
+
+    The generic's solve must already be on record (ensure_solved it first); its recorded
+    endpoints -- read back from the records, not from memory -- become this run's start
+    points, and each track record carries a `start` reference into the generic run:
+    a real two-link provenance chain, walkable back to the total-degree start labels.
+
+    No randomness enters here (gamma = 1), so the continuation homotopy is REBUILT from
+    target+generic rather than persisted: chained runs need no blob at all.
+    """
+    config = dict(DEFAULT_CONFIG if config is None else config)
+    ask = {
+        "op": "continue",
+        "target": target.content_digest(),
+        "generic": generic.content_digest(),
+        "config": dict(sorted(config.items())),
+    }
+    run = ledger.find_run(ask)
+
+    if run is None:
+        generic_run = ledger.find_run(_ask_digest(generic, config))
+        if generic_run is None:
+            raise ValueError("ensure_continued: the generic system has no recorded solve; "
+                             "ensure_solved(generic, ledger) first")
+        generic_done = ledger.completed_paths(generic_run["run"])
+        start_indices = sorted(i for i, rec in generic_done.items() if rec["status"] == "success")
+
+        target_object = ledger.put_object(target.to_classic_input(),
+                                          object_id=target.content_digest())
+        run = {
+            "kind": "run",
+            "schema": SCHEMA,
+            "run": _run_id(ask),
+            "ask": ask,
+            "op": "continue",
+            "target_object": target_object,
+            "start_run": generic_run["run"],
+            "start_indices": start_indices,
+            "num_paths": len(start_indices),
+        }
+        with ledger.open_journal(run["run"]) as journal:
+            journal.append(run)
+
+    run_id = run["run"]
+    done = ledger.completed_paths(run_id)
+    missing = [i for i in range(run["num_paths"]) if i not in done]
+
+    num_computed = 0
+    if missing:
+        homotopy = nag.coefficient_parameter_homotopy(target, generic)  # deterministic
+        start_records = ledger.completed_paths(run["start_run"])
+        with ledger.open_journal(run_id) as journal:
+            for i in missing:
+                generic_index = run["start_indices"][i]
+                start_point = _decode_point(start_records[generic_index]["endpoint"])
+                record = _track_one(target, homotopy, start_point, i, config)
+                record["run"] = run_id
+                record["start"] = {"kind": "point_ref",
+                                   "run": run["start_run"], "index": generic_index}
+                journal.append(record)
+                done[i] = record
+                num_computed += 1
+                if crash_after is not None and num_computed >= crash_after:
+                    raise SimulatedCrash(
+                        "simulated walltime kill after %d paths (run %s)" % (num_computed, run_id))
+
+    solutions = {i: _decode_point(rec["endpoint"])
+                 for i, rec in done.items() if rec["status"] == "success"}
+    statuses = {i: rec["status"] for i, rec in done.items()}
+    return LedgerSolveResult(run_id, solutions, statuses,
+                             num_reused=len(done) - num_computed, num_computed=num_computed)
+
+
+def provenance_chain(ledger: Ledger, run_id: str, index: int) -> list:
+    """Walk one endpoint's ancestry back to the beginning: the arc's 'all the way to the
+    start' promise, executed against nothing but the records."""
+    chain = []
+    while True:
+        rec = ledger.completed_paths(run_id).get(index)
+        if rec is None:
+            raise KeyError("no track record for (%s, %d)" % (run_id, index))
+        chain.append({"run": run_id, "index": index, "status": rec["status"]})
+        start = rec.get("start", {})
+        if start.get("kind") == "point_ref":
+            run_id, index = start["run"], start["index"]   # ascend one link
+        else:
+            chain.append({"run": run_id, "start_label": start.get("index", index)})
+            return chain
 
 
 def _track_one(target, homotopy, point, index: int, config: dict) -> dict:
