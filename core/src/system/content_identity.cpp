@@ -42,6 +42,9 @@ derivable variable-ordering cache.
 
 #include "bertini2/function_tree/canonical.hpp"
 #include "bertini2/function_tree/canonical_encoding.hpp"
+#include "bertini2/function_tree/reintern.hpp"
+
+#include <boost/archive/text_iarchive.hpp>
 
 #include <cstring>
 #include <map>
@@ -395,6 +398,62 @@ std::shared_ptr<const System> InternSystem(std::shared_ptr<System> const& candid
 	}
 	table[digest] = candidate;                  // miss: register and keep
 	return candidate;
+}
+
+
+// ---- re-intern-on-load (ADR-0042) ----
+
+void System::ReinternNodes(node::ReinternMemo& memo)
+{
+	auto reintern_variable = [&memo](Var& v) {
+		if (v)
+			v = std::static_pointer_cast<node::Variable>(node::Reintern(v, memo));
+	};
+	auto reintern_group = [&](VariableGroup& group) {
+		for (auto& v : group)
+			reintern_variable(v);
+	};
+
+	reintern_group(ungrouped_variables_);
+	for (auto& g : variable_groups_)
+		reintern_group(g);
+	for (auto& g : hom_variable_groups_)
+		reintern_group(g);
+	reintern_group(homogenizing_variables_);
+	reintern_variable(path_variable_);
+	reintern_group(implicit_parameters_);
+
+	for (auto& p : explicit_parameters_)
+		p = std::static_pointer_cast<node::NamedExpression>(node::Reintern(p, memo));
+	for (auto& f : pre_homogenization_functions_)
+		f = node::Reintern(f, memo);
+
+	for (auto& blk : blocks_)
+		std::visit([&memo](auto& b) {
+			using BlockT = std::decay_t<decltype(b)>;
+			if constexpr (std::is_same_v<BlockT, blocks::PolynomialBlock>
+			           || std::is_same_v<BlockT, blocks::RandomizationBlock<System>>
+			           || std::is_same_v<BlockT, blocks::BlendBlock<System>>)
+				b.Reintern(memo);
+			// LinearFormsBlock / ProductsOfLinearsBlock hold no nodes
+		}, blk);
+
+	// derived caches referencing the old nodes: drop, recompute on demand
+	have_ordering_ = false;
+	variable_ordering_.clear();
+	is_differentiated_ = false;
+}
+
+std::shared_ptr<const System> LoadSystemUnified(std::istream& in)
+{
+	auto loaded = std::make_shared<System>();
+	{
+		boost::archive::text_iarchive ia(in);
+		ia >> *loaded;
+	}
+	node::ReinternMemo memo;
+	loaded->ReinternNodes(memo);
+	return InternSystem(loaded);
 }
 
 std::size_t System::Hash() const

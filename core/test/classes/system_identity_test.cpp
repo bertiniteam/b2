@@ -358,6 +358,114 @@ BOOST_AUTO_TEST_CASE(intern_table_is_weak_and_self_cleans)
 	BOOST_CHECK(rep == fresh);
 }
 
+// ---- re-intern-on-load: LoadSystemUnified ----
+
+BOOST_AUTO_TEST_CASE(loaded_system_unifies_with_the_live_representative)
+{
+	auto live = std::make_shared<System>(Parse(kCircleLine));
+	live->Homogenize();
+	live->AutoPatch();
+
+	std::stringstream archive_stream;
+	{
+		boost::archive::text_oarchive oa(archive_stream);
+		oa << *live;
+	}
+
+	auto rep = bertini::InternSystem(live);
+	BOOST_REQUIRE(rep == live);
+
+	auto loaded = bertini::LoadSystemUnified(archive_stream);
+	BOOST_CHECK(loaded == live);   // the loaded copy was discarded for the live one
+}
+
+BOOST_AUTO_TEST_CASE(reintern_nodes_preserves_digest_and_unifies_node_pointers)
+{
+	auto original = Parse(kCircleLine);
+	original.Homogenize();
+
+	std::stringstream archive_stream;
+	{
+		boost::archive::text_oarchive oa(archive_stream);
+		oa << original;
+	}
+	System loaded;
+	{
+		boost::archive::text_iarchive ia(archive_stream);
+		ia >> loaded;
+	}
+
+	// before: content-equal but node-forked
+	BOOST_REQUIRE(loaded.IsSame(original));
+	auto const digest_before = loaded.ContentDigest();
+	BOOST_CHECK(loaded.GetNaturalFunctions().front() != original.GetNaturalFunctions().front());
+
+	bertini::node::ReinternMemo memo;
+	loaded.ReinternNodes(memo);
+
+	// after: digest invariant, node pointers unified with the live universe
+	BOOST_CHECK(digest_before == loaded.ContentDigest());
+	BOOST_CHECK(loaded.GetNaturalFunctions().front() == original.GetNaturalFunctions().front());
+	BOOST_CHECK(loaded.VariableOrdering() == original.VariableOrdering());   // shared_ptr equality per entry
+}
+
+BOOST_AUTO_TEST_CASE(two_archives_of_one_system_load_to_one_object)
+{
+	auto source = Parse("function f; variable_group x,y; f = x^4 - y + 17;");
+
+	auto archive_once = [&source]() {
+		std::stringstream s;
+		boost::archive::text_oarchive oa(s);
+		oa << source;
+		return s.str();
+	};
+	std::stringstream first(archive_once()), second(archive_once());
+
+	auto a = bertini::LoadSystemUnified(first);
+	auto b = bertini::LoadSystemUnified(second);
+	BOOST_CHECK(a == b);   // one interned representative
+	BOOST_CHECK(a->IsSealed());
+}
+
+BOOST_AUTO_TEST_CASE(loaded_blend_homotopy_unifies_recursively)
+{
+	// a homotopy with a blend block (operand systems + gamma coefficient nodes)
+	auto target = Parse(kCircleLine);
+	target.Homogenize();
+	target.AutoPatch();
+	bertini::start_system::TotalDegreeBinomial start(target);
+	auto t = bertini::node::Variable::Make("t");
+	auto homotopy = (1-t)*target + bertini::node::Rational::Make(3, 7, 1, 11)*t*start;
+	homotopy.AddPathVariable(t);
+
+	std::stringstream archive_stream;
+	{
+		boost::archive::text_oarchive oa(archive_stream);
+		oa << homotopy;
+	}
+	System loaded;
+	{
+		boost::archive::text_iarchive ia(archive_stream);
+		ia >> loaded;
+	}
+
+	auto const digest_before = loaded.ContentDigest();
+	bertini::node::ReinternMemo memo;
+	loaded.ReinternNodes(memo);
+
+	BOOST_CHECK(digest_before == loaded.ContentDigest());   // recursion changed nothing
+	BOOST_CHECK(loaded.IsSame(homotopy));
+	BOOST_CHECK(loaded.GetPathVariable() == homotopy.GetPathVariable());
+
+	// evaluation still works after the remap (blocks recompiled against reinterned nodes)
+	loaded.precision(30);
+	bertini::Vec<bertini::complex_dbl> values(loaded.NumTotalFunctions()), point(loaded.NumVariables());
+	for (Eigen::Index ii = 0; ii < point.size(); ++ii)
+		point(ii) = bertini::complex_dbl(0.5, 0.25);
+	loaded.EvalInPlace(values, point, bertini::complex_dbl(0.7, 0.0));
+	BOOST_CHECK(values.allFinite());
+}
+
 // ---- the golden fixture: cross-session digest stability ----
 
 BOOST_AUTO_TEST_CASE(golden_digests_match_committed_fixture)

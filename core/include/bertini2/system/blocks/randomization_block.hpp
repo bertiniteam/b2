@@ -68,6 +68,7 @@ block operand is a shared follow-up with BlendBlock).
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/reintern.hpp"
 #include "bertini2/system/blocks/describe.hpp"
 
 namespace bertini {
@@ -241,6 +242,16 @@ public:
 	std::vector<std::vector<int>> const& OperandMultidegrees() const { return operand_multidegrees_; }
 	/// \brief Get the number of variable groups the multidegree bookkeeping spans.
 	size_t NumGroups() const { return num_groups_; }
+
+	/// Re-intern this block's nodes after deserialization (ADR-0042): the homogenizing
+	/// variables rebuild through the live intern tables via the shared memo, and the operand
+	/// system recurses.  The coefficient matrices hold no nodes.  Content unchanged.
+	void Reintern(node::ReinternMemo& memo)
+	{
+		for (auto& v : hom_vars_)
+			v = std::static_pointer_cast<node::Variable>(node::Reintern(v, memo));
+		operand_->ReinternNodes(memo);
+	}
 
 	/// Human-facing description: terse shows 'f_a..f_b = R . g  (R: nxN)' then the underlying
 	/// functions 'g_j' indented (they are the interesting part); verbose additionally prints R's

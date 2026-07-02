@@ -54,6 +54,7 @@
 
 #include "bertini2/detail/sha256.hpp"
 #include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/reintern.hpp"
 #include "bertini2/system/patch.hpp"
 
 #include "bertini2/system/straight_line_program.hpp"
@@ -1184,6 +1185,24 @@ namespace bertini {
 		/// \brief Whether this system has been sealed against structural mutation (ADR-0042).
 		bool IsSealed() const;
 
+		/**
+		\brief Re-intern every node this system holds after deserialization (ADR-0042).
+
+		Deserialization constructs nodes outside the intern tables, so a loaded system's
+		nodes would fork the intern universe.  This remaps functions, constant
+		subfunctions, variable groups, homogenizing variables, path variable, parameters,
+		the pre-homogenization snapshot, and every node-holding block (operand systems
+		recursively) through node::Reintern with ONE shared memo -- so group members and
+		in-tree variables remain the same objects.  Derived caches referencing old nodes
+		(derivatives, SLPs, the ordering cache) are dropped and recompute on demand.
+
+		Content is unchanged (the digest is invariant), so this is allowed on a sealed
+		system.  Prefer LoadSystemUnified, which packages load -> reintern -> intern.
+
+		\param memo The pass's memo; share it when re-interning several loaded objects.
+		*/
+		void ReinternNodes(node::ReinternMemo& memo);
+
 		/// \brief Build an equivalent **pure function-tree** System: every block's functions
 		/// expressed as function-tree nodes, gathered into a single PolynomialBlock, with the
 		/// same variables, path variable, and patch (the patch is reused, not re-expressed).
@@ -2230,6 +2249,20 @@ namespace bertini {
 	\return The shared representative (the candidate itself on a table miss).
 	*/
 	std::shared_ptr<const System> InternSystem(std::shared_ptr<System> const& candidate);
+
+	/**
+	\brief Load a System from a text archive and unify it with the live intern universe
+	(ADR-0042): deserialize, ReinternNodes, InternSystem.
+
+	The returned handle is the live sealed representative: if an equal system already
+	exists in memory, THAT one comes back (its nodes shared with everything else); the
+	loaded copy is discarded.  This is the cross-session identity entry point -- the same
+	system loaded from two archives, or loaded and independently rebuilt, is one object.
+
+	\param in The stream holding a boost text archive written by `oa << system`.
+	\return The interned representative of the loaded system.
+	*/
+	std::shared_ptr<const System> LoadSystemUnified(std::istream& in);
 
 	/// \cond INTERNAL
 	// Explicit instantiation declarations for the two concrete numeric types.
