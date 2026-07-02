@@ -316,18 +316,21 @@ std::string System::CanonicalEncodingText() const
 
 detail::Digest256 System::ContentDigest() const
 {
-	if (is_sealed_ && sealed_digest_)
+	if (sealed_digest_)
 		return *sealed_digest_;
 
-	auto const digest = detail::Sha256(CanonicalEncodingText());
-	if (is_sealed_)
-		sealed_digest_ = digest;  // sealed-but-unmemoized happens after deserialization
-	return digest;
+	// Deliberately NOT lazily memoized: a sealed System is exactly the kind of object shared
+	// across threads, and ContentDigest() must be safe to call concurrently.  Seal() (and the
+	// load path, which re-seals single-threaded) are the only writers of sealed_digest_.
+	return detail::Sha256(CanonicalEncodingText());
 }
 
 void System::Seal()
 {
-	if (is_sealed_)
+	// idempotent; also re-memoizes a freshly-deserialized sealed system (the flag round-trips
+	// but the digest does not).  Sealing is a single-threaded authoring/load-time operation;
+	// once sealed+memoized, concurrent readers never write.
+	if (is_sealed_ && sealed_digest_)
 		return;
 	sealed_digest_ = detail::Sha256(CanonicalEncodingText());
 	is_sealed_ = true;
