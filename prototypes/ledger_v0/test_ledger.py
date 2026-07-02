@@ -21,7 +21,8 @@ from bertini.function_tree.symbol import Variable
 
 from ledger import Ledger
 from memo_solve import (ensure_solved, ensure_continued, provenance_chain,
-                        annotate, annotations_for, SimulatedCrash)
+                        annotate, annotations_for, declare_result, results,
+                        SimulatedCrash)
 
 
 def circle_line():
@@ -215,6 +216,29 @@ def test_annotations_round_trip(tmp_path):
     annotate(lg, result.run_id, 0, "edge", "top")
     assert annotations_for(lg, result.run_id, 0) == {"projection": 1.5, "edge": "top"}
     assert annotations_for(lg, result.run_id, 1) == {}
+
+
+def test_results_separate_signal_from_noise(tmp_path):
+    """Everything is a record; only declared deliverables are results."""
+    lg = Ledger(tmp_path)
+    scaffolding = ensure_solved(circle_family(13), lg)      # noise, to a regular user
+    final = ensure_continued(circle_family(2), circle_family(13), lg)
+
+    declare_result(lg, "my solutions", [(final.run_id, i) for i in sorted(final.solutions)])
+
+    declared = results(lg)
+    assert set(declared) == {"my solutions"}
+    assert len(declared["my solutions"]) == 2               # only the deliverable points
+    assert all(ref[0] == final.run_id for ref in declared["my solutions"])
+
+    text = (tmp_path / "RESULTS.txt").read_text()
+    assert "my solutions" in text
+    assert "x =" in text and "y =" in text                  # coordinates, human-labeled
+    assert scaffolding.run_id not in text                   # noise filtered away
+
+    # re-declaring the same name replaces (newest wins)
+    declare_result(lg, "my solutions", [(final.run_id, 0)])
+    assert len(results(lg)["my solutions"]) == 1
 
 
 def test_ledger_is_plain_text(tmp_path):

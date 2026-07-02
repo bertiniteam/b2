@@ -38,7 +38,8 @@ ledgerrec/0).  It needs no software to read, and you are free to delete it -- th
 only consequence is recomputing.
 
 LAYOUT
-  INDEX.txt     one line per run: when, what was solved, how many paths.  Start here.
+  RESULTS.txt   the declared results, with coordinates.  Most readers start AND END here.
+  INDEX.txt     one line per run: when, what was solved, how many paths.
   history/      the records: JSON, one object per line (JSONL), one file per writing
                 session, named by date.  Read with eyes, grep, jq, or
                 pandas.read_json(..., lines=True).
@@ -56,6 +57,9 @@ RECORD FORMAT (schema ledgerrec/0) -- every history line is one JSON object:
                     precision), and `start` (its provenance: a start_label, or a
                     point_ref {run, index} into an ancestor run's endpoint).
   kind="annotation" metadata attached to a point: `point` {run, index}, `key`, `value`.
+  kind="result"     the declared DELIVERABLES: `name`, `points` [{run, index}, ...].
+                    Everything else in history/ is scaffolding; RESULTS.txt renders
+                    these with coordinates -- "what were my solutions?".
 Chains of runs are walkable: follow track records' `start` references backward until
 a start_label -- that is the complete provenance of any point recorded here.
 """
@@ -153,6 +157,58 @@ a start_label -- that is the complete provenance of any point recorded here.
                 self._describe_target(run.get("target_object")),
                 run.get("run", "?")))
         (self.root / "INDEX.txt").write_text("\n".join(lines) + "\n")
+
+    def refresh_results(self):
+        """(Re)write RESULTS.txt: the declared results with their coordinates and
+        annotations -- 'what were my solutions?' answered in one file.  Derived and
+        rebuildable, like INDEX.txt; the humane analogue of bertini1's main_data."""
+        records = self.scan()
+        runs = {r["run"]: r for r in records if r.get("kind") == "run" and "run" in r}
+        tracks = {(r["run"], r["index"]): r for r in records if r.get("kind") == "track"}
+        notes = {}
+        for r in records:
+            if r.get("kind") == "annotation":
+                key = (r["point"]["run"], r["point"]["index"])
+                notes.setdefault(key, {})[r["key"]] = r["value"]
+        declared = {}
+        for r in records:
+            if r.get("kind") == "result":
+                declared[r["name"]] = r        # newest declaration of a name wins
+
+        lines = ["the results declared here (full precision + provenance in history/):"]
+        for name, rec in declared.items():
+            lines += ["", "== %s   (declared %s) ==" % (name, rec.get("when", "?"))]
+            if rec.get("description"):
+                lines.append("   %s" % rec["description"])
+            for n, ref in enumerate(rec["points"], 1):
+                key = (ref["run"], ref["index"])
+                track = tracks.get(key)
+                if track is None or track.get("status") != "success":
+                    lines.append("  point %d: (not computed / failed)" % n)
+                    continue
+                note = notes.get(key)
+                suffix = ("   " + ", ".join("%s=%s" % kv for kv in sorted(note.items()))
+                          if note else "")
+                lines.append("  point %d  [run %s #%d]%s" % (n, ref["run"], ref["index"], suffix))
+                var_names = self._variable_names(runs.get(ref["run"], {}).get("target_object"))
+                for k, (re_str, im_str) in enumerate(track["endpoint"]):
+                    var = var_names[k] if k < len(var_names) else "x%d" % k
+                    lines.append("    %s = %.12s + %.12s i" % (var, re_str, im_str))
+        if not declared:
+            lines.append("(none declared yet)")
+        (self.root / "RESULTS.txt").write_text("\n".join(lines) + "\n")
+
+    def _variable_names(self, object_id) -> list:
+        """Variable names from a stored classic input, for labeling coordinates."""
+        if not object_id or not self.has_object(object_id):
+            return []
+        text = self.get_object(object_id).decode("utf-8", "replace")
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("variable_group") or stripped.startswith("variable "):
+                names = stripped.split(None, 1)[1].rstrip(";")
+                return [v.strip() for v in names.split(",")]
+        return []
 
     def _describe_target(self, object_id):
         """A one-glance description of a run's target: its function lines, abbreviated."""

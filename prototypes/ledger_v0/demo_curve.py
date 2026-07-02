@@ -31,7 +31,7 @@ from bertini.function_tree.symbol import Variable, Rational
 
 from ledger import Ledger
 from memo_solve import (ensure_solved, ensure_continued, provenance_chain,
-                        annotate, annotations_for, SimulatedCrash)
+                        annotate, annotations_for, declare_result, SimulatedCrash)
 
 
 def curve_f(x, y):
@@ -96,6 +96,12 @@ def decompose(ledger, crash_after=None):
         print("    x = %+.1f: %d points  (reused %d, computed %d)"
               % (xval, len(result.solutions), result.num_reused, result.num_computed))
         sample_runs.append(result)
+
+    # the deliverable: only the sample points are RESULTS; everything else was scaffolding
+    declare_result(ledger, "edge samples of the ellipse x^2+4y^2=4",
+                   [(r.run_id, i) for r in sample_runs for i in sorted(r.solutions)],
+                   description="x-projection cellular decomposition sketch; "
+                               "2 edges sampled at 4 x-values each")
     return sample_runs
 
 

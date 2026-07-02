@@ -242,6 +242,35 @@ def annotations_for(ledger: Ledger, run_id: str, index: int) -> dict:
     return out
 
 
+def declare_result(ledger: Ledger, name: str, points: list, description: str = ""):
+    """Mark points as RESULTS -- the signal/noise line.  Everything in history/ is a
+    record; only declared results are 'what I cared about'.  Top-level solves declare
+    automatically; intermediate scaffolding never does.  `points` is a list of
+    (run_id, index) pairs.  Re-declaring a name replaces it (newest wins)."""
+    ledger.append({"kind": "result", "name": name, "description": description,
+                   "when": time.strftime("%Y-%m-%d %H:%M"),
+                   "points": [{"run": r, "index": i} for r, i in points]})
+    ledger.refresh_results()
+
+
+def results(ledger: Ledger) -> dict:
+    """The declared results, decoded: {name: {(run, index): point}}.  Newest declaration
+    of each name wins."""
+    declared = {}
+    for rec in ledger.scan():
+        if rec.get("kind") == "result":
+            declared[rec["name"]] = rec       # newest wins (scan is append-ordered)
+    out = {}
+    for name, rec in declared.items():
+        pts = {}
+        for ref in rec["points"]:
+            track = ledger.completed_paths(ref["run"]).get(ref["index"])
+            if track and track["status"] == "success":
+                pts[(ref["run"], ref["index"])] = _decode_point(track["endpoint"])
+        out[name] = pts
+    return out
+
+
 def provenance_chain(ledger: Ledger, run_id: str, index: int) -> list:
     """Walk one endpoint's ancestry back to the beginning: the arc's 'all the way to the
     start' promise, executed against nothing but the records."""
