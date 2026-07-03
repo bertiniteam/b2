@@ -423,12 +423,19 @@ void OutputDirectory::RefreshResults() const
 				if (auto const* endpoint = track_it->second.if_contains("endpoint");
 				    endpoint && endpoint->is_array())
 				{
+					// user variable names label coordinates only when the counts agree;
+					// internal (homogenized) points have extra coordinates, and labeling
+					// them with user names would be misleading (user-coordinate rendering
+					// is a noted follow-up)
+					if (var_names.size() != endpoint->get_array().size())
+						var_names.clear();
 					std::size_t k = 0;
 					for (auto const& pair : endpoint->get_array())
 					{
-						std::string const var = k < var_names.size() ? var_names[k] : ("x" + std::to_string(k));
+						std::string const var = k < var_names.size() ? var_names[k] : ("coordinate_" + std::to_string(k));
 						coords[var] = pair;
-						if (pair.is_array() && pair.get_array().size() == 2)
+						// coordinate entries are ["re","im"] or ["re","im",precision]
+						if (pair.is_array() && pair.get_array().size() >= 2)
 						{
 							auto re = std::string(pair.get_array()[0].as_string());
 							auto im = std::string(pair.get_array()[1].as_string());

@@ -131,6 +131,14 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 	/// \brief Attach a structured output directory at \p path (records + resume; ADR-0046).
 	/// Default no-op so non-recording derivers are unaffected; HomotopySolver overrides.
 	virtual void RecordToPath(std::string const& /*path*/) {}
+	/// \brief This solve's run id in the records (empty when not recording).
+	virtual std::string RecordsRunIdentity() const { return {}; }
+	/// \brief Append one raw record (a JSON object as text) to the attached directory;
+	/// no-op when not recording.  Lets the CLI archive its input file as a `given`.
+	virtual void AppendRecordJson(std::string const& /*record_json*/) {}
+	/// \brief Store content as a definition in the attached directory; returns its id
+	/// (empty when not recording).
+	virtual std::string PutRecordsDefinition(std::string const& /*content*/) { return {}; }
 	virtual ~AnyZeroDim() = default;
 };
 
@@ -738,6 +746,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 						          << "or a tighter tracking tolerance.  See EndgameBoundaryMetadata()." << std::endl;
 
 					PostEGAction();
+
+					DeclareFiniteSolutionsResult();
 				}
 				else // worker
 				{
@@ -1104,6 +1114,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				});
 
 				PostEGAction();
+
+				DeclareFiniteSolutionsResult();
 
 				this->NotifyObservers(AlgorithmComplete<AnyZeroDim>(*this));
 			}
@@ -2041,6 +2053,59 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				RecordTo(std::make_shared<records::OutputDirectory>(path));
 			}
 
+			/// \brief This solve's run id (the AnyZeroDim polymorphic hook).
+			std::string RecordsRunIdentity() const override { return records_run_id_; }
+
+			/// \brief Append a raw JSON record to the attached directory (no-op if none).
+			void AppendRecordJson(std::string const& record_json) override
+			{
+				if (records_)
+					records_->Append(boost::json::parse(record_json).as_object());
+			}
+
+			/// \brief Store a definition in the attached directory (empty id if none).
+			std::string PutRecordsDefinition(std::string const& content) override
+			{
+				return records_ ? records_->PutDefinition(content) : std::string();
+			}
+
+			/**
+			\brief Auto-declare this run's finite solutions as a `result` record and render
+			the derived views -- "what were my solutions?" answered by every recording solve,
+			CLI and Python alike.  Called after post-processing; no-op when not recording.
+			*/
+			void DeclareFiniteSolutionsResult()
+			{
+				if (!records_ || records_run_id_.empty())
+					return;
+				boost::json::array points;
+				for (auto const& smd : solution_final_metadata_)
+					if (smd.is_finite)
+						points.push_back(boost::json::object{
+							{"run", records_run_id_},
+							{"index", static_cast<std::int64_t>(smd.path_index)}});
+				boost::json::object result;
+				result["kind"] = "result";
+				result["name"] = "finite solutions [run " + records_run_id_ + "]";
+				result["when"] = [] {
+					std::time_t now = std::time(nullptr);
+					char buffer[20];
+					std::tm tm_buf{};
+#ifdef _WIN32
+					localtime_s(&tm_buf, &now);
+#else
+					localtime_r(&now, &tm_buf);
+#endif
+					std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", &tm_buf);
+					return std::string(buffer);
+				}();
+				result["description"] = "auto-declared by the solver after post-processing";
+				result["points"] = points;
+				records_->Append(result);
+				records_->RefreshResults();
+				records_->RefreshIndex();
+			}
+
 			/// \brief The attached output directory (null when not recording).
 			std::shared_ptr<records::OutputDirectory> const& Records() const { return records_; }
 
@@ -2103,9 +2168,21 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					    && rec.at("run").as_string() == records_run_id_)
 						return;   // header already on record (a resumed run)
 
+				// the RENDERING is filed by its own bytes (textually equal systems dedupe to
+				// ONE file; the classic rendering omits the random patch, so filing by content
+				// digest surprised users with N identical-looking copies); the true identity
+				// digest travels as its own header field
 				auto const target_definition = records_->PutDefinition(
-					bertini::classic::SystemToClassic(TargetSystem()),
-					TargetSystem().ContentDigest().Hex());
+					bertini::classic::SystemToClassic(TargetSystem()));
+				// the settings, reconstructible: the canonical config text under its digest
+				std::string const config_text =
+					std::string(records::ConfigEncodingVersion) + "\n"
+					+ records::CanonicalEncoding(this->template Get<ZeroDimConf>()) + "\n"
+					+ records::CanonicalEncoding(this->template Get<Tolerances>()) + "\n"
+					+ records::CanonicalEncoding(this->template Get<AutoRetrack>()) + "\n"
+					+ records::CanonicalEncoding(this->template Get<PostProcessing>()) + "\n";
+				auto const config_definition = records_->PutDefinition(
+					config_text, std::string(ask.at("config").as_string()));
 				boost::json::object header;
 				header["kind"] = "run";
 				header["schema"] = records::RecordSchemaVersion;
@@ -2125,6 +2202,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				header["op"] = "zerodim";
 				header["ask"] = ask;
 				header["target_object"] = target_definition;
+				header["target_digest"] = TargetSystem().ContentDigest().Hex();
+				header["config_object"] = config_definition;
 				header["num_paths"] = static_cast<std::int64_t>(num_start_points_);
 				records_->Append(header);
 			}

@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)
 
 	BOOST_REQUIRE(zd.Records() != nullptr);
 	BOOST_CHECK(fs::exists(dir / "README.txt"));
-	BOOST_CHECK_EQUAL(zd.Records()->Scan().size(), 5u);   // 1 run + 4 tracks
+	BOOST_CHECK_EQUAL(zd.Records()->Scan().size(), 6u);   // 1 run + 4 tracks + 1 auto-declared result
 }
 
 BOOST_AUTO_TEST_SUITE_END()
