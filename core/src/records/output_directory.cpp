@@ -250,6 +250,15 @@ void OutputDirectory::EnsureSessionFile()
 	throw std::runtime_error("OutputDirectory: could not claim a session history file");
 }
 
+void OutputDirectory::Annotate(std::string const& run_id, std::int64_t index,
+                               std::string const& key, boost::json::value const& value)
+{
+	Append({{"kind", "annotation"},
+	        {"point", json::object{{"run", run_id}, {"index", index}}},
+	        {"key", key},
+	        {"value", value}});
+}
+
 void OutputDirectory::Append(json::object const& record)
 {
 	EnsureSessionFile();

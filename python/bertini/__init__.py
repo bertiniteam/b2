@@ -108,7 +108,7 @@ from .random import random_matrix
 from ._coefficients import coefficient, coefficients
 
 # the casual records surface: solve / save / load over the structured output directory
-from .records import solve, save, load, records_dir, Solution, SolveResult
+from .records import solve, save, load, annotate, records_dir, Solution, SolveResult
 from . import records
 
 # attach the friendly system-building methods and Slice.from_coefficients (was bertini.linalg.*)
@@ -123,7 +123,7 @@ from . import operators                          # `from bertini.operators impor
 
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
-__all__ = ['solve','save','load','records_dir','Solution','SolveResult','records',
+__all__ = ['solve','save','load','annotate','records_dir','Solution','SolveResult','records',
            'Variable','variables','gather_variables','VariableGroup','Named','system','System',
            'jacobian','random_matrix','coefficient','coefficients',
            'complex_mp','real_mp','int_mp','rational_mp',

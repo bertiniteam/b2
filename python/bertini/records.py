@@ -220,6 +220,27 @@ def save(*args, description='', directory=None):
     return name
 
 
+def annotate(point, key, value, directory=None):
+    """Attach metadata to a solution: ``annotate(sol, 'projection', 1.5)``.
+
+    ``point`` is a :class:`Solution` (or anything with ``.provenance`` holding
+    ``{'run', 'index'}``), or an explicit ``{'run': ..., 'index': ...}`` dict.  The
+    annotation lands in the records beside the point it describes and renders into
+    ``results.json``; re-annotating the same key replaces it (newest wins).  ``value``
+    is any JSON-able thing.
+    """
+    provenance = getattr(point, 'provenance', None) or point
+    if not isinstance(provenance, dict) or 'run' not in provenance or 'index' not in provenance:
+        raise ValueError("annotate needs a point with provenance {'run', 'index'} "
+                         "(a Solution from solve(), or an explicit dict)")
+    out = _directory(directory)
+    out.annotate(str(provenance['run']), int(provenance['index']), str(key),
+                 _json.dumps(value))
+    out.refresh_results()
+    if hasattr(point, 'annotations'):
+        point.annotations[str(key)] = value
+
+
 def load(name=None, directory=None):
     """Load saved results by name -- the other half of :func:`save`.
 

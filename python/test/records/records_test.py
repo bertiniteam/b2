@@ -113,3 +113,31 @@ def test_ambient_directory_resolution(tmp_path, monkeypatch):
     monkeypatch.setenv('BERTINI_RECORDS_DIR', str(tmp_path / 'ambient'))
     assert pb.records_dir() == str(tmp_path / 'ambient')
     monkeypatch.setattr(records_module, '_ambient', None)   # don't leak
+
+
+def test_annotate_renders_beside_the_point(tmp_path):
+    """annotate(sol, key, value): margin notes land in results.json by the point."""
+    d = str(tmp_path / 'records')
+    r = pb.solve(circle_line(), seed=42, directory=d)
+    sol = r.solutions[0]
+    pb.annotate(sol, 'projection', 1.5, directory=d)
+    pb.annotate(sol, 'the one i meant', True, directory=d)
+    pb.save('picked', r, directory=d)
+
+    entry = pb.load('picked', directory=d)
+    by_index = {p['provenance']['index']: p for p in entry['points']}
+    notes = by_index[sol.provenance['index']]['annotations']
+    assert notes['projection'] == 1.5
+    assert notes['the one i meant'] is True
+    assert sol.annotations['projection'] == 1.5      # the live object learns it too
+
+    # newest wins per (point, key)
+    pb.annotate(sol, 'projection', 2.5, directory=d)
+    entry = pb.load('picked', directory=d)
+    by_index = {p['provenance']['index']: p for p in entry['points']}
+    assert by_index[sol.provenance['index']]['annotations']['projection'] == 2.5
+
+
+def test_annotate_without_provenance_is_an_error(tmp_path):
+    with pytest.raises(ValueError):
+        pb.annotate(np.array([1.0, 2.0]), 'key', 'value', directory=str(tmp_path / 'r'))

@@ -108,6 +108,22 @@ public:
 	void Append(boost::json::object const& record);
 
 	/**
+	\brief Attach metadata to a recorded point: appends an annotation record
+	`{"kind":"annotation", "point":{"run","index"}, "key", "value"}`.
+
+	Annotations are the audit trail's margin notes -- projection values, "this is the
+	one I meant", classification flags.  They render into results.json beside the
+	point they describe.  Newest wins per (point, key).
+
+	\param run_id The run the point belongs to.
+	\param index The point's path index within that run.
+	\param key The annotation's name.
+	\param value Any JSON value.
+	*/
+	void Annotate(std::string const& run_id, std::int64_t index,
+	              std::string const& key, boost::json::value const& value);
+
+	/**
 	\brief Every record from every history file, in filename-then-line order.
 
 	A torn FINAL line of a file is skipped (the crash-mid-append case); a torn interior

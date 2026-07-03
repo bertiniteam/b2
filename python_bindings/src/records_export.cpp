@@ -53,6 +53,13 @@ namespace {
 		return self.PutDefinition(content, id);
 	}
 
+	void AnnotateJson(records::OutputDirectory& self, std::string const& run_id,
+	                  long long index, std::string const& key, std::string const& value_json)
+	{
+		self.Annotate(run_id, static_cast<std::int64_t>(index), key,
+		              boost::json::parse(value_json));
+	}
+
 	std::string RootString(records::OutputDirectory const& self)
 	{
 		return self.Root().string();
@@ -90,6 +97,11 @@ void ExportRecords()
 		.def("put_definition", &PutDefinitionExternalId,
 			(arg("self"), arg("content"), arg("external_id")),
 			"Store a definition under an external id (e.g. a System's content_digest); returns it.")
+		.def("annotate", &AnnotateJson,
+			(arg("self"), arg("run"), arg("index"), arg("key"), arg("value_json")),
+			"Attach metadata to a recorded point: appends an annotation record for "
+			"({run, index}) with the given key and JSON-encoded value.  Newest wins "
+			"per (point, key); annotations render into results.json beside the point.")
 		.def("refresh_results", &records::OutputDirectory::RefreshResults, (arg("self")),
 			"(Re)write the pretty-printed, self-complete results.json from the declared "
 			"result records.")

@@ -185,6 +185,18 @@ BOOST_AUTO_TEST_CASE(index_and_results_render)
 	BOOST_CHECK(!fs::exists(dir / "RESULTS.txt"));
 }
 
+BOOST_AUTO_TEST_CASE(annotate_convenience_appends_annotation_records)
+{
+	OutputDirectory out(FreshDir("annotate"));
+	out.Annotate("abc123", 0, "projection", json::value(1.5));
+	out.Annotate("abc123", 0, "projection", json::value(2.5));   // newest wins downstream
+	auto const records = out.Scan();
+	BOOST_REQUIRE_EQUAL(records.size(), 2u);
+	BOOST_CHECK_EQUAL(std::string(records[1].at("kind").as_string()), "annotation");
+	BOOST_CHECK_EQUAL(records[1].at("point").as_object().at("index").as_int64(), 0);
+	BOOST_CHECK_EQUAL(records[1].at("value").as_double(), 2.5);
+}
+
 // ---- the cross-implementation bridge (with prototypes/ledger_v0) ----
 
 // Writes a small deterministic directory into the ctest working directory; the Python
