@@ -82,6 +82,16 @@ int RunZeroDim(std::string const& config_str, std::string const& input_str)
 		return 1;
 	}
 
+	// The structured output directory is simply part of the program's output (like
+	// main_data): produced always, freely deletable, no flag.  BERTINI_RECORDS_DIR
+	// overrides the default location.  Manager rank only; workers never touch records.
+	if (parallel::IsManager())
+	{
+		char const* records_dir = std::getenv("BERTINI_RECORDS_DIR");
+		alg->RecordToPath(records_dir ? records_dir : "bertini_output");
+		std::cout << "bertini: records at " << (records_dir ? records_dir : "bertini_output") << "\n";
+	}
+
 	alg->Run();
 
 	if (parallel::IsManager())

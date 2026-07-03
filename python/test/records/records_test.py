@@ -1,0 +1,115 @@
+# This file is part of Bertini 2.
+#
+# python/test/records/records_test.py is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# Bertini 2 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+# See the GNU General Public License for more details.
+#
+#  Copyright(C) Bertini2 Development Team
+#
+#  See <http://www.gnu.org/licenses/> for a copy of the license, as well as COPYING.
+
+"""The casual records surface (arc rung 5): solve / save / load, the Solution type,
+and ensure-answered hydration.  Correctness of the seam lives in C++
+(test_nag_algorithms/zero_dim_records); these pin the Python feel."""
+
+import json
+
+import numpy as np
+import pytest
+
+import bertini as pb
+from bertini import Variable, VariableGroup, System
+
+
+def circle_line():
+    x, y = Variable('x'), Variable('y')
+    s = System()
+    s.add_variable_group(VariableGroup([x, y]))
+    s.add_function(x**2 + y**2 - 1)
+    s.add_function(x - y)
+    return s
+
+
+def test_solve_records_and_rerun_hydrates(tmp_path):
+    d = str(tmp_path / 'records')
+    first = pb.solve(circle_line(), seed=42, directory=d)
+    assert len(first) == 2
+    assert first.num_hydrated == 0
+    assert first.run_id
+
+    again = pb.solve(circle_line(), seed=42, directory=d)
+    assert again.num_hydrated == 2          # ensure-answered: nothing recomputed
+    assert again.run_id == first.run_id
+    for a, b in zip(first, again):
+        assert all(abs(complex(u) - complex(v)) < 1e-12 for u, v in zip(a, b))
+
+
+def test_solutions_are_points_that_remember(tmp_path):
+    r = pb.solve(circle_line(), seed=42, directory=str(tmp_path / 'records'))
+    s = r[0]
+    assert isinstance(s, pb.Solution)
+    assert s.provenance == {'run': r.run_id, 'index': s.provenance['index']}
+    # behaves like the array you expect
+    assert abs(complex(s[0])) == pytest.approx(2 ** -0.5, abs=1e-8)
+    # a derived point is a NEW point: provenance honestly absent
+    doubled = 2 * s
+    assert doubled.provenance is None
+
+
+def test_save_and_load_round_trip(tmp_path):
+    d = str(tmp_path / 'records')
+    r = pb.solve(circle_line(), seed=42, directory=d)
+
+    pb.save('my favorites', r, directory=d)
+    pb.save('notes', {'count': 2, 'nice': True}, directory=d)
+
+    everything = pb.load(directory=d)
+    assert 'my favorites' in everything and 'notes' in everything
+    assert 'solutions [run %s]' % r.run_id in everything   # solve auto-declares
+
+    favorites = pb.load('my favorites', directory=d)
+    assert len(favorites['points']) == 2
+    pt = favorites['points'][0]
+    assert pt['status'] == 'success'
+    # endpoints are recorded in INTERNAL coordinates (homogenized: x, y + hom var),
+    # the representation restart needs; user-coordinate rendering is a noted follow-up
+    assert {'x', 'y'} <= set(pt['coordinates'])
+    assert pb.load('notes', directory=d)['value'] == {'count': 2, 'nice': True}
+
+
+def test_records_are_plain_json(tmp_path):
+    """The no-special-software property, from Python's side: raw json suffices."""
+    d = tmp_path / 'records'
+    pb.solve(circle_line(), seed=7, directory=str(d))
+
+    assert (d / 'README.txt').exists()
+    assert (d / 'INDEX.txt').exists()
+    machine = json.loads((d / 'results.json').read_text())
+    assert isinstance(machine, dict) and machine   # one json.load away
+
+    kinds = []
+    for journal in (d / 'history').glob('*.jsonl'):
+        for line in journal.read_text().splitlines():
+            if line.strip():
+                kinds.append(json.loads(line)['kind'])
+    assert 'run' in kinds and 'track' in kinds and 'result' in kinds
+
+
+def test_nameless_save(tmp_path):
+    d = str(tmp_path / 'records')
+    r = pb.solve(circle_line(), seed=42, directory=d)
+    name = pb.save(r, directory=d)               # save(stuff): magic happens
+    assert name.startswith('saved ')
+    assert len(pb.load(name, directory=d)['points']) == 2
+
+
+def test_ambient_directory_resolution(tmp_path, monkeypatch):
+    import bertini.records as records_module
+    monkeypatch.setattr(records_module, '_ambient', None)
+    monkeypatch.setenv('BERTINI_RECORDS_DIR', str(tmp_path / 'ambient'))
+    assert pb.records_dir() == str(tmp_path / 'ambient')
+    monkeypatch.setattr(records_module, '_ambient', None)   # don't leak

@@ -128,6 +128,9 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 	virtual void WriteRawSolutions(std::ostream& out)         const = 0;
 	/// \brief Apply configuration settings parsed from a classic-input config string.
 	virtual void ApplyParsedConfigs(std::string const& config_str) = 0;
+	/// \brief Attach a structured output directory at \p path (records + resume; ADR-0046).
+	/// Default no-op so non-recording derivers are unaffected; HomotopySolver overrides.
+	virtual void RecordToPath(std::string const& /*path*/) {}
 	virtual ~AnyZeroDim() = default;
 };
 
@@ -2030,6 +2033,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			void RecordTo(std::shared_ptr<records::OutputDirectory> directory)
 			{
 				records_ = std::move(directory);
+			}
+
+			/// \brief Attach an output directory by path (the AnyZeroDim polymorphic hook).
+			void RecordToPath(std::string const& path) override
+			{
+				RecordTo(std::make_shared<records::OutputDirectory>(path));
 			}
 
 			/// \brief The attached output directory (null when not recording).

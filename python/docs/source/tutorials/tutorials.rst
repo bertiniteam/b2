@@ -12,6 +12,7 @@
    zerodim_solver/index
    all_solutions/index
    solution_database/index
+   your_records/index
    concatenate_systems/index
    eigenvalues_by_homotopy/index
    parameter_homotopy/index
