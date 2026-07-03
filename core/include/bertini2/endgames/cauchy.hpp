@@ -1150,6 +1150,157 @@ public:
 	}
 
 	/**
+	\brief The minimum dehomogenized infinity norm over the current Cauchy loop's
+	samples -- what the security (divergence-truncation) check must watch.
+
+	The security check must watch the tracked SAMPLES, never the extrapolated
+	approximation: the Cauchy mean of a path diverging like a pole t^{-k} is a
+	STATIONARY FINITE number (the pole terms average to zero around the circle by the
+	roots-of-unity identity), so a norm check on the approximation can never fire for
+	exactly the paths it exists to truncate (the junk-success bug, 2026-07-03; present
+	in Bertini 1 as well).
+
+	\tparam ComplexT The complex number type of the samples.
+	\return The minimum dehomogenized infinity norm over the loop's samples.
+	*/
+	template<typename ComplexT>
+	auto MinLoopSampleNorm() const
+	{
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
+		auto const& samples = std::get<SampCont<ComplexT>>(cauchy_samples_);
+		RealT min_norm(0);
+		bool first = true;
+		for (auto const& s : samples)
+		{
+			RealT const n = this->GetSystem().template InfinityNormOfDehomogenized<ComplexT>(s);
+			if (first || n < min_norm)
+			{
+				min_norm = n;
+				first = false;
+			}
+		}
+		return min_norm;
+	}
+
+	/**
+	\brief The pole-component mass of the current Cauchy loop: the endgame
+	operating-zone measurement.
+
+	The loop samples are a discrete Fourier series of the Puiseux/Laurent expansion of
+	the path around the target time.  Every CLEAN Puiseux term t^{k/c} with k >= 0
+	contributes exactly zero to the twisted means below (roots-of-unity
+	orthogonality), so any surviving mass in the negative modes k = -1..-c measures
+	structure the operating zone forbids:
+
+	- a pole AT the target time (an affine path to genuine infinity -- there is no
+	  patch to give it a finite place to go), or
+	- any other singularity of the ramified cover INSIDE the loop (a branch point
+	  t* != 0 with |t*| < r), where the Cauchy integral assumption fails and the
+	  plain mean is garbage.
+
+	The two cases separate as the radius shrinks: an inside singularity's mass dies
+	once r < |t*| (then the endgame may proceed -- the zone finally reached); a pole
+	at the target time has mass GROWING like 1/r (see the growth verdict in RunImpl).
+
+	Uses exactly the samples the mean uses: the closed c-circuit loop, uniform in
+	angle, the duplicate closing sample excluded.  Coordinates only -- no function
+	values, so system scaling cannot affect the verdict.
+
+	\tparam ComplexT The complex number type of the samples.
+	\return max over m = 1..c of the infinity norm of the e^{i m theta / c}-twisted
+	sample mean (the estimated magnitude of the t^{-m/c} coefficient at the current
+	radius).
+	*/
+	template<typename ComplexT>
+	NumErrorT PoleComponentMass() const
+	{
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
+		auto const& samples = std::get<SampCont<ComplexT>>(cauchy_samples_);
+		auto const& times   = std::get<TimeCont<ComplexT>>(cauchy_times_);
+		auto const c = this->CycleNumber();
+		auto const N = this->EndgameSettings().num_sample_points;
+		auto const M = c * N;
+		if (c == 0 || samples.size() < M + 1 || times.size() < 2)
+			return NumErrorT(0);
+
+		// orientation of the loop (which way theta advances); the frequency sign follows it
+		RealT const orientation_test = imag(times[1] * conj(times[0]));
+		RealT const orientation = (orientation_test > RealT(0)) ? RealT(1) : RealT(-1);
+
+		RealT const two_pi = RealT(2) * acos(RealT(-1));
+		NumErrorT mass(0);
+		for (unsigned m = 1; m <= c; ++m)
+		{
+			Vec<ComplexT> twisted = Vec<ComplexT>::Zero(samples[0].size());
+			for (unsigned j = 0; j < M; ++j)
+			{
+				// weight e^{+i m theta_j / c} with theta_j = orientation * 2 pi j / N:
+				// picks out exactly the k = -m Puiseux mode
+				RealT const angle = orientation * two_pi * RealT(j * m) / RealT(N * c);
+				twisted += samples[j] * ComplexT(cos(angle), sin(angle));
+			}
+			twisted /= RealT(M);
+			auto const twisted_norm = static_cast<NumErrorT>(twisted.template lpNorm<Eigen::Infinity>());
+			if (twisted_norm > mass)
+				mass = twisted_norm;
+		}
+		return mass;
+	}
+
+	/// \brief MinLoopSampleNorm read from whichever numeric lane the adaptive
+	/// (double-first) endgame is currently computing in.
+	template<typename Dummy = void>
+	typename Eigen::NumTraits<BCT>::Real MinLoopSampleNormAMP() const
+	{
+		using RealT = typename Eigen::NumTraits<BCT>::Real;
+		if (this->current_endgame_precision_ == DoublePrecision())
+			return static_cast<RealT>(MinLoopSampleNorm<complex_dbl>());
+		return MinLoopSampleNorm<complex_mp>();
+	}
+
+	/// \brief PoleComponentMass read from whichever numeric lane the adaptive
+	/// (double-first) endgame is currently computing in.
+	template<typename Dummy = void>
+	NumErrorT PoleComponentMassAMP() const
+	{
+		if (this->current_endgame_precision_ == DoublePrecision())
+			return PoleComponentMass<complex_dbl>();
+		return PoleComponentMass<complex_mp>();
+	}
+
+	/**
+	\brief The per-round growth factor of pole mass that counts as "geometrically
+	growing", derived from the endgame's own radius schedule.
+
+	A pole at the target time has mass ~ 1/r; the radius shrinks by sample_factor per
+	round, so a pure pole's mass grows by exactly 1/sample_factor per round (2x at the
+	default 1/2).  The detection threshold is the geometric mean of "no growth" and
+	"pure pole": sqrt(1/sample_factor) -- self-adapting when sample_factor is
+	reconfigured, midway between noise and signal.
+
+	\return The growth-detection threshold for consecutive pole-mass measurements.
+	*/
+	NumErrorT PoleGrowthThreshold() const
+	{
+		auto const sample_factor = static_cast<NumErrorT>(this->EndgameSettings().sample_factor);
+		using std::sqrt;
+		return sqrt(NumErrorT(1) / sample_factor);
+	}
+
+	/**
+	\brief Is a pole-component mass SIGNIFICANT, i.e. above the noise floor of the
+	refined samples, relative to the approximation's own scale?
+
+	\param mass The pole-component mass (PoleComponentMass).
+	\param approx_scale The infinity norm of the current approximation.
+	\return true when the mass indicates the operating zone has not been reached.
+	*/
+	bool PoleMassSignificant(NumErrorT mass, NumErrorT approx_scale) const
+	{
+		return mass > NumErrorT(1e3) * this->FinalTolerance() * (NumErrorT(1) + approx_scale);
+	}
+
+	/**
 	\brief Primary function that runs the Cauchy endgame.
 	To begin, this function will compute a first approximation using the power series endgame notion. This approximation is made after a heuristic on the stabilization of
 	the cyle number is made, and after the maximum and minimum norms of tracked space values around the origin are withing a certain tolerance.
@@ -1207,13 +1358,20 @@ public:
 			return cauchy_loop_success;
 
 
-		// initialized to 0 so the security check below never reads indeterminate values.
-		// NOTE: the guard on the assignment (level <= 0) and the guard on the check in the loop (level != 0)
-		// appear inconsistent with each other and with the PowerSeries endgame, which uses (level <= 0) for both.
+		// The security check watches the SAMPLES (the path), never the extrapolated
+		// approximation: a pole-type diverging path has a stationary finite Cauchy mean,
+		// so an approximation-norm check can never fire for exactly the paths it exists
+		// to truncate.  initialized to 0 so the check never reads indeterminate values.
 		RealT norm_of_dehom_prev(0), norm_of_dehom_latest(0);
 
 		if(this->SecuritySettings().level <= 0)
-			norm_of_dehom_prev = this->GetSystem().InfinityNormOfDehomogenized(prev_approx);
+			norm_of_dehom_prev = MinLoopSampleNorm<ComplexT>();
+
+		// Pole-component state for the operating-zone check: mass persisting AND growing
+		// geometrically across rounds is the signature of a pole AT the target time
+		// (radius halves, mass ~1/r doubles) -- the path diverges; truncate honestly.
+		NumErrorT prev_pole_mass(0);
+		unsigned pole_growth_rounds = 0;
 
 		// Cycle-number consistency: refuse to accept a converged approximation until the cycle number
 		// has reported the SAME value for num_consecutive_same_cycle_number consecutive approximations.
@@ -1241,16 +1399,47 @@ public:
 			approx_error = static_cast<NumErrorT>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
 			NotifyObservers(ApproximatedRoot<EmitterType>(*this));
 
-			if (approx_error < this->FinalTolerance()
+			// the operating-zone measurement: negative-mode (pole) mass in the loop.
+			// Nonzero mass means the disk between here and the target time is not
+			// clean -- a pole at the target, or another branch point inside the loop
+			// -- and the mean is not to be trusted, however stationary it looks.
+			auto const pole_mass = PoleComponentMass<ComplexT>();
+			bool const in_operating_zone = !PoleMassSignificant(pole_mass,
+				static_cast<NumErrorT>(latest_approx.template lpNorm<Eigen::Infinity>()));
+
+			if (in_operating_zone
+			    && approx_error < this->FinalTolerance()
 			    && same_cycle_count >= GetCauchySettings().num_consecutive_same_cycle_number)
 			{
 				NotifyObservers(Converged<EmitterType>(*this));
 				return SuccessCode::Success;
 			}
 
+			if (!in_operating_zone)
+			{
+				// growing pole mass two rounds running: a pole AT the target time --
+				// the path diverges (affine infinity is really infinity); truncate.
+				if (prev_pole_mass > NumErrorT(0)
+				    && pole_mass > PoleGrowthThreshold() * prev_pole_mass)
+					++pole_growth_rounds;
+				else
+					pole_growth_rounds = 0;
+				if (pole_growth_rounds >= GetCauchySettings().num_pole_growth_rounds_before_truncation)
+				{
+					NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
+					return SuccessCode::SecurityMaxNormReached;
+				}
+				prev_pole_mass = pole_mass;
+			}
+			else
+			{
+				prev_pole_mass = NumErrorT(0);
+				pole_growth_rounds = 0;
+			}
+
 			if (this->SecuritySettings().level <= 0)
-			{//we are too large, break out of loop to return error.
-				norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(latest_approx);
+			{//the whole loop out of bounds twice running: the path is diverging; truncate.
+				norm_of_dehom_latest = MinLoopSampleNorm<ComplexT>();
 
 				if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&
 					norm_of_dehom_latest > this->SecuritySettings().max_norm  )
@@ -1341,9 +1530,14 @@ public:
 		//      up to mpfr (widening the retained PSEG window, never re-tracking it) and retries in mpfr.
 		//      The approximations live in BCT, so the per-iteration bookkeeping arithmetic is mpfr -- one
 		//      small vector op next to the tracking, which itself stays in the fast lane. ----
+		// the security check watches the SAMPLES, and acceptance is gated on the
+		// pole-component operating-zone measurement -- see RunImpl for the reasoning
 		RealT norm_of_dehom_prev(0), norm_of_dehom_latest(0);
 		if (this->SecuritySettings().level <= 0)
-			norm_of_dehom_prev = this->GetSystem().InfinityNormOfDehomogenized(this->previous_approximation_);
+			norm_of_dehom_prev = MinLoopSampleNormAMP();
+
+		NumErrorT prev_pole_mass(0);
+		unsigned pole_growth_rounds = 0;
 
 		unsigned prev_cycle = 0, same_cycle_count = 0;
 
@@ -1361,16 +1555,41 @@ public:
 			this->approximate_error_ = static_cast<NumErrorT>((this->final_approximation_ - this->previous_approximation_).template lpNorm<Eigen::Infinity>());
 			NotifyObservers(ApproximatedRoot<EmitterType>(*this));
 
-			if (this->approximate_error_ < this->FinalTolerance()
+			auto const pole_mass = PoleComponentMassAMP();
+			bool const in_operating_zone = !PoleMassSignificant(pole_mass,
+				static_cast<NumErrorT>(this->final_approximation_.template lpNorm<Eigen::Infinity>()));
+
+			if (in_operating_zone
+			    && this->approximate_error_ < this->FinalTolerance()
 			    && same_cycle_count >= GetCauchySettings().num_consecutive_same_cycle_number)
 			{
 				NotifyObservers(Converged<EmitterType>(*this));
 				return SuccessCode::Success;
 			}
 
+			if (!in_operating_zone)
+			{
+				if (prev_pole_mass > NumErrorT(0)
+				    && pole_mass > PoleGrowthThreshold() * prev_pole_mass)
+					++pole_growth_rounds;
+				else
+					pole_growth_rounds = 0;
+				if (pole_growth_rounds >= GetCauchySettings().num_pole_growth_rounds_before_truncation)
+				{
+					NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
+					return SuccessCode::SecurityMaxNormReached;
+				}
+				prev_pole_mass = pole_mass;
+			}
+			else
+			{
+				prev_pole_mass = NumErrorT(0);
+				pole_growth_rounds = 0;
+			}
+
 			if (this->SecuritySettings().level <= 0)
 			{
-				norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(this->final_approximation_);
+				norm_of_dehom_latest = MinLoopSampleNormAMP();
 				if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&
 				    norm_of_dehom_latest > this->SecuritySettings().max_norm)
 				{
