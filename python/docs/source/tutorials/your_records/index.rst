@@ -7,8 +7,50 @@ with its provenance.  You are free to delete it (the only consequence is recompu
 free to ``grep`` it, and free to read it in ten years with no bertini installed: the
 directory carries its own ``README.txt`` explaining the format.
 
-The payoff you feel immediately: **rerunning a script is always safe** — instant if the
-work is done, *resuming* if a previous run crashed, fresh if the ask is new.
+How to think about it: the records are ordinary program *output*, like the ``.log``
+file LaTeX writes — always produced, never precious, occasionally exactly what you
+need.  They are **not** a database you administer.  There is nothing to configure, no
+schema to migrate, no server; just files you can read.
+
+What it gains you:
+
+* **Restartability.**  A solve is *ensure-answered*: it consults the records first,
+  takes any paths already answered for the identical ask (system + settings + seed),
+  and computes only the rest.  Kill a 40-hour run at hour 39 and rerunning the same
+  command finishes the last hour.  This works for the CLI and Python alike, with no
+  flags — resuming *is* rerunning.
+* **Reproducibility.**  ``seed=42`` names the exact homotopy — same gamma, start
+  points, and patch, on every machine, forever.  Even a run where you *omitted* the
+  seed records the one it drew, so accidental results remain reproducible.
+* **Provenance.**  Every path remembers where it started; chained solves link runs
+  into a walkable graph (see :doc:`../chained_homotopies/index`), so any final point
+  answers "which chain of homotopies and start points produced you?" — all the way to
+  the beginning.
+* **An audit trail.**  Every tracked path is recorded whatever its outcome —
+  ``success``, ``diverged`` (a path that went to infinity: an answer, not a failure),
+  or ``failed`` (the tracker gave up) — so "what happened to my 50 missing paths?" is
+  a one-line pandas query, not a mystery.
+
+Turning it on and off
+---------------------
+
+It is on by default, everywhere.  Off is one line:
+
+.. testcode::
+
+   import bertini as pb
+   pb.recording(False)     # solves run bare: nothing written, nothing consulted
+   pb.recording(True)      # back on
+   print(pb.recording())   # ask the current state
+
+.. testoutput::
+
+   True
+
+For the command line, the switch is the environment: ``BERTINI_RECORDS_DIR=""``
+(empty) runs ``bertini2`` with no records, and any non-empty value relocates them
+(``BERTINI_RECORDS_DIR=~/project/records bertini2 input``).  With recording off there
+is nothing to resume from — the trade is yours to make.
 
 The three verbs
 ---------------
@@ -155,6 +197,15 @@ The command line gets the same treatment: running ``bertini2`` on an input file 
 command again.  Point the records somewhere else — a project directory on a cluster,
 never scratch — with the ``BERTINI_RECORDS_DIR`` environment variable (under MPI, pass
 ``mpirun -x BERTINI_RECORDS_DIR``; only the manager rank writes).
+
+Navigating what you have
+------------------------
+
+Four tools read the plain records back — any directory, any producer, no solver
+objects: :func:`bertini.runs` and :func:`bertini.tracks` (pandas DataFrames of the
+runs and the tracked paths), :func:`bertini.provenance_graph` (a networkx graph of
+the points), and :func:`bertini.plot_chain` (the chain drawn left to right).  They
+are the subject of :doc:`../chained_homotopies/index`.
 
 Power users: the solver objects underneath expose the same machinery —
 ``solver.record_to(path)``, ``solver.num_paths_hydrated()``, ``solver.records_run_id()``

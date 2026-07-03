@@ -73,6 +73,12 @@ def test_crossed_paths_runs():
 
 
 def test_chained_homotopies_runs(tmp_path, monkeypatch):
-    # the chains/provenance example: records into a scratch dir, asserts its own walk
+    # the chains/provenance example: records into a scratch dir, asserts its own walk,
+    # and draws the left-to-right progression (pandas + networkx + matplotlib)
+    pytest.importorskip("pandas")
+    pytest.importorskip("networkx")
+    pytest.importorskip("matplotlib")
     monkeypatch.setenv("BERTINI_RECORDS_DIR", str(tmp_path / "chain_records"))
-    _run("chained_homotopies.py")
+    plot = tmp_path / "chain.png"
+    _run("chained_homotopies.py", "--plot", str(plot))
+    assert plot.exists() and plot.stat().st_size > 0

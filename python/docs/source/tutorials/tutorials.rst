@@ -13,6 +13,7 @@
    all_solutions/index
    solution_database/index
    your_records/index
+   chained_homotopies/index
    concatenate_systems/index
    eigenvalues_by_homotopy/index
    parameter_homotopy/index
