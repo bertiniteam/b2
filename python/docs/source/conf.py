@@ -95,6 +95,13 @@ warnings.filterwarnings("ignore", message="FigureCanvasAgg is non-interactive")
 # natural default precision on a fresh `import bertini`.
 import bertini
 bertini.default_precision(20)
+
+# Point the ambient records directory at a scratch location for the whole doctest build.
+# bertini.solve() records by design (the structured output directory is ordinary program
+# output); without this, any tutorial calling solve() without directory= would drop a
+# bertini_output/ into sphinx's working directory.  One temp dir per build, auto-discarded.
+import tempfile as _tempfile
+bertini.records_dir(_tempfile.mkdtemp(prefix="bertini_docs_records_"))
 '''
 
 bibtex_bibfiles = ['../../../doc_resources/bertini2.bib']
