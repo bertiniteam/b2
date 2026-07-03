@@ -131,9 +131,87 @@ class SolveResult:
         return self._solver
 
 
+# --- chained solves -------------------------------------------------------------------
+
+def _point_reference(point, position, pending_givens):
+    """The provenance reference for one start point: a point_ref when the point carries
+    ``.provenance`` {run, index} (a Solution from a prior solve -- a CHAIN), else a
+    slot in the run's given (external data -- provenance bottoms out honestly)."""
+    prov = getattr(point, 'provenance', None)
+    if isinstance(prov, dict) and 'run' in prov and 'index' in prov:
+        return {'kind': 'point_ref', 'run': str(prov['run']), 'index': int(prov['index'])}
+    pending_givens.append((position, point))
+    return None    # patched once the given is archived
+
+
+def _archive_given_points(pending, directory_writer):
+    """Archive externally supplied start points as ONE given definition (coordinates as
+    full-precision strings, readable without bertini) plus its given record; returns the
+    definition id."""
+    rows = []
+    for _, point in pending:
+        coords = []
+        for v in _np.atleast_1d(_np.asarray(point, dtype=object)).ravel():
+            c = complex(v)
+            coords.append([repr(c.real), repr(c.imag)])
+        rows.append(coords)
+    content = _json.dumps({'kind': 'start_points', 'points': rows}, indent=1)
+    given_id = directory_writer.put_definition(content)
+    directory_writer.append(_json.dumps({
+        'kind': 'given', 'source': given_id, 'role': 'start_points',
+        'when': _time.strftime('%Y-%m-%d %H:%M')}))
+    return given_id
+
+
+def _coerce_start_point(point, precision):
+    """Coerce one start point to the coordinate type the solver's converter expects:
+    multiprecision complex for 'adaptive'/'multiple' (a raw float/complex array would
+    fail eigenpy conversion), plain complex for 'double'.  Points already holding mp
+    coordinates (a prior solve's solutions) pass through untouched."""
+    arr = _np.atleast_1d(_np.asarray(point))
+    if precision == 'double':
+        return arr.astype(complex)
+    from bertini.multiprec import complex_mp
+    mp_dtype = _np.dtype(complex_mp)   # the eigenpy-registered numpy dtype
+    if arr.dtype == mp_dtype:
+        return arr
+    return _np.array([v if isinstance(v, complex_mp)
+                      else complex_mp(repr(complex(v).real), repr(complex(v).imag))
+                      for v in arr.ravel()], dtype=mp_dtype)
+
+
+def _chained_solver(system, homotopy, start, where, *, precision, endgame):
+    """Build the HomotopySolver for a chained solve, plus the per-path provenance refs
+    and the start-data identity that joins the ask."""
+    import hashlib
+    from bertini import nag_algorithm as _nag
+
+    points = list(getattr(start, 'solutions', start))
+    if not points:
+        raise ValueError('solve: start= supplied no points')
+
+    pending_givens = []
+    refs = [_point_reference(pt, k, pending_givens) for k, pt in enumerate(points)]
+    if pending_givens:
+        given_id = _archive_given_points(pending_givens, _directory(where))
+        for slot, (position, _) in enumerate(pending_givens):
+            refs[position] = {'kind': 'given_ref', 'given': given_id, 'index': slot}
+
+    # the identity of the start data joins the ask: the same homotopy from different
+    # start points is a different computation
+    identity = hashlib.sha256(
+        _json.dumps(refs, sort_keys=True).encode()).hexdigest()
+
+    solver = _nag.HomotopySolver(homotopy,
+                                 [_coerce_start_point(pt, precision) for pt in points],
+                                 system, precision=precision, endgame=endgame)
+    return solver, refs, identity
+
+
 # --- the three verbs ------------------------------------------------------------------
 
-def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauchy'):
+def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauchy',
+          homotopy=None, start=None):
     """Solve a polynomial system, recording and resuming automatically.
 
     Ensure-answered semantics: the solve consults the ambient records directory first;
@@ -151,6 +229,15 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
         a fresh seed is drawn (and recorded in the run's ask).
     directory : str, optional
         Records directory override; default is ambient (see ``records_dir``).
+    homotopy : System, optional
+        A homotopy you built (e.g. :func:`bertini.nag_algorithm.blend_homotopy`), for a
+        CHAINED solve: its paths run from your ``start`` points at t=1 to ``system``'s
+        solutions at t=0.  Requires ``start``.
+    start : SolveResult or iterable of points, optional
+        Where the paths start.  A prior :class:`SolveResult` (or its solutions) chains
+        with full provenance -- the records link every new endpoint back through the
+        prior run, all the way to the beginning.  Raw points (arrays) are archived as a
+        *given*: provenance bottoms out honestly at data you supplied.
     precision, endgame : str
         Passed through to :func:`bertini.nag_algorithm.ZeroDimSolver` (``mptype`` /
         ``endgame``).
@@ -164,12 +251,21 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
     from bertini import nag_algorithm as _nag
     from bertini.random import set_random_seed as _set_seed
 
+    if (homotopy is None) != (start is None):
+        raise ValueError("solve: homotopy= and start= go together (a chained solve "
+                         "needs both the homotopy and where its paths start)")
     if seed is not None:
         _set_seed(seed)
 
-    zd = _nag.ZeroDimSolver(system, mptype=precision, endgame=endgame)
     where = str(directory if directory is not None else records_dir())
-    zd.record_to(where)
+    if homotopy is not None:
+        zd, refs, identity = _chained_solver(system, homotopy, start, where,
+                                             precision=precision, endgame=endgame)
+        zd.record_to(where)
+        zd.set_recorded_start_provenance(_json.dumps(refs), identity)
+    else:
+        zd = _nag.ZeroDimSolver(system, mptype=precision, endgame=endgame)
+        zd.record_to(where)
     zd.solve()
     zd.refresh_results()
 

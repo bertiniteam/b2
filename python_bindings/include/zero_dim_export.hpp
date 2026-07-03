@@ -265,6 +265,21 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		+[](AlgoT& self){ if (self.Records()) self.Records()->RefreshResults(); },
 		(boost::python::arg("self")),
 		"(Re)render the attached directory's results.json.  No-op when not recording.")
+	.def("set_recorded_start_provenance",
+		+[](AlgoT& self, std::string const& refs_json, std::string const& start_identity){
+			auto const parsed = boost::json::parse(refs_json).as_array();
+			std::vector<boost::json::object> refs;
+			refs.reserve(parsed.size());
+			for (auto const& r : parsed)
+				refs.push_back(r.as_object());
+			self.SetRecordedStartProvenance(std::move(refs), start_identity);
+		},
+		(boost::python::arg("self"), boost::python::arg("refs_json"), boost::python::arg("start_identity")),
+		"Declare where this solve's start points came from, for the records: a JSON array "
+		"with one reference object per path ({'kind':'point_ref','run':...,'index':...} for "
+		"a chain from a prior run, {'kind':'given_ref','given':...,'index':...} for external "
+		"data), plus an identity string for the start data (it joins the ask: same homotopy, "
+		"different starts = different computation).  Call before solve().")
 	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
 	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
 	.def("all_solutions",

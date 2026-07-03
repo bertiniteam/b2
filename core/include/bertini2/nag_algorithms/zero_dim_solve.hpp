@@ -2129,6 +2129,31 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 			/**
+			\brief Declare where this solve's start points came from, for the records
+			(chains and givens).
+
+			By default a solve's start points derive from the target + seed (canonical
+			start labels -- provenance bottoms out at the start system).  When the caller
+			supplies start points -- a prior run's solutions (a CHAIN) or external data (a
+			GIVEN) -- pass one reference object per path, e.g.
+			`{"kind":"point_ref","run":<id>,"index":i}` or
+			`{"kind":"given_ref","given":<definition id>,"index":i}`, plus an identity
+			string for the start data as a whole, which JOINS THE ASK: the same homotopy
+			from different start data is a different computation.
+
+			Call before Solve() (and before RecordsAsk()/EnsureRunRecorded()).
+
+			\param refs One provenance object per start point, in path-index order.
+			\param start_identity Digest/id of the start data (joins the ask identity).
+			*/
+			void SetRecordedStartProvenance(std::vector<boost::json::object> refs,
+			                                std::string start_identity)
+			{
+				records_start_refs_ = std::move(refs);
+				records_start_identity_ = std::move(start_identity);
+			}
+
+			/**
 			\brief The canonical text of this solver's FULL settings: the algorithm-level
 			configs, then the tracker's own, then the endgame's -- everything that decides
 			what gets computed (the second plank of archiving the algorithms).
@@ -2176,6 +2201,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				ask["tracker"] = tracking::TrackerTraits<TrackerType>::kRecordName;
 				ask["endgame"] = endgame::AlgoTraits<EndgameType>::kRecordName;
 				ask["target"] = TargetSystem().ContentDigest().Hex();
+				// the homotopy actually tracked: for seed-derived homotopies this is
+				// redundant with (target, seed) but harmless; for USER homotopies (the
+				// engine driven directly) it is the only thing telling asks apart
+				ask["homotopy"] = Homotopy().ContentDigest().Hex();
+				if (!records_start_identity_.empty())
+					ask["start"] = records_start_identity_;   // external start data is identity
 				ask["config"] = settings.Hex();
 				ask["seed"] = static_cast<std::int64_t>(GetGlobalSeed());
 				return ask;
@@ -2318,8 +2349,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// success / diverged / failed -- a truncation near infinity is a verdict,
 				// not a failure (the SummarizeSolve bucketing, PR #46, now in the records)
 				record["status"] = records::CoarsePathStatus(r.endgame_success_code);
-				record["start"] = boost::json::object{{"kind", "start_label"},
-				                                      {"index", static_cast<std::int64_t>(r.path_index)}};
+				// a chained/given start carries its true provenance; otherwise the
+				// canonical start-system label (provenance bottoms out here)
+				record["start"] = (r.path_index < records_start_refs_.size())
+					? records_start_refs_[r.path_index]
+					: boost::json::object{{"kind", "start_label"},
+					                      {"index", static_cast<std::int64_t>(r.path_index)}};
 				records_->Append(record);
 			}
 
@@ -2334,6 +2369,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			std::shared_ptr<records::OutputDirectory> records_;  ///< The attached output directory (null = not recording).
 			std::string records_run_id_;      ///< This solve's run id in the records (ask hash prefix).
+			std::vector<boost::json::object> records_start_refs_;  ///< Per-path start provenance (point_ref/given_ref); empty = canonical start labels.
+			std::string records_start_identity_;  ///< Identity of externally supplied start data (joins the ask); empty = starts derive from target+seed.
 			bool hydrating_ = false;          ///< True while replaying recorded paths (suppresses re-emission).
 			unsigned long long num_hydrated_ = 0;  ///< Paths hydrated from records in the last Solve().
 

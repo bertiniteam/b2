@@ -141,3 +141,84 @@ def test_annotate_renders_beside_the_point(tmp_path):
 def test_annotate_without_provenance_is_an_error(tmp_path):
     with pytest.raises(ValueError):
         pb.annotate(np.array([1.0, 2.0]), 'key', 'value', directory=str(tmp_path / 'r'))
+
+
+# --- chains and givens (rung 6) --------------------------------------------------------
+
+def circle_line_r(r2):
+    x, y = Variable('x'), Variable('y')
+    s = System()
+    s.add_variable_group(VariableGroup([x, y]))
+    s.add_function(x**2 + y**2 - r2)
+    s.add_function(x - y)
+    return s
+
+
+def test_chained_solve_records_point_refs(tmp_path):
+    """solve(B, homotopy=H, start=r1): every new track's start is a point_ref into r1 --
+    the provenance chain is walkable back to the beginning."""
+    from bertini.nag_algorithm import blend_homotopy
+    d = str(tmp_path / 'records')
+    A = circle_line_r(1)
+    r1 = pb.solve(A, seed=42, directory=d)
+
+    B = circle_line_r(4)
+    r2 = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1, seed=42, directory=d)
+    assert len(r2) == 2
+    assert {abs(round(complex(s[0]).real, 10)) for s in r2} == {round(2 ** 0.5, 10)}
+
+    starts = []
+    for journal in (tmp_path / 'records' / 'history').glob('*.jsonl'):
+        for line in journal.read_text().splitlines():
+            rec = json.loads(line)
+            if rec.get('kind') == 'track' and rec.get('run') == r2.run_id:
+                starts.append(rec['start'])
+    assert starts and all(
+        st['kind'] == 'point_ref' and st['run'] == r1.run_id for st in starts)
+
+
+def test_chained_solve_hydrates_on_rerun(tmp_path):
+    """A chained ask is an ask like any other: the identical rerun computes nothing."""
+    from bertini.nag_algorithm import blend_homotopy
+    d = str(tmp_path / 'records')
+    A = circle_line_r(1)
+    B = circle_line_r(4)
+
+    pb.set_random_seed = None   # noqa -- explicit seeds below control everything
+    r1 = pb.solve(A, seed=42, directory=d)
+    first = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1, seed=7, directory=d)
+    assert first.num_hydrated == 0
+
+    r1b = pb.solve(A, seed=42, directory=d)      # hydrates r1
+    assert r1b.num_hydrated == 2
+    again = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1b, seed=7, directory=d)
+    assert again.num_hydrated == 2
+
+
+def test_raw_start_points_become_a_given(tmp_path):
+    """Raw start points (no provenance) are archived as a given: provenance bottoms out
+    honestly at data the user supplied."""
+    from bertini.nag_algorithm import blend_homotopy
+    d = str(tmp_path / 'records')
+    A = circle_line_r(1)
+    B = circle_line_r(4)
+    raw = [np.array([2 ** -0.5 + 0j, 2 ** -0.5 + 0j]),
+           np.array([-(2 ** -0.5) + 0j, -(2 ** -0.5) + 0j])]
+    r = pb.solve(B, homotopy=blend_homotopy(B, A), start=raw, seed=7, directory=d)
+    assert len(r) == 2
+
+    givens, starts = [], []
+    for journal in (tmp_path / 'records' / 'history').glob('*.jsonl'):
+        for line in journal.read_text().splitlines():
+            rec = json.loads(line)
+            if rec.get('kind') == 'given':
+                givens.append(rec)
+            if rec.get('kind') == 'track' and rec.get('run') == r.run_id:
+                starts.append(rec['start'])
+    assert len(givens) == 1 and givens[0]['role'] == 'start_points'
+    assert all(st['kind'] == 'given_ref' and st['given'] == givens[0]['source']
+               for st in starts)
+    # the given's definition is plain json, coordinates readable without bertini
+    gid = givens[0]['source']
+    body = json.loads((tmp_path / 'records' / 'definitions' / gid[:2] / gid[2:]).read_text())
+    assert len(body['points']) == 2
