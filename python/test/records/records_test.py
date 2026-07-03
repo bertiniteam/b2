@@ -250,3 +250,24 @@ def test_depth_4_provenance_walk(tmp_path):
     resumed = pb.solve(systems[2], homotopy=blend_homotopy(systems[2], systems[1]),
                        start=cold, seed=42, directory=d)
     assert resumed.num_hydrated == 2      # identical ask as results[2]: pure memo
+
+
+def test_recording_off_is_one_line(tmp_path, monkeypatch):
+    """bertini.recording(False): solve runs bare -- nothing written, nothing consulted,
+    provenance honestly absent; recording(True) restores everything."""
+    import bertini.records as records_module
+    d = tmp_path / 'records'
+    monkeypatch.setattr(records_module, '_recording_enabled', True)   # isolate
+
+    pb.recording(False)
+    try:
+        r = pb.solve(circle_line(), seed=42, directory=str(d))
+        assert len(r) == 2
+        assert r.run_id == '' and r.solutions[0].provenance is None
+        assert not d.exists()
+    finally:
+        pb.recording(True)
+
+    assert pb.recording() is True
+    r2 = pb.solve(circle_line(), seed=42, directory=str(d))
+    assert r2.run_id and d.exists()

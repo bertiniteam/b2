@@ -44,6 +44,31 @@ __all__ = ['solve', 'save', 'load', 'records_dir', 'Solution', 'SolveResult']
 _ambient = None
 
 
+_recording_enabled = True
+
+
+def recording(on=None):
+    """The one-line on/off switch for the records: ``bertini.recording(False)``.
+
+    With recording off, ``solve`` runs bare -- no directory is written or consulted
+    (so no resuming either), and the ambient ``BERTINI_RECORDS_DIR`` attach is
+    suppressed for this process.  ``recording(True)`` turns it back on.  Call with no
+    argument to ask the current state.
+
+    For the command line, the same switch is the environment: ``BERTINI_RECORDS_DIR=""``
+    (empty) runs ``bertini2`` without records.
+    """
+    global _recording_enabled
+    if on is not None:
+        _recording_enabled = bool(on)
+        # the C++ side reads the environment for its ambient attach; keep it in step
+        if not _recording_enabled:
+            _os.environ['BERTINI_RECORDS_DIR'] = ''
+        elif _os.environ.get('BERTINI_RECORDS_DIR') == '':
+            del _os.environ['BERTINI_RECORDS_DIR']
+    return _recording_enabled
+
+
 def records_dir(path=None):
     """Get (or set, by passing a path) the ambient records directory for this process.
 
@@ -261,27 +286,34 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
     if homotopy is not None:
         zd, refs, identity = _chained_solver(system, homotopy, start, where,
                                              precision=precision, endgame=endgame)
-        zd.record_to(where)
-        zd.set_recorded_start_provenance(_json.dumps(refs), identity)
+        if _recording_enabled:
+            zd.record_to(where)
+            zd.set_recorded_start_provenance(_json.dumps(refs), identity)
     else:
         zd = _nag.ZeroDimSolver(system, mptype=precision, endgame=endgame)
-        zd.record_to(where)
+        if _recording_enabled:
+            zd.record_to(where)
     zd.solve()
-    zd.refresh_results()
+    if _recording_enabled:
+        zd.refresh_results()
 
     run_id = zd.records_run_id()
     # finite solutions, carrying their TRUE path indices as provenance ({run, index}
-    # is exactly how the records reference points)
+    # is exactly how the records reference points); with recording off there is no
+    # run to reference, so provenance is honestly absent
     all_sols = zd.all_solutions()
     solutions = [Solution(all_sols[int(m.path_index)],
-                          provenance={'run': run_id, 'index': int(m.path_index)})
+                          provenance=({'run': run_id, 'index': int(m.path_index)}
+                                      if run_id else None))
                  for m in zd.solution_metadata() if m.is_finite]
 
-    result = SolveResult(solutions, run_id, where, int(zd.num_paths_hydrated()), zd)
-    # top-level solves auto-declare their deliverable: "what were my solutions?"
-    save("solutions [run %s]" % run_id, result,
-         description="finite solutions, auto-declared by bertini.solve",
-         directory=where)
+    result = SolveResult(solutions, run_id, where if run_id else None,
+                         int(zd.num_paths_hydrated()), zd)
+    if run_id:
+        # top-level solves auto-declare their deliverable: "what were my solutions?"
+        save("solutions [run %s]" % run_id, result,
+             description="finite solutions, auto-declared by bertini.solve",
+             directory=where)
     return result
 
 

@@ -2120,13 +2120,17 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			/**
 			\brief Attach the ambient output directory if the BERTINI_RECORDS_DIR environment
 			variable is set (manager rank only; workers never touch the records).
+
+			An EMPTY value is the off switch: `BERTINI_RECORDS_DIR=""` means "explicitly no
+			records", for library and CLI alike.
 			*/
 			void MaybeAttachAmbientRecords()
 			{
 				if (records_ || !parallel::IsManager())
 					return;
 				if (char const* dir = std::getenv("BERTINI_RECORDS_DIR"))
-					records_ = std::make_shared<records::OutputDirectory>(dir);
+					if (*dir != '\0')
+						records_ = std::make_shared<records::OutputDirectory>(dir);
 			}
 
 			/**
