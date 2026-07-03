@@ -258,8 +258,17 @@ namespace tracking{
 		}
 
 		/// \brief Construct with default AMP bounds and safety digits.
-		AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), safety_digits_1(1), safety_digits_2(1), maximum_precision(300)
-		{}
+		///
+		/// epsilon, Phi, and Psi are error bounds that are normally recomputed from the
+		/// system before tracking (\see SetAMPConfigFrom).  They are nonetheless initialized
+		/// here so that a default-constructed config is fully deterministic: epsilon takes the
+		/// single-variable value (\f$1^2\f$), and Phi/Psi are derived from the default bounds so
+		/// the object is internally consistent.  Leaving them uninitialized produced garbage
+		/// (e.g. NaN) that broke value comparison and pickle round-tripping.
+		AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), epsilon(1), safety_digits_1(1), safety_digits_2(1), maximum_precision(300)
+		{
+			SetPhiPsiFromBounds();
+		}
 
 		/// \brief Construct AMP settings derived from a system's bounds.
 		explicit
