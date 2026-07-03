@@ -1,0 +1,46 @@
+@startuml records-flow-python
+title The structured output directory: Pythonland's path to it
+
+skinparam defaultFontSize 12
+
+actor User
+participant "bertini.solve()\nsave / annotate" as PB
+participant "ZeroDimSolver /\nHomotopySolver\n(the emission seam)" as Solver
+database "output directory\n(ambient: ./bertini_output,\nor directory= / records_dir())" as Dir
+participant "navigation tools\n(read plain files;\nno solver objects)" as Nav
+
+User -> PB : r1 = solve(sys, seed=42)
+note right of PB
+  bertini.recording(False) is the
+  one-line OFF switch (solves run
+  bare; provenance honestly absent)
+end note
+PB -> Solver : build + record_to(ambient)
+group ensure-answered
+  Solver -> Dir : scan for this ask
+  Solver -> Solver : hydrate what is recorded,\ncompute the rest
+end
+Solver -> Dir : run header + definitions\n+ one track record per path
+PB -> Dir : auto-declare "solutions [run ...]"
+PB --> User : SolveResult\n(Solutions carry provenance {run, index})
+
+User -> PB : r2 = solve(B, homotopy=H, start=r1)
+note right of PB
+  a CHAIN: track records carry
+  {'kind':'point_ref','run','index'}
+  back into r1 -- walkable to the
+  beginning.  Raw arrays instead of
+  r1 become a GIVEN (provenance
+  bottoms out honestly at your data).
+  Start identity JOINS THE ASK.
+end note
+PB -> Solver : + set_recorded_start_provenance(refs)
+Solver -> Dir : run + tracks (start = point_ref)
+
+User -> PB : annotate(sol, 'projection', 1.5)\nsave('my favorites', r2)
+PB -> Dir : annotation + result records;\nrender results.json
+
+User -> Nav : runs() / tracks()  [pandas DataFrames]\nprovenance_graph()  [networkx DiGraph]\nplot_chain()  [left-to-right lineage view]\nsolutions_of(run) / provenance(point) / load(name)
+Nav -> Dir : read history/ + results.json\n(any run: this session, another machine,\nor CLI-written -- same files)
+Nav --> User : the audit:\nevery path's verdict, every point's lineage
+@enduml

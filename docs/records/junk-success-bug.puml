@@ -1,0 +1,73 @@
+@startuml junk-success-bug
+title The junk-success bug: the Cauchy mean is blind to poles\n(found 2026-07-03 via the records' function_residual; inherited from Bertini 1)
+
+skinparam defaultFontSize 12
+skinparam activityDiamondFontSize 11
+
+start
+:an UNPATCHED affine user homotopy
+H = (1-t)*B + gamma*t*A
+toward a DEFICIENT target:
+this branch of B has NO finite root;
+:with no patch, there is no "infinity" to arrive at:
+the path is a Laurent POLE
+x(t) = a/t + b    (here y = -1 - (1-t)/(gamma*t));
+
+partition "Cauchy endgame" {
+  :sample the path around circles |t| = r;
+  :approximation := mean of the loop samples;
+  note right
+    **the identity that hides the pole:**
+    mean of a/t over uniform circle samples
+    = (a/r) * (sum of roots of unity) / N
+    = 0, EXACTLY, at every radius
+    so  mean = b  -- stationary, finite
+  end note
+  :consecutive approximations agree to FinalTolerance
+  (they are the SAME constant b);
+  note right
+    the acceptance axiom -- "a diverging
+    solution can never satisfy consecutive
+    agreement" -- is structurally violated:
+    the estimator's kernel contains exactly
+    the divergent signal
+  end note
+  :security check watched the EXTRAPOLATION
+  (= the finite mean b) -- can never fire;
+  #pink:SuccessCode::Success at a NON-ROOT
+  (function residual ~ 1.0, condition ~ 1e11);
+}
+
+partition "How it was caught" {
+  :every track record carries
+  function_residual + condition_number;
+  :the audit read 1.0 where Success stood;
+  note right
+    Bertini 1, identical homotopy
+    (UserHomotopy: 1, EndgameNum: 2):
+    the SAME endpoint -1 + 1/gamma,
+    residual 1.0, counted as a solution.
+    B1's PowerSeries truncates correctly --
+    its extrapolation follows the samples.
+  end note
+}
+
+partition "The fix (in progress)" {
+  :DONE: security check watches the SAMPLES
+  (min dehomogenized norm over the loop) --
+  a diverging path at large norms now truncates;
+  :PROPOSED: pole-component operating-zone check:
+  c_-1 = mean( x_j * exp(+i theta_j) )
+  isolates the a/t coefficient from the SAME samples
+  (the twisted roots-of-unity sum) --
+  significant c_-1 means NOT in the endgame zone:
+  keep advancing, threshold truncation fires;
+  note right
+    coordinates only -- no function
+    values, so system scaling cannot
+    make a solution look like a
+    non-solution (design constraint)
+  end note
+}
+stop
+@enduml
