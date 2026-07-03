@@ -125,21 +125,79 @@ Vec<ComplexT> DecodePoint(boost::json::array const& coords)
 }
 
 /**
+\brief The fixed canonical name of a tracker/endgame SuccessCode, for the records.
+
+Integer enum values could renumber across versions; the NAME is the durable,
+read-without-bertini rendering, recorded beside the integer in every track record.
+
+\param code The success code to name.
+\return Its fixed string name (never the numeric value).
+*/
+inline std::string CanonicalName(SuccessCode code)
+{
+	switch (code)
+	{
+		case SuccessCode::NeverStarted: return "NeverStarted";
+		case SuccessCode::Success: return "Success";
+		case SuccessCode::HigherPrecisionNecessary: return "HigherPrecisionNecessary";
+		case SuccessCode::ReduceStepSize: return "ReduceStepSize";
+		case SuccessCode::GoingToInfinity: return "GoingToInfinity";
+		case SuccessCode::FailedToConverge: return "FailedToConverge";
+		case SuccessCode::MatrixSolveFailure: return "MatrixSolveFailure";
+		case SuccessCode::MatrixSolveFailureFirstPartOfPrediction: return "MatrixSolveFailureFirstPartOfPrediction";
+		case SuccessCode::MaxNumStepsTaken: return "MaxNumStepsTaken";
+		case SuccessCode::MaxPrecisionReached: return "MaxPrecisionReached";
+		case SuccessCode::MinStepSizeReached: return "MinStepSizeReached";
+		case SuccessCode::Failure: return "Failure";
+		case SuccessCode::SingularStartPoint: return "SingularStartPoint";
+		case SuccessCode::ExternallyTerminated: return "ExternallyTerminated";
+		case SuccessCode::MinTrackTimeReached: return "MinTrackTimeReached";
+		case SuccessCode::SecurityMaxNormReached: return "SecurityMaxNormReached";
+		case SuccessCode::CycleNumTooHigh: return "CycleNumTooHigh";
+		case SuccessCode::FailedToSelectPrecisionAndStepsize: return "FailedToSelectPrecisionAndStepsize";
+	}
+	return "UnknownSuccessCode";
+}
+
+/**
+\brief The coarse outcome of a path, from its endgame verdict: "success", "diverged"
+(the path went to infinity -- a clean GoingToInfinity verdict, or the security check
+TRUNCATING it near infinity), or "failed" (the tracker gave up).
+
+A diverged path is an ANSWER, not a failure: the solver classified it, deliberately.
+Audits of a run should see success / diverged / failed as three distinct populations
+(the same bucketing SummarizeSolve uses).
+
+\param code The endgame success code of the path.
+\return The coarse status string.
+*/
+inline std::string CoarsePathStatus(SuccessCode code)
+{
+	if (code == SuccessCode::Success)
+		return "success";
+	if (code == SuccessCode::GoingToInfinity || code == SuccessCode::SecurityMaxNormReached)
+		return "diverged";
+	return "failed";
+}
+
+/**
 \brief Serialize one whole-path result as a ledgerrec/1 track record body.
 
 Field names mirror parallel::FullPathResult.  SuccessCodes are recorded as integers
-(their values are part of the ledgerrec contract).  The caller adds "kind"/"run"/
-"index"/"status"/"start".
+(their values are part of the ledgerrec contract) AND by canonical name (the durable,
+read-without-bertini rendering).  The caller adds "kind"/"run"/"index"/"status"/"start".
 */
 template <typename ComplexT>
 boost::json::object EncodeFullPathResult(parallel::FullPathResult<ComplexT> const& r)
 {
 	boost::json::object out;
 	out["pre_endgame_success_code"] = static_cast<std::int64_t>(r.pre_endgame_success_code);
+	out["pre_endgame_success_code_name"] = CanonicalName(r.pre_endgame_success_code);
 	out["boundary_point"] = EncodePoint(r.boundary_point);
 	out["boundary_stepsize"] = EncodeRealScalar(r.boundary_stepsize);
 	out["boundary_precision"] = static_cast<std::int64_t>(r.boundary_precision);
 	out["endgame_success_code"] = static_cast<std::int64_t>(r.endgame_success_code);
+	out["endgame_success_code_name"] = CanonicalName(r.endgame_success_code);
 	out["endpoint"] = EncodePoint(r.solution);
 	out["function_residual"] = ExactDoubleText(r.function_residual);
 	out["condition_number"] = ExactDoubleText(r.condition_number);

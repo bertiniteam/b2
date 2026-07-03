@@ -203,6 +203,61 @@ BOOST_AUTO_TEST_CASE(different_seed_is_a_different_ask)
 	BOOST_CHECK_EQUAL(runs, 2u);   // two asks, two run headers, one directory
 }
 
+// Named regression (user, 2026-07-03): a path the endgame truncates near infinity is a
+// VERDICT, not a failure -- the records must say "diverged", never "failed", or a
+// cyclic5 audit shows 50 phantom failures.  And diverged paths hydrate like any other:
+// every tracked path is in the store, so fails/divergences are auditable and memoized.
+BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
+{
+	auto const dir = FreshDir("diverged");
+
+	// {x*y - 1, x^2 - 1}: total degree 4 paths, exactly 2 finite solutions
+	// ((1,1) and (-1,-1)) -- the other 2 paths head to infinity
+	SetGlobalSeed(42);
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	System sys;
+	sys.AddFunction(x * y - 1);
+	sys.AddFunction(pow(x, 2) - 1);
+	sys.AddVariableGroup(VariableGroup{x, y});
+
+	ZD zd(sys);
+	zd.DefaultSetup();
+	zd.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+	zd.Solve();
+
+	unsigned successes = 0, diverged = 0, failed = 0;
+	for (auto const& rec : zd.Records()->Scan())
+	{
+		if (std::string(rec.at("kind").as_string()) != "track")
+			continue;
+		auto const status = std::string(rec.at("status").as_string());
+		if (status == "success") ++successes;
+		if (status == "diverged") ++diverged;
+		if (status == "failed") ++failed;
+		// the durable rendering: code NAMES beside the integers
+		BOOST_CHECK(rec.contains("endgame_success_code_name"));
+		BOOST_CHECK(rec.contains("pre_endgame_success_code_name"));
+	}
+	BOOST_CHECK_EQUAL(successes, 2u);
+	BOOST_CHECK_EQUAL(diverged, 2u);
+	BOOST_CHECK_EQUAL(failed, 0u);
+
+	// diverged paths are answers: a rerun hydrates ALL of them, recomputing none
+	SetGlobalSeed(42);
+	auto x2 = Variable::Make("x");
+	auto y2 = Variable::Make("y");
+	System sys_again;
+	sys_again.AddFunction(x2 * y2 - 1);
+	sys_again.AddFunction(pow(x2, 2) - 1);
+	sys_again.AddVariableGroup(VariableGroup{x2, y2});
+	ZD again(sys_again);
+	again.DefaultSetup();
+	again.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+	again.Solve();
+	BOOST_CHECK_EQUAL(again.NumPathsHydrated(), 4u);
+}
+
 BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)
 {
 	auto const dir = FreshDir("ambient");

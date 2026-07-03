@@ -2273,7 +2273,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				record["kind"] = "track";
 				record["run"] = records_run_id_;
 				record["index"] = static_cast<std::int64_t>(r.path_index);
-				record["status"] = (r.endgame_success_code == SuccessCode::Success) ? "success" : "failed";
+				// success / diverged / failed -- a truncation near infinity is a verdict,
+				// not a failure (the SummarizeSolve bucketing, PR #46, now in the records)
+				record["status"] = records::CoarsePathStatus(r.endgame_success_code);
 				record["start"] = boost::json::object{{"kind", "start_label"},
 				                                      {"index", static_cast<std::int64_t>(r.path_index)}};
 				records_->Append(record);

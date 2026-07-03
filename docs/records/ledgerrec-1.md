@@ -59,8 +59,16 @@ scoped by their run.
   values (`start_points`, exact coordinate text), or a reference to an ancestor run
   (`start_run` + `start_indices`).
 - **`track`** — one continued path:
-  `{"kind":"track", "run":<run id>, "index":i, "status":"success"|"failed",
+  `{"kind":"track", "run":<run id>, "index":i,
+    "status":"success"|"diverged"|"failed",
     "endpoint":[[re,im],...] | null, "start":<provenance>}`
+  `status` is the coarse verdict: `diverged` means the path went to infinity — a clean
+  `GoingToInfinity` verdict or a deliberate security truncation near infinity
+  (`SecurityMaxNormReached`) — an ANSWER, not a failure; `failed` means the tracker
+  gave up.  Every tracked path is recorded, whatever its outcome, so a run can be
+  audited path-by-path.  The exact codes ride along as
+  `pre_endgame_success_code`/`endgame_success_code` (integers) and
+  `*_success_code_name` (fixed canonical names — the durable rendering).
   Coordinates are decimal strings at full computed precision (`[real, imaginary]`
   pairs, one per variable, in the target's variable order).  `start` is either
   `{"kind":"start_label","index":i}` (a canonical start-system label — provenance

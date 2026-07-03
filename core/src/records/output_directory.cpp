@@ -431,13 +431,18 @@ void OutputDirectory::RefreshResults() const
 				json::object point;
 				point["provenance"] = ref;
 				auto const track_it = tracks.find({run_id, index});
-				if (track_it == tracks.end() || GetString(track_it->second, "status") != "success")
+				if (track_it == tracks.end())
 				{
 					point["status"] = "missing";
 					points.push_back(point);
 					continue;
 				}
-				point["status"] = "success";
+				// the recorded verdict, verbatim: success / diverged / failed -- a
+				// diverged (truncated-near-infinity) path is an answer, not a failure
+				point["status"] = GetString(track_it->second, "status", "success");
+				if (auto const* code_name = track_it->second.if_contains("endgame_success_code_name");
+				    code_name && code_name->is_string())
+					point["outcome"] = *code_name;
 
 				// user variable names label coordinates only when the counts agree;
 				// internal (homogenized) points have extra coordinates, and labeling
