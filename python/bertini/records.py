@@ -427,6 +427,202 @@ def provenance(point, directory=None):
         return hops
 
 
+# --- navigating the records: tables and the provenance graph ---------------------------
+#
+# Scale is a design constraint here: a directory may hold MILLIONS of tracked paths.
+# The tables stream plain records into pandas (fine at that scale); coordinates stay
+# OUT of the tables unless asked (they are the bulk of the bytes); and the chain plot
+# aggregates to run level rather than drawing a node per path once a run is large.
+
+def runs(directory=None):
+    """One row per recorded run, as a :class:`pandas.DataFrame`.
+
+    Columns: ``run``, ``when``, ``op``, ``num_paths``, ``seed``, ``tracker``,
+    ``endgame``, ``target_digest``, ``producer_version``, ``producer_commit``.
+    Reads the plain records -- any directory, any producer (CLI or Python).
+    """
+    import pandas as pd
+    rows = []
+    for rec in _scan_history(directory):
+        if rec.get('kind') != 'run':
+            continue
+        ask = rec.get('ask', {})
+        producer = rec.get('producer', {})
+        rows.append({
+            'run': rec.get('run'),
+            'when': rec.get('when'),
+            'op': rec.get('op'),
+            'num_paths': rec.get('num_paths'),
+            'seed': ask.get('seed'),
+            'tracker': ask.get('tracker'),
+            'endgame': ask.get('endgame'),
+            'target_digest': rec.get('target_digest'),
+            'producer_version': producer.get('version'),
+            'producer_commit': producer.get('commit'),
+        })
+    return pd.DataFrame(rows)
+
+
+def tracks(run=None, directory=None, coordinates=False):
+    """One row per tracked path (newest record per (run, index)), as a DataFrame.
+
+    Columns: ``run``, ``index``, ``status``, ``outcome`` (the endgame verdict's name),
+    ``start_kind``, ``start_run``, ``start_index``, ``cycle_num``,
+    ``path_time_seconds``.  Pass ``run=`` to restrict to one run.
+
+    ``coordinates=False`` (the default) keeps endpoints OUT of the table -- they are
+    most of the bytes, and a million-path audit usually wants the statuses, not the
+    numbers.  ``coordinates=True`` adds an ``endpoint_user`` column of complex tuples.
+    """
+    import pandas as pd
+    newest = {}
+    for rec in _scan_history(directory):
+        if rec.get('kind') != 'track' or 'run' not in rec or 'index' not in rec:
+            continue
+        if run is not None and rec['run'] != run:
+            continue
+        newest[(rec['run'], int(rec['index']))] = rec
+    rows = []
+    for (run_id, index), rec in sorted(newest.items()):
+        start = rec.get('start', {})
+        row = {
+            'run': run_id,
+            'index': index,
+            'status': rec.get('status'),
+            'outcome': rec.get('endgame_success_code_name'),
+            'start_kind': start.get('kind'),
+            'start_run': start.get('run'),
+            'start_index': start.get('index'),
+            'cycle_num': rec.get('cycle_num'),
+            'path_time_seconds': (float(rec['path_time_seconds'])
+                                  if 'path_time_seconds' in rec else None),
+        }
+        if coordinates:
+            endpoint = rec.get('endpoint_user') or rec.get('endpoint') or []
+            row['endpoint_user'] = tuple(complex(float(c[0]), float(c[1]))
+                                         for c in endpoint)
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def provenance_graph(directory=None, runs=None):
+    """The provenance of every recorded point, as a :class:`networkx.DiGraph`.
+
+    Nodes are points ``('run_id', index)`` plus origins ``('start_label', i)`` /
+    ``('given', definition_id, i)``; each edge points FROM where a path started TO its
+    endpoint (time flows along edges).  Node attributes: ``run``, ``index``,
+    ``status``; edge attribute ``run`` (the run that tracked it).
+
+    Pass ``runs=`` (an iterable of run ids) to restrict a large directory to the
+    chains you care about -- a million-path directory makes a million-node graph,
+    which networkx holds but no drawing survives (see :func:`plot_chain`, which
+    aggregates instead).
+    """
+    import networkx as nx
+    wanted = set(runs) if runs is not None else None
+    graph = nx.DiGraph()
+    for rec in _scan_history(directory):
+        if rec.get('kind') != 'track' or 'run' not in rec or 'index' not in rec:
+            continue
+        run_id = str(rec['run'])
+        if wanted is not None and run_id not in wanted:
+            continue
+        index = int(rec['index'])
+        endpoint = (run_id, index)
+        graph.add_node(endpoint, run=run_id, index=index, status=rec.get('status'))
+        start = rec.get('start', {})
+        kind = start.get('kind')
+        if kind == 'point_ref':
+            origin = (str(start['run']), int(start['index']))
+        elif kind == 'given_ref':
+            origin = ('given', str(start.get('given', '')), int(start.get('index', -1)))
+        else:
+            origin = ('start_label', run_id, int(start.get('index', index)))
+        graph.add_edge(origin, endpoint, run=run_id)
+    return graph
+
+
+def plot_chain(directory=None, runs=None, ax=None, max_paths_drawn=200):
+    """Draw the chain left to right: each run is a column, paths flow rightward from
+    their starts to their endpoints.
+
+    Small chains draw every path (green = success, orange = diverged, red = failed;
+    origins are squares).  A run with more than ``max_paths_drawn`` paths is NOT drawn
+    path-by-path -- the whole figure falls back to one node per run with edge widths
+    showing how many paths flow between runs, so a million-path chain renders in
+    milliseconds instead of crashing your session.
+
+    Returns the matplotlib Axes.
+    """
+    import networkx as nx
+    import matplotlib.pyplot as plt
+
+    graph = provenance_graph(directory, runs=runs)
+    if ax is None:
+        _, ax = plt.subplots(figsize=(9, 5))
+
+    # column per run, ordered by chain depth: origins at 0, then each run one right of
+    # the deepest run it draws starts from
+    run_edges = {}
+    run_sizes = {}
+    for origin, endpoint, data in graph.edges(data=True):
+        run_id = data['run']
+        run_sizes[run_id] = run_sizes.get(run_id, 0) + 1
+        if origin in graph.nodes and len(origin) == 2:
+            source = graph.nodes[origin].get('run')
+            if source is not None and source != run_id:
+                run_edges.setdefault(run_id, set()).add(source)
+    depth = {}
+    def run_depth(run_id, _seen=()):
+        if run_id in depth:
+            return depth[run_id]
+        parents = run_edges.get(run_id, ())
+        d = 1 + max((run_depth(p) for p in parents if p not in _seen), default=0)
+        depth[run_id] = d
+        return d
+    for run_id in run_sizes:
+        run_depth(run_id)
+
+    if run_sizes and max(run_sizes.values()) > max_paths_drawn:
+        # AGGREGATE: one node per run; edges weighted by path counts between runs
+        agg = nx.DiGraph()
+        for run_id, size in run_sizes.items():
+            agg.add_node(run_id, subset=depth[run_id], size=size)
+        counts = {}
+        for origin, endpoint, data in graph.edges(data=True):
+            source = graph.nodes.get(origin, {}).get('run')
+            if source is not None and source != data['run']:
+                counts[(source, data['run'])] = counts.get((source, data['run']), 0) + 1
+        for (a, b), n in counts.items():
+            agg.add_edge(a, b, weight=n)
+        pos = nx.multipartite_layout(agg, subset_key='subset')
+        widths = [1 + 4 * agg[a][b]['weight'] / max(counts.values()) for a, b in agg.edges]
+        nx.draw_networkx(agg, pos, ax=ax, node_color='#88aadd', node_size=900,
+                         width=widths, font_size=7,
+                         labels={r: '%s\n(%d paths)' % (r[:8], run_sizes[r]) for r in agg})
+        ax.set_title('chain of runs (aggregated: runs exceed max_paths_drawn)')
+    else:
+        for node in graph.nodes:
+            data = graph.nodes[node]
+            graph.nodes[node]['subset'] = (depth[data['run']] if data.get('run') in depth
+                                           else 0)
+        pos = nx.multipartite_layout(graph, subset_key='subset')
+        status_color = {'success': '#2a9d3a', 'diverged': '#e8930c', 'failed': '#d43a2f'}
+        colors = [status_color.get(graph.nodes[n].get('status'), '#888888')
+                  for n in graph.nodes]
+        shapes = ['s' if graph.nodes[n].get('run') not in depth else 'o'
+                  for n in graph.nodes]
+        nx.draw_networkx_edges(graph, pos, ax=ax, arrows=True, edge_color='#777777')
+        for shape in set(shapes):
+            nodes = [n for n, sh in zip(graph.nodes, shapes) if sh == shape]
+            nx.draw_networkx_nodes(graph, pos, nodelist=nodes, ax=ax, node_shape=shape,
+                                   node_color=[colors[i] for i, n in enumerate(graph.nodes)
+                                               if shapes[i] == shape], node_size=160)
+        ax.set_title('paths through the chain (left = the beginning)')
+    ax.set_axis_off()
+    return ax
+
+
 def annotate(point, key, value, directory=None):
     """Attach metadata to a solution: ``annotate(sol, 'projection', 1.5)``.
 

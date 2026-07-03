@@ -271,3 +271,61 @@ def test_recording_off_is_one_line(tmp_path, monkeypatch):
     assert pb.recording() is True
     r2 = pb.solve(circle_line(), seed=42, directory=str(d))
     assert r2.run_id and d.exists()
+
+
+# --- navigation / visualization tools ---------------------------------------------------
+
+def _small_chain(tmp_path):
+    from bertini.nag_algorithm import blend_homotopy
+    d = str(tmp_path / 'records')
+    members = [circle_line_r(r2) for r2 in (1, 4, 9)]
+    results = [pb.solve(members[0], seed=42, directory=d)]
+    for prev, tgt in zip(members, members[1:]):
+        results.append(pb.solve(tgt, homotopy=blend_homotopy(tgt, prev),
+                                start=results[-1], seed=42, directory=d))
+    return d, results
+
+
+def test_runs_and_tracks_dataframes(tmp_path):
+    pytest.importorskip('pandas')
+    d, results = _small_chain(tmp_path)
+
+    r = pb.runs(directory=d)
+    assert len(r) == 3
+    assert set(r['run']) == {res.run_id for res in results}
+    assert (r['num_paths'] == 2).all() and (r['seed'] == 42).all()
+    assert r['producer_version'].notna().all()
+
+    t = pb.tracks(directory=d)
+    assert len(t) == 6 and (t['status'] == 'success').all()
+    kinds = t.groupby('run')['start_kind'].agg(set)
+    assert kinds[results[0].run_id] == {'start_label'}
+    assert kinds[results[1].run_id] == {'point_ref'}
+
+    # coordinates stay OUT of the table unless asked (scale guard)
+    assert 'endpoint_user' not in t.columns
+    tc = pb.tracks(run=results[0].run_id, directory=d, coordinates=True)
+    assert len(tc) == 2 and len(tc['endpoint_user'].iloc[0]) == 2
+
+
+def test_provenance_graph_and_chain_plot(tmp_path):
+    pytest.importorskip('pandas')
+    nx = pytest.importorskip('networkx')
+    matplotlib = pytest.importorskip('matplotlib')
+    matplotlib.use('Agg')
+    d, results = _small_chain(tmp_path)
+
+    g = pb.provenance_graph(directory=d)
+    # 2 origins + 2 points x 3 runs; each run contributes 2 edges
+    assert g.number_of_nodes() == 8 and g.number_of_edges() == 6
+    # walk one lineage through the graph: final endpoint reaches an origin
+    final = (results[-1].run_id, 0)
+    ancestors = nx.ancestors(g, final)
+    assert any(len(a) == 3 and a[0] == 'start_label' for a in ancestors)
+
+    ax = pb.plot_chain(directory=d)                        # per-path drawing
+    assert ax.figure is not None
+    ax2 = pb.plot_chain(directory=d, max_paths_drawn=1)    # aggregation fallback
+    assert 'aggregated' in ax2.get_title()
+    import matplotlib.pyplot as plt
+    plt.close('all')
