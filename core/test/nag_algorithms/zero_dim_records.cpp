@@ -86,7 +86,15 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_hydration)
 	for (auto const& rec : a.Records()->Scan())
 	{
 		auto const kind = std::string(rec.at("kind").as_string());
-		if (kind == "run") ++runs;
+		if (kind == "run")
+		{
+			++runs;
+			// the archive says which software wrote it (descriptive, not identity)
+			auto const& producer = rec.at("producer").as_object();
+			BOOST_CHECK_EQUAL(std::string(producer.at("name").as_string()), "bertini2");
+			BOOST_CHECK(!producer.at("version").as_string().empty());
+			BOOST_CHECK(!producer.at("commit").as_string().empty());
+		}
 		if (kind == "track")
 		{
 			++tracks;

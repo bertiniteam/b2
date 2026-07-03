@@ -352,6 +352,7 @@ set(basics_sources
     src/records/config_encoding.cpp
     src/records/derive.cpp
     src/records/output_directory.cpp
+    src/records/producer.cpp
 )
 
 set(function_tree_sources
@@ -478,6 +479,20 @@ endif()
 # BERTINI2_VERSION (for cmake/SOVERSION semantics); this carries the complete
 # string so bertini::Version() can report the dev-count. See CMakeLists.txt.
 target_compile_definitions(bertini2 PUBLIC "BERTINI2_VERSION_FULL=\"${BERTINI2_FULL_VERSION}\"")
+
+# producer info: the git commit of the build, regenerated at BUILD time (a configure-time
+# capture would go stale between commits).  Content-compare in the script avoids churn.
+set(PRODUCER_INFO_HEADER "${CMAKE_CURRENT_BINARY_DIR}/generated/bertini2/records/producer_info.generated.hpp")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/bertini2/records")
+add_custom_target(producer_info
+    COMMAND ${CMAKE_COMMAND}
+        -DSRC_DIR=${CMAKE_SOURCE_DIR}
+        -DOUT_FILE=${PRODUCER_INFO_HEADER}
+        -P ${CMAKE_SOURCE_DIR}/cmake/GenerateProducerInfo.cmake
+    BYPRODUCTS "${PRODUCER_INFO_HEADER}"
+    COMMENT "capturing producer info (git commit)")
+add_dependencies(bertini2 producer_info)
+target_include_directories(bertini2 PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 target_link_libraries(bertini2 PUBLIC ${GMP_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPFR_LIBRARIES})

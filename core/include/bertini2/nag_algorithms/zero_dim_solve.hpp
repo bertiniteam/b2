@@ -46,6 +46,7 @@
 #include "bertini2/system/start_base.hpp"   // start_system::StartSystem + StartSystemFactory / MakeStartFactory
 #include "bertini2/parallel.hpp"
 #include "bertini2/records/output_directory.hpp"
+#include "bertini2/records/producer.hpp"
 #include "bertini2/records/solver_recording.hpp"
 #include "bertini2/records/config_encoding.hpp"
 #include "bertini2/io/classic_writer.hpp"
@@ -2201,6 +2202,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				}();
 				header["run"] = records_run_id_;
 				header["op"] = "zerodim";
+				// which software wrote this -- descriptive only, NEVER part of the ask
+				// identity (a newer build answering the same ask must still hydrate)
+				header["producer"] = records::ProducerInfo();
 				header["ask"] = ask;
 				header["target_object"] = target_definition;
 				header["target_digest"] = TargetSystem().ContentDigest().Hex();
