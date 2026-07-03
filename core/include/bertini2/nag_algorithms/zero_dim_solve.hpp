@@ -2129,20 +2129,48 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 			/**
+			\brief The canonical text of this solver's FULL settings: the algorithm-level
+			configs, then the tracker's own, then the endgame's -- everything that decides
+			what gets computed (the second plank of archiving the algorithms).
+
+			The order is the contract (fixed per solver kind): version line; ZeroDimConf,
+			Tolerances, AutoRetrack, PostProcessing; the tracker's Stepping, Newton,
+			Predictor, and precision config (fixed or adaptive); then the endgame's configs
+			in its AlgoTraits::NeededConfigs declaration order.  One encoding per line,
+			trailing newline.  The settings digest is SHA-256 over exactly this text.
+
+			\return The versioned canonical settings text.
+			*/
+			std::string CanonicalSettingsText() const
+			{
+				std::ostringstream text;
+				text << records::ConfigEncodingVersion << "\n"
+				     << records::CanonicalEncoding(this->template Get<ZeroDimConf>()) << "\n"
+				     << records::CanonicalEncoding(this->template Get<Tolerances>()) << "\n"
+				     << records::CanonicalEncoding(this->template Get<AutoRetrack>()) << "\n"
+				     << records::CanonicalEncoding(this->template Get<PostProcessing>()) << "\n"
+				     << records::CanonicalEncoding(GetTracker().template Get<tracking::SteppingConfig>()) << "\n"
+				     << records::CanonicalEncoding(GetTracker().template Get<tracking::NewtonConfig>()) << "\n"
+				     << records::CanonicalEncoding(GetTracker().GetPredictor()) << "\n"
+				     << records::CanonicalEncoding(GetTracker().template Get<PrecisionConfig>()) << "\n";
+				AppendEndgameConfigEncodings(text,
+					typename endgame::AlgoTraits<EndgameType>::NeededConfigs{});
+				return text.str();
+			}
+
+			/**
 			\brief The ask identity of this solve: op + tracker/endgame kind (stable record
 			names, never typeid) + target digest + settings digest + seed.
 
-			The settings digest composes, in this fixed documented order: ZeroDimConf,
-			Tolerances, AutoRetrack, PostProcessing (ADR-0043; extend by appending, never
-			reordering).
+			The settings digest is SHA-256 over CanonicalSettingsText() -- ALL the
+			configs the solve reads, algorithm + tracker + endgame, in that method's
+			fixed documented order (ADR-0043; extend by appending, never reordering).
+
+			\return The ask as a json object (hashed for the run id).
 			*/
 			boost::json::object RecordsAsk() const
 			{
-				auto const settings = records::SettingsDigest(
-					this->template Get<ZeroDimConf>(),
-					this->template Get<Tolerances>(),
-					this->template Get<AutoRetrack>(),
-					this->template Get<PostProcessing>());
+				auto const settings = detail::Sha256(CanonicalSettingsText());
 				boost::json::object ask;
 				ask["op"] = "zerodim";
 				ask["tracker"] = tracking::TrackerTraits<TrackerType>::kRecordName;
@@ -2151,6 +2179,21 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				ask["config"] = settings.Hex();
 				ask["seed"] = static_cast<std::int64_t>(GetGlobalSeed());
 				return ask;
+			}
+
+			/**
+			\brief Append the canonical encodings of the endgame's configs (its
+			AlgoTraits::NeededConfigs, in declaration order) to the settings text.
+
+			\tparam EGConfTs The endgame's config types, from its NeededConfigs list.
+			\param text The settings text being built.
+			*/
+			template <typename... EGConfTs>
+			void AppendEndgameConfigEncodings(std::ostringstream& text,
+			                                  detail::TypeList<EGConfTs...>) const
+			{
+				((text << records::CanonicalEncoding(
+					GetEndgame().template Get<EGConfTs>()) << "\n"), ...);
 			}
 
 			/**
@@ -2175,13 +2218,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// digest travels as its own header field
 				auto const target_definition = records_->PutDefinition(
 					bertini::classic::SystemToClassic(TargetSystem()));
-				// the settings, reconstructible: the canonical config text under its digest
-				std::string const config_text =
-					std::string(records::ConfigEncodingVersion) + "\n"
-					+ records::CanonicalEncoding(this->template Get<ZeroDimConf>()) + "\n"
-					+ records::CanonicalEncoding(this->template Get<Tolerances>()) + "\n"
-					+ records::CanonicalEncoding(this->template Get<AutoRetrack>()) + "\n"
-					+ records::CanonicalEncoding(this->template Get<PostProcessing>()) + "\n";
+				// the settings, reconstructible: the SAME canonical text the digest is over
+				std::string const config_text = CanonicalSettingsText();
 				auto const config_definition = records_->PutDefinition(
 					records::ConfigTextAsJson(config_text, std::string(ask.at("config").as_string())),
 					std::string(ask.at("config").as_string()));
