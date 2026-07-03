@@ -332,7 +332,7 @@ def test_provenance_graph_and_chain_plot(tmp_path):
 
 
 @pytest.mark.xfail(reason="KNOWN BUG, fix owned by a DEDICATED PR (user decision "
-                          "2026-07-03; see docs/records/junk-success-cauchy-pole-blindness.md): "
+                          "2026-07-03; see z_notes/junk-success-cauchy-pole-blindness.md): "
                           "the Cauchy endgame's circle-mean is blind to poles, so on raw "
                           "affine user homotopies toward deficient targets it can report "
                           "Success at a NON-ROOT (function_residual ~ 1; inherited from "
