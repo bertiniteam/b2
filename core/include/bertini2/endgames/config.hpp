@@ -112,7 +112,7 @@ namespace bertini{ namespace endgame{
 
 		mpq_rational sample_factor{1, 2}; ///< Geometric factor between successive sample times (exact rational).
 
-		unsigned max_num_refinements = 15; ///< Maximum Newton refinements when sharpening endgame sample points.
+		unsigned max_num_refinements = 4; ///< Maximum Newton refinements when sharpening endgame sample points.  A tracked sample is already on the path to tracking tolerance (~1e-6), and Newton doubles the correct digits per iteration, so 4 covers any realistic refinement target (6 -> 12 -> 24 -> 48 -> 96 digits); more is never legitimately needed.  (The old default of 15 was a remnant of poorly scaled random coefficient draws, since fixed by seed-rooted derivation.)
 
 		T final_tolerance = 1e-11;///< The tolerance to which to compute the endpoint using the endgame.
 
