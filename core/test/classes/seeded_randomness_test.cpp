@@ -27,6 +27,7 @@ Because they are checked on all three CI platforms, they also enforce cross-plat
 draw reproducibility.
 */
 
+#include <iostream>
 #include <sstream>
 
 #include <boost/test/unit_test.hpp>
@@ -142,7 +143,31 @@ BOOST_AUTO_TEST_CASE(same_seed_builds_digest_identical_homotopies)
 // fails loudly here.
 BOOST_AUTO_TEST_CASE(seed_42_homotopy_digest_is_pinned_cross_platform)
 {
-	BOOST_CHECK_EQUAL(SeededHomotopy(42).ContentDigest().Hex(), "4b2970766e8b58fb50f03fe9d7ce5bec58c07d5897b8637e55838248fc4fd2ac");
+	// Diagnostic stage digests (CI, 2026-07-03): the pinned value was minted on arm64 and
+	// x86_64 CI computes a DIFFERENT digest (6e7155e9...), while the raw-draw pins and the
+	// parsed-system fixtures pass everywhere -- so some stage of the construction cascade
+	// is architecture-dependent.  Print each stage's digest, and on final mismatch dump the
+	// full canonical encoding, so the CI log pinpoints the diverging stage and bytes.
+	SetGlobalSeed(42);
+	auto sys = ParseCircleLine();
+	std::cout << "[stage] parsed:      " << sys.ContentDigest().Hex() << "\n";
+	sys.Homogenize();
+	std::cout << "[stage] homogenized: " << sys.ContentDigest().Hex() << "\n";
+	sys.AutoPatch();
+	std::cout << "[stage] patched:     " << sys.ContentDigest().Hex() << "\n";
+	start_system::TotalDegreeBinomial start(sys);
+	std::cout << "[stage] td start:    " << start.ContentDigest().Hex() << "\n";
+	auto homotopy = MakeHomotopy(sys, start, "t");
+	auto const hex = homotopy.ContentDigest().Hex();
+	std::cout << "[stage] homotopy:    " << hex << "\n";
+
+	char const* const pinned = "4b2970766e8b58fb50f03fe9d7ce5bec58c07d5897b8637e55838248fc4fd2ac";
+	if (hex != pinned)
+	{
+		std::cout << "[diagnostic] canonical encoding of the mismatching homotopy follows\n"
+		          << "-----8<-----\n" << homotopy.CanonicalEncodingText() << "\n-----8<-----\n";
+	}
+	BOOST_CHECK_EQUAL(hex, pinned);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
