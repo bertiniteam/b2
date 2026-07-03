@@ -329,3 +329,28 @@ def test_provenance_graph_and_chain_plot(tmp_path):
     assert 'aggregated' in ax2.get_title()
     import matplotlib.pyplot as plt
     plt.close('all')
+
+
+@pytest.mark.xfail(reason="KNOWN GAP (2026-07-03): the raw affine user-homotopy path "
+                          "(HomotopySolver; no homogenization/patch) mishandles targets "
+                          "where a path has nowhere finite to go: the Cauchy endgame can "
+                          "report Success at a NON-ROOT (function_residual ~ 1).  The "
+                          "records stay honest (residual + condition number are in the "
+                          "track record); the plain zero-dim pipeline is correct.  The "
+                          "fix belongs in C++ (+ a named C++ regression) -- see the arc.",
+                   strict=False)
+def test_chained_deficient_target_paths_never_junk_success(tmp_path):
+    from bertini.nag_algorithm import blend_homotopy
+    from bertini import Variable
+    x, y = Variable('x'), Variable('y')
+    A = System(); A.add_variable_group(VariableGroup([x, y]))
+    A.add_function(x**2 - 1); A.add_function(x * y - 1)
+    B = System(); B.add_variable_group(VariableGroup([x, y]))
+    B.add_function(x**2 - 1); B.add_function(y * (x + 1) - 1)   # deficient: 1 finite root
+
+    d = str(tmp_path / 'records')
+    r1 = pb.solve(A, seed=42, directory=d)
+    r2 = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1, seed=42, directory=d)
+    for m in r2.solver.solution_metadata():
+        # a path recorded successful must actually sit on a root
+        assert float(m.function_residual) < 1e-6

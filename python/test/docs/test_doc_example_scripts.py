@@ -79,6 +79,8 @@ def test_chained_homotopies_runs(tmp_path, monkeypatch):
     pytest.importorskip("networkx")
     pytest.importorskip("matplotlib")
     monkeypatch.setenv("BERTINI_RECORDS_DIR", str(tmp_path / "chain_records"))
-    plot = tmp_path / "chain.png"
-    _run("chained_homotopies.py", "--plot", str(plot))
-    assert plot.exists() and plot.stat().st_size > 0
+    stem = tmp_path / "chain"
+    _run("chained_homotopies.py", "--plot", str(stem))
+    for suffix in (".png", ".svg"):     # tutorial images ship in both formats
+        image = stem.with_suffix(suffix)
+        assert image.exists() and image.stat().st_size > 0

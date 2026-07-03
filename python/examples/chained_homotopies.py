@@ -15,10 +15,12 @@ and the whole chain drawn left to right::
     python chained_homotopies.py                       # writes ./bertini_output
     python chained_homotopies.py --plot chain.png      # also draw the progression
 
-The family here is deliberately tiny -- circles of growing radius intersected with the
-line x = y -- so the chain itself is the star.  Rerunning the script is (nearly)
-instant: every solve is ensure-answered, so recorded paths hydrate instead of
-recomputing.
+The family here is deliberately tiny but NOT all sunshine: its first solve has four
+paths of which two are TRUNCATED (the endgame's security check cuts them off as they
+flee toward infinity -- a verdict, not a failure), so the picture shows lineages that
+die at the first column and lineages that survive the whole chain.  Rerunning the
+script is (nearly) instant: every solve is ensure-answered, so recorded paths hydrate
+instead of recomputing.
 """
 
 import argparse
@@ -28,38 +30,45 @@ from bertini import Variable, VariableGroup, System
 from bertini.nag_algorithm import blend_homotopy
 
 
-def circle_line(radius_squared):
-    """The circle x^2 + y^2 = r^2 intersected with the line x = y."""
-    x, y = Variable('x'), Variable('y')
+X, Y = Variable('x'), Variable('y')
+
+
+def family_member(a):
+    """The member {x^2 - a^2, x*y - 1}: two finite roots (+-a, +-1/a) -- but a total
+    degree of 4, so a fresh solve tracks four paths and two of them have nowhere
+    finite to go."""
     sys = System()
-    sys.add_variable_group(VariableGroup([x, y]))
-    sys.add_function(x**2 + y**2 - radius_squared)
-    sys.add_function(x - y)
+    sys.add_variable_group(VariableGroup([X, Y]))
+    sys.add_function(X**2 - a**2)
+    sys.add_function(X * Y - 1)
     return sys
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--plot', metavar='PATH', default=None,
-                        help='draw the left-to-right chain progression to this file')
+    parser.add_argument('--plot', metavar='STEM', default=None,
+                        help='draw the left-to-right chain progression to STEM.png and '
+                             'STEM.svg (any suffix on STEM is replaced)')
     args = parser.parse_args()
 
     # ---- build the chain -----------------------------------------------------------
-    radii_squared = [1, 4, 9, 16]
-    members = [circle_line(r2) for r2 in radii_squared]
+    members = [family_member(a) for a in (1, 2, 3, 4)]
 
     # the root: an ordinary solve (total-degree start; provenance bottoms out at
-    # canonical start labels)
+    # canonical start labels).  Four paths -- and only two finite roots, so two paths
+    # get TRUNCATED near infinity: recorded as `diverged`, an answer in itself.
     results = [pb.solve(members[0], seed=42)]
 
-    # each further member: continue the previous solutions through a blend homotopy
+    # each further member: continue the previous solutions through a blend homotopy.
+    # Only the FINITE solutions are carried forward -- the diverged paths' lineages
+    # simply end, which is exactly what the picture shows.
     for previous, target in zip(members, members[1:]):
         homotopy = blend_homotopy(target, previous)
         results.append(pb.solve(target, homotopy=homotopy, start=results[-1], seed=42))
 
     # margin notes and deliverables travel with the records
     final = results[-1]
-    pb.annotate(final.solutions[0], 'note', 'the positive branch at r=4')
+    pb.annotate(final.solutions[0], 'note', 'the branch through x = +1')
     pb.save('the chained family', final,
             description='solutions of the last member, chained from the first')
 
@@ -69,8 +78,11 @@ def main():
 
     print('\nthe tracked paths (statuses and where each one started):\n')
     tracks = pb.tracks()
-    print(tracks[['run', 'index', 'status', 'start_kind']].to_string(index=False))
-    assert (tracks['status'] == 'success').all()
+    print(tracks[['run', 'index', 'status', 'outcome', 'start_kind']].to_string(index=False))
+    # the first solve's two extra total-degree paths were truncated near infinity;
+    # everything that had somewhere to go, went there
+    assert (tracks['status'] == 'diverged').sum() == 2
+    assert (tracks['status'] == 'success').sum() == len(tracks) - 2
 
     # the provenance graph: every path an edge from its start to its endpoint
     graph = pb.provenance_graph()
@@ -88,9 +100,12 @@ def main():
     if args.plot:
         import matplotlib
         matplotlib.use('Agg')
+        from pathlib import Path
         ax = pb.plot_chain()
-        ax.figure.savefig(args.plot, dpi=110, bbox_inches='tight')
-        print('\nchain progression drawn to', args.plot)
+        stem = Path(args.plot).with_suffix('')      # tutorial images ship as png AND svg
+        for suffix in ('.png', '.svg'):
+            ax.figure.savefig(stem.with_suffix(suffix), dpi=110, bbox_inches='tight')
+        print('\nchain progression drawn to %s.png / .svg' % stem)
 
     print('\nrecords at:', pb.records_dir(), '-- results.json has the story.')
 
