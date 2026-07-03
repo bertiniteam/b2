@@ -1,0 +1,28 @@
+the results declared here (full precision + provenance in history/):
+
+== edge samples of the ellipse x^2+4y^2=4   (declared 2026-07-02 21:45) ==
+   x-projection cellular decomposition sketch; 2 edges sampled at 4 x-values each
+  point 1  [run 324aef22b7eb342a #0]   edge=bottom, projection=-1.5
+    x = -1.5 + 1.807e-20 i
+    y = -0.661438 + -1.35525e-20 i
+  point 2  [run 324aef22b7eb342a #1]   edge=top, projection=-1.5
+    x = -1.5 + 1.807e-20 i
+    y = 0.661438 + 1.35525e-20 i
+  point 3  [run fad349998105188a #0]   edge=bottom, projection=-0.5
+    x = -0.5 + 5.42101e-20 i
+    y = -0.968246 + -9.03502e-21 i
+  point 4  [run fad349998105188a #1]   edge=top, projection=-0.5
+    x = -0.5 + 5.42101e-20 i
+    y = 0.968246 + 9.03502e-21 i
+  point 5  [run ebb70265923b2596 #0]   edge=bottom, projection=0.5
+    x = 0.5 + -5.42101e-20 i
+    y = -0.968246 + -9.03502e-21 i
+  point 6  [run ebb70265923b2596 #1]   edge=top, projection=0.5
+    x = 0.5 + -5.42101e-20 i
+    y = 0.968246 + 9.03502e-21 i
+  point 7  [run 216caa54c1b60431 #0]   edge=bottom, projection=1.5
+    x = 1.5 + -1.807e-20 i
+    y = -0.661438 + -1.35525e-20 i
+  point 8  [run 216caa54c1b60431 #1]   edge=top, projection=1.5
+    x = 1.5 + -1.807e-20 i
+    y = 0.661438 + 1.35525e-20 i

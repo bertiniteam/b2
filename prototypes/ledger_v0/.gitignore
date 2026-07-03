@@ -1,3 +1,0 @@
-# demo output directories (records are the user's, never the repo's)
-demo_*_ledger/
-__pycache__/

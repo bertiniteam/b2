@@ -70,3 +70,9 @@ def test_solve_eigenvalues_runs():
 def test_crossed_paths_runs():
     # No size knob: it always provokes a crossing on cyclic-5 and shows the re-track repair.
     _run("crossed_paths.py", timeout=540)
+
+
+def test_chained_homotopies_runs(tmp_path, monkeypatch):
+    # the chains/provenance example: records into a scratch dir, asserts its own walk
+    monkeypatch.setenv("BERTINI_RECORDS_DIR", str(tmp_path / "chain_records"))
+    _run("chained_homotopies.py")

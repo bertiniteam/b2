@@ -77,6 +77,66 @@ forever, on every machine.  A seed you liked is a run you can reproduce, share, 
 resume.  Omit the seed and a fresh one is drawn (and recorded, so even accidental runs
 are reproducible afterward).
 
+Chains: provenance all the way back
+-----------------------------------
+
+A *chained* solve continues a previous result's solutions through a homotopy you
+build — and the records follow every hop.  Chain with ``homotopy=`` and ``start=``:
+
+.. testcode::
+
+   from bertini.nag_algorithm import blend_homotopy
+
+   bigger = pb.System()
+   bigger.add_variable_group(pb.VariableGroup([x, y]))
+   bigger.add_function(x**2 + y**2 - 4)     # the same family, radius 2
+   bigger.add_function(x - y)
+
+   H = blend_homotopy(bigger, s)            # from the circle we already solved
+   sols2 = pb.solve(bigger, homotopy=H, start=sols, seed=42, directory=where)
+   print(len(sols2))
+
+.. testoutput::
+
+   2
+
+Every new endpoint remembers which point it came from.  ``provenance`` walks the
+chain back to the very beginning — through as many runs as it takes, including runs
+written by the command-line ``bertini2``:
+
+.. testcode::
+
+   trail = pb.provenance(sols2.solutions[0], directory=where)
+   print(trail[0]['run'] == sols2.run_id)
+   print(trail[-1]['kind'])
+
+.. testoutput::
+
+   True
+   start_label
+
+``solutions_of`` reads any run's endpoints straight from the records — no solver
+object, any session, any machine — as points that chain directly:
+
+.. testcode::
+
+   cold = pb.solutions_of(sols.run_id, directory=where)
+   print(len(cold), cold[0].provenance['run'] == sols.run_id)
+
+.. testoutput::
+
+   2 True
+
+Start points that are *your* data (arrays, not a prior result) are archived as a
+**given**: provenance bottoms out honestly at what you supplied.  And margin notes
+travel with the points:
+
+.. testcode::
+
+   pb.annotate(sols2.solutions[0], 'note', 'the positive branch', directory=where)
+
+A complete runnable chain lives in ``python/examples/chained_homotopies.py``.
+
 What is in the directory
 ------------------------
 
