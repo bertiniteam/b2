@@ -1244,8 +1244,15 @@ public:
 			if (approx_error < this->FinalTolerance()
 			    && same_cycle_count >= GetCauchySettings().num_consecutive_same_cycle_number)
 			{
-				NotifyObservers(Converged<EmitterType>(*this));
-				return SuccessCode::Success;
+				// the residual gate (junk-success bug, 2026-07-03): only accept an
+				// agreed approximation that is actually a ROOT at the target time;
+				// otherwise keep going and let the endgame terminate naturally
+				// (min track time / security) -- an honest failure, never junk Success
+				if (this->template ApproximationIsVerifiedRoot<ComplexT>(latest_approx, target_time))
+				{
+					NotifyObservers(Converged<EmitterType>(*this));
+					return SuccessCode::Success;
+				}
 			}
 
 			if (this->SecuritySettings().level <= 0)
@@ -1364,8 +1371,12 @@ public:
 			if (this->approximate_error_ < this->FinalTolerance()
 			    && same_cycle_count >= GetCauchySettings().num_consecutive_same_cycle_number)
 			{
-				NotifyObservers(Converged<EmitterType>(*this));
-				return SuccessCode::Success;
+				// the residual gate (junk-success bug, 2026-07-03) -- see RunImpl
+				if (this->ApproximationIsVerifiedRoot(this->final_approximation_, target_time))
+				{
+					NotifyObservers(Converged<EmitterType>(*this));
+					return SuccessCode::Success;
+				}
 			}
 
 			if (this->SecuritySettings().level <= 0)

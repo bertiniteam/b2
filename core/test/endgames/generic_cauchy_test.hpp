@@ -2141,3 +2141,81 @@ BOOST_AUTO_TEST_CASE(observer_event_delivery)
 }// end observer_event_delivery
 
 
+
+
+/**
+Named regression: the junk-success bug (found 2026-07-03 via the records' function_residual).
+
+An UNPATCHED affine user homotopy toward a DEFICIENT target -- here the t=0 system
+{x^2-1, y*(x+1)-1} has only ONE finite root, but the t=1 system {x^2-1, x*y-1} has two --
+gives one path nowhere finite to go.  With no patch, the path does not run off to a clean
+infinity; it wanders, and the Cauchy means can agree with each other at a point that is
+NOT a root (residual ~1).  The endgame must never mint Success there: agreement of
+successive approximations is necessary but not sufficient -- the residual gate in
+EndgameBase::ApproximationIsVerifiedRoot is what this test pins.
+
+The healthy branch of the same homotopy must still converge to (1, 1/2).
+*/
+BOOST_AUTO_TEST_CASE(deficient_affine_user_homotopy_never_junk_success)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	auto gamma = bertini::node::Rational::Make(bertini::mpq_rational(4,5), bertini::mpq_rational(3,10));
+
+	// H = (1-t) * {x^2-1, y*(x+1)-1}  +  gamma * t * {x^2-1, x*y-1}
+	sys.AddFunction((1-t)*(pow(x,2)-1) + gamma*t*(pow(x,2)-1));
+	sys.AddFunction((1-t)*(y*(x+1)-1) + gamma*t*(x*y-1));
+
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+
+	auto t_start = ComplexFromString("1");
+	auto t_boundary = ComplexFromString("0.1");
+	auto t_target = ComplexFromString("0");
+
+	// ---- the deficient branch: starts at (-1,-1); no finite root awaits it ----
+	{
+		Vec<BCT> start(2), boundary(2);
+		start << ComplexFromString("-1"), ComplexFromString("-1");
+		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+		if (track_code == SuccessCode::Success)   // the pre-endgame may already give up; also fine
+		{
+			TestedEGType my_endgame(tracker);
+			my_endgame.SetBoundaryTime(t_boundary);
+			my_endgame.SetTargetTime(t_target);
+			auto eg_code = my_endgame.Run(boundary);
+			BOOST_CHECK(eg_code != SuccessCode::Success);   // NEVER junk Success at a non-root
+		}
+	}
+
+	// ---- the healthy branch: starts at (1,1); must still converge to (1, 1/2) ----
+	{
+		Vec<BCT> start(2), boundary(2);
+		start << ComplexFromString("1"), ComplexFromString("1");
+		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+		BOOST_REQUIRE(track_code == SuccessCode::Success);
+
+		TestedEGType my_endgame(tracker);
+		my_endgame.SetBoundaryTime(t_boundary);
+		my_endgame.SetTargetTime(t_target);
+		auto eg_code = my_endgame.Run(boundary);
+		BOOST_CHECK(eg_code == SuccessCode::Success);
+
+		Vec<BCT> expected(2);
+		expected << ComplexFromString("1"), ComplexFromString("0.5");
+		BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - expected).template lpNorm<Eigen::Infinity>() < 1e-6);
+	}
+}// end deficient_affine_user_homotopy_never_junk_success
