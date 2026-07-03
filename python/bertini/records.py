@@ -601,6 +601,10 @@ def plot_chain(directory=None, runs=None, ax=None, max_paths_drawn=200):
                          width=widths, font_size=7,
                          labels={r: '%s\n(%d paths)' % (r[:8], run_sizes[r]) for r in agg})
         ax.set_title('chain of runs (aggregated: runs exceed max_paths_drawn)')
+        import matplotlib.lines as mlines
+        ax.legend(handles=[mlines.Line2D([], [], color='#777777', linewidth=3,
+                                         label='paths flowing between runs (width = count)')],
+                  loc='upper left', bbox_to_anchor=(1.01, 1.0), fontsize=8, frameon=False)
     else:
         for node in graph.nodes:
             data = graph.nodes[node]
@@ -618,8 +622,25 @@ def plot_chain(directory=None, runs=None, ax=None, max_paths_drawn=200):
             nx.draw_networkx_nodes(graph, pos, nodelist=nodes, ax=ax, node_shape=shape,
                                    node_color=[colors[i] for i, n in enumerate(graph.nodes)
                                                if shapes[i] == shape], node_size=160)
-        ax.set_title('paths through the chain (left = the beginning)')
+        ax.set_title('paths through the chain')
+        import matplotlib.lines as mlines
+        legend_entries = [
+            mlines.Line2D([], [], color='#aaaaaa', marker='s', linestyle='none',
+                          markersize=8, label='start point (the beginning)'),
+            mlines.Line2D([], [], color='#2a9d3a', marker='o', linestyle='none',
+                          markersize=8, label='endpoint: success'),
+            mlines.Line2D([], [], color='#e8930c', marker='o', linestyle='none',
+                          markersize=8, label='endpoint: diverged (truncated)'),
+            mlines.Line2D([], [], color='#d43a2f', marker='o', linestyle='none',
+                          markersize=8, label='endpoint: failed'),
+        ]
+        ax.legend(handles=legend_entries, loc='upper left', bbox_to_anchor=(1.01, 1.0),
+                  fontsize=8, frameon=False)
+    # the horizontal axis is the chain itself: solves left to right
     ax.set_axis_off()
+    ax.annotate('chain depth: each column is one run, tracked left to right \u2192',
+                xy=(0.5, 0.02), xycoords='axes fraction', ha='center', fontsize=9,
+                color='#444444')
     return ax
 
 
