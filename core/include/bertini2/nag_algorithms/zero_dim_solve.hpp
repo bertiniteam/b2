@@ -50,6 +50,7 @@
 #include "bertini2/records/solver_recording.hpp"
 #include "bertini2/records/config_encoding.hpp"
 #include "bertini2/io/classic_writer.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <mutex>
@@ -2281,10 +2282,20 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// truthfully (homogenized points have more coordinates than the user's
 				// rendering declares)
 				{
-					boost::json::array variable_names;
+					boost::json::array variable_names, user_variable_names;
+					auto const& homogenizers = TargetSystem().HomogenizingVariables();
 					for (auto const& v : TargetSystem().Variables())
+					{
 						variable_names.push_back(boost::json::value(v->name()));
+						bool const is_homogenizer = std::find(homogenizers.begin(),
+							homogenizers.end(), v) != homogenizers.end();
+						if (!is_homogenizer)
+							user_variable_names.push_back(boost::json::value(v->name()));
+					}
 					header["variables"] = variable_names;
+					// the USER's variables, in dehomogenized-point order: labels for
+					// the endpoint_user coordinates on track records
+					header["variables_user"] = user_variable_names;
 				}
 				header["config_object"] = config_definition;
 				header["num_paths"] = static_cast<std::int64_t>(num_start_points_);
@@ -2349,6 +2360,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// success / diverged / failed -- a truncation near infinity is a verdict,
 				// not a failure (the SummarizeSolve bucketing, PR #46, now in the records)
 				record["status"] = records::CoarsePathStatus(r.endgame_success_code);
+				// the endpoint in USER coordinates too: audits read results in the
+				// variables the user wrote, not the internal homogenized ones
+				if (r.solution.size() != 0)
+					record["endpoint_user"] = records::EncodePoint(
+						this->TargetSystem().DehomogenizePoint(r.solution));
 				// a chained/given start carries its true provenance; otherwise the
 				// canonical start-system label (provenance bottoms out here)
 				record["start"] = (r.path_index < records_start_refs_.size())

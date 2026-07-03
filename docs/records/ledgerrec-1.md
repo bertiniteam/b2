@@ -73,7 +73,10 @@ scoped by their run.
   `pre_endgame_success_code`/`endgame_success_code` (integers) and
   `*_success_code_name` (fixed canonical names — the durable rendering).
   Coordinates are decimal strings at full computed precision (`[real, imaginary]`
-  pairs, one per variable, in the target's variable order).  `start` is either
+  pairs, one per variable, in the target's variable order).  `endpoint` is the
+  INTERNAL point (labels: the run header's `variables`); successful/diverged paths
+  also carry `endpoint_user`, the dehomogenized point in the USER's coordinates
+  (labels: `variables_user`) -- the ones audits should read.  `start` is either
   `{"kind":"start_label","index":i}` (a canonical start-system label — provenance
   bottoms out) or `{"kind":"point_ref","run":<id>,"index":i}` (a chain link into an
   ancestor run's endpoint).

@@ -457,11 +457,14 @@ void OutputDirectory::RefreshResults() const
 				// internal (homogenized) points have extra coordinates, and labeling
 				// them with user names would be misleading (user-coordinate rendering
 				// is a noted follow-up)
+				// prefer the endpoint in USER coordinates (with the user's variable
+				// names); fall back to the internal endpoint + internal ordering
+				bool const have_user_endpoint =
+					track_it->second.if_contains("endpoint_user") != nullptr;
+				char const* const names_key = have_user_endpoint ? "variables_user" : "variables";
 				std::vector<std::string> var_names;
-				// the run header's "variables" field is authoritative: the solver's own
-				// internal ordering, homogenizing variables included
 				if (run_it != runs.end())
-					if (auto const* vars = run_it->second.if_contains("variables");
+					if (auto const* vars = run_it->second.if_contains(names_key);
 					    vars && vars->is_array())
 						for (auto const& v : vars->get_array())
 							if (v.is_string())
@@ -496,7 +499,8 @@ void OutputDirectory::RefreshResults() const
 				}
 
 				json::object coords;
-				if (auto const* endpoint = track_it->second.if_contains("endpoint");
+				if (auto const* endpoint = track_it->second.if_contains(
+				        have_user_endpoint ? "endpoint_user" : "endpoint");
 				    endpoint && endpoint->is_array())
 				{
 					if (var_names.size() != endpoint->get_array().size())

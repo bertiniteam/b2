@@ -222,3 +222,31 @@ def test_raw_start_points_become_a_given(tmp_path):
     gid = givens[0]['source']
     body = json.loads((tmp_path / 'records' / 'definitions' / gid[:2] / gid[2:]).read_text())
     assert len(body['points']) == 2
+
+
+def test_depth_4_provenance_walk(tmp_path):
+    """Rung 6 acceptance: four chained solves; the final point's provenance walks back
+    through three point_refs to a canonical start label -- all the way to the beginning."""
+    from bertini.nag_algorithm import blend_homotopy
+    d = str(tmp_path / 'records')
+
+    radii = [1, 4, 9, 16]
+    systems = [circle_line_r(r) for r in radii]
+    results = [pb.solve(systems[0], seed=42, directory=d)]
+    for prior, target in zip(systems, systems[1:]):
+        results.append(pb.solve(target, homotopy=blend_homotopy(target, prior),
+                                start=results[-1], seed=42, directory=d))
+    assert all(len(r) == 2 for r in results)
+
+    trail = pb.provenance(results[-1].solutions[0], directory=d)
+    runs_walked = [hop['run'] for hop in trail if 'run' in hop]
+    assert runs_walked == [r.run_id for r in reversed(results)]   # depth 4
+    assert trail[-1]['kind'] == 'start_label'                     # the beginning
+
+    # solutions_of reads the records cold (no solver object): chains from ANY run
+    cold = pb.solutions_of(results[1].run_id, directory=d)
+    assert len(cold) == 2
+    assert {c.provenance['index'] for c in cold} == {0, 1}
+    resumed = pb.solve(systems[2], homotopy=blend_homotopy(systems[2], systems[1]),
+                       start=cold, seed=42, directory=d)
+    assert resumed.num_hydrated == 2      # identical ask as results[2]: pure memo

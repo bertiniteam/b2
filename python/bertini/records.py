@@ -316,6 +316,85 @@ def save(*args, description='', directory=None):
     return name
 
 
+def _scan_history(directory=None):
+    """Every record in the directory's history, in journal order (plain-json read)."""
+    root = _Path(directory if directory is not None else records_dir()) / 'history'
+    records = []
+    if root.is_dir():
+        for journal in sorted(root.glob('*.jsonl')):
+            for line in journal.read_text().splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    records.append(_json.loads(line))
+                except ValueError:
+                    continue    # a torn final line from a killed writer
+    return records
+
+
+def solutions_of(run, directory=None, status='success'):
+    """The recorded endpoints of a run, as :class:`Solution` points with provenance.
+
+    Works on ANY run in the directory -- including runs written by the command-line
+    ``bertini2`` or on another machine: this reads the plain records, no solver object
+    needed.  The points are in USER coordinates, exact to the recorded precision, and
+    carry ``{'run', 'index'}`` provenance, so they chain directly:
+    ``solve(B, homotopy=H, start=solutions_of(run_id))``.
+
+    ``status`` filters by recorded verdict (``'success'`` default; pass ``None`` for
+    every tracked path -- audits want all three populations).
+    """
+    from bertini.multiprec import complex_mp
+    tracks = {}
+    for rec in _scan_history(directory):
+        if rec.get('kind') == 'track' and rec.get('run') == run and 'index' in rec:
+            tracks[int(rec['index'])] = rec      # newest wins per index
+    points = []
+    for index in sorted(tracks):
+        rec = tracks[index]
+        if status is not None and rec.get('status') != status:
+            continue
+        endpoint = rec.get('endpoint_user') or rec.get('endpoint')
+        if not endpoint:
+            continue
+        coords = _np.array([complex_mp(str(c[0]), str(c[1])) for c in endpoint],
+                           dtype=_np.dtype(complex_mp))
+        points.append(Solution(coords, provenance={'run': str(run), 'index': index}))
+    return points
+
+
+def provenance(point, directory=None):
+    """Walk a point's provenance back to the beginning: the chain of ``{'run','index'}``
+    hops, ending at a canonical start label or a given (user-supplied data).
+
+    ``point`` is a :class:`Solution` (or anything with ``.provenance``), or an explicit
+    ``{'run': ..., 'index': ...}`` dict.  Reads the plain records -- runs written by
+    the CLI and by Python walk the same.
+    """
+    ref = getattr(point, 'provenance', None) or point
+    if not isinstance(ref, dict) or 'run' not in ref or 'index' not in ref:
+        raise ValueError("provenance needs a point with {'run', 'index'}")
+    tracks = {}
+    for rec in _scan_history(directory):
+        if rec.get('kind') == 'track' and 'run' in rec and 'index' in rec:
+            tracks[(str(rec['run']), int(rec['index']))] = rec
+    hops = []
+    current = {'run': str(ref['run']), 'index': int(ref['index'])}
+    while True:
+        hops.append(current)
+        rec = tracks.get((current['run'], current['index']))
+        if rec is None:
+            hops.append({'kind': 'unrecorded'})
+            return hops
+        start = rec.get('start', {})
+        if start.get('kind') == 'point_ref':
+            current = {'run': str(start['run']), 'index': int(start['index'])}
+            continue
+        hops.append(start)          # start_label or given_ref: the beginning
+        return hops
+
+
 def annotate(point, key, value, directory=None):
     """Attach metadata to a solution: ``annotate(sol, 'projection', 1.5)``.
 
