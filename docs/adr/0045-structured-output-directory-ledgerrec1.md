@@ -23,7 +23,7 @@ them a specification and a core implementation.
   (append-only JSONL, one date-named file per writing session, ONE writer per file,
   claimed by exclusive create) and `definitions/` (content-addressed, atomic
   write-temp+rename, idempotent — concurrent writers race benignly, no locks exist)
-  are the source of truth; `README.txt`, `INDEX.txt`, `RESULTS.txt`, `results.json`
+  are the source of truth; `README.txt`, `INDEX.txt`, `results.json`
   are derived, rebuildable views.  Record kinds: `run`, `track`, `result`,
   `annotation`, `given`; readers MUST tolerate a torn final line, MUST treat torn
   interior lines as corruption, and MUST preserve unknown kinds.
@@ -31,7 +31,9 @@ them a specification and a core implementation.
   (`core/include/bertini2/records/output_directory.hpp`) implements it: definitions
   put/get, session-journal append (flush per record: a walltime kill loses at most the
   line in flight), tolerant scan, and the derived-view renderers (INDEX; results.json
-  for code / RESULTS.txt for eyes).
+  for code AND eyes: pretty-printed, with a "runs" section referring to the
+  system/config definitions each result came from.  RESULTS.txt was retired once
+  results.json became human-readable -- one results file, no duplication).
 - **Boost.JSON, header-only**: `<boost/json/src.hpp>` is included in exactly one TU,
   so no new link component is required on any platform (CI builds Boost from source
   with a fixed component list).

@@ -194,8 +194,8 @@ def save(*args, description='', directory=None):
 
     A :class:`SolveResult` (or anything with ``.run_id`` and ``.solutions``) is declared
     as results with full provenance; any JSON-able value (dict, list, number, string) is
-    recorded inline.  Both land in the directory's ``results.json`` (for code) and
-    ``RESULTS.txt`` (for eyes).  A nameless ``save(thing)`` is auto-named by timestamp;
+    recorded inline.  They land in the directory's ``results.json`` (pretty-printed,
+    self-complete).  A nameless ``save(thing)`` is auto-named by timestamp;
     re-saving a name replaces it (newest wins).
     """
     if len(args) == 1:
@@ -231,7 +231,10 @@ def load(name=None, directory=None):
     path = _Path(directory if directory is not None else records_dir()) / 'results.json'
     if not path.exists():
         return {} if name is None else None
-    everything = _json.loads(path.read_text())
+    document = _json.loads(path.read_text())
+    # results.json is {"results": {...}, "runs": {...}}: the declared results plus
+    # references to what constructed them.  load() serves the results section.
+    everything = document.get('results', {})
     if name is None:
         return everything
     return everything.get(name)

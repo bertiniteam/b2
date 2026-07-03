@@ -83,8 +83,8 @@ What is in the directory
 Nothing here needs bertini to read::
 
    README.txt      what this is, and the record format — self-contained
-   RESULTS.txt     what you saved, rendered for eyes
-   results.json    the same, for code: one json.load away
+   results.json    what you saved, pretty-printed, plus references to the system
+                   and configs that produced it: one json.load away
    INDEX.txt       one line per run: when, what, how many paths
    history/        every record, one JSON object per line (grep / jq / pandas)
    definitions/    the systems, content-addressed (sha256sum verifies them)

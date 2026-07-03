@@ -212,7 +212,7 @@ a start_label -- that is the complete provenance of any point recorded here.
                 note = notes.get(key, {})
                 var_names = self._variable_names(runs.get(ref["run"], {}).get("target_object"))
                 coords = {}
-                for k, (re_str, im_str) in enumerate(track["endpoint"]):
+                for k, (re_str, im_str, *_prec) in enumerate(track["endpoint"]):
                     var = var_names[k] if k < len(var_names) else "x%d" % k
                     coords[var] = [re_str, im_str]
                 points.append({"coordinates": coords, "annotations": note,

@@ -142,5 +142,19 @@ detail::Digest256 SettingsDigest(ConfigTs const&... configs)
 	return detail::Sha256(combined);
 }
 
+/**
+\brief Render one or more canonical config encodings as pretty JSON, for archiving in a
+structured output directory.
+
+The DIGEST contract stays on the canonical text (`b2cfgenc/<n>`); this JSON view is
+derived from it mechanically -- exact values preserved as strings -- because JSON is the
+format humans and tools in the directory already speak.
+
+\param canonical_text Newline-separated canonical encodings, first line the version tag.
+\param digest_hex The settings digest these encodings produce (recorded alongside).
+\return A pretty-printed JSON document: {"schema", "digest", "configs": {Name: {k: v}}}.
+*/
+std::string ConfigTextAsJson(std::string const& canonical_text, std::string const& digest_hex);
+
 } // namespace records
 } // namespace bertini

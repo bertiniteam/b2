@@ -60,9 +60,10 @@ It needs no software to read, and you are free to delete it -- the only conseque
 is recomputing.
 
 LAYOUT
-  RESULTS.txt   the declared results, for EYES (never parse this).
-  results.json  the same results, for CODE: one json.load away.
-                Most readers start AND END with these two.
+  results.json  the declared results, pretty-printed and SELF-COMPLETE: the final
+                results first, then a "runs" section referring to everything used to
+                construct them (system rendering, configs, seed) by definition id.
+                Most readers start AND END here; it is one json.load away.
   INDEX.txt     one line per run: when, what was solved, how many paths.
   history/      the records: JSON, one object per line (JSONL), one file per writing
                 session, named by date.  Read with eyes, grep, jq, or
@@ -82,7 +83,7 @@ RECORD FORMAT (schema ledgerrec/1) -- every history line is one JSON object:
                     point_ref {run, index} into an ancestor run's endpoint).
   kind="result"     the declared DELIVERABLES: `name`, `points` [{run, index}, ...],
                     optional inline `value`.  Everything else in history/ is
-                    scaffolding; RESULTS.txt renders these -- "what were my solutions?".
+                    scaffolding; results.json renders these -- "what were my solutions?".
   kind="annotation" metadata attached to a point: `point` {run, index}, `key`, `value`.
   kind="given"      externally supplied data: `source` (definition id) -- provenance
                     bottoms out honestly at the boundary of what was computed here.
@@ -103,6 +104,56 @@ that is the complete provenance of any point recorded here.
 		char buffer[32];
 		std::strftime(buffer, sizeof(buffer), fmt, &tm_buf);
 		return buffer;
+	}
+
+	// A small pretty-printer (boost::json::serialize is compact-only): 1-space-indented,
+	// newline-separated -- results.json is the file a human most interacts with.
+	void PrettyPrint(std::ostream& out, json::value const& v, int depth)
+	{
+		std::string const pad(static_cast<std::size_t>(depth) + 1, ' ');
+		std::string const pad_close(static_cast<std::size_t>(depth), ' ');
+		switch (v.kind())
+		{
+			case json::kind::object:
+			{
+				auto const& obj = v.get_object();
+				if (obj.empty()) { out << "{}"; return; }
+				out << "{\n";
+				bool first = true;
+				for (auto const& kv : obj)
+				{
+					if (!first) out << ",\n";
+					first = false;
+					out << pad << json::serialize(json::value(kv.key())) << ": ";
+					PrettyPrint(out, kv.value(), depth + 1);
+				}
+				out << "\n" << pad_close << "}";
+				return;
+			}
+			case json::kind::array:
+			{
+				auto const& arr = v.get_array();
+				if (arr.empty()) { out << "[]"; return; }
+				// short leaf arrays (coordinate triples etc.) stay on one line
+				bool leaf = true;
+				for (auto const& e : arr)
+					if (e.is_object() || e.is_array()) { leaf = false; break; }
+				if (leaf && arr.size() <= 4) { out << json::serialize(v); return; }
+				out << "[\n";
+				bool first = true;
+				for (auto const& e : arr)
+				{
+					if (!first) out << ",\n";
+					first = false;
+					out << pad;
+					PrettyPrint(out, e, depth + 1);
+				}
+				out << "\n" << pad_close << "]";
+				return;
+			}
+			default:
+				out << json::serialize(v);
+		}
 	}
 
 	std::string GetString(json::object const& obj, char const* key, std::string const& fallback = "")
@@ -340,33 +391,22 @@ void OutputDirectory::RefreshResults() const
 			declared[GetString(r, "name")] = r;
 	}
 
-	json::object machine;
-	std::ostringstream eyes;
-	eyes << "the results declared here (for eyes only -- code reads results.json;\n"
-	     << "full precision + provenance in history/):\n";
+	json::object results_section;
+	json::object runs_section;   // only the runs the declared results reference
 
 	for (auto const& [name, rec] : declared)
 	{
 		json::object entry;
 		entry["declared"] = rec.contains("when") ? rec.at("when") : json::value();
 		entry["description"] = GetString(rec, "description");
-		eyes << "\n== " << name << "   (declared " << GetString(rec, "when", "?") << ") ==\n";
-		if (!GetString(rec, "description").empty())
-			eyes << "   " << GetString(rec, "description") << "\n";
-
 		if (rec.contains("value"))
-		{
 			entry["value"] = rec.at("value");
-			eyes << "  value: " << json::serialize(rec.at("value")) << "\n";
-		}
 
 		json::array points;
 		if (auto const* refs = rec.if_contains("points"); refs && refs->is_array())
 		{
-			long point_number = 0;
 			for (auto const& ref_value : refs->get_array())
 			{
-				++point_number;
 				if (!ref_value.is_object())
 					continue;
 				auto const& ref = ref_value.get_object();
@@ -375,6 +415,19 @@ void OutputDirectory::RefreshResults() const
 				if (auto const* idx = ref.if_contains("index"); idx && idx->is_int64())
 					index = idx->get_int64();
 
+				// the runs section makes results.json SELF-COMPLETE: final results first,
+				// then references to what constructed them (system, configs, seed)
+				auto const run_it = runs.find(run_id);
+				if (run_it != runs.end() && !runs_section.contains(run_id))
+				{
+					json::object summary;
+					for (char const* key : {"when", "op", "ask", "target_object",
+					                        "target_digest", "config_object", "num_paths"})
+						if (run_it->second.contains(key))
+							summary[key] = run_it->second.at(key);
+					runs_section[run_id] = summary;
+				}
+
 				json::object point;
 				point["provenance"] = ref;
 				auto const track_it = tracks.find({run_id, index});
@@ -382,15 +435,25 @@ void OutputDirectory::RefreshResults() const
 				{
 					point["status"] = "missing";
 					points.push_back(point);
-					eyes << "  point " << point_number << ": (not computed / failed)\n";
 					continue;
 				}
 				point["status"] = "success";
 
-				// coordinates keyed by variable name (parsed from the run's target definition)
+				// user variable names label coordinates only when the counts agree;
+				// internal (homogenized) points have extra coordinates, and labeling
+				// them with user names would be misleading (user-coordinate rendering
+				// is a noted follow-up)
 				std::vector<std::string> var_names;
-				auto const run_it = runs.find(run_id);
+				// the run header's "variables" field is authoritative: the solver's own
+				// internal ordering, homogenizing variables included
 				if (run_it != runs.end())
+					if (auto const* vars = run_it->second.if_contains("variables");
+					    vars && vars->is_array())
+						for (auto const& v : vars->get_array())
+							if (v.is_string())
+								var_names.emplace_back(v.get_string());
+				// older directories: fall back to parsing the classic rendering
+				if (var_names.empty() && run_it != runs.end())
 				{
 					auto const target_object = GetString(run_it->second, "target_object");
 					if (!target_object.empty() && HasDefinition(target_object))
@@ -419,73 +482,47 @@ void OutputDirectory::RefreshResults() const
 				}
 
 				json::object coords;
-				std::ostringstream coord_lines;
 				if (auto const* endpoint = track_it->second.if_contains("endpoint");
 				    endpoint && endpoint->is_array())
 				{
-					// user variable names label coordinates only when the counts agree;
-					// internal (homogenized) points have extra coordinates, and labeling
-					// them with user names would be misleading (user-coordinate rendering
-					// is a noted follow-up)
 					if (var_names.size() != endpoint->get_array().size())
 						var_names.clear();
 					std::size_t k = 0;
-					for (auto const& pair : endpoint->get_array())
+					for (auto const& coordinate : endpoint->get_array())
 					{
-						std::string const var = k < var_names.size() ? var_names[k] : ("coordinate_" + std::to_string(k));
-						coords[var] = pair;
-						// coordinate entries are ["re","im"] or ["re","im",precision]
-						if (pair.is_array() && pair.get_array().size() >= 2)
-						{
-							auto re = std::string(pair.get_array()[0].as_string());
-							auto im = std::string(pair.get_array()[1].as_string());
-							coord_lines << "    " << var << " = " << re.substr(0, 12)
-							            << " + " << im.substr(0, 12) << " i\n";
-						}
+						std::string const var = k < var_names.size() ? var_names[k]
+						                                             : ("coordinate_" + std::to_string(k));
+						coords[var] = coordinate;
 						++k;
 					}
 				}
 				point["coordinates"] = coords;
 
-				json::object note;
 				auto const note_it = annotations.find({run_id, index});
-				if (note_it != annotations.end())
-					note = note_it->second;
-				point["annotations"] = note;
+				point["annotations"] = (note_it != annotations.end()) ? note_it->second : json::object{};
 				points.push_back(point);
-
-				eyes << "  point " << point_number << "  [run " << run_id << " #" << index << "]";
-				if (!note.empty())
-				{
-					eyes << "   ";
-					bool first_key = true;
-					for (auto const& kv : note)
-					{
-						if (!first_key) eyes << ", ";
-						first_key = false;
-						eyes << kv.key() << "=" << json::serialize(kv.value());
-					}
-				}
-				eyes << "\n" << coord_lines.str();
 			}
 		}
 		if (!points.empty())
 			entry["points"] = points;
-		machine[name] = entry;
+		results_section[name] = entry;
 	}
 
-	if (declared.empty())
-		eyes << "(none declared yet)\n";
+	json::object machine;
+	machine["results"] = results_section;
+	machine["runs"] = runs_section;
 
 	{
 		std::ofstream out(root_ / "results.json");
-		out << json::serialize(machine) << "\n";
+		PrettyPrint(out, machine, 0);
+		out << "\n";
 	}
-	{
-		std::ofstream out(root_ / "RESULTS.txt");
-		out << eyes.str();
-	}
+	// RESULTS.txt retired: it duplicated results.json, which is now pretty-printed and
+	// self-complete -- one results file.  Remove a stale copy from older directories.
+	std::error_code ignored;
+	std::filesystem::remove(root_ / "RESULTS.txt", ignored);
 }
+
 
 std::string OutputDirectory::Describe() const
 {

@@ -330,5 +330,43 @@ std::string CanonicalEncoding(algorithm::classic::EndgameChoiceConfig const& c)
 	return "(cfg EndgameChoice endgame=" + CanonicalName(c.endgame) + ")";
 }
 
+std::string ConfigTextAsJson(std::string const& canonical_text, std::string const& digest_hex)
+{
+	std::ostringstream out;
+	out << "{\n \"schema\": \"" << ConfigEncodingVersion << "\",\n"
+	    << " \"digest\": \"" << digest_hex << "\",\n"
+	    << " \"configs\": {";
+	bool first_config = true;
+	std::istringstream lines(canonical_text);
+	for (std::string line; std::getline(lines, line); )
+	{
+		if (line.rfind("(cfg ", 0) != 0)
+			continue;
+		// "(cfg Name k=v k=v ...)": split the name, then the k=v fields
+		std::string const body = line.substr(5, line.size() - 6);   // drop "(cfg " and ")"
+		auto const name_end = body.find(' ');
+		std::string const name = body.substr(0, name_end);
+		out << (first_config ? "" : ",") << "\n  \"" << name << "\": {";
+		first_config = false;
+		bool first_field = true;
+		if (name_end != std::string::npos)
+		{
+			std::istringstream fields(body.substr(name_end + 1));
+			for (std::string field; std::getline(fields, field, ' '); )
+			{
+				auto const eq = field.find('=');
+				if (eq == std::string::npos)
+					continue;
+				out << (first_field ? "" : ",") << "\n   \"" << field.substr(0, eq)
+				    << "\": \"" << field.substr(eq + 1) << "\"";
+				first_field = false;
+			}
+		}
+		out << "\n  }";
+	}
+	out << "\n }\n}\n";
+	return out.str();
+}
+
 } // namespace records
 } // namespace bertini

@@ -91,7 +91,7 @@ void ExportRecords()
 			(arg("self"), arg("content"), arg("external_id")),
 			"Store a definition under an external id (e.g. a System's content_digest); returns it.")
 		.def("refresh_results", &records::OutputDirectory::RefreshResults, (arg("self")),
-			"(Re)write results.json (for code) and RESULTS.txt (for eyes) from the declared "
+			"(Re)write the pretty-printed, self-complete results.json from the declared "
 			"result records.")
 		.def("refresh_index", &records::OutputDirectory::RefreshIndex, (arg("self")),
 			"(Re)write INDEX.txt: one line per run.")

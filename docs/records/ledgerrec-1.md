@@ -10,8 +10,10 @@ no software required.  A copy of the essentials travels inside every directory a
 ```
 <output directory>/
   README.txt      what this is + this spec's essentials, self-contained
-  RESULTS.txt     declared results, rendered for EYES (never parse)
-  results.json    declared results, rendered for CODE (one json.load away)
+  results.json    the declared results, pretty-printed and self-complete:
+                  {"results": {...}, "runs": {...}} -- the final results first,
+                  then references (by definition id) to the system rendering and
+                  configs that produced them
   INDEX.txt       one line per run: when, what, how many paths
   history/        the records: JSONL, one file per writing session, date-named
   definitions/    content-addressed definitions: definitions/<2 hex>/<rest of digest>

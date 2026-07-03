@@ -264,7 +264,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 	.def("refresh_results",
 		+[](AlgoT& self){ if (self.Records()) self.Records()->RefreshResults(); },
 		(boost::python::arg("self")),
-		"(Re)render the attached directory's results.json / RESULTS.txt.  No-op when not recording.")
+		"(Re)render the attached directory's results.json.  No-op when not recording.")
 	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
 	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
 	.def("all_solutions",

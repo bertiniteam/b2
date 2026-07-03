@@ -122,7 +122,7 @@ public:
 	/// against malformed records).
 	void RefreshIndex() const;
 
-	/// \brief (Re)write results.json (for code) and RESULTS.txt (for eyes) from the
+	/// \brief (Re)write results.json -- pretty-printed and self-complete -- from the
 	/// declared `result` records: named results with coordinates keyed by variable
 	/// name, annotations, provenance refs, and inline saved values.
 	void RefreshResults() const;

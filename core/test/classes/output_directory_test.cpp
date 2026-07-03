@@ -165,12 +165,24 @@ BOOST_AUTO_TEST_CASE(index_and_results_render)
 		std::ifstream in(dir / "results.json");
 		return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	}()).as_object();
-	auto const& mine = results.at("my solutions").as_object();
+	auto const& mine = results.at("results").as_object().at("my solutions").as_object();
 	auto const& point = mine.at("points").as_array()[0].as_object();
 	BOOST_CHECK_EQUAL(std::string(point.at("status").as_string()), "success");
 	BOOST_CHECK(point.at("coordinates").as_object().contains("x"));
 	BOOST_CHECK(point.at("coordinates").as_object().contains("y"));
 	BOOST_CHECK_EQUAL(point.at("annotations").as_object().at("projection").as_double(), 1.5);
+
+	// self-completeness: the runs section refers back to what constructed the result
+	auto const& run = results.at("runs").as_object().at("abc123").as_object();
+	BOOST_CHECK_EQUAL(std::string(run.at("target_object").as_string()), target_id);
+
+	// pretty-printed (the file a human most interacts with), and RESULTS.txt is gone
+	{
+		std::ifstream in(dir / "results.json");
+		std::string raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		BOOST_CHECK(raw.find('\n') != std::string::npos);
+	}
+	BOOST_CHECK(!fs::exists(dir / "RESULTS.txt"));
 }
 
 // ---- the cross-implementation bridge (with prototypes/ledger_v0) ----

@@ -2182,7 +2182,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					+ records::CanonicalEncoding(this->template Get<AutoRetrack>()) + "\n"
 					+ records::CanonicalEncoding(this->template Get<PostProcessing>()) + "\n";
 				auto const config_definition = records_->PutDefinition(
-					config_text, std::string(ask.at("config").as_string()));
+					records::ConfigTextAsJson(config_text, std::string(ask.at("config").as_string())),
+					std::string(ask.at("config").as_string()));
 				boost::json::object header;
 				header["kind"] = "run";
 				header["schema"] = records::RecordSchemaVersion;
@@ -2203,6 +2204,15 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				header["ask"] = ask;
 				header["target_object"] = target_definition;
 				header["target_digest"] = TargetSystem().ContentDigest().Hex();
+				// the INTERNAL variable ordering, so views can label endpoint coordinates
+				// truthfully (homogenized points have more coordinates than the user's
+				// rendering declares)
+				{
+					boost::json::array variable_names;
+					for (auto const& v : TargetSystem().Variables())
+						variable_names.push_back(boost::json::value(v->name()));
+					header["variables"] = variable_names;
+				}
 				header["config_object"] = config_definition;
 				header["num_paths"] = static_cast<std::int64_t>(num_start_points_);
 				records_->Append(header);
