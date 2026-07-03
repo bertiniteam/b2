@@ -133,12 +133,38 @@ true path norm exceeds its SecurityMaxNorm, without truncating: its security che
 also watches the extrapolation.  With `EndgameNum: 1` (powerseries) B1 prints
 "Truncated infinite paths: 1" — correct, matching bertini2's powerseries.
 
-## Fix status (bertini2)
+## Why the affine case is pernicious (and projective is fine)
 
-- **Done**: the Cauchy security check watches the SAMPLES — minimum dehomogenized norm
+With SecurityLevel 1 on a homogenized+patched system, the points at infinity are
+DELIBERATELY computed: in projective space, infinity is just a finite point on the
+patch, and the endgame converges to it like any other.  Truncation there is an
+optimization.  In a raw AFFINE homotopy, infinity is really infinity -- the path and
+the endgame can never converge, so truncation is the only honest outcome, and an
+endgame that manufactures a finite "limit" (the pole's circle-mean) is manufacturing
+an answer where none exists.
+
+## A second manifestation: singular targets, misdetected cycle
+
+Chaining into a target with a multiplicity-2 root (e.g. {(x-1)^2+(y-1)^2, x-y} from
+the same family) shows a sibling failure: both paths genuinely converge to (1,1)
+(verified by independent continuation; the approach is ~sqrt(t), i.e. cycle 2), but
+the endgame detects CYCLE 1, its one-circuit loops are not closed on the two-sheeted
+branch, and the resulting garbage means stabilize at non-roots (residuals ~3.4/1.2)
+-- junk Success again.  Note for the fix: the twisted mean c_-1 is nonzero for ANY
+improperly-closed loop content (not only poles), so the operating-zone check below
+should catch this manifestation as well.
+
+## Fix status
+
+**The fix lives in its OWN PR** (user decision, 2026-07-03): discovered during the
+records arc (PR #68), important enough to land independently.  PR #68 carries only
+this documentation, the reproductions, and the xfailed Python pin.
+
+- **For the fix PR -- security check watches the SAMPLES — minimum dehomogenized norm
   over the current loop, in both `RunImpl` and the AMP driver
-  (`MinLoopSampleNorm` / `MinLoopSampleNormAMP` in `endgames/cauchy.hpp`).  Necessary
-  (the old check was structurally unable to fire on a pole) but not sufficient alone.
+  (`MinLoopSampleNorm` / `MinLoopSampleNormAMP`; patch staged).  Necessary
+  (the old check was structurally unable to fire on a pole) but not sufficient alone:
+  acceptance happens at radii where the pole's sample norms are still tiny.
 - **Rejected**: a residual gate on acceptance (`ApproximationIsVerifiedRoot`,
   briefly on the branch, reverted).  Function values are scaling-sensitive — a system
   scaled by 1e6 would make true solutions fail the gate.  Endgame convergence is

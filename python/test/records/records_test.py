@@ -331,13 +331,15 @@ def test_provenance_graph_and_chain_plot(tmp_path):
     plt.close('all')
 
 
-@pytest.mark.xfail(reason="KNOWN GAP (2026-07-03): the raw affine user-homotopy path "
-                          "(HomotopySolver; no homogenization/patch) mishandles targets "
-                          "where a path has nowhere finite to go: the Cauchy endgame can "
-                          "report Success at a NON-ROOT (function_residual ~ 1).  The "
-                          "records stay honest (residual + condition number are in the "
-                          "track record); the plain zero-dim pipeline is correct.  The "
-                          "fix belongs in C++ (+ a named C++ regression) -- see the arc.",
+@pytest.mark.xfail(reason="KNOWN BUG, fix owned by a DEDICATED PR (user decision "
+                          "2026-07-03; see docs/records/junk-success-cauchy-pole-blindness.md): "
+                          "the Cauchy endgame's circle-mean is blind to poles, so on raw "
+                          "affine user homotopies toward deficient targets it can report "
+                          "Success at a NON-ROOT (function_residual ~ 1; inherited from "
+                          "Bertini 1, reproduction committed).  In the affine case infinity "
+                          "is really infinity -- the endgame can never converge there.  The "
+                          "records stay honest; the plain (patched) zero-dim pipeline is "
+                          "correct.  Un-xfail when the endgame PR merges.",
                    strict=False)
 def test_chained_deficient_target_paths_never_junk_success(tmp_path):
     from bertini.nag_algorithm import blend_homotopy

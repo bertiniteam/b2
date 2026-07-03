@@ -156,6 +156,30 @@ that is the complete provenance of any point recorded here.
 		}
 	}
 
+	// Views (results.json, INDEX.txt) are REGENERATED files that concurrent writers may
+	// refresh at once (e.g. two MPI ranks recording their own runs): write to a
+	// process-unique temp then rename, so a reader never sees a truncated/empty view.
+	// (Definitions already write this way; journals are one-writer-per-file.)
+	void WriteViewAtomically(std::filesystem::path const& target, std::string const& content)
+	{
+		auto const tmp = target.parent_path() /
+			(target.filename().string() + ".tmp." + std::to_string(
+#ifdef _WIN32
+				_getpid()
+#else
+				getpid()
+#endif
+			));
+		{
+			std::ofstream out(tmp, std::ios::binary);
+			out.write(content.data(), static_cast<std::streamsize>(content.size()));
+		}
+		std::error_code ec;
+		std::filesystem::rename(tmp, target, ec);   // atomic on POSIX; last writer wins
+		if (ec)
+			std::filesystem::remove(tmp, ec);
+	}
+
 	std::string GetString(json::object const& obj, char const* key, std::string const& fallback = "")
 	{
 		auto const* v = obj.if_contains(key);
@@ -361,8 +385,7 @@ void OutputDirectory::RefreshIndex() const
 		    << "  " << description
 		    << "   [run " << run_id << "]\n";
 	}
-	std::ofstream index(root_ / "INDEX.txt");
-	index << out.str();
+	WriteViewAtomically(root_ / "INDEX.txt", out.str());
 }
 
 void OutputDirectory::RefreshResults() const
@@ -531,9 +554,10 @@ void OutputDirectory::RefreshResults() const
 	machine["runs"] = runs_section;
 
 	{
-		std::ofstream out(root_ / "results.json");
+		std::ostringstream out;
 		PrettyPrint(out, machine, 0);
 		out << "\n";
+		WriteViewAtomically(root_ / "results.json", out.str());
 	}
 	// RESULTS.txt retired: it duplicated results.json, which is now pretty-printed and
 	// self-complete -- one results file.  Remove a stale copy from older directories.
