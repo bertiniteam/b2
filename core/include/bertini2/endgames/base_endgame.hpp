@@ -197,40 +197,6 @@ public:
 	}
 
 
-	/**
-	\brief Is a candidate limit point actually a root of the tracked system at the
-	target time?  The residual gate on endgame convergence.
-
-	Agreement of successive approximations is NECESSARY for convergence but not
-	SUFFICIENT: on a path with no finite root to converge to -- possible for unpatched
-	user homotopies at deficient or singular targets, where there is no patch to send
-	the path to infinity -- the extrapolated approximations can stabilize at a point
-	that is not a root at all (observed: residual ~1 reported as Success; the
-	junk-success bug, 2026-07-03).  The residual tells the truth: a genuine root
-	approximated to FinalTolerance has residual ~ ||J|| * FinalTolerance, orders below
-	this gate; junk sits at O(1).
-
-	\tparam ComplexT The complex number type of the approximation.
-	\param approx The candidate limit point.
-	\param target_time The endgame's target time, where the system is evaluated.
-	\return true when the residual clears the gate (1e5 * FinalTolerance).
-	*/
-	template<typename ComplexT>
-	bool ApproximationIsVerifiedRoot(Vec<ComplexT> const& approx, ComplexT const& target_time) const
-	{
-		// the approximation's precision is authoritative: the system AND the time must
-		// both match it before evaluating (the SLP checks and throws otherwise)
-		ComplexT time_for_eval = target_time;
-		if constexpr (!std::is_same<ComplexT, complex_dbl>::value)
-		{
-			Precision(time_for_eval, Precision(approx));
-			this->GetSystem().precision(Precision(approx));
-		}
-		auto const residual = static_cast<NumErrorT>(
-			this->GetSystem().Eval(approx, time_for_eval).template lpNorm<Eigen::Infinity>());
-		return residual < NumErrorT(1e5) * this->FinalTolerance();
-	}
-
 	/// \brief Refine every sample point to the endgame's refinement tolerance.
 	template<typename ComplexT>
 	SuccessCode RefineAllSamples(SampCont<ComplexT> & samples, TimeCont<ComplexT> & times)
