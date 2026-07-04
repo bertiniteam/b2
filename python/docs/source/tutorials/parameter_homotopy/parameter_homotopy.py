@@ -7,6 +7,12 @@ Run:  python parameter_homotopy.py
 import bertini
 from bertini import nag_algorithm
 
+# one line: every solver below records into this directory (see the your_records
+# tutorial).  Pinning the seed makes reruns REPLAY the same homotopies, so a killed
+# sweep resumes from the records instead of recomputing.
+bertini.records_dir("circle_sweep_records")
+bertini.random.set_random_seed(42)
+
 # the variables are SHARED across every member of the family: the parameter homotopy
 # interpolates the members' equations, so they must be built over the same Variable objects.
 x, y = bertini.Variable('x'), bertini.Variable('y')
@@ -58,6 +64,7 @@ def main():
     generic, start_points = solve_once()
     move_parameter(generic, start_points)
     sweep(generic, start_points)
+    print(bertini.runs("circle_sweep_records")[['run', 'op', 'num_paths', 'seed']])
 
 
 if __name__ == '__main__':

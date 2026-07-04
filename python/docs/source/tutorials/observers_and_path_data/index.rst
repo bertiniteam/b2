@@ -5,6 +5,10 @@
 
    import bertini
 
+.. testcleanup:: *
+
+   bertini.recording(True)   # this document runs bare (see the note); restore for the rest
+
 Bertini tracks solution paths, but by default you only see where they *end*.  An **observer**
 lets you watch what happens *along* the way: it is a small object you attach to a tracker (or to
 any observable), whose ``Observe`` method is called with an **event** every time something
@@ -144,6 +148,7 @@ We will solve a degree-six univariate polynomial -- a total-degree homotopy with
     from bertini import ZeroDimSolver, SolutionPathCollector
 
     bertini.random.set_random_seed(2)   # so you get exactly this picture
+    bertini.recording(False)            # we are here to WATCH tracking -- see the note below
 
     z = bertini.Variable('z')
     sys = bertini.System()
@@ -157,6 +162,15 @@ We will solve a degree-six univariate polynomial -- a total-degree homotopy with
     solver.solve()
 
     assert len(A.series) == 6          # one PathDataCollector per solution path
+
+.. note::
+
+   Why turn recording off?  If ambient recording is on (see :doc:`../your_records/index`),
+   a solve whose exact ask was already answered **hydrates** its results from the records
+   instead of tracking -- that is the resuming feature doing its job.  But a hydrated
+   solve tracks no paths, so observers have nothing to observe.  This tutorial re-solves
+   the same system with the same seed on purpose (to compare collectors on identical
+   paths), so we run bare.  ``bertini.recording(True)`` puts things back.
 
 Plotting the paths
 ==================

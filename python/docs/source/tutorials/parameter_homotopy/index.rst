@@ -4,6 +4,13 @@
 .. testsetup:: *
 
    import bertini
+   _docs_ambient = bertini.records_dir()   # restored in testcleanup
+
+.. testcleanup:: *
+
+   import shutil
+   shutil.rmtree("circle_sweep_records", ignore_errors=True)
+   bertini.records_dir(_docs_ambient)
 
 The most expensive part of homotopy continuation is the *first* solve -- the one that has to
 find every solution from scratch.  But a great many problems are really a **family** of systems
@@ -31,6 +38,9 @@ Take a fixed unit circle intersected with a horizontal line whose height is the 
 
     import bertini
     from bertini import nag_algorithm
+
+    bertini.records_dir("circle_sweep_records")   # one line: record everything below
+    bertini.random.set_random_seed(42)            # same seed => reruns resume, not recompute
 
     # the variables are SHARED across every member of the family: the parameter homotopy
     # interpolates the members' equations, so they must be built over the same Variable objects.
@@ -94,6 +104,36 @@ solving from scratch again:
 Each iteration tracks only the two solutions we already have, to the new line -- not a fresh
 total-degree solve.  Across a large sweep that is the difference between tracking a handful of
 paths per parameter and tracking the full Bézout count every time.
+
+The sweep, on the record
+========================
+
+Those two lines back at the top were not decoration.  Naming the ambient directory with
+``records_dir`` turns recording on for **every** solver in the process -- the bare
+:class:`~bertini.ZeroDimSolver` and :class:`~bertini.HomotopySolver` used here included,
+not just :func:`bertini.solve`.  Every solve above wrote durable records of what it
+computed, and every solve *consults* the records before computing.  The pinned seed is
+what makes that pay: with the same seed a rerun of the script rebuilds the *same*
+homotopies (randomness is seed-rooted), so every already-answered solve hydrates from
+the records instead of tracking again.  Kill a thousand-member sweep at member 700 and
+rerun -- the first 700 come back instantly and the sweep continues where it died.
+Without a pinned seed each run draws fresh randomness, and there is nothing to resume
+*from*.
+
+Read the sweep back with the navigation tools (see :doc:`../your_records/index` for the
+full story):
+
+.. testcode::
+
+    runs = bertini.runs("circle_sweep_records")
+    print(len(runs) >= 5, all(runs['num_paths'] == 2))
+
+.. testoutput::
+
+    True True
+
+One ab-initio solve, then nothing but two-path parameter moves: exactly the yoga this
+tutorial preaches, now auditable after the fact.
 
 Choosing the generic member
 ===========================

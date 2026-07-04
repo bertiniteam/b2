@@ -115,6 +115,34 @@ def test_ambient_directory_resolution(tmp_path, monkeypatch):
     monkeypatch.setattr(records_module, '_ambient', None)   # don't leak
 
 
+def test_records_dir_is_the_ambient_switch_for_bare_solvers(tmp_path, monkeypatch):
+    """bertini.records_dir(path): the one line that turns ambient recording on for the
+    bare solver classes too -- the path is exported to BERTINI_RECORDS_DIR, which the
+    solvers' ambient attach reads; recording(False) still wins."""
+    import os
+    import bertini.records as records_module
+    d = tmp_path / 'ambient_records'
+    monkeypatch.setattr(records_module, '_ambient', None)
+    monkeypatch.setattr(records_module, '_recording_enabled', True)
+    monkeypatch.delenv('BERTINI_RECORDS_DIR', raising=False)
+
+    pb.records_dir(str(d))                                  # the one line
+    assert os.environ['BERTINI_RECORDS_DIR'] == str(d)
+
+    solver = pb.ZeroDimSolver(circle_line(), mptype='adaptive')
+    solver.solve()                                          # bare solver, no directory named
+    assert (d / 'history').exists()
+    assert (d / 'results.json').exists()
+
+    # the off switch still wins, and coming back restores the ambient export
+    pb.recording(False)
+    assert os.environ['BERTINI_RECORDS_DIR'] == ''
+    pb.records_dir(str(tmp_path / 'elsewhere'))             # setting while off: no export
+    assert os.environ['BERTINI_RECORDS_DIR'] == ''
+    pb.recording(True)
+    assert os.environ['BERTINI_RECORDS_DIR'] == str(tmp_path / 'elsewhere')
+
+
 def test_annotate_renders_beside_the_point(tmp_path):
     """annotate(sol, key, value): margin notes land in results.json by the point."""
     d = str(tmp_path / 'records')
