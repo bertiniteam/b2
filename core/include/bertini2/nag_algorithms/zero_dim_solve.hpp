@@ -2050,9 +2050,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 			/// \brief Attach an output directory by path (the AnyZeroDim polymorphic hook).
+			/// Uses the process-shared instance for the path: one session history file
+			/// per directory per process, however many solvers attach.
 			void RecordToPath(std::string const& path) override
 			{
-				RecordTo(std::make_shared<records::OutputDirectory>(path));
+				RecordTo(records::OutputDirectory::Shared(path));
 			}
 
 			/// \brief This solve's run id (the AnyZeroDim polymorphic hook).
@@ -2130,7 +2132,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					return;
 				if (char const* dir = std::getenv("BERTINI_RECORDS_DIR"))
 					if (*dir != '\0')
-						records_ = std::make_shared<records::OutputDirectory>(dir);
+						records_ = records::OutputDirectory::Shared(dir);
 			}
 
 			/**

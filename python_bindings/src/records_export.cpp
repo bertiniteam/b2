@@ -34,7 +34,9 @@ namespace {
 
 	std::shared_ptr<records::OutputDirectory> MakeDirectory(std::string const& path)
 	{
-		return std::make_shared<records::OutputDirectory>(path);
+		// the process-shared instance: one session history file per directory per
+		// process, however many OutputDirectory objects Python constructs
+		return records::OutputDirectory::Shared(path);
 	}
 
 	void AppendJson(records::OutputDirectory& self, std::string const& record_json)

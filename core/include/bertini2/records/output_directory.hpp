@@ -40,6 +40,8 @@ README.txt.  Cross-implementation compatibility with the Python pilot
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <vector>
@@ -68,6 +70,22 @@ public:
 	/// \brief Open (creating if needed) the output directory at `root`, writing the
 	/// self-documenting README.txt on first creation.
 	explicit OutputDirectory(std::filesystem::path root);
+
+	/**
+	\brief The process-shared OutputDirectory at `root`: one instance -- hence one
+	session history file -- per directory per process, however many solvers attach.
+
+	Each instance claims its own session history file on first append, so anything
+	constructing many writers in a loop (a parameter sweep attaching the ambient
+	records to every solver, say) must share one instance: the per-second claim
+	namespace is finite, and the history should not be shredded across a file per
+	solve.  Keyed by the weakly-canonical path; instances are held weakly, so a
+	directory nobody references anymore is released.
+
+	\param root The directory root (need not exist yet).
+	\return The shared instance for this path in this process.
+	*/
+	static std::shared_ptr<OutputDirectory> Shared(std::filesystem::path const& root);
 
 	/// \brief The directory's root path.
 	std::filesystem::path const& Root() const { return root_; }
@@ -153,6 +171,7 @@ private:
 	std::filesystem::path root_;        ///< The directory root.
 	std::ofstream session_;             ///< This session's history file (open after first append).
 	std::filesystem::path session_path_; ///< Path of the session history file (empty until claimed).
+	std::mutex append_mutex_;           ///< Serializes appends: a Shared() instance may be written from several threads.
 };
 
 } // namespace records

@@ -185,6 +185,33 @@ BOOST_AUTO_TEST_CASE(index_and_results_render)
 	BOOST_CHECK(!fs::exists(dir / "RESULTS.txt"));
 }
 
+BOOST_AUTO_TEST_CASE(shared_is_one_instance_per_path_per_process)
+{
+	// a sweep attaching the ambient records to thousands of solvers must share ONE
+	// writer (one session history file), not exhaust the per-second claim namespace
+	auto dir = FreshDir("shared");
+	auto a = OutputDirectory::Shared(dir);
+	auto b = OutputDirectory::Shared(dir);
+	BOOST_CHECK_EQUAL(a.get(), b.get());
+
+	auto other = OutputDirectory::Shared(FreshDir("shared_other"));
+	BOOST_CHECK(a.get() != other.get());
+
+	// many attaches, one session file
+	for (int i = 0; i < 100; ++i)
+		OutputDirectory::Shared(dir)->Append({{"kind", "probe"}, {"i", i}});
+	std::size_t session_files = 0;
+	for (auto const& entry : fs::directory_iterator(dir / "history"))
+		if (entry.path().extension() == ".jsonl")
+			++session_files;
+	BOOST_CHECK_EQUAL(session_files, 1u);
+
+	// held weakly: once nobody references it, the instance is released
+	std::weak_ptr<OutputDirectory> watch = a;
+	a.reset(); b.reset();
+	BOOST_CHECK(watch.expired());
+}
+
 BOOST_AUTO_TEST_CASE(annotate_convenience_appends_annotation_records)
 {
 	OutputDirectory out(FreshDir("annotate"));

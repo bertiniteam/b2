@@ -204,6 +204,26 @@ OutputDirectory::OutputDirectory(std::filesystem::path root) : root_(std::move(r
 }
 
 
+std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path const& root)
+{
+	static std::mutex table_mutex;
+	static std::map<std::filesystem::path, std::weak_ptr<OutputDirectory>> table;
+
+	std::error_code ec;
+	auto key = std::filesystem::weakly_canonical(root, ec);
+	if (ec)
+		key = root;
+
+	std::lock_guard<std::mutex> lock(table_mutex);
+	auto& slot = table[key];
+	if (auto live = slot.lock())
+		return live;
+	auto made = std::make_shared<OutputDirectory>(root);
+	slot = made;
+	return made;
+}
+
+
 // ---- definitions ----
 
 std::filesystem::path OutputDirectory::DefinitionPath(std::string const& id) const
@@ -285,6 +305,7 @@ void OutputDirectory::Annotate(std::string const& run_id, std::int64_t index,
 
 void OutputDirectory::Append(json::object const& record)
 {
+	std::lock_guard<std::mutex> lock(append_mutex_);
 	EnsureSessionFile();
 	session_ << json::serialize(record) << "\n";
 	session_.flush();
