@@ -248,7 +248,15 @@ using bertini::RandomMp;
 	 */
 	inline complex rand()
 	{
-		return complex( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+		// DRAW ORDER IS A CONTRACT (cross-platform reproducibility, 2026-07-03): the two
+		// component draws are sequenced EXPLICITLY -- real first, then imaginary.  Never
+		// put two draws in one full-expression: C++ argument evaluation order is
+		// unspecified, and gcc really does order them differently on x86_64 vs aarch64
+		// (found as an architecture-split seeded-homotopy digest: every (re, im) pair of
+		// every seeded coefficient was transposed between the two).
+		real_mp const re = RandomMp(real_mp(-1),real_mp(1));
+		real_mp const im = RandomMp(real_mp(-1),real_mp(1));
+		return complex( re, im );
 	}
 
 
@@ -257,7 +265,10 @@ using bertini::RandomMp;
 	 */
 	inline complex rand_unit()
 	{
-		complex returnme( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp const re = RandomMp(real_mp(-1),real_mp(1));
+		real_mp const im = RandomMp(real_mp(-1),real_mp(1));
+		complex returnme( re, im );
 		return returnme / abs(returnme);   // normalize to modulus 1 (NOT sqrt(abs), which left modulus sqrt|z|)
 	}
 
@@ -279,11 +290,16 @@ using bertini::RandomMp;
 	 */
 	inline complex rand_bounded_modulus()
 	{
-		complex z( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp re = RandomMp(real_mp(-1),real_mp(1));
+		real_mp im = RandomMp(real_mp(-1),real_mp(1));
+		complex z( re, im );
 		auto m = abs(z);
 		while (m == 0)   // measure-zero, but a zero coefficient is degenerate -- redraw
 		{
-			z = complex( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+			re = RandomMp(real_mp(-1),real_mp(1));
+			im = RandomMp(real_mp(-1),real_mp(1));
+			z = complex( re, im );
 			m = abs(z);
 		}
 		return z / sqrt(m);
@@ -303,11 +319,16 @@ using bertini::RandomMp;
 		SetThreadPrecision(num_digits);
 		a.precision(num_digits);
 
-		complex z( RandomMp(real_mp(-1),real_mp(1),num_digits), RandomMp(real_mp(-1),real_mp(1),num_digits) );
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp re = RandomMp(real_mp(-1),real_mp(1),num_digits);
+		real_mp im = RandomMp(real_mp(-1),real_mp(1),num_digits);
+		complex z( re, im );
 		auto m = abs(z);
 		while (m == 0)
 		{
-			z = complex( RandomMp(real_mp(-1),real_mp(1),num_digits), RandomMp(real_mp(-1),real_mp(1),num_digits) );
+			re = RandomMp(real_mp(-1),real_mp(1),num_digits);
+			im = RandomMp(real_mp(-1),real_mp(1),num_digits);
+			z = complex( re, im );
 			m = abs(z);
 		}
 		a = std::move(z / sqrt(m));
@@ -385,7 +406,10 @@ using bertini::RandomMp;
 		auto cached = ThreadPrecision();
 		SetThreadPrecision(num_digits);
 		
-		complex_mp temp( RandomMp(num_digits), RandomMp(num_digits) );
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp const re = RandomMp(num_digits);
+		real_mp const im = RandomMp(num_digits);
+		complex_mp temp( re, im );
 		a = std::move(temp);
 		SetThreadPrecision(cached);
 	}
@@ -414,7 +438,10 @@ using bertini::RandomMp;
 		SetThreadPrecision(num_digits);
 		a.precision(num_digits);
 		
-		complex temp(RandomMp(num_digits),RandomMp(num_digits));
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp const re = RandomMp(num_digits);
+		real_mp const im = RandomMp(num_digits);
+		complex temp(re, im);
 		a = std::move(temp/abs(temp));   // normalize to modulus 1 (NOT sqrt(abs))
 		SetThreadPrecision(cached);
 	}

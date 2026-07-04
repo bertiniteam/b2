@@ -65,3 +65,21 @@ draw routes:
   order-independence parallel tracking requires.
 - The v0 records prototype's pickled-homotopy stopgap is now removable: a homotopy
   instance is a pure function of (ask, seed).
+
+## Addendum (2026-07-04): draw COMPOSITION order is part of the contract
+
+The cross-platform seeded-homotopy fixture caught an architecture split (x86_64 vs
+aarch64 computing different seed-42 homotopy digests) whose root cause was not the
+draws — the raw `b2rand/1` pins passed everywhere — but the ORDER two draws were
+composed into one complex number: expressions like `complex(RandomMp(...),
+RandomMp(...))` leave the evaluation order of the two draws unspecified in C++, and
+gcc really does order them differently on the two architectures (every (re, im) pair
+of every seeded coefficient was transposed between them).
+
+Contract, from this addendum forward: **component draws are sequenced explicitly,
+real part first, then imaginary — never two draws inside one full-expression.**  All
+eight such sites (`random.hpp`, `num_traits.hpp`) were rewritten with named
+`re`/`im` locals; the pinned seed-42 digest (minted on aarch64, which already
+evaluated left-to-right) is unchanged, and x86_64 now agrees with it.  Any future
+draw-composition helper must follow the same rule; the cross-platform fixture is the
+enforcement.

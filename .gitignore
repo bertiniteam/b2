@@ -123,3 +123,4 @@ bertini2_tests_*.log
 
 # Compiled benchmark binaries (keep the .cpp sources)
 /tuning/arithmetic_cost
+build_eg/
