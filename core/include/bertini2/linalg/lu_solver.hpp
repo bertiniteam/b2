@@ -164,9 +164,17 @@ private:
 			if (p != k)
 				lu_.row(k).swap(lu_.row(p));
 
-			// scale the sub-column below the pivot: l_ik = a_ik / a_kk (in place, no temp).
+			// scale the sub-column below the pivot by the reciprocal of the pivot -- one (costly)
+			// mpc division per column instead of one per sub-row, then cheap multiplies.  Pin recip_
+			// to the pivot's own precision first: during AMP the working precision changes, and a
+			// reciprocal left at a stale precision would contaminate the factorization (and, through
+			// the solution, trip the endgame's uniform-precision checks).
+			if constexpr (is_mp)
+				Precision(recip_, Precision(lu_(k, k)));
+			recip_ = 1;
+			recip_ /= lu_(k, k);                 // recip_ = 1 / a_kk, at the pivot's precision
 			for (unsigned i = k + 1; i < n_; ++i)
-				lu_(i, k) /= lu_(k, k);
+				lu_(i, k) *= recip_;             // l_ik = a_ik * (1 / a_kk)
 
 			// rank-1 trailing-submatrix update, reusing t_ for every multiply-subtract so the
 			// whole O(N^3) sweep allocates nothing beyond the scratch scalar.
@@ -189,6 +197,7 @@ private:
 			Precision(lu_, precision_);
 			Precision(y_, precision_);
 			Precision(t_, precision_);
+			Precision(recip_, precision_);   // re-pinned per pivot in FactorInPlace, but keep it valid
 			Precision(amax_, precision_);
 			Precision(acur_, precision_);
 		}
@@ -200,6 +209,7 @@ private:
 	std::vector<unsigned> piv_;      ///< Row pivots: piv_[k] is the row swapped into position k.
 	mutable Vec<NumT> y_;            ///< Solve scratch (permuted rhs / forward-sub result).
 	mutable NumT t_;                 ///< Reused scalar scratch for multiply-subtract.
+	NumT recip_;                     ///< Reused scratch: reciprocal of the current pivot.
 	RealT amax_;                     ///< Reused scratch: running max magnitude in pivot search.
 	RealT acur_;                     ///< Reused scratch: current magnitude in pivot search.
 };

@@ -47,6 +47,19 @@ namespace {
 			b(i) = NumT(0.5 + 0.1 * double(i), 0.3 - 0.05 * double(i));
 		return b;
 	}
+
+	// Well-conditioned but pivot-heavy: a diagonally dominant matrix with its rows cyclically
+	// shifted, so the dominant entries sit OFF the diagonal and partial pivoting must swap every
+	// row.  Same singular values as MakeMatrix (a row permutation), so still well conditioned.
+	template<typename NumT>
+	Mat<NumT> MakePivotMatrix(unsigned n)
+	{
+		Mat<NumT> D = MakeMatrix<NumT>(n);
+		Mat<NumT> A(n, n);
+		for (unsigned i = 0; i < n; ++i)
+			A.row(i) = D.row((i + 1) % n);
+		return A;
+	}
 }
 
 BOOST_AUTO_TEST_SUITE(LU_solver)
@@ -54,7 +67,7 @@ BOOST_AUTO_TEST_SUITE(LU_solver)
 // Custom solver must agree with Eigen's PartialPivLU (small residual, matching solution).
 BOOST_AUTO_TEST_CASE(parity_double)
 {
-	for (unsigned n : {3u, 5u, 20u, 50u})
+	for (unsigned n : {3u, 5u, 20u, 50u, 100u})
 	{
 		auto A = MakeMatrix<complex_dbl>(n);
 		auto b = MakeRHS<complex_dbl>(n);
@@ -80,7 +93,7 @@ BOOST_AUTO_TEST_CASE(parity_mp)
 	auto saved = bertini::DefaultPrecision();
 	bertini::DefaultPrecision(40);
 
-	for (unsigned n : {3u, 5u, 20u, 50u})
+	for (unsigned n : {3u, 5u, 20u, 50u, 100u})
 	{
 		auto A = MakeMatrix<complex_mp>(n);
 		auto b = MakeRHS<complex_mp>(n);
@@ -101,6 +114,45 @@ BOOST_AUTO_TEST_CASE(parity_mp)
 		BOOST_CHECK_SMALL(diff,  1e-30);
 	}
 
+	bertini::DefaultPrecision(saved);
+}
+
+// Pivot-heavy: dominant entries off the diagonal, so partial pivoting must swap every row.
+// Exercises the pivot-selection + row-swap path against Eigen on both scalar types.
+BOOST_AUTO_TEST_CASE(parity_pivoting)
+{
+	for (unsigned n : {5u, 20u, 60u})
+	{
+		auto Ad = MakePivotMatrix<complex_dbl>(n);
+		auto bd = MakeRHS<complex_dbl>(n);
+		Eigen::PartialPivLU<Mat<complex_dbl>> eld(Ad);
+		Vec<complex_dbl> xed = eld.solve(bd);
+		bertini::linalg::PartialPivLU<complex_dbl> bld;
+		bld.ChangeSize(n);
+		BOOST_CHECK(bld.Factor(Ad) == bertini::MatrixSuccessCode::Success);
+		Vec<complex_dbl> xcd(n);
+		bld.Solve(bd, xcd);
+		BOOST_CHECK_SMALL((Ad * xcd - bd).norm(), 1e-12);
+		BOOST_CHECK_SMALL((xcd - xed).norm(),      1e-12);
+	}
+
+	auto saved = bertini::DefaultPrecision();
+	bertini::DefaultPrecision(40);
+	for (unsigned n : {5u, 20u, 60u})
+	{
+		auto A = MakePivotMatrix<complex_mp>(n);
+		auto b = MakeRHS<complex_mp>(n);
+		Eigen::PartialPivLU<Mat<complex_mp>> elu(A);
+		Vec<complex_mp> xe = elu.solve(b);
+		bertini::linalg::PartialPivLU<complex_mp> blu;
+		blu.ChangeSize(n);
+		blu.ChangePrecision(40);
+		BOOST_CHECK(blu.Factor(A) == bertini::MatrixSuccessCode::Success);
+		Vec<complex_mp> xc(n);
+		blu.Solve(b, xc);
+		BOOST_CHECK_SMALL(static_cast<double>((A * xc - b).norm()), 1e-30);
+		BOOST_CHECK_SMALL(static_cast<double>((xc - xe).norm()),    1e-30);
+	}
 	bertini::DefaultPrecision(saved);
 }
 
