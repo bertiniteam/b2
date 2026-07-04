@@ -49,3 +49,26 @@ unclear — the pair is **save/load**).
   polish), as is `annotate()` and chained `point_ref` provenance (rung 6 proper).
 - The Python prototype (`prototypes/ledger_v0`) is superseded for solve/save/load and
   resume; it is retained until rung 6 retires its chain/curve demos.
+
+## Addendum (2026-07-03/04): the surface as it shipped
+
+Grown since the original decision, same principles:
+
+- **Chains**: `solve(B, homotopy=H, start=r1)` — a prior result's solutions chain
+  with `point_ref` provenance; raw arrays are archived as a *given* (`given_ref`
+  starts); the start-data identity joins the ask.
+- **Verbs**: `annotate(point, key, value)`; `solutions_of(run)` (cold-read any run's
+  endpoints — CLI-written included — as chainable Solutions); `provenance(point)`
+  (the walk back to a start label or given).
+- **Navigation/viz**: `runs()`/`tracks()` (pandas DataFrames; coordinates excluded
+  from tracks unless asked — million-path scale guard), `provenance_graph()`
+  (networkx DiGraph), `plot_chain()` (left-to-right lineage view; aggregates to
+  run-level above `max_paths_drawn`).
+- **The off switch is one line**: `bertini.recording(False)`; for the CLI/ambient,
+  an EMPTY `BERTINI_RECORDS_DIR`.  Off = bare solve, provenance honestly absent.
+- **Track verdicts are three-way** (success / diverged / failed — truncation is a
+  verdict, not a failure) with SuccessCode names recorded beside the integers;
+  tracks carry `endpoint_user` (+ run headers `variables_user`) so audits read the
+  user's coordinates.  `results.json` is the single results file: pretty-printed,
+  self-complete (`{"results", "runs"}` with definition refs); RESULTS.txt retired.
+- Run headers carry `producer {name, version, commit}` — descriptive, never identity.

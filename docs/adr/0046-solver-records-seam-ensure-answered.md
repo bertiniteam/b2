@@ -34,10 +34,19 @@ through it, and it runs only on the main/manager thread.  Therefore:
   crossing check works on a resumed run.  `Solve()`/`RunParallel()` then dispatch only
   the missing indices.  A re-track appends a fresh record; last-per-index wins on read.
 - **The ask** (`RecordsAsk`): op + tracker/endgame kind (stable `kRecordName` strings
-  on TrackerTraits/AlgoTraits — never typeid) + target `ContentDigest` + a
-  `SettingsDigest` over (ZeroDimConf, Tolerances, AutoRetrack, PostProcessing — fixed
-  documented order; extend by appending) + the global seed.  The run id is a hash
-  prefix of the ask.
+  on TrackerTraits/AlgoTraits — never typeid) + target `ContentDigest` + the homotopy
+  `ContentDigest` (redundant for seed-derived homotopies, the distinguishing slot for
+  user homotopies driven through the engine) + the settings digest + the global seed
+  + (for chained/given starts) the start-data identity.  The run id is a hash prefix
+  of the ask.
+- **The settings digest is over `CanonicalSettingsText()`** — ALL the configs the
+  solve reads, in one fixed documented order: ZeroDimConf, Tolerances, AutoRetrack,
+  PostProcessing; the tracker's Stepping, Newton, Predictor, precision config (fixed
+  or adaptive); then the endgame's configs in its AlgoTraits::NeededConfigs order.
+  The SAME text feeds the archived config JSON (extend by appending, never
+  reordering).  *(Updated 2026-07-03: originally only the four algorithm-level
+  configs; the tracker+endgame configs joined as the second plank of archiving the
+  algorithms.)*
 - **Attachment**: explicit `RecordTo(directory)`, or ambient via the
   `BERTINI_RECORDS_DIR` environment variable — attached on the manager rank only;
   workers never touch the records.  When neither is present, nothing records: the

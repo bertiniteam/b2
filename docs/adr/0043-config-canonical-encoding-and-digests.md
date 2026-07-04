@@ -69,3 +69,20 @@ Deliberate exclusions:
   those defaults is separate cleanup.
 - MPI verified (per-rung gate): CLI mpirun smoke (counts match serial, both
   start-system families) and the mpi4py zero-dim suite both green with this change.
+
+## Addendum (2026-07-03): the archived form is JSON; the digest preimage is unchanged
+
+Output directories archive a solve's configs under the settings digest as **pretty
+JSON** (`records::ConfigTextAsJson` — `{"schema", "digest", "configs": {Name:
+{field: value}}}`), derived mechanically from the canonical text with exact values
+preserved as strings.  The DIGEST contract stays on the `b2cfgenc/<n>` canonical text
+exactly as decided above; the JSON is a view, chosen because the directory's human
+and tool surfaces already speak JSON.
+
+Also: the settings digest for a zero-dim/homotopy solve now composes ALL configs the
+solve reads (algorithm + tracker + endgame; see ADR-0046) — the per-config encoders
+and the golden fixture are untouched by that composition change.
+
+Coordination note: PR #70 adds `CauchyConfig::num_pole_growth_rounds_before_truncation`;
+when it merges alongside the records arc, the Cauchy encoder must gain the field and
+the fixture regenerates (adding a config field REQUIRES extending its encoder).
