@@ -234,7 +234,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		"Run the zero-dim algorithm. Pass an mpi4py communicator for parallel execution.")
 	.def("record_to",
 		+[](AlgoT& self, std::string const& directory){
-			self.RecordTo(std::make_shared<bertini::records::OutputDirectory>(directory));
+			self.RecordTo(bertini::records::OutputDirectory::Shared(directory));
 		},
 		(boost::python::arg("self"), boost::python::arg("directory")),
 		"Attach a structured output directory at the given path: this solve records every "
