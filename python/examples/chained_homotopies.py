@@ -19,7 +19,7 @@ The family here is deliberately tiny but NOT all sunshine: its first solve has f
 paths of which two are TRUNCATED (the endgame's security check cuts them off as they
 flee toward infinity -- a verdict, not a failure), so the picture shows lineages that
 die at the first column and lineages that survive the whole chain.  Rerunning the
-script is (nearly) instant: every solve is ensure-answered, so recorded paths hydrate
+script is (nearly) instant: every solve is ensure-answered, so recorded paths recall
 instead of recomputing.
 """
 

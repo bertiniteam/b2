@@ -32,7 +32,7 @@ from bertini.multiprec import complex_mp
 from bertini.nag_algorithm import observers as nag_observers
 
 # we are here to WATCH tracking: with ambient recording on, a repeated identical solve
-# hydrates from the records and tracks nothing, so observers see nothing (see the
+# recalls from the records and tracks nothing, so observers see nothing (see the
 # observers tutorial's note and the your_records tutorial)
 bertini.recording(False)
 

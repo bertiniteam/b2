@@ -166,8 +166,8 @@ We will solve a degree-six univariate polynomial -- a total-degree homotopy with
 .. note::
 
    Why turn recording off?  If ambient recording is on (see :doc:`../your_records/index`),
-   a solve whose exact ask was already answered **hydrates** its results from the records
-   instead of tracking -- that is the resuming feature doing its job.  But a hydrated
+   a solve whose exact ask was already answered **recalls** its results from the records
+   instead of tracking -- that is the resuming feature doing its job.  But a recalled
    solve tracks no paths, so observers have nothing to observe.  This tutorial re-solves
    the same system with the same seed on purpose (to compare collectors on identical
    paths), so we run bare.  ``bertini.recording(True)`` puts things back.

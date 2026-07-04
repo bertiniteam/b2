@@ -22,10 +22,10 @@
 /**
 \file The records seam (ADR-0046): solve() is ensure-answered.  A recording solve emits
 a run header + one track record per path; an identical ask against the same directory
-hydrates instead of computing; a PARTIAL directory (the kill-and-rerun case) hydrates
+recalls instead of computing; a PARTIAL directory (the kill-and-rerun case) recalls
 what exists and computes only the rest; BERTINI_RECORDS_DIR attaches ambient records
 with zero API calls.  Seed-rooted randomness (ADR-0044) is what makes the rebuilt
-homotopy identical, so hydrated and computed results are directly comparable.
+homotopy identical, so recalled and computed results are directly comparable.
 */
 
 #include <cstdlib>
@@ -69,9 +69,9 @@ System TwoQuadrics()
 
 BOOST_AUTO_TEST_SUITE(zero_dim_records)
 
-BOOST_AUTO_TEST_CASE(recording_solve_then_full_hydration)
+BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 {
-	auto const dir = FreshDir("hydrate");
+	auto const dir = FreshDir("recall");
 
 	// first solve: records everything
 	SetGlobalSeed(42);
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_hydration)
 	a.DefaultSetup();
 	a.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	a.Solve();
-	BOOST_CHECK_EQUAL(a.NumPathsHydrated(), 0u);
+	BOOST_CHECK_EQUAL(a.NumPathsRecalled(), 0u);
 
 	unsigned runs = 0, tracks = 0;
 	for (auto const& rec : a.Records()->Scan())
@@ -104,16 +104,16 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_hydration)
 	BOOST_CHECK_EQUAL(runs, 1u);
 	BOOST_CHECK_EQUAL(tracks, 4u);
 
-	// identical ask (same seed => same homotopy, ADR-0044): hydrates, computes nothing
+	// identical ask (same seed => same homotopy, ADR-0044): recalls, computes nothing
 	SetGlobalSeed(42);
 	auto sys_b = TwoQuadrics();
 	ZD b(sys_b);
 	b.DefaultSetup();
 	b.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	b.Solve();
-	BOOST_CHECK_EQUAL(b.NumPathsHydrated(), 4u);
+	BOOST_CHECK_EQUAL(b.NumPathsRecalled(), 4u);
 
-	// hydrated state is identical to computed state (same installer, same records)
+	// recalled state is identical to computed state (same installer, same records)
 	auto const& first = a.SolutionsInternalCoords();
 	auto const& again = b.SolutionsInternalCoords();
 	BOOST_REQUIRE_EQUAL(first.size(), again.size());
@@ -160,14 +160,14 @@ BOOST_AUTO_TEST_CASE(partial_directory_resumes_computing_only_the_missing)
 		partial.PutDefinition(full.Records()->GetDefinition(target_id), target_id);
 	}
 
-	// the rerun: hydrates 2, computes 2, and the answers match the uninterrupted solve
+	// the rerun: recalls 2, computes 2, and the answers match the uninterrupted solve
 	SetGlobalSeed(42);
 	auto sys_resumed = TwoQuadrics();
 	ZD resumed(sys_resumed);
 	resumed.DefaultSetup();
 	resumed.RecordTo(std::make_shared<records::OutputDirectory>(partial_dir));
 	resumed.Solve();
-	BOOST_CHECK_EQUAL(resumed.NumPathsHydrated(), 2u);
+	BOOST_CHECK_EQUAL(resumed.NumPathsRecalled(), 2u);
 
 	auto const& expected = full.SolutionsInternalCoords();
 	auto const& actual = resumed.SolutionsInternalCoords();
@@ -175,14 +175,14 @@ BOOST_AUTO_TEST_CASE(partial_directory_resumes_computing_only_the_missing)
 	for (std::size_t ii = 0; ii < expected.size(); ++ii)
 		BOOST_CHECK_SMALL((expected[ii] - actual[ii]).norm(), 1e-14);
 
-	// and the partial directory is now complete: a further rerun hydrates everything
+	// and the partial directory is now complete: a further rerun recalls everything
 	SetGlobalSeed(42);
 	auto sys_again = TwoQuadrics();
 	ZD again(sys_again);
 	again.DefaultSetup();
 	again.RecordTo(std::make_shared<records::OutputDirectory>(partial_dir));
 	again.Solve();
-	BOOST_CHECK_EQUAL(again.NumPathsHydrated(), 4u);
+	BOOST_CHECK_EQUAL(again.NumPathsRecalled(), 4u);
 }
 
 BOOST_AUTO_TEST_CASE(different_seed_is_a_different_ask)
@@ -196,13 +196,13 @@ BOOST_AUTO_TEST_CASE(different_seed_is_a_different_ask)
 	a.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	a.Solve();
 
-	SetGlobalSeed(43);   // different homotopy instance: nothing to hydrate
+	SetGlobalSeed(43);   // different homotopy instance: nothing to recall
 	auto sys_b = TwoQuadrics();
 	ZD b(sys_b);
 	b.DefaultSetup();
 	b.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	b.Solve();
-	BOOST_CHECK_EQUAL(b.NumPathsHydrated(), 0u);
+	BOOST_CHECK_EQUAL(b.NumPathsRecalled(), 0u);
 
 	unsigned runs = 0;
 	for (auto const& rec : b.Records()->Scan())
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(different_seed_is_a_different_ask)
 
 // Named regression (user, 2026-07-03): a path the endgame truncates near infinity is a
 // VERDICT, not a failure -- the records must say "diverged", never "failed", or a
-// cyclic5 audit shows 50 phantom failures.  And diverged paths hydrate like any other:
+// cyclic5 audit shows 50 phantom failures.  And diverged paths recall like any other:
 // every tracked path is in the store, so fails/divergences are auditable and memoized.
 BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 {
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 	BOOST_CHECK_EQUAL(diverged, 2u);
 	BOOST_CHECK_EQUAL(failed, 0u);
 
-	// diverged paths are answers: a rerun hydrates ALL of them, recomputing none
+	// diverged paths are answers: a rerun recalls ALL of them, recomputing none
 	SetGlobalSeed(42);
 	auto x2 = Variable::Make("x");
 	auto y2 = Variable::Make("y");
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 	again.DefaultSetup();
 	again.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	again.Solve();
-	BOOST_CHECK_EQUAL(again.NumPathsHydrated(), 4u);
+	BOOST_CHECK_EQUAL(again.NumPathsRecalled(), 4u);
 }
 
 BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)

@@ -139,14 +139,14 @@ class SolveResult:
     """What ``solve`` returns: the solutions plus a claim ticket on the recorded run.
 
     Forgetting to capture it loses nothing -- the records hold the truth; another
-    ``solve`` of the same ask re-mints an equivalent result (hydrated, not recomputed).
+    ``solve`` of the same ask re-mints an equivalent result (recalled, not recomputed).
     """
 
-    def __init__(self, solutions, run_id, directory, num_hydrated, solver):
+    def __init__(self, solutions, run_id, directory, num_recalled, solver):
         self.solutions = solutions          #: list[Solution]: the finite solutions, user coordinates
         self.run_id = run_id                #: str: the recorded run's id ({run, index} is a point reference)
         self.directory = directory          #: str: the records directory this run lives in
-        self.num_hydrated = num_hydrated    #: int: paths taken from the records instead of computed
+        self.num_recalled = num_recalled    #: int: paths taken from the records instead of computed
         self._solver = solver               # kept alive: the power-user escape hatch
 
     def __len__(self):
@@ -159,8 +159,8 @@ class SolveResult:
         return self.solutions[k]
 
     def __repr__(self):
-        return ("SolveResult(%d solutions, run %s, %d hydrated, records at %s)"
-                % (len(self.solutions), self.run_id, self.num_hydrated, self.directory))
+        return ("SolveResult(%d solutions, run %s, %d recalled, records at %s)"
+                % (len(self.solutions), self.run_id, self.num_recalled, self.directory))
 
     @property
     def solver(self):
@@ -320,7 +320,7 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
                  for m in zd.solution_metadata() if m.is_finite]
 
     result = SolveResult(solutions, run_id, where if run_id else None,
-                         int(zd.num_paths_hydrated()), zd)
+                         int(zd.num_paths_recalled()), zd)
     if run_id:
         # top-level solves auto-declare their deliverable: "what were my solutions?"
         save("solutions [run %s]" % run_id, result,

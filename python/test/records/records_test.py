@@ -13,7 +13,7 @@
 #  See <http://www.gnu.org/licenses/> for a copy of the license, as well as COPYING.
 
 """The casual records surface (arc rung 5): solve / save / load, the Solution type,
-and ensure-answered hydration.  Correctness of the seam lives in C++
+and ensure-answered recall.  Correctness of the seam lives in C++
 (test_nag_algorithms/zero_dim_records); these pin the Python feel."""
 
 import json
@@ -34,15 +34,15 @@ def circle_line():
     return s
 
 
-def test_solve_records_and_rerun_hydrates(tmp_path):
+def test_solve_records_and_rerun_recalls(tmp_path):
     d = str(tmp_path / 'records')
     first = pb.solve(circle_line(), seed=42, directory=d)
     assert len(first) == 2
-    assert first.num_hydrated == 0
+    assert first.num_recalled == 0
     assert first.run_id
 
     again = pb.solve(circle_line(), seed=42, directory=d)
-    assert again.num_hydrated == 2          # ensure-answered: nothing recomputed
+    assert again.num_recalled == 2          # ensure-answered: nothing recomputed
     assert again.run_id == first.run_id
     for a, b in zip(first, again):
         assert all(abs(complex(u) - complex(v)) < 1e-12 for u, v in zip(a, b))
@@ -205,7 +205,7 @@ def test_chained_solve_records_point_refs(tmp_path):
         st['kind'] == 'point_ref' and st['run'] == r1.run_id for st in starts)
 
 
-def test_chained_solve_hydrates_on_rerun(tmp_path):
+def test_chained_solve_recalls_on_rerun(tmp_path):
     """A chained ask is an ask like any other: the identical rerun computes nothing."""
     from bertini.nag_algorithm import blend_homotopy
     d = str(tmp_path / 'records')
@@ -215,12 +215,12 @@ def test_chained_solve_hydrates_on_rerun(tmp_path):
     pb.set_random_seed = None   # noqa -- explicit seeds below control everything
     r1 = pb.solve(A, seed=42, directory=d)
     first = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1, seed=7, directory=d)
-    assert first.num_hydrated == 0
+    assert first.num_recalled == 0
 
-    r1b = pb.solve(A, seed=42, directory=d)      # hydrates r1
-    assert r1b.num_hydrated == 2
+    r1b = pb.solve(A, seed=42, directory=d)      # recalls r1
+    assert r1b.num_recalled == 2
     again = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1b, seed=7, directory=d)
-    assert again.num_hydrated == 2
+    assert again.num_recalled == 2
 
 
 def test_raw_start_points_become_a_given(tmp_path):
@@ -277,7 +277,7 @@ def test_depth_4_provenance_walk(tmp_path):
     assert {c.provenance['index'] for c in cold} == {0, 1}
     resumed = pb.solve(systems[2], homotopy=blend_homotopy(systems[2], systems[1]),
                        start=cold, seed=42, directory=d)
-    assert resumed.num_hydrated == 2      # identical ask as results[2]: pure memo
+    assert resumed.num_recalled == 2      # identical ask as results[2]: pure memo
 
 
 def test_recording_off_is_one_line(tmp_path, monkeypatch):

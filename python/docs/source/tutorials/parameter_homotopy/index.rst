@@ -114,7 +114,7 @@ Those two lines back at the top were not decoration.  Naming the ambient directo
 not just :func:`bertini.solve`.  Every solve above wrote durable records of what it
 computed, and every solve *consults* the records before computing.  The pinned seed is
 what makes that pay: with the same seed a rerun of the script rebuilds the *same*
-homotopies (randomness is seed-rooted), so every already-answered solve hydrates from
+homotopies (randomness is seed-rooted), so every already-answered solve recalls from
 the records instead of tracking again.  Kill a thousand-member sweep at member 700 and
 rerun -- the first 700 come back instantly and the sweep continues where it died.
 Without a pinned seed each run draws fresh randomness, and there is nothing to resume

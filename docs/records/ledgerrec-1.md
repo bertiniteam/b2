@@ -56,7 +56,7 @@ scoped by their run.
     "producer":{"name","version","commit"}, "num_paths":N, ...op-specific fields...}`
   `producer` says which software wrote the record (commit is `unknown` for builds
   outside a git checkout); it is descriptive ONLY -- never part of the ask identity,
-  so a newer build answering the same ask hydrates rather than recomputes.
+  so a newer build answering the same ask recalls rather than recomputes.
   The `ask` is what was requested (target digest + config digest(s) + seed); the run id
   is a hash of the ask.  Op-specific fields describe how start points arise: recorded
   values (`start_points`, exact coordinate text), or a reference to an ancestor run

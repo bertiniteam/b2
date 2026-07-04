@@ -26,8 +26,8 @@
 
 The whole-path result (parallel/path_result.hpp) is the manager-side unit of completed
 work in every topology (serial / threaded / MPI): StoreFullPathResult is the single
-installation point.  So a track record IS a serialized FullPathResult, and hydration is
-decoding one and replaying it through the same installer -- hydrated solver state is
+installation point.  So a track record IS a serialized FullPathResult, and recall is
+decoding one and replaying it through the same installer -- recalled solver state is
 identical to computed state BY CONSTRUCTION.
 
 Scalar encodings are exact and human-readable: doubles as %.17g decimal (round-trips
@@ -215,7 +215,7 @@ boost::json::object EncodeFullPathResult(parallel::FullPathResult<ComplexT> cons
 	return out;
 }
 
-/// \brief Reconstruct a whole-path result from a track record (the hydration half).
+/// \brief Reconstruct a whole-path result from a track record (the recall half).
 template <typename ComplexT>
 parallel::FullPathResult<ComplexT> DecodeFullPathResult(boost::json::object const& rec,
                                                         std::size_t path_index)

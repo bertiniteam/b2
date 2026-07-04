@@ -240,7 +240,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		"Attach a structured output directory at the given path: this solve records every "
 		"path as it completes (durable, plain-text, see the directory's README.txt) and "
 		"consults the records before computing -- an identical ask (same system, settings, "
-		"seed) hydrates from the records instead of re-tracking, so a crashed solve resumes "
+		"seed) recalls from the records instead of re-tracking, so a crashed solve resumes "
 		"by simply calling solve() again.  Also attachable ambiently via the "
 		"BERTINI_RECORDS_DIR environment variable, with no code at all.")
 	.def("records_path",
@@ -256,10 +256,10 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		(boost::python::arg("self")),
 		"This solve's run id in the records (empty until a recording solve() runs).  "
 		"Points are referenced as {run, index} pairs; this is the run half.")
-	.def("num_paths_hydrated",
-		+[](AlgoT const& self){ return self.NumPathsHydrated(); },
+	.def("num_paths_recalled",
+		+[](AlgoT const& self){ return self.NumPathsRecalled(); },
 		(boost::python::arg("self")),
-		"How many paths the last solve() hydrated from the records instead of computing "
+		"How many paths the last solve() recalled from the records instead of computing "
 		"(0 on a fresh solve; num_paths on a full memo hit).")
 	.def("refresh_results",
 		+[](AlgoT& self){ if (self.Records()) self.Records()->RefreshResults(); },

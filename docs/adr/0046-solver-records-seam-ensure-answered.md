@@ -28,8 +28,8 @@ through it, and it runs only on the main/manager thread.  Therefore:
   multiprecision as full-precision decimal + precision).  Emission is a tail call in
   `StoreFullPathResult` (plus explicit emits on the direct-install serial path and the
   re-track lambda) — single-writer by construction, no locks.
-- **Hydration replays records through the same installer**: recorded paths are decoded
-  to `FullPathResult`s and passed to `StoreFullPathResult`, so hydrated state is
+- **Recall replays records through the same installer**: recorded paths are decoded
+  to `FullPathResult`s and passed to `StoreFullPathResult`, so recalled state is
   identical to computed state BY CONSTRUCTION — boundary data included, so the midpath
   crossing check works on a resumed run.  `Solve()`/`RunParallel()` then dispatch only
   the missing indices.  A re-track appends a fresh record; last-per-index wins on read.
@@ -57,17 +57,17 @@ through it, and it runs only on the main/manager thread.  Therefore:
 - **The CLI, killed and rerun, finishes — with zero new flags** (demonstrated: SIGKILL
   mid-run, rerun completes, one run header, every path recorded once).  Under
   `mpirun`, records are written by the manager alone (one history file) and an MPI
-  rerun fully hydrates — identical `main_data`, zero recomputation.  Note: OpenMPI
+  rerun fully recalls — identical `main_data`, zero recomputation.  Note: OpenMPI
   does not forward arbitrary environment variables to ranks; use
   `mpirun -x BERTINI_RECORDS_DIR ...` (only the manager needs it, but forwarding is
   the reliable habit).
-- Tested (test_nag_algorithms/zero_dim_records): record-then-hydrate equivalence to
+- Tested (test_nag_algorithms/zero_dim_records): record-then-recall equivalence to
   1e-14; PARTIAL directory resumes computing only the missing paths and matches the
   uninterrupted solve; a different seed is a different ask (two run headers, one
   directory); ambient env attachment.
-- Hydration trusts the records (coordinates are a cache of the recorded computation);
-  classification (PostEGAction) reruns over hydrated metadata identically.
-- The `hydrating_` flag suppresses re-emission during replay; emission requires an
+- Recall trusts the records (coordinates are a cache of the recorded computation);
+  classification (PostEGAction) reruns over recalled metadata identically.
+- The `recalling_` flag suppresses re-emission during replay; emission requires an
   attached directory and a run id, so mis-ordered calls are inert rather than wrong.
 - Known scope edges (deliberate): `SharpeningConfig`/`MidPathConfig` are not yet in
   the settings digest (appending them later changes future asks only); the

@@ -689,7 +689,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 							[this](Result const& r){ StoreFullPathResult(r); });
 					};
 
-					// the records seam (ADR-0046): the manager is the sole writer; hydrate what
+					// the records seam (ADR-0046): the manager is the sole writer; recall what
 					// is already recorded and dispatch only the rest
 					MaybeAttachAmbientRecords();
 					std::vector<SolnIndT> indices_to_run;
@@ -698,7 +698,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					if (records_)
 					{
 						EnsureRunRecorded();
-						indices_to_run = HydrateRecordedPaths(indices_to_run);
+						indices_to_run = RecallRecordedPaths(indices_to_run);
 					}
 
 					std::queue<Task> queue;
@@ -1077,14 +1077,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					all_indices[ii]  = idx;
 				}
 
-				// the records seam (ADR-0046): ensure the run is on record, hydrate any paths
+				// the records seam (ADR-0046): ensure the run is on record, recall any paths
 				// already recorded (solve() is ensure-answered), and compute only the rest
 				MaybeAttachAmbientRecords();
 				std::vector<SolnIndT> indices_to_run = all_indices;
 				if (records_)
 				{
 					EnsureRunRecorded();
-					indices_to_run = HydrateRecordedPaths(all_indices);
+					indices_to_run = RecallRecordedPaths(all_indices);
 				}
 
 				// num_threads: 0 = auto (hardware_concurrency), 1 = serial, N = N threads;
@@ -2113,8 +2113,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			/// \brief The attached output directory (null when not recording).
 			std::shared_ptr<records::OutputDirectory> const& Records() const { return records_; }
 
-			/// \brief How many paths the last Solve() hydrated from records instead of computing.
-			unsigned long long NumPathsHydrated() const { return num_hydrated_; }
+			/// \brief How many paths the last Solve() recalled from records instead of computing.
+			unsigned long long NumPathsRecalled() const { return num_recalled_; }
 
 			/// \brief This solve's run id in the records (empty when not recording).
 			std::string const& RecordsRunId() const { return records_run_id_; }
@@ -2279,7 +2279,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				header["run"] = records_run_id_;
 				header["op"] = "zerodim";
 				// which software wrote this -- descriptive only, NEVER part of the ask
-				// identity (a newer build answering the same ask must still hydrate)
+				// identity (a newer build answering the same ask must still recall)
 				header["producer"] = records::ProducerInfo();
 				header["ask"] = ask;
 				header["target_object"] = target_definition;
@@ -2309,14 +2309,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 			/**
-			\brief Hydrate recorded paths into the solver's state and return the indices
+			\brief Recall recorded paths into the solver's state and return the indices
 			still to compute.
 
 			Each recorded path is decoded to a FullPathResult and replayed through
-			StoreFullPathResult -- hydrated state is identical to computed state by
+			StoreFullPathResult -- recalled state is identical to computed state by
 			construction (boundary data included, so the midpath check works on resume).
 			*/
-			std::vector<SolnIndT> HydrateRecordedPaths(std::vector<SolnIndT> const& all_indices)
+			std::vector<SolnIndT> RecallRecordedPaths(std::vector<SolnIndT> const& all_indices)
 			{
 				std::map<std::size_t, boost::json::object> recorded;   // last record per index wins
 				for (auto const& rec : records_->Scan())
@@ -2331,8 +2331,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 						recorded[static_cast<std::size_t>(idx->as_int64())] = rec;
 				}
 
-				num_hydrated_ = 0;
-				hydrating_ = true;
+				num_recalled_ = 0;
+				recalling_ = true;
 				std::vector<SolnIndT> missing;
 				for (auto const idx : all_indices)
 				{
@@ -2344,20 +2344,20 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					}
 					StoreFullPathResult(
 						records::DecodeFullPathResult<BaseComplexT>(found->second, idx));
-					++num_hydrated_;
+					++num_recalled_;
 				}
-				hydrating_ = false;
+				recalling_ = false;
 				return missing;
 			}
 
 			/**
 			\brief Emit the track record for one completed path (called from
-			StoreFullPathResult on the main/manager thread; no-op while hydrating or when
+			StoreFullPathResult on the main/manager thread; no-op while recalling or when
 			not recording).
 			*/
 			void RecordCompletedPath(parallel::FullPathResult<BaseComplexT> const& r)
 			{
-				if (!records_ || hydrating_ || records_run_id_.empty())
+				if (!records_ || recalling_ || records_run_id_.empty())
 					return;
 				auto record = records::EncodeFullPathResult(r);
 				record["kind"] = "track";
@@ -2393,8 +2393,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			std::string records_run_id_;      ///< This solve's run id in the records (ask hash prefix).
 			std::vector<boost::json::object> records_start_refs_;  ///< Per-path start provenance (point_ref/given_ref); empty = canonical start labels.
 			std::string records_start_identity_;  ///< Identity of externally supplied start data (joins the ask); empty = starts derive from target+seed.
-			bool hydrating_ = false;          ///< True while replaying recorded paths (suppresses re-emission).
-			unsigned long long num_hydrated_ = 0;  ///< Paths hydrated from records in the last Solve().
+			bool recalling_ = false;          ///< True while replaying recorded paths (suppresses re-emission).
+			unsigned long long num_recalled_ = 0;  ///< Paths recalled from records in the last Solve().
 
 			unsigned long long num_start_points_;  ///< Number of start points the start system produces.
 			NumErrorT midpath_retrack_tolerance_;  ///< Tolerance used when re-tracking paths flagged by the midpath check.

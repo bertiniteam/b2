@@ -16,7 +16,7 @@ unclear — the pair is **save/load**).
 
 - **Python** (`bertini.records`, re-exported at top level):
   - `solve(system, seed=None, directory=None, ...)` — builds the default ZeroDim
-    solver, attaches the ambient directory, solves (ensure-answered: hydration via the
+    solver, attaches the ambient directory, solves (ensure-answered: recall via the
     seam), auto-declares its finite solutions as a result, and returns a `SolveResult`:
     a claim ticket (run id + directory + solutions) that is safe to drop.
   - `save(thing)` / `save(name, thing)` — a solve result is declared with full
@@ -28,7 +28,7 @@ unclear — the pair is **save/load**).
     absent).  `records_dir()` gets/sets the ambient directory
     (`BERTINI_RECORDS_DIR`, else `./bertini_output`).
   - Bindings: solver-level `record_to(path)` / `records_run_id()` /
-    `num_paths_hydrated()` / `records_path()` / `refresh_results()` on every solver
+    `num_paths_recalled()` / `records_path()` / `refresh_results()` on every solver
     (ZDVisitor), and a minimal `_pybertini.records.OutputDirectory` for WRITING through
     the single C++ implementation (reading is plain json — the point of the format).
 - **CLI**: records are on by default — `bertini2` writes `bertini_output` beside the

@@ -76,11 +76,11 @@ The three verbs
                                                          # normally you write NOTHING and get ./bertini_output
 
    sols = pb.solve(s, seed=42, directory=where)
-   print(len(sols), 'solutions, hydrated', sols.num_hydrated)
+   print(len(sols), 'solutions, recalled', sols.num_recalled)
 
 .. testoutput::
 
-   2 solutions, hydrated 0
+   2 solutions, recalled 0
 
 Solve it *again* — same system, same seed — and nothing is recomputed: the answers come
 back from the records.
@@ -88,11 +88,11 @@ back from the records.
 .. testcode::
 
    again = pb.solve(s, seed=42, directory=where)
-   print('hydrated', again.num_hydrated, 'of', len(again))
+   print('recalled', again.num_recalled, 'of', len(again))
 
 .. testoutput::
 
-   hydrated 2 of 2
+   recalled 2 of 2
 
 Each solution is the numpy-like point you expect, and it *remembers where it came from*:
 
@@ -214,5 +214,5 @@ the points), and :func:`bertini.plot_chain` (the chain drawn left to right).  Th
 are the subject of :doc:`../chained_homotopies/index`.
 
 Power users: the solver objects underneath expose the same machinery —
-``solver.record_to(path)``, ``solver.num_paths_hydrated()``, ``solver.records_run_id()``
+``solver.record_to(path)``, ``solver.num_paths_recalled()``, ``solver.records_run_id()``
 — and the full record schema is documented in ``docs/records/ledgerrec-1.md``.

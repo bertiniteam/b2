@@ -27,7 +27,7 @@
 
 An archive read in ten years should say which binary wrote it.  The producer is
 DESCRIPTIVE only -- it is never part of the ask identity, so a newer build answering
-the same ask still hydrates the old answer rather than recomputing.
+the same ask still recalls the old answer rather than recomputing.
 */
 
 #pragma once
