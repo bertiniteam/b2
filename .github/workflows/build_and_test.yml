@@ -240,7 +240,10 @@ jobs:
     if: ${{ inputs.minimal != true }}
     needs: [doc_lint]
     runs-on: windows-latest
-    timeout-minutes: 40   # backstop against a hang; the clang-cl build+test is ~22 min
+    timeout-minutes: 60   # backstop against a hang; the clang-cl build+test is ~22 min
+                          # warm, but a cache-cold rerun on a slow runner legitimately
+                          # needs ~40 (observed 2026-07-05: all tests PASSED, then the
+                          # 40-min axe fell during post-job cache packing)
     env:
       CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
     steps:
