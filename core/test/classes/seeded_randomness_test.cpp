@@ -95,6 +95,34 @@ BOOST_AUTO_TEST_CASE(seeded_session_draws_are_pinned)
 
 // ---- reproducibility semantics ----
 
+// The effective per-solve seed: DeriveSolveSeed captures the session stream's current
+// position, so a seedless solve records a seed that reproduces it STANDALONE instead
+// of a session master that silently under-determines a mid-session run.
+BOOST_AUTO_TEST_CASE(derived_solve_seeds_capture_the_stream_deterministically)
+{
+	SetGlobalSeed(42);
+	auto const s1 = DeriveSolveSeed();
+	auto const s2 = DeriveSolveSeed();
+	BOOST_CHECK(s1 != 0u);                       // 0 means "entropy" to SetGlobalSeed
+	BOOST_CHECK(s1 != s2);                       // consecutive solves get distinct seeds
+	BOOST_CHECK(s1 <= 0xFFFFFFFFul);             // 32-bit portable (Windows unsigned long)
+	BOOST_CHECK(s2 <= 0xFFFFFFFFul);
+
+	SetGlobalSeed(42);                           // same master =>
+	BOOST_CHECK_EQUAL(DeriveSolveSeed(), s1);    // the same derived seeds, in order
+	BOOST_CHECK_EQUAL(DeriveSolveSeed(), s2);
+
+	// DELIBERATELY independent of the draw streams: a multithreaded solve leaves the
+	// calling thread's stream at a scheduling-dependent position, so the derivation
+	// must not read it -- intervening draws change nothing
+	SetGlobalSeed(42);
+	(void)RandomRat();
+	BOOST_CHECK_EQUAL(DeriveSolveSeed(), s1);
+
+	SetGlobalSeed(43);                           // different master, different chain
+	BOOST_CHECK(DeriveSolveSeed() != s1);
+}
+
 BOOST_AUTO_TEST_CASE(same_seed_same_draws_different_seed_different_draws)
 {
 	SetGlobalSeed(42);

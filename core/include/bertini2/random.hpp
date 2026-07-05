@@ -82,6 +82,28 @@ namespace bertini
 	*/
 	unsigned long DerivedWorkerSeed(uint64_t worker_index);
 
+	/**
+	Derive an EFFECTIVE PER-SOLVE SEED from the current master.
+
+	A seedless solve's setup draws (gamma, patch, start coefficients) come sequentially
+	off the session stream, so they depend on everything drawn before -- recording the
+	session master seed under-determines such a run.  Instead, the solve surface calls
+	this at solve start when no explicit seed was given, passes the result to
+	SetGlobalSeed, and records it as the run's ask seed: replaying that one number
+	standalone rebuilds the identical homotopy.
+
+	The derivation is (master, solve ordinal) through pure integer mixing -- NOT a draw
+	from the thread-local streams, whose position after a multithreaded solve is
+	scheduling-dependent.  SetGlobalSeed resets the ordinal, and the solve surface
+	rekeys to each derived seed, so consecutive seedless solves form a deterministic
+	seed chain from the initial master: same master, same sequence of solves, same
+	seeds -- on every platform (the value is masked to 32 bits for LLP64 Windows).
+	Never returns 0 (SetGlobalSeed treats 0 as "draw from entropy").
+
+	\return A nonzero seed for this solve, ready for SetGlobalSeed and the ask record.
+	*/
+	unsigned long DeriveSolveSeed();
+
 
 	/**
 	Generate a random integer number between -10^digits and 10^digits

@@ -263,7 +263,11 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
     seed : int, optional
         The reproducibility seed.  ``solve(sys, seed=42)`` means the same homotopy --
         the same gamma, start points, and patch -- forever, on every machine.  Omitted:
-        a fresh seed is drawn (and recorded in the run's ask).
+        an EFFECTIVE seed is derived for this solve and the solve runs under it, so
+        the seed recorded in the run's ask reproduces that run standalone -- a
+        mid-session solve does not silently depend on the session's earlier draw
+        history.  (Consecutive seedless solves get distinct seeds, chained
+        deterministically from ``set_random_seed``'s master when one was set.)
     directory : str, optional
         Records directory override; default is ambient (see ``records_dir``).
     homotopy : System, optional
@@ -286,13 +290,19 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
         the run id -- a claim ticket, safe to drop.
     """
     from bertini import nag_algorithm as _nag
-    from bertini.random import set_random_seed as _set_seed
+    from bertini.random import set_random_seed as _set_seed, derive_solve_seed as _derive_seed
 
     if (homotopy is None) != (start is None):
         raise ValueError("solve: homotopy= and start= go together (a chained solve "
                          "needs both the homotopy and where its paths start)")
-    if seed is not None:
-        _set_seed(seed)
+    if seed is None:
+        # derive this solve's own effective seed: the run's recorded seed must
+        # reproduce the run STANDALONE, never depend on the session's earlier draw
+        # history.  (A chained solve's homotopy was built before this line -- its
+        # exact coefficients are archived in definitions/ by the run header, so
+        # nothing is lost there either.)
+        seed = _derive_seed()
+    _set_seed(seed)
 
     where = str(directory if directory is not None else records_dir())
     if homotopy is not None:

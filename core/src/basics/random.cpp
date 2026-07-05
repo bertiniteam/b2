@@ -55,6 +55,12 @@ std::atomic<unsigned long> g_global_seed{0};
 constexpr uint64_t kDomainSetup  = 0x5e7400000000ULL; // "setup"  -- SetGlobalSeed
 constexpr uint64_t kDomainPath   = 0x9a7400000000ULL; // "path"   -- per-path tracking streams
 constexpr uint64_t kDomainWorker = 0x107ce000000ULL;  // "worker" -- per-rank child seeds (MPI)
+constexpr uint64_t kDomainSolve  = 0x501e000000000ULL; // "solve"  -- effective per-solve seeds
+
+// Ordinal of the next DeriveSolveSeed call under the current master; reset by SetGlobalSeed
+// so (master, ordinal) is well-defined.  Since a solve rekeys to its own effective seed,
+// consecutive seedless solves form a deterministic seed CHAIN from the initial master.
+std::atomic<uint64_t> g_solve_ordinal{0};
 
 // Seed the engine from the FULL (master, domain, index) tuple via std::seed_seq.  Using the whole
 // 64-bit words (not a uint32_t truncation) means distinct tuples set distinct mt19937 states, so
@@ -99,6 +105,7 @@ void SetGlobalSeed(unsigned long seed)
 		if (seed == 0) seed = 1;
 	}
 	g_global_seed.store(seed, std::memory_order_relaxed);
+	g_solve_ordinal.store(0, std::memory_order_relaxed);   // (master, ordinal) restarts here
 	// the setup stream: domain = setup, index = 0.  Path/worker streams use other domains, so none
 	// of them can ever reproduce this stream (the old ReseedThisThread(0) == SetGlobalSeed collision).
 	SeedEngine(g_thread_engine, static_cast<uint64_t>(seed), kDomainSetup, 0);
@@ -124,6 +131,25 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
 	uint64_t h = splitmix64(s ^ kDomainWorker ^ splitmix64(worker_index));
 	if (h == 0) h = 1; // SetGlobalSeed treats 0 as "draw from entropy"; avoid that
 	return static_cast<unsigned long>(h);
+}
+
+unsigned long DeriveSolveSeed()
+{
+	// (master, solve ordinal) -> child seed, pure integer arithmetic (splitmix64):
+	// identical on every platform, and DELIBERATELY independent of the thread-local
+	// draw streams -- after a multithreaded solve the calling thread's stream position
+	// depends on which paths it happened to track, so deriving from a stream would be
+	// scheduling-dependent.  Since the solve surface rekeys to the returned seed
+	// (SetGlobalSeed resets the ordinal), consecutive seedless solves form a
+	// deterministic seed chain from the initial master.  Masked to 32 bits so the
+	// value is identical on LP64 and LLP64 (Windows) platforms.
+	uint64_t const master = static_cast<uint64_t>(GetGlobalSeed());
+	uint64_t const ordinal = g_solve_ordinal.fetch_add(1, std::memory_order_relaxed);
+	uint64_t const h = splitmix64(master ^ kDomainSolve ^ splitmix64(ordinal));
+	unsigned long s = static_cast<unsigned long>(h & 0xFFFFFFFFull);
+	if (s == 0) s = static_cast<unsigned long>(h >> 32);   // deterministic nonzero fallback
+	if (s == 0) s = 1;                                     // 0 means "entropy" to SetGlobalSeed
+	return s;
 }
 
 

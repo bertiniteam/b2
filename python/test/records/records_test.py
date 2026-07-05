@@ -81,6 +81,106 @@ def test_save_and_load_round_trip(tmp_path):
     assert pb.load('notes', directory=d)['value'] == {'count': 2, 'nice': True}
 
 
+def _run_headers(d):
+    """All run-header records in a directory, oldest first."""
+    headers = []
+    for journal in sorted((d / 'history').glob('*.jsonl')):
+        for line in journal.read_text().splitlines():
+            if line.strip():
+                rec = json.loads(line)
+                if rec.get('kind') == 'run':
+                    headers.append(rec)
+    return headers
+
+
+def test_seedless_solve_records_a_self_sufficient_seed(tmp_path):
+    """A seedless mid-session solve must not depend on the session's earlier draw
+    history: the seed it records is an EFFECTIVE seed captured from the stream at
+    solve start, and replaying it standalone reproduces the identical run."""
+    pb.random.set_random_seed(1001)
+    pb.solve(circle_line(), directory=str(tmp_path / 'warmup'))   # draw history happens
+
+    mid = pb.solve(circle_line(), directory=str(tmp_path / 'mid'))
+    (header,) = _run_headers(tmp_path / 'mid')
+    recorded_seed = header['ask']['seed']
+    assert recorded_seed != 1001   # the session master would under-determine this run
+
+    # a FRESH context: the recorded seed alone rebuilds the identical homotopy => the
+    # identical ask => the identical run id (a separate directory, so this is a
+    # recomputation, not a recall)
+    replay = pb.solve(circle_line(), seed=recorded_seed, directory=str(tmp_path / 'replay'))
+    assert replay.run_id == mid.run_id
+    (replay_header,) = _run_headers(tmp_path / 'replay')
+    assert replay_header['ask']['homotopy'] == header['ask']['homotopy']
+
+
+def test_consecutive_seedless_solves_get_distinct_seeds(tmp_path):
+    """Two seedless solves of the same system are distinct asks (fresh gamma each),
+    all still deterministic from the session master."""
+    pb.random.set_random_seed(2002)
+    d = str(tmp_path / 'records')
+    first = pb.solve(circle_line(), directory=d)
+    second = pb.solve(circle_line(), directory=d)
+    assert second.run_id != first.run_id
+    assert second.num_recalled == 0
+    seeds = [h['ask']['seed'] for h in _run_headers(tmp_path / 'records')]
+    assert len(seeds) == 2 and seeds[0] != seeds[1]
+
+    # the whole session replays from the master: same seeds derive, in order
+    pb.random.set_random_seed(2002)
+    d2 = str(tmp_path / 'records2')
+    assert pb.solve(circle_line(), directory=d2).run_id == first.run_id
+    assert pb.solve(circle_line(), directory=d2).run_id == second.run_id
+
+
+def test_killed_seedless_session_reruns_skip_ahead(tmp_path):
+    """The resume story for a seedless multi-solve script: seeds chain
+    deterministically from the master, so rerunning the SAME script (same master,
+    same sequence of solves) re-derives the same effective seeds -- everything
+    already answered recalls, and work picks up exactly where the kill landed."""
+    d = str(tmp_path / 'records')
+
+    # session 1: the script means to solve three members, but dies after two
+    pb.random.set_random_seed(3003)
+    pb.solve(circle_line_r(2), directory=d)
+    pb.solve(circle_line_r(3), directory=d)
+    # -- kill --
+
+    # session 2: rerun the whole script verbatim; the first two recall in full,
+    # only the third is computed
+    pb.random.set_random_seed(3003)
+    r1 = pb.solve(circle_line_r(2), directory=d)
+    r2 = pb.solve(circle_line_r(3), directory=d)
+    r3 = pb.solve(circle_line_r(5), directory=d)
+    assert r1.num_recalled == 2 and r2.num_recalled == 2
+    assert r3.num_recalled == 0
+
+
+def test_tracked_homotopy_is_archived_and_self_verifies(tmp_path):
+    """The homotopy actually tracked is archived beside the target -- for a user-built
+    (chained) homotopy the archived encoding is the ONLY complete record of it."""
+    import hashlib
+    from bertini.nag_algorithm import blend_homotopy
+
+    d = tmp_path / 'records'
+    prior = pb.solve(circle_line_r(2), seed=42, directory=str(d))
+    target = circle_line_r(3)
+    pb.solve(target, homotopy=blend_homotopy(target, circle_line_r(2)),
+             start=prior, directory=str(d))
+
+    for header in _run_headers(d):
+        for key in ('target', 'homotopy'):
+            digest = header['ask'][key]
+            shard = d / 'definitions' / 'systems' / digest[:2]
+            (path,) = shard.glob('*-%s.json' % digest)
+            stored = json.loads(path.read_text())
+            encoding = stored['encoding']
+            assert hashlib.sha256(encoding.encode()).hexdigest() == digest
+        # the tracked homotopy is a different system from the target, and has the
+        # path variable the target lacks
+        assert header['ask']['homotopy'] != header['ask']['target']
+
+
 def test_records_are_plain_json(tmp_path):
     """The no-special-software property, from Python's side: raw json suffices."""
     d = tmp_path / 'records'

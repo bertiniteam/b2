@@ -116,6 +116,16 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 			BOOST_CHECK(parts.contains("variable_groups"));
 			BOOST_CHECK(parts.contains("path_variable"));
 			BOOST_CHECK(parts.contains("is_patched"));
+			// the homotopy ACTUALLY TRACKED is archived too, self-verifying the same
+			// way -- its exact coefficients (gamma, start constants) are what the
+			// paths followed; no seed can rebuild a user homotopy, only the encoding
+			auto const homotopy_id = std::string(rec.at("ask").as_object().at("homotopy").as_string());
+			BOOST_CHECK(homotopy_id != target_id);   // the blend is its own system
+			auto const hstored = boost::json::parse(a.Records()->GetDefinition(homotopy_id)).as_object();
+			BOOST_CHECK_EQUAL(bertini::detail::Sha256(
+				std::string(hstored.at("encoding").as_string())).Hex(), homotopy_id);
+			// unlike the target, the tracked homotopy HAS a path variable
+			BOOST_CHECK(!hstored.at("system").as_object().at("path_variable").is_null());
 		}
 		if (kind == "track")
 		{

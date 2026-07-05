@@ -87,10 +87,17 @@ scoped by their run.
   `producer` says which software wrote the record (commit is `unknown` for builds
   outside a git checkout); it is descriptive ONLY -- never part of the ask identity,
   so a newer build answering the same ask recalls rather than recomputes.
-  The `ask` is what was requested (target digest + config digest(s) + seed); the run id
-  is a hash of the ask.  Op-specific fields describe how start points arise: recorded
-  values (`start_points`, exact coordinate text), or a reference to an ancestor run
-  (`start_run` + `start_indices`).
+  The `ask` is what was requested (target digest + homotopy digest + config digest(s)
+  + seed); the run id is a hash of the ask.  BOTH the target system and the homotopy
+  actually tracked are archived in `definitions/systems/` under their digests -- the
+  homotopy's exact coefficients (gamma, start-system constants, blend structure) are
+  what the paths followed, and for user-built homotopies the archived encoding is the
+  only complete record of them.  The `seed` is the run's own EFFECTIVE seed: a solve
+  given no explicit seed derives one at solve start (deterministically chained from
+  the session master), so the recorded value reproduces the run standalone -- it is
+  never a session master that silently under-determines a mid-session run.  Op-specific fields
+  describe how start points arise: recorded values (`start_points`, exact coordinate
+  text), or a reference to an ancestor run (`start_run` + `start_indices`).
 - **`track`** — one continued path:
   `{"kind":"track", "run":<run id>, "index":i,
     "status":"success"|"diverged"|"failed",

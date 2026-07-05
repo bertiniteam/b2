@@ -2271,6 +2271,17 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					                              target_digest_hex,
 					                              io::SystemPartsJson(TargetSystem())),
 					"systems", target_digest_hex);
+				// the homotopy ACTUALLY TRACKED is archived too: its exact coefficients
+				// (gamma, start-system constants, blend structure) are what the paths
+				// followed, and for user homotopies (chained solves, the engine driven
+				// directly) the archived encoding is the ONLY complete record -- no
+				// seed can rebuild a homotopy constructed before this solve began.
+				auto const homotopy_digest_hex = Homotopy().ContentDigest().Hex();
+				records_->PutDefinition(
+					records::SystemEncodingAsJson(Homotopy().CanonicalEncodingText(),
+					                              homotopy_digest_hex,
+					                              io::SystemPartsJson(Homotopy())),
+					"systems", homotopy_digest_hex);
 				// the settings, reconstructible: the SAME canonical text the digest is over
 				std::string const config_text = CanonicalSettingsText();
 				records_->PutDefinition(
