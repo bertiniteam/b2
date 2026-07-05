@@ -29,10 +29,14 @@ version bump plus a golden-fixture update in the same commit.
 
 #include "bertini2/records/config_encoding.hpp"
 
+#include <charconv>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
+
+#include <boost/json.hpp>
 
 namespace bertini {
 namespace records {
@@ -330,6 +334,57 @@ std::string CanonicalEncoding(algorithm::classic::EndgameChoiceConfig const& c)
 	return "(cfg EndgameChoice endgame=" + CanonicalName(c.endgame) + ")";
 }
 
+namespace {
+
+	// The canonical text's exact scalar encodings, decoded for the derived JSON view:
+	// d64 bit patterns become shortest round-trip decimals (a reader sees 1e-05, not
+	// "d64:3ee4f8b588e368f1"; the shortest form parses back to the identical double),
+	// netstrings shed their length prefix, and plain integers become JSON numbers.
+	// The DIGEST contract stays on the canonical text; this only affects presentation.
+	std::string ValueAsJsonToken(std::string const& v)
+	{
+		if (v.rfind("d64:", 0) == 0 && v.size() == 20)
+		{
+			std::uint64_t bits = 0;
+			bool ok = true;
+			for (std::size_t i = 4; i < v.size(); ++i)
+			{
+				auto const c = v[i];
+				bits <<= 4;
+				if (c >= '0' && c <= '9') bits |= static_cast<std::uint64_t>(c - '0');
+				else if (c >= 'a' && c <= 'f') bits |= static_cast<std::uint64_t>(c - 'a' + 10);
+				else { ok = false; break; }
+			}
+			if (ok)
+			{
+				double d = 0;
+				std::memcpy(&d, &bits, sizeof(d));
+				if (std::isfinite(d))
+				{
+					char buffer[32];
+					auto const res = std::to_chars(buffer, buffer + sizeof(buffer), d);
+					return std::string(buffer, res.ptr);   // shortest round-trip decimal
+				}
+			}
+		}
+		if (auto const colon = v.find(':'); colon != std::string::npos)
+		{
+			// netstring "N:payload" -> the payload, JSON-escaped
+			bool numeric_prefix = colon > 0;
+			for (std::size_t i = 0; i < colon && numeric_prefix; ++i)
+				numeric_prefix = (v[i] >= '0' && v[i] <= '9');
+			if (numeric_prefix
+			    && std::stoull(v.substr(0, colon)) == v.size() - colon - 1)
+				return boost::json::serialize(boost::json::value(v.substr(colon + 1)));
+		}
+		if (!v.empty() && v.find_first_not_of("-0123456789") == std::string::npos
+		    && v.find('-', 1) == std::string::npos && v.size() <= 18)
+			return v;   // a plain integer: emit as a JSON number
+		return boost::json::serialize(boost::json::value(v));   // exact string (e.g. "1/10")
+	}
+
+} // unnamed namespace
+
 std::string ConfigTextAsJson(std::string const& canonical_text, std::string const& digest_hex)
 {
 	std::ostringstream out;
@@ -358,7 +413,7 @@ std::string ConfigTextAsJson(std::string const& canonical_text, std::string cons
 				if (eq == std::string::npos)
 					continue;
 				out << (first_field ? "" : ",") << "\n   \"" << field.substr(0, eq)
-				    << "\": \"" << field.substr(eq + 1) << "\"";
+				    << "\": " << ValueAsJsonToken(field.substr(eq + 1));
 				first_field = false;
 			}
 		}
