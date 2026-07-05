@@ -41,6 +41,7 @@ its canonical encoding (`b2sysenc`, ADR-0042); this view is derived and regenera
 
 #include <sstream>
 #include <string>
+#include <variant>
 
 namespace bertini{
 	namespace io{
@@ -52,9 +53,11 @@ namespace bertini{
 		declaration order), `homogenizing_variables` (names; present in homogenized
 		systems), `path_variable` (name, or null), `named_subexpressions`
 		(`{name: expression}`, discovered inside the function trees), `functions`
-		(expression strings, printed in user coordinates), and `is_patched` (with
-		`num_patches` when patched; exact patch coefficients live in the canonical
-		encoding, not here).
+		(the polynomial functions as expression strings), `blocks` (one
+		`{"kind", "num_functions"}` per evaluation block, in order -- so randomized,
+		sliced, and blended systems say so), and `is_patched` (with `num_patches`
+		when patched).  Exact block coefficients live in the canonical encoding, not
+		here.
 
 		\param sys The system to render.
 		\return The parts as a boost::json object (presentation only, never identity).
@@ -114,6 +117,30 @@ namespace bertini{
 					function_texts.push_back(json::value(expr.str()));
 				}
 				parts["functions"] = function_texts;
+			}
+
+			{
+				// one summary object per evaluation block, in evaluation order --
+				// a randomized, sliced, or blended system says so here (the exact
+				// coefficients live in the canonical encoding)
+				struct BlockKindName
+				{
+					std::string operator()(blocks::PolynomialBlock const&) const { return "polynomial"; }
+					std::string operator()(blocks::LinearFormsBlock const&) const { return "linear_forms"; }
+					std::string operator()(blocks::ProductsOfLinearsBlock const&) const { return "products_of_linears"; }
+					std::string operator()(blocks::BlendBlock<System> const&) const { return "blend"; }
+					std::string operator()(blocks::RandomizationBlock<System> const&) const { return "randomization"; }
+				};
+				json::array block_summaries;
+				for (auto const& b : sys.Blocks())
+				{
+					json::object summary;
+					summary["kind"] = std::visit(BlockKindName{}, b);
+					summary["num_functions"] = static_cast<std::int64_t>(
+						std::visit([](auto const& blk) { return blk.NumFunctions(); }, b));
+					block_summaries.push_back(summary);
+				}
+				parts["blocks"] = block_summaries;
 			}
 
 			parts["is_patched"] = sys.IsPatched();

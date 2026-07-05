@@ -22,7 +22,7 @@
 /**
 \file output_directory.cpp
 
-\brief The structured output directory implementation (ledgerrec/1, ADR-0045).
+\brief The structured output directory implementation (b2rec/1, ADR-0045).
 Boost.JSON is used header-only (src.hpp included here, exactly once in the library) so
 no new link component is required on any platform.
 */
@@ -32,6 +32,8 @@ no new link component is required on any platform.
 #include "bertini2/records/output_directory.hpp"
 
 #include <algorithm>
+#include <charconv>
+#include <cmath>
 #include <cstdio>
 #include <ctime>
 #include <map>
@@ -54,8 +56,8 @@ namespace {
 	constexpr char kReadme[] =
 R"(This directory is a structured output directory: the durable, self-contained
 record of numerical algebraic geometry computations (polynomial-system solves by
-homotopy continuation).  Written by bertini2 (record schema ledgerrec/1; full spec:
-docs/records/ledgerrec-1.md in the bertini2 repository -- but this file suffices).
+homotopy continuation).  Written by bertini2 (record schema b2rec/1; full spec:
+docs/records/b2rec-1.md in the bertini2 repository -- but this file suffices).
 It needs no software to read, and you are free to delete it -- the only consequence
 is recomputing.
 
@@ -91,13 +93,13 @@ LAYOUT
                 embed their digest, so a file copied out of the store stays
                 identified and verifiable.
 
-RECORD FORMAT (schema ledgerrec/1) -- every history line is one JSON object:
+RECORD FORMAT (schema b2rec/1) -- every history line is one JSON object:
   kind="run"        a solve: `ask` (what was requested: target system digest + config
                     + seed), `run` (this run's id), `when`, `num_paths`, and how start
                     points arise (recorded values, or a reference to an ancestor run).
-                    `target_object` names the exact system definition (its id equals
-                    `target_digest`); open that file for the system's parts and its
-                    canonical encoding.
+                    `target_digest` is the solved system's content digest; the
+                    definitions/systems/ file with that id holds the system's parts
+                    and its canonical encoding (dereferencing is the reader's job).
   kind="track"      one continued path: `run`, `index`, `status`, `endpoint`
                     (coordinates as [real, imaginary] decimal-string pairs, full
                     precision), and `start` (its provenance: a start_label, or a
@@ -129,12 +131,64 @@ that is the complete provenance of any point recorded here.
 
 	// A small pretty-printer (boost::json::serialize is compact-only): 1-space-indented,
 	// newline-separated -- results.json is the file a human most interacts with.
+	// One textual form for a double EVERYWHERE the records write one: the shortest
+	// round-trip decimal (0.5, 1e-05), never Boost.JSON's uppercase-scientific (5E-1).
+	// Keeps annotation values, config views, and every other double consistent.
+	std::string ReadableDouble(double d)
+	{
+		if (!std::isfinite(d))
+			return json::serialize(json::value(d));   // null, per JSON rules
+		char buffer[32];
+		auto const res = std::to_chars(buffer, buffer + sizeof(buffer), d);
+		return std::string(buffer, res.ptr);
+	}
+
+	// json::serialize with ReadableDouble applied to every double leaf (compact form,
+	// used for the one-line history records)
+	std::string SerializeReadable(json::value const& v)
+	{
+		switch (v.kind())
+		{
+			case json::kind::double_:
+				return ReadableDouble(v.get_double());
+			case json::kind::object:
+			{
+				std::string out = "{";
+				bool first = true;
+				for (auto const& kv : v.get_object())
+				{
+					if (!first) out += ",";
+					first = false;
+					out += json::serialize(json::value(kv.key())) + ":" + SerializeReadable(kv.value());
+				}
+				return out + "}";
+			}
+			case json::kind::array:
+			{
+				std::string out = "[";
+				bool first = true;
+				for (auto const& e : v.get_array())
+				{
+					if (!first) out += ",";
+					first = false;
+					out += SerializeReadable(e);
+				}
+				return out + "]";
+			}
+			default:
+				return json::serialize(v);
+		}
+	}
+
 	void PrettyPrint(std::ostream& out, json::value const& v, int depth)
 	{
 		std::string const pad(static_cast<std::size_t>(depth) + 1, ' ');
 		std::string const pad_close(static_cast<std::size_t>(depth), ' ');
 		switch (v.kind())
 		{
+			case json::kind::double_:
+				out << ReadableDouble(v.get_double());
+				return;
 			case json::kind::object:
 			{
 				auto const& obj = v.get_object();
@@ -159,7 +213,7 @@ that is the complete provenance of any point recorded here.
 				bool leaf = true;
 				for (auto const& e : arr)
 					if (e.is_object() || e.is_array()) { leaf = false; break; }
-				if (leaf && arr.size() <= 4) { out << json::serialize(v); return; }
+				if (leaf && arr.size() <= 4) { out << SerializeReadable(v); return; }
 				out << "[\n";
 				bool first = true;
 				for (auto const& e : arr)
@@ -277,6 +331,34 @@ std::string SystemEncodingAsJson(std::string const& encoding_text, std::string c
 	return out.str();
 }
 
+namespace {
+
+	// ids are 64 lowercase hex; kinds/labels are short lowercase words.  Anything else
+	// is refused OUTRIGHT -- these strings become filesystem paths, and a hostile or
+	// buggy caller must not be able to write outside definitions/ ("../../evil") or
+	// smuggle separators into filenames.
+	bool ValidDefinitionId(std::string const& id)
+	{
+		if (id.size() != 64)
+			return false;
+		for (char const c : id)
+			if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')))
+				return false;
+		return true;
+	}
+
+	bool ValidPathWord(std::string const& word, bool allow_empty)
+	{
+		if (word.empty())
+			return allow_empty;
+		for (char const c : word)
+			if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_'))
+				return false;
+		return true;
+	}
+
+} // unnamed namespace
+
 std::filesystem::path OutputDirectory::DefinitionPath(std::string const& kind,
                                                       std::string const& id,
                                                       std::string const& label) const
@@ -296,7 +378,9 @@ std::optional<std::filesystem::path> OutputDirectory::FindDefinition(std::string
 {
 	// records carry bare ids; kind and extension are presentation.  Resolution: the
 	// unique file under definitions/<kind>/<first 2 hex>/ named <kind>-<id>.<ext>.
-	if (id.size() < 3)
+	// Non-hex "ids" are refused: a hostile directory's records must not be able to
+	// point resolution outside definitions/ (e.g. "../..").
+	if (!ValidDefinitionId(id))
 		return std::nullopt;
 	auto const defs = root_ / "definitions";
 	if (!std::filesystem::exists(defs))
@@ -329,6 +413,15 @@ std::string OutputDirectory::PutDefinition(std::string const& content, std::stri
                                            std::optional<std::string> external_id,
                                            std::string const& label)
 {
+	if (!ValidPathWord(kind, false))
+		throw std::invalid_argument("OutputDirectory: definition kind must be a lowercase "
+		                            "word ([a-z0-9_]+), got '" + kind + "'");
+	if (!ValidPathWord(label, true))
+		throw std::invalid_argument("OutputDirectory: definition label must be a lowercase "
+		                            "word ([a-z0-9_]*), got '" + label + "'");
+	if (external_id && !ValidDefinitionId(*external_id))
+		throw std::invalid_argument("OutputDirectory: external definition id must be 64 "
+		                            "lowercase hex characters, got '" + *external_id + "'");
 	std::string const id = external_id ? *external_id : detail::Sha256(content).Hex();
 	if (auto const existing = FindDefinition(id))
 		return id;   // idempotent: content-addressed writes never conflict
@@ -405,7 +498,7 @@ void OutputDirectory::Append(json::object const& record)
 {
 	std::lock_guard<std::mutex> lock(append_mutex_);
 	EnsureSessionFile();
-	session_ << json::serialize(record) << "\n";
+	session_ << SerializeReadable(record) << "\n";
 	session_.flush();
 	auto const* kind = record.if_contains("kind");
 	if (kind && kind->is_string() && kind->get_string() == "run")
@@ -479,7 +572,9 @@ void OutputDirectory::RefreshIndex() const
 		// directories put a classic rendering in the header, and older ones stored the
 		// rendering AS the definition -- read whichever this directory has
 		std::string rendering = GetString(r, "target_rendering");
-		auto const target_object = GetString(r, "target_object");
+		auto target_object = GetString(r, "target_digest");
+		if (target_object.empty())
+			target_object = GetString(r, "target_object");   // older directories
 		if (!target_object.empty() && HasDefinition(target_object))
 		{
 			auto const stored = GetDefinition(target_object);
@@ -602,9 +697,8 @@ void OutputDirectory::RefreshResults() const
 				if (run_it != runs.end() && !runs_section.contains(run_id))
 				{
 					json::object summary;
-					for (char const* key : {"when", "op", "ask", "target_object",
-					                        "target_digest", "target_rendering",
-					                        "config_object", "num_paths"})
+					for (char const* key : {"when", "op", "ask", "target_digest",
+					                        "num_paths"})
 						if (run_it->second.contains(key))
 							summary[key] = run_it->second.at(key);
 					runs_section[run_id] = summary;
@@ -648,7 +742,9 @@ void OutputDirectory::RefreshResults() const
 				if (var_names.empty() && run_it != runs.end())
 				{
 					std::string rendering = GetString(run_it->second, "target_rendering");
-					auto const target_object = GetString(run_it->second, "target_object");
+					auto target_object = GetString(run_it->second, "target_digest");
+					if (target_object.empty())
+						target_object = GetString(run_it->second, "target_object");
 					if (rendering.empty() && !target_object.empty() && HasDefinition(target_object))
 						rendering = GetDefinition(target_object);
 					if (!rendering.empty())

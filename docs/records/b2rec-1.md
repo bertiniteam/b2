@@ -1,4 +1,4 @@
-# The structured output directory: record format `ledgerrec/1`
+# The structured output directory: record format `b2rec/1`
 
 *The 30-year contract for bertini2's durable records (the structured-output-directory
 arc; ADR-0045).  This document plus a directory is a complete, interpretable artifact —
@@ -75,13 +75,14 @@ new kinds without coordination).
 
 ### Record kinds
 
-Every record carries `"schema": "ledgerrec/1"` on its run headers; other records are
+Every record carries `"schema": "b2rec/1"` on its run headers; other records are
 scoped by their run.
 
 - **`run`** — one solve/continuation/operation instance:
-  `{"kind":"run", "schema":"ledgerrec/1", "when":"YYYY-MM-DD HH:MM", "run":<run id>,
-    "op":<operation name, default "solve">, "ask":{...}, "target_object":<definition id>,
-    "target_digest":<system content digest -- equals target_object>,
+  `{"kind":"run", "schema":"b2rec/1", "when":"YYYY-MM-DD HH:MM", "run":<run id>,
+    "op":<operation name, default "solve">, "ask":{...},
+    "target_digest":<the solved system's content digest -- also the id of its
+                     definitions/systems/ file; dereferencing is the reader's job>,
     "producer":{"name","version","commit"}, "num_paths":N, ...op-specific fields...}`
   `producer` says which software wrote the record (commit is `unknown` for builds
   outside a git checkout); it is descriptive ONLY -- never part of the ask identity,
@@ -130,7 +131,7 @@ recorded assertion, not a `point_ref`.
 
 ## Versioning
 
-`ledgerrec/1` names this format.  Any change to record shapes or file conventions bumps
+`b2rec/1` names this format.  Any change to record shapes or file conventions bumps
 the version; readers encountering a newer version should read what they understand and
 preserve the rest.  The companion identity encodings carry their own versions:
 `b2sysenc/<n>` (system canonical encoding, ADR-0042), `b2cfgenc/<n>` (config encoding,

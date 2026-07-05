@@ -218,4 +218,4 @@ are the subject of :doc:`../chained_homotopies/index`.
 
 Power users: the solver objects underneath expose the same machinery —
 ``solver.record_to(path)``, ``solver.num_paths_recalled()``, ``solver.records_run_id()``
-— and the full record schema is documented in ``docs/records/ledgerrec-1.md``.
+— and the full record schema is documented in ``docs/records/b2rec-1.md``.

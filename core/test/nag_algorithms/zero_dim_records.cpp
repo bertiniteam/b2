@@ -98,8 +98,9 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 			// (the digest PREIMAGE): the definition id EQUALS the identity digest,
 			// the embedded digest matches, and hashing the encoding reproduces both
 			// (a copied-out file verifies itself)
-			auto const target_id = std::string(rec.at("target_object").as_string());
-			BOOST_CHECK_EQUAL(target_id, std::string(rec.at("target_digest").as_string()));
+			// one field: the digest; dereferencing to definitions/ is the reader's job
+			BOOST_CHECK(!rec.contains("target_object"));
+			auto const target_id = std::string(rec.at("target_digest").as_string());
 			auto const stored = boost::json::parse(a.Records()->GetDefinition(target_id)).as_object();
 			BOOST_CHECK_EQUAL(std::string(stored.at("digest").as_string()), target_id);
 			auto const encoding = std::string(stored.at("encoding").as_string());
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(partial_directory_resumes_computing_only_the_missing)
 					return rec;
 			return boost::json::object{};
 		}();
-		auto const target_id = std::string(header.at("target_object").as_string());
+		auto const target_id = std::string(header.at("target_digest").as_string());
 		partial.PutDefinition(full.Records()->GetDefinition(target_id), "systems", target_id);
 	}
 
@@ -311,6 +312,129 @@ BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)
 	BOOST_REQUIRE(zd.Records() != nullptr);
 	BOOST_CHECK(fs::exists(dir / "README.txt"));
 	BOOST_CHECK_EQUAL(zd.Records()->Scan().size(), 6u);   // 1 run + 4 tracks + 1 auto-declared result
+}
+
+// finds the run header in a directory's records
+boost::json::object RunHeaderOf(records::OutputDirectory const& out)
+{
+	for (auto const& rec : out.Scan())
+		if (std::string(rec.at("kind").as_string()) == "run")
+			return rec;
+	return {};
+}
+
+BOOST_AUTO_TEST_CASE(randomized_system_records_and_recalls)
+{
+	// an overdetermined system squared by Randomize(): the records must carry the
+	// randomization (the drawn matrix is identity!), archive it faithfully, and
+	// recall it on rerun exactly like a plain polynomial system
+	auto const dir = FreshDir("randomized");
+
+	auto build = [] {
+		auto x = Variable::Make("x");
+		auto y = Variable::Make("y");
+		System sys;
+		sys.AddFunction(pow(x, 2) - 1);
+		sys.AddFunction(pow(y, 2) - 1);
+		sys.AddFunction(pow(x, 2) + pow(y, 2) - 2);   // dependent third equation
+		sys.AddVariableGroup(VariableGroup{x, y});
+		return sys;
+	};
+
+	SetGlobalSeed(42);
+	auto squared_a = build().Randomize();
+	ZD a(squared_a);
+	a.DefaultSetup();
+	a.RecordTo(records::OutputDirectory::Shared(dir));
+	a.Solve();
+	BOOST_CHECK_EQUAL(a.NumPathsRecalled(), 0u);
+
+	// the archived definition: id == content digest, encoding hashes to it, and the
+	// parts view SAYS the system is randomized
+	auto const header = RunHeaderOf(*a.Records());
+	BOOST_REQUIRE(header.contains("target_digest"));
+	auto const target_id = std::string(header.at("target_digest").as_string());
+	auto const stored = boost::json::parse(a.Records()->GetDefinition(target_id)).as_object();
+	BOOST_CHECK_EQUAL(bertini::detail::Sha256(
+		std::string(stored.at("encoding").as_string())).Hex(), target_id);
+	bool randomization_declared = false;
+	for (auto const& b : stored.at("system").as_object().at("blocks").as_array())
+		if (std::string(b.as_object().at("kind").as_string()) == "randomization")
+			randomization_declared = true;
+	BOOST_CHECK(randomization_declared);
+
+	// same seed => same randomization matrix => identical ask: pure recall
+	SetGlobalSeed(42);
+	auto squared_b = build().Randomize();
+	ZD b(squared_b);
+	b.DefaultSetup();
+	b.RecordTo(records::OutputDirectory::Shared(dir));
+	b.Solve();
+	BOOST_CHECK_EQUAL(b.NumPathsRecalled(), 4u);   // randomized square: degrees {2,2}
+	BOOST_CHECK_EQUAL(b.RecordsRunId(), a.RecordsRunId());
+
+	// a DIFFERENT seed draws a different randomization: a different ask, no recall
+	SetGlobalSeed(43);
+	auto squared_c = build().Randomize();
+	ZD c(squared_c);
+	c.DefaultSetup();
+	c.RecordTo(records::OutputDirectory::Shared(dir));
+	c.Solve();
+	BOOST_CHECK_EQUAL(c.NumPathsRecalled(), 0u);
+	BOOST_CHECK_NE(c.RecordsRunId(), a.RecordsRunId());
+}
+
+BOOST_AUTO_TEST_CASE(sliced_system_records_and_recalls)
+{
+	// a positive-dimensional system squared by a linear slice block: the records
+	// must archive the slice (exact coefficients live in the encoding), declare it
+	// in the parts view, and recall on rerun
+	auto const dir = FreshDir("sliced");
+
+	auto build = [] {
+		auto x = Variable::Make("x");
+		auto y = Variable::Make("y");
+		auto z = Variable::Make("z");
+		System sys;
+		sys.AddFunction(pow(x, 2) + pow(y, 2) + pow(z, 2) - 1);   // a surface
+		sys.AddVariableGroup(VariableGroup{x, y, z});
+		// slice with two exact linear forms (columns: x, y, z, constant)
+		Mat<complex_mp> forms(2, 4);
+		forms << complex_mp(1), complex_mp(2), complex_mp(3), complex_mp("0.25"),
+		         complex_mp(5), complex_mp(-1), complex_mp(1), complex_mp("0.125");
+		sys.AddBlock(blocks::LinearFormsBlock(3, forms));
+		return sys;
+	};
+
+	SetGlobalSeed(42);
+	auto sliced_a = build();
+	ZD a(sliced_a);
+	a.DefaultSetup();
+	a.RecordTo(records::OutputDirectory::Shared(dir));
+	a.Solve();
+	BOOST_CHECK_EQUAL(a.NumPathsRecalled(), 0u);
+
+	auto const header = RunHeaderOf(*a.Records());
+	BOOST_REQUIRE(header.contains("target_digest"));
+	auto const target_id = std::string(header.at("target_digest").as_string());
+	auto const stored = boost::json::parse(a.Records()->GetDefinition(target_id)).as_object();
+	BOOST_CHECK_EQUAL(bertini::detail::Sha256(
+		std::string(stored.at("encoding").as_string())).Hex(), target_id);
+	bool slice_declared = false;
+	for (auto const& b : stored.at("system").as_object().at("blocks").as_array())
+		if (std::string(b.as_object().at("kind").as_string()) == "linear_forms")
+			slice_declared = true;
+	BOOST_CHECK(slice_declared);
+
+	// identical build + seed: pure recall
+	SetGlobalSeed(42);
+	auto sliced_b = build();
+	ZD b(sliced_b);
+	b.DefaultSetup();
+	b.RecordTo(records::OutputDirectory::Shared(dir));
+	b.Solve();
+	BOOST_CHECK_EQUAL(b.NumPathsRecalled(), 2u);   // degrees {2,1,1}: two paths
+	BOOST_CHECK_EQUAL(b.RecordsRunId(), a.RecordsRunId());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

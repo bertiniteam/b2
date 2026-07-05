@@ -16,7 +16,7 @@
 /** \file records_export.cpp
 \brief The `records` submodule: bindings for the structured output directory.
 
-The directory format is plain text (that is the point: docs/records/ledgerrec-1.md),
+The directory format is plain text (that is the point: docs/records/b2rec-1.md),
 so Python READS it with json/pandas, no bindings needed.  These bindings exist for
 WRITING through the one C++ implementation -- session-journal appends (one writer per
 file), content-addressed definitions, and the derived-view renderers -- so both faces
@@ -80,7 +80,7 @@ void ExportRecords()
 
 	scope new_submodule_scope = new_submodule;
 	new_submodule_scope.attr("__doc__") =
-		"The structured output directory (record schema ledgerrec/1): durable, plain-text "
+		"The structured output directory (record schema b2rec/1): durable, plain-text "
 		"records of computations.  READ it with json/pandas -- no bertini required; these "
 		"bindings are for WRITING through the single C++ implementation.";
 

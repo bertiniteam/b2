@@ -22,7 +22,7 @@
 /**
 \file solver_recording.hpp
 
-\brief FullPathResult <-> track-record serialization (ledgerrec/1; the arc's rung 4).
+\brief FullPathResult <-> track-record serialization (b2rec/1; the arc's rung 4).
 
 The whole-path result (parallel/path_result.hpp) is the manager-side unit of completed
 work in every topology (serial / threaded / MPI): StoreFullPathResult is the single
@@ -181,10 +181,10 @@ inline std::string CoarsePathStatus(SuccessCode code)
 }
 
 /**
-\brief Serialize one whole-path result as a ledgerrec/1 track record body.
+\brief Serialize one whole-path result as a b2rec/1 track record body.
 
 Field names mirror parallel::FullPathResult.  SuccessCodes are recorded as integers
-(their values are part of the ledgerrec contract) AND by canonical name (the durable,
+(their values are part of the b2rec contract) AND by canonical name (the durable,
 read-without-bertini rendering).  The caller adds "kind"/"run"/"index"/"status"/"start".
 */
 template <typename ComplexT>

@@ -23,14 +23,14 @@
 \file output_directory.hpp
 
 \brief The structured output directory: durable, self-documenting records of
-computations (`ledgerrec/1`; ADR-0045; the arc's rung 3).
+computations (`b2rec/1`; ADR-0045; the arc's rung 3).
 
 Plain files are the source of truth, interactable without special software:
 `history/` holds append-only JSONL records (one date-named file per writing session,
 one writer per file, torn-final-line tolerant), `definitions/` holds content-addressed
 definitions (atomic + idempotent writes; no locks exist or are needed), and README /
 INDEX / RESULTS / results.json are derived, rebuildable views.  The format contract
-lives in docs/records/ledgerrec-1.md and travels inside every directory as its
+lives in docs/records/b2rec-1.md and travels inside every directory as its
 README.txt.  Cross-implementation compatibility with the Python pilot
 (prototypes/ledger_v0) is tested.
 */
@@ -54,8 +54,8 @@ namespace bertini {
 namespace records {
 
 /// \brief The record-format version tag written on run headers; see
-/// docs/records/ledgerrec-1.md.  Bump on any change to record shapes or conventions.
-constexpr char RecordSchemaVersion[] = "ledgerrec/1";
+/// docs/records/b2rec-1.md.  Bump on any change to record shapes or conventions.
+constexpr char RecordSchemaVersion[] = "b2rec/1";
 
 /**
 \brief One structured output directory: definitions/ + history/ + derived views.

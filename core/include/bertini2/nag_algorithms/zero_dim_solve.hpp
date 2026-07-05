@@ -2266,14 +2266,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// The encoding is the digest PREIMAGE, so the definition id EQUALS
 				// target_digest and a copied-out file verifies itself (hash .encoding).
 				auto const target_digest_hex = TargetSystem().ContentDigest().Hex();
-				auto const target_definition = records_->PutDefinition(
+				records_->PutDefinition(
 					records::SystemEncodingAsJson(TargetSystem().CanonicalEncodingText(),
 					                              target_digest_hex,
 					                              io::SystemPartsJson(TargetSystem())),
 					"systems", target_digest_hex);
 				// the settings, reconstructible: the SAME canonical text the digest is over
 				std::string const config_text = CanonicalSettingsText();
-				auto const config_definition = records_->PutDefinition(
+				records_->PutDefinition(
 					records::ConfigTextAsJson(config_text, std::string(ask.at("config").as_string())),
 					"configs",
 					std::string(ask.at("config").as_string()));
@@ -2298,7 +2298,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// identity (a newer build answering the same ask must still recall)
 				header["producer"] = records::ProducerInfo();
 				header["ask"] = ask;
-				header["target_object"] = target_definition;
+				// the field holds a DIGEST -- dereferencing it to the definitions/
+				// file is the reader's job (its id equals this digest)
 				header["target_digest"] = target_digest_hex;
 				// the INTERNAL variable ordering, so views can label endpoint coordinates
 				// truthfully (homogenized points have more coordinates than the user's
@@ -2319,7 +2320,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					// the endpoint_user coordinates on track records
 					header["variables_user"] = user_variable_names;
 				}
-				header["config_object"] = config_definition;
+				// (the settings digest lives in ask.config; deref is the reader's job)
 				header["num_paths"] = static_cast<std::int64_t>(num_start_points_);
 				records_->Append(header);
 			}

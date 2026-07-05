@@ -1,4 +1,4 @@
-# ADR-0045: The structured output directory — record schema ledgerrec/1 and the C++ OutputDirectory
+# ADR-0045: The structured output directory — record schema b2rec/1 and the C++ OutputDirectory
 
 **Status:** Accepted
 **Date:** 2026-07-03
@@ -18,7 +18,7 @@ them a specification and a core implementation.
 
 ## Decision
 
-- **`ledgerrec/1`** is the record format, specified in `docs/records/ledgerrec-1.md`
+- **`b2rec/1`** is the record format, specified in `docs/records/b2rec-1.md`
   and carried inside every directory as its `README.txt`.  Layout: `history/`
   (append-only JSONL, one date-named file per writing session, ONE writer per file,
   claimed by exclusive create) and `definitions/` (content-addressed under

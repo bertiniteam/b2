@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file Tests for the C++ structured output directory (ledgerrec/1, ADR-0045): ports of
+\file Tests for the C++ structured output directory (b2rec/1, ADR-0045): ports of
 the Python pilot's ledger tests, plus the cross-implementation bridge — this suite
 WRITES an example directory (into the ctest working directory) that the Python
 prototype's cross-impl test reads, and READS one the prototype writes when present.
@@ -28,6 +28,8 @@ prototype's cross-impl test reads, and READS one the prototype writes when prese
 
 #include <filesystem>
 #include <fstream>
+#include <thread>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/json.hpp>
@@ -59,7 +61,7 @@ BOOST_AUTO_TEST_CASE(construction_writes_the_self_documenting_readme)
 	BOOST_CHECK(fs::exists(dir / "README.txt"));
 	std::ifstream readme(dir / "README.txt");
 	std::string text((std::istreambuf_iterator<char>(readme)), std::istreambuf_iterator<char>());
-	BOOST_CHECK(text.find("ledgerrec/1") != std::string::npos);
+	BOOST_CHECK(text.find("b2rec/1") != std::string::npos);
 	BOOST_CHECK(text.find("free to delete") != std::string::npos);
 }
 
@@ -163,8 +165,8 @@ BOOST_AUTO_TEST_CASE(index_and_results_render)
 	auto const target_id = out.PutDefinition(
 		"function f;\nvariable_group x, y;\nf = x^2+4*y^2-4;\n", "systems");
 
-	out.Append({{"kind", "run"}, {"schema", "ledgerrec/1"}, {"when", "2026-07-03 10:00"},
-	            {"run", "abc123"}, {"op", "solve"}, {"target_object", target_id},
+	out.Append({{"kind", "run"}, {"schema", "b2rec/1"}, {"when", "2026-07-03 10:00"},
+	            {"run", "abc123"}, {"op", "solve"}, {"target_digest", target_id},
 	            {"target_rendering", "function f;\nvariable_group x, y;\nf = x^2+4*y^2-4;\n"},
 	            {"num_paths", 1}});
 	out.Append({{"kind", "track"}, {"run", "abc123"}, {"index", 0}, {"status", "success"},
@@ -194,7 +196,7 @@ BOOST_AUTO_TEST_CASE(index_and_results_render)
 
 	// self-completeness: the runs section refers back to what constructed the result
 	auto const& run = results.at("runs").as_object().at("abc123").as_object();
-	BOOST_CHECK_EQUAL(std::string(run.at("target_object").as_string()), target_id);
+	BOOST_CHECK_EQUAL(std::string(run.at("target_digest").as_string()), target_id);
 
 	// pretty-printed (the file a human most interacts with), and RESULTS.txt is gone
 	{
@@ -230,6 +232,106 @@ BOOST_AUTO_TEST_CASE(shared_is_one_instance_per_path_per_process)
 	std::weak_ptr<OutputDirectory> watch = a;
 	a.reset(); b.reset();
 	BOOST_CHECK(watch.expired());
+}
+
+BOOST_AUTO_TEST_CASE(hostile_ids_kinds_and_labels_are_refused)
+{
+	// these strings become filesystem paths: a hostile or buggy caller must not be
+	// able to write outside definitions/ or smuggle separators into filenames
+	auto const dir = FreshDir("hostile");
+	OutputDirectory out(dir);
+	BOOST_CHECK_THROW(out.PutDefinition("x", "systems", "../../evil"), std::invalid_argument);
+	BOOST_CHECK_THROW(out.PutDefinition("x", "systems", std::string(64, 'Z')), std::invalid_argument);
+	BOOST_CHECK_THROW(out.PutDefinition("x", "../escape"), std::invalid_argument);
+	BOOST_CHECK_THROW(out.PutDefinition("x", "systems", std::nullopt, "a/b"), std::invalid_argument);
+	BOOST_CHECK_THROW(out.PutDefinition("x", ""), std::invalid_argument);
+	// and a hostile directory's RECORDS cannot point resolution outside definitions/
+	BOOST_CHECK(!out.HasDefinition("../../../etc/passwd"));
+	BOOST_CHECK(!out.HasDefinition(".."));
+	BOOST_CHECK(!out.HasDefinition(""));
+	BOOST_CHECK_THROW(out.GetDefinition("../../../etc/passwd"), std::runtime_error);
+	// nothing escaped
+	BOOST_CHECK(!fs::exists(dir.parent_path() / "evil"));
+}
+
+BOOST_AUTO_TEST_CASE(doubles_render_consistently_everywhere)
+{
+	// annotation values, results.json, and history lines all use the same shortest
+	// round-trip decimal form as the config views -- never uppercase-scientific
+	auto dir = FreshDir("doubles");
+	OutputDirectory out(dir);
+	out.Append({{"kind", "run"}, {"run", "r1"}, {"num_paths", 1}});
+	out.Append({{"kind", "track"}, {"run", "r1"}, {"index", 0}, {"status", "success"},
+	            {"endpoint", json::array{json::array{"0.5", "0"}}}});
+	out.Annotate("r1", 0, "projection", json::value(0.5));
+	out.Annotate("r1", 0, "tolerance", json::value(1e-05));
+	out.Append({{"kind", "result"}, {"name", "pts"}, {"when", "now"},
+	            {"points", json::array{json::object{{"run", "r1"}, {"index", 0}}}}});
+	out.RefreshResults();
+
+	auto read = [](fs::path const& p) {
+		std::ifstream in(p);
+		return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	};
+	auto const results = read(dir / "results.json");
+	BOOST_CHECK(results.find("0.5") != std::string::npos);
+	BOOST_CHECK(results.find("1e-05") != std::string::npos);
+	BOOST_CHECK(results.find("5E-1") == std::string::npos);
+	for (auto const& entry : fs::directory_iterator(dir / "history"))
+		if (entry.path().extension() == ".jsonl")
+		{
+			auto const line_text = read(entry.path());
+			BOOST_CHECK(line_text.find("5E-1") == std::string::npos);
+			if (line_text.find("projection") != std::string::npos)
+				BOOST_CHECK(line_text.find("0.5") != std::string::npos);
+		}
+	// round trip: the values come back as the same doubles
+	for (auto const& rec : out.Scan())
+		if (rec.if_contains("key") && rec.at("key").as_string() == "tolerance")
+			BOOST_CHECK_EQUAL(rec.at("value").as_double(), 1e-05);
+}
+
+BOOST_AUTO_TEST_CASE(concurrent_appends_from_many_threads_all_land)
+{
+	// a Shared() instance may be written from several threads (ambient recording in
+	// a threaded sweep): every record lands, none torn, one session file
+	auto dir = FreshDir("threads");
+	auto out = OutputDirectory::Shared(dir);
+	constexpr int kThreads = 8, kEach = 50;
+	std::vector<std::thread> workers;
+	for (int t = 0; t < kThreads; ++t)
+		workers.emplace_back([&out, t] {
+			for (int i = 0; i < kEach; ++i)
+				out->Append({{"kind", "probe"}, {"thread", t}, {"i", i}});
+		});
+	for (auto& w : workers)
+		w.join();
+	BOOST_CHECK_EQUAL(out->Scan().size(), static_cast<std::size_t>(kThreads * kEach));
+	std::size_t session_files = 0;
+	for (auto const& entry : fs::directory_iterator(dir / "history"))
+		if (entry.path().extension() == ".jsonl")
+			++session_files;
+	BOOST_CHECK_EQUAL(session_files, 1u);
+}
+
+BOOST_AUTO_TEST_CASE(views_survive_dangling_and_garbage_references)
+{
+	// a run whose definition is MISSING, a result pointing at a nonexistent track,
+	// and an annotation on a point that was never recorded: views must render
+	// something, never throw, never crash
+	auto dir = FreshDir("dangling");
+	OutputDirectory out(dir);
+	out.Append({{"kind", "run"}, {"run", "r1"}, {"num_paths", 1},
+	            {"target_digest", std::string(64, '0')}});   // no such definition
+	out.Append({{"kind", "result"}, {"name", "ghost"}, {"when", "now"},
+	            {"points", json::array{json::object{{"run", "nope"}, {"index", 99}}}}});
+	out.Annotate("never_ran", 7, "note", json::value("orphan"));
+	BOOST_CHECK_NO_THROW(out.RefreshResults());
+	BOOST_CHECK_NO_THROW(out.RefreshIndex());
+	BOOST_CHECK(fs::exists(dir / "results.json"));
+	std::ifstream in(dir / "INDEX.txt");
+	std::string index_text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	BOOST_CHECK(index_text.find("(unknown target)") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(annotate_convenience_appends_annotation_records)

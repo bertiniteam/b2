@@ -14,7 +14,7 @@
 // Bertini2 is provided with permitted additional terms in the b2/licenses/ directory.
 
 /** \file records_export.hpp
-\brief Exports the `records` submodule: the structured output directory (ledgerrec/1).
+\brief Exports the `records` submodule: the structured output directory (b2rec/1).
 */
 
 #pragma once
