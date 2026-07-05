@@ -69,8 +69,9 @@ LAYOUT
                 session, named by date.  Read with eyes, grep, jq, or
                 pandas.read_json(..., lines=True).
   definitions/  the things records refer to, filed as
-                    definitions/<kind>/<first 2 hex of digest>/<kind>-<digest>.<ext>
-                e.g.  definitions/systems/03/system-03958a...7f.txt
+                    definitions/<kind>/<2 hex>/<kind>[-<role>]-<digest>.<ext>
+                e.g.  definitions/systems/03/system-03958a...7f.json
+                      definitions/givens/34/given-cli_input-3468cd...9b.txt
                 The filename carries the FULL digest (never concatenate) and the kind;
                 the two-hex folder exists purely so no directory grows unbounded; the
                 extension is honest (.json for JSON, .txt for text).  Kinds:
@@ -274,15 +275,18 @@ std::string SystemEncodingAsJson(std::string const& encoding_text, std::string c
 }
 
 std::filesystem::path OutputDirectory::DefinitionPath(std::string const& kind,
-                                                      std::string const& id) const
+                                                      std::string const& id,
+                                                      std::string const& label) const
 {
 	// kind folder for the browsing human; two-hex-char shard inside so no single
 	// directory grows unbounded (a 100k-target sweep must not melt systems/).  The
 	// filename repeats the FULL id -- recovering a definition's digest must never
-	// require string concatenation -- and says what it is even after the file
-	// wanders away from its folder.  The extension is honest: .json for JSON.
+	// require string concatenation -- plus an optional role label, so a listing says
+	// what each file is even after it wanders away from its folder.  The id always
+	// sits between the LAST '-' and the extension.
 	return root_ / "definitions" / kind / id.substr(0, 2)
-	       / (KindSingular(kind) + "-" + id);   // extension appended at write time
+	       / (KindSingular(kind) + (label.empty() ? "" : "-" + label) + "-" + id);
+	       // extension appended at write time
 }
 
 std::optional<std::filesystem::path> OutputDirectory::FindDefinition(std::string const& id) const
@@ -303,10 +307,14 @@ std::optional<std::filesystem::path> OutputDirectory::FindDefinition(std::string
 			continue;
 		for (auto const& entry : std::filesystem::directory_iterator(shard))
 		{
+			// filename shape: <kind>[-<label>]-<id>.<ext> -- the id is always
+			// between the LAST '-' and the extension (hex never contains '-')
 			auto const name = entry.path().filename().string();
-			auto const dash = name.find('-');
 			auto const dot = name.rfind('.');
-			if (dash != std::string::npos && dot != std::string::npos && dot > dash
+			if (dot == std::string::npos)
+				continue;
+			auto const dash = name.rfind('-', dot);
+			if (dash != std::string::npos && dot > dash
 			    && name.compare(dash + 1, dot - dash - 1, id) == 0)
 				return entry.path();
 		}
@@ -315,13 +323,14 @@ std::optional<std::filesystem::path> OutputDirectory::FindDefinition(std::string
 }
 
 std::string OutputDirectory::PutDefinition(std::string const& content, std::string const& kind,
-                                           std::optional<std::string> external_id)
+                                           std::optional<std::string> external_id,
+                                           std::string const& label)
 {
 	std::string const id = external_id ? *external_id : detail::Sha256(content).Hex();
 	if (auto const existing = FindDefinition(id))
 		return id;   // idempotent: content-addressed writes never conflict
 	char const* const ext = (!content.empty() && content.front() == '{') ? ".json" : ".txt";
-	auto path = DefinitionPath(kind, id);
+	auto path = DefinitionPath(kind, id, label);
 	path += ext;
 	std::filesystem::create_directories(path.parent_path());
 	auto const tmp = path.parent_path() / (path.filename().string() + ".tmp");

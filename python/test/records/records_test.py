@@ -250,7 +250,7 @@ def test_raw_start_points_become_a_given(tmp_path):
     # filed by kind with the FULL digest in the filename and an honest extension
     gid = givens[0]['source']
     body = json.loads((tmp_path / 'records' / 'definitions' / 'givens'
-                       / gid[:2] / ('given-%s.json' % gid)).read_text())
+                       / gid[:2] / ('given-start_points-%s.json' % gid)).read_text())
     assert len(body['points']) == 2
 
 

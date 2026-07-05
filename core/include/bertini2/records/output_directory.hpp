@@ -102,6 +102,9 @@ public:
 	       by the id's first two hex characters so no directory grows unbounded.
 	\param external_id If given, store under that id; otherwise the id is the SHA-256
 	       of the bytes (self-verifying: `sha256sum` of the file reproduces its name).
+	\param label Optional role label woven into the filename (e.g. "cli_input" gives
+	       `given-cli_input-<digest>.txt`), so a listing says what each file IS
+	       without opening it.  Presentation only, never identity.
 	\return The definition id (64 lowercase hex characters).
 
 	Atomic (write-temp + rename) and idempotent: equal content lands at an equal path,
@@ -109,7 +112,8 @@ public:
 	reference bare ids); the kind is presentation, not identity.
 	*/
 	std::string PutDefinition(std::string const& content, std::string const& kind,
-	                          std::optional<std::string> external_id = std::nullopt);
+	                          std::optional<std::string> external_id = std::nullopt,
+	                          std::string const& label = {});
 
 	/// \brief Read a definition's bytes by id (searched across all kinds).  Throws if absent.
 	std::string GetDefinition(std::string const& id) const;
@@ -169,7 +173,8 @@ public:
 	std::string Describe() const;
 
 private:
-	std::filesystem::path DefinitionPath(std::string const& kind, std::string const& id) const;
+	std::filesystem::path DefinitionPath(std::string const& kind, std::string const& id,
+	                                     std::string const& label) const;
 	std::optional<std::filesystem::path> FindDefinition(std::string const& id) const;
 	void EnsureSessionFile();
 

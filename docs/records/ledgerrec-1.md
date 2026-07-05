@@ -28,8 +28,11 @@ recomputing).
 ## Definitions (`definitions/`)
 
 One file per definition, filed as
-`definitions/<kind>/<first 2 hex of digest>/<kind singular>-<full 64-hex digest>.<ext>`,
-e.g. `definitions/systems/03/system-03958a...7f.txt`.
+`definitions/<kind>/<first 2 hex of digest>/<kind singular>[-<role>]-<full 64-hex digest>.<ext>`,
+e.g. `definitions/systems/03/system-03958a...7f.json` or
+`definitions/givens/34/given-cli_input-3468cd...9b.txt`.  The id always sits between
+the LAST `-` and the extension; the optional role label (givens carry `cli_input` or
+`start_points`) is presentation, never identity.
 
 - The **kind** folder is for the browsing human; bertini writes `systems/`, `configs/`,
   and `givens/`, and the vocabulary is open (any lowercase name).  The kind is

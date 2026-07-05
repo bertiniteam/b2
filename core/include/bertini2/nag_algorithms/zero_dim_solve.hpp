@@ -139,9 +139,11 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 	/// no-op when not recording.  Lets the CLI archive its input file as a `given`.
 	virtual void AppendRecordJson(std::string const& /*record_json*/) {}
 	/// \brief Store content as a definition of the given kind ("systems"/"configs"/
-	/// "givens") in the attached directory; returns its id (empty when not recording).
+	/// "givens"), optionally labeled by role in the filename (e.g. "cli_input"), in
+	/// the attached directory; returns its id (empty when not recording).
 	virtual std::string PutRecordsDefinition(std::string const& /*content*/,
-	                                         std::string const& /*kind*/) { return {}; }
+	                                         std::string const& /*kind*/,
+	                                         std::string const& /*label*/ = {}) { return {}; }
 	virtual ~AnyZeroDim() = default;
 };
 
@@ -2068,12 +2070,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					records_->Append(boost::json::parse(record_json).as_object());
 			}
 
-			/// \brief Store a definition of the given kind in the attached directory
-			/// (empty id if none).
+			/// \brief Store a definition of the given kind (optional role label in the
+			/// filename) in the attached directory (empty id if none).
 			std::string PutRecordsDefinition(std::string const& content,
-			                                 std::string const& kind) override
+			                                 std::string const& kind,
+			                                 std::string const& label = {}) override
 			{
-				return records_ ? records_->PutDefinition(content, kind) : std::string();
+				return records_ ? records_->PutDefinition(content, kind, std::nullopt, label)
+				                : std::string();
 			}
 
 			/**

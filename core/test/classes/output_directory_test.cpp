@@ -87,6 +87,11 @@ BOOST_AUTO_TEST_CASE(definitions_are_idempotent_and_self_verifying)
 	auto const jid = out.PutDefinition("{\"kind\":\"probe\"}", "givens");
 	BOOST_CHECK(fs::exists(dir / "definitions" / "givens" / jid.substr(0, 2)
 	                       / ("given-" + jid + ".json")));
+	// a role label weaves into the filename (presentation only; same resolution)
+	auto const lid = out.PutDefinition("my input file", "givens", std::nullopt, "cli_input");
+	BOOST_CHECK(fs::exists(dir / "definitions" / "givens" / lid.substr(0, 2)
+	                       / ("given-cli_input-" + lid + ".txt")));
+	BOOST_CHECK_EQUAL(out.GetDefinition(lid), "my input file");
 	// ids resolve without the kind: readers follow bare ids from the records
 	BOOST_CHECK_EQUAL(out.GetDefinition(ext), "a rendering");
 }

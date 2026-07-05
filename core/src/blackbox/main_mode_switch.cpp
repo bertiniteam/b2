@@ -105,7 +105,8 @@ int RunZeroDim(std::string const& config_str, std::string const& input_str)
 		// archive the ACTUAL input file in the records: the truest statement of what was
 		// asked, referenced from this run as a `given`
 		{
-			auto const input_definition = alg->PutRecordsDefinition(config_str + input_str, "givens");
+			auto const input_definition =
+				alg->PutRecordsDefinition(config_str + input_str, "givens", "cli_input");
 			if (!input_definition.empty())
 				alg->AppendRecordJson(std::string("{\"kind\":\"given\",\"role\":\"cli_input\",\"run\":\"")
 					+ alg->RecordsRunIdentity() + "\",\"source\":\"" + input_definition + "\"}");
