@@ -253,6 +253,16 @@ BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 
 	ZD zd(sys);
 	zd.DefaultSetup();
+	// Since the pole-component operating-zone fix (PR #70), the security check watches the
+	// dehomogenized loop SAMPLES; under the default max_norm (1e4) the two at-infinity paths
+	// of this patched solve converge in homogeneous coordinates before their samples trip
+	// the check, and report honest successes at projective points at infinity.  This test
+	// is about the diverged-vs-failed VOCABULARY, so tighten max_norm to make those two
+	// paths actually truncate.  Settings are ask identity: the recall rerun below must set
+	// the same value.
+	endgame::SecurityConfig sec;
+	sec.max_norm = 50;
+	zd.GetEndgame().Set(sec);
 	zd.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	zd.Solve();
 
@@ -283,6 +293,7 @@ BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 	sys_again.AddVariableGroup(VariableGroup{x2, y2});
 	ZD again(sys_again);
 	again.DefaultSetup();
+	again.GetEndgame().Set(sec);   // same ask: settings are part of the recall identity
 	again.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	again.Solve();
 	BOOST_CHECK_EQUAL(again.NumPathsRecalled(), 4u);

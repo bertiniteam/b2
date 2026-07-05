@@ -361,17 +361,10 @@ def test_provenance_graph_and_chain_plot(tmp_path):
     plt.close('all')
 
 
-@pytest.mark.xfail(reason="KNOWN BUG, fix owned by a DEDICATED PR (user decision "
-                          "2026-07-03; see z_notes/junk-success-cauchy-pole-blindness.md): "
-                          "the Cauchy endgame's circle-mean is blind to poles, so on raw "
-                          "affine user homotopies toward deficient targets it can report "
-                          "Success at a NON-ROOT (function_residual ~ 1; inherited from "
-                          "Bertini 1, reproduction committed).  In the affine case infinity "
-                          "is really infinity -- the endgame can never converge there.  The "
-                          "records stay honest; the plain (patched) zero-dim pipeline is "
-                          "correct.  Un-xfail when the endgame PR merges.",
-                   strict=False)
 def test_chained_deficient_target_paths_never_junk_success(tmp_path):
+    # Regression pin for the Cauchy pole-blindness junk-success bug (PR #70): on raw
+    # affine user homotopies toward deficient targets, the endgame must never report
+    # Success at a non-root -- deficient paths truncate as diverging instead.
     from bertini.nag_algorithm import blend_homotopy
     from bertini import Variable
     x, y = Variable('x'), Variable('y')
