@@ -138,9 +138,10 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 	/// \brief Append one raw record (a JSON object as text) to the attached directory;
 	/// no-op when not recording.  Lets the CLI archive its input file as a `given`.
 	virtual void AppendRecordJson(std::string const& /*record_json*/) {}
-	/// \brief Store content as a definition in the attached directory; returns its id
-	/// (empty when not recording).
-	virtual std::string PutRecordsDefinition(std::string const& /*content*/) { return {}; }
+	/// \brief Store content as a definition of the given kind ("systems"/"configs"/
+	/// "givens") in the attached directory; returns its id (empty when not recording).
+	virtual std::string PutRecordsDefinition(std::string const& /*content*/,
+	                                         std::string const& /*kind*/) { return {}; }
 	virtual ~AnyZeroDim() = default;
 };
 
@@ -2067,10 +2068,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					records_->Append(boost::json::parse(record_json).as_object());
 			}
 
-			/// \brief Store a definition in the attached directory (empty id if none).
-			std::string PutRecordsDefinition(std::string const& content) override
+			/// \brief Store a definition of the given kind in the attached directory
+			/// (empty id if none).
+			std::string PutRecordsDefinition(std::string const& content,
+			                                 std::string const& kind) override
 			{
-				return records_ ? records_->PutDefinition(content) : std::string();
+				return records_ ? records_->PutDefinition(content, kind) : std::string();
 			}
 
 			/**
@@ -2250,16 +2253,24 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					    && rec.at("run").as_string() == records_run_id_)
 						return;   // header already on record (a resumed run)
 
-				// the RENDERING is filed by its own bytes (textually equal systems dedupe to
-				// ONE file; the classic rendering omits the random patch, so filing by content
-				// digest surprised users with N identical-looking copies); the true identity
-				// digest travels as its own header field
+				// the archived system is a JSON document (like the configs) embedding
+				// the CANONICAL ENCODING (b2sysenc) -- exact and complete: every block
+				// (slices, randomization, blends), patch, and gamma survives, where a
+				// classic rendering flattens or loses them.  The encoding is the digest
+				// PREIMAGE, so the definition id EQUALS target_digest and the embedded
+				// digest lets a copied-out file verify itself (hash its .encoding).
+				// The classic rendering rides along inside, and in the header, for eyes.
+				auto const target_digest_hex = TargetSystem().ContentDigest().Hex();
+				auto const target_rendering = bertini::classic::SystemToClassic(TargetSystem());
 				auto const target_definition = records_->PutDefinition(
-					bertini::classic::SystemToClassic(TargetSystem()));
+					records::SystemEncodingAsJson(TargetSystem().CanonicalEncodingText(),
+					                              target_digest_hex, target_rendering),
+					"systems", target_digest_hex);
 				// the settings, reconstructible: the SAME canonical text the digest is over
 				std::string const config_text = CanonicalSettingsText();
 				auto const config_definition = records_->PutDefinition(
 					records::ConfigTextAsJson(config_text, std::string(ask.at("config").as_string())),
+					"configs",
 					std::string(ask.at("config").as_string()));
 				boost::json::object header;
 				header["kind"] = "run";
@@ -2283,7 +2294,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				header["producer"] = records::ProducerInfo();
 				header["ask"] = ask;
 				header["target_object"] = target_definition;
-				header["target_digest"] = TargetSystem().ContentDigest().Hex();
+				header["target_digest"] = target_digest_hex;
+				// classic-style rendering FOR EYES ONLY (INDEX.txt, results.json): it
+				// cannot express all block structure, so it is never the identity
+				header["target_rendering"] = target_rendering;
 				// the INTERNAL variable ordering, so views can label endpoint coordinates
 				// truthfully (homogenized points have more coordinates than the user's
 				// rendering declares)

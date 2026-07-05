@@ -193,7 +193,7 @@ def _archive_given_points(pending, directory_writer):
             coords.append([repr(c.real), repr(c.imag)])
         rows.append(coords)
     content = _json.dumps({'kind': 'start_points', 'points': rows}, indent=1)
-    given_id = directory_writer.put_definition(content)
+    given_id = directory_writer.put_definition(content, 'givens')
     directory_writer.append(_json.dumps({
         'kind': 'given', 'source': given_id, 'role': 'start_points',
         'when': _time.strftime('%Y-%m-%d %H:%M')}))

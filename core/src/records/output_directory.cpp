@@ -68,15 +68,36 @@ LAYOUT
   history/      the records: JSON, one object per line (JSONL), one file per writing
                 session, named by date.  Read with eyes, grep, jq, or
                 pandas.read_json(..., lines=True).
-  definitions/  the things records refer to (polynomial systems, etc.), stored once
-                each in a file named by the SHA-256 of its content -- so records can
-                reference them exactly, and `sha256sum` verifies them.  Mostly
-                human-readable input files.
+  definitions/  the things records refer to, filed as
+                    definitions/<kind>/<first 2 hex of digest>/<kind>-<digest>.<ext>
+                e.g.  definitions/systems/03/system-03958a...7f.txt
+                The filename carries the FULL digest (never concatenate) and the kind;
+                the two-hex folder exists purely so no directory grows unbounded; the
+                extension is honest (.json for JSON, .txt for text).  Kinds:
+                  systems/  the exact polynomial systems, as JSON: {"schema",
+                            "digest", "encoding", "rendering"}.  The encoding is
+                            bertini2's canonical form (b2sysenc; versioned, block
+                            structure preserved) and is the digest PREIMAGE: the id
+                            equals the system's content digest, and hashing the
+                            encoding (`jq -r .encoding <file> | sha256sum`)
+                            reproduces it.  The rendering is classic-style text for
+                            eyes -- it cannot express all structure; never identity.
+                  configs/  the solver settings that ran, as JSON (digest embedded).
+                  givens/   externally supplied data: start points (JSON), CLI input
+                            files (byte-exact copies of what you supplied --
+                            `sha256sum` reproduces their id directly).
+                The filename carries the full digest and the kind, and the JSON kinds
+                embed their digest, so a file copied out of the store stays
+                identified and verifiable.
 
 RECORD FORMAT (schema ledgerrec/1) -- every history line is one JSON object:
   kind="run"        a solve: `ask` (what was requested: target system digest + config
                     + seed), `run` (this run's id), `when`, `num_paths`, and how start
                     points arise (recorded values, or a reference to an ancestor run).
+                    `target_object` names the exact system definition (its id equals
+                    `target_digest`); `target_rendering` is a classic-style rendering
+                    of the same system FOR EYES ONLY -- it cannot express all block
+                    structure, so never treat it as the system's identity.
   kind="track"      one continued path: `run`, `index`, `status`, `endpoint`
                     (coordinates as [real, imaginary] decimal-string pairs, full
                     precision), and `start` (its provenance: a start_label, or a
@@ -226,18 +247,82 @@ std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path c
 
 // ---- definitions ----
 
-std::filesystem::path OutputDirectory::DefinitionPath(std::string const& id) const
+namespace {
+
+	// "systems" -> "system": the filename carries the kind in the singular
+	std::string KindSingular(std::string const& kind)
+	{
+		return (!kind.empty() && kind.back() == 's') ? kind.substr(0, kind.size() - 1) : kind;
+	}
+
+} // unnamed namespace
+
+std::string SystemEncodingAsJson(std::string const& encoding_text, std::string const& digest_hex,
+                                 std::string const& rendering)
 {
-	return root_ / "definitions" / id.substr(0, 2) / id.substr(2);
+	// the schema token is the encoding's own first word, so the two never drift
+	auto const schema_end = encoding_text.find_first_of(" \n");
+	std::string const schema = encoding_text.substr(0, schema_end);
+	// boost::json does the escaping (encodings may contain any variable name -- emoji
+	// included); the layout is hand-rolled to match the config definitions' style
+	std::ostringstream out;
+	out << "{\n \"schema\": " << json::serialize(json::value(schema)) << ",\n"
+	    << " \"digest\": " << json::serialize(json::value(digest_hex)) << ",\n"
+	    << " \"encoding\": " << json::serialize(json::value(encoding_text)) << ",\n"
+	    << " \"rendering\": " << json::serialize(json::value(rendering)) << "\n}\n";
+	return out.str();
 }
 
-std::string OutputDirectory::PutDefinition(std::string const& content,
+std::filesystem::path OutputDirectory::DefinitionPath(std::string const& kind,
+                                                      std::string const& id) const
+{
+	// kind folder for the browsing human; two-hex-char shard inside so no single
+	// directory grows unbounded (a 100k-target sweep must not melt systems/).  The
+	// filename repeats the FULL id -- recovering a definition's digest must never
+	// require string concatenation -- and says what it is even after the file
+	// wanders away from its folder.  The extension is honest: .json for JSON.
+	return root_ / "definitions" / kind / id.substr(0, 2)
+	       / (KindSingular(kind) + "-" + id);   // extension appended at write time
+}
+
+std::optional<std::filesystem::path> OutputDirectory::FindDefinition(std::string const& id) const
+{
+	// records carry bare ids; kind and extension are presentation.  Resolution: the
+	// unique file under definitions/<kind>/<first 2 hex>/ named <kind>-<id>.<ext>.
+	if (id.size() < 3)
+		return std::nullopt;
+	auto const defs = root_ / "definitions";
+	if (!std::filesystem::exists(defs))
+		return std::nullopt;
+	for (auto const& kind_dir : std::filesystem::directory_iterator(defs))
+	{
+		if (!kind_dir.is_directory())
+			continue;
+		auto const shard = kind_dir.path() / id.substr(0, 2);
+		if (!std::filesystem::exists(shard))
+			continue;
+		for (auto const& entry : std::filesystem::directory_iterator(shard))
+		{
+			auto const name = entry.path().filename().string();
+			auto const dash = name.find('-');
+			auto const dot = name.rfind('.');
+			if (dash != std::string::npos && dot != std::string::npos && dot > dash
+			    && name.compare(dash + 1, dot - dash - 1, id) == 0)
+				return entry.path();
+		}
+	}
+	return std::nullopt;
+}
+
+std::string OutputDirectory::PutDefinition(std::string const& content, std::string const& kind,
                                            std::optional<std::string> external_id)
 {
 	std::string const id = external_id ? *external_id : detail::Sha256(content).Hex();
-	auto const path = DefinitionPath(id);
-	if (std::filesystem::exists(path))
+	if (auto const existing = FindDefinition(id))
 		return id;   // idempotent: content-addressed writes never conflict
+	char const* const ext = (!content.empty() && content.front() == '{') ? ".json" : ".txt";
+	auto path = DefinitionPath(kind, id);
+	path += ext;
 	std::filesystem::create_directories(path.parent_path());
 	auto const tmp = path.parent_path() / (path.filename().string() + ".tmp");
 	{
@@ -250,9 +335,10 @@ std::string OutputDirectory::PutDefinition(std::string const& content,
 
 std::string OutputDirectory::GetDefinition(std::string const& id) const
 {
-	std::ifstream in(DefinitionPath(id), std::ios::binary);
-	if (!in.good())
+	auto const path = FindDefinition(id);
+	if (!path)
 		throw std::runtime_error("OutputDirectory: no definition with id " + id);
+	std::ifstream in(*path, std::ios::binary);
 	std::ostringstream contents;
 	contents << in.rdbuf();
 	return contents.str();
@@ -260,7 +346,7 @@ std::string OutputDirectory::GetDefinition(std::string const& id) const
 
 bool OutputDirectory::HasDefinition(std::string const& id) const
 {
-	return std::filesystem::exists(DefinitionPath(id));
+	return FindDefinition(id).has_value();
 }
 
 
@@ -377,10 +463,15 @@ void OutputDirectory::RefreshIndex() const
 			num_paths = std::to_string(np->get_int64());
 
 		std::string description = "(unknown target)";
+		// the run header's classic-style rendering is the for-eyes view; older
+		// directories stored the rendering AS the definition, so fall back to that
+		std::string rendering = GetString(r, "target_rendering");
 		auto const target_object = GetString(r, "target_object");
-		if (!target_object.empty() && HasDefinition(target_object))
+		if (rendering.empty() && !target_object.empty() && HasDefinition(target_object))
+			rendering = GetDefinition(target_object);
+		if (!rendering.empty())
 		{
-			std::istringstream text(GetDefinition(target_object));
+			std::istringstream text(rendering);
 			std::string functions;
 			for (std::string line; std::getline(text, line); )
 			{
@@ -475,7 +566,8 @@ void OutputDirectory::RefreshResults() const
 				{
 					json::object summary;
 					for (char const* key : {"when", "op", "ask", "target_object",
-					                        "target_digest", "config_object", "num_paths"})
+					                        "target_digest", "target_rendering",
+					                        "config_object", "num_paths"})
 						if (run_it->second.contains(key))
 							summary[key] = run_it->second.at(key);
 					runs_section[run_id] = summary;
@@ -513,13 +605,18 @@ void OutputDirectory::RefreshResults() const
 						for (auto const& v : vars->get_array())
 							if (v.is_string())
 								var_names.emplace_back(v.get_string());
-				// older directories: fall back to parsing the classic rendering
+				// older directories: fall back to parsing the classic rendering (from
+				// the header field, or -- older still -- the definition, which used to
+				// BE the rendering before systems/ stored the canonical encoding)
 				if (var_names.empty() && run_it != runs.end())
 				{
+					std::string rendering = GetString(run_it->second, "target_rendering");
 					auto const target_object = GetString(run_it->second, "target_object");
-					if (!target_object.empty() && HasDefinition(target_object))
+					if (rendering.empty() && !target_object.empty() && HasDefinition(target_object))
+						rendering = GetDefinition(target_object);
+					if (!rendering.empty())
 					{
-						std::istringstream text(GetDefinition(target_object));
+						std::istringstream text(rendering);
 						for (std::string line; std::getline(text, line); )
 						{
 							auto const key_pos = line.find("variable_group");

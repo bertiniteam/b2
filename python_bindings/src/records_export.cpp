@@ -44,15 +44,17 @@ namespace {
 		self.Append(boost::json::parse(record_json).as_object());
 	}
 
-	std::string PutDefinitionDefaultId(records::OutputDirectory& self, std::string const& content)
+	std::string PutDefinitionDefaultId(records::OutputDirectory& self,
+	                                   std::string const& content, std::string const& kind)
 	{
-		return self.PutDefinition(content);
+		return self.PutDefinition(content, kind);
 	}
 
 	std::string PutDefinitionExternalId(records::OutputDirectory& self,
-	                                    std::string const& content, std::string const& id)
+	                                    std::string const& content, std::string const& kind,
+	                                    std::string const& id)
 	{
-		return self.PutDefinition(content, id);
+		return self.PutDefinition(content, kind, id);
 	}
 
 	void AnnotateJson(records::OutputDirectory& self, std::string const& run_id,
@@ -94,11 +96,12 @@ void ExportRecords()
 		.def("append", &AppendJson, (arg("self"), arg("record_json")),
 			"Append one record (a JSON object as a string) to this session's history file.  "
 			"One writer per file; flushed per record.")
-		.def("put_definition", &PutDefinitionDefaultId, (arg("self"), arg("content")),
-			"Store a definition content-addressed (id = SHA-256 of the bytes); returns the id.")
+		.def("put_definition", &PutDefinitionDefaultId, (arg("self"), arg("content"), arg("kind")),
+			"Store a definition content-addressed (id = SHA-256 of the bytes) under the given "
+			"kind folder ('systems'/'configs'/'givens'); returns the id.")
 		.def("put_definition", &PutDefinitionExternalId,
-			(arg("self"), arg("content"), arg("external_id")),
-			"Store a definition under an external id (e.g. a System's content_digest); returns it.")
+			(arg("self"), arg("content"), arg("kind"), arg("external_id")),
+			"Store a definition of the given kind under an external id; returns it.")
 		.def("annotate", &AnnotateJson,
 			(arg("self"), arg("run"), arg("index"), arg("key"), arg("value_json")),
 			"Attach metadata to a recorded point: appends an annotation record for "

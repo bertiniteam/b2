@@ -195,7 +195,10 @@ Nothing here needs bertini to read::
                    and configs that produced it: one json.load away
    INDEX.txt       one line per run: when, what, how many paths
    history/        every record, one JSON object per line (grep / jq / pandas)
-   definitions/    the systems, content-addressed (sha256sum verifies them)
+   definitions/    what the records refer to, grouped by kind and named by their
+                   digest -- systems/ (JSON embedding the exact canonical encoding,
+                   whose sha256 IS the system's identity digest), configs/ (JSON),
+                   givens/ (your data, byte-exact)
 
 The command line gets the same treatment: running ``bertini2`` on an input file writes
 ``bertini_output`` beside your familiar Bertini 1 files (``main_data``,

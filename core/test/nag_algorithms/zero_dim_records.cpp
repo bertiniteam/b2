@@ -94,6 +94,22 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 			BOOST_CHECK_EQUAL(std::string(producer.at("name").as_string()), "bertini2");
 			BOOST_CHECK(!producer.at("version").as_string().empty());
 			BOOST_CHECK(!producer.at("commit").as_string().empty());
+			// the archived system is a JSON document embedding the canonical encoding
+			// (the digest PREIMAGE): the definition id EQUALS the identity digest,
+			// the embedded digest matches, and hashing the encoding reproduces both
+			// (a copied-out file verifies itself)
+			auto const target_id = std::string(rec.at("target_object").as_string());
+			BOOST_CHECK_EQUAL(target_id, std::string(rec.at("target_digest").as_string()));
+			auto const stored = boost::json::parse(a.Records()->GetDefinition(target_id)).as_object();
+			BOOST_CHECK_EQUAL(std::string(stored.at("digest").as_string()), target_id);
+			auto const encoding = std::string(stored.at("encoding").as_string());
+			BOOST_CHECK_EQUAL(bertini::detail::Sha256(encoding).Hex(), target_id);
+			BOOST_CHECK_EQUAL(encoding.rfind("b2sysenc/", 0), 0u);
+			BOOST_CHECK_EQUAL(std::string(stored.at("schema").as_string()),
+			                  encoding.substr(0, encoding.find_first_of(" \n")));
+			// the for-eyes rendering travels inside the definition and in the header
+			BOOST_CHECK(stored.contains("rendering"));
+			BOOST_CHECK(rec.contains("target_rendering"));
 		}
 		if (kind == "track")
 		{
@@ -157,7 +173,7 @@ BOOST_AUTO_TEST_CASE(partial_directory_resumes_computing_only_the_missing)
 			return boost::json::object{};
 		}();
 		auto const target_id = std::string(header.at("target_object").as_string());
-		partial.PutDefinition(full.Records()->GetDefinition(target_id), target_id);
+		partial.PutDefinition(full.Records()->GetDefinition(target_id), "systems", target_id);
 	}
 
 	// the rerun: recalls 2, computes 2, and the answers match the uninterrupted solve

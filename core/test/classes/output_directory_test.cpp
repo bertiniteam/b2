@@ -65,16 +65,30 @@ BOOST_AUTO_TEST_CASE(construction_writes_the_self_documenting_readme)
 
 BOOST_AUTO_TEST_CASE(definitions_are_idempotent_and_self_verifying)
 {
-	OutputDirectory out(FreshDir("defs"));
-	auto const id1 = out.PutDefinition("hello records");
-	auto const id2 = out.PutDefinition("hello records");
+	auto const dir = FreshDir("defs");
+	OutputDirectory out(dir);
+	auto const id1 = out.PutDefinition("hello records", "givens");
+	auto const id2 = out.PutDefinition("hello records", "givens");
 	BOOST_CHECK_EQUAL(id1, id2);
 	BOOST_CHECK_EQUAL(out.GetDefinition(id1), "hello records");
 	BOOST_CHECK_EQUAL(id1, bertini::detail::Sha256("hello records").Hex());
 
-	auto const ext = out.PutDefinition("a rendering", std::string(64, 'a'));
+	auto const ext = out.PutDefinition("a rendering", "systems", std::string(64, 'a'));
 	BOOST_CHECK_EQUAL(ext, std::string(64, 'a'));
 	BOOST_CHECK(out.HasDefinition(ext));
+
+	// layout: kind folder for the human, two-hex shard for scale, and the filename
+	// carries kind + FULL digest + an honest extension (no concatenation to recover
+	// the digest, and the file says what it is even away from its folder)
+	BOOST_CHECK(fs::exists(dir / "definitions" / "givens" / id1.substr(0, 2)
+	                       / ("given-" + id1 + ".txt")));
+	BOOST_CHECK(fs::exists(dir / "definitions" / "systems" / "aa"
+	                       / ("system-" + std::string(64, 'a') + ".txt")));
+	auto const jid = out.PutDefinition("{\"kind\":\"probe\"}", "givens");
+	BOOST_CHECK(fs::exists(dir / "definitions" / "givens" / jid.substr(0, 2)
+	                       / ("given-" + jid + ".json")));
+	// ids resolve without the kind: readers follow bare ids from the records
+	BOOST_CHECK_EQUAL(out.GetDefinition(ext), "a rendering");
 }
 
 BOOST_AUTO_TEST_CASE(append_scan_round_trips_in_one_date_named_session_file)
@@ -142,10 +156,11 @@ BOOST_AUTO_TEST_CASE(index_and_results_render)
 	auto dir = FreshDir("views");
 	OutputDirectory out(dir);
 	auto const target_id = out.PutDefinition(
-		"function f;\nvariable_group x, y;\nf = x^2+4*y^2-4;\n");
+		"function f;\nvariable_group x, y;\nf = x^2+4*y^2-4;\n", "systems");
 
 	out.Append({{"kind", "run"}, {"schema", "ledgerrec/1"}, {"when", "2026-07-03 10:00"},
 	            {"run", "abc123"}, {"op", "solve"}, {"target_object", target_id},
+	            {"target_rendering", "function f;\nvariable_group x, y;\nf = x^2+4*y^2-4;\n"},
 	            {"num_paths", 1}});
 	out.Append({{"kind", "track"}, {"run", "abc123"}, {"index", 0}, {"status", "success"},
 	            {"endpoint", json::array{json::array{"1.5", "0"}, json::array{"-0.66", "0"}}}});

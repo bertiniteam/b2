@@ -21,7 +21,10 @@ them a specification and a core implementation.
 - **`ledgerrec/1`** is the record format, specified in `docs/records/ledgerrec-1.md`
   and carried inside every directory as its `README.txt`.  Layout: `history/`
   (append-only JSONL, one date-named file per writing session, ONE writer per file,
-  claimed by exclusive create) and `definitions/` (content-addressed, atomic
+  claimed by exclusive create) and `definitions/` (content-addressed under
+  human-navigable kind folders, filenames carrying kind + full digest + honest
+  extension — `systems/` are JSON embedding the canonical encoding, the digest
+  preimage, so the definition id IS the system's identity digest; atomic
   write-temp+rename, idempotent — concurrent writers race benignly, no locks exist)
   are the source of truth; `README.txt`, `INDEX.txt`, `results.json`
   are derived, rebuildable views.  Record kinds: `run`, `track`, `result`,

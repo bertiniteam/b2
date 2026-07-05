@@ -246,9 +246,11 @@ def test_raw_start_points_become_a_given(tmp_path):
     assert len(givens) == 1 and givens[0]['role'] == 'start_points'
     assert all(st['kind'] == 'given_ref' and st['given'] == givens[0]['source']
                for st in starts)
-    # the given's definition is plain json, coordinates readable without bertini
+    # the given's definition is plain json, coordinates readable without bertini,
+    # filed by kind with the FULL digest in the filename and an honest extension
     gid = givens[0]['source']
-    body = json.loads((tmp_path / 'records' / 'definitions' / gid[:2] / gid[2:]).read_text())
+    body = json.loads((tmp_path / 'records' / 'definitions' / 'givens'
+                       / gid[:2] / ('given-%s.json' % gid)).read_text())
     assert len(body['points']) == 2
 
 

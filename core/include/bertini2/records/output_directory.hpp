@@ -90,27 +90,31 @@ public:
 	/// \brief The directory's root path.
 	std::filesystem::path const& Root() const { return root_; }
 
-	// ---- definitions (content-addressed) ----
+	// ---- definitions (content-addressed, grouped by kind) ----
 
 	/**
 	\brief Store a definition content-addressed; returns its id.
 
 	\param content The definition's bytes (usually human-readable text).
-	\param external_id If given (e.g. a System's ContentDigest hex, whose preimage is
-	       the canonical encoding rather than these bytes), store under that id;
-	       otherwise the id is the SHA-256 of the bytes (self-verifying).
+	\param kind The human-navigable subfolder the definition lives in: "systems",
+	       "configs", or "givens" (an open vocabulary -- any lowercase name works;
+	       these three are the ones bertini writes).  Inside each kind, files shard
+	       by the id's first two hex characters so no directory grows unbounded.
+	\param external_id If given, store under that id; otherwise the id is the SHA-256
+	       of the bytes (self-verifying: `sha256sum` of the file reproduces its name).
 	\return The definition id (64 lowercase hex characters).
 
 	Atomic (write-temp + rename) and idempotent: equal content lands at an equal path,
-	so concurrent writers race benignly.
+	so concurrent writers race benignly.  Ids are resolved WITHOUT the kind (records
+	reference bare ids); the kind is presentation, not identity.
 	*/
-	std::string PutDefinition(std::string const& content,
+	std::string PutDefinition(std::string const& content, std::string const& kind,
 	                          std::optional<std::string> external_id = std::nullopt);
 
-	/// \brief Read a definition's bytes by id.  Throws if absent.
+	/// \brief Read a definition's bytes by id (searched across all kinds).  Throws if absent.
 	std::string GetDefinition(std::string const& id) const;
 
-	/// \brief Whether a definition with this id is present.
+	/// \brief Whether a definition with this id is present (searched across all kinds).
 	bool HasDefinition(std::string const& id) const;
 
 	// ---- history (append-only JSONL) ----
@@ -165,7 +169,8 @@ public:
 	std::string Describe() const;
 
 private:
-	std::filesystem::path DefinitionPath(std::string const& id) const;
+	std::filesystem::path DefinitionPath(std::string const& kind, std::string const& id) const;
+	std::optional<std::filesystem::path> FindDefinition(std::string const& id) const;
 	void EnsureSessionFile();
 
 	std::filesystem::path root_;        ///< The directory root.
@@ -173,6 +178,25 @@ private:
 	std::filesystem::path session_path_; ///< Path of the session history file (empty until claimed).
 	std::mutex append_mutex_;           ///< Serializes appends: a Shared() instance may be written from several threads.
 };
+
+/**
+\brief The archived form of a system definition: a machine-parseable JSON document
+`{"schema", "digest", "encoding", "rendering"}` -- one `json.load` away, like the
+config definitions.
+
+The `encoding` value is the EXACT canonical encoding text (`b2sysenc/<n>`, the digest
+preimage, block structure preserved); `rendering` is the classic-style text for eyes.
+Verification of a wandering file: extract the encoding and hash it, e.g.
+`jq -r .encoding <file> | sha256sum` reproduces `digest`.
+
+\param encoding_text The system's canonical encoding (`System::CanonicalEncodingText()`).
+\param digest_hex The system's content digest (64 lowercase hex characters).
+\param rendering The classic-style rendering of the same system, for eyes only.
+\return The pretty-printed JSON document.
+*/
+std::string SystemEncodingAsJson(std::string const& encoding_text,
+                                 std::string const& digest_hex,
+                                 std::string const& rendering);
 
 } // namespace records
 } // namespace bertini
