@@ -76,13 +76,13 @@ LAYOUT
                 the two-hex folder exists purely so no directory grows unbounded; the
                 extension is honest (.json for JSON, .txt for text).  Kinds:
                   systems/  the exact polynomial systems, as JSON: {"schema",
-                            "digest", "encoding", "rendering"}.  The encoding is
-                            bertini2's canonical form (b2sysenc; versioned, block
-                            structure preserved) and is the digest PREIMAGE: the id
-                            equals the system's content digest, and hashing the
-                            encoding (`jq -r .encoding <file> | sha256sum`)
-                            reproduces it.  The rendering is classic-style text for
-                            eyes -- it cannot express all structure; never identity.
+                            "digest", "system", "encoding"}.  The "system" value has
+                            fields for the parts (variable groups, path variable,
+                            functions, patches).  The encoding is bertini2's
+                            canonical form (b2sysenc; versioned, block structure
+                            preserved) and is the digest PREIMAGE: the id equals the
+                            system's content digest, and hashing the encoding
+                            (`jq -r .encoding <file> | sha256sum`) reproduces it.
                   configs/  the solver settings that ran, as JSON (digest embedded).
                   givens/   externally supplied data: start points (JSON), CLI input
                             files (byte-exact copies of what you supplied --
@@ -96,9 +96,8 @@ RECORD FORMAT (schema ledgerrec/1) -- every history line is one JSON object:
                     + seed), `run` (this run's id), `when`, `num_paths`, and how start
                     points arise (recorded values, or a reference to an ancestor run).
                     `target_object` names the exact system definition (its id equals
-                    `target_digest`); `target_rendering` is a classic-style rendering
-                    of the same system FOR EYES ONLY -- it cannot express all block
-                    structure, so never treat it as the system's identity.
+                    `target_digest`); open that file for the system's parts and its
+                    canonical encoding.
   kind="track"      one continued path: `run`, `index`, `status`, `endpoint`
                     (coordinates as [real, imaginary] decimal-string pairs, full
                     precision), and `start` (its provenance: a start_label, or a
@@ -259,18 +258,22 @@ namespace {
 } // unnamed namespace
 
 std::string SystemEncodingAsJson(std::string const& encoding_text, std::string const& digest_hex,
-                                 std::string const& rendering)
+                                 json::object const& parts)
 {
 	// the schema token is the encoding's own first word, so the two never drift
 	auto const schema_end = encoding_text.find_first_of(" \n");
 	std::string const schema = encoding_text.substr(0, schema_end);
 	// boost::json does the escaping (encodings may contain any variable name -- emoji
-	// included); the layout is hand-rolled to match the config definitions' style
+	// included); the parts object is pretty-printed so the file reads well, and the
+	// encoding (one long string) goes last
+	json::object doc;
+	doc["schema"] = schema;
+	doc["digest"] = digest_hex;
+	doc["system"] = parts;
+	doc["encoding"] = encoding_text;
 	std::ostringstream out;
-	out << "{\n \"schema\": " << json::serialize(json::value(schema)) << ",\n"
-	    << " \"digest\": " << json::serialize(json::value(digest_hex)) << ",\n"
-	    << " \"encoding\": " << json::serialize(json::value(encoding_text)) << ",\n"
-	    << " \"rendering\": " << json::serialize(json::value(rendering)) << "\n}\n";
+	PrettyPrint(out, doc, 0);
+	out << "\n";
 	return out.str();
 }
 
@@ -472,13 +475,38 @@ void OutputDirectory::RefreshIndex() const
 			num_paths = std::to_string(np->get_int64());
 
 		std::string description = "(unknown target)";
-		// the run header's classic-style rendering is the for-eyes view; older
-		// directories stored the rendering AS the definition, so fall back to that
+		// the system definition's structured parts carry the functions; transitional
+		// directories put a classic rendering in the header, and older ones stored the
+		// rendering AS the definition -- read whichever this directory has
 		std::string rendering = GetString(r, "target_rendering");
 		auto const target_object = GetString(r, "target_object");
-		if (rendering.empty() && !target_object.empty() && HasDefinition(target_object))
-			rendering = GetDefinition(target_object);
-		if (!rendering.empty())
+		if (!target_object.empty() && HasDefinition(target_object))
+		{
+			auto const stored = GetDefinition(target_object);
+			if (!stored.empty() && stored.front() == '{')
+			{
+				std::error_code parse_error;
+				auto const doc = json::parse(stored, parse_error);
+				if (!parse_error && doc.is_object())
+					if (auto const* sys = doc.get_object().if_contains("system");
+					    sys && sys->is_object())
+						if (auto const* fns = sys->get_object().if_contains("functions");
+						    fns && fns->is_array())
+						{
+							std::string joined;
+							for (auto const& f : fns->get_array())
+								if (f.is_string())
+									joined += (joined.empty() ? "" : ";  ")
+									          + std::string(f.get_string());
+							if (!joined.empty())
+								description = joined.size() > 60
+								              ? joined.substr(0, 57) + "..." : joined;
+						}
+			}
+			else if (rendering.empty())
+				rendering = stored;   // oldest directories: the definition IS classic text
+		}
+		if (description == "(unknown target)" && !rendering.empty())
 		{
 			std::istringstream text(rendering);
 			std::string functions;

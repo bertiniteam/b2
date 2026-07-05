@@ -186,22 +186,24 @@ private:
 
 /**
 \brief The archived form of a system definition: a machine-parseable JSON document
-`{"schema", "digest", "encoding", "rendering"}` -- one `json.load` away, like the
+`{"schema", "digest", "system", "encoding"}` -- one `json.load` away, like the
 config definitions.
 
-The `encoding` value is the EXACT canonical encoding text (`b2sysenc/<n>`, the digest
-preimage, block structure preserved); `rendering` is the classic-style text for eyes.
-Verification of a wandering file: extract the encoding and hash it, e.g.
-`jq -r .encoding <file> | sha256sum` reproduces `digest`.
+The `system` value is the structured parts view (variable groups, path variable,
+functions, patches -- see `io::SystemPartsJson`); the `encoding` value is the EXACT
+canonical encoding text (`b2sysenc/<n>`, the digest preimage, block structure
+preserved).  Classic (Bertini 1) syntax appears nowhere: it is an input/compatibility
+format, not an output format.  Verification of a wandering file: extract the encoding
+and hash it, e.g. `jq -r .encoding <file> | sha256sum` reproduces `digest`.
 
 \param encoding_text The system's canonical encoding (`System::CanonicalEncodingText()`).
 \param digest_hex The system's content digest (64 lowercase hex characters).
-\param rendering The classic-style rendering of the same system, for eyes only.
+\param parts The structured parts view of the same system (presentation only).
 \return The pretty-printed JSON document.
 */
 std::string SystemEncodingAsJson(std::string const& encoding_text,
                                  std::string const& digest_hex,
-                                 std::string const& rendering);
+                                 boost::json::object const& parts);
 
 } // namespace records
 } // namespace bertini

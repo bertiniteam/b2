@@ -44,15 +44,18 @@ the LAST `-` and the extension; the optional role label (givens carry `cli_input
 - The **two-hex shard** folder exists purely so no directory grows unbounded (a
   hundred-thousand-target sweep must not melt `systems/`).
 - Every definition is **self-verifying**, per kind:
-  - **`systems/`** are JSON documents `{"schema", "digest", "encoding", "rendering"}`
-    -- one `json.load` away.  The `encoding` is the system's canonical form
+  - **`systems/`** are JSON documents `{"schema", "digest", "system", "encoding"}`
+    -- one `json.load` away.  The `system` value is the structured parts view:
+    fields for `variable_groups`, `hom_variable_groups`, `homogenizing_variables`,
+    `path_variable`, `named_subexpressions`, `functions` (expression strings), and
+    `is_patched`/`num_patches`.  The `encoding` is the system's canonical form
     (`b2sysenc/<n>`): exact and complete (every block -- slices, randomization,
     blends -- patch, and gamma survives), and it is the *preimage* of
     `System::ContentDigest()`, so the definition id **equals** the system's identity
-    digest and `jq -r .encoding <file> | sha256sum` reproduces it.  The `rendering`
-    is classic-style text for eyes; it cannot express the block structure and is
-    never an identity (the same text also rides in the run header as
-    `target_rendering`).
+    digest and `jq -r .encoding <file> | sha256sum` reproduces it.  Classic (Bertini
+    1) syntax appears nowhere in the records: it is an input/compatibility format
+    for replicating results in that software (`bertini.to_classic_input` produces it
+    on demand), not an output format -- and it cannot express the block structure.
   - **`configs/`** are JSON with the digest embedded; the digest contract is over the
     `b2cfgenc/<n>` canonical text the JSON is derived from.
   - **`givens/`** are stored byte-exact (fidelity: a CLI input file is *your* file);
@@ -79,7 +82,6 @@ scoped by their run.
   `{"kind":"run", "schema":"ledgerrec/1", "when":"YYYY-MM-DD HH:MM", "run":<run id>,
     "op":<operation name, default "solve">, "ask":{...}, "target_object":<definition id>,
     "target_digest":<system content digest -- equals target_object>,
-    "target_rendering":<classic-style text, for eyes only, NOT identity>,
     "producer":{"name","version","commit"}, "num_paths":N, ...op-specific fields...}`
   `producer` says which software wrote the record (commit is `unknown` for builds
   outside a git checkout); it is descriptive ONLY -- never part of the ask identity,

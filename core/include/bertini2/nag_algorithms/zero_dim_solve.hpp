@@ -50,6 +50,7 @@
 #include "bertini2/records/solver_recording.hpp"
 #include "bertini2/records/config_encoding.hpp"
 #include "bertini2/io/classic_writer.hpp"
+#include "bertini2/io/json_writer.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
@@ -2257,18 +2258,18 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					    && rec.at("run").as_string() == records_run_id_)
 						return;   // header already on record (a resumed run)
 
-				// the archived system is a JSON document (like the configs) embedding
+				// the archived system is a JSON document (like the configs): a
+				// structured "system" parts view (variable groups, functions, ...) and
 				// the CANONICAL ENCODING (b2sysenc) -- exact and complete: every block
-				// (slices, randomization, blends), patch, and gamma survives, where a
-				// classic rendering flattens or loses them.  The encoding is the digest
-				// PREIMAGE, so the definition id EQUALS target_digest and the embedded
-				// digest lets a copied-out file verify itself (hash its .encoding).
-				// The classic rendering rides along inside, and in the header, for eyes.
+				// (slices, randomization, blends), patch, and gamma survives.  Classic
+				// syntax appears nowhere (an input/compat format, not an output one).
+				// The encoding is the digest PREIMAGE, so the definition id EQUALS
+				// target_digest and a copied-out file verifies itself (hash .encoding).
 				auto const target_digest_hex = TargetSystem().ContentDigest().Hex();
-				auto const target_rendering = bertini::classic::SystemToClassic(TargetSystem());
 				auto const target_definition = records_->PutDefinition(
 					records::SystemEncodingAsJson(TargetSystem().CanonicalEncodingText(),
-					                              target_digest_hex, target_rendering),
+					                              target_digest_hex,
+					                              io::SystemPartsJson(TargetSystem())),
 					"systems", target_digest_hex);
 				// the settings, reconstructible: the SAME canonical text the digest is over
 				std::string const config_text = CanonicalSettingsText();
@@ -2299,9 +2300,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				header["ask"] = ask;
 				header["target_object"] = target_definition;
 				header["target_digest"] = target_digest_hex;
-				// classic-style rendering FOR EYES ONLY (INDEX.txt, results.json): it
-				// cannot express all block structure, so it is never the identity
-				header["target_rendering"] = target_rendering;
 				// the INTERNAL variable ordering, so views can label endpoint coordinates
 				// truthfully (homogenized points have more coordinates than the user's
 				// rendering declares)

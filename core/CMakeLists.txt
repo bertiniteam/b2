@@ -210,6 +210,7 @@ set(functiontree_roots_HEADERS
 
 set(io_headers
     include/bertini2/io/classic_writer.hpp
+    include/bertini2/io/json_writer.hpp
     include/bertini2/io/file_utilities.hpp
     include/bertini2/io/generators.hpp
     include/bertini2/io/parsing.hpp

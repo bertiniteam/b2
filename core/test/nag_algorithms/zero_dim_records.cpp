@@ -107,9 +107,14 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 			BOOST_CHECK_EQUAL(encoding.rfind("b2sysenc/", 0), 0u);
 			BOOST_CHECK_EQUAL(std::string(stored.at("schema").as_string()),
 			                  encoding.substr(0, encoding.find_first_of(" \n")));
-			// the for-eyes rendering travels inside the definition and in the header
-			BOOST_CHECK(stored.contains("rendering"));
-			BOOST_CHECK(rec.contains("target_rendering"));
+			// the structured parts view rides inside: fields for the system's parts,
+			// machine-parseable (classic syntax appears nowhere -- it is an input
+			// format, and cannot express block structure)
+			auto const& parts = stored.at("system").as_object();
+			BOOST_CHECK(!parts.at("functions").as_array().empty());
+			BOOST_CHECK(parts.contains("variable_groups"));
+			BOOST_CHECK(parts.contains("path_variable"));
+			BOOST_CHECK(parts.contains("is_patched"));
 		}
 		if (kind == "track")
 		{
