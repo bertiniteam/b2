@@ -476,7 +476,8 @@ jobs:
           # not the C++ (a gdb backtrace of the bundled exe settles it).
           CIBW_TEST_COMMAND_LINUX: >-
             cd {project} &&
-            python -c "import bertini,os;print(os.path.join(os.path.dirname(bertini.__file__),'_bin','bertini2'))" | xargs -I{} {} --version &&
+            elf=$(python -c "import bertini,os;print(os.path.join(os.path.dirname(bertini.__file__),'_bin','bertini2'))") &&
+            "$elf" --version &&
             python -m pytest python/test/ -q
 
       - name: ccache size (cold run = grows from nothing; warm run = hits)
