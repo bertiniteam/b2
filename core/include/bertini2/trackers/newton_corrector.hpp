@@ -12,6 +12,7 @@
 #include "bertini2/trackers/amp_criteria.hpp"
 #include "bertini2/trackers/config.hpp"
 #include "bertini2/system/system.hpp"
+#include "bertini2/linalg/lu_solver.hpp"
 
 
 namespace bertini{
@@ -87,6 +88,7 @@ namespace bertini{
 					Precision(std::get< Mat<complex_mp> >(J_temp_), new_precision);
 					Precision(std::get< Vec<complex_mp> >(rand_temp_), new_precision);
 					Precision(std::get< Vec<complex_mp> >(solve_temp_), new_precision);
+					std::get< linalg::PartialPivLU<complex_mp> >(LU_).ChangePrecision(new_precision);
 
 					current_precision_ = new_precision;
 				}
@@ -116,6 +118,8 @@ namespace bertini{
 					std::get< Vec<complex_mp> >(step_temp_).resize(numTotalFunctions_);
 					std::get< Vec<complex_dbl> >(solve_temp_).resize(numVariables_);
 					std::get< Vec<complex_mp> >(solve_temp_).resize(numVariables_);
+					std::get< linalg::PartialPivLU<complex_dbl> >(LU_).ChangeSize(numVariables_);
+					std::get< linalg::PartialPivLU<complex_mp> >(LU_).ChangeSize(numVariables_);
 					RefreshRandomDirection();
 				}
 
@@ -207,7 +211,7 @@ namespace bertini{
 
 						// Adaptive precision: fill metadata + enforce AMP criteria B and C.
 						Mat<ComplexT>& J_temp_ref = std::get< Mat<ComplexT> >(J_temp_);
-						Eigen::PartialPivLU< Mat<ComplexT> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexT> > >(LU_);
+						linalg::PartialPivLU<ComplexT>& LU_ref = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
 
 						meta.norm_delta_z = NumErrorT(step_ref.template lpNorm<Eigen::Infinity>());
 						meta.norm_J = NumErrorT(J_temp_ref.norm());
@@ -219,7 +223,7 @@ namespace bertini{
 							// condition estimates comparable across steps and keeps tracking deterministic.
 							Vec<ComplexT>& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
 							Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
-							solve_ref = LU_ref.solve(rand_ref);
+							LU_ref.Solve(rand_ref, solve_ref);   // reuse the factorization from EvalIterationStep
 							meta.norm_J_inverse = NumErrorT(solve_ref.norm());
 						}
 						meta.condition_number_estimate = NumErrorT(meta.norm_J*meta.norm_J_inverse);
@@ -265,21 +269,21 @@ namespace bertini{
 					Vec<ComplexT>& f_temp_ref = std::get< Vec<ComplexT> >(f_temp_);
 					Mat<ComplexT>& J_temp_ref = std::get< Mat<ComplexT> >(J_temp_);
 					
-					Eigen::PartialPivLU< Mat<ComplexT> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexT> > >(LU_);
+					linalg::PartialPivLU<ComplexT>& LU_ref = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
 
 					S.SetAndReset<ComplexT>(current_space, current_time);
 					S.EvalInPlace(f_temp_ref);
 					S.JacobianInPlace(J_temp_ref);
-					LU_ref.compute(J_temp_ref);
-					
-					if (LUPartialPivotDecompositionSuccessful(LU_ref.matrixLU())!=MatrixSuccessCode::Success)
+					// Factor a copy of J (J_temp_ref is read again afterward for meta.norm_J).  The health
+					// check is folded into Factor().
+					if (LU_ref.Factor(J_temp_ref)!=MatrixSuccessCode::Success)
 						return SuccessCode::MatrixSolveFailure;
-					
+
 					// Solve J*newton_step = f (NOT -f): this lets us skip materializing the negated RHS
 					// temporary.  newton_step therefore holds +J^{-1}f = -(true Newton step), so callers
 					// SUBTRACT it (next_space -= newton_step).  The convergence test uses lpNorm, which is
 					// sign-insensitive, so it is unaffected.
-					newton_step = LU_ref.solve(f_temp_ref);
+					LU_ref.Solve(f_temp_ref, newton_step);
 
 					return SuccessCode::Success;
 					
@@ -302,7 +306,7 @@ namespace bertini{
 				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
 				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > solve_temp_; // reused scratch: LU solve result
 
-				std::tuple< Eigen::PartialPivLU<Mat<complex_dbl>>, Eigen::PartialPivLU<Mat<complex_mp>> > LU_;
+				std::tuple< linalg::PartialPivLU<complex_dbl>, linalg::PartialPivLU<complex_mp> > LU_;
 				
 				unsigned current_precision_;
 

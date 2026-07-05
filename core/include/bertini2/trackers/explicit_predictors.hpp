@@ -41,6 +41,7 @@
 #include <boost/type_index.hpp>
 
 #include "bertini2/eigen_extensions.hpp"
+#include "bertini2/linalg/lu_solver.hpp"
 
 namespace bertini{
 	namespace tracking{
@@ -359,6 +360,9 @@ namespace bertini{
 				{
 					std::get< Mat<complex_dbl> >(K_).resize(numTotalFunctions_, s_);
 					std::get< Mat<complex_mp> >(K_).resize(numTotalFunctions_, s_);
+
+					std::get< linalg::PartialPivLU<complex_dbl> >(LU_).ChangeSize(numVariables_);
+					std::get< linalg::PartialPivLU<complex_mp> >(LU_).ChangeSize(numVariables_);
 				}
 
 
@@ -402,6 +406,7 @@ namespace bertini{
 					Precision(std::get< Vec<complex_mp> >(solve_temp_),new_precision);
 					Precision(std::get< Vec<complex_mp> >(stage_pt_temp_),new_precision);
 					Precision(std::get< Vec<complex_mp> >(err_temp_),new_precision);
+					std::get< linalg::PartialPivLU<complex_mp> >(LU_).ChangePrecision(new_precision);
 
 					Precision(std::get< Mat<real_mp> >(a_),new_precision);
 					Precision(std::get< Vec<real_mp> >(b_),new_precision);
@@ -637,12 +642,12 @@ namespace bertini{
 				void SetNormsCond(NumErrorT & norm_J, NumErrorT & norm_J_inverse, NumErrorT & condition_number_estimate, unsigned num_steps_since_last_condition_number_computation, unsigned frequency_of_CN_estimation)
 				{
 					// Calculate condition number and update if needed
-					Eigen::PartialPivLU<Mat<ComplexT>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexT>> >(LU_);
+					linalg::PartialPivLU<ComplexT>& LUref = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
 					Mat<ComplexT>& dhdxref = std::get< Mat<ComplexT> >(dh_dx_0_);
 
 					Vec<ComplexT> const& randy = std::get< Vec<ComplexT> >(rand_temp_);
 					Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
-					solve_ref = LUref.solve(randy);
+					LUref.Solve(randy, solve_ref);
 
 					norm_J = NumErrorT(dhdxref.norm());
 					norm_J_inverse = NumErrorT(solve_ref.norm());
@@ -764,7 +769,7 @@ namespace bertini{
 
 					if(stage == 0)
 					{
-						Eigen::PartialPivLU<Mat<ComplexT>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexT>> >(LU_);
+						linalg::PartialPivLU<ComplexT>& LUref = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
 						Mat<ComplexT>& dhdxref = std::get< Mat<ComplexT> >(dh_dx_0_);
 
 						if (!std::is_same<ComplexT,complex_dbl>::value)
@@ -778,19 +783,21 @@ namespace bertini{
 						}
 						S.SetAndReset<ComplexT>(space, time);
 						S.JacobianInPlace(dhdxref);
-						LUref.compute(dhdxref);
+						// Factor a copy of dh/dx (dh_dx_0_ is read again in SetNormsCond); health check folded in.
+						auto lu_code = LUref.Factor(dhdxref);
 						if (!std::is_same<ComplexT,complex_dbl>::value)
 						{
 							assert(Precision(dhdxref)==current_precision_);
-							assert(Precision(LUref.matrixLU())==current_precision_);
+							assert(Precision(LUref.Factors())==current_precision_);
 						}
 
-						if (LUPartialPivotDecompositionSuccessful(LUref.matrixLU())!=MatrixSuccessCode::Success)
+						if (lu_code!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
-						
+
 						Vec<ComplexT>& dhdtref = std::get< Vec<ComplexT> >(dh_dt_temp_);
 						S.TimeDerivativeInPlace(dhdtref);
-						K.col(stage) = LUref.solve(-dhdtref);
+						dhdtref = -dhdtref;                     // in place; Solve needs materialized rhs
+						LUref.Solve(dhdtref, K.col(stage));
 						
 						return SuccessCode::Success;
 						
@@ -801,15 +808,15 @@ namespace bertini{
 
 						Mat<ComplexT>& dhdxtempref = std::get< Mat<ComplexT> >(dh_dx_temp_);
 						S.JacobianInPlace(dhdxtempref);
-						Eigen::PartialPivLU<Mat<ComplexT>>& LU_temp = std::get< Eigen::PartialPivLU<Mat<ComplexT>> >(LU_);
-						LU_temp.compute(dhdxtempref);
-
-						if (LUPartialPivotDecompositionSuccessful(LU_temp.matrixLU())!=MatrixSuccessCode::Success)
+						linalg::PartialPivLU<ComplexT>& LU_temp = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
+						// dh_dx_temp_ is pure scratch here -> factor destructively, skipping the copy.
+						if (LU_temp.FactorDestructive(dhdxtempref)!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailure;
 
 						Vec<ComplexT>& dhdtref = std::get< Vec<ComplexT> >(dh_dt_temp_);
 						S.TimeDerivativeInPlace(dhdtref);
-						K.col(stage) = LU_temp.solve(-dhdtref);
+						dhdtref = -dhdtref;                     // in place; Solve needs materialized rhs
+						LU_temp.Solve(dhdtref, K.col(stage));
 						
 						return SuccessCode::Success;
 					}
@@ -949,7 +956,7 @@ namespace bertini{
 				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > dh_dt_temp_;  // Temporary time derivative used for all stages
 				// std::tuple< Eigen::PartialPivLU<Mat<complex_dbl>>, Eigen::PartialPivLU<Mat<complex_mp>> > LU_0_;  // LU from the intial stage used for AMP testing
 
-				mutable std::tuple< Eigen::PartialPivLU<Mat<complex_dbl>>, Eigen::PartialPivLU<Mat<complex_mp>> > LU_;
+				mutable std::tuple< linalg::PartialPivLU<complex_dbl>, linalg::PartialPivLU<complex_mp> > LU_;
 
 				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > step_temp_;  // reused scratch for FullStep stage accumulation
 				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
