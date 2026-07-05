@@ -25,8 +25,9 @@ A new `bertini::records` namespace (the future home of the output-directory mach
 with one canonical encoder per configuration struct and digests over them
 (`core/include/bertini2/records/config_encoding.hpp`):
 
-- **Versioned header**: every digest is SHA-256 over `b2cfgenc/1` + the encoding.  Any
-  change to what an encoder emits bumps the version and the golden fixture in the same
+- **Versioned header**: every digest is SHA-256 over `b2cfgenc/<n>` + the encoding
+  (currently `b2cfgenc/2`; v2 added `CauchyConfig::num_pole_growth_rounds_before_truncation`).
+  Any change to what an encoder emits bumps the version and the golden fixture in the same
   commit — an intentional new keyspace, never silent drift.
 - **Exact scalars**:
   - `double` → `d64:<16 hex>`: the IEEE-754 bit pattern, the only single-valued
@@ -55,7 +56,11 @@ Deliberate exclusions:
 - Any solver's full settings reduce to one stable digest — the config half of ask
   identity — pinned by the golden fixture
   `core/test/classes/data/config_digest_fixture.txt` (eight recipes; drift fails
-  loudly with bump-the-version instructions).
+  loudly with bump-the-version instructions).  The bump itself is also under test: the
+  append-only version registry `config_encoding_versions.txt` maps every `b2cfgenc`
+  version ever used to a hash of the encoding function's output (one recipe per
+  encoder, version header excluded), so regenerating the fixture without bumping the
+  version fails the registry test.
 - **Adding a field to a config struct now requires extending its encoder.**  The
   encoding is a hand-maintained mirror of the struct (like `serialize`); the fixture
   catches encoder-vs-struct drift only when defaults change, so review discipline

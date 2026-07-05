@@ -30,7 +30,7 @@ configuration a path was tracked under by digest, so equal settings must digest 
 FOREVER -- across runs, compilers, machines, and versions.  Hence the same rules as the
 System encoding (ADR-0042):
 
-- versioned header (`b2cfgenc/1`) baked into every digest -- a spec change is a new
+- versioned header (`b2cfgenc/2`) baked into every digest -- a spec change is a new
   keyspace, never silent drift;
 - exact values only: doubles encode as their IEEE-754 bit pattern (`d64:<16 hex>`),
   NEVER decimal round-trips; rationals via exact `.str()`; enums via fixed string
@@ -38,7 +38,9 @@ System encoding (ADR-0042):
 - one encoder per struct, listing fields by name in declaration order.  Adding a field
   to a config struct REQUIRES extending its encoder (and bumping `b2cfgenc` if the
   change is identity-affecting) -- the golden fixture in config_digest_test.cpp fails
-  loudly otherwise.
+  loudly otherwise, and the append-only version registry
+  (config_encoding_versions.txt, one keyspace hash per version ever used) fails if the
+  encoding changes without the bump.
 
 Deliberately excluded from encoding: `algorithm::RandomConfig` (the seed is its own slot
 in the ask identity, beside the config digest -- never inside it) and
@@ -58,7 +60,7 @@ namespace bertini {
 namespace records {
 
 /// \brief The version tag baked into every config digest; bump on any encoding change.
-constexpr char ConfigEncodingVersion[] = "b2cfgenc/1";
+constexpr char ConfigEncodingVersion[] = "b2cfgenc/2";
 
 /// \brief The fixed canonical name of a predictor choice (never its numeric value).
 std::string CanonicalName(tracking::Predictor p);

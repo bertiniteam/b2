@@ -229,6 +229,7 @@ std::string CanonicalEncoding(endgame::CauchyConfig const& c)
 	    << " maximum_cauchy_ratio=" << ExactDouble(c.maximum_cauchy_ratio)
 	    << " fail_safe_maximum_cycle_number=" << c.fail_safe_maximum_cycle_number
 	    << " num_consecutive_same_cycle_number=" << c.num_consecutive_same_cycle_number
+	    << " num_pole_growth_rounds_before_truncation=" << c.num_pole_growth_rounds_before_truncation
 	    << ")";
 	return out.str();
 }

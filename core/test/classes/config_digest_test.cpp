@@ -29,7 +29,10 @@ commit, never silently.
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -188,6 +191,83 @@ BOOST_AUTO_TEST_CASE(golden_digests_match_committed_fixture)
 			"DIGEST DRIFT for '" << name << "': expected " << it->second << " got " << hex
 			<< " -- if intentional, bump b2cfgenc/<n> and the fixture in the same commit");
 	}
+}
+
+// ---- the version registry: the bump itself is under test ----
+
+// The golden fixture above catches encoding DRIFT, but a wholesale fixture regeneration
+// could silently skip the version bump (digests include the version token, so regenerated
+// digests always "match" whatever token is compiled in).  This registry closes that gap:
+// data/config_encoding_versions.txt maps every b2cfgenc version ever used to the hash of
+// the encoding FUNCTION itself -- the canonical texts of one recipe per encoder, version
+// header excluded.  If any encoder's output changes, the keyspace hash moves, and the only
+// honest fix is to bump ConfigEncodingVersion and APPEND a new registry line (never edit
+// an existing line; line k must carry version suffix k, so rewriting history is loud).
+BOOST_AUTO_TEST_CASE(encoding_version_is_bumped_when_the_encoding_changes)
+{
+	// One recipe per encoder (broader than the digest fixture, which samples).  Fields
+	// with uninitialized or precision-dependent defaults are pinned explicitly.
+	std::ostringstream all;
+	{ tracking::SteppingConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ tracking::NewtonConfig c; c.max_num_newton_iterations = 3; c.min_num_newton_iterations = 1; all << CanonicalEncoding(c) << '\n'; }
+	{ tracking::FixedPrecisionConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ tracking::AdaptiveMultiplePrecisionConfig c; c.epsilon = 4.0; c.Phi = 20000.0; c.Psi = 5000.0; all << CanonicalEncoding(c) << '\n'; }
+	all << CanonicalEncoding(tracking::Predictor::RKF45) << '\n';
+	{ endgame::SecurityConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ endgame::EndgameConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ endgame::PowerSeriesConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ endgame::CauchyConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ endgame::TrackBackConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ algorithm::TolerancesConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ algorithm::MidPathConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ algorithm::AutoRetrackConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{
+		algorithm::SharpeningConfig c;
+		c.sharpendigits = 14;                       // uninitialized by default
+		c.function_residual_tolerance = 1e-12;      // default is precision-dependent
+		all << CanonicalEncoding(c) << '\n';
+	}
+	{
+		algorithm::RegenerationConfig c;
+		c.slice_newton_before_endgame = 1e-5;       // uninitialized by default
+		c.slice_newton_during_endgame = 1e-6;
+		c.slice_final_tolerance = 1e-11;
+		all << CanonicalEncoding(c) << '\n';
+	}
+	{ algorithm::PostProcessingConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ algorithm::ZeroDimConfig c; c.initial_ambient_precision = 30; all << CanonicalEncoding(c) << '\n'; }
+	{ algorithm::MetaConfig c; all << CanonicalEncoding(c) << '\n'; }
+	{ algorithm::classic::EndgameChoiceConfig c; all << CanonicalEncoding(c) << '\n'; }
+
+	auto const keyspace = detail::Sha256(all.str()).Hex();
+
+	auto const registry_path =
+		std::filesystem::path(__FILE__).parent_path() / "data" / "config_encoding_versions.txt";
+	std::vector<std::pair<std::string, std::string>> registry;
+	{
+		std::ifstream in(registry_path);
+		BOOST_REQUIRE_MESSAGE(in.good(), "version registry missing: " << registry_path);
+		std::string version, hex;
+		while (in >> version >> hex)
+			registry.emplace_back(version, hex);
+	}
+	BOOST_REQUIRE_MESSAGE(!registry.empty(), "version registry is empty: " << registry_path);
+
+	// versions are dense and append-only: line k carries suffix k
+	for (std::size_t ii = 0; ii < registry.size(); ++ii)
+		BOOST_CHECK_EQUAL(registry[ii].first, "b2cfgenc/" + std::to_string(ii + 1));
+
+	BOOST_REQUIRE_MESSAGE(registry.back().first == records::ConfigEncodingVersion,
+		"the LAST registry line must be the current ConfigEncodingVersion ("
+		<< records::ConfigEncodingVersion << "); found " << registry.back().first);
+
+	BOOST_CHECK_MESSAGE(registry.back().second == keyspace,
+		"the config ENCODING changed under existing version token "
+		<< records::ConfigEncodingVersion << " (registered keyspace "
+		<< registry.back().second << ", current " << keyspace
+		<< ") -- bump ConfigEncodingVersion, APPEND {new version, " << keyspace
+		<< "} to data/config_encoding_versions.txt (never edit existing lines), and "
+		"regenerate data/config_digest_fixture.txt, all in the same commit");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

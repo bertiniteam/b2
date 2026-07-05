@@ -32,6 +32,8 @@ regenerate the fixture in the same commit, never silently.
 #include <map>
 #include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -510,6 +512,72 @@ BOOST_AUTO_TEST_CASE(golden_digests_match_committed_fixture)
 			<< " got " << sys.ContentDigest().Hex()
 			<< " -- if intentional, bump b2sysenc/<n> and the fixture in the same commit");
 	}
+}
+
+// ---- the version registry: the bump itself is under test ----
+
+// The golden fixture above catches encoding DRIFT, but a wholesale fixture regeneration
+// could silently skip the version bump (digests include the version token, so regenerated
+// digests always "match" whatever token is compiled in).  This registry closes that gap:
+// data/system_encoding_versions.txt maps every b2sysenc version ever used to the hash of
+// the encoding FUNCTION itself -- the fixture recipes' canonical texts with the version
+// token (the first whitespace-delimited word) stripped.  If the encoder's output changes,
+// the keyspace hash moves, and the only honest fix is to bump the b2sysenc version and
+// APPEND a new registry line (never edit an existing line; line k must carry version
+// suffix k, so rewriting history is loud).
+BOOST_AUTO_TEST_CASE(encoding_version_is_bumped_when_the_encoding_changes)
+{
+	PinnedCanonicalization const pin;
+
+	std::map<std::string, System> recipes;
+	recipes.emplace("single_var", Parse("function f; variable_group x; f = x+1;"));
+	recipes.emplace("circle_line", Parse(kCircleLine));
+	recipes.emplace("rational_coeffs", Parse("function f; variable_group x,y; f = (1/3)*x^3 - y + 2;"));
+	recipes.emplace("transcendental", Parse("function f; variable_group x; f = sin(x) + 3*exp(x);"));
+	{
+		auto homogenized = Parse(kCircleLine);
+		homogenized.Homogenize();
+		recipes.emplace("circle_line_homogenized", std::move(homogenized));
+	}
+
+	std::string current_version;
+	std::string all;
+	for (auto const& [name, sys] : recipes)
+	{
+		auto const text = sys.CanonicalEncodingText();
+		auto const space = text.find(' ');
+		BOOST_REQUIRE_MESSAGE(space != std::string::npos, "encoding of '" << name << "' has no version token");
+		current_version = text.substr(0, space);
+		all += name + "\n" + text.substr(space + 1) + "\n";
+	}
+	auto const keyspace = bertini::detail::Sha256(all).Hex();
+
+	auto const registry_path =
+		std::filesystem::path(__FILE__).parent_path() / "data" / "system_encoding_versions.txt";
+	std::vector<std::pair<std::string, std::string>> registry;
+	{
+		std::ifstream in(registry_path);
+		BOOST_REQUIRE_MESSAGE(in.good(), "version registry missing: " << registry_path);
+		std::string version, hex;
+		while (in >> version >> hex)
+			registry.emplace_back(version, hex);
+	}
+	BOOST_REQUIRE_MESSAGE(!registry.empty(), "version registry is empty: " << registry_path);
+
+	// versions are dense and append-only: line k carries suffix k
+	for (std::size_t ii = 0; ii < registry.size(); ++ii)
+		BOOST_CHECK_EQUAL(registry[ii].first, "b2sysenc/" + std::to_string(ii + 1));
+
+	BOOST_REQUIRE_MESSAGE(registry.back().first == current_version,
+		"the LAST registry line must be the current encoding version ("
+		<< current_version << "); found " << registry.back().first);
+
+	BOOST_CHECK_MESSAGE(registry.back().second == keyspace,
+		"the system ENCODING changed under existing version token " << current_version
+		<< " (registered keyspace " << registry.back().second << ", current " << keyspace
+		<< ") -- bump the b2sysenc version, APPEND {new version, " << keyspace
+		<< "} to data/system_encoding_versions.txt (never edit existing lines), and "
+		"regenerate data/system_digest_fixture.txt, all in the same commit");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
