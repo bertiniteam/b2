@@ -2141,3 +2141,153 @@ BOOST_AUTO_TEST_CASE(observer_event_delivery)
 }// end observer_event_delivery
 
 
+
+
+/**
+Named regression: the junk-success bug (found 2026-07-03 via the structured output
+directory's function_residual; present in Bertini 1, reproduction in that arc's notes).
+
+An UNPATCHED affine user homotopy toward a DEFICIENT target -- the t=0 system
+{x^2-1, y*(x+1)-1} has only ONE finite root, the t=1 system {x^2-1, x*y-1} has two --
+gives one path nowhere finite to go.  With no patch there is no "infinity" to arrive
+at: the path is a Laurent POLE, y(t) = -1 - (1-t)/(gamma*t).  The Cauchy mean
+annihilates the pole term EXACTLY (roots-of-unity identity), so consecutive
+approximations agree at the finite Laurent constant -1 + 1/gamma and the endgame used
+to mint Success at a non-root (residual ~1).
+
+The pole-component operating-zone check (PoleComponentMass: negative Puiseux modes of
+the same loop samples) must refuse that acceptance, and the growing-mass verdict must
+truncate the path as diverging.  The healthy branch of the same homotopy must still
+converge to (1, 1/2).
+*/
+BOOST_AUTO_TEST_CASE(deficient_affine_user_homotopy_never_junk_success)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	auto gamma = bertini::node::Rational::Make(bertini::mpq_rational(4,5), bertini::mpq_rational(3,10));
+
+	// H = (1-t) * {x^2-1, y*(x+1)-1}  +  gamma * t * {x^2-1, x*y-1}
+	sys.AddFunction((1-t)*(pow(x,2)-1) + gamma*t*(pow(x,2)-1));
+	sys.AddFunction((1-t)*(y*(x+1)-1) + gamma*t*(x*y-1));
+
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+
+	auto t_start = ComplexFromString("1");
+	auto t_boundary = ComplexFromString("0.1");
+	auto t_target = ComplexFromString("0");
+
+	// ---- the deficient branch: starts at (-1,-1); no finite root awaits it ----
+	{
+		Vec<BCT> start(2), boundary(2);
+		start << ComplexFromString("-1"), ComplexFromString("-1");
+		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+		if (track_code == SuccessCode::Success)   // the pre-endgame may already give up; also fine
+		{
+			TestedEGType my_endgame(tracker);
+			my_endgame.SetBoundaryTime(t_boundary);
+			my_endgame.SetTargetTime(t_target);
+			auto eg_code = my_endgame.Run(boundary);
+			BOOST_CHECK(eg_code != SuccessCode::Success);   // NEVER junk Success at a non-root
+		}
+	}
+
+	// ---- the healthy branch: starts at (1,1); must still converge to (1, 1/2) ----
+	{
+		Vec<BCT> start(2), boundary(2);
+		start << ComplexFromString("1"), ComplexFromString("1");
+		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+		BOOST_REQUIRE(track_code == SuccessCode::Success);
+
+		TestedEGType my_endgame(tracker);
+		my_endgame.SetBoundaryTime(t_boundary);
+		my_endgame.SetTargetTime(t_target);
+		auto eg_code = my_endgame.Run(boundary);
+		BOOST_CHECK(eg_code == SuccessCode::Success);
+
+		Vec<BCT> expected(2);
+		expected << ComplexFromString("1"), ComplexFromString("0.5");
+		BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - expected).template lpNorm<Eigen::Infinity>() < 1e-6);
+	}
+}// end deficient_affine_user_homotopy_never_junk_success
+
+
+/**
+Named regression, second manifestation: a SINGULAR (multiplicity-2) target of an
+unpatched affine homotopy.
+
+H = (1-t) * {(x-1)^2+(y-1)^2, x-y} + gamma * t * {x^2-4, x*y-1}: both tracked paths
+genuinely converge to the double root (1,1) (verified by independent continuation;
+the approach is ~sqrt(t), cycle 2).  But at the endgame boundary radius the loop can
+enclose OTHER branch points of the cover, where the full-circle monodromy is trivial:
+the loop closes after ONE circuit, cycle is misdetected as 1, and the unclosed-sheet
+means are garbage that stabilizes at non-roots (observed residuals ~3.4/1.2, minted
+as Success).  The pole-component mass of such a loop is nonzero (any non-analytic
+content inside leaves negative-mode mass), so the operating-zone check must refuse
+acceptance there.  The honest property pinned here: Success implies AT the root.
+*/
+BOOST_AUTO_TEST_CASE(singular_affine_user_homotopy_success_implies_at_the_root)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	auto gamma = bertini::node::Rational::Make(bertini::mpq_rational(4,5), bertini::mpq_rational(3,10));
+
+	sys.AddFunction((1-t)*(pow(x-1,2)+pow(y-1,2)) + gamma*t*(pow(x,2)-4));
+	sys.AddFunction((1-t)*(x-y) + gamma*t*(x*y-1));
+
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+
+	auto t_start = ComplexFromString("1");
+	auto t_boundary = ComplexFromString("0.1");
+	auto t_target = ComplexFromString("0");
+
+	Vec<BCT> expected(2);
+	expected << ComplexFromString("1"), ComplexFromString("1");
+
+	for (auto const& start_pair : {std::make_pair("2", "0.5"), std::make_pair("-2", "-0.5")})
+	{
+		Vec<BCT> start(2), boundary(2);
+		start << ComplexFromString(start_pair.first), ComplexFromString(start_pair.second);
+		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+		if (track_code != SuccessCode::Success)
+			continue;   // honest tracking failure near the singular target: acceptable
+
+		TestedEGType my_endgame(tracker);
+		my_endgame.SetBoundaryTime(t_boundary);
+		my_endgame.SetTargetTime(t_target);
+		auto eg_code = my_endgame.Run(boundary);
+		if (eg_code == SuccessCode::Success)
+		{
+			// Success is only acceptable AT the double root
+			BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - expected).template lpNorm<Eigen::Infinity>() < 1e-4);
+		}
+		// any non-Success code is an honest failure: also acceptable
+	}
+}// end singular_affine_user_homotopy_success_implies_at_the_root
