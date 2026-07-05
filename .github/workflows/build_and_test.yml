@@ -467,19 +467,16 @@ jobs:
           # the full suite here is the in-container proof of the fix.  If it flakes or
           # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
           CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy pandas networkx"
-          # TEMPORARY DIAGNOSTIC (2026-07-04): the bundled CLI SIGSEGVs on
-          # --version/--help inside the container (this branch only; develop is fine).
-          # Capture a gdb backtrace + dynamic-linker trace before pytest runs.
-          # Remove once the crash is understood and fixed.
+          # The explicit `bertini2 --version` up front is a permanent smoke test of the
+          # BUNDLED CLI BINARY: wheel repair rewrites its ELF metadata (patchelf via
+          # auditwheel), and a bad rewrite segfaults in the dynamic loader before main()
+          # -- which is exactly what happened with the image's stock patchelf (hence the
+          # 0.17.2.1 pin in CIBW_BEFORE_ALL_LINUX above).  If this line ever fails with
+          # rc=139 and no output, suspect the patchelf/auditwheel/strip pipeline first,
+          # not the C++ (a gdb backtrace of the bundled exe settles it).
           CIBW_TEST_COMMAND_LINUX: >-
             cd {project} &&
-            elf=$(python -c "import bertini,os;print(os.path.join(os.path.dirname(bertini.__file__),'_bin','bertini2'))") &&
-            echo "CLI diag: $elf" &&
-            { "$elf" --version && echo "CLI diag: --version OK" ; } ||
-            { echo "CLI diag: --version crashed, rc=$?";
-              (dnf install -y gdb || yum install -y gdb) >/dev/null 2>&1 || true;
-              gdb -batch -ex run -ex bt -ex "info sharedlibrary" --args "$elf" --version || true;
-              LD_DEBUG=libs "$elf" --version 2>&1 | tail -40 || true; } ;
+            python -c "import bertini,os;print(os.path.join(os.path.dirname(bertini.__file__),'_bin','bertini2'))" | xargs -I{} {} --version &&
             python -m pytest python/test/ -q
 
       - name: ccache size (cold run = grows from nothing; warm run = hits)
