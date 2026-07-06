@@ -321,13 +321,12 @@ BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 
 	ZD zd(sys);
 	zd.DefaultSetup();
-	// Since the pole-component operating-zone fix (PR #70), the security check watches the
-	// dehomogenized loop SAMPLES; under the default max_norm (1e4) the two at-infinity paths
-	// of this patched solve converge in homogeneous coordinates before their samples trip
-	// the check, and report honest successes at projective points at infinity.  This test
-	// is about the diverged-vs-failed VOCABULARY, so tighten max_norm to make those two
-	// paths actually truncate.  Settings are ask identity: the recall rerun below must set
-	// the same value.
+	// The security check watches the dehomogenized ENDPOINT for divergence to infinity;
+	// the two at-infinity paths of this patched solve have endpoints genuinely at
+	// infinity, so they truncate as `diverged`.  A tightened max_norm (50) makes the
+	// verdict robust regardless of the endgame's exact convergence path.  This test is
+	// about the diverged-vs-failed VOCABULARY; settings are ask identity, so the recall
+	// rerun below must set the same value.
 	endgame::SecurityConfig sec;
 	sec.max_norm = 50;
 	zd.GetEndgame().Set(sec);

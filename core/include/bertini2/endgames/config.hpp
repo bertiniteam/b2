@@ -155,15 +155,6 @@ namespace bertini{ namespace endgame{
 		// See z_notes/20260629_endgame_stepsize_reset_rootcause.
 		unsigned int num_consecutive_same_cycle_number = 2; ///< Consecutive identical cycle-number estimates required before trusting convergence (guards against an unreliable cycle number at too-low precision).
 
-		// The pole-component operating-zone check truncates a path whose negative-mode
-		// (pole) mass GROWS geometrically across rounds: a pole at the target time has
-		// mass ~ 1/r, so it grows by a factor of 1/sample_factor per round (the growth
-		// detection threshold is derived from sample_factor at the check site -- its
-		// geometric mean sqrt(1/sample_factor) -- not configured here).  This setting is
-		// how many consecutive growing rounds are required before declaring the path
-		// diverging; mirrors num_consecutive_same_cycle_number.
-		unsigned int num_pole_growth_rounds_before_truncation = 2; ///< Consecutive rounds of geometrically growing pole mass required before truncating a path as diverging.
-
 	};
 
 

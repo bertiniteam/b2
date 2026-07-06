@@ -16,11 +16,11 @@ and the whole chain drawn left to right::
     python chained_homotopies.py --plot chain.png      # also draw the progression
 
 The family here is deliberately tiny but NOT all sunshine: its first solve has four
-paths of which two end at points AT INFINITY (the solve is projective under the hood,
-so those endpoints are computed honestly and classified as infinite rather than
-carried forward), so the picture shows lineages that die at the first column and
-lineages that survive the whole chain.  Rerunning the script is (nearly) instant:
-every solve is ensure-answered, so recorded paths recall instead of recomputing.
+paths of which two are TRUNCATED (the endgame's security check cuts them off as they
+flee toward infinity -- a verdict, not a failure), so the picture shows lineages that
+die at the first column and lineages that survive the whole chain.  Rerunning the
+script is (nearly) instant: every solve is ensure-answered, so recorded paths recall
+instead of recomputing.
 """
 
 import argparse
@@ -56,11 +56,11 @@ def main():
 
     # the root: an ordinary solve (total-degree start; provenance bottoms out at
     # canonical start labels).  Four paths -- and only two finite roots, so two paths
-    # end at points at infinity: computed, recorded, and classified infinite.
+    # get TRUNCATED near infinity: recorded as `diverged`, an answer in itself.
     results = [pb.solve(members[0], seed=42)]
 
     # each further member: continue the previous solutions through a blend homotopy.
-    # Only the FINITE solutions are carried forward -- the at-infinity lineages
+    # Only the FINITE solutions are carried forward -- the diverged paths' lineages
     # simply end, which is exactly what the picture shows.
     for previous, target in zip(members, members[1:]):
         homotopy = blend_homotopy(target, previous)
@@ -79,11 +79,10 @@ def main():
     print('\nthe tracked paths (statuses and where each one started):\n')
     tracks = pb.tracks()
     print(tracks[['run', 'index', 'status', 'outcome', 'start_kind']].to_string(index=False))
-    # every path went somewhere and said so: the first solve's two extra total-degree
-    # paths ended at points at infinity (successes in projective coordinates, filtered
-    # out by finiteness), the rest at the chain's finite solutions
-    assert (tracks['status'] == 'success').sum() == len(tracks)
-    assert len(tracks) == 4 + 2 + 2 + 2   # total-degree root, then three chained hops
+    # the first solve's two extra total-degree paths were truncated near infinity;
+    # everything that had somewhere to go, went there
+    assert (tracks['status'] == 'diverged').sum() == 2
+    assert (tracks['status'] == 'success').sum() == len(tracks) - 2
 
     # the provenance graph: every path an edge from its start to its endpoint
     graph = pb.provenance_graph()

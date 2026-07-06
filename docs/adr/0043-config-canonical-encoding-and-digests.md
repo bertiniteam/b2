@@ -26,7 +26,9 @@ with one canonical encoder per configuration struct and digests over them
 (`core/include/bertini2/records/config_encoding.hpp`):
 
 - **Versioned header**: every digest is SHA-256 over `b2cfgenc/<n>` + the encoding
-  (currently `b2cfgenc/2`; v2 added `CauchyConfig::num_pole_growth_rounds_before_truncation`).
+  (currently `b2cfgenc/3`; v2 added `CauchyConfig::num_pole_growth_rounds_before_truncation`,
+  v3 removed it again when the pole-growth truncation was dropped — see the endgame
+  fix that keeps only the acceptance gate).
   Any change to what an encoder emits bumps the version and the golden fixture in the same
   commit — an intentional new keyspace, never silent drift.
 - **Exact scalars**:
@@ -88,6 +90,8 @@ Also: the settings digest for a zero-dim/homotopy solve now composes ALL configs
 solve reads (algorithm + tracker + endgame; see ADR-0046) — the per-config encoders
 and the golden fixture are untouched by that composition change.
 
-Coordination note: PR #70 adds `CauchyConfig::num_pole_growth_rounds_before_truncation`;
-when it merges alongside the records arc, the Cauchy encoder must gain the field and
-the fixture regenerates (adding a config field REQUIRES extending its encoder).
+Coordination note (historical): PR #70 added `CauchyConfig::num_pole_growth_rounds_before_truncation`
+(b2cfgenc/2), then a follow-up removed it (b2cfgenc/3) when the pole-growth truncation
+was dropped in favor of the acceptance gate alone.  Both moves followed the same
+discipline: extend/shrink the encoder, bump the version, regenerate the fixture,
+append the registry line.
