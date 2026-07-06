@@ -1,7 +1,10 @@
 [project]
 name = "bertini2"
-version = "2.0.2" 
-requires-python = ">= 3.9"
+# The version is the single source of truth in the top-level `VERSION` file.
+# It is declared dynamic here and read by scikit-build-core (see
+# [tool.scikit-build.metadata.version] below) and by CMake (see CMakeLists.txt).
+dynamic = ["version"]
+requires-python = ">= 3.10"
 readme = "README.md"
 dependencies = ["numpy"]
 authors = [
@@ -15,6 +18,9 @@ description = "Software for numerical algebraic geometry"
 [project.optional-dependencies]
 test = ["pytest"]
 
+[project.scripts]
+bertini2 = "bertini._cli:main"
+
 [project.urls]
 Repository = "https://github.com/bertiniteam/b2"
 
@@ -23,6 +29,12 @@ requires = [
     "scikit-build-core","numpy"
 ]
 build-backend = "scikit_build_core.build"
+
+[tool.scikit-build.metadata.version]
+# Read the project version from the top-level VERSION file (single source of truth).
+provider = "scikit_build_core.metadata.regex"
+input = "VERSION"
+regex = "(?P<value>.+)"
 
 [tool.scikit-build]
 wheel.packages = ["python/bertini"]
@@ -38,3 +50,12 @@ build-type = "Release"
 [tool.pytest.ini_options]
 testpaths = ["python/test"]
 pythonpath = ["python/test"]
+# Exclude MPI tests from default pytest run (run with mpirun -n N explicitly)
+norecursedirs = ["python/test/parallel"]
+# Safety net (pytest-timeout): no single test may hang the suite.  A homotopy solve on a
+# pathological random gamma can, very rarely, send a path grinding for a long time -- on Windows
+# CI this once hung a job for 6 hours.  A per-test cap turns that into a fast, debuggable failure
+# (with a stack dump) instead.  method=thread so it also bounds a grind stuck inside the C++
+# extension (a signal cannot interrupt that).  Generous (180s) so it never trips a legitimate test.
+timeout = 180
+timeout_method = "thread"

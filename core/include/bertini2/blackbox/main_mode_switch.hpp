@@ -30,11 +30,16 @@
 
 #pragma once
 
-
-
+#include "bertini2/blackbox/argc_argv.hpp"
 
 namespace bertini{
 
-	void MainModeSwitch();
+	/**
+	Route to the appropriate algorithm based on parsed arguments and the
+	tracktype found in the input file's CONFIG section.
+
+	\returns 0 on success, nonzero on failure or unimplemented tracktype.
+	*/
+	int MainModeSwitch(ParsedArgs const& args);
 }
 

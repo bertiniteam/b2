@@ -1,0 +1,329 @@
+//This file is part of Bertini 2.
+//
+//polynomial_block.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//polynomial_block.hpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with polynomial_block.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
+// additional terms in the b2/licenses/ directory.
+
+/**
+\file bertini2/system/blocks/polynomial_block.hpp
+
+\brief The evaluation block holding the classic polynomial path: function-tree functions
+(and their derivatives) and/or the compiled straight-line program.
+
+This is the fold of System's historical `functions_` / `slp_` / `eval_method_` machinery
+into a first-class block, so a System becomes a uniform loop over blocks ("everything is a
+block").  It owns the function trees, their differentiation, and the SLP, and it carries
+the system's variable ordering + path variable (the function-tree Jacobian/time-derivative
+evaluate node trees through them).  It is value-in: each Eval/Jacobian/TimeDeriv sets the
+variables (and path value) from its arguments, then evaluates.
+
+The SLP it can compile itself: SLPCompiler reads exactly the variable ordering, path
+variable, functions, and derivatives this block owns (see SLPCompiler::Compile).
+*/
+
+#pragma once
+
+#include <vector>
+#include <memory>
+
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+
+#include "bertini2/num_traits.hpp"
+#include "bertini2/eigen_extensions.hpp"
+#include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/reintern.hpp"
+#include "bertini2/system/straight_line_program.hpp"
+
+namespace bertini {
+namespace blocks {
+
+/**
+\brief The polynomial evaluation block: function trees + derivatives + SLP.
+*/
+class PolynomialBlock
+{
+public:
+	using NE  = std::shared_ptr<node::NamedExpression>;  ///< Shorthand for a shared pointer to a named expression.
+	using Nd  = std::shared_ptr<node::Node>;  ///< Shorthand for a shared pointer to a generic node.
+	using Var = std::shared_ptr<node::Variable>;  ///< Shorthand for a shared pointer to a variable node.
+
+	/// \brief Construct an empty polynomial block at the current default precision.
+	PolynomialBlock() : precision_(DefaultPrecision()) {}
+
+	// ---- construction (System forwards AddFunction / AddSubFunction here) ----
+	/// \brief Add a function (one row of the block).
+	void AddFunction(Nd const& f)    { functions_.push_back(f);    Invalidate(); }
+	/// \brief Add a named constant subfunction.
+	void AddConstant(NE const& f)    { constant_subfunctions_.push_back(f); Invalidate(); }
+
+	/// The variable ordering + path variable the function trees are evaluated against; the
+	/// owning System keeps these in sync (they change as variable groups are added / the
+	/// system is homogenized).
+	void SetVariableOrdering(VariableGroup const& vars) const { variables_ = vars; Invalidate(); }
+	/// \brief Set the path variable the function trees are evaluated against.
+	void SetPathVariable(Var const& t) const { path_variable_ = t; Invalidate(); }
+	/// \brief Clear the path variable.
+	void ClearPathVariable() const { path_variable_.reset(); Invalidate(); }
+
+	// Mutable access for the owning System's construction-time manipulations (Homogenize walks
+	// the trees in place; Reorder/Simplify reassign entries).  The System keeps the variable
+	// groups / ordering; the block keeps the functions and their derivatives.
+	/// \brief Get mutable access to the block's functions.
+	std::vector<Nd>&       Functions()       { return functions_; }
+	/// \brief Get const access to the block's functions.
+	std::vector<Nd> const& Functions() const { return functions_; }
+	/// \brief Get the block's constant subfunctions.
+	std::vector<NE> const& ConstantSubfunctions() const { return constant_subfunctions_; }
+	/// \brief Get the number of constant subfunctions.
+	size_t NumConstants() const { return constant_subfunctions_.size(); }
+
+	/// \brief Query whether the block's derivatives have been computed.
+	bool IsDifferentiated() const { return is_differentiated_; }
+	/// \brief Mark the block's derivatives as stale (to be recomputed on next use).
+	void Invalidate() const { is_differentiated_ = false; }
+
+	/// Per-function degrees (total, and with respect to a variable group).
+	std::vector<int> Degrees() const
+	{
+		std::vector<int> d; d.reserve(functions_.size());
+		for (auto const& f : functions_) d.push_back(f->Degree());
+		return d;
+	}
+	/// \brief Per-function degrees with respect to a given variable group.
+	std::vector<int> Degrees(VariableGroup const& vars) const
+	{
+		std::vector<int> d; d.reserve(functions_.size());
+		for (auto const& f : functions_) d.push_back(f->Degree(vars));
+		return d;
+	}
+
+	/// Homogenize each function w.r.t. the group + its homogenizing var, functionally:
+	/// each function is rebound to a freshly homogenized copy, so any external holder of the
+	/// original function node never observes it change (shared variables are preserved).
+	void Homogenize(VariableGroup const& group, Var const& hom_var)
+	{
+		for (auto& f : functions_)
+			f = f->Homogenized(group, hom_var);
+		Invalidate();
+	}
+	/// \brief Query whether every function is homogeneous with respect to a variable group.
+	bool IsHomogeneous(VariableGroup const& vars) const
+	{
+		for (auto const& f : functions_) if (!f->IsHomogeneous(vars)) return false;
+		return true;
+	}
+	/// \brief Query whether every function is polynomial in a variable group.
+	bool IsPolynomial(VariableGroup const& vars) const
+	{
+		for (auto const& f : functions_) if (!f->IsPolynomial(vars)) return false;
+		return true;
+	}
+
+	// ---- block contract: metadata ----
+	/// \brief Get the number of functions in the block.
+	size_t NumFunctions() const { return functions_.size(); }
+	/// \brief Query whether the block depends on the path variable.
+	bool DependsOnPathVariable() const { return static_cast<bool>(path_variable_); }
+
+	/// Human-facing description: one line per function, `f_k = <expression>`.  Polynomials are the
+	/// content, so terse and verbose are the same (the expression is shown either way).
+	void Describe(std::ostream& out, size_t& row, VariableGroup const& /*vars*/, bool /*verbose*/) const
+	{
+		for (auto const& f : functions_)
+			out << "  f_" << row++ << " = " << f << "\n";
+	}
+
+	/// \brief Get the block's current working precision.
+	unsigned Precision() const { return precision_; }
+	/// \brief Set the block's working precision (delegated to the compiled SLP).
+	void Precision(unsigned new_precision) const
+	{
+		// The SLP (its per-thread Memory) is the sole evaluator and carries its own precision; the
+		// function / derivative / variable nodes are no longer evaluated during tracking, so their
+		// precision is vestigial and left untouched (keeps the shared node DAG read-only).
+		slp_.precision(new_precision);
+		precision_ = new_precision;
+	}
+
+	// ---- block contract: evaluation (value-in) ----
+	// The compiled SLP is the sole evaluator; the function/derivative trees survive only as the
+	// thing the SLP is compiled from (and that Simplify/Differentiate operate on).
+	/// \brief Evaluate the block's functions in place at the given variable and path-variable values.
+	template <typename T>
+	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& path_value) const
+	{
+		EnsureDifferentiated();
+		SetValues<T>(vars, path_value);
+		slp_.template GetFuncValsInPlace<T>(result);
+	}
+
+	/// \brief Evaluate the block's Jacobian in place at the given variable and path-variable values.
+	template <typename T>
+	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& path_value) const
+	{
+		EnsureDifferentiated();
+		SetValues<T>(vars, path_value);
+		slp_.template GetJacobianInPlace<T>(J);
+	}
+
+	/// \brief Evaluate the block's time derivative in place (zero if there is no path variable).
+	template <typename T>
+	void TimeDerivInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& path_value) const
+	{
+		if (!path_variable_) { result.setZero(); return; }
+		EnsureDifferentiated();
+		SetValues<T>(vars, path_value);
+		slp_.template GetTimeDerivInPlace<T>(result);
+	}
+
+	// ---- accessors the SLP compiler reads (mirror the System names) ----
+	/// \brief Get the variable ordering the functions are evaluated against.
+	VariableGroup const& VariableOrdering() const { return variables_; }
+	/// \brief Query whether the block has a path variable.
+	bool HavePathVariable() const { return static_cast<bool>(path_variable_); }
+	/// \brief Get the block's path variable (may be null).
+	Var GetPathVariable() const { return path_variable_; }
+	/// \brief Get the number of natural (pre-randomization) functions.
+	size_t NumNaturalFunctions() const { return functions_.size(); }
+	/// \brief Get the block's natural function trees.
+	std::vector<Nd> const& GetNaturalFunctions() const { return functions_; }
+	// The SLP is built from the explicit per-variable derivative trees (space/time derivatives).
+	/// \brief Get the per-variable space-derivative trees (computing them if needed).
+	std::vector<Nd> const& GetSpaceDerivatives() const
+	{
+		if (space_derivatives_.empty())
+			DifferentiateUsingDerivatives();
+		return space_derivatives_;
+	}
+	/// \brief Get the time-derivative trees (computing them if needed).
+	std::vector<Nd> const& GetTimeDerivatives() const
+	{
+		if (path_variable_ && time_derivatives_.empty())
+			DifferentiateUsingDerivatives();
+		return time_derivatives_;
+	}
+
+	/// Build the symbolic derivatives (and, for SLP eval, compile the SLP from this block).
+	/// Derivatives are NOT simplified here; explicit simplification is System::Simplify
+	/// (SimplifyDerivatives), an opt-in the user invokes.
+	void Differentiate() const
+	{
+		if (is_differentiated_) return;
+		DifferentiateUsingDerivatives();
+		is_differentiated_ = true;  // set before Compile, which reads the deriv state
+		slp_ = SLPCompiler().Compile(*this);
+	}
+
+	/// Simplify the function trees (and invalidate the derivatives, which must be rebuilt).
+	void SimplifyFunctions() const
+	{
+		// Intentionally inert on the top-level functions, preserving long-standing behavior:
+		// when functions were Function-wrapped, Handle::Simplified() returned self (an opaque
+		// boundary), so top-level simplification never happened.  Now that functions are bare
+		// roots, actually simplifying them here would be a behavior change, deferred to its own step.
+		Invalidate();
+	}
+
+	/// Simplify the derivative trees.  Simplification is functional and purely structural
+	/// (Node::Simplified, ADR-0011), so it needs no point and no node evaluation.  Requires the
+	/// derivatives to already exist.
+	void SimplifyDerivatives() const
+	{
+		using bertini::Simplify;
+		for (auto& n : space_derivatives_) n = Simplify(n);
+		for (auto& n : time_derivatives_)  n = Simplify(n);
+	}
+
+	/// Re-intern this block's nodes after deserialization (ADR-0042): functions, constant
+	/// subfunctions, variable ordering, and path variable are rebuilt through the live intern
+	/// tables via the shared memo; the derivative/SLP caches (which reference the old nodes)
+	/// are dropped and recompute on demand.  Content is unchanged.
+	void Reintern(node::ReinternMemo& memo)
+	{
+		for (auto& f : functions_)
+			f = node::Reintern(f, memo);
+		for (auto& c : constant_subfunctions_)
+			c = std::static_pointer_cast<node::NamedExpression>(node::Reintern(c, memo));
+		for (auto& v : variables_)
+			v = std::static_pointer_cast<node::Variable>(node::Reintern(v, memo));
+		if (path_variable_)
+			path_variable_ = std::static_pointer_cast<node::Variable>(node::Reintern(path_variable_, memo));
+		space_derivatives_.clear();
+		time_derivatives_.clear();
+		Invalidate();
+	}
+
+private:
+	void EnsureDifferentiated() const { if (!is_differentiated_) Differentiate(); }
+
+	template <typename T>
+	void SetValues(Vec<T> const& vars, T const& path_value) const
+	{
+		slp_.SetVariableValues(vars);
+		if (path_variable_) slp_.template SetPathVariable<T>(path_value);
+	}
+
+	void DifferentiateUsingDerivatives() const
+	{
+		const size_t n = functions_.size();
+		space_derivatives_.resize(n * variables_.size());
+		for (size_t jj = 0; jj < variables_.size(); ++jj)
+			for (size_t ii = 0; ii < n; ++ii)
+				space_derivatives_[ii + jj * n] = functions_[ii]->Differentiate(variables_[jj]);
+		if (path_variable_)
+		{
+			time_derivatives_.resize(n);
+			for (size_t ii = 0; ii < n; ++ii)
+				time_derivatives_[ii] = functions_[ii]->Differentiate(path_variable_);
+		}
+	}
+
+	mutable std::vector<Nd> functions_;
+	mutable std::vector<NE> constant_subfunctions_;
+
+	mutable std::vector<Nd>  space_derivatives_;
+	mutable std::vector<Nd>  time_derivatives_;
+	mutable StraightLineProgram slp_;
+
+	mutable VariableGroup variables_;   ///< the system's variable ordering (kept in sync by the owning System)
+	mutable Var path_variable_;         ///< the path variable, or null
+
+	mutable bool is_differentiated_ = false;
+	mutable unsigned precision_;
+
+	friend class boost::serialization::access;
+
+	template <typename Archive>
+	void serialize(Archive& ar, const unsigned /*version*/)
+	{
+		ar & constant_subfunctions_;
+		ar & functions_;
+		ar & is_differentiated_;
+		ar & space_derivatives_;
+		ar & time_derivatives_;
+		ar & slp_;
+		ar & variables_;
+		ar & path_variable_;
+		ar & precision_;
+	}
+};
+
+} // namespace blocks
+} // namespace bertini

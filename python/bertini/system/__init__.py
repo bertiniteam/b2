@@ -47,10 +47,84 @@ Making a new `System` is the starting point you want, probably some of these thi
 
 """
 
-import bertini._pybertini.system
+from bertini._pybertini import system as _pybsys
 
-from bertini._pybertini.system import * # brings the type System
-from bertini._pybertini.system import start_system
+from bertini._pybertini.system import *
 
-__all__ = dir(bertini._pybertini.system)
+# --- unified builder: System.add(*objects) ---
+# One fluent verb instead of remembering add_function / add_variable_group: dispatch each
+# argument by type.  Returns self for chaining.  Additive -- the explicit methods still work.
+import numpy as _np
+from bertini._pybertini.function_tree import AbstractNode as _AbstractNode
+from bertini._pybertini.container import VariableGroup as _VariableGroup
+
+
+def _system_add(self, *objects):
+    """Add functions and/or variable groups to the System, dispatched by type.
+
+    Each argument may be:
+      * a function-tree expression (e.g. ``x**2 + y - 1``, or a lone ``Variable``) -> added
+        as a function;
+      * a :class:`~bertini.VariableGroup` -> added as an affine variable group;
+      * a numpy array / list / tuple of the above -> each element is added (so
+        ``sys.add(A @ x - lam*x)``, ``sys.add([f, g])``, and ``sys.add(grp, f, g)`` work).
+
+    Projective groups still use :meth:`add_hom_variable_group`; structured blocks use
+    :meth:`~bertini.System.add_linear`.  Returns ``self`` for chaining.
+    """
+    for obj in objects:
+        if isinstance(obj, _AbstractNode):
+            self.add_function(obj)
+        elif isinstance(obj, _VariableGroup):
+            self.add_variable_group(obj)
+        elif isinstance(obj, (_np.ndarray, list, tuple)):
+            for elt in (obj.ravel() if isinstance(obj, _np.ndarray) else obj):
+                self.add(elt)
+        else:
+            raise TypeError(
+                f"System.add does not know how to add a {type(obj).__name__}; pass a "
+                "function-tree expression, a VariableGroup, or an array/list of those"
+            )
+    return self
+
+
+System.add = _system_add
+
+
+def _system_jacobian(self, usercoordinates=True):
+    """The symbolic Jacobian of the system, as a 2-D numpy object array of expression nodes.
+
+    ``J[i, j]`` is the partial derivative of function ``i`` with respect to variable ``j`` -- an
+    expression tree, not a number (contrast :meth:`eval_jacobian`, which is numeric).  Ready to
+    ``numpy.vstack`` onto a coefficient row and ``@`` a vector of variables.
+
+    Parameters
+    ----------
+    usercoordinates : bool, default True
+        When True, differentiate the functions *as authored* (the natural, pre-homogenization
+        functions) with respect to the user-declared affine/projective variable groups: the
+        solver-added homogenizing variables never appear and patches are omitted.  When False,
+        differentiate the functions *as currently stored* (possibly homogenized) with respect to
+        the full internal variable ordering (homogenizing variables included), with the patch's
+        rows appended when the system is patched.
+
+    Notes
+    -----
+    For a system that has *already* been homogenized, the user-coordinate Jacobian relies on the
+    natural functions snapshotted at homogenization time.  Build the system affinely and call
+    ``jacobian`` before homogenizing/solving for the cleanest result.
+    """
+    rows = self.symbolic_jacobian(usercoordinates)
+    return _np.array(rows, dtype=object)
+
+
+System.jacobian = _system_jacobian
+
+# Override C++ submodule reference with the Python wrapper (which has AbstractStartSystem removed).
+# Can't use 'from . import start_system': the star import already set that name to the C++ submodule.
+import importlib as _importlib
+start_system = _importlib.import_module('bertini.system.start_system')
+del _importlib
+
+__all__ = dir(_pybsys)
 __all__.extend(['start_system'])

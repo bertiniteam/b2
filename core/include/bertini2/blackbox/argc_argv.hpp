@@ -28,14 +28,29 @@
 
 #pragma once
 
+#include <boost/filesystem.hpp>
+
 namespace bertini{
 
 /**
-Main initial function for doing stuff to interpret the command-line arguments for invokation of the program.
-
-\param argc The number of arguments to the program.  Must be at least one.
-\param argv array of character arrays, the arguments to the program when called.
+\brief Parsed results of the command-line arguments.
 */
-void ParseArgcArgv(int argc, char** argv);
+struct ParsedArgs {
+	boost::filesystem::path input_file{"input"}; ///< Path to the input file (Bertini1 default: "input").
+};
+
+/**
+Parse command-line arguments and return a ParsedArgs struct.
+
+Recognized flags:
+  -f `<file>`   use `<file>` as the input file (overrides default "input")
+  `<file>`      bare positional argument treated as input file path
+  --help      print usage and exit
+  --version   print version and exit
+
+\param argc The number of arguments.
+\param argv The argument strings.
+*/
+ParsedArgs ParseArgcArgv(int argc, char** argv);
 
 } //namespace bertini

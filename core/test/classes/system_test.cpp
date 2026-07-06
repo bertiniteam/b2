@@ -35,11 +35,15 @@
 
 
 
+#include <sstream>
+
 #include "bertini2/system/system.hpp"
 #include "bertini2/system/precon.hpp"
+#include "bertini2/system/slice.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
 
 #include "externs.hpp"
+#include "eval_helper.hpp"
 
 namespace utf = boost::unit_test;
 
@@ -50,7 +54,7 @@ BOOST_AUTO_TEST_SUITE(system_class)
 
 using Var = std::shared_ptr<bertini::node::Variable>;
 
-using mpfr = bertini::mpfr_complex;
+using mpfr = bertini::complex_mp;
 
 using namespace bertini;
 /**
@@ -77,6 +81,58 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 	BOOST_CHECK(s);
 	BOOST_CHECK(!sys.IsHomogeneous());
 
+}
+
+
+/**
+\class bertini::System
+\test \b parsed_system_has_functions_and_evaluates A parsed system must actually contain its
+functions and evaluate them.  (Regression: when classic functions became eager-bound, a parse
+path that skipped the post-parse emit produced a silently empty, size-0 system -- the earlier
+parse tests only checked parse success / homogeneity, never the function count or a value.)
+*/
+BOOST_AUTO_TEST_CASE(parsed_system_has_functions_and_evaluates)
+{
+	System sys;
+	std::string str = "variable_group x, y; function f, g; f = x*y; g = x + y;";
+	bool ok = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
+	BOOST_CHECK(ok);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 2u);
+
+	Vec<complex_dbl> pt(2); pt << complex_dbl(2,0), complex_dbl(3,0);
+	auto v = sys.Eval(pt);
+	BOOST_REQUIRE_EQUAL(v.size(), 2);
+	BOOST_CHECK_SMALL(std::abs(v(0) - complex_dbl(6,0)), 1e-12);   // x*y at (2,3)
+	BOOST_CHECK_SMALL(std::abs(v(1) - complex_dbl(5,0)), 1e-12);   // x+y at (2,3)
+}
+
+
+/**
+\class bertini::System
+\test \b parsed_subfunction_is_a_named_expression A `s = expr` subfunction parses to an immutable
+NamedExpression embedded in the function that references it; the System evaluates correctly, prints
+the function with `s` by name, and lists the named subexpression's value below (discovered, not stored).
+*/
+BOOST_AUTO_TEST_CASE(parsed_subfunction_is_a_named_expression)
+{
+	System sys;
+	std::string str = "variable_group x, y; function f; s = x*y; f = s + x;";
+	bool ok = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
+	BOOST_CHECK(ok);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 1u);
+
+	// f = s + x = x*y + x; at (2,3) -> 6 + 2 = 8
+	Vec<complex_dbl> pt(2); pt << complex_dbl(2,0), complex_dbl(3,0);
+	auto v = sys.Eval(pt);
+	BOOST_REQUIRE_EQUAL(v.size(), 1);
+	BOOST_CHECK_SMALL(std::abs(v(0) - complex_dbl(8,0)), 1e-12);
+
+	std::stringstream ss; ss << sys;
+	const std::string text = ss.str();
+	BOOST_CHECK(text.find("named subexpression") != std::string::npos);  // discovered + shown
+	BOOST_CHECK(text.find("s = x*y") != std::string::npos);              // its value
 }
 
 
@@ -188,7 +244,7 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
-	Vec<dbl> v(1);
+	Vec<complex_dbl> v(1);
 	v << 1.0;
 
 	auto J = S.Jacobian(v);
@@ -215,12 +271,12 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
-	Vec<dbl> v(2);
+	Vec<complex_dbl> v(2);
 	v << 1.0 , 2.0;
 
 	auto J = S.Jacobian(v);
 
-	BOOST_CHECK_THROW(S.Jacobian(v,dbl(0.5)), std::runtime_error);
+	BOOST_CHECK_THROW(S.Jacobian(v,complex_dbl(0.5)), std::runtime_error);
 }
 
 
@@ -241,10 +297,10 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
-	Vec<dbl> v(1);
+	Vec<complex_dbl> v(1);
 	v << 1.0;
-	dbl time(0.5,0.2);
-	bertini::Mat<dbl> J = S.Jacobian(v,time);
+	complex_dbl time(0.5,0.2);
+	bertini::Mat<complex_dbl> J = S.Jacobian(v,time);
 
 	BOOST_CHECK_THROW(S.Jacobian(v), std::runtime_error);
 }
@@ -386,14 +442,14 @@ BOOST_AUTO_TEST_CASE(system_evaluate_double)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 
 	bertini::System sys;
-	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 
-	values(0) = dbl(2.0);
-	values(1) = dbl(3.0);
+	values(0) = complex_dbl(2.0);
+	values(1) = complex_dbl(3.0);
 
-	Vec<dbl> v = sys.Eval(values);
+	Vec<complex_dbl> v = sys.Eval(values);
 
 	BOOST_CHECK_EQUAL(v(0), 36.0);
 
@@ -419,7 +475,7 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 
 	bertini::System sys;
-	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	Vec<mpfr> values(2);
 
@@ -447,6 +503,12 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 	auto y = Variable::Make("y");
 	auto z = Variable::Make("z");
 
+	// Modest magnitudes keep the high-degree SLP-vs-analytic rounding comfortably inside the
+	// 1e-15 tolerance below.
+	complex_dbl a(0.5,  0.25);
+	complex_dbl b(0.4, -0.30);
+	complex_dbl c(0.6,  0.20);
+
 	System sys;
 
 	sys.AddVariableGroup(VariableGroup{x, y, z});
@@ -454,11 +516,7 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 	sys.AddFunction(pow(x,2)*pow(y,3)*pow(z,4) + 1);
 	sys.AddFunction(pow(x,3)*pow(y,4)*pow(z,5) + 4);
 
-	auto a = x->Eval<dbl>();
-	auto b = y->Eval<dbl>();
-	auto c = z->Eval<dbl>();
-
-	Vec<dbl> v(3);
+	Vec<complex_dbl> v(3);
 	v << a, b, c;
 
 	auto J = sys.Jacobian(v);
@@ -507,9 +565,9 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 	sys1+=sys2;
 
 
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 
-	values << dbl(2.0), dbl(3.0);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 
 	auto v = sys1.Eval(values);
 
@@ -534,7 +592,7 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 \test \b add_two_systems_evaluated_in_mpfr Sibling of add_two_systems, but
 exercises the Vec<mpfr> evaluation path. This is the C++ analog of the
 Python test_add_systems that surfaced the macos-15-intel SIGABRT — the C++
-suite previously only covered the Vec<dbl> path.
+suite previously only covered the Vec<complex_dbl> path.
 */
 BOOST_AUTO_TEST_CASE(add_two_systems_evaluated_in_mpfr)
 {
@@ -584,10 +642,9 @@ BOOST_AUTO_TEST_CASE(add_system_to_self_doubles_under_function_tree_eval)
 	sys.AddVariableGroup(vars);
 	sys.AddFunction(y+1);
 	sys.AddFunction(x*y);
-	sys.SetEvalMethod(bertini::EvalMethod::FunctionTree);
 
-	Vec<dbl> values(2);
-	values << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 	auto before = sys.Eval(values);   // [4, 6]
 
 	sys += sys;                       // self-add
@@ -618,15 +675,15 @@ BOOST_AUTO_TEST_CASE(operator_plus_equals_invalidates_slp_cache)
 	sys.AddFunction(y+1);
 	sys.AddFunction(x*y);
 
-	Vec<dbl> values(2);
-	values << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 	(void) sys.Eval(values);          // primes the SLP cache: [y+1, x*y]
 
 	sys += sys;                       // mutates tree to [2(y+1), 2xy] but cache stale
 
 	auto after = sys.Eval(values);    // expected [8, 12], currently [4, 6]
-	BOOST_CHECK_EQUAL(after(0), dbl(8.0));
-	BOOST_CHECK_EQUAL(after(1), dbl(12.0));
+	BOOST_CHECK_EQUAL(after(0), complex_dbl(8.0));
+	BOOST_CHECK_EQUAL(after(1), complex_dbl(12.0));
 }
 
 
@@ -638,7 +695,7 @@ by a Node and must also invalidate is_differentiated_.
 */
 BOOST_AUTO_TEST_CASE(operator_mult_equals_invalidates_slp_cache)
 {
-	using bertini::node::Float;
+	using bertini::node::Complex;
 
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y");
@@ -649,14 +706,14 @@ BOOST_AUTO_TEST_CASE(operator_mult_equals_invalidates_slp_cache)
 	sys.AddVariableGroup(vars);
 	sys.AddFunction(x+y);
 
-	Vec<dbl> values(2);
-	values << dbl(1.0), dbl(2.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(1.0), complex_dbl(2.0);
 	(void) sys.Eval(values);          // primes SLP for f = x+y
 
-	sys *= Float::Make("3.0");        // f should now be 3*(x+y)
+	sys *= Complex::Make("3.0");        // f should now be 3*(x+y)
 
 	auto after = sys.Eval(values);    // expected [9], currently [3]
-	BOOST_CHECK_EQUAL(after(0), dbl(9.0));
+	BOOST_CHECK_EQUAL(after(0), complex_dbl(9.0));
 }
 
 
@@ -679,15 +736,15 @@ BOOST_AUTO_TEST_CASE(reorder_functions_decreasing_invalidates_slp_cache)
 	sys.AddFunction(x+y);             // degree 1, initially at position 0
 	sys.AddFunction(x*y);             // degree 2, initially at position 1
 
-	Vec<dbl> values(2);
-	values << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 	(void) sys.Eval(values);          // primes SLP with the [degree1, degree2] order
 
 	sys.ReorderFunctionsByDegreeDecreasing();   // now [degree2, degree1] = [x*y, x+y]
 
 	auto after = sys.Eval(values);
-	BOOST_CHECK_EQUAL(after(0), dbl(6.0));      // x*y at position 0
-	BOOST_CHECK_EQUAL(after(1), dbl(5.0));      // x+y at position 1
+	BOOST_CHECK_EQUAL(after(0), complex_dbl(6.0));      // x*y at position 0
+	BOOST_CHECK_EQUAL(after(1), complex_dbl(5.0));      // x+y at position 1
 }
 
 
@@ -709,15 +766,15 @@ BOOST_AUTO_TEST_CASE(reorder_functions_increasing_invalidates_slp_cache)
 	sys.AddFunction(x*y);             // degree 2, initially at position 0
 	sys.AddFunction(x+y);             // degree 1, initially at position 1
 
-	Vec<dbl> values(2);
-	values << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> values(2);
+	values << complex_dbl(2.0), complex_dbl(3.0);
 	(void) sys.Eval(values);          // primes SLP with the [degree2, degree1] order
 
 	sys.ReorderFunctionsByDegreeIncreasing();   // now [degree1, degree2] = [x+y, x*y]
 
 	auto after = sys.Eval(values);
-	BOOST_CHECK_EQUAL(after(0), dbl(5.0));      // x+y at position 0
-	BOOST_CHECK_EQUAL(after(1), dbl(6.0));      // x*y at position 1
+	BOOST_CHECK_EQUAL(after(0), complex_dbl(5.0));      // x+y at position 0
+	BOOST_CHECK_EQUAL(after(1), complex_dbl(6.0));      // x*y at position 1
 }
 
 
@@ -738,12 +795,12 @@ BOOST_AUTO_TEST_CASE(eval_wrong_size_input_throws)
 	sys.AddVariableGroup(vars);
 	sys.AddFunction(x+y);
 
-	Vec<dbl> too_small(1);
-	too_small << dbl(1.0);
+	Vec<complex_dbl> too_small(1);
+	too_small << complex_dbl(1.0);
 	BOOST_CHECK_THROW(sys.Eval(too_small), std::runtime_error);
 
-	Vec<dbl> too_big(3);
-	too_big << dbl(1.0), dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> too_big(3);
+	too_big << complex_dbl(1.0), complex_dbl(2.0), complex_dbl(3.0);
 	BOOST_CHECK_THROW(sys.Eval(too_big), std::runtime_error);
 }
 
@@ -771,21 +828,21 @@ BOOST_AUTO_TEST_CASE(add_systems_chain)
 
 	sys1 += sys2 += sys3;      // sys2 becomes sys2+sys3; sys1 becomes sys1+sys2+sys3
 
-	Vec<dbl> v(2);
-	v << dbl(2.0), dbl(3.0);
+	Vec<complex_dbl> v(2);
+	v << complex_dbl(2.0), complex_dbl(3.0);
 
 	// sys1 originally: [x, y] = [2, 3]
 	// sys2 originally: [y, x] = [3, 2]
 	// sys3 originally: [xy, x+y] = [6, 5]
 	// sys1 final:      [2+3+6, 3+2+5] = [11, 10]
 	auto v1 = sys1.Eval(v);
-	BOOST_CHECK_EQUAL(v1(0), dbl(11.0));
-	BOOST_CHECK_EQUAL(v1(1), dbl(10.0));
+	BOOST_CHECK_EQUAL(v1(0), complex_dbl(11.0));
+	BOOST_CHECK_EQUAL(v1(1), complex_dbl(10.0));
 
 	// sys2 final:      [3+6, 2+5] = [9, 7]
 	auto v2 = sys2.Eval(v);
-	BOOST_CHECK_EQUAL(v2(0), dbl(9.0));
-	BOOST_CHECK_EQUAL(v2(1), dbl(7.0));
+	BOOST_CHECK_EQUAL(v2(0), complex_dbl(9.0));
+	BOOST_CHECK_EQUAL(v2(1), complex_dbl(7.0));
 }
 
 
@@ -847,13 +904,13 @@ BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
-	Vec<dbl> v(1);
+	Vec<complex_dbl> v(1);
 	v << 1.0;
-	dbl time(0.5,0.2);
+	complex_dbl time(0.5,0.2);
 	auto dS_dt = S.TimeDerivative(v,time);
 
-	BOOST_CHECK_CLOSE( dS_dt(0).real(), dbl(-1).real(), threshold_clearance_d);
-	BOOST_CHECK_CLOSE( dS_dt(1).imag(), dbl(-1).imag(), threshold_clearance_d);
+	BOOST_CHECK_CLOSE( dS_dt(0).real(), complex_dbl(-1).real(), threshold_clearance_d);
+	BOOST_CHECK_CLOSE( dS_dt(1).imag(), complex_dbl(-1).imag(), threshold_clearance_d);
 
 
 }
@@ -875,8 +932,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(3);
-	v << dbl(2,3), dbl(3,4), dbl(4,5);
+	Vec<complex_dbl> v(3);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -903,9 +960,9 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(6);
-	v << dbl(2,3), dbl(3,4), dbl(4,5), 
-		 dbl(5,6), dbl(6,7), dbl(7,8);
+	Vec<complex_dbl> v(6);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5), 
+		 complex_dbl(5,6), complex_dbl(6,7), complex_dbl(7,8);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -940,10 +997,10 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(8);
-	v << dbl(2,3), dbl(3,4), dbl(4,5), 
-		 dbl(10,11), dbl(11,12),
-		 dbl(5,6), dbl(6,7), dbl(7,8);
+	Vec<complex_dbl> v(8);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5), 
+		 complex_dbl(10,11), complex_dbl(11,12),
+		 complex_dbl(5,6), complex_dbl(6,7), complex_dbl(7,8);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -975,8 +1032,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(2);
-	v << dbl(2,3), dbl(3,4);
+	Vec<complex_dbl> v(2);
+	v << complex_dbl(2,3), complex_dbl(3,4);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -985,6 +1042,104 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 	BOOST_CHECK(abs(d(0) - v(0)) < threshold_clearance_d);
 	BOOST_CHECK(abs(d(1) - v(1)) < threshold_clearance_d);
 }
+
+
+/**
+\class bertini::System
+\test \b system_homogenize_point_unhomogenized_is_identity HomogenizePoint on an unhomogenized, unpatched system returns the point unchanged.
+*/
+BOOST_AUTO_TEST_CASE(system_homogenize_point_unhomogenized_is_identity)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+
+	Vec<complex_dbl> p(2);
+	p << complex_dbl(3,4), complex_dbl(4,5);
+
+	auto h = sys.HomogenizePoint(p);
+
+	BOOST_CHECK_EQUAL(h.size(),2);
+	BOOST_CHECK(abs(h(0) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(1) - p(1)) < threshold_clearance_d);
+}
+
+
+/**
+\class bertini::System
+\test \b system_homogenize_point_FIFO_one_aff_group HomogenizePoint inserts the homogenizing coordinate with value 1, and dehomogenization inverts it.
+*/
+BOOST_AUTO_TEST_CASE(system_homogenize_point_FIFO_one_aff_group)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+
+	sys.Homogenize();
+
+	Vec<complex_dbl> p(2);
+	p << complex_dbl(3,4), complex_dbl(4,5);
+
+	auto h = sys.HomogenizePoint(p);
+
+	BOOST_CHECK_EQUAL(h.size(),3);
+	BOOST_CHECK(abs(h(0) - complex_dbl(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(1) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(2) - p(1)) < threshold_clearance_d);
+
+	auto p_again = sys.DehomogenizePoint(h);
+	BOOST_CHECK_EQUAL(p_again.size(),2);
+	BOOST_CHECK(abs(p_again(0) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(p_again(1) - p(1)) < threshold_clearance_d);
+}
+
+
+/**
+\class bertini::System
+\test \b system_homogenize_point_FIFO_mixed_groups HomogenizePoint handles affine groups, hom groups, and dehomogenization inverts it, with multiple group types in play.
+*/
+BOOST_AUTO_TEST_CASE(system_homogenize_point_FIFO_mixed_groups)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	Var z = Variable::Make("z"), w = Variable::Make("w");
+	Var h1 = Variable::Make("h1"), h2 = Variable::Make("h2");
+	VariableGroup vars{x, y};
+	VariableGroup vars2{h1,h2};
+	VariableGroup vars3{z, w};
+	sys.AddVariableGroup(vars);
+	sys.AddHomVariableGroup(vars2);
+	sys.AddVariableGroup(vars3);
+
+	sys.Homogenize();
+
+	Vec<complex_dbl> p(6);
+	p << complex_dbl(3,4), complex_dbl(4,5),
+		 complex_dbl(10,11), complex_dbl(11,12),
+		 complex_dbl(6,7), complex_dbl(7,8);
+
+	auto h = sys.HomogenizePoint(p);
+
+	BOOST_CHECK_EQUAL(h.size(),8);
+	// [hom0, x, y, hom-group passthrough, hom1, z, w]
+	BOOST_CHECK(abs(h(0) - complex_dbl(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(1) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(2) - p(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(3) - p(2)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(4) - p(3)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(5) - complex_dbl(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(6) - p(4)) < threshold_clearance_d);
+	BOOST_CHECK(abs(h(7) - p(5)) < threshold_clearance_d);
+
+	auto p_again = sys.DehomogenizePoint(h);
+	BOOST_CHECK_EQUAL(p_again.size(),6);
+	for (int ii = 0; ii < 6; ++ii)
+		BOOST_CHECK(abs(p_again(ii) - p(ii)) < threshold_clearance_d);
+}
+
+
 
 
 /**
@@ -1004,8 +1159,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
 
 	sys.Homogenize();
 
-	Vec<dbl> v(4);
-	v << dbl(2,3), dbl(3,4), dbl(4,5), dbl(5,6);
+	Vec<complex_dbl> v(4);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5), complex_dbl(5,6);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -1042,11 +1197,11 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_a
 
 	sys.Homogenize();
 
-	Vec<dbl> v(10);
-	v << dbl(2,3), dbl(3,4), dbl(4,5), 
-		 dbl(10,11), dbl(11,12),
-		 dbl(5,6), dbl(6,7), dbl(7,8),
-		 dbl(12,13), dbl(13,14);
+	Vec<complex_dbl> v(10);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5), 
+		 complex_dbl(10,11), complex_dbl(11,12),
+		 complex_dbl(5,6), complex_dbl(6,7), complex_dbl(7,8),
+		 complex_dbl(12,13), complex_dbl(13,14);
 
 	auto d = sys.DehomogenizePoint(v);
 
@@ -1091,9 +1246,9 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 	S.AddFunction((1-t)*x + t*(1-x));
 	S.AddFunction(x-t);
 
-	mpfr_float coefficient_bound = S.CoefficientBound<mpfr>();
-	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
-	BOOST_CHECK(coefficient_bound > mpfr_float("0.5"));
+	real_mp coefficient_bound = S.CoefficientBound<mpfr>();
+	BOOST_CHECK(coefficient_bound < real_mp("10"));
+	BOOST_CHECK(coefficient_bound > real_mp("0.5"));
 }
 
 
@@ -1111,13 +1266,13 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	mpfr_float coefficient_bound = sys.CoefficientBound<mpfr>();
-	BOOST_CHECK(coefficient_bound < mpfr_float("5"));
-	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
+	real_mp coefficient_bound = sys.CoefficientBound<mpfr>();
+	BOOST_CHECK(coefficient_bound < real_mp("5"));
+	BOOST_CHECK(coefficient_bound > real_mp("2"));
 }
 
 
@@ -1130,22 +1285,68 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 {
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
+	// AutoPatch coefficients come from RandomMp; seeding makes this test's draws
+	// (and hence the <10 threshold below) deterministic regardless of which other
+	// tests ran first.  RandomMp now honors SetGlobalSeed (it shares ThreadEngine).
+	bertini::SetGlobalSeed(1u);
+
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	mpfr_float coefficient_bound = sys.CoefficientBound<mpfr>();
-	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
-	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
+	real_mp coefficient_bound = sys.CoefficientBound<mpfr>();
+	BOOST_CHECK(coefficient_bound < real_mp("10"));
+	BOOST_CHECK(coefficient_bound > real_mp("2"));
+}
+
+
+/**
+\class bertini::System
+\test \b system_homogenize_point_lands_on_patch On a patched system, HomogenizePoint produces a point ON the patch (rescaling it again is the identity), and dehomogenizing recovers the user point.
+*/
+BOOST_AUTO_TEST_CASE(system_homogenize_point_lands_on_patch)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	Vec<complex_dbl> p(2);
+	p << complex_dbl(3,4), complex_dbl(4,5);
+
+	auto h = sys.HomogenizePoint(p);
+	BOOST_CHECK_EQUAL(h.size(),3);
+
+	// already on the patch: rescaling is the identity
+	auto h_rescaled = sys.RescalePointToFitPatch(h);
+	for (int ii = 0; ii < 3; ++ii)
+		BOOST_CHECK(abs(h_rescaled(ii) - h(ii)) < threshold_clearance_d);
+
+	// projectively the same point: dehomogenizing recovers the user coordinates
+	auto p_again = sys.DehomogenizePoint(h);
+	BOOST_CHECK(abs(p_again(0) - p(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(p_again(1) - p(1)) < threshold_clearance_d);
+
+	// and the round trip from an on-patch internal point is exact:
+	// Hom(Dehom(s)) == s for s on the patch
+	Vec<complex_dbl> v(3);
+	v << complex_dbl(2,3), complex_dbl(3,4), complex_dbl(4,5);
+	auto s = sys.RescalePointToFitPatch(v);
+	auto s_again = sys.HomogenizePoint(sys.DehomogenizePoint(s));
+	for (int ii = 0; ii < 3; ++ii)
+		BOOST_CHECK(abs(s_again(ii) - s(ii)) < threshold_clearance_d);
 }
 
 /**
@@ -1165,8 +1366,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
 	S.AddFunction((1-t)*x + t*(1-x));
 	S.AddFunction(x-t);
 
-	mpfr_float degree_bound = S.DegreeBound();
-	BOOST_CHECK(degree_bound == mpfr_float("1"));
+	real_mp degree_bound = S.DegreeBound();
+	BOOST_CHECK(degree_bound == real_mp("1"));
 }
 
 
@@ -1184,12 +1385,12 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(y+x*y + real_mp("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	mpfr_float degree_bound = sys.DegreeBound();
-	BOOST_CHECK(degree_bound == mpfr_float("4"));
+	real_mp degree_bound = sys.DegreeBound();
+	BOOST_CHECK(degree_bound == real_mp("4"));
 }
 
 
@@ -1214,7 +1415,7 @@ BOOST_AUTO_TEST_CASE(system_multiply_by_node)
 	sys1.AddFunction(z);
 
 	sys2.AddVariableGroup(vars);  
-	sys2.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys2.AddFunction(y+x*y + real_mp("0.5"));
 	sys2.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys2.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -1245,7 +1446,7 @@ BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 	sys1.AddFunction(z);
 
 	sys2.AddVariableGroup(vars);  
-	sys2.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys2.AddFunction(y+x*y + real_mp("0.5"));
 	sys2.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys2.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -1253,6 +1454,72 @@ BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 	auto sys3 = Concatenate(sys1, sys2);
 
 	BOOST_CHECK_EQUAL(sys3.NumNaturalFunctions(),6);
+}
+
+/**
+\class bertini::System
+\test \b concatenate_accepts_a_structured_block_system  Concatenate must append the functions of a
+system whose rows live in a structured block (a linear-forms slice), not only PolynomialBlock rows.
+Regression: it iterated sys2.Function(ii) -- which reads only the PolynomialBlock -- so a structured
+operand was skipped (and null-deref/segfaulted when it had no polynomial block).
+*/
+BOOST_AUTO_TEST_CASE(concatenate_accepts_a_structured_block_system)
+{
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	bertini::VariableGroup vars{x,y};
+
+	bertini::System sys1;
+	sys1.AddVariableGroup(vars);
+	sys1.AddFunction(x*x + y*y - 1);          // a polynomial: f0 = x^2 + y^2 - 1
+
+	// a system whose two functions live in a LinearFormsBlock (a slice): f = 2x+3y+1, x-y+4
+	bertini::Mat<bertini::complex_mp> M(2,3);
+	M << bertini::complex_mp(2), bertini::complex_mp(3),  bertini::complex_mp(1),
+	     bertini::complex_mp(1), bertini::complex_mp(-1), bertini::complex_mp(4);
+	auto sys2 = bertini::Slice::FromCoefficients(vars, M).AsSystem();
+
+	auto sys3 = Concatenate(sys1, sys2);      // used to segfault on the structured operand
+	BOOST_CHECK_EQUAL(sys3.NumNaturalFunctions(), 3);
+
+	// at (x,y) = (1,1):  f0 = 1,  f1 = 6,  f2 = 4
+	bertini::Vec<bertini::complex_dbl> p(2); p << bertini::complex_dbl(1), bertini::complex_dbl(1);
+	auto v = sys3.Eval(p);
+	BOOST_CHECK_EQUAL(v.size(), 3);
+	BOOST_CHECK_CLOSE(v(0).real(), 1.0, 1e-11);
+	BOOST_CHECK_CLOSE(v(1).real(), 6.0, 1e-11);
+	BOOST_CHECK_CLOSE(v(2).real(), 4.0, 1e-11);
+}
+
+/**
+\class bertini::System
+\test \b concatenate_copies_patch_from_patched_operand When exactly one operand is patched,
+Concatenate must give the result that operand's patch.  Regression: Concatenate used to call
+sys1.CopyPatches(sys1) -- copying patches from itself, a no-op -- so the patch was silently
+dropped and the result came out unpatched.
+*/
+BOOST_AUTO_TEST_CASE(concatenate_copies_patch_from_patched_operand)
+{
+	bertini::SetGlobalSeed(1u); // AutoPatch draws random patch coefficients
+
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x,y};
+
+	bertini::System base;
+	base.AddVariableGroup(vars);
+	base.AddFunction(x*x + y*y - 1);
+	base.Homogenize();
+
+	// Two systems with identical variable ordering (clones share the node DAG), only one patched.
+	auto sys1 = Clone(base);              // unpatched
+	auto sys2 = Clone(base);
+	sys2.AutoPatch();                     // patched
+
+	BOOST_CHECK(!sys1.IsPatched());
+	BOOST_CHECK(sys2.IsPatched());
+
+	auto sys3 = Concatenate(sys1, sys2);
+	BOOST_CHECK(sys3.IsPatched());
+	BOOST_CHECK(sys3.GetPatch() == sys2.GetPatch());
 }
 
 /**
@@ -1265,14 +1532,14 @@ BOOST_AUTO_TEST_CASE(parsed_system_evaluates_correctly)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 	
 	bertini::System sys;
-	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 	
-	Vec<dbl> values(2);
+	Vec<complex_dbl> values(2);
 	
-	values(0) = dbl(2.0);
-	values(1) = dbl(3.0);
+	values(0) = complex_dbl(2.0);
+	values(1) = complex_dbl(3.0);
 	
-	Vec<dbl> v(sys.NumNaturalFunctions());
+	Vec<complex_dbl> v(sys.NumNaturalFunctions());
 	sys.EvalInPlace(v, values);
 	
 	BOOST_CHECK_EQUAL(v(0), 36.0);
@@ -1374,6 +1641,298 @@ BOOST_AUTO_TEST_CASE(clone_system_new_variables_evaluation)
 	BOOST_CHECK_EQUAL(f,f2);
 	BOOST_CHECK_EQUAL(f_clone2,f2);
 }
+
+
+
+/**
+\class bertini::node
+\test \b gather_variables_alphabetical GatherVariables returns the distinct
+variables of a set of functions, de-duplicated and sorted alphabetically by name.
+*/
+BOOST_AUTO_TEST_CASE(gather_variables_alphabetical)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+
+	// note: declared out of alphabetical order, x used twice
+	auto f1 = (pow(z,2) + y*x);
+	auto f2 = (x - y);
+
+	auto found = bertini::node::GatherVariables(std::vector<std::shared_ptr<bertini::node::Node>>{f1, f2});
+
+	BOOST_CHECK_EQUAL(found.size(), 3);
+	BOOST_CHECK_EQUAL(found[0]->name(), "x");
+	BOOST_CHECK_EQUAL(found[1]->name(), "y");
+	BOOST_CHECK_EQUAL(found[2]->name(), "z");
+}
+
+
+/**
+\class bertini::System
+\test \b system_construct_from_functions Constructing a System from a list of
+functions auto-discovers the variables into a single affine variable group.
+*/
+BOOST_AUTO_TEST_CASE(system_construct_from_functions)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+
+	auto f1 = (x*y*z);
+	auto f2 = (x + y + z);
+
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Node>>{f1, f2});
+
+	BOOST_CHECK_EQUAL(sys.NumTotalFunctions(), 2);
+	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 1);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 3);
+
+	auto const& ordering = sys.Variables();
+	BOOST_CHECK_EQUAL(ordering[0]->name(), "x");
+	BOOST_CHECK_EQUAL(ordering[1]->name(), "y");
+	BOOST_CHECK_EQUAL(ordering[2]->name(), "z");
+}
+
+
+/**
+\class bertini::System
+\test \b system_set_variable_groups SetVariableGroups replaces the whole
+variable-group structure with the supplied affine groups.
+*/
+BOOST_AUTO_TEST_CASE(system_set_variable_groups)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+
+	auto f1 = (x*y*z);
+
+	bertini::System sys(std::vector<std::shared_ptr<bertini::node::Node>>{f1});
+	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 1);
+
+	bertini::VariableGroup g1{x};
+	bertini::VariableGroup g2{y, z};
+	sys.SetVariableGroups(std::vector<bertini::VariableGroup>{g1, g2});
+
+	BOOST_CHECK_EQUAL(sys.NumVariableGroups(), 2);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 3);
+}
+
+
+// ---- Symbolic Jacobian (matrix of expression nodes) -------------------------------------------
+
+/**
+\class bertini::System
+\test \b symbolic_jacobian_free_function The free SymbolicJacobian(functions, variables) builds the
+matrix of partial-derivative expressions, row-major, with the right shape and entries.
+*/
+BOOST_AUTO_TEST_CASE(symbolic_jacobian_free_function)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	auto f0 = pow(x,2)*y;        // d/dx = 2xy,  d/dy = x^2
+	auto f1 = x*y - pow(y,2);    // d/dx = y,    d/dy = x - 2y
+
+	bertini::VariableGroup vars{x, y};
+	auto J = bertini::SymbolicJacobian(std::vector<std::shared_ptr<bertini::node::Node>>{f0, f1}, vars);
+
+	BOOST_CHECK_EQUAL(J.rows, 2u);
+	BOOST_CHECK_EQUAL(J.cols, 2u);
+	BOOST_CHECK_EQUAL(J.entries.size(), 4u);
+
+	std::map<std::string, complex_dbl> pt{{"x", complex_dbl(2)}, {"y", complex_dbl(3)}};
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[0], pt) - complex_dbl(12)), 1e-12); // 2*2*3
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[1], pt) - complex_dbl(4)),  1e-12); // 2^2
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[2], pt) - complex_dbl(3)),  1e-12); // y
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[3], pt) - complex_dbl(-4)), 1e-12); // 2 - 2*3
+}
+
+/**
+\class bertini::System
+\test \b system_symbolic_jacobian_usercoordinates System::SymbolicJacobian(true) differentiates the
+declared functions w.r.t. the affine variable groups, matching the free function.
+*/
+BOOST_AUTO_TEST_CASE(system_symbolic_jacobian_usercoordinates)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	auto f0 = pow(x,2)*y;
+	auto f1 = x*y - pow(y,2);
+
+	bertini::System S;
+	S.AddVariableGroup(bertini::VariableGroup{x, y});
+	S.AddFunction(f0);
+	S.AddFunction(f1);
+
+	auto J = S.SymbolicJacobian(true);
+	BOOST_CHECK_EQUAL(J.rows, 2u);
+	BOOST_CHECK_EQUAL(J.cols, 2u);
+
+	std::map<std::string, complex_dbl> pt{{"x", complex_dbl(2)}, {"y", complex_dbl(3)}};
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[0], pt) - complex_dbl(12)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[3], pt) - complex_dbl(-4)), 1e-12);
+}
+
+/**
+\class bertini::System
+\test \b system_symbolic_jacobian_usercoordinates_after_homogenize After homogenization, the
+user-coordinate Jacobian still differentiates the *natural* functions: no homogenizing variable
+appears, and the entries match the affine partials.
+*/
+BOOST_AUTO_TEST_CASE(system_symbolic_jacobian_usercoordinates_after_homogenize)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	auto f0 = pow(x,2)*y;
+	auto f1 = x*y - pow(y,2);
+
+	bertini::System S;
+	S.AddVariableGroup(bertini::VariableGroup{x, y});
+	S.AddFunction(f0);
+	S.AddFunction(f1);
+	S.Homogenize();
+
+	auto J = S.SymbolicJacobian(true);
+	BOOST_CHECK_EQUAL(J.rows, 2u);
+	BOOST_CHECK_EQUAL(J.cols, 2u);   // only x and y -- NOT the homogenizing variable
+
+	for (auto const& e : J.entries)
+		for (auto const& v : bertini::node::GatherVariables(e))
+			BOOST_CHECK(v->name() != "HOM_VAR_0");
+
+	std::map<std::string, complex_dbl> pt{{"x", complex_dbl(2)}, {"y", complex_dbl(3)}};
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[0], pt) - complex_dbl(12)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(bertini::test::EvalAt<complex_dbl>(J.entries[1], pt) - complex_dbl(4)),  1e-12);
+}
+
+/**
+\class bertini::System
+\test \b system_symbolic_jacobian_internal_includes_patch The internal-coordinate Jacobian keeps the
+homogenizing variable as a column and appends one patch row per variable group.
+*/
+BOOST_AUTO_TEST_CASE(system_symbolic_jacobian_internal_includes_patch)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	auto f0 = pow(x,2)*y;
+	auto f1 = x*y - pow(y,2);
+
+	bertini::System S;
+	S.AddVariableGroup(bertini::VariableGroup{x, y});
+	S.AddFunction(f0);
+	S.AddFunction(f1);
+	S.Homogenize();
+	S.AutoPatch();
+
+	auto Juser = S.SymbolicJacobian(true);
+	BOOST_CHECK_EQUAL(Juser.cols, 2u);
+
+	auto Jint = S.SymbolicJacobian(false);
+	BOOST_CHECK_EQUAL(Jint.cols, static_cast<size_t>(S.NumVariables())); // includes the homogenizing variable
+	BOOST_CHECK_EQUAL(Jint.rows, 2u + 1u);                                // 2 functions + 1 patch row (one variable group)
+}
+
+
+// ---- variable-name validation ----
+// A Variable's name must be a well-formed identifier; an expression, operator,
+// whitespace, leading digit, or empty string is rejected at construction.
+
+BOOST_AUTO_TEST_CASE(variable_name_expression_is_rejected)
+{
+	BOOST_CHECK_THROW(Variable::Make("x^2+1"), std::runtime_error);
+	BOOST_CHECK_THROW(Variable::Make("2x"),    std::runtime_error);
+	BOOST_CHECK_THROW(Variable::Make("a b"),   std::runtime_error);
+	BOOST_CHECK_THROW(Variable::Make(""),      std::runtime_error);
+	BOOST_CHECK_THROW(Variable::Make(") ; x"), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(variable_name_valid_identifiers_accepted)
+{
+	BOOST_CHECK_NO_THROW(Variable::Make("x"));
+	BOOST_CHECK_NO_THROW(Variable::Make("x_1"));
+	BOOST_CHECK_NO_THROW(Variable::Make("x[0]"));
+	BOOST_CHECK_NO_THROW(Variable::Make("\xCE\xA9"));         // Ω
+	BOOST_CHECK_NO_THROW(Variable::Make("\xF0\x9F\x8E\x89")); // 🎉 (emoji)
+}
+
+
+// ---- path-variable / user-variable collision avoidance ----
+// An auto-constructed homotopy's path variable must never share a name with a user
+// variable.  UniquePathVariableName generates a collision-free name; AddPathVariable
+// throws if a chosen name collides (the backstop all homotopy builders funnel through).
+
+BOOST_AUTO_TEST_CASE(unique_path_variable_name_passes_through_when_free)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	BOOST_CHECK_EQUAL(UniquePathVariableName(sys, "t"), std::string("t"));
+}
+
+BOOST_AUTO_TEST_CASE(unique_path_variable_name_avoids_existing_t)
+{
+	Var t  = Variable::Make("t");
+	Var t1 = Variable::Make("t_1");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{t});
+	BOOST_CHECK_EQUAL(UniquePathVariableName(sys, "t"), std::string("t_1"));
+
+	System sys2;
+	sys2.AddVariableGroup(VariableGroup{t, t1});
+	BOOST_CHECK_EQUAL(UniquePathVariableName(sys2, "t"), std::string("t_2"));
+}
+
+BOOST_AUTO_TEST_CASE(add_path_variable_colliding_name_throws)
+{
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+	System S;
+	S.AddVariableGroup(VariableGroup{x, t});   // user variable named "t"
+	Var collider = Variable::Make("t");
+	BOOST_CHECK_THROW(S.AddPathVariable(collider), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(add_path_variable_noncolliding_ok)
+{
+	Var x = Variable::Make("x");
+	System S;
+	S.AddVariableGroup(VariableGroup{x});
+	Var s = Variable::Make("s");
+	BOOST_CHECK_NO_THROW(S.AddPathVariable(s));
+	BOOST_CHECK(S.HavePathVariable());
+}
+
+BOOST_AUTO_TEST_CASE(make_homotopy_auto_names_a_safe_path_variable)
+{
+	Var x = Variable::Make("x");
+	System target;
+	target.AddVariableGroup(VariableGroup{x});
+	target.AddFunction(x*x - 1);
+	System start;
+	start.AddVariableGroup(VariableGroup{x});
+	start.AddFunction(x - 1);
+
+	auto H = MakeHomotopy(target, start);   // empty name -> auto-choose a safe one
+	BOOST_CHECK(H.HavePathVariable());
+	BOOST_CHECK_EQUAL(H.GetPathVariable()->name(), std::string("t")); // "t" is free (only variable is x)
+}
+
+BOOST_AUTO_TEST_CASE(make_homotopy_with_colliding_pathvar_throws)
+{
+	Var x = Variable::Make("x");
+	System target;
+	target.AddVariableGroup(VariableGroup{x});
+	target.AddFunction(x*x - 1);
+	System start;
+	start.AddVariableGroup(VariableGroup{x});
+	start.AddFunction(x - 1);
+
+	// Forcing the path variable to be "x" collides with the user variable x.
+	BOOST_CHECK_THROW(MakeHomotopy(target, start, "x"), std::runtime_error);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

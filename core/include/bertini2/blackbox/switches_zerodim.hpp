@@ -44,86 +44,162 @@ namespace blackbox{
 
 
 
+/**
+\brief Runtime options selecting which ZeroDim algorithm to instantiate.
+
+Holds the runtime (enum) choices -- start system, tracker, and endgame -- that the
+ZeroDimSpecify* switch chain resolves into concrete compile-time template parameters.
+*/
 struct ZeroDimRT
 {
-	type::Start start = type::Start::TotalDegree;
-	type::Tracker tracker = type::Tracker::Adaptive;
-	type::Endgame endgame = type::Endgame::Cauchy;
+	// INTERIM default = TotalDegreeBinomial (see policies.hpp): the linear-product TotalDegreeLinearProduct is the
+	// eventual default but currently stalls the Cauchy endgame on harder systems, so the safe
+	// default stays roots of unity until that is fixed.
+	type::Start start = type::Start::TotalDegreeBinomial;  ///< Which start system to use.
+	type::Tracker tracker = type::Tracker::Adaptive;       ///< Which path tracker to use.
+	type::Endgame endgame = type::Endgame::Cauchy;         ///< Which endgame to use.
 };
 
 
-template <typename StartType, typename TrackerType, typename EndgameType, template<typename,typename> class SystemManagementPol, typename ... ConstTs>
+/**
+\brief Infer which start system to use from the target system's variable-group structure.
+
+This replicates classic Bertini, which chooses the start system from how the user
+groups the variables rather than from a dedicated setting:
+
+- a single affine variable group, with no homogeneous variable groups -> total degree
+  (the 1-homogeneous Bezout start system);
+- anything else with grouping -- two or more variable groups, or one or more
+  homogeneous variable groups -- -> multihomogeneous, using that partition.
+
+User-defined homotopies are not inferred here; they come with their own start system.
+*/
+inline type::Start InferStartType(System const& sys)
+{
+	// INTERIM: a single affine group infers TotalDegreeBinomial (the safe default).  The eventual choice
+	// here is TotalDegreeLinearProduct (general position), gated on the Cauchy-endgame fix; see policies.hpp.
+	if (sys.NumVariableGroups() == 1 && sys.NumHomVariableGroups() == 0)
+		return type::Start::TotalDegreeBinomial;
+	else
+		return type::Start::MHom;
+}
+
+
+// The concrete start-system type appears only at the construction site, via
+// start_system::MakeStartFactory<StartType>() (see start_base.hpp); ZeroDim downstream is a
+// single type that holds the start system polymorphically.  Add a start system => add a
+// case in ZeroDimSpecifyStart, no new ZeroDim instantiation.
+
+/**
+\brief Instantiate the fully-specified ZeroDim solver -- the end of the switch chain.
+
+By this point every algorithm choice is a compile-time template parameter, so the concrete
+ZeroDimSolver can be constructed.  The blackbox always clones and builds its own system.
+
+\tparam TrackerType The resolved path-tracker type.
+\tparam EndgameType The resolved endgame type.
+\tparam ConstTs The forwarded construction-argument types.
+\param ts The construction arguments forwarded to the solver (target system and start-system factory).
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
+template <typename TrackerType, typename EndgameType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyComplete(ConstTs const& ...ts)
 {
+	// the blackbox always clones + builds (ZeroDimSolver); ts... = (target, start_factory).
 	return std::make_unique<
-			algorithm::ZeroDim<
-				TrackerType, 
-				EndgameType, 
-				System, 
-				StartType,
-				SystemManagementPol>
+			algorithm::ZeroDimSolver<TrackerType, EndgameType, System>
 			>(ts...);
 }
 
-template <typename StartType, typename TrackerType, typename EndgameType, typename ... ConstTs>
-std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyShouldClone(std::true_type, ConstTs const& ...ts)
-{
-	return ZeroDimSpecifyComplete<StartType, TrackerType, 
-			typename endgame::EndgameSelector<TrackerType>::Cauchy, policy::CloneGiven>(ts...);
-}
+/**
+\brief Resolve the runtime endgame choice (rt.endgame) into a compile-time endgame type, then continue.
 
-template <typename StartType, typename TrackerType, typename EndgameType, typename ... ConstTs>
-std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyShouldClone(std::false_type, ConstTs const& ...ts)
-{
-	return ZeroDimSpecifyComplete<StartType, TrackerType, 
-			typename endgame::EndgameSelector<TrackerType>::Cauchy, policy::RefToGiven>(ts...);
-}
-
-
-template <typename StartType, typename TrackerType, typename ... ConstTs>
+\tparam TrackerType The already-resolved path-tracker type.
+\tparam ConstTs The forwarded construction-argument types.
+\param rt The runtime options carrying the endgame selection.
+\param ts The construction arguments forwarded down the chain.
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
+template <typename TrackerType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyEndgame(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
-	
 	switch (rt.endgame)
 	{
 		case type::Endgame::PowerSeries:
-			return ZeroDimSpecifyShouldClone<StartType, TrackerType, 
-					typename endgame::EndgameSelector<TrackerType>::PSEG>(typename StorageSelector<StartType>::ShouldClone(), ts...);
+			// honor the requested endgame!  until 2026-06-12 this hardcoded Cauchy.
+			return ZeroDimSpecifyComplete<TrackerType,
+					typename endgame::EndgameSelector<TrackerType>::PSEG>(ts...);
 
 		case type::Endgame::Cauchy:
-			return ZeroDimSpecifyShouldClone<StartType, TrackerType, 
-					typename endgame::EndgameSelector<TrackerType>::Cauchy>(typename StorageSelector<StartType>::ShouldClone(), ts...);
+			return ZeroDimSpecifyComplete<TrackerType,
+					typename endgame::EndgameSelector<TrackerType>::Cauchy>(ts...);
 	}
+	throw std::runtime_error("unrecognized endgame type in ZeroDimSpecifyEndgame");
 }
 
-template <typename StartType, typename ... ConstTs>
+/**
+\brief Resolve the runtime tracker choice (rt.tracker) into a compile-time tracker type, then continue.
+
+\tparam ConstTs The forwarded construction-argument types.
+\param rt The runtime options carrying the tracker selection.
+\param ts The construction arguments forwarded down the chain.
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
+template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyTracker(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
 	switch (rt.tracker)
 	{
 		case type::Tracker::FixedDouble:
-			return ZeroDimSpecifyEndgame<StartType, tracking::DoublePrecisionTracker>(rt, ts...);
+			return ZeroDimSpecifyEndgame<tracking::DoublePrecisionTracker>(rt, ts...);
 		case type::Tracker::FixedMultiple:
-			return ZeroDimSpecifyEndgame<StartType, tracking::MultiplePrecisionTracker>(rt, ts...);
+			return ZeroDimSpecifyEndgame<tracking::MultiplePrecisionTracker>(rt, ts...);
 		case type::Tracker::Adaptive:
-			return ZeroDimSpecifyEndgame<StartType, tracking::AMPTracker>(rt, ts...);
+			return ZeroDimSpecifyEndgame<tracking::AMPTracker>(rt, ts...);
 	}
+	throw std::runtime_error("unrecognized tracker type in ZeroDimSpecifyTracker");
 }
 
+/**
+\brief Resolve the runtime start-system choice (rt.start) into a start-system factory, then continue.
+
+Appends the chosen start-system factory to the argument pack before continuing down the chain
+(ZeroDimSolver consumes the target system and that factory).
+
+\tparam ConstTs The forwarded construction-argument types.
+\param rt The runtime options carrying the start-system selection.
+\param ts The construction arguments forwarded down the chain.
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyStart(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
+	// append the start-system factory to the argument pack; ZeroDimSolver consumes (target, factory).
 	switch (rt.start)
 	{
-		case type::Start::TotalDegree:
-			return ZeroDimSpecifyTracker<start_system::TotalDegree>(rt, ts...);
+		case type::Start::TotalDegreeLinearProduct:
+			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegreeLinearProduct>());
+		case type::Start::TotalDegreeBinomial:
+			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegreeBinomial>());
 		case type::Start::MHom:
-			return ZeroDimSpecifyTracker<start_system::MHomogeneous>(rt, ts...);
+			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::MHomogeneous>());
 		case type::Start::User:
 			throw std::runtime_error("trying to use generic zero dim with user homotopy.  use the specific UserBlaBla instead");
 	}
+	throw std::runtime_error("unrecognized start system type in ZeroDimSpecifyStart");
 }
 
+/**
+\brief Build a ZeroDim solver from runtime options -- the entry point of the switch chain.
+
+Enters the ZeroDimSpecify* chain, which resolves each runtime option (start, tracker, endgame)
+into the corresponding compile-time template parameter and constructs the solver.
+
+\tparam ConstTs The forwarded construction-argument types.
+\param rt The runtime options selecting start system, tracker, and endgame.
+\param ts The construction arguments (the target system, ...).
+\return An owning handle to the constructed solver, type-erased as AnyZeroDim.
+*/
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> MakeZeroDim(ZeroDimRT const& rt, ConstTs const& ...ts)
 {

@@ -30,11 +30,6 @@
 namespace bertini {
 namespace node{	
 
-void UnaryOperator::Reset() const
-{
-	Node::ResetStoredValues();
-	operand_->Reset();
-}
 
 void UnaryOperator::SetOperand(std::shared_ptr<Node> n)
 {
@@ -82,9 +77,20 @@ std::vector<int> UnaryOperator::MultiDegree(VariableGroup const& vars) const
 	return deg;
 }
 
-void UnaryOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
+
+std::size_t UnaryOperator::HashImpl() const
 {
-	operand_->Homogenize(vars, homvar);
+	std::size_t h = typeid(*this).hash_code();   // distinguishes Sin/Cos/Tan/Exp/Log/Sqrt/Negate/...
+	HashCombine(h, operand_->Hash());
+	return h;
+}
+
+bool UnaryOperator::IsSame(Node const& other) const
+{
+	if (typeid(*this) != typeid(other))
+		return false;
+	// same concrete unary type -> safe to view as UnaryOperator and compare operand identity
+	return operand_.get() == static_cast<UnaryOperator const&>(other).operand_.get();
 }
 
 
@@ -119,13 +125,6 @@ bool UnaryOperator::IsHomogeneous(VariableGroup const& vars) const
  
  \param prec the number of digits to change precision to.
  */
-void UnaryOperator::precision(unsigned int prec) const
-{
-	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
-	val_pair.first.precision(prec);
-
-	operand_->precision(prec);
-}
 
 
 
@@ -135,13 +134,6 @@ void UnaryOperator::precision(unsigned int prec) const
 //
 ////////////
 
-void NaryOperator::Reset() const
-{
-	Node::ResetStoredValues();
-	for (const auto& ii : operands_)
-		ii->Reset();
-
-}
 
 // Add an operand onto the container for this operator
 void NaryOperator::AddOperand(std::shared_ptr<Node> n)
@@ -172,19 +164,9 @@ std::shared_ptr<Node> NaryOperator::FirstOperand() const
  
  \param prec the number of digits to change precision to.
  */
-void NaryOperator::precision(unsigned int prec) const
-{
-	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
-	val_pair.first.precision(prec);
-	
-	this->PrecisionChangeSpecific(prec);
-
-	for (const auto& iter : operands_)
-		iter->precision(prec);
-}
 
 
-void NaryOperator::PrecisionChangeSpecific(unsigned prec) const
+void NaryOperator::PrecisionChangeSpecific(unsigned /*prec*/) const
 {}
 
 

@@ -42,13 +42,23 @@ namespace bertini{
 	namespace algorithm{
 
 		
-		template<typename RealType, typename ComplexType, typename MetaDataType>
+		/**
+		\brief Detects whether any solution paths crossed during tracking, before the endgame.
+
+		Compares the solution points at the endgame boundary (with a relaxed tolerance) and records
+		the paths that coincide, so the caller can rerun the offending paths.
+
+		\tparam RealT The real number type.
+		\tparam ComplexT The complex number type.
+		\tparam MetaDataType The per-solution metadata type carried in the boundary data.
+		*/
+		template<typename RealT, typename ComplexT, typename MetaDataType>
 		struct MidpathChecker : public detail::Configured<MidPathConfig>
 		{
-			using MidPathConfT = MidPathConfig;
-			using AlgConf = detail::Configured<MidPathConfig>;
-			using BoundaryData = SolnCont< MetaDataType >;
-			using PathIndT = unsigned long long;
+			using MidPathConfT = MidPathConfig;                 ///< The configuration type this checker reads.
+			using AlgConf = detail::Configured<MidPathConfig>;  ///< The Configured base alias.
+			using BoundaryData = SolnCont< MetaDataType >;      ///< Container of solution data at the endgame boundary.
+			using PathIndT = unsigned long long;                ///< Integer type indexing solution paths.
 			
 
 			MidpathChecker() = default;
@@ -72,30 +82,46 @@ namespace bertini{
 				starting point as a path it crosses with.
 			 */
 			struct CrossedPath{
-				
+
+				/**
+				\brief Record a path crossing.
+				\param index The index of this path.
+				\param crossed_with The index of a path it crosses with.
+				\param same_start Whether the two paths share the same starting point.
+				*/
 				CrossedPath(PathIndT index, PathIndT crossed_with, bool same_start)
 				{
 					index_ = index;
 					crossed_with_.push_back( std::make_pair(crossed_with, same_start) );
 					rerun_ = !same_start;
 				}
-				
-				
+
+
+				/// \return The index of this path.
 				PathIndT index() const
 				{
 					return index_;
 				}
-				
+
+				/**
+				\brief Record an additional path that this one crosses with.
+				\param crossed The (path index, same-start) pair to add.
+				*/
 				void crossed_with(std::pair<PathIndT, bool> crossed)
 				{
 					crossed_with_.push_back(crossed);
 				}
-				
+
+				/**
+				\brief Update whether this path needs rerunning, given another crossing.
+				\param same_start Whether the crossing path shares the same starting point.
+				*/
 				void rerun(bool same_start)
 				{
 					rerun_ = rerun_ || !same_start;
 				}
-				
+
+				/// \return Whether this path needs to be rerun.
 				bool rerun() const
 				{
 					return rerun_;
@@ -112,12 +138,14 @@ namespace bertini{
 
 
 			
+			/// \return True if no paths crossed (the check passed).
 			bool Passed() const
 			{
 				return passed_;
 			}
-			
-			
+
+
+			/// \return The tolerance below which two points are considered the same.
 			const auto& SamePointTol() const
 			{
 				return this->template Get<MidPathConfT>().same_point_tolerance;
@@ -126,29 +154,41 @@ namespace bertini{
 			/**
 			 \brief Checks the solution data at the endgame boundary to see if any paths have crossed during tracking before the endgame.
 			 
-			 \param boundary_data Solution data at the endgame boundary
-			 
-			 \returns A Data object which stores data about crossed paths
-			 
+			 \tparam StartSystemT The start system type.
+			 \param boundary_data Solution data at the endgame boundary.
+			 \param start_system The start system used for tracking.
+
+			 \returns True if no paths crossed during tracking, false otherwise.
+
 			*/
 			template <typename StartSystemT>
 			bool Check(BoundaryData const& boundary_data, StartSystemT const& start_system)
 			{
+				// Each Check is independent: the algorithm calls this repeatedly (once before any
+				// resolve, then again after each MidpathResolve).  Reset the accumulated state so a
+				// later call reports *this* call's crossings, not the union with prior calls.
+				// Without this, passed_ (only ever set false below) would stay false forever once
+				// any crossing was seen, and crossed_paths_ would grow without bound -- the resolve
+				// loop in EGBoundaryAction would then never see a clean pass and would re-track
+				// stale indices.
+				passed_ = true;
+				crossed_paths_.clear();
+
 				for (PathIndT ii = 0; ii < boundary_data.size(); ++ii)
 				{
 					if ( boundary_data[ii].success_code != SuccessCode::Success)
 							continue;
 
-					const Vec<ComplexType>& solution_ii = boundary_data[ii].path_point;
-					const auto start_ii = start_system.template StartPoint<ComplexType>(ii);
+					const Vec<ComplexT>& solution_ii = boundary_data[ii].path_point;
+					const auto start_ii = start_system.template StartPoint<ComplexT>(ii);
 
 					for (PathIndT jj = ii+1; jj < boundary_data.size(); ++jj)
 					{
 						if ( boundary_data[jj].success_code != SuccessCode::Success)
 							continue;
 
-						const Vec<ComplexType>& solution_jj = boundary_data[jj].path_point;
-						const Vec<ComplexType> diff_sol = solution_ii - solution_jj;
+						const Vec<ComplexT>& solution_jj = boundary_data[jj].path_point;
+						const Vec<ComplexT> diff_sol = solution_ii - solution_jj;
 						
 						if ((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < SamePointTol())
 						{
@@ -156,9 +196,17 @@ namespace bertini{
 							bool j_already_stored = false;
 							// Check if start points are the same
 							
-							const auto start_jj = start_system.template StartPoint<ComplexType>(jj);
+							const auto start_jj = start_system.template StartPoint<ComplexT>(jj);
 							auto diff_start = start_ii - start_jj;
-							bool same_start = (diff_start.template lpNorm<Eigen::Infinity>() > SamePointTol());
+							// same_start is true when the two paths *began at the same start point*
+							// (their start points differ by less than the tolerance).  That governs
+							// whether this coincidence is a genuine path crossing worth re-tracking:
+							// CrossedPath sets rerun_ = !same_start, so two *distinct* starts that
+							// have collided (same_start == false) get re-tracked, while two paths
+							// that legitimately share a start point do not.  NOTE: this comparison
+							// was historically inverted (>), which flipped rerun and meant genuine
+							// crossings were never re-tracked.
+							bool same_start = (diff_start.template lpNorm<Eigen::Infinity>() < SamePointTol());
 							
 							
 							// Check if path has already been stored in crossed_paths_
@@ -199,6 +247,7 @@ namespace bertini{
 			};
 			
 			
+			/// \return The list of paths found to have crossed.
 			const std::vector<CrossedPath> GetCrossedPaths() const
 			{
 				return crossed_paths_;

@@ -23,10 +23,18 @@
 // silviana amethyst, university of wisconsin eau claire
 
 
-#include "bertini2/system/system.hpp"
+#include <variant>
+#include <type_traits>
 
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+#include "bertini2/system/system.hpp"
+#include "bertini2/system/slice.hpp"   // for System::Slices() (needs the full Slice type)
+#include "bertini2/function_tree/find.hpp"
+
+#include <algorithm>
+#include <sstream>
+
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 using Nd = std::shared_ptr<bertini::node::Node>;
 
 BOOST_CLASS_EXPORT(bertini::System)
@@ -37,21 +45,6 @@ namespace bertini
 {
 
 	using namespace bertini::node;
-	
-	EvalMethod DefaultEvalMethod()
-	{
-		return EvalMethod::SLP;
-	}
-
-	DerivMethod DefaultDerivMethod()
-	{
-		return DerivMethod::Derivatives;
-	}
-
-	bool DefaultAutoSimplify()
-	{
-		return true;
-	}
 
 	void swap(System & a, System & b)
 	{
@@ -61,6 +54,7 @@ namespace bertini
 		swap(a.variable_groups_,b.variable_groups_);
 		swap(a.hom_variable_groups_,b.hom_variable_groups_);
 		swap(a.homogenizing_variables_,b.homogenizing_variables_);
+		swap(a.pre_homogenization_functions_,b.pre_homogenization_functions_);
 
 		swap(a.time_order_of_variable_groups_,b.time_order_of_variable_groups_);
 
@@ -73,22 +67,20 @@ namespace bertini
 		swap(a.implicit_parameters_,b.implicit_parameters_);
 		swap(a.explicit_parameters_,b.explicit_parameters_);
 
-		swap(a.constant_subfunctions_,b.constant_subfunctions_);
-		swap(a.subfunctions_,b.subfunctions_);
-		swap(a.functions_,b.functions_);
-
+		// the polynomial path (functions / derivatives / SLP / eval+deriv method) lives in blocks_
+		swap(a.blocks_,b.blocks_);
 		swap(a.is_differentiated_,b.is_differentiated_);
-		swap(a.jacobian_,b.jacobian_);
-
-		swap(a.space_derivatives_,b.space_derivatives_);
-		swap(a.time_derivatives_,b.time_derivatives_);
-
-		swap(a.assume_uniform_precision_,b.assume_uniform_precision_);
-		swap(a.eval_method_,b.eval_method_);
 
 		swap(a.precision_,b.precision_);
 		swap(a.is_patched_,b.is_patched_);
 		swap(a.patch_,b.patch_);
+	}
+
+	// construct from a list of functions, auto-discovering the variables
+	System::System(std::vector<Nd> const& functions) : System()
+	{
+		AddFunctions(functions);
+		AddVariableGroup( node::GatherVariables(functions) );
 	}
 
 	// the copy constructor
@@ -105,16 +97,11 @@ namespace bertini
 		patch_ = other.patch_;
 		is_patched_ = other.is_patched_;
 
-		jacobian_ = other.jacobian_;
-		space_derivatives_ = other.space_derivatives_;
-		time_derivatives_ = other.time_derivatives_;
-
 		is_differentiated_ = other.is_differentiated_;
 
-		assume_uniform_precision_ = other.assume_uniform_precision_;
-		eval_method_ = other.eval_method_;
-
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
+
+		pre_homogenization_functions_ = other.pre_homogenization_functions_;
 
 		current_variable_values_ = other.current_variable_values_;
 
@@ -124,10 +111,10 @@ namespace bertini
 		precision_ = other.precision_;
 
 
-		constant_subfunctions_ = other.constant_subfunctions_;
-		subfunctions_ = other .subfunctions_;
-		functions_ = other .functions_;
 		explicit_parameters_  = other .explicit_parameters_;
+
+		// the polynomial path (functions / subfunctions / derivatives / SLP) lives in blocks_
+		blocks_ = other.blocks_;
 
 		// // now to do the members which are not simply copied
 		// constant_subfunctions_.resize(other.constant_subfunctions_.size());
@@ -164,7 +151,10 @@ namespace bertini
 
 	size_t System::NumNaturalFunctions() const
 	{
-		return functions_.size();
+		size_t n = 0;
+		for (auto const& blk : blocks_)
+			n += std::visit([](auto const& b){ return b.NumFunctions(); }, blk);
+		return n;
 	}
 
 
@@ -215,7 +205,7 @@ namespace bertini
 
 	size_t System::NumConstants() const
 	{
-		return constant_subfunctions_.size();
+		return PolyBlockPtr() ? PolyBlockPtr()->NumConstants() : 0;
 	}
 
 	size_t System::NumParameters() const
@@ -237,81 +227,16 @@ namespace bertini
 
 	void System::precision(unsigned new_precision) const
 	{
-		if (this->assume_uniform_precision_ && new_precision == this->precision_)
-			return;
-
-		for (const auto& iter : functions_) {
-			iter->precision(new_precision);
-		}
-
-		for (const auto& iter : subfunctions_) {
-			iter->precision(new_precision);
-		}
-
-		for (const auto& iter : explicit_parameters_) {
-			iter->precision(new_precision);
-		}
-
-
-		for (const auto& iter :implicit_parameters_) {
-			iter->precision(new_precision);
-		}
-
-		for (const auto& iter : constant_subfunctions_) {
-			iter->precision(new_precision);
-		}
-
-		if (is_differentiated_)
-		{
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
-
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:{
-							for (const auto& iter : jacobian_)
-								iter->precision(new_precision);
-							break;
-						}
-						case DerivMethod::Derivatives:{
-							for (const auto& iter : space_derivatives_)
-								iter->precision(new_precision);
-							for (const auto& iter : time_derivatives_)
-								iter->precision(new_precision);
-							break;
-						}
-					}
-					break;
-				}
-				case EvalMethod::SLP:
-				{
-					this->slp_.precision(new_precision);
-					break;					
-				}
-			}
-			
-		}
-
-		if (have_path_variable_)
-			path_variable_->precision(new_precision);
-
-
-		for (const auto& iter : homogenizing_variables_)
-			iter->precision(new_precision);
-
-		for (const auto& iter : variable_groups_)
-			for (const auto& jter : iter)
-				jter->precision(new_precision);
-
-		for (const auto& iter : hom_variable_groups_)
-			for (const auto& jter : iter)
-				jter->precision(new_precision);
-
-		for (const auto& iter : ungrouped_variables_)
-			iter->precision(new_precision);
+		// Each block precisions its own evaluator (its SLP / coefficient sub-system).  The
+		// parameter / function / variable nodes are no longer evaluated during tracking, so their
+		// precision is vestigial and left untouched -- this keeps the shared node DAG read-only
+		// across threads (ADR-0027).
+		for (auto const& blk : blocks_)
+			std::visit([&](auto const& b){ b.Precision(new_precision); }, blk);
 
 		using bertini::Precision;
-		Precision(std::get<Vec<mpfr_complex> >(current_variable_values_),new_precision);
+		Precision(std::get<Vec<complex_mp> >(current_variable_values_),new_precision);
+		Precision(std::get<complex_mp>(current_path_value_),new_precision);
 
 		if (IsPatched())
 			patch_.Precision(new_precision);
@@ -322,92 +247,96 @@ namespace bertini
 
 	void System::Differentiate() const
 	{
-		switch (deriv_method_){
-			case DerivMethod::JacobianNode:
-			{
-				DifferentiateUsingJacobianNode();
-				break;
-			}
-			case DerivMethod::Derivatives:
-			{
-				DifferentiateUsingDerivatives();
-				break;
-			}
-		}
-
-
-		if (auto_simplify_)
-			this->SimplifyDerivatives();
-
-
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:{
-				break;
-			}
-			case EvalMethod::SLP:
-			{	
-				SLPCompiler compiler;
-				this->slp_ = compiler.Compile(*this);
-				break;
-			}
-		}
-		
-
-
-	}
-
-	void System::DifferentiateUsingJacobianNode() const
-	{
-		auto num_functions = NumNaturalFunctions();
-		jacobian_.resize(num_functions);
-		for (int ii = 0; ii < num_functions; ++ii)
-			jacobian_[ii] = Jacobian::Make(functions_[ii]->Differentiate());
-
-		is_differentiated_ = true;
-	}
-
-	void System::DifferentiateUsingDerivatives() const
-	{
-		const auto& vars = this->Variables();
-		const auto num_vars = NumVariables();
-		const auto num_functions = NumNaturalFunctions();
-
-		space_derivatives_.resize(num_functions*num_vars);
-		// again, computing these in column major, so staying with one variable at a time.
-		for (int jj = 0; jj < num_vars; ++jj)
-			for (int ii = 0; ii < num_functions; ++ii)
-				space_derivatives_[ii+jj*num_functions] = Function::Make(functions_[ii]->Differentiate(vars[jj]));
-
-		if (HavePathVariable())
-		{
-			const auto& t = path_variable_;
-			time_derivatives_.resize(num_functions);
-				for (int ii = 0; ii < num_functions; ++ii)
-					time_derivatives_[ii] = Function::Make(functions_[ii]->Differentiate(t));
-		}
-
+		// push the System's variable ordering / path variable / auto-simplify into the
+		// polynomial block, then let each block differentiate itself (the polynomial block
+		// builds its derivatives + compiles its SLP; structured blocks are analytic no-ops).
+		SyncPolyBlock();
+		for (auto const& blk : blocks_)
+			std::visit([](auto const& b){ b.Differentiate(); }, blk);
 		is_differentiated_ = true;
 	}
 
 	std::vector< Nd > System::GetSpaceDerivatives() const
 	{
-		if ( (deriv_method_==DerivMethod::JacobianNode) || (!is_differentiated_) )
-			DifferentiateUsingDerivatives();
-
-		return space_derivatives_;
+		SyncPolyBlock();
+		if (auto* p = PolyBlockPtr())
+			return p->GetSpaceDerivatives();
+		return {};
 	}
 
 	std::vector< Nd > System::GetTimeDerivatives() const
 	{
-		if ( (deriv_method_==DerivMethod::JacobianNode) || (!is_differentiated_) )
-			DifferentiateUsingDerivatives();
-		
-		return time_derivatives_;
+		SyncPolyBlock();
+		if (auto* p = PolyBlockPtr())
+			return p->GetTimeDerivatives();
+		return {};
+	}
+
+
+	NodeMatrix SymbolicJacobian(std::vector<Nd> const& functions, VariableGroup const& variables)
+	{
+		NodeMatrix J;
+		J.rows = functions.size();
+		J.cols = variables.size();
+		J.entries.reserve(J.rows * J.cols);
+		for (auto const& f : functions)
+			for (auto const& v : variables)
+				J.entries.push_back(f->Differentiate(v));   // J[i,j] = d f_i / d v_j, row-major
+		return J;
+	}
+
+
+	NodeMatrix System::SymbolicJacobian(bool usercoordinates) const
+	{
+		if (usercoordinates)
+		{
+			// Differentiate the functions as the user authored them (natural, pre-homogenization
+			// if the system has since been homogenized) w.r.t. the user-declared variables.  The
+			// solver-added homogenizing variables never appear; patches are omitted.
+			std::vector<Nd> funcs = pre_homogenization_functions_.empty()
+			                          ? NaturalFunctionsAsNodes()
+			                          : pre_homogenization_functions_;
+			VariableGroup vars;
+			for (auto const& g : variable_groups_)
+				for (auto const& v : g) vars.push_back(v);
+			for (auto const& g : hom_variable_groups_)
+				for (auto const& v : g) vars.push_back(v);
+			for (auto const& v : ungrouped_variables_) vars.push_back(v);
+			return bertini::SymbolicJacobian(funcs, vars);
+		}
+
+		// Internal coordinates: differentiate the functions as currently stored (possibly
+		// homogenized) w.r.t. the full variable ordering (homogenizing variables included), then
+		// append the patch's Jacobian rows (the patch is linear, so its rows are constant).
+		std::vector<Nd> funcs = NaturalFunctionsAsNodes();
+		VariableGroup const& vars = Variables();
+		NodeMatrix J = bertini::SymbolicJacobian(funcs, vars);
+
+		if (is_patched_)
+		{
+			auto const& coeffs = patch_.Coefficients();         // one Vec<complex_mp> per group
+			auto const& sizes  = patch_.VariableGroupSizes();   // sizes line up with the ordering
+			size_t const ncols = J.cols;
+			Nd const zero = Integer::Make(0);
+			unsigned counter = 0;                               // walks the variable ordering, as Patch::EvalInPlace does
+			for (size_t ii = 0; ii < sizes.size(); ++ii)
+			{
+				std::vector<Nd> row(ncols, zero);
+				for (unsigned jj = 0; jj < sizes[ii]; ++jj)
+				{
+					row[counter] = Complex::Make(coeffs[ii](static_cast<Eigen::Index>(jj)));
+					++counter;
+				}
+				for (auto const& e : row) J.entries.push_back(e);
+				++J.rows;
+			}
+		}
+		return J;
 	}
 
 	void System::Homogenize()
 	{
+		ThrowIfSealed("Homogenize");
 
 		// first some checks to make sure the system is compatible with the act of homogenization
 		//
@@ -417,25 +346,35 @@ namespace bertini
 		//    * not partially homogenized, in the sense that some groups have been homogenized, and others haven't
 		//    
 		//
-		for (const auto& curr_function : functions_)
-		{	
-			for (const auto& curr_var_gp : hom_variable_groups_)
-			{
-				if (!curr_function->IsHomogeneous(curr_var_gp))
+		for (const auto& curr_var_gp : hom_variable_groups_)
+			for (auto const& b : blocks_)
+				if (!std::visit([&](auto const& blk){ return blk.IsHomogeneous(curr_var_gp); }, b))
 					throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
-			}
-		}
 
 		if (!IsPolynomial())
 			throw std::runtime_error("trying to homogenize a non-polynomial system.");
 
 		bool already_had_homvars = NumHomVariables()!=0;
-		
+
 		if (already_had_homvars && NumHomVariables()!=NumVariableGroups())
 			throw std::runtime_error("size mismatch on number of homogenizing variables and number of variable groups");
 
+		// idempotency: homogenizing an already-homogenized system must be a no-op.
+		// without this, a second call re-homogenizes each function with respect to
+		// the group INCLUDING its homogenizing variable, inflating degrees (observed
+		// 2026-06-06: degrees (2,1) -> (3,2), turning a 2-path TD into a 6-path one).
+		if (already_had_homvars && IsHomogeneous())
+			return;
+
 		if (!already_had_homvars)
 		{
+			// snapshot the natural (affine) functions before any block homogenizes itself, so
+			// SymbolicJacobian(usercoordinates=true) can differentiate them without the
+			// homogenizing variables ever appearing.  Immutable nodes -> shared ownership, free.
+			// Must precede the resize below: resizing homogenizing_variables_ would make the
+			// variable ordering include an (empty) homogenizing slot, which the structured
+			// blocks' node-expansion rejects as a variable-count mismatch.
+			pre_homogenization_functions_ = NaturalFunctionsAsNodes();
 			homogenizing_variables_.resize(NumVariableGroups());
 		}
 
@@ -457,27 +396,72 @@ namespace bertini
 			converter << "HOM_VAR_" << group_counter;
 
 			if (already_had_homvars){
-				Var hom_var = homogenizing_variables_[group_counter];
+				Var hom_var = homogenizing_variables_[static_cast<size_t>(group_counter)];
 				VariableGroup temp_group = *curr_var_gp;
 
 				PushFront(temp_group, hom_var);
 
-				// temp_group.push_front(hom_var);
-				for (const auto& curr_function : functions_)
-					curr_function->Homogenize(temp_group, hom_var);
+				// every block homogenizes itself w.r.t. this group: the polynomial block walks
+				// its trees, structured blocks fold the constant onto the homogenizing variable.
+				for (auto& b : blocks_)
+					std::visit([&](auto& blk){ blk.Homogenize(temp_group, hom_var); }, b);
 			}
 			else
 			{
 				Var hom_var = Variable::Make(converter.str());
-				homogenizing_variables_[group_counter] = hom_var;
-				for (const auto& curr_function : functions_)
-					curr_function->Homogenize(*curr_var_gp, hom_var);
+				homogenizing_variables_[static_cast<size_t>(group_counter)] = hom_var;
+				for (auto& b : blocks_)
+					std::visit([&](auto& blk){ blk.Homogenize(*curr_var_gp, hom_var); }, b);
 			}
 
 			group_counter++;
 		}
 
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
+		have_ordering_ = false;
+
+		#ifndef BERTINI_DISABLE_ASSERTS
+		assert(homogenizing_variables_.size() == variable_groups_.size());
+		#endif
+	}
+
+
+	void System::Homogenize(VariableGroup const& provided_hom_vars)
+	{
+		ThrowIfSealed("Homogenize");
+		// Like Homogenize(), but adopt the supplied homogenizing variables (one per affine variable
+		// group, in group order) instead of minting fresh ones.  Mirrors Homogenize()'s
+		// fresh-system branch exactly; the only difference is where the hom var comes from.
+		for (const auto& curr_var_gp : hom_variable_groups_)
+			for (auto const& b : blocks_)
+				if (!std::visit([&](auto const& blk){ return blk.IsHomogeneous(curr_var_gp); }, b))
+					throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
+
+		if (!IsPolynomial())
+			throw std::runtime_error("trying to homogenize a non-polynomial system.");
+
+		if (NumHomVariables()!=0)
+			throw std::runtime_error("Homogenize(provided homogenizing variables): system is already homogenized.");
+
+		if (provided_hom_vars.size()!=NumVariableGroups())
+			throw std::runtime_error("Homogenize(provided homogenizing variables): need exactly one homogenizing variable per affine variable group.");
+
+		// snapshot the natural (affine) functions before homogenizing (see Homogenize()); must
+		// precede the resize so the ordering does not yet include an empty homogenizing slot.
+		pre_homogenization_functions_ = NaturalFunctionsAsNodes();
+		homogenizing_variables_.resize(NumVariableGroups());
+
+		auto group_counter = 0;
+		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
+		{
+			Var hom_var = provided_hom_vars[static_cast<size_t>(group_counter)];
+			homogenizing_variables_[static_cast<size_t>(group_counter)] = hom_var;
+			for (auto& b : blocks_)
+				std::visit([&](auto& blk){ blk.Homogenize(*curr_var_gp, hom_var); }, b);
+			group_counter++;
+		}
+
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 
 		#ifndef BERTINI_DISABLE_ASSERTS
@@ -501,28 +485,29 @@ namespace bertini
 		if (NumHomVariables()!=NumVariableGroups())
 			return false;
 
-		for (const auto& iter : functions_)
+		auto all_blocks_homogeneous = [&](VariableGroup const& tempvars) -> bool {
+			for (auto const& b : blocks_)
+				if (!std::visit([&](auto const& blk){ return blk.IsHomogeneous(tempvars); }, b))
+					return false;
+			return true;
+		};
+
+		auto counter = 0;
+		for (const auto& vars : variable_groups_)
 		{
-			auto counter = 0;
-			for (const auto& vars : variable_groups_)
-			{
-				auto tempvars = vars;
-				if (have_homvars)
-					PushFront(tempvars, homogenizing_variables_[counter]);
-				counter++;
-
-				if (!iter->IsHomogeneous(tempvars))
-					return false;
-			}
-
-			for (const auto& vars : hom_variable_groups_)
-				if (!iter->IsHomogeneous(vars))
-					return false;
-
-			if (NumUngroupedVariables()>0)
-				if (!iter->IsHomogeneous(ungrouped_variables_))
-					return false;
+			auto tempvars = vars;
+			if (have_homvars)
+				PushFront(tempvars, homogenizing_variables_[static_cast<size_t>(counter)]);
+			counter++;
+			if (!all_blocks_homogeneous(tempvars))
+				return false;
 		}
+		for (const auto& vars : hom_variable_groups_)
+			if (!all_blocks_homogeneous(vars))
+				return false;
+		if (NumUngroupedVariables()>0)
+			if (!all_blocks_homogeneous(ungrouped_variables_))
+				return false;
 		return true;
 	}
 
@@ -541,27 +526,26 @@ namespace bertini
 		if (have_homvars && NumHomVariables()!=NumVariableGroups())
 			throw std::runtime_error("trying to check polynomiality on a partially-formed system.  mismatch between number of homogenizing variables, and number of variable groups");
 
+		auto all_blocks_polynomial = [&](VariableGroup const& tempvars) -> bool {
+			for (auto const& b : blocks_)
+				if (!std::visit([&](auto const& blk){ return blk.IsPolynomial(tempvars); }, b))
+					return false;
+			return true;
+		};
 
-		for (const auto& iter : functions_)
+		auto counter = 0;
+		for (const auto& vars : variable_groups_)
 		{
-			auto counter = 0;
-			for (const auto& vars : variable_groups_)
-			{
-				auto tempvars = vars;
-				if (have_homvars)
-					PushFront(tempvars,homogenizing_variables_[counter]);
-
-				counter++;
-
-				if (!iter->IsPolynomial(tempvars))
-					return false;
-
-			}
-			for (const auto& vars : hom_variable_groups_)
-				if (!iter->IsPolynomial(vars))
-					return false;
-
+			auto tempvars = vars;
+			if (have_homvars)
+				PushFront(tempvars,homogenizing_variables_[static_cast<size_t>(counter)]);
+			counter++;
+			if (!all_blocks_polynomial(tempvars))
+				return false;
 		}
+		for (const auto& vars : hom_variable_groups_)
+			if (!all_blocks_polynomial(vars))
+				return false;
 		return true;
 	}
 
@@ -584,8 +568,9 @@ namespace bertini
 
 	void System::AddVariableGroup(VariableGroup const& v)
 	{
+		ThrowIfSealed("AddVariableGroup");
 		variable_groups_.push_back(v);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Affine);
@@ -594,10 +579,34 @@ namespace bertini
 
 
 
+	void System::SetVariableGroups(std::vector<VariableGroup> const& groups)
+	{
+		ThrowIfSealed("SetVariableGroups");
+		// clear the existing variable structure, but preserve the path variable.
+		ungrouped_variables_.clear();
+		variable_groups_.clear();
+		hom_variable_groups_.clear();
+		homogenizing_variables_.clear();
+		time_order_of_variable_groups_.clear();
+
+		// install the supplied groups as affine variable groups.  AddVariableGroup
+		// takes care of the FIFO time-ordering entries and resets the relevant flags.
+		for (auto const& g : groups)
+			AddVariableGroup(g);
+
+		InvalidateDifferentiation();
+		have_ordering_ = false;
+		is_patched_ = false;
+	}
+
+
+
+
 	void System::AddHomVariableGroup(VariableGroup const& v)
 	{
+		ThrowIfSealed("AddHomVariableGroup");
 		hom_variable_groups_.push_back(v);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Homogeneous);
@@ -609,8 +618,9 @@ namespace bertini
 
 	void System::AddUngroupedVariable(Var const& v)
 	{
+		ThrowIfSealed("AddUngroupedVariable");
 		ungrouped_variables_.push_back(v);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
@@ -621,12 +631,12 @@ namespace bertini
 
 	void System::AddUngroupedVariables(VariableGroup const& v)
 	{
+		ThrowIfSealed("AddUngroupedVariables");
 		ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 		is_patched_ = false;
-		for (const auto& iter : v)
-			time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
+		time_order_of_variable_groups_.insert(time_order_of_variable_groups_.end(), v.size(), VariableGroupType::Ungrouped);
 	}
 
 
@@ -634,8 +644,9 @@ namespace bertini
  
 	void System::AddImplicitParameter(Var const& v)
 	{
+		ThrowIfSealed("AddImplicitParameter");
 		implicit_parameters_.push_back(v);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 	}
 
 
@@ -643,8 +654,9 @@ namespace bertini
 
 	void System::AddImplicitParameters(VariableGroup const& v)
 	{
+		ThrowIfSealed("AddImplicitParameters");
 		implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 	}
 
 
@@ -655,91 +667,87 @@ namespace bertini
 
 
 
-	void System::AddParameter(Fn const& F)
+	void System::AddParameter(NE const& F)
 	{
+		ThrowIfSealed("AddParameter");
 		explicit_parameters_.push_back(F);
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 	}
 
 
 
-	void System::AddParameters(std::vector<Fn> const& v)
+
+
+
+
+
+
+
+	void System::AddFunction(Nd const& N)
 	{
-		explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		ThrowIfSealed("AddFunction");
+		PolyBlock().AddFunction(N);
+		InvalidateDifferentiation();
 	}
 
 
 
-
-
-	void System::AddSubfunction(Fn const& F)
+	void System::AddFunctions(std::vector<Nd> const& v)
 	{
-		subfunctions_.push_back(F);
-		is_differentiated_ = false;
+		ThrowIfSealed("AddFunctions");
+		for (auto const& f : v) PolyBlock().AddFunction(f);
+		InvalidateDifferentiation();
 	}
 
 
 
-	void System::AddSubfunctions(std::vector<Fn> const& v)
+
+
+
+	void System::AddConstant(NE const& F)
 	{
-		subfunctions_.insert( subfunctions_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
+		ThrowIfSealed("AddConstant");
+		PolyBlock().AddConstant(F);
+		InvalidateDifferentiation();
 	}
 
 
 
 
 
-	void System::AddFunction(Fn const& F)
+
+	std::set<std::string> System::VariableNameSet() const
 	{
-		functions_.push_back(F);
-		is_differentiated_ = false;
+		std::set<std::string> names;
+		auto add_group = [&names](VariableGroup const& g) {
+			for (auto const& v : g)
+				if (v)
+					names.insert(v->name());
+		};
+		add_group(ungrouped_variables_);
+		for (auto const& g : variable_groups_)
+			add_group(g);
+		for (auto const& g : hom_variable_groups_)
+			add_group(g);
+		add_group(homogenizing_variables_);
+		add_group(implicit_parameters_);
+		return names;
 	}
-
-
-
-	void System::AddFunction(Nd const& N, std::string const& name)
-	{
-		functions_.push_back(Function::Make(N, name));
-		is_differentiated_ = false;
-	}
-
-
-
-	void System::AddFunctions(std::vector<Fn> const& v)
-	{
-		functions_.insert( functions_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
-	}
-
-
-
-
-
-
-	void System::AddConstant(Fn const& F)
-	{
-		constant_subfunctions_.push_back(F);
-		is_differentiated_ = false;
-	}
-
-
-	void System::AddConstants(std::vector<Fn> const& v)
-	{
-		constant_subfunctions_.insert( constant_subfunctions_.end(), v.begin(), v.end() );
-		is_differentiated_ = false;
-	}
-
-
-
-
 
 
 	void System::AddPathVariable(Var const& v)
 	{
+		ThrowIfSealed("AddPathVariable");
+		// A homotopy's path variable must never share a name with a user variable
+		// (else references to the name are ambiguous, and it corrupts hash-consing).
+		// Auto-constructed homotopies avoid this via UniquePathVariableName; this is
+		// the backstop for any caller (all homotopy builders funnel through here).
+		if (v && VariableNameSet().count(v->name()))
+			throw std::runtime_error("System::AddPathVariable: path-variable name \"" + v->name()
+				+ "\" collides with an existing system variable.  Choose a different name "
+				  "(see UniquePathVariableName).");
 		path_variable_ = v;
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_path_variable_ = true;
 	}
 
@@ -849,6 +857,7 @@ namespace bertini
 
 	void System::CopyVariableStructure(System const& other)
 	{
+		ThrowIfSealed("CopyVariableStructure");
 		this->ClearVariables();
 
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
@@ -877,13 +886,13 @@ namespace bertini
 
 		std::vector<unsigned> s;
 
-		unsigned hom_group_counter(0), affine_group_counter(0), patch_counter(0);
+		unsigned hom_group_counter(0), affine_group_counter(0);
 		for (auto curr_grouptype : time_order_of_variable_groups_)
 		{
 			if (curr_grouptype==VariableGroupType::Homogeneous)
-				s.push_back(hom_variable_groups_[hom_group_counter++].size());
+				s.push_back(static_cast<unsigned>(hom_variable_groups_[hom_group_counter++].size()));
 			else if (curr_grouptype==VariableGroupType::Affine)
-				s.push_back(variable_groups_[affine_group_counter++].size() + static_cast<int>(have_homvars));
+				s.push_back(static_cast<unsigned>(variable_groups_[affine_group_counter++].size() + (have_homvars ? 1 : 0)));
 		}
 		return s;
 	}
@@ -899,6 +908,7 @@ namespace bertini
 
 	void System::AutoPatchFIFO()
 	{
+		ThrowIfSealed("AutoPatch");
 		if (!IsHomogeneous())
 			throw std::runtime_error("requesting to AutoPatch a system which is not homogenized.  Homogenize it first.");
 		
@@ -911,6 +921,7 @@ namespace bertini
 
 	void System::CopyPatches(System const& other)
 	{
+		ThrowIfSealed("CopyPatches");
 		if (!other.IsPatched())
 			throw std::runtime_error("trying to copy patch from unpatched other system.  may only copy patch from a system which is already patched.");
 
@@ -934,21 +945,21 @@ namespace bertini
 	{
 		static_assert(Eigen::NumTraits<NumT>::IsComplex,"NumT must be a complex type");
 		
-		using RT = typename Eigen::NumTraits<NumT>::Real;
-		using CT = NumT;
+		using RealT = typename Eigen::NumTraits<NumT>::Real;
+		using ComplexT = NumT;
 
-		RT bound(0);
+		RealT bound(0);
 
 		for (unsigned ii=0; ii < num_evaluations; ii++)
 		{	
-			Vec<CT> randy = RandomOfUnits<CT>(NumVariables());
-			Vec<CT> f_vals;
+			Vec<ComplexT> randy = RandomOfUnits<ComplexT>(static_cast<unsigned>(NumVariables()));
+			Vec<ComplexT> f_vals;
 			if (HavePathVariable())
-				f_vals = Eval(randy, RandomUnit<CT>());
+				f_vals = Eval(randy, RandomUnit<ComplexT>());
 			else
 				f_vals = Eval(randy);
 			
-			Mat<CT> dh_dx = Jacobian<CT>();
+			Mat<ComplexT> dh_dx = Jacobian<ComplexT>();
 			
 			bound = max(f_vals.array().abs().maxCoeff(),
 						 dh_dx.array().abs().maxCoeff(), bound);
@@ -956,12 +967,14 @@ namespace bertini
 		return bound;
 	}
 
-	template double System::CoefficientBound<dbl>(unsigned) const;
-	template mpfr_float System::CoefficientBound<mpfr_complex>(unsigned) const;
+	template double System::CoefficientBound<complex_dbl>(unsigned) const;
+	template real_mp System::CoefficientBound<complex_mp>(unsigned) const;
 
     int System::DegreeBound() const
     {
     	auto degs = Degrees(Variables());
+    	if (degs.empty())
+    		return 0;   // a system with no functions has no degree bound
     	return *std::max_element(degs.begin(), degs.end());
     }
 
@@ -969,8 +982,11 @@ namespace bertini
 	std::vector<int> System::Degrees() const
 	{
 		std::vector<int> degs;
-		for (const auto& iter : functions_)
-			degs.push_back(iter->Degree());
+		for (auto const& b : blocks_)
+		{
+			auto d = std::visit([](auto const& blk){ return blk.Degrees(); }, b);
+			degs.insert(degs.end(), d.begin(), d.end());
+		}
 		return degs;
 	}
 
@@ -978,14 +994,352 @@ namespace bertini
 	std::vector<int> System::Degrees(VariableGroup const& vars) const
 	{
 		std::vector<int> degs;
-		for (const auto& iter : functions_)
-			degs.push_back(iter->Degree(vars));
-		return degs;
+		for (auto const& b : blocks_)
+		{
+			auto d = std::visit([&](auto const& blk){ return blk.Degrees(vars); }, b);
+			degs.insert(degs.end(), d.begin(), d.end());
 		}
+		return degs;
+	}
+
+
+	//
+	//  ExpandToFunctionTree -- build the pure function-tree twin of a block-composed system.
+	//  A verification / interop oracle (see the header).  Scoped to the current block types.
+	//
+	namespace {
+
+		// Build the function-tree node for a single linear form  sum_c M(r,c)*var_c + M(r,n),
+		// where row r of M holds the (augmented) coefficients and `vars` are the ordered variable
+		// nodes (column c <-> vars[c]); the last column is the constant / augmenting term.  Zero
+		// coefficients are skipped to keep the tree compact (and exact: a skipped term is +0).
+		Nd LinearFormNode(Mat<complex_mp> const& M, Eigen::Index r,
+		                  VariableGroup const& vars, size_t num_vars)
+		{
+			Nd form = node::Complex::Make(M(r, static_cast<Eigen::Index>(num_vars))); // constant term
+			for (size_t c = 0; c < num_vars; ++c)
+			{
+				complex_mp const& coeff = M(r, static_cast<Eigen::Index>(c));
+				if (coeff.real() == 0 && coeff.imag() == 0)
+					continue;
+				form = form + node::Complex::Make(coeff) * vars[c];
+			}
+			return form;
+		}
+
+	} // anonymous namespace
+
+
+	std::vector<Nd> System::NaturalFunctionsAsNodes() const
+	{
+		using namespace bertini::node;
+		std::vector<Nd> out;
+
+		auto const& vars = Variables(); // ordered variable nodes; block column c <-> vars[c]
+
+		for (auto const& blk : blocks_)
+		{
+			std::visit([&](auto const& b)
+			{
+				using B = std::decay_t<decltype(b)>;
+
+				if constexpr (std::is_same_v<B, blocks::PolynomialBlock>)
+				{
+					// already function-tree: each stored function is the bare expression node.
+					for (auto const& f : b.Functions())
+						out.push_back(f);
+				}
+				else if constexpr (std::is_same_v<B, blocks::ProductsOfLinearsBlock>)
+				{
+					// f_i = prod_r ( row r of factor-matrix i . [vars ; 1] )
+					const size_t n = b.NumVariables();
+					if (static_cast<size_t>(vars.size()) != n)
+						throw std::runtime_error("ExpandToFunctionTree: products-of-linears variable count mismatch");
+					for (auto const& M : b.Factors())
+					{
+						Nd prod = nullptr;
+						for (Eigen::Index r = 0; r < M.rows(); ++r)
+						{
+							Nd factor = LinearFormNode(M, r, vars, n);
+							prod = prod ? (prod * factor) : factor;
+						}
+						out.push_back(prod ? prod : Nd(Integer::Make(1))); // empty product == 1
+					}
+				}
+				else if constexpr (std::is_same_v<B, blocks::BlendBlock<System>>)
+				{
+					// H = sum_i c_i(t) * operand_i, each operand expanded to nodes (recursion).
+					auto const& coeffs   = b.Coefficients();
+					auto const& operands = b.Operands();
+					const size_t k = b.NumFunctions();
+					std::vector<Nd> blended(k, nullptr);
+					for (size_t i = 0; i < operands.size(); ++i)
+					{
+						std::vector<Nd> fi = operands[i]->NaturalFunctionsAsNodes();
+						if (fi.size() < k)
+							throw std::runtime_error("ExpandToFunctionTree: blend operand has too few functions");
+						for (size_t j = 0; j < k; ++j)
+						{
+							Nd term = coeffs[i] * fi[j];
+							blended[j] = blended[j] ? (blended[j] + term) : term;
+						}
+					}
+					for (auto& f : blended)
+						out.push_back(f ? f : Nd(Integer::Make(0)));
+				}
+				else if constexpr (std::is_same_v<B, blocks::RandomizationBlock<System>>)
+				{
+					// g_i = sum_j c_ij * f_j * prod_g h_g^{(D_{i,g} - d_{j,g})}, the operand functions
+					// expanded recursively and the homogenizing-variable powers folded back in (so the
+					// expansion matches the block's homogenized evaluation).
+					std::vector<Nd> fj = b.Operand()->NaturalFunctionsAsNodes();      // N nodes
+					auto const& R   = b.RandomizationMatrix();                        // n x N
+					auto const& tgt = b.TargetMultidegrees();
+					auto const& omd = b.OperandMultidegrees();
+					auto const& homvars = b.HomVars();
+					const bool hom = b.IsHomogenized();
+					const size_t n = b.NumFunctions();
+					const size_t N = fj.size();
+					for (size_t i = 0; i < n; ++i)
+					{
+						Nd gi = nullptr;
+						for (size_t j = 0; j < N; ++j)
+						{
+							complex_mp const& c = R(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
+							if (c.real() == 0 && c.imag() == 0)
+								continue;
+							Nd term = Complex::Make(c) * fj[j];
+							if (hom)
+								for (size_t g = 0; g < homvars.size(); ++g)
+								{
+									const int e = tgt[i][g] - omd[j][g];
+									if (e > 0)
+										term = term * pow(homvars[g], e);
+								}
+							gi = gi ? (gi + term) : term;
+						}
+						out.push_back(gi ? gi : Nd(Integer::Make(0)));
+					}
+				}
+				else if constexpr (std::is_same_v<B, blocks::LinearFormsBlock>)
+				{
+					// each row is one affine linear form  sum_c M(r,c)*vars[c] (+ constant).  Affine:
+					// the trailing column is the constant.  Homogeneous (post-Homogenize): every column
+					// is a variable column (the old constant is now the homogenizing-variable coeff).
+					auto const& M = b.Coefficients();
+					const size_t n = b.NumVariables();
+					if (static_cast<size_t>(vars.size()) != n)
+						throw std::runtime_error("ExpandToFunctionTree: linear-forms variable count mismatch");
+					for (Eigen::Index r = 0; r < M.rows(); ++r)
+					{
+						if (b.IsHomogenized())
+						{
+							Nd form = nullptr;
+							for (size_t c = 0; c < n; ++c)
+							{
+								complex_mp const& coeff = M(r, static_cast<Eigen::Index>(c));
+								if (coeff.real() == 0 && coeff.imag() == 0)
+									continue;
+								Nd term = node::Complex::Make(coeff) * vars[c];
+								form = form ? (form + term) : term;
+							}
+							out.push_back(form ? form : Nd(Integer::Make(0)));
+						}
+						else
+						{
+							out.push_back(LinearFormNode(M, r, vars, n));   // augmented: last col is the constant
+						}
+					}
+				}
+				else // any future block
+				{
+					throw std::runtime_error("ExpandToFunctionTree: block type not yet supported");
+				}
+			}, blk);
+		}
+
+		return out;
+	}
+
+
+	std::vector<Slice> System::Slices() const
+	{
+		// Recover one Slice per LinearFormsBlock.  The block's columns are indexed by the system's
+		// variable ordering (see Slice::AddTo), so the slice is rebuilt over Variables().
+		std::vector<Slice> out;
+		auto const& vars = Variables();
+
+		for (auto const& blk : blocks_)
+		{
+			auto* p = std::get_if<blocks::LinearFormsBlock>(&blk);
+			if (!p)
+				continue;
+
+			auto const& M = p->Coefficients();
+			if (!p->IsHomogenized())
+			{
+				// affine: M is already augmented (trailing column is each form's constant).
+				out.push_back(Slice::FromCoefficients(vars, M, /*homogeneous=*/false));
+			}
+			else
+			{
+				// homogenized: M has one column per variable and no separate constant column.
+				// Re-augment with a zero constant so the recovered (homogeneous) slice evaluates
+				// identically (the old constant already rides on the homogenizing variable's column).
+				Mat<complex_mp> aug(M.rows(), M.cols() + 1);
+				aug.leftCols(M.cols()) = M;
+				aug.col(M.cols()).setZero();
+				out.push_back(Slice::FromCoefficients(vars, aug, /*homogeneous=*/true));
+			}
+		}
+		return out;
+	}
+
+
+	System System::ExpandToFunctionTree() const
+	{
+		// expand THIS system's blocks to nodes first (reads the current block structure)...
+		std::vector<Nd> nodes = NaturalFunctionsAsNodes();
+
+		// ...then build the twin from a copy (same variables / groups / hom vars / path variable /
+		// patch / ordering), with all blocks replaced by one PolynomialBlock of those nodes.
+		System result = *this;
+		result.ClearBlocks();
+		for (auto const& f : nodes)
+			result.AddFunction(f);
+		result.InvalidateDifferentiation();
+		return result;
+	}
+
+
+	//
+	//  Randomize -- square up an overdetermined system (see the header).  Construction (degrees,
+	//  sorting, the coefficient matrix) happens here, on a copy, where System is complete; the
+	//  RandomizationBlock just stores the finished matrix and multidegrees and evaluates.
+	//
+	namespace {
+
+		// operand->Degrees(group_g)[j] gathered into operand_multidegrees[j][g].
+		std::vector<std::vector<int>> OperandMultidegrees(System const& operand)
+		{
+			auto groups = operand.VariableGroups();
+			const size_t G = groups.size();
+			const size_t N = operand.NumNaturalFunctions();
+			std::vector<std::vector<int>> md(N, std::vector<int>(G, 0));
+			for (size_t g = 0; g < G; ++g)
+			{
+				auto dg = operand.Degrees(groups[g]);            // length N: degree of each function in group g
+				for (size_t j = 0; j < N && j < dg.size(); ++j)
+					md[j][g] = dg[j];
+			}
+			return md;
+		}
+
+	} // anonymous namespace
+
+
+	System System::AssembleRandomized(std::shared_ptr<System> operand, Mat<complex_mp> coefficients) const
+	{
+		const size_t G = operand->NumVariableGroups();
+		const size_t N = operand->NumNaturalFunctions();
+		const size_t n = static_cast<size_t>(coefficients.rows());
+
+		if (static_cast<size_t>(coefficients.cols()) != N)
+			throw std::runtime_error("Randomize: coefficient matrix column count must equal the number of natural functions.");
+
+		auto operand_md = OperandMultidegrees(*operand);
+
+		// Row i's target multidegree is, per group, the largest degree among the functions actually
+		// combined into it (those with a nonzero coefficient).  This makes every h-power deficit
+		// D_{i,g} - d_{j,g} >= 0, and -- with the descending sort the auto path uses -- equal to the
+		// row's own leading-function degree, so the path count is minimal.
+		std::vector<std::vector<int>> target_md(n, std::vector<int>(G, 0));
+		for (size_t i = 0; i < n; ++i)
+			for (size_t j = 0; j < N; ++j)
+			{
+				complex_mp const& c = coefficients(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
+				if (c.real() == 0 && c.imag() == 0)
+					continue;
+				for (size_t g = 0; g < G; ++g)
+					target_md[i][g] = std::max(target_md[i][g], operand_md[j][g]);
+			}
+
+		blocks::RandomizationBlock<System> block(operand, std::move(coefficients),
+		                                         std::move(target_md), std::move(operand_md), G);
+
+		System result = *this;          // share variables / groups / path variable / ordering
+		result.ClearBlocks();           // drop this system's own functions...
+		result.AddBlock(std::move(block));  // ...the randomized rows come from the block
+		result.InvalidateDifferentiation();
+		return result;
+	}
+
+
+	System System::Randomize() const
+	{
+		const size_t G = NumVariableGroups();
+		const size_t N = NumNaturalFunctions();
+		const size_t n = NumVariables() - NumHomVariableGroups();
+
+		if (N < n)
+			throw std::runtime_error("Randomize: system is underdetermined (fewer functions than variables), so it has no isolated solutions to capture.");
+
+		auto operand = std::make_shared<System>(*this);
+
+		Mat<complex_mp> R(static_cast<Eigen::Index>(n), static_cast<Eigen::Index>(N));
+
+		if (G == 1)
+		{
+			// single affine group: sort the operand's functions by descending degree, then R = [I | C].
+			// The identity block makes g_i carry f_i with coefficient 1 (degree d_i); the random tail
+			// C folds the lower-degree functions in, padded by hom-var powers.  deg g_i = d_i, so the
+			// total-degree path count is the product of the n largest degrees -- optimal.
+			//
+			// Only the C tail is random, and it is drawn conjugate-orthonormal (ADR-0041) -- matching
+			// Bertini 1, which builds every random complex matrix unitary.  C being dense leaves the
+			// degree-optimal structure intact: after the descending sort every tail function is lower
+			// degree than row i's leading f_i, so target_md[i] stays d_i regardless of C's nonzeros.
+			operand->ReorderFunctionsByDegreeDecreasing();
+			R.leftCols(static_cast<Eigen::Index>(n)).setIdentity();
+			if (N > n)
+				R.rightCols(static_cast<Eigen::Index>(N - n)) =
+					bertini::RandomConjugateOrthonormalMatrix<complex_mp>(
+						static_cast<unsigned>(n), static_cast<unsigned>(N - n));
+		}
+		else
+		{
+			// several variable groups: multidegrees are only partially ordered, so use a dense random
+			// R with a common (componentwise-max) target multidegree -- correct, and optimal when the
+			// functions share a multidegree.  Drawn conjugate-orthonormal (ADR-0041), like b1.
+			R = bertini::RandomConjugateOrthonormalMatrix<complex_mp>(
+				static_cast<unsigned>(n), static_cast<unsigned>(N));
+		}
+
+		return AssembleRandomized(operand, std::move(R));
+	}
+
+
+	System System::Randomize(Mat<complex_mp> const& R) const
+	{
+		if (static_cast<size_t>(R.cols()) != NumNaturalFunctions())
+			throw std::runtime_error("Randomize: supplied matrix must have one column per natural function of the system.");
+		auto operand = std::make_shared<System>(*this);  // functions kept in their current order
+		return AssembleRandomized(operand, R);
+	}
+
+
+	Mat<complex_mp> System::RandomizationMatrix() const
+	{
+		for (auto const& b : blocks_)
+			if (auto const* rb = std::get_if<blocks::RandomizationBlock<System>>(&b))
+				return rb->RandomizationMatrix();
+		throw std::runtime_error("RandomizationMatrix: this system has no randomization block (it was not produced by Randomize()).");
+	}
 
 
 	void System::ReorderFunctionsByDegreeDecreasing()
 	{
+		ThrowIfSealed("ReorderFunctionsByDegreeDecreasing");
 		auto degs = Degrees(Variables());
 
 		// now we sort a vector of the indexing numbers by the degrees contained in degs.
@@ -998,22 +1352,23 @@ namespace bertini
 
 
 		// finally, we re-order the functions based on the indices we just computed
-		std::vector<std::shared_ptr<node::Function> > re_ordered_functions(degs.size());
+		std::vector<std::shared_ptr<node::Node> > re_ordered_functions(degs.size());
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
-			re_ordered_functions[ind] = functions_[iter];
+			re_ordered_functions[ind] = PolyBlock().Functions()[iter];
 			ind++;
 		}
 
-		swap(functions_, re_ordered_functions);
-		is_differentiated_ = false;
+		swap(PolyBlock().Functions(), re_ordered_functions);
+		InvalidateDifferentiation();
 	}
 
 
 
 	void System::ReorderFunctionsByDegreeIncreasing()
 	{
+		ThrowIfSealed("ReorderFunctionsByDegreeIncreasing");
 		auto degs = Degrees(Variables());
 
 		// now we sort a vector of the indexing numbers by the degrees contained in degs.
@@ -1026,16 +1381,16 @@ namespace bertini
 
 
 		// finally, we re-order the functions based on the indices we just computed
-		std::vector<std::shared_ptr<node::Function> > re_ordered_functions(degs.size());
+		std::vector<std::shared_ptr<node::Node> > re_ordered_functions(degs.size());
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
-			re_ordered_functions[ind] = functions_[iter];
+			re_ordered_functions[ind] = PolyBlock().Functions()[iter];
 			ind++;
 		}
 
-		swap(functions_, re_ordered_functions);
-		is_differentiated_ = false;
+		swap(PolyBlock().Functions(), re_ordered_functions);
+		InvalidateDifferentiation();
 	}
 
 
@@ -1056,6 +1411,7 @@ namespace bertini
 
 	void System::ClearVariables()
 	{
+		ThrowIfSealed("ClearVariables");
 		ungrouped_variables_.clear();
 		variable_groups_.clear();
 		hom_variable_groups_.clear();
@@ -1064,88 +1420,42 @@ namespace bertini
 		path_variable_.reset();
 		have_path_variable_ = false;
 
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		have_ordering_ = false;
 	}
 
 
 
+
+
+
 	void System::SimplifyFunctions()
 	{
+		ThrowIfSealed("SimplifyFunctions");
 		using bertini::Simplify;
-		for (auto& iter : this->functions_)
-			Simplify(iter);
+		if (auto* p = PolyBlockPtr())
+			p->SimplifyFunctions();
 
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 	}
 
 
 
 	void System::SimplifyDerivatives() const
 	{
-		using bertini::Simplify;
-
-		auto num_vars = this->NumVariables();
-		std::vector<dbl> old_vals(num_vars);  dbl old_path_var_val;
-
-		auto vars = this->Variables();
-		for (unsigned ii=0; ii<num_vars; ++ii)
+		SyncPolyBlock();
+		if (auto* p = PolyBlockPtr())
 		{
-			old_vals[ii] = vars[ii]->Eval<dbl>();
-			vars[ii]->SetToRandUnit<dbl>();
+			if (!p->IsDifferentiated()) p->Differentiate();
+			p->SimplifyDerivatives();
 		}
-
-		if (HavePathVariable())
-		{
-			old_path_var_val = path_variable_->Eval<dbl>();
-			path_variable_->SetToRandUnit<dbl>();
-		}
-
-
-		for (const auto& n : jacobian_)
-			n->Reset();
-		for (const auto& n : space_derivatives_)
-			n->Reset();
-		for (const auto& n : time_derivatives_)
-			n->Reset();
-
-
-
-		switch (deriv_method_){
-			case DerivMethod::JacobianNode:{
-				for (auto& iter : this->jacobian_)
-					Simplify(iter);
-				break;
-			}
-			case DerivMethod::Derivatives:{
-				for (auto& iter : this->space_derivatives_)
-					Simplify(iter);
-				for (auto& iter : this->time_derivatives_)
-					Simplify(iter);
-				break;
-			}
-		}
-
-		
-		for (unsigned ii=0; ii<num_vars; ++ii)
-			vars[ii]->set_current_value<dbl>(old_vals[ii]);
-		if (HavePathVariable())
-			path_variable_->set_current_value(old_path_var_val);
-
-
-		for (const auto& n : jacobian_)
-			n->Reset();
-		for (const auto& n : space_derivatives_)
-			n->Reset();
-		for (const auto& n : time_derivatives_)
-			n->Reset();
-
 	}
 
 
 
 	void System::Simplify()
 	{
+		ThrowIfSealed("Simplify");
 		SimplifyFunctions();
 		SimplifyDerivatives();
 	}
@@ -1166,121 +1476,96 @@ namespace bertini
 	//
 	////////////////////
 
+	void System::Describe(std::ostream& out, bool verbose) const
+	{
+		// --- variables ---
+		out << NumVariableGroups() << (NumVariableGroups() == 1 ? " variable group:\n" : " variable groups:\n");
+		{
+			auto counter = 0;
+			for (const auto& grp : variable_groups_)
+			{
+				out << "  group " << counter++ << ": ";
+				for (auto const& v : grp) out << *v << " ";
+				out << "\n";
+			}
+		}
+		if (!hom_variable_groups_.empty())
+		{
+			out << NumHomVariableGroups() << " projective variable groups:\n";
+			auto counter = 0;
+			for (const auto& grp : hom_variable_groups_)
+			{
+				out << "  group " << counter++ << ": ";
+				for (auto const& v : grp) out << *v << " ";
+				out << "\n";
+			}
+		}
+		if (NumHomVariables() != 0)
+		{
+			out << "  homogenizing variables: ";
+			for (const auto& v : homogenizing_variables_) out << *v << " ";
+			out << "\n";
+		}
+		if (!ungrouped_variables_.empty())
+		{
+			out << "  ungrouped variables: ";
+			for (const auto& v : ungrouped_variables_) out << *v << " ";
+			out << "\n";
+		}
+
+		// --- functions, block by block ---
+		out << "\n" << NumNaturalFunctions() << (NumNaturalFunctions() == 1 ? " function:\n" : " functions:\n");
+		VariableGroup vars;
+		try { vars = VariableOrdering(); } catch (...) { /* unordered/malformed: print without var names */ }
+		size_t row = 0;
+		for (auto const& blk : blocks_)
+			std::visit([&](auto const& b){ b.Describe(out, row, vars, verbose); }, blk);
+
+		// --- named subexpressions: the functions above print these by name; show each one's value
+		// here.  They are not stored separately --- they are discovered (Find) in the function trees
+		// they are embedded in (nested ones included).
+		if (auto* p = PolyBlockPtr())
+		{
+			std::vector<std::shared_ptr<const node::Node>> roots(p->Functions().begin(), p->Functions().end());
+			auto named = node::Find<node::NamedExpression>(roots);
+			if (!named.empty())
+			{
+				out << "\n" << named.size() << (named.size() == 1 ? " named subexpression:\n" : " named subexpressions:\n");
+				for (auto const& ne : named)
+					out << "  " << ne->name() << " = " << ne->EntryNode() << "\n";
+			}
+		}
+
+		// --- parameters / constants (only when present) ---
+		if (NumParameters())
+		{
+			out << "\n" << NumParameters() << " explicit parameters:\n";
+			for (const auto& p : explicit_parameters_)
+				out << "  " << p->name() << " = " << p->EntryNode() << "\n";
+		}
+		if (NumConstants())
+		{
+			out << "\n" << NumConstants() << " constants:\n";
+			for (const auto& c : PolyBlockPtr()->ConstantSubfunctions())
+				out << "  " << c->name() << " = " << c->EntryNode() << "\n";
+		}
+
+		// --- path variable / patch (only the informative bits) ---
+		if (path_variable_)
+			out << "\npath variable: " << path_variable_->name() << "\n";
+		if (IsPatched())
+		{
+			if (verbose)
+				out << "\n" << patch_;
+			else
+				out << "\npatched (" << NumPatches() << (NumPatches() == 1 ? " patch)\n" : " patches)\n");
+		}
+	}
+
+
 	std::ostream& operator<<(std::ostream& out, const bertini::System & s)
 	{
-
-
-		out << s.NumVariableGroups() << " variable groups, containing these variables:\n";
-		auto counter = 0;
-		for (const auto& iter : s.variable_groups_)
-		{
-			out << "group " << counter << ": "<< "\n";
-			for (auto jter : iter)
-				out << *jter << " ";
-
-
-			out << "\n";
-			counter++;
-		}
-		out << "\n";
-
-		out << s.NumHomVariables() << " homogenizing variables:\n";
-		for (const auto& iter : s.homogenizing_variables_)
-			out << (*iter) << " ";
-		out << "\n\n";
-
-
-		out << s.ungrouped_variables_.size() << " ungrouped variables:\n";
-		for (const auto& v :s.ungrouped_variables_)
-			out << (*v) << " ";
-		out << "\n\n";
-
-
-		out << s.NumNaturalFunctions() << " functions:\n";
-		for (const auto& iter : s.functions_) 
-			out << (iter)->name() << " = " << *iter << "\n";
-		out << "\n";
-
-
-		if (s.NumParameters()) {
-			out << s.NumParameters() << " explicit parameters:\n";
-			for (const auto& iter : s.explicit_parameters_)
-				out << (iter)->name() << " = " << *iter << "\n";
-			out << "\n";
-		}
-
-
-		if (s.NumConstants()) {
-			out << s.NumConstants() << " constants:\n";
-			for (const auto& iter : s.constant_subfunctions_)
-				out << (iter)->name() << " = " << *iter << "\n";
-			out << "\n";
-		}
-
-		if (s.path_variable_)
-			out << "path variable defined.  named " << s.path_variable_->name() << "\n";
-		else 
-			out << "no path variable defined\n";
-
-		if (s.is_differentiated_)
-		{
-			out << "system is differentiated; jacobian:\n";
-
-				switch (s.deriv_method_){
-					case DerivMethod::JacobianNode:{
-						out << "using the JacobianNode method of differentiation:" << std::endl;
-
-						for (const auto& iter : s.jacobian_)
-							out << (iter)->name() << " = " << *iter << "\n";
-						break;
-					}
-
-					case DerivMethod::Derivatives:{
-						out << "using the Derivatives method of differentiation:" << std::endl;
-
-						for (int jj = 0; jj < s.NumVariables(); ++jj)
-							for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
-							{
-								const auto& d = s.space_derivatives_[ii+jj*s.NumNaturalFunctions()];
-								out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
-							}
-
-						if (s.HavePathVariable())
-							for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
-							{
-								const auto& d = s.time_derivatives_[ii];
-								out << "jac_time_der(" << ii << ") = " << d << "\n";
-							}
-						break;
-					}
-				} // switch on deriv method
-
-
-
-				if (s.eval_method_ == EvalMethod::SLP)
-				{
-					out << "since using SLP for evaluation, here's the SLP:" << std::endl;
-					out << s.slp_;				
-				}
-
-			out << "\n";
-		}
-		else{
-			out << "system not differentiated\n";
-		}
-
-		if (s.IsPatched())
-		{
-			out << s.patch_;
-		}
-		else{
-			out << "system not patched\n";
-		}
-
-		out << "\ncurrent variable values:\n";
-		out << std::get< Vec<dbl> > (s.current_variable_values_) << "\n";
-		out << std::get< Vec<mpfr_complex> > (s.current_variable_values_) << "\n";
-
+		s.Describe(out, /*verbose=*/false);
 		return out;
 	}
 
@@ -1301,6 +1586,7 @@ namespace bertini
 
 	System& System::operator+=(System const& rhs)
 	{
+		ThrowIfSealed("operator+= (append functions)");
 		if (this->NumTotalFunctions()!=rhs.NumTotalFunctions())
 			throw std::runtime_error("cannot add two Systems with differing numbers of functions");
 
@@ -1326,10 +1612,38 @@ namespace bertini
 			if (this->patch_ != rhs.patch_)
 				throw std::runtime_error("System+=System cannot combine two patched systems whose patches differ.");
 
-		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
-			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->EntryNode() + (*iter)->EntryNode());
+		// make NEW Function wrappers rather than calling SetRoot on the existing
+		// ones: the existing Function nodes are shared_ptrs, SHARED with whatever
+		// system this one was (shallowly) copied from.  mutating them in place
+		// rewrites that system's functions too — e.g. forming the homotopy
+		// (1-t)*target + gamma*t*start used to corrupt both the target and the
+		// start system (observed 2026-06-06).
+		if (!this->HasStructuredBlocks() && !rhs.HasStructuredBlocks())
+		{
+			auto& lhsf = PolyBlock().Functions();
+			auto const& rhsf = rhs.PolyFunctions();
+			for (size_t ii = 0; ii < lhsf.size(); ++ii)
+				lhsf[ii] = rhsf[ii] + lhsf[ii];
+		}
+		else
+		{
+			// One (or both) operands evaluate via a STRUCTURED block (products-of-linears, blend, ...)
+			// -- e.g. the linear-product TotalDegreeLinearProduct or MHom start systems.  Their functions do NOT
+			// live in the PolynomialBlock, so the pure-poly path above read rhs.PolyFunctions()
+			// (empty) out of bounds and SEGFAULTED.  Expand every block to function-tree nodes on both
+			// sides, blend pairwise, and store the result as a single PolynomialBlock (a function-tree
+			// system, which evaluates and tracks correctly).
+			auto lhsf = this->NaturalFunctionsAsNodes();
+			auto rhsf = rhs.NaturalFunctionsAsNodes();
+			if (lhsf.size() != rhsf.size())
+				throw std::runtime_error("System+=System: natural function counts differ after expanding structured blocks");
+			for (size_t ii = 0; ii < lhsf.size(); ++ii)
+				lhsf[ii] = rhsf[ii] + lhsf[ii];
+			blocks_.clear();
+			PolyBlock().Functions() = std::move(lhsf);
+		}
 
-		is_differentiated_ = false;
+		InvalidateDifferentiation();
 		return *this;
 	}
 
@@ -1341,11 +1655,26 @@ namespace bertini
 
 	System& System::operator*=(std::shared_ptr<node::Node> const& N)
 	{
-		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
+		ThrowIfSealed("operator*= (multiply functions)");
+		// new wrappers, not SetRoot — see comment in operator+= above.
+		if (!HasStructuredBlocks())
 		{
-			(*iter)->SetRoot( N * (*iter)->EntryNode());
+			for (auto& f : PolyBlock().Functions())
+				f = N * f;
 		}
-		is_differentiated_ = false;
+		else
+		{
+			// Structured-block system (e.g. linear-product TotalDegreeLinearProduct / MHom): its functions are NOT
+			// in the PolynomialBlock, so multiplying only PolyBlock().Functions() would silently
+			// no-op (a WRONG result -- e.g. gamma*t*TotalDegreeLinearProduct leaving the start system unscaled).
+			// Expand every block to function-tree nodes, scale, and store as a pure PolynomialBlock.
+			auto fns = NaturalFunctionsAsNodes();
+			for (auto& f : fns)
+				f = N * f;
+			blocks_.clear();
+			PolyBlock().Functions() = std::move(fns);
+		}
+		InvalidateDifferentiation();
 		return *this;
 	}
 
@@ -1377,82 +1706,183 @@ namespace bertini
 				throw std::runtime_error("concatenating systems with incompatible patches");
 
 		if (sys2.IsPatched() && !sys1.IsPatched())
-			sys1.CopyPatches(sys1);
+			sys1.CopyPatches(sys2); // give the unpatched result sys2's patch
 		// the other cases are automatically covered.  sys1 already patched, or neither patched.
 
-		for (unsigned ii(0); ii<sys2.NumNaturalFunctions(); ++ii)
-			sys1.AddFunction(sys2.Function(ii));
+		// Append sys2's functions to sys1, block by block.  We cannot just iterate
+		// sys2.Function(ii): that reads only the PolynomialBlock (PolyBlockPtr()->Functions()),
+		// so a system whose rows live in a structured block -- a linear-forms slice, a
+		// products-of-linears block -- would be skipped (and null-deref if it has no polynomial
+		// block at all).  Instead merge sys2's polynomial functions into sys1's PolynomialBlock
+		// and copy each structured block verbatim (they are value-in and indexed by the shared
+		// variable ordering, which we have already checked matches).
+		for (auto const& blk : sys2.Blocks())
+		{
+			std::visit([&sys1](auto const& b) {
+				using B = std::decay_t<decltype(b)>;
+				if constexpr (std::is_same_v<B, blocks::PolynomialBlock>)
+				{
+					for (auto const& f : b.Functions())
+						sys1.AddFunction(f);
+				}
+				else
+				{
+					sys1.AddBlock(b);
+				}
+			}, blk);
+		}
 
 		return sys1;
 	}
 
 
+	std::string UniquePathVariableName(System const& target, std::string base)
+	{
+		auto const names = target.VariableNameSet();
+		if (!names.count(base))
+			return base;
+		for (unsigned long k = 1; ; ++k)
+		{
+			std::string candidate = base + "_" + std::to_string(k);
+			if (!names.count(candidate))
+				return candidate;
+		}
+	}
+
+
+	System MakeHomotopy(System const& target, System const& start,
+	                    std::string const& path_variable_name,
+	                    std::shared_ptr<node::Node> const& gamma)
+	{
+		// Empty name means "choose a safe one": never inject a bare `t` that could
+		// collide with a user variable of the same name.
+		std::string const effective_name = path_variable_name.empty()
+			? UniquePathVariableName(target, "t")
+			: path_variable_name;
+		auto t = node::Variable::Make(effective_name);
+		auto g = gamma ? gamma
+		               : std::static_pointer_cast<node::Node>(node::Complex::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Complex node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
+
+		System homotopy;
+		if (start.HasStructuredBlocks() || target.HasStructuredBlocks())
+		{
+			// A block-backed system (e.g. a products-of-linears start, or a randomized target)
+			// cannot be fused into a node-arithmetic homotopy: operator+ / operator* only combine
+			// the PolynomialBlock functions and silently ignore structured blocks.  So whenever
+			// EITHER side carries a structured block, combine the two systems with a blend block:
+			// H = (1-t)*target + gamma*t*start, evaluated by blending whole Systems.  The homotopy
+			// carries target's variable structure and patch; the blend contributes the natural
+			// rows.  ClearBlocks drops the shell's own function blocks (a structured target's rows
+			// live in a structured block, not a PolynomialBlock, so ClearFunctions would leave them
+			// to be evaluated a second time alongside the blend).  Mirrors ZeroDimSolver homotopy formation (MakeHomotopy).
+			homotopy = target;
+			homotopy.ClearBlocks();
+			homotopy.AddPathVariable(t);
+			std::vector<std::shared_ptr<node::Node>> coeffs{ 1 - t, g * t };
+			std::vector<std::shared_ptr<const System>> operands{
+				std::make_shared<System>(target),
+				std::make_shared<System>(start) };
+			homotopy.AddBlock(blocks::BlendBlock<System>(t, std::move(coeffs), std::move(operands)));
+		}
+		else
+		{
+			homotopy = (1-t)*target + g*t*start;
+			homotopy.AddPathVariable(t);
+		}
+		return homotopy;
+	}
+
+
+	System MakeMovingHomotopy(System const& fixed, System const& start_moving, System const& end_moving,
+	                          std::string const& path_variable_name,
+	                          std::shared_ptr<node::Node> const& gamma)
+	{
+		if (start_moving.NumNaturalFunctions() != end_moving.NumNaturalFunctions())
+			throw std::runtime_error("MakeMovingHomotopy: start_moving and end_moving must have the same number of functions (they are the two endpoints of the moving rows).");
+		if (fixed.NumVariables() != start_moving.NumVariables() || fixed.NumVariables() != end_moving.NumVariables())
+			throw std::runtime_error("MakeMovingHomotopy: fixed, start_moving and end_moving must share the same variable structure.");
+		if (start_moving.HavePathVariable() || end_moving.HavePathVariable() || fixed.HavePathVariable())
+			throw std::runtime_error("MakeMovingHomotopy: the fixed and moving systems must not already have a path variable.");
+
+		// Catch the equations being placed in the wrong block.  Compare top-level functions
+		// structurally (their serialized form, the same one the classic writer emits), expanding any
+		// structured block via NaturalFunctionsAsNodes so polynomial and slice/products rows alike are
+		// covered.  Two failure modes:
+		//   * a fixed equation also living in the moving rows -- the rows that move must be ONLY the
+		//     moving rows, so a fixed function appearing there is a duplicate (the typical cause:
+		//     concatenating the fixed system into start_moving/end_moving; see issue #258); and
+		//   * a moving row identical at both endpoints -- it does not actually move and belongs in
+		//     `fixed`.  The blend pairs the moving rows by position, so this check is positional.
+		auto function_strings = [](System const& s) {
+			std::vector<std::string> out;
+			for (auto const& f : s.NaturalFunctionsAsNodes())
+			{
+				std::ostringstream ss;
+				ss << f;
+				out.push_back(ss.str());
+			}
+			return out;
+		};
+		auto const fixed_funcs = function_strings(fixed);
+		auto const start_funcs = function_strings(start_moving);
+		auto const end_funcs   = function_strings(end_moving);
+
+		for (auto const& f : fixed_funcs)
+			if (std::find(start_funcs.begin(), start_funcs.end(), f) != start_funcs.end()
+			 || std::find(end_funcs.begin(),   end_funcs.end(),   f) != end_funcs.end())
+				throw std::runtime_error(
+					"MakeMovingHomotopy: the function `" + f + "` appears in both the fixed system and "
+					"the moving rows.  start_moving/end_moving must contain ONLY the rows that move "
+					"(e.g. the sliding slice), not the fixed system as well -- did you concatenate the "
+					"fixed system into them?");
+
+		for (size_t i = 0; i < start_funcs.size(); ++i)   // start/end agree in count (checked above)
+			if (start_funcs[i] == end_funcs[i])
+				throw std::runtime_error(
+					"MakeMovingHomotopy: moving row " + std::to_string(i) + " (`" + start_funcs[i]
+					+ "`) is identical in start_moving and end_moving, so it does not move; put "
+					"non-moving equations in `fixed` instead.");
+
+		// Empty name means "choose a safe one" relative to the fixed system's variables.
+		std::string const effective_name = path_variable_name.empty()
+			? UniquePathVariableName(fixed, "t")
+			: path_variable_name;
+		auto t = node::Variable::Make(effective_name);
+		auto g = gamma ? gamma
+		               : std::static_pointer_cast<node::Node>(node::Complex::Make(bertini::multiprecision::RandomUnit(MaxPrecisionAllowed())));  // gamma trick: norm-1 complex at max precision (a Complex node caps at its creation precision, so generate the constant at the AMP ceiling -- like patch coefficients -- rather than the current default)
+
+		// Keep the fixed system's blocks as sibling blocks (do NOT clear them): they are autonomous,
+		// so they are evaluated once per point and contribute nothing to dH/dt as the moving rows
+		// slide.  Append a single blend block that moves only the moving rows:
+		//   moving = (1-t)*end_moving + gamma*t*start_moving   (t=1 -> gamma*start, t=0 -> end).
+		// Mirrors MakeHomotopy's blend branch, but blends only the moving operands instead of whole
+		// systems, so the fixed equations are never duplicated or scaled.
+		System homotopy = fixed;
+		homotopy.AddPathVariable(t);
+		std::vector<std::shared_ptr<node::Node>> coeffs{ 1 - t, g * t };
+		std::vector<std::shared_ptr<const System>> operands{
+			std::make_shared<System>(end_moving),
+			std::make_shared<System>(start_moving) };
+		homotopy.AddBlock(blocks::BlendBlock<System>(t, std::move(coeffs), std::move(operands)));
+		return homotopy;
+	}
+
+
 	System Clone(System const& sys)
 	{
-
-//////////////////  attempt 1.  generates a npos == null problem of some sort.  i couldn't figure it out.
-
-
-		// namespace io = boost::iostreams;
-		// using buffer_type = std::vector<char>;
-		// buffer_type buffer;
-
-		// io::stream<io::back_insert_device<buffer_type> > output_stream(buffer);
-		// boost::archive::binary_oarchive oa(output_stream);
-
-		// oa << sys;
-		// output_stream.flush();
-
-		
-
-		// io::basic_array_source<char> source(&buffer[0],buffer.size());
-		// io::stream<io::basic_array_source <char> > input_stream(source);
-		// boost::archive::binary_iarchive ia(input_stream);
-
-		// System sys_clone;
-		// ia >> sys_clone;
-
-		// return sys_clone;
-
-
-
-///////////////////////  attempt2  generates crashes.  :(
-		// std::string serial_str;
-		// {
-		// 	boost::iostreams::back_insert_device<std::string> inserter(serial_str);
-		// 	boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > s(inserter);
-		// 	boost::archive::binary_oarchive oa(s);
-
-		// 	oa << sys;
-
-		// 	// don't forget to flush the stream to finish writing into the buffer
-		// 	s.flush();
-		// }
-		
-		// boost::iostreams::basic_array_source<char> device(serial_str.data(), serial_str.size());
-		// boost::iostreams::stream<boost::iostreams::basic_array_source<char> > t(device);
-		// boost::archive::binary_iarchive ia(t);
-		// System sys_clone;
-		// ia >> sys_clone;
-
-
-
-
-///////////////////// attempt3.  works.  why the others generate problems with the binary archive baffles me.
-
-		std::stringstream ss;
-		{
-			boost::archive::text_oarchive oa(ss);
-			oa << sys;
-		}
-
-		System sys_clone;
-		{
-			boost::archive::text_iarchive ia(ss);
-			ia >> sys_clone;
-		}
-
-		return sys_clone;
+		// Memory-isolating clone (ADR-0027).  Since the evaluation path no longer
+		// writes shared node state, per-thread copies may share the immutable node DAG
+		// and the compiled SLP Program; each copy only needs its own evaluation Memory.  The System
+		// copy constructor provides exactly that: it shares the node DAG (nodes are shared_ptr) and,
+		// per block, shares the compiled Program while copying the per-thread SLPMemory; the
+		// operand-holding blocks (BlendBlock, RandomizationBlock) deep-copy their nested operand
+		// Systems the same way (own Memory, shared DAG).  No mutable state is shared, so a clone is
+		// safe to evaluate concurrently with the original.
+		//
+		// This replaces the old text-archive serialize/deserialize round trip + re-Differentiate()
+		// (issue #246): no deep copy of the DAG, and no SLP recompile (the clone reuses the source's
+		// compiled Program).
+		return System(sys);
 	}
 
 
@@ -1460,5 +1890,52 @@ namespace bertini
 	{
 		sys.Simplify();
 	}
+
+
+	const System::Var& System::GetPathVariable() const
+	{
+		if (this->HavePathVariable())
+			return this->path_variable_;
+		throw std::runtime_error("trying to get path variable for a system which doesn't have a path variable defined");
+	}
+
+
+	// Explicit instantiation definitions — paired with extern template declarations in system.hpp.
+
+	template void System::EvalInPlace<complex_dbl>(Vec<complex_dbl>&) const;
+	template void System::EvalInPlace<complex_mp>(Vec<complex_mp>&) const;
+
+	template Vec<complex_dbl> System::Eval<complex_dbl>() const;
+	template Vec<complex_mp> System::Eval<complex_mp>() const;
+
+	template void System::JacobianInPlace<complex_dbl>(Mat<complex_dbl>&) const;
+	template void System::JacobianInPlace<complex_mp>(Mat<complex_mp>&) const;
+
+	template Mat<complex_dbl> System::Jacobian<complex_dbl>() const;
+	template Mat<complex_mp> System::Jacobian<complex_mp>() const;
+
+	template Mat<complex_dbl> System::Jacobian<complex_dbl>(const Vec<complex_dbl>&) const;
+	template Mat<complex_mp> System::Jacobian<complex_mp>(const Vec<complex_mp>&) const;
+
+	template void System::JacobianInPlace<complex_dbl>(Mat<complex_dbl>&, const Vec<complex_dbl>&) const;
+	template void System::JacobianInPlace<complex_mp>(Mat<complex_mp>&, const Vec<complex_mp>&) const;
+
+	template void System::TimeDerivativeInPlace<complex_dbl>(Vec<complex_dbl>&) const;
+	template void System::TimeDerivativeInPlace<complex_mp>(Vec<complex_mp>&) const;
+
+	template Vec<complex_dbl> System::TimeDerivative<complex_dbl>() const;
+	template Vec<complex_mp> System::TimeDerivative<complex_mp>() const;
+
+	template void System::SetVariables<complex_dbl>(const Vec<complex_dbl>&) const;
+	template void System::SetVariables<complex_mp>(const Vec<complex_mp>&) const;
+
+	template void System::SetPathVariable<complex_dbl>(complex_dbl const&) const;
+	template void System::SetPathVariable<complex_mp>(complex_mp const&) const;
+
+	template void System::SetAndReset<complex_dbl>(Vec<complex_dbl> const&, complex_dbl const&) const;
+	template void System::SetAndReset<complex_mp>(Vec<complex_mp> const&, complex_mp const&) const;
+
+	template void System::SetAndReset<complex_dbl>(Vec<complex_dbl> const&) const;
+	template void System::SetAndReset<complex_mp>(Vec<complex_mp> const&) const;
 
 }

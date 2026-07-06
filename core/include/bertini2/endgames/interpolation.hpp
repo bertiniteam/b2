@@ -51,16 +51,17 @@ Details:
 		Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we 
 		say we have converged. 
 
-\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
-\param endgame_time The time value at which we start the endgame. 
-\param x_endgame_start The current space point at endgame_time.
-\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
-\param samples a deque that will hold all the samples corresponding to the time values in times. 
+\param target_time The time value that we wish to interpolate at.
+\param num_sample_points The number of (time, sample) points used in the interpolation.
+\param times The time values of the samples used for interpolation.
+\param samples The space values corresponding to the time values in \p times.
+\param derivatives The dx/dt (or dx/ds) values at the (time, sample) points.
+\param shift_from Which end of the sample containers to interpolate from.
 
-\tparam CT The complex number type.
+\tparam ComplexT The complex number type.
 */			
-template<typename CT>		
-	Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives, ContStart shift_from = ContStart::Back)
+template<typename ComplexT>		
+	Vec<ComplexT> HermiteInterpolateAndSolve(ComplexT const& target_time, const unsigned int num_sample_points, const TimeCont<ComplexT> & times, const SampCont<ComplexT> & samples, const SampCont<ComplexT> & derivatives, ContStart shift_from = ContStart::Back)
 {
 	assert((times.size() >= num_sample_points) && "must have sufficient number of sample times");
 	assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
@@ -70,17 +71,17 @@ template<typename CT>
 	unsigned num_t, num_s, num_d;
 	if (shift_from == ContStart::Back)
 	{
-		num_t = times.size()-1;
-		num_s = samples.size()-1;
-		num_d = derivatives.size()-1;
+		num_t = static_cast<unsigned>(times.size()-1);
+		num_s = static_cast<unsigned>(samples.size()-1);
+		num_d = static_cast<unsigned>(derivatives.size()-1);
 	}
 	else
 	{
 		num_t = num_s = num_d = num_sample_points-1;
 	}
 
-	Mat< Vec<CT> > space_differences(2*num_sample_points,2*num_sample_points);
-	Vec<CT> time_differences(2*num_sample_points);
+	Mat< Vec<ComplexT> > space_differences(2*num_sample_points,2*num_sample_points);
+	Vec<ComplexT> time_differences(2*num_sample_points);
 
 
 	for(unsigned int ii=0; ii<num_sample_points; ++ii)
@@ -113,7 +114,7 @@ template<typename CT>
 
 	//Start of Result from Hermite polynomial, this is using the diagonal of the 
 	//finite difference matrix.
-	Vec<CT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
+	Vec<ComplexT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
 
 
 	//This builds the hermite polynomial from the highest term down. 

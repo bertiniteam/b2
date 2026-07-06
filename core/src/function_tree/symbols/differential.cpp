@@ -36,10 +36,6 @@ Differential::Differential(std::shared_ptr<const Variable> diff_variable, std::s
 {
 }
 
-void Differential::Reset() const
-{
-	Node::ResetStoredValues();
-}
 
 const std::shared_ptr<const Variable>& Differential::GetVariable() const 
 {
@@ -52,7 +48,7 @@ void Differential::print(std::ostream & target) const
 }
 
 
-std::shared_ptr<Node> Differential::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> Differential::Differentiate(std::shared_ptr<Variable> const& /*v*/) const
 {
 	throw std::runtime_error("differentiating a differential is not correctly implemented yet");
 	return Integer::Make(0);
@@ -61,12 +57,12 @@ std::shared_ptr<Node> Differential::Differentiate(std::shared_ptr<Variable> cons
 /**
 Compute the degree with respect to a single variable.   For differentials, the degree is 0.
 */
-int Differential::Degree(std::shared_ptr<Variable> const& v) const
+int Differential::Degree(std::shared_ptr<Variable> const& /*v*/) const
 {
 	return 0;
 }
 
-int Differential::Degree(VariableGroup const& vars) const
+int Differential::Degree(VariableGroup const& /*vars*/) const
 {
 	return 0;
 }
@@ -76,12 +72,8 @@ std::vector<int> Differential::MultiDegree(VariableGroup const& vars) const
 	return std::vector<int>(vars.size(),0);
 }
 
-void Differential::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
-{
-	
-}
 
-bool Differential::IsHomogeneous(std::shared_ptr<Variable> const& v) const
+bool Differential::IsHomogeneous(std::shared_ptr<Variable> const& /*v*/) const
 {
 	return true;
 }
@@ -89,7 +81,7 @@ bool Differential::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 /**
 Check for homogeneity, with respect to a variable group.
 */
-bool Differential::IsHomogeneous(VariableGroup const& vars) const
+bool Differential::IsHomogeneous(VariableGroup const& /*vars*/) const
 {
 	return true;
 }
@@ -100,60 +92,11 @@ bool Differential::IsHomogeneous(VariableGroup const& vars) const
  
  \param prec the number of digits to change precision to.
  */
-void Differential::precision(unsigned int prec) const
-{
-	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
-	val_pair.first.precision(prec);
-}
 
 // This should never be called for a Differential.  Only for Jacobians.
-dbl Differential::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
-{
-	if(differential_variable_ == diff_variable)
-	{
-		return 1.0;
-	}
-	else
-	{
-		return 0.0;
-	}
-}
-
-void Differential::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	if(differential_variable_ == diff_variable)
-	{
-		evaluation_value = 1.0;
-	}
-	else
-	{
-		evaluation_value = 0.0;
-	}
-}
 
 
-mpfr_complex Differential::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
-{
-	if(differential_variable_ == diff_variable)
-	{
-		return mpfr_complex(1);
-	}
-	else
-	{
-		return mpfr_complex(0);
-	}
-}
 
-void Differential::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
-{
-	if(differential_variable_ == diff_variable)
-	{
-		evaluation_value = 1;
-	}
-	else
-	{
-		evaluation_value = 0;
-	}
-}
+
 	} // re: namespace node
 } // re: namespace bertini

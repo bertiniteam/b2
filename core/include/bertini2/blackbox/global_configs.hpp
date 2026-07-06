@@ -49,24 +49,33 @@ namespace {
 	using namespace algorithm;
 }
 
+/**
+\brief Bundles of configuration types, as TypeLists, grouped by solve stage.
+
+Each member is a detail::TypeList of the config structs for one stage of a zero-dim solve;
+`All` concatenates them.  Used to build the Configured base that stores every config.
+*/
 struct Configs
 {
-	
 
+	/// Tracking-stage configuration types.
 	using Tracking = detail::TypeList<SteppingConfig, NewtonConfig, FixedPrecisionConfig, AdaptiveMultiplePrecisionConfig, tracking::PrecisionType, Predictor>;
 
+	/// Endgame-stage configuration types.
 	using Endgame = detail::TypeList<SecurityConfig, EndgameConfig, PowerSeriesConfig, CauchyConfig, TrackBackConfig>;
 
+	/// Algorithm-stage configuration types.
 	template<typename T>
-	using Algorithm = detail::TypeList<TolerancesConfig, MidPathConfig, AutoRetrackConfig, SharpeningConfig, RegenerationConfig, PostProcessingConfig, ZeroDimConfig<T>, classic::AlgoChoice>;
+	using Algorithm = detail::TypeList<TolerancesConfig, MidPathConfig, AutoRetrackConfig, SharpeningConfig, RegenerationConfig, PostProcessingConfig, ZeroDimConfig, classic::AlgoChoice, classic::EndgameChoiceConfig, RandomConfig>;
 
+	/// All configuration types (Tracking + Endgame + Algorithm) concatenated.
 	template<typename T>
 	using All = detail::ListCat<Tracking, Endgame, Algorithm<T>>;
 };
 
 
 struct Defaults : 
-detail::Configured<Configs::All<bertini::dbl>, Configs::All<bertini::mpfr_complex>>
+detail::Configured<Configs::All<bertini::complex_dbl>, Configs::All<bertini::complex_mp>>
 {
 
 

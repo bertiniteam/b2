@@ -40,7 +40,12 @@ General methods exploting polymorphism, for simplifying a Node, and all subnodes
 
 namespace bertini {
 
-unsigned Simplify(std::shared_ptr<bertini::node::Node> const& n);
+/**
+\brief Functionally simplify a tree: returns a NEW simplified tree, leaving the input
+untouched (non-mutating, copy-on-write; ADR-0011, issue #251).  Thin wrapper over
+node::Node::Simplified().
+*/
+std::shared_ptr<bertini::node::Node> Simplify(std::shared_ptr<bertini::node::Node> const& n);
 
 } // namespace bertini
 

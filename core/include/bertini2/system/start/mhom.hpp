@@ -80,8 +80,10 @@ namespace bertini
 			*/
 			unsigned long long NumStartPoints() const override;
 
+			/// \brief Get the number of start points contributed by a given variable-group partition.
 			unsigned long long NumStartPointsForPartition(Vec<int> partition) const;
 
+			/// \brief Multiply this start system in place by an expression node.
 			MHomogeneous& operator*=(Nd const& n);
 
 			MHomogeneous& operator+=(System const& sys) = delete;
@@ -104,14 +106,14 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<dbl> GenerateStartPoint(dbl,unsigned long long index) const override;
+			Vec<complex_dbl> GenerateStartPoint(complex_dbl,unsigned long long index) const override;
 
 			/**
 			Get the ith start point, in current default precision.
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const override;
+			Vec<complex_mp> GenerateStartPoint(complex_mp,unsigned long long index) const override;
 			
 			/**
 			 A local version of GenerateStartPoint that can be templated
@@ -122,20 +124,38 @@ namespace bertini
 			
 
 			
-			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.
 			std::vector< VariableGroup > var_groups_;
-			Mat<std::shared_ptr<node::LinearProduct>> linprod_matrix_; ///< All the linear products for each entry in the degree matrix.
+			/// Random linear-factor coefficients, one matrix per (function, variable group).
+			/// Entry (i,j) is a (degree_matrix_(i,j)) x (group_j_size + 1) matrix: each row is
+			/// a linear factor over group j's variables, the trailing column being the factor's
+			/// constant (0 for projective groups -- their factors are homogeneous).  This is the
+			/// data the retired node::LinearProduct used to hold; the products-of-linears block
+			/// and the start-point solve read it directly.
+			Mat<Mat<complex_mp>> linear_coeffs_;
 			std::vector< std::vector<size_t> > variable_cols_; ///< The columns associated with each variable.  The first index is the variable group, the second index is the particular variable in the group.
+			size_t num_hom_groups_ = 0; ///< how many of the leading entries of var_groups_ are projective (homogeneous) groups; the rest are affine.  A projective group of size k spans P^{k-1}: dimension k-1, so it takes k-1 functions and its start-point component is a homogeneous vector.
 
-			mutable Vec<mpfr_complex> temp_v_mp_;
+			mutable Vec<complex_mp> temp_v_mp_;
 
 			friend class boost::serialization::access;
 
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) 
+			void serialize(Archive& ar, const unsigned /*version*/)
 			{
+				// Serialize ALL persistent state.  This object is broadcast to MPI workers via
+				// ZeroDimSolver::DistributeSystems (a polymorphic shared_ptr<StartSystem> archive);
+				// dropping any member leaves a worker with a hollow start system whose
+				// NumStartPoints() returns 0, sizing the per-path metadata to nothing and crashing
+				// the parallel solve.  Order base-first so Boost object tracking re-links the
+				// var_groups_ shared_ptr<Variable> entries to the same Variable nodes serialized in
+				// the base System (variable_groups_/hom_variable_groups_), preserving node identity.
 				ar & boost::serialization::base_object<StartSystem>(*this);
-				ar & degrees_;
+				ar & degree_matrix_;
+				ar & valid_partitions_;
+				ar & var_groups_;
+				ar & linear_coeffs_;   // random factor coefficients: PRIMARY data, not recomputable
+				ar & variable_cols_;
+				ar & num_hom_groups_;
 			}
 
 		};

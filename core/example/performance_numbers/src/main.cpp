@@ -29,9 +29,9 @@ int main()
     
     
     
-    auto v_d = demo::GenerateSystemInput<dbl>(sys1);
-    auto b_d = demo::GenerateRHS<dbl>(sys1);
-    auto A_d = demo::GenerateMatrix<dbl>(matrix_N);
+    auto v_d = demo::GenerateSystemInput<complex_dbl>(sys1);
+    auto b_d = demo::GenerateRHS<complex_dbl>(sys1);
+    auto A_d = demo::GenerateMatrix<complex_dbl>(matrix_N);
     auto v_mp = demo::GenerateSystemInput<mpfr>(sys1);
     auto b_mp = demo::GenerateRHS<mpfr>(sys1);
     auto A_mp = demo::GenerateMatrix<mpfr>(matrix_N);

@@ -31,8 +31,10 @@
 #pragma once
 
 #include "python_common.hpp"
+#include "generic_observable.hpp"
 
 #include <bertini2/endgames.hpp>
+#include <boost/python/copy_const_reference.hpp>
 
 namespace bertini{
 	namespace python{
@@ -53,18 +55,13 @@ namespace bertini{
 
 		private:
 
-			using BCT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseComplexType;
-			using BRT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseRealType;
+			using BCT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseComplexT;
+			using BRT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseRealT;
 			using BaseEGT = typename EndgameT::BaseEGT;
 
 			static
-			SuccessCode WrapRunDefaultTime(EndgameT & self, BCT t, Vec<BCT> const& s){
-				return self.Run(t, s);
-			}
-
-			static
-			 SuccessCode WrapRunCustomTime(EndgameT & self, BCT t, Vec<BCT> const& s, BCT const& u){
-				return self.Run(t, s, u);
+			SuccessCode WrapRun(EndgameT & self, Vec<BCT> const& s){
+				return self.Run(s);
 			}
 
 
@@ -99,8 +96,8 @@ namespace bertini{
 
 		private:
 
-			using BCT = typename TrackerTraits<typename PowerSeriesT::TrackerType>::BaseComplexType;
-			using BRT = typename TrackerTraits<typename PowerSeriesT::TrackerType>::BaseRealType;
+			using BCT = typename TrackerTraits<typename PowerSeriesT::TrackerType>::BaseComplexT;
+			using BRT = typename TrackerTraits<typename PowerSeriesT::TrackerType>::BaseRealT;
 
 
 		};// CauchyVisitor class
@@ -122,8 +119,8 @@ namespace bertini{
 
 		private:
 
-			using BCT = typename TrackerTraits<typename CauchyT::TrackerType>::BaseComplexType;
-			using BRT = typename TrackerTraits<typename CauchyT::TrackerType>::BaseRealType;
+			using BCT = typename TrackerTraits<typename CauchyT::TrackerType>::BaseComplexT;
+			using BRT = typename TrackerTraits<typename CauchyT::TrackerType>::BaseRealT;
 
 
 		};// CauchyVisitor class
@@ -131,31 +128,92 @@ namespace bertini{
 
 
 
-		// now prototypes for expose functions defined in the .cpp files for the python bindings.
+		// Visitor body definitions — template member functions must be in the header
+		// so each split TU can instantiate them for its own concrete type.
 
-		/**
-		The main function for exporting the bound endgames to Python.
+		template<typename EndgameT>
+		template<class PyClass>
+		void EndgameBaseVisitor<EndgameT>::visit(PyClass& cl) const
+		{
+			using TrackerT = typename EndgameT::TrackerType;
+			using BCT = typename TrackerTraits<TrackerT>::BaseComplexT;
 
-		This should be the only function called from the main function defining the module, and should call all those functions exposing particular endgames.
-		*/
+			cl
+			.def("cycle_number", this->GetCycleNumberFn(),arg("self"),"Get the cycle number as currently computed")
+
+			.def("get_endgame_settings",&EndgameT::EndgameSettings,return_internal_reference<>(),arg("self"),"Get the current non-specific endgame settings")
+			.def("get_security_settings",&EndgameT::SecuritySettings,return_internal_reference<>(),arg("self"),"Get the 'security' settings for the endgame (path truncation near infinity)")
+
+			.def("set_endgame_settings",&EndgameT::template Set<endgame::EndgameConfig>,(arg("self"),arg("settings")),"Set the values of non-specific endgame settings")
+			.def("set_security_settings",&EndgameT::template Set<endgame::SecurityConfig>,(arg("self"),arg("settings")),"Set the values of security-level settings")
+
+			.def("get_tracker", &EndgameT::GetTracker, return_internal_reference<>(),arg("self"),"Get the tracker used in this endgame.  This is the same tracker as you feed the endgame object when you make it.  This is a reference variable")
+			.def("get_system",  &EndgameT::GetSystem,  return_internal_reference<>(),arg("self"),"Get the tracked system.  This is a reference to the internal system.")
+
+			.def("final_approximation", &return_final_approximation<BCT>,arg("self"),"Get the current approximation of the root, in the ambient numeric type for the tracker being used")
+
+			.def("run", &EndgameBaseVisitor::WrapRun,
+				 (arg("self"), "start_point"),
+				 "Run the endgame from the stored boundary time to the stored target time. "
+				 "Call set_boundary_time() before running.")
+
+			.def("set_boundary_time", &EndgameT::SetBoundaryTime,
+				 (arg("self"), arg("t")),
+				 "Set the time at which the endgame begins (authoritative, stored at the given precision).")
+			.def("set_target_time", &EndgameT::SetTargetTime,
+				 (arg("self"), arg("t")),
+				 "Set the time the endgame tracks toward (default 0).")
+			.def("boundary_time", &EndgameT::BoundaryTime,
+				 return_value_policy<copy_const_reference>(), arg("self"),
+				 "Get the stored endgame boundary time.")
+			.def("target_time", &EndgameT::TargetTime,
+				 return_value_policy<copy_const_reference>(), arg("self"),
+				 "Get the stored target time.")
+
+			.def(ObservableVisitor<EndgameT>())
+			;
+		}
+
+
+		template<typename EndgameT>
+		template<class PyClass>
+		void CauchyVisitor<EndgameT>::visit(PyClass& cl) const
+		{
+			using TrackerT = typename EndgameT::TrackerType;
+
+			cl
+			.def(init<TrackerT const&, endgame::CauchyConfig const&>((arg("self"),arg("tracker"),arg("cauchyconfig"))))
+			.def(init<TrackerT const&, endgame::EndgameConfig const&>((arg("self"),arg("tracker"),arg("endgameconfig"))))
+			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))));
+		}
+
+
+		template<typename EndgameT>
+		template<class PyClass>
+		void PowerSeriesVisitor<EndgameT>::visit(PyClass& cl) const
+		{
+			using TrackerT = typename EndgameT::TrackerType;
+
+			cl
+			.def(init<TrackerT const&, endgame::PowerSeriesConfig const&>((arg("self"),arg("tracker"),arg("powerseriesconfig"))))
+			.def(init<TrackerT const&, endgame::EndgameConfig const&>((arg("self"),arg("tracker"),arg("endgameconfig"))))
+			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))));
+		}
+
+
+		// Prototypes for functions defined in the split .cpp files.
+
 		void ExportEndgames();
+		void ExportEndgameSettings();
 
-
-		/**
-		export the power series endgame incarnations
-		*/
+		// per-tracker-family export functions (defined in endgame_{double,mp,amp}_export.cpp)
 		void ExportAMPPSEG();
 		void ExportFDPSEG();
 		void ExportFMPSEG();
 
-
-		/**
-		export the cauchy endgame incarnations
-		*/
 		void ExportAMPCauchyEG();
 		void ExportFDCauchyEG();
 		void ExportFMCauchyEG();
-
 
 
 }}// re: namespaces

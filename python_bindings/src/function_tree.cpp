@@ -34,7 +34,7 @@
 
 using namespace boost::python;
 
-using dbl = std::complex<double>;
+using complex_dbl = std::complex<double>;
 using mpfr = bertini::complex;
 
 // BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(NodeEvalOverloadsMpfr, bertini::node::Node::template Eval<mpfr>, 0, 1);
@@ -51,7 +51,7 @@ namespace bertini{
 		void SetupFunctionTree()
 		{
 			// Tell Python that pointers to derived Nodes can be used as Node pointers
-			implicitly_convertible<std::shared_ptr<node::Float>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<node::Complex>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::special_number::Pi>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::special_number::E>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::Variable>, Nodeptr>();
@@ -72,10 +72,7 @@ namespace bertini{
 			implicitly_convertible<std::shared_ptr<node::ArcSinOperator>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::ArcCosOperator>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<node::ArcTanOperator>, Nodeptr>();
-			
-			implicitly_convertible<std::shared_ptr<node::Function>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<node::Jacobian>, Nodeptr>();
-			
+
 			
 			
 			// Expose the deque containers

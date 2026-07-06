@@ -61,6 +61,7 @@ namespace bertini
 		MinTrackTimeReached,
 		SecurityMaxNormReached,
 		CycleNumTooHigh,
+		FailedToSelectPrecisionAndStepsize,
 
 	};
 

@@ -1,0 +1,63 @@
+name: Documentation lint 📑
+
+# Cheap, fast doc-correctness gate -- runs Doxygen only (no compilation, no wheel,
+# no graphviz) so it can run on every PR in well under a minute.  This is the first
+# foothold of a broader linting initiative; future linters (clang-format,
+# clang-tidy, include-what-you-use, ...) can be added as additional jobs here.
+#
+# It does NOT belong in build_and_test.yml: that workflow is the expensive
+# build/test matrix, and it already `paths-ignore`s Doxyfile/doc_resources/docs, so
+# doc-only changes skip it and hit only this lint -- exactly the fast feedback we want.
+
+# Header (core/include) changes reach this lint through build_and_test.yml, which
+# calls it as a prerequisite gate (see workflow_call below).  The standalone
+# triggers here cover only the doc-config/tooling paths that build_and_test
+# deliberately `paths-ignore`s, so the lint still runs for doc-only changes without
+# double-running on a typical code PR.
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'Doxyfile'
+      - 'doc_resources/**'
+      - 'tools/doclint.sh'
+      - 'tools/doc_undocumented_baseline.txt'
+      - '.github/workflows/doc_lint.yml'
+  pull_request:
+    paths:
+      - 'Doxyfile'
+      - 'doc_resources/**'
+      - 'tools/doclint.sh'
+      - 'tools/doc_undocumented_baseline.txt'
+      - '.github/workflows/doc_lint.yml'
+  workflow_dispatch:
+  # Called by build_and_test.yml as a prerequisite gate, so no C++ compilation
+  # starts until the docs lint is green.
+  workflow_call:
+
+# The undocumented-entity ratchet count in tools/doc_undocumented_baseline.txt is
+# specific to this Doxygen version; CI must use the same one that seeded the
+# baseline, not whatever the runner's apt happens to ship.  Bump both together.
+env:
+  DOXYGEN_VERSION: "1.13.2"
+
+jobs:
+  doc_lint:
+    name: Doxygen doc lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install pinned Doxygen
+        run: |
+          url="https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz"
+          curl -sSL "$url" | tar -xz
+          echo "$PWD/doxygen-${DOXYGEN_VERSION}/bin" >> "$GITHUB_PATH"
+
+      - name: Show Doxygen version
+        run: doxygen --version
+
+      - name: Lint C++ documentation
+        run: bash tools/doclint.sh

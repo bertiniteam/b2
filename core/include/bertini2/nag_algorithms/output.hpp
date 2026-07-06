@@ -51,11 +51,19 @@ struct Classic
 {};
 
 
-template <typename A, typename B, typename C, typename D, template<typename, typename> class E>
-struct Classic <ZeroDim<A,B,C,D,E>>
-{
-	using ZDT = ZeroDim<A,B,C,D,E>;
+/**
+\brief Writes a solver's results in the classic Bertini output format.
 
+A collection of static formatting helpers, each writing one section of classic
+Bertini output (main data, raw data, solution lists, the systems, per-endpoint
+metadata) to a stream.  ZeroDimSolver reuses this verbatim via its HomotopySolver base.
+*/
+template <typename A, typename B, typename C>
+struct Classic <HomotopySolver<A,B,C>>
+{
+	using ZDT = HomotopySolver<A,B,C>;  ///< The solver type whose results are formatted.
+
+	/// \brief Write both the main-data and raw-data sections.
 	template <typename OutT>
 	static
 	void All(OutT & out, ZDT const& zd)
@@ -68,6 +76,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	}
 
 	
+	/// \brief Write the human-readable "main data" section (variables, endpoints, and systems).
 	template <typename OutT>
 	static
 	void MainData(OutT & out, ZDT const& zd)
@@ -75,14 +84,14 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		NumVariables(out, zd);
 		Variables(out, zd,"\n\n");
 
-		const auto& s = zd.FinalSolutions();
-		const auto& m = zd.FinalSolutionMetadata();
+		const auto& s = zd.SolutionsInternalCoords();
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
-			if (zd.FinalSolutionMetadata()[ii].endgame_success == SuccessCode::NeverStarted)
+			// only successful endgames have a final approximation to report
+			if (zd.SolutionMetadata()[ii].endgame_success_code != SuccessCode::Success)
 				continue;
-			
+
 			EndPointMDFull(ii, out, zd);
 			EndPoint(ii, out, zd,"\n\n");
 		}
@@ -95,15 +104,17 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		Homotopy(out,zd,"\n\n");
 	}
 
+	/// \brief Write the "raw data" section (per-endpoint raw metadata and the target system).
 	template <typename OutT>
-	static 
+	static
 	void RawData(OutT & out, ZDT const& zd)
 	{
-		const auto n = zd.FinalSolutions().size();
+		const auto n = zd.SolutionsInternalCoords().size();
 		NumVariables(out, zd,"\n\n");
-		for (decltype(zd.FinalSolutions().size()) ii{0}; ii<n; ++ii)
+		for (decltype(zd.SolutionsInternalCoords().size()) ii{0}; ii<n; ++ii)
 		{
-			if (zd.FinalSolutionMetadata()[ii].endgame_success == SuccessCode::NeverStarted)
+			// only successful endgames have a final approximation to report
+			if (zd.SolutionMetadata()[ii].endgame_success_code != SuccessCode::Success)
 				continue;
 			EndPointMDRaw(ii,out,zd,"\n\n");
 		}
@@ -113,8 +124,75 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	}
 
 
+	// --- Bertini 1.7 machine-readable solution files -------------------------------------
+	//
+	// These mirror the classic solution-file format so that tooling written against Bertini 1.7
+	// reads Bertini 2's output unchanged: the first line is the solution count, then each
+	// solution is a block of NumVariables coordinate lines ("re im", scientific), blocks
+	// separated by a blank line.  Byte-for-byte equality with Bertini 1 is neither sought nor
+	// possible (different implementations and RNG); the contract is *machine-readable* parity.
+	// Coordinates are in user (dehomogenized) coordinates, as Bertini 1 reports them.
+
+	// Write a count-led list of solution points (each a Vec): "<count>\n\n" then, per point,
+	// the coordinate lines followed by a blank-line separator.
+	/// \brief Write a count-led, blank-line-separated list of solution points (Bertini 1.7 format).
+	template <typename OutT, typename SolListT>
+	static void SolutionList(OutT & out, SolListT const& sols)
+	{
+		out << sols.size() << "\n\n";
+		for (auto const& v : sols)
+		{
+			generators::Classic::generate(boost::spirit::ostream_iterator(out), v);
+			out << "\n";
+		}
+	}
+
+	/// \brief Write the finite solutions as a classic solution list.
 	template <typename OutT>
-	static 
+	static void FiniteSolutions(OutT & out, ZDT const& zd)      { SolutionList(out, zd.FiniteSolutions()); }
+
+	/// \brief Write the real finite solutions as a classic solution list.
+	template <typename OutT>
+	static void RealFiniteSolutions(OutT & out, ZDT const& zd)  { SolutionList(out, zd.RealSolutions()); }
+
+	/// \brief Write the nonsingular solutions as a classic solution list.
+	template <typename OutT>
+	static void NonsingularSolutions(OutT & out, ZDT const& zd) { SolutionList(out, zd.NonsingularSolutions()); }
+
+	/// \brief Write the singular solutions as a classic solution list.
+	template <typename OutT>
+	static void SingularSolutions(OutT & out, ZDT const& zd)    { SolutionList(out, zd.SingularSolutions()); }
+
+	// raw_solutions: every successful endpoint, each preceded by its path number (Bertini 1 lists
+	// the raw endpoints before finite/infinite classification, tagged by path).
+	/// \brief Write every successful raw endpoint, each tagged by its path number (Bertini 1 order).
+	template <typename OutT>
+	static void RawSolutions(OutT & out, ZDT const& zd)
+	{
+		auto const& md   = zd.SolutionMetadata();
+		auto const& sols = zd.SolutionsUserCoords();
+		const auto m = std::min(md.size(), sols.size());
+
+		std::size_t count{0};
+		for (std::size_t ii{0}; ii<m; ++ii)
+			if (md[ii].endgame_success_code == SuccessCode::Success)
+				++count;
+
+		out << count << "\n\n";
+		for (std::size_t ii{0}; ii<m; ++ii)
+		{
+			if (md[ii].endgame_success_code != SuccessCode::Success)
+				continue;
+			out << md[ii].path_index << "\n";
+			generators::Classic::generate(boost::spirit::ostream_iterator(out), sols[ii]);
+			out << "\n";
+		}
+	}
+
+
+	/// \brief Write the number of variables in the target system.
+	template <typename OutT>
+	static
 	void NumVariables(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& sys = zd.TargetSystem();
@@ -122,8 +200,9 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	}
 
 
+	/// \brief Write the names of the target system's variables, in order.
 	template <typename OutT>
-	static 
+	static
 	void Variables(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& sys = zd.TargetSystem();
@@ -134,50 +213,56 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	}
 
 
+	/// \brief Write the target system.
 	template <typename OutT>
-	static 
+	static
 	void TargetSystem(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		out << zd.TargetSystem() << additional;
 	}
 
+	/// \brief Write the start system.
 	template <typename OutT>
-	static 
+	static
 	void StartSystem(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		out << zd.StartSystem() << additional;
 	}
 
+	/// \brief Write the homotopy.
 	template <typename OutT>
-	static 
+	static
 	void Homotopy(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		out << zd.Homotopy() << additional;
 	}
 
+	/// \brief Write one endpoint in internal (homogeneous) coordinates.
 	template <typename IndexT, typename OutT>
 	static
 	void EndPoint(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
-	{	
-		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.FinalSolutions()[ind]);
+	{
+		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.SolutionsInternalCoords()[ind]);
 		out << additional;
 	}
 
+	/// \brief Write one endpoint in user (dehomogenized) coordinates.
 	template <typename IndexT, typename OutT>
 	static
 	void EndPointDehom(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
-	{	
-		DefaultPrecision(Precision(zd.FinalSolutions()[ind]));
+	{
+		DefaultPrecision(Precision(zd.SolutionsInternalCoords()[ind]));
 
-		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.TargetSystem().DehomogenizePoint(zd.FinalSolutions()[ind]));
+		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.SolutionsUserCoords()[ind]);
 		out << additional;
 	}
 
+	/// \brief Write one endpoint's full metadata block (main-data form).
 	template <typename IndexT, typename OutT>
 	static
 	void EndPointMDFull(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
-		const auto& data = zd.FinalSolutionMetadata()[ind];
+		const auto& data = zd.SolutionMetadata()[ind];
 		out << data.path_index << '\n'
 			<< data.solution_index << '\n'
 			<< data.condition_number << '\n'
@@ -191,18 +276,19 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 			<< data.accuracy_estimate_user_coords << '\n'
 			<< data.cycle_num << '\n'
 			<< data.multiplicity << '\n'
-			<< data.pre_endgame_success << ' ' << data.endgame_success << '\n';
+			<< data.pre_endgame_success_code << ' ' << data.endgame_success_code << '\n';
 		out << additional;
 	}
 
 
 
+	/// \brief Write one endpoint's metadata block (raw-data form).
 	template <typename IndexT, typename OutT>
 	static
 	void EndPointMDRaw(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
-		const auto& pt = zd.FinalSolutions()[ind];
-		const auto& data = zd.FinalSolutionMetadata()[ind];
+		const auto& pt = zd.SolutionsInternalCoords()[ind];
+		const auto& data = zd.SolutionMetadata()[ind];
 		out << data.path_index << '\n'
 			<< Precision(pt) << '\n';
 		EndPoint(ind, out, zd);
@@ -213,7 +299,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		out << '\n' << data.accuracy_estimate << '\n';
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), data.time_of_first_prec_increase);
 		out << '\n' << data.cycle_num << '\n'
-			<< data.endgame_success << '\n'
+			<< data.endgame_success_code << '\n'
 			<< additional;
 	}
 
@@ -221,31 +307,37 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 };
 
 
+// ZeroDimSolver is-a HomotopySolver, so it reuses the engine's classic output verbatim: the static
+// methods take a HomotopySolver const&, to which a ZeroDimSolver const& binds (public derivation).
+template <typename A, typename B, typename C>
+struct Classic <ZeroDimSolver<A,B,C>> : Classic <HomotopySolver<A,B,C>>
+{};
+
+
+/// \brief Extracts the nonsingular (multiplicity-one) solutions from a solver's results.
 struct NonsingularSolutions
 {
 
-	
+	/// \brief Collect the user-coordinate points of every successful, multiplicity-one solution.
 	template<typename AlgoT>
 	static
 	auto Extract(AlgoT const& alg)
 	{
-		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
-
-		const auto& sys = alg.TargetSystem();
+		using BCT = typename AlgoTraits<AlgoT>::BaseComplexT;
 
 		SampCont<BCT> solns;
 
-		const auto& s = alg.FinalSolutions();
-		const auto& m = alg.FinalSolutionMetadata();
+		const auto& s = alg.SolutionsUserCoords();
+		const auto& m = alg.SolutionMetadata();
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
 			const auto& d = m[ii];
-			if (d.endgame_success == SuccessCode::Success &&
+			if (d.endgame_success_code == SuccessCode::Success &&
 				d.multiplicity==1)
 			{
-				solns.push_back(sys.DehomogenizePoint(s[ii]));
-			}	
+				solns.push_back(s[ii]);
+			}
 		}
 
 		return solns;
@@ -253,26 +345,24 @@ struct NonsingularSolutions
 };
 
 
+/// \brief Extracts all solutions from a solver's results.
 struct AllSolutions
 {
 
-	
+	/// \brief Collect the user-coordinate points of every solution.
 	template<typename AlgoT>
 	static
 	auto Extract(AlgoT const& alg)
 	{
-		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
-
-		const auto& sys = alg.TargetSystem();
+		using BCT = typename AlgoTraits<AlgoT>::BaseComplexT;
 
 		SampCont<BCT> solns;
 
-		const auto& s = alg.FinalSolutions();
-		const auto& m = alg.FinalSolutionMetadata();
+		const auto& s = alg.SolutionsUserCoords();
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
-			solns.push_back(sys.DehomogenizePoint(s[ii]));
+			solns.push_back(s[ii]);
 		}
 
 		return solns;

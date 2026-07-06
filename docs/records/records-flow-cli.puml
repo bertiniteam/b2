@@ -1,0 +1,49 @@
+@startuml records-flow-cli
+title The structured output directory: the CLI's path to it
+
+skinparam defaultFontSize 12
+
+actor User
+participant "bertini2 (CLI)" as CLI
+participant "ZeroDim solver\n(the emission seam)" as Solver
+database "output directory\n(default: ./bertini_output)" as Dir
+
+User -> CLI : bertini2 input
+note right of CLI
+  records are ordinary output, like main_data:
+  produced always, freely deletable, no flag.
+  BERTINI_RECORDS_DIR relocates them;
+  BERTINI_RECORDS_DIR="" is the OFF switch.
+  Manager rank only under MPI
+  (mpirun -x BERTINI_RECORDS_DIR).
+end note
+CLI -> Dir : archive the input file\n(kind="given", role=cli_input)
+CLI -> Solver : solve
+
+group ensure-answered
+  Solver -> Dir : scan history for this ask\n(target digest + homotopy digest\n+ FULL settings digest + seed)
+  Dir --> Solver : recorded paths
+  Solver -> Solver : HYDRATE recorded paths,\ncompute only the missing\n(a killed run FINISHES on rerun)
+end
+
+Solver -> Dir : run header (kind="run"):\nask, producer{name,version,commit},\nvariables + variables_user, num_paths
+Solver -> Dir : definitions/ (content-addressed):\ntarget rendering, config JSON
+loop every tracked path
+  Solver -> Dir : track record: status\n(success | diverged | failed),\nSuccessCode name + integers,\nendpoint + endpoint_user,\nfunction_residual, start provenance
+end
+Solver -> Dir : auto-declare finite solutions\n(kind="result")
+Solver -> Dir : render results.json + INDEX.txt
+
+note over Dir
+  **the directory, readable with NO software:**
+  README.txt      what this is (self-documenting)
+  results.json    declared results, pretty, SELF-COMPLETE
+                  (results first, then refs to the system,
+                  configs, seed that produced them)
+  INDEX.txt       one line per run
+  history/        JSONL journals, one writer per file
+  definitions/    content-addressed (sha256sum verifies)
+end note
+
+User -> Dir : eyes / grep / jq / pandas / sha256sum
+@enduml

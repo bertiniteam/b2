@@ -26,7 +26,11 @@
 // individual authors of this file include:
 // silviana amethyst, university of notre dame
 
+#include <sstream>
+
 #include <boost/test/unit_test.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include "bertini2/nag_datatypes/witness_set.hpp"
 #include "bertini2/system/precon.hpp"
 
@@ -40,7 +44,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 
 	BOOST_AUTO_TEST_SUITE(default_storage_policy)
 
-		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::mpfr_complex>;
+		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex_mp>;
 
 		BOOST_AUTO_TEST_CASE(make_a_witness_set)
 		{
@@ -53,7 +57,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			WitnessSet w;
 
-			bertini::LinearSlice ell;
+			bertini::Slice ell;
 
 			w.SetSlice(ell);
 
@@ -66,7 +70,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			WitnessSet w;
 
-			bertini::Vec<bertini::mpfr_complex> p;
+			bertini::Vec<bertini::complex_mp> p;
 
 			w.AddPoint(p);
 
@@ -79,15 +83,15 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			auto sys = bertini::system::Precon::GriewankOsborn();
 
-			bertini::Vec<bertini::mpfr_complex> p(sys.NumVariables());
-			bertini::nag_datatype::PointCont<bertini::Vec<bertini::mpfr_complex>> points;
+			bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
+			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex_mp>> points;
 			for (unsigned ii = 0; ii < 3; ++ii)
 				points.push_back(p);
 
 
 			const auto vars = sys.VariableGroups()[0];
 
-			auto slice = bertini::LinearSlice::RandomComplex(vars, 1);
+			auto slice = bertini::Slice::RandomComplex(vars, 1);
 
 
 			WitnessSet w{points, slice, sys};
@@ -99,6 +103,9 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 			BOOST_CHECK(!w.IsConsistent());
 			// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
 
+			// the stored slice round-trips: same dimension, same variable count.
+			BOOST_CHECK_EQUAL(w.GetSlice().Dimension(), 1);
+			BOOST_CHECK_EQUAL(w.GetSlice().NumVariables(), slice.NumVariables());
 		}
 
 
@@ -107,15 +114,15 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			auto sys = bertini::system::Precon::Sphere();
 
-			bertini::Vec<bertini::mpfr_complex> p(sys.NumVariables());
-			bertini::nag_datatype::PointCont<bertini::Vec<bertini::mpfr_complex>> points;
+			bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
+			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex_mp>> points;
 			for (unsigned ii = 0; ii < 2; ++ii)
 				points.push_back(p);
 
 
 			const auto vars = sys.Variables();
 
-			auto slice = bertini::LinearSlice::RandomComplex(vars, 2);
+			auto slice = bertini::Slice::RandomComplex(vars, 2);
 
 
 			WitnessSet w{points, slice, sys};
@@ -128,6 +135,42 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		}
 
 
+		// A witness set round-trips through a boost archive (the C++ path MPI/threading use), and the
+		// deserialized system is immediately usable -- load() re-differentiated it.
+		BOOST_AUTO_TEST_CASE(serialization_roundtrip)
+		{
+			auto sys = bertini::system::Precon::Sphere();
+
+			bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
+			for (unsigned ii = 0; ii < sys.NumVariables(); ++ii)
+				p(ii) = bertini::complex_mp(1);
+
+			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex_mp>> points;
+			points.push_back(p);
+			points.push_back(p);
+
+			const auto vars = sys.Variables();
+			auto slice = bertini::Slice::RandomComplex(vars, 2);
+
+			WitnessSet w{points, slice, sys};
+
+			std::stringstream ss;
+			{ boost::archive::text_oarchive oa(ss); oa << w; }
+
+			WitnessSet w2;
+			{ boost::archive::text_iarchive ia(ss); ia >> w2; }
+
+			BOOST_CHECK_EQUAL(w2.Degree(), 2);
+			BOOST_CHECK_EQUAL(w2.Dimension(), 2);
+			BOOST_CHECK(w2.IsConsistent());
+			BOOST_CHECK_EQUAL(w2.GetSlice().NumVariables(), slice.NumVariables());
+
+			// the deserialized system evaluates and differentiates without throwing.
+			BOOST_CHECK_NO_THROW(w2.GetSystem().Eval(p));
+			BOOST_CHECK_NO_THROW(w2.GetSystem().Jacobian(p));
+		}
+
+
 	BOOST_AUTO_TEST_SUITE_END() // default storage policy
 
 
@@ -135,7 +178,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 
 	BOOST_AUTO_TEST_SUITE(policy_by_reference)
 
-		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::mpfr_complex, bertini::System, bertini::nag_datatype::policy::Reference>;
+		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex_mp, bertini::System, bertini::nag_datatype::policy::Reference>;
 
 
 		// check whether can construct a witness set from a set of points, a slice, and a system
@@ -143,15 +186,15 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			auto sys = bertini::system::Precon::GriewankOsborn();
 
-			bertini::Vec<bertini::mpfr_complex> p(sys.NumVariables());
-			bertini::nag_datatype::PointCont<std::reference_wrapper<bertini::Vec<bertini::mpfr_complex>>> points;
+			bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
+			bertini::nag_datatype::PointCont<std::reference_wrapper<bertini::Vec<bertini::complex_mp>>> points;
 			for (unsigned ii = 0; ii < 3; ++ii)
 				points.push_back(p);
 
 
 			const auto vars = sys.VariableGroups()[0];
 
-			auto slice = bertini::LinearSlice::RandomComplex(vars, 1);
+			auto slice = bertini::Slice::RandomComplex(vars, 1);
 
 
 			WitnessSet w{points, slice, sys};
@@ -173,7 +216,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		using sp = std::shared_ptr<T>;
 
 		using WitnessSet = bertini::nag_datatype::WitnessSet<
-			bertini::mpfr_complex, 
+			bertini::complex_mp, 
 			bertini::System, 
 			bertini::nag_datatype::policy::SharedPtr>;
 
@@ -187,12 +230,12 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 			auto n_vars = sys->NumVariables();
 			const auto vars = sys->VariableGroups()[0];
 
-			nag_datatype::PointCont< sp<Vec<mpfr_complex>> > points;
+			nag_datatype::PointCont< sp<Vec<complex_mp>> > points;
 			for (unsigned ii = 0; ii < 3; ++ii)
-				points.push_back(std::make_shared<Vec<mpfr_complex>>(n_vars));
+				points.push_back(std::make_shared<Vec<complex_mp>>(n_vars));
 
 
-			auto slice = std::make_shared<LinearSlice>(LinearSlice::RandomComplex(vars, 1));
+			auto slice = std::make_shared<Slice>(Slice::RandomComplex(vars, 1));
 
 
 			WitnessSet w{points, slice, sys};

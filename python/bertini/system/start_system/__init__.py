@@ -34,8 +34,11 @@
 Start systems
 
 """
-import bertini._pybertini.system.start_system
+from bertini._pybertini.system import start_system as _pybss
 from bertini._pybertini.system.start_system import *
 
-__all__ = dir(bertini._pybertini.system.start_system)
+del AbstractStartSystem
+
+_ABSTRACT = {'AbstractStartSystem'}
+__all__ = [n for n in dir(_pybss) if n not in _ABSTRACT]
 

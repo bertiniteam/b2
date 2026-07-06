@@ -31,6 +31,10 @@
 
 #include "bertini2/nag_datatypes/witness_set.hpp"
 
+#include <algorithm>
+#include <vector>
+#include <boost/serialization/vector.hpp>
+
 namespace bertini {
 
 	namespace nag_datatype {
@@ -41,22 +45,57 @@ namespace bertini {
 
 		*/
 		template<typename ComplexT, typename SystemT = System, template<typename> class ObjManagementP = policy::Copy >
-		class NumericalIrreducibleDecomposition 
+		class NumericalIrreducibleDecomposition
 		{
-			using WS = WitnessSet<ComplexT, SystemT, ObjManagementP>;
-			using WSCont = std::vector<WS>;
+		public:
+			using WS = WitnessSet<ComplexT, SystemT, ObjManagementP>;  ///< The witness set type.
+			using WSCont = std::vector<WS>;                            ///< Container of witness sets.
 
+		private:
 			WSCont finished_witness_sets_;
 
 		public:
+			/**
+			\brief The distinct codimensions which contain at least one component.
+			*/
 			std::vector<int> NonEmptyCodimensions() const
-			{}
+			{
+				std::vector<int> codims;
+				for (const auto& w : finished_witness_sets_)
+					if (std::find(codims.begin(), codims.end(), w.Dimension()) == codims.end())
+						codims.push_back(static_cast<int>(w.Dimension()));
 
+				return codims;
+			}
+
+			/// \return All stored witness sets.
 			const WSCont& GetWitnessSets() const
 			{
 				return finished_witness_sets_;
 			}
 
+			/**
+			\brief The number of witness sets stored.  Convenience accessor for languages
+			(e.g. Python) which do not have the std::vector<WitnessSet> container bound.
+			*/
+			typename WSCont::size_type NumWitnessSets() const
+			{
+				return finished_witness_sets_.size();
+			}
+
+			/**
+			\brief Get (a const reference to) the i-th witness set.
+			*/
+			const WS& GetWitnessSet(typename WSCont::size_type i) const
+			{
+				return finished_witness_sets_.at(i);
+			}
+
+			/**
+			\brief Get all stored witness sets of a given dimension.
+			\param dim The dimension to filter by.
+			\return The witness sets whose dimension equals \p dim.
+			*/
 			WSCont WitnessSetsOfDim(int dim)
 			{
 				WSCont w_correct_dim;
@@ -65,7 +104,19 @@ namespace bertini {
 						w_correct_dim.push_back(w);
 
 				return w_correct_dim;
-			} 
+			}
+
+		private:
+
+			friend class boost::serialization::access;
+
+			/// Serialize the stored witness sets.  Each WitnessSet handles its own load-time fixup
+			/// (re-differentiating its system), so this is just the container.
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned /*version*/)
+			{
+				ar & finished_witness_sets_;
+			}
 
 		};
 

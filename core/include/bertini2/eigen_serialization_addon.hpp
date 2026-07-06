@@ -22,12 +22,14 @@
 
 #pragma once
 
-
-
+/// \cond INTERNAL
+// This file is an Eigen plugin fragment: its contents are injected into the body
+// of Eigen::DenseBase, so the members below have no enclosing class of their own
+// here.  Hidden from Doxygen, which would otherwise fail to resolve them.
 
 friend class boost::serialization::access;
 template<class Archive>
-void save(Archive & ar, const unsigned int version) const {
+void save(Archive & ar, const unsigned int /*version*/) const {
   derived().eval();
   const Eigen::Index rows = derived().rows(), cols = derived().cols();
   ar & rows;
@@ -38,7 +40,7 @@ void save(Archive & ar, const unsigned int version) const {
 }
 
 template<class Archive>
-void load(Archive & ar, const unsigned int version) {
+void load(Archive & ar, const unsigned int /*version*/) {
   Eigen::Index rows, cols;
   ar & rows;
   ar & cols;
@@ -51,5 +53,6 @@ template<class Archive>
 void serialize(Archive & ar, const unsigned int file_version) {
   boost::serialization::split_member(ar, *this, file_version);
 }
+/// \endcond
 
 #endif // EIGEN_SERIALIZATION_ADDON_HPP

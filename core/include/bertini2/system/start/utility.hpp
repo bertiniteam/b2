@@ -61,7 +61,7 @@ namespace bertini{
 		std::vector< T > subscripts(dimensions.size());//for forming a subscript from an index
 
 		std::vector<T> k(dimensions.size(),1);
-		for (int ii = 0; ii < dimensions.size()-1; ++ii)
+		for (size_t ii = 0; ii+1 < dimensions.size(); ++ii)
 		  k[ii+1] = k[ii]*dimensions[ii];
 
 
@@ -69,11 +69,11 @@ namespace bertini{
 		  throw std::out_of_range("in IndexToSubscript, index exceeds max based on dimension sizes");
 
 
-		for (int ii = dimensions.size()-1; ii >= 0; --ii)
+		for (int ii = static_cast<int>(dimensions.size())-1; ii >= 0; --ii)
 		{
-		  T I = index%k[ii];
-		  T J = (index - I) / k[ii];
-		  subscripts[ii] = J;
+		  T I = index%k[static_cast<size_t>(ii)];
+		  T J = (index - I) / k[static_cast<size_t>(ii)];
+		  subscripts[static_cast<size_t>(ii)] = J;
 		  index = I;
 		}
 

@@ -21,7 +21,7 @@ auto StepOne(bertini::System const& sys)
 	using EndgameT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 	
 
-	auto zd = bertini::algorithm::ZeroDim<TrackerT, EndgameT, bertini::System, bertini::start_system::TotalDegree>(sys);
+	auto zd = bertini::algorithm::ZeroDimSolver<TrackerT, EndgameT, bertini::System, bertini::start_system::TotalDegreeLinearProduct>(sys);
 
 	zd.DefaultSetup();
 	
@@ -57,7 +57,7 @@ auto StepTwo(bertini::System const& target_sys, bertini::System const& start_sys
 
 	auto userss = bertini::start_system::User(start_sys, solns);
 
-	auto zd = bertini::algorithm::ZeroDim<TrackerT, typename bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::User, bertini::policy::RefToGiven>(target_sys, userss, homotopy);
+	auto zd = bertini::algorithm::HomotopySolver<TrackerT, typename bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System>(target_sys, userss, homotopy);
 
 	zd.DefaultSetup();
 	

@@ -46,8 +46,10 @@ namespace bertini{ namespace start_system{
 
 // forward declare the function, so we can friend it below.
 namespace boost { namespace serialization {
+/// \cond USER_SERIALIZATION
 template<class Archive>
 inline void save_construct_data(Archive & ar, const bertini::start_system::User * t, const unsigned int file_version);
+/// \endcond
 }}
 // end nonsense for friends.  so lonely, but c++ friends don't solve the irl problem at all.  
 
@@ -70,8 +72,9 @@ namespace bertini
 			/**
 			 Constructor for making a user-provided start system from another.
 			*/
-			User(System const& s, SampCont<dbl> const& solns);
-			User(System const& s, SampCont<mpfr_complex> const& solns);
+			User(System const& s, SampCont<complex_dbl> const& solns);
+			/// \brief Construct a user-provided start system from a system and its multiprecision solutions.
+			User(System const& s, SampCont<complex_mp> const& solns);
 
 
 
@@ -91,35 +94,36 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<dbl> GenerateStartPoint(dbl,unsigned long long index) const override;
+			Vec<complex_dbl> GenerateStartPoint(complex_dbl,unsigned long long index) const override;
 
 			/**
 			Get the ith start point, in current default precision.
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const override;
+			Vec<complex_mp> GenerateStartPoint(complex_mp,unsigned long long index) const override;
 
 
 			friend class boost::serialization::access;
 			template<class Archive> friend void boost::serialization::save_construct_data(Archive & ar, const User * t, const unsigned int file_version);
 
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) {
+			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<StartSystem>(*this);
 			}
 
 			const bertini::System& user_system_;
-			std::tuple<SampCont<dbl>, SampCont<mpfr_complex>> solns_;
+			std::tuple<SampCont<complex_dbl>, SampCont<complex_mp>> solns_;
 			bool solns_in_dbl_;
 		};
 	}
 }
 
 namespace boost { namespace serialization {
+/// \cond USER_SERIALIZATION
 template<class Archive>
 inline void save_construct_data(
-    Archive & ar, const bertini::start_system::User * t, const unsigned int file_version
+    Archive & ar, const bertini::start_system::User * t, const unsigned int /*file_version*/
 ){
     // save data required to construct instance
     ar << t->user_system_;
@@ -132,7 +136,7 @@ inline void save_construct_data(
 
 template<class Archive>
 inline void load_construct_data(
-    Archive & ar, bertini::start_system::User * t, const unsigned int file_version
+    Archive & ar, bertini::start_system::User * t, const unsigned int /*file_version*/
 ){
     // retrieve data from archive required to construct new instance
     bertini::System sys;
@@ -143,15 +147,16 @@ inline void load_construct_data(
 
     if (solns_in_dbl)
     {
-    	bertini::SampCont<bertini::dbl> solns;
+    	bertini::SampCont<bertini::complex_dbl> solns;
     	ar >> solns;
     	::new(t)bertini::start_system::User(sys, solns);
     }
 	else
 	{
-		bertini::SampCont<bertini::mpfr_complex> solns;
+		bertini::SampCont<bertini::complex_mp> solns;
 		ar >> solns;
 		::new(t)bertini::start_system::User(sys, solns);
 	}
 }
+/// \endcond
 }}

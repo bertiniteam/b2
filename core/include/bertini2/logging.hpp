@@ -51,7 +51,7 @@ namespace logging{
 
 	namespace blog = boost::log;
 
-	using severity_level = blog::trivial::severity_level;
+	using severity_level = blog::trivial::severity_level;  ///< The logging severity level type (from Boost.Log).
 	namespace src = blog::sources;
 	namespace sinks = blog::sinks;
 	namespace keywords = blog::keywords;
@@ -61,7 +61,8 @@ namespace logging{
 	// question answered by user James Adkison, asked by Adi, edited by James McNellis.
 	// the adaptation is the replacement of std::ostream with the blros type.  why the unmodified code still fails
 	// for blros types is a mystery.
-	using blros = blog::record_ostream;
+	using blros = blog::record_ostream;  ///< Shorthand for the Boost.Log record output stream type.
+	/// \brief Stream-insertion of an enum into a log record, via its underlying integer type.
 	template<typename T>
 	blros& operator<<(typename std::enable_if<std::is_enum<T>::value, blros>::type& stream, const T& e)
 	{
@@ -89,6 +90,7 @@ namespace logging{
 	struct Logging
 	{
 
+		/// \brief Initialize Bertini2 logging (call once); adds a rotating log file and sets the level.
 		static
 		void Init(std::string const& name_pattern = "bertini_%N.log",
 				std::string const& format = "%Message%",
@@ -102,6 +104,7 @@ namespace logging{
 		}
 
 
+		/// \brief Add a rotating log-file sink with the given name pattern, format, and rotation size.
 		static
 		void AddFile(std::string const& name_pattern, std::string const& format, unsigned rotation_size, bool auto_flush = true)
 		{

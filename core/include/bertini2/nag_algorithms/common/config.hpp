@@ -27,7 +27,8 @@
 #pragma once
 
 #include "bertini2/system/start_systems.hpp"
-#include "bertini2/nag_algorithms/common/policies.hpp"
+
+#include <type_traits>
 
 namespace bertini{
 	namespace algorithm{
@@ -36,6 +37,18 @@ template<typename T>
 using SolnCont = std::vector<T>;
 
 namespace classic{
+
+enum class EndgameChoice
+{
+	PowerSeries = 1,
+	Cauchy = 2
+};
+
+/// \brief Selects which endgame to use (classic input).
+struct EndgameChoiceConfig
+{
+	EndgameChoice endgame = EndgameChoice::Cauchy;  ///< The chosen endgame.
+};
 
 enum class AlgoChoice
 {
@@ -56,40 +69,44 @@ enum class AlgoChoice
 
 
 
+/// \brief Newton and path-tracking tolerances.
 struct TolerancesConfig
-{	
-	using T = NumErrorT;
+{
+	using T = NumErrorT;  ///< The numeric (error) type.
 
-	T newton_before_endgame = T(1)/T(100000); //E.4.1
-	T newton_during_endgame = T(1)/T(1000000); //E.4.2
+	T newton_before_endgame = T(1)/T(100000); ///< Newton tolerance before the endgame (E.4.1).
+	T newton_during_endgame = T(1)/T(1000000); ///< Newton tolerance during the endgame (E.4.2).
 
-	T final_tolerance = T(1)/T(100000000000); //E.5.1
+	T final_tolerance = T(1)/T(100000000000); ///< Final tracking tolerance (E.5.1).
 
-	T path_truncation_threshold = T(100000); //E.4.13
+	T path_truncation_threshold = T(100000); ///< Path-truncation threshold; the tracker dies if a coordinate exceeds it (E.4.13).
 };
-		
-	
+
+
+/// \brief Configuration for the midpath (path-crossing) check.
 struct MidPathConfig
 {
-	using T = NumErrorT;
+	using T = NumErrorT;  ///< The numeric (error) type.
 
-	T same_point_tolerance = T(1)/T(100000);
+	T same_point_tolerance = T(1)/T(100000);  ///< Two boundary points are "the same" if within this tolerance.
 };
 
 
 
+/// \brief Configuration for auto-retracking paths flagged as crossed.
 struct AutoRetrackConfig
 {
-	using T = NumErrorT;
+	using T = NumErrorT;  ///< The numeric (error) type.
 
-	T midpath_decrease_tolerance_factor = T(1)/T(2);
+	T midpath_decrease_tolerance_factor = T(1)/T(2);  ///< Factor by which tracking tolerances are tightened when re-tracking a crossed path.
 };
 
 
 
+/// \brief Configuration for sharpening computed solutions.
 struct SharpeningConfig
 {
-	using T = NumErrorT;
+	using T = NumErrorT;  ///< The numeric (error) type.
 
 	unsigned sharpendigits; ///< how many digits should be correct after sharpening.
 	
@@ -102,47 +119,103 @@ struct SharpeningConfig
 
 
 
+/// \brief Configuration for the regeneration cascade.
 struct RegenerationConfig
 {
-	using T = NumErrorT;
+	using T = NumErrorT;  ///< The numeric (error) type.
 
 	bool remove_infinite_endpoints = true; ///<  Bool indicating whether endpoints during the regeneration start point buildup step which are infinite should be discarded.  If you are not interested in infinite solutions, ensure this is true.  RegenRemoveInf
 
 	bool higher_dimension_check = true; ///< RegenHigherDimTest
-	unsigned start_level = 0;
-	T newton_before_endgame; ///< The tolerance for tracking before reaching the endgame.  SliceTolBeforeEG
-	T newton_during_endgame; ///< The tolerance for tracking during the endgame.  SliceTolDuringEG
-	T final_tolerance; ///< The final tolerance to track to, using the endgame.  SliceFinalTol
+	unsigned start_level = 0;  ///< The regeneration level to start from.
+	// These are the SLICE-moving tracking tolerances (Bertini 1's SliceTol* family) -- the tolerances
+	// for moving the linear slices during regeneration, kept separate from the main tracking
+	// tolerances in TolerancesConfig.  The slice_ prefix makes every config field name unique across
+	// structs, which is what lets a field be set on an owner without naming its struct
+	// (owner.update(field=...) routes by field).
+	T slice_newton_before_endgame; ///< Slice-moving tracking tolerance before the endgame.  SliceTolBeforeEG
+	T slice_newton_during_endgame; ///< Slice-moving tracking tolerance during the endgame.  SliceTolDuringEG
+	T slice_final_tolerance; ///< Final tolerance to track the slice move to, using the endgame.  SliceFinalTol
 };
 
 
 
+/// \brief Configuration for post-processing solutions (reality/finiteness/singularity classification).
 struct PostProcessingConfig{
-	using T = NumErrorT;
-	
-	T real_threshold = T(1)/T(100000000); ///< threshold on the imaginary part of a solution being 0.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.
+	using T = NumErrorT;  ///< The numeric (error) type.
 
-	T endpoint_finite_threshold = T(1)/T(100000);  ///< The threshold on norm of endpoints being considered infinite.  There is another setting in Tolerances, `path_truncation_threshold`, which tells the path tracker to die if exceeded.  Another related setting is in Security, `max_norm` -- the endgame dies if the norm of the computed approximation exceeds this twice.
+	T real_threshold = T(1)/T(100000000); ///< Bertini 1's `ImagThreshold`.  Threshold on the imaginary part of a (dehomogenized) solution coordinate being 0: a point is real if the infinity norm of the imaginary parts is below this.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.  B1 default 1e-8.
 
-	T same_point_tolerance {T(1)/T(10000000000)}; ///< The tolerance for whether two points are the same.  This should be *lower* than the accuracy to which you request your solutions be computed.  Perhaps by at least two orders of magnitude, but the default value is a factor of 10 less stringent.  This also depends on the norm being used to tell whether two points are the same, and the norm used for the convergence condition to terminate tracking.
+	T endpoint_finite_threshold = T(100000);  ///< Bertini 1's `EndpointFiniteThreshold`.  An endpoint is considered to be at infinity if the infinity norm of its *dehomogenized* coordinates is larger than this value.  This uses the same dehomogenize-then-infinity-norm computation the endgame uses for its `Security::max_norm` divergence check (a separate, smaller threshold for bailing out *during* the endgame).  There is also `path_truncation_threshold` in Tolerances, which tells the path tracker to die if exceeded.  B1 default 1e5.
+
+	T same_point_tolerance_multiplier {T(10)}; ///< Bertini 1's `EndpointSameThreshold`.  A multiplier (>= 1) on `final_tolerance`: two endpoints are considered the same point if the infinity norm of the difference of their *dehomogenized* coordinates is below `final_tolerance * same_point_tolerance_multiplier`.  Keeping it a multiplier (rather than an absolute tolerance) means the same-point test always stays a fixed factor looser than the accuracy you tracked to, even if `final_tolerance` is changed.  B1 default 10.
+
+	T condition_number_threshold {T(100000000)}; ///< Bertini 1's `CondNumThreshold`.  An endpoint is considered singular if it is the endpoint of multiple paths (multiplicity > 1), or if the approximation of the condition number (in the spectral norm, as estimated by the tracker) is larger than this value.  B1 default 1e8.
 };
 
+/**
+\brief The default ambient precision for a ZeroDimConfig, by complex type.
+
+Double-precision solves work at double; multiprecision solves work at the current default precision
+-- which is the precision the MultiplePrecisionTracker is built at, so that in a fixed-multiple solve
+the start points, the tracker, and the working ("thread") precision are all one and the same value.
+(Defaulting to DoublePrecision() here left fixed-multiple solves with the tracker at DefaultPrecision()
+but the ambient/thread precision at double -- a mismatch the tracker rejects at start.)
+*/
 template<typename ComplexT>
+inline unsigned DefaultInitialAmbientPrecision()
+{
+	if constexpr (std::is_same<ComplexT, complex_dbl>::value)
+		return DoublePrecision();
+	else
+		return DefaultPrecision();
+}
+
+// Not templated on the complex type: the three times are stored as exact, precision-free
+// mpq_rational (real) and converted to the tracking complex type at the current working precision at
+// use -- the same pattern SteppingConfig uses for its step sizes.  This keeps the config precision-
+// agnostic (one struct, not a DoublePrec/Multiprec pair), and is in fact more correct under adaptive
+// precision: a value like the endgame boundary 1/10 is materialized at full working precision rather
+// than frozen at whatever precision the config happened to be constructed at.
+//
+// The times are real because a zero-dim solve tracks along the real t-axis (1 -> 0).  Complex
+// homotopy times remain available at the endgame level (set directly), just not through this config.
+/// \brief Top-level configuration for a zero-dimensional solve (times, precision, threading).
 struct ZeroDimConfig
 {
-	unsigned initial_ambient_precision = DoublePrecision();
+	// Per-complex-type default; the ZeroDim algorithm overwrites this in DefaultSettingsSetup with
+	// DefaultInitialAmbientPrecision<BaseComplexT>() (it knows its tracking type, this struct does not).
+	unsigned initial_ambient_precision = DefaultPrecision();  ///< Initial ambient (working) precision for the solve.
 	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 
-	ComplexT start_time = ComplexT(1);
-	ComplexT endgame_boundary = ComplexT(1)/ComplexT(10);
-	ComplexT target_time = ComplexT(0);
+	/// Number of worker threads for a shared-memory (non-MPI) solve.  0 = auto
+	/// (std::thread::hardware_concurrency); 1 = serial (no thread pool).  Overridden by the
+	/// OMP_NUM_THREADS environment variable when set.  See parallel::EffectiveThreadCount.
+	/// Under MPI the per-rank thread count comes from OMP_NUM_THREADS, not this field.
+	unsigned num_threads = 0;
 
-	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";
+	mpq_rational start_time{1};          ///< Homotopy start time (t=1).
+	mpq_rational endgame_boundary{1, 10}; ///< Time at which tracking hands off to the endgame (t=1/10).
+	mpq_rational target_time{0};         ///< Homotopy target time (t=0).
+
+	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";  ///< Name given to the homotopy's path variable.
 };
 
+/// \brief Top-level meta configuration: which algorithm to run.
 struct MetaConfig
 {
-	classic::AlgoChoice tracktype = classic::AlgoChoice::ZeroDim;
+	classic::AlgoChoice tracktype = classic::AlgoChoice::ZeroDim;  ///< Which algorithm (track type) to run.
+};
+
+/**
+Global RNG seed for reproducible runs.  random_seed == 0 (the default) draws from
+std::random_device and reports the effective seed so the run can be reproduced.
+Set via `randomseed: N;` in the classic Bertini input file or bertini.set_random_seed(N)
+in Python.  Must be applied before system construction (gamma, patch, TD-constants).
+*/
+struct RandomConfig
+{
+	unsigned long random_seed = 0;  ///< The RNG seed; 0 draws from std::random_device and reports the effective seed.
 };
 
 

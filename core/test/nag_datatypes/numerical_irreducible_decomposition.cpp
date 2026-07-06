@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_SUITE(nid)
 		using sp = std::shared_ptr<T>;
 
 		using NID = bertini::nag_datatype::NumericalIrreducibleDecomposition<
-			bertini::mpfr_complex>;
+			bertini::complex_mp>;
 
 		BOOST_AUTO_TEST_CASE(something)
 		{	

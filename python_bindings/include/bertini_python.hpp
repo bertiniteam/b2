@@ -52,6 +52,7 @@
 #include "detail.hpp"
 #include "logging.hpp"
 #include "zero_dim_export.hpp"
+#include "numerical_irreducible_decomposition_export.hpp"
 #include "info.hpp"
 
 #endif

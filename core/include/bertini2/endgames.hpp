@@ -40,3 +40,26 @@
 #include "bertini2/endgames/observers.hpp"
 
 
+// Explicit instantiation declarations — suppress re-instantiation of the
+// endgame stack in every including TU.  The definitions live in
+// core/src/eti/endgames_eti.cpp; see ADR-0014.  Adding a flavor or tracker?
+// Extend both lists.
+namespace bertini{ namespace endgame{
+
+extern template class EndgameBase<PowerSeriesEndgame<FixedPrecEndgame<tracking::DoublePrecisionTracker>>, FixedPrecEndgame<tracking::DoublePrecisionTracker>>;
+extern template class EndgameBase<PowerSeriesEndgame<FixedPrecEndgame<tracking::MultiplePrecisionTracker>>, FixedPrecEndgame<tracking::MultiplePrecisionTracker>>;
+extern template class EndgameBase<PowerSeriesEndgame<AMPEndgame>, AMPEndgame>;
+extern template class EndgameBase<CauchyEndgame<FixedPrecEndgame<tracking::DoublePrecisionTracker>>, FixedPrecEndgame<tracking::DoublePrecisionTracker>>;
+extern template class EndgameBase<CauchyEndgame<FixedPrecEndgame<tracking::MultiplePrecisionTracker>>, FixedPrecEndgame<tracking::MultiplePrecisionTracker>>;
+extern template class EndgameBase<CauchyEndgame<AMPEndgame>, AMPEndgame>;
+
+extern template class PowerSeriesEndgame<FixedPrecEndgame<tracking::DoublePrecisionTracker>>;
+extern template class PowerSeriesEndgame<FixedPrecEndgame<tracking::MultiplePrecisionTracker>>;
+extern template class PowerSeriesEndgame<AMPEndgame>;
+extern template class CauchyEndgame<FixedPrecEndgame<tracking::DoublePrecisionTracker>>;
+extern template class CauchyEndgame<FixedPrecEndgame<tracking::MultiplePrecisionTracker>>;
+extern template class CauchyEndgame<AMPEndgame>;
+
+}} // namespaces
+
+

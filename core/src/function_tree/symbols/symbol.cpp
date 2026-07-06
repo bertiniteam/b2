@@ -32,15 +32,6 @@
 namespace bertini{
 	namespace node{
 
-unsigned Symbol::EliminateZeros()
-{
-	return 0;
-}
-unsigned Symbol::EliminateOnes()
-{
-	return 0;
-}
-
 
 const std::string& NamedSymbol::name() const
 {

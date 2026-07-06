@@ -33,7 +33,8 @@
 
 
 """
-bertini -- Python bindings for Bertini 2.
+bertini -- Python bindings for Bertini 2
+========================================
 
 This code is licensed under the GNU Public License, Version 3, with
 additional clauses under section 7 as permitted, to protect the 
@@ -50,7 +51,6 @@ See the source at https://github.com/bertiniteam/b2
 from importlib.metadata import version
 __version__ = version("bertini2")
 
-import os
 import sys
 
 if sys.platform == "win32":
@@ -60,36 +60,88 @@ if sys.platform == "win32":
     for p in get_dll_paths():
         _dll_manager.add_dll_directory(p)
 
+del sys  # used only for the platform check above; don't leak it into the bertini.* namespace
+
 # put stuff in the bertini namespace
 
-import bertini.function_tree as function_tree
+from . import symbolics
+from .symbolics import sin, cos, tan, asin, acos, atan, exp, log, sqrt
+from .symbolics import canonicalize, monomial_order, MonomialOrder
 
-import bertini.system as system
-import bertini.tracking as tracking
-import bertini.endgame as endgame
-import bertini.parse as parse
-import bertini.container as container
-import bertini.logging as logging
-import bertini.nag_algorithm as nag_algorithm
-import bertini.random as random
+from . import system
+from . import tracking
+from . import endgame
+from . import parse
+from . import logging
+from . import nag_algorithm
+from . import random
+from . import parallel
 
-from bertini._pybertini import info
-
-import bertini.multiprec as multiprec
+from . import multiprec
 
 # some convenience assignments
-Variable = function_tree.symbol.Variable
-VariableGroup = function_tree.VariableGroup
+Variable = symbolics.Variable
+variables = symbolics.variables
+gather_variables = symbolics.gather_variables
+VariableGroup = symbolics.VariableGroup
+Named = symbolics.NamedExpression            # Named(expr, "a"): a user-named subexpression
 System = system.System
 default_precision = multiprec.default_precision
+
+# the multiprecision number types, hoisted to the top level (they also live in bertini.multiprec)
+from .multiprec import complex_mp, real_mp, int_mp, rational_mp
+
+# symbolic constants, ready to drop straight into expressions (bertini.E, bertini.Pi, bertini.I)
+E = symbolics.E()
+Pi = symbolics.Pi()
+I = symbolics.Complex(0, 1)                     # imaginary unit -- no dedicated node, a complex leaf
+
+# the everyday classes, hoisted to the top level for tab-completion.  They still live in their
+# submodules (nag_algorithm.*, tracking.*); this just spares users the deep path.
+from .nag_algorithm import ZeroDimSolver, HomotopySolver, SolutionPathCollector, Slice, StartSystemType
+from .tracking import (AMPTracker, DoublePrecisionTracker, MultiplePrecisionTracker,
+                       SuccessCode, Predictor)
+
+from ._calculus import jacobian
+from .random import random_matrix
+
+# exact-coefficient coercion at the top level (was bertini.linalg.coefficient / as_coefficients)
+from ._coefficients import coefficient, coefficients
+
+# the casual records surface: solve / save / load over the structured output directory
+from .records import (solve, save, load, annotate, solutions_of, provenance,
+                      recording, records_dir, runs, tracks, provenance_graph,
+                      plot_chain, Solution, SolveResult)
+from . import records
+
+# attach the friendly system-building methods and Slice.from_coefficients (was bertini.linalg.*)
+from . import _system_ops as _system_ops
+_system_ops.install(system.System)
+from . import _slice_ops as _slice_ops
+_slice_ops.install(nag_algorithm.Slice)
+
+from . import operators                          # `from bertini.operators import *` -> just the math ops
 
 
 
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
-__all__ = ['Variable','VariableGroup','system','System',
-           'nag_algorithm','container','default_precision',
-           'tracking','endgame','logging','function_tree','parse','multiprec','random']
+__all__ = ['solve','save','load','annotate','solutions_of','provenance','recording','records_dir','runs','tracks','provenance_graph','plot_chain','Solution','SolveResult','records',
+           'Variable','variables','gather_variables','VariableGroup','Named','system','System',
+           'jacobian','random_matrix','coefficient','coefficients',
+           'complex_mp','real_mp','int_mp','rational_mp',
+           'nag_algorithm','default_precision',
+           'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
+           'operators',
+           # everyday classes hoisted to the top level
+           'ZeroDimSolver','HomotopySolver','SolutionPathCollector','Slice',
+           'AMPTracker','DoublePrecisionTracker','MultiplePrecisionTracker',
+           # enums at the root
+           'SuccessCode','Predictor','MonomialOrder','StartSystemType',
+           # symbolic constants
+           'E','Pi','I',
+           'sin','cos','tan','asin','acos','atan','exp','log','sqrt',
+           'canonicalize','monomial_order']
 
 
 

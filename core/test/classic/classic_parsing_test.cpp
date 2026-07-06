@@ -27,7 +27,12 @@
 
 #include "bertini2/bertini.hpp"
 #include <bertini2/io/parsing/classic_utilities.hpp>
+#include <bertini2/io/parsing/system_parsers.hpp>
+#include <bertini2/io/classic_writer.hpp>
 #include <string>
+#include <set>
+#include <fstream>
+#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
 
@@ -616,7 +621,194 @@ BOOST_AUTO_TEST_CASE(test_split_and_uncomment)
 
     BOOST_CHECK(input.find("variable_group x,y;")!=std::string::npos);
     BOOST_CHECK(input.find("f = x^2 + y;")!=std::string::npos);
-    
+
+}
+
+
+// The classic WRITER is the inverse of the parser: emitting a system to classic syntax and parsing
+// it back must reconstruct an equivalent system (so a Bertini 1 run sees the same problem).
+BOOST_AUTO_TEST_CASE(classic_writer_round_trips_a_system)
+{
+	using namespace bertini;
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*x + y*y - 1);
+	sys.AddFunction(x - y);
+
+	System reparsed{ classic::SystemToClassic(sys) };
+	BOOST_CHECK_EQUAL(reparsed.NumNaturalFunctions(), sys.NumNaturalFunctions());
+
+	// identical values at a generic point -> the emitted classic text is a faithful round-trip
+	Vec<complex_dbl> pt(2); pt << complex_dbl(0.3, 0.7), complex_dbl(-0.4, 0.2);
+	auto a = sys.Eval(pt);
+	auto b = reparsed.Eval(pt);
+	BOOST_REQUIRE_EQUAL(a.size(), b.size());
+	for (Eigen::Index i = 0; i < a.size(); ++i)
+		BOOST_CHECK_SMALL(abs(a(i) - b(i)), 1e-12);
+}
+
+
+// Regression: a classic input FILE with '%' comments must parse.  The blackbox reads files via
+// the Path overload of SplitIntoConfigAndInput, which used to split the raw text WITHOUT running
+// the CommentStripper first -- so a '%' comment (Bertini 1's comment marker) survived into the
+// input section and the system parser choked ("did not consume entire input").  Comments appear
+// here both on their own line and trailing real declarations, in both CONFIG and INPUT.
+BOOST_AUTO_TEST_CASE(file_with_percent_comments_parses)
+{
+	namespace fs = boost::filesystem;
+	auto path = fs::temp_directory_path() / fs::unique_path("b2_comment_%%%%-%%%%.b2");
+
+	{
+		std::ofstream out(path.string());
+		out <<
+			"CONFIG\n"
+			"% a full-line comment in config\n"
+			"tracktype: 0;   % trailing comment after a real setting\n"
+			"END;\n"
+			"INPUT\n"
+			"% two groups => multihomogeneous; this comment must be stripped\n"
+			"variable_group x;\n"
+			"variable_group y;   % trailing comment on a declaration\n"
+			"function f1, f2;\n"
+			"f1 = x*y - 1;\n"
+			"f2 = x + y - 3;   % and another\n"
+			"END;\n";
+	}
+
+	std::string config, input;
+	bertini::parsing::classic::SplitIntoConfigAndInput(config, input, path);
+	fs::remove(path);
+
+	// the '%' comment text is gone from both sections...
+	BOOST_CHECK(config.find('%') == std::string::npos);
+	BOOST_CHECK(input.find('%')  == std::string::npos);
+	// ...while the real declarations survive...
+	BOOST_CHECK(input.find("variable_group x;") != std::string::npos);
+	BOOST_CHECK(input.find("f1 = x*y - 1;")     != std::string::npos);
+
+	// ...and the system parser actually consumes the comment-free input.
+	bertini::System sys;
+	auto iter = input.begin();
+	auto end  = input.end();
+	bertini::parsing::classic::parse(iter, end, sys);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 2u);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+}
+
+
+// ---- Unicode (UTF-8) identifier support ----
+// The classic grammar accepts Unicode *letters* as identifiers (Ω, α, CJK, ...),
+// storing names as their raw UTF-8 bytes.  UTF-8 is spelled with byte escapes so
+// the source stays plain ASCII (portable across compilers), and inputs are built
+// by std::string concatenation so a hex escape never swallows a following digit.
+// See io/parsing/unicode_ident.hpp.
+namespace {
+	const std::string kOmega = "\xCE\xA9";         // U+03A9 GREEK CAPITAL LETTER OMEGA
+	const std::string kAlpha = "\xCE\xB1";         // U+03B1 GREEK SMALL LETTER ALPHA
+	const std::string kCJK   = "\xE4\xB8\xAD";     // U+4E2D
+	const std::string kParty = "\xF0\x9F\x8E\x89"; // U+1F389 PARTY POPPER (single-code-point emoji)
+	// 👍🏽 = THUMBS UP (U+1F44D) + skin-tone modifier (U+1F3FD): a two-code-point emoji.
+	const std::string kThumbsToned = "\xF0\x9F\x91\x8D" "\xF0\x9F\x8F\xBD";
+	// 👩‍👩‍👧 = WOMAN + ZWJ + WOMAN + ZWJ + GIRL: a five-code-point ZWJ sequence.
+	const std::string kFamily = "\xF0\x9F\x91\xA9" "\xE2\x80\x8D" "\xF0\x9F\x91\xA9"
+	                            "\xE2\x80\x8D" "\xF0\x9F\x91\xA7";
+}
+
+BOOST_AUTO_TEST_CASE(unicode_variable_group_omega_parses)
+{
+	std::string input = "variable_group " + kOmega + ", " + kAlpha + ";\n"
+	                    "function f;\n"
+	                    "f = " + kOmega + "^2 + " + kAlpha + "^2 - 1;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 1u);
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	auto names = sys.VariableNameSet();
+	BOOST_CHECK(names.count(kOmega) == 1);
+	BOOST_CHECK(names.count(kAlpha) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_name_roundtrips_utf8)
+{
+	using namespace bertini;
+	std::string input = "variable_group " + kOmega + ";\n"
+	                    "function f;\n"
+	                    "f = " + kOmega + "^2 - 2;\n";
+	System sys{ input };
+	std::string emitted = classic::SystemToClassic(sys);   // the classic writer emits UTF-8
+	BOOST_CHECK(emitted.find(kOmega) != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_cjk_variable_parses)
+{
+	std::string input = "variable_group " + kCJK + ", y;\n"
+	                    "function f;\n"
+	                    "f = " + kCJK + " + y;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	BOOST_CHECK(sys.VariableNameSet().count(kCJK) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_mixed_ascii_unicode_identifier)
+{
+	// A single identifier mixing ASCII and Unicode letters/digits.
+	std::string ident = "x" + kOmega + "1";
+	std::string input = "variable_group " + ident + ", y;\n"
+	                    "function f;\n"
+	                    "f = " + ident + " + y;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	BOOST_CHECK(sys.VariableNameSet().count(ident) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_symbol_prefix_not_greedy)
+{
+	// Ω is declared but Ωα is not; the boundary guard stops the known symbol Ω from
+	// matching a prefix of Ωα, so referencing Ωα must fail to parse rather than
+	// silently becoming Ω (leaving α dangling).
+	std::string input = "variable_group " + kOmega + ";\n"
+	                    "function f;\n"
+	                    "f = " + kOmega + kAlpha + ";\n";
+	BOOST_CHECK_THROW(bertini::System sys{ input }, std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(utf8_bom_is_stripped)
+{
+	// A leading UTF-8 BOM must be dropped by System(std::string) so it is not seen
+	// as a stray leading character.
+	std::string input = std::string("\xEF\xBB\xBF") +
+	                    "variable_group x, y;\n"
+	                    "function f;\n"
+	                    "f = x^2 + y^2 - 1;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	BOOST_CHECK_EQUAL(sys.NumNaturalFunctions(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(emoji_variable_parses)
+{
+	// Single-code-point emoji are valid identifiers.
+	std::string input = "variable_group " + kParty + ", y;\n"
+	                    "function f;\n"
+	                    "f = " + kParty + " + y;\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	BOOST_CHECK(sys.VariableNameSet().count(kParty) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(multipoint_emoji_variable_parses)
+{
+	// A multi-code-point emoji (skin-toned, and a ZWJ sequence) reads as ONE
+	// contiguous identifier -- the whole byte sequence is the variable's name.
+	std::string input = "variable_group " + kThumbsToned + ", " + kFamily + ";\n"
+	                    "function f;\n"
+	                    "f = " + kThumbsToned + " + " + kFamily + ";\n";
+	bertini::System sys{ input };
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 2u);
+	auto names = sys.VariableNameSet();
+	BOOST_CHECK(names.count(kThumbsToned) == 1);   // not split at the skin-tone modifier
+	BOOST_CHECK(names.count(kFamily) == 1);        // not split at the ZWJs
 }
 
 

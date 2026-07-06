@@ -34,13 +34,20 @@
 #pragma once
 
 #include <random>
+#include "bertini2/records/draw_functions.hpp"
 #include <complex>
 
 
 namespace bertini{
 
-	using dbl = std::complex<double>;
-	using dbl_complex = std::complex<double>;
+// Forward declaration — full definition in random.hpp / random.cpp.
+// Avoids pulling mpfr_complex.hpp into the Boost.Multiprecision include chain.
+std::mt19937& ThreadEngine();
+
+	// The two double-precision scalar types, named to parallel real_mp / complex_mp.
+	// real_dbl is an explicit alias for double so a future change lives in one place.
+	using real_dbl = double;  ///< The double-precision real number type.
+	using complex_dbl = std::complex<double>;  ///< The double-precision complex number type.
 
 	/**
 	\brief Overload * for unsigned * complex<double>
@@ -69,13 +76,13 @@ namespace bertini{
 	inline
 	double RandReal()
 	{
-		static std::default_random_engine generator;
-		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		return distribution(generator);
+		// pinned draw (b2rand/1, ADR-0044)
+		return records::DrawSymmetricDouble();
 	}
 
 	namespace{
-		using dbl = std::complex<double>;
+		using real_dbl = double;
+		using complex_dbl = std::complex<double>;
 	}
 
 	/**
@@ -85,13 +92,13 @@ namespace bertini{
 
 	 \note This overload was removed from C++ in C++11, for some insane reason.  Here it is, back in black.
 	 */
-	inline dbl pow(const dbl & z, int power)
+	inline complex_dbl pow(const complex_dbl & z, int power)
 	{
 		if (power < 0) {
 			return pow(1./z, -power);
 		}
 		else if (power==0)
-			return dbl(1,0);
+			return complex_dbl(1,0);
 		else if(power==1)
 			return z;
 		else if(power==2)
@@ -100,8 +107,8 @@ namespace bertini{
 			return z*z*z;
 		else
 		{
-			unsigned int p(power);
-			dbl result(1,0), z_to_the_current_power_of_two = z;
+			unsigned int p(static_cast<unsigned int>(power));
+			complex_dbl result(1,0), z_to_the_current_power_of_two = z;
 			// have copy of p in memory, can freely modify it.
 			do {
 				if ( (p & 1) == 1 ) { // get the lowest bit of the number

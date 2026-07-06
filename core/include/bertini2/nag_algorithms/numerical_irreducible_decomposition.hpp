@@ -30,7 +30,20 @@
 
 #pragma once
 
+#include "bertini2/num_traits.hpp"
+
+#include "bertini2/detail/visitable.hpp"
+#include "bertini2/tracking.hpp"
+
+#include "bertini2/detail/configured.hpp"
+#include "bertini2/detail/observable.hpp"
+
+#include "bertini2/nag_algorithms/common/algorithm_base.hpp"
+#include "bertini2/nag_algorithms/common/config.hpp"
+
 #include "bertini2/nag_datatypes/numerical_irreducible_decomposition.hpp"
+
+#include <stdexcept>
 
 
 namespace bertini {
@@ -38,19 +51,217 @@ namespace bertini {
 	namespace algorithm {
 
 
-		template <typename ComplexT>
-		struct NumericalIrreducibleDecomposition
-		{
+/**
+forward declare of the NumericalIrreducibleDecomposition algorithm.
 
-			static 
-			nag_datatype::NumericalIrreducibleDecomposition<ComplexT> RegenerativeCascade()
-			{
+Unlike ZeroDim, NID has no start system -- the regenerative cascade is a
+fundamentally different way of solving a polynomial system -- so it carries no
+StartSystem template parameter.  It owns a cloned target system directly (no
+system-management policy: this is placeholder scaffolding whose Solve() throws).
+*/
+template<	typename TrackerType, typename EndgameType,
+			typename SystemType = System >
+struct NumericalIrreducibleDecomposition;
 
-			}
+
+
+/**
+specify the traits for the algorithm.  this is why we need the forward declare.
+
+The NeededConfigs typelist is what drives the (reusable) Python config interface:
+the ConfiguredVisitor reflects over exactly these types.
+*/
+template<	typename TrackerType, typename EndgameType,
+			typename SystemType >
+struct AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >
+{
+	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;     ///< The real number type of the tracker.
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;  ///< The complex number type of the tracker.
+
+	/// The config types this algorithm reads (drives the reusable Python config interface).
+	using NeededConfigs = detail::TypeList<
+								RegenerationConfig,
+								TolerancesConfig,
+								SharpeningConfig,
+								PostProcessingConfig
+								>;
+};
 
 
 
-			
-		};
+/// \brief Type-erased base for the Numerical Irreducible Decomposition algorithm.
+struct AnyNID : public virtual AnyAlgorithm
+{
+	virtual ~AnyNID() = default;
+};
+
+
+
+/**
+\brief The Numerical Irreducible Decomposition algorithm.
+
+\note This is framework scaffolding.  The regenerative cascade itself is not yet
+implemented; the compute entry points (Run, Solve, RegenerativeCascade) currently
+throw.  The class is fully wired for configuration (via detail::Configured and the
+NeededConfigs typelist) and observation, and exposes a Tracker and Endgame, so it
+slots into the existing Python config interface with no extra plumbing.
+*/
+template<	typename TrackerType, typename EndgameType,
+			typename SystemType >
+struct NumericalIrreducibleDecomposition :
+					public virtual AnyNID,
+					public Observable,
+					public detail::Configured<
+						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >::NeededConfigs>
+{
+	// these usings are for getters in python
+	using TrackerT = TrackerType;   ///< The path-tracker type.
+	using EndgameT = EndgameType;   ///< The endgame type.
+	using SystemT  = SystemType;    ///< The system type.
+
+
+/// a bunch of using statements to reduce typing.
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;  ///< The complex number type of the tracker.
+	using BaseRealT    = typename tracking::TrackerTraits<TrackerType>::BaseRealT;     ///< The real number type of the tracker.
+
+	/// The Configured base storing this algorithm's configuration structs.
+	using Config = detail::Configured<
+						typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >::NeededConfigs>;
+	/// Retrieve a stored configuration struct by type (inherited from Configured).
+	using Config::Get;
+
+
+	using Regeneration   = RegenerationConfig;    ///< Regeneration configuration type.
+	using Tolerances     = TolerancesConfig;      ///< Tolerances configuration type.
+	using Sharpening     = SharpeningConfig;      ///< Sharpening configuration type.
+	using PostProcessing = PostProcessingConfig;  ///< Post-processing configuration type.
+
+	using ResultT = nag_datatype::NumericalIrreducibleDecomposition<BaseComplexT>;  ///< The decomposition result type.
+
+	// NID owns a cloned target system directly (no policy).
+	/// \return The target system being decomposed.
+	const SystemType& TargetSystem() const { return target_system_; }
+	/// \return The target system being decomposed.
+	SystemType&       TargetSystem()       { return target_system_; }
+
+
+/// constructors
+
+	/**
+	Construct a NumericalIrreducibleDecomposition algorithm object from the system to be decomposed.
+	*/
+	NumericalIrreducibleDecomposition(SystemType const& target)
+	 : target_system_(Clone(target)), tracker_(TargetSystem()), endgame_(tracker_)
+	{
+		DefaultSetup();
 	}
-}
+
+	virtual ~NumericalIrreducibleDecomposition() = default;
+
+
+/// the main functions
+
+	/**
+	\brief Main Run() function provided for calling from the blackbox mode.
+	*/
+	void Run() override
+	{
+		Solve();
+	}
+
+	/**
+	\brief Perform the numerical irreducible decomposition.
+
+	\note Not yet implemented -- this is framework scaffolding.
+	*/
+	void Solve()
+	{
+		throw std::runtime_error("NumericalIrreducibleDecomposition is not yet implemented");
+	}
+
+	/**
+	\brief Run the regenerative cascade.
+
+	\note Not yet implemented -- this is framework scaffolding.
+	*/
+	ResultT RegenerativeCascade()
+	{
+		throw std::runtime_error("NumericalIrreducibleDecomposition::RegenerativeCascade is not yet implemented");
+	}
+
+	/**
+	\brief Get the most recently computed decomposition.
+	*/
+	const ResultT& GetDecomposition() const
+	{
+		return decomposition_;
+	}
+
+
+/// tracker / endgame access
+
+	/// \return The path tracker used by the algorithm.
+	const TrackerType& GetTracker() const
+	{
+		return tracker_;
+	}
+
+	/// \return The path tracker used by the algorithm.
+	TrackerType& GetTracker()
+	{
+		return tracker_;
+	}
+
+	/// \return The endgame used by the algorithm.
+	const EndgameType& GetEndgame() const
+	{
+		return endgame_;
+	}
+
+	/// \return The endgame used by the algorithm.
+	EndgameType& GetEndgame()
+	{
+		return endgame_;
+	}
+
+
+/// setup functions
+
+	void DefaultSetup()
+	{
+		DefaultSettingsSetup();
+		DefaultSystemSetup();
+	}
+
+	/**
+	Fills the configs from default values.
+	*/
+	void DefaultSettingsSetup()
+	{
+		this->template Set<Regeneration>(Regeneration());
+		this->template Set<Tolerances>(Tolerances());
+		this->template Set<Sharpening>(Sharpening());
+		this->template Set<PostProcessing>(PostProcessing());
+	}
+
+	/// \brief Homogenize and patch the owned target system to its default working form.
+	void DefaultSystemSetup()
+	{
+		// homogenize + patch the owned target (the old CloneTarget::SystemSetup; a no-op of effect
+		// since Solve() throws, but kept so the prepared target is consistent if ever inspected).
+		target_system_.Homogenize();
+		target_system_.AutoPatch();
+	}
+
+
+private:
+	SystemType  target_system_;   ///< the cloned, owned system to be decomposed
+	TrackerType tracker_;
+	EndgameType endgame_;
+	ResultT decomposition_;
+};
+
+
+	} // ns algorithm
+
+} // ns bertini

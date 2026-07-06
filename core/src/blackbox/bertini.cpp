@@ -1,22 +1,23 @@
 #include "bertini2/bertini.hpp"
+#include "bertini2/fast_allocator.hpp"
 
 int main(int argument_count, char** arguments)
-{	
+{
 	using namespace bertini;
 
-	ParseArgcArgv(argument_count, arguments);
+	// Route GMP/MPFR/MPC limb allocation through mimalloc (if built with BERTINI2_FAST_ALLOC).
+	// First thing, before any multiprecision work.  No-op if disabled.
+	InstallFastAllocator();
 
-	serial::Initialize();
-	parallel::Initialize();
+	auto parsed = ParseArgcArgv(argument_count, arguments);
 
+	parallel::Initialize();  // MPI_Init first so rank is known
+	serial::Initialize();    // splash on rank 0 only
 
-
-	MainModeSwitch();
-
-
+	int result = MainModeSwitch(parsed);
 
 	parallel::Finalize();
 	serial::Finalize();
 
-	return 0;
+	return result;
 }

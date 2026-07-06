@@ -38,17 +38,19 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/split_member.hpp>
 
+/// \brief Tell Eigen to mix a Boost.serialization addon into every dense matrix/array.
 #define EIGEN_DENSEBASE_PLUGIN "bertini2/eigen_serialization_addon.hpp"
 
 #include <Eigen/Core>
 
 namespace {
-using mpfr_real = bertini::mpfr_float;
-using mpfr_complex = bertini::mpfr_complex;
+using mpfr_real = bertini::real_mp;
+using complex_mp = bertini::complex_mp;
 }
 
 namespace Eigen {
 
+/// \cond EIGEN_GLUE
 	template<> struct NumTraits<mpfr_real> : GenericNumTraits<mpfr_real> // permits to get the epsilon, dummy_precision, lowest, highest functions
 	{
 
@@ -75,21 +77,46 @@ namespace Eigen {
 			return -highest();
 		}
 
+		// ThreadPrecision (thread-local), not DefaultPrecision (global): these
+		// tolerances are consumed inside tracking (LU solves, norms, convergence
+		// checks), which may run on std::thread workers whose precision is set
+		// thread-locally.  On the main thread the two agree.
+		// epsilon() and dummy_precision() are pow(10, -precision): expensive (transcendental,
+		// heap-allocating) yet a pure function of the thread precision.  They are called per
+		// LU-diagonal element, per Newton iteration, per predictor stage, per step, so recomputing
+		// them dominated the multiprecision path.  Memoize per thread, keyed on the current
+		// precision -- the cached value is bit-identical to a fresh pow at that precision.
 		inline static Real dummy_precision()
 		{
-			using bertini::DefaultPrecision;
-			return pow( mpfr_real(10),-int(DefaultPrecision()-3));
+			using bertini::ThreadPrecision;
+			thread_local unsigned cached_prec = 0;
+			thread_local Real cached_val;
+			const unsigned p = ThreadPrecision();
+			if (p != cached_prec)
+			{
+				cached_val = pow(mpfr_real(10), -int(p-3));
+				cached_prec = p;
+			}
+			return cached_val;
 		}
 
 		inline static Real epsilon()
 		{
-			using bertini::DefaultPrecision;
-			return pow(mpfr_real(10),-int(DefaultPrecision()));
+			using bertini::ThreadPrecision;
+			thread_local unsigned cached_prec = 0;
+			thread_local Real cached_val;
+			const unsigned p = ThreadPrecision();
+			if (p != cached_prec)
+			{
+				cached_val = pow(mpfr_real(10), -int(p));
+				cached_prec = p;
+			}
+			return cached_val;
 		}
 
 		static inline int digits10()
 		{
-			return bertini::DefaultPrecision();
+			return static_cast<int>(bertini::ThreadPrecision());
 			// return internal::default_digits10_impl<T>::run();
 		}
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
@@ -113,15 +140,15 @@ namespace Eigen {
 
 
 	/**
-	 \brief This templated struct permits us to use the mpfr_complex type in Eigen matrices.
+	 \brief This templated struct permits us to use the complex_mp type in Eigen matrices.
 
 	 Provides methods to get the epsilon, dummy_precision, lowest, highest functions, largely by inheritance from the NumTraits<mpfr_real> contained in mpfr_extensions.
 	 */
-	template<> struct NumTraits<mpfr_complex> : NumTraits<mpfr_real>
+	template<> struct NumTraits<complex_mp> : NumTraits<mpfr_real>
 	{
 		typedef mpfr_real Real;
 		typedef mpfr_real NonInteger;
-		typedef mpfr_complex Nested;// Nested;
+		typedef complex_mp Nested;// Nested;
 		enum {
 			IsComplex = 1,
 			IsInteger = 0,
@@ -136,29 +163,29 @@ namespace Eigen {
 
 	namespace internal {
 		template<>
-		struct abs2_impl<mpfr_complex>
+		struct abs2_impl<complex_mp>
 		{
-			static inline mpfr_real run(const mpfr_complex& x)
+			static inline mpfr_real run(const complex_mp& x)
 			{
 				return real(x)*real(x) + imag(x)*imag(x);
 			}
 		};
 
 
-		template<> inline mpfr_complex random<mpfr_complex>()
+		template<> inline complex_mp random<complex_mp>()
 		{
 			return bertini::multiprecision::rand();
 		}
 
-		template<> inline mpfr_complex random<mpfr_complex>(const mpfr_complex& a, const mpfr_complex& b)
+		template<> inline complex_mp random<complex_mp>(const complex_mp& a, const complex_mp& b)
 		{
-			return a + (b-a) * random<mpfr_complex>();
+			return a + (b-a) * random<complex_mp>();
 		}
 
 		template<>
-		struct conj_helper<mpfr_complex, mpfr_complex, false, true>
+		struct conj_helper<complex_mp, complex_mp, false, true>
 		{
-			typedef mpfr_complex Scalar;
+			typedef complex_mp Scalar;
 			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
 			{ return c + pmul(x,y); }
 
@@ -167,9 +194,9 @@ namespace Eigen {
 		};
 
 		template<>
-		struct conj_helper<mpfr_complex, mpfr_complex, true, false>
+		struct conj_helper<complex_mp, complex_mp, true, false>
 		{
-			typedef mpfr_complex Scalar;
+			typedef complex_mp Scalar;
 			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
 			{ return c + pmul(x,y); }
 
@@ -181,81 +208,82 @@ namespace Eigen {
 
 		//int
 		template<>
-		struct scalar_product_traits<int,mpfr_complex>
+		struct scalar_product_traits<int,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, int>
+		struct scalar_product_traits<complex_mp, int>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		//long
 		template<>
-		struct scalar_product_traits<long,mpfr_complex>
+		struct scalar_product_traits<long,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, long>
+		struct scalar_product_traits<complex_mp, long>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		//long long
 		template<>
-		struct scalar_product_traits<long long,mpfr_complex>
+		struct scalar_product_traits<long long,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, long long>
+		struct scalar_product_traits<complex_mp, long long>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 
 		//mpfr_real
 		template<>
-		struct scalar_product_traits<mpfr_real,mpfr_complex>
+		struct scalar_product_traits<mpfr_real,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, mpfr_real>
+		struct scalar_product_traits<complex_mp, mpfr_real>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		//mpz_int
 		template<>
-		struct scalar_product_traits<bertini::mpz_int,mpfr_complex>
+		struct scalar_product_traits<bertini::mpz_int,complex_mp>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<mpfr_complex, bertini::mpz_int>
+		struct scalar_product_traits<complex_mp, bertini::mpz_int>
 		{
 	    	enum { Defined = 1 };
-	    	typedef mpfr_complex ReturnType;
+	    	typedef complex_mp ReturnType;
 		};
 
 	} // re: namespace internal
+/// \endcond
 } // re: namespace Eigen
 
 
@@ -267,8 +295,10 @@ namespace Eigen {
 
 namespace bertini {
 
-	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
-	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+	/// \brief A dynamically-sized column vector of NumT.
+	template<typename NumT> using Vec = Eigen::Matrix<NumT, Eigen::Dynamic, 1>;
+	/// \brief A dynamically-sized matrix of NumT.
+	template<typename NumT> using Mat = Eigen::Matrix<NumT, Eigen::Dynamic, Eigen::Dynamic>;
 
 
 	/**
@@ -354,15 +384,24 @@ namespace bertini {
 	inline
 	bool IsSmallValue(T const& testme)
 	{
-		using std::abs;
-		return abs(testme) <= Eigen::NumTraits<T>::epsilon()*100;
+		// |testme| <= eps*100  <=>  abs2(testme) <= (eps*100)^2.  Comparing squared magnitudes uses
+		// abs2 (re^2+im^2 for complex; see abs2_impl<complex_mp>) and avoids the allocating, sqrt-based
+		// std::abs/hypot on the multiprecision complex type.  eps*100 is non-negative, so the squared
+		// comparison is exactly equivalent.
+		using Real = typename Eigen::NumTraits<T>::Real;
+		const Real thresh = Eigen::NumTraits<T>::epsilon() * 100;
+		return Eigen::numext::abs2(testme) <= thresh * thresh;
 	}
 
 	/**
 	\brief Check whether two values are very close to each other.
 
-	\e The tolerance for being close
-	See \url http://www.boost.org/doc/libs/1_34_0/libs/test/doc/components/test_tools/floating_point_comparison.html, for example.
+	\tparam T The numeric type.
+	\param a The first value.
+	\param b The second value.
+	\param e The tolerance for being close.
+
+	See http://www.boost.org/doc/libs/1_34_0/libs/test/doc/components/test_tools/floating_point_comparison.html, for example.
 	*/
 	template<typename T>
 	inline
@@ -393,15 +432,22 @@ namespace bertini {
 	bool IsLargeChange(T const& numerator, T const& denomenator)
 	{
 		static_assert(!Eigen::NumTraits<T>::IsInteger, "IsLargeChange cannot be used safely on non-integral types");
-		using std::abs;
-		return abs(numerator/denomenator) >= 1/Eigen::NumTraits<T>::dummy_precision();
+		// |num/den| >= 1/dummy  <=>  |num|*dummy >= |den|  <=>  abs2(num)*dummy^2 >= abs2(den).
+		// The squared form drops BOTH the complex division (num/den) and the sqrt-based abs/hypot --
+		// each of which allocates multiprecision temporaries -- and is exact since all quantities are
+		// non-negative.  (In its hot caller, LUPartialPivotDecompositionSuccessful, the denominator has
+		// already passed IsSmallValue, so it is non-tiny here.)
+		using Real = typename Eigen::NumTraits<T>::Real;
+		const Real d = Eigen::NumTraits<T>::dummy_precision();
+		return Eigen::numext::abs2(numerator) * (d * d) >= Eigen::numext::abs2(denomenator);
 	}
 
+	/// \brief Outcome of a matrix-decomposition sanity check (e.g. LU pivot magnitude).
 	enum class MatrixSuccessCode
 	{
-		Success,
-		LargeChange,
-		SmallValue
+		Success,      ///< The decomposition looks healthy.
+		LargeChange,  ///< A pivot changed by a suspiciously large amount.
+		SmallValue    ///< A pivot is suspiciously small (near-singular).
 	};
 
 	/**
@@ -422,7 +468,7 @@ namespace bertini {
 		#endif
 
 			// this loop won't test entry (0,0).  it's tested separately after.
-		for (unsigned int ii = LU.rows()-1; ii > 0; ii--)
+		for (Eigen::Index ii = LU.rows()-1; ii > 0; ii--)
 		{
 			if (IsSmallValue(LU(ii,ii)))
 			{
@@ -501,7 +547,36 @@ namespace bertini {
 	inline
 	Mat<NumberType> RandomOfUnits(unsigned int rows, unsigned int cols)
 	{
-		return Mat<NumberType>(rows,cols).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });
+		return Mat<NumberType>(rows,cols).unaryExpr([](NumberType const& /*x*/) { return RandomUnit<NumberType>(); });
+	}
+
+
+	/**
+	\brief Make a random conjugate-orthonormal matrix (orthonormal rows when rows<=cols, orthonormal
+	columns when rows>=cols), to the current default precision.
+
+	Bertini 1 builds every random complex matrix conjugate-orthonormal (unitary), and when it needs a
+	non-square shape it generates a SQUARE one and truncates.  This mirrors that: draw a square random
+	matrix of the larger dimension, QR-factor it to a unitary Q, and return the leading rows x cols
+	block.  The QR launders the seed draw away -- the result is conjugate-orthonormal regardless of how
+	the seed was drawn -- and perfectly conditioned, which is the point: genericity without scaling
+	trouble.  Use it for every random *matrix* (slices, the randomization tail) the way the
+	bounded-modulus scalar draw is used for individual coefficients (ADR-0041).
+
+	\param rows The number of rows of the returned matrix.
+	\param cols The number of columns of the returned matrix.
+	\tparam NumberType the (complex) number type to fill the matrix with.
+	*/
+	template <typename NumberType>
+	inline
+	Mat<NumberType> RandomConjugateOrthonormalMatrix(unsigned int rows, unsigned int cols)
+	{
+		using std::max;
+		const unsigned int dim = max(rows, cols);   // generate square, then truncate -- Bertini 1's recipe
+		Mat<NumberType> seed = RandomOfUnits<NumberType>(dim, dim);
+		Eigen::HouseholderQR<Mat<NumberType> > qr(seed);
+		Mat<NumberType> Q = qr.householderQ() * Mat<NumberType>::Identity(dim, dim);
+		return Q.topLeftCorner(rows, cols);
 	}
 
 	/**
@@ -516,7 +591,7 @@ namespace bertini {
 	inline
 	Vec<NumberType> RandomOfUnits(unsigned int size)
 	{
-		return Vec<NumberType>(size).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });
+		return Vec<NumberType>(size).unaryExpr([](NumberType const&) { return RandomUnit<NumberType>(); });
 	}
 
 }

@@ -43,9 +43,10 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the SecurityConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::SecurityConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::SecurityConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "SecurityConfig")
 				{
@@ -72,11 +73,11 @@ namespace bertini {
 					
 					root_rule_.name("config::Security");
 					
-					root_rule_ = ((security_level_[phx::bind( [this](bertini::endgame::SecurityConfig & S, int l)
+					root_rule_ = ((security_level_[phx::bind( [](bertini::endgame::SecurityConfig & S, int l)
 															 {
 																 S.level = l;
 															 }, _val, _1 )]
-								   ^ security_max_norm_[phx::bind( [this](bertini::endgame::SecurityConfig & S, T norm)
+								   ^ security_max_norm_[phx::bind( [](bertini::endgame::SecurityConfig & S, T norm)
 																  {
 																	  S.max_norm = norm;
 																  }, _val, _1 )])
@@ -89,7 +90,7 @@ namespace bertini {
 					
 					security_max_norm_.name("security_max_norm_");
 					security_max_norm_ = *(char_ - all_names_) >> (no_case[maxnorm_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
@@ -103,18 +104,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::Security"))
+					);
 					
 					
 					
@@ -140,10 +133,12 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the EndgameConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::EndgameConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::EndgameConfig(), Skipper>
 			{
-				using T = double;
-				using R = mpq_rational;
+				using T = double;  ///< The number type used by this parser.
+				using R = mpq_rational; ///< Exact rational type (decimal-to-rational, no floating-point precision to go stale).
+
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "EndgameConfig")
 				{
@@ -160,45 +155,45 @@ namespace bertini {
 					using boost::spirit::lexeme;
 					using boost::spirit::as_string;
 					using boost::spirit::ascii::no_case;
-					
-					
-					
+
+
+
 					std::string samplefactor_name = "samplefactor";
 					std::string numpoints_name = "numsamplepoints";
 					std::string mintrack_name = "nbhdradius";
-					
-					
+
+
 					root_rule_.name("config::Endgame");
-					
-					root_rule_ = ((sample_factor_[phx::bind( [this](bertini::endgame::EndgameConfig & S, R num)
+
+					root_rule_ = ((sample_factor_[phx::bind( [](bertini::endgame::EndgameConfig & S, R num)
 															{
 																S.sample_factor = num;
 															}, _val, _1 )]
-								   ^ min_track_[phx::bind( [this](bertini::endgame::EndgameConfig & S, T num)
+								   ^ min_track_[phx::bind( [](bertini::endgame::EndgameConfig & S, T num)
 														  {
 															  S.min_track_time = num;
 														  }, _val, _1 )]
-								   ^ num_sample_[phx::bind( [this](bertini::endgame::EndgameConfig & S, unsigned num)
+								   ^ num_sample_[phx::bind( [](bertini::endgame::EndgameConfig & S, unsigned num)
 															  {
 																  S.num_sample_points = num;
 															  }, _val, _1 )])
-								  
+
 								  >> -no_setting_)
 					| no_setting_;
-					
-					
+
+
 					all_names_ = (no_case[samplefactor_name] >> ':') | (no_case[numpoints_name] >> ':')| (no_case[mintrack_name] >> ':');
-					
+
 					sample_factor_.name("sample_factor_");
 					sample_factor_ = *(char_ - all_names_) >> (no_case[samplefactor_name] >> ':')
-					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string str)
+					>> mpfr_rules.rational[phx::bind( [](R & num, std::string const& str)
 														   {
-															   num = bertini::NumTraits<double>::FromString(str);
+															   num = bertini::NumTraits<R>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					min_track_.name("min_track_");
 					min_track_ = *(char_ - all_names_) >> (no_case[mintrack_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
@@ -217,18 +212,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::Endgame"))
+					);
 					
 					
 					
@@ -252,9 +239,10 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the PowerSeriesConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::PowerSeriesConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::PowerSeriesConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "bertini::endgame::PowerSeriesConfigType")
 				{
@@ -279,7 +267,7 @@ namespace bertini {
 					
 					root_rule_.name("bertini::endgame::PowerSeriesConfig");
 					
-					root_rule_ = (max_cycle_[phx::bind( [this](bertini::endgame::PowerSeriesConfig & S, unsigned num)
+					root_rule_ = (max_cycle_[phx::bind( [](bertini::endgame::PowerSeriesConfig & S, unsigned num)
 													   {
 														   S.max_cycle_number = num;
 													   }, _val, _1 )]
@@ -304,18 +292,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("bertini::endgame::PowerSeriesConfig"))
+					);
 					
 					
 					
@@ -336,9 +316,10 @@ namespace bertini {
 
 			 */
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the CauchyConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::CauchyConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::CauchyConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "bertini::endgame::CauchyConfig")
 				{
@@ -364,11 +345,11 @@ namespace bertini {
 					
 					root_rule_.name("config::Cauchy");
 					
-					root_rule_ = ((cycle_cutoff_[phx::bind( [this](bertini::endgame::CauchyConfig & S, T num)
+					root_rule_ = ((cycle_cutoff_[phx::bind( [](bertini::endgame::CauchyConfig & S, T num)
 														   {
 															   S.cycle_cutoff_time = num;
 														   }, _val, _1 )]
-								   ^ ratio_cutoff_[phx::bind( [this](bertini::endgame::CauchyConfig & S, T num)
+								   ^ ratio_cutoff_[phx::bind( [](bertini::endgame::CauchyConfig & S, T num)
 															 {
 																 S.ratio_cutoff_time = num;
 															 }, _val, _1 )])
@@ -378,14 +359,14 @@ namespace bertini {
 					
 					cycle_cutoff_.name("cycle_cutoff_");
 					cycle_cutoff_ = *(char_ - all_names_) >> (no_case[cyclecutoff_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					ratio_cutoff_.name("ratio_cutoff_");
 					ratio_cutoff_ = *(char_ - all_names_) >> (no_case[ratiocutoff_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
@@ -399,18 +380,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::Cauchy"))
+					);
 					
 					
 					
@@ -430,9 +403,10 @@ namespace bertini {
 			
 
 			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			/// \brief Parser for the TrackBackConfig settings block of classic Bertini input.
 			struct ConfigSettingParser<Iterator, bertini::endgame::TrackBackConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::TrackBackConfig(), Skipper>
 			{
-				using T = double;
+				using T = double;  ///< The number type used by this parser.
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "bertini::endgame::TrackBackConfig")
 				{
@@ -458,15 +432,15 @@ namespace bertini {
 
 					root_rule_.name("bertini::endgame::TrackBackConfig");
 					
-					root_rule_ = root_rule_ = ((min_cycle_[phx::bind( [this](bertini::endgame::TrackBackConfig & S, unsigned num)
+					root_rule_ = root_rule_ = ((min_cycle_[phx::bind( [](bertini::endgame::TrackBackConfig & S, unsigned num)
 																	   {
 																		   S.minimum_cycle = num;
 																	   }, _val, _1 )]
-											   ^ junk_removal_[phx::bind( [this](bertini::endgame::TrackBackConfig & S, int num)
+											   ^ junk_removal_[phx::bind( [](bertini::endgame::TrackBackConfig & S, int num)
 																		 {
 																			 S.junk_removal_test = static_cast<bool>(num);
 																		 }, _val, _1 )]
-											   ^ max_depth_[phx::bind( [this](bertini::endgame::TrackBackConfig & S, unsigned num)
+											   ^ max_depth_[phx::bind( [](bertini::endgame::TrackBackConfig & S, unsigned num)
 																	   {
 																		   S.max_depth_LDT = num;
 																	   }, _val, _1 )]
@@ -498,18 +472,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+					qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("bertini::endgame::TrackBackConfig"))
+					);
 					
 					
 					

@@ -1,0 +1,59 @@
+//This file is part of Bertini 2.
+//
+//src/eti/zero_dim_eti.cpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//src/eti/zero_dim_eti.cpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with src/eti/zero_dim_eti.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// silviana amethyst, university of wisconsin eau claire
+
+/**
+\file zero_dim_eti.cpp
+
+Explicit instantiation definitions for the closed universe of ZeroDim
+algorithm types: {PowerSeries, Cauchy} x {double, multiple, AMP} trackers,
+TotalDegreeLinearProduct start, CloneGiven system management (the default; both the python
+bindings and blackbox use exactly these six).  Pairs with the extern template
+declarations at the bottom of bertini2/nag_algorithms/zero_dim_solve.hpp.
+See ADR-0014.
+
+Adding a combo?  Add it here AND to the extern block.
+*/
+
+#include "bertini2/nag_algorithms/zero_dim_solve.hpp"
+#include "bertini2/endgames.hpp"
+#include "bertini2/system/start_systems.hpp"
+
+namespace bertini{ namespace algorithm{
+
+using DPT  = tracking::DoublePrecisionTracker;
+using MPT  = tracking::MultiplePrecisionTracker;
+using AMPT = tracking::AMPTracker;
+
+// ZeroDimSolver holds its start system polymorphically, so these six instantiations cover EVERY
+// clone-owned start system (TotalDegreeLinearProduct, MHomogeneous, TotalDegreeBinomial, future Polyhedral, ...).
+// Adding a start system costs zero ETI.  Each ZeroDimSolver instantiation also instantiates its
+// HomotopySolver base.
+template struct ZeroDimSolver<DPT,  typename endgame::EndgameSelector<DPT>::PSEG,    System>;
+template struct ZeroDimSolver<DPT,  typename endgame::EndgameSelector<DPT>::Cauchy,  System>;
+template struct ZeroDimSolver<MPT,  typename endgame::EndgameSelector<MPT>::PSEG,    System>;
+template struct ZeroDimSolver<MPT,  typename endgame::EndgameSelector<MPT>::Cauchy,  System>;
+template struct ZeroDimSolver<AMPT, typename endgame::EndgameSelector<AMPT>::PSEG,   System>;
+template struct ZeroDimSolver<AMPT, typename endgame::EndgameSelector<AMPT>::Cauchy, System>;
+
+}} // namespaces

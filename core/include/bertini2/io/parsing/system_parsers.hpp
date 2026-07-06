@@ -42,6 +42,7 @@ namespace bertini {
 		
 		
 		
+			/// \brief Parse a polynomial system from the iterator range into a System.
 			template <typename Iterator>
 			static bool parse(Iterator first, Iterator last, System& sys)
 			{
@@ -61,7 +62,9 @@ namespace bertini {
 				
 				if (!r || first != last) // fail if we did not get a full match
 					return false;
-				
+
+				// every definition has now filled its function box: emit the bare entries.
+				S.EmitDeclaredFunctions(s);
 				sys = s;
 				return r;
 			}
@@ -74,19 +77,34 @@ namespace bertini {
 	System::System(std::string const& input)
 	{
 		System sys;
-		
+
 		parsing::classic::SystemParser<std::string::const_iterator> S;
-		
-		std::string::const_iterator iter = input.begin();
-		std::string::const_iterator end = input.end();
+
+		// Treat the input as UTF-8; drop a leading BOM so it is not seen as a
+		// stray leading character by the grammar.
+		std::string cleaned = input;
+		parsing::classic::StripUTF8BOM(cleaned);
+
+		std::string::const_iterator iter = cleaned.begin();
+		std::string::const_iterator end = cleaned.end();
 		
 		bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
 		
 		if (!s || iter!=end)
 		{
-			throw std::runtime_error("unable to correctly parse string in construction of system");
+			std::string remaining(iter, end);
+			if (remaining.size() > 60)
+				remaining = remaining.substr(0, 60) + "...";
+			if (remaining.empty())
+				remaining = "<end of input>";
+			throw std::runtime_error(
+				"[SystemParser] parser did not consume entire input; "
+				"unparsed remainder: \"" + remaining + "\"");
 		}
 		
+		// every definition has now filled its function box: emit the bare entries.
+		S.EmitDeclaredFunctions(sys);
+
 		using std::swap;
 		swap(sys,*this);
 	}

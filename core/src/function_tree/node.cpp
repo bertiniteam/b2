@@ -26,18 +26,22 @@
 
 #include "bertini2/function_tree.hpp"
 
+#include <unordered_map>
+#include <vector>
+#include <mutex>
+#include <algorithm>
+
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Variable)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Differential)
 
-BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Float)
+BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Complex)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Integer)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Rational)
 
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::special_number::Pi)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::special_number::E)
 
-BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Function)
-BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::Jacobian)
+BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::NamedExpression)
 
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::SinOperator)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::ArcSinOperator)
@@ -54,6 +58,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::PowerOperator)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::IntegerPowerOperator)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::SqrtOperator)
 BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::ExpOperator)
+BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::LogOperator)
 
 
 
@@ -61,31 +66,42 @@ BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::ExpOperator)
 namespace bertini{
 namespace node{
 
-	unsigned Node::ReduceDepth()
+	// Default: nothing to simplify -- return this node unchanged (sharing preserved).
+	// Operators override to recurse + reassemble through the Simplified* factories.
+	std::shared_ptr<Node> Node::Simplified() const
 	{
-		return 0;
+		return std::const_pointer_cast<Node>(shared_from_this());
 	}
 
-
-	template<typename T>
-	void Node::EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const
+	// Default: nothing to homogenize (leaves) -- return this node unchanged.  Operators that
+	// can carry degree-deficient summands (and their ancestors) override to rebuild functionally.
+	std::shared_ptr<Node> Node::Homogenized(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) const
 	{
-		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-		if(!val_pair.second)
-		{
-			detail::FreshEvalSelector<T>::RunInPlace(val_pair.first, *this,diff_variable);
-			val_pair.second = true;
-		}
-		eval_value = val_pair.first;
+		return std::const_pointer_cast<Node>(shared_from_this());
 	}
 
-	template void Node::EvalInPlace<dbl>(dbl&, std::shared_ptr<Variable> const&) const;
-	template void Node::EvalInPlace<mpfr_complex>(mpfr_complex&, std::shared_ptr<Variable> const&) const;
+	// ---- structural hash / equality (predicate layer for hash-consing) ----
 
-	unsigned Node::precision() const
+	std::size_t Node::Hash() const
 	{
-		return std::get<std::pair<mpfr_complex,bool> >(current_value_).first.precision();
+		if (!structural_hash_)
+			structural_hash_ = HashImpl();
+		return *structural_hash_;
 	}
+
+	// Default: identity hash (the object address).  Distinct objects hash distinctly; value
+	// and operator nodes override HashImpl to be structural.
+	std::size_t Node::HashImpl() const
+	{
+		return std::hash<const void*>{}(this);
+	}
+
+	// Default: identity equality.  Value/operator nodes override.
+	bool Node::IsSame(Node const& other) const
+	{
+		return this == &other;
+	}
+
 
 	bool Node::IsPolynomial(std::shared_ptr<Variable> const&v) const
 	{
@@ -97,16 +113,47 @@ namespace node{
 		return Degree(v)>=0;
 	}
 
-	void Node::ResetStoredValues() const
-	{
-		std::get< std::pair<dbl,bool> >(current_value_).second = false;
-		std::get< std::pair<mpfr_complex,bool> >(current_value_).second = false;
+	Node::Node()
+	{ }
+
+	// ---- hash-consing intern table ----
+	namespace {
+		// Process-global table: structural hash -> live nodes, held weakly so it self-cleans
+		// (a node dies when its last external shared_ptr drops; its weak_ptr is pruned on the
+		// next touch of that bucket).  Lazy-init function-local statics avoid SIOF.
+		std::unordered_map<std::size_t, std::vector<std::weak_ptr<Node>>>& InternBuckets()
+		{
+			static std::unordered_map<std::size_t, std::vector<std::weak_ptr<Node>>> buckets;
+			return buckets;
+		}
+		std::mutex& InternMutex()
+		{
+			static std::mutex m;
+			return m;
+		}
 	}
 
-	Node::Node()
+	std::shared_ptr<Node> Intern(std::shared_ptr<Node> const& candidate)
 	{
-		std::get<std::pair<dbl,bool> >(current_value_).second = false;
-		std::get<std::pair<mpfr_complex,bool> >(current_value_).second = false;
+		std::lock_guard<std::mutex> lock(InternMutex());
+		auto& bucket = InternBuckets()[candidate->Hash()];
+
+		std::shared_ptr<Node> found;
+		// scan for a live, structurally-equal node; prune any expired weak_ptrs as we go
+		bucket.erase(
+			std::remove_if(bucket.begin(), bucket.end(),
+				[&](std::weak_ptr<Node> const& wp) {
+					auto sp = wp.lock();
+					if (!sp) return true;                          // dead -> prune
+					if (!found && sp->IsSame(*candidate)) found = sp;
+					return false;
+				}),
+			bucket.end());
+
+		if (found)
+			return found;                                          // hit: discard the candidate
+		bucket.push_back(candidate);                               // miss: register and keep
+		return candidate;
 	}
 } // namespace node
 } // namespace bertini

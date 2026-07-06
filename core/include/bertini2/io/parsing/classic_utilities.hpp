@@ -60,38 +60,45 @@ namespace bertini {
 			public:
 				
 				
+				/// \brief Get the config portion of the split input file.
 				std::string Config() const
 				{
 					return config_;
 				}
-				
+
+				/// \brief Get the input portion of the split input file.
 				std::string Input() const
 				{
 					return input_;
 				}
-				
+
+				/// \brief Query whether the input file was readable.
 				bool Readable() const
 				{
 					return readable_;
 				}
-				
-				
+
+
+				/// \brief Set the input portion.
 				void SetInput(std::string new_input)
 				{
 					input_ = new_input;
 				}
-				
+
+				/// \brief Set the config portion.
 				void SetConfig(std::string new_config)
 				{
 					config_ = new_config;
 				}
-				
+
+				/// \brief Set both the config and input portions.
 				void SetConfigInput(std::string c, std::string i)
 				{
 					config_ = c;
 					input_ = i;
 				}
-				
+
+				/// \brief Set whether the input file was readable.
 				void SetReadable(bool read)
 				{
 					readable_ = read;
@@ -115,6 +122,7 @@ namespace bertini {
 				//            }
 				
 				
+				/// \brief Stream-insertion for a SplitInputFile, printing its config and input portions.
 				friend std::ostream& operator<<(std::ostream & out, SplitInputFile const& printme)
 				{
 					out << "--------config-----------\n\n" << printme.Config() << "\n\n-------input--------\n\n" << printme.Input();
@@ -281,18 +289,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+										qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("SplitInputFileParser"))
+					);
 				}
 				
 			private:
@@ -355,18 +355,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+										qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("CommentStripper"))
+					);
 				}
 				
 			private:
@@ -376,6 +368,7 @@ namespace bertini {
 			
 			
 			
+			/// \brief Split a classic Bertini input file's contents into its config and input portions.
 			SplitInputFile ParseInputFile(std::string str_input_file)
 			{
 				std::string::const_iterator iter = str_input_file.begin();
@@ -403,14 +396,12 @@ namespace bertini {
 			 */
 			std::tuple<std::string, std::string> SplitIntoConfigAndInput(Path const& input_file)
 			{
-				auto file_as_string = FileToString(input_file);
-				
-				SplitInputFileParser<std::string::const_iterator> parser;
-				SplitInputFile config_and_input;
-				std::string::const_iterator iter = file_as_string.begin();
-				std::string::const_iterator end = file_as_string.end();
-				phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input);
-
+				// Route through ParseInputFile, which runs the CommentStripper pass BEFORE splitting.
+				// Bertini 1 uses '%' as its comment marker; calling the raw SplitInputFileParser here --
+				// as this used to -- left '%' comments in the text, and the downstream system/settings
+				// parsers then choked ("parser did not consume entire input").  A classic input file
+				// with comments must parse, for backwards compatibility.
+				auto config_and_input = ParseInputFile(FileToString(input_file));
 				return std::make_tuple(config_and_input.Config(), config_and_input.Input());
 			}
 

@@ -25,6 +25,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "bertini2/system/start_systems.hpp"
+#include "bertini2/system/blocks/block.hpp"
+#include "bertini2/system/blocks/blend_block.hpp"
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <algorithm>
+#include <iostream>
+#include <iomanip>
+#include <memory>
+#include <sstream>
 
 using System = bertini::System;
 
@@ -34,12 +43,12 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 using mpq_rational = bertini::mpq_rational;
-using mpfr_float = bertini::mpfr_float;
+using real_mp = bertini::real_mp;
 using mpz_int = bertini::mpz_int;
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 
 #include "externs.hpp"
 
@@ -68,18 +77,24 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_small_example)
 	*/
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
+	// second projective coordinate of each homogeneous group: a hom group of size k is
+	// P^{k-1}, so a size-1 group is the degenerate P^0.  Use size-2 groups (P^1, dimension
+	// 1) so each group absorbs one function -- the degree matrix, partitions, and start-
+	// point count are exactly as for the original (capacity = dimension = size - 1 = 1).
+	auto x1 = Variable::Make("x1");
+	auto y1 = Variable::Make("y1");
 
 	System sys;
 
-	VariableGroup v1{x};
-	VariableGroup v2{y};
+	VariableGroup v1{x, x1};
+	VariableGroup v2{y, y1};
 
 	sys.AddHomVariableGroup(v1);
 	sys.AddHomVariableGroup(v2);
 
 	sys.AddFunction(x*y);
 	sys.AddFunction(pow(x,2)*pow(y,2));
-	
+
 	auto mhom_start_system = bertini::start_system::MHomogeneous(sys);
 
 	Vec<int> partition_1(2);
@@ -99,6 +114,87 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_small_example)
 	BOOST_CHECK(mhom_start_system.NumStartPoints() == 4);
 
 }
+
+
+// Each generated start point must be an actual root of the (homogenized + patched)
+// start system: evaluating the start system there is ~0.  This validates both the
+// start-point linear solve and its homogenization onto the patch (the part the solve
+// flow needs).
+BOOST_AUTO_TEST_CASE(start_points_are_roots_of_the_start_system)
+{
+	DefaultPrecision(30);
+	bertini::SetGlobalSeed(1u);
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddVariableGroup(VariableGroup{y});
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(x + y);
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	auto mhom = MHomogeneous(sys);
+
+	// Partition capacity respects each group's declared dimension even after homogenization
+	// (VariableGroupSizes() would count the homogenizing variable and double it): the
+	// m-homogeneous Bezout number here is 2, not 4.
+	BOOST_CHECK_EQUAL(mhom.NumStartPoints(), 2ull);
+
+	const auto n = mhom.NumStartPoints();
+	for (unsigned long long i = 0; i < n; ++i)
+	{
+		auto sp = mhom.StartPoint<complex_dbl>(i);
+		BOOST_CHECK_EQUAL(static_cast<size_t>(sp.size()), mhom.NumVariables());
+		auto v = mhom.Eval(sp);
+		for (Eigen::Index j = 0; j < v.size(); ++j)
+			BOOST_CHECK(std::abs(v(j)) < 1e-10);   // each start point is a root, on the patch
+	}
+
+	// The blend homotopy (built as FormHomotopy does) is correct: zero at the start points
+	// at t=1, and its Jacobian and dH/dt agree with finite differences.
+	auto t = Variable::Make("t");
+	auto gamma = bertini::node::Rational::Make(bertini::node::Rational::Rand());
+	System H = sys;                 // target's variable structure + patch
+	H.ClearFunctions();             // the blend supplies the rows; don't also eval target's own functions
+	H.AddPathVariable(t);
+	std::vector<std::shared_ptr<bertini::node::Node>> coeffs{ 1 - t, gamma * t };
+	std::vector<std::shared_ptr<const System>> operands{
+		std::make_shared<System>(sys),
+		std::make_shared<System>(mhom) };
+	H.AddBlock(bertini::blocks::BlendBlock<System>(t, coeffs, operands));
+
+	for (unsigned long long i = 0; i < n; ++i)
+	{
+		auto Hval = H.Eval(mhom.StartPoint<complex_dbl>(i), complex_dbl(1));
+		for (Eigen::Index j = 0; j < Hval.size(); ++j)
+			BOOST_CHECK(std::abs(Hval(j)) < 1e-9);
+	}
+
+	bertini::Vec<complex_dbl> xq(H.NumVariables());
+	for (Eigen::Index k = 0; k < xq.size(); ++k)
+		xq(k) = complex_dbl(0.37 * static_cast<double>(k + 1) + 0.11, -0.19 * static_cast<double>(k) + 0.07);
+	const complex_dbl tv(0.42, -0.13);
+	const complex_dbl hstep(1e-6, 0);
+
+	auto J = H.Jacobian(xq, tv);
+	auto f0 = H.Eval(xq, tv);
+	for (Eigen::Index c = 0; c < xq.size(); ++c)
+	{
+		auto xp = xq; xp(c) += hstep;
+		auto fp = H.Eval(xp, tv);
+		for (Eigen::Index r = 0; r < f0.size(); ++r)
+			BOOST_CHECK(std::abs((fp(r) - f0(r)) / hstep - J(r, c)) < 1e-5);
+	}
+
+	auto dHdt = H.TimeDerivative(xq, tv);
+	auto fpt = H.Eval(xq, tv + hstep);
+	for (Eigen::Index r = 0; r < f0.size(); ++r)
+		BOOST_CHECK(std::abs((fpt(r) - f0(r)) / hstep - dHdt(r)) < 1e-5);
+}
+
+
 
 
 BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_larger_example)
@@ -121,13 +217,20 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_larger_example)
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
 	auto z = Variable::Make("z");
+	// second projective coordinate of each homogeneous group (see the small example above):
+	// a hom group of size k is P^{k-1}, so use size-2 groups (P^1, dimension 1).  Degree
+	// matrix, partitions, and start-point count are exactly as for size-1 groups under the
+	// correct convention (capacity = dimension = size - 1 = 1).
+	auto x1 = Variable::Make("x1");
+	auto y1 = Variable::Make("y1");
+	auto z1 = Variable::Make("z1");
 
 
 	System sys;
 
-	VariableGroup v1{x};
-	VariableGroup v2{y};
-	VariableGroup v3{z};
+	VariableGroup v1{x, x1};
+	VariableGroup v2{y, y1};
+	VariableGroup v3{z, z1};
 
 	sys.AddHomVariableGroup(v1);
 	sys.AddHomVariableGroup(v2);
@@ -538,6 +641,109 @@ BOOST_AUTO_TEST_CASE(variable_in_many_variable_groups_in_mhom_construction)
 
 	BOOST_CHECK_THROW(auto mhom_start_system = bertini::start_system::MHomogeneous(sys), std::runtime_error);
 
+}
+
+
+// --- serialization round-trip --------------------------------------------------------------
+//
+// Regression guard for the parallel-solve crash: ZeroDimSolver::DistributeSystems broadcasts the
+// owning shared_ptr<StartSystem> to MPI workers through a polymorphic boost archive.  If a derived
+// start system's serialize() drops a member, a worker deserializes a hollow object whose
+// NumStartPoints() is wrong, the per-path metadata sizes to nothing, and the solve segfaults.
+// MHomogeneous::serialize() used to persist only a vestigial degrees_ member, so this was silently
+// broken for the m-homogeneous start system (binomial/linear-product happened to be complete).
+//
+// Round-trip through the BASE pointer so we exercise exactly the path DistributeSystems uses, and
+// drive every generated start system through one helper so a future omission is caught everywhere.
+
+using bertini::start_system::StartSystem;
+
+static std::shared_ptr<StartSystem> RoundTripStart(std::shared_ptr<StartSystem> const& ss)
+{
+	std::stringstream buf;
+	{
+		boost::archive::text_oarchive oa(buf);
+		oa << ss;                         // serialized polymorphically as shared_ptr<StartSystem>
+	}
+	std::shared_ptr<StartSystem> out;
+	{
+		boost::archive::text_iarchive ia(buf);
+		ia >> out;
+	}
+	return out;
+}
+
+static void CheckStartRoundTrip(std::shared_ptr<StartSystem> const& orig)
+{
+	auto copy = RoundTripStart(orig);
+	BOOST_REQUIRE(copy);
+
+	// NumStartPoints() was the exact quantity that came back as 0 on a worker before the fix.
+	BOOST_CHECK_EQUAL(copy->NumStartPoints(), orig->NumStartPoints());
+	BOOST_REQUIRE(orig->NumStartPoints() > 0ull);
+
+	const auto n = std::min<unsigned long long>(orig->NumStartPoints(), 8ull);
+	for (unsigned long long i = 0; i < n; ++i)
+	{
+		auto a = orig->StartPoint<complex_dbl>(i);
+		auto b = copy->StartPoint<complex_dbl>(i);
+		BOOST_REQUIRE_EQUAL(a.size(), b.size());
+		for (Eigen::Index k = 0; k < a.size(); ++k)
+		{
+			BOOST_CHECK_CLOSE(a(k).real(), b(k).real(), 1e-10);
+			BOOST_CHECK_CLOSE(a(k).imag(), b(k).imag(), 1e-10);
+		}
+	}
+}
+
+BOOST_AUTO_TEST_CASE(mhomogeneous_survives_serialization_round_trip)
+{
+	DefaultPrecision(30);
+	bertini::SetGlobalSeed(1u);
+
+	System sys;
+	auto x  = Variable::Make("x");
+	auto y  = Variable::Make("y");
+	auto x1 = Variable::Make("x1");
+	auto y1 = Variable::Make("y1");
+	// size-2 hom groups (each P^1, dimension 1) so the target is square; see the small-example
+	// construction test above.
+	sys.AddHomVariableGroup(VariableGroup{x, x1});
+	sys.AddHomVariableGroup(VariableGroup{y, y1});
+	sys.AddFunction(x*y);
+	sys.AddFunction(pow(x,2)*pow(y,2));
+
+	CheckStartRoundTrip(std::make_shared<bertini::start_system::MHomogeneous>(sys));
+}
+
+BOOST_AUTO_TEST_CASE(total_degree_binomial_survives_serialization_round_trip)
+{
+	DefaultPrecision(30);
+	bertini::SetGlobalSeed(1u);
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*y + y - 1);
+	sys.AddFunction(x*x - real_mp("0.5")*y - x*y);
+
+	CheckStartRoundTrip(std::make_shared<bertini::start_system::TotalDegreeBinomial>(sys));
+}
+
+BOOST_AUTO_TEST_CASE(total_degree_linear_product_survives_serialization_round_trip)
+{
+	DefaultPrecision(30);
+	bertini::SetGlobalSeed(1u);
+
+	System sys;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddFunction(x*y + y - 1);
+	sys.AddFunction(x*x - real_mp("0.5")*y - x*y);
+
+	CheckStartRoundTrip(std::make_shared<bertini::start_system::TotalDegreeLinearProduct>(sys));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

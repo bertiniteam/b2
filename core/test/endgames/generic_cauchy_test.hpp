@@ -44,21 +44,21 @@ using VariableGroup = bertini::VariableGroup;
 
 
 
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 using mpq_rational = bertini::mpq_rational;
 
 using bertini::Precision;
 
-template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
-template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename NumT> using Vec = Eigen::Matrix<NumT, Eigen::Dynamic, 1>;
+template<typename NumT> using Mat = Eigen::Matrix<NumT, Eigen::Dynamic, Eigen::Dynamic>;
 
 
 using PrecisionConfig = bertini::tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
-using BRT = bertini::tracking::TrackerTraits<TrackerType>::BaseRealType;
-using BCT = bertini::tracking::TrackerTraits<TrackerType>::BaseComplexType;
+using BRT = bertini::tracking::TrackerTraits<TrackerType>::BaseRealT;
+using BCT = bertini::tracking::TrackerTraits<TrackerType>::BaseComplexT;
 
 using SuccessCode = bertini::SuccessCode;
 
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 	cauchy_samples.back() << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
 
-	auto first_track_success =  my_endgame.CircleTrack(origin);
+	[[maybe_unused]] auto first_track_success =  my_endgame.CircleTrack(origin);
 
 	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - cauchy_samples.front()).template lpNorm<Eigen::Infinity>() < 1e-5);
 
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 	my_endgame.SetCauchySamples(cauchy_samples);
 	my_endgame.SetCauchyTimes(cauchy_times);
 	
-	auto tracking_success =  my_endgame.CircleTrack(origin);
+	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
 
 	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
 
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(circle_track__nonzero_target_time)
 	my_endgame.SetCauchySamples(cauchy_samples);
 	my_endgame.SetCauchyTimes(cauchy_times);
 	
-	auto tracking_success =  my_endgame.CircleTrack(center);
+	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(center);
 
 
 	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
@@ -382,12 +382,13 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
 
 	auto precision_config = PrecisionConfig(sys);
 
 	TrackerType tracker(sys);
-	
+
 	bertini::tracking::SteppingConfig stepping_preferences;
 	bertini::tracking::NewtonConfig newton_preferences;
 
@@ -532,7 +533,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 
 
-	auto tracking_success =  my_endgame.CircleTrack(origin);
+	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
 	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == true);
 
 } // end check closed loop if cycle num is 1 for cauchy class test
@@ -594,7 +595,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 	my_endgame.SetCauchySamples(cauchy_samples);
 	my_endgame.SetCauchyTimes(cauchy_times);
 
-	auto tracking_success =  my_endgame.CircleTrack(origin);
+	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
 	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == false);
 
 	tracking_success =  my_endgame.CircleTrack(origin);
@@ -662,7 +663,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto tracking_success =  my_endgame.CircleTrack(origin);
+	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
 	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
 
 } // end compare cauchy ratios for cauchy class test
@@ -724,7 +725,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 	
-	auto tracking_success =  my_endgame.CircleTrack(origin);
+	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
 	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
 
 } // end compare cauchy ratios for cycle num greater than 1 cauchy class test
@@ -1032,7 +1033,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_nonzero_target_time)
 #endif
 
 
-	auto first_approx_success = my_endgame.InitialApproximation(start_time,start_sample,target_time,first_approx);
+	[[maybe_unused]] auto first_approx_success = my_endgame.InitialApproximation(start_time,start_sample,target_time,first_approx);
 
 	BOOST_CHECK((first_approx - x_to_check_against).template lpNorm<Eigen::Infinity>() < 1e-2);
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
@@ -1098,12 +1099,12 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto first_track_success =  my_endgame.CircleTrack(origin);
+	[[maybe_unused]] auto first_track_success =  my_endgame.CircleTrack(origin);
 
 	my_endgame.CycleNumber(1); // manually set cycle number to 1 for this test
 
 	Vec<BCT> first_cauchy_approx;
-	auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
+	[[maybe_unused]] auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
 
 	BOOST_CHECK((first_cauchy_approx - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
 
@@ -1171,13 +1172,13 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto first_track_success =  my_endgame.CircleTrack(origin);
-	auto second_track_success = my_endgame.CircleTrack(origin);
+	[[maybe_unused]] auto first_track_success =  my_endgame.CircleTrack(origin);
+	[[maybe_unused]] auto second_track_success = my_endgame.CircleTrack(origin);
 
 	my_endgame.CycleNumber(2);
 
 	Vec<BCT> first_cauchy_approx;
-	auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
+	[[maybe_unused]] auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
 
 	BOOST_CHECK((first_cauchy_approx - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
 }// end compute_cauchy_approximation_cycle_num_greater_than_1
@@ -1234,7 +1235,7 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 	TestedEGType my_endgame(tracker);
 	my_endgame.AddToPSData(time, sample);
 
-	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
+	[[maybe_unused]] auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
 
 	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).template lpNorm<Eigen::Infinity>() < 1e-5);
 	BOOST_CHECK(my_endgame.GetCauchySamples<BCT>().size() == 4);
@@ -1293,7 +1294,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 	TestedEGType my_endgame(tracker);
 
 	my_endgame.AddToPSData(time, sample);
-	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
+	[[maybe_unused]] auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
 
 	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).template lpNorm<Eigen::Infinity>() < 1e-6);
 	BOOST_CHECK_EQUAL(my_endgame.GetCauchySamples<BCT>().size(), 7);
@@ -1352,13 +1353,14 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 	solution << BCT(1,0);
 
 	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(time);
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(tons_of_detail);
 #endif
 
-	auto cauchy_endgame_success = my_endgame.Run(time,sample);
+	[[maybe_unused]] auto cauchy_endgame_success = my_endgame.Run(sample);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - solution).template lpNorm<Eigen::Infinity>() < 1e-5);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 1);
@@ -1413,8 +1415,9 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 
 	
 	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(time);
 
-	auto cauchy_endgame_success = my_endgame.Run(time,sample);
+	auto cauchy_endgame_success = my_endgame.Run(sample);
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
@@ -1480,7 +1483,8 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 
 	
 	TestedEGType my_endgame(tracker);
-	auto cauchy_endgame_success = my_endgame.Run(time,sample);
+	my_endgame.SetBoundaryTime(time);
+	auto cauchy_endgame_success = my_endgame.Run(sample);
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
@@ -1540,13 +1544,14 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 	SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
+	my_endgame.SetBoundaryTime(current_time);
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(tons_of_detail);
 #endif
 
-	auto code = my_endgame.Run(current_time,current_space);
+	auto code = my_endgame.Run(current_space);
 	BOOST_CHECK(code == SuccessCode::Success);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).template lpNorm<Eigen::Infinity>() < 1e-11);
@@ -1677,8 +1682,10 @@ BOOST_AUTO_TEST_CASE(cauchy_full_run_nonzero_target_time)
 	CauchyConfig cauchy_settings;
 	SecurityConfig security_settings;
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
+	my_endgame.SetBoundaryTime(start_time);
+	my_endgame.SetTargetTime(target_time);
 
-	auto endgame_success = my_endgame.Run(start_time,start_sample,target_time);
+	auto endgame_success = my_endgame.Run(start_sample);
 	BOOST_CHECK(endgame_success == SuccessCode::Success);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_to_check_against).template lpNorm<Eigen::Infinity>() < 1e-10);
@@ -1700,8 +1707,11 @@ the endgame.
 */
 BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
-	
-	
+	// Deterministic RNG: the random TotalDegreeLinearProduct start system below (and the
+	// endgame's internal random draws) otherwise seed from std::random_device,
+	// which makes this marginal double-precision case flake run-to-run and
+	// across platforms.  Seed it so the test is reproducible.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
 
 	DefaultPrecision(ambient_precision);
 
@@ -1718,7 +1728,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	BOOST_CHECK(griewank_osborn_sys.IsHomogeneous());
 	BOOST_CHECK(griewank_osborn_sys.IsPatched());	
 
-	auto griewank_TD = bertini::start_system::TotalDegree(griewank_osborn_sys);
+	auto griewank_TD = bertini::start_system::TotalDegreeBinomial(griewank_osborn_sys);
 	griewank_TD.Homogenize();
 	BOOST_CHECK(griewank_TD.IsHomogeneous());
 	BOOST_CHECK(griewank_TD.IsPatched());
@@ -1756,7 +1766,16 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 		SuccessCode tracking_success;
 
 		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
-		BOOST_CHECK(tracking_success==SuccessCode::Success);
+		// Tracking from t=1 to the endgame boundary must succeed for every path.
+		// REQUIRE (not CHECK) so that a tracking failure reports cleanly right here
+		// instead of leaving `result` empty and throwing a cryptic
+		// "dehomogenizing point with incorrect number of coordinates" from
+		// DehomogenizePoint below.
+		BOOST_REQUIRE_MESSAGE(tracking_success==SuccessCode::Success,
+			"tracking path " << ii << " to the endgame boundary failed with code "
+			<< static_cast<int>(tracking_success));
+		BOOST_REQUIRE_EQUAL(result.size(),
+			static_cast<Eigen::Index>(final_griewank_osborn_system.NumVariables()));
 
 		griewank_homogenized_solutions.push_back(result);
 		griewank_solutions.push_back(final_griewank_osborn_system.DehomogenizePoint(result));
@@ -1778,18 +1797,15 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
-	unsigned num_fails = 0;
-
-	unsigned num_infinite_solutions = 0;
+	unsigned num_converged_at_origin = 0;
 	for (auto& s : griewank_homogenized_solutions) //current_space_values)
 	{
 		auto init_prec = Precision(s(0));
 		DefaultPrecision(init_prec);
 		final_griewank_osborn_system.precision(init_prec);
-		BCT time_at_correct_prec = t_endgame_boundary;
-		Precision(time_at_correct_prec,init_prec);
 
-		SuccessCode endgame_success = my_endgame.Run(time_at_correct_prec,s);
+		my_endgame.SetBoundaryTime(t_endgame_boundary);
+		SuccessCode endgame_success = my_endgame.Run(s);
 
 // i took this check out jan 27, 2018.  the tracker's precision literally cannot be adjusted as currently written.  hence, there's no way to correct a failing test like this.  i do hope there isn't something nasty lurking about causing it to fail, but causing other problems as well.  i guess it would be nice if the tracker came back in the same precision as the endgame result, but ... do i really care?  if i did, i would have to add a ChangePrecision(p) method to all flavors of trackers, but that's not really what they do...  they're a tool, and adjust precision according to the input they receive, just like the endgames, and other things.
 		// BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
@@ -1797,20 +1813,35 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 		if(endgame_success == SuccessCode::Success)
 		{
 			num_paths_converging++;
+
+			// Post-solve tolerance check: griewank-osborne has exactly one finite
+			// solution, the origin (multiplicity 3).  Any path the endgame reports
+			// as converged must land on the origin to tolerance (unless it is a
+			// diverging path, caught below by the security max_norm).  This guards
+			// against the endgame returning Success on a point that is not actually
+			// a solution.  Observed distance-to-origin is ~1e-12 across all
+			// instantiations (double, fixed-multiple, AMP); 1e-9 leaves margin
+			// against run-to-run variation while still catching a non-solution.
+			Vec<BCT> dehomogenized_final = griewank_osborn_sys.DehomogenizePoint(my_endgame.FinalApproximation<BCT>());
+			auto final_norm = dehomogenized_final.template lpNorm<Eigen::Infinity>();
+			if (final_norm <= security_settings.max_norm) // a finite (non-diverging) converged solution
+			{
+				auto dist_to_origin = (dehomogenized_final - correct).template lpNorm<Eigen::Infinity>();
+				BOOST_CHECK_MESSAGE(dist_to_origin < 1e-9,
+					"griewank converged finite path did not meet tolerance at the origin; distance = " << dist_to_origin);
+				++num_converged_at_origin;
+			}
 		}
 		else if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
 		{
 			num_paths_diverging++;
 		}
-		else
-			++num_fails;
-
-		if (griewank_osborn_sys.DehomogenizePoint(my_endgame.FinalApproximation<BCT>()).template lpNorm<Eigen::Infinity>() > security_settings.max_norm)
-			++num_infinite_solutions;
 
 	}
 	BOOST_CHECK(num_paths_converging>=3);
 	BOOST_CHECK(num_paths_diverging<=3);
+	// the three converged paths must actually be the (multiplicity-3) origin, to tolerance
+	BOOST_CHECK(num_converged_at_origin>=3);
 }//end compute griewank osborne
 
 
@@ -1846,6 +1877,9 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
+	// Deterministic RNG: random TotalDegreeLinearProduct start system + endgame draws.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
+
 	DefaultPrecision(ambient_precision);
 
 	Var x = Variable::Make("x");
@@ -1869,7 +1903,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	
 
-	auto TD = bertini::start_system::TotalDegree(sys);
+	auto TD = bertini::start_system::TotalDegreeBinomial(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());
@@ -1904,7 +1938,14 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 		SuccessCode tracking_success;
 
 		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
-		BOOST_CHECK(tracking_success==SuccessCode::Success);
+		// REQUIRE success and a full-size result before dehomogenizing, so a tracking
+		// failure reports cleanly here instead of throwing a cryptic
+		// "dehomogenizing point with incorrect number of coordinates" on an empty result.
+		BOOST_REQUIRE_MESSAGE(tracking_success==SuccessCode::Success,
+			"tracking path " << ii << " to the endgame boundary failed with code "
+			<< static_cast<int>(tracking_success));
+		BOOST_REQUIRE_EQUAL(result.size(),
+			static_cast<Eigen::Index>(final_system.NumVariables()));
 
 		homogenized_solutions.push_back(result);
 		solutions.push_back(final_system.DehomogenizePoint(result));
@@ -1916,6 +1957,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	correct << BCT(1,0),BCT(1,0);
 
 	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(BCT{0.1});
 
 	tracker.Setup(TestedPredictor,
 	              	1e-6, 1e5,
@@ -1935,9 +1977,8 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	{
 		auto eg_prec = Precision(s);
 		DefaultPrecision(eg_prec);
-		BCT t_endgame_boundary{0.1};
 		final_system.precision(eg_prec);
-		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
+		SuccessCode endgame_success = my_endgame.Run(s);
 		if(endgame_success == SuccessCode::Success)
 		{
 			++num_successful_occurences;
@@ -2014,12 +2055,12 @@ BOOST_AUTO_TEST_CASE(gory_detail_logging)
 
 	
 	TestedEGType my_endgame(tracker);
-
+	my_endgame.SetBoundaryTime(time);
 
 	bertini::endgame::GoryDetailLogger<TestedEGType> eg_logger;
 	my_endgame.AddObserver(eg_logger);
 
-	auto cauchy_endgame_success = my_endgame.Run(time,sample);
+	auto cauchy_endgame_success = my_endgame.Run(sample);
 
 
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
@@ -2028,3 +2069,225 @@ BOOST_AUTO_TEST_CASE(gory_detail_logging)
 }// end cauchy_endgame_test_cycle_num_greater_than_1
 
 
+/**
+	Checks that endgame events are actually delivered to an observer, with readable payloads.
+
+	For the adaptive-numeric-type (AMP) endgame this exercises the complex_dbl fast lane WHILE observed:
+	the event-payload numeric-type conversion and the slot-aware state accessors (LatestTime, etc.) --
+	which previously read an empty mpfr slot and crashed the moment an observer was attached.  It runs
+	for fixed-double, fixed-multiple, and AMP, so all three precision policies are covered.
+*/
+BOOST_AUTO_TEST_CASE(observer_event_delivery)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	newton_preferences.max_num_newton_iterations = 2;
+	newton_preferences.min_num_newton_iterations = 1;
+
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+	tracker.ReinitializeInitialStepSize(false);
+
+	BCT time(1);
+	Vec<BCT> sample(1);
+	Vec<BCT> x_origin(1);
+
+	time = ComplexFromString("0.1");
+	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
+	x_origin << BCT(1,0);
+
+	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(time);
+
+	bertini::endgame::EventRecorder<TestedEGType> recorder;
+	my_endgame.AddObserver(recorder);
+
+	auto cauchy_endgame_success = my_endgame.Run(sample);
+
+	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
+
+	// Events were actually delivered to the observer (no observer attached previously meant the
+	// complex_dbl event-emission path was never exercised).
+	BOOST_CHECK_GT(recorder.num_events, 0u);
+	// Cauchy loops were tracked and their circle-advances observed.
+	BOOST_CHECK_GT(recorder.num_circle_advanced, 0u);
+	// It reached the endgame operating zone and converged exactly once.
+	BOOST_CHECK_GE(recorder.num_in_eg_zone, 1u);
+	BOOST_CHECK_EQUAL(recorder.num_converged, 1u);
+	BOOST_CHECK_GT(recorder.num_approximated_root, 0u);
+
+	// The payload captured THROUGH the observer (read at BaseComplexT, converted from the fast lane if
+	// needed) matches the endgame's own final result, and is the correct root.
+	BOOST_CHECK(recorder.converged_point.size()==1);
+	BOOST_CHECK((recorder.converged_point - my_endgame.FinalApproximation<BCT>()).template lpNorm<Eigen::Infinity>() < 1e-10);
+	BOOST_CHECK((recorder.converged_point - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
+	BOOST_CHECK(recorder.last_circle_point.size()==1);
+}// end observer_event_delivery
+
+
+
+
+/**
+Named regression: the junk-success bug (found 2026-07-03 via the structured output
+directory's function_residual; present in Bertini 1, reproduction in that arc's notes).
+
+An UNPATCHED affine user homotopy toward a DEFICIENT target -- the t=0 system
+{x^2-1, y*(x+1)-1} has only ONE finite root, the t=1 system {x^2-1, x*y-1} has two --
+gives one path nowhere finite to go.  With no patch there is no "infinity" to arrive
+at: the path is a Laurent POLE, y(t) = -1 - (1-t)/(gamma*t).  The Cauchy mean
+annihilates the pole term EXACTLY (roots-of-unity identity), so consecutive
+approximations agree at the finite Laurent constant -1 + 1/gamma and the endgame used
+to mint Success at a non-root (residual ~1).
+
+The pole-component operating-zone check (PoleComponentMass: negative Puiseux modes of
+the same loop samples) must refuse that acceptance, and the growing-mass verdict must
+truncate the path as diverging.  The healthy branch of the same homotopy must still
+converge to (1, 1/2).
+*/
+BOOST_AUTO_TEST_CASE(deficient_affine_user_homotopy_never_junk_success)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	auto gamma = bertini::node::Rational::Make(bertini::mpq_rational(4,5), bertini::mpq_rational(3,10));
+
+	// H = (1-t) * {x^2-1, y*(x+1)-1}  +  gamma * t * {x^2-1, x*y-1}
+	sys.AddFunction((1-t)*(pow(x,2)-1) + gamma*t*(pow(x,2)-1));
+	sys.AddFunction((1-t)*(y*(x+1)-1) + gamma*t*(x*y-1));
+
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+
+	auto t_start = ComplexFromString("1");
+	auto t_boundary = ComplexFromString("0.1");
+	auto t_target = ComplexFromString("0");
+
+	// ---- the deficient branch: starts at (-1,-1); no finite root awaits it ----
+	{
+		Vec<BCT> start(2), boundary(2);
+		start << ComplexFromString("-1"), ComplexFromString("-1");
+		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+		if (track_code == SuccessCode::Success)   // the pre-endgame may already give up; also fine
+		{
+			TestedEGType my_endgame(tracker);
+			my_endgame.SetBoundaryTime(t_boundary);
+			my_endgame.SetTargetTime(t_target);
+			auto eg_code = my_endgame.Run(boundary);
+			BOOST_CHECK(eg_code != SuccessCode::Success);   // NEVER junk Success at a non-root
+		}
+	}
+
+	// ---- the healthy branch: starts at (1,1); must still converge to (1, 1/2) ----
+	{
+		Vec<BCT> start(2), boundary(2);
+		start << ComplexFromString("1"), ComplexFromString("1");
+		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+		BOOST_REQUIRE(track_code == SuccessCode::Success);
+
+		TestedEGType my_endgame(tracker);
+		my_endgame.SetBoundaryTime(t_boundary);
+		my_endgame.SetTargetTime(t_target);
+		auto eg_code = my_endgame.Run(boundary);
+		BOOST_CHECK(eg_code == SuccessCode::Success);
+
+		Vec<BCT> expected(2);
+		expected << ComplexFromString("1"), ComplexFromString("0.5");
+		BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - expected).template lpNorm<Eigen::Infinity>() < 1e-6);
+	}
+}// end deficient_affine_user_homotopy_never_junk_success
+
+
+/**
+Named regression, second manifestation: a SINGULAR (multiplicity-2) target of an
+unpatched affine homotopy.
+
+H = (1-t) * {(x-1)^2+(y-1)^2, x-y} + gamma * t * {x^2-4, x*y-1}: both tracked paths
+genuinely converge to the double root (1,1) (verified by independent continuation;
+the approach is ~sqrt(t), cycle 2).  But at the endgame boundary radius the loop can
+enclose OTHER branch points of the cover, where the full-circle monodromy is trivial:
+the loop closes after ONE circuit, cycle is misdetected as 1, and the unclosed-sheet
+means are garbage that stabilizes at non-roots (observed residuals ~3.4/1.2, minted
+as Success).  The pole-component mass of such a loop is nonzero (any non-analytic
+content inside leaves negative-mode mass), so the operating-zone check must refuse
+acceptance there.  The honest property pinned here: Success implies AT the root.
+*/
+BOOST_AUTO_TEST_CASE(singular_affine_user_homotopy_success_implies_at_the_root)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	auto gamma = bertini::node::Rational::Make(bertini::mpq_rational(4,5), bertini::mpq_rational(3,10));
+
+	sys.AddFunction((1-t)*(pow(x-1,2)+pow(y-1,2)) + gamma*t*(pow(x,2)-4));
+	sys.AddFunction((1-t)*(x-y) + gamma*t*(x*y-1));
+
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+
+	auto t_start = ComplexFromString("1");
+	auto t_boundary = ComplexFromString("0.1");
+	auto t_target = ComplexFromString("0");
+
+	Vec<BCT> expected(2);
+	expected << ComplexFromString("1"), ComplexFromString("1");
+
+	for (auto const& start_pair : {std::make_pair("2", "0.5"), std::make_pair("-2", "-0.5")})
+	{
+		Vec<BCT> start(2), boundary(2);
+		start << ComplexFromString(start_pair.first), ComplexFromString(start_pair.second);
+		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+		if (track_code != SuccessCode::Success)
+			continue;   // honest tracking failure near the singular target: acceptable
+
+		TestedEGType my_endgame(tracker);
+		my_endgame.SetBoundaryTime(t_boundary);
+		my_endgame.SetTargetTime(t_target);
+		auto eg_code = my_endgame.Run(boundary);
+		if (eg_code == SuccessCode::Success)
+		{
+			// Success is only acceptable AT the double root
+			BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - expected).template lpNorm<Eigen::Infinity>() < 1e-4);
+		}
+		// any non-Success code is an honest failure: also acceptable
+	}
+}// end singular_affine_user_homotopy_success_implies_at_the_root

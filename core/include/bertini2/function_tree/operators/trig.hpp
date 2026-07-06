@@ -52,11 +52,12 @@ namespace node{
 
 	Abstract class for trigonometric Operator types.
 	*/
-	class TrigOperator: public virtual UnaryOperator
+	class TrigOperator: public UnaryOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
+		/// \brief Construct a trigonometric operator over a single operand node.
 		TrigOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 
@@ -74,7 +75,7 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 
@@ -88,25 +89,25 @@ namespace node{
 	/**
 	\brief Provides the sine Operator.
 
-	This class represents the sine function.  FreshEval method
-	is defined for sine and takes the sine of the child node.
+	This class represents the sine function.
 	*/
-	class SinOperator : public virtual TrigOperator, public virtual EnableSharedFromThisVirtual<SinOperator>
+	class SinOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
+		/// \brief Construct (and intern) a SinOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<SinOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<SinOperator>( new SinOperator(ts...) );
+			return std::static_pointer_cast<SinOperator>(Intern(std::shared_ptr<Node>( new SinOperator(ts...) )));
 		}
 
 	private:
-		SinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		SinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 		
 	public:
@@ -126,15 +127,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 
 		
 	private:
@@ -142,7 +138,7 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -151,25 +147,25 @@ namespace node{
 	/**
 	\brief Provides the inverse sine Operator.
 
-	This class represents the inverse sine function.  FreshEval method
-	is defined for arcsine and takes the sine of the child node.
+	This class represents the inverse sine function.
 	*/
-	class ArcSinOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<ArcSinOperator>
+	class ArcSinOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
+		/// \brief Construct (and intern) a ArcSinOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ArcSinOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<ArcSinOperator>( new ArcSinOperator(ts...) );
+			return std::static_pointer_cast<ArcSinOperator>(Intern(std::shared_ptr<Node>( new ArcSinOperator(ts...) )));
 		}
 
 	private:
-		ArcSinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		ArcSinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 
 	public:
@@ -187,15 +183,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 	private:
 		ArcSinOperator() = default;
@@ -203,7 +194,7 @@ namespace node{
 		
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -218,25 +209,25 @@ namespace node{
 	/**
 	\brief  Provides the cosine Operator.
 
-	This class represents the cosine function.  FreshEval method
-	is defined for cosine and takes the cosine of the child node.
+	This class represents the cosine function.
 	*/
-	class CosOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<CosOperator>
+	class CosOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
+		/// \brief Construct (and intern) a CosOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<CosOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<CosOperator>( new CosOperator(ts...) );
+			return std::static_pointer_cast<CosOperator>(Intern(std::shared_ptr<Node>( new CosOperator(ts...) )));
 		}
 
 	private:
-		CosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		CosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 		
 	public:
@@ -258,15 +249,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 
 		
 		
@@ -275,7 +261,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -284,25 +270,25 @@ namespace node{
 	/**
 	\brief Provides the arc cosine Operator.
 
-	This class represents the inverse cosine function.  FreshEval method
-	is defined for arccosine and takes the arccosine of the child node.
+	This class represents the inverse cosine function.
 	*/
-	class ArcCosOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<ArcCosOperator>
+	class ArcCosOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
+		/// \brief Construct (and intern) a ArcCosOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ArcCosOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<ArcCosOperator>( new ArcCosOperator(ts...) );
+			return std::static_pointer_cast<ArcCosOperator>(Intern(std::shared_ptr<Node>( new ArcCosOperator(ts...) )));
 		}
 
 	private:
-		ArcCosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		ArcCosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 	public:
 		
@@ -323,15 +309,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 
 		
 	private:
@@ -339,7 +320,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -356,25 +337,25 @@ namespace node{
 	/**
 	\brief Provides the tangent Operator.
 
-	This class represents the tangent function.  FreshEval method
-	is defined for tangent and takes the tangent of the child node.
+	This class represents the tangent function.
 	*/
-	class TanOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<TanOperator>
+	class TanOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
+		/// \brief Construct (and intern) a TanOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<TanOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<TanOperator>( new TanOperator(ts...) );
+			return std::static_pointer_cast<TanOperator>(Intern(std::shared_ptr<Node>( new TanOperator(ts...) )));
 		}
 
 	private:
-		TanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		TanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 	public:
 		
@@ -393,15 +374,10 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 
 		
 	private:
@@ -410,7 +386,7 @@ namespace node{
 		
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -419,25 +395,25 @@ namespace node{
 	/**
 	\brief Provides the inverse tangent Operator.
 
-	This class represents the inverse tangent function.  FreshEval method
-	is defined for arctangent and takes the arc tangent of the child node.
+	This class represents the inverse tangent function.
 	*/
-	class ArcTanOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<ArcTanOperator>
+	class ArcTanOperator : public TrigOperator
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
+		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
+		/// \brief Construct (and intern) a ArcTanOperator node.
 		template<typename... Ts> 
 		static 
 		std::shared_ptr<ArcTanOperator> Make(Ts&& ...ts){ 
-			return std::shared_ptr<ArcTanOperator>( new ArcTanOperator(ts...) );
+			return std::static_pointer_cast<ArcTanOperator>(Intern(std::shared_ptr<Node>( new ArcTanOperator(ts...) )));
 		}
 
 	private:
-		ArcTanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		ArcTanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N)
 		{};
 	public:
 		
@@ -456,22 +432,17 @@ namespace node{
 	protected:
 		
 		
-		// Specific implementation of FreshEval for arctangent.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		
 		
 	private:
 		ArcTanOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -479,11 +450,13 @@ namespace node{
 	
 	// begin the overload of operators
 
+	/// \brief Build a sine expression-tree node.
 	inline std::shared_ptr<Node> sin(const std::shared_ptr<Node> & N)
 	{
 		return SinOperator::Make(N);
 	}
 	
+	/// \brief Build a arcsine expression-tree node.
 	inline std::shared_ptr<Node> asin(const std::shared_ptr<Node> & N)
 	{
 		return ArcSinOperator::Make(N);
@@ -491,6 +464,7 @@ namespace node{
 	
 
 
+	/// \brief Build a cosine expression-tree node.
 	inline std::shared_ptr<Node> cos(const std::shared_ptr<Node> & N)
 	{
 		return CosOperator::Make(N);
@@ -498,6 +472,7 @@ namespace node{
 
 
 
+	/// \brief Build a arccosine expression-tree node.
 	inline std::shared_ptr<Node> acos(const std::shared_ptr<Node> & N)
 	{
 		return ArcCosOperator::Make(N);
@@ -505,6 +480,7 @@ namespace node{
 
 
 
+	/// \brief Build a tangent expression-tree node.
 	inline std::shared_ptr<Node> tan(const std::shared_ptr<Node> & N)
 	{
 		return TanOperator::Make(N);
@@ -512,6 +488,7 @@ namespace node{
 
 
 	
+	/// \brief Build a arctangent expression-tree node.
 	inline std::shared_ptr<Node> atan(const std::shared_ptr<Node> & N)
 	{
 		return ArcTanOperator::Make(N);

@@ -43,17 +43,13 @@ Numeric types exposed are
 This namespace also includes the mathematical operators, like `cos`, etc.
 """
 
-import bertini._pybertini.multiprec
-import numpy as np
+from bertini._pybertini import multiprec as _pybmp
 
 from bertini._pybertini.multiprec import *
 
-def Vector(n=0):
-	"""
-	make a vector, which is just a numpy array of multiprecision complexes.
-	"""
-	return np.zeros((n,), dtype = Complex)
+# (no Vector helper: eigenpy makes the mp number types work as numpy dtypes directly, so a plain
+# numpy array -- e.g. np.zeros(n, dtype=bertini.complex_mp) -- is the vector.)
 
-__all__ = dir(bertini._pybertini.multiprec)
+__all__ = dir(_pybmp)
 
 

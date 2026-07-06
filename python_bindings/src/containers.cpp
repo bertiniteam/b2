@@ -35,6 +35,8 @@
 
 #include "containers_export.hpp"
 
+#include <boost/python/iterator.hpp>
+
 namespace bertini{
 	namespace python{
 
@@ -48,9 +50,25 @@ void ListVisitor<T>::visit(PyClass& cl) const
 	// By default indexed elements are returned by proxy. This can be
     // disabled by supplying *true* in the NoProxy template parameter.
 
+	// vector_indexing_suite only provides the __getitem__/__len__ sequence protocol; add a real
+	// __iter__ so `for s in solver.all_solutions(): ...` (and any other list container) iterates
+	// directly rather than relying on the index-fallback.
+	.def("__iter__", boost::python::iterator<T>())
+
 	.def("__str__", &ListVisitor::__str__)
 	.def("__repr__", &ListVisitor::__repr__)
 	;
+}
+
+
+// Construct a VariableGroup of `count` variables named name0, name1, ..., name{count-1}.
+// A convenience constructor that absorbs the old linalg.variable_vector(name, count).
+std::shared_ptr<bertini::VariableGroup> create_named_variable_group(std::string const& name, int count)
+{
+	auto vg = std::make_shared<bertini::VariableGroup>();
+	for (int i = 0; i < count; ++i)
+		vg->push_back(bertini::node::Variable::Make(name + std::to_string(i)));
+	return vg;
 }
 
 
@@ -70,6 +88,20 @@ void ExportContainers()
 	    , &pylist_converter<bertini::VariableGroup>::construct
 	    , boost::python::type_id<bertini::VariableGroup>());
 
+	// allow a Python list of expressions to convert to std::vector<Node ptr>
+	// (used by System([f0,f1,...]) and add_functions)
+	using VecFn = std::vector<std::shared_ptr<bertini::node::Node>>;
+	boost::python::converter::registry::push_back(&pylist_converter<VecFn>::convertible
+	    , &pylist_converter<VecFn>::construct
+	    , boost::python::type_id<VecFn>());
+
+	// allow a Python list of VariableGroups to convert to std::vector<VariableGroup>
+	// (used by System::set_variable_groups)
+	using VecVarGroup = std::vector<bertini::VariableGroup>;
+	boost::python::converter::registry::push_back(&pylist_converter<VecVarGroup>::convertible
+	    , &pylist_converter<VecVarGroup>::construct
+	    , boost::python::type_id<VecVarGroup>());
+
 
 
 	// std::vector of Rational Node ptrs
@@ -78,11 +110,19 @@ void ExportContainers()
 	.def(ListVisitor<T1>())
 	;
 
+	// std::vector of Complex Node ptrs (TotalDegreeBinomial's random values are Complex nodes)
+	using T1c = std::vector<std::shared_ptr< bertini::node::Complex > >;
+	class_< T1c >("ListOfComplex")
+	.def(ListVisitor<T1c>())
+	;
+
 	// The VariableGroup vector container
 	using T2 = bertini::VariableGroup;
 	class_< T2 >("VariableGroup")
 	.def(ListVisitor<T2>())
 	.def("__init__", boost::python::make_constructor(&create_MyClass<T2>))
+	.def("__init__", boost::python::make_constructor(&create_named_variable_group),
+	     "VariableGroup(name, count): the variables name0, name1, ..., name{count-1}")
 	;
 	
 	// std::vector of ints
@@ -99,48 +139,43 @@ void ExportContainers()
 	;
 
 
-	// std::vector of Function Node ptrs
-	using T5 = std::vector<std::shared_ptr< bertini::node::Function > >;
-	class_< T5 >("ListOfFunction")
+	// std::vector of Node ptrs
+	using T5 = std::vector<std::shared_ptr< bertini::node::Node > >;
+	class_< T5 >("ListOfNode")
 	.def(ListVisitor<T5>())
 	;
 
 
-	// std::vector of Jacobian Node ptrs
-	using T6 = std::vector<std::shared_ptr< bertini::node::Jacobian > >;
-	class_< T6 >("ListOfJacobian")
-	.def(ListVisitor<T6>())
-	;
 
 
 	// std::vector of Eigen::matrix
-	using T7 = std::vector<bertini::Vec<dbl_complex>>;
+	using T7 = std::vector<bertini::Vec<complex_dbl>>;
 	class_< T7 >("ListOfVectorComplexDoublePrecision")
 	.def(ListVisitor<T7>())
 	;
 
 	// std::vector of Eigen::matrix
-	using T8 = std::vector<bertini::Vec<mpfr_complex>>;
+	using T8 = std::vector<bertini::Vec<complex_mp>>;
 	class_< T8 >("ListOfVectorComplexVariablePrecision")
 	.def(ListVisitor<T8>())
 	;
 
-	using T9 = std::vector<bertini::algorithm::SolutionMetaData<dbl_complex>>;
+	using T9 = std::vector<bertini::algorithm::SolutionMetaData<complex_dbl>>;
 	class_< T9 >("ListOfSolutionMetaData_DoublePrec")
 	.def(ListVisitor<T9>())
 	;
 
-	using T10 = std::vector<bertini::algorithm::SolutionMetaData<mpfr_complex>>;
+	using T10 = std::vector<bertini::algorithm::SolutionMetaData<complex_mp>>;
 	class_< T10 >("ListOfSolutionMetaData_MultiPrec")
 	.def(ListVisitor<T10>())
 	;
 
-	using T11 = std::vector<bertini::algorithm::EGBoundaryMetaData<dbl_complex>>;
+	using T11 = std::vector<bertini::algorithm::EGBoundaryMetaData<complex_dbl>>;
 	class_< T11 >("ListOfEGBoundaryMetaData_DoublePrec")
 	.def(ListVisitor<T11>())
 	;
 
-	using T12 = std::vector<bertini::algorithm::EGBoundaryMetaData<mpfr_complex>>;
+	using T12 = std::vector<bertini::algorithm::EGBoundaryMetaData<complex_mp>>;
 	class_< T12 >("ListOfEGBoundaryMetaData_MultiPrec")
 	.def(ListVisitor<T12>())
 	;

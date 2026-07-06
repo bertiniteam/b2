@@ -36,9 +36,11 @@ namespace bertini{
 	namespace parsing{
 
 		namespace classic{
+			/// \brief A Qi grammar parsing a real multiprecision number, at a precision matching the input's digits.
 			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct MpfrFloatParser : qi::grammar<Iterator, mpfr_float(), boost::spirit::ascii::space_type>
+			struct MpfrFloatParser : qi::grammar<Iterator, real_mp(), boost::spirit::ascii::space_type>
 			{
+				/// \brief Construct the real-multiprecision parser.
 				MpfrFloatParser() : MpfrFloatParser::base_type(root_rule_,"MpfrFloatParser")
 				{
 					using std::max;
@@ -49,46 +51,40 @@ namespace bertini{
 					using qi::_4;
 					using qi::_val;
 
-					root_rule_.name("mpfr_float");
+					root_rule_.name("real_mp");
 					root_rule_ = mpfr_rules_.number_string_
 									[ phx::bind( 
 											[]
-											(mpfr_float & B, std::string const& P)
+											(real_mp & B, std::string const& P)
 											{
 												using std::max;
 												auto prev_prec = DefaultPrecision();
 												auto asdf = max(prev_prec,LowestMultiplePrecision());
 												auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
 
-												B.precision(digits);
-												B = mpfr_float(P,digits);
+												B.precision(static_cast<unsigned>(digits));
+												B = real_mp(P,static_cast<unsigned>(digits));
 											},
 											_val,_1
 										)
 									];
 
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("mpfr_float parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+										qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("MpfrFloatParser"))
+					);
 				}
 
-				qi::rule<Iterator, mpfr_float(), Skipper > root_rule_;
-				rules::LongNum<Iterator> mpfr_rules_;
+				qi::rule<Iterator, real_mp(), Skipper > root_rule_;  ///< The grammar's root rule.
+				rules::LongNum<Iterator> mpfr_rules_;  ///< Sub-rules matching arbitrary-length number strings.
 			};
 
 
+			/// \brief A Qi grammar parsing a complex multiprecision number (real then imaginary part).
 			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct MpfrComplexParser : qi::grammar<Iterator, mpfr_complex(), boost::spirit::ascii::space_type>
+			struct MpfrComplexParser : qi::grammar<Iterator, complex_mp(), boost::spirit::ascii::space_type>
 			{
+				/// \brief Construct the complex-multiprecision parser.
 				MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
 				{
 					using std::max;
@@ -101,9 +97,8 @@ namespace bertini{
 					(mpfr_float_ >> mpfr_float_)
 					[ phx::bind(
 								[]
-								(mpfr_complex & B, mpfr_float const& P, mpfr_float const& Q)
+								(complex_mp & B, real_mp const& P, real_mp const& Q)
 								{
-									auto prev_prec = DefaultPrecision();
 									auto digits = max(P.precision(),Q.precision());
 									
 									B.precision(digits);
@@ -116,10 +111,11 @@ namespace bertini{
 					 ];
 				}
 				
-				qi::rule<Iterator, mpfr_complex(), Skipper > root_rule_;
-				MpfrFloatParser<Iterator> mpfr_float_;
+				qi::rule<Iterator, complex_mp(), Skipper > root_rule_;  ///< The grammar's root rule.
+				MpfrFloatParser<Iterator> mpfr_float_;  ///< The real-part parser, used for both components.
 			};
 
+			/// \brief Parse a double from the iterator range.
 			template <typename Iterator>
 			static bool parse(Iterator first, Iterator last, double& c)
 			{
@@ -143,6 +139,7 @@ namespace bertini{
 				return r;
 			}
 			
+			/// \brief Parse a double-precision complex number from the iterator range.
 			template <typename Iterator>
 			static bool parse(Iterator first, Iterator last, std::complex<double>& c)
 			{
@@ -172,8 +169,9 @@ namespace bertini{
 			
 			
 			
+			/// \brief Parse a multiprecision real from the iterator range.
 			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, mpfr_float& c)
+			static bool parse(Iterator first, Iterator last, real_mp& c)
 			{
 				using boost::spirit::qi::double_;
 				using boost::spirit::qi::_1;
@@ -183,7 +181,7 @@ namespace bertini{
 				
 				MpfrFloatParser<Iterator> S;
 				
-				mpfr_float rN {0};
+				real_mp rN {0};
 				bool r = phrase_parse(first, last,
 									  S,
 									  space,
@@ -201,8 +199,9 @@ namespace bertini{
 			
 			
 			
+			/// \brief Parse a multiprecision complex number from the iterator range.
 			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, mpfr_complex& c)
+			static bool parse(Iterator first, Iterator last, complex_mp& c)
 			{
 				using boost::spirit::qi::double_;
 				using boost::spirit::qi::_1;
@@ -212,7 +211,7 @@ namespace bertini{
 				
 				MpfrComplexParser<Iterator> S;
 				
-				mpfr_complex rN {};
+				complex_mp rN {};
 				bool r = phrase_parse(first, last,
 									  S,
 									  space,
@@ -231,6 +230,7 @@ namespace bertini{
 
 		namespace cplusplus{
 			
+			/// \brief Parse a double from the iterator range.
 			template <typename Iterator>
 			static bool parse(Iterator first, Iterator last, double& c)
 			{
@@ -255,6 +255,7 @@ namespace bertini{
 			}
 			
 			
+			/// \brief Parse a double-precision complex number from the iterator range.
 			template <typename Iterator>
 			static bool parse(Iterator first, Iterator last, std::complex<double>& c)
 			{

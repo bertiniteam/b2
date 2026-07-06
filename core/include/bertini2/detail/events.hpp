@@ -42,6 +42,20 @@ namespace bertini {
 	\brief Strawman Event type, enabling polymorphism.
 
 	This class is abstract, and should never actually be created.
+
+	\par Lifetime contract (important!)
+	Events are short-lived stack temporaries.  An observable emits one with
+	`NotifyObservers(SomeEvent<T>(*this))`, so the event lives only for the
+	duration of that `NotifyObservers` call — i.e. only while `Observe()` is
+	running.  Moreover, the concrete event subclasses hold their payload by
+	`const&` into the emitter's internal buffers (e.g. `resulting_point_`,
+	`start_point_`), which may themselves be reused on the next step.
+
+	Therefore an observer **must not** store a reference or pointer to an event
+	(or to anything it returns by reference) past the return of `Observe()`.
+	If you need to keep data, copy it out by value inside `Observe()`.  This is
+	exactly what the Python observer layer does: it reads values during the call
+	and copies them into its own storage.
 	*/
 	class AnyEvent
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
@@ -90,9 +104,9 @@ namespace bertini {
 
 		Event() = delete;
 
-		using HeldT = const ObsT&;
+		using HeldT = const ObsT&;  ///< How the observable is held: by const reference.
 	protected:
-		const ObsT& current_observable_;
+		const ObsT& current_observable_;  ///< The observable object this event carries.
 	};
 
 
@@ -134,14 +148,16 @@ namespace bertini {
 
 		Event() = delete;
 
-		using HeldT = ObsT&;
+		using HeldT = ObsT&;  ///< How the observable is held: by mutable reference.
 	protected:
-		ObsT& current_observable_;
+		ObsT& current_observable_;  ///< The observable object this event carries.
 	};
 
+	/// \brief An event holding a const reference to its observable.
 	template<typename ObsT>
 	using ConstEvent = Event<ObsT,true>;
 
+	/// \brief An event holding a mutable reference to its observable.
 	template<typename ObsT>
 	using MutableEvent = Event<ObsT,false>;
 

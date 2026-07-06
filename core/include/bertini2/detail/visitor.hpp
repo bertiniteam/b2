@@ -61,7 +61,8 @@ namespace bertini{
 	class Visitor
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
-		typedef RetT ReturnType;
+		typedef RetT ReturnType;  ///< The type returned when visiting.
+		/// \brief Visit an object of the visited type.
 		virtual ReturnType Visit(VisitedT const &) = 0;
 		virtual ~Visitor() = default;
 	};
