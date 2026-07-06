@@ -1307,11 +1307,9 @@ public:
 		// pole-annihilation case -- a Laurent pole whose Cauchy mean is a STATIONARY
 		// FINITE number, which no norm check can catch -- is handled separately by the
 		// pole-component operating-zone check below, so this check need only see honest
-		// infinity.  Initialized to 0 so the check never reads indeterminate values.
+		// infinity.  Tracked across consecutive IN-ZONE rounds only (see below);
+		// initialized to 0 so the check never reads indeterminate values.
 		RealT norm_of_dehom_prev(0), norm_of_dehom_latest(0);
-
-		if(this->SecuritySettings().level <= 0)
-			norm_of_dehom_prev = this->GetSystem().InfinityNormOfDehomogenized(prev_approx);
 
 		// Cycle-number consistency: refuse to accept a converged approximation until the cycle number
 		// has reported the SAME value for num_consecutive_same_cycle_number consecutive approximations.
@@ -1366,20 +1364,32 @@ public:
 				return SuccessCode::Success;
 			}
 
+			// Security truncation happens ONLY in the operating zone.  Outside it the
+			// loop may encircle a pole or branch point and the Cauchy mean is garbage --
+			// its norm means nothing, and truncating on it killed clean convergent paths
+			// (the cyclic-6 residual, 156 -> 155).  Inside the zone the mean is
+			// trustworthy: a genuinely-infinite endpoint is in-zone AND large (clean
+			// homogeneous convergence, the endpoint growing to infinity faster than any
+			// sample), so two consecutive IN-ZONE rounds above max_norm truncate honestly.
+			// An out-of-zone round restarts the two-consecutive count.
 			if (this->SecuritySettings().level <= 0)
-			{//the endpoint out of bounds twice running: the path is diverging; truncate.
-				norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(latest_approx);
-
-				if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&
-					norm_of_dehom_latest > this->SecuritySettings().max_norm  )
+			{
+				if (in_operating_zone)
 				{
-					NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
-					return SuccessCode::SecurityMaxNormReached;
+					norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(latest_approx);
+					if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&
+						norm_of_dehom_latest > this->SecuritySettings().max_norm  )
+					{
+						NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
+						return SuccessCode::SecurityMaxNormReached;
+					}
+					norm_of_dehom_prev = norm_of_dehom_latest;
 				}
+				else
+					norm_of_dehom_prev = RealT(0);   // out of zone: restart the count
 			}
 
 			prev_approx = latest_approx;
-			norm_of_dehom_prev = norm_of_dehom_latest;
 
 			auto advance_success = AdvanceTime<ComplexT>(target_time);
 			if (advance_success != SuccessCode::Success)
@@ -1460,12 +1470,11 @@ public:
 		//      The approximations live in BCT, so the per-iteration bookkeeping arithmetic is mpfr -- one
 		//      small vector op next to the tracking, which itself stays in the fast lane. ----
 		// the security check watches the extrapolated ENDPOINT for honest divergence to
-		// infinity (which grows faster than any finite loop sample); acceptance is gated
-		// on the pole-component operating-zone measurement, which handles the
-		// finite-mean pole case -- see RunImpl for the full reasoning
+		// infinity (which grows faster than any finite loop sample), but ONLY in the
+		// operating zone (a trustworthy mean) -- see RunImpl for the full reasoning.
+		// Acceptance is gated on the same operating-zone measurement (the finite-mean
+		// pole case).  Tracked across consecutive in-zone rounds; starts at 0.
 		RealT norm_of_dehom_prev(0), norm_of_dehom_latest(0);
-		if (this->SecuritySettings().level <= 0)
-			norm_of_dehom_prev = this->GetSystem().InfinityNormOfDehomogenized(this->previous_approximation_);
 
 		unsigned prev_cycle = 0, same_cycle_count = 0;
 
@@ -1499,19 +1508,26 @@ public:
 				return SuccessCode::Success;
 			}
 
+			// security truncation ONLY in the operating zone (a trustworthy mean); an
+			// out-of-zone round restarts the two-consecutive count.  See RunImpl.
 			if (this->SecuritySettings().level <= 0)
 			{
-				norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(this->final_approximation_);
-				if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&
-				    norm_of_dehom_latest > this->SecuritySettings().max_norm)
+				if (in_operating_zone)
 				{
-					NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
-					return SuccessCode::SecurityMaxNormReached;
+					norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(this->final_approximation_);
+					if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&
+					    norm_of_dehom_latest > this->SecuritySettings().max_norm)
+					{
+						NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
+						return SuccessCode::SecurityMaxNormReached;
+					}
+					norm_of_dehom_prev = norm_of_dehom_latest;
 				}
+				else
+					norm_of_dehom_prev = RealT(0);   // out of zone: restart the count
 			}
 
 			this->previous_approximation_ = this->final_approximation_;
-			norm_of_dehom_prev = norm_of_dehom_latest;
 
 			auto advance_code = AdvanceTimeAMP(target_time);
 			if (advance_code != SuccessCode::Success)

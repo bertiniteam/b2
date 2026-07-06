@@ -12,9 +12,10 @@ This tutorial builds a small chain from the family :math:`\{x^2 - a^2,\; xy - 1\
 for growing :math:`a`, and then reads its own records back with the navigation tools.
 The family is deliberately not all sunshine: each member has just **two** finite roots
 (:math:`(\pm a, \pm 1/a)`) but total degree four, so the first solve tracks four paths
-and two of them have nowhere finite to go — the endgame's security check **truncates**
-them as they flee toward infinity.  In the records that is the verdict ``diverged``:
-an answer, not a failure, and those lineages simply end.  The complete script is
+and two of them have nowhere finite to go — they head to infinity.  Each is an
+**answer, not a failure**: it either converges to an infinite endpoint or is truncated
+near infinity (``diverged``); either way it is recorded, and only the finite solutions
+are carried forward, so those lineages simply end.  The complete script is
 :download:`chained_homotopies.py <../../../../examples/chained_homotopies.py>`:
 
 .. literalinclude:: ../../../../examples/chained_homotopies.py
@@ -65,15 +66,16 @@ paths flowing rightward from their origins (squares) through every run, colored 
 verdict (green success, orange diverged, red failed):
 
 .. image:: chain_progression.png
-   :alt: paths flowing left to right through a four-run chain; two lineages are
-         truncated at the first run and two survive to the end
+   :alt: paths flowing left to right through a four-run chain; two lineages end at
+         the first run and two survive to the end
    :align: center
 
-Read it like a family tree.  Four total-degree start points enter the first run; the
-two **orange** endpoints are the truncated paths — they have no outgoing edges,
-because a diverged point is an endpoint of knowledge, not a start for more tracking —
-and only the two **green** lineages are carried forward, run after run, to the final
-member.  ``solve(start=...)`` does that filtering for you: it chains a result's
+Read it like a family tree.  Four total-degree start points enter the first run; two
+of them go to infinity (converging to an infinite endpoint, or truncated as
+``diverged`` — either way an answer, and shown coloured by that verdict).  They have
+no outgoing edges — an infinite or diverged point is an endpoint of knowledge, not a
+start for more tracking — and only the two finite lineages are carried forward, run
+after run, to the final member.  ``solve(start=...)`` does that filtering for you: it chains a result's
 *finite solutions*.  The same discipline applies to points you would rather not
 continue for other reasons (a singular endpoint, say, spotted by its
 ``cycle_num``/condition number in :func:`bertini.tracks` or ``is_singular`` in the

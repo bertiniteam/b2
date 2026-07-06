@@ -301,16 +301,36 @@ BOOST_AUTO_TEST_CASE(different_seed_is_a_different_ask)
 	BOOST_CHECK_EQUAL(runs, 2u);   // two asks, two run headers, one directory
 }
 
-// Named regression (user, 2026-07-03): a path the endgame truncates near infinity is a
-// VERDICT, not a failure -- the records must say "diverged", never "failed", or a
-// cyclic5 audit shows 50 phantom failures.  And diverged paths recall like any other:
-// every tracked path is in the store, so fails/divergences are auditable and memoized.
-BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
+// The coarse status VOCABULARY, pinned directly (independent of which paths a solve
+// happens to truncate): a path is `success` (converged -- to a finite root OR to an
+// infinite endpoint), `diverged` (went to infinity -- a clean GoingToInfinity verdict
+// or a security truncation near infinity), or `failed` (the tracker gave up).  A
+// truncated path must be `diverged`, never `failed` (regression: a cyclic5 audit once
+// showed 50 phantom failures from mis-bucketing truncations).
+BOOST_AUTO_TEST_CASE(path_status_vocabulary_is_success_diverged_failed)
 {
-	auto const dir = FreshDir("diverged");
+	using records::CoarsePathStatus;
+	BOOST_CHECK_EQUAL(CoarsePathStatus(SuccessCode::Success), "success");
+	BOOST_CHECK_EQUAL(CoarsePathStatus(SuccessCode::GoingToInfinity), "diverged");
+	BOOST_CHECK_EQUAL(CoarsePathStatus(SuccessCode::SecurityMaxNormReached), "diverged");
+	// anything else the tracker/endgame reports is a failure to converge
+	BOOST_CHECK_EQUAL(CoarsePathStatus(SuccessCode::FailedToConverge), "failed");
+	BOOST_CHECK_EQUAL(CoarsePathStatus(SuccessCode::HigherPrecisionNecessary), "failed");
+}
+
+// Named regression (user, 2026-07-03..07): every tracked path near infinity is an
+// ANSWER, never a `failed`.  At security level 0, an at-infinity path may EITHER
+// truncate (`diverged`) OR converge to an infinite endpoint (`success`, classified
+// infinite) -- both outcomes are valid and which happens depends on the endgame's
+// exact convergence.  So the invariant is robust: no path is lost or `failed`, every
+// path is success-or-diverged, and every path recalls.
+BOOST_AUTO_TEST_CASE(at_infinity_paths_are_success_or_diverged_never_failed)
+{
+	auto const dir = FreshDir("at_infinity");
 
 	// {x*y - 1, x^2 - 1}: total degree 4 paths, exactly 2 finite solutions
-	// ((1,1) and (-1,-1)) -- the other 2 paths head to infinity
+	// ((1,1) and (-1,-1)) -- the other 2 head to infinity (each either truncates as
+	// diverged, or converges to an infinite endpoint recorded as success)
 	SetGlobalSeed(42);
 	auto x = Variable::Make("x");
 	auto y = Variable::Make("y");
@@ -321,23 +341,15 @@ BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 
 	ZD zd(sys);
 	zd.DefaultSetup();
-	// The security check watches the dehomogenized ENDPOINT for divergence to infinity;
-	// the two at-infinity paths of this patched solve have endpoints genuinely at
-	// infinity, so they truncate as `diverged`.  A tightened max_norm (50) makes the
-	// verdict robust regardless of the endgame's exact convergence path.  This test is
-	// about the diverged-vs-failed VOCABULARY; settings are ask identity, so the recall
-	// rerun below must set the same value.
-	endgame::SecurityConfig sec;
-	sec.max_norm = 50;
-	zd.GetEndgame().Set(sec);
 	zd.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	zd.Solve();
 
-	unsigned successes = 0, diverged = 0, failed = 0;
+	unsigned paths = 0, successes = 0, diverged = 0, failed = 0;
 	for (auto const& rec : zd.Records()->ResultsOf(zd.RecordsRunId()))
 	{
 		if (std::string(rec.at("kind").as_string()) != "path")
 			continue;
+		++paths;
 		auto const status = std::string(rec.at("status").as_string());
 		if (status == "success") ++successes;
 		if (status == "diverged") ++diverged;
@@ -346,11 +358,12 @@ BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 		BOOST_CHECK(rec.contains("endgame_success_code_name"));
 		BOOST_CHECK(rec.contains("pre_endgame_success_code_name"));
 	}
-	BOOST_CHECK_EQUAL(successes, 2u);
-	BOOST_CHECK_EQUAL(diverged, 2u);
-	BOOST_CHECK_EQUAL(failed, 0u);
+	BOOST_CHECK_EQUAL(paths, 4u);            // every total-degree path is recorded
+	BOOST_CHECK_EQUAL(failed, 0u);           // none FAILED -- the load-bearing invariant
+	BOOST_CHECK_EQUAL(successes + diverged, 4u);   // each is an answer: converged or diverged
+	BOOST_CHECK_GE(successes, 2u);           // at least the two finite roots converge
 
-	// diverged paths are answers: a rerun recalls ALL of them, recomputing none
+	// every path is an answer in the store: a rerun recalls ALL of them, computing none
 	SetGlobalSeed(42);
 	auto x2 = Variable::Make("x");
 	auto y2 = Variable::Make("y");
@@ -360,7 +373,6 @@ BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 	sys_again.AddVariableGroup(VariableGroup{x2, y2});
 	ZD again(sys_again);
 	again.DefaultSetup();
-	again.GetEndgame().Set(sec);   // same ask: settings are part of the recall identity
 	again.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	again.Solve();
 	BOOST_CHECK_EQUAL(again.NumPathsRecalled(), 4u);
