@@ -118,7 +118,11 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 			BOOST_CHECK(!parts.at("functions").as_array().empty());
 			BOOST_CHECK(parts.contains("variable_groups"));
 			BOOST_CHECK(parts.contains("path_variable"));
-			BOOST_CHECK(parts.contains("is_patched"));
+			// the ask's target is the system the USER asked about -- pristine, never
+			// the homogenized/patched preparation (whose per-solve random patch would
+			// make two asks about the same system look like different targets)
+			BOOST_CHECK_EQUAL(parts.at("functions").as_array().size(), 2u);
+			BOOST_CHECK_EQUAL(parts.at("is_patched").as_bool(), false);
 			// the homotopy ACTUALLY TRACKED is archived too, self-verifying the same
 			// way -- its exact coefficients (gamma, start constants) are what the
 			// paths followed; no seed can rebuild a user homotopy, only the encoding
@@ -391,6 +395,47 @@ BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)
 	BOOST_CHECK_EQUAL(zd.Records()->Scan().size(), 2u);   // history: 1 run + 1 auto-declared result
 	// the paths live in the payload store: header + 4 path records
 	BOOST_CHECK_EQUAL(zd.Records()->ResultsOf(zd.RecordsRunId()).size(), 5u);
+}
+
+// A solve leaves the session as it found it: the ambient default precision and the
+// calling thread's RNG streams are restored at solve exit, whether the solve computed
+// or recalled.  Without this, what a LATER solve computes (its config identity, its
+// drawn coefficients) depends on whether an EARLIER solve computed or recalled --
+// which cascades into phantom new asks on rerun (found live: the eigenvalue tutorial
+// grew new records on every rerun of a fully seeded script).
+BOOST_AUTO_TEST_CASE(a_solve_leaves_the_session_as_it_found_it)
+{
+	auto const dir = FreshDir("session_state");
+
+	// the RNG leg: the draw AFTER a solve must equal the draw after merely
+	// constructing (serial tracking rekeys the calling thread's stream per path;
+	// the guard restores it)
+	SetGlobalSeed(11);
+	auto sys_a = TwoQuadrics();
+	ZD a(sys_a);
+	a.DefaultSetup();
+	auto const draw_without_solving = RandomRat();
+
+	SetGlobalSeed(11);
+	auto sys_b = TwoQuadrics();
+	ZD b(sys_b);
+	b.DefaultSetup();
+	b.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+	auto const precision_before = DefaultPrecision();
+	b.Solve();
+	BOOST_CHECK_EQUAL(DefaultPrecision(), precision_before);
+	BOOST_CHECK_EQUAL(RandomRat(), draw_without_solving);
+
+	// and a RECALLING solve perturbs exactly as little as a computing one
+	SetGlobalSeed(11);
+	auto sys_c = TwoQuadrics();
+	ZD c(sys_c);
+	c.DefaultSetup();
+	c.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+	c.Solve();
+	BOOST_CHECK_EQUAL(c.NumPathsRecalled(), 4u);
+	BOOST_CHECK_EQUAL(DefaultPrecision(), precision_before);
+	BOOST_CHECK_EQUAL(RandomRat(), draw_without_solving);
 }
 
 // Records are ON BY DEFAULT: with BERTINI_RECORDS_DIR unset, a bare solver (no

@@ -605,6 +605,43 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 
 			/**
+			\brief Restores the ambient session state a solve may perturb: "a solve
+			leaves the session as it found it".
+
+			Two globals otherwise leak: the mpfr default precision (an adaptive solve
+			historically left it at the tracking precision -- e.g. 16 after a
+			double-fast-lane finish), and the calling thread's RNG streams (serial
+			tracking rekeys them to per-path domains via ReseedThisThread).  Either
+			leak makes what a LATER solve computes -- its config identity, its drawn
+			coefficients -- depend on whether THIS solve computed or recalled, which
+			cascades into phantom new asks on rerun.  Scoped restoration makes recall
+			and compute indistinguishable to the rest of the session; the records the
+			solve wrote are its only trace.
+			*/
+			struct ScopedSessionState
+			{
+				unsigned precision_;               ///< The ambient default precision at solve entry.
+				std::mt19937 engine_;              ///< The calling thread's legacy engine state at entry.
+				records::DrawStream stream_;       ///< The calling thread's pinned draw stream at entry.
+
+				/// \brief Capture the ambient session state.
+				ScopedSessionState()
+					: precision_(DefaultPrecision()),
+					  engine_(ThreadEngine()),
+					  stream_(records::ThreadDrawStream())
+				{}
+				/// \brief Restore it, whatever the solve did in between.
+				~ScopedSessionState()
+				{
+					DefaultPrecision(precision_);
+					ThreadEngine() = engine_;
+					records::ThreadDrawStream() = stream_;
+				}
+				ScopedSessionState(ScopedSessionState const&) = delete;             ///< Non-copyable.
+				ScopedSessionState& operator=(ScopedSessionState const&) = delete;  ///< Non-assignable.
+			};
+
+			/**
 			\brief Main Run() function provided for calling from the blackbox mode
 			*/
 			void Run() override
@@ -640,6 +677,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			{
 				using Result = parallel::FullPathResult<BaseComplexT>;
 				using Task   = parallel::StartPointTask<BaseComplexT>;
+
+				ScopedSessionState const session_state_guard{};   // a solve leaves the session as it found it
 
 				mpfr_free_cache(); // reproducibility: clear this rank's mpfr constant cache (see Solve())
 
@@ -1054,6 +1093,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// Cheap (one constant recompute per solve); thread-local (each worker thread clears its
 				// own when it starts a solve).
 				mpfr_free_cache();
+
+				ScopedSessionState const session_state_guard{};   // a solve leaves the session as it found it
 
 				solutions_user_coords_fresh_ = false;
 
@@ -2064,6 +2105,18 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			/// \brief This solve's run id (the AnyZeroDim polymorphic hook).
 			std::string RecordsRunIdentity() const override { return records_run_id_; }
 
+			/**
+			\brief The system the records name as this solve's TARGET: what the user
+			asked about.
+
+			For the bare engine that is TargetSystem() itself; ZeroDimSolver overrides
+			with the pristine user-supplied system -- never the squared/homogenized/
+			patched preparation, whose per-solve random coefficients would make two
+			asks about the SAME system look like different targets.  The prepared
+			system actually tracked is archived completely inside the homotopy.
+			*/
+			virtual SystemType const& RecordsTargetSystem() const { return TargetSystem(); }
+
 			/// \brief Append a raw JSON record to the attached directory (no-op if none).
 			void AppendRecordJson(std::string const& record_json) override
 			{
@@ -2206,7 +2259,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				ask["op"] = "zerodim";
 				ask["tracker"] = tracking::TrackerTraits<TrackerType>::kRecordName;
 				ask["endgame"] = endgame::AlgoTraits<EndgameType>::kRecordName;
-				ask["target"] = TargetSystem().ContentDigest().Hex();
+				ask["target"] = RecordsTargetSystem().ContentDigest().Hex();
 				// the homotopy actually tracked: for seed-derived homotopies this is
 				// redundant with (target, seed) but harmless; for USER homotopies (the
 				// engine driven directly) it is the only thing telling asks apart
@@ -2272,11 +2325,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// syntax appears nowhere (an input/compat format, not an output one).
 				// The encoding is the digest PREIMAGE, so the definition id EQUALS
 				// target_digest and a copied-out file verifies itself (hash .encoding).
-				auto const target_digest_hex = TargetSystem().ContentDigest().Hex();
+				auto const target_digest_hex = RecordsTargetSystem().ContentDigest().Hex();
 				records_->PutDefinition(
-					records::SystemEncodingAsJson(TargetSystem().CanonicalEncodingText(),
+					records::SystemEncodingAsJson(RecordsTargetSystem().CanonicalEncodingText(),
 					                              target_digest_hex,
-					                              io::SystemPartsJson(TargetSystem())),
+					                              io::SystemPartsJson(RecordsTargetSystem())),
 					"systems", target_digest_hex);
 				// the homotopy ACTUALLY TRACKED is archived too: its exact coefficients
 				// (gamma, start-system constants, blend structure) are what the paths
@@ -2489,7 +2542,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			/// \brief Build and own the target, start system, and homotopy from a target system and factory.
 			OwnedHomotopy(SystemType const& target, FactoryT factory, std::string const& path_variable_name)
-			 : owned_target_(Clone(target)), owned_factory_(std::move(factory))
+			 : user_target_(Clone(target)), owned_target_(Clone(target)), owned_factory_(std::move(factory))
 			{
 				ConsistencyCheck();              // feasibility (no path var; not under-constrained; polynomial)
 				SquareUp();                      // randomize an over-determined system down to square
@@ -2504,12 +2557,18 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			/// \return The built (cloned, prepared) target system.
 			SystemType const&       BuiltTarget()   const { return owned_target_;   }
+			/// \return The target exactly as the USER supplied it: pristine -- never
+			/// squared, homogenized, or patched.  The records name THIS system as the
+			/// ask's target (you asked about your system; the prepared one actually
+			/// tracked lives, complete, inside the archived homotopy).
+			SystemType const&       UserTarget()    const { return user_target_;    }
 			/// \return The built start system.
 			StartSystemBaseT const& BuiltStart()    const { return *owned_start_;   }
 			/// \return The built homotopy.
 			SystemType const&       BuiltHomotopy() const { return owned_homotopy_; }
 
 		protected:
+			SystemType                        user_target_;     ///< The target exactly as supplied (pristine; the records' target identity).
 			SystemType                        owned_target_;    ///< The owned (cloned, prepared) target system.
 			std::shared_ptr<StartSystemBaseT> owned_start_;     ///< The owned start system.
 			SystemType                        owned_homotopy_;  ///< The owned homotopy.
@@ -2630,6 +2689,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			 : OwnedT(target, std::move(factory), ZeroDimConfig{}.path_variable_name),
 			   EngineT(OwnedT::BuiltTarget(), OwnedT::BuiltStart(), OwnedT::BuiltHomotopy())
 			{}
+
+			/// \brief The records name the PRISTINE user-supplied system as this
+			/// solve's target (see HomotopySolver::RecordsTargetSystem).
+			SystemType const& RecordsTargetSystem() const override { return OwnedT::UserTarget(); }
 
 			/// \brief Whether the supplied system was over-determined and squared-up by randomization.
 			bool WasRandomized() const { return this->was_randomized_; }

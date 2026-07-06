@@ -181,6 +181,36 @@ def test_tracked_homotopy_is_archived_and_self_verifies(tmp_path):
         assert header['ask']['homotopy'] != header['ask']['target']
 
 
+def test_seeded_session_of_bare_solves_replays_exactly(tmp_path):
+    """The eigenvalue-tutorial regression, distilled: seed up top, build-and-solve a
+    sequence of systems (same formulations twice), rerun the whole script -- the
+    records must gain NOTHING but recall narrations.  Requires both fixes it found:
+    a solve leaves the session as it found it (precision + RNG restored, so recall
+    and compute perturb identically), and the ask's target is the USER's pristine
+    system (never the per-solve-patched preparation)."""
+    d = tmp_path / 'ambient_records'      # where the conftest fixture pointed us
+
+    def script():
+        pb.random.set_random_seed(9099)   # seeded up top: the whole run is seeded
+        for build in (circle_line, lambda: circle_line_r(3), circle_line):
+            solver = pb.ZeroDimSolver(build(), mptype='adaptive')
+            solver.solve()
+
+    script()
+    systems = sorted(f.name for f in d.glob('definitions/systems/*/*.json'))
+    results = sorted(f.name for f in d.glob('results/*/*.jsonl'))
+    # 2 distinct user targets + 3 homotopies (fresh gamma per seedless solve)
+    assert len(systems) == 5 and len(results) == 3
+
+    script()                              # the rerun: nothing new but the narration
+    assert sorted(f.name for f in d.glob('definitions/systems/*/*.json')) == systems
+    assert sorted(f.name for f in d.glob('results/*/*.jsonl')) == results
+    recalls = [rec for j in d.glob('history/*.jsonl')
+               for rec in map(json.loads, j.read_text().splitlines())
+               if rec.get('kind') == 'recall']
+    assert len(recalls) == 3 and all(r['num_computed'] == 0 for r in recalls)
+
+
 def test_recall_events_narrate_reasks(tmp_path):
     """A recalled ask WAS asked: the re-ask leaves one recall line in history (with
     counts), a fresh solve leaves none, and runs() surfaces the tally.  Points are
