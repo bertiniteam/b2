@@ -73,7 +73,6 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinxcontrib.bibtex',
-    'sphinx_rtd_theme'
     ]
 
 autosectionlabel_prefix_document = True
@@ -174,8 +173,8 @@ else:
 
 build_date = os.environ.get('BERTINI_BUILD_DATE', '')
 if build_date:
-    # sphinx_rtd_theme shows `release` in the sidebar header; appending the
-    # build date there makes it visible without template overrides.
+    # the theme shows `release` in the sidebar header; appending the build date
+    # there makes it visible without template overrides.
     release = '{} ({})'.format(version, build_date)
 
 # Expose build metadata to Jinja templates (used by _templates/footer.html
