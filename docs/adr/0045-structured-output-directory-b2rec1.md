@@ -3,6 +3,17 @@
 **Status:** Accepted
 **Date:** 2026-07-03
 
+> **Update (2026-07-06, rung-7 shakedown):** the layout evolved from *two* truth stores
+> (`history/` + `definitions/`, with a single derived `results.json`) to **three**:
+> `history/` (what was asked, when — run headers, declared results, annotations),
+> `results/` (one append-only JSONL file per run — every computed path with its endpoint
+> and metadata), and `definitions/` (content-addressed inputs).  `results.json` and
+> `RESULTS.txt` are **retired** — `history/` no longer carries per-path lines, so the
+> "database" concern moved out of the journal into `results/`.  `README.txt` + `INDEX.txt`
+> remain the only derived views.  The current spec is `docs/records/b2rec-1.md`; the
+> rationale is in the arc doc (`arcs/structured-output-directory.md`, rounds 7–10).  The
+> rest of this ADR describes the original two-store design.
+
 ## Context
 
 The structured-output-directory arc (rung 3) needs its storage layer in core C++, so

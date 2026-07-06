@@ -3,6 +3,15 @@
 **Status:** Accepted
 **Date:** 2026-07-03
 
+> **Update (2026-07-06, rung-7 shakedown):** `results.json` (referenced below) is
+> **retired**.  `load` / `save` now read and write the three truth stores directly
+> (`history/` for declarations + annotations, `results/` for the per-run computed
+> paths); there is no monolithic derived results file.  Also: records are on by default
+> for the bare `ZeroDimSolver`/`HomotopySolver` classes too (not just `solve` and the
+> CLI), and the CLI off switch is `BERTINI_RECORDS_DIR=none` (the empty string works on
+> POSIX but Windows deletes empty-valued vars).  See `docs/records/b2rec-1.md` and the
+> arc doc (rounds 7–10) for the current design.
+
 ## Context
 
 Rung 5 of the structured-output-directory arc: put humane faces on the ADR-0046 seam.
