@@ -38,8 +38,8 @@ into a :class:`System`.
 ``random_matrix(m, n)``
     A random (numeric or symbolic) coefficient matrix -- e.g. a random linear projection.
 
-See the tutorials :doc:`/tutorials/zerodim_solver/index` and
-:doc:`/tutorials/user_product_of_linears/index`.
+See the tutorials :doc:`/tutorials/formulating_and_solving/zerodim_solver/index` and
+:doc:`/tutorials/formulating_and_solving/user_product_of_linears/index`.
 
 
 Symbols, constants, and operators
@@ -76,7 +76,7 @@ numbers rather than symbols).
     Get or set the global working precision (decimal digits).  **Global mutable state** -- set it
     before building the values whose precision you care about.
 
-See :doc:`/tutorials/precision_matters/index` and :doc:`/tutorials/precision_models/index`.
+See :doc:`/tutorials/settings_and_precision/precision_matters/index` and :doc:`/tutorials/settings_and_precision/precision_models/index`.
 
 
 Solving
@@ -96,8 +96,8 @@ The zero-dimensional solve and the homotopy building blocks.
     (``parameter_sweep``, ``moving_homotopy``, ``coefficient_parameter_homotopy``,
     ``blend_homotopy``) stay in :mod:`bertini.nag_algorithm`.
 
-See :doc:`/tutorials/zerodim_solver/index`, :doc:`/tutorials/all_solutions/index`, and
-:doc:`/tutorials/parameter_homotopy/index`.
+See :doc:`/tutorials/formulating_and_solving/zerodim_solver/index`, :doc:`/tutorials/formulating_and_solving/all_solutions/index`, and
+:doc:`/tutorials/formulating_and_solving/parameter_homotopy/index`.
 
 
 Tracking and endgames
@@ -115,7 +115,7 @@ Lower-level path tracking, when you want to drive it yourself.
     The endgames for singular endpoints: ``AMPCauchyEndgame``, ``AMPPowerSeriesEndgame``, and the
     fixed-precision variants (``FixedDouble...``, ``FixedMultiple...``).
 
-See :doc:`/tutorials/tracking_nonsingular/index` and :doc:`/tutorials/manual_endgame_usage/index`.
+See :doc:`/tutorials/doing_things_manually/tracking_nonsingular/index` and :doc:`/tutorials/doing_things_manually/manual_endgame_usage/index`.
 
 
 Settings
@@ -129,7 +129,7 @@ Every tracker/solver owns its configuration structs (in :mod:`bertini.tracking`,
     ``solver.set(final_tolerance='1e-11')`` or
     ``tracker.get_stepping().set(max_step_size='0.05')``.  ``set`` and ``update`` are the same.
 
-See :doc:`/tutorials/carrying_settings/index`.
+See :doc:`/tutorials/settings_and_precision/carrying_settings/index`.
 
 
 Other namespaces

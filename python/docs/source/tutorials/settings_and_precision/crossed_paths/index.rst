@@ -35,9 +35,9 @@ Provoking one
 The classic way to under-resolve paths is a low-order predictor with a loose tolerance.  We use the
 **Euler** predictor (order 1) and a loose pre-endgame tolerance on the cyclic-5 system (120 paths,
 70 distinct finite solutions).  The complete script is :download:`crossed_paths.py
-<../../../../examples/crossed_paths.py>`:
+</../../examples/crossed_paths.py>`:
 
-.. literalinclude:: ../../../../examples/crossed_paths.py
+.. literalinclude:: /../../examples/crossed_paths.py
    :language: python
    :caption: examples/crossed_paths.py
 
@@ -59,7 +59,7 @@ The key knobs are three lines on the solver:
 
    The fixed seed only makes the *bad behaviour* reproducible so we can talk about it.  Pinning a
    seed is **never** the fix for a flaky solve -- the fixes are tolerance, precision, and predictor.
-   See :doc:`/tutorials/solving_at_scale/index`.
+   See :doc:`/tutorials/parallelism/solving_at_scale/index`.
 
 Seeing the damage, then the repair
 ===================================

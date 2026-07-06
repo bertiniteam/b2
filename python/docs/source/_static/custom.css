@@ -35,3 +35,42 @@ footer .build-info code {
     padding: 0.05em 0.4em;
     border-radius: 4px;
 }
+
+figcaption, .figure p.caption {
+    font-size: 0.85em;
+}
+
+
+
+
+
+
+/* sidebar toctree - always style l1 */
+.toc-tree li.toctree-l1 {
+    margin-top: 1em;
+}
+.toc-tree li.toctree-l1 > a {
+    font-weight: bold;
+    font-size: 1.05em;
+    color: var(--color-foreground-primary);
+}
+
+/* on-page toctree - only style l1 when it has children */
+.toctree-wrapper ul li.toctree-l1:has(ul) {
+    margin-top: 1em;
+}
+.toctree-wrapper ul li.toctree-l1:has(ul) > a {
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+/* remove bullets but keep indentation */
+.toctree-wrapper ul {
+    list-style: none;
+}
+.toctree-wrapper ul li.toctree-l1 {
+    padding-left: 0;
+}
+.toctree-wrapper ul li.toctree-l2 {
+    padding-left: 1.5em;
+}

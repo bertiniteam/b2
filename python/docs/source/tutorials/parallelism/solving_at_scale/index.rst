@@ -96,9 +96,9 @@ solutions.  It is the "many cheap paths" regime -- cyclic-6 is |tw-cyclic-paths|
 shows off fine-grained load balancing.
 
 The complete, runnable script is :download:`solve_cyclic.py
-<../../../../examples/solve_cyclic.py>`:
+</../../examples/solve_cyclic.py>`:
 
-.. literalinclude:: ../../../../examples/solve_cyclic.py
+.. literalinclude:: /../../examples/solve_cyclic.py
    :language: python
    :caption: examples/solve_cyclic.py
 
@@ -121,7 +121,7 @@ note below.)
    happens it is a **path crossing** -- a sign the tracker under-resolved the paths -- not a benign
    duplicate.  The solver checks for exactly this at the endgame boundary and re-tracks the
    offending paths; with the default predictor and tolerances it essentially never triggers.  The
-   :doc:`/tutorials/crossed_paths/index` tutorial provokes one on purpose and shows what to do about it.
+   :doc:`/tutorials/settings_and_precision/crossed_paths/index` tutorial provokes one on purpose and shows what to do about it.
 
 .. _correctness-across-ranks:
 
@@ -167,15 +167,15 @@ essentially nothing.)
 Scaling the eigenvalue solve
 ============================
 
-The eigenvalue solve from :doc:`/tutorials/eigenvalues_by_homotopy/index` is the opposite regime: a *few* paths,
+The eigenvalue solve from :doc:`/tutorials/formulating_and_solving/eigenvalues_by_homotopy/index` is the opposite regime: a *few* paths,
 each *expensive* and of *uneven* cost.  Writing the eigenvector projectively makes the
 multihomogeneous Bézout number exactly :math:`n` -- **one path per eigenvalue** -- so an
 :math:`n \times n` matrix gives only :math:`n` paths.  To have work worth distributing you scale
 the *matrix*, not the path count.
 
-The complete script is :download:`solve_eigenvalues.py <../../../../examples/solve_eigenvalues.py>`:
+The complete script is :download:`solve_eigenvalues.py </../../examples/solve_eigenvalues.py>`:
 
-.. literalinclude:: ../../../../examples/solve_eigenvalues.py
+.. literalinclude:: /../../examples/solve_eigenvalues.py
    :language: python
    :caption: examples/solve_eigenvalues.py
 
@@ -251,7 +251,7 @@ Where to go from here
 * The scripts take a ``--n`` / ``--size`` argument: push them up until a single machine is no
   longer enough, then spread the ranks across a cluster with a hostfile
   (``mpirun --hostfile hosts -n ...``).
-* Combine with :doc:`/tutorials/parameter_homotopy/index`: solve once at a generic parameter, then distribute the
+* Combine with :doc:`/tutorials/formulating_and_solving/parameter_homotopy/index`: solve once at a generic parameter, then distribute the
   *re-solves* across parameter values -- each is an independent, already-cheap track, ideal for the
   manager-worker pool.
 * The same ``solve(communicator=...)`` works for every zero-dim solver class (total degree,

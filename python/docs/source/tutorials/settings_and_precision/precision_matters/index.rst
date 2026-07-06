@@ -71,7 +71,7 @@ root is counted once).  ``num_failed`` is the **precision** headline: it counts 
 to *give up* on -- the ``MinStepSizeReached`` failures that adaptive precision exists to prevent.
 Zero of them here.  (The report also exposes ``all_paths_resolved``, a stricter all-in-one flag that
 *additionally* requires the midpath check to have cleared every path crossing -- a separate,
-predictor-driven concern covered in :doc:`/tutorials/crossed_paths/index`, not a precision one.)
+predictor-driven concern covered in :doc:`/tutorials/settings_and_precision/crossed_paths/index`, not a precision one.)
 
 How a count can lie
 ===================
