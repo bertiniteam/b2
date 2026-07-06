@@ -8,7 +8,7 @@
 A **parameter homotopy** is the right tool whenever you must solve the *same* polynomial system
 over and over at *different* coefficient values -- a parameter sweep.  You pay for one hard solve
 at a generic parameter, then reach every value you care about by cheap tracking that reuses those
-start solutions (the :doc:`/tutorials/parameter_homotopy/index` tutorial introduces the idea).  This tutorial puts
+start solutions (the :doc:`/tutorials/formulating_and_solving/parameter_homotopy/index` tutorial introduces the idea).  This tutorial puts
 that to work on a real problem and then makes it *parallel on two levels at once*:
 
 * **MPI across the parameter points** -- the points are independent, so hand each compute node a
@@ -124,16 +124,16 @@ comes back with the full list of counts**:
 That is the two-level model in one call: MPI spreads the *points* across ranks, and each rank's
 solves thread the *paths* across its cores.  The complete, runnable script -- which builds the
 grid, runs the sweep, and draws the map -- is
-:download:`parallel_parameter_homotopy.py <../../../../examples/parallel_parameter_homotopy.py>`:
+:download:`parallel_parameter_homotopy.py </../../examples/parallel_parameter_homotopy.py>`:
 
-.. literalinclude:: ../../../../examples/parallel_parameter_homotopy.py
+.. literalinclude:: /../../examples/parallel_parameter_homotopy.py
    :language: python
    :caption: examples/parallel_parameter_homotopy.py
    :start-after: X = pb.Variable('X')
    :end-before: def main()
 
 Run it serially, or across ranks with threads inside each (the ``--bind-to none`` and
-``--map-by`` notes from :doc:`/tutorials/solving_at_scale/index` apply -- and always run a *file*, never a heredoc)::
+``--map-by`` notes from :doc:`/tutorials/parallelism/solving_at_scale/index` apply -- and always run a *file*, never a heredoc)::
 
    python parallel_parameter_homotopy.py --grid 28 --save schlogl.svg     # serial + threads
    OMP_NUM_THREADS=3 mpirun -n 4 --bind-to none \
@@ -158,5 +158,5 @@ Where to go from here
   point, so the per-point threading earns more.
 * Push ``--grid`` up and spread the ranks across a cluster with a hostfile
   (``mpirun --hostfile hosts ...``); the sweep code does not change.
-* See :doc:`/tutorials/solving_at_scale/index` for the other axis -- distributing the *paths of a single solve*
-  across ranks -- and :doc:`/tutorials/observers_and_path_data/index` to watch the tracking itself.
+* See :doc:`/tutorials/parallelism/solving_at_scale/index` for the other axis -- distributing the *paths of a single solve*
+  across ranks -- and :doc:`/tutorials/observing_metadata_more/observers_and_path_data/index` to watch the tracking itself.

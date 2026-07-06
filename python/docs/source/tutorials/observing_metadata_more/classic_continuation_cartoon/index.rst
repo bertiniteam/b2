@@ -6,13 +6,13 @@ Every introduction to homotopy continuation draws the same picture: smooth start
 *endgame boundary*; the endpoints come in three flavors — **nonsingular**, **singular**, and "at
 **infinity**" (paths that diverge).  Here is the hand-drawn version:
 
-.. image:: ../../../../../doc_resources/images/homotopycontinuation_generic.png
+.. image:: /../../../doc_resources/images/homotopycontinuation_generic.png
    :width: 90%
    :alt: the classic (hand-drawn) homotopy-continuation cartoon
 
 This tutorial reproduces that drawing from a **real solve** — every curve is genuine tracked data —
 with each path styled by the kind of endpoint it reaches.  It builds on the observer machinery from
-:doc:`/tutorials/observers_and_path_data/index`.
+:doc:`/tutorials/observing_metadata_more/observers_and_path_data/index`.
 
 A small system with one of each flavor
 ======================================

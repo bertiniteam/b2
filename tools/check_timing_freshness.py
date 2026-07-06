@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-SUBS_FILE = REPO / "python" / "docs" / "source" / "tutorials" / "solving_at_scale" / "_timing_data.txt"
+SUBS_FILE = REPO / "python" / "docs" / "source" / "tutorials" /  "parallelism" / "solving_at_scale" / "_timing_data.txt"
 
 # Grace window.  Timings are refreshed at (roughly) each release; six months is comfortably longer
 # than the release cadence, so tripping this means a refresh was almost certainly skipped, not that

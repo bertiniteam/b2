@@ -16,7 +16,7 @@ Bertini can track in three precision models, and ``ZeroDimSolver`` selects betwe
 
 This tutorial is about how the three models differ *in the interface* -- the types you get back and
 how you set the precision. For *why and when* you reach for adaptive precision (the conditioning
-story), see :doc:`/tutorials/precision_matters/index`.
+story), see :doc:`/tutorials/settings_and_precision/precision_matters/index`.
 
 .. testcode::
 
@@ -100,7 +100,7 @@ The config surface is the same shape across models
 Apart from the precision-specific tracker knobs (the ``amp`` config exists only for an adaptive
 tracker), the configs are the same across precision models -- ``tolerances``, ``zero_dim``, stepping,
 and so on are not precision-stamped. That is exactly why a settings bundle carries between models (see
-:doc:`/tutorials/carrying_settings/index`):
+:doc:`/tutorials/settings_and_precision/carrying_settings/index`):
 
 .. testcode::
 
