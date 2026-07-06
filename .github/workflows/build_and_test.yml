@@ -449,7 +449,7 @@ jobs:
             cd boost_1_90_0 &&
             ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py &&
             printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam &&
-            ./b2 install -j$(sysctl -n hw.ncpu) --user-config=user-config.jam python=$PY_VER hardcode-dll-paths=true dll-path=/tmp/deps-py/lib &&
+            ./b2 install -j$(sysctl -n hw.ncpu) --user-config=user-config.jam python=$PY_VER --without-mpi hardcode-dll-paths=true dll-path=/tmp/deps-py/lib &&
             cd /tmp &&
             rm -rf eigenpy-${{ env.EIGENPY_VERSION }} && tar zxf eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz &&
             cd eigenpy-${{ env.EIGENPY_VERSION }} && mkdir -p bld && cd bld &&
