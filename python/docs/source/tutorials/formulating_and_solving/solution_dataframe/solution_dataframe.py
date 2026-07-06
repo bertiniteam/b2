@@ -1,11 +1,11 @@
 """A database of solutions: filtering and plotting with pandas.
 
-Assembled from the ``.. testcode::`` blocks of the solution_database tutorial.
+Assembled from the ``.. testcode::`` blocks of the solution_dataframe tutorial.
 Solves the intersection of two plane curves (a nodal cubic and a second cubic
 threaded through its node), lays the solve out as a pandas DataFrame, filters the
 solutions by category, and draws two figures: the real plane and the complex planes.
 
-Run:  python solution_database.py
+Run:  python solution_dataframe.py
 """
 
 import os
@@ -79,8 +79,8 @@ def plot_real_plane(real_simple, singular):
     ax.scatter(real_simple.x_re, real_simple.y_re, c='k', marker='o', s=70, label='real, simple')
     ax.scatter(singular.x_re,    singular.y_re,    c='r', marker='*', s=300, label='real, singular')
     ax.legend(); ax.set_xlabel('x'); ax.set_ylabel('y'); ax.set_aspect('equal')
-    fig.savefig(os.path.join(_OUT, 'solution_database_real_plane.svg'))
-    fig.savefig(os.path.join(_OUT, 'solution_database_real_plane.png'), dpi=150)
+    fig.savefig(os.path.join(_OUT, 'solution_dataframe_real_plane.svg'))
+    fig.savefig(os.path.join(_OUT, 'solution_dataframe_real_plane.png'), dpi=150)
 
 
 def plot_complex_planes(df, real_simple, singular):
@@ -97,8 +97,8 @@ def plot_complex_planes(df, real_simple, singular):
             ax.scatter(sub[re], sub[im], c=color, marker=marker, s=size, label=label)
         ax.set_title(title); ax.set_xlabel('real part'); ax.set_ylabel('imaginary part')
     axes[0].legend()
-    fig.savefig(os.path.join(_OUT, 'solution_database_complex_planes.svg'))
-    fig.savefig(os.path.join(_OUT, 'solution_database_complex_planes.png'), dpi=150)
+    fig.savefig(os.path.join(_OUT, 'solution_dataframe_complex_planes.svg'))
+    fig.savefig(os.path.join(_OUT, 'solution_dataframe_complex_planes.png'), dpi=150)
 
 
 def main():

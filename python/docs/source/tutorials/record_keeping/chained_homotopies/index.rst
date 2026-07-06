@@ -3,7 +3,7 @@ Chained homotopies: provenance all the way back
 
 A *chain* is a sequence of solves where each solve's start points are the previous
 solve's solutions — the workhorse pattern of parameter continuation.  Because every
-solve records where each of its paths started (see :doc:`../your_records/index`), a
+solve records where each of its paths started (see :doc:`../automatic_record_keeping/index`), a
 chain is more than its final answers: it is a **directed graph of points**, and any
 final solution can be walked back through every intermediate run to the very first
 start point.
@@ -16,9 +16,9 @@ and two of them have nowhere finite to go — they head to infinity.  Each is an
 **answer, not a failure**: it either converges to an infinite endpoint or is truncated
 near infinity (``diverged``); either way it is recorded, and only the finite solutions
 are carried forward, so those lineages simply end.  The complete script is
-:download:`chained_homotopies.py <../../../../examples/chained_homotopies.py>`:
+:download:`chained_homotopies.py <../../../../../examples/chained_homotopies.py>`:
 
-.. literalinclude:: ../../../../examples/chained_homotopies.py
+.. literalinclude:: ../../../../../examples/chained_homotopies.py
    :language: python
    :caption: examples/chained_homotopies.py
 

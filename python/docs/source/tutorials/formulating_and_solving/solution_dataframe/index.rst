@@ -1,5 +1,5 @@
-🗃️ A database of solutions: filtering and plotting with pandas
-**************************************************************
+🗃️ A dataframe of solutions: filtering and plotting with pandas
+***************************************************************
 
 .. testsetup:: *
 
@@ -135,7 +135,7 @@ real solutions on top -- circles for the transverse crossings, a star for the si
    ax.legend(); ax.set_xlabel('x'); ax.set_ylabel('y'); ax.set_aspect('equal')
    plt.show()
 
-.. figure:: solution_database_real_plane.svg
+.. figure:: solution_dataframe_real_plane.svg
    :align: center
 
    The two curves and the real roots.  The complex roots are simply absent -- they are not points
@@ -166,7 +166,7 @@ the points by category:
    axes[0].legend()
    plt.show()
 
-.. figure:: solution_database_complex_planes.svg
+.. figure:: solution_dataframe_complex_planes.svg
    :align: center
 
    Each coordinate in its own complex plane.  The two real roots lie on the real axis; the complex
@@ -186,6 +186,6 @@ Complete example
 
 The whole tutorial as one runnable script -- it saves the figure(s) shown above:
 
-.. literalinclude:: solution_database.py
+.. literalinclude:: solution_dataframe.py
    :language: python
-   :caption: solution_database.py
+   :caption: solution_dataframe.py

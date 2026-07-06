@@ -20,4 +20,4 @@ Formulating and solving systems
    user_product_of_linears/index
    canonical_ordering/index
 
-   solution_database/index
+   solution_dataframe/index

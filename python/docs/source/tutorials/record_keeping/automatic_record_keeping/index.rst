@@ -1,5 +1,5 @@
-Your results, your records
-===========================
+Automatic record keeping
+========================
 
 Every solve writes a **structured output directory**: a durable, plain-text record of
 what was computed — which system, which settings, which seed, and every path's endpoint
@@ -55,7 +55,7 @@ is nothing to resume from — the trade is yours to make.
 The solver classes (:class:`~bertini.ZeroDimSolver`, :class:`~bertini.HomotopySolver`)
 record *ambiently*: they join in once the ambient directory has been named, either by
 ``bertini.records_dir("my_records")`` in your script (one line — see
-:doc:`../parameter_homotopy/index` for it in action) or by the ``BERTINI_RECORDS_DIR``
+:doc:`../../formulating_and_solving/parameter_homotopy/index` for it in action) or by the ``BERTINI_RECORDS_DIR``
 environment variable.  Until then they run bare, exactly as they always have.
 
 The three verbs

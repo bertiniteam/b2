@@ -7,7 +7,7 @@ Run:  python parameter_homotopy.py
 import bertini
 from bertini import nag_algorithm
 
-# one line: every solver below records into this directory (see the your_records
+# one line: every solver below records into this directory (see the automatic record keeping
 # tutorial).  Pinning the seed makes reruns REPLAY the same homotopies, so a killed
 # sweep resumes from the records instead of recomputing.
 bertini.records_dir("circle_sweep_records")

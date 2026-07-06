@@ -120,7 +120,7 @@ rerun -- the first 700 come back instantly and the sweep continues where it died
 Without a pinned seed each run draws fresh randomness, and there is nothing to resume
 *from*.
 
-Read the sweep back with the navigation tools (see :doc:`../your_records/index` for the
+Read the sweep back with the navigation tools (see :doc:`../../record_keeping/automatic_record_keeping/index` for the
 full story):
 
 .. testcode::
