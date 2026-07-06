@@ -47,7 +47,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-OUT = REPO / "python" / "docs" / "source" / "tutorials" / "solving_at_scale"
+OUT = REPO / "python" / "docs" / "source" / "tutorials" / "parallelism" / "solving_at_scale"
 SUBS_FILE = OUT / "_timing_data.txt"
 CYCLIC = "python/examples/solve_cyclic.py"
 EIGEN = "python/examples/solve_eigenvalues.py"

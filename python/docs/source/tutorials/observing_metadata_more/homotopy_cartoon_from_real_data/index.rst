@@ -8,7 +8,7 @@ right at :math:`t=1`, paths flowing left to the solutions of the target at :math
 This tutorial makes that picture from a **real solve** — and uses the same machinery to *see* the
 one thing the cartoon never shows: where an adaptive-precision tracker decides double precision is
 no longer enough and raises its working precision.  It builds directly on
-:doc:`/tutorials/observers_and_path_data/index` (read that first for how observers and ``PathDataCollector`` work).
+:doc:`/tutorials/observing_metadata_more/observers_and_path_data/index` (read that first for how observers and ``PathDataCollector`` work).
 
 The idea
 ========
