@@ -155,6 +155,10 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 		}
 	BOOST_CHECK_EQUAL(tracks, 4u);
 
+	// a fresh solve narrates via its run header alone: no recall event yet
+	for (auto const& rec : a.Records()->Scan())
+		BOOST_CHECK(std::string(rec.at("kind").as_string()) != "recall");
+
 	// identical ask (same seed => same homotopy, ADR-0044): recalls, computes nothing
 	SetGlobalSeed(42);
 	auto sys_b = TwoQuadrics();
@@ -163,6 +167,20 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 	b.RecordTo(std::make_shared<records::OutputDirectory>(dir));
 	b.Solve();
 	BOOST_CHECK_EQUAL(b.NumPathsRecalled(), 4u);
+
+	// the narrative stays complete: the re-ask left exactly one recall event
+	unsigned recall_events = 0;
+	for (auto const& rec : b.Records()->Scan())
+		if (std::string(rec.at("kind").as_string()) == "recall")
+		{
+			++recall_events;
+			BOOST_CHECK_EQUAL(std::string(rec.at("run").as_string()), b.RecordsRunId());
+			BOOST_CHECK_EQUAL(rec.at("num_recalled").as_int64(), 4);
+			BOOST_CHECK_EQUAL(rec.at("num_computed").as_int64(), 0);
+			BOOST_CHECK(rec.contains("when"));
+			BOOST_CHECK(rec.contains("producer"));
+		}
+	BOOST_CHECK_EQUAL(recall_events, 1u);
 
 	// recalled state is identical to computed state (same installer, same records)
 	auto const& first = a.SolutionsInternalCoords();
@@ -223,6 +241,19 @@ BOOST_AUTO_TEST_CASE(partial_directory_resumes_computing_only_the_missing)
 	resumed.RecordTo(std::make_shared<records::OutputDirectory>(partial_dir));
 	resumed.Solve();
 	BOOST_CHECK_EQUAL(resumed.NumPathsRecalled(), 2u);
+
+	// the kill-and-rerun story, in the record: 2 from the store, 2 computed now
+	{
+		bool found = false;
+		for (auto const& rec : resumed.Records()->Scan())
+			if (std::string(rec.at("kind").as_string()) == "recall")
+			{
+				found = true;
+				BOOST_CHECK_EQUAL(rec.at("num_recalled").as_int64(), 2);
+				BOOST_CHECK_EQUAL(rec.at("num_computed").as_int64(), 2);
+			}
+		BOOST_CHECK(found);
+	}
 
 	auto const& expected = full.SolutionsInternalCoords();
 	auto const& actual = resumed.SolutionsInternalCoords();

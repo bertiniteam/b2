@@ -246,6 +246,10 @@ std::string SystemEncodingAsJson(std::string const& encoding_text,
                                  std::string const& digest_hex,
                                  boost::json::object const& parts);
 
+/// \brief The record timestamp, now: `YYYY-MM-DD HH:MM` local time -- the one clock
+/// format every record kind uses (run headers, declarations, recall events).
+std::string TimeStampNow();
+
 /**
 \brief Resolve the ambient records directory from the environment -- the ONE place the
 `BERTINI_RECORDS_DIR` semantics live (the CLI and every solver's ambient attach use it).

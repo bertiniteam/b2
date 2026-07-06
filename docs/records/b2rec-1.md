@@ -103,6 +103,17 @@ scoped by their run.
   never a session master that silently under-determines a mid-session run.  Op-specific fields
   describe how start points arise: recorded values (`start_points`, exact coordinate
   text), or a reference to an ancestor run (`start_run` + `start_indices`).
+- **`recall`** — a re-ask answered from the store (the narrative stays complete: a
+  recalled ask WAS asked):
+  `{"kind":"recall", "run":<run id>, "when":..., "num_recalled":k, "num_computed":m,
+    "producer":{...}}`
+  A point is computed exactly ONCE, ever -- its path line in `results/` is written at
+  computation and never again; "recalled" is a property of a SESSION's relationship to
+  the store, so it is narrated here, not marked on points.  A fresh solve narrates via
+  its run header alone; every later identical ask appends one recall line (a partial
+  resume reads honestly: `num_recalled: 9, num_computed: 15` -- the kill-and-rerun
+  story).  `producer` says which build asked -- on a shared filesystem, who recalled
+  from where.
 - **`result`** — a declared deliverable (the signal/noise line):
   `{"kind":"result", "name":<string>, "description":<string>, "when":...,
     "points":[{"run":..,"index":..},...], "value":<any JSON, optional>}`

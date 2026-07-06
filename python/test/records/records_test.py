@@ -181,6 +181,35 @@ def test_tracked_homotopy_is_archived_and_self_verifies(tmp_path):
         assert header['ask']['homotopy'] != header['ask']['target']
 
 
+def test_recall_events_narrate_reasks(tmp_path):
+    """A recalled ask WAS asked: the re-ask leaves one recall line in history (with
+    counts), a fresh solve leaves none, and runs() surfaces the tally.  Points are
+    never marked -- a point is computed exactly once, ever; 'recalled' is a session
+    property, narrated in history."""
+    d = str(tmp_path / 'records')
+    pb.solve(circle_line(), seed=42, directory=d)
+
+    def recall_lines():
+        return [rec for journal in (tmp_path / 'records' / 'history').glob('*.jsonl')
+                for rec in map(json.loads, journal.read_text().splitlines())
+                if rec.get('kind') == 'recall']
+
+    assert recall_lines() == []                    # fresh: the run header is the story
+
+    again = pb.solve(circle_line(), seed=42, directory=d)
+    (event,) = recall_lines()
+    assert event['run'] == again.run_id
+    assert event['num_recalled'] == 2 and event['num_computed'] == 0
+    assert 'when' in event and 'producer' in event
+
+    table = pb.runs(directory=d)
+    assert int(table[table['run'] == again.run_id]['recalls'].iloc[0]) == 1
+
+    pb.solve(circle_line(), seed=42, directory=d)  # third ask: the tally grows
+    table = pb.runs(directory=d)
+    assert int(table[table['run'] == again.run_id]['recalls'].iloc[0]) == 2
+
+
 def test_records_are_plain_json(tmp_path):
     """The no-special-software property, from Python's side: raw json suffices."""
     d = tmp_path / 'records'

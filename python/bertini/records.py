@@ -493,12 +493,20 @@ def runs(directory=None):
     """One row per recorded run, as a :class:`pandas.DataFrame`.
 
     Columns: ``run``, ``when``, ``op``, ``num_paths``, ``seed``, ``tracker``,
-    ``endgame``, ``target_digest``, ``producer_version``, ``producer_commit``.
+    ``endgame``, ``target_digest``, ``recalls`` (how many later sessions answered
+    this ask from the store -- 0 means computed once, never re-asked),
+    ``producer_version``, ``producer_commit``.
     Reads the plain records -- any directory, any producer (CLI or Python).
     """
     import pandas as pd
+    history = _scan_history(directory)
+    recall_counts = {}
+    for rec in history:
+        if rec.get('kind') == 'recall':
+            run_id = rec.get('run')
+            recall_counts[run_id] = recall_counts.get(run_id, 0) + 1
     rows = []
-    for rec in _scan_history(directory):
+    for rec in history:
         if rec.get('kind') != 'run':
             continue
         ask = rec.get('ask', {})
@@ -512,6 +520,7 @@ def runs(directory=None):
             'tracker': ask.get('tracker'),
             'endgame': ask.get('endgame'),
             'target_digest': rec.get('target_digest'),
+            'recalls': recall_counts.get(rec.get('run'), 0),
             'producer_version': producer.get('version'),
             'producer_commit': producer.get('commit'),
         })

@@ -2099,18 +2099,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				boost::json::object result;
 				result["kind"] = "result";
 				result["name"] = "finite solutions [run " + records_run_id_ + "]";
-				result["when"] = [] {
-					std::time_t now = std::time(nullptr);
-					char buffer[20];
-					std::tm tm_buf{};
-#ifdef _WIN32
-					localtime_s(&tm_buf, &now);
-#else
-					localtime_r(&now, &tm_buf);
-#endif
-					std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", &tm_buf);
-					return std::string(buffer);
-				}();
+				result["when"] = records::TimeStampNow();
 				result["description"] = "auto-declared by the solver after post-processing";
 				result["points"] = points;
 				records_->Append(result);
@@ -2262,12 +2251,19 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					 {"run", records_run_id_},
 					 {"ask", ask}});
 
+				records_run_resumed_ = false;
 				for (auto const& rec : records_->Scan())
 					if (auto const* k = rec.if_contains("kind");
 					    k && k->is_string() && k->get_string() == "run"
 					    && rec.if_contains("run") && rec.at("run").is_string()
 					    && rec.at("run").as_string() == records_run_id_)
-						return;   // header already on record (a resumed run)
+					{
+						// header already on record: this ask was asked before.  The
+						// recall event narrating THIS session lands after recall runs
+						// (RecallRecordedPaths knows the counts).
+						records_run_resumed_ = true;
+						return;
+					}
 
 				// the archived system is a JSON document (like the configs): a
 				// structured "system" parts view (variable groups, functions, ...) and
@@ -2302,18 +2298,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				boost::json::object header;
 				header["kind"] = "run";
 				header["schema"] = records::RecordSchemaVersion;
-				header["when"] = [] {
-					std::time_t now = std::time(nullptr);
-					char buffer[20];
-					std::tm tm_buf{};
-#ifdef _WIN32
-					localtime_s(&tm_buf, &now);
-#else
-					localtime_r(&now, &tm_buf);
-#endif
-					std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", &tm_buf);
-					return std::string(buffer);
-				}();
+				header["when"] = records::TimeStampNow();
 				header["run"] = records_run_id_;
 				header["op"] = "zerodim";
 				// which software wrote this -- descriptive only, NEVER part of the ask
@@ -2386,6 +2371,18 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					++num_recalled_;
 				}
 				recalling_ = false;
+
+				// the narrative stays complete: a recalled ask WAS asked.  One small
+				// history line per re-ask -- when, how much came from the store, how
+				// much this session still computed (the kill-and-rerun story, in the
+				// record).  Fresh runs (no prior header) narrate via their run header.
+				if (records_run_resumed_)
+					records_->Append({{"kind", "recall"},
+					                  {"run", records_run_id_},
+					                  {"when", records::TimeStampNow()},
+					                  {"num_recalled", static_cast<std::int64_t>(num_recalled_)},
+					                  {"num_computed", static_cast<std::int64_t>(missing.size())},
+					                  {"producer", records::ProducerInfo()}});
 				return missing;
 			}
 
@@ -2436,6 +2433,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			std::vector<boost::json::object> records_start_refs_;  ///< Per-path start provenance (point_ref/given_ref); empty = canonical start labels.
 			std::string records_start_identity_;  ///< Identity of externally supplied start data (joins the ask); empty = starts derive from target+seed.
 			bool recalling_ = false;          ///< True while replaying recorded paths (suppresses re-emission).
+			bool records_run_resumed_ = false; ///< True when this ask's run header pre-existed (a re-ask: emit a recall event).
 			unsigned long long num_recalled_ = 0;  ///< Paths recalled from records in the last Solve().
 
 			unsigned long long num_start_points_;  ///< Number of start points the start system produces.

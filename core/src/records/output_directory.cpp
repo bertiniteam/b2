@@ -109,6 +109,9 @@ RECORD FORMAT (schema b2rec/1) -- every history line is one JSON object:
                     system's content digest; the definitions/systems/ file with that
                     id holds the system's parts and its canonical encoding
                     (dereferencing is the reader's job).
+  kind="recall"     a re-ask answered from the store: `run`, `when`, `num_recalled`,
+                    `num_computed`.  A point is computed exactly once, ever; "recalled"
+                    is a property of a session, narrated here -- never marked on points.
   kind="result"     the declared DELIVERABLES: `name`, `points` [{run, index}, ...],
                     optional inline `value` -- "what were my solutions?".
   kind="annotation" metadata attached to a point: `point` {run, index}, `key`, `value`.
@@ -306,6 +309,11 @@ std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path c
 	auto made = std::make_shared<OutputDirectory>(root);
 	slot = made;
 	return made;
+}
+
+std::string TimeStampNow()
+{
+	return TimeStamp("%Y-%m-%d %H:%M");
 }
 
 std::optional<std::string> AmbientRecordsPath()
@@ -652,15 +660,22 @@ void OutputDirectory::RefreshIndex() const
 		if (GetString(r, "kind") != "run")
 			continue;
 		auto const run_id = GetString(r, "run", "?");
-		// paths done / failed, from the run's results file (the payload store)
+		// paths done / failed, from the run's results file (the payload store).
+		// Counted RAW -- lines and a byte pattern, never a JSON parse: this view
+		// refreshes per solve, and a 300-million-path run must not be re-parsed to
+		// render one INDEX line.  The pattern matches the compact serialization this
+		// class itself writes; a torn tail undercounts by at most one (a view may).
 		auto counts = std::make_pair(0L, 0L);
-		for (auto const& payload : ResultsOf(run_id))
-			if (GetString(payload, "kind") == "path")
-			{
-				++counts.first;
-				if (GetString(payload, "status") == "failed")
-					++counts.second;
-			}
+		if (ValidRunId(run_id))
+			if (std::ifstream in(ResultsPath(run_id)); in)
+				for (std::string line; std::getline(in, line); )
+				{
+					if (line.find("\"kind\":\"path\"") == std::string::npos)
+						continue;
+					++counts.first;
+					if (line.find("\"status\":\"failed\"") != std::string::npos)
+						++counts.second;
+				}
 		std::string num_paths = "?";
 		if (auto const* np = r.if_contains("num_paths"); np && np->is_int64())
 			num_paths = std::to_string(np->get_int64());
