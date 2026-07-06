@@ -90,9 +90,9 @@ cross-test state.
 ### Tutorial doctests and doc figures
 
 Tutorial code blocks are executable and CI-tested: `python -m sphinx -b doctest source
-_doctest_build` from `python/docs/`.  Behavior changes that alter tutorial output (path
-counts, verdicts, printed tables) will fail there -- update the prose *and* the doctest
-expectations together.
+build/doctest` from `python/docs/` (the output goes under `python/docs/build/`, which is
+gitignored).  Behavior changes that alter tutorial output (path counts, verdicts, printed
+tables) will fail there -- update the prose *and* the doctest expectations together.
 
 Committed tutorial figures ship as **both** `.png` and `.svg` and are regenerated ONLY
 through `tools/refresh_doc_artifacts.py`.  Mind the flags: the default (no flags) runs the
