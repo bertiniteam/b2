@@ -21,10 +21,11 @@
 
 /**
 \file The records seam (ADR-0046): solve() is ensure-answered.  A recording solve emits
-a run header + one track record per path; an identical ask against the same directory
-recalls instead of computing; a PARTIAL directory (the kill-and-rerun case) recalls
-what exists and computes only the rest; BERTINI_RECORDS_DIR attaches ambient records
-with zero API calls.  Seed-rooted randomness (ADR-0044) is what makes the rebuilt
+a run header into history/ and one path record per completed path into the run's
+results/ file (data + metadata together; history holds only what was asked, when); an
+identical ask against the same directory recalls instead of computing; a PARTIAL
+directory (the kill-and-rerun case) recalls what exists and computes only the rest;
+BERTINI_RECORDS_DIR attaches ambient records with zero API calls.  Seed-rooted randomness (ADR-0044) is what makes the rebuilt
 homotopy identical, so recalled and computed results are directly comparable.
 */
 
@@ -82,10 +83,12 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 	a.Solve();
 	BOOST_CHECK_EQUAL(a.NumPathsRecalled(), 0u);
 
-	unsigned runs = 0, tracks = 0;
+	unsigned runs = 0;
 	for (auto const& rec : a.Records()->Scan())
 	{
 		auto const kind = std::string(rec.at("kind").as_string());
+		BOOST_CHECK(kind != "track");   // history holds NO per-path lines: what was asked, when
+		BOOST_CHECK(kind != "path");
 		if (kind == "run")
 		{
 			++runs;
@@ -126,14 +129,30 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 				std::string(hstored.at("encoding").as_string())).Hex(), homotopy_id);
 			// unlike the target, the tracked homotopy HAS a path variable
 			BOOST_CHECK(!hstored.at("system").as_object().at("path_variable").is_null());
-		}
-		if (kind == "track")
-		{
-			++tracks;
-			BOOST_CHECK_EQUAL(std::string(rec.at("status").as_string()), "success");
+			// history REFERS to the payload store; the paths live there
+			BOOST_CHECK_EQUAL(std::string(rec.at("results_file").as_string()),
+			                  "results/" + std::string(rec.at("run").as_string()).substr(0, 2)
+			                  + "/" + std::string(rec.at("run").as_string()) + ".jsonl");
 		}
 	}
 	BOOST_CHECK_EQUAL(runs, 1u);
+
+	// the payload store: line 1 self-describes the run (a wandering file says what it
+	// is), then one path record per completed path, metadata and endpoint together
+	unsigned tracks = 0;
+	auto const payloads = a.Records()->ResultsOf(a.RecordsRunId());
+	BOOST_REQUIRE(!payloads.empty());
+	BOOST_CHECK_EQUAL(std::string(payloads.front().at("kind").as_string()), "results_header");
+	BOOST_CHECK_EQUAL(std::string(payloads.front().at("run").as_string()), a.RecordsRunId());
+	BOOST_CHECK(payloads.front().at("ask").as_object().contains("seed"));
+	for (auto const& rec : payloads)
+		if (std::string(rec.at("kind").as_string()) == "path")
+		{
+			++tracks;
+			BOOST_CHECK_EQUAL(std::string(rec.at("status").as_string()), "success");
+			BOOST_CHECK(rec.contains("endgame_success_code_name"));
+			BOOST_CHECK(rec.contains("endpoint"));
+		}
 	BOOST_CHECK_EQUAL(tracks, 4u);
 
 	// identical ask (same seed => same homotopy, ADR-0044): recalls, computes nothing
@@ -165,20 +184,24 @@ BOOST_AUTO_TEST_CASE(partial_directory_resumes_computing_only_the_missing)
 	full.RecordTo(std::make_shared<records::OutputDirectory>(full_dir));
 	full.Solve();
 
-	// build the partial directory: the run header + only paths 0 and 2 (a crash after
-	// two of four paths, in effect)
+	// build the partial directory: the run header + only paths 0 and 2 of the payload
+	// store (a crash after two of four paths, in effect)
 	{
 		records::OutputDirectory partial(partial_dir);
+		auto const run_id = full.RecordsRunId();
 		for (auto const& rec : full.Records()->Scan())
+			if (std::string(rec.at("kind").as_string()) == "run")
+				partial.Append(rec);
+		for (auto const& rec : full.Records()->ResultsOf(run_id))
 		{
 			auto const kind = std::string(rec.at("kind").as_string());
-			if (kind == "run")
-				partial.Append(rec);
-			else if (kind == "track")
+			if (kind == "results_header")
+				partial.EnsureResultsFile(run_id, rec);
+			else if (kind == "path")
 			{
 				auto const idx = rec.at("index").as_int64();
 				if (idx == 0 || idx == 2)
-					partial.Append(rec);
+					partial.AppendResult(run_id, rec);
 			}
 		}
 		// the target definition rides along too
@@ -277,9 +300,9 @@ BOOST_AUTO_TEST_CASE(diverged_paths_are_recorded_as_diverged_not_failed)
 	zd.Solve();
 
 	unsigned successes = 0, diverged = 0, failed = 0;
-	for (auto const& rec : zd.Records()->Scan())
+	for (auto const& rec : zd.Records()->ResultsOf(zd.RecordsRunId()))
 	{
-		if (std::string(rec.at("kind").as_string()) != "track")
+		if (std::string(rec.at("kind").as_string()) != "path")
 			continue;
 		auto const status = std::string(rec.at("status").as_string());
 		if (status == "success") ++successes;
@@ -334,7 +357,9 @@ BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)
 
 	BOOST_REQUIRE(zd.Records() != nullptr);
 	BOOST_CHECK(fs::exists(dir / "README.txt"));
-	BOOST_CHECK_EQUAL(zd.Records()->Scan().size(), 6u);   // 1 run + 4 tracks + 1 auto-declared result
+	BOOST_CHECK_EQUAL(zd.Records()->Scan().size(), 2u);   // history: 1 run + 1 auto-declared result
+	// the paths live in the payload store: header + 4 path records
+	BOOST_CHECK_EQUAL(zd.Records()->ResultsOf(zd.RecordsRunId()).size(), 5u);
 }
 
 // Records are ON BY DEFAULT: with BERTINI_RECORDS_DIR unset, a bare solver (no

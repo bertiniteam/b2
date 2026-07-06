@@ -10,20 +10,22 @@ no software required.  A copy of the essentials travels inside every directory a
 ```
 <output directory>/
   README.txt      what this is + this spec's essentials, self-contained
-  results.json    the declared results, pretty-printed and self-complete:
-                  {"results": {...}, "runs": {...}} -- the final results first,
-                  then references (by definition id) to the exact system and
-                  configs that produced them
-  INDEX.txt       one line per run: when, what, how many paths
-  history/        the records: JSONL, one file per writing session, date-named
-  definitions/    content-addressed definitions, grouped by kind:
+  INDEX.txt       one line per run: when, what, how many paths done
+  history/        WHAT WAS ASKED, WHEN: run headers, declared results,
+                  annotations -- JSONL, one file per writing session, date-named;
+                  every line small, referring into the other stores by id
+  results/        WHAT WAS COMPUTED: one append-only JSONL file per run,
+                  results/<2 hex of run id>/<run id>.jsonl -- a self-description
+                  header line, then one line per completed path (endpoint AND
+                  its per-path metadata together)
+  definitions/    WHAT THINGS ARE: content-addressed inputs, grouped by kind:
                   definitions/<kind>/<2 hex>/<kind>-<full digest>.<ext>
 ```
 
-`history/` and `definitions/` are the **source of truth**; the four top-level files are
-derived, rebuildable views.  The directory is fully self-contained: deleting it can
-never break anything anywhere; the sole consequence is forgetting (worst case:
-recomputing).
+`history/`, `results/`, and `definitions/` are the **source of truth** -- three stores,
+separated by concern; `README.txt` and `INDEX.txt` are derived, rebuildable views.  The
+directory is fully self-contained: deleting it can never break anything anywhere; the
+sole consequence is forgetting (worst case: recomputing).
 
 ## Definitions (`definitions/`)
 
@@ -66,12 +68,14 @@ Definitions are written atomically (write-temp, rename) and idempotently (equal 
 
 ## History (`history/`)
 
-Files are named `YYYYMMDD_HHMMSS-pid<pid>[suffix].jsonl` — **one writer per file,
-ever** (the name is claimed with exclusive create).  Each line is one JSON object with
-a `kind`.  A reader MUST tolerate a torn final line (a crash mid-append) and MUST
-treat a torn interior line as corruption.  A reader MUST preserve records whose `kind`
-it does not recognize (the operation vocabulary is open; in-progress algorithms mint
-new kinds without coordination).
+The narrative: what was asked, when.  History contains **no per-path lines** -- the
+computed paths live in `results/`, referred to by the run header.  Files are named
+`YYYYMMDD_HHMMSS-pid<pid>[suffix].jsonl` — **one writer per file, ever** (the name is
+claimed with exclusive create).  Each line is one JSON object with a `kind`.  A reader
+MUST tolerate a torn final line (a crash mid-append) and MUST treat a torn interior
+line as corruption.  A reader MUST preserve records whose `kind` it does not recognize
+(the operation vocabulary is open; in-progress algorithms mint new kinds without
+coordination).
 
 ### Record kinds
 
@@ -83,7 +87,8 @@ scoped by their run.
     "op":<operation name, default "solve">, "ask":{...},
     "target_digest":<the solved system's content digest -- also the id of its
                      definitions/systems/ file; dereferencing is the reader's job>,
-    "producer":{"name","version","commit"}, "num_paths":N, ...op-specific fields...}`
+    "producer":{"name","version","commit"}, "num_paths":N,
+    "results_file":"results/<2 hex>/<run id>.jsonl", ...op-specific fields...}`
   `producer` says which software wrote the record (commit is `unknown` for builds
   outside a git checkout); it is descriptive ONLY -- never part of the ask identity,
   so a newer build answering the same ask recalls rather than recomputes.
@@ -98,25 +103,6 @@ scoped by their run.
   never a session master that silently under-determines a mid-session run.  Op-specific fields
   describe how start points arise: recorded values (`start_points`, exact coordinate
   text), or a reference to an ancestor run (`start_run` + `start_indices`).
-- **`track`** — one continued path:
-  `{"kind":"track", "run":<run id>, "index":i,
-    "status":"success"|"diverged"|"failed",
-    "endpoint":[[re,im],...] | null, "start":<provenance>}`
-  `status` is the coarse verdict: `diverged` means the path went to infinity — a clean
-  `GoingToInfinity` verdict or a deliberate security truncation near infinity
-  (`SecurityMaxNormReached`) — an ANSWER, not a failure; `failed` means the tracker
-  gave up.  Every tracked path is recorded, whatever its outcome, so a run can be
-  audited path-by-path.  The exact codes ride along as
-  `pre_endgame_success_code`/`endgame_success_code` (integers) and
-  `*_success_code_name` (fixed canonical names — the durable rendering).
-  Coordinates are decimal strings at full computed precision (`[real, imaginary]`
-  pairs, one per variable, in the target's variable order).  `endpoint` is the
-  INTERNAL point (labels: the run header's `variables`); successful/diverged paths
-  also carry `endpoint_user`, the dehomogenized point in the USER's coordinates
-  (labels: `variables_user`) -- the ones audits should read.  `start` is either
-  `{"kind":"start_label","index":i}` (a canonical start-system label — provenance
-  bottoms out) or `{"kind":"point_ref","run":<id>,"index":i}` (a chain link into an
-  ancestor run's endpoint).
 - **`result`** — a declared deliverable (the signal/noise line):
   `{"kind":"result", "name":<string>, "description":<string>, "when":...,
     "points":[{"run":..,"index":..},...], "value":<any JSON, optional>}`
@@ -128,9 +114,53 @@ scoped by their run.
   `{"kind":"given", "source":<definition id>, ...}`.  Provenance bottoms out honestly
   at the boundary of what was computed here.
 
+## Results (`results/`)
+
+The payload store: one append-only JSONL file per run at
+`results/<2 hex of run id>/<run id>.jsonl`, sharded like `definitions/` so no directory
+grows unbounded.  One writer per run in practice (the solve's manager rank); a
+concurrent identical ask appends identical lines, which last-wins reading tolerates.
+Same torn-line rules as history.  Line 1 is the file's **self-description**:
+
+- **`results_header`** — `{"kind":"results_header", "schema":"b2rec/1",
+  "run":<run id>, "ask":{...}}` -- a wandering results file says what run and ask it
+  answers, just as a wandering definition self-verifies.
+
+Then one line per completed path, appended as paths finish (a partially-computed run
+reads honestly: what is here is done):
+
+- **`path`** — one continued path:
+  `{"kind":"path", "run":<run id>, "index":i,
+    "status":"success"|"diverged"|"failed",
+    "endpoint":[[re,im],...] | null, "start":<provenance>, ...per-path metadata...}`
+  `status` is the coarse verdict: `diverged` means the path went to infinity — a clean
+  `GoingToInfinity` verdict or a deliberate security truncation near infinity
+  (`SecurityMaxNormReached`) — an ANSWER, not a failure; `failed` means the tracker
+  gave up.  Every tracked path is recorded, whatever its outcome, so a run can be
+  audited path-by-path.  The per-path metadata travels WITH the point (the data and
+  its facts are one thing): the exact codes as
+  `pre_endgame_success_code`/`endgame_success_code` (integers) and
+  `*_success_code_name` (fixed canonical names — the durable rendering), cycle number,
+  precision, timings.  Coordinates are decimal strings at full computed precision
+  (`[real, imaginary]` pairs, one per variable, in the target's variable order).
+  `endpoint` is the INTERNAL point (labels: the run header's `variables`);
+  successful/diverged paths also carry `endpoint_user`, the dehomogenized point in the
+  USER's coordinates (labels: `variables_user`) -- the ones audits should read.
+  `start` is either `{"kind":"start_label","index":i}` (a canonical start-system
+  label — provenance bottoms out) or `{"kind":"point_ref","run":<id>,"index":i}` (a
+  chain link into an ancestor run's endpoint).
+
+The payload vocabulary is open like the record vocabulary: future operations may
+append other payload kinds (e.g. component-membership verdicts) to their run's file.
+
+**Write ordering**: a run's results file (with its header) is created BEFORE the
+history run header that refers to it, and each path line is written before anything
+refers to that path -- a reference in this format never dangles; at worst an orphaned
+payload awaits a reference that never came (harmless, ignorable).
+
 ### Provenance
 
-Walk a point's ancestry by following `track.start` references backward until a
+Walk a point's ancestry by following path records' `start` references backward until a
 `start_label` or `given`.  Ids are content-derived, so records from different
 directories/sessions merge by file concatenation; matching points ACROSS lineages is
 never automatic (float results are not bit-reproducible) — an adopted match is its own

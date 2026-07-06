@@ -2114,7 +2114,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				result["description"] = "auto-declared by the solver after post-processing";
 				result["points"] = points;
 				records_->Append(result);
-				records_->RefreshResults();
 				records_->RefreshIndex();
 			}
 
@@ -2254,6 +2253,15 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				auto const ask = RecordsAsk();
 				records_run_id_ = detail::Sha256(boost::json::serialize(ask)).Hex().substr(0, 16);
 
+				// the run's results file (the payload store) is created BEFORE anything
+				// refers to it: line 1 is its self-description, so a wandering results
+				// file says what run and ask it answers.  Idempotent on resume.
+				records_->EnsureResultsFile(records_run_id_,
+					{{"kind", "results_header"},
+					 {"schema", records::RecordSchemaVersion},
+					 {"run", records_run_id_},
+					 {"ask", ask}});
+
 				for (auto const& rec : records_->Scan())
 					if (auto const* k = rec.if_contains("kind");
 					    k && k->is_string() && k->get_string() == "run"
@@ -2336,6 +2344,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				}
 				// (the settings digest lives in ask.config; deref is the reader's job)
 				header["num_paths"] = static_cast<std::int64_t>(num_start_points_);
+				// where this run's computed paths live: history refers, results/ holds
+				header["results_file"] = "results/" + records_run_id_.substr(0, 2)
+				                         + "/" + records_run_id_ + ".jsonl";
 				records_->Append(header);
 			}
 
@@ -2350,13 +2361,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			std::vector<SolnIndT> RecallRecordedPaths(std::vector<SolnIndT> const& all_indices)
 			{
 				std::map<std::size_t, boost::json::object> recorded;   // last record per index wins
-				for (auto const& rec : records_->Scan())
+				for (auto const& rec : records_->ResultsOf(records_run_id_))
 				{
 					auto const* k = rec.if_contains("kind");
-					if (!k || !k->is_string() || k->get_string() != "track")
-						continue;
-					if (!rec.if_contains("run") || !rec.at("run").is_string()
-					    || rec.at("run").as_string() != records_run_id_)
+					if (!k || !k->is_string() || k->get_string() != "path")
 						continue;
 					if (auto const* idx = rec.if_contains("index"); idx && idx->is_int64())
 						recorded[static_cast<std::size_t>(idx->as_int64())] = rec;
@@ -2382,16 +2390,19 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 			/**
-			\brief Emit the track record for one completed path (called from
-			StoreFullPathResult on the main/manager thread; no-op while recalling or when
-			not recording).
+			\brief Emit the path record for one completed path into the run's results
+			file (called from StoreFullPathResult on the main/manager thread; no-op
+			while recalling or when not recording).
+
+			The record carries the endpoint AND its per-path metadata together -- the
+			data and its facts are one thing (history holds only what was asked, when).
 			*/
 			void RecordCompletedPath(parallel::FullPathResult<BaseComplexT> const& r)
 			{
 				if (!records_ || recalling_ || records_run_id_.empty())
 					return;
 				auto record = records::EncodeFullPathResult(r);
-				record["kind"] = "track";
+				record["kind"] = "path";
 				record["run"] = records_run_id_;
 				record["index"] = static_cast<std::int64_t>(r.path_index);
 				// success / diverged / failed -- a truncation near infinity is a verdict,
@@ -2408,7 +2419,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					? records_start_refs_[r.path_index]
 					: boost::json::object{{"kind", "start_label"},
 					                      {"index", static_cast<std::int64_t>(r.path_index)}};
-				records_->Append(record);
+				records_->AppendResult(records_run_id_, record);
 			}
 
 

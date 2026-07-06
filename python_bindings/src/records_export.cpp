@@ -102,10 +102,17 @@ void ExportRecords()
 			(arg("self"), arg("run"), arg("index"), arg("key"), arg("value_json")),
 			"Attach metadata to a recorded point: appends an annotation record for "
 			"({run, index}) with the given key and JSON-encoded value.  Newest wins "
-			"per (point, key); annotations render into results.json beside the point.")
-		.def("refresh_results", &records::OutputDirectory::RefreshResults, (arg("self")),
-			"(Re)write the pretty-printed, self-complete results.json from the declared "
-			"result records.")
+			"per (point, key); readers merge annotations beside the point they describe.")
+		.def("results_of",
+			+[](records::OutputDirectory const& self, std::string const& run_id) {
+				boost::python::list out;
+				for (auto const& rec : self.ResultsOf(run_id))
+					out.append(boost::json::serialize(rec));
+				return out;
+			},
+			(arg("self"), arg("run_id")),
+			"Every record in the run's results file (header line included), each as a "
+			"JSON string.  Empty when nothing is recorded for that run.")
 		.def("refresh_index", &records::OutputDirectory::RefreshIndex, (arg("self")),
 			"(Re)write INDEX.txt: one line per run.")
 		.def("describe", &records::OutputDirectory::Describe, (arg("self")),

@@ -263,10 +263,6 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		(boost::python::arg("self")),
 		"How many paths the last solve() recalled from the records instead of computing "
 		"(0 on a fresh solve; num_paths on a full memo hit).")
-	.def("refresh_results",
-		+[](AlgoT& self){ if (self.Records()) self.Records()->RefreshResults(); },
-		(boost::python::arg("self")),
-		"(Re)render the attached directory's results.json.  No-op when not recording.")
 	.def("set_recorded_start_provenance",
 		+[](AlgoT& self, std::string const& refs_json, std::string const& start_identity){
 			auto const parsed = boost::json::parse(refs_json).as_array();

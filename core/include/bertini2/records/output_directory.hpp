@@ -25,14 +25,16 @@
 \brief The structured output directory: durable, self-documenting records of
 computations (`b2rec/1`; ADR-0045; the arc's rung 3).
 
-Plain files are the source of truth, interactable without special software:
-`history/` holds append-only JSONL records (one date-named file per writing session,
-one writer per file, torn-final-line tolerant), `definitions/` holds content-addressed
-definitions (atomic + idempotent writes; no locks exist or are needed), and README /
-INDEX / RESULTS / results.json are derived, rebuildable views.  The format contract
-lives in docs/records/b2rec-1.md and travels inside every directory as its
-README.txt.  Cross-implementation compatibility with the Python pilot
-(prototypes/ledger_v0) is tested.
+Plain files are the source of truth, interactable without special software.  The three
+truth stores separate concerns: `definitions/` holds the INPUTS by content address
+(atomic + idempotent writes; no locks exist or are needed); `results/` holds the
+OUTPUTS -- one append-only JSONL file per run, a self-description header line then one
+line per completed path, everything recall needs; `history/` is the narrative of WHAT
+WAS ASKED, WHEN -- run headers, result declarations, annotations -- every line small,
+referring into the other two stores by id (one date-named file per writing session,
+one writer per file, torn-final-line tolerant).  README / INDEX are derived,
+rebuildable text views.  The format contract lives in docs/records/b2rec-1.md and
+travels inside every directory as its README.txt.
 */
 
 #pragma once
@@ -40,6 +42,7 @@ README.txt.  Cross-implementation compatibility with the Python pilot
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -138,8 +141,8 @@ public:
 	`{"kind":"annotation", "point":{"run","index"}, "key", "value"}`.
 
 	Annotations are the audit trail's margin notes -- projection values, "this is the
-	one I meant", classification flags.  They render into results.json beside the
-	point they describe.  Newest wins per (point, key).
+	one I meant", classification flags.  Readers (e.g. `bertini.load`) merge them
+	beside the point they describe.  Newest wins per (point, key).
 
 	\param run_id The run the point belongs to.
 	\param index The point's path index within that run.
@@ -157,17 +160,53 @@ public:
 	*/
 	std::vector<boost::json::object> Scan() const;
 
+	// ---- results (per-run append-only JSONL payload files; truth) ----
+
+	/**
+	\brief Ensure the run's results file exists, with its self-description header as
+	line 1: `{"kind":"results_header","schema",...,"run","ask"}`.
+
+	The file lives at `results/<2 hex>/<run id>.jsonl` (sharded like definitions/).
+	Creation is exclusive-create, so concurrent writers race benignly: exactly one
+	writes the header.  Idempotent -- an existing file (a resumed run) is untouched.
+	Written BEFORE the history run header that refers to it, so a reference never
+	dangles.
+
+	\param run_id The run id (lowercase hex; anything else is refused -- it becomes a path).
+	\param header The self-description object written as line 1.
+	*/
+	void EnsureResultsFile(std::string const& run_id, boost::json::object const& header);
+
+	/**
+	\brief Append one payload record to the run's results file (flushed per record, so
+	a kill loses at most the line in flight).
+
+	Tracked paths append `{"kind":"path","run","index","status",...}` lines carrying
+	the endpoint AND its per-path metadata -- the treasure travels with its facts.  The
+	kind vocabulary is open: future operations may append other payload kinds.
+
+	\param run_id The run whose file receives the record.
+	\param record The payload record.
+	*/
+	void AppendResult(std::string const& run_id, boost::json::object const& record);
+
+	/**
+	\brief Every record in the run's results file, header line included, in order.
+
+	Same tolerance rules as Scan: a torn final line is skipped, a torn interior line
+	throws.  An absent file (nothing recorded for this run) is an empty vector.
+
+	\param run_id The run to read.
+	\return The records, oldest first; entry 0 is normally the results_header.
+	*/
+	std::vector<boost::json::object> ResultsOf(std::string const& run_id) const;
+
 	// ---- derived views (rebuildable at will) ----
 
 	/// \brief (Re)write INDEX.txt: one line per run — when, paths done, op, target
 	/// description, run id.  Derived from the records; never crashes a solve (defensive
 	/// against malformed records).
 	void RefreshIndex() const;
-
-	/// \brief (Re)write results.json -- pretty-printed and self-complete -- from the
-	/// declared `result` records: named results with coordinates keyed by variable
-	/// name, annotations, provenance refs, and inline saved values.
-	void RefreshResults() const;
 
 	/// \brief One human line: how much is here (record/file/definition counts + path).
 	std::string Describe() const;
@@ -176,12 +215,14 @@ private:
 	std::filesystem::path DefinitionPath(std::string const& kind, std::string const& id,
 	                                     std::string const& label) const;
 	std::optional<std::filesystem::path> FindDefinition(std::string const& id) const;
+	std::filesystem::path ResultsPath(std::string const& run_id) const;
 	void EnsureSessionFile();
 
 	std::filesystem::path root_;        ///< The directory root.
 	std::ofstream session_;             ///< This session's history file (open after first append).
 	std::filesystem::path session_path_; ///< Path of the session history file (empty until claimed).
 	std::mutex append_mutex_;           ///< Serializes appends: a Shared() instance may be written from several threads.
+	std::map<std::string, std::ofstream> results_streams_;  ///< Open per-run results files (keyed by run id; bounded by concurrent runs).
 };
 
 /**

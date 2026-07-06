@@ -62,57 +62,65 @@ docs/records/b2rec-1.md in the bertini2 repository -- but this file suffices).
 It needs no software to read, and you are free to delete it -- the only consequence
 is recomputing.
 
-LAYOUT
-  results.json  the declared results, pretty-printed and SELF-COMPLETE: the final
-                results first, then a "runs" section referring to everything used to
-                construct them (system rendering, configs, seed) by definition id.
-                Most readers start AND END here; it is one json.load away.
-  INDEX.txt     one line per run: when, what was solved, how many paths.
-  history/      the records: JSON, one object per line (JSONL), one file per writing
-                session, named by date.  Read with eyes, grep, jq, or
-                pandas.read_json(..., lines=True).
-  definitions/  the things records refer to, filed as
+LAYOUT -- three stores, separated by concern:
+  history/      WHAT WAS ASKED, WHEN: run headers, declared results, annotations.
+                JSON, one object per line (JSONL), one file per writing session,
+                named by date.  Every line is small; the data it speaks of lives in
+                the other two stores, referred to by id.  Read with eyes, grep, jq,
+                or pandas.read_json(..., lines=True).
+  results/      WHAT WAS COMPUTED: one append-only JSONL file per run, at
+                    results/<2 hex>/<run id>.jsonl
+                Line 1 is a self-description header {"kind":"results_header", "run",
+                "ask"} -- a wandering file says what it is.  Then one line per
+                completed path: {"kind":"path", "index", "status", endpoint
+                coordinates in full precision, and its per-path metadata (verdict
+                names, cycle number, timings)} -- the data and its facts travel
+                together.  Paths append as they complete, so a partially-computed
+                run reads honestly: what is here is done.
+  definitions/  WHAT THINGS ARE: content-addressed inputs, filed as
                     definitions/<kind>/<2 hex>/<kind>[-<role>]-<digest>.<ext>
                 e.g.  definitions/systems/03/system-03958a...7f.json
                       definitions/givens/34/given-cli_input-3468cd...9b.txt
                 The filename carries the FULL digest (never concatenate) and the kind;
                 the two-hex folder exists purely so no directory grows unbounded; the
                 extension is honest (.json for JSON, .txt for text).  Kinds:
-                  systems/  the exact polynomial systems, as JSON: {"schema",
-                            "digest", "system", "encoding"}.  The "system" value has
-                            fields for the parts (variable groups, path variable,
-                            functions, patches).  The encoding is bertini2's
-                            canonical form (b2sysenc; versioned, block structure
-                            preserved) and is the digest PREIMAGE: the id equals the
-                            system's content digest, and hashing the encoding
+                  systems/  the exact polynomial systems -- targets AND the homotopies
+                            actually tracked -- as JSON: {"schema", "digest",
+                            "system", "encoding"}.  The "system" value has fields for
+                            the parts (variable groups, path variable, functions,
+                            patches).  The encoding is bertini2's canonical form
+                            (b2sysenc; versioned, block structure preserved) and is
+                            the digest PREIMAGE: the id equals the system's content
+                            digest, and hashing the encoding
                             (`jq -r .encoding <file> | sha256sum`) reproduces it.
                   configs/  the solver settings that ran, as JSON (digest embedded).
                   givens/   externally supplied data: start points (JSON), CLI input
                             files (byte-exact copies of what you supplied --
                             `sha256sum` reproduces their id directly).
-                The filename carries the full digest and the kind, and the JSON kinds
-                embed their digest, so a file copied out of the store stays
-                identified and verifiable.
+  INDEX.txt     derived, rebuildable: one line per run -- when, what was solved, how
+                many paths done.
 
 RECORD FORMAT (schema b2rec/1) -- every history line is one JSON object:
-  kind="run"        a solve: `ask` (what was requested: target system digest + config
-                    + seed), `run` (this run's id), `when`, `num_paths`, and how start
-                    points arise (recorded values, or a reference to an ancestor run).
-                    `target_digest` is the solved system's content digest; the
-                    definitions/systems/ file with that id holds the system's parts
-                    and its canonical encoding (dereferencing is the reader's job).
-  kind="track"      one continued path: `run`, `index`, `status`, `endpoint`
-                    (coordinates as [real, imaginary] decimal-string pairs, full
-                    precision), and `start` (its provenance: a start_label, or a
-                    point_ref {run, index} into an ancestor run's endpoint).
+  kind="run"        a solve: `ask` (what was requested: target system digest +
+                    homotopy digest + config digest + seed), `run` (this run's id),
+                    `when`, `num_paths`, `results_file` (where its computed paths
+                    live), and how start points arise (recorded values, or a
+                    reference to an ancestor run).  `target_digest` is the solved
+                    system's content digest; the definitions/systems/ file with that
+                    id holds the system's parts and its canonical encoding
+                    (dereferencing is the reader's job).
   kind="result"     the declared DELIVERABLES: `name`, `points` [{run, index}, ...],
-                    optional inline `value`.  Everything else in history/ is
-                    scaffolding; results.json renders these -- "what were my solutions?".
+                    optional inline `value` -- "what were my solutions?".
   kind="annotation" metadata attached to a point: `point` {run, index}, `key`, `value`.
   kind="given"      externally supplied data: `source` (definition id) -- provenance
                     bottoms out honestly at the boundary of what was computed here.
+And every results/ line: kind="results_header" (line 1), then kind="path" -- one
+continued path: `index`, `status` (success / diverged / failed), `endpoint` and
+`endpoint_user` (coordinates as [real, imaginary] decimal-string pairs, full
+precision), per-path metadata, and `start` (its provenance: a start_label, or a
+point_ref {run, index} into an ancestor run's endpoint).
 Readers preserve records of kinds they do not recognize.  Chains of runs are walkable:
-follow track records' `start` references backward until a start_label or a given --
+follow path records' `start` references backward until a start_label or a given --
 that is the complete provenance of any point recorded here.
 )";
 
@@ -271,6 +279,7 @@ OutputDirectory::OutputDirectory(std::filesystem::path root) : root_(std::move(r
 {
 	std::filesystem::create_directories(root_ / "definitions");
 	std::filesystem::create_directories(root_ / "history");
+	std::filesystem::create_directories(root_ / "results");
 	auto const readme = root_ / "README.txt";
 	if (!std::filesystem::exists(readme))
 	{
@@ -517,16 +526,11 @@ void OutputDirectory::Append(json::object const& record)
 		RefreshIndex();
 }
 
-std::vector<json::object> OutputDirectory::Scan() const
-{
-	std::vector<json::object> records;
-	std::vector<std::filesystem::path> files;
-	for (auto const& entry : std::filesystem::directory_iterator(root_ / "history"))
-		if (entry.path().extension() == ".jsonl")
-			files.push_back(entry.path());
-	std::sort(files.begin(), files.end());
+namespace {
 
-	for (auto const& path : files)
+	// The one JSONL reader, shared by history and results files: a torn FINAL line is
+	// skipped (the crash-mid-append case), a torn interior line throws (real corruption).
+	void ScanJsonlInto(std::filesystem::path const& path, std::vector<json::object>& records)
 	{
 		std::ifstream in(path);
 		std::vector<std::string> lines;
@@ -542,12 +546,95 @@ std::vector<json::object> OutputDirectory::Scan() const
 			{
 				if (ii + 1 == lines.size())
 					continue;   // torn tail: the write died mid-line; replay ignores it
-				throw std::runtime_error("corrupt history file " + path.string()
+				throw std::runtime_error("corrupt records file " + path.string()
 					+ " at line " + std::to_string(ii + 1));
 			}
 			records.push_back(parsed.as_object());
 		}
 	}
+
+} // unnamed namespace
+
+std::vector<json::object> OutputDirectory::Scan() const
+{
+	std::vector<json::object> records;
+	std::vector<std::filesystem::path> files;
+	for (auto const& entry : std::filesystem::directory_iterator(root_ / "history"))
+		if (entry.path().extension() == ".jsonl")
+			files.push_back(entry.path());
+	std::sort(files.begin(), files.end());
+
+	for (auto const& path : files)
+		ScanJsonlInto(path, records);
+	return records;
+}
+
+
+// ---- results (per-run payload files) ----
+
+namespace {
+
+	// run ids are hex (a prefix of the ask's SHA-256).  Anything else is refused: the
+	// id becomes a filesystem path, and a hostile record must not write outside results/.
+	bool ValidRunId(std::string const& id)
+	{
+		if (id.size() < 2 || id.size() > 64)
+			return false;
+		for (char const c : id)
+			if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')))
+				return false;
+		return true;
+	}
+
+} // unnamed namespace
+
+std::filesystem::path OutputDirectory::ResultsPath(std::string const& run_id) const
+{
+	// sharded like definitions/: two hex chars so no directory grows unbounded
+	return root_ / "results" / run_id.substr(0, 2) / (run_id + ".jsonl");
+}
+
+void OutputDirectory::EnsureResultsFile(std::string const& run_id, json::object const& header)
+{
+	if (!ValidRunId(run_id))
+		throw std::invalid_argument("OutputDirectory: invalid run id '" + run_id + "'");
+	std::lock_guard<std::mutex> lock(append_mutex_);
+	auto const path = ResultsPath(run_id);
+	std::filesystem::create_directories(path.parent_path());
+	// exclusive create: exactly one writer (across processes) writes the header line
+	if (std::FILE* claimed = std::fopen(path.string().c_str(), "wx"))
+	{
+		std::fclose(claimed);
+		std::ofstream out(path, std::ios::app);
+		out << SerializeReadable(header) << "\n";
+		out.flush();
+	}
+}
+
+void OutputDirectory::AppendResult(std::string const& run_id, json::object const& record)
+{
+	if (!ValidRunId(run_id))
+		throw std::invalid_argument("OutputDirectory: invalid run id '" + run_id + "'");
+	std::lock_guard<std::mutex> lock(append_mutex_);
+	auto& stream = results_streams_[run_id];
+	if (!stream.is_open())
+	{
+		auto const path = ResultsPath(run_id);
+		std::filesystem::create_directories(path.parent_path());
+		stream.open(path, std::ios::app);
+	}
+	stream << SerializeReadable(record) << "\n";
+	stream.flush();
+}
+
+std::vector<json::object> OutputDirectory::ResultsOf(std::string const& run_id) const
+{
+	std::vector<json::object> records;
+	if (!ValidRunId(run_id))
+		return records;
+	auto const path = ResultsPath(run_id);
+	if (std::filesystem::exists(path))
+		ScanJsonlInto(path, records);
 	return records;
 }
 
@@ -557,24 +644,23 @@ std::vector<json::object> OutputDirectory::Scan() const
 void OutputDirectory::RefreshIndex() const
 {
 	auto const records = Scan();
-	std::map<std::string, std::pair<long, long>> track_counts;   // run -> (done, failed)
-	for (auto const& r : records)
-		if (GetString(r, "kind") == "track")
-		{
-			auto& counts = track_counts[GetString(r, "run")];
-			++counts.first;
-			if (GetString(r, "status") == "failed")
-				++counts.second;
-		}
 
 	std::ostringstream out;
-	out << "what has been solved here (newest last; details in history/):\n\n";
+	out << "what has been solved here (newest last; paths in results/, details in history/):\n\n";
 	for (auto const& r : records)
 	{
 		if (GetString(r, "kind") != "run")
 			continue;
 		auto const run_id = GetString(r, "run", "?");
-		auto const counts = track_counts.count(run_id) ? track_counts[run_id] : std::make_pair(0L, 0L);
+		// paths done / failed, from the run's results file (the payload store)
+		auto counts = std::make_pair(0L, 0L);
+		for (auto const& payload : ResultsOf(run_id))
+			if (GetString(payload, "kind") == "path")
+			{
+				++counts.first;
+				if (GetString(payload, "status") == "failed")
+					++counts.second;
+			}
 		std::string num_paths = "?";
 		if (auto const* np = r.if_contains("num_paths"); np && np->is_int64())
 			num_paths = std::to_string(np->get_int64());
@@ -644,190 +730,6 @@ void OutputDirectory::RefreshIndex() const
 	WriteViewAtomically(root_ / "INDEX.txt", out.str());
 }
 
-void OutputDirectory::RefreshResults() const
-{
-	auto const records = Scan();
-
-	std::map<std::pair<std::string, std::int64_t>, json::object> tracks;
-	std::map<std::pair<std::string, std::int64_t>, json::object> annotations;
-	std::map<std::string, json::object> runs;
-	std::map<std::string, json::object> declared;   // newest declaration of a name wins
-
-	for (auto const& r : records)
-	{
-		auto const kind = GetString(r, "kind");
-		if (kind == "run")
-			runs[GetString(r, "run")] = r;
-		else if (kind == "track")
-		{
-			if (auto const* idx = r.if_contains("index"); idx && idx->is_int64())
-				tracks[{GetString(r, "run"), idx->get_int64()}] = r;
-		}
-		else if (kind == "annotation")
-		{
-			if (auto const* pt = r.if_contains("point"); pt && pt->is_object())
-			{
-				auto const& p = pt->get_object();
-				if (auto const* idx = p.if_contains("index"); idx && idx->is_int64())
-				{
-					auto& bag = annotations[{GetString(p, "run"), idx->get_int64()}];
-					bag[GetString(r, "key")] = r.contains("value") ? r.at("value") : json::value();
-				}
-			}
-		}
-		else if (kind == "result")
-			declared[GetString(r, "name")] = r;
-	}
-
-	json::object results_section;
-	json::object runs_section;   // only the runs the declared results reference
-
-	for (auto const& [name, rec] : declared)
-	{
-		json::object entry;
-		entry["declared"] = rec.contains("when") ? rec.at("when") : json::value();
-		entry["description"] = GetString(rec, "description");
-		if (rec.contains("value"))
-			entry["value"] = rec.at("value");
-
-		json::array points;
-		if (auto const* refs = rec.if_contains("points"); refs && refs->is_array())
-		{
-			for (auto const& ref_value : refs->get_array())
-			{
-				if (!ref_value.is_object())
-					continue;
-				auto const& ref = ref_value.get_object();
-				auto const run_id = GetString(ref, "run");
-				std::int64_t index = -1;
-				if (auto const* idx = ref.if_contains("index"); idx && idx->is_int64())
-					index = idx->get_int64();
-
-				// the runs section makes results.json SELF-COMPLETE: final results first,
-				// then references to what constructed them (system, configs, seed)
-				auto const run_it = runs.find(run_id);
-				if (run_it != runs.end() && !runs_section.contains(run_id))
-				{
-					json::object summary;
-					for (char const* key : {"when", "op", "ask", "target_digest",
-					                        "num_paths"})
-						if (run_it->second.contains(key))
-							summary[key] = run_it->second.at(key);
-					runs_section[run_id] = summary;
-				}
-
-				json::object point;
-				point["provenance"] = ref;
-				auto const track_it = tracks.find({run_id, index});
-				if (track_it == tracks.end())
-				{
-					point["status"] = "missing";
-					points.push_back(point);
-					continue;
-				}
-				// the recorded verdict, verbatim: success / diverged / failed -- a
-				// diverged (truncated-near-infinity) path is an answer, not a failure
-				point["status"] = GetString(track_it->second, "status", "success");
-				if (auto const* code_name = track_it->second.if_contains("endgame_success_code_name");
-				    code_name && code_name->is_string())
-					point["outcome"] = *code_name;
-
-				// user variable names label coordinates only when the counts agree;
-				// internal (homogenized) points have extra coordinates, and labeling
-				// them with user names would be misleading (user-coordinate rendering
-				// is a noted follow-up)
-				// prefer the endpoint in USER coordinates (with the user's variable
-				// names); fall back to the internal endpoint + internal ordering
-				bool const have_user_endpoint =
-					track_it->second.if_contains("endpoint_user") != nullptr;
-				char const* const names_key = have_user_endpoint ? "variables_user" : "variables";
-				std::vector<std::string> var_names;
-				if (run_it != runs.end())
-					if (auto const* vars = run_it->second.if_contains(names_key);
-					    vars && vars->is_array())
-						for (auto const& v : vars->get_array())
-							if (v.is_string())
-								var_names.emplace_back(v.get_string());
-				// older directories: fall back to parsing the classic rendering (from
-				// the header field, or -- older still -- the definition, which used to
-				// BE the rendering before systems/ stored the canonical encoding)
-				if (var_names.empty() && run_it != runs.end())
-				{
-					std::string rendering = GetString(run_it->second, "target_rendering");
-					auto target_object = GetString(run_it->second, "target_digest");
-					if (target_object.empty())
-						target_object = GetString(run_it->second, "target_object");
-					if (rendering.empty() && !target_object.empty() && HasDefinition(target_object))
-						rendering = GetDefinition(target_object);
-					if (!rendering.empty())
-					{
-						std::istringstream text(rendering);
-						for (std::string line; std::getline(text, line); )
-						{
-							auto const key_pos = line.find("variable_group");
-							auto const alt_pos = line.find("variable ");
-							if (key_pos == std::string::npos && alt_pos == std::string::npos)
-								continue;
-							auto names = line.substr(line.find(' ') + 1);
-							while (!names.empty() && (names.back() == ';' || names.back() == '\r'))
-								names.pop_back();
-							std::istringstream splitter(names);
-							for (std::string v; std::getline(splitter, v, ','); )
-							{
-								auto const b = v.find_first_not_of(" \t");
-								auto const e = v.find_last_not_of(" \t");
-								if (b != std::string::npos)
-									var_names.push_back(v.substr(b, e - b + 1));
-							}
-							break;
-						}
-					}
-				}
-
-				json::object coords;
-				if (auto const* endpoint = track_it->second.if_contains(
-				        have_user_endpoint ? "endpoint_user" : "endpoint");
-				    endpoint && endpoint->is_array())
-				{
-					if (var_names.size() != endpoint->get_array().size())
-						var_names.clear();
-					std::size_t k = 0;
-					for (auto const& coordinate : endpoint->get_array())
-					{
-						std::string const var = k < var_names.size() ? var_names[k]
-						                                             : ("coordinate_" + std::to_string(k));
-						coords[var] = coordinate;
-						++k;
-					}
-				}
-				point["coordinates"] = coords;
-
-				auto const note_it = annotations.find({run_id, index});
-				point["annotations"] = (note_it != annotations.end()) ? note_it->second : json::object{};
-				points.push_back(point);
-			}
-		}
-		if (!points.empty())
-			entry["points"] = points;
-		results_section[name] = entry;
-	}
-
-	json::object machine;
-	machine["results"] = results_section;
-	machine["runs"] = runs_section;
-
-	{
-		std::ostringstream out;
-		PrettyPrint(out, machine, 0);
-		out << "\n";
-		WriteViewAtomically(root_ / "results.json", out.str());
-	}
-	// RESULTS.txt retired: it duplicated results.json, which is now pretty-printed and
-	// self-complete -- one results file.  Remove a stale copy from older directories.
-	std::error_code ignored;
-	std::filesystem::remove(root_ / "RESULTS.txt", ignored);
-}
-
 
 std::string OutputDirectory::Describe() const
 {
@@ -839,8 +741,14 @@ std::string OutputDirectory::Describe() const
 	for (auto const& entry : std::filesystem::recursive_directory_iterator(root_ / "definitions"))
 		if (entry.is_regular_file())
 			++definitions;
+	long run_files = 0;
+	if (std::filesystem::exists(root_ / "results"))
+		for (auto const& entry : std::filesystem::recursive_directory_iterator(root_ / "results"))
+			if (entry.is_regular_file() && entry.path().extension() == ".jsonl")
+				++run_files;
 	std::ostringstream out;
 	out << Scan().size() << " records in " << history_files << " history file(s), "
+	    << run_files << " run results file(s), "
 	    << definitions << " definition(s), at " << std::filesystem::absolute(root_).string();
 	return out.str();
 }

@@ -188,15 +188,22 @@ def test_records_are_plain_json(tmp_path):
 
     assert (d / 'README.txt').exists()
     assert (d / 'INDEX.txt').exists()
-    machine = json.loads((d / 'results.json').read_text())
-    assert isinstance(machine, dict) and machine   # one json.load away
 
     kinds = []
     for journal in (d / 'history').glob('*.jsonl'):
         for line in journal.read_text().splitlines():
             if line.strip():
                 kinds.append(json.loads(line)['kind'])
-    assert 'run' in kinds and 'track' in kinds and 'result' in kinds
+    # history holds what was asked, when -- never the computed paths themselves
+    assert 'run' in kinds and 'result' in kinds
+    assert 'track' not in kinds and 'path' not in kinds
+
+    # the computed paths live in results/<2 hex>/<run>.jsonl: header line then paths
+    (results_file,) = (d / 'results').glob('*/*.jsonl')
+    payload_kinds = [json.loads(line)['kind']
+                     for line in results_file.read_text().splitlines() if line.strip()]
+    assert payload_kinds[0] == 'results_header'
+    assert payload_kinds.count('path') == 2
 
 
 def test_nameless_save(tmp_path):
@@ -232,7 +239,7 @@ def test_records_dir_is_the_ambient_switch_for_bare_solvers(tmp_path, monkeypatc
     solver = pb.ZeroDimSolver(circle_line(), mptype='adaptive')
     solver.solve()                                          # bare solver, no directory named
     assert (d / 'history').exists()
-    assert (d / 'results.json').exists()
+    assert list((d / 'results').glob('*/*.jsonl'))          # the paths landed too
 
     # the off switch still wins ('none': Windows deletes empty-valued variables, and
     # with records on by default a deleted variable would mean ON), and coming back
@@ -272,7 +279,7 @@ def test_bare_solvers_record_by_default(tmp_path):
 
 
 def test_annotate_renders_beside_the_point(tmp_path):
-    """annotate(sol, key, value): margin notes land in results.json by the point."""
+    """annotate(sol, key, value): margin notes land in the records by the point."""
     d = str(tmp_path / 'records')
     r = pb.solve(circle_line(), seed=42, directory=d)
     sol = r.solutions[0]
@@ -323,12 +330,10 @@ def test_chained_solve_records_point_refs(tmp_path):
     assert len(r2) == 2
     assert {abs(round(complex(s[0]).real, 10)) for s in r2} == {round(2 ** 0.5, 10)}
 
-    starts = []
-    for journal in (tmp_path / 'records' / 'history').glob('*.jsonl'):
-        for line in journal.read_text().splitlines():
-            rec = json.loads(line)
-            if rec.get('kind') == 'track' and rec.get('run') == r2.run_id:
-                starts.append(rec['start'])
+    results_file = (tmp_path / 'records' / 'results' / r2.run_id[:2]
+                    / (r2.run_id + '.jsonl'))
+    starts = [rec['start'] for rec in map(json.loads, results_file.read_text().splitlines())
+              if rec.get('kind') == 'path']
     assert starts and all(
         st['kind'] == 'point_ref' and st['run'] == r1.run_id for st in starts)
 
@@ -363,14 +368,16 @@ def test_raw_start_points_become_a_given(tmp_path):
     r = pb.solve(B, homotopy=blend_homotopy(B, A), start=raw, seed=7, directory=d)
     assert len(r) == 2
 
-    givens, starts = [], []
+    givens = []
     for journal in (tmp_path / 'records' / 'history').glob('*.jsonl'):
         for line in journal.read_text().splitlines():
             rec = json.loads(line)
             if rec.get('kind') == 'given':
                 givens.append(rec)
-            if rec.get('kind') == 'track' and rec.get('run') == r.run_id:
-                starts.append(rec['start'])
+    results_file = (tmp_path / 'records' / 'results' / r.run_id[:2]
+                    / (r.run_id + '.jsonl'))
+    starts = [rec['start'] for rec in map(json.loads, results_file.read_text().splitlines())
+              if rec.get('kind') == 'path']
     assert len(givens) == 1 and givens[0]['role'] == 'start_points'
     assert all(st['kind'] == 'given_ref' and st['given'] == givens[0]['source']
                for st in starts)

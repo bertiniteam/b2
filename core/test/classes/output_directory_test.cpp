@@ -159,52 +159,72 @@ BOOST_AUTO_TEST_CASE(unknown_record_kinds_are_preserved)
 	BOOST_CHECK_EQUAL(records[0].at("level").as_int64(), 3);
 }
 
-BOOST_AUTO_TEST_CASE(index_and_results_render)
+// The three truth stores separate concerns: history says what was asked, results/
+// holds the computed paths (one file per run, header line first), definitions/ holds
+// the inputs.  This exercises the results store's whole contract.
+BOOST_AUTO_TEST_CASE(results_files_are_per_run_self_describing_and_torn_tolerant)
+{
+	auto const dir = FreshDir("results_store");
+	OutputDirectory out(dir);
+
+	out.EnsureResultsFile("abc123", {{"kind", "results_header"}, {"run", "abc123"}});
+	out.EnsureResultsFile("abc123", {{"kind", "results_header"}, {"run", "DUPLICATE"}});  // idempotent
+	out.AppendResult("abc123", {{"kind", "path"}, {"run", "abc123"}, {"index", 0},
+	                            {"status", "success"}});
+	out.AppendResult("abc123", {{"kind", "path"}, {"run", "abc123"}, {"index", 1},
+	                            {"status", "diverged"}});
+
+	// sharded like definitions/: results/<2 hex>/<run id>.jsonl
+	auto const path = dir / "results" / "ab" / "abc123.jsonl";
+	BOOST_REQUIRE(fs::exists(path));
+
+	auto const records = out.ResultsOf("abc123");
+	BOOST_REQUIRE_EQUAL(records.size(), 3u);
+	BOOST_CHECK_EQUAL(std::string(records[0].at("kind").as_string()), "results_header");
+	BOOST_CHECK_EQUAL(std::string(records[0].at("run").as_string()), "abc123");  // first header won
+	BOOST_CHECK_EQUAL(records[1].at("index").as_int64(), 0);
+	BOOST_CHECK_EQUAL(std::string(records[2].at("status").as_string()), "diverged");
+
+	// a torn final line (kill mid-append) is invisible to replay
+	{
+		std::ofstream torn(path, std::ios::app);
+		torn << "{\"kind\": \"path\", \"ind";
+	}
+	BOOST_CHECK_EQUAL(out.ResultsOf("abc123").size(), 3u);
+
+	// nothing recorded for a run reads as empty, not an error
+	BOOST_CHECK(out.ResultsOf("beef00").empty());
+
+	// hostile run ids are refused outright: they become filesystem paths
+	BOOST_CHECK_THROW(out.AppendResult("../../evil", {{"kind", "path"}}), std::invalid_argument);
+	BOOST_CHECK_THROW(out.EnsureResultsFile("ABC123", {}), std::invalid_argument);  // not lowercase hex
+	BOOST_CHECK(out.ResultsOf("../../../etc/passwd").empty());
+}
+
+BOOST_AUTO_TEST_CASE(index_renders_from_history_and_results)
 {
 	auto dir = FreshDir("views");
 	OutputDirectory out(dir);
 	auto const target_id = out.PutDefinition(
 		"function f;\nvariable_group x, y;\nf = x^2+4*y^2-4;\n", "systems");
 
+	out.EnsureResultsFile("abc123", {{"kind", "results_header"}, {"run", "abc123"}});
+	out.AppendResult("abc123", {{"kind", "path"}, {"run", "abc123"}, {"index", 0},
+	            {"status", "success"},
+	            {"endpoint", json::array{json::array{"1.5", "0"}, json::array{"-0.66", "0"}}}});
 	out.Append({{"kind", "run"}, {"schema", "b2rec/1"}, {"when", "2026-07-03 10:00"},
 	            {"run", "abc123"}, {"op", "solve"}, {"target_digest", target_id},
 	            {"target_rendering", "function f;\nvariable_group x, y;\nf = x^2+4*y^2-4;\n"},
 	            {"num_paths", 1}});
-	out.Append({{"kind", "track"}, {"run", "abc123"}, {"index", 0}, {"status", "success"},
-	            {"endpoint", json::array{json::array{"1.5", "0"}, json::array{"-0.66", "0"}}}});
-	out.Append({{"kind", "annotation"}, {"point", json::object{{"run", "abc123"}, {"index", 0}}},
-	            {"key", "projection"}, {"value", 1.5}});
-	out.Append({{"kind", "result"}, {"name", "my solutions"}, {"description", "demo"},
-	            {"when", "2026-07-03 10:01"},
-	            {"points", json::array{json::object{{"run", "abc123"}, {"index", 0}}}}});
-	out.RefreshResults();
 
 	std::ifstream index(dir / "INDEX.txt");
 	std::string index_text((std::istreambuf_iterator<char>(index)), std::istreambuf_iterator<char>());
 	BOOST_CHECK(index_text.find("x^2+4*y^2-4") != std::string::npos);
 	BOOST_CHECK(index_text.find("abc123") != std::string::npos);
+	BOOST_CHECK(index_text.find("1/1 paths done") != std::string::npos);  // counted from results/
 
-	auto const results = json::parse([&]{
-		std::ifstream in(dir / "results.json");
-		return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-	}()).as_object();
-	auto const& mine = results.at("results").as_object().at("my solutions").as_object();
-	auto const& point = mine.at("points").as_array()[0].as_object();
-	BOOST_CHECK_EQUAL(std::string(point.at("status").as_string()), "success");
-	BOOST_CHECK(point.at("coordinates").as_object().contains("x"));
-	BOOST_CHECK(point.at("coordinates").as_object().contains("y"));
-	BOOST_CHECK_EQUAL(point.at("annotations").as_object().at("projection").as_double(), 1.5);
-
-	// self-completeness: the runs section refers back to what constructed the result
-	auto const& run = results.at("runs").as_object().at("abc123").as_object();
-	BOOST_CHECK_EQUAL(std::string(run.at("target_digest").as_string()), target_id);
-
-	// pretty-printed (the file a human most interacts with), and RESULTS.txt is gone
-	{
-		std::ifstream in(dir / "results.json");
-		std::string raw((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-		BOOST_CHECK(raw.find('\n') != std::string::npos);
-	}
+	// the retired monolith views never come back
+	BOOST_CHECK(!fs::exists(dir / "results.json"));
 	BOOST_CHECK(!fs::exists(dir / "RESULTS.txt"));
 }
 
@@ -257,27 +277,25 @@ BOOST_AUTO_TEST_CASE(hostile_ids_kinds_and_labels_are_refused)
 
 BOOST_AUTO_TEST_CASE(doubles_render_consistently_everywhere)
 {
-	// annotation values, results.json, and history lines all use the same shortest
+	// annotation values, results files, and history lines all use the same shortest
 	// round-trip decimal form as the config views -- never uppercase-scientific
 	auto dir = FreshDir("doubles");
 	OutputDirectory out(dir);
-	out.Append({{"kind", "run"}, {"run", "r1"}, {"num_paths", 1}});
-	out.Append({{"kind", "track"}, {"run", "r1"}, {"index", 0}, {"status", "success"},
+	out.Append({{"kind", "run"}, {"run", "aa11"}, {"num_paths", 1}});
+	out.AppendResult("aa11", {{"kind", "path"}, {"run", "aa11"}, {"index", 0},
+	            {"status", "success"}, {"residual", 1e-05},
 	            {"endpoint", json::array{json::array{"0.5", "0"}}}});
-	out.Annotate("r1", 0, "projection", json::value(0.5));
-	out.Annotate("r1", 0, "tolerance", json::value(1e-05));
-	out.Append({{"kind", "result"}, {"name", "pts"}, {"when", "now"},
-	            {"points", json::array{json::object{{"run", "r1"}, {"index", 0}}}}});
-	out.RefreshResults();
+	out.Annotate("aa11", 0, "projection", json::value(0.5));
+	out.Annotate("aa11", 0, "tolerance", json::value(1e-05));
 
 	auto read = [](fs::path const& p) {
 		std::ifstream in(p);
 		return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	};
-	auto const results = read(dir / "results.json");
-	BOOST_CHECK(results.find("0.5") != std::string::npos);
-	BOOST_CHECK(results.find("1e-05") != std::string::npos);
-	BOOST_CHECK(results.find("5E-1") == std::string::npos);
+	auto const results_text = read(dir / "results" / "aa" / "aa11.jsonl");
+	BOOST_CHECK(results_text.find("0.5") != std::string::npos);
+	BOOST_CHECK(results_text.find("1e-05") != std::string::npos);
+	BOOST_CHECK(results_text.find("5E-1") == std::string::npos);
 	for (auto const& entry : fs::directory_iterator(dir / "history"))
 		if (entry.path().extension() == ".jsonl")
 		{
@@ -290,6 +308,9 @@ BOOST_AUTO_TEST_CASE(doubles_render_consistently_everywhere)
 	for (auto const& rec : out.Scan())
 		if (rec.if_contains("key") && rec.at("key").as_string() == "tolerance")
 			BOOST_CHECK_EQUAL(rec.at("value").as_double(), 1e-05);
+	for (auto const& rec : out.ResultsOf("aa11"))
+		if (rec.if_contains("residual"))
+			BOOST_CHECK_EQUAL(rec.at("residual").as_double(), 1e-05);
 }
 
 BOOST_AUTO_TEST_CASE(concurrent_appends_from_many_threads_all_land)
@@ -327,9 +348,7 @@ BOOST_AUTO_TEST_CASE(views_survive_dangling_and_garbage_references)
 	out.Append({{"kind", "result"}, {"name", "ghost"}, {"when", "now"},
 	            {"points", json::array{json::object{{"run", "nope"}, {"index", 99}}}}});
 	out.Annotate("never_ran", 7, "note", json::value("orphan"));
-	BOOST_CHECK_NO_THROW(out.RefreshResults());
 	BOOST_CHECK_NO_THROW(out.RefreshIndex());
-	BOOST_CHECK(fs::exists(dir / "results.json"));
 	std::ifstream in(dir / "INDEX.txt");
 	std::string index_text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	BOOST_CHECK(index_text.find("(unknown target)") != std::string::npos);

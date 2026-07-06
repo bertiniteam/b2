@@ -108,7 +108,7 @@ def main():
             ax.figure.savefig(stem.with_suffix(suffix), dpi=110, bbox_inches='tight')
         print('\nchain progression drawn to %s.png / .svg' % stem)
 
-    print('\nrecords at:', pb.records_dir(), '-- results.json has the story.')
+    print('\nrecords at:', pb.records_dir(), '-- history/ has the story, results/ the points.')
 
 
 if __name__ == '__main__':

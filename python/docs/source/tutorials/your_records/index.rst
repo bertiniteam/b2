@@ -188,17 +188,21 @@ A complete runnable chain lives in ``python/examples/chained_homotopies.py``.
 What is in the directory
 ------------------------
 
-Nothing here needs bertini to read::
+Nothing here needs bertini to read — three stores, separated by concern::
 
    README.txt      what this is, and the record format — self-contained
-   results.json    what you saved, pretty-printed, plus references to the system
-                   and configs that produced it: one json.load away
    INDEX.txt       one line per run: when, what, how many paths
-   history/        every record, one JSON object per line (grep / jq / pandas)
-   definitions/    what the records refer to, grouped by kind and named by their
+   history/        WHAT WAS ASKED, WHEN: run headers, saved results, annotations —
+                   one JSON object per line (grep / jq / pandas), every line small,
+                   referring into the other two stores by id
+   results/        WHAT WAS COMPUTED: one file per run, a self-description header
+                   line then one line per tracked path — endpoint coordinates and
+                   the path's metadata (verdict, cycle number, timings) together
+   definitions/    WHAT THINGS ARE: the inputs, grouped by kind and named by their
                    digest -- systems/ (JSON embedding the exact canonical encoding,
-                   whose sha256 IS the system's identity digest), configs/ (JSON),
-                   givens/ (your data, byte-exact)
+                   whose sha256 IS the system's identity digest; targets and the
+                   homotopies actually tracked), configs/ (JSON), givens/ (your
+                   data, byte-exact)
 
 The command line gets the same treatment: running ``bertini2`` on an input file writes
 ``bertini_output`` beside your familiar Bertini 1 files (``main_data``,

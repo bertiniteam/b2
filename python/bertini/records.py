@@ -24,9 +24,10 @@ nobody is required to name it.
     pb.save(sols)                         # or pb.save("my favorites", sols)
     pb.load("my favorites")               # back, in any later session
 
-Reading the records never requires bertini: they are JSON lines (``history/``) and a
-``results.json`` one ``json.load`` away.  Power users keep the full solver-object API;
-these three verbs are sugar over it.
+Reading the records never requires bertini: JSON lines throughout -- ``history/``
+(what was asked, when), ``results/`` (one file per run: the computed paths and their
+metadata), ``definitions/`` (the exact inputs, content-addressed).  Power users keep
+the full solver-object API; these three verbs are sugar over it.
 """
 
 import json as _json
@@ -325,8 +326,6 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
         if _recording_enabled:
             zd.record_to(where)
     zd.solve()
-    if _recording_enabled:
-        zd.refresh_results()
 
     run_id = zd.records_run_id()
     # finite solutions, carrying their TRUE path indices as provenance ({run, index}
@@ -353,9 +352,9 @@ def save(*args, description='', directory=None):
 
     A :class:`SolveResult` (or anything with ``.run_id`` and ``.solutions``) is declared
     as results with full provenance; any JSON-able value (dict, list, number, string) is
-    recorded inline.  They land in the directory's ``results.json`` (pretty-printed,
-    self-complete).  A nameless ``save(thing)`` is auto-named by timestamp;
-    re-saving a name replaces it (newest wins).
+    recorded inline.  The declaration lands in ``history/`` (the points themselves
+    live in ``results/``, referred to by {run, index}).  A nameless ``save(thing)``
+    is auto-named by timestamp; re-saving a name replaces it (newest wins).
     """
     if len(args) == 1:
         name, thing = 'saved %s' % _time.strftime('%Y-%m-%d %H:%M:%S'), args[0]
@@ -375,7 +374,6 @@ def save(*args, description='', directory=None):
 
     out = _directory(directory)
     out.append(_json.dumps(record))
-    out.refresh_results()
     return name
 
 
@@ -396,6 +394,32 @@ def _scan_history(directory=None):
     return records
 
 
+def _scan_results(directory=None, run=None):
+    """Every record in the directory's results files (plain-json read).
+
+    ``run=`` reads just that run's file (``results/<2 hex>/<run>.jsonl``).  Header
+    lines (kind ``results_header``) are included; callers filter by kind.
+    """
+    root = _Path(directory if directory is not None else records_dir()) / 'results'
+    if run is not None:
+        run = str(run)
+        path = root / run[:2] / (run + '.jsonl')
+        files = [path] if path.exists() else []
+    else:
+        files = sorted(root.glob('*/*.jsonl')) if root.is_dir() else []
+    records = []
+    for path in files:
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(_json.loads(line))
+            except ValueError:
+                continue    # a torn final line from a killed writer
+    return records
+
+
 def solutions_of(run, directory=None, status='success'):
     """The recorded endpoints of a run, as :class:`Solution` points with provenance.
 
@@ -410,8 +434,8 @@ def solutions_of(run, directory=None, status='success'):
     """
     from bertini.multiprec import complex_mp
     tracks = {}
-    for rec in _scan_history(directory):
-        if rec.get('kind') == 'track' and rec.get('run') == run and 'index' in rec:
+    for rec in _scan_results(directory, run=run):
+        if rec.get('kind') == 'path' and 'index' in rec:
             tracks[int(rec['index'])] = rec      # newest wins per index
     points = []
     for index in sorted(tracks):
@@ -439,8 +463,8 @@ def provenance(point, directory=None):
     if not isinstance(ref, dict) or 'run' not in ref or 'index' not in ref:
         raise ValueError("provenance needs a point with {'run', 'index'}")
     tracks = {}
-    for rec in _scan_history(directory):
-        if rec.get('kind') == 'track' and 'run' in rec and 'index' in rec:
+    for rec in _scan_results(directory):
+        if rec.get('kind') == 'path' and 'run' in rec and 'index' in rec:
             tracks[(str(rec['run']), int(rec['index']))] = rec
     hops = []
     current = {'run': str(ref['run']), 'index': int(ref['index'])}
@@ -507,10 +531,8 @@ def tracks(run=None, directory=None, coordinates=False):
     """
     import pandas as pd
     newest = {}
-    for rec in _scan_history(directory):
-        if rec.get('kind') != 'track' or 'run' not in rec or 'index' not in rec:
-            continue
-        if run is not None and rec['run'] != run:
+    for rec in _scan_results(directory, run=run):
+        if rec.get('kind') != 'path' or 'run' not in rec or 'index' not in rec:
             continue
         newest[(rec['run'], int(rec['index']))] = rec
     rows = []
@@ -552,8 +574,8 @@ def provenance_graph(directory=None, runs=None):
     import networkx as nx
     wanted = set(runs) if runs is not None else None
     graph = nx.DiGraph()
-    for rec in _scan_history(directory):
-        if rec.get('kind') != 'track' or 'run' not in rec or 'index' not in rec:
+    for rec in _scan_results(directory):
+        if rec.get('kind') != 'path' or 'run' not in rec or 'index' not in rec:
             continue
         run_id = str(rec['run'])
         if wanted is not None and run_id not in wanted:
@@ -680,9 +702,9 @@ def annotate(point, key, value, directory=None):
 
     ``point`` is a :class:`Solution` (or anything with ``.provenance`` holding
     ``{'run', 'index'}``), or an explicit ``{'run': ..., 'index': ...}`` dict.  The
-    annotation lands in the records beside the point it describes and renders into
-    ``results.json``; re-annotating the same key replaces it (newest wins).  ``value``
-    is any JSON-able thing.
+    annotation lands in the records beside the point it describes (readers such as
+    :func:`load` merge it in); re-annotating the same key replaces it (newest wins).
+    ``value`` is any JSON-able thing.
     """
     provenance = getattr(point, 'provenance', None) or point
     if not isinstance(provenance, dict) or 'run' not in provenance or 'index' not in provenance:
@@ -691,7 +713,6 @@ def annotate(point, key, value, directory=None):
     out = _directory(directory)
     out.annotate(str(provenance['run']), int(provenance['index']), str(key),
                  _json.dumps(value))
-    out.refresh_results()
     if hasattr(point, 'annotations'):
         point.annotations[str(key)] = value
 
@@ -701,16 +722,70 @@ def load(name=None, directory=None):
 
     ``load("my favorites")`` returns that result (its points, annotations, provenance,
     or its inline value); ``load()`` returns the whole dict of everything saved, by
-    name.  Reads the plain ``results.json``, so this works in any later session -- and
-    the same file is readable without bertini at all.
+    name.  Reads the plain records -- declarations and annotations from ``history/``,
+    the referenced points from ``results/`` -- so this works in any later session, on
+    any producer's directory, and the same files are readable without bertini at all.
     """
-    path = _Path(directory if directory is not None else records_dir()) / 'results.json'
-    if not path.exists():
-        return {} if name is None else None
-    document = _json.loads(path.read_text())
-    # results.json is {"results": {...}, "runs": {...}}: the declared results plus
-    # references to what constructed them.  load() serves the results section.
-    everything = document.get('results', {})
-    if name is None:
-        return everything
-    return everything.get(name)
+    runs_by_id = {}
+    declared = {}
+    annotations = {}
+    for rec in _scan_history(directory):
+        kind = rec.get('kind')
+        if kind == 'run':
+            runs_by_id[str(rec.get('run'))] = rec
+        elif kind == 'result':
+            declared[rec.get('name')] = rec          # newest declaration wins
+        elif kind == 'annotation':
+            pt = rec.get('point', {})
+            where = (str(pt.get('run')), int(pt.get('index', -1)))
+            annotations.setdefault(where, {})[rec.get('key')] = rec.get('value')
+
+    paths = {}          # (run, index) -> newest payload record, loaded per run on demand
+    loaded_runs = set()
+
+    def _payload(run_id, index):
+        if run_id not in loaded_runs:
+            loaded_runs.add(run_id)
+            for rec in _scan_results(directory, run=run_id):
+                if rec.get('kind') == 'path' and 'index' in rec:
+                    paths[(run_id, int(rec['index']))] = rec
+        return paths.get((run_id, index))
+
+    def _entry(rec):
+        entry = {'declared': rec.get('when'), 'description': rec.get('description', '')}
+        if 'value' in rec:
+            entry['value'] = rec['value']
+        points = []
+        for ref in rec.get('points', []):
+            run_id, index = str(ref.get('run')), int(ref.get('index', -1))
+            point = {'provenance': ref}
+            payload = _payload(run_id, index)
+            if payload is None:
+                point['status'] = 'missing'
+                points.append(point)
+                continue
+            # the recorded verdict, verbatim: success / diverged / failed -- a
+            # diverged (truncated-near-infinity) path is an answer, not a failure
+            point['status'] = payload.get('status', 'success')
+            if 'endgame_success_code_name' in payload:
+                point['outcome'] = payload['endgame_success_code_name']
+            # prefer the endpoint in USER coordinates (with the user's variable
+            # names, from the run header); fall back to the internal endpoint
+            endpoint = payload.get('endpoint_user') or payload.get('endpoint') or []
+            names_key = 'variables_user' if 'endpoint_user' in payload else 'variables'
+            var_names = (runs_by_id.get(run_id) or {}).get(names_key, [])
+            if len(var_names) != len(endpoint):
+                var_names = []
+            point['coordinates'] = {
+                (var_names[k] if k < len(var_names) else 'coordinate_%d' % k): c
+                for k, c in enumerate(endpoint)}
+            point['annotations'] = annotations.get((run_id, index), {})
+            points.append(point)
+        if points:
+            entry['points'] = points
+        return entry
+
+    if name is not None:
+        rec = declared.get(name)
+        return None if rec is None else _entry(rec)
+    return {n: _entry(r) for n, r in declared.items()}
