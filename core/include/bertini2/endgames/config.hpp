@@ -112,7 +112,7 @@ namespace bertini{ namespace endgame{
 
 		mpq_rational sample_factor{1, 2}; ///< Geometric factor between successive sample times (exact rational).
 
-		unsigned max_num_refinements = 15; ///< Maximum Newton refinements when sharpening endgame sample points.
+		unsigned max_num_refinements = 4; ///< Maximum Newton refinements when sharpening endgame sample points.  A tracked sample is already on the path to tracking tolerance (~1e-6), and Newton doubles the correct digits per iteration, so 4 covers any realistic refinement target (6 -> 12 -> 24 -> 48 -> 96 digits); more is never legitimately needed.  (The old default of 15 was a remnant of poorly scaled random coefficient draws, since fixed by seed-rooted derivation.)
 
 		T final_tolerance = 1e-11;///< The tolerance to which to compute the endpoint using the endgame.
 
@@ -155,15 +155,6 @@ namespace bertini{ namespace endgame{
 		// See z_notes/20260629_endgame_stepsize_reset_rootcause.
 		unsigned int num_consecutive_same_cycle_number = 2; ///< Consecutive identical cycle-number estimates required before trusting convergence (guards against an unreliable cycle number at too-low precision).
 
-		// The pole-component operating-zone check truncates a path whose negative-mode
-		// (pole) mass GROWS geometrically across rounds: a pole at the target time has
-		// mass ~ 1/r, so it grows by a factor of 1/sample_factor per round (the growth
-		// detection threshold is derived from sample_factor at the check site -- its
-		// geometric mean sqrt(1/sample_factor) -- not configured here).  This setting is
-		// how many consecutive growing rounds are required before declaring the path
-		// diverging; mirrors num_consecutive_same_cycle_number.
-		unsigned int num_pole_growth_rounds_before_truncation = 2; ///< Consecutive rounds of geometrically growing pole mass required before truncating a path as diverging.
-
 	};
 
 
@@ -186,6 +177,8 @@ namespace bertini{ namespace endgame{
 	template<typename PrecT>
 	struct AlgoTraits< PowerSeriesEndgame<PrecT>>
 	{
+		static constexpr char const* kRecordName = "powerseries";  ///< Stable endgame name for records (b2rec ask identity; never typeid).
+
 		/// The config types this endgame reads.
 		using NeededConfigs = detail::TypeList<
 			PowerSeriesConfig,
@@ -203,6 +196,8 @@ namespace bertini{ namespace endgame{
 	template<typename PrecT>
 	struct AlgoTraits< CauchyEndgame<PrecT>>
 	{
+		static constexpr char const* kRecordName = "cauchy";  ///< Stable endgame name for records (b2rec ask identity; never typeid).
+
 		/// The config types this endgame reads.
 		using NeededConfigs = detail::TypeList<
 			CauchyConfig,

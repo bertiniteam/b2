@@ -15,7 +15,14 @@ jobs:
     env:
       GITLAB_CONFIGURED: ${{ secrets.GITLAB_URL != '' }}
     steps:
+    # Mirroring is best-effort replication: an outage on the GitLab end (502s, etc.)
+    # must not paint the branch's checks red -- it says nothing about the code.  The
+    # step-level continue-on-error keeps the check green either way; the warning
+    # annotation below keeps a real mirror failure visible on the run's summary page
+    # so a rotted token or dead mirror still gets noticed.
     - name: Sync to GitLab
+      id: sync
+      continue-on-error: true
       if: env.GITLAB_CONFIGURED == 'true'
       # You may pin to the exact commit or the version.
       # uses: kujov/gitlab-sync@b19399d43e81ac88acb6eefd5588e6ebde3d7d88
@@ -29,3 +36,6 @@ jobs:
         gitlab_pat: ${{ secrets.GITLAB_PAT }}
         # Whether to force push to GitLab. Defaults to false.
         force_push: true
+    - name: Surface a mirror failure as a warning (not a red check)
+      if: env.GITLAB_CONFIGURED == 'true' && steps.sync.outcome == 'failure'
+      run: echo "::warning title=GitLab mirror sync failed::The push to the GitLab mirror failed (often a GitLab-side outage). The code checks are unaffected; investigate if this persists."

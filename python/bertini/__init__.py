@@ -33,7 +33,8 @@
 
 
 """
-bertini -- Python bindings for Bertini 2.
+bertini -- Python bindings for Bertini 2
+========================================
 
 This code is licensed under the GNU Public License, Version 3, with
 additional clauses under section 7 as permitted, to protect the 
@@ -107,6 +108,12 @@ from .random import random_matrix
 # exact-coefficient coercion at the top level (was bertini.linalg.coefficient / as_coefficients)
 from ._coefficients import coefficient, coefficients
 
+# the casual records surface: solve / save / load over the structured output directory
+from .records import (solve, save, load, annotate, solutions_of, provenance,
+                      recording, records_dir, runs, tracks, provenance_graph,
+                      plot_chain, Solution, SolveResult)
+from . import records
+
 # attach the friendly system-building methods and Slice.from_coefficients (was bertini.linalg.*)
 from . import _system_ops as _system_ops
 _system_ops.install(system.System)
@@ -119,7 +126,8 @@ from . import operators                          # `from bertini.operators impor
 
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
-__all__ = ['Variable','variables','gather_variables','VariableGroup','Named','system','System',
+__all__ = ['solve','save','load','annotate','solutions_of','provenance','recording','records_dir','runs','tracks','provenance_graph','plot_chain','Solution','SolveResult','records',
+           'Variable','variables','gather_variables','VariableGroup','Named','system','System',
            'jacobian','random_matrix','coefficient','coefficients',
            'complex_mp','real_mp','int_mp','rational_mp',
            'nag_algorithm','default_precision',

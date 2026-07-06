@@ -45,6 +45,7 @@
 #include "function_tree_export.hpp"  // SetupFunctionTree() + light function_tree headers
 #include "eigenpy_interaction.hpp"   // EnableEigenPy()
 #include "parallel_export.hpp"       // ExportParallel()
+#include "records_export.hpp"        // ExportRecords()
 #include "bertini2/fast_allocator.hpp"  // InstallFastAllocator()
 
 namespace bertini { namespace python {
@@ -142,6 +143,8 @@ namespace bertini
 
 			ExportParallel();
 			ExportZeroDim();
+
+			ExportRecords();
 
 			ExportNID();
 

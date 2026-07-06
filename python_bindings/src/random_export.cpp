@@ -53,6 +53,12 @@ void ExportRandom(){
 	def("get_random_seed", &bertini::GetGlobalSeed,
 		"Return the effective global RNG seed. If set_random_seed has not been called, "
 		"draws from entropy on first call and caches the result.");
+	def("derive_solve_seed", &bertini::DeriveSolveSeed,
+		"Capture the session stream's current position as an effective per-solve seed: "
+		"one draw off the current stream (advancing it), nonzero, 32-bit portable. "
+		"bertini.solve uses this when no explicit seed is given, so a recorded run's "
+		"seed reproduces that run standalone -- deterministic from the session master "
+		"when one was set, random for a never-seeded session.");
 }
 
 

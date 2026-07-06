@@ -45,7 +45,15 @@
 #include "bertini2/nag_algorithms/events.hpp"
 #include "bertini2/system/start_base.hpp"   // start_system::StartSystem + StartSystemFactory / MakeStartFactory
 #include "bertini2/parallel.hpp"
+#include "bertini2/records/output_directory.hpp"
+#include "bertini2/records/producer.hpp"
+#include "bertini2/records/solver_recording.hpp"
+#include "bertini2/records/config_encoding.hpp"
+#include "bertini2/io/classic_writer.hpp"
+#include "bertini2/io/json_writer.hpp"
+#include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <mutex>
 #include <iostream>
 #include <map>
@@ -123,6 +131,20 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 	virtual void WriteRawSolutions(std::ostream& out)         const = 0;
 	/// \brief Apply configuration settings parsed from a classic-input config string.
 	virtual void ApplyParsedConfigs(std::string const& config_str) = 0;
+	/// \brief Attach a structured output directory at \p path (records + resume; ADR-0046).
+	/// Default no-op so non-recording derivers are unaffected; HomotopySolver overrides.
+	virtual void RecordToPath(std::string const& /*path*/) {}
+	/// \brief This solve's run id in the records (empty when not recording).
+	virtual std::string RecordsRunIdentity() const { return {}; }
+	/// \brief Append one raw record (a JSON object as text) to the attached directory;
+	/// no-op when not recording.  Lets the CLI archive its input file as a `given`.
+	virtual void AppendRecordJson(std::string const& /*record_json*/) {}
+	/// \brief Store content as a definition of the given kind ("systems"/"configs"/
+	/// "givens"), optionally labeled by role in the filename (e.g. "cli_input"), in
+	/// the attached directory; returns its id (empty when not recording).
+	virtual std::string PutRecordsDefinition(std::string const& /*content*/,
+	                                         std::string const& /*kind*/,
+	                                         std::string const& /*label*/ = {}) { return {}; }
 	virtual ~AnyZeroDim() = default;
 };
 
@@ -583,6 +605,43 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 
 			/**
+			\brief Restores the ambient session state a solve may perturb: "a solve
+			leaves the session as it found it".
+
+			Two globals otherwise leak: the mpfr default precision (an adaptive solve
+			historically left it at the tracking precision -- e.g. 16 after a
+			double-fast-lane finish), and the calling thread's RNG streams (serial
+			tracking rekeys them to per-path domains via ReseedThisThread).  Either
+			leak makes what a LATER solve computes -- its config identity, its drawn
+			coefficients -- depend on whether THIS solve computed or recalled, which
+			cascades into phantom new asks on rerun.  Scoped restoration makes recall
+			and compute indistinguishable to the rest of the session; the records the
+			solve wrote are its only trace.
+			*/
+			struct ScopedSessionState
+			{
+				unsigned precision_;               ///< The ambient default precision at solve entry.
+				std::mt19937 engine_;              ///< The calling thread's legacy engine state at entry.
+				records::DrawStream stream_;       ///< The calling thread's pinned draw stream at entry.
+
+				/// \brief Capture the ambient session state.
+				ScopedSessionState()
+					: precision_(DefaultPrecision()),
+					  engine_(ThreadEngine()),
+					  stream_(records::ThreadDrawStream())
+				{}
+				/// \brief Restore it, whatever the solve did in between.
+				~ScopedSessionState()
+				{
+					DefaultPrecision(precision_);
+					ThreadEngine() = engine_;
+					records::ThreadDrawStream() = stream_;
+				}
+				ScopedSessionState(ScopedSessionState const&) = delete;             ///< Non-copyable.
+				ScopedSessionState& operator=(ScopedSessionState const&) = delete;  ///< Non-assignable.
+			};
+
+			/**
 			\brief Main Run() function provided for calling from the blackbox mode
 			*/
 			void Run() override
@@ -618,6 +677,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			{
 				using Result = parallel::FullPathResult<BaseComplexT>;
 				using Task   = parallel::StartPointTask<BaseComplexT>;
+
+				ScopedSessionState const session_state_guard{};   // a solve leaves the session as it found it
 
 				mpfr_free_cache(); // reproducibility: clear this rank's mpfr constant cache (see Solve())
 
@@ -671,9 +732,21 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 							[this](Result const& r){ StoreFullPathResult(r); });
 					};
 
-					std::queue<Task> queue;
+					// the records seam (ADR-0046): the manager is the sole writer; recall what
+					// is already recorded and dispatch only the rest
+					MaybeAttachAmbientRecords();
+					std::vector<SolnIndT> indices_to_run;
 					for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
-						queue.push(Task{ static_cast<SolnIndT>(ii), start_points[ii] });
+						indices_to_run.push_back(static_cast<SolnIndT>(ii));
+					if (records_)
+					{
+						EnsureRunRecorded();
+						indices_to_run = RecallRecordedPaths(indices_to_run);
+					}
+
+					std::queue<Task> queue;
+					for (auto idx : indices_to_run)
+						queue.push(Task{ idx, start_points[idx] });
 					run_round(queue);
 
 					// Midpath/crossing check on the collected boundary points, then bounded parallel
@@ -718,6 +791,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 						          << "or a tighter tracking tolerance.  See EndgameBoundaryMetadata()." << std::endl;
 
 					PostEGAction();
+
+					DeclareFiniteSolutionsResult();
 				}
 				else // worker
 				{
@@ -1019,6 +1094,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// own when it starts a solve).
 				mpfr_free_cache();
 
+				ScopedSessionState const session_state_guard{};   // a solve leaves the session as it found it
+
 				solutions_user_coords_fresh_ = false;
 
 				PreSolveChecks();
@@ -1045,6 +1122,16 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					all_indices[ii]  = idx;
 				}
 
+				// the records seam (ADR-0046): ensure the run is on record, recall any paths
+				// already recorded (solve() is ensure-answered), and compute only the rest
+				MaybeAttachAmbientRecords();
+				std::vector<SolnIndT> indices_to_run = all_indices;
+				if (records_)
+				{
+					EnsureRunRecorded();
+					indices_to_run = RecallRecordedPaths(all_indices);
+				}
+
 				// num_threads: 0 = auto (hardware_concurrency), 1 = serial, N = N threads;
 				// OMP_NUM_THREADS overrides.  n_threads <= 1 takes the pool-free serial path.
 				const unsigned n_threads =
@@ -1052,12 +1139,17 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 				if (n_threads <= 1)
 				{
-					for (auto idx : all_indices)
+					for (auto idx : indices_to_run)
+					{
 						ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
+						// the serial path installs results directly (no StoreFullPathResult),
+						// so emit its record here
+						RecordCompletedPath(PackFullPathResult(idx));
+					}
 				}
 				else
 				{
-					RunPathsThreaded(all_indices, start_points, n_threads);
+					RunPathsThreaded(indices_to_run, start_points, n_threads);
 				}
 
 				// Crossed-path re-tracks run on the main thread against the (escalated) member
@@ -1065,9 +1157,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				// deferred optimization.
 				RunMidpathResolution([this, &start_points](SolnIndT idx){
 					ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
+					RecordCompletedPath(PackFullPathResult(idx));   // a re-track appends a fresh record (last wins)
 				});
 
 				PostEGAction();
+
+				DeclareFiniteSolutionsResult();
 
 				this->NotifyObservers(AlgorithmComplete<AnyZeroDim>(*this));
 			}
@@ -1975,12 +2070,424 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
 				smd.max_precision_used  = r.max_precision_used;
 				smd.path_time_seconds   = r.path_time_seconds;
+
+				// the records seam (ADR-0046): every topology installs completed paths here on
+				// the main/manager thread, so emission is single-writer by construction
+				RecordCompletedPath(r);
 			}
 
+
+		////////////////////
+		//
+		//  the structured output directory seam (records; ADR-0046)
+		//
+		//////////////////
+
+		public:
+
+			/**
+			\brief Attach a structured output directory: this solve records to (and
+			memoizes/resumes from) it.  Null detaches.  See ADR-0046.
+			*/
+			void RecordTo(std::shared_ptr<records::OutputDirectory> directory)
+			{
+				records_ = std::move(directory);
+			}
+
+			/// \brief Attach an output directory by path (the AnyZeroDim polymorphic hook).
+			/// Uses the process-shared instance for the path: one session history file
+			/// per directory per process, however many solvers attach.
+			void RecordToPath(std::string const& path) override
+			{
+				RecordTo(records::OutputDirectory::Shared(path));
+			}
+
+			/// \brief This solve's run id (the AnyZeroDim polymorphic hook).
+			std::string RecordsRunIdentity() const override { return records_run_id_; }
+
+			/**
+			\brief The system the records name as this solve's TARGET: what the user
+			asked about.
+
+			For the bare engine that is TargetSystem() itself; ZeroDimSolver overrides
+			with the pristine user-supplied system -- never the squared/homogenized/
+			patched preparation, whose per-solve random coefficients would make two
+			asks about the SAME system look like different targets.  The prepared
+			system actually tracked is archived completely inside the homotopy.
+			*/
+			virtual SystemType const& RecordsTargetSystem() const { return TargetSystem(); }
+
+			/// \brief Append a raw JSON record to the attached directory (no-op if none).
+			void AppendRecordJson(std::string const& record_json) override
+			{
+				if (records_)
+					records_->Append(boost::json::parse(record_json).as_object());
+			}
+
+			/// \brief Store a definition of the given kind (optional role label in the
+			/// filename) in the attached directory (empty id if none).
+			std::string PutRecordsDefinition(std::string const& content,
+			                                 std::string const& kind,
+			                                 std::string const& label = {}) override
+			{
+				return records_ ? records_->PutDefinition(content, kind, std::nullopt, label)
+				                : std::string();
+			}
+
+			/**
+			\brief Auto-declare this run's finite solutions as a `result` record and render
+			the derived views -- "what were my solutions?" answered by every recording solve,
+			CLI and Python alike.  Called after post-processing; no-op when not recording.
+			*/
+			void DeclareFiniteSolutionsResult()
+			{
+				if (!records_ || records_run_id_.empty())
+					return;
+				boost::json::array points;
+				for (auto const& smd : solution_final_metadata_)
+					if (smd.is_finite)
+						points.push_back(boost::json::object{
+							{"run", records_run_id_},
+							{"index", static_cast<std::int64_t>(smd.path_index)}});
+				boost::json::object result;
+				result["kind"] = "result";
+				result["name"] = "finite solutions [run " + records_run_id_ + "]";
+				result["when"] = records::TimeStampNow();
+				result["description"] = "auto-declared by the solver after post-processing";
+				result["points"] = points;
+				records_->Append(result);
+				records_->RefreshIndex();
+			}
+
+			/// \brief The attached output directory (null when not recording).
+			std::shared_ptr<records::OutputDirectory> const& Records() const { return records_; }
+
+			/// \brief How many paths the last Solve() recalled from records instead of computing.
+			unsigned long long NumPathsRecalled() const { return num_recalled_; }
+
+			/// \brief This solve's run id in the records (empty when not recording).
+			std::string const& RecordsRunId() const { return records_run_id_; }
+
+			/**
+			\brief Attach the ambient output directory (manager rank only; workers never
+			touch the records).
+
+			Records are ON BY DEFAULT for every solver, matching the CLI and
+			`bertini.solve` (ADR-0047): the resolution -- unset `BERTINI_RECORDS_DIR`
+			means `./bertini_output`, a value chooses the directory, `none` (or the
+			POSIX-only empty string) means explicitly no records -- lives in
+			`records::AmbientRecordsPath`.  An explicit `RecordTo(...)` always wins
+			over the ambient resolution.
+			*/
+			void MaybeAttachAmbientRecords()
+			{
+				if (records_ || !parallel::IsManager())
+					return;
+				if (auto const dir = records::AmbientRecordsPath())
+					records_ = records::OutputDirectory::Shared(*dir);
+			}
+
+			/**
+			\brief Declare where this solve's start points came from, for the records
+			(chains and givens).
+
+			By default a solve's start points derive from the target + seed (canonical
+			start labels -- provenance bottoms out at the start system).  When the caller
+			supplies start points -- a prior run's solutions (a CHAIN) or external data (a
+			GIVEN) -- pass one reference object per path, e.g.
+			`{"kind":"point_ref","run":<id>,"index":i}` or
+			`{"kind":"given_ref","given":<definition id>,"index":i}`, plus an identity
+			string for the start data as a whole, which JOINS THE ASK: the same homotopy
+			from different start data is a different computation.
+
+			Call before Solve() (and before RecordsAsk()/EnsureRunRecorded()).
+
+			\param refs One provenance object per start point, in path-index order.
+			\param start_identity Digest/id of the start data (joins the ask identity).
+			*/
+			void SetRecordedStartProvenance(std::vector<boost::json::object> refs,
+			                                std::string start_identity)
+			{
+				records_start_refs_ = std::move(refs);
+				records_start_identity_ = std::move(start_identity);
+			}
+
+			/**
+			\brief The canonical text of this solver's FULL settings: the algorithm-level
+			configs, then the tracker's own, then the endgame's -- everything that decides
+			what gets computed (the second plank of archiving the algorithms).
+
+			The order is the contract (fixed per solver kind): version line; ZeroDimConf,
+			Tolerances, AutoRetrack, PostProcessing; the tracker's Stepping, Newton,
+			Predictor, and precision config (fixed or adaptive); then the endgame's configs
+			in its AlgoTraits::NeededConfigs declaration order.  One encoding per line,
+			trailing newline.  The settings digest is SHA-256 over exactly this text.
+
+			\return The versioned canonical settings text.
+			*/
+			std::string CanonicalSettingsText() const
+			{
+				std::ostringstream text;
+				text << records::ConfigEncodingVersion << "\n"
+				     << records::CanonicalEncoding(this->template Get<ZeroDimConf>()) << "\n"
+				     << records::CanonicalEncoding(this->template Get<Tolerances>()) << "\n"
+				     << records::CanonicalEncoding(this->template Get<AutoRetrack>()) << "\n"
+				     << records::CanonicalEncoding(this->template Get<PostProcessing>()) << "\n"
+				     << records::CanonicalEncoding(GetTracker().template Get<tracking::SteppingConfig>()) << "\n"
+				     << records::CanonicalEncoding(GetTracker().template Get<tracking::NewtonConfig>()) << "\n"
+				     << records::CanonicalEncoding(GetTracker().GetPredictor()) << "\n"
+				     << records::CanonicalEncoding(GetTracker().template Get<PrecisionConfig>()) << "\n";
+				AppendEndgameConfigEncodings(text,
+					typename endgame::AlgoTraits<EndgameType>::NeededConfigs{});
+				return text.str();
+			}
+
+			/**
+			\brief The ask identity of this solve: op + tracker/endgame kind (stable record
+			names, never typeid) + target digest + settings digest + seed.
+
+			The settings digest is SHA-256 over CanonicalSettingsText() -- ALL the
+			configs the solve reads, algorithm + tracker + endgame, in that method's
+			fixed documented order (ADR-0043; extend by appending, never reordering).
+
+			\return The ask as a json object (hashed for the run id).
+			*/
+			boost::json::object RecordsAsk() const
+			{
+				auto const settings = detail::Sha256(CanonicalSettingsText());
+				boost::json::object ask;
+				ask["op"] = "zerodim";
+				ask["tracker"] = tracking::TrackerTraits<TrackerType>::kRecordName;
+				ask["endgame"] = endgame::AlgoTraits<EndgameType>::kRecordName;
+				ask["target"] = RecordsTargetSystem().ContentDigest().Hex();
+				// the homotopy actually tracked: for seed-derived homotopies this is
+				// redundant with (target, seed) but harmless; for USER homotopies (the
+				// engine driven directly) it is the only thing telling asks apart
+				ask["homotopy"] = Homotopy().ContentDigest().Hex();
+				if (!records_start_identity_.empty())
+					ask["start"] = records_start_identity_;   // external start data is identity
+				ask["config"] = settings.Hex();
+				ask["seed"] = static_cast<std::int64_t>(GetGlobalSeed());
+				return ask;
+			}
+
+			/**
+			\brief Append the canonical encodings of the endgame's configs (its
+			AlgoTraits::NeededConfigs, in declaration order) to the settings text.
+
+			\tparam EGConfTs The endgame's config types, from its NeededConfigs list.
+			\param text The settings text being built.
+			*/
+			template <typename... EGConfTs>
+			void AppendEndgameConfigEncodings(std::ostringstream& text,
+			                                  detail::TypeList<EGConfTs...>) const
+			{
+				((text << records::CanonicalEncoding(
+					GetEndgame().template Get<EGConfTs>()) << "\n"), ...);
+			}
+
+			/**
+			\brief Ensure this solve's run header is on record (appending it if absent) and
+			set the run id.  Requires an attached directory; call after PreSolveSetup.
+			*/
+			void EnsureRunRecorded()
+			{
+				auto const ask = RecordsAsk();
+				records_run_id_ = detail::Sha256(boost::json::serialize(ask)).Hex().substr(0, 16);
+
+				// the run's results file (the payload store) is created BEFORE anything
+				// refers to it: line 1 is its self-description, so a wandering results
+				// file says what run and ask it answers.  Idempotent on resume.
+				records_->EnsureResultsFile(records_run_id_,
+					{{"kind", "results_header"},
+					 {"schema", records::RecordSchemaVersion},
+					 {"run", records_run_id_},
+					 {"ask", ask}});
+
+				records_run_resumed_ = false;
+				for (auto const& rec : records_->Scan())
+					if (auto const* k = rec.if_contains("kind");
+					    k && k->is_string() && k->get_string() == "run"
+					    && rec.if_contains("run") && rec.at("run").is_string()
+					    && rec.at("run").as_string() == records_run_id_)
+					{
+						// header already on record: this ask was asked before.  The
+						// recall event narrating THIS session lands after recall runs
+						// (RecallRecordedPaths knows the counts).
+						records_run_resumed_ = true;
+						return;
+					}
+
+				// the archived system is a JSON document (like the configs): a
+				// structured "system" parts view (variable groups, functions, ...) and
+				// the CANONICAL ENCODING (b2sysenc) -- exact and complete: every block
+				// (slices, randomization, blends), patch, and gamma survives.  Classic
+				// syntax appears nowhere (an input/compat format, not an output one).
+				// The encoding is the digest PREIMAGE, so the definition id EQUALS
+				// target_digest and a copied-out file verifies itself (hash .encoding).
+				auto const target_digest_hex = RecordsTargetSystem().ContentDigest().Hex();
+				records_->PutDefinition(
+					records::SystemEncodingAsJson(RecordsTargetSystem().CanonicalEncodingText(),
+					                              target_digest_hex,
+					                              io::SystemPartsJson(RecordsTargetSystem())),
+					"systems", target_digest_hex);
+				// the homotopy ACTUALLY TRACKED is archived too: its exact coefficients
+				// (gamma, start-system constants, blend structure) are what the paths
+				// followed, and for user homotopies (chained solves, the engine driven
+				// directly) the archived encoding is the ONLY complete record -- no
+				// seed can rebuild a homotopy constructed before this solve began.
+				auto const homotopy_digest_hex = Homotopy().ContentDigest().Hex();
+				records_->PutDefinition(
+					records::SystemEncodingAsJson(Homotopy().CanonicalEncodingText(),
+					                              homotopy_digest_hex,
+					                              io::SystemPartsJson(Homotopy())),
+					"systems", homotopy_digest_hex);
+				// the settings, reconstructible: the SAME canonical text the digest is over
+				std::string const config_text = CanonicalSettingsText();
+				records_->PutDefinition(
+					records::ConfigTextAsJson(config_text, std::string(ask.at("config").as_string())),
+					"configs",
+					std::string(ask.at("config").as_string()));
+				boost::json::object header;
+				header["kind"] = "run";
+				header["schema"] = records::RecordSchemaVersion;
+				header["when"] = records::TimeStampNow();
+				header["run"] = records_run_id_;
+				header["op"] = "zerodim";
+				// which software wrote this -- descriptive only, NEVER part of the ask
+				// identity (a newer build answering the same ask must still recall)
+				header["producer"] = records::ProducerInfo();
+				header["ask"] = ask;
+				// the field holds a DIGEST -- dereferencing it to the definitions/
+				// file is the reader's job (its id equals this digest)
+				header["target_digest"] = target_digest_hex;
+				// the INTERNAL variable ordering, so views can label endpoint coordinates
+				// truthfully (homogenized points have more coordinates than the user's
+				// rendering declares)
+				{
+					boost::json::array variable_names, user_variable_names;
+					auto const& homogenizers = TargetSystem().HomogenizingVariables();
+					for (auto const& v : TargetSystem().Variables())
+					{
+						variable_names.push_back(boost::json::value(v->name()));
+						bool const is_homogenizer = std::find(homogenizers.begin(),
+							homogenizers.end(), v) != homogenizers.end();
+						if (!is_homogenizer)
+							user_variable_names.push_back(boost::json::value(v->name()));
+					}
+					header["variables"] = variable_names;
+					// the USER's variables, in dehomogenized-point order: labels for
+					// the endpoint_user coordinates on track records
+					header["variables_user"] = user_variable_names;
+				}
+				// (the settings digest lives in ask.config; deref is the reader's job)
+				header["num_paths"] = static_cast<std::int64_t>(num_start_points_);
+				// where this run's computed paths live: history refers, results/ holds
+				header["results_file"] = "results/" + records_run_id_.substr(0, 2)
+				                         + "/" + records_run_id_ + ".jsonl";
+				records_->Append(header);
+			}
+
+			/**
+			\brief Recall recorded paths into the solver's state and return the indices
+			still to compute.
+
+			Each recorded path is decoded to a FullPathResult and replayed through
+			StoreFullPathResult -- recalled state is identical to computed state by
+			construction (boundary data included, so the midpath check works on resume).
+			*/
+			std::vector<SolnIndT> RecallRecordedPaths(std::vector<SolnIndT> const& all_indices)
+			{
+				std::map<std::size_t, boost::json::object> recorded;   // last record per index wins
+				for (auto const& rec : records_->ResultsOf(records_run_id_))
+				{
+					auto const* k = rec.if_contains("kind");
+					if (!k || !k->is_string() || k->get_string() != "path")
+						continue;
+					if (auto const* idx = rec.if_contains("index"); idx && idx->is_int64())
+						recorded[static_cast<std::size_t>(idx->as_int64())] = rec;
+				}
+
+				num_recalled_ = 0;
+				recalling_ = true;
+				std::vector<SolnIndT> missing;
+				for (auto const idx : all_indices)
+				{
+					auto const found = recorded.find(static_cast<std::size_t>(idx));
+					if (found == recorded.end())
+					{
+						missing.push_back(idx);
+						continue;
+					}
+					StoreFullPathResult(
+						records::DecodeFullPathResult<BaseComplexT>(found->second, idx));
+					++num_recalled_;
+				}
+				recalling_ = false;
+
+				// the narrative stays complete: a recalled ask WAS asked.  One small
+				// history line per re-ask -- when, how much came from the store, how
+				// much this session still computed (the kill-and-rerun story, in the
+				// record).  Fresh runs (no prior header) narrate via their run header.
+				if (records_run_resumed_)
+					records_->Append({{"kind", "recall"},
+					                  {"run", records_run_id_},
+					                  {"when", records::TimeStampNow()},
+					                  {"num_recalled", static_cast<std::int64_t>(num_recalled_)},
+					                  {"num_computed", static_cast<std::int64_t>(missing.size())},
+					                  {"producer", records::ProducerInfo()}});
+				return missing;
+			}
+
+			/**
+			\brief Emit the path record for one completed path into the run's results
+			file (called from StoreFullPathResult on the main/manager thread; no-op
+			while recalling or when not recording).
+
+			The record carries the endpoint AND its per-path metadata together -- the
+			data and its facts are one thing (history holds only what was asked, when).
+			*/
+			void RecordCompletedPath(parallel::FullPathResult<BaseComplexT> const& r)
+			{
+				if (!records_ || recalling_ || records_run_id_.empty())
+					return;
+				auto record = records::EncodeFullPathResult(r);
+				record["kind"] = "path";
+				record["run"] = records_run_id_;
+				record["index"] = static_cast<std::int64_t>(r.path_index);
+				// success / diverged / failed -- a truncation near infinity is a verdict,
+				// not a failure (the SummarizeSolve bucketing, PR #46, now in the records)
+				record["status"] = records::CoarsePathStatus(r.endgame_success_code);
+				// the endpoint in USER coordinates too: audits read results in the
+				// variables the user wrote, not the internal homogenized ones
+				if (r.solution.size() != 0)
+					record["endpoint_user"] = records::EncodePoint(
+						this->TargetSystem().DehomogenizePoint(r.solution));
+				// a chained/given start carries its true provenance; otherwise the
+				// canonical start-system label (provenance bottoms out here)
+				record["start"] = (r.path_index < records_start_refs_.size())
+					? records_start_refs_[r.path_index]
+					: boost::json::object{{"kind", "start_label"},
+					                      {"index", static_cast<std::int64_t>(r.path_index)}};
+				records_->AppendResult(records_run_id_, record);
+			}
+
+
+		protected:
+
+		protected:
 
 		///////
 		//	private data members
 		///////
+
+			std::shared_ptr<records::OutputDirectory> records_;  ///< The attached output directory (null = not recording).
+			std::string records_run_id_;      ///< This solve's run id in the records (ask hash prefix).
+			std::vector<boost::json::object> records_start_refs_;  ///< Per-path start provenance (point_ref/given_ref); empty = canonical start labels.
+			std::string records_start_identity_;  ///< Identity of externally supplied start data (joins the ask); empty = starts derive from target+seed.
+			bool recalling_ = false;          ///< True while replaying recorded paths (suppresses re-emission).
+			bool records_run_resumed_ = false; ///< True when this ask's run header pre-existed (a re-ask: emit a recall event).
+			unsigned long long num_recalled_ = 0;  ///< Paths recalled from records in the last Solve().
 
 			unsigned long long num_start_points_;  ///< Number of start points the start system produces.
 			NumErrorT midpath_retrack_tolerance_;  ///< Tolerance used when re-tracking paths flagged by the midpath check.
@@ -2035,7 +2542,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			/// \brief Build and own the target, start system, and homotopy from a target system and factory.
 			OwnedHomotopy(SystemType const& target, FactoryT factory, std::string const& path_variable_name)
-			 : owned_target_(Clone(target)), owned_factory_(std::move(factory))
+			 : user_target_(Clone(target)), owned_target_(Clone(target)), owned_factory_(std::move(factory))
 			{
 				ConsistencyCheck();              // feasibility (no path var; not under-constrained; polynomial)
 				SquareUp();                      // randomize an over-determined system down to square
@@ -2050,12 +2557,18 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			/// \return The built (cloned, prepared) target system.
 			SystemType const&       BuiltTarget()   const { return owned_target_;   }
+			/// \return The target exactly as the USER supplied it: pristine -- never
+			/// squared, homogenized, or patched.  The records name THIS system as the
+			/// ask's target (you asked about your system; the prepared one actually
+			/// tracked lives, complete, inside the archived homotopy).
+			SystemType const&       UserTarget()    const { return user_target_;    }
 			/// \return The built start system.
 			StartSystemBaseT const& BuiltStart()    const { return *owned_start_;   }
 			/// \return The built homotopy.
 			SystemType const&       BuiltHomotopy() const { return owned_homotopy_; }
 
 		protected:
+			SystemType                        user_target_;     ///< The target exactly as supplied (pristine; the records' target identity).
 			SystemType                        owned_target_;    ///< The owned (cloned, prepared) target system.
 			std::shared_ptr<StartSystemBaseT> owned_start_;     ///< The owned start system.
 			SystemType                        owned_homotopy_;  ///< The owned homotopy.
@@ -2176,6 +2689,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			 : OwnedT(target, std::move(factory), ZeroDimConfig{}.path_variable_name),
 			   EngineT(OwnedT::BuiltTarget(), OwnedT::BuiltStart(), OwnedT::BuiltHomotopy())
 			{}
+
+			/// \brief The records name the PRISTINE user-supplied system as this
+			/// solve's target (see HomotopySolver::RecordsTargetSystem).
+			SystemType const& RecordsTargetSystem() const override { return OwnedT::UserTarget(); }
 
 			/// \brief Whether the supplied system was over-determined and squared-up by randomization.
 			bool WasRandomized() const { return this->was_randomized_; }

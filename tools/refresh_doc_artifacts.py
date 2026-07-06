@@ -52,12 +52,14 @@ SVG_HASHSALT = "bertini2-docs"
 # (relative to `outdir`, which is the script's own directory unless noted), and an optional
 # `needs` predicate for artifacts that require something extra (e.g. the built CLI binary).
 class Plot:
-    def __init__(self, key, script, outputs, argv=None, outdir=None, needs=None, note=None):
+    def __init__(self, key, script, outputs, argv=None, outdir=None, needs=None, note=None,
+                 env=None):
         self.key = key
         self.script = script                      # Path
         self.outputs = outputs                    # list[str] basenames
         self.outdir = outdir or script.parent     # where the images land
         self.argv = argv or []                    # extra argv (may reference {outdir})
+        self.env = env or {}                      # extra env (values may reference {tmpdir})
         self.needs = needs                        # optional (label, Path) that must exist
         self.note = note
 
@@ -71,10 +73,10 @@ def _plots():
         Plot("real_points",
              TUT / "formulating_and_solving" / "real_points" / "real_points.py",
              ["real_points.png"]),
-        Plot("solution_database",
-             TUT / "formulating_and_solving" / "solution_database" / "solution_database.py",
-             ["solution_database_real_plane.svg", "solution_database_real_plane.png",
-              "solution_database_complex_planes.svg", "solution_database_complex_planes.png"]),
+        Plot("solution_dataframe",
+             TUT / "formulating_and_solving" / "solution_dataframe" / "solution_dataframe.py",
+             ["solution_dataframe_real_plane.svg", "solution_dataframe_real_plane.png",
+              "solution_dataframe_complex_planes.svg", "solution_dataframe_complex_planes.png"]),
         Plot("observers_and_path_data",
              TUT / "observing_metadata_more" / "observers_and_path_data" / "observers_and_path_data.py",
              ["observers_and_path_data.svg", "observers_and_path_data.png",
@@ -102,6 +104,13 @@ def _plots():
         Plot("critical_points",
              TUT / "formulating_and_solving" / "critical_points" / "critical_points_plot.py",
              ["critical_points.svg", "critical_points.png"]),
+        Plot("chained_homotopies",
+             EXAMPLES / "chained_homotopies.py",
+             ["chain_progression.svg", "chain_progression.png"],
+             outdir=TUT / "chained_homotopies",
+             argv=["--plot", "{outdir}/chain_progression"],
+             env={"BERTINI_RECORDS_DIR": "{tmpdir}"},
+             note="records go to a scratch dir; only the drawn chain is the artifact"),
     ]
 
 
@@ -155,10 +164,13 @@ def run_plot(plot: Plot, dry_run):
     if dry_run:
         return 0
     env, rc_path = _env_with_determinism()
+    scratch = tempfile.TemporaryDirectory(prefix="refresh_doc_artifacts_")
+    env.update({k: v.format(tmpdir=scratch.name) for k, v in plot.env.items()})
     try:
         proc = subprocess.run(cmd, cwd=REPO, env=env)
     finally:
         os.unlink(rc_path)
+        scratch.cleanup()
     if proc.returncode == 0:
         for name in plot.outputs:
             _strip_svg_date(plot.outdir / name)

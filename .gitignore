@@ -96,6 +96,10 @@ build/
 bld/
 build_mine/
 
+# stray sphinx doctest output (the convention is python/docs/build/doctest, already
+# ignored by build/ above; this covers any legacy _doctest_build dir too)
+_doctest_build/
+
 # Wheel / sdist output
 dist/
 
@@ -123,3 +127,4 @@ bertini2_tests_*.log
 
 # Compiled benchmark binaries (keep the .cpp sources)
 /tuning/arithmetic_cost
+build_eg/

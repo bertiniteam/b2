@@ -35,6 +35,7 @@
 
 
 #include "bertini2/mpfr_complex.hpp"
+#include "bertini2/records/derive.hpp"
 #include <boost/random.hpp>
 #include <random>
 #include <cstdint>
@@ -81,6 +82,28 @@ namespace bertini
 	*/
 	unsigned long DerivedWorkerSeed(uint64_t worker_index);
 
+	/**
+	Derive an EFFECTIVE PER-SOLVE SEED from the current master.
+
+	A seedless solve's setup draws (gamma, patch, start coefficients) come sequentially
+	off the session stream, so they depend on everything drawn before -- recording the
+	session master seed under-determines such a run.  Instead, the solve surface calls
+	this at solve start when no explicit seed was given, passes the result to
+	SetGlobalSeed, and records it as the run's ask seed: replaying that one number
+	standalone rebuilds the identical homotopy.
+
+	The derivation is (master, solve ordinal) through pure integer mixing -- NOT a draw
+	from the thread-local streams, whose position after a multithreaded solve is
+	scheduling-dependent.  SetGlobalSeed resets the ordinal, and the solve surface
+	rekeys to each derived seed, so consecutive seedless solves form a deterministic
+	seed chain from the initial master: same master, same sequence of solves, same
+	seeds -- on every platform (the value is masked to 32 bits for LLP64 Windows).
+	Never returns 0 (SetGlobalSeed treats 0 as "draw from entropy").
+
+	\return A nonzero seed for this solve, ready for SetGlobalSeed and the ask record.
+	*/
+	unsigned long DeriveSolveSeed();
+
 
 	/**
 	Generate a random integer number between -10^digits and 10^digits
@@ -89,9 +112,8 @@ namespace bertini
 	inline
 	mpz_int RandomInt()
 	{
-		using namespace boost::random;
-		static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
-		return ui(ThreadEngine());
+		// pinned draw (b2rand/1, ADR-0044): uniform on [-2^(digits/log10(2)), +same]
+		return records::ThreadDrawStream().IntSymmetric(mpz_int(1) << digits*1000L/301L);
 	}
 
 
@@ -101,9 +123,15 @@ namespace bertini
 	template <unsigned long digits = 50>
 	mpq_rational RandomRat()
 	{
-		using namespace boost::random;
-		static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
-		return mpq_rational(ui(ThreadEngine()), ui(ThreadEngine()));
+		// pinned draws (b2rand/1, ADR-0044).  A zero denominator is redrawn (deterministically):
+		// the legacy draw could in principle hand mpq a denominator of 0.
+		mpz_int const bound = mpz_int(1) << digits*1000L/301L;
+		auto& stream = records::ThreadDrawStream();
+		mpz_int const num = stream.IntSymmetric(bound);
+		mpz_int den = stream.IntSymmetric(bound);
+		while (den == 0)
+			den = stream.IntSymmetric(bound);
+		return mpq_rational(num, den);
 	}
 
 
@@ -115,18 +143,11 @@ namespace bertini
 	template <unsigned int length_in_digits>
 	real_mp RandomMp()
 	{
-
-		using namespace boost::multiprecision;
-   		using namespace boost::random;
-
-   		static thread_local uniform_real_distribution<number<mpfr_float_backend<length_in_digits>, et_on> > distribution(0,1);
-
-		// Draw from the single per-thread engine shared by every random type
-		// (RandomInt/RandomRat, the double-typed draws, and now the multiprecision
-		// ones), so SetGlobalSeed()/ReseedThisThread() control them all uniformly.
-		// The distribution fills the full mp mantissa from the 32-bit engine via
-		// generate_canonical.
-		real_mp a{distribution(ThreadEngine())};
+		// Pinned draw (b2rand/1, ADR-0044) from the single per-thread stream shared by
+		// every random type, so SetGlobalSeed()/ReseedThisThread() control them all
+		// uniformly.  Uniform on [0,1) at length_in_digits digits, bit-identical on
+		// every platform.
+		real_mp a{records::ThreadDrawStream().UnitRealMp(length_in_digits)};
 		return a;
 	}
 	
@@ -249,7 +270,15 @@ using bertini::RandomMp;
 	 */
 	inline complex rand()
 	{
-		return complex( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+		// DRAW ORDER IS A CONTRACT (cross-platform reproducibility, 2026-07-03): the two
+		// component draws are sequenced EXPLICITLY -- real first, then imaginary.  Never
+		// put two draws in one full-expression: C++ argument evaluation order is
+		// unspecified, and gcc really does order them differently on x86_64 vs aarch64
+		// (found as an architecture-split seeded-homotopy digest: every (re, im) pair of
+		// every seeded coefficient was transposed between the two).
+		real_mp const re = RandomMp(real_mp(-1),real_mp(1));
+		real_mp const im = RandomMp(real_mp(-1),real_mp(1));
+		return complex( re, im );
 	}
 
 
@@ -258,7 +287,10 @@ using bertini::RandomMp;
 	 */
 	inline complex rand_unit()
 	{
-		complex returnme( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp const re = RandomMp(real_mp(-1),real_mp(1));
+		real_mp const im = RandomMp(real_mp(-1),real_mp(1));
+		complex returnme( re, im );
 		return returnme / abs(returnme);   // normalize to modulus 1 (NOT sqrt(abs), which left modulus sqrt|z|)
 	}
 
@@ -280,11 +312,16 @@ using bertini::RandomMp;
 	 */
 	inline complex rand_bounded_modulus()
 	{
-		complex z( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp re = RandomMp(real_mp(-1),real_mp(1));
+		real_mp im = RandomMp(real_mp(-1),real_mp(1));
+		complex z( re, im );
 		auto m = abs(z);
 		while (m == 0)   // measure-zero, but a zero coefficient is degenerate -- redraw
 		{
-			z = complex( RandomMp(real_mp(-1),real_mp(1)), RandomMp(real_mp(-1),real_mp(1)) );
+			re = RandomMp(real_mp(-1),real_mp(1));
+			im = RandomMp(real_mp(-1),real_mp(1));
+			z = complex( re, im );
 			m = abs(z);
 		}
 		return z / sqrt(m);
@@ -304,11 +341,16 @@ using bertini::RandomMp;
 		SetThreadPrecision(num_digits);
 		a.precision(num_digits);
 
-		complex z( RandomMp(real_mp(-1),real_mp(1),num_digits), RandomMp(real_mp(-1),real_mp(1),num_digits) );
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp re = RandomMp(real_mp(-1),real_mp(1),num_digits);
+		real_mp im = RandomMp(real_mp(-1),real_mp(1),num_digits);
+		complex z( re, im );
 		auto m = abs(z);
 		while (m == 0)
 		{
-			z = complex( RandomMp(real_mp(-1),real_mp(1),num_digits), RandomMp(real_mp(-1),real_mp(1),num_digits) );
+			re = RandomMp(real_mp(-1),real_mp(1),num_digits);
+			im = RandomMp(real_mp(-1),real_mp(1),num_digits);
+			z = complex( re, im );
 			m = abs(z);
 		}
 		a = std::move(z / sqrt(m));
@@ -386,7 +428,10 @@ using bertini::RandomMp;
 		auto cached = ThreadPrecision();
 		SetThreadPrecision(num_digits);
 		
-		complex_mp temp( RandomMp(num_digits), RandomMp(num_digits) );
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp const re = RandomMp(num_digits);
+		real_mp const im = RandomMp(num_digits);
+		complex_mp temp( re, im );
 		a = std::move(temp);
 		SetThreadPrecision(cached);
 	}
@@ -415,7 +460,10 @@ using bertini::RandomMp;
 		SetThreadPrecision(num_digits);
 		a.precision(num_digits);
 		
-		complex temp(RandomMp(num_digits),RandomMp(num_digits));
+		// draw order is a contract: real first, then imaginary (see rand())
+		real_mp const re = RandomMp(num_digits);
+		real_mp const im = RandomMp(num_digits);
+		complex temp(re, im);
 		a = std::move(temp/abs(temp));   // normalize to modulus 1 (NOT sqrt(abs))
 		SetThreadPrecision(cached);
 	}

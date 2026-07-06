@@ -64,6 +64,10 @@ concurrency:
 # (eigenpy >= 3.13 requires Python >= 3.10, so the wheel matrix drops 3.9).
 env:
   EIGENPY_VERSION: "3.13.0"
+  # Single source of truth for the Boost version (C++ tests + wheels).  Pin exact;
+  # bump deliberately.  The tarball/dir use the underscored form (boost_1_90_0),
+  # derived in-shell where needed since GitHub expressions have no string replace().
+  BOOST_VERSION: "1.90.0"
   # Opt JavaScript actions into Node 24 (Node 20 is being removed from the runners).
   # Silences the conda-incubator/setup-miniconda@v3 (and other node20 action) deprecation.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -141,9 +145,10 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           cd /tmp
-          curl -fsSL -o boost_1_90_0.tar.bz2 https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2
-          tar xjf boost_1_90_0.tar.bz2
-          cd boost_1_90_0
+          bu="boost_$(echo "$BOOST_VERSION" | tr . _)"
+          curl -fsSL -o "$bu.tar.bz2" "https://archives.boost.io/release/${BOOST_VERSION}/source/$bu.tar.bz2"
+          tar xjf "$bu.tar.bz2"
+          cd "$bu"
           ./bootstrap.sh --prefix=/tmp/boost-base \
             --with-libraries=serialization,filesystem,graph,chrono,regex,timer,log,thread,test
           ./b2 install -j$(nproc)
@@ -152,9 +157,10 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           cd /tmp
-          curl -fsSL -o boost_1_90_0.tar.bz2 https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2
-          tar xjf boost_1_90_0.tar.bz2
-          cd boost_1_90_0
+          bu="boost_$(echo "$BOOST_VERSION" | tr . _)"
+          curl -fsSL -o "$bu.tar.bz2" "https://archives.boost.io/release/${BOOST_VERSION}/source/$bu.tar.bz2"
+          tar xjf "$bu.tar.bz2"
+          cd "$bu"
           ./bootstrap.sh --prefix=/tmp/boost-base \
             --with-libraries=serialization,filesystem,graph,chrono,regex,timer,log,thread,test
           ./b2 install -j2 hardcode-dll-paths=true dll-path=/tmp/boost-base/lib
@@ -240,7 +246,10 @@ jobs:
     if: ${{ inputs.minimal != true }}
     needs: [doc_lint]
     runs-on: windows-latest
-    timeout-minutes: 40   # backstop against a hang; the clang-cl build+test is ~22 min
+    timeout-minutes: 60   # backstop against a hang; the clang-cl build+test is ~22 min
+                          # warm, but a cache-cold rerun on a slow runner legitimately
+                          # needs ~40 (observed 2026-07-05: all tests PASSED, then the
+                          # 40-min axe fell during post-job cache packing)
     env:
       CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
     steps:
@@ -330,7 +339,7 @@ jobs:
             ~/.cache/pip
             ~/.cache/cibuildwheel
             ~/Library/Caches/Homebrew
-            /tmp/boost_1_90_0.tar.bz2
+            /tmp/boost_*.tar.bz2
             /tmp/eigen-3.4.0.tar.gz
             /tmp/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz
           key: ${{ runner.os }}-cibw-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'python/pyproject.toml', 'CMakeLists.txt', 'core/CMakeLists.txt', '.github/workflows/build_and_test.yml', 'python_bindings/include/tracker_export.hpp', 'python_bindings/include/endgame_export.hpp') }}
@@ -389,6 +398,9 @@ jobs:
             yum install -y wget gmp-devel mpfr-devel libmpc-devel libtool &&
             { yum install -y ccache || { yum install -y epel-release && yum install -y ccache; }; } &&
             ccache --version &&
+            python3 -m venv /tmp/pe && /tmp/pe/bin/pip install -q "patchelf==0.17.2.1" &&
+            install -m755 /tmp/pe/bin/patchelf /usr/local/bin/patchelf &&
+            echo "pinned $(patchelf --version) at $(command -v patchelf)" &&
             cd /tmp &&
             { [ -f eigen-3.4.0.tar.gz ] || wget -q https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz ; } &&
             rm -rf eigen-3.4.0 && tar xzf eigen-3.4.0.tar.gz &&
@@ -414,9 +426,10 @@ jobs:
             PY_INC=$(python -c "import sysconfig; print(sysconfig.get_path('include'))") &&
             PY_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')") &&
             cd /tmp &&
-            { [ -f boost_1_90_0.tar.bz2 ] || wget -q https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2 ; } &&
-            rm -rf boost_1_90_0 && tar xjf boost_1_90_0.tar.bz2 &&
-            cd boost_1_90_0 &&
+            BU="boost_$(echo ${{ env.BOOST_VERSION }} | tr . _)" &&
+            { [ -f "$BU.tar.bz2" ] || wget -q "https://archives.boost.io/release/${{ env.BOOST_VERSION }}/source/$BU.tar.bz2" ; } &&
+            rm -rf "$BU" && tar xjf "$BU.tar.bz2" &&
+            cd "$BU" &&
             ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py &&
             printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam &&
             ./b2 install -j$(nproc) --user-config=user-config.jam python=$PY_VER --without-mpi &&
@@ -438,12 +451,13 @@ jobs:
             PY_INC=$(python -c "import sysconfig; print(sysconfig.get_path('include'))") &&
             PY_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')") &&
             cd /tmp &&
-            { [ -f boost_1_90_0.tar.bz2 ] || curl -fsSL -o boost_1_90_0.tar.bz2 https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2 ; } &&
-            rm -rf boost_1_90_0 && tar xjf boost_1_90_0.tar.bz2 &&
-            cd boost_1_90_0 &&
+            BU="boost_$(echo ${{ env.BOOST_VERSION }} | tr . _)" &&
+            { [ -f "$BU.tar.bz2" ] || curl -fsSL -o "$BU.tar.bz2" "https://archives.boost.io/release/${{ env.BOOST_VERSION }}/source/$BU.tar.bz2" ; } &&
+            rm -rf "$BU" && tar xjf "$BU.tar.bz2" &&
+            cd "$BU" &&
             ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py &&
             printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam &&
-            ./b2 install -j$(sysctl -n hw.ncpu) --user-config=user-config.jam python=$PY_VER hardcode-dll-paths=true dll-path=/tmp/deps-py/lib &&
+            ./b2 install -j$(sysctl -n hw.ncpu) --user-config=user-config.jam python=$PY_VER --without-mpi hardcode-dll-paths=true dll-path=/tmp/deps-py/lib &&
             cd /tmp &&
             rm -rf eigenpy-${{ env.EIGENPY_VERSION }} && tar zxf eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz &&
             cd eigenpy-${{ env.EIGENPY_VERSION }} && mkdir -p bld && cd bld &&
@@ -460,8 +474,19 @@ jobs:
           # (and locally); the older blame on "MPFR 3.1.6" was a misdiagnosis.  Running
           # the full suite here is the in-container proof of the fix.  If it flakes or
           # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
-          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy pandas"
-          CIBW_TEST_COMMAND_LINUX: "cd {project} && python -m pytest python/test/ -q"
+          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy pandas networkx"
+          # The explicit `bertini2 --version` up front is a permanent smoke test of the
+          # BUNDLED CLI BINARY: wheel repair rewrites its ELF metadata (patchelf via
+          # auditwheel), and a bad rewrite segfaults in the dynamic loader before main()
+          # -- which is exactly what happened with the image's stock patchelf (hence the
+          # 0.17.2.1 pin in CIBW_BEFORE_ALL_LINUX above).  If this line ever fails with
+          # rc=139 and no output, suspect the patchelf/auditwheel/strip pipeline first,
+          # not the C++ (a gdb backtrace of the bundled exe settles it).
+          CIBW_TEST_COMMAND_LINUX: >-
+            cd {project} &&
+            elf=$(python -c "import bertini,os;print(os.path.join(os.path.dirname(bertini.__file__),'_bin','bertini2'))") &&
+            "$elf" --version &&
+            python -m pytest python/test/ -q
 
       - name: ccache size (cold run = grows from nothing; warm run = hits)
         if: always()
@@ -586,7 +611,7 @@ jobs:
 
       - name: Run Python tests
         run: |
-          pip install pytest pytest-timeout sympy pandas
+          pip install pytest pytest-timeout sympy pandas networkx
           python -m pytest python/test/ -v
 
   test_wheels_windows:
@@ -624,5 +649,5 @@ jobs:
           conda install -y python=${{ matrix.python-version }} --update-deps
           $py = "C:\Miniconda\envs\b2-windows\python.exe"
           & $py -m pip install --no-index --find-links dist/ bertini2
-          & $py -m pip install pytest pytest-timeout sympy pandas
+          & $py -m pip install pytest pytest-timeout sympy pandas networkx networkx
           & $py -m pytest python/test/ -v

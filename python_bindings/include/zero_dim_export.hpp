@@ -34,6 +34,8 @@
 
 #pragma once
 
+#include <bertini2/records/output_directory.hpp>
+
 #include "python_common.hpp"
 #include "configured_visitor.hpp"
 #include "generic_observable.hpp"
@@ -230,6 +232,52 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		},
 		(boost::python::arg("communicator") = boost::python::object()),
 		"Run the zero-dim algorithm. Pass an mpi4py communicator for parallel execution.")
+	.def("record_to",
+		+[](AlgoT& self, std::string const& directory){
+			self.RecordTo(bertini::records::OutputDirectory::Shared(directory));
+		},
+		(boost::python::arg("self"), boost::python::arg("directory")),
+		"Attach a structured output directory at the given path: this solve records every "
+		"path as it completes (durable, plain-text, see the directory's README.txt) and "
+		"consults the records before computing -- an identical ask (same system, settings, "
+		"seed) recalls from the records instead of re-tracking, so a crashed solve resumes "
+		"by simply calling solve() again.  Recording is ON BY DEFAULT with no code at all: "
+		"an unattached solver records to the ambient directory (BERTINI_RECORDS_DIR, else "
+		"./bertini_output; the value 'none' switches records off).  record_to chooses the "
+		"directory explicitly and always wins over the ambient resolution.")
+	.def("records_path",
+		+[](AlgoT const& self) -> boost::python::object {
+			if (!self.Records())
+				return boost::python::object();
+			return boost::python::object(self.Records()->Root().string());
+		},
+		(boost::python::arg("self")),
+		"The attached output directory's path, or None when not recording.")
+	.def("records_run_id",
+		+[](AlgoT const& self){ return self.RecordsRunId(); },
+		(boost::python::arg("self")),
+		"This solve's run id in the records (empty until a recording solve() runs).  "
+		"Points are referenced as {run, index} pairs; this is the run half.")
+	.def("num_paths_recalled",
+		+[](AlgoT const& self){ return self.NumPathsRecalled(); },
+		(boost::python::arg("self")),
+		"How many paths the last solve() recalled from the records instead of computing "
+		"(0 on a fresh solve; num_paths on a full memo hit).")
+	.def("set_recorded_start_provenance",
+		+[](AlgoT& self, std::string const& refs_json, std::string const& start_identity){
+			auto const parsed = boost::json::parse(refs_json).as_array();
+			std::vector<boost::json::object> refs;
+			refs.reserve(parsed.size());
+			for (auto const& r : parsed)
+				refs.push_back(r.as_object());
+			self.SetRecordedStartProvenance(std::move(refs), start_identity);
+		},
+		(boost::python::arg("self"), boost::python::arg("refs_json"), boost::python::arg("start_identity")),
+		"Declare where this solve's start points came from, for the records: a JSON array "
+		"with one reference object per path ({'kind':'point_ref','run':...,'index':...} for "
+		"a chain from a prior run, {'kind':'given_ref','given':...,'index':...} for external "
+		"data), plus an identity string for the start data (it joins the ask: same homotopy, "
+		"different starts = different computation).  Call before solve().")
 	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
 	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
 	.def("all_solutions",

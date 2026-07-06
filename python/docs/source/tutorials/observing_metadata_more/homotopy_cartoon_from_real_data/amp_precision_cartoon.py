@@ -29,6 +29,10 @@ import numpy as np
 import bertini as pb
 from bertini.tracking import observers
 
+# we are here to WATCH tracking: with ambient recording on, a repeated identical run
+# would RECALL instead of tracking, and the observers would collect nothing to draw
+pb.recording(False)
+
 
 N = 5
 ENDGAME_BOUNDARY = 0.1   # default t at which the endgame begins

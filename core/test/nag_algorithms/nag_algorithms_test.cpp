@@ -40,7 +40,30 @@
 #include "bertini2/mpfr_extensions.hpp"
 #include "test/utility/enable_logging.hpp"
 
+#include <cstdlib>
 
+// Records are ON BY DEFAULT for every solver (ambient ./bertini_output when
+// BERTINI_RECORDS_DIR is unset).  Tests must be hermetic: without this, a bare
+// solve would litter the test runner's cwd AND recall paths recorded by a
+// PREVIOUS ctest run, silently changing what a rerun actually exercises.  The
+// value `none` is the portable off switch (an empty value is POSIX-only: Windows
+// deletes a variable assigned an empty string, which would flip "off" back to
+// the default); records tests attach their own directories via RecordTo, which
+// always wins over the ambient resolution.
+struct RecordsOffByDefaultInTests
+{
+	/// Export the explicit records-off sentinel for the whole test module.
+	RecordsOffByDefaultInTests()
+	{
+#ifdef _WIN32
+		_putenv_s("BERTINI_RECORDS_DIR", "none");
+#else
+		setenv("BERTINI_RECORDS_DIR", "none", 1);
+#endif
+	}
+};
+
+BOOST_GLOBAL_FIXTURE( RecordsOffByDefaultInTests );
 
 // deliberately left blank.  link other files with this one.
 

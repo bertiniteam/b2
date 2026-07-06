@@ -15,6 +15,7 @@ The Python bindings for Bertini 2
 
    welcome
    tutorials/tutorials
+   detailed/everyday
 
 🏛 Reference materials
 ============================
@@ -22,8 +23,8 @@ The Python bindings for Bertini 2
 .. toctree::
    :maxdepth: 2
 
-   detailed/detailed
    known_gotchas
+   detailed/api
    zbib
 
 🔀 Indices and tables

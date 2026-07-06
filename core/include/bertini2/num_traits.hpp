@@ -34,6 +34,7 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #define BERTINI_NUM_TRAITS_HPP
 
 #include <random>
+#include "bertini2/records/draw_functions.hpp"
 #include <complex>
 #include <cmath>
 #include "bertini2/mpfr_complex.hpp"
@@ -219,8 +220,15 @@ namespace bertini
 	{
 		using std::abs;
 		using std::sqrt;
-		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		complex_dbl returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
+		// DRAW ORDER IS A CONTRACT (cross-platform reproducibility, 2026-07-03): the two
+		// component draws are sequenced EXPLICITLY -- real first, then imaginary.  Never
+		// put two draws in one full-expression: C++ argument evaluation order is
+		// unspecified, and gcc really does order them differently on x86_64 vs aarch64
+		// (found as an architecture-split seeded-homotopy digest: every (re, im) pair of
+		// every seeded coefficient was transposed between the two).
+		double const re = records::DrawSymmetricDouble();
+		double const im = records::DrawSymmetricDouble();
+		complex_dbl returnme(re, im);
 		return returnme / sqrt( abs(returnme));
 	}
 
@@ -228,8 +236,10 @@ namespace bertini
 	template <> inline
 	complex_dbl RandomUnit<complex_dbl >()
 	{
-		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		complex_dbl returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
+		// draw order is a contract: real first, then imaginary (see rand_complex)
+		double const re = records::DrawSymmetricDouble();
+		double const im = records::DrawSymmetricDouble();
+		complex_dbl returnme(re, im);
 		return returnme / abs(returnme);
 	}
 
@@ -248,8 +258,7 @@ namespace bertini
 	inline
 	real_mp RandomUnit<real_mp>()
 	{
-		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		return real_mp( distribution(ThreadEngine()) < 0.0 ? -1 : 1 );
+		return real_mp( records::DrawSymmetricDouble() < 0.0 ? -1 : 1 );
 	}
 }// re: namespace bertini
 

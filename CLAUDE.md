@@ -87,6 +87,18 @@ precision-derived tolerance). When adding or debugging precision-sensitive tests
 file on its own (`pytest python/test/classes/<file>.py`) to confirm it does not depend on
 cross-test state.
 
+### Tutorial doctests and doc figures
+
+Tutorial code blocks are executable and CI-tested: `python -m sphinx -b doctest source
+build/doctest` from `python/docs/` (the output goes under `python/docs/build/`, which is
+gitignored).  Behavior changes that alter tutorial output (path counts, verdicts, printed
+tables) will fail there -- update the prose *and* the doctest expectations together.
+
+Committed tutorial figures ship as **both** `.png` and `.svg` and are regenerated ONLY
+through `tools/refresh_doc_artifacts.py`.  Mind the flags: the default (no flags) runs the
+**timing benchmark tables**, not plots -- to redraw one figure use
+`python tools/refresh_doc_artifacts.py --plots --only <name>`.
+
 ## Architecture
 
 The project has three layers, built in order:
@@ -97,12 +109,38 @@ The project has three layers, built in order:
    - `trackers/` -- Path tracking (fixed-precision and adaptive-precision trackers, predictors, Newton correctors)
    - `endgames/` -- Power series and Cauchy endgames for singular endpoint handling
    - `nag_algorithms/` -- Higher-level algorithms (zero-dim solve; numerical irreducible decomposition is *framework scaffolding* -- not yet implemented, its `Solve()` throws)
-   - `io/parsing/` -- Boost.Spirit Qi parsers for classic Bertini input format
+   - `records/` -- The structured output directory (record schema `b2rec/1`, spec at `docs/records/b2rec-1.md`): durable, self-describing run records with full provenance and resume-by-recall.  `OutputDirectory` = append-only JSONL `history/` + content-addressed `definitions/` under kind folders (`systems/`, `configs/`, `givens/`, ...); `README.txt`/`INDEX.txt`/`results.json` are derived, rebuildable views, never truth.  Solvers write through the emission seam in `nag_algorithms` (`RecordTo(...)` or the ambient `BERTINI_RECORDS_DIR`); `bertini.solve` is *ensure-answered* -- paths already recorded for an identical ask (system digest + settings digest + seed) are **recalled**, not recomputed.  See ADR-0042..0047 and "Persistent digests" below.
+   - `io/parsing/` -- Boost.Spirit Qi parsers for classic Bertini input format.  `io/json_writer.hpp` renders a System's parts (variable groups, functions, blocks, patches) as JSON for the records archive -- classic syntax is an INPUT/compat format only (it cannot express block structure) and never appears inside records.
    - `blackbox/` -- CLI executable entry point (CMake target `bertini2_exe`, binary named `bertini2`)
 
 2. **`python_bindings/`** -- Boost.Python + eigenpy bindings producing `_pybertini` native module. Each `*_export.cpp` wraps the corresponding C++ subsystem. Depends on `eigenpy` for NumPy/Eigen interop.
 
 3. **`python/bertini/`** -- Pure Python package that wraps `_pybertini` into a user-friendly API. Submodules mirror the C++ structure: `function_tree`, `system`, `tracking`, `endgame`, `parse`, `nag_algorithm`, `multiprec`, etc.
+
+## Persistent Digests -- the forever contract
+
+Systems and configurations have **stable cross-session identities**: SHA-256 digests over
+versioned canonical text encodings (`b2sysenc/<n>` for Systems, ADR-0042; `b2cfgenc/<n>`
+for configs, ADR-0043; seeds are rooted per `b2rand/1`, ADR-0044).  Records reference
+objects by digest, so equal objects must digest equally *forever* -- across machines,
+compilers, and versions.  Rules that follow:
+
+- **The canonical texts are digest preimages, never presentation.**  Exact values only
+  (doubles as IEEE-754 bit patterns `d64:<16 hex>`, rationals via exact `.str()`, enums by
+  fixed name tables).  Human-readable JSON views are *derived* from them and free to
+  change only if the transform is invertible.  Never "improve" an encoding for
+  readability.
+- **Adding a field to a config struct REQUIRES extending its encoder** (they are
+  hand-maintained mirrors, like `serialize`), and an identity-affecting encoder change
+  REQUIRES, in the same commit: bump the version token, regenerate the golden digest
+  fixture (`core/test/classes/data/{config,system}_digest_fixture.txt` -- run the test,
+  it prints the new digests), and **append** a line to the version registry
+  (`core/test/classes/data/{config,system}_encoding_versions.txt` -- the failing test
+  prints the keyspace hash to append).  Registries are append-only: never edit an
+  existing line; line *k* carries version suffix *k*.  Tests enforce all of this.
+- Deliberately excluded from identity: the RNG seed (its own slot in the ask, beside the
+  config digest), `ZeroDimConfig::num_threads` (thread count must not change what was
+  computed), and all transient eval state.
 
 ## Key Dependencies
 
@@ -121,7 +159,7 @@ The project has three layers, built in order:
 
 ## CI/CD
 
-- `.github/workflows/build_and_test.yml` -- Builds wheels on Ubuntu/macOS/Windows and runs tests. Triggered by pull requests and pushes to `develop`/`main`.
+- `.github/workflows/build_and_test.yml` -- Builds wheels on Ubuntu/macOS/Windows and runs tests. Triggered by pull requests and pushes to `develop`/`main`.  Docs-only changes (`**/*.md`, `python/docs/**`, `Doxyfile`, `VERSION`) are in `paths-ignore` — but beware: for `pull_request` events GitHub evaluates the filter against the PR's **entire** diff, so a docs-only *push to a PR that also carries code* still re-runs CI (and, via the concurrency group, cancels the PR's in-flight run — batch docs commits with code pushes). Only pushes to `develop`/`main` and PRs whose whole diff is docs-only are skipped.  MPI is verified per-platform: the CLI smoke test requires `mpirun -n 2` to produce the *same solution count* as serial, for both start-system families.
 - `.github/workflows/doc_lint.yml` -- A cheap Doxygen doc-correctness gate that **the build matrix depends on** (it runs first; if it fails, nothing compiles). **Run `bash tools/doclint.sh` locally before pushing any C++ change**, or CI will bounce the whole build. It needs `doxygen` on PATH (`brew install doxygen`). Two passes: (1) *correctness* — `@param` names must match signatures, no doc blocks on removed signatures, no unresolved `\ref`/`\cite` (zero tolerance); (2) *undocumented ratchet* — the count of undocumented public entities in `tools/doc_undocumented_baseline.txt` may only **decrease** (currently `0`, so **every new public C++ entity — including each struct data member — needs a Doxygen comment**, e.g. `///< ...`). If you legitimately reduce the count, run `bash tools/doclint.sh --update-baseline` to lock it in.
 - `.github/workflows/publish.yml` -- Publishes to TestPyPI on `develop` push, PyPI on version tags (`v*.*.*`) with Sigstore signing and GitHub Releases.
 

@@ -73,7 +73,6 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinxcontrib.bibtex',
-    'sphinx_rtd_theme'
     ]
 
 autosectionlabel_prefix_document = True
@@ -95,6 +94,13 @@ warnings.filterwarnings("ignore", message="FigureCanvasAgg is non-interactive")
 # natural default precision on a fresh `import bertini`.
 import bertini
 bertini.default_precision(20)
+
+# Point the ambient records directory at a scratch location for the whole doctest build.
+# bertini.solve() records by design (the structured output directory is ordinary program
+# output); without this, any tutorial calling solve() without directory= would drop a
+# bertini_output/ into sphinx's working directory.  One temp dir per build, auto-discarded.
+import tempfile as _tempfile
+bertini.records_dir(_tempfile.mkdtemp(prefix="bertini_docs_records_"))
 '''
 
 bibtex_bibfiles = ['../../../doc_resources/bertini2.bib']
@@ -167,8 +173,8 @@ else:
 
 build_date = os.environ.get('BERTINI_BUILD_DATE', '')
 if build_date:
-    # sphinx_rtd_theme shows `release` in the sidebar header; appending the
-    # build date there makes it visible without template overrides.
+    # the theme shows `release` in the sidebar header; appending the build date
+    # there makes it visible without template overrides.
     release = '{} ({})'.format(version, build_date)
 
 # Expose build metadata to Jinja templates (used by _templates/footer.html

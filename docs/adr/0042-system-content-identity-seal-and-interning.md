@@ -126,7 +126,11 @@ a second archive — would share with it. Therefore:
   loaded artifacts unify with live ones instead of forking the intern universe.
 - The digest is only as stable as the encoding spec; the golden-digest fixture test
   (`core/test/classes/data/system_digest_fixture.txt`) fails loudly on any drift, and the versioned
-  header turns an intentional spec change into a new keyspace rather than silent corruption.
+  header turns an intentional spec change into a new keyspace rather than silent corruption.  The
+  bump itself is also under test: the append-only version registry
+  (`core/test/classes/data/system_encoding_versions.txt`) maps every `b2sysenc` version ever used to
+  a hash of the fixture recipes' encoding texts (version token excluded), so regenerating the
+  fixture without bumping the version fails the registry test.
 - Sealing is opt-in: existing mutable workflows are untouched, and factory outputs
   (`MakeHomotopy`, `Randomize`, zero-dim internals) are not auto-sealed.
 - Value-equal coefficients stored at different precisions are *distinct* identities (their

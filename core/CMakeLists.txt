@@ -148,6 +148,10 @@ set(detail_headers
     include/bertini2/detail/enable_permuted_arguments.hpp
     include/bertini2/detail/typelist.hpp
     include/bertini2/detail/sha256.hpp
+    include/bertini2/records/config_encoding.hpp
+    include/bertini2/records/derive.hpp
+    include/bertini2/records/output_directory.hpp
+    include/bertini2/records/draw_functions.hpp
 )
 
 set(function_tree_headers
@@ -206,6 +210,7 @@ set(functiontree_roots_HEADERS
 
 set(io_headers
     include/bertini2/io/classic_writer.hpp
+    include/bertini2/io/json_writer.hpp
     include/bertini2/io/file_utilities.hpp
     include/bertini2/io/generators.hpp
     include/bertini2/io/parsing.hpp
@@ -345,6 +350,10 @@ set(basics_sources
     src/basics/have_bertini.cpp
     src/basics/fast_allocator.cpp
     src/detail/sha256.cpp
+    src/records/config_encoding.cpp
+    src/records/derive.cpp
+    src/records/output_directory.cpp
+    src/records/producer.cpp
 )
 
 set(function_tree_sources
@@ -471,6 +480,20 @@ endif()
 # BERTINI2_VERSION (for cmake/SOVERSION semantics); this carries the complete
 # string so bertini::Version() can report the dev-count. See CMakeLists.txt.
 target_compile_definitions(bertini2 PUBLIC "BERTINI2_VERSION_FULL=\"${BERTINI2_FULL_VERSION}\"")
+
+# producer info: the git commit of the build, regenerated at BUILD time (a configure-time
+# capture would go stale between commits).  Content-compare in the script avoids churn.
+set(PRODUCER_INFO_HEADER "${CMAKE_CURRENT_BINARY_DIR}/generated/bertini2/records/producer_info.generated.hpp")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/bertini2/records")
+add_custom_target(producer_info
+    COMMAND ${CMAKE_COMMAND}
+        -DSRC_DIR=${CMAKE_SOURCE_DIR}
+        -DOUT_FILE=${PRODUCER_INFO_HEADER}
+        -P ${CMAKE_SOURCE_DIR}/cmake/GenerateProducerInfo.cmake
+    BYPRODUCTS "${PRODUCER_INFO_HEADER}"
+    COMMENT "capturing producer info (git commit)")
+add_dependencies(bertini2 producer_info)
+target_include_directories(bertini2 PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 target_link_libraries(bertini2 PUBLIC ${GMP_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPFR_LIBRARIES})
@@ -792,6 +815,9 @@ if (ENABLE_UNIT_TESTING)
 
 	set(B2_CLASS_TEST_SOURCES
 		test/classes/sha256_test.cpp
+		test/classes/config_digest_test.cpp
+		test/classes/seeded_randomness_test.cpp
+		test/classes/output_directory_test.cpp
 		test/classes/boost_multiprecision_test.cpp
 		test/classes/fundamentals_test.cpp
 		test/classes/precision_propagation_test.cpp
@@ -893,6 +919,7 @@ if (ENABLE_UNIT_TESTING)
 		test/nag_algorithms/nag_algorithms_test.cpp
 		test/nag_algorithms/zero_dim.cpp
 		test/nag_algorithms/threaded_solve.cpp
+		test/nag_algorithms/zero_dim_records.cpp
 		test/nag_algorithms/numerical_irreducible_decomposition.cpp
 		test/nag_algorithms/trace.cpp
 	)

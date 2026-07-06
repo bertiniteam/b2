@@ -82,10 +82,35 @@ int RunZeroDim(std::string const& config_str, std::string const& input_str)
 		return 1;
 	}
 
+	// The structured output directory is simply part of the program's output (like
+	// main_data): produced always, freely deletable, no flag.  BERTINI_RECORDS_DIR
+	// overrides the default location; `none` (or an empty value, POSIX only) is the
+	// off switch.  One resolution, shared with the library solvers' ambient attach
+	// (records::AmbientRecordsPath).  Manager rank only; workers never touch records.
+	if (parallel::IsManager())
+	{
+		if (auto const records_dir = bertini::records::AmbientRecordsPath())
+		{
+			alg->RecordToPath(*records_dir);
+			std::cout << "bertini: records at " << *records_dir << "\n";
+		}
+		else
+			std::cout << "bertini: records off (BERTINI_RECORDS_DIR)\n";
+	}
+
 	alg->Run();
 
 	if (parallel::IsManager())
 	{
+		// archive the ACTUAL input file in the records: the truest statement of what was
+		// asked, referenced from this run as a `given`
+		{
+			auto const input_definition =
+				alg->PutRecordsDefinition(config_str + input_str, "givens", "cli_input");
+			if (!input_definition.empty())
+				alg->AppendRecordJson(std::string("{\"kind\":\"given\",\"role\":\"cli_input\",\"run\":\"")
+					+ alg->RecordsRunIdentity() + "\",\"source\":\"" + input_definition + "\"}");
+		}
 		{
 			std::ofstream main_data{"main_data"};
 			alg->WriteMainData(main_data);

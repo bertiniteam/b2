@@ -178,6 +178,7 @@ set(PYBERTINI_SOURCES
     src/tracker_observers.cpp
     src/endgame_observers.cpp
     # zero_dim: coordinator + configs + per-tracker-family split
+    src/records_export.cpp
     src/zero_dim_export.cpp
     src/zero_dim_configs_export.cpp
     src/zero_dim_double_export.cpp

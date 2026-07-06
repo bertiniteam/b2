@@ -70,3 +70,17 @@ def test_solve_eigenvalues_runs():
 def test_crossed_paths_runs():
     # No size knob: it always provokes a crossing on cyclic-5 and shows the re-track repair.
     _run("crossed_paths.py", timeout=540)
+
+
+def test_chained_homotopies_runs(tmp_path, monkeypatch):
+    # the chains/provenance example: records into a scratch dir, asserts its own walk,
+    # and draws the left-to-right progression (pandas + networkx + matplotlib)
+    pytest.importorskip("pandas")
+    pytest.importorskip("networkx")
+    pytest.importorskip("matplotlib")
+    monkeypatch.setenv("BERTINI_RECORDS_DIR", str(tmp_path / "chain_records"))
+    stem = tmp_path / "chain"
+    _run("chained_homotopies.py", "--plot", str(stem))
+    for suffix in (".png", ".svg"):     # tutorial images ship in both formats
+        image = stem.with_suffix(suffix)
+        assert image.exists() and image.stat().st_size > 0
