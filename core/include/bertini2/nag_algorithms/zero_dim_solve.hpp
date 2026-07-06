@@ -2128,19 +2128,22 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			std::string const& RecordsRunId() const { return records_run_id_; }
 
 			/**
-			\brief Attach the ambient output directory if the BERTINI_RECORDS_DIR environment
-			variable is set (manager rank only; workers never touch the records).
+			\brief Attach the ambient output directory (manager rank only; workers never
+			touch the records).
 
-			An EMPTY value is the off switch: `BERTINI_RECORDS_DIR=""` means "explicitly no
-			records", for library and CLI alike.
+			Records are ON BY DEFAULT for every solver, matching the CLI and
+			`bertini.solve` (ADR-0047): the resolution -- unset `BERTINI_RECORDS_DIR`
+			means `./bertini_output`, a value chooses the directory, `none` (or the
+			POSIX-only empty string) means explicitly no records -- lives in
+			`records::AmbientRecordsPath`.  An explicit `RecordTo(...)` always wins
+			over the ambient resolution.
 			*/
 			void MaybeAttachAmbientRecords()
 			{
 				if (records_ || !parallel::IsManager())
 					return;
-				if (char const* dir = std::getenv("BERTINI_RECORDS_DIR"))
-					if (*dir != '\0')
-						records_ = records::OutputDirectory::Shared(dir);
+				if (auto const dir = records::AmbientRecordsPath())
+					records_ = records::OutputDirectory::Shared(*dir);
 			}
 
 			/**

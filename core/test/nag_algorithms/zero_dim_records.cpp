@@ -324,15 +324,50 @@ BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)
 	zd.DefaultSetup();
 	zd.Solve();   // no RecordTo: the environment supplies the directory
 
+	// restore the module's hermeticity sentinel (NOT unset: unset now means
+	// records-on-by-default, and later tests in this suite must stay recordless)
 #ifdef _WIN32
-	_putenv_s("BERTINI_RECORDS_DIR", "");
+	_putenv_s("BERTINI_RECORDS_DIR", "none");
 #else
-	unsetenv("BERTINI_RECORDS_DIR");
+	setenv("BERTINI_RECORDS_DIR", "none", 1);
 #endif
 
 	BOOST_REQUIRE(zd.Records() != nullptr);
 	BOOST_CHECK(fs::exists(dir / "README.txt"));
 	BOOST_CHECK_EQUAL(zd.Records()->Scan().size(), 6u);   // 1 run + 4 tracks + 1 auto-declared result
+}
+
+// Records are ON BY DEFAULT: with BERTINI_RECORDS_DIR unset, a bare solver (no
+// RecordTo, no environment setup) records to ./bertini_output -- the library
+// behaves like the CLI and bertini.solve (ADR-0047).
+BOOST_AUTO_TEST_CASE(bare_solvers_record_by_default_when_env_unset)
+{
+	auto const sandbox = FreshDir("default_on");
+	fs::create_directories(sandbox);
+	auto const old_cwd = fs::current_path();
+	fs::current_path(sandbox);
+#ifdef _WIN32
+	_putenv("BERTINI_RECORDS_DIR=");   // assigning empty DELETES the variable on Windows
+#else
+	unsetenv("BERTINI_RECORDS_DIR");
+#endif
+
+	SetGlobalSeed(11);
+	auto sys = TwoQuadrics();
+	ZD zd(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	// restore the module's hermeticity sentinel and the cwd before asserting
+#ifdef _WIN32
+	_putenv_s("BERTINI_RECORDS_DIR", "none");
+#else
+	setenv("BERTINI_RECORDS_DIR", "none", 1);
+#endif
+	fs::current_path(old_cwd);
+
+	BOOST_REQUIRE(zd.Records() != nullptr);
+	BOOST_CHECK(fs::exists(sandbox / "bertini_output" / "README.txt"));
 }
 
 // finds the run header in a directory's records

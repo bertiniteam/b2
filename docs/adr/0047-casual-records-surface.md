@@ -65,7 +65,13 @@ Grown since the original decision, same principles:
   (networkx DiGraph), `plot_chain()` (left-to-right lineage view; aggregates to
   run-level above `max_paths_drawn`).
 - **The off switch is one line**: `bertini.recording(False)`; for the CLI/ambient,
-  an EMPTY `BERTINI_RECORDS_DIR`.  Off = bare solve, provenance honestly absent.
+  `BERTINI_RECORDS_DIR=none` (the empty string also works on POSIX; Windows deletes
+  empty-valued variables, so `none` is the portable spelling).  Off = bare solve,
+  provenance honestly absent.  *(Updated 2026-07-06: records-on-by-default extends
+  to the bare solver classes -- `ZeroDimSolver`/`HomotopySolver` ambient-attach
+  `./bertini_output` when `BERTINI_RECORDS_DIR` is unset, exactly like the CLI and
+  `bertini.solve`; the resolution lives in ONE place, `records::AmbientRecordsPath`.
+  Test suites pin the off sentinel for hermeticity.)*
 - **Track verdicts are three-way** (success / diverged / failed — truncation is a
   verdict, not a failure) with SuccessCode names recorded beside the integers;
   tracks carry `endpoint_user` (+ run headers `variables_user`) so audits read the

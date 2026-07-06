@@ -49,8 +49,13 @@ through it, and it runs only on the main/manager thread.  Therefore:
   algorithms.)*
 - **Attachment**: explicit `RecordTo(directory)`, or ambient via the
   `BERTINI_RECORDS_DIR` environment variable — attached on the manager rank only;
-  workers never touch the records.  When neither is present, nothing records: the
-  test suites stay clean, and surface-level default-on is rung 5's product decision.
+  workers never touch the records.  *(Updated 2026-07-06: when neither is present,
+  the ambient resolution now defaults ON -- `./bertini_output`, exactly like the CLI
+  and `bertini.solve`; `BERTINI_RECORDS_DIR=none` (or the POSIX-only empty string)
+  is the explicit off switch, and the resolution lives in
+  `records::AmbientRecordsPath`.  Test suites pin the off sentinel to stay clean;
+  originally nothing recorded without attachment, with default-on deferred to the
+  rung-5 surfaces.)*
 
 ## Consequences
 

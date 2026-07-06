@@ -28,6 +28,7 @@ prototype's cross-impl test reads, and READS one the prototype writes when prese
 
 #include <filesystem>
 #include <fstream>
+#include <cstdlib>
 #include <thread>
 #include <vector>
 
@@ -332,6 +333,45 @@ BOOST_AUTO_TEST_CASE(views_survive_dangling_and_garbage_references)
 	std::ifstream in(dir / "INDEX.txt");
 	std::string index_text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	BOOST_CHECK(index_text.find("(unknown target)") != std::string::npos);
+}
+
+// The ONE place the BERTINI_RECORDS_DIR semantics live: unset = records on by
+// default at ./bertini_output; a value = that directory; `none` (portable) or the
+// empty string (POSIX-only: Windows deletes empty-valued variables) = off.
+BOOST_AUTO_TEST_CASE(ambient_records_path_resolution)
+{
+	auto set_env = [](char const* value) {
+#ifdef _WIN32
+		_putenv_s("BERTINI_RECORDS_DIR", value);
+#else
+		setenv("BERTINI_RECORDS_DIR", value, 1);
+#endif
+	};
+
+#ifdef _WIN32
+	_putenv("BERTINI_RECORDS_DIR=");   // assigning empty DELETES the variable on Windows
+#else
+	unsetenv("BERTINI_RECORDS_DIR");
+#endif
+	auto const unset = bertini::records::AmbientRecordsPath();
+	BOOST_REQUIRE(unset.has_value());
+	BOOST_CHECK_EQUAL(*unset, "bertini_output");
+
+	set_env("my_records");
+	auto const chosen = bertini::records::AmbientRecordsPath();
+	BOOST_REQUIRE(chosen.has_value());
+	BOOST_CHECK_EQUAL(*chosen, "my_records");
+
+	set_env("none");
+	BOOST_CHECK(!bertini::records::AmbientRecordsPath().has_value());
+
+#ifndef _WIN32
+	setenv("BERTINI_RECORDS_DIR", "", 1);   // the POSIX-only empty-string off switch
+	BOOST_CHECK(!bertini::records::AmbientRecordsPath().has_value());
+	unsetenv("BERTINI_RECORDS_DIR");        // leave the environment as we found it
+#else
+	_putenv("BERTINI_RECORDS_DIR=");
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(annotate_convenience_appends_annotation_records)

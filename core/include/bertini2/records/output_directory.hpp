@@ -205,5 +205,19 @@ std::string SystemEncodingAsJson(std::string const& encoding_text,
                                  std::string const& digest_hex,
                                  boost::json::object const& parts);
 
+/**
+\brief Resolve the ambient records directory from the environment -- the ONE place the
+`BERTINI_RECORDS_DIR` semantics live (the CLI and every solver's ambient attach use it).
+
+Records are ON BY DEFAULT for every face of bertini2 (ADR-0047): when the variable is
+unset, the resolution is `bertini_output`.  A non-empty value chooses the directory.
+The OFF switch is the value `none` -- or the empty string, which only exists on POSIX
+(Windows cannot represent an empty environment value: assigning one deletes the
+variable, which would silently flip "off" back to the default).
+
+\return The directory to record to, or nullopt when records are explicitly off.
+*/
+std::optional<std::string> AmbientRecordsPath();
+
 } // namespace records
 } // namespace bertini

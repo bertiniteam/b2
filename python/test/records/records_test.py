@@ -234,13 +234,41 @@ def test_records_dir_is_the_ambient_switch_for_bare_solvers(tmp_path, monkeypatc
     assert (d / 'history').exists()
     assert (d / 'results.json').exists()
 
-    # the off switch still wins, and coming back restores the ambient export
+    # the off switch still wins ('none': Windows deletes empty-valued variables, and
+    # with records on by default a deleted variable would mean ON), and coming back
+    # restores the ambient export
     pb.recording(False)
-    assert os.environ['BERTINI_RECORDS_DIR'] == ''
+    assert os.environ['BERTINI_RECORDS_DIR'] == 'none'
     pb.records_dir(str(tmp_path / 'elsewhere'))             # setting while off: no export
-    assert os.environ['BERTINI_RECORDS_DIR'] == ''
+    assert os.environ['BERTINI_RECORDS_DIR'] == 'none'
     pb.recording(True)
     assert os.environ['BERTINI_RECORDS_DIR'] == str(tmp_path / 'elsewhere')
+
+
+def test_bare_solvers_record_by_default(tmp_path):
+    """Records are on for free: a bare ZeroDimSolver (and HomotopySolver -- same
+    engine, same seam) records to the ambient directory with ZERO setup, and an
+    identical bare rerun recalls.  recording(False) runs bare."""
+    ambient = tmp_path / 'ambient_records'   # where the conftest fixture pointed us
+
+    pb.random.set_random_seed(4004)
+    solver = pb.ZeroDimSolver(circle_line(), mptype='adaptive')
+    solver.solve()                           # nothing attached, nothing exported by us
+    assert (ambient / 'history').exists()
+    assert solver.records_path() == str(ambient)
+
+    pb.random.set_random_seed(4004)
+    again = pb.ZeroDimSolver(circle_line(), mptype='adaptive')
+    again.solve()
+    assert again.num_paths_recalled() == 2   # the ensure-answered default, for free
+
+    pb.recording(False)
+    try:
+        bare = pb.ZeroDimSolver(circle_line(), mptype='adaptive')
+        bare.solve()
+        assert bare.records_path() is None
+    finally:
+        pb.recording(True)
 
 
 def test_annotate_renders_beside_the_point(tmp_path):

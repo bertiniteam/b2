@@ -50,23 +50,29 @@ _recording_enabled = True
 def recording(on=None):
     """The one-line on/off switch for the records: ``bertini.recording(False)``.
 
-    With recording off, ``solve`` runs bare -- no directory is written or consulted
-    (so no resuming either), and the ambient ``BERTINI_RECORDS_DIR`` attach is
-    suppressed for this process.  ``recording(True)`` turns it back on.  Call with no
-    argument to ask the current state.
+    Recording is ON BY DEFAULT for every solver in the process -- ``solve``,
+    ``ZeroDimSolver``, ``HomotopySolver`` -- into the ambient directory (see
+    ``records_dir``).  With recording off, solves run bare: no directory is written
+    or consulted (so no resuming either), and the ambient ``BERTINI_RECORDS_DIR``
+    attach is suppressed for this process.  ``recording(True)`` turns it back on.
+    Call with no argument to ask the current state.
 
-    For the command line, the same switch is the environment: ``BERTINI_RECORDS_DIR=""``
-    (empty) runs ``bertini2`` without records.
+    For the command line, the same switch is the environment:
+    ``BERTINI_RECORDS_DIR=none`` runs ``bertini2`` without records (the empty string
+    also works on POSIX; Windows deletes empty-valued variables, so ``none`` is the
+    portable spelling).
     """
     global _recording_enabled
     if on is not None:
         _recording_enabled = bool(on)
         # the C++ side reads the environment for its ambient attach; keep it in step
+        # ('none' rather than '' -- Windows deletes empty-valued variables, and with
+        # records on by default a deleted variable would mean ON)
         if not _recording_enabled:
-            _os.environ['BERTINI_RECORDS_DIR'] = ''
+            _os.environ['BERTINI_RECORDS_DIR'] = 'none'
         elif _ambient is not None:
             _os.environ['BERTINI_RECORDS_DIR'] = _ambient
-        elif _os.environ.get('BERTINI_RECORDS_DIR') == '':
+        elif _os.environ.get('BERTINI_RECORDS_DIR') in ('', 'none'):
             del _os.environ['BERTINI_RECORDS_DIR']
     return _recording_enabled
 
@@ -77,21 +83,24 @@ def records_dir(path=None):
     Resolution when unset: the ``BERTINI_RECORDS_DIR`` environment variable, else
     ``./bertini_output``.  Created on demand.  Returns the resolved path as a string.
 
-    Setting a path is the one-line switch that turns ambient recording on for EVERY
-    solver in the process, not just ``solve``: the path is exported to
-    ``BERTINI_RECORDS_DIR``, which the solver classes (``ZeroDimSolver``,
-    ``HomotopySolver``) read for their ambient attach.  ``recording(False)`` still
-    wins: while recording is off, nothing is exported.
+    Ambient recording is ON BY DEFAULT for every solver in the process --
+    ``ZeroDimSolver`` and ``HomotopySolver`` record here just like ``solve``, with no
+    code at all.  Setting a path chooses WHERE: it is exported to
+    ``BERTINI_RECORDS_DIR``, which the solver classes read for their ambient attach.
+    ``recording(False)`` is the off switch: while recording is off, nothing is
+    exported and the off sentinel survives.
     """
     global _ambient
     if path is not None:
         _ambient = str(path)
         # the solver classes' ambient attach reads the environment; keep it in step
-        # (unless recording is switched off, whose empty-string sentinel must survive)
+        # (unless recording is switched off, whose off sentinel must survive)
         if _recording_enabled:
             _os.environ['BERTINI_RECORDS_DIR'] = _ambient
     if _ambient is None:
-        _ambient = _os.environ.get('BERTINI_RECORDS_DIR', 'bertini_output')
+        env = _os.environ.get('BERTINI_RECORDS_DIR')
+        # '' / 'none' are the recording-off sentinels, not directory names
+        _ambient = env if env and env != 'none' else 'bertini_output'
     return _ambient
 
 

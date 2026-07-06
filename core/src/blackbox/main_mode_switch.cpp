@@ -84,18 +84,18 @@ int RunZeroDim(std::string const& config_str, std::string const& input_str)
 
 	// The structured output directory is simply part of the program's output (like
 	// main_data): produced always, freely deletable, no flag.  BERTINI_RECORDS_DIR
-	// overrides the default location; setting it EMPTY is the off switch.  Manager
-	// rank only; workers never touch records.
+	// overrides the default location; `none` (or an empty value, POSIX only) is the
+	// off switch.  One resolution, shared with the library solvers' ambient attach
+	// (records::AmbientRecordsPath).  Manager rank only; workers never touch records.
 	if (parallel::IsManager())
 	{
-		char const* records_dir = std::getenv("BERTINI_RECORDS_DIR");
-		if (records_dir && *records_dir == '\0')
-			std::cout << "bertini: records off (BERTINI_RECORDS_DIR is empty)\n";
-		else
+		if (auto const records_dir = bertini::records::AmbientRecordsPath())
 		{
-			alg->RecordToPath(records_dir ? records_dir : "bertini_output");
-			std::cout << "bertini: records at " << (records_dir ? records_dir : "bertini_output") << "\n";
+			alg->RecordToPath(*records_dir);
+			std::cout << "bertini: records at " << *records_dir << "\n";
 		}
+		else
+			std::cout << "bertini: records off (BERTINI_RECORDS_DIR)\n";
 	}
 
 	alg->Run();

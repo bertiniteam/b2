@@ -241,8 +241,10 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		"path as it completes (durable, plain-text, see the directory's README.txt) and "
 		"consults the records before computing -- an identical ask (same system, settings, "
 		"seed) recalls from the records instead of re-tracking, so a crashed solve resumes "
-		"by simply calling solve() again.  Also attachable ambiently via the "
-		"BERTINI_RECORDS_DIR environment variable, with no code at all.")
+		"by simply calling solve() again.  Recording is ON BY DEFAULT with no code at all: "
+		"an unattached solver records to the ambient directory (BERTINI_RECORDS_DIR, else "
+		"./bertini_output; the value 'none' switches records off).  record_to chooses the "
+		"directory explicitly and always wins over the ambient resolution.")
 	.def("records_path",
 		+[](AlgoT const& self) -> boost::python::object {
 			if (!self.Records())

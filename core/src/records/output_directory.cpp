@@ -35,6 +35,7 @@ no new link component is required on any platform.
 #include <charconv>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <map>
 #include <sstream>
@@ -296,6 +297,17 @@ std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path c
 	auto made = std::make_shared<OutputDirectory>(root);
 	slot = made;
 	return made;
+}
+
+std::optional<std::string> AmbientRecordsPath()
+{
+	char const* dir = std::getenv("BERTINI_RECORDS_DIR");
+	if (dir == nullptr)
+		return std::string("bertini_output");   // records on by default (ADR-0047)
+	std::string const value(dir);
+	if (value.empty() || value == "none")       // the explicit off switch ("" is POSIX-only)
+		return std::nullopt;
+	return value;
 }
 
 

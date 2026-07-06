@@ -53,6 +53,24 @@ def _reset_precision():
     pb.default_precision(old)
 
 
+@pytest.fixture(autouse=True)
+def _isolate_ambient_records(tmp_path, monkeypatch):
+    """Give every test its own ambient records directory.
+
+    Records are ON BY DEFAULT for every solver (``ZeroDimSolver``/``HomotopySolver``
+    attach the ambient ``BERTINI_RECORDS_DIR`` with no code at all), which is right in
+    production and hazardous in tests: a bare solve would litter the runner's cwd AND
+    recall paths recorded by a previous test or a previous pytest run, silently changing
+    what a rerun exercises.  Recording stays ON (tests exercise the production default)
+    but each test gets a fresh throwaway directory; tests that care about placement pass
+    ``directory=`` or set the environment themselves, which overrides this.
+    """
+    import bertini.records as _records
+    monkeypatch.setenv('BERTINI_RECORDS_DIR', str(tmp_path / 'ambient_records'))
+    monkeypatch.setattr(_records, '_ambient', None)   # re-resolve from the environment
+    yield
+
+
 @pytest.fixture
 def precision(request):
     """Set the global default precision for a test, restoring it afterward.
