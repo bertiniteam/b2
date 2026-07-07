@@ -444,25 +444,42 @@ jobs:
 
           # On macOS, build all Boost components (including Boost.Python) into /tmp/deps-py
           # so delocate sees only one set of dylibs. boost-base is used only for C++ tests.
-          CIBW_BEFORE_BUILD_MACOS: >
-            pip install scikit-build-core numpy scipy &&
-            rm -rf /tmp/deps-py && mkdir -p /tmp/deps-py &&
-            PY_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')") &&
-            PY_INC=$(python -c "import sysconfig; print(sysconfig.get_path('include'))") &&
-            PY_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')") &&
-            cd /tmp &&
-            BU="boost_$(echo ${{ env.BOOST_VERSION }} | tr . _)" &&
-            { [ -f "$BU.tar.bz2" ] || curl -fsSL -o "$BU.tar.bz2" "https://archives.boost.io/release/${{ env.BOOST_VERSION }}/source/$BU.tar.bz2" ; } &&
-            rm -rf "$BU" && tar xjf "$BU.tar.bz2" &&
-            cd "$BU" &&
-            ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py &&
-            printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam &&
-            ./b2 install -j$(sysctl -n hw.ncpu) --user-config=user-config.jam python=$PY_VER --without-mpi hardcode-dll-paths=true dll-path=/tmp/deps-py/lib &&
-            cd /tmp &&
-            rm -rf eigenpy-${{ env.EIGENPY_VERSION }} && tar zxf eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz &&
-            cd eigenpy-${{ env.EIGENPY_VERSION }} && mkdir -p bld && cd bld &&
-            cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF &&
-            make -j2 install
+          # Prefer the prebuilt Boost+eigenpy bundle from the `ci-deps` release (built once by
+          # build-macos-deps.yml); fall back to building from source if it is missing (e.g. a
+          # version bump before the bundle is refreshed).  The bundle was tarred from /tmp with
+          # hardcode-dll-paths=/tmp/deps-py/lib, so extracting it back to /tmp/deps-py keeps the
+          # dylib paths valid for delocate.  The asset name encodes the toolchain, so a version
+          # bump simply 404s and rebuilds -- never a silent ABI mismatch.
+          CIBW_BEFORE_BUILD_MACOS: |
+            set -e
+            pip install scikit-build-core numpy scipy
+            PY_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+            PY_TAG="cp$(echo "$PY_VER" | tr -d .)"
+            ASSET="deps-macos14-arm64-${PY_TAG}-boost${{ env.BOOST_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}.tar.gz"
+            URL="https://github.com/${{ github.repository }}/releases/download/ci-deps/${ASSET}"
+            rm -rf /tmp/deps-py
+            if curl -fsSL -o /tmp/deps.tgz "$URL"; then
+              echo "== using prebuilt macOS deps: $ASSET =="
+              tar xzf /tmp/deps.tgz -C /tmp
+            else
+              echo "== prebuilt $ASSET not found; building Boost+eigenpy from source =="
+              PY_INC=$(python -c "import sysconfig; print(sysconfig.get_path('include'))")
+              PY_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')")
+              mkdir -p /tmp/deps-py
+              cd /tmp
+              BU="boost_$(echo ${{ env.BOOST_VERSION }} | tr . _)"
+              [ -f "$BU.tar.bz2" ] || curl -fsSL -o "$BU.tar.bz2" "https://archives.boost.io/release/${{ env.BOOST_VERSION }}/source/$BU.tar.bz2"
+              rm -rf "$BU"; tar xjf "$BU.tar.bz2"
+              cd "$BU"
+              ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py
+              printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam
+              ./b2 install -j$(sysctl -n hw.ncpu) --user-config=user-config.jam python=$PY_VER --without-mpi hardcode-dll-paths=true dll-path=/tmp/deps-py/lib
+              cd /tmp
+              rm -rf eigenpy-${{ env.EIGENPY_VERSION }}; tar zxf eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz
+              cd eigenpy-${{ env.EIGENPY_VERSION }}; mkdir -p bld; cd bld
+              cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF
+              make -j2 install
+            fi
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
           CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=4 CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
@@ -611,8 +628,12 @@ jobs:
 
       - name: Run Python tests
         run: |
-          pip install pytest pytest-timeout numpy sympy pandas networkx matplotlib
-          python -m pytest python/test/ -v
+          # open-mpi lets pip build mpi4py, which un-skips the MPI test modules; they run at 1 rank
+          # (their `Get_size() > 1` guards gate the distributed assertions) -- exactly as the Windows
+          # job, whose env already ships mpi4py, already runs them.  Goal: 0 skipped tests.
+          brew install open-mpi
+          pip install pytest pytest-timeout numpy sympy pandas networkx matplotlib mpi4py
+          python -m pytest python/test/ -rs -v
 
   test_wheels_windows:
     name: Test wheel on windows-${{ matrix.python-version }}
