@@ -51,6 +51,10 @@ jobs:
       always() &&
       (needs.build_and_test.result == 'success' || needs.build_and_test.result == 'skipped')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # push the persistent docs-store branch (the durable versioned-docs store)
+    outputs:
+      is_release: ${{ steps.relver.outputs.is_release }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -146,16 +150,58 @@ jobs:
             doc_resources/landing/index.html > site/index.html
           cp doc_resources/landing/style.css site/style.css
 
-      - name: Upload Pages artifact
+      - name: Determine release version
+        id: relver
+        run: |
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # Only a public release (X.Y.Z, no pre/dev suffix) gets a durable versioned-docs directory.
+          if echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VERSION '$VERSION' is not a public release; docs built but not deployed "\
+                 "(the site keeps only X.Y.Z versions -- deploy happens from real release tags)."
+          fi
+
+      - name: Assemble the versioned docs store
+        # Fold the freshly-built site/ into the persistent docs-store branch as /vX.Y.Z/, refresh
+        # /stable/ and the root landing (derived from every version present), and push it back.  The
+        # branch is the durable byte store; older versions are never rebuilt.  Public releases only.
+        if: steps.relver.outputs.is_release == 'true' && inputs.deploy
+        env:
+          STORE_BRANCH: docs-store
+          REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads "$REMOTE" "$STORE_BRANCH" >/dev/null 2>&1; then
+            git clone --branch "$STORE_BRANCH" --single-branch --depth 1 "$REMOTE" store
+          else
+            echo "No $STORE_BRANCH yet; starting a fresh store."
+            git init -q store && git -C store checkout -q -b "$STORE_BRANCH"
+          fi
+          python tools/assemble_versioned_docs.py --site site --store store \
+            --version "${{ steps.relver.outputs.version }}" --stable
+          git -C store config user.name  "github-actions[bot]"
+          git -C store config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C store add -A
+          git -C store commit -q -m "docs: publish v${{ steps.relver.outputs.version }}" || echo "store unchanged"
+          git -C store push -q "$REMOTE" HEAD:"$STORE_BRANCH"
+          rm -rf store/.git  # the Pages artifact must not carry the store's git metadata
+
+      - name: Upload Pages artifact (versioned store)
+        if: steps.relver.outputs.is_release == 'true' && inputs.deploy
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: store
 
   deploy_docs:
     name: Deploy to GitHub Pages
     needs:
       - build_docs
-    if: needs.build_docs.result == 'success' && inputs.deploy
+    # Deploy only for public releases: prerelease/dev builds have no versioned artifact to publish,
+    # and deploying a flat build would clobber the multi-version site.
+    if: needs.build_docs.result == 'success' && inputs.deploy && needs.build_docs.outputs.is_release == 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write
