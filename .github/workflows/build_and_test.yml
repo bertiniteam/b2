@@ -552,6 +552,18 @@ jobs:
           auto-activate: false
           channel-priority: strict
 
+      # Persist the compiler cache for the bertini2 compile (Boost/eigenpy come prebuilt from
+      # conda; bertini itself is the only from-source cost).  ccache is already active on this job
+      # via USE_CCACHE=ON; this just gives its cache dir somewhere durable.  Loose key like Unix.
+      - name: Cache ccache (Windows)
+        uses: actions/cache@v5
+        with:
+          path: ${{ github.workspace }}\.ccache
+          key: ccache-win-${{ matrix.python-version }}-${{ github.sha }}
+          restore-keys: |
+            ccache-win-${{ matrix.python-version }}-
+            ccache-win-
+
       - name: Build Windows
         shell: pwsh
         run: |
@@ -575,9 +587,16 @@ jobs:
           $boostHeader = "$env:CONDA_PREFIX\Library\include\boost\archive\archive_exception.hpp"
           (Get-Content $boostHeader).Replace('public virtual std::exception', 'public std::exception') | Set-Content $boostHeader
 
+          # Persist ccache across runs.  USE_CCACHE=ON (CMakeLists default) already wraps clang-cl
+          # with the conda-provided ccache; only the cache DIR was ephemeral, so every run was cold.
+          # A cold cache is just a normal build, so this can only help -- never break.
+          $env:CCACHE_DIR = "${{ github.workspace }}\.ccache"
+          $env:CCACHE_MAXSIZE = '400M'
           cd ${{ github.workspace }}
           pip install build delvewheel
+          ccache --zero-stats 2>$null
           python -m build --wheel --no-isolation
+          ccache --show-stats
 
           $wheelPath = (Get-ChildItem dist/*.whl | Select-Object -First 1).FullName
           if (-not $wheelPath) { Write-Error "No wheel found in dist/"; exit 1 }
