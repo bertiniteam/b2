@@ -49,6 +49,13 @@ Built and pushed by `.github/workflows/build-ci-image.yml` → `ghcr.io/bertinit
 Triggers: a push to `develop` touching `docker/manylinux-deps/**`, or manual dispatch.
 It **must run in `bertiniteam/b2`** (its token can only push to that org's GHCR).
 
+**Parallel build.** The expensive per-CPython Boost+eigenpy builds run as a **matrix** (one
+runner each, inside the manylinux container via `docker run`, using `build-python-deps.sh`),
+each uploading a `deps-<tag>.tar.gz` artifact.  A final `assemble-and-push` job downloads them
+into `deps/` and builds the (thin, ~2-minute) assembly `Dockerfile` that just installs the
+system layer and unpacks the tarballs.  So wall-clock is one Python's build, not five in
+series.  `deps/` is gitignored (populated only in CI).
+
 **One-time setup:** after the first push, make the package **public** in the org's
 Packages settings so any CI (incl. fork PRs) can pull it without auth. (Owner action —
 GHCR package visibility is a package setting, not something CI can flip.)
