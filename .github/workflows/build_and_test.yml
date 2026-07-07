@@ -54,6 +54,12 @@ on:
         required: false
         type: boolean
         default: false
+      os:
+        description: 'Which OS(es) to run — manual runs only'
+        required: false
+        type: choice
+        default: all
+        options: [all, linux, macos, windows]
 
 concurrency:
   group: build-${{ github.head_ref || github.ref_name }}
@@ -111,15 +117,21 @@ jobs:
           # pending a reproducer or an upstream fix. Re-add "macos-15-intel"
           # below when ready to revisit.
           if [[ "${{ inputs.minimal }}" == "true" ]]; then
-            echo 'os=["ubuntu-latest"]' >> $GITHUB_OUTPUT
-            echo 'python_versions=["3.11"]' >> $GITHUB_OUTPUT
+            OS='["ubuntu-latest"]'; PY='["3.11"]'
           elif [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/develop" || "${{ github.ref }}" == refs/tags/* || "${{ inputs.full_matrix }}" == "true" || "${{ github.event.pull_request.base.ref }}" == "develop" || "${{ github.event.pull_request.base.ref }}" == "main" ]]; then
-            echo 'os=["ubuntu-latest","macos-14"]' >> $GITHUB_OUTPUT
-            echo 'python_versions=["3.10","3.11","3.12","3.13","3.14"]' >> $GITHUB_OUTPUT
+            OS='["ubuntu-latest","macos-14"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
           else
-            echo 'os=["ubuntu-latest"]' >> $GITHUB_OUTPUT
-            echo 'python_versions=["3.11"]' >> $GITHUB_OUTPUT
+            OS='["ubuntu-latest"]'; PY='["3.11"]'
           fi
+          # Manual OS targeting (the workflow_dispatch `os` input) narrows the unix matrix; the
+          # separate Windows jobs gate on the same input.  Empty/`all` => leave as computed above.
+          case "${{ inputs.os }}" in
+            linux)   OS='["ubuntu-latest"]' ;;
+            macos)   OS='["macos-14"]' ;;
+            windows) OS='[]' ;;   # no unix jobs; only the standalone Windows jobs run
+          esac
+          echo "os=$OS" >> $GITHUB_OUTPUT
+          echo "python_versions=$PY" >> $GITHUB_OUTPUT
 
   test_cpp_unix:
     name: C++ tests on ${{ matrix.os }}
@@ -259,7 +271,7 @@ jobs:
 
   test_cpp_windows:
     name: C++ tests on Windows
-    if: ${{ inputs.minimal != true }}
+    if: ${{ inputs.minimal != true && (inputs.os == '' || inputs.os == 'all' || inputs.os == 'windows') }}
     needs: [doc_lint]
     runs-on: windows-latest
     timeout-minutes: 60   # backstop against a hang; the clang-cl build+test is ~22 min
@@ -541,7 +553,7 @@ jobs:
   build_windows_wheels:
     name: Windows Python-${{ matrix.python-version }} wheels
     needs: [set_matrix, test_cpp_windows]
-    if: ${{ inputs.minimal != true && !failure() && !cancelled() }}
+    if: ${{ inputs.minimal != true && !failure() && !cancelled() && (inputs.os == '' || inputs.os == 'all' || inputs.os == 'windows') }}
     runs-on: windows-latest
     env:
       CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
@@ -676,7 +688,7 @@ jobs:
 
   test_wheels_windows:
     name: Test wheel on windows-${{ matrix.python-version }}
-    if: ${{ inputs.minimal != true }}
+    if: ${{ inputs.minimal != true && (inputs.os == '' || inputs.os == 'all' || inputs.os == 'windows') }}
     needs: [build_windows_wheels]
     runs-on: windows-latest
     timeout-minutes: 25   # backstop against a hang; healthy runs are ~6 min (was 6h before the fix)
