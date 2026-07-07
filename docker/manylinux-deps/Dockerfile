@@ -40,7 +40,26 @@ LABEL org.bertini.boost_version="${BOOST_VERSION}"
 LABEL org.bertini.eigen_version="${EIGEN_VERSION}"
 LABEL org.bertini.eigenpy_version="${EIGENPY_VERSION}"
 
-RUN yum install -y wget gmp-devel mpfr-devel libmpc-devel libtool && yum clean all
+# System layer (CPython-independent): numeric -devel libs, ccache, and OpenMPI so
+# `pip install mpi4py` can build in the wheel *test* venv -- which un-skips the MPI tests
+# (test_mpi_zerodim.py, test_doc_example_scripts.py).  This is the "complete build+test
+# env" idea: everything the Linux wheel run needs, factored here and assembled once.
+RUN yum install -y epel-release \
+ && yum install -y wget gmp-devel mpfr-devel libmpc-devel libtool ccache openmpi openmpi-devel \
+ && yum clean all \
+ && echo /usr/lib64/openmpi/lib > /etc/ld.so.conf.d/openmpi.conf && ldconfig
+
+# OpenMPI's mpicc/mpirun are not on the default PATH on AlmaLinux; expose them so mpi4py
+# builds and (for the dedicated MPI job / serial runs) mpirun is available.
+ENV PATH=/usr/lib64/openmpi/bin:${PATH}
+
+# Pin patchelf 0.17.2.1 (mirrors CIBW_BEFORE_ALL_LINUX): the image's stock patchelf
+# mis-rewrites the bundled bertini2 CLI's ELF and segfaults it at load.
+RUN python3 -m venv /tmp/pe \
+ && /tmp/pe/bin/pip install -q "patchelf==0.17.2.1" \
+ && install -m755 /tmp/pe/bin/patchelf /usr/local/bin/patchelf \
+ && rm -rf /tmp/pe \
+ && patchelf --version
 
 # Eigen (header-only, CPython-independent) -> /usr/local, same as CIBW_BEFORE_ALL_LINUX.
 RUN cd /tmp \
