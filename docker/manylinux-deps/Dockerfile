@@ -83,7 +83,7 @@ RUN set -eux; cd /tmp; \
       PY="/opt/python/${tag}/bin/python"; \
       [ -x "$PY" ] || { echo "missing interpreter: $PY"; exit 1; }; \
       PREFIX="/opt/deps/${tag}"; \
-      "$PY" -m pip install -q numpy; \
+      "$PY" -m pip install -q numpy scipy; \
       PY_VER="$("$PY" -c 'import sys;print(f"{sys.version_info.major}.{sys.version_info.minor}")')"; \
       PY_INC="$("$PY" -c 'import sysconfig;print(sysconfig.get_path("include"))')"; \
       PY_LIB="$("$PY" -c 'import sysconfig;print(sysconfig.get_config_var("LIBDIR") or "")')"; \
