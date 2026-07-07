@@ -31,15 +31,16 @@
 #pragma once
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <boost/filesystem.hpp>
 
 namespace bertini{
 
 	namespace fs = boost::filesystem;
 
-	using Path = fs::path;
+	using Path = fs::path;  ///< Shorthand for a filesystem path.
 
-	using ifstream = std::ifstream;
+	using ifstream = std::ifstream;  ///< Shorthand for an input file stream.
 	/**
 	\brief Try to open a file, and throw if it doesn't exist, or is a directory.
 	*/
@@ -94,7 +95,20 @@ namespace bertini{
 	{
 		ifstream infile;
 		OpenInFileThrowIfFail(infile, input_path);
-		return std::string ( std::istreambuf_iterator<char>(infile), std::istreambuf_iterator<char>() );
+		std::istreambuf_iterator<char> file_begin(infile), file_end;
+		std::string contents(file_begin, file_end);
+
+		// Treat file contents as UTF-8; drop a leading byte-order mark (EF BB BF)
+		// so it is not parsed as a stray leading character.
+		if (contents.size() >= 3 &&
+		    static_cast<unsigned char>(contents[0]) == 0xEF &&
+		    static_cast<unsigned char>(contents[1]) == 0xBB &&
+		    static_cast<unsigned char>(contents[2]) == 0xBF)
+		{
+			contents.erase(0, 3);
+		}
+
+		return contents;
 	}
 }
 

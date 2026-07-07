@@ -9,7 +9,7 @@ namespace demo{
 	using Node = std::shared_ptr<bertini::node::Node>;
 	using Variable = std::shared_ptr<bertini::node::Variable>;
 
-	using dbl = bertini::dbl;
+	using complex_dbl = bertini::complex_dbl;
 	using mpfr = bertini::mpfr;
 
 	auto MakeStep1Parameters()
@@ -17,10 +17,10 @@ namespace demo{
 		using bertini::Variable::Make;
 
 		// make symbolic objects for the parameters
-		auto param_A = MakeFloat(bertini::RandomComplex(30));
-		auto param_B = MakeFloat(bertini::RandomComplex(30));
-		auto param_C = MakeFloat(bertini::RandomComplex(30));
-		auto param_D = MakeFloat(bertini::RandomComplex(30));
+		auto param_A = MakeComplex(bertini::RandomComplex(30));
+		auto param_B = MakeComplex(bertini::RandomComplex(30));
+		auto param_C = MakeComplex(bertini::RandomComplex(30));
+		auto param_D = MakeComplex(bertini::RandomComplex(30));
 
 		return std::vector<Node>{param_A, param_B, param_C, param_D};
 	}
@@ -88,7 +88,7 @@ namespace demo{
 
 	auto ConstructStart(bertini::System const& sys)
 	{
-	    return bertini::start_system::TotalDegree(sys);
+	    return bertini::start_system::TotalDegreeLinearProduct(sys);
 	}
 
 	template <typename StartT>

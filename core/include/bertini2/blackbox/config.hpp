@@ -34,40 +34,19 @@ namespace bertini{
 
 
 namespace type{
-enum class Start{ TotalDegree, MHom, User};
+/// \brief Which start system the zero-dim solve should use.
+enum class Start{ TotalDegreeLinearProduct, TotalDegreeBinomial, MHom, User};
+/// \brief Which path tracker the zero-dim solve should use.
 enum class Tracker{ FixedDouble, FixedMultiple, Adaptive};
+/// \brief Which endgame the zero-dim solve should use.
 enum class Endgame{ PowerSeries, Cauchy};
 }
 
-
-template<typename T>
-	struct StorageSelector{};
-
-template<>
-	struct StorageSelector<start_system::User>
-	{
-		using ShouldClone = typename std::false_type;
-		// typename algorithm::StorageSelector<StartType>::Storage
-		// using Storage = typename policy::RefToGiven<System, start_system::User>;
-	};
-
-template<>
-	struct StorageSelector<start_system::TotalDegree>
-	{
-		// using Storage = typename policy::CloneGiven<System, start_system::TotalDegree>;
-		// typedef policy::CloneGiven Storage;
-		using ShouldClone = typename std::true_type;
-		// using Storage = typename policy::CloneGiven;
-	};
-
-template<>
-	struct StorageSelector<start_system::MHomogeneous>
-	{
-		using ShouldClone = typename std::true_type;
-		// template < typename T, typename S>
-		// using Storage = typename policy::CloneGiven<T,S>;
-	};
-
+// NOTE: the old StorageSelector<StartSystem> (clone-vs-ref per start-system type) is
+// gone.  ZeroDim is no longer templated on the start system, so the clone-vs-ref choice
+// is made at the construction site by picking the policy instantiation directly: the
+// blackbox always clones (CloneGiven + a start-system factory; see switches_zerodim.hpp),
+// and user homotopies use RefToGiven through the dedicated UserHomotopy path.
 
 	}
 }

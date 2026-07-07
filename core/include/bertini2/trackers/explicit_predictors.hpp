@@ -41,6 +41,7 @@
 #include <boost/type_index.hpp>
 
 #include "bertini2/eigen_extensions.hpp"
+#include "bertini2/linalg/lu_solver.hpp"
 
 namespace bertini{
 	namespace tracking{
@@ -150,31 +151,6 @@ namespace bertini{
 			}
 			
 			
-			namespace {
-				template<typename T>
-				struct LUSelector
-				{};
-
-				template<>
-				struct LUSelector<dbl>
-				{
-					template<typename N>
-					static Eigen::PartialPivLU<Mat<dbl>>& Run(N & n)
-					{
-						return n.GetLU_d();
-					}
-				};
-
-				template<>
-				struct LUSelector<mpfr_complex>
-				{
-					template<typename N>
-					static Eigen::PartialPivLU<Mat<mpfr_complex>>& Run(N & n)
-					{
-						return n.GetLU_mp();
-					}
-				};
-			}
 			
 			/**
 			 \class ExplicitRKPredictor
@@ -200,8 +176,6 @@ namespace bertini{
 			 */
 			class ExplicitRKPredictor
 			{
-				friend LUSelector<dbl>;
-				friend LUSelector<mpfr_complex>;
 			public:
 				
 				/**
@@ -209,7 +183,7 @@ namespace bertini{
 
 				\param S the system the predictor will be predicting on.
 				*/
-				ExplicitRKPredictor(const System& S) : current_precision_(DefaultPrecision()), s_(0)
+				ExplicitRKPredictor(const System& S) : s_(0), current_precision_(DefaultPrecision())
 				{
 					ChangeSystem(S);
 					PredictorMethod(DefaultPredictor());
@@ -221,7 +195,7 @@ namespace bertini{
 				 \param method The predictor method to be implemented.
 				 \param S the system to be predicting on.
 				 */
-				ExplicitRKPredictor(Predictor method, const System& S) : current_precision_(DefaultPrecision()), s_(0)
+				ExplicitRKPredictor(Predictor method, const System& S) : s_(0), current_precision_(DefaultPrecision())
 				{
 					ChangeSystem(S);
 					PredictorMethod(method);
@@ -250,9 +224,9 @@ namespace bertini{
 							crefd.resize(s_); crefd(0) = 0;
 							arefd.resize(s_,s_); arefd(0,0) = 0;
 							brefd.resize(s_); brefd(0) = 0;
-							Mat<mpfr_float>& arefmp = std::get< Mat<mpfr_float> >(a_);
-							Vec<mpfr_float>& brefmp = std::get< Vec<mpfr_float> >(b_);
-							Vec<mpfr_float>& crefmp = std::get< Vec<mpfr_float> >(c_);
+							Mat<real_mp>& arefmp = std::get< Mat<real_mp> >(a_);
+							Vec<real_mp>& brefmp = std::get< Vec<real_mp> >(b_);
+							Vec<real_mp>& crefmp = std::get< Vec<real_mp> >(c_);
 							crefmp.resize(s_); crefmp(0) = 0;
 							arefmp.resize(s_,s_); arefmp(0,0) = 0;
 							brefmp.resize(s_); brefmp(0) = 0;
@@ -269,12 +243,12 @@ namespace bertini{
 							crefd.resize(s_); crefd(0) = static_cast<double>(cEuler_(0));
 							arefd.resize(s_,s_); arefd(0,0) = static_cast<double>(aEuler_(0,0));
 							brefd.resize(s_); brefd(0) = static_cast<double>(bEuler_(0));
-							Mat<mpfr_float>& arefmp = std::get< Mat<mpfr_float> >(a_);
-							Vec<mpfr_float>& brefmp = std::get< Vec<mpfr_float> >(b_);
-							Vec<mpfr_float>& crefmp = std::get< Vec<mpfr_float> >(c_);
-							crefmp.resize(s_); crefmp(0) = static_cast<mpfr_float>(cEuler_(0));
-							arefmp.resize(s_,s_); arefmp(0,0) = static_cast<mpfr_float>(aEuler_(0,0));
-							brefmp.resize(s_); brefmp(0) = static_cast<mpfr_float>(bEuler_(0));
+							Mat<real_mp>& arefmp = std::get< Mat<real_mp> >(a_);
+							Vec<real_mp>& brefmp = std::get< Vec<real_mp> >(b_);
+							Vec<real_mp>& crefmp = std::get< Vec<real_mp> >(c_);
+							crefmp.resize(s_); crefmp(0) = static_cast<real_mp>(cEuler_(0));
+							arefmp.resize(s_,s_); arefmp(0,0) = static_cast<real_mp>(aEuler_(0,0));
+							brefmp.resize(s_); brefmp(0) = static_cast<real_mp>(bEuler_(0));
 							uses_embedded_ = false;
 							break;
 						}
@@ -282,8 +256,8 @@ namespace bertini{
 						{
 							s_ = 2;
 							
-							FillButcherTable<double>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
-							FillButcherTable<mpfr_float>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							FillButcherTable<double>(static_cast<int>(s_),aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
 							
 							break;
 						}
@@ -291,8 +265,8 @@ namespace bertini{
 						{
 							s_ = 4;
 							
-							FillButcherTable<double>(s_, aRK4_, bRK4_, cRK4_);
-							FillButcherTable<mpfr_float>(s_, aRK4_, bRK4_, cRK4_);
+							FillButcherTable<double>(static_cast<int>(s_),aRK4_, bRK4_, cRK4_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRK4_, bRK4_, cRK4_);
 							
 							break;
 						}
@@ -301,8 +275,8 @@ namespace bertini{
 						{
 							s_ = 6;
 							
-							FillButcherTable<double>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
-							FillButcherTable<mpfr_float>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+							FillButcherTable<double>(static_cast<int>(s_),aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
 							
 							break;
 						}
@@ -311,8 +285,8 @@ namespace bertini{
 						{
 							s_ = 6;
 							
-							FillButcherTable<double>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
-							FillButcherTable<mpfr_float>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+							FillButcherTable<double>(static_cast<int>(s_),aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
 							
 							break;
 						}
@@ -321,8 +295,8 @@ namespace bertini{
 						{
 							s_ = 8;
 							
-							FillButcherTable<double>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
-							FillButcherTable<mpfr_float>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+							FillButcherTable<double>(static_cast<int>(s_),aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
 							
 							break;
 						}
@@ -331,8 +305,8 @@ namespace bertini{
 						{
 							s_ = 10;
 							
-							FillButcherTable<double>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
-							FillButcherTable<mpfr_float>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+							FillButcherTable<double>(static_cast<int>(s_),aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+							FillButcherTable<real_mp>(static_cast<int>(s_),aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
 							
 							break;
 						}
@@ -356,24 +330,53 @@ namespace bertini{
 				 */
 				void ChangeSystem(const System& S)
 				{
-					numTotalFunctions_ = S.NumTotalFunctions();
-					numVariables_ = S.NumVariables();
+					numTotalFunctions_ = static_cast<unsigned>(S.NumTotalFunctions());
+					numVariables_ = static_cast<unsigned>(S.NumVariables());
 					// you cannot set K_ here, because s_ may not have been set
-					std::get< Mat<dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr_complex> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<dbl> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr_complex> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Vec<dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr_complex> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Mat<complex_dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<complex_mp> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<complex_dbl> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<complex_mp> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Vec<complex_dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_dbl> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_dbl> >(rand_temp_) = RandomOfUnits<complex_dbl>(numVariables_);
+					std::get< Vec<complex_mp> >(rand_temp_) = RandomOfUnits<complex_mp>(numVariables_);
+					std::get< Vec<complex_dbl> >(solve_temp_).resize(numVariables_);
+					std::get< Vec<complex_mp> >(solve_temp_).resize(numVariables_);
+
+					std::get< Vec<complex_dbl> >(stage_pt_temp_).resize(numVariables_);
+					std::get< Vec<complex_mp> >(stage_pt_temp_).resize(numVariables_);
+					std::get< Vec<complex_dbl> >(err_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(err_temp_).resize(numTotalFunctions_);
 
 					ResizeK();
 				}
 				
 				
+				/// \brief Resize the internal Runge-Kutta stage matrix K to match the current system and stage count.
 				void ResizeK()
 				{
-					std::get< Mat<dbl> >(K_).resize(numTotalFunctions_, s_);
-					std::get< Mat<mpfr_complex> >(K_).resize(numTotalFunctions_, s_);
+					std::get< Mat<complex_dbl> >(K_).resize(numTotalFunctions_, s_);
+					std::get< Mat<complex_mp> >(K_).resize(numTotalFunctions_, s_);
+
+					std::get< linalg::PartialPivLU<complex_dbl> >(LU_).ChangeSize(numVariables_);
+					std::get< linalg::PartialPivLU<complex_mp> >(LU_).ChangeSize(numVariables_);
+				}
+
+
+				/**
+				 \brief Adopt an externally-owned condition-number probe direction (both precisions).
+
+				 The tracker calls this once per path so the predictor estimates ||J^{-1}|| against the
+				 SAME random direction as the corrector (ADR-0024: one tracker-owned, per-path probe).
+				 Standalone use (e.g. unit tests with no tracker) keeps the per-system probe drawn in
+				 ChangeSystem.
+				 */
+				void SetConditionProbe(std::tuple< Vec<complex_dbl>, Vec<complex_mp> > const& probe)
+				{
+					rand_temp_ = probe;
 				}
 				
 				
@@ -393,16 +396,22 @@ namespace bertini{
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					Precision(std::get< Mat<mpfr_complex> >(K_),new_precision);
+					Precision(std::get< Mat<complex_mp> >(K_),new_precision);
 
-					Precision(std::get< Vec<mpfr_complex> >(dh_dt_temp_),new_precision);
-					Precision(std::get< Mat<mpfr_complex> >(dh_dx_0_),new_precision);
-					Precision(std::get< Mat<mpfr_complex> >(dh_dx_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(dh_dt_temp_),new_precision);
+					Precision(std::get< Mat<complex_mp> >(dh_dx_0_),new_precision);
+					Precision(std::get< Mat<complex_mp> >(dh_dx_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(step_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(rand_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(solve_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(stage_pt_temp_),new_precision);
+					Precision(std::get< Vec<complex_mp> >(err_temp_),new_precision);
+					std::get< linalg::PartialPivLU<complex_mp> >(LU_).ChangePrecision(new_precision);
 
-					Precision(std::get< Mat<mpfr_float> >(a_),new_precision);
-					Precision(std::get< Vec<mpfr_float> >(b_),new_precision);
-					Precision(std::get< Vec<mpfr_float> >(b_minus_bstar_),new_precision);
-					Precision(std::get< Vec<mpfr_float> >(c_),new_precision);
+					Precision(std::get< Mat<real_mp> >(a_),new_precision);
+					Precision(std::get< Vec<real_mp> >(b_),new_precision);
+					Precision(std::get< Vec<real_mp> >(b_minus_bstar_),new_precision);
+					Precision(std::get< Vec<real_mp> >(c_),new_precision);
 
 					PredictorMethod(predictor_);
 
@@ -411,18 +420,22 @@ namespace bertini{
 					PrecisionSanityCheck();
 				}
 				
+				/// \brief Assert (in debug builds) that the predictor's state is all at the expected precision.
 				void PrecisionSanityCheck() const
 				{
-					assert(current_precision_==DefaultPrecision());
+#ifndef NDEBUG
+					// ThreadPrecision: correct when running on a std::thread worker,
+					// where precision is set via SetThreadPrecision (thread-local only).
+					assert(current_precision_==ThreadPrecision());
 
-					Vec<mpfr_complex>& dhdttemp = std::get< Vec<mpfr_complex> >(dh_dt_temp_);
-					Mat<mpfr_complex>& dhdx0 = std::get< Mat<mpfr_complex> >(dh_dx_0_); 
-					Mat<mpfr_complex>& dhdxtemp = std::get< Mat<mpfr_complex> >(dh_dx_temp_); 
+					Vec<complex_mp>& dhdttemp = std::get< Vec<complex_mp> >(dh_dt_temp_);
+					Mat<complex_mp>& dhdx0 = std::get< Mat<complex_mp> >(dh_dx_0_); 
+					Mat<complex_mp>& dhdxtemp = std::get< Mat<complex_mp> >(dh_dx_temp_); 
 
-					Mat<mpfr_float>& a = std::get< Mat<mpfr_float> >(a_); 
-					Vec<mpfr_float>& b = std::get< Vec<mpfr_float> >(b_); 
-					Vec<mpfr_float>& bstar = std::get< Vec<mpfr_float> >(b_minus_bstar_); 
-					Vec<mpfr_float>& c = std::get< Vec<mpfr_float> >(c_);
+					Mat<real_mp>& a = std::get< Mat<real_mp> >(a_); 
+					Vec<real_mp>& b = std::get< Vec<real_mp> >(b_); 
+					Vec<real_mp>& bstar = std::get< Vec<real_mp> >(b_minus_bstar_); 
+					Vec<real_mp>& c = std::get< Vec<real_mp> >(c_);
 
 
 
@@ -435,6 +448,7 @@ namespace bertini{
 					if (uses_embedded_)
 						assert(Precision(bstar)==current_precision_);
 					assert(Precision(c)==current_precision_);
+#endif
 				}
 				
 				
@@ -442,162 +456,58 @@ namespace bertini{
 				 \brief Perform a generic predictor step.
 				 
 				 \param next_space The computed prediction.
-				 \param method An enum class selecting the predictor method to use.
+				 \param meta Step metadata, populated during the step with the Jacobian norms and condition number estimate.
 				 \param S The system being solved.
 				 \param current_space The current space variable vector.
 				 \param current_time The current time.
 				 \param delta_t The size of the time step.
-				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
-				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
+				 \param num_steps_since_last_condition_number_computation Updated in this function.
 				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
-				 \param prec_type The operating precision type.
 				 \param tracking_tolerance How tightly to track the path.
+				 \param AMP_config Optional adaptive-multiple-precision configuration; when null, fixed-precision behaviour is used.
 
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType>
-				SuccessCode Predict(Vec<ComplexType> & next_space,
+				template<typename ComplexT>
+				SuccessCode Predict(Vec<ComplexT> & next_space,
+									StepMetadata & meta,
 									System const& S,
-									const Vec<ComplexType>& current_space, ComplexType current_time,
-									ComplexType const& delta_t,
-									NumErrorT & condition_number_estimate,
+									const Vec<ComplexT>& current_space, ComplexT current_time,
+									ComplexT const& delta_t,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
-									NumErrorT const& tracking_tolerance)
+									NumErrorT const& tracking_tolerance,
+									AdaptiveMultiplePrecisionConfig const* AMP_config = nullptr)
 				{
-
 					auto step_success = FullStep(next_space, S, current_space, current_time, delta_t);
 
-					NumErrorT norm_J, norm_J_inverse;
-					SetNormsCond<ComplexType>(norm_J, norm_J_inverse, condition_number_estimate, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
+					// Condition estimate (norm_J, norm_J_inverse, condition_number_estimate) is always
+					// computed -- it is reported and used by the fixed-precision path too.
+					SetNormsCond<ComplexT>(meta.norm_J, meta.norm_J_inverse, meta.condition_number_estimate,
+					                       num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
+
+					// Fixed-precision (nullptr): just the prediction + condition estimate, no AMP criteria.
+					if (AMP_config == nullptr)
+						return step_success;
+
+					SetSizeProportion<ComplexT>(meta.size_proportion, delta_t);
+					if (predict::HasErrorEstimate(predictor_))
+						SetErrorEstimate<ComplexT>(meta.error_estimate, delta_t);
+
+					if (step_success != SuccessCode::Success)
+						return step_success;
+
+					if (!amp::CriterionA<ComplexT>(meta.norm_J, meta.norm_J_inverse, *AMP_config))
+						return SuccessCode::HigherPrecisionNecessary;
+					if (!amp::CriterionC<ComplexT>(meta.norm_J_inverse, current_space, tracking_tolerance, *AMP_config))
+						return SuccessCode::HigherPrecisionNecessary;
 
 					return step_success;
 				}
 				
 				
 				
-				/**
-				 \brief Perform a generic predictor step and return size_proportion and condition number information
-				 
-				 \param next_space The computed prediction.
-				 \param method An enum class selecting the predictor method to use.
-				 \param size_proportion $a$ in AMP2 paper.
-				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
-				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
-				 \param S The system being solved.
-				 \param current_space The current space variable vector.
-				 \param current_time The current time.
-				 \param delta_t The size of the time step.
-				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
-				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
-				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
-				 \param prec_type The operating precision type.
-				 \param tracking_tolerance How tightly to track the path.
-				 \param AMP_config The settings for adaptive multiple precision.
-
-				 \return SuccessCode indicating how the prediction went.
-				 */
-				
-				template<typename ComplexType>
-				SuccessCode Predict(Vec<ComplexType> & next_space,
-									NumErrorT & size_proportion,
-									NumErrorT & norm_J,
-									NumErrorT & norm_J_inverse,
-									System const& S,
-									const Vec<ComplexType>& current_space, ComplexType current_time,
-									ComplexType const& delta_t,
-									NumErrorT & condition_number_estimate,
-									unsigned & num_steps_since_last_condition_number_computation,
-									unsigned frequency_of_CN_estimation,
-									NumErrorT const& tracking_tolerance,
-									AdaptiveMultiplePrecisionConfig const& AMP_config)
-				{
-
-					
-					auto success_code = Predict<ComplexType>(next_space, S, current_space, current_time, delta_t,
-										   condition_number_estimate, num_steps_since_last_condition_number_computation,
-										   frequency_of_CN_estimation, tracking_tolerance);
-
-					SetNormsCond<ComplexType>(norm_J, norm_J_inverse, condition_number_estimate, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
-					
-					// Set size_proportion
-					SetSizeProportion(size_proportion, delta_t);
-
-					if(success_code != SuccessCode::Success)
-						return success_code;
-					
-					
-					
-					//AMP Criteria
-					if (!amp::CriterionA<ComplexType>(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
-					{
-						return SuccessCode::HigherPrecisionNecessary;
-					}
-					else if (!amp::CriterionC<ComplexType>(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
-					{
-						return SuccessCode::HigherPrecisionNecessary;
-					}
-					
-					
-					return success_code;
-				}
-				
-				
-				/**
-				 \brief Perform a generic predictor step and return error estimate, size_proportion and condition number information
-				 
-				 \param next_space The computed prediction.
-				 \param method An enum class selecting the predictor method to use.
-				 \param error_estimate Estimate of the error from an embedded method.
-				 \param size_proportion $a$ in AMP2 paper.
-				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
-				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
-				 \param S The system being solved.
-				 \param current_space The current space variable vector.
-				 \param current_time The current time.
-				 \param delta_t The size of the time step.
-				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
-				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
-				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
-				 \param prec_type The operating precision type.
-				 \param tracking_tolerance How tightly to track the path.
-				 \param AMP_config The settings for adaptive multiple precision.
-
-				 \return SuccessCode indicating how the prediction went.
-				 */
-				
-				template<typename ComplexType>
-				SuccessCode Predict(Vec<ComplexType> & next_space,
-									NumErrorT & error_estimate,
-									NumErrorT & size_proportion,
-									NumErrorT & norm_J,
-									NumErrorT & norm_J_inverse,
-									System const& S,
-									const Vec<ComplexType>& current_space, ComplexType current_time,
-									ComplexType const& delta_t,
-									NumErrorT & condition_number_estimate,
-									unsigned & num_steps_since_last_condition_number_computation,
-									unsigned frequency_of_CN_estimation,
-									NumErrorT const& tracking_tolerance,
-									AdaptiveMultiplePrecisionConfig const& AMP_config)
-				{
-
-					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
-					
-					if(!predict::HasErrorEstimate(predictor_))
-						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
-					
-
-					auto success_code = Predict(next_space, size_proportion, norm_J, norm_J_inverse,
-											  S, current_space, current_time, delta_t,
-											  condition_number_estimate, num_steps_since_last_condition_number_computation,
-											  frequency_of_CN_estimation, tracking_tolerance, AMP_config);
-					
-					SetErrorEstimate(error_estimate, delta_t);
-					
-					return success_code;
-				}
 				
 				
 				
@@ -651,23 +561,7 @@ namespace bertini{
 				//
 				////////////////////
 				
-				template <typename T>
-				Eigen::PartialPivLU<Mat<T>>& GetLU()
-				{
-					return LUSelector<T>::Run(*this);
-				}
 
-
-				Eigen::PartialPivLU<Mat<dbl>>& GetLU_d()
-				{
-					return LU_d_;
-				}
-
-				Eigen::PartialPivLU<Mat<mpfr_complex>>& GetLU_mp()
-				{
-					assert(current_precision_==DefaultPrecision());
-					return LU_mp_[current_precision_];
-				}
 
 				/**
 				 \brief Performs a full prediction step from current_time to current_time + delta_t
@@ -681,11 +575,11 @@ namespace bertini{
 				 \return SuccessCode determining result of the computation
 				 */
 				
-				template<typename ComplexType>
-				SuccessCode FullStep(Vec<ComplexType> & next_space,
+				template<typename ComplexT>
+				SuccessCode FullStep(Vec<ComplexT> & next_space,
 									System const& S,
-									 Vec<ComplexType> const& current_space, ComplexType const& current_time,
-									 ComplexType const& delta_t)
+									 Vec<ComplexT> const& current_space, ComplexT const& current_time,
+									 ComplexT const& delta_t)
 				{
 					
 					// If using constant predictor
@@ -695,56 +589,70 @@ namespace bertini{
 						return SuccessCode::Success;
 					}
 					
-					using RealType = typename Eigen::NumTraits<ComplexType>::Real;
+					using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
-					Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
-					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
-					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
-					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
-					Kref.fill(ComplexType(0));
-					Vec<ComplexType> temp(S.NumTotalFunctions());
-					
+					Mat<ComplexT>& Kref = std::get< Mat<ComplexT> >(K_);
+					Mat<RealT>& aref = std::get< Mat<RealT> >(a_);
+					Vec<RealT>& bref = std::get< Vec<RealT> >(b_);
+					Vec<RealT>& cref = std::get< Vec<RealT> >(c_);
+					Kref.fill(ComplexT(0));
+					Vec<ComplexT>& temp = std::get< Vec<ComplexT> >(step_temp_);
+
 					if(EvalRHS(S, current_space, current_time, Kref, 0) != SuccessCode::Success)
 					{
 						return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 					}
 					
-					for(int ii = 1; ii < s_; ++ii)
+					Vec<ComplexT>& stage_pt = std::get< Vec<ComplexT> >(stage_pt_temp_);
+					for(unsigned ii = 1; ii < s_; ++ii)
 					{
 						temp.setZero(); // see https://github.com/bertiniteam/b2/issues/198
-						for(int jj = 0; jj < ii; ++jj)
+						for(unsigned jj = 0; jj < ii; ++jj)
 							temp += aref(ii,jj)*Kref.col(jj);
 
-						// Vec<ComplexType> wfp = 
-						if(EvalRHS<ComplexType>(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
+						// Evaluate into the preallocated stage-point scratch rather than passing the
+						// expression (current_space + delta_t*temp) to EvalRHS's const Vec& param, which
+						// would materialize a fresh temporary Vec every stage.
+						stage_pt.noalias() = current_space + delta_t*temp;
+						if(EvalRHS<ComplexT>(S, stage_pt, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
 							return SuccessCode::MatrixSolveFailure;
 					}
 					
 					
 					temp.setZero();
-					for(int ii = 0; ii < s_; ++ii)
+					for(unsigned ii = 0; ii < s_; ++ii)
 						temp += bref(ii)*Kref.col(ii);
-										
-					next_space = current_space + delta_t*temp;
+
+					// next_space is a distinct buffer from current_space/temp, so noalias avoids a
+					// materialized temporary for the axpy.
+					next_space.noalias() = current_space + delta_t*temp;
 					
 					return SuccessCode::Success;
 				};
 
 				
-				template<typename ComplexType>
+				/// \brief Compute and (when due) refresh the Jacobian norms and condition-number estimate.
+				/// \tparam ComplexT The complex number type to compute at.
+				/// \param[out] norm_J Set to ||J||.
+				/// \param[out] norm_J_inverse Set to the estimate of ||J^{-1}||.
+				/// \param[out] condition_number_estimate Set to the product of the two norms.
+				/// \param num_steps_since_last_condition_number_computation Steps elapsed since the last estimate.
+				/// \param frequency_of_CN_estimation Recompute the estimate once this many steps have passed.
+				template<typename ComplexT>
 				void SetNormsCond(NumErrorT & norm_J, NumErrorT & norm_J_inverse, NumErrorT & condition_number_estimate, unsigned num_steps_since_last_condition_number_computation, unsigned frequency_of_CN_estimation)
 				{
 					// Calculate condition number and update if needed
-					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
-					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
+					linalg::PartialPivLU<ComplexT>& LUref = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
+					Mat<ComplexT>& dhdxref = std::get< Mat<ComplexT> >(dh_dx_0_);
 
-					// TODO this random vector should not be made fresh every time.  especiallyif the numeric type is mpfr_complex!
-					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(numVariables_);
-					Vec<ComplexType> temp_soln = LUref.solve(randy);
-					
+					Vec<ComplexT> const& randy = std::get< Vec<ComplexT> >(rand_temp_);
+					Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
+					LUref.Solve(randy, solve_ref);
+
 					norm_J = NumErrorT(dhdxref.norm());
-					norm_J_inverse = NumErrorT(temp_soln.norm());
-					
+					norm_J_inverse = NumErrorT(solve_ref.norm());
+
+
 					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
 					{
 						condition_number_estimate = NumErrorT(norm_J * norm_J_inverse);
@@ -765,23 +673,22 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename ComplexType>
-				SuccessCode SetErrorEstimate(NumErrorT & error_estimate, ComplexType const& delta_t)
+				template<typename ComplexT>
+				SuccessCode SetErrorEstimate(NumErrorT & error_estimate, ComplexT const& delta_t)
 				{
-					using RealType = typename Eigen::NumTraits<ComplexType>::Real;
+					using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
-					Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
-					Vec<RealType>& b_minus_bstar_ref = std::get< Vec<RealType> >(b_minus_bstar_);
+					Mat<ComplexT>& Kref = std::get< Mat<ComplexT> >(K_);
+					Vec<RealT>& b_minus_bstar_ref = std::get< Vec<RealT> >(b_minus_bstar_);
 					
-					auto numFuncs = Kref.rows();
-					Vec<ComplexType> err(numFuncs);
-					
+					Vec<ComplexT>& err = std::get< Vec<ComplexT> >(err_temp_);  // reused scratch, not a fresh per-step alloc
+
 					err.setZero();
-					for(int ii = 0; ii < s_; ++ii)
+					for(unsigned ii = 0; ii < s_; ++ii)
 					{
 						err += (b_minus_bstar_ref(ii))*Kref.col(ii);
 					}
-					
+
 					err *= delta_t;
 					
 					error_estimate = NumErrorT(err.norm());
@@ -804,8 +711,8 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename ComplexType>
-				SuccessCode SetSizeProportion(NumErrorT & size_proportion, ComplexType const& delta_t)
+				template<typename ComplexT>
+				SuccessCode SetSizeProportion(NumErrorT & size_proportion, ComplexT const& delta_t)
 				{
 					if(predict::HasErrorEstimate(predictor_))
 					{
@@ -819,9 +726,20 @@ namespace bertini{
 					}
 					else
 					{
-						Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
-						using std::pow;
-						size_proportion = NumErrorT(Kref.array().abs().maxCoeff()/(pow(abs(delta_t), p_)));
+						// No embedded error estimate (e.g. Euler, RK4).  AMP2 (bhswAMP2, Eqs 9-10)
+						// derives the size proportion $a$ from the prediction step itself, written as
+						// the initial Newton residual: ||d|| = a|s|.  The predicted step in z is
+						// delta_t*(sum_i b_i K_i), so ||d|| = |delta_t|*||K|| and therefore
+						//     a = ||d|| / |s| = ||K|| ~ maxCoeff(|K|),
+						// with NO further division by |delta_t|.  The previous
+						// maxCoeff(K)/|delta_t|^p over-divided by the step: it inflated $a$ like
+						// 1/|delta_t|^p as the step shrank, spuriously escalating AMP precision
+						// (DigitsB) on small steps.  $a$ is meant to be an O(1), step-independent
+						// proportionality constant -- see SetSizeProportion's error-estimate branch,
+						// which divides err_est by |delta_t|^(p+1) for exactly the same reason
+						// (AMP3 / bhsODEAMP Eq. 6).
+						Mat<ComplexT>& Kref = std::get< Mat<ComplexT> >(K_);
+						size_proportion = NumErrorT(Kref.array().abs().maxCoeff());
 						return SuccessCode::Success;
 					}
 				};
@@ -840,61 +758,65 @@ namespace bertini{
 				 \return Success code of this computation
 				 */
 				
-				template<typename ComplexType>
+				template<typename ComplexT>
 				SuccessCode EvalRHS(System const& S,
-									const Vec<ComplexType>& space, const ComplexType& time, Mat<ComplexType> & K, unsigned stage)
+									const Vec<ComplexT>& space, const ComplexT& time, Mat<ComplexT> & K, unsigned stage)
 				{
 
-					if (std::is_same<ComplexType, mpfr_complex>::value)
+
+					if (std::is_same<ComplexT, complex_mp>::value)
 						PrecisionSanityCheck();
 
 					if(stage == 0)
 					{
-						Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
-						Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
+						linalg::PartialPivLU<ComplexT>& LUref = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
+						Mat<ComplexT>& dhdxref = std::get< Mat<ComplexT> >(dh_dx_0_);
 
-						if (!std::is_same<ComplexType,dbl>::value)
+						if (!std::is_same<ComplexT,complex_dbl>::value)
 						{
-							assert(DefaultPrecision()==current_precision_);
+							assert(ThreadPrecision()==current_precision_);
 
 							assert(Precision(space)==current_precision_);
 							assert(Precision(time)==current_precision_);
 							assert(Precision(dhdxref)==current_precision_);
 							assert(Precision(K)==current_precision_);
 						}
-						S.SetAndReset<ComplexType>(space, time);
+						S.SetAndReset<ComplexT>(space, time);
 						S.JacobianInPlace(dhdxref);
-						LUref = dhdxref.lu();
-						if (!std::is_same<ComplexType,dbl>::value)
+						// Factor a copy of dh/dx (dh_dx_0_ is read again in SetNormsCond); health check folded in.
+						auto lu_code = LUref.Factor(dhdxref);
+						if (!std::is_same<ComplexT,complex_dbl>::value)
 						{
 							assert(Precision(dhdxref)==current_precision_);
-							assert(Precision(LUref.matrixLU())==current_precision_);
+							assert(Precision(LUref.Factors())==current_precision_);
 						}
 
-						if (LUPartialPivotDecompositionSuccessful(LUref.matrixLU())!=MatrixSuccessCode::Success)
+						if (lu_code!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
-						
-						Vec<ComplexType>& dhdtref = std::get< Vec<ComplexType> >(dh_dt_temp_);
+
+						Vec<ComplexT>& dhdtref = std::get< Vec<ComplexT> >(dh_dt_temp_);
 						S.TimeDerivativeInPlace(dhdtref);
-						K.col(stage) = LUref.solve(-dhdtref);
+						dhdtref = -dhdtref;                     // in place; Solve needs materialized rhs
+						LUref.Solve(dhdtref, K.col(stage));
 						
 						return SuccessCode::Success;
 						
 					}
 					else
 					{
-						S.SetAndReset<ComplexType>(space, time);
+						S.SetAndReset<ComplexT>(space, time);
 
-						Mat<ComplexType>& dhdxtempref = std::get< Mat<ComplexType> >(dh_dx_temp_);
+						Mat<ComplexT>& dhdxtempref = std::get< Mat<ComplexT> >(dh_dx_temp_);
 						S.JacobianInPlace(dhdxtempref);
-						auto LU = dhdxtempref.lu();
-						
-						if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
+						linalg::PartialPivLU<ComplexT>& LU_temp = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
+						// dh_dx_temp_ is pure scratch here -> factor destructively, skipping the copy.
+						if (LU_temp.FactorDestructive(dhdxtempref)!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailure;
-						
-						Vec<ComplexType>& dhdtref = std::get< Vec<ComplexType> >(dh_dt_temp_);
+
+						Vec<ComplexT>& dhdtref = std::get< Vec<ComplexT> >(dh_dt_temp_);
 						S.TimeDerivativeInPlace(dhdtref);
-						K.col(stage) = LU.solve(-dhdtref);
+						dhdtref = -dhdtref;                     // in place; Solve needs materialized rhs
+						LU_temp.Solve(dhdtref, K.col(stage));
 						
 						return SuccessCode::Success;
 					}
@@ -927,41 +849,41 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename RealType>
+				template<typename RealT>
 				void FillButcherTable(int stages, const Mat<mpq_rational>& a,
 								 const Mat<mpq_rational> & b,
 								 const Mat<mpq_rational> & b_minus_bstar,
 								 const Mat<mpq_rational> & c)
 				{
-					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
+					Mat<RealT>& aref = std::get< Mat<RealT> >(a_);
 					aref.resize(stages, stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						for(int jj = 0; jj < s_; ++jj)
+						for(unsigned jj = 0; jj < s_; ++jj)
 						{
-							aref(ii,jj) = static_cast<RealType>(a(ii,jj));
+							aref(ii,jj) = static_cast<RealT>(a(ii,jj));
 						}
 					}
 					
-					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
+					Vec<RealT>& bref = std::get< Vec<RealT> >(b_);
 					bref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						bref(ii) = static_cast<RealType>(b(ii));
+						bref(ii) = static_cast<RealT>(b(ii));
 					}
 					
-					Vec<RealType>& b_minus_bstar_ref = std::get< Vec<RealType> >(b_minus_bstar_);
+					Vec<RealT>& b_minus_bstar_ref = std::get< Vec<RealT> >(b_minus_bstar_);
 					b_minus_bstar_ref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						b_minus_bstar_ref(ii) = static_cast<RealType>(b_minus_bstar(ii));
+						b_minus_bstar_ref(ii) = static_cast<RealT>(b_minus_bstar(ii));
 					}
 
-					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
+					Vec<RealT>& cref = std::get< Vec<RealT> >(c_);
 					cref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						cref(ii) = static_cast<RealType>(c(ii));
+						cref(ii) = static_cast<RealT>(c(ii));
 						
 					}
 					uses_embedded_ = true;
@@ -981,33 +903,33 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename RealType>
+				template<typename RealT>
 				void FillButcherTable(int stages, const Mat<mpq_rational>& a,
 									  const Mat<mpq_rational> & b,
 									  const Mat<mpq_rational> & c)
 				{
-					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
+					Mat<RealT>& aref = std::get< Mat<RealT> >(a_);
 					aref.resize(stages, stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						for(int jj = 0; jj < s_; ++jj)
+						for(unsigned jj = 0; jj < s_; ++jj)
 						{
-							aref(ii,jj) = static_cast<RealType>(a(ii,jj));
+							aref(ii,jj) = static_cast<RealT>(a(ii,jj));
 						}
 					}
 					
-					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
+					Vec<RealT>& bref = std::get< Vec<RealT> >(b_);
 					bref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						bref(ii) = static_cast<RealType>(b(ii));
+						bref(ii) = static_cast<RealT>(b(ii));
 					}
 					
-					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
+					Vec<RealT>& cref = std::get< Vec<RealT> >(c_);
 					cref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						cref(ii) = static_cast<RealType>(c(ii));
+						cref(ii) = static_cast<RealT>(c(ii));
 						
 					}
 					uses_embedded_ = false;
@@ -1026,24 +948,29 @@ namespace bertini{
 				
 				unsigned numTotalFunctions_; // Number of total functions for the current system
 				unsigned numVariables_;  // Number of variables for the current system
-				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > K_;  // All the stage variables.  Each column represents a different stage.
+				mutable std::tuple< Mat<complex_dbl>, Mat<complex_mp> > K_;  // All the stage variables.  Each column represents a different stage.
 				Predictor predictor_;  // Method for prediction
 				unsigned p_;  //Order of the prediction method
-				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > dh_dx_0_;  // Jacobian for the initial stage.  Use for AMP testing
-				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > dh_dx_temp_;  // Temporary jacobian for all other stages
-				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > dh_dt_temp_;  // Temporary time derivative used for all stages
-				// std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_0_;  // LU from the intial stage used for AMP testing
+				mutable std::tuple< Mat<complex_dbl>, Mat<complex_mp> > dh_dx_0_;  // Jacobian for the initial stage.  Use for AMP testing
+				mutable std::tuple< Mat<complex_dbl>, Mat<complex_mp> > dh_dx_temp_;  // Temporary jacobian for all other stages
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > dh_dt_temp_;  // Temporary time derivative used for all stages
+				// std::tuple< Eigen::PartialPivLU<Mat<complex_dbl>>, Eigen::PartialPivLU<Mat<complex_mp>> > LU_0_;  // LU from the intial stage used for AMP testing
 
-				mutable Eigen::PartialPivLU<Mat<dbl>> LU_d_;
-				mutable std::map<unsigned,Eigen::PartialPivLU<Mat<mpfr_complex>>> LU_mp_;
+				mutable std::tuple< linalg::PartialPivLU<complex_dbl>, linalg::PartialPivLU<complex_mp> > LU_;
+
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > step_temp_;  // reused scratch for FullStep stage accumulation
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > solve_temp_; // reused scratch: LU solve result
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > stage_pt_temp_; // reused scratch: RK stage point (current_space + delta_t*temp)
+				mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > err_temp_;   // reused scratch: embedded-RK error estimate vector
 				
 				
 				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods )
 				mutable unsigned s_; // Number of stages
-				mutable std::tuple< Mat<double>, Mat<mpfr_float> > a_;
-				mutable std::tuple< Vec<double>, Vec<mpfr_float> > b_;
-				mutable std::tuple< Vec<double>, Vec<mpfr_float> > b_minus_bstar_;
-				mutable std::tuple< Vec<double>, Vec<mpfr_float> > c_;
+				mutable std::tuple< Mat<double>, Mat<real_mp> > a_;
+				mutable std::tuple< Vec<double>, Vec<real_mp> > b_;
+				mutable std::tuple< Vec<double>, Vec<real_mp> > b_minus_bstar_;
+				mutable std::tuple< Vec<double>, Vec<real_mp> > c_;
 				
 				mutable bool uses_embedded_;
 				mutable unsigned current_precision_;
@@ -1129,6 +1056,53 @@ namespace bertini{
 			
 			
 			
+		/// \cond INTERNAL
+		// Explicit instantiation declarations — suppress re-instantiation in every
+		// including TU.  The definitions live in core/src/tracking/explicit_predictors.cpp.
+		// Concrete types: complex_dbl = std::complex<double>, complex_mp (multiprecision).
+		// NumErrorT = double (from bertini2/common/config.hpp).
+
+		extern template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
+		    Vec<complex_dbl>&, StepMetadata&, System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
+		    unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
+		extern template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
+		    Vec<complex_mp>&, StepMetadata&, System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
+		    unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
+
+		extern template SuccessCode ExplicitRKPredictor::FullStep<complex_dbl>(
+		    Vec<complex_dbl>&, System const&, Vec<complex_dbl> const&, complex_dbl const&, complex_dbl const&);
+		extern template SuccessCode ExplicitRKPredictor::FullStep<complex_mp>(
+		    Vec<complex_mp>&, System const&, Vec<complex_mp> const&, complex_mp const&, complex_mp const&);
+
+		extern template void ExplicitRKPredictor::SetNormsCond<complex_dbl>(
+		    double&, double&, double&, unsigned, unsigned);
+		extern template void ExplicitRKPredictor::SetNormsCond<complex_mp>(
+		    double&, double&, double&, unsigned, unsigned);
+
+		extern template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_dbl>(double&, complex_dbl const&);
+		extern template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_mp>(double&, complex_mp const&);
+
+		extern template SuccessCode ExplicitRKPredictor::SetSizeProportion<complex_dbl>(double&, complex_dbl const&);
+		extern template SuccessCode ExplicitRKPredictor::SetSizeProportion<complex_mp>(double&, complex_mp const&);
+
+		extern template SuccessCode ExplicitRKPredictor::EvalRHS<complex_dbl>(
+		    System const&, Vec<complex_dbl> const&, complex_dbl const&, Mat<complex_dbl>&, unsigned);
+		extern template SuccessCode ExplicitRKPredictor::EvalRHS<complex_mp>(
+		    System const&, Vec<complex_mp> const&, complex_mp const&, Mat<complex_mp>&, unsigned);
+
+		extern template void ExplicitRKPredictor::FillButcherTable<double>(
+		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
+		    Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+		extern template void ExplicitRKPredictor::FillButcherTable<real_mp>(
+		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
+		    Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+
+		extern template void ExplicitRKPredictor::FillButcherTable<double>(
+		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+		extern template void ExplicitRKPredictor::FillButcherTable<real_mp>(
+		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+		/// \endcond
+
 		} // re: predict
 	}// re: tracking
 }// re: bertini

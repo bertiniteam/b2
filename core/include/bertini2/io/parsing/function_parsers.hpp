@@ -41,6 +41,7 @@ namespace bertini {
 		
 			
 			
+			/// \brief Parse a function expression from the iterator range into a node tree.
 			template <typename Iterator>
 			bool parse(Iterator first, Iterator last, std::shared_ptr<bertini::node::Node>& func)
 			{

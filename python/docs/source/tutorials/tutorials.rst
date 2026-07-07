@@ -5,11 +5,28 @@
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Available tutorials
+   :maxdepth: 2
+
+   formulating_and_solving/index
+
+   manipulating_solutions/index
+
+   settings_and_precision/index
+
+   parallelism/index
+
+   observing_metadata_more/index
+   
+   performance_benchmarking/index
+   record_keeping/index
+   
+   doing_things_manually/index
+   
+   
 
 
-   evaluation_cyclic
-   tracking_nonsingular
-   manual_endgame_usage
+
+
+
+
 

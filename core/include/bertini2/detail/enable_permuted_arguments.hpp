@@ -64,20 +64,20 @@ namespace bertini {
 	struct IndexByType< T1, T2, RemainingT... > : std::integral_constant< std::size_t, IndexByType< T1, RemainingT... >::value + 1 > 
 	{};
 
-	// a free function which gets a type from a tuple with no duplicates.  Remember, duplicates are not allowed.
-	template< std::size_t I, std::size_t J, 
+	/// \brief Get the value of type T, pulling from the given (absent) args when T is not among the present types.
+	template< std::size_t I, std::size_t J,
 			typename T, typename... PresentT, typename... GivenT >
-	auto GetByIndex( const std::tuple< PresentT... >&, 
+	auto GetByIndex( const std::tuple< PresentT... >&,
 	                 const std::tuple< GivenT... >& absent_args )
 	   -> typename std::enable_if< I == sizeof...( PresentT ), const T& >::type
 	{
 	   return std::get< J >( absent_args );
 	}
 
-	// the other half of the get by index function
-	template< std::size_t I, std::size_t J, 
+	/// \brief Get the value of type T from the present args when T is among the present types (the I != sizeof... overload).
+	template< std::size_t I, std::size_t J,
 	        typename T, typename... PresentT, typename... GivenT >
-	auto GetByIndex(const std::tuple< PresentT... >& present_args, 
+	auto GetByIndex(const std::tuple< PresentT... >& present_args,
 	                const std::tuple< GivenT... >& ) // these arguments will have to be default constructed
 	   -> typename std::enable_if< I != sizeof...( PresentT ), const T& >::type /* remember, `I != sizeof...( PresentT )` means it found T in PresentT */
 	{
@@ -94,27 +94,31 @@ namespace bertini {
 	template<> struct AreValidArguments< true > : std::true_type 
 	{};
 
-	// a proxy function which to ensure that the types are distinct, and that we can indeed get the index by type.
-	template< std::size_t... > 
-	void ValidateTypes() 
+	/// \brief Proxy function ensuring the types are distinct and indexable by type (compile-time check).
+	template< std::size_t... >
+	void ValidateTypes()
 	{}
 
 
 
-	// default construct the objects not present in the arguments, but required by the unpermute function
+	/// \brief Holds a default-constructed value of T, used to fill arguments not present when unpermuting.
 	template< typename T >
 	struct DefaultConstruct
-	{ static const T value; };
+	{
+		static const T value;  ///< The default-constructed value of T.
+	};
 
+	/// \cond PERMUTE_DETAIL
 	template< typename T >
 	const T DefaultConstruct< T >::value
 	{};
+	/// \endcond
 
 
 
 	} // namespace detail
 
-	// helper template which reorders parameters
+	/// \brief Reorder a set of present arguments into the declared UnpermutedT order, default-constructing any absent.
 	template< typename... UnpermutedT, 	// these must be declared when using the function
 	          typename... PermutedPresentT > // these are inferred, cannot be declared
 	std::tuple< const UnpermutedT&... > Unpermute( const PermutedPresentT&... present_permuted_args )

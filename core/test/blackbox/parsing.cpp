@@ -26,8 +26,8 @@
 
 #include "bertini2/system/precon.hpp"
 #include "bertini2/blackbox/global_configs.hpp"
-
 #include "bertini2/io/parsing.hpp"
+#include "bertini2/io/parsing/system_parsers.hpp"
 
 
 BOOST_AUTO_TEST_SUITE(blackbox_test)
@@ -35,13 +35,13 @@ BOOST_AUTO_TEST_SUITE(blackbox_test)
 BOOST_AUTO_TEST_SUITE(parsing_configs)
 
 using namespace bertini;
-using mpfr = bertini::mpfr_complex;
-using dbl = bertini::dbl;
+using mpfr = bertini::complex_mp;
+using complex_dbl = bertini::complex_dbl;
  
 BOOST_AUTO_TEST_CASE(parse1)
 {
 	
-	using AllConfsD = blackbox::config::Configs::All<dbl>::type;
+	using AllConfsD = blackbox::config::Configs::All<complex_dbl>::type;
 	using AllConfsMP = blackbox::config::Configs::All<mpfr>::type;
 
 std::string config = 
@@ -76,10 +76,99 @@ maxnewtonits: 1;)";
 
 	auto results_double = bertini::parsing::classic::ConfigParser<AllConfsD>::Parse(config);
 	auto results_mp = bertini::parsing::classic::ConfigParser<AllConfsMP>::Parse(config);
+
+	BOOST_CHECK_EQUAL(std::get<algorithm::RandomConfig>(results_double).random_seed, 72ul);
+	BOOST_CHECK_EQUAL(std::get<algorithm::RandomConfig>(results_mp).random_seed, 72ul);
 }
 
 
 
 BOOST_AUTO_TEST_SUITE_END() // end the parsing sub-suite
+
+
+
+BOOST_AUTO_TEST_SUITE(parser_errors)
+
+BOOST_AUTO_TEST_CASE(system_missing_semicolon)
+{
+	// "variable_group x, y" is missing a semicolon — expectation operator fires
+	std::string bad = "variable_group x, y\nfunction f;\nf = x+y;";
+	BOOST_CHECK_THROW(bertini::System{bad}, std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(system_syntax_error_in_expression)
+{
+	std::string bad = "variable_group x, y;\nfunction f;\nf = x + * y;";
+	BOOST_CHECK_THROW(bertini::System{bad}, std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(system_garbage_input)
+{
+	// Completely nonsensical input — parser cannot make progress
+	BOOST_CHECK_THROW(bertini::System{"@#$% not bertini at all"}, std::runtime_error);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // end parser_errors suite
+
+
+
+BOOST_AUTO_TEST_SUITE(unary_minus_precedence)
+
+using complex_dbl = bertini::complex_dbl;
+
+namespace {
+	// parse "f = <expr>" over variable_group x,y,z and evaluate at the given point
+	complex_dbl ParseEval(std::string const& expr, complex_dbl x, complex_dbl y, complex_dbl z)
+	{
+		bertini::System s{"variable_group x, y, z;\nfunction f;\nf = " + expr + ";"};
+		bertini::Vec<complex_dbl> pt(3);
+		pt << x, y, z;
+		return s.Eval(pt)(0);
+	}
+}
+
+// Regression for the grammar bug where a leading unary '-' negated the ENTIRE following
+// expression ("-y+x" parsed as "-(y+x)") instead of just its operand.  Unary +/- bind one
+// factor_, so "-y+x" is (-y)+x and "-x^2" is -(x^2).
+BOOST_AUTO_TEST_CASE(leading_minus_negates_only_its_operand)
+{
+	const complex_dbl x(2,0), y(5,0), z(3,0);
+	// "-y+x" == x-y == -3, NOT -(y+x) == -7
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-y+x", x,y,z) - ParseEval("x-y", x,y,z)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-y+x", x,y,z) - complex_dbl(-3,0)),               1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(leading_minus_on_a_parenthesized_sum)
+{
+	const complex_dbl x(2,0), y(5,0), z(3,0);
+	// the bug found via round-tripping: "-(y-z)+x" == x-(y-z) == 0, NOT -((y-z)+x)
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-(y-z)+x", x,y,z) - ParseEval("x-(y-z)", x,y,z)), 1e-12);
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-(y-z)+x", x,y,z) - complex_dbl(0,0)),                    1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(all_negative_sum_is_unchanged)
+{
+	const complex_dbl x(2,0), y(5,0), z(3,0);
+	// "-y-x" == -(y+x) == -7 (here the greedy reading happened to agree)
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-y-x", x,y,z) - complex_dbl(-7,0)), 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(unary_minus_binds_looser_than_power)
+{
+	const complex_dbl x(2,0), y(5,0), z(3,0);
+	// "-x^2" == -(x^2) == -4, NOT (-x)^2 == 4
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-x^2", x,y,z) - complex_dbl(-4,0)), 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(unary_minus_then_product)
+{
+	const complex_dbl x(2,0), y(5,0), z(3,0);
+	// "-x*y" == -(x*y) == -10
+	BOOST_CHECK_SMALL(std::abs(ParseEval("-x*y", x,y,z) - complex_dbl(-10,0)), 1e-12);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // unary_minus_precedence
+
+
 
 BOOST_AUTO_TEST_SUITE_END() // end the blackbox suite

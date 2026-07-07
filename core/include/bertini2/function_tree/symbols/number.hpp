@@ -36,7 +36,7 @@
 /**
 \file number.hpp
 
-\brief Provides the Number Node types, including Rational, Float, and Integer
+\brief Provides the Number Node types, including Rational, Complex, and Integer
 
 */
 
@@ -56,10 +56,9 @@ namespace node{
 	/**
 	\brief Abstract Number type from which other Numbers derive.
 
-	This class represents constant leaves to a function tree.  FreshEval simply returns
-	the value of the constant.
+	This class represents constant leaves to a function tree.
 	*/
-	class Number : public virtual Symbol
+	class Number : public Symbol
 	{
 	public:
 
@@ -67,7 +66,6 @@ namespace node{
 
 
 
-		void Reset() const override;
 
 
 		
@@ -81,7 +79,7 @@ namespace node{
 		The degree of a number is always 0.  It's a number.
 		*/
 		inline
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		int Degree(std::shared_ptr<Variable> const& /*v*/ = nullptr) const override
 		{
 			return 0;
 		}
@@ -92,7 +90,7 @@ namespace node{
 		The degree of a number is always 0.  It's a number.
 		*/
 		inline
-		int Degree(VariableGroup const& vars) const override
+		int Degree(VariableGroup const& /*vars*/) const override
 		{
 			return 0;
 		}
@@ -109,22 +107,13 @@ namespace node{
 			return std::vector<int>(vars.size(), 0);
 		}
 
-		/**
-		\brief Homogenize this node.
-
-		Homogenization of a number is a trivial operation.  Don't do anything.
-		*/
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
-		{
-			
-		}
 
 		/**
 		\brief Is this node homogeneous?
 
 		Numbers are always homogeneous
 		*/
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		bool IsHomogeneous(std::shared_ptr<Variable> const& /*v*/ = nullptr) const override
 		{
 			return true;
 		}
@@ -132,19 +121,12 @@ namespace node{
 		/**
 		Check for homogeneity, with respect to a variable group.
 		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
+		bool IsHomogeneous(VariableGroup const& /*vars*/) const override
 		{
 			return true;
 		}
 
 		
-		/**
-		 Change the precision of this variable-precision tree node.
-		 
-		 \param prec the number of digits to change precision to.
-		 */
-		void precision(unsigned int prec) const override;
-
 		/**
 		\brief Differentiate a number.
 		 */
@@ -156,7 +138,7 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Symbol>(*this);
 		}
 
@@ -169,26 +151,64 @@ namespace node{
 
 	Signed real Integer storage in an expression tree. Consider using a Rational type.
 	*/
-	class Integer : public virtual Number, public virtual EnableSharedFromThisVirtual<Integer>
+	class Integer : public Number
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
 
 
+		/// \brief Defaulted copy constructor.
 		Integer(Integer const&) = default;
 
 		~Integer() = default;
-		
+
 
 
 
 		void print(std::ostream & target) const override;
 
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Integer> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Integer>( new Integer(ts...) );
+		// negative literals print with a leading '-', so parenthesize like a Negate
+		unsigned Precedence() const override
+		{
+			return true_value_ < 0 ? PrecNegate : PrecAtom;
+		}
+
+		/**
+		\brief Get the literal value this node represents.
+		*/
+		mpz_int const& GetValue() const
+		{
+			return true_value_;
+		}
+
+		bool IsLiteralZero() const override
+		{
+			return true_value_ == 0;
+		}
+
+		bool IsLiteralOne() const override
+		{
+			return true_value_ == 1;
+		}
+
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Integer).hash_code();
+			HashCombine(h, std::hash<std::string>{}(true_value_.str()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Integer const*>(&other);
+			return o && true_value_ == o->true_value_;
+		}
+
+		/// \brief Construct (and intern) a Integer node.
+		template<typename... Ts>
+		static
+		std::shared_ptr<Integer> Make(Ts&& ...ts){
+			return std::static_pointer_cast<Integer>(Intern(std::shared_ptr<Node>( new Integer(ts...) )));
 		}
 
 	private:
@@ -209,15 +229,6 @@ namespace node{
 
 
 
-		// Return value of constant
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpz_int true_value_;
@@ -227,7 +238,7 @@ namespace node{
 		Integer() = default;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Number>(*this);
 			ar & true_value_;
 		}
@@ -242,18 +253,23 @@ namespace node{
 
 
 	/**
-	\brief Number type for storing floating point numbers within an expression tree.  
+	\brief A complex-number literal node in an expression tree.
 
-	 Number type for storing floating point numbers within an expression tree.  The number passed in at construct time is stored as the true value, and evaluation down or up samples from this 'true value'.  Consider using a Rational or Integer if possible.
+	Stores an arbitrary-precision **complex** value (complex_mp) -- a real-valued literal is just
+	the special case with zero imaginary part.  The value passed at construction time is held as the
+	'true value' at its authored precision, and evaluation down- or up-samples from it.  Despite the
+	historical "float" name this node carried, it is NOT real-only: it holds a full complex number.
+	Prefer a Rational or Integer when the coefficient is exact -- they evaluate faster and to
+	arbitrary precision without a stored sample.
 	*/
-	class Float : public virtual Number, public virtual EnableSharedFromThisVirtual<Float>
+	class Complex : public Number
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
 
 
-		~Float() = default;
+		~Complex() = default;
 		
 
 
@@ -261,51 +277,83 @@ namespace node{
 
 		void print(std::ostream & target) const override;
 
-
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Float> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Float>( new Float(ts...) );
+		// real-valued floats print bare (no complex pair); negative ones get
+		// a leading '-', so parenthesize like a Negate.  pairs self-delimit.
+		unsigned Precedence() const override
+		{
+			if (highest_precision_value_.imag() == 0 && highest_precision_value_.real() < 0)
+				return PrecNegate;
+			return PrecAtom;
 		}
 
+		/**
+		\brief Get the literal value this node represents, at its stored (highest) precision.
+		*/
+		complex_mp const& GetValue() const
+		{
+			return highest_precision_value_;
+		}
 
+		bool IsLiteralZero() const override
+		{
+			return highest_precision_value_.real() == 0 && highest_precision_value_.imag() == 0;
+		}
+
+		bool IsLiteralOne() const override
+		{
+			return highest_precision_value_.real() == 1 && highest_precision_value_.imag() == 0;
+		}
+
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Complex).hash_code();
+			HashCombine(h, std::hash<std::string>{}(highest_precision_value_.real().str()));
+			HashCombine(h, std::hash<std::string>{}(highest_precision_value_.imag().str()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Complex const*>(&other);
+			return o
+				&& highest_precision_value_.real() == o->highest_precision_value_.real()
+				&& highest_precision_value_.imag() == o->highest_precision_value_.imag();
+		}
+
+		/// \brief Construct (and intern) a Complex node.
+		template<typename... Ts>
+		static
+		std::shared_ptr<Complex> Make(Ts&& ...ts){
+			return std::static_pointer_cast<Complex>(Intern(std::shared_ptr<Node>( new Complex(ts...) )));
+		}
 
 	private:
 
 		explicit
-		Float(mpfr_complex const& val) : highest_precision_value_(val)
+		Complex(complex_mp const& val) : highest_precision_value_(val)
 		{}
 
 		explicit
-		Float(mpfr_float const& rval, mpfr_float const& ival = 0) : highest_precision_value_(rval,ival)
+		Complex(real_mp const& rval, real_mp const& ival = 0) : highest_precision_value_(rval,ival)
 		{}
 
 		explicit
-		Float(std::string const& val) : highest_precision_value_(val)
+		Complex(std::string const& val) : highest_precision_value_(val)
 		{}
 
 		explicit
-		Float(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
+		Complex(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
 		{}
 
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-
-		mpfr_complex highest_precision_value_;
+		complex_mp highest_precision_value_;
 
 		friend class boost::serialization::access;
-		Float() = default;
+		Complex() = default;
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Number>(*this);
-			ar & const_cast<mpfr_complex &>(highest_precision_value_);
+			ar & const_cast<complex_mp &>(highest_precision_value_);
 		}
 	};
 
@@ -317,14 +365,14 @@ namespace node{
 	/**
 	\brief The Rational number type for Bertini2 expression trees.
 
-	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a mpfr_complex at evaluate time.
+	The Rational number type for Bertini2 expression trees.  The "true value" is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a complex_mp at evaluate time.
 	*/
-	class Rational : public virtual Number, public virtual EnableSharedFromThisVirtual<Rational>
+	class Rational : public Number
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
-		using mpq_rational = bertini::mpq_rational;
+		using mpq_rational = bertini::mpq_rational;  ///< The exact rational type this node stores.
 
 		
 
@@ -359,16 +407,87 @@ namespace node{
 
 		void print(std::ostream & target) const override;
 
-
-
-
-		
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Rational> Make(Ts&& ...ts){ 
-			return std::shared_ptr<Rational>( new Rational(ts...) );
+		// real-valued rationals print bare (no complex pair).  the bare form is
+		// textually an expression: a leading '-' parenthesizes like a Negate, and
+		// 'p/q' contains a division, so it binds like a Mult (x/(1/3), not x/1/3).
+		// complex pairs self-delimit.
+		unsigned Precedence() const override
+		{
+			if (true_value_imag_ == 0)
+			{
+				if (true_value_real_ < 0)
+					return PrecNegate;
+				if (denominator(true_value_real_) != 1)
+					return PrecMult;
+			}
+			return PrecAtom;
 		}
 
+		/**
+		\brief Get the real part of the literal value this node represents.
+		*/
+		mpq_rational const& GetValueReal() const
+		{
+			return true_value_real_;
+		}
+
+		/**
+		\brief Get the imaginary part of the literal value this node represents.
+		*/
+		mpq_rational const& GetValueImag() const
+		{
+			return true_value_imag_;
+		}
+
+		/**
+		\brief Get this exact constant as a number of type NumT, independent of the
+		evaluation engine.
+
+		Unlike Eval, this does no caching and never touches the node's stored working
+		value --- it is a pure read of the literal.  It matches the literal's conversion:
+		double truncation for complex_dbl, and a value at the current thread precision for mpfr.
+		*/
+		template<typename NumT>
+		NumT Value() const
+		{
+			if constexpr (std::is_same<NumT, complex_dbl>::value)
+				return complex_dbl(double(true_value_real_), double(true_value_imag_));
+			else
+				return NumT(boost::multiprecision::mpfr_float(true_value_real_, ThreadPrecision()),
+				            boost::multiprecision::mpfr_float(true_value_imag_, ThreadPrecision()));
+		}
+
+		bool IsLiteralZero() const override
+		{
+			return true_value_real_ == 0 && true_value_imag_ == 0;
+		}
+
+		bool IsLiteralOne() const override
+		{
+			return true_value_real_ == 1 && true_value_imag_ == 0;
+		}
+
+		std::size_t HashImpl() const override
+		{
+			std::size_t h = typeid(Rational).hash_code();
+			HashCombine(h, std::hash<std::string>{}(true_value_real_.str()));
+			HashCombine(h, std::hash<std::string>{}(true_value_imag_.str()));
+			return h;
+		}
+		bool IsSame(Node const& other) const override
+		{
+			auto o = dynamic_cast<Rational const*>(&other);
+			return o && true_value_real_ == o->true_value_real_ && true_value_imag_ == o->true_value_imag_;
+		}
+
+
+
+		/// \brief Construct (and intern) a Rational node.
+		template<typename... Ts>
+		static
+		std::shared_ptr<Rational> Make(Ts&& ...ts){
+			return std::static_pointer_cast<Rational>(Intern(std::shared_ptr<Node>( new Rational(ts...) )));
+		}
 
 	private:
 
@@ -396,15 +515,6 @@ namespace node{
 		{}
 
 
-		// Return value of constant
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
-
-
-		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		
-		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpq_rational true_value_real_, true_value_imag_;
@@ -412,7 +522,7 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Number>(*this);
 			ar & const_cast<mpq_rational &>(true_value_real_);
 			ar & const_cast<mpq_rational &>(true_value_imag_);

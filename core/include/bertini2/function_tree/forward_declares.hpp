@@ -39,10 +39,9 @@ namespace bertini {
 	namespace node{ 
 		class Variable;
 		class Integer;
-		class Float;
+		class Complex;
 		class Rational;
-		class Function;
-		class Jacobian;
+		class NamedExpression;
 		class Differential;
 	}
 
@@ -61,9 +60,6 @@ namespace bertini {
 		class LogOperator;
 		class NegateOperator;
 		class SqrtOperator;
-
-		class LinearProduct;
-		class DiffLinear;
 
 	}
 
@@ -87,15 +83,15 @@ namespace bertini {
 
 
 	namespace node{
+		/// \brief Register all concrete Node types with a Boost.Serialization archive.
 		template <typename Archive>
 		void register_derived_node_types(Archive& ar)
 		{
 			ar.template register_type<bertini::node::Variable>();
 			ar.template register_type<bertini::node::Integer>();
-			ar.template register_type<bertini::node::Float>();
+			ar.template register_type<bertini::node::Complex>();
 			ar.template register_type<bertini::node::Rational>();
-			ar.template register_type<bertini::node::Function>();
-			ar.template register_type<bertini::node::Jacobian>();
+			ar.template register_type<bertini::node::NamedExpression>();
 			ar.template register_type<bertini::node::Differential>();
 			// ar.template register_type<bertini::node::Operator>(); // abstract type
 			// ar.template register_type<bertini::node::UnaryOperator>(); // abstract type
@@ -108,7 +104,6 @@ namespace bertini {
 			ar.template register_type<bertini::node::LogOperator>();
 			ar.template register_type<bertini::node::NegateOperator>();
 			ar.template register_type<bertini::node::SqrtOperator>();
-			ar.template register_type<bertini::node::LinearProduct>();
 			// ar.template register_type<bertini::node::TrigOperator>(); // abstract type
 			ar.template register_type<bertini::node::SinOperator>();
 			ar.template register_type<bertini::node::ArcSinOperator>();

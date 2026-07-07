@@ -1,6 +1,6 @@
 extern const double relaxed_threshold_clearance_d;
 extern const double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
+extern bertini::real_mp threshold_clearance_mp;
 extern const unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
 extern const std::string xstr_real;
@@ -16,16 +16,16 @@ extern const std::string pstr_imag;
 extern const std::string zstr_real;
 extern const std::string zstr_imag;
 
-extern const bertini::dbl xnum_dbl;
-extern const bertini::dbl ynum_dbl;
-extern const bertini::dbl znum_dbl;
-extern const bertini::dbl anum_dbl;
-extern const bertini::dbl bnum_dbl;
-extern const bertini::dbl pnum_dbl;
+extern const bertini::complex_dbl xnum_dbl;
+extern const bertini::complex_dbl ynum_dbl;
+extern const bertini::complex_dbl znum_dbl;
+extern const bertini::complex_dbl anum_dbl;
+extern const bertini::complex_dbl bnum_dbl;
+extern const bertini::complex_dbl pnum_dbl;
 
-extern bertini::mpfr_complex xnum_mpfr;
-extern bertini::mpfr_complex ynum_mpfr;
-extern bertini::mpfr_complex znum_mpfr;
-extern bertini::mpfr_complex anum_mpfr;
-extern bertini::mpfr_complex bnum_mpfr;
-extern bertini::mpfr_complex pnum_mpfr;
+extern bertini::complex_mp xnum_mpfr;
+extern bertini::complex_mp ynum_mpfr;
+extern bertini::complex_mp znum_mpfr;
+extern bertini::complex_mp anum_mpfr;
+extern bertini::complex_mp bnum_mpfr;
+extern bertini::complex_mp pnum_mpfr;

@@ -36,7 +36,7 @@
 
 
 extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
+extern bertini::real_mp threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
@@ -53,13 +53,13 @@ using VariableGroup = bertini::VariableGroup;
 
 
 using mpq_rational = bertini::mpq_rational;
-using dbl = std::complex<double>;
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using complex_dbl = std::complex<double>;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 
 
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 
 
 BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
@@ -70,12 +70,12 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
 	*/
 	//Setting upt current space and time values for evaluation
-	Vec<dbl> current_space(2);
-	current_space << dbl(256185069753.4088,-387520022558.0519),
-					 dbl(-0.021,-0.177);
+	Vec<complex_dbl> current_space(2);
+	current_space << complex_dbl(256185069753.4088,-387520022558.0519),
+					 complex_dbl(-0.021,-0.177);
 
-	dbl current_time(0,0);
-	dbl delta_t(.1,0);
+	complex_dbl current_time(0,0);
+	complex_dbl delta_t(.1,0);
 	current_time += delta_t;
 
 	//Defining the system and variables. 
@@ -89,11 +89,11 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 	sys.AddFunction(y - pow(x,2));
 
 	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
-	Mat<dbl> dh_dx = sys.Jacobian(current_space, current_time); 
-	Eigen::PartialPivLU<Mat<dbl>> LU = dh_dx.lu();
+	Mat<complex_dbl> dh_dx = sys.Jacobian(current_space, current_time); 
+	Eigen::PartialPivLU<Mat<complex_dbl>> LU = dh_dx.lu();
 
-	Vec<dbl> randy = Vec<dbl>::Random(sys.NumVariables());
-	Vec<dbl> temp_soln = LU.solve(randy);
+	Vec<complex_dbl> randy = Vec<complex_dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
+	Vec<complex_dbl> temp_soln = LU.solve(randy);
 					
 	auto norm_J = double(dh_dx.norm());
 	auto norm_J_inverse = double(temp_soln.norm());
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 
-	auto CritA = bertini::tracking::amp::CriterionA<dbl>(norm_J,norm_J_inverse,AMP);
+	auto CritA = bertini::tracking::amp::CriterionA<complex_dbl>(norm_J,norm_J_inverse,AMP);
 
 
 	//Check to make sure we failed.
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
 	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
 	Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
 
-	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
+	Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
 	Vec<mpfr> temp_soln = LU.solve(randy);
 					
 	auto norm_J = double(dh_dx.norm());
@@ -168,12 +168,12 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
 	*/
 	//Setting upt current space and time values for evaluation
-	Vec<dbl> current_space(2);
-	current_space << dbl(256185069753.4088,-387520022558.0519),
-					 dbl(-0.021,-0.177);
+	Vec<complex_dbl> current_space(2);
+	current_space << complex_dbl(256185069753.4088,-387520022558.0519),
+					 complex_dbl(-0.021,-0.177);
 
-	dbl current_time(0,0);
-	dbl delta_t(.1,0);
+	complex_dbl current_time(0,0);
+	complex_dbl delta_t(.1,0);
 	current_time += delta_t;
 
 	//Defining the system and variables. 
@@ -188,12 +188,12 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 
 	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
 	auto f = sys.Eval(current_space, current_time);
-	Mat<dbl> dh_dx = sys.Jacobian(current_space, current_time); 
-	Eigen::PartialPivLU<Mat<dbl>> LU = dh_dx.lu();
-	Vec<dbl> delta_z = LU.solve(-f);
+	Mat<complex_dbl> dh_dx = sys.Jacobian(current_space, current_time); 
+	Eigen::PartialPivLU<Mat<complex_dbl>> LU = dh_dx.lu();
+	Vec<complex_dbl> delta_z = LU.solve(-f);
 
-	Vec<dbl> randy = Vec<dbl>::Random(sys.NumVariables());
-	Vec<dbl> temp_soln = LU.solve(randy);
+	Vec<complex_dbl> randy = Vec<complex_dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
+	Vec<complex_dbl> temp_soln = LU.solve(randy);
 					
 	auto norm_J = double(dh_dx.norm());
 	auto norm_J_inverse = double(temp_soln.norm());
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 	unsigned int num_newton_iterations_remaining = 1;
 	auto TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
 
-	auto CritB = bertini::tracking::amp::CriterionB<dbl>(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,delta_z.norm(),AMP);
+	auto CritB = bertini::tracking::amp::CriterionB<complex_dbl>(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,delta_z.norm(),AMP);
 
 
 	//Check to make sure we failed.
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
 	Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
 	Vec<mpfr> delta_z = LU.solve(-f);
 
-	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
+	Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
 	Vec<mpfr> temp_soln = LU.solve(randy);
 					
 	auto norm_J = double(dh_dx.norm());
@@ -273,12 +273,12 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
 	*/
 	//Setting upt current space and time values for evaluation
-	Vec<dbl> current_space(2);
-	current_space << dbl(256185069753.4088,-387520022558.0519),
-					 dbl(-0.021,-0.177);
+	Vec<complex_dbl> current_space(2);
+	current_space << complex_dbl(256185069753.4088,-387520022558.0519),
+					 complex_dbl(-0.021,-0.177);
 
-	dbl current_time(0,0);
-	dbl delta_t(.1,0);
+	complex_dbl current_time(0,0);
+	complex_dbl delta_t(.1,0);
 	current_time += delta_t;
 
 	//Defining the system and variables. 
@@ -292,11 +292,11 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 	sys.AddFunction(y - pow(x,2));
 
 	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
-	Mat<dbl> dh_dx = sys.Jacobian(current_space, current_time); 
-	Eigen::PartialPivLU<Mat<dbl>> LU = dh_dx.lu();
+	Mat<complex_dbl> dh_dx = sys.Jacobian(current_space, current_time); 
+	Eigen::PartialPivLU<Mat<complex_dbl>> LU = dh_dx.lu();
 
-	Vec<dbl> randy = Vec<dbl>::Random(sys.NumVariables());
-	Vec<dbl> temp_soln = LU.solve(randy);
+	Vec<complex_dbl> randy = Vec<complex_dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
+	Vec<complex_dbl> temp_soln = LU.solve(randy);
 	auto norm_J_inverse = double(temp_soln.norm());
 
 
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 	AMP.safety_digits_2 = 32000;
 	auto TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
 
-	auto CritC = bertini::tracking::amp::CriterionC<dbl>(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
+	auto CritC = bertini::tracking::amp::CriterionC<complex_dbl>(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
 
 
 	//Check to make sure we failed.
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
 	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
 	Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
 
-	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
+	Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
 	Vec<mpfr> temp_soln = LU.solve(randy);
 	auto norm_J_inverse = double(temp_soln.norm());
 

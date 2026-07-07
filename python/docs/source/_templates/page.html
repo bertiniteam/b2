@@ -1,0 +1,21 @@
+{# Extend furo's page template to append build provenance to the footer.
+
+   Furo (unlike the old sphinx_rtd_theme) has no `footer.html` / `extrafooter` block; its footer
+   lives in a `{% block footer %}` inside `furo/page.html`.  So we override *that* block, keep
+   furo's copyright + icons via `{{ super() }}`, and append a "Built from <sha> on <date>" line.
+
+   `commit_sha` / `commit_short` / `build_date` come from `html_context` in conf.py.  When no commit
+   resolves (e.g. a wheel-only or shallow build), `commit_sha` is empty and the whole block is
+   skipped -- never a broken commit link or the literal 'unknown'. #}
+{% extends "!page.html" %}
+
+{% block footer %}
+  {{ super() }}
+  {% if commit_sha %}
+  <div class="build-info" style="margin-top: 0.75rem; font-size: var(--font-size--small); color: var(--color-foreground-muted);">
+    Built from
+    <a href="https://github.com/bertiniteam/b2/commit/{{ commit_sha }}"><code>{{ commit_short }}</code></a>
+    {%- if build_date %} on {{ build_date }}{% endif %}.
+  </div>
+  {% endif %}
+{% endblock footer %}

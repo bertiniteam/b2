@@ -38,6 +38,39 @@ namespace bertini{
 
 
 
+template<typename TrackerT>
+void ExportTrackingEvents()
+{
+	using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+	using TEv = TrackingEvent<EmitterT>;
+
+	// tracker() downcasts from EmitterT to TrackerT.
+	// Safe: TrackerT IS-A EmitterT (direct single inheritance) and the emitting
+	// object is always the concrete TrackerT (*this in NotifyObservers calls).
+	auto tracker_getter = +[](const TEv& e) -> const TrackerT& {
+		return static_cast<const TrackerT&>(e.Get());
+	};
+
+	class_<TEv, bases<AnyEvent>, boost::noncopyable>("TrackingEvent", no_init)
+		.def("tracker", tracker_getter, return_value_policy<reference_existing_object>());
+
+	class_<TrackingStarted<EmitterT>,        bases<TEv>, boost::noncopyable>("TrackingStarted",        no_init);
+	class_<TrackingEnded<EmitterT>,          bases<TEv>, boost::noncopyable>("TrackingEnded",          no_init);
+	class_<SuccessfulStep<EmitterT>,         bases<TEv>, boost::noncopyable>("SuccessfulStep",         no_init);
+	class_<FailedStep<EmitterT>,             bases<TEv>, boost::noncopyable>("FailedStep",             no_init);
+	class_<StepsizeDecreased<EmitterT>,      bases<TEv>, boost::noncopyable>("StepsizeDecreased",      no_init);
+	class_<StepsizeIncreased<EmitterT>,      bases<TEv>, boost::noncopyable>("StepsizeIncreased",      no_init);
+	class_<InfinitePathTruncation<EmitterT>, bases<TEv>, boost::noncopyable>("InfinitePathTruncation", no_init);
+
+	class_<PrecisionChanged<EmitterT>, bases<TEv>, boost::noncopyable>("PrecisionChanged", no_init)
+		.def("previous", &PrecisionChanged<EmitterT>::Previous)
+		.def("next",     &PrecisionChanged<EmitterT>::Next);
+
+	class_<PrecisionIncreased<EmitterT>, bases<PrecisionChanged<EmitterT>>, boost::noncopyable>("PrecisionIncreased", no_init);
+	class_<PrecisionDecreased<EmitterT>, bases<PrecisionChanged<EmitterT>>, boost::noncopyable>("PrecisionDecreased", no_init);
+}
+
+
 template <typename TrackerT>
 void ExportSpecificObservers(std::string scope_name)
 {
@@ -48,7 +81,7 @@ void ExportSpecificObservers(std::string scope_name)
 	scope_C.attr(scope_name.c_str()) = submodule_C;
 	scope new_submodule_scope_C = submodule_C;
 
-	class_<ObserverWrapper<Observer<TrackerT>>, bases<AnyObserver>, boost::noncopyable>("Abstract", init< >())
+	class_<ObserverWrapper<Observer<TrackerT>>, std::shared_ptr<ObserverWrapper<Observer<TrackerT>>>, bases<AnyObserver>, boost::noncopyable>("CustomObserver", init< >())
 	;
 
 	class_< FirstPrecisionRecorder<TrackerT>, bases<Observer<TrackerT>> >("FirstPrecisionRecorder", init< >())
@@ -58,6 +91,8 @@ void ExportSpecificObservers(std::string scope_name)
 	class_<GoryDetailLogger<TrackerT>, bases<Observer<TrackerT>> >("GoryDetailLogger", init< >())
 	.def(TrackingObserverVisitor<GoryDetailLogger<TrackerT>>())
 	;
+
+	ExportTrackingEvents<TrackerT>();
 }
 
 void ExportTrackerObservers()

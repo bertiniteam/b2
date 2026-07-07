@@ -49,7 +49,7 @@ using namespace bertini;
 
 BOOST_AUTO_TEST_CASE(make_system_pool)
 {
-	SystemPool sp;
+	[[maybe_unused]] SystemPool sp;
 }
 
 
@@ -123,7 +123,7 @@ using namespace bertini;
 
 BOOST_AUTO_TEST_CASE(make_double_point_point)
 {
-	PointPool<dbl> pool;
+	[[maybe_unused]] PointPool<complex_dbl> pool;
 }
 BOOST_AUTO_TEST_SUITE_END()
 

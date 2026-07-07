@@ -5,7 +5,7 @@
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
-using dbl = bertini::dbl;
+using complex_dbl = bertini::complex_dbl;
 using mpfr = bertini::mpfr;
 
 namespace demo{
@@ -21,17 +21,17 @@ namespace demo{
 	{
 		using bertini::Variable::Make;
         using bertini::Integer::Make;
-        using bertini::MakeFloat;
+        using bertini::MakeComplex;
 
 	    auto x1 = Variable::Make("x1");
 	    auto x2 = Variable::Make("x2");
 	    auto x3 = Variable::Make("x3");
 	    auto x4 = Variable::Make("x4");
         
-        auto p1 = MakeFloat("3.2");
-        auto p2 = MakeFloat("-2.8");
-        auto p3 = bertini::MakeFloat("3.5");
-        auto p4 = MakeFloat("-3.6");
+        auto p1 = MakeComplex("3.2");
+        auto p2 = MakeComplex("-2.8");
+        auto p3 = bertini::MakeComplex("3.5");
+        auto p4 = MakeComplex("-3.6");
         
         std::vector<Node> params{p1, p2, p3, p4};
 

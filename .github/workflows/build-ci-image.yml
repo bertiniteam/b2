@@ -1,0 +1,101 @@
+name: Build CI deps image 🐳
+
+# Builds the manylinux + prebuilt Boost/Boost.Python + eigenpy image consumed by the wheel matrix.
+# The expensive per-CPython Boost builds run in PARALLEL (one matrix runner each, inside the
+# manylinux container via docker run); a final job assembles them into the image and pushes it to
+# ghcr.io/bertiniteam/b2-manylinux-deps, tagged by TOOLCHAIN KEY.  Rare: only on docker/ changes or
+# dispatch.
+#
+# OWNER: the package lands under whichever org runs this; it MUST run in bertiniteam/b2 (its token
+# can only push to that org's GHCR).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths:
+      - 'docker/manylinux-deps/**'
+      - '.github/workflows/build-ci-image.yml'
+      - '.github/ci-deps-versions.env'   # a version bump here rebuilds the image
+
+concurrency:
+  group: ci-image-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # BOOST_VERSION / EIGEN_VERSION / EIGENPY_VERSION are single-sourced in
+  # .github/ci-deps-versions.env and loaded per-job (see the "Load dep versions" steps).
+  MANYLINUX_TAG: "mlx2_34"
+  MANYLINUX_IMAGE: "quay.io/pypa/manylinux_2_34_x86_64"
+  IMAGE: "ghcr.io/bertiniteam/b2-manylinux-deps"
+
+jobs:
+  build-deps:
+    name: Boost+eigenpy ${{ matrix.pytag }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pytag: [cp310-cp310, cp311-cp311, cp312-cp312, cp313-cp313, cp314-cp314]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Load dep versions
+        run: cat .github/ci-deps-versions.env >> "$GITHUB_ENV"
+      - name: Build Boost+eigenpy for ${{ matrix.pytag }} (manylinux)
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work \
+            -e BOOST_VERSION -e EIGEN_VERSION -e EIGENPY_VERSION \
+            "$MANYLINUX_IMAGE" \
+            bash docker/manylinux-deps/build-python-deps.sh "${{ matrix.pytag }}"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: deps-${{ matrix.pytag }}
+          path: deps-${{ matrix.pytag }}.tar.gz
+          if-no-files-found: error
+
+  assemble-and-push:
+    name: Assemble & push image
+    needs: build-deps
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Load dep versions
+        run: cat .github/ci-deps-versions.env >> "$GITHUB_ENV"
+
+      - name: Collect prebuilt deps into the build context
+        uses: actions/download-artifact@v5
+        with:
+          pattern: deps-*
+          merge-multiple: true
+          path: docker/manylinux-deps/deps
+
+      - name: Compute toolchain tag
+        id: tag
+        run: |
+          echo "key=boost${BOOST_VERSION}-eigen${EIGEN_VERSION}-eigenpy${EIGENPY_VERSION}-${MANYLINUX_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Image: $IMAGE:boost${BOOST_VERSION}-eigen${EIGEN_VERSION}-eigenpy${EIGENPY_VERSION}-${MANYLINUX_TAG}"
+          ls -lh docker/manylinux-deps/deps
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push (assembly only -- fast)
+        uses: docker/build-push-action@v6
+        with:
+          context: docker/manylinux-deps
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.tag.outputs.key }}
+            ${{ env.IMAGE }}:latest
+          build-args: |
+            BOOST_VERSION=${{ env.BOOST_VERSION }}
+            EIGEN_VERSION=${{ env.EIGEN_VERSION }}
+            EIGENPY_VERSION=${{ env.EIGENPY_VERSION }}

@@ -1,0 +1,97 @@
+name: Build macOS deps tarballs 🍏
+
+# macOS has no container, so the Linux image trick doesn't apply.  The analog: build Boost
+# (incl. per-CPython Boost.Python) + eigenpy ONCE per toolchain and publish them as GitHub
+# Release assets, which the wheel job downloads instead of recompiling every run.  Release
+# storage is a separate quota, so this sidesteps the 10 GB Actions-cache ceiling too.
+#
+# Runs rarely -- only when the Dockerfile-equivalent recipe or the pinned versions change,
+# or on demand.  Assets are attached to the `ci-deps` prerelease and named by TOOLCHAIN KEY
+# + arch + CPython, so the wheel job pins an exact match (never a silent ABI swap; ADR-0006).
+#
+# The build steps MIRROR build_and_test.yml's CIBW_BEFORE_BUILD_MACOS exactly (same prefix
+# /tmp/deps-py and hardcode-dll-paths, so a downloaded tarball extracts back to /tmp/deps-py
+# and delocate is happy).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths:
+      - '.github/workflows/build-macos-deps.yml'
+      - '.github/ci-deps-versions.env'   # a version bump here rebuilds the macOS tarballs
+
+concurrency:
+  group: macos-deps-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # BOOST_VERSION / EIGENPY_VERSION are single-sourced in .github/ci-deps-versions.env
+  # and loaded by the "Load dep versions" step below.
+  RELEASE_TAG: "ci-deps"          # a permanent prerelease that just holds CI dep bundles
+
+jobs:
+  build-macos-deps:
+    name: macOS deps py${{ matrix.python-version }}
+    runs-on: macos-14   # arm64
+    permissions:
+      contents: write   # create/upload the ci-deps release assets
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v5
+      - name: Load dep versions
+        run: cat .github/ci-deps-versions.env >> "$GITHUB_ENV"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install host libs (CPython-independent)
+        run: brew install gmp mpfr libmpc eigen@3
+
+      - name: Build Boost + eigenpy into /tmp/deps-py
+        run: |
+          set -euo pipefail
+          PY="$(which python)"
+          "$PY" -m pip install -q scikit-build-core numpy scipy
+          rm -rf /tmp/deps-py && mkdir -p /tmp/deps-py
+          PY_VER="$("$PY" -c 'import sys;print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+          PY_INC="$("$PY" -c 'import sysconfig;print(sysconfig.get_path("include"))')"
+          PY_LIB="$("$PY" -c 'import sysconfig;print(sysconfig.get_config_var("LIBDIR") or "")')"
+          cd /tmp
+          BU="boost_$(echo "${BOOST_VERSION}" | tr . _)"
+          curl -fsSL -o "$BU.tar.bz2" "https://archives.boost.io/release/${BOOST_VERSION}/source/$BU.tar.bz2"
+          rm -rf "$BU" && tar xjf "$BU.tar.bz2"
+          cd "$BU"
+          ./bootstrap.sh --with-python="$PY" --prefix=/tmp/deps-py
+          printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$PY" "$PY_INC" "$PY_LIB" > user-config.jam
+          ./b2 install -j"$(sysctl -n hw.ncpu)" --user-config=user-config.jam python="$PY_VER" \
+            --without-mpi hardcode-dll-paths=true dll-path=/tmp/deps-py/lib
+          cd /tmp
+          rm -rf "eigenpy-${EIGENPY_VERSION}" && tar zxf "eigenpy-${EIGENPY_VERSION}.tar.gz" 2>/dev/null || \
+            { curl -fsSL -o "eigenpy-${EIGENPY_VERSION}.tar.gz" "https://github.com/stack-of-tasks/eigenpy/releases/download/v${EIGENPY_VERSION}/eigenpy-${EIGENPY_VERSION}.tar.gz"; tar zxf "eigenpy-${EIGENPY_VERSION}.tar.gz"; }
+          cd "eigenpy-${EIGENPY_VERSION}" && mkdir -p bld && cd bld
+          cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py \
+            -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE="$PY" \
+            -DPython3_NumPy_INCLUDE_DIR="$("$PY" -c 'import numpy;print(numpy.get_include())')" \
+            -DBUILD_TESTING=OFF
+          make -j2 install
+
+      - name: Package + publish the tarball
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PY_TAG="cp$(echo '${{ matrix.python-version }}' | tr -d .)"
+          KEY="boost${BOOST_VERSION}-eigenpy${EIGENPY_VERSION}"
+          ASSET="deps-macos14-arm64-${PY_TAG}-${KEY}.tar.gz"
+          tar czf "$ASSET" -C /tmp deps-py
+          ls -lh "$ASSET"
+          # Ensure the holder release exists (idempotent), then upload/replace this asset.
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --prerelease \
+                 --title "CI dependency bundles" \
+                 --notes "Prebuilt Boost + eigenpy bundles consumed by the wheel matrix. Not a software release."
+          gh release upload "$RELEASE_TAG" "$ASSET" --repo "$GITHUB_REPOSITORY" --clobber

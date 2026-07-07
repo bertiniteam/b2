@@ -44,6 +44,7 @@ namespace bertini{
 			def("eigen_version", &bertini::EigenHeaderVersion);
 			def("gmp_version", &bertini::GMPVersion);
 			def("mpfr_version", &bertini::MPFRVersion);
+			def("mpi_version", &bertini::MPIVersion);
 			def("dependency_versions", &bertini::DependencyVersions);
 			def("splash", &bertini::SplashScreen);
 		}

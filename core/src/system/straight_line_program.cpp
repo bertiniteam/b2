@@ -25,6 +25,14 @@
 
 #include "bertini2/system/straight_line_program.hpp"
 #include "bertini2/system/system.hpp"
+#include "bertini2/system/blocks/polynomial_block.hpp"
+
+#include <boost/math/constants/constants.hpp>
+
+#include <cstdlib>
+#include <functional>
+#include <mutex>
+#include <unordered_map>
 
 
 
@@ -55,6 +63,65 @@ namespace bertini{
 		case Assign: return "Assign";
 		case IntPower: return "IntPower";
 		}
+		throw std::runtime_error("unrecognized operation in OpcodeToString");
+	}
+
+
+	// Produce a constant's value directly from its exact recipe --- no function-tree node, no node
+	// evaluation (ADR-0027).  These mirror the number nodes' FreshEval_d / FreshEval_mp exactly
+	// (Integer/Complex/Rational in number.cpp; Pi/E in special_number.cpp) so the compiled program
+	// evaluates bit-for-bit identically to the old node-backed path, at the ambient working
+	// precision (ThreadPrecision).
+	template<>
+	complex_dbl ConstantRecipe::Produce<complex_dbl>() const {
+		switch (kind) {
+			case Kind::Integer:  return complex_dbl(double(int_value), 0);
+			case Kind::Rational: return complex_dbl(double(rat_real), double(rat_imag));
+			case Kind::Complex:    return complex_dbl(float_value);
+			case Kind::Pi:       return complex_dbl(boost::math::constants::pi<double>(), 0);
+			case Kind::E:        return complex_dbl(exp(1.0), 0.0);
+		}
+		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<complex_dbl>");
+	}
+
+	template<>
+	complex_mp ConstantRecipe::Produce<complex_mp>() const {
+		using boost::multiprecision::mpfr_float;
+		switch (kind) {
+			case Kind::Integer:  return complex_mp(int_value, 0, ThreadPrecision());
+			case Kind::Rational: return complex_mp(real_mp(rat_real, ThreadPrecision()), real_mp(rat_imag, ThreadPrecision()));
+			case Kind::Complex:    return complex_mp(float_value, ThreadPrecision());
+			case Kind::Pi:       return complex_mp(boost::math::constants::pi<real_mp>());
+			case Kind::E:        return complex_mp(real_mp(exp(real_mp(1))));
+		}
+		throw std::runtime_error("unrecognized ConstantRecipe kind in Produce<complex_mp>");
+	}
+
+	// Real companion of Produce (ADR-0034): the real value of a constant whose slot was inferred
+	// NumType::Real.  Only the real part is used; IsReal() guarantees the imaginary part is zero, so
+	// this matches the real part of Produce<complex>() bit-for-bit.
+	template<>
+	real_dbl ConstantRecipe::ProduceReal<real_dbl>() const {
+		switch (kind) {
+			case Kind::Integer:  return double(int_value);
+			case Kind::Rational: return double(rat_real);
+			case Kind::Complex:  return double(float_value.real());
+			case Kind::Pi:       return boost::math::constants::pi<double>();
+			case Kind::E:        return exp(1.0);
+		}
+		throw std::runtime_error("unrecognized ConstantRecipe kind in ProduceReal<real_dbl>");
+	}
+
+	template<>
+	real_mp ConstantRecipe::ProduceReal<real_mp>() const {
+		switch (kind) {
+			case Kind::Integer:  return real_mp(int_value, ThreadPrecision());
+			case Kind::Rational: return real_mp(rat_real, ThreadPrecision());
+			case Kind::Complex:  return real_mp(float_value.real(), ThreadPrecision());
+			case Kind::Pi:       return boost::math::constants::pi<real_mp>();
+			case Kind::E:        return real_mp(exp(real_mp(1)));
+		}
+		throw std::runtime_error("unrecognized ConstantRecipe kind in ProduceReal<real_mp>");
 	}
 
 
@@ -67,24 +134,28 @@ namespace bertini{
 
 	void StraightLineProgram::precision(unsigned new_precision) const{
 
-		if (new_precision==this->precision_){
+		if (new_precision==memory_.precision_){
 			return;
 		}
 		else{
-			auto& mem = std::get<std::vector<mpfr_complex>>(memory_);
+			auto& cmem = memory_.Get<complex_mp>();
+			auto& rmem = memory_.Get<real_mp>();
 
-			for (auto& p: true_values_of_numbers_)
-			{
-				auto& n = std::get<Nd>(p);
-				auto& loc = std::get<size_t>(p);
-
-				mem[loc] = n->Eval<mpfr_complex>();
+			// Refill the constants from their exact recipes (no node evaluation) into the bank their
+			// NumType selects, then normalize every slot of both banks to the new precision.
+			for (auto const& c : program_->constant_recipes_){
+				if (program_->slot_numtype_[c.slot] == NumType::Real)
+					rmem[c.slot] = c.ProduceReal<real_mp>();
+				else
+					cmem[c.slot] = c.Produce<complex_mp>();
 			}
 
-			for (auto& n : mem)
+			for (auto& n : cmem)
+				Precision(n, new_precision);
+			for (auto& n : rmem)
 				Precision(n, new_precision);
 
-			this->precision_ = new_precision;
+			memory_.precision_ = new_precision;
 		}
 
 
@@ -92,8 +163,55 @@ namespace bertini{
 
 
 
+	template<typename NumT>
+	void StraightLineProgram::CopyNumbersIntoMemory() const
+	{
+		using RealT = typename NumTraits<NumT>::Real;
+		constexpr bool is_mp = std::is_same<NumT,complex_mp>::value;
+		for (auto const& c : program_->constant_recipes_){
+			if (program_->slot_numtype_[c.slot] == NumType::Real){
+				memory_.Get<RealT>()[c.slot] = c.ProduceReal<RealT>();
+				if constexpr (is_mp)
+					Precision(memory_.Get<RealT>()[c.slot], memory_.precision_);
+			}
+			else{
+				memory_.Get<NumT>()[c.slot] = c.Produce<NumT>();
+				if constexpr (is_mp)
+					Precision(memory_.Get<NumT>()[c.slot], memory_.precision_);
+			}
+		}
+	}
 
-	void StraightLineProgram::AddInstruction(Operation binary_op, size_t in_loc1, size_t in_loc2, size_t out_loc){
+	template void StraightLineProgram::CopyNumbersIntoMemory<complex_dbl>() const;
+	template void StraightLineProgram::CopyNumbersIntoMemory<complex_mp>() const;
+
+
+	void StraightLineProgram::SetupMemory()
+	{
+		// Re-seed the thread-local default precision from the program's own precision before
+		// growing the complex_mp memory block. resize() default-constructs each new element via
+		// mpfr_init2(x, thread_default_precision()); on Boost 1.87 that value can be 0 on fresh
+		// threads, which aborts. DefaultPrecision() sets both the static and thread-local defaults
+		// so the default-constructed slots are valid.
+		DefaultPrecision(memory_.precision_);
+
+		// adjust the sizes of the memory blocks to match the number expected via compilation.
+		// All four banks (real/complex x dbl/mp) are sized to the slot count; a slot lives in exactly
+		// one bank per its NumType, so the off-type banks hold default, never-read entries for now.
+		memory_.Get<real_dbl>().resize(program_->num_slots_);
+		memory_.Get<complex_dbl>().resize(program_->num_slots_);
+		memory_.Get<real_mp>().resize(program_->num_slots_);
+		memory_.Get<complex_mp>().resize(program_->num_slots_);
+
+		// downsample to get ready for evaluation
+		CopyNumbersIntoMemory<complex_dbl>();
+		CopyNumbersIntoMemory<complex_mp>();
+	}
+
+
+
+
+	void SLPProgram::AddInstruction(Operation binary_op, size_t in_loc1, size_t in_loc2, size_t out_loc){
 		this->instructions_.push_back(binary_op);
 		this->instructions_.push_back(in_loc1);
 		this->instructions_.push_back(in_loc2);
@@ -102,88 +220,96 @@ namespace bertini{
 
 
 
-	void StraightLineProgram::AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc){
+	void SLPProgram::AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc){
 		this->instructions_.push_back(unary_op);
 		this->instructions_.push_back(in_loc);
 		this->instructions_.push_back(out_loc);
 
 	}
 
-	void StraightLineProgram::AddNumber(Nd const num, size_t loc){
-		this->true_values_of_numbers_.push_back(std::pair<Nd,size_t>(num, loc));
+	void SLPProgram::AddConstant(ConstantRecipe recipe){
+		this->constant_recipes_.push_back(std::move(recipe));
 	}
 
 
 
 	std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s){
+		auto const& prog = *s.program_;
+
 		out << "\n\n#fns: " << s.NumFunctions() << " #vars: " << s.NumVariables() << std::endl;
 		out << "have path variable: " << s.HavePathVariable() << std::endl;
 
 		out << std::endl << "numbers of things:" << std::endl;
-		out << "Functions: " << s.number_of_.Functions << std::endl;
-		out << "Variables: " << s.number_of_.Variables << std::endl;
-		out << "Jacobian: " << s.number_of_.Jacobian << std::endl;
+		out << "Functions: " << prog.number_of_.Functions << std::endl;
+		out << "Variables: " << prog.number_of_.Variables << std::endl;
+		out << "Jacobian: " << prog.number_of_.Jacobian << std::endl;
 
 		if (s.HavePathVariable())
-			out << "TimeDeriv: " << s.number_of_.TimeDeriv << std::endl;
+			out << "TimeDeriv: " << prog.number_of_.TimeDeriv << std::endl;
 
 
 		out << std::endl << " output locations:" << std::endl;
-		out << "Functions " << s.output_locations_.Functions << std::endl;
-		out << "Jacobian " << s.output_locations_.Jacobian << std::endl;
+		out << "Functions " << prog.output_locations_.Functions << std::endl;
+		out << "Jacobian " << prog.output_locations_.Jacobian << std::endl;
 
 		if (s.HavePathVariable())
-			out << "TimeDeriv " << s.output_locations_.TimeDeriv << std::endl;
+			out << "TimeDeriv " << prog.output_locations_.TimeDeriv << std::endl;
 
 
 		out << std::endl << " input locations:" << std::endl;
-		out << "Variables " << s.input_locations_.Variables << std::endl;
+		out << "Variables " << prog.input_locations_.Variables << std::endl;
 		if (s.HavePathVariable())
-			out << "Time " << s.input_locations_.Time << std::endl;
+			out << "Time " << prog.input_locations_.Time << std::endl;
 
 
 
-		out << std::endl << "true values of numbers: (number, location to downsample to)" << std::endl;
-		for (auto const& x : s.true_values_of_numbers_)
-		    out << *(x.first)  << ':' << x.second << std::endl;
+		out << std::endl << "constants: (kind, location to downsample to)" << std::endl;
+		for (auto const& c : prog.constant_recipes_)
+		    out << static_cast<int>(c.kind)  << ':' << c.slot << std::endl;
 		out << std::endl << std::endl;
 
 
 		out << std::endl << "instructions: " << std::endl;
-		for (size_t ii(0); ii<s.instructions_.size(); /*it's in the loop at access time*/){
-			auto op = static_cast<Operation>(s.instructions_[ii++]);
+		for (size_t ii(0); ii<prog.instructions_.size(); /*it's in the loop at access time*/){
+			auto op = static_cast<Operation>(prog.instructions_[ii++] & kOpcodeMask);  // strip packed bank bits
 			out << OpcodeToString(op) << "(";
-			if (IsUnary(op))
-				out << s.instructions_[ii++] << ") --> " << s.instructions_[ii++] << std::endl;
-
-			else
-				out << s.instructions_[ii++] << "," << s.instructions_[ii++] << ") --> " << s.instructions_[ii++] << std::endl;
+			if (IsUnary(op)){
+				auto operand = prog.instructions_[ii++];
+				auto result = prog.instructions_[ii++];
+				out << operand << ") --> " << result << std::endl;
+			}
+			else{
+				auto operand1 = prog.instructions_[ii++];
+				auto operand2 = prog.instructions_[ii++];
+				auto result = prog.instructions_[ii++];
+				out << operand1 << "," << operand2 << ") --> " << result << std::endl;
+			}
 		}
 
 
 
 
-		auto& memory_dbl =  std::get<std::vector<dbl_complex>>(s.memory_);
-		auto& memory_mpfr =  std::get<std::vector<mpfr_complex>>(s.memory_);
+		auto& memory_dbl =  s.memory_.Get<complex_dbl>();
+		auto& memory_mpfr =  s.memory_.Get<complex_mp>();
 
-		out << "\nvariable values in dbl memory:\n";
-		for (unsigned ii=0; ii<s.number_of_.Variables; ++ii){
-			out << memory_dbl[s.input_locations_.Variables + ii] << " ";
-		} 
+		out << "\nvariable values in complex_dbl memory:\n";
+		for (unsigned ii=0; ii<prog.number_of_.Variables; ++ii){
+			out << memory_dbl[prog.input_locations_.Variables + ii] << " ";
+		}
 
 
 		out << "\nvariable values in mpfr memory:\n";
-		for (unsigned ii=0; ii<s.number_of_.Variables; ++ii){
-			out << memory_mpfr[s.input_locations_.Variables + ii] << " ";
-		} 
+		for (unsigned ii=0; ii<prog.number_of_.Variables; ++ii){
+			out << memory_mpfr[prog.input_locations_.Variables + ii] << " ";
+		}
 
 		if (s.HavePathVariable()){
-			out << "\ntime value in dbl memory:\n";
-				out << memory_dbl[s.input_locations_.Time] << " ";
+			out << "\ntime value in complex_dbl memory:\n";
+				out << memory_dbl[prog.input_locations_.Time] << " ";
 
 
 			out << "\ntime value in mpfr memory:\n";
-				out << memory_mpfr[s.input_locations_.Time] << " ";
+				out << memory_mpfr[prog.input_locations_.Time] << " ";
 		}
 
 		out << std::endl << "full memory (double precision):" << std::endl;
@@ -191,7 +317,7 @@ namespace bertini{
 			out << v << ",";
 		out << std::endl;
 
-		
+
 		out << std::endl << "full memory (mpfr precision):" << std::endl;
 		for (auto v: memory_mpfr)
 			out << v << ",";
@@ -204,129 +330,470 @@ namespace bertini{
 
 
 	template<typename NumT>
-	void StraightLineProgram::Eval() const{
+	void SLPProgram::Eval(SLPMemory& mem) const{
 
-		auto& memory =  std::get<std::vector<NumT>>(memory_);
+		// Two banks at this precision: the complex bank (NumT) and its real companion (ADR-0034).
+		// A slot's value lives in exactly one, selected by slot_numtype_.  An all-Complex program
+		// only ever touches `cplx`, so this is identical to the pre-tier path.
+		using RealT = typename NumTraits<NumT>::Real;
+		auto& cplx = mem.Get<NumT>();
+		auto& real = mem.Get<RealT>();
+
+		// Bring the std math functions into scope so the REAL (double) path resolves them: a plain
+		// double has no associated namespace, so unqualified sin/pow/... would otherwise bind to the
+		// function-tree node operators.  ADL still finds Boost's overloads for real_mp / complex_mp
+		// and std's for complex_dbl, so all four numeric types resolve correctly.
+		using std::pow;  using std::sqrt; using std::log;  using std::exp;
+		using std::sin;  using std::cos;  using std::tan;
+		using std::asin; using std::acos; using std::atan;
+
+		// The tier dispatch constructs complex temporaries during eval (promoting a real operand to
+		// complex in Power/sqrt/log/...).  Boost inits such a new mpc at the *thread default* precision,
+		// which is not guaranteed to be the working precision on this path -- if it is 0, mpc_init2
+		// aborts.  Pin the thread-local default to the working precision (thread-safe; no global write).
+		// (The old eval never constructed mp temporaries, so it didn't need this.)
+		if constexpr (!std::is_same<NumT,complex_dbl>::value)
+			SetThreadPrecision(mem.precision_);
+
+		// Re-tag a freshly written complex slot to the working precision.  Boost.Multiprecision has a
+		// bug in mixed mpfr_float/mpc_complex expression templates: `real_mp / complex_mp` computes the
+		// correct value but tags the result precision 0 (multiplication is unaffected), which later
+		// aborts when that slot is copied (mpc_init2 with precision 0).  Minimal bertini-free repro:
+		// two operands at precision 40, `out = r / z` gives out.precision()==0.  Re-tagging restores it.
+		// No-op for complex_dbl (std::complex has no precision tag), so the hot double path keeps native
+		// mixed arithmetic with zero overhead.
+		auto retag = [&](size_t o){
+			if constexpr (!std::is_same<NumT,complex_dbl>::value) Precision(cplx[o], mem.precision_);
+		};
 
 
 #ifndef BERTINI_DISABLE_PRECISION_CHECKS
-		if (! std::is_same<NumT,dbl_complex>::value && Precision(memory[0])!=this->precision_){
+		if (! std::is_same<NumT,complex_dbl>::value && Precision(cplx[0])!=mem.precision_){
 			throw std::runtime_error("memory and SLP are out-of-sync WRT precision");
 		}
 #endif
 
 
-		if (is_evaluated_)
+		if (mem.is_evaluated_)
 			return;
 
-		for (int ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
+		// If the frozen prologue's results are already valid for this number type (double constants
+		// never change; mpfr constants are valid while the working precision is unchanged), skip it
+		// and re-run only the live segment, reusing the frozen slots already in memory.
+		bool frozen_valid;
+		if constexpr (std::is_same<NumT,complex_dbl>::value)
+			frozen_valid = mem.frozen_valid_dbl_;
+		else
+			frozen_valid = (mem.frozen_valid_mp_precision_ == mem.precision_);
+
+		const size_t loop_start = frozen_valid ? first_live_instruction_ : 0;
+
+		// The operand/result banks are baked into each instruction's opcode word at compile time
+		// (SpecializeInstructions), so these take the decoded flags directly -- no slot_numtype_ lookup
+		// in the hot loop.  r0/r1 = operand-is-real, ro = result-is-real.
+
+		// Binary arithmetic.  When the result is Real, inference guarantees both operands are Real
+		// (R+R, R-R, R*R, R/R), so we use the cheap real path; otherwise native mixed arithmetic
+		// (real * complex is ~half the work of complex * complex), promoting nothing.  `is_div` marks
+		// Divide: only `real_mp / complex_mp` trips the Boost precision bug (and only when the complex
+		// value's imaginary part is 0), so we re-tag exactly that branch -- mixed +,-,* need no fix-up.
+		auto binop = [&](size_t i1, size_t i2, size_t o, bool r0, bool r1, bool ro, bool is_div, auto fn){
+			if (ro)               real[o] = fn(real[i1], real[i2]);  // all-real, cheap
+			else if (!r0 && !r1)  cplx[o] = fn(cplx[i1], cplx[i2]);  // pure complex
+			else if (r0) {                                           // real (op) complex
+				cplx[o] = fn(real[i1], cplx[i2]);
+				if (is_div) retag(o);
+			}
+			else                  cplx[o] = fn(cplx[i1], real[i2]);  // complex (op) real
+		};
+
+		// Type-preserving unary (result NumType == operand NumType): negate/copy/exp/sin/cos/tan/atan.
+		auto un_preserve = [&](size_t i, size_t o, bool ro, auto fn){
+			if (ro) real[o] = fn(real[i]); else cplx[o] = fn(cplx[i]);
+		};
+
+		// Escape unary (result is Complex; a real operand is promoted by a single converting
+		// construction at the working precision -- not a mixed expression template -- so it's tagged
+		// correctly): sqrt/log/asin/acos, which can leave ℝ for some real inputs.
+		auto un_escape = [&](size_t i, size_t o, bool ri, auto fn){
+			cplx[o] = ri ? fn(NumT(real[i])) : fn(cplx[i]);
+		};
+
+		for (size_t ii = loop_start; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
 			//in the unary case the loop will increment by 3
 			//binary: by 4
 
-			switch (instructions_[ii]) {
+			const size_t opw = instructions_[ii];                        // opcode + packed bank bits
+			const Operation op = static_cast<Operation>(opw & kOpcodeMask);
+			const bool r0 = opw & kArg0Real;   // first operand in real bank
+			const bool r1 = opw & kArg1Real;   // second operand in real bank (binary, non-IntPower)
+			const bool ro = opw & kOutReal;    // result in real bank
+			const size_t a = instructions_[ii+1], b = instructions_[ii+2];
+			// c (the second operand / result word) exists only for binary ops (4-word instructions).
+			// A unary op is 3 words, so reading instructions_[ii+3] there is the NEXT instruction --
+			// and one past the end of the tape when the unary op is the last instruction (a trailing
+			// Assign is the common case: output wiring ends every program). Guard the read.
+			const size_t c = IsUnary(op) ? 0 : instructions_[ii+3];
 
-				case Add:
-					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] + memory[instructions_[ii+2]];
-					break;
+			switch (op) {
 
-				case Subtract:
-					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] - memory[instructions_[ii+2]];
-					break;
+				case Add:      binop(a, b, c, r0, r1, ro, false, [](auto const& x, auto const& y){ return x + y; }); break;
+				case Subtract: binop(a, b, c, r0, r1, ro, false, [](auto const& x, auto const& y){ return x - y; }); break;
+				case Multiply: binop(a, b, c, r0, r1, ro, false, [](auto const& x, auto const& y){ return x * y; }); break;
+				case Divide:   binop(a, b, c, r0, r1, ro, true,  [](auto const& x, auto const& y){ return x / y; }); break;
 
-				case Multiply:
-					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] * memory[instructions_[ii+2]];
+				case Power: {
+					// general a^b (slot exponent); result is Complex, so promote any real operand to
+					// complex (a single converting construction at the working precision, not a mixed
+					// expression template), then a pure-complex pow -- so the result is tagged correctly.
+					const NumT base = r0 ? NumT(real[a]) : cplx[a];
+					const NumT expo = r1 ? NumT(real[b]) : cplx[b];
+					cplx[c] = pow(base, expo);
 					break;
-
-				case Divide:
-					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] / memory[instructions_[ii+2]];
-					break;
-
-				case Power:
-					memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
-					break;
+				}
 
 				case IntPower:
-					{
-					memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], this->integers_[instructions_[ii+2]]);
-					break;
-					}
-
-				case Assign:
-					memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]];
+					// Integer powers are lowered to Multiply instructions at COMPILE time now
+					// (Visit(IntegerPowerOperator) does exponentiation by squaring), so the hot loop
+					// only ever does allocation-free multiplies.  This case is a defensive fallback.
+					if (ro) real[c] = pow(real[a], this->integers_[b]);
+					else    cplx[c] = pow(cplx[a], this->integers_[b]);
 					break;
 
-				case Negate:
-					memory[this->instructions_[ii+2]] = -(memory[instructions_[ii+1]]);
-					break;
+				// Direct, in-place (no by-value lambda): `return x` / `return -x` would mint a temporary
+				// (an allocation per op at mp); a slot-to-slot copy / negate evaluates in place.
+				case Assign:   if (ro) real[b] = real[a];  else cplx[b] = cplx[a];   break;
+				case Negate:   if (ro) real[b] = -real[a]; else cplx[b] = -cplx[a];  break;
+				case Exp:      un_preserve(a, b, ro, [](auto const& x){ return exp(x); }); break;
+				case Sin:      un_preserve(a, b, ro, [](auto const& x){ return sin(x); }); break;
+				case Cos:      un_preserve(a, b, ro, [](auto const& x){ return cos(x); }); break;
+				case Tan:      un_preserve(a, b, ro, [](auto const& x){ return tan(x); }); break;
+				case Atan:     un_preserve(a, b, ro, [](auto const& x){ return atan(x); }); break;
 
-				case Sqrt:
-					memory[this->instructions_[ii+2]] = sqrt(memory[instructions_[ii+1]]);
-					break;
-
-				case Log:
-					memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
-					break;
-
-				case Exp:
-					memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
-					break;
-
-				case Sin:
-					memory[this->instructions_[ii+2]] = sin(memory[instructions_[ii+1]]);
-					break;
-
-				case Cos:
-					memory[this->instructions_[ii+2]] = cos(memory[instructions_[ii+1]]);
-					break;
-
-				case Tan:
-					memory[this->instructions_[ii+2]] = tan(memory[instructions_[ii+1]]);
-					break;
-
-				case Asin:
-					memory[this->instructions_[ii+2]] = asin(memory[instructions_[ii+1]]);
-					break;
-
-				case Acos:
-					memory[this->instructions_[ii+2]] = acos(memory[instructions_[ii+1]]);
-					break;
-
-				case Atan:
-					memory[this->instructions_[ii+2]] = atan(memory[instructions_[ii+1]]);
-					break;
+				case Sqrt:     un_escape(a, b, r0, [](auto const& x){ return sqrt(x); }); break;
+				case Log:      un_escape(a, b, r0, [](auto const& x){ return log(x); }); break;
+				case Asin:     un_escape(a, b, r0, [](auto const& x){ return asin(x); }); break;
+				case Acos:     un_escape(a, b, r0, [](auto const& x){ return acos(x); }); break;
 
 			} // switch for operation
 
 
-			if (IsUnary(static_cast<Operation>(instructions_[ii]))) {
-				ii = ii+3;
-
-			}
-			//in the binary case the loop will increment by 4
-			else {
-				ii = ii+4;
-			}
+			ii += IsUnary(op) ? 3 : 4;  // op is masked, so arity is read correctly
 		} // for loop around operations
 
-		is_evaluated_ = true;
+		// A full run (from instruction 0) has just refreshed the frozen prologue at this precision.
+		if (!frozen_valid)
+		{
+			if constexpr (std::is_same<NumT,complex_dbl>::value)
+				mem.frozen_valid_dbl_ = true;
+			else
+				mem.frozen_valid_mp_precision_ = mem.precision_;
+		}
+
+		mem.is_evaluated_ = true;
 	}
 
-	template void StraightLineProgram::Eval<dbl_complex>() const;
-	template void StraightLineProgram::Eval<mpfr_complex>() const;
+	template void SLPProgram::Eval<complex_dbl>(SLPMemory&) const;
+	template void SLPProgram::Eval<complex_mp>(SLPMemory&) const;
 
 
-	template<typename NumT>
-	void StraightLineProgram::CopyNumbersIntoMemory() const
+	namespace {
+		// The NumType of a binary op's result given its operands' NumTypes (ADR-0034).  Real only when
+		// the result is GUARANTEED real for all inputs; otherwise Complex (the safe escape).  IntPower
+		// is handled separately (its exponent is an integer index, and result = base NumType).
+		NumType BinaryResultNumType(Operation op, NumType a, NumType b)
+		{
+			const bool both_real = (a == NumType::Real && b == NumType::Real);
+			switch (op)
+			{
+				// R+R, R-R, R*R are real; R/R is real (real/real stays in ℝ); any complex operand -> complex.
+				case Add: case Subtract: case Multiply: case Divide:
+					return both_real ? NumType::Real : NumType::Complex;
+				// general a^b (slot exponent): negative real base to a non-integer power leaves ℝ.
+				case Power:
+				default:
+					return NumType::Complex;
+			}
+		}
+
+		// The NumType of a unary op's result given its operand's NumType.
+		NumType UnaryResultNumType(Operation op, NumType a)
+		{
+			switch (op)
+			{
+				case Negate: case Assign:                          return a;          // sign/copy preserve
+				case Exp: case Sin: case Cos: case Tan: case Atan: return a;          // real-valued for real input
+				case Sqrt: case Log: case Asin: case Acos:         return NumType::Complex;  // can leave ℝ
+				default:                                           return NumType::Complex;
+			}
+		}
+	} // anonymous namespace
+
+	bool SLPProgram::tiers_enabled_ = true;
+
+	void SLPProgram::ComputeSlotNumTypes()
 	{
-		for (auto const& x: true_values_of_numbers_){
-			GetMemory<NumT>()[x.second] = (x.first)->Eval<NumT>();
-			if (std::is_same<NumT,mpfr_complex>::value)
-				Precision(GetMemory<NumT>()[x.second], this->precision_);
+		// Seed: constant slots from their recipe's real-ness; everything else (variables, the path
+		// variable, and as-yet-unwritten temporaries) starts Complex.  Then one forward pass over the
+		// dependency-ordered tape propagates the NumType of each instruction's result (same shape as
+		// PartitionInstructions' frozenness pass).
+		slot_numtype_.assign(num_slots_, NumType::Complex);
+		if (!tiers_enabled_)  // A/B baseline: force the pre-tier all-complex evaluation
+			return;
+		for (auto const& c : constant_recipes_)
+			slot_numtype_[c.slot] = c.IsReal() ? NumType::Real : NumType::Complex;
+
+		for (size_t ii = 0; ii < instructions_.size(); )
+		{
+			const auto op = static_cast<Operation>(instructions_[ii]);
+			if (IsUnary(op))
+			{
+				slot_numtype_[instructions_[ii + 2]] =
+					UnaryResultNumType(op, slot_numtype_[instructions_[ii + 1]]);
+				ii += 3;
+			}
+			else if (op == IntPower)
+			{
+				// in2 is an index into integers_, not a slot; real^int = real, complex^int = complex.
+				slot_numtype_[instructions_[ii + 3]] = slot_numtype_[instructions_[ii + 1]];
+				ii += 4;
+			}
+			else
+			{
+				slot_numtype_[instructions_[ii + 3]] =
+					BinaryResultNumType(op, slot_numtype_[instructions_[ii + 1]], slot_numtype_[instructions_[ii + 2]]);
+				ii += 4;
+			}
 		}
 	}
 
-	template void StraightLineProgram::CopyNumbersIntoMemory<dbl_complex>() const;
-	template void StraightLineProgram::CopyNumbersIntoMemory<mpfr_complex>() const;
+
+	void SLPProgram::SpecializeInstructions()
+	{
+		// Bake each instruction's operand/result banks into its opcode word (ADR-0034), so the eval
+		// loop reads them inline rather than looking up slot_numtype_ per slot.  Walk the still-clean
+		// tape; the base op (read before we OR in bits) drives arity, so the increment stays correct.
+		for (size_t ii = 0; ii < instructions_.size(); )
+		{
+			const auto op = static_cast<Operation>(instructions_[ii]);  // clean: bits not yet set here
+			size_t bits = 0;
+			if (IsUnary(op))
+			{
+				if (slot_numtype_[instructions_[ii + 1]] == NumType::Real) bits |= kArg0Real;
+				if (slot_numtype_[instructions_[ii + 2]] == NumType::Real) bits |= kOutReal;
+				instructions_[ii] |= bits;
+				ii += 3;
+			}
+			else
+			{
+				if (slot_numtype_[instructions_[ii + 1]] == NumType::Real) bits |= kArg0Real;
+				// IntPower's second word is an index into integers_, not a slot, so it gets no bank bit.
+				if (op != IntPower && slot_numtype_[instructions_[ii + 2]] == NumType::Real) bits |= kArg1Real;
+				if (slot_numtype_[instructions_[ii + 3]] == NumType::Real) bits |= kOutReal;
+				instructions_[ii] |= bits;
+				ii += 4;
+			}
+		}
+	}
+
+
+	void SLPProgram::PartitionInstructions()
+	{
+		// A memory slot is "frozen" if its value depends only on frozen inputs.  Seed: the literal
+		// numbers (Integer/Complex/Rational and Pi/E, all in true_values_of_numbers_) are frozen; the
+		// variable and time slots are live.  Then a single forward pass propagates frozenness: an
+		// instruction is frozen iff all its input slots are frozen, and it freezes its output slot.
+		const size_t num_slots = num_slots_;
+		std::vector<bool> slot_frozen(num_slots, false);
+		for (auto const& c : constant_recipes_)
+			slot_frozen[c.slot] = true;
+
+		struct Instr { size_t off; size_t len; bool frozen; };
+		std::vector<Instr> parsed;
+
+		for (size_t ii = 0; ii < instructions_.size(); )
+		{
+			const auto op = static_cast<Operation>(instructions_[ii]);
+			const bool unary = IsUnary(op);
+			const size_t len = unary ? 3 : 4;
+
+			bool frozen;
+			size_t out;
+			if (unary)
+			{
+				out = instructions_[ii + 2];
+				frozen = slot_frozen[instructions_[ii + 1]];
+			}
+			else if (op == IntPower)
+			{
+				// The second operand of IntPower is an index into integers_, not a memory slot; the
+				// exponent is a literal, so frozenness depends only on the base slot.
+				out = instructions_[ii + 3];
+				frozen = slot_frozen[instructions_[ii + 1]];
+			}
+			else
+			{
+				out = instructions_[ii + 3];
+				frozen = slot_frozen[instructions_[ii + 1]] && slot_frozen[instructions_[ii + 2]];
+			}
+
+			slot_frozen[out] = frozen;
+			parsed.push_back({ii, len, frozen});
+			ii += len;
+		}
+
+		// Stable partition: frozen instructions first (preserving relative order), then live ones.
+		// This is dependency-safe because no live instruction is an input to a frozen one.
+		std::vector<size_t> reordered;
+		reordered.reserve(instructions_.size());
+		size_t frozen_words = 0;
+		for (auto const& I : parsed)
+			if (I.frozen)
+			{
+				reordered.insert(reordered.end(), instructions_.begin() + static_cast<std::ptrdiff_t>(I.off), instructions_.begin() + static_cast<std::ptrdiff_t>(I.off) + static_cast<std::ptrdiff_t>(I.len));
+				frozen_words += I.len;
+			}
+		for (auto const& I : parsed)
+			if (!I.frozen)
+				reordered.insert(reordered.end(), instructions_.begin() + static_cast<std::ptrdiff_t>(I.off), instructions_.begin() + static_cast<std::ptrdiff_t>(I.off) + static_cast<std::ptrdiff_t>(I.len));
+
+		instructions_ = std::move(reordered);
+		first_live_instruction_ = frozen_words;
+	}
+
+
+	// ---- program content identity + intern table (ADR-0027 E4, ADR-0042) ----
+
+	namespace {
+		// boost::hash_combine recipe (same as Node::HashCombine; that one is protected).
+		inline void CombineHash(std::size_t& seed, std::size_t value)
+		{
+			seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+		}
+
+		inline std::size_t StringHash(std::string const& s)
+		{
+			return std::hash<std::string>{}(s);
+		}
+
+		// Exact equality of everything identity-relevant in a recipe.  Value-equal Complex
+		// literals at DIFFERENT precisions compare unequal (their high-precision downsamples
+		// differ), consistent with ADR-0042's stance on stored precision.
+		bool SameRecipe(ConstantRecipe const& a, ConstantRecipe const& b)
+		{
+			return a.kind == b.kind
+				&& a.int_value == b.int_value
+				&& a.rat_real == b.rat_real
+				&& a.rat_imag == b.rat_imag
+				&& a.float_value.real() == b.float_value.real()
+				&& a.float_value.imag() == b.float_value.imag()
+				&& a.float_value.precision() == b.float_value.precision()
+				&& a.slot == b.slot;
+		}
+	}
+
+	std::size_t SLPProgram::ContentHash() const
+	{
+		std::size_t h = StringHash("SLPProgram");
+		CombineHash(h, has_path_variable_ ? 1u : 0u);
+		CombineHash(h, number_of_.Functions);
+		CombineHash(h, number_of_.Variables);
+		CombineHash(h, number_of_.Jacobian);
+		CombineHash(h, number_of_.TimeDeriv);
+		CombineHash(h, output_locations_.Functions);
+		CombineHash(h, output_locations_.Jacobian);
+		CombineHash(h, output_locations_.TimeDeriv);
+		CombineHash(h, input_locations_.Variables);
+		CombineHash(h, input_locations_.Time);
+		CombineHash(h, integers_.size());
+		for (auto const i : integers_)
+			CombineHash(h, static_cast<std::size_t>(static_cast<long long>(i)));
+		CombineHash(h, instructions_.size());
+		for (auto const w : instructions_)
+			CombineHash(h, w);
+		CombineHash(h, constant_recipes_.size());
+		for (auto const& r : constant_recipes_)
+		{
+			CombineHash(h, static_cast<std::size_t>(static_cast<int>(r.kind)));
+			CombineHash(h, StringHash(r.int_value.str()));
+			CombineHash(h, StringHash(r.rat_real.str()));
+			CombineHash(h, StringHash(r.rat_imag.str()));
+			CombineHash(h, StringHash(r.float_value.real().str()));
+			CombineHash(h, StringHash(r.float_value.imag().str()));
+			CombineHash(h, r.float_value.precision());
+			CombineHash(h, r.slot);
+		}
+		CombineHash(h, first_live_instruction_);
+		CombineHash(h, num_slots_);
+		for (auto const t : slot_numtype_)
+			CombineHash(h, static_cast<std::size_t>(t));
+		return h;
+	}
+
+	bool SLPProgram::SameContent(SLPProgram const& other) const
+	{
+		if (has_path_variable_ != other.has_path_variable_
+			|| number_of_.Functions != other.number_of_.Functions
+			|| number_of_.Variables != other.number_of_.Variables
+			|| number_of_.Jacobian != other.number_of_.Jacobian
+			|| number_of_.TimeDeriv != other.number_of_.TimeDeriv
+			|| output_locations_.Functions != other.output_locations_.Functions
+			|| output_locations_.Jacobian != other.output_locations_.Jacobian
+			|| output_locations_.TimeDeriv != other.output_locations_.TimeDeriv
+			|| input_locations_.Variables != other.input_locations_.Variables
+			|| input_locations_.Time != other.input_locations_.Time
+			|| integers_ != other.integers_
+			|| instructions_ != other.instructions_
+			|| first_live_instruction_ != other.first_live_instruction_
+			|| num_slots_ != other.num_slots_
+			|| slot_numtype_ != other.slot_numtype_
+			|| constant_recipes_.size() != other.constant_recipes_.size())
+			return false;
+
+		for (size_t ii = 0; ii < constant_recipes_.size(); ++ii)
+			if (!SameRecipe(constant_recipes_[ii], other.constant_recipes_[ii]))
+				return false;
+		return true;
+	}
+
+	namespace {
+		// Process-global program intern table: ContentHash -> live programs, held weakly so it
+		// self-cleans.  Same shape as the node intern table (node.cpp); lazy-init function-local
+		// statics avoid SIOF.
+		std::unordered_map<std::size_t, std::vector<std::weak_ptr<const SLPProgram>>>& ProgramInternBuckets()
+		{
+			static std::unordered_map<std::size_t, std::vector<std::weak_ptr<const SLPProgram>>> buckets;
+			return buckets;
+		}
+		std::mutex& ProgramInternMutex()
+		{
+			static std::mutex m;
+			return m;
+		}
+	}
+
+	std::shared_ptr<const SLPProgram> InternProgram(std::shared_ptr<const SLPProgram> const& candidate)
+	{
+		std::lock_guard<std::mutex> lock(ProgramInternMutex());
+		auto& bucket = ProgramInternBuckets()[candidate->ContentHash()];
+
+		std::shared_ptr<const SLPProgram> found;
+		// scan for a live, content-equal program; prune any expired weak_ptrs as we go
+		bucket.erase(
+			std::remove_if(bucket.begin(), bucket.end(),
+				[&](std::weak_ptr<const SLPProgram> const& wp) {
+					auto sp = wp.lock();
+					if (!sp) return true;                              // dead -> prune
+					if (!found && sp->SameContent(*candidate)) found = sp;
+					return false;
+				}),
+			bucket.end());
+
+		if (found)
+			return found;                                              // hit: discard the candidate
+		bucket.push_back(candidate);                                   // miss: register and keep
+		return candidate;
+	}
 
 }
 
@@ -341,8 +808,85 @@ namespace bertini{
 	using SLP = StraightLineProgram;
 
 
-	void SLPCompiler::Visit(node::Variable const& n){
+	// Build an exact ConstantRecipe straight from a number node's true value --- no node evaluation
+	// (ADR-0027).  One overload per concrete constant kind.
+	namespace {
+		ConstantRecipe RecipeFor(node::Integer const& n){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Integer; r.int_value = n.GetValue(); return r;
+		}
+		ConstantRecipe RecipeFor(node::Rational const& n){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Rational;
+			r.rat_real = n.GetValueReal(); r.rat_imag = n.GetValueImag(); return r;
+		}
+		ConstantRecipe RecipeFor(node::Complex const& n){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Complex; r.float_value = n.GetValue(); return r;
+		}
+		ConstantRecipe RecipeFor(node::special_number::Pi const&){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::Pi; return r;
+		}
+		ConstantRecipe RecipeFor(node::special_number::E const&){
+			ConstantRecipe r; r.kind = ConstantRecipe::Kind::E; return r;
+		}
+	}
 
+
+	namespace {
+		// session-global value-numbering switch (instruction-level CSE).  ON by default; set
+		// BERTINI2_NO_VALUENUMBER in the environment to start it off (for A/B measurement).
+		bool& TheValueNumberingFlag(){ static bool on = (std::getenv("BERTINI2_NO_VALUENUMBER") == nullptr); return on; }
+		// operands may be given in either order for these; used to canonicalize the VN key.
+		bool IsCommutative(Operation op){ return op == Add || op == Multiply; }
+	}
+
+	bool SLPValueNumbering()          { return TheValueNumberingFlag(); }
+	void SetSLPValueNumbering(bool on){ TheValueNumberingFlag() = on; }
+
+	size_t SLPCompiler::EmitBinary(Operation op, size_t a, size_t b){
+		if (TheValueNumberingFlag()){
+			size_t x = a, y = b;
+			if (IsCommutative(op) && x > y) std::swap(x, y);   // a*b and b*a are the same computation
+			auto key = std::make_tuple(op, x, y);
+			auto it = vn_binary_.find(key);
+			if (it != vn_binary_.end()) return it->second;    // identical computation already emitted
+			const size_t out = next_available_complex_++;
+			program_under_construction_.AddInstruction(op, a, b, out);
+			vn_binary_.emplace(key, out);
+			return out;
+		}
+		const size_t out = next_available_complex_++;
+		program_under_construction_.AddInstruction(op, a, b, out);
+		return out;
+	}
+
+	size_t SLPCompiler::EmitUnary(Operation op, size_t a){
+		if (TheValueNumberingFlag()){
+			auto key = std::make_pair(op, a);
+			auto it = vn_unary_.find(key);
+			if (it != vn_unary_.end()) return it->second;
+			const size_t out = next_available_complex_++;
+			program_under_construction_.AddInstruction(op, a, out);
+			vn_unary_.emplace(key, out);
+			return out;
+		}
+		const size_t out = next_available_complex_++;
+		program_under_construction_.AddInstruction(op, a, out);
+		return out;
+	}
+
+	void SLPCompiler::RegisterConstant(Nd const& nd, ConstantRecipe recipe){
+		recipe.slot = next_available_complex_;
+		program_under_construction_.AddConstant(std::move(recipe));
+		locations_encountered_nodes_[nd] = next_available_complex_++;
+	}
+
+
+	void SLPCompiler::Visit(node::Variable const& n){
+		// A system's variables are all pre-registered before its function trees are compiled, so
+		// reaching this Visit means a function references a variable that is not in the system's
+		// variable ordering.  That is unsupported: to bake a constant into a function, build it with
+		// a literal (Complex / Integer / Rational), not a variable removed from the ordering.
+		throw std::runtime_error("SLP compile: a function references the variable '" + n.name() +
+			"', which is not in the system's variable ordering");
 	}
 
 
@@ -350,44 +894,34 @@ namespace bertini{
 	//
 	//  implementer note:
 	//
-	// if you add another type to be visited, you must list it in TWO locations in the SLPCompiler type in the .hpp.   
-	// 
+	// if you add another type to be visited, you must list it in TWO locations in the SLPCompiler type in the .hpp.
+	//
 	//
 
 
 
-	// wtb: factor out this pattern
 	void SLPCompiler::Visit(node::Integer const& n){
-		auto as_ptr = n.shared_from_this();
-		this->DealWithNumber(n); // that sweet template magic.  see slp.hpp for the definition of this template function
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
-	void SLPCompiler::Visit(node::Float const& n){
-		auto as_ptr = n.shared_from_this();
-		this->DealWithNumber(n);
+	void SLPCompiler::Visit(node::Complex const& n){
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
 	void SLPCompiler::Visit(node::Rational const& n){
-		auto as_ptr = n.shared_from_this();
-		this->DealWithNumber(n);
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
 	void SLPCompiler::Visit(node::special_number::Pi const& n){
-		this->DealWithNumber(n);
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
 	void SLPCompiler::Visit(node::special_number::E const& n){
-		this->DealWithNumber(n);
+		this->RegisterConstant(n.shared_from_this(), RecipeFor(n));
 	}
 
 
-	void SLPCompiler::Visit(node::Jacobian const& n){
-		throw std::runtime_error("unimplemented visit to node of type Jacobian");
-
-
-	}
-
-	void SLPCompiler::Visit(node::Differential const& n){
+	void SLPCompiler::Visit(node::Differential const& /*n*/){
 		throw std::runtime_error("unimplemented visit to node of type Differential");
 	}
 
@@ -395,16 +929,16 @@ namespace bertini{
 
 
 
-	void SLPCompiler::Visit(node::Function const & f){
-		// put the location of the accepted node into memory, and copy into an output location.
+	void SLPCompiler::Visit(node::NamedExpression const & f){
+		// A named subexpression appearing inside a tree (a = x^2+y^2, used elsewhere): compute the
+		// entry once and copy its value into the NamedExpression's own slot, so every reference to
+		// the name shares that one result.  (Same wiring as an embedded Function.)
 		const std::shared_ptr<node::Node>& n = f.EntryNode();
-		const std::shared_ptr<const node::Function> f_as_ptr = std::dynamic_pointer_cast<node::Function const>(f.shared_from_this());
-
+		const std::shared_ptr<const node::NamedExpression> f_as_ptr = std::dynamic_pointer_cast<node::NamedExpression const>(f.shared_from_this());
 
 		if (this->locations_encountered_nodes_.find(n) == this->locations_encountered_nodes_.end())
-			n->Accept(*this); 
+			n->Accept(*this);
 		size_t location_entry = this->locations_encountered_nodes_[n];
-
 
 		size_t location_this_node;
 		if (this->locations_encountered_nodes_.find(f_as_ptr) == this->locations_encountered_nodes_.end()){
@@ -414,13 +948,7 @@ namespace bertini{
 		else
 			location_this_node = locations_encountered_nodes_[f_as_ptr];
 
-
-		if (locations_top_level_functions_and_derivatives_.find(f_as_ptr)!= locations_top_level_functions_and_derivatives_.end()){ // top-level
-			slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
-		}
-		else{ // not a top-level
-			slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
-		}
+		program_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
 	}
 
 
@@ -434,34 +962,26 @@ namespace bertini{
 		for (auto& n : n.Operands()){
 
 			if (this->locations_encountered_nodes_.find(n)==this->locations_encountered_nodes_.end())
-				n->Accept(*this); 
+				n->Accept(*this);
 
 			operand_locations.push_back(this->locations_encountered_nodes_[n]);
 		}
 
-		  
+
 		const auto& signs = n.GetSigns();
 		size_t prev_result_loc; // for tracking where the output of the previous iteration went
 
 		// seed the loop.
 		if (signs[0])
 			prev_result_loc = operand_locations[0];
-		else{
-			slp_under_construction_.AddInstruction(Negate, operand_locations[0], next_available_complex_);
-			prev_result_loc = next_available_complex_++;
-		}
-		
+		else
+			prev_result_loc = EmitUnary(Negate, operand_locations[0]);
+
 
 		// this loop
 		// does the additions for the rest of the operands
-		for (size_t ii{1}; ii<n.Operands().size(); ++ii){
-			if (signs[ii])
-				slp_under_construction_.AddInstruction(Add,prev_result_loc,operand_locations[ii],next_available_complex_);
-			else
-				slp_under_construction_.AddInstruction(Subtract,prev_result_loc,operand_locations[ii],next_available_complex_);
-
-			prev_result_loc = next_available_complex_++;
-		}
+		for (size_t ii{1}; ii<n.Operands().size(); ++ii)
+			prev_result_loc = EmitBinary(signs[ii] ? Add : Subtract, prev_result_loc, operand_locations[ii]);
 
 		this->locations_encountered_nodes_[as_ptr] =  prev_result_loc;
 
@@ -488,13 +1008,13 @@ namespace bertini{
 
 			if (this->locations_encountered_nodes_.find(operand)==this->locations_encountered_nodes_.end())
 			{
-				operand->Accept(*this); 
+				operand->Accept(*this);
 			}
 
 			operand_locations.push_back(this->locations_encountered_nodes_[operand]);
 		}
 
-		  
+
 		const auto& mult_or_div = n.GetMultOrDiv();// true is multiply and false is divide
 
 		size_t prev_result_loc; // for tracking where the output of the previous iteration went
@@ -502,29 +1022,22 @@ namespace bertini{
 		// seed the loop.
 		if (mult_or_div[0])
 			prev_result_loc = operand_locations[0];
-		else{ 
+		else{
 			// this case is reciprocation of the first operand
 
 			// this code sucks.  really, there should be a bank of integers that we pull from, instead of many copies of the same integer.
 			auto one = Integer::Make(1);
-			this->DealWithNumber(*one);
+			this->RegisterConstant(one, RecipeFor(*one));
 			auto location_one  = locations_encountered_nodes_[one];
 
-			slp_under_construction_.AddInstruction(Divide, location_one, operand_locations[0], next_available_complex_);
-			prev_result_loc = next_available_complex_++;
+			prev_result_loc = EmitBinary(Divide, location_one, operand_locations[0]);
 		}
-		
+
 
 		// this loop
 		// does the additions for the rest of the operands
-		for (size_t ii{1}; ii<n.Operands().size(); ++ii){
-			if (mult_or_div[ii])
-				slp_under_construction_.AddInstruction(Multiply,prev_result_loc,operand_locations[ii],next_available_complex_);
-			else
-				slp_under_construction_.AddInstruction(Divide,prev_result_loc,operand_locations[ii],next_available_complex_);
-
-			prev_result_loc = next_available_complex_++;
-		}
+		for (size_t ii{1}; ii<n.Operands().size(); ++ii)
+			prev_result_loc = EmitBinary(mult_or_div[ii] ? Multiply : Divide, prev_result_loc, operand_locations[ii]);
 
 		this->locations_encountered_nodes_[as_ptr] =  prev_result_loc;
 
@@ -537,177 +1050,204 @@ namespace bertini{
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
 		auto as_ptr = std::dynamic_pointer_cast<node::IntegerPowerOperator const>(n.shared_from_this());
 
-		IntT expo = n.exponent(); //integer
+		const IntT expo = n.exponent(); //integer
 
 		// ensure we have the location of the base of the power operation.  it's a node at this point.
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-		{
-			operand->Accept(*this); 
+			operand->Accept(*this);
+		const size_t base_loc = locations_encountered_nodes_[operand];
+
+		// Lower base^expo to multiplications at COMPILE time (exponentiation by squaring) instead of
+		// emitting an IntPower that calls boost's pow(mpc,int) -- which does ~14 heap allocations per
+		// call and is the dominant allocation churn in multiprecision eval.  A complex multiply into a
+		// preallocated slot is allocation-free, and the SLP's hash-consing already shares repeated
+		// powers across terms, so this is both faster and the right layer for a known exponent.
+		auto emit_mul = [&](size_t l, size_t r) -> size_t {
+			return EmitBinary(Multiply, l, r);
+		};
+		auto one_loc = [&]() -> size_t {
+			auto one = Integer::Make(1);
+			this->RegisterConstant(one, RecipeFor(*one));
+			return locations_encountered_nodes_[one];
+		};
+
+		size_t result_loc;
+		if (expo == 0)
+			result_loc = one_loc();                         // x^0 = 1
+		else {
+			const unsigned m = expo < 0 ? static_cast<unsigned>(-static_cast<long long>(expo))
+			                            : static_cast<unsigned>(expo);
+			// base^m by exponentiation-by-squaring, emitted as multiplications: O(log m) multiplies
+			// instead of O(m) -- a large win at high degree / high precision, where each mpfr multiply
+			// is costly and pow(complex,complex) is far costlier still.  Allocation-free: a*a (aliased
+			// operands) allocates a temporary whereas a*b does not, so before each squaring we copy the
+			// running square into a distinct slot and only ever multiply distinct slots.  The loop also
+			// covers m==1 (yields base_loc, emitting nothing).
+			auto emit_copy = [&](size_t s) -> size_t {
+				return EmitUnary(Assign, s);
+			};
+			size_t sq = base_loc;                            // sq = base^(2^bit)
+			size_t acc = 0; bool have = false;
+			for (unsigned mm = m; mm > 0; mm >>= 1u) {
+				if (mm & 1u) {                               // accumulate this set bit
+					if (have) acc = emit_mul(acc, sq);
+					else      { acc = sq; have = true; }
+				}
+				if (mm > 1u) {                               // more bits remain: sq = sq^2 (distinct ops)
+					const size_t copy = emit_copy(sq);
+					sq = emit_mul(sq, copy);
+				}
+			}
+			result_loc = acc;                                // base^m
+			if (expo < 0)                                    // x^-k = 1 / x^k
+				result_loc = EmitBinary(Divide, one_loc(), result_loc);
 		}
 
-		auto location_operand = locations_encountered_nodes_[operand];
-
-
-
-		if (this->locations_integers_.find(expo) == this->locations_integers_.end())
-		{
-			locations_integers_[expo] = slp_under_construction_.integers_.size();
-			slp_under_construction_.integers_.push_back(expo);
-		}
-
-
-		auto location_exponent  = locations_integers_[expo]; // this is a map lookup
-
-		
-		this->locations_encountered_nodes_[as_ptr] = next_available_complex_;
-		slp_under_construction_.AddInstruction(IntPower,location_operand,location_exponent, next_available_complex_++);
+		this->locations_encountered_nodes_[as_ptr] = result_loc;
 	}
 
 
 	void SLPCompiler::Visit(node::PowerOperator const& n){
 		auto as_ptr = std::dynamic_pointer_cast<node::PowerOperator const>(n.shared_from_this());
-		//get location of base and power then add instruction
 
 		const auto& base = n.GetBase();
 		const auto& exponent = n.GetExponent();
 
-		if (this->locations_encountered_nodes_.find(base) == this->locations_encountered_nodes_.end())
-			base->Accept(*this); 
+		// If the exponent is a compile-time integer (e.g. parsed x^4), lower it to multiplications via
+		// the IntegerPowerOperator path instead of emitting a general Power -- pow(complex,complex) is
+		// the single most allocation-heavy op in mp eval (it goes through exp/log), whereas the lowered
+		// multiplies are allocation-free.
+		if (auto exp_int = std::dynamic_pointer_cast<node::Integer const>(exponent)) {
+			auto ipow = node::pow(base, exp_int->GetValue().convert_to<int>());  // makes an IntegerPowerOperator
+			if (this->locations_encountered_nodes_.find(ipow) == this->locations_encountered_nodes_.end())
+				ipow->Accept(*this);
+			this->locations_encountered_nodes_[as_ptr] = locations_encountered_nodes_[ipow];
+			return;
+		}
 
+		// general base^exponent (symbolic or non-integer exponent)
+		if (this->locations_encountered_nodes_.find(base) == this->locations_encountered_nodes_.end())
+			base->Accept(*this);
 		if (this->locations_encountered_nodes_.find(exponent) == this->locations_encountered_nodes_.end())
-			exponent->Accept(*this); 
+			exponent->Accept(*this);
 
 		auto loc_base = locations_encountered_nodes_[base];
 		auto loc_exponent = locations_encountered_nodes_[exponent];
 
-		this->locations_encountered_nodes_[as_ptr] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Power, loc_base, loc_exponent, next_available_complex_++);
-
-
-
+		this->locations_encountered_nodes_[as_ptr] = EmitBinary(Power, loc_base, loc_exponent);
 	}
 
 	void SLPCompiler::Visit(node::ExpOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ExpOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Exp,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ExpOperator const>(n.shared_from_this())] = EmitUnary(Exp, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::LogOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::LogOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Log,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::LogOperator const>(n.shared_from_this())] = EmitUnary(Log, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::NegateOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::NegateOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Negate,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::NegateOperator const>(n.shared_from_this())] = EmitUnary(Negate, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::SqrtOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SqrtOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Sqrt,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SqrtOperator const>(n.shared_from_this())] = EmitUnary(Sqrt, location_operand);
 	}
 
 
 	// the trig operators
 	void SLPCompiler::Visit(node::SinOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SinOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Sin,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SinOperator const>(n.shared_from_this())] = EmitUnary(Sin, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::ArcSinOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcSinOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Asin,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcSinOperator const>(n.shared_from_this())] = EmitUnary(Asin, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::CosOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::CosOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Cos,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::CosOperator const>(n.shared_from_this())] = EmitUnary(Cos, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::ArcCosOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcCosOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Acos,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcCosOperator const>(n.shared_from_this())] = EmitUnary(Acos, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::TanOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::TanOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Tan,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::TanOperator const>(n.shared_from_this())] = EmitUnary(Tan, location_operand);
 	}
 
 	void SLPCompiler::Visit(node::ArcTanOperator const& n){
-		
+
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); 
+			operand->Accept(*this);
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcTanOperator const>(n.shared_from_this())] =  next_available_complex_;
-		slp_under_construction_.AddInstruction(Atan,location_operand, next_available_complex_++);
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcTanOperator const>(n.shared_from_this())] = EmitUnary(Atan, location_operand);
 	}
 
 
@@ -721,165 +1261,137 @@ namespace bertini{
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	SLP SLPCompiler::Compile(System const& sys){
+	template <typename SourceT>
+	SLP SLPCompiler::Compile(SourceT const& sys){
 		this->Clear();
 
-		this->slp_under_construction_.precision_ = DefaultPrecision();
+		// ThreadPrecision (thread-local), not DefaultPrecision (global): SLPs are
+		// (re)compiled lazily during Eval, which may run on a std::thread worker
+		// whose precision was set via SetThreadPrecision.  The global can be stale
+		// (e.g. still at the boost default) on MPI worker ranks.
+		const unsigned prec = ThreadPrecision();
 
 		// deal with variables
-		
+
 
 			// 1. ADD VARIABLES
 
-		slp_under_construction_.input_locations_.Variables = next_available_complex_;
+		program_under_construction_.input_locations_.Variables = next_available_complex_;
 
 		auto variable_ordering = sys.VariableOrdering();
 		for (auto v: variable_ordering){
 			locations_encountered_nodes_[ v ] = next_available_complex_++;
 		}
-		slp_under_construction_.number_of_.Variables = variable_ordering.size();
-		// slp_under_construction_.input_locations_.Variables = variable_counter;
+		program_under_construction_.number_of_.Variables = variable_ordering.size();
 
 			// deal with path variable
 		if (sys.HavePathVariable())
 		{
 				// do this action only if the system has a path variable defined
-			slp_under_construction_.input_locations_.Time = next_available_complex_;
+			program_under_construction_.input_locations_.Time = next_available_complex_;
 			locations_encountered_nodes_[ sys.GetPathVariable() ] = next_available_complex_++;
-			slp_under_construction_.has_path_variable_ = true;
-		}
-
-
-		
-			// make space for natural functions and derivatives.  we omit the patches.
-			// 3. ADD FUNCTIONS
-		slp_under_construction_.number_of_.Functions = sys.NumNaturalFunctions();
-		slp_under_construction_.output_locations_.Functions = next_available_complex_;
-		for (auto f: sys.GetNaturalFunctions())
-		{
-			locations_top_level_functions_and_derivatives_[f] = next_available_complex_; // don't increment yet, we're listing it a few places. this is for an optimization that elides a copy for assignment.
-			locations_encountered_nodes_[f] = next_available_complex_++;
-
-			#ifndef BERTINI_DISABLE_FUNCTION_TREE_SANITY_CHECKS
-						try{
-							f->shared_from_this();
-						}
-						catch (std::exception){
-							throw std::runtime_error("top level function is not a function");
-						}
-			#endif
-
-
+			program_under_construction_.has_path_variable_ = true;
 		}
 
 
 
+			// 3. ADD FUNCTIONS AND DERIVATIVES (we omit the patches).
+			//
+			// Each output is a bare expression root: the natural functions' entry expressions,
+			// then the space derivatives, then the time derivatives.  We reserve a contiguous
+			// output slot for every output, then visit each root (computing its value into its
+			// own slot) and emit an Assign copying that value into the reserved output slot.  The
+			// compiler marks entry points itself via this explicit output list, rather than
+			// relying on a Function wrapper node (ADR-0027).
 
+		std::vector<std::shared_ptr<node::Node>> function_roots;
+		for (auto const& f : sys.GetNaturalFunctions())
+			function_roots.push_back(f);
 
-		
-		// always have space derivatives
+		auto ds_dx = sys.GetSpaceDerivatives();
+		std::vector<std::shared_ptr<node::Node>> ds_dt;
+		if (sys.HavePathVariable())
+			for (auto const& d : sys.GetTimeDerivatives())
+				ds_dt.push_back(d);
 
-		auto ds_dx = sys.GetSpaceDerivatives(); // a linear object, so can just run down the object
-		slp_under_construction_.number_of_.Jacobian = ds_dx.size();
-		slp_under_construction_.output_locations_.Jacobian = next_available_complex_;
-		for (auto n: ds_dx)
-		{
-			locations_top_level_functions_and_derivatives_[n] = next_available_complex_; // don't increment yet, we're listing it a few places. this is for an optimization that elides a copy for assignment.
-			locations_encountered_nodes_[n] = next_available_complex_++;
-		}
+		// reserve the output slots, contiguously, in the order [functions | jacobian | timederiv]
+		program_under_construction_.number_of_.Functions = function_roots.size();
+		program_under_construction_.output_locations_.Functions = next_available_complex_;
+		std::vector<size_t> function_output_slots;
+		for (size_t i = 0; i < function_roots.size(); ++i)
+			function_output_slots.push_back(next_available_complex_++);
 
+		program_under_construction_.number_of_.Jacobian = ds_dx.size();
+		program_under_construction_.output_locations_.Jacobian = next_available_complex_;
+		std::vector<size_t> jacobian_output_slots;
+		for (size_t i = 0; i < ds_dx.size(); ++i)
+			jacobian_output_slots.push_back(next_available_complex_++);
 
-
-
-		// sometimes have time derivatives
+		std::vector<size_t> time_deriv_output_slots;
 		if (sys.HavePathVariable()) {
-			
-			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
-			slp_under_construction_.number_of_.TimeDeriv = ds_dt.size();
-			slp_under_construction_.output_locations_.TimeDeriv = next_available_complex_; // note the start of the block in memory.  the size was also recorded in the previous line.
-			for (auto n: ds_dt)
-			{
-				locations_top_level_functions_and_derivatives_[n] = next_available_complex_; // don't increment yet, we're listing it a few places. this is for an optimization that elides a copy for assignment.
-				locations_encountered_nodes_[n] = next_available_complex_++;
+			program_under_construction_.number_of_.TimeDeriv = ds_dt.size();
+			program_under_construction_.output_locations_.TimeDeriv = next_available_complex_;
+			for (size_t i = 0; i < ds_dt.size(); ++i)
+				time_deriv_output_slots.push_back(next_available_complex_++);
+		}
+
+		// visit each output root and copy its value into the reserved output slot.  A shared root
+		// is visited once (CSE), but every output position gets its own Assign.
+		auto wire_outputs = [&](auto const& roots, std::vector<size_t> const& out_slots) {
+			for (size_t i = 0; i < roots.size(); ++i) {
+				auto const& r = roots[i];
+				if (this->locations_encountered_nodes_.find(r) == this->locations_encountered_nodes_.end())
+					r->Accept(*this);
+				program_under_construction_.AddInstruction(Assign, this->locations_encountered_nodes_[r], out_slots[i]);
 			}
-		}
+		};
+
+		wire_outputs(function_roots, function_output_slots);
+		wire_outputs(ds_dx, jacobian_output_slots);
+		if (sys.HavePathVariable())
+			wire_outputs(ds_dt, time_deriv_output_slots);
 
 
+		// the program's total slot count is the number of memory slots allocated during compilation
+		program_under_construction_.num_slots_ = next_available_complex_;
+
+		// NumType per slot (ADR-0034): infer which slots are real vs complex from the tree/tape.
+		program_under_construction_.ComputeSlotNumTypes();
+
+		// Split the tape into a frozen (constants-only) prologue and a live segment, so a
+		// point-only re-evaluation can skip recomputing the constants (ADR-0027).  This is a pure
+		// program operation (no memory needed).
+		program_under_construction_.PartitionInstructions();
+
+		// Pack the per-instruction bank selectors into the opcode words (after the tape is final), so
+		// eval never touches slot_numtype_.  Must come last -- PartitionInstructions reads clean opcodes.
+		program_under_construction_.SpecializeInstructions();
 
 
+		// Wrap the now-immutable program in a facade and set up a per-thread memory for it.
+		// The program is hash-consed (ADR-0027 E4): identical compiled tapes collapse to one
+		// shared object, while each facade keeps its own SLPMemory.
+		SLP result;
+		result.program_ = InternProgram(std::make_shared<const SLPProgram>(std::move(program_under_construction_)));
+		result.memory_.precision_ = prec;
+		result.SetupMemory();
 
-		// now we're actually ready to start visiting using recursion, since we've recorded the locations of inputs and outputs.
-		
-		for (auto& f: sys.GetNaturalFunctions())
-		{
-			f->shared_from_this();
-			f->Accept(*this);
-
-			// post visit function
-			/* code */
-		}
-
-
-
-		
-		// always do derivatives with respect to space variables
-		for (auto n: ds_dx)
-			n->Accept(*this);
-
-
-
-
-		// sometimes have time derivatives
-		if (sys.HavePathVariable()) {
-			
-			// we need derivatives with respect to time only if the system has a path variable defined
-			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
-			for (auto n: ds_dt)
-				n->Accept(*this);
-		}
-
-
-		// Re-seed the thread-local default precision from the SLP's own precision before
-		// growing the mpfr_complex memory block. resize() default-constructs each new
-		// element via mpfr_init2(x, thread_default_precision()); on Boost 1.87 that value
-		// can be 0 on fresh threads, which aborts. DefaultPrecision() sets both the static
-		// and thread-local defaults so the default-constructed slots are valid.
-		DefaultPrecision(slp_under_construction_.precision_);
-
-		// adjust the sizes of the memory blocks to match the number expected via compilation
-		slp_under_construction_.GetMemory<dbl_complex>().resize(next_available_complex_);
-		slp_under_construction_.GetMemory<mpfr_complex>().resize(next_available_complex_);
-
-
-		// downsample to get ready for evaluation
-		slp_under_construction_.CopyNumbersIntoMemory<dbl_complex>();
-		slp_under_construction_.CopyNumbersIntoMemory<mpfr_complex>();
-
-
-		return slp_under_construction_;
+		return result;
 	}
+
+	// Explicit instantiations: compile from a whole System (classic / slp_test path) and from a
+	// PolynomialBlock (the fold -- the block compiles its own SLP in PolynomialBlock::Differentiate).
+	template SLP SLPCompiler::Compile<System>(System const&);
+	template SLP SLPCompiler::Compile<blocks::PolynomialBlock>(blocks::PolynomialBlock const&);
 
 	void SLPCompiler::Clear(){
 		next_available_complex_ = 0;
 		next_available_int_ = 0;
 
 		locations_encountered_nodes_.clear();
-		slp_under_construction_ = SLP();
+		vn_binary_.clear();
+		vn_unary_.clear();
+		program_under_construction_ = SLPProgram();
 	}
 
 }

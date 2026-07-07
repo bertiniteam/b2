@@ -2,8 +2,14 @@ name: Build and test wheels 🐍
 
 on:
   push:
+    # feature branches get their CI from the pull_request trigger; running the
+    # push event there too just produced a cancelled twin whose never-started
+    # jobs render as 0s "failures" with raw matrix-template names in the PR
+    # checks list.  for a branch without an open PR, use the workflow_dispatch
+    # trigger defined below.
     branches:
-      - '**'
+      - develop
+      - main
     paths-ignore:
       - 'python/docs/**'
       - 'doc_resources/**'
@@ -11,6 +17,10 @@ on:
       - '**/*.md'
       - '**/*.html'
       - '.github/workflows/build_docs.yml'
+      # A version-only bump (single source of truth) changes nothing that needs
+      # building/testing; the actual release reruns full CI via publish.yml's tag
+      # trigger (workflow_call). See CMakeLists.txt / pyproject.toml.
+      - 'VERSION'
   pull_request:
     paths-ignore:
       - 'python/docs/**'
@@ -19,6 +29,7 @@ on:
       - '**/*.md'
       - '**/*.html'
       - '.github/workflows/build_docs.yml'
+      - 'VERSION'
   workflow_call:
     inputs:
       minimal:
@@ -43,12 +54,53 @@ on:
         required: false
         type: boolean
         default: false
+      os:
+        description: 'Which OS(es) to run — manual runs only'
+        required: false
+        type: choice
+        default: all
+        options: [all, linux, macos, windows]
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
+# Boost/Eigen/eigenpy versions are single-sourced in .github/ci-deps-versions.env and surfaced by
+# the `set_versions` job; the two jobs that build them from source consume it as job-level env.
+# That same file is in build-ci-image.yml's path filter, so a version bump rebuilds the Linux image.
+env:
+  # Opt JavaScript actions into Node 24 (Node 20 is being removed from the runners).
+  # Silences the conda-incubator/setup-miniconda@v3 (and other node20 action) deprecation.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
+  # Cheap, Doxygen-only gate (no compilation).  Every job that actually builds
+  # the C++ core `needs` this, so a documentation error fails the run in ~1 minute
+  # and NO expensive build/test job ever starts.  Surfacing this late (e.g. only at
+  # docs-publish time) would waste the whole build matrix on a doc typo.
+  doc_lint:
+    name: Documentation lint
+    uses: ./.github/workflows/doc_lint.yml
+
+  set_versions:
+    name: Resolve dependency versions
+    runs-on: ubuntu-latest
+    outputs:
+      boost: ${{ steps.v.outputs.boost }}
+      eigen: ${{ steps.v.outputs.eigen }}
+      eigenpy: ${{ steps.v.outputs.eigenpy }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: v
+        name: Read .github/ci-deps-versions.env
+        run: |
+          set -a; . .github/ci-deps-versions.env; set +a
+          {
+            echo "boost=$BOOST_VERSION"
+            echo "eigen=$EIGEN_VERSION"
+            echo "eigenpy=$EIGENPY_VERSION"
+          } >> "$GITHUB_OUTPUT"
+
   set_matrix:
     name: Set OS matrix
     runs-on: ubuntu-latest
@@ -65,21 +117,30 @@ jobs:
           # pending a reproducer or an upstream fix. Re-add "macos-15-intel"
           # below when ready to revisit.
           if [[ "${{ inputs.minimal }}" == "true" ]]; then
-            echo 'os=["ubuntu-latest"]' >> $GITHUB_OUTPUT
-            echo 'python_versions=["3.11"]' >> $GITHUB_OUTPUT
+            OS='["ubuntu-latest"]'; PY='["3.11"]'
           elif [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/develop" || "${{ github.ref }}" == refs/tags/* || "${{ inputs.full_matrix }}" == "true" || "${{ github.event.pull_request.base.ref }}" == "develop" || "${{ github.event.pull_request.base.ref }}" == "main" ]]; then
-            echo 'os=["ubuntu-latest","macos-14"]' >> $GITHUB_OUTPUT
-            echo 'python_versions=["3.9","3.10","3.11","3.12","3.13","3.14"]' >> $GITHUB_OUTPUT
+            OS='["ubuntu-latest","macos-14"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
           else
-            echo 'os=["ubuntu-latest","macos-14"]' >> $GITHUB_OUTPUT
-            echo 'python_versions=["3.11"]' >> $GITHUB_OUTPUT
+            OS='["ubuntu-latest"]'; PY='["3.11"]'
           fi
+          # Manual OS targeting (the workflow_dispatch `os` input) narrows the unix matrix; the
+          # separate Windows jobs gate on the same input.  Empty/`all` => leave as computed above.
+          case "${{ inputs.os }}" in
+            linux)   OS='["ubuntu-latest"]' ;;
+            macos)   OS='["macos-14"]' ;;
+            windows) OS='[]' ;;   # no unix jobs; only the standalone Windows jobs run
+          esac
+          echo "os=$OS" >> $GITHUB_OUTPUT
+          echo "python_versions=$PY" >> $GITHUB_OUTPUT
 
   test_cpp_unix:
     name: C++ tests on ${{ matrix.os }}
     if: ${{ inputs.minimal != true }}
-    needs: [set_matrix]
+    needs: [doc_lint, set_matrix, set_versions]
     runs-on: ${{ matrix.os }}
+    env:
+      BOOST_VERSION: ${{ needs.set_versions.outputs.boost }}
+    timeout-minutes: 30   # backstop against a hang; healthy runs are ~7 min
     strategy:
       fail-fast: false
       matrix:
@@ -91,19 +152,31 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget libgmp-dev libmpfr-dev libmpc-dev libeigen3-dev libtool
+          sudo apt-get install -y wget libgmp-dev libmpfr-dev libmpc-dev libeigen3-dev libtool openmpi-bin libopenmpi-dev ccache
 
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install gmp mpfr libmpc eigen@3
+        run: brew install gmp mpfr libmpc eigen@3 open-mpi ccache
+
+      # compiler cache: makes recompiles of unchanged C++ near-free.  the key is
+      # deliberately loose (always save fresh, restore newest) -- ccache does its
+      # own invalidation; do not key on file hashes.
+      - name: Cache ccache
+        uses: actions/cache@v5
+        with:
+          path: .ccache
+          key: ccache-cpp-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: |
+            ccache-cpp-${{ matrix.os }}-
 
       - name: Build Boost base (Linux)
         if: runner.os == 'Linux'
         run: |
           cd /tmp
-          curl -fsSL -o boost_1_90_0.tar.bz2 https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2
-          tar xjf boost_1_90_0.tar.bz2
-          cd boost_1_90_0
+          bu="boost_$(echo "$BOOST_VERSION" | tr . _)"
+          curl -fsSL -o "$bu.tar.bz2" "https://archives.boost.io/release/${BOOST_VERSION}/source/$bu.tar.bz2"
+          tar xjf "$bu.tar.bz2"
+          cd "$bu"
           ./bootstrap.sh --prefix=/tmp/boost-base \
             --with-libraries=serialization,filesystem,graph,chrono,regex,timer,log,thread,test
           ./b2 install -j$(nproc)
@@ -112,14 +185,17 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           cd /tmp
-          curl -fsSL -o boost_1_90_0.tar.bz2 https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2
-          tar xjf boost_1_90_0.tar.bz2
-          cd boost_1_90_0
+          bu="boost_$(echo "$BOOST_VERSION" | tr . _)"
+          curl -fsSL -o "$bu.tar.bz2" "https://archives.boost.io/release/${BOOST_VERSION}/source/$bu.tar.bz2"
+          tar xjf "$bu.tar.bz2"
+          cd "$bu"
           ./bootstrap.sh --prefix=/tmp/boost-base \
             --with-libraries=serialization,filesystem,graph,chrono,regex,timer,log,thread,test
           ./b2 install -j2 hardcode-dll-paths=true dll-path=/tmp/boost-base/lib
 
       - name: Configure
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: |
           cmake -B build \
             -DCMAKE_PREFIX_PATH=/tmp/boost-base \
@@ -127,22 +203,81 @@ jobs:
             -DENABLE_UNIT_TESTING=ON \
             -DINSTALL_DOCUMENTATION=OFF \
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON \
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
-        run: cmake --build build --parallel 2
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+          CCACHE_MAXSIZE: 400M
+        # Linux runners are 4-core/16 GB and the heaviest TU peaks ~4 GB (ADR-0019), so the full
+        # 4-way build fits; the 3-core/7 GB macOS runner stays at 2.  See ADR-0004.
+        run: cmake --build build --parallel ${{ runner.os == 'Linux' && 4 || 2 }}
 
-      - name: Test
+      - name: ccache stats
+        if: always()
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+        run: ccache -s || true
+
+      # Run the suite under BOTH thread settings.  OMP_NUM_THREADS overrides the requested per-solve
+      # thread count (parallel::EffectiveThreadCount), so the serial and threaded code paths genuinely
+      # differ; running both on every platform catches threading bugs (e.g. clone-per-thread) that a
+      # single setting would hide.  `--parallel` is ctest's *process* parallelism (independent of the
+      # per-solve OMP count), so each leg still runs the test executables concurrently.
+      - name: Test (threaded + OMP_NUM_THREADS=1)
         working-directory: build
         env:
           LD_LIBRARY_PATH: /tmp/boost-base/lib:/tmp/boost-base/lib64
           DYLD_LIBRARY_PATH: /tmp/boost-base/lib
-        run: ctest --output-on-failure --parallel $(nproc 2>/dev/null || sysctl -n hw.ncpu)
+        run: |
+          set -e
+          jobs=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+          echo "::group::ctest with OMP_NUM_THREADS unset (per-solve threading on)"
+          env -u OMP_NUM_THREADS ctest --output-on-failure --timeout 600 --parallel "$jobs"
+          echo "::endgroup::"
+          echo "::group::ctest with OMP_NUM_THREADS=1 (per-solve serial)"
+          OMP_NUM_THREADS=1 ctest --output-on-failure --timeout 600 --parallel "$jobs"
+          echo "::endgroup::"
+
+      # The published wheels ship WITHOUT MPI (we can't know the user's MPI), but this C++ build is
+      # MPI-enabled (openmpi is installed above), so we verify the MPI runtime path actually works
+      # on each OS we support -- and, crucially, that it gives the SAME answer as the serial solve.
+      # The blackbox CLI reads a file named `input` from the cwd and writes the solution count as
+      # the first line of `main_data`.  mpirun -n 2 = one manager + one worker (the minimal pool).
+      #
+      # Run BOTH start-system families, because DistributeSystems broadcasts the start system to the
+      # workers and a dropped serialized member is invisible until that exact start system is sent.
+      # small.b2 (one affine group) infers total-degree; small_mhom.b2 (two groups) infers the
+      # multihomogeneous start system -- whose serialize() was once incomplete, crashing every worker.
+      - name: MPI smoke test (CLI under mpirun)
+        working-directory: build/core
+        env:
+          LD_LIBRARY_PATH: /tmp/boost-base/lib:/tmp/boost-base/lib64
+          DYLD_LIBRARY_PATH: /tmp/boost-base/lib
+        run: |
+          set -e
+          for case in small small_mhom; do
+            cp "$GITHUB_WORKSPACE/benchmark/inputs/${case}.b2" input
+            ./bertini2 >/dev/null 2>&1
+            serial=$(head -n1 main_data); rm -f main_data
+            mpirun -n 2 --bind-to none ./bertini2 >/dev/null 2>&1
+            parallel=$(head -n1 main_data); rm -f main_data
+            echo "${case}: solution count serial=$serial  mpi(-n 2)=$parallel"
+            test -n "$serial"
+            test "$serial" = "$parallel"   # MPI must match serial, not merely run
+          done
 
   test_cpp_windows:
     name: C++ tests on Windows
-    if: ${{ inputs.minimal != true }}
+    if: ${{ inputs.minimal != true && (inputs.os == '' || inputs.os == 'all' || inputs.os == 'windows') }}
+    needs: [doc_lint]
     runs-on: windows-latest
+    timeout-minutes: 60   # backstop against a hang; the clang-cl build+test is ~22 min
+                          # warm, but a cache-cold rerun on a slow runner legitimately
+                          # needs ~40 (observed 2026-07-05: all tests PASSED, then the
+                          # 40-min axe fell during post-job cache packing)
     env:
       CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
     steps:
@@ -161,7 +296,7 @@ jobs:
         with:
           activate-environment: b2-windows
           environment-file: environment-win.yml
-          auto-activate-base: false
+          auto-activate: false
           channel-priority: strict
 
       - name: Configure and build C++ tests
@@ -174,6 +309,13 @@ jobs:
           $env:CMAKE_GENERATOR_TOOLSET = ''
           $env:CMAKE_PREFIX_PATH = "$env:CONDA_PREFIX\Library"
 
+          # The GitHub Windows runner now ships Visual Studio 2026 (MSVC 14.51), whose STL
+          # <yvals_core.h> hard-asserts (STL1000) that the compiler is Clang >= 20; the conda
+          # clang-cl is older.  The only errors are that version gate -- the C++17 code compiles
+          # fine -- so we opt out of the gate.  (Proper fix: ship a clang >= 20 toolchain.)
+          $env:CXXFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
+          $env:CFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
+
           $boostHeader = "$env:CONDA_PREFIX\Library\include\boost\archive\archive_exception.hpp"
           (Get-Content $boostHeader).Replace('public virtual std::exception', 'public std::exception') | Set-Content $boostHeader
 
@@ -181,20 +323,37 @@ jobs:
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DBUILD_PYTHON_BINDINGS=OFF `
             -DENABLE_UNIT_TESTING=ON `
+            -DUSE_CCACHE=OFF `
             -DINSTALL_DOCUMENTATION=OFF `
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON `
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel
 
-      - name: Test
+      # Run under both per-solve thread settings (see the unix C++ test job for the rationale).
+      - name: Test (threaded + OMP_NUM_THREADS=1)
         shell: pwsh
         working-directory: build
-        run: ctest --output-on-failure --parallel
+        run: |
+          Remove-Item Env:\OMP_NUM_THREADS -ErrorAction SilentlyContinue
+          Write-Host "::group::ctest with OMP_NUM_THREADS unset (per-solve threading on)"
+          ctest --output-on-failure --timeout 600 --parallel
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host "::endgroup::"
+          $env:OMP_NUM_THREADS = '1'
+          Write-Host "::group::ctest with OMP_NUM_THREADS=1 (per-solve serial)"
+          ctest --output-on-failure --timeout 600 --parallel
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host "::endgroup::"
 
   build_macos_ubuntu_wheels:
     name: ${{ matrix.os }} Python-${{ matrix.python-version }} wheels
-    needs: [set_matrix]
+    needs: [set_matrix, test_cpp_unix, set_versions]
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ${{ matrix.os }}
+    env:
+      BOOST_VERSION: ${{ needs.set_versions.outputs.boost }}
+      EIGEN_VERSION: ${{ needs.set_versions.outputs.eigen }}
+      EIGENPY_VERSION: ${{ needs.set_versions.outputs.eigenpy }}
     strategy:
       fail-fast: false
       matrix:
@@ -212,13 +371,31 @@ jobs:
             ~/.cache/pip
             ~/.cache/cibuildwheel
             ~/Library/Caches/Homebrew
-            /tmp/boost_1_90_0.tar.bz2
-            /tmp/eigen-3.4.0.tar.gz
-            /tmp/eigenpy-3.12.0.tar.gz
-          key: ${{ runner.os }}-cibw-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'python/pyproject.toml', 'CMakeLists.txt', 'core/CMakeLists.txt', '.github/workflows/build_and_test.yml') }}
+            /tmp/boost_*.tar.bz2
+            /tmp/eigen-${{ env.EIGEN_VERSION }}.tar.gz
+            /tmp/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz
+          key: ${{ runner.os }}-cibw-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'python/pyproject.toml', 'CMakeLists.txt', 'core/CMakeLists.txt', '.github/workflows/build_and_test.yml', 'python_bindings/include/tracker_export.hpp', 'python_bindings/include/endgame_export.hpp') }}
           restore-keys: |
             ${{ runner.os }}-cibw-${{ matrix.python-version }}-
             ${{ runner.os }}-cibw-
+      # compiler cache for the bertini2 compile itself (deps are built by their
+      # own build systems and are out of ccache's cmake-launcher reach).  the key
+      # is deliberately loose -- always save fresh, restore newest; ccache does
+      # its own invalidation.  on Linux the cache lives in the repo dir because
+      # that is what cibuildwheel mounts into the container (as /project).
+      - name: Cache ccache (bertini2 compile)
+        uses: actions/cache@v5
+        with:
+          path: .ccache
+          key: ccache-wheels-${{ runner.os }}-${{ matrix.python-version }}-${{ github.sha }}
+          restore-keys: |
+            ccache-wheels-${{ runner.os }}-${{ matrix.python-version }}-
+            ccache-wheels-${{ runner.os }}-
+      # pre-create as the runner user so docker's volume mount doesn't create it
+      # root-owned on the host
+      - name: Ensure ccache dir exists
+        shell: bash
+        run: mkdir -p .ccache
       - name: Set CIBW_BUILD for this Python version
         shell: bash
         run: |
@@ -233,82 +410,120 @@ jobs:
           echo "MACOSX_DEPLOYMENT_TARGET=${SW_VERS}.0" >> $GITHUB_ENV
       - uses: pypa/cibuildwheel@v3.4.1
         env:
-          # Build cp39 through cp313 for both Linux (manylinux) and macOS.
+          # Build cp310 through cp314 for both Linux (manylinux) and macOS (cp39 was
+          # dropped when eigenpy moved to >= 3.13, whose floor is Python 3.10).
           # Boost.Python and eigenpy are rebuilt per target Python in BEFORE_BUILD
           # so each wheel bundles a matching libboost_python3X.
           CIBW_BUILD: ${{ env.CIBW_BUILD }}
           CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
-          # Install system deps + download (but DO NOT build) Boost & eigenpy sources
-          # once per container. Boost.Python is ABI-locked to a single CPython version,
-          # so it must be rebuilt per target Python in BEFORE_BUILD — building it here
-          # against the manylinux2014 system python3 produces a libboost_python39 that
-          # all five wheels would then bundle, breaking import on cp310/311/312/313.
+          # Prebuilt deps image (built by build-ci-image.yml).  The tag is the toolchain key from
+          # the single-sourced versions, so a bump pins a new tag -- and if that tag isn't built
+          # yet, cibuildwheel's pull fails loudly (the implicit ABI assert; no silent mismatch).
+          CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/bertiniteam/b2-manylinux-deps:boost${{ env.BOOST_VERSION }}-eigen${{ env.EIGEN_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}-mlx2_34
+          # cibuildwheel COPIES the project into the container (no bind mount), so
+          # a cache written under /project is discarded.  mount the host ccache dir
+          # explicitly; ignored on macOS (host build, no container).
+          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume=${{ github.workspace }}/.ccache:/ccache-host"
+          # Everything is prebuilt in the image (Boost/Boost.Python + eigenpy at /opt/deps/<tag>;
+          # eigen/ccache/patchelf/openmpi installed).  So BEFORE_ALL just asserts the image is the
+          # one we expect -- a fast, loud failure if we ever point at the wrong/empty image.
           CIBW_BEFORE_ALL_LINUX: >
-            yum install -y wget gmp-devel mpfr-devel libmpc-devel libtool &&
-            cd /tmp &&
-            { [ -f eigen-3.4.0.tar.gz ] || wget -q https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz ; } &&
-            rm -rf eigen-3.4.0 && tar xzf eigen-3.4.0.tar.gz &&
-            cmake -S eigen-3.4.0 -B eigen-3.4.0/bld -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release &&
-            cmake --install eigen-3.4.0/bld &&
-            { [ -f eigenpy-3.12.0.tar.gz ] || wget -q https://github.com/stack-of-tasks/eigenpy/releases/download/v3.12.0/eigenpy-3.12.0.tar.gz ; }
+            ls -1 /opt/deps &&
+            command -v patchelf &&
+            ccache --version >/dev/null &&
+            command -v mpicc
           # On macOS, Homebrew's boost-python3 / eigenpy bottles track the current
           # Homebrew default Python (now 3.14), so a cp313 wheel that bundles them
           # imports a libboost_python314.dylib into a 3.13 interpreter and segfaults.
           # Install only the Python-version-independent libs from brew here; download
           # Boost & eigenpy sources to /tmp for the per-Python build in BEFORE_BUILD.
           CIBW_BEFORE_ALL_MACOS: >
-            brew install gmp mpfr libmpc eigen@3 &&
+            brew install gmp mpfr libmpc eigen@3 ccache &&
             cd /tmp &&
-            { [ -f eigenpy-3.12.0.tar.gz ] || curl -fsSL -o eigenpy-3.12.0.tar.gz https://github.com/stack-of-tasks/eigenpy/releases/download/v3.12.0/eigenpy-3.12.0.tar.gz ; }
+            { [ -f eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ] || curl -fsSL -o eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz https://github.com/stack-of-tasks/eigenpy/releases/download/v${{ env.EIGENPY_VERSION }}/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ; }
 
-          # Build Boost and eigenpy fresh against the active per-Python interpreter
-          # so each wheel bundles a matching libboost_python3X.
+          # Deps are prebuilt in the image at /opt/deps/<cpXY-cpXY>.  Point the build at the active
+          # Python's prefix via a stable /opt/deps/current symlink (CIBW_ENVIRONMENT_LINUX is a
+          # static string, so it can't compute the per-Python path itself).
           CIBW_BEFORE_BUILD_LINUX: >
             pip install scikit-build-core numpy scipy &&
-            rm -rf /tmp/deps-py && mkdir -p /tmp/deps-py &&
-            PY_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')") &&
-            PY_INC=$(python -c "import sysconfig; print(sysconfig.get_path('include'))") &&
-            PY_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')") &&
-            cd /tmp &&
-            { [ -f boost_1_90_0.tar.bz2 ] || wget -q https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2 ; } &&
-            rm -rf boost_1_90_0 && tar xjf boost_1_90_0.tar.bz2 &&
-            cd boost_1_90_0 &&
-            ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py &&
-            printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam &&
-            ./b2 install -j$(nproc) --user-config=user-config.jam python=$PY_VER &&
-            cd /tmp &&
-            rm -rf eigenpy-3.12.0 && tar zxf eigenpy-3.12.0.tar.gz &&
-            cd eigenpy-3.12.0 && mkdir -p bld && cd bld &&
-            cmake .. -DCMAKE_PREFIX_PATH=/tmp/deps-py -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF -DCMAKE_INSTALL_DO_STRIP=ON &&
-            make -j2 install &&
-            find /tmp/deps-py -name '*.so*' -type f | while read f; do
-              err=$(strip --strip-unneeded "$f" 2>&1) || echo "strip failed on $f: $err"
-            done
+            PYTAG="cp$(python -c 'import sys;v=sys.version_info;print(f"{v.major}{v.minor}")')" &&
+            DEPS="$(ls -d /opt/deps/${PYTAG}-* | head -1)" &&
+            test -d "$DEPS" &&
+            ln -sfn "$DEPS" /opt/deps/current &&
+            echo "using prebuilt Boost+eigenpy at $DEPS"
 
           # On macOS, build all Boost components (including Boost.Python) into /tmp/deps-py
           # so delocate sees only one set of dylibs. boost-base is used only for C++ tests.
-          CIBW_BEFORE_BUILD_MACOS: >
-            pip install scikit-build-core numpy scipy &&
-            rm -rf /tmp/deps-py && mkdir -p /tmp/deps-py &&
-            PY_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')") &&
-            PY_INC=$(python -c "import sysconfig; print(sysconfig.get_path('include'))") &&
-            PY_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')") &&
-            cd /tmp &&
-            { [ -f boost_1_90_0.tar.bz2 ] || curl -fsSL -o boost_1_90_0.tar.bz2 https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2 ; } &&
-            rm -rf boost_1_90_0 && tar xjf boost_1_90_0.tar.bz2 &&
-            cd boost_1_90_0 &&
-            ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py &&
-            printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam &&
-            ./b2 install -j$(sysctl -n hw.ncpu) --user-config=user-config.jam python=$PY_VER hardcode-dll-paths=true dll-path=/tmp/deps-py/lib &&
-            cd /tmp &&
-            rm -rf eigenpy-3.12.0 && tar zxf eigenpy-3.12.0.tar.gz &&
-            cd eigenpy-3.12.0 && mkdir -p bld && cd bld &&
-            cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF &&
-            make -j2 install
+          # Prefer the prebuilt Boost+eigenpy bundle from the `ci-deps` release (built once by
+          # build-macos-deps.yml); fall back to building from source if it is missing (e.g. a
+          # version bump before the bundle is refreshed).  The bundle was tarred from /tmp with
+          # hardcode-dll-paths=/tmp/deps-py/lib, so extracting it back to /tmp/deps-py keeps the
+          # dylib paths valid for delocate.  The asset name encodes the toolchain, so a version
+          # bump simply 404s and rebuilds -- never a silent ABI mismatch.
+          CIBW_BEFORE_BUILD_MACOS: |
+            set -e
+            pip install scikit-build-core numpy scipy
+            PY_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+            PY_TAG="cp$(echo "$PY_VER" | tr -d .)"
+            ASSET="deps-macos14-arm64-${PY_TAG}-boost${{ env.BOOST_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}.tar.gz"
+            URL="https://github.com/${{ github.repository }}/releases/download/ci-deps/${ASSET}"
+            rm -rf /tmp/deps-py
+            if curl -fsSL -o /tmp/deps.tgz "$URL"; then
+              echo "== using prebuilt macOS deps: $ASSET =="
+              tar xzf /tmp/deps.tgz -C /tmp
+            else
+              echo "== prebuilt $ASSET not found; building Boost+eigenpy from source =="
+              PY_INC=$(python -c "import sysconfig; print(sysconfig.get_path('include'))")
+              PY_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')")
+              mkdir -p /tmp/deps-py
+              cd /tmp
+              BU="boost_$(echo ${{ env.BOOST_VERSION }} | tr . _)"
+              [ -f "$BU.tar.bz2" ] || curl -fsSL -o "$BU.tar.bz2" "https://archives.boost.io/release/${{ env.BOOST_VERSION }}/source/$BU.tar.bz2"
+              rm -rf "$BU"; tar xjf "$BU.tar.bz2"
+              cd "$BU"
+              ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py
+              printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam
+              ./b2 install -j$(sysctl -n hw.ncpu) --user-config=user-config.jam python=$PY_VER --without-mpi hardcode-dll-paths=true dll-path=/tmp/deps-py/lib
+              cd /tmp
+              rm -rf eigenpy-${{ env.EIGENPY_VERSION }}; tar zxf eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz
+              cd eigenpy-${{ env.EIGENPY_VERSION }}; mkdir -p bld; cd bld
+              cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF
+              make -j2 install
+            fi
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
-          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py"
-          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib"
+          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/opt/deps/current/lib:/opt/deps/current/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/opt/deps/current CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=4 CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
+          # Full pytest suite, restored 2026-06-08 now that the uninitialized-numpy-slot
+          # crash is fixed in the bindings (see ADR-0006).  The build image is
+          # manylinux_2_34 (AlmaLinux 9, MPFR 4.1; set via CIBW_MANYLINUX_X86_64_IMAGE
+          # above).  The crash was NEVER MPFR-version specific - it is the all-zero
+          # mpfr/mpc "uninitialized sentinel" bug, which reproduces on any MPFR version
+          # (and locally); the older blame on "MPFR 3.1.6" was a misdiagnosis.  Running
+          # the full suite here is the in-container proof of the fix.  If it flakes or
+          # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
+          # mpi4py builds against the image's OpenMPI, so the MPI test modules run (at 1 rank)
+          # instead of skipping -- 0 skiptests on Linux, matching Windows/macOS.
+          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy pandas networkx matplotlib mpi4py"
+          # The explicit `bertini2 --version` up front is a permanent smoke test of the
+          # BUNDLED CLI BINARY: wheel repair rewrites its ELF metadata (patchelf via
+          # auditwheel), and a bad rewrite segfaults in the dynamic loader before main()
+          # -- which is exactly what happened with the image's stock patchelf (hence the
+          # 0.17.2.1 pin in CIBW_BEFORE_ALL_LINUX above).  If this line ever fails with
+          # rc=139 and no output, suspect the patchelf/auditwheel/strip pipeline first,
+          # not the C++ (a gdb backtrace of the bundled exe settles it).
+          CIBW_TEST_COMMAND_LINUX: >-
+            cd {project} &&
+            elf=$(python -c "import bertini,os;print(os.path.join(os.path.dirname(bertini.__file__),'_bin','bertini2'))") &&
+            "$elf" --version &&
+            python -m pytest python/test/ -rs -q
+
+      - name: ccache size (cold run = grows from nothing; warm run = hits)
+        if: always()
+        shell: bash
+        run: |
+          du -sh .ccache 2>/dev/null || echo "no .ccache directory was produced"
+          if command -v ccache >/dev/null; then CCACHE_DIR=$PWD/.ccache ccache -s || true; fi
 
       - uses: actions/upload-artifact@v5
         with:
@@ -318,20 +533,22 @@ jobs:
 
   build_windows_wheels:
     name: Windows Python-${{ matrix.python-version }} wheels
-    if: ${{ inputs.minimal != true }}
+    needs: [set_matrix, test_cpp_windows]
+    if: ${{ inputs.minimal != true && !failure() && !cancelled() && (inputs.os == '' || inputs.os == 'all' || inputs.os == 'windows') }}
     runs-on: windows-latest
     env:
       CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     steps:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Cache conda packages + pip
         uses: actions/cache@v5
+        continue-on-error: true
         with:
           path: |
             ${{ github.workspace }}\conda_pkgs
@@ -345,8 +562,20 @@ jobs:
           activate-environment: b2-windows
           environment-file: environment-win.yml
           python-version: ${{ matrix.python-version }}
-          auto-activate-base: false
+          auto-activate: false
           channel-priority: strict
+
+      # Persist the compiler cache for the bertini2 compile (Boost/eigenpy come prebuilt from
+      # conda; bertini itself is the only from-source cost).  ccache is already active on this job
+      # via USE_CCACHE=ON; this just gives its cache dir somewhere durable.  Loose key like Unix.
+      - name: Cache ccache (Windows)
+        uses: actions/cache@v5
+        with:
+          path: ${{ github.workspace }}\.ccache
+          key: ccache-win-${{ matrix.python-version }}-${{ github.sha }}
+          restore-keys: |
+            ccache-win-${{ matrix.python-version }}-
+            ccache-win-
 
       - name: Build Windows
         shell: pwsh
@@ -361,12 +590,26 @@ jobs:
           $env:CMAKE_GENERATOR_TOOLSET = ''
           $env:CMAKE_PREFIX_PATH = "$env:CONDA_PREFIX\Library"
 
+          # The GitHub Windows runner now ships Visual Studio 2026 (MSVC 14.51), whose STL
+          # <yvals_core.h> hard-asserts (STL1000) that the compiler is Clang >= 20; the conda
+          # clang-cl is older.  The only errors are that version gate -- the C++17 code compiles
+          # fine -- so we opt out of the gate.  (Proper fix: ship a clang >= 20 toolchain.)
+          $env:CXXFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
+          $env:CFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
+
           $boostHeader = "$env:CONDA_PREFIX\Library\include\boost\archive\archive_exception.hpp"
           (Get-Content $boostHeader).Replace('public virtual std::exception', 'public std::exception') | Set-Content $boostHeader
 
+          # Persist ccache across runs.  USE_CCACHE=ON (CMakeLists default) already wraps clang-cl
+          # with the conda-provided ccache; only the cache DIR was ephemeral, so every run was cold.
+          # A cold cache is just a normal build, so this can only help -- never break.
+          $env:CCACHE_DIR = "${{ github.workspace }}\.ccache"
+          $env:CCACHE_MAXSIZE = '400M'
           cd ${{ github.workspace }}
           pip install build delvewheel
+          ccache --zero-stats 2>$null
           python -m build --wheel --no-isolation
+          ccache --show-stats
 
           $wheelPath = (Get-ChildItem dist/*.whl | Select-Object -First 1).FullName
           if (-not $wheelPath) { Write-Error "No wheel found in dist/"; exit 1 }
@@ -381,14 +624,25 @@ jobs:
 
   test_wheels_linux_macos:
     name: Test wheels on ${{ matrix.os }} / py${{ matrix.python-version }}
-    if: ${{ inputs.minimal != true }}
+    # ubuntu-latest is excluded below: Linux wheels run the full pytest suite *inside*
+    # the manylinux_2_34 container via CIBW_TEST_COMMAND_LINUX (see
+    # build_macos_ubuntu_wheels).  This host-runner job therefore covers macOS only;
+    # Windows is covered by test_wheels_windows.
+    #
+    # Guard: this job's matrix EXCLUDES ubuntu, so when the os matrix is ubuntu-only (a non-develop
+    # base, or `-f os=linux`/`os=windows`) it would expand to zero combinations and FAIL the run
+    # with no job to point at.  Only run when the matrix actually contains macOS.
+    if: ${{ inputs.minimal != true && contains(fromJson(needs.set_matrix.outputs.os), 'macos-14') }}
     needs: [set_matrix, build_macos_ubuntu_wheels]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 25   # backstop against a hang; healthy test runs are well under a minute
     strategy:
       fail-fast: false
       matrix:
         os: ${{ fromJson(needs.set_matrix.outputs.os) }}
         python-version: ${{ fromJson(needs.set_matrix.outputs.python_versions) }}
+        exclude:
+          - os: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v5
@@ -410,18 +664,23 @@ jobs:
 
       - name: Run Python tests
         run: |
-          pip install pytest
-          python -m pytest python/test/ -v
+          # open-mpi lets pip build mpi4py, which un-skips the MPI test modules; they run at 1 rank
+          # (their `Get_size() > 1` guards gate the distributed assertions) -- exactly as the Windows
+          # job, whose env already ships mpi4py, already runs them.  Goal: 0 skipped tests.
+          brew install open-mpi
+          pip install pytest pytest-timeout numpy sympy pandas networkx matplotlib mpi4py
+          python -m pytest python/test/ -rs -v
 
   test_wheels_windows:
     name: Test wheel on windows-${{ matrix.python-version }}
-    if: ${{ inputs.minimal != true }}
+    if: ${{ inputs.minimal != true && (inputs.os == '' || inputs.os == 'all' || inputs.os == 'windows') }}
     needs: [build_windows_wheels]
     runs-on: windows-latest
+    timeout-minutes: 25   # backstop against a hang; healthy runs are ~6 min (was 6h before the fix)
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
 
     steps:
       - uses: actions/checkout@v5
@@ -431,7 +690,7 @@ jobs:
           activate-environment: b2-windows
           environment-file: environment-win.yml
           python-version: ${{ matrix.python-version }}
-          auto-activate-base: false
+          auto-activate: false
           channel-priority: strict
 
       - name: Download wheels artifact
@@ -447,5 +706,5 @@ jobs:
           conda install -y python=${{ matrix.python-version }} --update-deps
           $py = "C:\Miniconda\envs\b2-windows\python.exe"
           & $py -m pip install --no-index --find-links dist/ bertini2
-          & $py -m pip install pytest
+          & $py -m pip install pytest pytest-timeout numpy sympy pandas networkx matplotlib
           & $py -m pytest python/test/ -v

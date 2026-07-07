@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   check_version:
-    name: Check pyproject.toml version matches tag
+    name: Check VERSION file matches tag
     runs-on: ubuntu-latest
     outputs:
       is_prerelease: ${{ steps.check.outputs.is_prerelease }}
@@ -31,17 +31,41 @@ jobs:
             exit 1
           fi
           TAG_VERSION="${TAG#v}"
-          PYPROJECT_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-          if [ "$TAG_VERSION" != "$PYPROJECT_VERSION" ]; then
-            echo "Error: tag '$TAG' does not match pyproject.toml version '$PYPROJECT_VERSION'"
+          # The version is dynamic in pyproject.toml; its single source of truth
+          # is the top-level VERSION file (read by scikit-build-core and CMake).
+          FILE_VERSION=$(tr -d '[:space:]' < VERSION)
+          if [ "$TAG_VERSION" != "$FILE_VERSION" ]; then
+            echo "Error: tag '$TAG' does not match VERSION file '$FILE_VERSION'"
             exit 1
           fi
-          echo "OK: tag '$TAG' matches pyproject.toml version '$PYPROJECT_VERSION'"
-          echo "$TAG" | grep -Eq '\.(dev|a|b|rc)[0-9]+$' && echo "is_prerelease=true" >> $GITHUB_OUTPUT || echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          echo "OK: tag '$TAG' matches VERSION file '$FILE_VERSION'"
+          # Prerelease iff the tag carries a PEP 440 pre/dev suffix.  Note only `.dev` takes a
+          # leading dot; `a`/`b`/`rc` attach directly (3.0.0rc1), so the alternation must mirror the
+          # validation regex above -- a naive `\.(dev|a|b|rc)` would misread rc1 as a FINAL release
+          # and route it to real PyPI + a GitHub Release instead of TestPyPI.
+          echo "$TAG" | grep -Eq '(\.dev[0-9]+|a[0-9]+|b[0-9]+|rc[0-9]+)$' && echo "is_prerelease=true" >> $GITHUB_OUTPUT || echo "is_prerelease=false" >> $GITHUB_OUTPUT
+
+  check_timing_freshness:
+    name: Check tutorial timings are fresh
+    needs: check_version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # Gate ONLY real releases.  We keep this as a step-level `if` (not a job-level one) so the
+      # JOB always succeeds for prereleases instead of being *skipped*: a skipped `needs` would
+      # propagate a skip through `build_and_test` (a reusable-workflow caller) and silently skip
+      # every publish/docs job under the default `if: success()`.  Prereleases (.dev/a/b/rc) are
+      # exactly when a timing refresh may not have happened yet, so for them this is a no-op pass.
+      - name: Verify the scaling-tutorial timings are not stale
+        if: needs.check_version.outputs.is_prerelease == 'false'
+        run: python tools/check_timing_freshness.py
 
   build_and_test:
     name: Build and test
-    needs: check_version
+    # No job-level `if`: check_timing_freshness always *succeeds* for prereleases (its gate is a
+    # step), so the default success() gating here -- and, critically, in every downstream publish
+    # job -- works.  A conditional on this reusable-workflow caller would skip all of them.
+    needs: [check_version, check_timing_freshness]
     uses: ./.github/workflows/build_and_test.yml
 
   publish-to-testpypi:
@@ -149,6 +173,6 @@ jobs:
     needs: [check_version, build_and_test]
     uses: ./.github/workflows/build_docs.yml
     permissions:
-      contents: read
+      contents: write  # build_docs pushes the persistent docs-store branch (versioned docs)
       pages: write
       id-token: write

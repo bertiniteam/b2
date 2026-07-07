@@ -37,7 +37,7 @@
 
 
 extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
+extern bertini::real_mp threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_SUITE(euler_predict_tracking_basics)
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
-using Float = bertini::node::Float;
+using Complex = bertini::node::Complex;
 using ExplicitRKPredictor = bertini::tracking::predict::ExplicitRKPredictor;
 
 using Var = std::shared_ptr<Variable>;
@@ -55,13 +55,13 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
-using dbl = std::complex<double>;
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using complex_dbl = std::complex<double>;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 
 
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 using bertini::DefaultPrecision;
 using bertini::Precision;
 
@@ -70,13 +70,13 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	
 	
 	// Starting point in spacetime step
-	Vec<dbl> current_space(2);
-	current_space << dbl(2.3,0.2), dbl(1.1, 1.87);
+	Vec<complex_dbl> current_space(2);
+	current_space << complex_dbl(2.3,0.2), complex_dbl(1.1, 1.87);
 	
 	// Starting time
-	dbl current_time(0.9);
+	complex_dbl current_time(0.9);
 	// Time step
-	dbl delta_t(-0.1);
+	complex_dbl delta_t(-0.1);
 	
 	
 	
@@ -99,32 +99,21 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
 	
-	double norm_J, norm_J_inverse, size_proportion;
+	bertini::tracking::StepMetadata meta;
 	
-	Vec<dbl> predicted(2);
-	predicted << dbl(2.40310963516214640018253210912048,0.187706567388887830930493342816564),
-	dbl(0.370984337833979085688209698697074, 1.30889906180158745272421523674049);
+	Vec<complex_dbl> predicted(2);
+	predicted << complex_dbl(2.40310963516214640018253210912048,0.187706567388887830930493342816564),
+	complex_dbl(0.370984337833979085688209698697074, 1.30889906180158745272421523674049);
 	
-	Vec<dbl> euler_prediction_result;
+	Vec<complex_dbl> euler_prediction_result;
 	
 	double tracking_tolerance(1e-5);
-	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
 	std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 	
-	auto success_code = predictor->Predict(euler_prediction_result,
-										   size_proportion,
-										   norm_J, norm_J_inverse,
-										   sys,
-										   current_space, current_time,
-										   delta_t,
-										   condition_number_estimate,
-										   num_steps_since_last_condition_number_computation,
-										   frequency_of_CN_estimation,
-										   tracking_tolerance,
-										   AMP);
+	auto success_code = predictor->Predict(euler_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
 	
 	BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
@@ -168,7 +157,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
 		
-		double norm_J, norm_J_inverse, size_proportion;
+		bertini::tracking::StepMetadata meta;
 		
 		Vec<mpfr> predicted(2);
 		predicted << mpfr("2.40310963516214640018253210912048","0.187706567388887830930493342816564"),
@@ -177,23 +166,12 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		Vec<mpfr> euler_prediction_result;
 		
 		double tracking_tolerance = 1e-5;
-		double condition_number_estimate;
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(euler_prediction_result,
-											   size_proportion,
-											   norm_J, norm_J_inverse,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_condition_number_computation,
-											   frequency_of_CN_estimation,
-											   tracking_tolerance,
-											   AMP);
+		auto success_code = predictor->Predict(euler_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
 		
 		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
@@ -213,13 +191,13 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
-		Vec<dbl> current_space(2);
-		current_space << dbl(4.641588833612776e-1), dbl(7.416198487095662e-1);
+		Vec<complex_dbl> current_space(2);
+		current_space << complex_dbl(4.641588833612776e-1), complex_dbl(7.416198487095662e-1);
 		
 		// Starting time
-		dbl current_time(0.7);
+		complex_dbl current_time(0.7);
 		// Time step
-		dbl delta_t(-0.01);
+		complex_dbl delta_t(-0.01);
 		
 		
 		
@@ -234,7 +212,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		// Define homotopy system
 		sys.AddFunction( t*(pow(x,3)-1) + (1-t)*(pow(x,3) + 2) );
-		sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + mpfr_float("0.5")) );
+		sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + real_mp("0.5")) );
 		
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
@@ -243,27 +221,20 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		AMP.coefficient_bound = 2;
 		
 		
-		Vec<dbl> predicted(2);
-		predicted << dbl(0.417742995025149735840732480384),
-		dbl(0.731506850772617663577442383933525);
+		Vec<complex_dbl> predicted(2);
+		predicted << complex_dbl(0.417742995025149735840732480384),
+		complex_dbl(0.731506850772617663577442383933525);
 		
-		Vec<dbl> euler_prediction_result;
+		Vec<complex_dbl> euler_prediction_result;
 		
 		double tracking_tolerance(1e-5);
-		double condition_number_estimate;
+		bertini::tracking::StepMetadata meta;
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(euler_prediction_result,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_condition_number_computation,
-											   frequency_of_CN_estimation,
-											   tracking_tolerance);
+		auto success_code = predictor->Predict(euler_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance);
 		
 		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
@@ -302,7 +273,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		// Define homotopy system
 		sys.AddFunction( t*(pow(x,3)-1) + (1-t)*(pow(x,3) + 2) );
-		sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + mpfr_float("0.5")) );
+		sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + real_mp("0.5")) );
 		
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
@@ -318,20 +289,13 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		Vec<mpfr> euler_prediction_result;
 		
 		double tracking_tolerance = 1e-5;
-		double condition_number_estimate;
+		bertini::tracking::StepMetadata meta;
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(euler_prediction_result,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_condition_number_computation,
-											   frequency_of_CN_estimation,
-											   tracking_tolerance);
+		auto success_code = predictor->Predict(euler_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance);
 		
 		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
@@ -345,13 +309,13 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
 		
 		// Starting point in spacetime step
-		Vec<dbl> current_space(2);
-		current_space << dbl(1.0), dbl(-4.0);
+		Vec<complex_dbl> current_space(2);
+		current_space << complex_dbl(1.0), complex_dbl(-4.0);
 		
 		// Starting time
-		dbl current_time(.75+1e-13);
+		complex_dbl current_time(.75+1e-13);
 		// Time step
-		dbl delta_t(-0.1);
+		complex_dbl delta_t(-0.1);
 		
 		
 		
@@ -368,29 +332,22 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
+		[[maybe_unused]] auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		AMP.coefficient_bound = 5;
 		
 		double tracking_tolerance(1e-5);
-		double condition_number_estimate;
+		bertini::tracking::StepMetadata meta;
 		
 		unsigned num_steps_since_last_cond_num_est = 1;
 		unsigned freq_of_CN_estimation = 1;
 		
-		Vec<dbl> prediction_result;
+		Vec<complex_dbl> prediction_result;
 		
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(prediction_result,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_cond_num_est,
-											   freq_of_CN_estimation,
-											   tracking_tolerance);
+		auto success_code = predictor->Predict(prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_cond_num_est, freq_of_CN_estimation, tracking_tolerance);
 		
 		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 		
@@ -428,12 +385,12 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
+		[[maybe_unused]] auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		AMP.coefficient_bound = 5;
 		
 		double tracking_tolerance = 1e-5;
-		double condition_number_estimate;
+		bertini::tracking::StepMetadata meta;
 		
 		unsigned num_steps_since_last_cond_num_est = 1;
 		unsigned freq_of_CN_estimation = 1;
@@ -443,14 +400,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(prediction_result,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_cond_num_est,
-											   freq_of_CN_estimation,
-											   tracking_tolerance);
+		auto success_code = predictor->Predict(prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_cond_num_est, freq_of_CN_estimation, tracking_tolerance);
 		
 		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 	}
@@ -461,13 +411,13 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
 		
 		// Starting point in spacetime step
-		Vec<dbl> current_space(2);
-		current_space << dbl(1.0), dbl(-4.0);
+		Vec<complex_dbl> current_space(2);
+		current_space << complex_dbl(1.0), complex_dbl(-4.0);
 		
 		// Starting time
-		dbl current_time(.8);
+		complex_dbl current_time(.8);
 		// Time step
-		dbl delta_t(-0.1);
+		complex_dbl delta_t(-0.1);
 		
 		
 		
@@ -486,33 +436,22 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		double norm_J, norm_J_inverse, size_proportion, error_est;
+		bertini::tracking::StepMetadata meta;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_1 = 100;
 		
 		double tracking_tolerance(1e-5);
-		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_cond_num_est = 1;
 		unsigned freq_of_CN_estimation = 1;
 		
-		Vec<dbl> prediction_result;
+		Vec<complex_dbl> prediction_result;
 		
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(prediction_result,
-											   size_proportion,
-											   norm_J, norm_J_inverse,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_cond_num_est,
-											   freq_of_CN_estimation,
-											   tracking_tolerance,
-											   AMP);
+		auto success_code = predictor->Predict(prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_cond_num_est, freq_of_CN_estimation, tracking_tolerance, &AMP);
 		
 		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
@@ -547,13 +486,12 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		double norm_J, norm_J_inverse, size_proportion, error_est;
+		bertini::tracking::StepMetadata meta;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_1 = 100;
 		
 		double tracking_tolerance = 1e-5;
-		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_cond_num_est = 1;
 		unsigned freq_of_CN_estimation = 1;
@@ -563,17 +501,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(prediction_result,
-											   size_proportion,
-											   norm_J, norm_J_inverse,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_cond_num_est,
-											   freq_of_CN_estimation,
-											   tracking_tolerance,
-											   AMP);
+		auto success_code = predictor->Predict(prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_cond_num_est, freq_of_CN_estimation, tracking_tolerance, &AMP);
 		
 		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
@@ -583,13 +511,13 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
 		
 		// Starting point in spacetime step
-		Vec<dbl> current_space(2);
-		current_space << dbl(1.0), dbl(-4.0);
+		Vec<complex_dbl> current_space(2);
+		current_space << complex_dbl(1.0), complex_dbl(-4.0);
 		
 		// Starting time
-		dbl current_time(.8);
+		complex_dbl current_time(.8);
 		// Time step
-		dbl delta_t(-0.1);
+		complex_dbl delta_t(-0.1);
 		
 		
 		
@@ -608,7 +536,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		double norm_J, norm_J_inverse, size_proportion, error_est;
+		bertini::tracking::StepMetadata meta;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_2 = 100;
@@ -616,26 +544,15 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		AMP.SetPhiPsiFromBounds();
 		
 		double tracking_tolerance(1e-5);
-		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_cond_num_est = 1;
 		unsigned freq_of_CN_estimation = 1;
 		
-		Vec<dbl> prediction_result;
+		Vec<complex_dbl> prediction_result;
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(prediction_result,
-											   size_proportion,
-											   norm_J, norm_J_inverse,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_cond_num_est,
-											   freq_of_CN_estimation,
-											   tracking_tolerance,
-											   AMP);
+		auto success_code = predictor->Predict(prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_cond_num_est, freq_of_CN_estimation, tracking_tolerance, &AMP);
 		
 		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
@@ -670,13 +587,12 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		double norm_J, norm_J_inverse, size_proportion, error_est;
+		bertini::tracking::StepMetadata meta;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_2 = 100;
 		
 		double tracking_tolerance = 1e-5;
-		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_cond_num_est = 1;
 		unsigned freq_of_CN_estimation = 1;
@@ -686,17 +602,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(prediction_result,
-											   size_proportion,
-											   norm_J, norm_J_inverse,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_cond_num_est,
-											   freq_of_CN_estimation,
-											   tracking_tolerance,
-											   AMP);
+		auto success_code = predictor->Predict(prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_cond_num_est, freq_of_CN_estimation, tracking_tolerance, &AMP);
 		
 		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
@@ -737,7 +643,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
 		
-		double norm_J, norm_J_inverse, size_proportion;
+		bertini::tracking::StepMetadata meta;
 		
 		Vec<mpfr> predicted(2);
 		predicted << mpfr("2.40310963516214640018253210912048","0.187706567388887830930493342816564"),
@@ -746,23 +652,12 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		Vec<mpfr> euler_prediction_result;
 		
 		double tracking_tolerance = 1e-5;
-		double condition_number_estimate;
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
 		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
-		auto success_code = predictor->Predict(euler_prediction_result,
-											   size_proportion,
-											   norm_J, norm_J_inverse,
-											   sys,
-											   current_space, current_time,
-											   delta_t,
-											   condition_number_estimate,
-											   num_steps_since_last_condition_number_computation,
-											   frequency_of_CN_estimation,
-											   tracking_tolerance,
-											   AMP);
+		auto success_code = predictor->Predict(euler_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
 		
 		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
@@ -804,17 +699,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		mpfr("0.37098433783397908568820969869707413571104273956141", "1.3088990618015874527242152367404908738825831867988");
 		
 
-		success_code = predictor->Predict(euler_prediction_result,
-										  size_proportion,
-										  norm_J, norm_J_inverse,
-										  sys,
-										  current_space, current_time,
-										  delta_t,
-										  condition_number_estimate,
-										  num_steps_since_last_condition_number_computation,
-										  frequency_of_CN_estimation,
-										  tracking_tolerance,
-										  AMP);
+		success_code = predictor->Predict(euler_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
 		
 		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);

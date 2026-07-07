@@ -14,6 +14,8 @@ missing
 stamp-h1
 
 config.*
+# ...but bertini/config.py is a real source module, not an autotools leftover
+!bertini/config.py
 
 libtool
 

@@ -37,6 +37,7 @@
 namespace bertini{
 	namespace system{
 
+		/// \brief A collection of preconstructed example systems, for tests and demonstrations.
 		struct Precon{
 
 /**

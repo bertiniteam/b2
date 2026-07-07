@@ -51,7 +51,7 @@ template< typename T>
 inline std::ostream& operator<<(std::ostream & out, const std::vector<T> & t)
 {
 	out << "[";
-	for (int ii = 0; ii < t.size(); ++ii)
+	for (size_t ii = 0; ii < t.size(); ++ii)
 	{
 		out << t[ii];
 		if (ii!=t.size()-1)
@@ -69,7 +69,7 @@ template< typename T>
 inline std::ostream& operator<<(std::ostream & out, const std::deque<T> & t)
 {
 	out << "[";
-	for (int ii = 0; ii < t.size(); ++ii)
+	for (size_t ii = 0; ii < t.size(); ++ii)
 	{
 		out << t[ii];
 		if (ii!=t.size()-1)
@@ -101,10 +101,10 @@ private:
 	static std::string __str__(const object& obj)
 	{
 		std::ostringstream oss;
-		const ContT& self=extract<ContT>(obj)();
+		ContT self=extract<ContT>(obj)();
 		std::stringstream ss;
 		ss << "[";
-		for (int ii = 0; ii < self.size(); ++ii)
+		for (size_t ii = 0; ii < self.size(); ++ii)
 		{
 			ss << self[ii];
 			if (ii!=self.size()-1)
@@ -142,11 +142,13 @@ private:
 // derived from https://stackoverflow.com/questions/56290774/boost-python-exposing-c-class-with-constructor-taking-a-stdlist
 
 template<typename ContT>
-std::shared_ptr<ContT> create_MyClass(boost::python::list const& l)
-{	
+std::shared_ptr<ContT> create_MyClass(boost::python::object const& iterable)
+{
 	using ContainedT = typename ContT::value_type;
 
-    ContT temp{ boost::python::stl_input_iterator<ContainedT>(l)
+    // Accept ANY Python iterable, not just a list -- so e.g. VariableGroup(linalg.variable_vector('x', 3))
+    // works directly on the numpy object array, with no list() wrapping.
+    ContT temp{ boost::python::stl_input_iterator<ContainedT>(iterable)
         , boost::python::stl_input_iterator<ContainedT>() };
     return std::make_shared<ContT>(temp);
 }
@@ -173,17 +175,18 @@ struct pylist_converter
 
     static void* convertible(PyObject* object)
     {
-        if (!PyList_Check(object)) {
+        // Accept any Python iterable (list, tuple, numpy object array, ...) -- so e.g. a
+        // bertini.linalg.variable_vector converts to a VariableGroup with no list() wrapping.
+        // Strings/bytes are iterable but are never a container of our element type, so reject them.
+        if (object == Py_None || PyUnicode_Check(object) || PyBytes_Check(object))
+            return nullptr;
+
+        PyObject* iter = PyObject_GetIter(object);
+        if (!iter) {
+            PyErr_Clear();
             return nullptr;
         }
-
-        int sz = PySequence_Size(object);
-        for (int i = 0; i < sz; ++i) {
-            if (!(PyList_GetItem(object, i))) { // silviana sez: i removed a string checking call here.
-                return nullptr;
-            }
-        }
-
+        Py_DECREF(iter);
         return object;
     }
 
@@ -196,10 +199,10 @@ struct pylist_converter
 
         ContT* l = (ContT*)(storage);
 
-        int sz = PySequence_Size(object);
-        for (int i = 0; i < sz; ++i) {
-            l->push_back(boost::python::extract<ContainedT>(PyList_GetItem(object, i)));
-        }
+        boost::python::object iterable(boost::python::handle<>(boost::python::borrowed(object)));
+        boost::python::stl_input_iterator<ContainedT> it(iterable), end;
+        for (; it != end; ++it)
+            l->push_back(*it);
     }
 };
 

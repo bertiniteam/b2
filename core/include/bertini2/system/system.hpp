@@ -32,7 +32,10 @@
 #define BERTINI_SYSTEM_HPP
 
 #include <assert.h>
+#include <optional>
 #include <vector>
+#include <set>
+#include <string>
 
 
 #include <boost/archive/text_oarchive.hpp>
@@ -41,6 +44,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
+#include <boost/serialization/std_variant.hpp>
 #include <boost/type_index.hpp>
 
 #include "bertini2/mpfr_complex.hpp"
@@ -48,10 +52,13 @@
 #include "bertini2/eigen_extensions.hpp"
 
 
+#include "bertini2/detail/sha256.hpp"
 #include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/reintern.hpp"
 #include "bertini2/system/patch.hpp"
 
 #include "bertini2/system/straight_line_program.hpp"
+#include "bertini2/system/blocks/block.hpp"
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -61,33 +68,35 @@
 
 namespace bertini {
 
-	
-	enum class EvalMethod
-	{
-		FunctionTree, // using virtual methods and recursion
-		SLP // using straight line programs
-		    // now!  20230714, Eindhoven, Netherlands
-	};
+	// (included above) so the evaluation blocks can see them.
 
-	enum class DerivMethod
-	{
-		JacobianNode, // using Jacobian nodes, which are either 1 or 0 when evaluated based on the variable of differentiation
-		Derivatives // classic differentiation, using more space in memory but not requiring a variable of differentation when evaluatiing
-	};
+	namespace node { struct EncodingContext; }  // function_tree/canonical_encoding.hpp (ADR-0042)
 
+	class Slice;  // system/slice.hpp -- a thin wrapper over a LinearFormsBlock; System::Slices()
+	              // recovers them from a slice-derived system without binding the block variant.
 
 	/**
-	\brief Gets the default evaluation method for Jacobians.  One might be faster...
+	\brief A matrix of expression-tree nodes (the *symbolic* Jacobian), stored row-major.
+
+	Unlike the numeric `Mat<T>` Jacobian, this carries the partial-derivative expressions
+	themselves (one `Node` per entry).  `entries` has `rows*cols` elements in row-major order
+	(`entries[i*cols + j]` is row i, column j).  See `SymbolicJacobian`.
 	*/
-	EvalMethod DefaultEvalMethod();
-
-	DerivMethod DefaultDerivMethod();
-
+	struct NodeMatrix
+	{
+		std::vector<std::shared_ptr<node::Node>> entries; ///< row-major, length rows*cols
+		size_t rows = 0; ///< the number of rows (functions)
+		size_t cols = 0; ///< the number of columns (variables)
+	};
 
 	/**
-	\brief Get the default value for whether a system should autosimplify.
+	\brief The symbolic Jacobian of a list of functions w.r.t. a list of variables.
+
+	`J[i,j] = functions[i]` differentiated with respect to `variables[j]`, as an expression
+	tree (via `Node::Differentiate`).  No numeric evaluation occurs.  Returned row-major.
 	*/
-	bool DefaultAutoSimplify();
+	NodeMatrix SymbolicJacobian(std::vector<std::shared_ptr<node::Node>> const& functions,
+	                            VariableGroup const& variables);
 
 	/**
 	\brief The fundamental polynomial system class for Bertini2.
@@ -100,18 +109,31 @@ namespace bertini {
 	
 	public:
 		// a few local using statements to reduce typing etc.
-		using Fn = std::shared_ptr<node::Function>;
-		using Var = std::shared_ptr<node::Variable>;
-		using Nd = std::shared_ptr<node::Node>;
-		using Jac = std::shared_ptr<node::Jacobian>;
-		
+		using NE = std::shared_ptr<node::NamedExpression>;  ///< Shorthand for a shared pointer to a named expression (a function of the system).
+		using Var = std::shared_ptr<node::Variable>;  ///< Shorthand for a shared pointer to a variable node.
+		using Nd = std::shared_ptr<node::Node>;  ///< Shorthand for a shared pointer to a generic expression-tree node.
+
 		/**
 		\brief The default constructor for a system.
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(DefaultPrecision()), is_patched_(false)
+		System() : have_path_variable_(false), is_patched_(false), is_differentiated_(false), have_ordering_(false), precision_(DefaultPrecision())
 		{}
 
-		/** 
+		/**
+		\brief Construct a system from a list of functions.
+
+		The functions are added to the system, the variables appearing in them are
+		automatically discovered (see node::GatherVariables), and those variables are
+		placed into a single affine variable group (ordered alphabetically by name).
+		This is a convenience for programmatically building a system without having to
+		assemble the variable group by hand.
+
+		\param functions The functions which define the system.
+		*/
+		explicit
+		System(std::vector<Nd> const& functions);
+
+		/**
 		\brief The copy operator, creates a system from a string using the Bertini parser for Bertini classic syntax.
 		*/
 		explicit
@@ -148,7 +170,7 @@ namespace bertini {
 		/**
 		Change the precision of the entire system's functions, subfunctions, and all other nodes.
 
-		\param new_precision The new precision, in digits, to work in.  This only affects the mpfr_complex types, not double.  To use low-precision (doubles), use that number type in the templated functions.
+		\param new_precision The new precision, in digits, to work in.  This only affects the complex_mp types, not double.  To use low-precision (doubles), use that number type in the templated functions.
 		*/
 		void precision(unsigned new_precision) const;
 
@@ -165,143 +187,52 @@ namespace bertini {
 		*/
 		void Differentiate() const;
 
-
-		
 		/**
-		\brief Force re-evaluation of the system next eval of functions. If something has changed in the system, call this.
+		 \brief The symbolic Jacobian of the system, as a matrix of expression-tree nodes.
+
+		 \param usercoordinates  When true (the default), differentiate the functions *as the
+		 user authored them* with respect to the user-declared variables -- the natural
+		 (pre-homogenization) functions and the affine / projective variable groups.  The
+		 solver-added homogenizing variables never appear, and patch rows are omitted.  When
+		 false, differentiate the functions *as currently stored* (possibly homogenized) with
+		 respect to the full internal variable ordering (homogenizing variables included), and
+		 append the patch's Jacobian rows when the system is patched.
+
+		 This is purely symbolic -- it builds expression trees, it does not evaluate.  For a
+		 homogenized system the user-coordinate Jacobian relies on the natural functions stashed
+		 at homogenization time (see `pre_homogenization_functions_`).
+
+		 \return A `NodeMatrix` (row-major).
 		*/
-		void ResetFunctions() const
-		{
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			switch (eval_method_){
-			case EvalMethod::FunctionTree:
-				for (const auto& iter : functions_) 
-					iter->Reset();
-				break;
-			case EvalMethod::SLP:
-				// nothing
-				break;
-			}	
-			
-		}
+		NodeMatrix SymbolicJacobian(bool usercoordinates = true) const;
 
-		/**
-		\brief Force re-evaluation of the system next eval of Jacobians. If something has changed in the system, call this.
-		*/
-		void ResetJacobian() const
-		{
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
 
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:
-						{
-							for (const auto& iter : jacobian_) 
-								iter->Reset();
-							break;
-						}
-						case DerivMethod::Derivatives:
-						{
-							for (const auto& iter : space_derivatives_) 
-								iter->Reset();
-							break;
-						}
-					}
-
-					break;
-				}
-				case EvalMethod::SLP:
-				{
-					// nothing to do, it's not a resetting kind of thing.
-					break;					
-				}
-
-			}
-		}
-
-		void ResetTimeDerivatives() const
-		{
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
-					
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:
-						{
-							for (const auto& iter : jacobian_) 
-								iter->Reset();
-							break;
-						}
-						case DerivMethod::Derivatives:
-						{
-							for (const auto& iter : time_derivatives_) 
-								iter->Reset();
-							break;
-						}
-					}
-
-					break;
-				}
-				case EvalMethod::SLP:
-				{
-					// nothing to do, it's not a resetting kind of thing.
-					break;					
-				}
-
-			}
-		}
-
-		/**
-		\brief A complete reset of the system, so that all of functions, space derivatives, and time derivatives will all be re-evaluated.
-		*/
-		void Reset() const
-		{
-			ResetFunctions();
-			ResetJacobian();
-			ResetTimeDerivatives();
-		}
 		/**
 		 \brief Evaluate the system using the previously set variable (and time) values, in place.
 
 		It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
 
-		\return The function values of the system
-		*/ 
+		\param function_values The vector to write the function values into.
+		*/
 		template<typename T>
 		void EvalInPlace(Vec<T> & function_values) const
 		{
 			
-			if (function_values.size() != NumTotalFunctions()) 
+			if (function_values.size() != static_cast<Eigen::Index>(NumTotalFunctions())) 
 			{
 				std::stringstream ss;
 				ss << "trying to evaluate system in-place, but number length of vector into which to write the values (" << function_values.size() << ") doesn't match number of system user-defined functions plus patches ( " << NumNaturalFunctions() << "+" << NumPatches() << ") = " << NumTotalFunctions() << ").  Use System.NumTotalFunctions() to make the container for in-place evaluation";
 				throw std::runtime_error(ss.str());
 			}
 
-			switch (eval_method_){
-				case EvalMethod::FunctionTree:
-				{
-					unsigned counter(0);
-					for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-						(*iter)->EvalInPlace<T>(function_values(counter));
-					}
-					break;
-				}
+			if (!is_differentiated_)
+				Differentiate();   // syncs + (for the polynomial block) compiles the SLP
 
-				case EvalMethod::SLP:
-					{
-						slp_.GetFuncValsInPlace<T>(function_values);
-					}
-					break;
-			}
-
-
+			EvalBlocksInPlace<T>(function_values);
 			if (IsPatched())
 				patch_.EvalInPlace(function_values,
-									std::get<Vec<T> >(current_variable_values_)); // does a patch not have a caching mechanism?
-									// .segment(NumNaturalFunctions(),NumTotalVariableGroups())
-			
+				                   std::get<Vec<T> >(current_variable_values_));
+			CoerceBlockOutputPrecision(function_values);
 		}
 		
 		
@@ -334,7 +265,8 @@ namespace bertini {
 		 
 		 
 		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
+		 \param function_values The vector to write the function values into.
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
 		template<typename T, typename Derived>
@@ -342,7 +274,7 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
 
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 			{
 				std::stringstream ss;
 				ss << "trying to evaluate system, but number of input variables (" << variable_values.size() << ") doesn't match number of system variables (" << NumVariables() << ").";
@@ -352,7 +284,6 @@ namespace bertini {
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 			
 			SetVariables(variable_values.eval());
-			ResetFunctions();
 			EvalInPlace(function_values);
 		}
 		
@@ -366,7 +297,7 @@ namespace bertini {
 
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename Derived>
@@ -380,6 +311,13 @@ namespace bertini {
 
 		}
 
+		/**
+		\brief Evaluate the system at the given variable values (no path variable defined).
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param variable_values The values of the variables, for the evaluation.
+		\return The vector of function values.
+		*/
 		template<typename T>
 		Vec<T> Eval(const Vec<T> & variable_values) const
 		{
@@ -396,8 +334,9 @@ namespace bertini {
 		 Evaluate the system, provided a path variable is defined for the system, in place.
 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 
+		 \param function_values The vector to write the function values into.
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
 
@@ -408,15 +347,14 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
 
-			SetVariables(variable_values.eval());//TODO: remove this eval
+			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
 
-			ResetFunctions(); // todo, elimiante this.  i feel like setting the variables or path variable should be enough to set the flag/ take the action
 
 			EvalInPlace(function_values);
 		}
@@ -433,7 +371,7 @@ namespace bertini {
 		 Evaluate the system, provided a path variable is defined for the system.
 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
@@ -449,6 +387,14 @@ namespace bertini {
 		}
 
 
+		/**
+		\brief Evaluate the system at the given variable values and path-variable value.
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param variable_values The values of the variables, for the evaluation.
+		\param path_variable_value The current value of the path variable.
+		\return The vector of function values.
+		*/
 		template<typename T>
 		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
@@ -462,7 +408,7 @@ namespace bertini {
 		/**
 		 \brief Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
 
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
 		This is analogous to J = sys.JacobianInPlace();
 
@@ -473,48 +419,18 @@ namespace bertini {
 		{
 		
 
-			if(J.rows() != NumTotalFunctions() || J.cols() != NumVariables())
+			if(J.rows() != static_cast<Eigen::Index>(NumTotalFunctions()) || J.cols() != static_cast<Eigen::Index>(NumVariables()))
 			{
 				throw std::runtime_error("trying to evaluate jacobian of system in place, but input J doesn't have right number of columns or rows");
 			}
 			
-			const auto& vars = Variables();
-
 			if (!is_differentiated_)
 				Differentiate();
 
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:
-				{
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:{
-							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
-								for (int jj = 0; jj < NumVariables(); ++jj)
-									jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
-							break;
-						}
-						case DerivMethod::Derivatives:
-						{
-							for (int jj = 0; jj < NumVariables(); ++jj)
-								for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
-									space_derivatives_[ii+jj*NumNaturalFunctions()]->EvalInPlace<T>(J(ii,jj));
-							break;
-						}
-					}
-					break;
-				} // function tree branch
-
-				case EvalMethod::SLP:
-				{
-					this->slp_.GetJacobianInPlace<T>(J); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
-					break;					
-				}
-			}
-			
+			JacobianBlocksInPlace<T>(J);
 			if (IsPatched())
-				patch_.JacobianInPlace(J,std::get<Vec<T> >(current_variable_values_));
-			
+				patch_.JacobianInPlace(J, std::get<Vec<T> >(current_variable_values_));
+			CoerceBlockOutputPrecision(J);
 		}
 
 		
@@ -527,7 +443,7 @@ namespace bertini {
 		/**
 		Evaluate the Jacobian matrix of the system, using the previous space and time values.
 
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		*/
 		template<typename T>
 		Mat<T> Jacobian() const
@@ -546,15 +462,16 @@ namespace bertini {
 		 Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
 		 
 		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
-		 
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
+
+		 \param J The matrix to write the Jacobian into.
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
 		template<typename T>
 		void JacobianInPlace(Mat<T> & J, const Vec<T> &  variable_values) const
 		{
 
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 			
 			if (HavePathVariable())
@@ -574,14 +491,14 @@ namespace bertini {
 		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		
 		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values) const
 		{
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
 			if (HavePathVariable())
@@ -599,27 +516,26 @@ namespace bertini {
 		 Evaluate the Jacobian of the system, provided a path variable is defined for the system, in place.
 		 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
-		 \return The Jacobian matrix.
-		 
+
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
+
+		 \param J The matrix to write the Jacobian into.
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
-
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 */
 		template<typename Derived, typename T>
 		void JacobianInPlace(Mat<T> & J, const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 			
 			if (!HavePathVariable())
 				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
 			
-			SetVariables(variable_values.eval()); // TODO: remove this eval
+			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
-			ResetJacobian();
 			JacobianInPlace(J);
 		}
 
@@ -636,7 +552,7 @@ namespace bertini {
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
 
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 */
 		template<typename Derived, typename T>
 		Mat<T> Jacobian(const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
@@ -655,10 +571,18 @@ namespace bertini {
 		}
 
 
+		/**
+		\brief Compute the Jacobian of the system at the given variable and path-variable values.
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param variable_values The values of the variables.
+		\param path_variable_value The current value of the path variable.
+		\return The Jacobian matrix.
+		*/
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
 			if (!HavePathVariable())
@@ -675,7 +599,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T The number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename Derived, typename T>
@@ -685,9 +609,8 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
-			SetVariables(variable_values.eval()); //TODO: remove this eval()
+			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
-			ResetTimeDerivatives();
 			TimeDerivativeInPlace(ds_dt);
 		}
 
@@ -701,7 +624,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T The number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename Derived, typename T>
@@ -721,14 +644,20 @@ namespace bertini {
 
 
 
+		/**
+		\brief Compute the time-derivative of the system in place, after setting the variable values.
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param[out] ds_dt The vector into which to write dS/dt.
+		\param variable_values The values of the variables.
+		*/
 		template<typename Derived, typename T>
-		void TimeDerivativeInPlace(Vec<T> & ds_dt, 
+		void TimeDerivativeInPlace(Vec<T> & ds_dt,
 							const Eigen::MatrixBase<Derived> & variable_values) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
-			SetVariables(variable_values.eval()); //TODO: remove this eval()
-			ResetTimeDerivatives();
+			SetVariables(variable_values.eval());
 			TimeDerivativeInPlace(ds_dt);
 		}
 
@@ -742,7 +671,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T The number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename Derived, typename T>
@@ -756,11 +685,18 @@ namespace bertini {
 		}
 
 
+		/**
+		\brief Compute the time-derivative of the system in place, using the currently set variable values.
+
+		\tparam T The number type for evaluation (e.g. complex_dbl or complex_mp).
+		\param[out] ds_dt The vector into which to write dS/dt.
+		\throws std::runtime_error if no path variable is defined.
+		*/
 		template<typename T>
 		void TimeDerivativeInPlace(Vec<T> & ds_dt) const
 		{
 
-			if(ds_dt.size() < NumNaturalFunctions())
+			if(ds_dt.size() < static_cast<Eigen::Index>(NumNaturalFunctions()))
 			{
 				std::stringstream ss;
 				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumNaturalFunctions() << ").";
@@ -770,42 +706,15 @@ namespace bertini {
 			if (!HavePathVariable())
 				throw std::runtime_error("computing time derivative of system with no path variable defined");
 
-
 			if (!is_differentiated_)
 				Differentiate();
 
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:
-						{
-							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
-								jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
-							break;
-						}
-						case DerivMethod::Derivatives:
-						{
-							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
-								time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
-							break;
-						}
-					}
-				break;
-				} // function tree branch
-
-				case EvalMethod::SLP:
-				{
-					this->slp_.GetTimeDerivInPlace(ds_dt); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
-					break;					
-				}
-			}
-
+			TimeDerivBlocksInPlace<T>(ds_dt);
 			// the patch doesn't move with time.  derivatives 0.
 			if (IsPatched())
-				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
-					ds_dt(ii+NumNaturalFunctions()) = T(0);
-			
+				for (size_t ii = 0; ii < NumTotalVariableGroups(); ++ii)
+					ds_dt(static_cast<Eigen::Index>(ii + NumNaturalFunctions())) = T(0);
+			CoerceBlockOutputPrecision(ds_dt);
 		}
 
 		
@@ -818,7 +727,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T The number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename T>
@@ -838,6 +747,18 @@ namespace bertini {
 		\throws std::runtime_error, if the system is not polynomial, has a mismatch on the number of homogenizing variables and the number of variable groups (this would result from a partially homogenized system), or the homogenizing variable names somehow get screwed up by having duplicates.
 		*/
 		void Homogenize();
+
+		/**
+		Homogenize the system reusing externally-supplied homogenizing variables -- one per affine
+		variable group, in group order -- instead of minting fresh ones.  Used by
+		`RandomizationBlock` so a wrapped operand system shares the owning system's homogenizing
+		variables (the h-power deficit factors and the operand's functions must live in the same
+		homogeneous coordinates).  Otherwise behaves exactly like `Homogenize()` on a fresh system.
+
+		\throws std::runtime_error if the system is non-polynomial, already homogenized, or the
+		number of supplied homogenizing variables does not equal the number of affine variable groups.
+		*/
+		void Homogenize(VariableGroup const& provided_hom_vars);
 
 		/**
 		Checks whether a system is homogeneous, overall.  This means with respect to each variable group (including homogenizing variable if defined), homogeneous variable group, and ungrouped variables, if defined.
@@ -897,6 +818,12 @@ namespace bertini {
 		size_t NumHomVariables() const;
 
 		/**
+		 Get the homogenizing variables, one per affine variable group (in group order), or
+		 an empty container if the system is not homogenized.
+		 */
+		VariableGroup const& HomogenizingVariables() const { return homogenizing_variables_; }
+
+		/**
 		Get the total number of variable groups in the system, including both affine and homogenous.  Ignores the ungrouped variables, because they are not in any group.
 		*/
 		size_t NumTotalVariableGroups() const;
@@ -947,7 +874,7 @@ namespace bertini {
 		/**
 		 Set the values of the variables to be equal to the input values
 
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 \throws std::runtime_error if the number of variables doesn't match.
 
 		 The ordering of the variables matters.  
@@ -965,42 +892,28 @@ namespace bertini {
 		template<typename T>
 		void SetVariables(const Vec<T> & new_values) const
 		{
-			if (new_values.size()!= NumVariables())
+			if (new_values.size()!= static_cast<Eigen::Index>(NumVariables()))
+			{
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
-
-			const auto& vars = Variables();
+			}
 
 			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
-				if (!std::is_same<T,dbl>::value && (Precision(new_values) != this->precision()))
-					throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
-
-				if (!std::is_same<T,dbl>::value && (vars[0]->node::NamedSymbol::precision() != this->precision()) )
-					throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");
+				// A system with no variables (a constant) has an empty point: there is no
+				// precision to read from it, so skip the check.
+				if (new_values.size() > 0)
+				{
+					if constexpr (!std::is_same<T,complex_dbl>::value) {
+						if (Precision(new_values) != this->precision())
+							throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
+					}
+				}
 			#endif
 
-			if (!is_differentiated_)
-				Differentiate();
-
-
-			switch (eval_method_){
-				case EvalMethod::FunctionTree:{
-					auto counter = 0;
-
-					for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
-						(*iter)->set_current_value(new_values(counter));
-					}
-
-					std::get<Vec<T> >(current_variable_values_) = new_values;
-					break;
-				}
-				case EvalMethod::SLP:{
-					std::get<Vec<T> >(current_variable_values_) = new_values; // if this isn't here, then patch evaluation breaks.
-					slp_.SetVariableValues(new_values);
-					break;
-				}
-			} // switch
-
-			
+			// Blocks are value-in: the polynomial block feeds this stored vector into its SLP, the
+			// structured blocks compute on it directly, and the patch reads it too (see
+			// EvalBlocksInPlace).  The shared Variable nodes are no longer written during evaluation
+			// (ADR-0027), so the node DAG stays read-only across threads.
+			std::get<Vec<T> >(current_variable_values_) = new_values;
 		}
 
 
@@ -1009,7 +922,7 @@ namespace bertini {
 		 Set the current value of the path variable.
 		
 		 \throws std::runtime_error, if a path variable is not defined.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
 		 \param new_value The new updated values for the path variable.
 		 */
@@ -1019,55 +932,42 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
 
-			if (!is_differentiated_)
-				Differentiate();
-
-			switch (eval_method_){
-				case EvalMethod::FunctionTree:{
-					path_variable_->set_current_value(new_value);
-					break;
-				}
-				case EvalMethod::SLP:{
-					path_variable_->set_current_value(new_value);
-					slp_.SetPathVariable(new_value);
-				}
-			}
+			// Store the path value in the System's own per-thread buffer, NOT the shared node.
+			// Blocks are value-in and receive the path value as an argument (see EvalBlocksInPlace /
+			// CurrentPathValue), so the path-variable node is never read during evaluation (ADR-0027).
+			std::get<T>(current_path_value_) = new_value;
 		}
 
 
+		/**
+		\brief Stage the system's current point (variables and path value) for a subsequent Eval/Jacobian.
+
+		Formerly also reset the function-tree node caches; node-level evaluation is gone, so there is
+		nothing to reset -- the SLP carries its own state.
+
+		\tparam T The number type.
+		\param new_space The new variable values.
+		\param new_time The new path-variable value.
+		*/
 		template<typename T>
 		void SetAndReset(Vec<T> const& new_space, T const& new_time) const
 		{
 			SetVariables(new_space);
 			SetPathVariable(new_time);
-
-			Reset();
 		}
 
+		/**
+		\brief Stage the system's current point (variables only) for a subsequent Eval/Jacobian.
+
+		\tparam T The number type.
+		\param new_space The new variable values.
+		*/
 		template<typename T>
 		void SetAndReset(Vec<T> const& new_space) const
 		{
 			SetVariables(new_space);
-
-			Reset();
 		}
 
-		/**
-		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
-		 \param new_values The new updated values for the implicit parameters.
-		 */
-		template<typename T>
-		void SetImplicitParameters(Vec<T> new_values) const
-		{
-			if (new_values.size()!= implicit_parameters_.size())
-				throw std::runtime_error("trying to set implicit parameter values, but there is a size mismatch");
-
-			size_t counter = 0;
-			for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++)
-				(*iter)->set_current_value(new_values(counter));
-
-		}
 
 
 
@@ -1092,8 +992,21 @@ namespace bertini {
 
 
 		/**
+		 \brief Replace the entire variable-group structure of the system.
+
+		 Clears all existing affine, homogeneous, and ungrouped variables (and any
+		 homogenizing variables introduced by a prior Homogenize), then installs the
+		 supplied groups as the system's affine variable groups, in order.  The path
+		 variable, if any, is preserved.
+
+		 \param groups The affine variable groups to install.
+		 */
+		void SetVariableGroups(std::vector<VariableGroup> const& groups);
+
+
+		/**
 		 Add a homogeneous (projective) variable group to the system.  The system must be homogeneous with respect to this group, though this is not verified at the time of this call.
-		 
+
 		 \param v The variable group to add.
 		 */
 		void AddHomVariableGroup(VariableGroup const& v);
@@ -1139,51 +1052,16 @@ namespace bertini {
 
 		 \param F The parameter to add.
 		 */
-		void AddParameter(Fn const& F);
-
-		/**
-		 Add some explicit parameters to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
-
-		 \param F The parameters to add.
-		 */
-		void AddParameters(std::vector<Fn> const& F);
+		void AddParameter(NE const& F);
 
 
 
 		/**
-		 Add a subfunction to the system.
-
-		 Tacks them onto the end of the system.
-
-		 \param F The subfunction to add.
-		 */
-		void AddSubfunction(Fn const& F);
-
-		/**
-		 Add some subfunctions to the system.
-
-		 Tacks them onto the end of the system.
-
-		 \param F The subfunctions to add.
-		 */
-		void AddSubfunctions(std::vector<Fn> const& F);
-
-
-
-		/**
-		 Add a function to the system.
+		 Add a function to the system, as a bare expression.
 
 		 \param F The function to add.
 		 */
-		void AddFunction(Fn const& F);
-
-		/**
-		 Add a function to the system.
-
-		 \param F The function to add.
-		 \param name The name of the function
-		 */
-		void AddFunction(Nd const& F, std::string const& name = "unnamed_function");
+		void AddFunction(Nd const& F);
 
 
 		/**
@@ -1191,7 +1069,195 @@ namespace bertini {
 
 		 \param F The functions to add.
 		 */
-		void AddFunctions(std::vector<Fn> const& F);
+		void AddFunctions(std::vector<Nd> const& F);
+
+		/**
+		\brief Append an evaluation block (products-of-linears, blend, ...).
+
+		A block-composed system evaluates its blocks (in the order added) instead of the
+		function-tree / SLP functions; blocks contribute the leading "natural" rows, with
+		any patch appended after, exactly as for a classic system.
+		*/
+		void AddBlock(Block b) { ThrowIfSealed("AddBlock"); blocks_.push_back(std::move(b)); }
+
+		/// Read-only access to the system's evaluation blocks (in evaluation order).  For
+		/// introspection / testing -- e.g. reading a RandomizationBlock's matrix; the variant
+		/// itself stays out of the Python surface.
+		std::vector<Block> const& Blocks() const { return blocks_; }
+
+		/// \brief Recover the linear-form slices embedded in this system, one per LinearFormsBlock
+		/// (empty if the system has none).  Lets a user back out the slice structure of a system
+		/// built from a slice -- the Python-facing alternative to exposing the Block variant.
+		/// Defined in system.cpp (needs the full Slice type).
+		std::vector<Slice> Slices() const;
+
+		/// Remove the polynomial block (the System's natural functions), leaving any structured
+		/// blocks and the variable structure / patch intact.  Used to turn a copy of a System
+		/// into a homotopy shell whose rows come from a blend block rather than its own
+		/// functions (FormHomotopy): `h = target; h.ClearFunctions(); h.AddBlock(blend);`.
+		void ClearFunctions()
+		{
+			ThrowIfSealed("ClearFunctions");
+			for (auto it = blocks_.begin(); it != blocks_.end(); )
+			{
+				if (std::holds_alternative<blocks::PolynomialBlock>(*it))
+					it = blocks_.erase(it);
+				else
+					++it;
+			}
+			InvalidateDifferentiation();
+		}
+
+		/// \brief Whether this system is evaluated from blocks rather than the function tree.
+		bool HasBlocks() const { return !blocks_.empty(); }
+
+		/// Does the system have any non-polynomial (structured) block -- products-of-linears,
+		/// linear-forms, blend?  Every system has a PolynomialBlock for its functions after the
+		/// fold, so HasBlocks() is no longer the right test for "needs whole-System blending";
+		/// this is.  (e.g. an MHom start system has a products block; a total-degree start does not.)
+		bool HasStructuredBlocks() const
+		{
+			for (auto const& b : blocks_)
+				if (!std::holds_alternative<blocks::PolynomialBlock>(b))
+					return true;
+			return false;
+		}
+
+		/// \brief Remove all evaluation blocks (the system reverts to its function-tree
+		/// functions).  Mainly for testing the block path against the function-tree path.
+		void ClearBlocks() { ThrowIfSealed("ClearBlocks"); blocks_.clear(); }
+
+
+		////////////////////
+		//
+		//  content identity (ADR-0042)
+		//
+		//////////////////
+
+		/**
+		\brief The canonical exact text encoding of this system -- the persistent-identity
+		substrate (ADR-0042).
+
+		Versioned (`b2sysenc/1` header, which also pins the session canonicalization settings),
+		exact (coefficients by their exact digits), and deterministic: everything
+		evaluation-relevant is included (functions, variable groups + types + time order, path
+		variable, parameters, patch and randomization/blend coefficients -- randomness is
+		identity), and only transient eval state is excluded.  Any change to what this emits is
+		digest-breaking: bump the version and the golden fixture in the same commit.
+		*/
+		std::string CanonicalEncodingText() const;
+
+		/**
+		\brief The persistent content digest: SHA-256 of CanonicalEncodingText().
+
+		Stable across runs, compilers, and sessions -- the L2 identity key a solutions
+		database references systems (and homotopies) by.
+		*/
+		detail::Digest256 ContentDigest() const;
+
+		/**
+		\brief In-process hash derived from ContentDigest() (its first 8 bytes).
+
+		IsSame(other) implies equal Hash() by construction.
+		*/
+		std::size_t Hash() const;
+
+		/**
+		\brief Content equality: equal ContentDigest().
+
+		\param other The system to compare against.
+		\return true iff the two systems have identical canonical encodings.
+		*/
+		bool IsSame(System const& other) const;
+
+		/**
+		\brief Seal this system: memoize its ContentDigest() and forbid structural mutation
+		(hashcons-on-freeze, ADR-0042).  Idempotent.
+
+		After sealing, structural mutators (AddFunction, Homogenize, AutoPatch, ...) throw
+		std::logic_error; transient operations (SetVariables, precision, Differentiate,
+		evaluation) remain allowed.  Copying a sealed system yields an UNSEALED copy -- the
+		copy-on-write escape hatch.  ("Seal", not "freeze": ADR-0027's freeze set is
+		evaluation-time input currying, a different concept; they compose.)
+		*/
+		void Seal();
+
+		/// \brief Whether this system has been sealed against structural mutation (ADR-0042).
+		bool IsSealed() const;
+
+		/**
+		\brief Re-intern every node this system holds after deserialization (ADR-0042).
+
+		Deserialization constructs nodes outside the intern tables, so a loaded system's
+		nodes would fork the intern universe.  This remaps functions, constant
+		subfunctions, variable groups, homogenizing variables, path variable, parameters,
+		the pre-homogenization snapshot, and every node-holding block (operand systems
+		recursively) through node::Reintern with ONE shared memo -- so group members and
+		in-tree variables remain the same objects.  Derived caches referencing old nodes
+		(derivatives, SLPs, the ordering cache) are dropped and recompute on demand.
+
+		Content is unchanged (the digest is invariant), so this is allowed on a sealed
+		system.  Prefer LoadSystemUnified, which packages load -> reintern -> intern.
+
+		\param memo The pass's memo; share it when re-interning several loaded objects.
+		*/
+		void ReinternNodes(node::ReinternMemo& memo);
+
+		/// \brief Build an equivalent **pure function-tree** System: every block's functions
+		/// expressed as function-tree nodes, gathered into a single PolynomialBlock, with the
+		/// same variables, path variable, and patch (the patch is reused, not re-expressed).
+		///
+		/// This is a verification / interop oracle — the block path exists for performance and
+		/// precision control, so this is NOT a replacement for block evaluation.  It lets the
+		/// block-composed evaluation be cross-checked against the function-tree path
+		/// (eval / Jacobian must agree).  Scoped to the current block types; a block that cannot
+		/// be expanded throws.
+		System ExpandToFunctionTree() const;
+
+		/// \brief The system's natural (pre-patch) functions as function-tree expression nodes,
+		/// expanding any structured block.  Used by ExpandToFunctionTree and, recursively, by
+		/// BlendBlock expansion (a blend is sum_i c_i(t) * operand_i, each operand expanded).
+		std::vector<Nd> NaturalFunctionsAsNodes() const;
+
+
+		/**
+		\brief Randomize an overdetermined system down to a square one, returning a NEW system.
+
+		An overdetermined system (N natural functions, n variables, N > n) is replaced by n generic
+		combinations whose isolated solutions still contain this system's -- the standard squaring-up
+		so the isolated solutions can be found by homotopy continuation (solve the square result,
+		then discard the extraneous solutions by re-evaluating this system).
+
+		The returned system carries a single `RandomizationBlock` wrapping a copy of this system; the
+		combination is `g_i = sum_j R_ij f_j` (the block applies the homogenizing-variable powers
+		needed when the functions differ in degree).  **This system is not mutated** -- any internal
+		degree sorting happens on the copy.
+
+		Auto form: for a single affine variable group the functions are sorted by descending degree
+		and `R = [I | C]` (C random), giving the optimal total-degree path count (the product of the
+		n largest degrees); for several variable groups a dense random `R` is used with a common
+		target multidegree.
+
+		\throws std::runtime_error if the system is underdetermined (fewer functions than variables).
+		*/
+		System Randomize() const;
+
+		/**
+		\brief Randomize using a caller-supplied (exact) coefficient matrix R, leaving the functions
+		in their current order.  R has one row per desired randomized function and one column per
+		natural function of this system.  Returns a NEW system; this one is not mutated.
+
+		\throws std::runtime_error if R's column count does not equal this system's natural-function count.
+		*/
+		System Randomize(Mat<complex_mp> const& R) const;
+
+		/**
+		\brief The randomization matrix R of a system produced by Randomize() (its first
+		RandomizationBlock's n x N coefficient matrix).
+
+		\throws std::runtime_error if this system carries no randomization block.
+		*/
+		Mat<complex_mp> RandomizationMatrix() const;
 
 
 
@@ -1204,15 +1270,7 @@ namespace bertini {
 
 		 \param C The constant to add.
 		 */
-		void AddConstant(Fn const& C);
-
-
-		/**
-		 Add some constant functions to the system.  Constants must not depend on anything which can vary -- they're constant!
-
-		 \param C The constants to add.
-		 */
-		void AddConstants(std::vector<Fn> const& C);
+		void AddConstant(NE const& C);
 
 
 
@@ -1232,12 +1290,24 @@ namespace bertini {
 		*/
 		bool HavePathVariable() const;
 
-		auto& GetPathVariable() const{
-			if (this->HavePathVariable())
-				return this->path_variable_;
-			else
-				throw std::runtime_error("trying to get path variable for a system which doesn't have a path variable defined");
-		}
+		/// \brief Get the system's path variable (throws if none is defined).
+		const Var& GetPathVariable() const;
+
+		/**
+		 \brief Collect the names of every variable the user could reference.
+
+		 Gathers names from all variable groups (ungrouped, affine, projective),
+		 the homogenizing variables, and the implicit parameters.  Reads the raw
+		 group members directly, so it is safe on a partially-built or
+		 not-yet-homogenized system (unlike VariableOrdering, which throws on a
+		 hom-var/affine-group mismatch).  The path variable itself is not included.
+
+		 Used to guarantee an auto-constructed homotopy's path variable never
+		 collides with a user variable.  \see UniquePathVariableName, AddPathVariable.
+
+		 \return The set of variable/parameter names in the system.
+		 */
+		std::set<std::string> VariableNameSet() const;
 
 		/**
 		 Order the variables, by the order in which the groups were added.
@@ -1280,7 +1350,7 @@ namespace bertini {
 		/**
 		\brief Dehomogenize a point, using the variable grouping / structure of the system.
 		
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
 		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the total number of var
 		*/
@@ -1288,7 +1358,7 @@ namespace bertini {
 		Vec<T> DehomogenizePoint(Vec<T> const& x) const
 			{
 
-				if (x.size()!=NumVariables()){
+				if (x.size()!=static_cast<Eigen::Index>(NumVariables())){
 					std::stringstream message;
 					message << "dehomogenizing point with incorrect number of coordinates. input has ";
 					message << x.size();
@@ -1304,25 +1374,97 @@ namespace bertini {
 			}
 
 
+		/**
+		\brief The infinity norm of a point after dehomogenization.
+
+		This is the single canonical "how big is this point, in user coordinates" measurement.
+		An endpoint going to infinity has its dehomogenized coordinates blow up, so this is what
+		the endgames test against `Security::max_norm` to detect divergence, and what the
+		zero-dim solver tests against `endpoint_finite_threshold` to classify finite/infinite
+		endpoints.  Routing both through here keeps those decisions consistent: never compare the
+		raw internal (homogenized, on-patch) coordinates, which carry the homogenizing variable
+		and patch scaling.
+
+		\tparam T the number-type of the point.  Returns the associated real magnitude type.
+		*/
+		template<typename T>
+		auto InfinityNormOfDehomogenized(Vec<T> const& x) const
+		{
+			return DehomogenizePoint(x).template lpNorm<Eigen::Infinity>();
+		}
 
 
 		/**
-		 \brief Get a function by its index.  
+		\brief Take a point in user (dehomogenized) coordinates into this system's internal coordinates.
 
-		 This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
+		Two steps: (1) insert the homogenizing coordinate, with value 1, for each affine
+		variable group, per the FIFO variable ordering; (2) if the system is patched,
+		rescale the result onto the patch.  The result is the projectively-identical
+		point expressed in the coordinates the solver works in -- suitable for
+		comparison with internal-coordinate solutions, or as a start point for further
+		tracking re-using this system's patch.
+
+		This is the inverse of DehomogenizePoint: DehomogenizePoint(HomogenizePoint(p)) == p.
+		On an unhomogenized, unpatched system this is the identity.
+
+		\tparam T the number-type.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
+
+		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the number of natural variables of the system.
+		*/
+		template<typename T>
+		Vec<T> HomogenizePoint(Vec<T> const& x) const
+			{
+
+				if (x.size()!=static_cast<Eigen::Index>(NumNaturalVariables())){
+					std::stringstream message;
+					message << "homogenizing point with incorrect number of coordinates. input has ";
+					message << x.size();
+					message << " but system expects ";
+					message << NumNaturalVariables();
+					throw std::runtime_error(message.str());
+				}
+
+				if (!have_ordering_)
+					ConstructOrdering();
+
+				auto x_homogenized = HomogenizePointFIFO(x);
+
+				if (IsPatched())
+					RescalePointToFitPatchInPlace(x_homogenized);
+
+				return x_homogenized;
+			}
+
+
+
+
+		/**
+		 \brief Get a function by its index, as a function-tree node.
+
+		 Works for every block type: structured blocks (linear forms, products of linears,
+		 randomization, blend) are expanded to their node form on demand, so this is in sync with
+		 NumNaturalFunctions().  Throws std::out_of_range if the index is past the end (rather than
+		 dereferencing past it -- the old un-checked version segfaulted on slice-derived systems
+		 that have no PolynomialBlock).
 		*/
 		auto Function(unsigned index) const
 		{
-			return functions_[index];
+			auto fns = NaturalFunctionsAsNodes();
+			if (index >= fns.size())
+				throw std::out_of_range("System::Function index out of range");
+			return fns[index];
 		}
 
-		
+
 		/**
-		 \brief Get the functions.  
+		 \brief Get the functions, as function-tree nodes.
+
+		 Expands any structured block (so it agrees with NumNaturalFunctions() and Function(i),
+		 even for systems built purely from a slice / start-system block).
 		*/
-		auto GetNaturalFunctions() const
+		std::vector<Nd> GetNaturalFunctions() const
 		{
-			return functions_;
+			return NaturalFunctionsAsNodes();
 		}
 
 
@@ -1344,6 +1486,7 @@ namespace bertini {
 		}
 
 
+		/// \brief Get the system's path variable node (the raw stored pointer; may be null if unset).
 		const Var& PathVariable() const
 		{
 			return path_variable_;
@@ -1359,7 +1502,7 @@ namespace bertini {
 		 for (int jj = 0; jj < num_vars; ++jj)
 			for (int ii = 0; ii < num_functions; ++ii)
 				space_derivatives_[ii+jj*num_functions] = functions_[ii]->Differentiate(vars[jj]);
-		 ```		
+		 ```
 		 */
 		std::vector< Nd > GetSpaceDerivatives() const;
 
@@ -1454,6 +1597,7 @@ namespace bertini {
 		void CopyPatches(System const& other);
 
 
+		/// \brief Get a copy of the system's patch.
 		Patch GetPatch() const
 		{
 			return patch_;
@@ -1468,6 +1612,10 @@ namespace bertini {
 		}
 
 
+		/// \brief Rescale a point so it lies on the system's patch, returning the rescaled copy.
+		/// \tparam T The number type.
+		/// \param x The point to rescale.
+		/// \return The rescaled point.
 		template <typename T>
 		Vec<T> RescalePointToFitPatch(Vec<T> const& x) const
 		{
@@ -1475,11 +1623,24 @@ namespace bertini {
 		}
 
 
+		/// \brief Rescale a point in place so it lies on the system's patch.
+		/// \tparam T The number type.
+		/// \param[in,out] x The point to rescale.
 		template<typename T>
 		void RescalePointToFitPatchInPlace(Vec<T> & x) const
 		{
 			patch_.RescalePointToFitInPlace(x);
 		}
+		/**
+		\brief Human-facing description of the system, block by block.
+
+		Each block describes the rows it owns (labelled `f_k` in function-vector order).  `verbose ==
+		false` (the default, used by `operator<<` / Python `str`) shows placeholder symbols for the
+		structured blocks' matrices/coefficients; `verbose == true` reveals the actual numbers and the
+		underlying functions of randomization / blend blocks.  This is for reading, not re-parsing.
+		*/
+		void Describe(std::ostream& out, bool verbose = false) const;
+
 		/**
 		 \brief Overloaded operator for printing to an arbirtary out stream.
 		 */
@@ -1490,6 +1651,10 @@ namespace bertini {
 		 \brief Clear the entire structure of variables in a system.  Reconstructing it is up to you.
 		*/
 		void ClearVariables();
+
+
+
+
 
 
 		/**
@@ -1503,59 +1668,11 @@ namespace bertini {
 		*/ 
 		void CopyVariableStructure(System const& other);
 		
-		/**
-		\brief One of a family of functions indicating whether we can assume the system will always have uniform precision.
-
-		\see PleaseAssumeUniformPrecision AssumeUniformPrecision IsAssumingUniformPrecision
-		*/
-		void DontAssumeUniformPrecision()
-		{
-			AssumeUniformPrecision(false);
-		}
-
-		void PleaseAssumeUniformPrecision()
-		{
-			AssumeUniformPrecision(true);
-		}
-
-		void AssumeUniformPrecision(bool val)
-		{
-			assume_uniform_precision_ = false;
-		}
-
-		/** 
-		\brief yon getter for the obvious thing it gets
-		*/
-		auto IsAssumingUniformPrecision() const
-		{
-			return assume_uniform_precision_;
-		}
-
-		inline
-		void PleaseAutoSimplify()
-		{
-			SetAutoSimplify(true);
-		}
-
-		inline
-		void DontAutoSimplify()
-		{
-			SetAutoSimplify(false);
-		}
-
-		void SetAutoSimplify(bool val)
-		{
-			auto_simplify_ = val;
-		}
-
-
-		/**
-		\brief Query the state of autosimplification
-		*/
-		auto IsAutoSimplifying() const
-		{
-			return auto_simplify_;
-		}
+		// The Please/Dont AssumeUniformPrecision family was removed: the setter had
+		// ignored its argument (always storing false) for ages, so the early-out in
+		// System::precision() it was meant to enable was dead code, and skipping the
+		// propagation is unsound anyway (e.g. the SLP can be at a different precision
+		// than precision_ claims).  precision() now always propagates.
 
 		/**
 		\brief Simplify the functions contained in the system.
@@ -1579,40 +1696,7 @@ namespace bertini {
 		void Simplify();
 
 
-		/**  
-		 \brief Set  method being used for evaluation
-		 * */
-		void SetEvalMethod(EvalMethod method)
-		{
-			eval_method_ = method;
-		}
 
-		/**  
-		 \brief Query the current method used for evaluation
-		 * */
-		EvalMethod  GetEvalMethod() const
-		{
-			return eval_method_;
-		}
-
-
-
-
-		/**  
-		 \brief Set  method being used for differentiation
-		 * */
-		void SetDerivMethod(DerivMethod method)
-		{
-			deriv_method_ = method;
-		}
-
-		/**  
-		 \brief Query the current method used for differentiation
-		 * */
-		DerivMethod  GetDerivMethod() const
-		{
-			return deriv_method_;
-		}
 
 
 		/**
@@ -1655,6 +1739,11 @@ namespace bertini {
 		friend const System operator*(Nd const&  N, System const& s);
 	private:
 
+		/// Shared back end of the Randomize overloads: given the overdetermined operand (already a
+		/// copy, sorted or not) and a finished coefficient matrix, compute the per-row target
+		/// multidegrees, build the RandomizationBlock, and return a new system carrying it.
+		System AssembleRandomized(std::shared_ptr<System> operand, Mat<complex_mp> coefficients) const;
+
 		/**
 		\brief Get the sizes according to the FIFO ordering.
 		*/
@@ -1671,7 +1760,7 @@ namespace bertini {
 		/**
 		\brief Dehomogenize a point according to the FIFO variable ordering.
 	
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+		\tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
 		\see FIFOVariableOrdering
 		*/
@@ -1687,7 +1776,6 @@ namespace bertini {
 
 			unsigned affine_group_counter = 0;
 			unsigned hom_group_counter = 0;
-			unsigned ungrouped_variable_counter = 0;
 
 			unsigned hom_index = 0; // index into x, the point we are dehomogenizing
 			unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
@@ -1715,12 +1803,12 @@ namespace bertini {
 					{
 						for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
 							x_dehomogenized(dehom_index++) = x(hom_index++);
+						hom_group_counter++; // was missing; mattered only for multiple hom groups of differing sizes
 						break;
 					}
 					case VariableGroupType::Ungrouped:
 					{
 						x_dehomogenized(dehom_index++) = x(hom_index++);
-						ungrouped_variable_counter++;
 						break;
 					}
 					default:
@@ -1733,60 +1821,252 @@ namespace bertini {
 			return x_dehomogenized;
 		}
 
-		void DifferentiateUsingDerivatives() const;
-		void DifferentiateUsingJacobianNode() const;
+
+		/**
+		\brief FIFO-ordering implementation of HomogenizePoint's first step: insert
+		the homogenizing coordinate, with value 1, at each affine group's slot.
+		Homogeneous groups and ungrouped variables pass through.  Patch rescaling is
+		the caller's job.
+		*/
+		template<typename T>
+		Vec<T> HomogenizePointFIFO(Vec<T> const& x) const
+		{
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(homogenizing_variables_.size()==0 || homogenizing_variables_.size()==NumVariableGroups() && "must have either 0 homogenizing variables, or the number of homogenizing variables must match the number of affine variable groups.");
+			#endif
+
+			bool is_homogenized = homogenizing_variables_.size()!=0;
+			if (!is_homogenized)
+				return x;
+
+			Vec<T> x_homogenized(NumVariables());
+
+			unsigned affine_group_counter = 0;
+			unsigned hom_group_counter = 0;
+
+			unsigned dehom_index = 0; // index into x, the user-coordinates point
+			unsigned hom_index = 0; // index into x_homogenized, the point we are computing
+
+			for (auto& iter : time_order_of_variable_groups_)
+			{
+				switch (iter){
+					case VariableGroupType::Affine:
+					{
+						x_homogenized(hom_index++) = T(1);
+						for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+							x_homogenized(hom_index++) = x(dehom_index++);
+						affine_group_counter++;
+						break;
+					}
+					case VariableGroupType::Homogeneous:
+					{
+						for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
+							x_homogenized(hom_index++) = x(dehom_index++);
+						hom_group_counter++;
+						break;
+					}
+					case VariableGroupType::Ungrouped:
+					{
+						x_homogenized(hom_index++) = x(dehom_index++);
+						break;
+					}
+					default:
+					{
+						throw std::runtime_error("unacceptable VariableGroupType in HomogenizePointFIFO");
+					}
+				}
+			}
+
+			return x_homogenized;
+		}
+
+		// --- the System's polynomial block (its functions live here after the fold) ---
+
+		/// Get the System's PolynomialBlock, creating an (empty) one in blocks_ if none exists.
+		blocks::PolynomialBlock& PolyBlock()
+		{
+			for (auto& b : blocks_)
+				if (auto* p = std::get_if<blocks::PolynomialBlock>(&b))
+					return *p;
+			blocks_.emplace_back(blocks::PolynomialBlock{});
+			return std::get<blocks::PolynomialBlock>(blocks_.back());
+		}
+
+		/// Find the System's PolynomialBlock, or nullptr if it has none (e.g. a pure
+		/// structured system, or a freshly-constructed one with no functions yet).
+		blocks::PolynomialBlock const* PolyBlockPtr() const
+		{
+			for (auto const& b : blocks_)
+				if (auto* p = std::get_if<blocks::PolynomialBlock>(&b))
+					return p;
+			return nullptr;
+		}
+
+		/// The polynomial block's functions (an empty list if there is no polynomial block).
+		std::vector<Nd> const& PolyFunctions() const
+		{
+			static const std::vector<Nd> none;
+			auto* p = PolyBlockPtr();
+			return p ? p->Functions() : none;
+		}
+
+		/// Mark the blocks as needing (re)differentiation after a structural change.
+		void InvalidateDifferentiation() const
+		{
+			is_differentiated_ = false;
+			if (auto* p = PolyBlockPtr())
+				p->Invalidate();
+		}
+
+		/// Push the System-owned context (variable ordering, path variable, auto-simplify) into
+		/// the PolynomialBlock before it differentiates/evaluates.  The block's setters are
+		/// idempotent (they only invalidate on real change), so this is safe to call repeatedly.
+		void SyncPolyBlock() const
+		{
+			if (auto* p = PolyBlockPtr())
+			{
+				p->SetVariableOrdering(Variables());
+				if (have_path_variable_) p->SetPathVariable(path_variable_);
+				else                     p->ClearPathVariable();
+			}
+		}
 
 		/**
 		 Puts together the ordering of variables, and stores it internally.
 		*/
 		void ConstructOrdering() const;
 
+		/// \brief The current path-variable value as type T (zero if no path variable).
+		template <typename T>
+		T CurrentPathValue() const
+		{
+			if (have_path_variable_)
+				return std::get<T>(current_path_value_);
+			return T(0);
+		}
+
+		/// \brief Force a block-path evaluation result to the system's working precision.
+		///
+		/// A block evaluates correctly at its working precision, but the *result* container
+		/// (function values / Jacobian / time derivative) is allocated by the caller, often at
+		/// whatever the ambient DefaultPrecision happens to be, and Eigen's coefficient-wise
+		/// assignment into it preserves the destination entry's precision.  So writing a
+		/// 20-digit block value into a result entry that was allocated at, say,
+		/// MaxPrecisionAllowed leaves a 20-digit value carried at 1000-digit precision.  The
+		/// adaptive tracker then propagates that over-precise value as the path point and the
+		/// next System::SetVariables throws (point precision != system precision).  Coercing the
+		/// whole result to precision_ here makes a block-composed System honor the contract that
+		/// its evaluations come out at its working precision, exactly as the SLP path does.
+		/// No-op for double (which carries no precision).
+		template <typename Derived>
+		void CoerceBlockOutputPrecision(Eigen::MatrixBase<Derived>& result) const
+		{
+			using Scalar = typename Derived::Scalar;
+			if constexpr (!std::is_same<Scalar, complex_dbl>::value)
+			{
+				using bertini::Precision;
+				Precision(result, precision_);
+			}
+		}
+
+		/// \brief Evaluate the blocks' function values into the leading (natural) rows.
+		template <typename T>
+		void EvalBlocksInPlace(Vec<T>& function_values) const
+		{
+			const auto& vars = std::get<Vec<T> >(current_variable_values_);
+			const T t = CurrentPathValue<T>();
+			Eigen::Index row = 0;
+			for (auto const& blk : blocks_)
+				std::visit([&](auto const& b){
+					const Eigen::Index n = static_cast<Eigen::Index>(b.NumFunctions());
+					b.template EvalInPlace<T>(function_values.segment(row, n), vars, t);
+					row += n;
+				}, blk);
+		}
+
+		/// \brief Evaluate the blocks' Jacobian into the leading rows of J.
+		template <typename T>
+		void JacobianBlocksInPlace(Mat<T>& J) const
+		{
+			const auto& vars = std::get<Vec<T> >(current_variable_values_);
+			const T t = CurrentPathValue<T>();
+			Eigen::Index row = 0;
+			for (auto const& blk : blocks_)
+				std::visit([&](auto const& b){
+					const Eigen::Index n = static_cast<Eigen::Index>(b.NumFunctions());
+					Mat<T> jb(n, J.cols());                 // blocks write into a contiguous target
+					b.template JacobianInPlace<T>(jb, vars, t);
+					J.block(row, 0, n, J.cols()) = jb;
+					row += n;
+				}, blk);
+		}
+
+		/// \brief Evaluate the blocks' time-derivative into the leading rows.
+		template <typename T>
+		void TimeDerivBlocksInPlace(Vec<T>& ds_dt) const
+		{
+			const auto& vars = std::get<Vec<T> >(current_variable_values_);
+			const T t = CurrentPathValue<T>();
+			Eigen::Index row = 0;
+			for (auto const& blk : blocks_)
+				std::visit([&](auto const& b){
+					const Eigen::Index n = static_cast<Eigen::Index>(b.NumFunctions());
+					b.template TimeDerivInPlace<T>(ds_dt.segment(row, n), vars, t);
+					row += n;
+				}, blk);
+		}
+
+
+		// Append this system's canonical encoding to `out`, sharing `ctx` so operand systems
+		// (randomization / blend) and cross-function node sharing back-reference deterministically
+		// within one encoding unit.  The public CanonicalEncodingText() wraps this with a fresh
+		// context; the recursion for operand systems passes the same one.  (ADR-0042)
+		void EncodeCanonical(std::ostream& out, node::EncodingContext& ctx) const;
+
+		// Guard for structural mutators: throws std::logic_error naming `operation` if the
+		// system is sealed (ADR-0042).  First line of every structural mutator.
+		void ThrowIfSealed(char const* operation) const;
+
+		bool is_sealed_ = false; ///< Sealed against structural mutation (ADR-0042).  Copies are unsealed; serialization round-trips the flag.
+		mutable std::optional<detail::Digest256> sealed_digest_; ///< The digest memoized at Seal() (recomputed on demand after deserialization).  Not serialized.
 
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
 		std::vector< VariableGroup > hom_variable_groups_; ///< Homogeneous or projective variable groups.  System SHOULD be homogeneous with respect to these.  
 
-		VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.  
+		VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.
+
+		std::vector<Nd> pre_homogenization_functions_; ///< The system's functions as expression nodes, snapshotted just before the first Homogenize().  Empty until/unless the system is homogenized.  Used by SymbolicJacobian(usercoordinates=true) so the user-coordinate Jacobian of a homogenized system carries no homogenizing variables.  (Distinct from the polynomial block's GetNaturalFunctions(), which means "this block's own functions vs. structured-block expansions".)
 
 
 		bool have_path_variable_ = false; ///< Whether we have the variable or not.
 		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
 		
 		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
-		std::vector< Fn > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.  
+		std::vector< NE > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.
 
-		std::vector< Fn > constant_subfunctions_; ///< degree-0 functions, depending on neither variables nor the path variable.
-		std::vector< Fn > subfunctions_; ///< Any declared subfunctions for the system.  Can use these to ensure that complicated repeated structures are only created and evaluated once.
-		std::vector< Fn > functions_; ///< The system's functions.
-		
+		// The polynomial path -- functions_, subfunctions_, constant_subfunctions_, their
+		// derivatives, the SLP, and eval_method_ -- has been folded into a
+		// blocks::PolynomialBlock held in blocks_ (see PolyBlock()/PolyBlockPtr()).  The System
+		// is now a thin orchestrator over blocks + variable groups + patch.
+
 		class Patch patch_; ///< Patch on the variable groups.  Assumed to be in the same order as the time_order_of_variable_groups_ if the system uses FIFO ordering, or in same order as the AffHomUng variable groups if that is set.
 		bool is_patched_ = false;	///< Indicator of whether the system has been patched.
 
-		mutable std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
+		mutable bool is_differentiated_ = false; ///< orchestrator flag: have the blocks been differentiated + synced since the last structural change.
 
-		mutable std::vector< Nd > space_derivatives_; ///< The generated functions from differentiation with respect to space.  in column-major order to be consistent with Eigen default order.  Created when first call for a Jacobian matrix evaluation.
-
-		mutable std::vector< Nd > time_derivatives_; ///< The generated functions from differentiation with respect to time.  in column-major order to be consistent with Eigen default order.  Created when first call for a Jacobian matrix evaluation.
-
-		mutable bool is_differentiated_ = false; ///< indicator for whether the jacobian tree has been populated.
-
-		mutable StraightLineProgram slp_; ///< The straight line program.  Is mutable since  it's a has-a, not is-a relationship.
+		std::vector<Block> blocks_; ///< Evaluation blocks.  Every System has one (a PolynomialBlock for its functions); structured systems (MHom, linear forms) add more.
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 
-		mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > current_variable_values_;
+		mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > current_variable_values_;
+		mutable std::tuple< complex_dbl, complex_mp > current_path_value_{}; ///< per-thread path value (node-free; read by CurrentPathValue, written by SetPathVariable)
 
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
 		mutable bool have_ordering_ = false;
 
-		mutable unsigned precision_; ///< the current working precision of the system 
+		mutable unsigned precision_; ///< the current working precision of the system
 
-		bool assume_uniform_precision_ = false; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
-
-		EvalMethod eval_method_ = DefaultEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
-		DerivMethod deriv_method_ = DefaultDerivMethod(); ///< an enum class value, indicating which method of evaluation should be used.
-
-		bool auto_simplify_ = DefaultAutoSimplify();
 
 
 
@@ -1797,7 +2077,7 @@ namespace bertini {
 
 		/*definition of serialize function*/
 		template<class Archive>
-		void serialize(Archive & ar, const unsigned int version){
+		void serialize(Archive & ar, const unsigned int /*version*/){
 			ar & ungrouped_variables_;
 			ar & variable_groups_;
 			ar & hom_variable_groups_;
@@ -1810,40 +2090,26 @@ namespace bertini {
 			ar & implicit_parameters_;
 			ar & explicit_parameters_;
 
-			ar & constant_subfunctions_;
-			ar & subfunctions_;
-			ar & functions_;
-
-
 			ar & patch_;
 			ar & is_patched_;
 
+			// The polynomial path (functions / subfunctions / derivatives / SLP / eval+deriv
+			// methods) now lives inside the PolynomialBlock, which is archived as part of blocks_.
+			ar & blocks_;
 
-			ar & assume_uniform_precision_;
-
-			ar & eval_method_;
-			ar & deriv_method_;
-
-			ar & auto_simplify_;
 
 			// now for the cached / mutable things
 			ar & precision_;
 
-
-			// if (Archive::is_loading::value == true){
-			// 	is_differentiated_ = false;}
-			// // else
-			// // {
-				ar & is_differentiated_;
-				ar & jacobian_;
-				ar & space_derivatives_;
-				ar & time_derivatives_;
-			// }
-
-
-			ar & slp_; // does this need to be re-constructed after de-serialization?
+			ar & is_differentiated_;
 
 			ar & time_order_of_variable_groups_;
+
+			ar & pre_homogenization_functions_;
+
+			// seal flag round-trips; the memoized digest is recomputed on demand after load
+			// (guards against archives written under an older encoding version) (ADR-0042)
+			ar & is_sealed_;
 
 			// if (Archive::is_loading::value == true){
 				// have_ordering_ = false;}
@@ -1855,12 +2121,12 @@ namespace bertini {
 
 
 			// if (Archive::is_loading::value == true){
-        	// 	std::get<Vec<dbl>>(current_variable_values_).resize(NumVariables());
-        	// 	std::get<Vec<mpfr_complex>>(current_variable_values_).resize(NumVariables());
+        	// 	std::get<Vec<complex_dbl>>(current_variable_values_).resize(NumVariables());
+        	// 	std::get<Vec<complex_mp>>(current_variable_values_).resize(NumVariables());
 			// }
 			// // next two lines no matter what
-			// ar & std::get<Vec<dbl>>(current_variable_values_);
-			// ar & std::get<Vec<mpfr_complex>>(current_variable_values_);
+			// ar & std::get<Vec<complex_dbl>>(current_variable_values_);
+			// ar & std::get<Vec<complex_mp>>(current_variable_values_);
 
 		}
 
@@ -1887,6 +2153,79 @@ namespace bertini {
 
 
 	/**
+	\brief Produce a path-variable name guaranteed not to collide with any variable in `target`.
+
+	Returns `base` if `target` has no variable of that name; otherwise appends `_1`, `_2`, ...
+	to `base` and returns the first candidate absent from the system's VariableNameSet.  The
+	result is deterministic (depends only on `target`'s variable names and `base`), so a caller
+	that must recompute it later -- e.g. to decide whether a homotopy needs rebuilding -- gets the
+	same answer.  Used by the auto-construct homotopy path so a user variable named `t` (or even
+	the zero-dim sentinel name) can never clash with the injected path variable.
+
+	\param target The system whose variable names must be avoided.
+	\param base The desired path-variable name (mangled only if it collides).
+	\return A name not present in `target.VariableNameSet()`.
+	*/
+	std::string UniquePathVariableName(System const& target, std::string base = "t");
+
+	/**
+	\brief Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start.
+
+	The path variable `t` (named `path_variable_name`) is added to the returned homotopy, tracked
+	from t=1 (where H is gamma*start, so its roots are start's solutions) down to t=0 (where H is
+	target).  When `start` carries a structured evaluation block (e.g. a products-of-linears start
+	system) it cannot be fused by node arithmetic, so the two systems are combined with a
+	BlendBlock that evaluates whole Systems; otherwise the node-arithmetic combination is used.
+	This is the same construction the zero-dim solver's CloneGiven policy uses internally; it is
+	exposed so a user-authored start system can be turned into a trackable homotopy for the
+	user-homotopy solve path.
+
+	\param target The target system (H at t=0).
+	\param start The start system whose solutions seed the homotopy (H at t=1).
+	\param path_variable_name The name to give the homotopy's path variable.  Defaults to empty,
+	       meaning "choose a safe name": a collision-free name based on `t` is generated via
+	       UniquePathVariableName(target).  Pass a non-empty name to force it (it must not collide
+	       with a variable in `target`, or AddPathVariable throws).
+	\param gamma The gamma coefficient (a node).  If null, a random rational gamma is generated.
+	*/
+	System MakeHomotopy(System const& target, System const& start,
+	                    std::string const& path_variable_name = "",
+	                    std::shared_ptr<node::Node> const& gamma = nullptr);
+
+	/**
+	\brief Form a homotopy that moves ONLY some rows, leaving the rest fixed and evaluated once.
+
+	The "regeneration" homotopy: `fixed` holds the equations that do not move (the polynomial system
+	and any static linear slices); `start_moving` and `end_moving` are systems holding just the rows
+	that move, agreeing in function count and variable structure.  The result is
+
+	    H = [ fixed's blocks (unchanged) ;  (1-t)*end_moving + gamma*t*start_moving ]
+
+	with the moving rows produced by a single `BlendBlock` over `end_moving`/`start_moving` and the
+	fixed rows kept as their own sibling blocks.  Because the fixed blocks are autonomous, they are
+	evaluated exactly once per point and contribute zero to `dH/dt` -- the fixed system is never
+	re-evaluated or scaled by the path coefficient as the moving rows slide.  At t=1 the moving rows
+	are `gamma*start_moving` (so the start points are roots of `fixed` together with `start_moving`),
+	at t=0 they are `end_moving`.
+
+	The fixed rows come first, then the moving rows; build the matching target (for the user-homotopy
+	pipeline) as `fixed` concatenated with `end_moving`, and the start points as the roots of `fixed`
+	together with `start_moving`.
+
+	\param fixed The equations that do not move (evaluated once per point).
+	\param start_moving The moving rows at t=1 (their roots, with `fixed`, are the start points).
+	\param end_moving The moving rows at t=0 (the target rows).
+	\param path_variable_name The name to give the homotopy's path variable.  Defaults to empty,
+	       meaning "choose a safe name": a collision-free name based on `t` is generated via
+	       UniquePathVariableName(fixed).  Pass a non-empty name to force it (it must not collide
+	       with a variable in `fixed`, or AddPathVariable throws).
+	\param gamma The gamma coefficient (a node).  If null, a random rational gamma is generated.
+	*/
+	System MakeMovingHomotopy(System const& fixed, System const& start_moving, System const& end_moving,
+	                          std::string const& path_variable_name = "",
+	                          std::shared_ptr<node::Node> const& gamma = nullptr);
+
+	/**
 	\brief Do a deep clone of the system.  This includes the entire structure, variables, etc.  everything.
 	*/
 	System Clone(System const& sys);
@@ -1895,6 +2234,79 @@ namespace bertini {
 	\brief Free form function for simplifying systems.
 	*/
 	void Simplify(System & sys);
+
+	/**
+	\brief Hash-cons a System: return the live sealed representative with equal
+	ContentDigest() if one exists, else seal and register the candidate (ADR-0042).
+
+	The System-level analogue of node::Intern / InternProgram: a process-global,
+	mutex-guarded, weak (self-cleaning) table keyed by the full 256-bit content digest, so
+	no equality disambiguation chain is needed.  The candidate is sealed as a side effect
+	(an interned identity must not mutate); the returned handle is const -- interned
+	Systems are shared.  Copy an interned System to get an unsealed, mutable one.
+
+	\param candidate The system to intern; sealed if it becomes the representative.
+	\return The shared representative (the candidate itself on a table miss).
+	*/
+	std::shared_ptr<const System> InternSystem(std::shared_ptr<System> const& candidate);
+
+	/**
+	\brief Load a System from a text archive and unify it with the live intern universe
+	(ADR-0042): deserialize, ReinternNodes, InternSystem.
+
+	The returned handle is the live sealed representative: if an equal system already
+	exists in memory, THAT one comes back (its nodes shared with everything else); the
+	loaded copy is discarded.  This is the cross-session identity entry point -- the same
+	system loaded from two archives, or loaded and independently rebuilt, is one object.
+
+	\param in The stream holding a boost text archive written by `oa << system`.
+	\return The interned representative of the loaded system.
+	*/
+	std::shared_ptr<const System> LoadSystemUnified(std::istream& in);
+
+	/// \cond INTERNAL
+	// Explicit instantiation declarations for the two concrete numeric types.
+	// Definitions live in core/src/system/system.cpp.
+	// Suppresses re-instantiation of the heavy Eval/Jacobian/Set template bodies
+	// (with their eval_method_ switch trees) in every including TU.
+
+	extern template void System::EvalInPlace<complex_dbl>(Vec<complex_dbl>&) const;
+	extern template void System::EvalInPlace<complex_mp>(Vec<complex_mp>&) const;
+
+	extern template Vec<complex_dbl> System::Eval<complex_dbl>() const;
+	extern template Vec<complex_mp> System::Eval<complex_mp>() const;
+
+	extern template void System::JacobianInPlace<complex_dbl>(Mat<complex_dbl>&) const;
+	extern template void System::JacobianInPlace<complex_mp>(Mat<complex_mp>&) const;
+
+	extern template Mat<complex_dbl> System::Jacobian<complex_dbl>() const;
+	extern template Mat<complex_mp> System::Jacobian<complex_mp>() const;
+
+	extern template Mat<complex_dbl> System::Jacobian<complex_dbl>(const Vec<complex_dbl>&) const;
+	extern template Mat<complex_mp> System::Jacobian<complex_mp>(const Vec<complex_mp>&) const;
+
+	extern template void System::JacobianInPlace<complex_dbl>(Mat<complex_dbl>&, const Vec<complex_dbl>&) const;
+	extern template void System::JacobianInPlace<complex_mp>(Mat<complex_mp>&, const Vec<complex_mp>&) const;
+
+	extern template void System::TimeDerivativeInPlace<complex_dbl>(Vec<complex_dbl>&) const;
+	extern template void System::TimeDerivativeInPlace<complex_mp>(Vec<complex_mp>&) const;
+
+	extern template Vec<complex_dbl> System::TimeDerivative<complex_dbl>() const;
+	extern template Vec<complex_mp> System::TimeDerivative<complex_mp>() const;
+
+	extern template void System::SetVariables<complex_dbl>(const Vec<complex_dbl>&) const;
+	extern template void System::SetVariables<complex_mp>(const Vec<complex_mp>&) const;
+
+	extern template void System::SetPathVariable<complex_dbl>(complex_dbl const&) const;
+	extern template void System::SetPathVariable<complex_mp>(complex_mp const&) const;
+
+	extern template void System::SetAndReset<complex_dbl>(Vec<complex_dbl> const&, complex_dbl const&) const;
+	extern template void System::SetAndReset<complex_mp>(Vec<complex_mp> const&, complex_mp const&) const;
+
+	extern template void System::SetAndReset<complex_dbl>(Vec<complex_dbl> const&) const;
+	extern template void System::SetAndReset<complex_mp>(Vec<complex_mp> const&) const;
+	/// \endcond
+
 }
 
 

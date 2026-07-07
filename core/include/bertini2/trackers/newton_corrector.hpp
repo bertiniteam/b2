@@ -12,6 +12,7 @@
 #include "bertini2/trackers/amp_criteria.hpp"
 #include "bertini2/trackers/config.hpp"
 #include "bertini2/system/system.hpp"
+#include "bertini2/linalg/lu_solver.hpp"
 
 
 namespace bertini{
@@ -46,6 +47,7 @@ namespace bertini{
 			public:
 				
 				
+				/// \brief Construct a Newton corrector for a system, at the current default precision.
 				NewtonCorrector(const System& S) : current_precision_(DefaultPrecision())
 				{
 					ChangeSystem(S);
@@ -74,23 +76,25 @@ namespace bertini{
 				
 				
 				/**
-				 /brief Change the precision of the predictor variables and reassign the Butcher table variables.
+				 \brief Change the precision of the predictor variables and reassign the Butcher table variables.
 				 
 				 \param new_precision The new precision.
 				 
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					Precision(std::get< Vec<mpfr_complex> >(f_temp_), new_precision);
-					Precision(std::get< Vec<mpfr_complex> >(step_temp_), new_precision);
-					Precision(std::get< Mat<mpfr_complex> >(J_temp_), new_precision);
+					Precision(std::get< Vec<complex_mp> >(f_temp_), new_precision);
+					Precision(std::get< Vec<complex_mp> >(step_temp_), new_precision);
+					Precision(std::get< Mat<complex_mp> >(J_temp_), new_precision);
+					Precision(std::get< Vec<complex_mp> >(rand_temp_), new_precision);
+					Precision(std::get< Vec<complex_mp> >(solve_temp_), new_precision);
+					std::get< linalg::PartialPivLU<complex_mp> >(LU_).ChangePrecision(new_precision);
 
-					std::get< Eigen::PartialPivLU<Mat<mpfr_complex>> >(LU_) = Eigen::PartialPivLU<Mat<mpfr_complex>>(numTotalFunctions_);
-
-					current_precision_ = new_precision;				
+					current_precision_ = new_precision;
 				}
 
 
+				/// \brief Get the corrector's current working precision.
 				unsigned precision() const
 				{
 					return current_precision_;
@@ -104,112 +108,89 @@ namespace bertini{
 				 */
 				void ChangeSystem(const System& S)
 				{
-					numTotalFunctions_ = S.NumTotalFunctions();
-					numVariables_ = S.NumVariables();
-					std::get< Mat<dbl> >(J_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr_complex> >(J_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Vec<dbl> >(f_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr_complex> >(f_temp_).resize(numTotalFunctions_);
-					std::get< Vec<dbl> >(step_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr_complex> >(step_temp_).resize(numTotalFunctions_);
+					numTotalFunctions_ = static_cast<unsigned>(S.NumTotalFunctions());
+					numVariables_ = static_cast<unsigned>(S.NumVariables());
+					std::get< Mat<complex_dbl> >(J_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<complex_mp> >(J_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Vec<complex_dbl> >(f_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(f_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_dbl> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_mp> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<complex_dbl> >(solve_temp_).resize(numVariables_);
+					std::get< Vec<complex_mp> >(solve_temp_).resize(numVariables_);
+					std::get< linalg::PartialPivLU<complex_dbl> >(LU_).ChangeSize(numVariables_);
+					std::get< linalg::PartialPivLU<complex_mp> >(LU_).ChangeSize(numVariables_);
+					RefreshRandomDirection();
 				}
 
-				
-				
-				
 				/**
-				 \brief Run Newton's method in fixed precision.
-				 
-				 Run Newton's method until it converges (\f$\Delta z\f$ < tol), or the next point's norm exceeds the path truncation threshold.
-				 
-				 \return The SuccessCode indicating what happened.
-				 
-				 \tparam ComplexType The complex type for arithmetic
-				 
-				 \param[out] next_space The computed next space point.
-				 \param S The system we are tracking on.
-				 \param current_space The base point for newton correcting.
-				 \param current_time The current time value.  Note it is complex.
-				 \param tracking_tolerance The upper threshold for step size.  Must iterate correcting until the corrector step is less than this threshold in length.
-				 \param path_truncation_threshold Correcting stops the the norm of the current solution exceeds this number.
-				 \param min_num_newton_iterations The corrector must take at least this many steps.  This should be at least 1.
-				 \param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
-				 
+				 \brief (Re)draw the random probe direction used to estimate ||J^{-1}|| (the condition
+				 number) from this thread's RNG engine.
+
+				 The tracker calls this once at the start of a path track (see Tracker::TrackPath's
+				 caller / the per-path reseed point), so the direction is held fixed for the ENTIRE
+				 track of that point -- every Newton step and the endgame's sample-circle sub-tracks
+				 -- and, given a per-path RNG reseed, is reproducible regardless of how paths were
+				 distributed across workers.  It is NOT redrawn per Newton step or per TrackPath, which
+				 would both perturb condition estimates and (in the endgame) churn the RNG mid-track.
 				 */
-				
-				template <typename ComplexType>
-				SuccessCode Correct(Vec<ComplexType> & next_space,
-									   System const& S,
-									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
-									   ComplexType const& current_time,
-									   NumErrorT const& tracking_tolerance,
-									   unsigned min_num_newton_iterations,
-									   unsigned max_num_newton_iterations)
+				void RefreshRandomDirection()
 				{
-					#ifndef BERTINI_DISABLE_ASSERTS
-					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
-					#endif
-					
-					Vec<ComplexType>& step_ref = std::get< Vec<ComplexType> >(step_temp_);
-					
-					next_space = current_space;
-					for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
-					{
-						//Update the newton iterate by one iteration
-						auto success_code = EvalIterationStep(step_ref, S, next_space, current_time);
-						if(success_code != SuccessCode::Success)
-							return success_code;
-						
-						next_space += step_ref;
-						
-						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
-							return SuccessCode::Success;
-					}
-					
-					return SuccessCode::FailedToConverge;
+					std::get< Vec<complex_dbl> >(rand_temp_) = RandomOfUnits<complex_dbl>(numVariables_);
+					std::get< Vec<complex_mp> >(rand_temp_) = RandomOfUnits<complex_mp>(numVariables_);
+				}
 
-					
-
+				/**
+				 \brief The condition-number probe direction (both precisions), so the tracker can share
+				 the SAME per-path probe with the predictor -- making the predictor's and corrector's
+				 ||J^{-1}|| estimates use one consistent direction.  \see RefreshRandomDirection.
+				 */
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > const& ConditionProbe() const
+				{
+					return rand_temp_;
 				}
 
 				
 				
 				
-				
-				
+
+
 				/**
-				 \brief Run Newton's method in multiple precision.
-				 
-				 Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
-				 
-				 \tparam ComplexType The complex type for arithmetic
-				 
+				 \brief Run Newton's method, optionally with adaptive multiple precision.
+
+				 One method replaces the former fixed/AMP/out-param overloads.  When AMP_config is null
+				 it is a plain fixed-precision Newton loop (convergence only).  When AMP_config is
+				 non-null it additionally fills the step metadata (norm_delta_z, norm_J, norm_J_inverse,
+				 condition_number_estimate) and enforces AMP criteria B and C, returning
+				 HigherPrecisionNecessary on violation.
+
 				 \param[out] next_space The computed next space point.
+				 \param[out] meta Step metadata (corrector fields; only filled in the AMP path).
 				 \param S The system we are tracking on.
 				 \param current_space The base point for newton correcting.
-				 \param current_time The current time value.  Note it is complex.
-				 \param tracking_tolerance The upper threshold for step size.  Must iterate correcting until the corrector step is less than this threshold in length.
-				 \param path_truncation_threshold Correcting stops the the norm of the current solution exceeds this number.
-				 \param min_num_newton_iterations The corrector must take at least this many steps.  This should be at least 1.
-				 \param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
-				 \param AMP_config Adaptive multiple precision settings.  Using this argument is how Bertini2 knows you want to use adaptive precision.
+				 \param current_time The current time value.
+				 \param tracking_tolerance Iterate until the step is shorter than this.
+				 \param min_num_newton_iterations Take at least this many steps (>= 1).
+				 \param max_num_newton_iterations The maximum number of iterations.
+				 \param AMP_config Adaptive-precision settings, or nullptr for fixed precision.
 				 */
-				template <typename ComplexType>
-				SuccessCode Correct(Vec<ComplexType> & next_space,
+				template <typename ComplexT>
+				SuccessCode Correct(Vec<ComplexT> & next_space,
+									   StepMetadata & meta,
 									   System const& S,
-									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
-									   ComplexType const& current_time,
+									   Vec<ComplexT> const& current_space,
+									   ComplexT const& current_time,
 									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations,
-									   AdaptiveMultiplePrecisionConfig const& AMP_config)
+									   AdaptiveMultiplePrecisionConfig const* AMP_config = nullptr)
 				{
 					#ifndef BERTINI_DISABLE_ASSERTS
 					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
 					#endif
 
-					Vec<ComplexType>& step_ref = std::get< Vec<ComplexType> >(step_temp_);
-					
+					Vec<ComplexT>& step_ref = std::get< Vec<ComplexT> >(step_temp_);
+
 					next_space = current_space;
 					for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
 					{
@@ -217,107 +198,50 @@ namespace bertini{
 						auto success_code = EvalIterationStep(step_ref, S, next_space, current_time);
 						if(success_code != SuccessCode::Success)
 							return success_code;
-						
-						next_space += step_ref;
-						
-						Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
-						Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
-						
-						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
-							return SuccessCode::Success;
-						
-						NumErrorT norm_J_inverse(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
 
-						if (!amp::CriterionB<ComplexType>(NumErrorT(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, NumErrorT(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
+						next_space -= step_ref;  // step_ref = +J^{-1}f = -(Newton step); see EvalIterationStep
+
+						// Fixed precision: cheap convergence-only loop, no norms / probe / criteria.
+						if (AMP_config == nullptr)
+						{
+							if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
+								return SuccessCode::Success;
+							continue;
+						}
+
+						// Adaptive precision: fill metadata + enforce AMP criteria B and C.
+						Mat<ComplexT>& J_temp_ref = std::get< Mat<ComplexT> >(J_temp_);
+						linalg::PartialPivLU<ComplexT>& LU_ref = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
+
+						meta.norm_delta_z = NumErrorT(step_ref.template lpNorm<Eigen::Infinity>());
+						meta.norm_J = NumErrorT(J_temp_ref.norm());
+						{
+							// Reuse the FIXED probe vector generated once at setup (do NOT regenerate
+							// per call): a fresh random probe direction every Newton step occasionally
+							// produced an inflated ||J^{-1}|| estimate -> spurious HigherPrecisionNecessary
+							// -> precision escalation/grind.  A single fixed direction also makes the
+							// condition estimates comparable across steps and keeps tracking deterministic.
+							Vec<ComplexT>& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
+							Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
+							LU_ref.Solve(rand_ref, solve_ref);   // reuse the factorization from EvalIterationStep
+							meta.norm_J_inverse = NumErrorT(solve_ref.norm());
+						}
+						meta.condition_number_estimate = NumErrorT(meta.norm_J*meta.norm_J_inverse);
+
+						if ( (meta.norm_delta_z < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
+							return SuccessCode::Success;
+
+						if (!amp::CriterionB<ComplexT>(meta.norm_J, meta.norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, meta.norm_delta_z, *AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
-						
-						if (!amp::CriterionC<ComplexType>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
+
+						if (!amp::CriterionC<ComplexT>(meta.norm_J_inverse, next_space, tracking_tolerance, *AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 					}
-					
+
 					return SuccessCode::FailedToConverge;
 				}
 
-				
-				
-				
-				
-				
-				/**
-				 \brief Run Newton's method in multiple precision.
-				 
-				 Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
-				 
-				 \tparam ComplexType The complex type for arithmetic
-				 \tparam RealType The underlying real number type, used for comparitors.
-				 
-				 \param[out] next_space The computed next space point.
-				 \param[out] norm_delta_z The norm of the last step size.
-				 \param[out] norm_J The matrix norm of the Jacobian matrix.
-				 \param[out] norm_J_inverse The matrix norm of the inverse of the Jacobian matrix.
-				 \param[out] condition_number_estimate An estimate on the condition number.
-				 \param S The system we are tracking on.
-				 \param current_space The base point for newton correcting.
-				 \param current_time The current time value.  Note it is complex.
-				 \param tracking_tolerance The upper threshold for step size.  Must iterate correcting until the corrector step is less than this threshold in length.
-				 \param path_truncation_threshold Correcting stops the the norm of the current solution exceeds this number.
-				 \param min_num_newton_iterations The corrector must take at least this many steps.  This should be at least 1.
-				 \param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
-				 \param AMP_config Adaptive multiple precision settings.  Using this argument is how Bertini2 knows you want to use adaptive precision.
-				 */
-				template <typename ComplexType>
-				SuccessCode Correct(Vec<ComplexType> & next_space,
-									   NumErrorT & norm_delta_z,
-									   NumErrorT & norm_J,
-									   NumErrorT & norm_J_inverse,
-									   NumErrorT & condition_number_estimate,
-									   System const& S,
-									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
-									   ComplexType const& current_time,
-									   NumErrorT const& tracking_tolerance,
-									   unsigned min_num_newton_iterations,
-									   unsigned max_num_newton_iterations,
-									   AdaptiveMultiplePrecisionConfig const& AMP_config)
-				{
-					#ifndef BERTINI_DISABLE_ASSERTS
-					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
-					#endif
-					
-					Vec<ComplexType>& step_ref = std::get< Vec<ComplexType> >(step_temp_);
-					
-					next_space = current_space;
-					for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
-					{
-						//Update the newton iterate by one iteration
-						auto success_code = EvalIterationStep(step_ref, S, next_space, current_time);
-						if(success_code != SuccessCode::Success)
-							return success_code;
-						
-						next_space += step_ref;
-						
-						Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
-						Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
-						
-						
-						norm_delta_z = NumErrorT(step_ref.template lpNorm<Eigen::Infinity>());
-						norm_J = NumErrorT(J_temp_ref.norm());
-						norm_J_inverse = NumErrorT(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
-						condition_number_estimate = NumErrorT(norm_J*norm_J_inverse);
-												
-						if ( (norm_delta_z < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
-							return SuccessCode::Success;
-						
-						if (!amp::CriterionB<ComplexType>(norm_J, norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, norm_delta_z, AMP_config))
-							return SuccessCode::HigherPrecisionNecessary;
-						
-						if (!amp::CriterionC<ComplexType>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
-							return SuccessCode::HigherPrecisionNecessary;
-					}
-					
-					return SuccessCode::FailedToConverge;
-				}
 
-				
 			private:
 
 				///////////////////////////
@@ -337,26 +261,30 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename ComplexType, typename Derived>
-				SuccessCode EvalIterationStep(Vec<ComplexType> & newton_step,
+				template<typename ComplexT, typename Derived>
+				SuccessCode EvalIterationStep(Vec<ComplexT> & newton_step,
 											  const System& S,
-											  const Eigen::MatrixBase<Derived>& current_space, const ComplexType& current_time)
+											  const Eigen::MatrixBase<Derived>& current_space, const ComplexT& current_time)
 				{
-					Vec<ComplexType>& f_temp_ref = std::get< Vec<ComplexType> >(f_temp_);
-					Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
+					Vec<ComplexT>& f_temp_ref = std::get< Vec<ComplexT> >(f_temp_);
+					Mat<ComplexT>& J_temp_ref = std::get< Mat<ComplexT> >(J_temp_);
 					
-					Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
+					linalg::PartialPivLU<ComplexT>& LU_ref = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
 
-					S.SetAndReset<ComplexType>(current_space, current_time);
+					S.SetAndReset<ComplexT>(current_space, current_time);
 					S.EvalInPlace(f_temp_ref);
 					S.JacobianInPlace(J_temp_ref);
-					LU_ref = J_temp_ref.lu();
-					
-					if (LUPartialPivotDecompositionSuccessful(LU_ref.matrixLU())!=MatrixSuccessCode::Success)
+					// Factor a copy of J (J_temp_ref is read again afterward for meta.norm_J).  The health
+					// check is folded into Factor().
+					if (LU_ref.Factor(J_temp_ref)!=MatrixSuccessCode::Success)
 						return SuccessCode::MatrixSolveFailure;
-					
-					newton_step = LU_ref.solve(-f_temp_ref);
-					
+
+					// Solve J*newton_step = f (NOT -f): this lets us skip materializing the negated RHS
+					// temporary.  newton_step therefore holds +J^{-1}f = -(true Newton step), so callers
+					// SUBTRACT it (next_space -= newton_step).  The convergence test uses lpNorm, which is
+					// sign-insensitive, so it is unaffected.
+					LU_ref.Solve(f_temp_ref, newton_step);
+
 					return SuccessCode::Success;
 					
 				}
@@ -372,11 +300,13 @@ namespace bertini{
 				unsigned numTotalFunctions_; // Number of total functions for the current system
 				unsigned numVariables_;  // Number of variables for the current system
 				
-				std::tuple< Vec<dbl>, Vec<mpfr_complex> > f_temp_; // Variable to hold temporary evaluation of the system
-				std::tuple< Vec<dbl>, Vec<mpfr_complex> > step_temp_; // Variable to hold temporary evaluation of the newton step
-				std::tuple< Mat<dbl>, Mat<mpfr_complex> > J_temp_; // Variable to hold temporary evaluation of the Jacobian
-				
-				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_; // The LU factorization from the Newton iterates
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > f_temp_;
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > step_temp_;
+				std::tuple< Mat<complex_dbl>, Mat<complex_mp> > J_temp_;
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
+				std::tuple< Vec<complex_dbl>, Vec<complex_mp> > solve_temp_; // reused scratch: LU solve result
+
+				std::tuple< linalg::PartialPivLU<complex_dbl>, linalg::PartialPivLU<complex_mp> > LU_;
 				
 				unsigned current_precision_;
 

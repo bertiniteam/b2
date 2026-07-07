@@ -35,8 +35,8 @@ Parsing functions, taking strings and producing various other things
 """
 
 
-import bertini._pybertini.parse
+from bertini._pybertini import parse as _pybparse
 from bertini._pybertini.parse import *
 
-__all__ = dir(bertini._pybertini.parse)
+__all__ = dir(_pybparse)
 

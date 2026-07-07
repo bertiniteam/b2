@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//test/generating/mpfr_complex.cpp is free software: you can redistribute it and/or modify
+//test/generating/complex_mp.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//test/generating/mpfr_complex.cpp is distributed in the hope that it will be useful,
+//test/generating/complex_mp.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with test/generating/mpfr_complex.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with test/generating/complex_mp.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) Bertini2 Development Team
 //
@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file test/generating/mpfr_complex.cpp  Tests the generating of text from mpfr_complex's.
+\file test/generating/complex_mp.cpp  Tests the generating of text from complex_mp's.
 */
 
 
@@ -31,7 +31,7 @@
 
 
 
-using mpfr = bertini::mpfr_complex;
+using mpfr = bertini::complex_mp;
 
 BOOST_AUTO_TEST_SUITE(mpfr_complex_generating)
 

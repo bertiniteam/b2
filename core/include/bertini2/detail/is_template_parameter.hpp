@@ -44,7 +44,7 @@ namespace bertini {
 	*/
 	template <typename...>
 	struct IsTemplateParameter {
-	    static constexpr bool value = false;
+	    static constexpr bool value = false;  ///< Whether the queried type appears in the pack (base case: no).
 	};
 
 	/**
@@ -53,15 +53,16 @@ namespace bertini {
 	template <typename F, typename S, typename... T>
 	struct IsTemplateParameter<F, S, T...> {
 	    static constexpr bool value =
-	        std::is_same<F, S>::value || IsTemplateParameter<F, T...>::value;
+	        std::is_same<F, S>::value || IsTemplateParameter<F, T...>::value;  ///< Whether F appears in the pack.
 	        // either it is the same as the first one in the pack, or we need to expand to the right in the pack.
 	};
 
 
+	/// \brief IsTemplateParameter specialization accepting the candidate types packaged in a TypeList.
 	template < typename T, typename ...Ts>
 	struct IsTemplateParameter<T, TypeList<Ts...>>
 	{
-		static constexpr bool value = IsTemplateParameter<T, Ts...>::value;
+		static constexpr bool value = IsTemplateParameter<T, Ts...>::value;  ///< Whether T appears in the TypeList.
 	};
 
 

@@ -1,0 +1,16 @@
+CONFIG
+
+tracktype: 0;
+
+END;
+
+INPUT
+
+variable_group x1, x2, x3;
+function f1, f2, f3;
+
+f1 = x1^3 - 2;
+f2 = x2^3 - 3;
+f3 = x3^3 - 5;
+
+END;

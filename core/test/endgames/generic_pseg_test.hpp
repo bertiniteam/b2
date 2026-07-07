@@ -44,22 +44,22 @@ using VariableGroup = bertini::VariableGroup;
 using SuccessCode = bertini::SuccessCode;
 
 
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr_complex;
-using mpfr_float = bertini::mpfr_float;
+using complex_dbl = bertini::complex_dbl;
+using mpfr = bertini::complex_mp;
+using real_mp = bertini::real_mp;
 using mpq_rational = bertini::mpq_rational;
 
 using bertini::Precision;
 using bertini::DefaultPrecision;
 
-template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
-template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename NumT> using Vec = Eigen::Matrix<NumT, Eigen::Dynamic, 1>;
+template<typename NumT> using Mat = Eigen::Matrix<NumT, Eigen::Dynamic, Eigen::Dynamic>;
 
 
 using PrecisionConfig = bertini::tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
-using BRT = bertini::tracking::TrackerTraits<TrackerType>::BaseRealType;
-using BCT = bertini::tracking::TrackerTraits<TrackerType>::BaseComplexType;
+using BRT = bertini::tracking::TrackerTraits<TrackerType>::BaseRealT;
+using BCT = bertini::tracking::TrackerTraits<TrackerType>::BaseComplexT;
 
 template<typename ...T>
 BCT ComplexFromString(T... s)
@@ -294,13 +294,13 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.SetRandVec<BCT>(samples.back().size());
+	my_endgame.SetRandVec<BCT>(static_cast<int>(samples.back().size()));
 	my_endgame.ComputeBoundOnCycleNumber<BCT>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
 
-	auto first_upper_bound = my_endgame.UpperBoundOnCycleNumber();
+	[[maybe_unused]] auto first_upper_bound = my_endgame.UpperBoundOnCycleNumber();
 
 	//Setting up a new sample for approximation.
 	time = ComplexFromString(".0125"); //.025/2 = .0125
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 
 	my_endgame.ComputeAllDerivatives<BCT>();
 
-	my_endgame.SetRandVec<BCT>(samples.back().size());
+	my_endgame.SetRandVec<BCT>(static_cast<int>(samples.back().size()));
 	my_endgame.ComputeCycleNumber<BCT>(BCT(0));
 
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 
 	Vec<BCT> first_approx;
 	Vec<BCT> approx_1(1);
-	my_endgame.SetRandVec<BCT>(samples.back().size());
+	my_endgame.SetRandVec<BCT>(static_cast<int>(samples.back().size()));
 
 	my_endgame.ComputeAllDerivatives<BCT>();
 
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 	
 	tracker.PrecisionSetup(precision_config);
 
-	BCT sample_factor = ComplexFromString(".5");
+	[[maybe_unused]] BCT sample_factor = ComplexFromString(".5");
 	BCT origin = BCT(0);
 	Vec<BCT> x_origin(1);
 	x_origin << BCT(1);
@@ -773,12 +773,13 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
-	my_endgame.Run(current_time,current_space);
+	my_endgame.SetBoundaryTime(current_time);
+	my_endgame.Run(current_space);
 
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);
 
-}//end pseg mp for power series class 
+}//end pseg mp for power series class
 
 
 /**
@@ -832,7 +833,9 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
 	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
-	my_endgame.Run(current_time,current_space,target_time);
+	my_endgame.SetBoundaryTime(current_time);
+	my_endgame.SetTargetTime(target_time);
+	my_endgame.Run(current_space);
 
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);
@@ -901,7 +904,8 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
-	my_endgame.Run(t_endgame_boundary,eg_boundary_point);
+	my_endgame.SetBoundaryTime(t_endgame_boundary);
+	my_endgame.Run(eg_boundary_point);
 
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),1);
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct_root).norm() < 1e-11);
@@ -963,8 +967,8 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
-
-	my_endgame.Run(current_time,current_space);
+	my_endgame.SetBoundaryTime(current_time);
+	my_endgame.Run(current_space);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-10);//my_endgame.GetTrackToleranceDuringEndgame());
 
@@ -1013,6 +1017,10 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
+	// Deterministic RNG: the endgame's internal random draws otherwise seed from
+	// std::random_device, flaking this marginal case run-to-run.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
+
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
@@ -1081,7 +1089,8 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	for (const auto& s : current_space_values)
 	{
 		DefaultPrecision(ambient_precision);
-		SuccessCode endgame_success = my_endgame.Run(endgame_time,s);
+		my_endgame.SetBoundaryTime(endgame_time);
+		SuccessCode endgame_success = my_endgame.Run(s);
 		if(endgame_success == SuccessCode::Success){
 			BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);// my_endgame.GetTrackToleranceDuringEndgame());
 			num_paths_converging++;
@@ -1111,6 +1120,8 @@ values we have.
 BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
 	using namespace bertini::tracking;
+	// Deterministic RNG: random TotalDegreeLinearProduct start system + endgame draws.  See ADR-0003.
+	bertini::SetGlobalSeed(1u);
 	DefaultPrecision(ambient_precision);
 
 	Var x = Variable::Make("x");
@@ -1135,7 +1146,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	
 
-	auto TD = bertini::start_system::TotalDegree(sys);
+	auto TD = bertini::start_system::TotalDegreeBinomial(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());
@@ -1206,8 +1217,8 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	unsigned num_successful_occurences = 0;
 	for (auto const& s : endgame_boundary_solutions)
 	{
-		Precision(t_endgame_boundary, Precision(s));
-		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
+		my_endgame.SetBoundaryTime(t_endgame_boundary);
+		SuccessCode endgame_success = my_endgame.Run(s);
 		if(endgame_success == SuccessCode::Success)
 		{
 			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
@@ -1278,9 +1289,9 @@ BOOST_AUTO_TEST_CASE(parabola)
 					stepping_settings, newton_settings);
 
 	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(t_endgame_boundary);
 
-
-	auto endgame_success = my_endgame.Run(t_endgame_boundary,soln_at_EG_bdry);
+	auto endgame_success = my_endgame.Run(soln_at_EG_bdry);
 	BOOST_CHECK(endgame_success==SuccessCode::Success);
 
 	auto endgame_solution = my_endgame.FinalApproximation<BCT>();
@@ -1341,8 +1352,10 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_nonzero_target_time)
 	bertini::endgame::SecurityConfig security_settings;
 	bertini::endgame::PowerSeriesConfig power_series_settings;
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings, security_settings);
+	my_endgame.SetBoundaryTime(start_time);
+	my_endgame.SetTargetTime(target_time);
 
-	auto endgame_success = my_endgame.Run(start_time,start_sample,target_time);
+	auto endgame_success = my_endgame.Run(start_sample);
 	BOOST_CHECK(endgame_success == SuccessCode::Success);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_to_check_against).norm() < 1e-10);

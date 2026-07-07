@@ -30,25 +30,9 @@
 
 namespace bertini {
 
-unsigned Simplify(std::shared_ptr<bertini::node::Node> const& n)
+std::shared_ptr<bertini::node::Node> Simplify(std::shared_ptr<bertini::node::Node> const& n)
 {
-	unsigned num_reductions = 0;
-	unsigned num_ones = 0;
-	unsigned num_zeros = 0;
-
-	num_reductions = n->ReduceDepth();
-	num_ones = n->EliminateOnes();
-	num_zeros = n->EliminateZeros();
-
-	unsigned num_rounds{0};
-	while (num_reductions || num_ones || num_zeros)
-	{
-		++num_rounds;
-		num_reductions = n->ReduceDepth();
-		num_ones = n->EliminateOnes();
-		num_zeros = n->EliminateZeros();
-	}
-	return num_rounds;
+	return n->Simplified();
 }
 
 } // namespace bertini

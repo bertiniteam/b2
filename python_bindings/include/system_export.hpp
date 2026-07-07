@@ -55,8 +55,8 @@ namespace bertini{
 		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 		
-		using dbl = std::complex<double>;
-		using mpfr = bertini::mpfr_complex;
+		using complex_dbl = std::complex<double>;
+		using mpfr = bertini::complex_mp;
 		
 		
 		
@@ -69,6 +69,7 @@ namespace bertini{
 		void ExportStartSystems();
 		void ExportStartSystemBase();
 		void ExportTotalDegree();
+		void ExportRootsOfUnity();
 		
 		
 		
@@ -92,22 +93,11 @@ namespace bertini{
 
 
 
-			// using just_fn = void (bertini::System::*)(std::shared_ptr<node::Node> const&);
-			using fn_and_name = void (bertini::System::*)(std::shared_ptr<node::Node> const&, std::string const&);
-
-
-			static fn_and_name AddFnAndName()
-			{
-				return &System::AddFunction;
-			};
-
 			static void AddJustFn(bertini::System& self, std::shared_ptr<node::Node> const& f) { return self.AddFunction(f);}
-			void (bertini::System::*sysAddFunc1)(std::shared_ptr<node::Function> const&) = &bertini::System::AddFunction;
-			// void (bertini::System::*sysAddFunc2)(std::shared_ptr<node::Node> const&, std::string const&) = &bertini::System::AddFunction;
 			
 
-//			Vec<dbl> (System::*sysEval1)(const Vec<dbl> &) = &System::template Eval<dbl>;
-//			Vec<dbl> (System::*sysEval1)(const Vec<dbl> &) = &System::template Eval<dbl>;
+//			Vec<complex_dbl> (System::*sysEval1)(const Vec<complex_dbl> &) = &System::template Eval<complex_dbl>;
+//			Vec<complex_dbl> (System::*sysEval1)(const Vec<complex_dbl> &) = &System::template Eval<complex_dbl>;
 			
 			std::vector<int> (bertini::System::*sysDeg1)() const = &bertini::System::Degrees;
 			std::vector<int> (bertini::System::*sysDeg2)(VariableGroup const&) const = &bertini::System::Degrees;

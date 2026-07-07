@@ -33,8 +33,7 @@
 
 #ifndef BERTINI_PYTHON_ROOT_EXPORT_HPP
 #define BERTINI_PYTHON_ROOT_EXPORT_HPP
-#include <bertini2/function_tree/roots/function.hpp>
-#include <bertini2/function_tree/roots/jacobian.hpp>
+#include <bertini2/function_tree/roots/named_expression.hpp>
 
 #include "python_common.hpp"
 
@@ -49,42 +48,9 @@ namespace bertini{
 		
 		void ExportRoots();
 		
-		/**
-		 Function class
-		 */
-		template<typename NodeBaseT>
-		class HandleVisitor: public def_visitor<HandleVisitor<NodeBaseT> >
-		{
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-		};
-
-
-		/**
-		 Function class
-		 */
-		template<typename NodeBaseT>
-		class FunctionVisitor: public def_visitor<FunctionVisitor<NodeBaseT> >
-		{
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-		};
+		// (HandleVisitor / FunctionVisitor removed: the Function and Handle node types are gone)
 
 		
-		
-		/** 
-		 Jacobian class
-		 */
-		template<typename NodeBaseT>
-		class JacobianVisitor: public def_visitor<JacobianVisitor<NodeBaseT> >
-		{
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-		};
-
 		
 	}
 }

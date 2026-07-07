@@ -34,7 +34,7 @@
 #include "bertini2/io/parsing/qi_files.hpp"
 
 #include "bertini2/function_tree/node.hpp"
-#include "bertini2/function_tree/roots/function.hpp"
+#include "bertini2/function_tree/roots/named_expression.hpp"
 
 #include "bertini2/function_tree/operators/arithmetic.hpp"
 #include "bertini2/function_tree/operators/trig.hpp"
@@ -102,6 +102,7 @@ namespace {
 
 
 
+/// \cond FUNCTION_RULES_PHOENIX
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, cos_lazy, cos, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sin_lazy, sin, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, tan_lazy, tan, 1);
@@ -109,6 +110,7 @@ BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, tan_lazy, tan
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, log_lazy, log, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, exp_lazy, exp, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sqrt_lazy, sqrt, 1);
+/// \endcond
 
 
 
@@ -141,12 +143,12 @@ namespace bertini {
 			template<typename Iterator>
 			struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>
 			{
-				using Node = node::Node;
-				using Function = node::Function;
-				using Float = node::Float;
-				using Integer = node::Integer;
-				using Rational = node::Rational;
-				
+				using Node = node::Node;  ///< The generic expression-tree node type.
+				using Complex = node::Complex;  ///< The complex-number node type.
+				using Integer = node::Integer;  ///< The integer node type.
+				using Rational = node::Rational;  ///< The rational-number node type.
+
+				/// \brief Construct the function parser, given the table of already-encountered symbols.
 				FunctionParser(qi::symbols<char,std::shared_ptr<Node> > * encountered_symbols) : FunctionParser::base_type(root_rule_,"FunctionParser")
 				{
 					namespace phx = boost::phoenix;
@@ -162,7 +164,9 @@ namespace bertini {
 					using ::pow;
 					
 					root_rule_.name("function_");
-					root_rule_ = expression_ [ _val = make_shared_<Function>()(_1)];
+					// Return the bare parsed expression (no Function wrapper): the System parser names
+					// it (a NamedExpression for subfunctions) or stores it directly (top-level functions).
+					root_rule_ = expression_ [ _val = _1];
 					
 					
 					///////////////////
@@ -196,10 +200,18 @@ namespace bertini {
 					
 					exp_elem_.name("exp_elem_");
 					exp_elem_ =
-					(symbol_  >> !qi::alnum) [_val = _1]
+					// The negative lookahead keeps a known symbol from matching a
+					// prefix of a longer identifier (e.g. `e` inside `exp`, or `x`
+					// inside `xy`).  It must use the UTF-8 continuation predicate so
+					// a following Unicode letter (e.g. `α` after a known `Ω`) also
+					// blocks the match -- a bare ASCII !qi::alnum would not.
+					(symbol_  >> utf8_ident_boundary_parser()) [_val = _1]
 					|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
-					|   (lit('-') > expression_  [_val = -_1])
-					|   (lit('+') > expression_  [_val = _1])
+					// unary +/- bind a single factor_, NOT the whole expression_: "-y+x" is
+					// (-y)+x, and "-x^2" is -(x^2).  (Binding expression_ here made a leading
+					// minus greedily negate everything after it.)
+					|   (lit('-') > factor_  [_val = -_1])
+					|   (lit('+') > factor_  [_val = _1])
 					|   (lit("sin") > '(' > expression_ [_val = sin_lazy(_1)] > ')' )
 					|   (lit("cos") > '(' > expression_ [_val = cos_lazy(_1)] > ')' )
 					|   (lit("tan") > '(' > expression_ [_val = tan_lazy(_1)] > ')' )
@@ -234,7 +246,7 @@ namespace bertini {
 					
 					number_.name("number_");
 					number_ =
-					mpfr_rules_.long_number_string_ [ _val = make_shared_<Float>()(_1) ]
+					mpfr_rules_.long_number_string_ [ _val = make_shared_<Complex>()(_1) ]
 					|
 					mpfr_rules_.integer_string_ [ _val = make_shared_<Integer>()(_1) ];
 					
@@ -245,22 +257,10 @@ namespace bertini {
 					
 					
 					
-					using qi::on_error;
-					using boost::phoenix::val;
-					using boost::phoenix::construct;
-					
-					
-					on_error<qi::fail>
-					(
-					 root_rule_
-					 , std::cout
-					 << val("Function parser error:  expecting ")
-					 << _4
-					 << val(" here: \"")
-					 << construct<std::string>(_3, _2)
-					 << val("\"")
-					 << std::endl
-					 );
+										qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("FunctionParser"))
+					);
 					
 					
 					
@@ -283,6 +283,7 @@ namespace bertini {
 				
 				
 				
+				/// \cond FUNCTION_RULES_GRAMMAR
 				qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type > root_rule_;
 				// the rule for kicking the entire thing off
 				
@@ -300,6 +301,7 @@ namespace bertini {
 				qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
 				
 				parsing::rules::LongNum<Iterator> mpfr_rules_;
+				/// \endcond
 			};
 			
 		} // re: namespace classic

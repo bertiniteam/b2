@@ -16,7 +16,7 @@ grp.append(x)
 grp.append(y)
 sys.add_variable_group(grp)
 
-td = bertini.start_system.TotalDegree(sys)
+td = bertini.start_system.TotalDegreeLinearProduct(sys)
 
 zd = bertini.algorithms.ZeroDim(sys, td)
 

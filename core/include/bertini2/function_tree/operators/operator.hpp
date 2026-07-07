@@ -54,7 +54,7 @@ namespace node{
 
 	This class is an interface for all operators in the Bertini2 function tree.
 	*/
-	class Operator : public virtual Node
+	class Operator : public Node
 	{
 		
 	public:
@@ -66,7 +66,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Node>(*this);
 		}
 	};
@@ -80,26 +80,31 @@ namespace node{
 	This class is an interface for all unary operators, such as negation.
 	The sole child is stored in a shared_ptr.
 	*/
-	class UnaryOperator : public virtual Operator
+	class UnaryOperator : public Operator
 	{
 	public:
 		
+		/// \brief Construct a unary operator over a single operand node.
 		UnaryOperator(const std::shared_ptr<Node> & n) : operand_(n)
 		{}
 		
 		
 		
 		virtual ~UnaryOperator() = default;
+
+		// Structural hash/equality for every unary op (typeid distinguishes Sin/Cos/Exp/...);
+		// IntegerPowerOperator overrides to fold in its exponent.
+		std::size_t HashImpl() const override;
+		bool IsSame(Node const& other) const override;
+
 		
 		
-		void Reset() const override;
-		
-		
+		/// \brief Set the single child (operand) of this unary operator.
 		void SetOperand(std::shared_ptr<Node> n);
-		
-		
-		
-		//Return the only child for the unary operator
+
+
+
+		/// \return The only child (operand) of this unary operator.
 		std::shared_ptr<Node> Operand() const;
 		
 		
@@ -118,10 +123,6 @@ namespace node{
 		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 
-
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
-
-		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		
@@ -132,24 +133,18 @@ namespace node{
 		
 
 
-		/**
-		 Change the precision of this variable-precision tree node.
-		 
-		 \param prec the number of digits to change precision to.
-		 */
-		void precision(unsigned int prec) const override;
 
 
 
 	protected:
 		//Stores the single child of the unary operator
-		std::shared_ptr<Node> operand_;
+		std::shared_ptr<Node> operand_;  ///< The single child (operand) of the unary operator.
 		UnaryOperator(){}
 	private:
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Operator>(*this);
 			ar & operand_;
 		}
@@ -165,26 +160,28 @@ namespace node{
 	Operands of the operator are stored in a vector and methods to add and access operands are available
 	in this interface.
 	*/
-	class NaryOperator : public virtual Operator
+	class NaryOperator : public Operator
 	{
 	public:
 		
 		virtual ~NaryOperator() = default;
 		
 		
-		void Reset() const override;
 		
-		// Add an operand onto the container for this operator
+		/// \brief Add an operand (child) onto this operator.
 		virtual void AddOperand(std::shared_ptr<Node> n);
 		
 		
+		/// \return The number of operands (children).
 		size_t NumOperands() const;
-		
+
+		/// \return The container of operands (children).
 		inline auto const& Operands() const{
 			return operands_;
 		}
 		
 		
+		/// \return The first operand (child).
 		std::shared_ptr<Node> FirstOperand() const;
 		
 		 /**
@@ -192,7 +189,6 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		void precision(unsigned int prec) const override;
 
 		
 		
@@ -213,7 +209,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Operator>(*this);
 			ar & operands_;
 		}

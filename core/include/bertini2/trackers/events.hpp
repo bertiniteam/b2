@@ -137,6 +137,7 @@ namespace bertini {
 	*/
 	ADD_BERTINI_EVENT_TYPE(PrecisionEvent,TrackingEvent);
 
+	/// \brief Event emitted when the tracker's working precision changes.
 	template<class ObservedT>
 	class PrecisionChanged : public PrecisionEvent<ObservedT>
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
@@ -303,7 +304,7 @@ namespace bertini {
 
 		\param obs The observed object, the tracker.  `*this` probably.
 		\param start_time The time \f$t_0\f$ at which tracking is starting.
-		\param end_time The target time for tracking.
+		\param endtime The target time for tracking.
 		\param start_point The space point \f$x_0\f$ for starting tracking.
 		*/
 		Initializing(const ObservedT & obs, 

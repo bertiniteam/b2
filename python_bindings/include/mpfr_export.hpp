@@ -80,7 +80,7 @@ namespace bertini{
 			static std::string __str__(const object& obj)
 			{
 				std::ostringstream oss;
-				const T& self=extract<T>(obj)();
+				T self=extract<T>(obj)();
 				std::stringstream ss;
 				ss << self;
 				return ss.str();
@@ -89,7 +89,7 @@ namespace bertini{
 			static std::string __repr__(const object& obj)
 			{
 				std::ostringstream oss;
-				const T& self=extract<T>(obj)();
+				T self=extract<T>(obj)();
 				std::stringstream ss;
 				ss << self.str(0,std::ios::scientific);
 				return ss.str();
@@ -237,6 +237,12 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 
 		private:
+			// NOTE: for the PowVisitor<T,int> instantiation this emits a single
+			// -Wsign-conversion (int->unsigned) warning. It is left intentionally:
+			// the natural pow(a,b) is correct for every (T,S) instantiation here,
+			// including negative integer exponents (e.g. a**-2). Forcing the
+			// exponent to unsigned silences the warning but breaks negative
+			// exponents; promoting it to T fails to compile for the complex T.
 			static T __pow__(const T& a, const S& b){using std::pow; using boost::multiprecision::pow; return pow(a,b); };
 		};
 
@@ -314,7 +320,7 @@ namespace bertini{
 			using RealT = typename NumTraits<T>::Real;
 
 		private:
-			static void set_real(T &c, mpfr_float const& r) { c.real(r);}
+			static void set_real(T &c, real_mp const& r) { c.real(r);}
 			static RealT get_real(T const&c) { return c.real();}
 
 			static void set_imag(T &c, RealT const& r) { c.imag(r);}
@@ -326,7 +332,7 @@ namespace bertini{
 			static std::string __str__(const object& obj)
 			{
 				std::ostringstream oss;
-				const T& self=extract<T>(obj)();
+				T self=extract<T>(obj)();
 				std::stringstream ss;
 				ss << self;
 				return ss.str();
@@ -335,7 +341,7 @@ namespace bertini{
 			static std::string __repr__(const object& obj)
 			{
 				std::ostringstream oss;
-				const T& self=extract<T>(obj)();
+				T self=extract<T>(obj)();
 				std::stringstream ss;
 				ss << "(" << real(self).str(0,std::ios::scientific) << ", " << imag(self).str(0,std::ios::scientific) << ")";
 				return ss.str();

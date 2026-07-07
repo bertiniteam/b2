@@ -41,7 +41,7 @@ namespace node{
 
 	std::shared_ptr<Node> I()
 	{
-		return MakeFloat(0,1);
+		return MakeComplex(0,1);
 	}
 
 

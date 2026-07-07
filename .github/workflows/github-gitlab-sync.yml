@@ -1,12 +1,29 @@
-name: Sync to MPI GitLab
-on: 
+name: Sync to GitLab mirror
+on:
   push
+
+# Any repo (upstream or fork) that configures the three GITLAB_* secrets gets
+# mirrored to its own GitLab target; repos without the secrets skip silently.
+# This replaces the old hardcoded `if: github.repository == 'bertiniteam/b2'`,
+# which prevented forks from syncing even when their secrets were set.
+# Note: the `secrets` context is not available in job-level `if`, hence the
+# env indirection.
+
 jobs:
   sync:
-    if: github.repository == 'bertiniteam/b2' #only on official 
     runs-on: ubuntu-latest
+    env:
+      GITLAB_CONFIGURED: ${{ secrets.GITLAB_URL != '' }}
     steps:
+    # Mirroring is best-effort replication: an outage on the GitLab end (502s, etc.)
+    # must not paint the branch's checks red -- it says nothing about the code.  The
+    # step-level continue-on-error keeps the check green either way; the warning
+    # annotation below keeps a real mirror failure visible on the run's summary page
+    # so a rotted token or dead mirror still gets noticed.
     - name: Sync to GitLab
+      id: sync
+      continue-on-error: true
+      if: env.GITLAB_CONFIGURED == 'true'
       # You may pin to the exact commit or the version.
       # uses: kujov/gitlab-sync@b19399d43e81ac88acb6eefd5588e6ebde3d7d88
       uses: kujov/gitlab-sync@2.2.1
@@ -18,5 +35,7 @@ jobs:
         # Your GitLab Personal Access Token with required permissions
         gitlab_pat: ${{ secrets.GITLAB_PAT }}
         # Whether to force push to GitLab. Defaults to false.
-        
-        force_push: true # optional, default is false
+        force_push: true
+    - name: Surface a mirror failure as a warning (not a red check)
+      if: env.GITLAB_CONFIGURED == 'true' && steps.sync.outcome == 'failure'
+      run: echo "::warning title=GitLab mirror sync failed::The push to the GitLab mirror failed (often a GitLab-side outage). The code checks are unaffected; investigate if this persists."

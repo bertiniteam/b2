@@ -15,6 +15,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #file(GLOB SOURCES src/*.cpp)
 
 option(ENABLE_UNIT_TESTING "Turn on building and running of unit tests while compiling" OFF)
+option(BMP_EXPRESSION_TEMPLATES "Enable Boost.Multiprecision expression templates for mpfr_float, mpfr_complex, mpz_int, mpq_rational" ON)
+# Route GMP/MPFR/MPC limb allocation through mimalloc (static, NON-override) for a large
+# multiprecision speedup.  OFF = system allocator, no extra dependency, InstallFastAllocator()
+# becomes a no-op -- the build-time escape hatch if a platform's CI dislikes mimalloc.
+option(BERTINI2_FAST_ALLOC "Use a bundled fast allocator (mimalloc) for multiprecision limb allocation" ON)
+
+find_package(MPI)
+option(ENABLE_MPI "Enable MPI parallelism (requires OpenMPI or MPICH; no Boost.MPI needed)" ${MPI_FOUND})
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
@@ -25,14 +33,18 @@ endif(NOT CMAKE_BUILD_TYPE)
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "ENABLE_UNIT_TESTING: ${ENABLE_UNIT_TESTING}")
 
+if(BMP_EXPRESSION_TEMPLATES)
+    add_compile_definitions(BMP_EXPRESSION_TEMPLATES=1)
+    message(STATUS "BMP expression templates: ON")
+else()
+    message(STATUS "BMP expression templates: OFF")
+endif()
+
 if (WIN32)
     add_compile_options(/bigobj)
     add_compile_options(/EHsc)
     set(CMAKE_BUILD_TYPE Release)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    set(BUILD_SHARED_LIBS TRUE)
 else ()
-    # add_compile_definitions(-DBMP_EXPRESSION_TEMPLATES=1)
     add_compile_options(
         # put things for debug compile here
         $<$<CONFIG:Debug>:-g>
@@ -40,7 +52,9 @@ else ()
 
         # and things for release here
         $<$<CONFIG:Release>:-O3>
-        $<$<CONFIG:Release>:-g>
+        # (debug info intentionally omitted from Release: CI strips it from
+        # wheels anyway, and -g bloats objects ~3-4x, exhausting disk on
+        # constrained build hosts.)
         # using O2 or O3 cuts runtime by over half.
 	)
 endif ()
@@ -70,6 +84,13 @@ set(_BOOST_REQUIRED_COMPONENTS
     log_setup
     thread
 )
+
+if(ENABLE_MPI AND NOT MPI_FOUND)
+    message(FATAL_ERROR "ENABLE_MPI=ON but no MPI installation was found.")
+endif()
+if(ENABLE_MPI)
+    message(STATUS "MPI enabled: ${MPI_CXX_COMPILER}")
+endif()
 
 find_package(Boost REQUIRED COMPONENTS ${_BOOST_REQUIRED_COMPONENTS})
 
@@ -126,11 +147,17 @@ set(detail_headers
     include/bertini2/detail/is_template_parameter.hpp
     include/bertini2/detail/enable_permuted_arguments.hpp
     include/bertini2/detail/typelist.hpp
+    include/bertini2/detail/sha256.hpp
+    include/bertini2/records/config_encoding.hpp
+    include/bertini2/records/derive.hpp
+    include/bertini2/records/output_directory.hpp
+    include/bertini2/records/draw_functions.hpp
 )
 
 set(function_tree_headers
     include/bertini2/function_tree.hpp
     include/bertini2/function_tree/node.hpp
+    include/bertini2/function_tree/gather.hpp
     include/bertini2/function_tree/forward_declares.hpp
     include/bertini2/function_tree/simplify.hpp
     include/bertini2/function_tree/operators/operator.hpp
@@ -139,9 +166,7 @@ set(function_tree_headers
     include/bertini2/function_tree/symbols/differential.hpp
     include/bertini2/function_tree/symbols/special_number.hpp
     include/bertini2/function_tree/symbols/number.hpp
-    include/bertini2/function_tree/symbols/linear_product.hpp
-    include/bertini2/function_tree/roots/function.hpp
-    include/bertini2/function_tree/roots/jacobian.hpp
+    include/bertini2/function_tree/roots/named_expression.hpp
     include/bertini2/function_tree/operators/arithmetic.hpp
     include/bertini2/function_tree/operators/trig.hpp
 )
@@ -156,9 +181,13 @@ set(settings_headers
 
 set(functiontreeinclude_HEADERS
 	include/bertini2/function_tree/node.hpp
+	include/bertini2/function_tree/gather.hpp
 	include/bertini2/function_tree/factory.hpp
 	include/bertini2/function_tree/forward_declares.hpp
 	include/bertini2/function_tree/simplify.hpp
+	include/bertini2/function_tree/canonical.hpp
+	include/bertini2/function_tree/canonical_encoding.hpp
+	include/bertini2/function_tree/reintern.hpp
 )
 
 set(functiontree_operators_HEADERS
@@ -173,15 +202,15 @@ set(functiontree_symbols_HEADERS
 	include/bertini2/function_tree/symbols/differential.hpp
 	include/bertini2/function_tree/symbols/special_number.hpp
 	include/bertini2/function_tree/symbols/number.hpp
-    include/bertini2/function_tree/symbols/linear_product.hpp
 )
 
 set(functiontree_roots_HEADERS
-	include/bertini2/function_tree/roots/function.hpp
-	include/bertini2/function_tree/roots/jacobian.hpp
+	include/bertini2/function_tree/roots/named_expression.hpp
 )
 
 set(io_headers
+    include/bertini2/io/classic_writer.hpp
+    include/bertini2/io/json_writer.hpp
     include/bertini2/io/file_utilities.hpp
     include/bertini2/io/generators.hpp
     include/bertini2/io/parsing.hpp
@@ -220,7 +249,6 @@ set(nag_algorithms_headers
 set(nag_algorithms_common_headers
     include/bertini2/nag_algorithms/common/algorithm_base.hpp
     include/bertini2/nag_algorithms/common/config.hpp
-    include/bertini2/nag_algorithms/common/policies.hpp
 )
 
 set(nag_datatypes_headers
@@ -234,6 +262,9 @@ set(nag_datatypes_common_headers
 
 set(parallel_headers
     include/bertini2/parallel/initialize_finalize.hpp
+    include/bertini2/parallel/path_result.hpp
+    include/bertini2/parallel/manager.hpp
+    include/bertini2/parallel/worker.hpp
 )
 
 set(parallel_rootinclude_HEADERS
@@ -256,7 +287,8 @@ set(system_headers
 )
 
 set(system_start_headers
-	include/bertini2/system/start/total_degree.hpp
+	include/bertini2/system/start/total_degree_linear_product.hpp
+	include/bertini2/system/start/total_degree_binomial.hpp
 	include/bertini2/system/start/mhom.hpp
 	include/bertini2/system/start/user.hpp
 	include/bertini2/system/start/utility.hpp
@@ -270,19 +302,15 @@ set(trackers_HEADERS
 	include/bertini2/trackers/adaptive_precision_utilities.hpp
 	include/bertini2/trackers/amp_criteria.hpp
 	include/bertini2/trackers/amp_tracker.hpp
-	include/bertini2/trackers/base_predictor.hpp
 	include/bertini2/trackers/base_tracker.hpp
 	include/bertini2/trackers/config.hpp
 	include/bertini2/trackers/events.hpp
 	include/bertini2/trackers/explicit_predictors.hpp
 	include/bertini2/trackers/fixed_precision_tracker.hpp
 	include/bertini2/trackers/fixed_precision_utilities.hpp
-	include/bertini2/trackers/newton_correct.hpp
 	include/bertini2/trackers/newton_corrector.hpp
 	include/bertini2/trackers/observers.hpp
 	include/bertini2/trackers/ode_predictors.hpp
-	include/bertini2/trackers/predict.hpp
-	include/bertini2/trackers/step.hpp
 	include/bertini2/trackers/tracker.hpp
 )
 
@@ -320,22 +348,31 @@ set(BERTINI2_LIBRARY_HEADERS
 set(basics_sources
     src/basics/random.cpp
     src/basics/have_bertini.cpp
+    src/basics/fast_allocator.cpp
+    src/detail/sha256.cpp
+    src/records/config_encoding.cpp
+    src/records/derive.cpp
+    src/records/output_directory.cpp
+    src/records/producer.cpp
 )
 
 set(function_tree_sources
     src/function_tree/node.cpp
+    src/function_tree/gather.cpp
+    src/function_tree/find.cpp
     src/function_tree/simplify.cpp
+    src/function_tree/canonical.cpp
+    src/function_tree/canonical_encoding.cpp
+    src/function_tree/reintern.cpp
     src/function_tree/operators/arithmetic.cpp
     src/function_tree/operators/trig.cpp
-    src/function_tree/linear_product.cpp
     src/function_tree/operators/operator.cpp
     src/function_tree/symbols/special_number.cpp
     src/function_tree/symbols/differential.cpp
     src/function_tree/symbols/symbol.cpp
     src/function_tree/symbols/variable.cpp
     src/function_tree/symbols/number.cpp
-    src/function_tree/roots/jacobian.cpp
-    src/function_tree/roots/function.cpp
+    src/function_tree/roots/named_expression.cpp
 )
 
 set(parallel_sources
@@ -348,8 +385,10 @@ set(system_source_files
     src/system/slice.cpp
     src/system/start_base.cpp
     src/system/system.cpp
+    src/system/content_identity.cpp
     src/system/straight_line_program.cpp
-    src/system/start/total_degree.cpp
+    src/system/start/total_degree_linear_product.cpp
+    src/system/start/total_degree_binomial.cpp
     src/system/start/mhom.cpp
     src/system/start/user.cpp
 )
@@ -358,18 +397,29 @@ set(tracking_source_files
     src/tracking/explicit_predictors.cpp
 )
 
+# explicit template instantiation TUs: the one home for the heavy
+# endgame/zerodim instantiations (see ADR-0014); consumers get extern
+# declarations from the umbrella headers and just link.
+set(eti_source_files
+    src/eti/endgames_eti.cpp
+    src/eti/zero_dim_eti.cpp
+    src/eti/zero_dim_blackbox_eti.cpp
+)
+
 set(BERTINI2_LIBRARY_SOURCES
     ${basics_sources}
     ${function_tree_sources}
     ${parallel_sources}
     ${system_source_files}
     ${tracking_source_files}
+    ${eti_source_files}
 )
 
 set(BERTINI2_EXE_SOURCES
     src/blackbox/bertini.cpp
     src/blackbox/main_mode_switch.cpp
     src/blackbox/argc_argv.cpp
+    src/blackbox/algorithm_builder.cpp
 )
 
 set(BERTINI2_EXE_HEADERS
@@ -392,11 +442,25 @@ add_library(bertini2 ${BERTINI2_LIBRARY_SOURCES}
                             ${BERTINI2_LIBRARY_HEADERS})
 add_library(bertini2::bertini2 ALIAS bertini2)
 
+# The (static) library is linked into the shared _pybertini Python module, so
+# its objects must be position-independent. Previously this requirement was
+# accidentally satisfied because every consumer recompiled the library sources
+# itself (with -fPIC); now that the library is compiled once and linked, mark
+# it PIC explicitly.
+set_target_properties(bertini2 PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 target_include_directories(bertini2
   SYSTEM PUBLIC
     ${GMP_INCLUDES}
     ${MPFR_INCLUDES}
     ${MPC_INCLUDES}
+    # Treat Boost/Eigen headers as system so their (and their template
+    # instantiations') warnings stay out of our build output. Boost is linked
+    # below via raw ${Boost_LIBRARIES} (no include propagation), so its include
+    # dir must be added here explicitly. Eigen3::Eigen is an imported target
+    # (already SYSTEM by default), but we mark it explicitly to be robust.
+    ${Boost_INCLUDE_DIRS}
+    $<TARGET_PROPERTY:Eigen3::Eigen,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_include_directories(bertini2 PUBLIC
@@ -405,26 +469,79 @@ target_include_directories(bertini2 PUBLIC
     $<INSTALL_INTERFACE:include>  # <prefix>/include
     )
 
-
-# All library files
-target_sources(bertini2 PUBLIC
-    ${BERTINI2_LIBRARY_SOURCES}
-    ${BERTINI2_LIBRARY_HEADERS}
-)
-
 if(WIN32)
-  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  set(BUILD_SHARED_LIBS TRUE)
   target_compile_options(bertini2
                          PRIVATE $<$<CXX_COMPILER_ID:MSVC>:-bigobj -MP>)
   target_compile_definitions(bertini2 PUBLIC "HAVE_SNPRINTF")
 endif()
+
+# The full PEP 440 version (e.g. 3.0.0.dev6), including any .devN/rc suffix.
+# jrl-cmakemodules' generated config.hpp bakes in the *stripped* numeric
+# BERTINI2_VERSION (for cmake/SOVERSION semantics); this carries the complete
+# string so bertini::Version() can report the dev-count. See CMakeLists.txt.
+target_compile_definitions(bertini2 PUBLIC "BERTINI2_VERSION_FULL=\"${BERTINI2_FULL_VERSION}\"")
+
+# producer info: the git commit of the build, regenerated at BUILD time (a configure-time
+# capture would go stale between commits).  Content-compare in the script avoids churn.
+set(PRODUCER_INFO_HEADER "${CMAKE_CURRENT_BINARY_DIR}/generated/bertini2/records/producer_info.generated.hpp")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/bertini2/records")
+add_custom_target(producer_info
+    COMMAND ${CMAKE_COMMAND}
+        -DSRC_DIR=${CMAKE_SOURCE_DIR}
+        -DOUT_FILE=${PRODUCER_INFO_HEADER}
+        -P ${CMAKE_SOURCE_DIR}/cmake/GenerateProducerInfo.cmake
+    BYPRODUCTS "${PRODUCER_INFO_HEADER}"
+    COMMENT "capturing producer info (git commit)")
+add_dependencies(bertini2 producer_info)
+target_include_directories(bertini2 PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 target_link_libraries(bertini2 PUBLIC ${GMP_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPFR_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPC_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC Eigen3::Eigen)
 target_link_libraries(bertini2 PUBLIC ${Boost_LIBRARIES})
+
+# Faster multiprecision: route GMP/MPFR/MPC limb allocation through mimalloc (static, NON-override).
+# We never replace the process malloc; bertini::InstallFastAllocator() installs an ownership-aware
+# GMP memory hook that calls mi_*.  See bertini2/fast_allocator.hpp.  mimalloc is fetched + built
+# from source (MIT license), so no system dependency is added and the wheel stays self-contained.
+# Escape hatch: -DBERTINI2_FAST_ALLOC=OFF builds exactly as before (hook is a no-op).
+if(BERTINI2_FAST_ALLOC)
+    include(FetchContent)
+    set(MI_OVERRIDE     OFF CACHE BOOL "" FORCE)  # do NOT hijack the process malloc; we call mi_* explicitly
+    set(MI_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(MI_BUILD_STATIC ON  CACHE BOOL "" FORCE)
+    set(MI_BUILD_OBJECT OFF CACHE BOOL "" FORCE)
+    set(MI_BUILD_TESTS  OFF CACHE BOOL "" FORCE)
+    # CRITICAL for the dlopen-ed Python extension on glibc Linux: mimalloc otherwise builds with
+    # -ftls-model=initial-exec, whose TLS must come from the limited static-TLS surplus.  When
+    # _pybertini.so (with mimalloc statically linked) is dlopen-ed, that surplus is exhausted and
+    # import fails with "cannot allocate memory in static TLS block".  Local-dynamic TLS is the
+    # dlopen-compatible model.  (Windows/macOS are unaffected, but the option is harmless there.)
+    set(MI_LOCAL_DYNAMIC_TLS ON CACHE BOOL "" FORCE)
+    FetchContent_Declare(mimalloc
+        GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+        GIT_TAG        v2.1.7)
+    FetchContent_MakeAvailable(mimalloc)
+    set_target_properties(mimalloc-static PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(bertini2 PUBLIC mimalloc-static)
+    target_compile_definitions(bertini2 PUBLIC BERTINI2_HAVE_MIMALLOC)
+    message(STATUS "bertini2: multiprecision allocator = mimalloc (static, non-override)")
+else()
+    message(STATUS "bertini2: multiprecision allocator = system (BERTINI2_FAST_ALLOC=OFF)")
+endif()
+
+if(ENABLE_MPI)
+    # We use only the MPI C API.  Including <mpi.h> from C++ otherwise pulls in the deprecated
+    # MPI C++ bindings (the MPI:: namespace / mpicxx.h), which MPICH compiles in by default and
+    # which fail to build under modern C++ (clang especially) -- so the project compiled with
+    # OpenMPI but not MPICH.  These macros tell both implementations to skip the C++ bindings.
+    # PUBLIC + on the compile command line, so they are defined before any <mpi.h> include, and
+    # propagate to everything linking bertini2 (python bindings, blackbox).
+    target_compile_definitions(bertini2 PUBLIC BERTINI2_HAVE_MPI MPICH_SKIP_MPICXX OMPI_SKIP_MPICXX)
+    target_link_libraries(bertini2 PUBLIC MPI::MPI_CXX)
+    message(STATUS "bertini2 built with plain C MPI support (no Boost.MPI)")
+endif()
 
 
 if(SUFFIX_SO_VERSION)
@@ -434,9 +551,83 @@ endif(SUFFIX_SO_VERSION)
 add_executable(bertini2_exe)
 target_sources(bertini2_exe PUBLIC ${BERTINI2_EXE_SOURCES} ${BERTINI2_EXE_HEADERS})
 target_link_libraries(bertini2_exe ${Boost_LIBRARIES} bertini2)
+set_target_properties(bertini2_exe PROPERTIES OUTPUT_NAME bertini2)
+# On MSVC/lld-link, linking an executable with OUTPUT_NAME matching the static library
+# (bertini2) causes lld-link to write bertini2.lib as an import library, overwriting
+# the static archive. /NOIMPLIB suppresses the import library entirely.
+if(MSVC)
+  target_link_options(bertini2_exe PRIVATE /NOIMPLIB)
+endif()
+
+# Precompile the four blackbox headers that collectively cover all exe source files.
+# algorithm_builder.hpp is the heaviest (pulls in full tracking + NAG algorithm
+# machinery); the others are lighter but still include significant Bertini subsystems.
+target_precompile_headers(bertini2_exe PRIVATE
+    <bertini2/eigen_extensions.hpp>
+    <bertini2/blackbox/argc_argv.hpp>
+    <bertini2/blackbox/main_mode_switch.hpp>
+    <bertini2/blackbox/algorithm_builder.hpp>
+    <bertini2/parallel.hpp>
+)
 
 # todo: this should be made a devmode thing
 #target_compile_options(bertini2 PRIVATE -Wall -Wextra)
+
+# auditwheel rejects the wheel ("depends on unsupported ISA extensions") because the
+# *executable* -- unlike a .so -- links the manylinux/AlmaLinux 9 CRT startup objects
+# (Scrt1.o etc.), which carry a GNU_PROPERTY note declaring an x86-64-v2 ISA requirement.
+# Our own code is compiled to the v1 baseline (the _pybertini .so, built from the same
+# sources, passes auditwheel), so that note is a spurious artifact of the distro CRT.
+# Strip it from the exe so auditwheel sees the true (v1) requirement.  Wheel/Linux only.
+if(SKBUILD AND UNIX AND NOT APPLE AND CMAKE_OBJCOPY)
+  add_custom_command(TARGET bertini2_exe POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} --remove-section .note.gnu.property $<TARGET_FILE:bertini2_exe>
+    COMMENT "Stripping .note.gnu.property from bertini2 CLI (drops the distro CRT's x86-64-v2 ISA marking)")
+endif()
+
+# From-source DEV / editable builds (NOT the wheel): mirror the freshly-built CLI into the
+# source-tree package at python/bertini/_bin/bertini2, so the console-script shim
+# (python/bertini/_cli.py, which an editable `pip install -e .` redirects to the source tree)
+# finds the binary.  The wheel build (SKBUILD) instead uses the install(TARGETS ... DESTINATION
+# _bin) rule below.  Together these keep EVERY build path delivering the `bertini2` command:
+# wheel (`pip install .`), editable (`pip install -e .`), and plain in-tree builds.  Guarded on the
+# package dir existing so a stand-alone `core/` build does not create a stray tree.
+if(NOT SKBUILD AND EXISTS ${CMAKE_SOURCE_DIR}/python/bertini)
+  add_custom_command(TARGET bertini2_exe POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/python/bertini/_bin
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:bertini2_exe> ${CMAKE_SOURCE_DIR}/python/bertini/_bin/bertini2
+    COMMENT "Syncing bertini2 CLI into python/bertini/_bin (editable / from-source dev installs)")
+endif()
+
+# Ship the blackbox CLI inside the Python wheel so `pip install bertini2` puts a
+# `bertini2` command on PATH (see the [project.scripts] shim in pyproject.toml and
+# python/bertini/_cli.py).  Under scikit-build (SKBUILD) the whole install tree is
+# rooted at the `bertini` package (wheel.install-dir = "bertini"), so RUNTIME
+# DESTINATION _bin lands the exe at bertini/_bin/bertini2 -- next to _pybertini and
+# the libs that auditwheel/delocate vendor.  We set INSTALL_RPATH so the exe finds
+# those vendored shared libs even if the repair tool does not patch executables:
+#   - auditwheel  -> vendored libs in top-level bertini2.libs/  ($ORIGIN/../../bertini2.libs)
+#   - delocate    -> vendored libs in bertini/.dylibs           (@loader_path/../.dylibs)
+#   - $ORIGIN/.. and ../lib cover libbertini2 installed into the package tree itself.
+# A normal (non-wheel) `cmake --install` keeps the usual bin/ location.
+#
+# The exe install is tagged COMPONENT cli so a user who wants ONLY the solver -- no Python, no
+# library/headers -- can `cmake --install build --component cli` and get just bin/bertini2.  The exe
+# statically links libbertini2.a, so the CLI-only install is self-contained re: our code (it still
+# needs Boost/GMP/MPFR/MPC/MPI shared libs, as any from-source build does).  A plain `cmake --install`
+# (no --component) still installs everything.
+if(SKBUILD)
+  install(TARGETS bertini2_exe RUNTIME DESTINATION _bin COMPONENT cli)
+  if(APPLE)
+    set_target_properties(bertini2_exe PROPERTIES
+      INSTALL_RPATH "@loader_path/../../bertini2.libs;@loader_path/../.dylibs;@loader_path/..;@loader_path/../lib")
+  elseif(UNIX)
+    set_target_properties(bertini2_exe PROPERTIES
+      INSTALL_RPATH "$ORIGIN/../../bertini2.libs;$ORIGIN/..;$ORIGIN/../lib")
+  endif()
+else()
+  install(TARGETS bertini2_exe RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT cli)
+endif()
 
 install(
   TARGETS bertini2
@@ -623,22 +814,42 @@ install(
 if (ENABLE_UNIT_TESTING)
 
 	set(B2_CLASS_TEST_SOURCES
+		test/classes/sha256_test.cpp
+		test/classes/config_digest_test.cpp
+		test/classes/seeded_randomness_test.cpp
+		test/classes/output_directory_test.cpp
 		test/classes/boost_multiprecision_test.cpp
 		test/classes/fundamentals_test.cpp
+		test/classes/precision_propagation_test.cpp
 		test/classes/eigen_test.cpp
 		test/classes/complex_test.cpp
-		test/classes/function_tree_test.cpp
 		test/classes/function_tree_transform.cpp
+		test/classes/structural_hash_test.cpp
+		test/classes/canonical_encoding_test.cpp
+		test/classes/reintern_test.cpp
+		test/classes/interning_test.cpp
 		test/classes/system_test.cpp
+		test/classes/system_identity_test.cpp
 		test/classes/slp_test.cpp
-		test/classes/differentiate_test.cpp
-		test/classes/differentiate_wrt_var.cpp
+		test/classes/slp_intern_test.cpp
+		test/classes/lu_bench_test.cpp
+		test/classes/eval_expression_test.cpp
+		test/classes/named_expression_test.cpp
 		test/classes/homogenization_test.cpp
 		test/classes/start_system_test.cpp
+		test/classes/start_system_interop_test.cpp
 		test/classes/node_serialization_test.cpp
 		test/classes/patch_test.cpp
 		test/classes/slice_test.cpp
 		test/classes/m_hom_start_system.cpp
+		test/classes/products_of_linears_block_test.cpp
+		test/classes/linear_forms_block_test.cpp
+		test/classes/blend_block_test.cpp
+		test/classes/randomization_block_test.cpp
+		test/classes/moving_homotopy_test.cpp
+		test/classes/system_printing_test.cpp
+		test/classes/system_blocks_test.cpp
+		test/classes/degrees_test.cpp
 		test/classes/class_test.cpp
 	)
 
@@ -707,6 +918,8 @@ if (ENABLE_UNIT_TESTING)
 	set(B2_NAG_ALGORITHMS_TEST
 		test/nag_algorithms/nag_algorithms_test.cpp
 		test/nag_algorithms/zero_dim.cpp
+		test/nag_algorithms/threaded_solve.cpp
+		test/nag_algorithms/zero_dim_records.cpp
 		test/nag_algorithms/numerical_irreducible_decomposition.cpp
 		test/nag_algorithms/trace.cpp
 	)
@@ -755,6 +968,8 @@ if (ENABLE_UNIT_TESTING)
 		test/tracking_basics/amp_criteria_test.cpp
 		test/tracking_basics/amp_tracker_test.cpp
 		test/tracking_basics/path_observers.cpp
+		test/tracking_basics/expand_to_function_tree_test.cpp
+		test/tracking_basics/amp_jacobian_estimate_test.cpp
 	)
 
 	add_executable(test_tracking_basics ${B2_TRACKING_BASICS_TEST})
@@ -765,3 +980,30 @@ if (ENABLE_UNIT_TESTING)
 	enable_testing()
 
 endif (ENABLE_UNIT_TESTING)
+
+# lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj,
+# which holds all ExplicitRKPredictor Butcher-tableau statics) unless every object in
+# the archive is forced in. CMake 3.24+ LINK_LIBRARY:WHOLE_ARCHIVE places the archive
+# in the linker's input list (not just options) with the appropriate /WHOLEARCHIVE: flag.
+#
+# We strip the normal "bertini2" link entry first to avoid having the archive appear
+# twice. $<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2> re-adds it and propagates transitive
+# interface deps (gmp, mpfr, boost, MPI, etc.) automatically.
+# /FORCE:MULTIPLE: Boost.Serialization void_cast_register and oserializer templates are
+# instantiated in multiple TUs within bertini2 itself; /WHOLEARCHIVE exposes all copies
+# and /FORCE:MULTIPLE picks the first (same as weak/COMDAT on Linux/macOS).
+if(MSVC AND ENABLE_UNIT_TESTING)
+  foreach(_t test_classes test_blackbox test_classic test_endgames test_generating
+              test_nag_algorithms test_nag_datatypes test_pool test_settings
+              test_tracking_basics)
+    if(TARGET ${_t})
+      get_target_property(_ll ${_t} LINK_LIBRARIES)
+      if(_ll)
+        list(REMOVE_ITEM _ll bertini2)
+        set_target_properties(${_t} PROPERTIES LINK_LIBRARIES "${_ll}")
+      endif()
+      target_link_options(${_t} PRIVATE /FORCE:MULTIPLE)
+      target_link_libraries(${_t} "$<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2>")
+    endif()
+  endforeach()
+endif()

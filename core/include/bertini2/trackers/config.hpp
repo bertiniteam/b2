@@ -45,13 +45,16 @@ namespace bertini
 namespace tracking{
 
 	
+	/// \brief The precision regime a tracker operates in: fixed double, fixed multiple, or adaptive.
 	enum class PrecisionType //E.2.1
 	{
 		Fixed,
+		FixedMultiple,
 		Adaptive
 	};
-	
 
+
+	/// \brief The predictor (ODE integration) method used during path tracking.
 	enum class Predictor //E.4.3
 	{
 		Constant,
@@ -72,16 +75,38 @@ namespace tracking{
 	
 
 
+	/**
+	\brief Metadata produced by a single predict or correct step.
+
+	Collapses the formerly hand-threaded out-parameters (norm_J, norm_J_inverse,
+	condition_number_estimate, size_proportion, error_estimate, norm_delta_z) into one
+	struct.  Not every field is written by every step: size_proportion/error_estimate are
+	predictor-only (and error_estimate only for embedded methods); norm_delta_z is
+	corrector-only.  Unwritten fields keep their default of 0.
+	*/
+	struct StepMetadata
+	{
+		NumErrorT norm_J = 0;                    ///< ||J|| (Frobenius) at the step.
+		NumErrorT norm_J_inverse = 0;            ///< estimate of ||J^{-1}|| via the condition probe.
+		NumErrorT condition_number_estimate = 0; ///< norm_J * norm_J_inverse (refreshed per frequency_of_CN_estimation).
+		NumErrorT size_proportion = 0;           ///< AMP "a" (predictor only).
+		NumErrorT error_estimate = 0;            ///< embedded-method error estimate (predictor, embedded only).
+		NumErrorT norm_delta_z = 0;              ///< ||latest Newton step|| (corrector only).
+	};
+
+
+	/// \brief Settings governing step-size adjustment during tracking.
 	struct SteppingConfig
 	{
-		using T = mpq_rational;
+		// mpq_rational: exact rationals with no MPFR precision state — safe in DefaultConstruct<T>::value statics.
+		// real_mp fields here would be initialized at BMP's startup precision (20) and contaminate
+		// tracker arithmetic when target precision < 20 via preserve_related_precision.
+		mpq_rational initial_step_size{1, 10}; ///< The length of the first time step when calling TrackPath.  StepInitSize
+		mpq_rational max_step_size{1, 10};     ///<  The largest allowed step size.  MaxStepSize
+		double       min_step_size = 1e-100;   ///< The minimum allowed step size (threshold only, double precision is sufficient).  MinStepSize
 
-		T initial_step_size = T(1)/T(10); ///< The length of the first time step when calling TrackPath.  You can turn it resetting, so subsequent calls use the same stepsize, too.  You make a call to the Tracker itself.
-		T max_step_size = T(1)/T(10); ///<  The largest allowed step size.  MaxStepSize
-		T min_step_size = T(1)/T(1e100); ///< The mimum allowed step size.  MinStepSize
-
-		T step_size_success_factor = T(2); ///< Factor by which to dilate the time step when triggered.  StepSuccessFactor
-		T step_size_fail_factor = T(1)/T(2); ///< Factor by which to contract the time step when triggered.  StepFailFactor
+		mpq_rational step_size_success_factor{2, 1}; ///< Factor by which to dilate the time step when triggered.  StepSuccessFactor
+		mpq_rational step_size_fail_factor{1, 2};    ///< Factor by which to contract the time step when triggered.  StepFailFactor
 
 		unsigned consecutive_successful_steps_before_stepsize_increase = 5; ///< What it says.  If you can come up with a better name, please suggest it.  StepsForIncrease
 
@@ -93,10 +118,11 @@ namespace tracking{
 
 
 	
+	/// \brief Settings governing the Newton corrector's iteration bounds.
 	struct NewtonConfig
 	{
-		unsigned max_num_newton_iterations = 2; //MaxNewtonIts
-		unsigned min_num_newton_iterations = 1;
+		unsigned max_num_newton_iterations = 2; ///< The maximum number of Newton iterations per correction.  MaxNewtonIts
+		unsigned min_num_newton_iterations = 1; ///< The minimum number of Newton iterations per correction.
 	};
 
 
@@ -106,23 +132,37 @@ namespace tracking{
 	
 
 
+	/// \brief Settings for a fixed-precision tracker (carries the single working precision in effect).
 	struct FixedPrecisionConfig
 	{
-		using RealType = double;
+		using RealT = double;  ///< The real number type.
+
+		/**
+		\brief The number of digits to always work at.
+
+		For a double-precision tracker this is DoublePrecision() (16) and cannot be changed.  For a
+		fixed-multiple tracker it is the precision the whole solve runs at -- the tracker, the system,
+		the start points, and the working precision all sit at this one value.  A tracker keeps this
+		field in sync with its actual precision, so reading it tells you the precision in effect; set it
+		to choose a different fixed precision (the algorithm then lifts the system and start points to
+		match).  The sentinel 0 means "unset -- use the tracker's natural precision".
+		*/
+		unsigned precision = 0;
 
 		/**
 		\brief Construct a ready-to-go set of fixed precision settings from a system.
 		*/
 		explicit
-		FixedPrecisionConfig(System const& sys) 
+		FixedPrecisionConfig(System const& /*sys*/)
 		{ }
 
 		FixedPrecisionConfig() = default;
 	};
 
 
+	/// \brief Stream-insertion for FixedPrecisionConfig (a no-op; the config carries no printable state).
 	inline
-	std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig const& fpc)
+	std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig const& /*fpc*/)
 	{
 		return out;
 	}
@@ -169,8 +209,13 @@ namespace tracking{
 		int safety_digits_1 = 1; ///< User-chosen setting for the number of safety digits used during Criteria A & B.
 		int safety_digits_2 = 1; ///< User-chosen setting for the number of safety digits used during Criterion C.
 		unsigned int maximum_precision = 300; ///< User-chosed setting for the maximum allowable precision.  Paths will die if their precision is requested to be set higher than this threshold.
-		
-		unsigned consecutive_successful_steps_before_precision_decrease = 10;
+
+		// Note: a single setting -- Bertini 1's StepsForIncrease, i.e.
+		// SteppingConfig::consecutive_successful_steps_before_stepsize_increase -- gates BOTH stepsize
+		// increase AND precision decrease (the required number of consecutive successful steps).
+		// Precision decrease is additionally subject to B1's digits-margin hysteresis (see
+		// ExtraDigitsBeforePrecisionDecrease in amp_tracker.hpp).  The old, duplicate AMP-config setting
+		// `consecutive_successful_steps_before_precision_decrease` (a B2 deviation) was removed.
 
 		unsigned max_num_precision_decreases = 10; ///< The maximum number of times precision can be lowered during tracking of a segment of path.
 		
@@ -188,7 +233,7 @@ namespace tracking{
 
 			epsilon = pow(NumErrorT(sys.NumVariables()),2);
 			degree_bound = sys.DegreeBound();
-			coefficient_bound = sys.CoefficientBound<dbl>();
+			coefficient_bound = sys.CoefficientBound<complex_dbl>();
 		}
 		
 
@@ -198,21 +243,34 @@ namespace tracking{
 		 * Phi becomes \f$ D*(D-1)*B \f$.
 		 * Psi is set as \f$ D*B \f$.
 		*/
+		/// \brief Set Phi and Psi from the degree and coefficient bounds.
 		void SetPhiPsiFromBounds()
-		{	
+		{
 			Phi = degree_bound*(degree_bound-NumErrorT(1))*coefficient_bound;
 		    Psi = degree_bound*coefficient_bound;  //Psi from the AMP paper.
 		}
 
+		/// \brief Set all AMP criteria (bounds, epsilon, Phi, Psi) from a system.
 		void SetAMPConfigFrom(System const& sys)
 		{
 			SetBoundsAndEpsilonFrom(sys);
 			SetPhiPsiFromBounds();
 		}
 
-		AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
-		{}
+		/// \brief Construct with default AMP bounds and safety digits.
+		///
+		/// epsilon, Phi, and Psi are error bounds that are normally recomputed from the
+		/// system before tracking (\see SetAMPConfigFrom).  They are nonetheless initialized
+		/// here so that a default-constructed config is fully deterministic: epsilon takes the
+		/// single-variable value (\f$1^2\f$), and Phi/Psi are derived from the default bounds so
+		/// the object is internally consistent.  Leaving them uninitialized produced garbage
+		/// (e.g. NaN) that broke value comparison and pickle round-tripping.
+		AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), epsilon(1), safety_digits_1(1), safety_digits_2(1), maximum_precision(300)
+		{
+			SetPhiPsiFromBounds();
+		}
 
+		/// \brief Construct AMP settings derived from a system's bounds.
 		explicit
 		AdaptiveMultiplePrecisionConfig(System const& sys) : AdaptiveMultiplePrecisionConfig()
 		{
@@ -220,6 +278,7 @@ namespace tracking{
 		}
 	}; // re: AdaptiveMultiplePrecisionConfig
 
+	/// \brief Stream-insertion for AdaptiveMultiplePrecisionConfig, printing its bounds and safety digits.
 	inline
 	std::ostream& operator<<(std::ostream & out, AdaptiveMultiplePrecisionConfig const& AMP)
 	{
@@ -230,7 +289,7 @@ namespace tracking{
 		out << "Psi: " << AMP.Psi << "\n";
 		out << "safety_digits_1: " << AMP.safety_digits_1 << "\n";
 		out << "safety_digits_2: " << AMP.safety_digits_2 << "\n";
-		out << "consecutive_successful_steps_before_precision_decrease" << AMP.consecutive_successful_steps_before_precision_decrease << "\n";
+		out << "max_num_precision_decreases: " << AMP.max_num_precision_decreases << "\n";
 		return out;
 	}
 
@@ -263,18 +322,21 @@ namespace tracking{
 	
 
 // now for the TrackerTraits structs, which enable lookup of correct settings objects and types, etc.
+	/// \brief Trait lookup mapping a tracker type to its numeric types, event-emitter type, precision
+	///        config, and the type/config lists it needs.  Specialized per concrete tracker type.
 	template<class T>
 	struct TrackerTraits
 	{};
 
 
-	
+	/// \cond TRACKER_TRAITS_SPECIALIZATIONS
 
 	template<>
 	struct TrackerTraits<DoublePrecisionTracker>
 	{
-		using BaseComplexType = dbl;
-		using BaseRealType = double;
+		static constexpr char const* kRecordName = "double";  ///< Stable tracker name for records (b2rec ask identity; never typeid).
+		using BaseComplexT = complex_dbl;
+		using BaseRealT = double;
 		using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
 		using PrecisionConfig = FixedPrecisionConfig;
 		enum {
@@ -282,7 +344,7 @@ namespace tracking{
 			IsAdaptivePrec = 0
 		};
 
-		using NeededTypes = detail::TypeList<dbl>;
+		using NeededTypes = detail::TypeList<complex_dbl>;
 		using NeededConfigs = detail::TypeList<
 			SteppingConfig, 
 			NewtonConfig,
@@ -294,8 +356,9 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<MultiplePrecisionTracker>
 	{
-		using BaseComplexType = mpfr_complex;
-		using BaseRealType = mpfr_float;
+		static constexpr char const* kRecordName = "multiple";  ///< Stable tracker name for records (b2rec ask identity; never typeid).
+		using BaseComplexT = complex_mp;
+		using BaseRealT = real_mp;
 		using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 		using PrecisionConfig = FixedPrecisionConfig;
 
@@ -304,7 +367,7 @@ namespace tracking{
 			IsAdaptivePrec = 0
 		};
 
-		using NeededTypes = detail::TypeList<mpfr_complex>;
+		using NeededTypes = detail::TypeList<complex_mp>;
 
 		using NeededConfigs = detail::TypeList<
 			SteppingConfig, 
@@ -318,8 +381,9 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<AMPTracker>
 	{
-		using BaseComplexType = mpfr_complex;
-		using BaseRealType = mpfr_float;
+		static constexpr char const* kRecordName = "adaptive";  ///< Stable tracker name for records (b2rec ask identity; never typeid).
+		using BaseComplexT = complex_mp;
+		using BaseRealT = real_mp;
 		using EventEmitterType = AMPTracker;
 		using PrecisionConfig = AdaptiveMultiplePrecisionConfig;
 
@@ -328,7 +392,7 @@ namespace tracking{
 			IsAdaptivePrec = 1
 		};
 
-		using NeededTypes = detail::TypeList<dbl, mpfr_complex>;
+		using NeededTypes = detail::TypeList<complex_dbl, complex_mp>;
 
 		using NeededConfigs = detail::TypeList<
 			SteppingConfig, 
@@ -343,8 +407,8 @@ namespace tracking{
 	template<class D>
 	struct TrackerTraits<FixedPrecisionTracker<D> > : public TrackerTraits<D>
 	{ 
-		using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
-		using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+		using BaseComplexT = typename TrackerTraits<D>::BaseComplexT;
+		using BaseRealT = typename TrackerTraits<D>::BaseRealT;
 		using EventEmitterType = typename TrackerTraits<D>::EventEmitterType;
 		using PrecisionConfig = typename TrackerTraits<D>::PrecisionConfig;
 
@@ -356,6 +420,8 @@ namespace tracking{
 		using NeededTypes = typename TrackerTraits<D>::NeededTypes;
 		using NeededConfigs = typename TrackerTraits<D>::NeededConfigs;
 	};
+
+	/// \endcond
 
 } // re: namespace tracking 
 } // re: namespace bertini

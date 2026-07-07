@@ -25,6 +25,10 @@
 //  West Texas A&M University
 //  Spring 2016
 //
+// silviana amethyst
+// max planck institute of molecular cell biology and genetics
+// 2025
+//
 //
 //  python/symbol_export.hpp:  Header file for exposing symbol nodes to python.
 
@@ -70,7 +74,7 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 			
 		private:
-			std::string (NodeBaseT::*getname)() const = &NodeBaseT::name;
+			const std::string& (NodeBaseT::*getname)() const = &NodeBaseT::name;
 			void (NodeBaseT::*setname)(const std::string &) = &NodeBaseT::name;
 
 		};
@@ -122,7 +126,7 @@ namespace bertini{
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
-			
+
 		};
 
 		

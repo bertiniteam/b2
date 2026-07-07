@@ -41,34 +41,34 @@ BOOST_AUTO_TEST_SUITE(interpolation)
 
 
 BOOST_AUTO_TEST_SUITE(generic_tests_double_16)
-using BaseComplexType = bertini::dbl;
+using BaseComplexT = bertini::complex_dbl;
 unsigned ambient_precision = bertini::DoublePrecision();
 #include "test/endgames/generic_interpolation.hpp"
 BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 
 
 BOOST_AUTO_TEST_SUITE(generic_tests_double_30)
-using BaseComplexType = bertini::dbl;
+using BaseComplexT = bertini::complex_dbl;
 unsigned ambient_precision = 30;
 #include "test/endgames/generic_interpolation.hpp"
 BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 
 
 BOOST_AUTO_TEST_SUITE(generic_tests_mpfr_16)
-using BaseComplexType = bertini::mpfr_complex;
+using BaseComplexT = bertini::complex_mp;
 unsigned ambient_precision = bertini::DoublePrecision();
 #include "test/endgames/generic_interpolation.hpp"
 BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 
 
 BOOST_AUTO_TEST_SUITE(generic_tests_mpfr_30)
-using BaseComplexType = bertini::mpfr_complex;
+using BaseComplexT = bertini::complex_mp;
 unsigned ambient_precision = 30;
 #include "test/endgames/generic_interpolation.hpp"
 BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 
 BOOST_AUTO_TEST_SUITE(generic_tests_mpfr_100)
-using BaseComplexType = bertini::mpfr_complex;
+using BaseComplexT = bertini::complex_mp;
 unsigned ambient_precision = 100;
 #include "test/endgames/generic_interpolation.hpp"
 BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision

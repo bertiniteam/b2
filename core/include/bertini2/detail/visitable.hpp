@@ -49,6 +49,7 @@ namespace bertini{
 		template<class VisitedT, typename RetT>
 		struct DefaultConstruct
 		{
+			/// \brief Default behaviour on an unknown visitor: warn and return a default-constructed value.
 			static RetT OnUnknownVisitor(VisitedT&a, VisitorBase&) // VisitorBase is inherited from using CRTP -- it's not a template parameter to this function, so its typeid name is useless.
 			{
 				std::cout << "unknown visitor: " << a << " of type " << typeid(VisitedT).name() << ".  Make sure you've added it in all three places!  two in the class definition (type inheritance listing as visiting, and virtual function declaration), and one in cpp source (function definition)." << std::endl;
@@ -56,9 +57,11 @@ namespace bertini{
 			}
 		};
 
+		/// \brief A policy that throws (with the offending type names) when an unknown visitor is encountered.
 		template<class VisitedT, typename RetT>
 		struct RaiseExceptionWithTypeNamesInMessage
 		{
+			/// \brief Behaviour on an unknown visitor: throw a std::runtime_error naming the visited type.
 			static RetT OnUnknownVisitor(VisitedT&a, VisitorBase&)
 			{
 				std::stringstream err_msg;
@@ -87,8 +90,9 @@ namespace bertini{
 	class VisitableBase
 	{
 	public:
-		typedef RetT VisitReturnType;
+		typedef RetT VisitReturnType;  ///< The type returned when a visitor accepts this object.
 		virtual ~VisitableBase() = default;
+		/// \brief Accept a visitor (dispatch to the visitor's Visit for this concrete type).
 		virtual VisitReturnType Accept(VisitorBase&) = 0; // the implementation will either be provided by a macro, or by hand, for each class which is visitable.
 
 	protected:

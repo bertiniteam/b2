@@ -53,21 +53,18 @@ namespace node {
 
 	This class is an interface for all non-operators.
 	*/
-	class Symbol : public virtual Node
+	class Symbol : public Node
 	{
 		
 	public:
 		
 		virtual ~Symbol() = default;
 
-		unsigned EliminateZeros() override;
-		unsigned EliminateOnes() override;
-		
 	private:
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Node>(*this);
 		}
 	};
@@ -80,11 +77,57 @@ namespace node {
 	
 	
 	/**
+	\brief Capability class for things which have a name.
+
+	Deliberately NOT a Node: classes that need a name alongside a different
+	primary base (e.g. special_number::Pi, which is a Number) inherit this
+	without creating a diamond in the Node hierarchy.
+	*/
+	/// \brief Mixin holding a name, shared by named nodes without forming a diamond in the hierarchy.
+	class NameHolder
+	{
+	public:
+		/// \return The name.
+		const std::string& name() const
+		{
+			return name_;
+		}
+
+		/// \brief Set the name.
+		void name(const std::string& new_name)
+		{
+			name_ = new_name;
+		}
+
+	protected:
+		~NameHolder() = default;  // not polymorphic; never delete through NameHolder*
+
+		NameHolder() = default;
+
+		/// \brief Construct holding the given name.
+		explicit NameHolder(std::string new_name) : name_(std::move(new_name))
+		{}
+
+		std::string name_;  ///< The stored name.
+
+	private:
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned /*version*/) {
+			ar & name_;
+		}
+	};
+
+
+
+
+	/**
 	\brief Symbols which have names are named symbols.
-	
+
 	Symbols which have names are named symbols.
 	*/
-	class NamedSymbol : public virtual Symbol
+	class NamedSymbol : public Symbol
 	{
 
 	public:
@@ -113,14 +156,14 @@ namespace node {
 	protected:
 		NamedSymbol() = default;
 
-		std::string name_;
+		std::string name_;  ///< The stored name.
 
 	private:
 
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Symbol>(*this);
 			ar & name_;
 		}
