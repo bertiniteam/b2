@@ -151,37 +151,44 @@ copyright = '2015-2026, Bertini Team'
 author = 'Bertini Team'
 
 
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents. Prefer CI-supplied env vars (set by .github/workflows/docs.yml)
-# since they work on shallow clones; fall back to gitpython for local builds.
-last_commit = os.environ.get('BERTINI_GIT_SHA')
-if last_commit:
-    version = last_commit[:7]
-    release = last_commit
-else:
+# The version info shown as |version| / |release| (furo prints `release` in the sidebar header).
+# This MUST be the actual package version -- never a commit hash -- and must be defined in every
+# build path.  Prefer the installed distribution's metadata: the docs are built against the built
+# wheel, so this matches it exactly and is well-defined for wheel installs.  Fall back to the
+# top-level VERSION file (the single source of truth, per pyproject/CMake) for a source-tree build
+# with nothing installed.  Never leave a commit hash or the literal 'unknown' on the front page.
+from pathlib import Path as _Path
+release = ''
+try:
+    from importlib.metadata import version as _dist_version
+    release = _dist_version('bertini2')
+except Exception:
+    release = ''
+if not release:
+    try:
+        release = (_Path(__file__).resolve().parents[3] / 'VERSION').read_text().strip()
+    except Exception:
+        release = ''
+version = release  # furo shows `release`; keep them identical so the header is never blank/truncated
+
+# Build provenance (commit + date) is kept OUT of the version string and shown only in the footer
+# (_templates/footer.html, gated on `commit_sha`).  Prefer the CI-supplied SHA (works on shallow
+# clones); fall back to gitpython for local checkouts; if neither resolves, leave it empty so the
+# footer hides the line entirely rather than printing 'unknown' or a broken commit link.
+build_commit = os.environ.get('BERTINI_GIT_SHA', '')
+if not build_commit:
     try:
         import git  # package gitpython
-        repo = git.Repo(search_parent_directories=True)
-        last_commit = str(repo.head.commit)
-        version = last_commit[:7]
-        release = last_commit
+        build_commit = str(git.Repo(search_parent_directories=True).head.commit)
     except Exception:
-        last_commit = 'unknown'
-        version = last_commit
-        release = version
-
+        build_commit = ''
 build_date = os.environ.get('BERTINI_BUILD_DATE', '')
-if build_date:
-    # the theme shows `release` in the sidebar header; appending the build date
-    # there makes it visible without template overrides.
-    release = '{} ({})'.format(version, build_date)
 
 # Expose build metadata to Jinja templates (used by _templates/footer.html
 # to render the "Built from <sha> on <date>" line in the page footer).
 html_context = {
-    'commit_sha': last_commit if last_commit and last_commit != 'unknown' else '',
-    'commit_short': version if last_commit and last_commit != 'unknown' else '',
+    'commit_sha': build_commit,
+    'commit_short': build_commit[:7] if build_commit else '',
     'build_date': build_date,
 }
 
