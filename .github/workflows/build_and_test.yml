@@ -474,7 +474,7 @@ jobs:
           # (and locally); the older blame on "MPFR 3.1.6" was a misdiagnosis.  Running
           # the full suite here is the in-container proof of the fix.  If it flakes or
           # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
-          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy pandas networkx"
+          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy pandas networkx matplotlib"
           # The explicit `bertini2 --version` up front is a permanent smoke test of the
           # BUNDLED CLI BINARY: wheel repair rewrites its ELF metadata (patchelf via
           # auditwheel), and a bad rewrite segfaults in the dynamic loader before main()
@@ -611,7 +611,7 @@ jobs:
 
       - name: Run Python tests
         run: |
-          pip install pytest pytest-timeout sympy pandas networkx
+          pip install pytest pytest-timeout numpy sympy pandas networkx matplotlib
           python -m pytest python/test/ -v
 
   test_wheels_windows:
@@ -649,5 +649,5 @@ jobs:
           conda install -y python=${{ matrix.python-version }} --update-deps
           $py = "C:\Miniconda\envs\b2-windows\python.exe"
           & $py -m pip install --no-index --find-links dist/ bertini2
-          & $py -m pip install pytest pytest-timeout sympy pandas networkx networkx
+          & $py -m pip install pytest pytest-timeout numpy sympy pandas networkx matplotlib
           & $py -m pytest python/test/ -v
