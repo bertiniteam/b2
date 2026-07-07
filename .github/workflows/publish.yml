@@ -173,6 +173,6 @@ jobs:
     needs: [check_version, build_and_test]
     uses: ./.github/workflows/build_docs.yml
     permissions:
-      contents: read
+      contents: write  # build_docs pushes the persistent docs-store branch (versioned docs)
       pages: write
       id-token: write
