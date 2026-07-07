@@ -59,15 +59,10 @@ concurrency:
   group: build-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
-# Single source of truth for the eigenpy version built from source for the
-# Linux/macOS wheels.  Pin exact for reproducible builds; bump deliberately
-# (eigenpy >= 3.13 requires Python >= 3.10, so the wheel matrix drops 3.9).
+# Boost/Eigen/eigenpy versions are single-sourced in .github/ci-deps-versions.env and surfaced by
+# the `set_versions` job; the two jobs that build them from source consume it as job-level env.
+# That same file is in build-ci-image.yml's path filter, so a version bump rebuilds the Linux image.
 env:
-  EIGENPY_VERSION: "3.13.0"
-  # Single source of truth for the Boost version (C++ tests + wheels).  Pin exact;
-  # bump deliberately.  The tarball/dir use the underscored form (boost_1_90_0),
-  # derived in-shell where needed since GitHub expressions have no string replace().
-  BOOST_VERSION: "1.90.0"
   # Opt JavaScript actions into Node 24 (Node 20 is being removed from the runners).
   # Silences the conda-incubator/setup-miniconda@v3 (and other node20 action) deprecation.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -80,6 +75,25 @@ jobs:
   doc_lint:
     name: Documentation lint
     uses: ./.github/workflows/doc_lint.yml
+
+  set_versions:
+    name: Resolve dependency versions
+    runs-on: ubuntu-latest
+    outputs:
+      boost: ${{ steps.v.outputs.boost }}
+      eigen: ${{ steps.v.outputs.eigen }}
+      eigenpy: ${{ steps.v.outputs.eigenpy }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: v
+        name: Read .github/ci-deps-versions.env
+        run: |
+          set -a; . .github/ci-deps-versions.env; set +a
+          {
+            echo "boost=$BOOST_VERSION"
+            echo "eigen=$EIGEN_VERSION"
+            echo "eigenpy=$EIGENPY_VERSION"
+          } >> "$GITHUB_OUTPUT"
 
   set_matrix:
     name: Set OS matrix
@@ -110,8 +124,10 @@ jobs:
   test_cpp_unix:
     name: C++ tests on ${{ matrix.os }}
     if: ${{ inputs.minimal != true }}
-    needs: [doc_lint, set_matrix]
+    needs: [doc_lint, set_matrix, set_versions]
     runs-on: ${{ matrix.os }}
+    env:
+      BOOST_VERSION: ${{ needs.set_versions.outputs.boost }}
     timeout-minutes: 30   # backstop against a hang; healthy runs are ~7 min
     strategy:
       fail-fast: false
@@ -319,9 +335,13 @@ jobs:
 
   build_macos_ubuntu_wheels:
     name: ${{ matrix.os }} Python-${{ matrix.python-version }} wheels
-    needs: [set_matrix, test_cpp_unix]
+    needs: [set_matrix, test_cpp_unix, set_versions]
     if: ${{ !failure() && !cancelled() }}
     runs-on: ${{ matrix.os }}
+    env:
+      BOOST_VERSION: ${{ needs.set_versions.outputs.boost }}
+      EIGEN_VERSION: ${{ needs.set_versions.outputs.eigen }}
+      EIGENPY_VERSION: ${{ needs.set_versions.outputs.eigenpy }}
     strategy:
       fail-fast: false
       matrix:
@@ -340,7 +360,7 @@ jobs:
             ~/.cache/cibuildwheel
             ~/Library/Caches/Homebrew
             /tmp/boost_*.tar.bz2
-            /tmp/eigen-3.4.0.tar.gz
+            /tmp/eigen-${{ env.EIGEN_VERSION }}.tar.gz
             /tmp/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz
           key: ${{ runner.os }}-cibw-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'python/pyproject.toml', 'CMakeLists.txt', 'core/CMakeLists.txt', '.github/workflows/build_and_test.yml', 'python_bindings/include/tracker_export.hpp', 'python_bindings/include/endgame_export.hpp') }}
           restore-keys: |
@@ -402,10 +422,10 @@ jobs:
             install -m755 /tmp/pe/bin/patchelf /usr/local/bin/patchelf &&
             echo "pinned $(patchelf --version) at $(command -v patchelf)" &&
             cd /tmp &&
-            { [ -f eigen-3.4.0.tar.gz ] || wget -q https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz ; } &&
-            rm -rf eigen-3.4.0 && tar xzf eigen-3.4.0.tar.gz &&
-            cmake -S eigen-3.4.0 -B eigen-3.4.0/bld -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release &&
-            cmake --install eigen-3.4.0/bld &&
+            { [ -f eigen-${{ env.EIGEN_VERSION }}.tar.gz ] || wget -q https://gitlab.com/libeigen/eigen/-/archive/${{ env.EIGEN_VERSION }}/eigen-${{ env.EIGEN_VERSION }}.tar.gz ; } &&
+            rm -rf eigen-${{ env.EIGEN_VERSION }} && tar xzf eigen-${{ env.EIGEN_VERSION }}.tar.gz &&
+            cmake -S eigen-${{ env.EIGEN_VERSION }} -B eigen-${{ env.EIGEN_VERSION }}/bld -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release &&
+            cmake --install eigen-${{ env.EIGEN_VERSION }}/bld &&
             { [ -f eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ] || wget -q https://github.com/stack-of-tasks/eigenpy/releases/download/v${{ env.EIGENPY_VERSION }}/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ; }
           # On macOS, Homebrew's boost-python3 / eigenpy bottles track the current
           # Homebrew default Python (now 3.14), so a cp313 wheel that bundles them
