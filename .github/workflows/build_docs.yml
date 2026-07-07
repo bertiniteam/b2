@@ -111,7 +111,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install \
             sphinx furo sphinxcontrib-bibtex gitpython \
-            scikit-build-core build numpy matplotlib pandas
+            scikit-build-core build numpy matplotlib pandas sympy networkx
 
       - name: Download built wheel
         uses: actions/download-artifact@v5
