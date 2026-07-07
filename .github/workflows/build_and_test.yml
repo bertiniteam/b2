@@ -416,29 +416,22 @@ jobs:
           # so each wheel bundles a matching libboost_python3X.
           CIBW_BUILD: ${{ env.CIBW_BUILD }}
           CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
+          # Prebuilt deps image (built by build-ci-image.yml).  The tag is the toolchain key from
+          # the single-sourced versions, so a bump pins a new tag -- and if that tag isn't built
+          # yet, cibuildwheel's pull fails loudly (the implicit ABI assert; no silent mismatch).
+          CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/bertiniteam/b2-manylinux-deps:boost${{ env.BOOST_VERSION }}-eigen${{ env.EIGEN_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}-mlx2_34
           # cibuildwheel COPIES the project into the container (no bind mount), so
           # a cache written under /project is discarded.  mount the host ccache dir
           # explicitly; ignored on macOS (host build, no container).
           CIBW_CONTAINER_ENGINE: "docker; create_args: --volume=${{ github.workspace }}/.ccache:/ccache-host"
-          # Install system deps + download (but DO NOT build) Boost & eigenpy sources
-          # once per container. Boost.Python is ABI-locked to a single CPython version,
-          # so it must be rebuilt per target Python in BEFORE_BUILD — building it here
-          # against the manylinux system python3 produces a single libboost_python3X that
-          # all wheels would then bundle, breaking import on the other CPython versions.
+          # Everything is prebuilt in the image (Boost/Boost.Python + eigenpy at /opt/deps/<tag>;
+          # eigen/ccache/patchelf/openmpi installed).  So BEFORE_ALL just asserts the image is the
+          # one we expect -- a fast, loud failure if we ever point at the wrong/empty image.
           CIBW_BEFORE_ALL_LINUX: >
-            yum install -y wget gmp-devel mpfr-devel libmpc-devel libtool &&
-            { yum install -y ccache || { yum install -y epel-release && yum install -y ccache; }; } &&
-            ccache --version &&
-            python3 -m venv /tmp/pe && /tmp/pe/bin/pip install -q "patchelf==0.17.2.1" &&
-            install -m755 /tmp/pe/bin/patchelf /usr/local/bin/patchelf &&
-            echo "pinned $(patchelf --version) at $(command -v patchelf)" &&
-            cd /tmp &&
-            { [ -f eigen-${{ env.EIGEN_VERSION }}.tar.gz ] || wget -q https://gitlab.com/libeigen/eigen/-/archive/${{ env.EIGEN_VERSION }}/eigen-${{ env.EIGEN_VERSION }}.tar.gz ; } &&
-            rm -rf eigen-${{ env.EIGEN_VERSION }} && tar xzf eigen-${{ env.EIGEN_VERSION }}.tar.gz &&
-            cmake -S eigen-${{ env.EIGEN_VERSION }} -B eigen-${{ env.EIGEN_VERSION }}/bld -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release &&
-            cmake --install eigen-${{ env.EIGEN_VERSION }}/bld &&
-            { [ -f eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ] || wget -q https://github.com/stack-of-tasks/eigenpy/releases/download/v${{ env.EIGENPY_VERSION }}/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ; }
+            ls -1 /opt/deps &&
+            command -v patchelf &&
+            ccache --version >/dev/null &&
+            command -v mpicc
           # On macOS, Homebrew's boost-python3 / eigenpy bottles track the current
           # Homebrew default Python (now 3.14), so a cp313 wheel that bundles them
           # imports a libboost_python314.dylib into a 3.13 interpreter and segfaults.
@@ -449,30 +442,16 @@ jobs:
             cd /tmp &&
             { [ -f eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ] || curl -fsSL -o eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz https://github.com/stack-of-tasks/eigenpy/releases/download/v${{ env.EIGENPY_VERSION }}/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ; }
 
-          # Build Boost and eigenpy fresh against the active per-Python interpreter
-          # so each wheel bundles a matching libboost_python3X.
+          # Deps are prebuilt in the image at /opt/deps/<cpXY-cpXY>.  Point the build at the active
+          # Python's prefix via a stable /opt/deps/current symlink (CIBW_ENVIRONMENT_LINUX is a
+          # static string, so it can't compute the per-Python path itself).
           CIBW_BEFORE_BUILD_LINUX: >
             pip install scikit-build-core numpy scipy &&
-            rm -rf /tmp/deps-py && mkdir -p /tmp/deps-py &&
-            PY_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')") &&
-            PY_INC=$(python -c "import sysconfig; print(sysconfig.get_path('include'))") &&
-            PY_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')") &&
-            cd /tmp &&
-            BU="boost_$(echo ${{ env.BOOST_VERSION }} | tr . _)" &&
-            { [ -f "$BU.tar.bz2" ] || wget -q "https://archives.boost.io/release/${{ env.BOOST_VERSION }}/source/$BU.tar.bz2" ; } &&
-            rm -rf "$BU" && tar xjf "$BU.tar.bz2" &&
-            cd "$BU" &&
-            ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py &&
-            printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam &&
-            ./b2 install -j$(nproc) --user-config=user-config.jam python=$PY_VER --without-mpi &&
-            cd /tmp &&
-            rm -rf eigenpy-${{ env.EIGENPY_VERSION }} && tar zxf eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz &&
-            cd eigenpy-${{ env.EIGENPY_VERSION }} && mkdir -p bld && cd bld &&
-            cmake .. -DCMAKE_PREFIX_PATH=/tmp/deps-py -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF -DCMAKE_INSTALL_DO_STRIP=ON &&
-            make -j2 install &&
-            find /tmp/deps-py -name '*.so*' -type f | while read f; do
-              err=$(strip --strip-unneeded "$f" 2>&1) || echo "strip failed on $f: $err"
-            done
+            PYTAG="cp$(python -c 'import sys;v=sys.version_info;print(f"{v.major}{v.minor}")')" &&
+            DEPS="$(ls -d /opt/deps/${PYTAG}-* | head -1)" &&
+            test -d "$DEPS" &&
+            ln -sfn "$DEPS" /opt/deps/current &&
+            echo "using prebuilt Boost+eigenpy at $DEPS"
 
           # On macOS, build all Boost components (including Boost.Python) into /tmp/deps-py
           # so delocate sees only one set of dylibs. boost-base is used only for C++ tests.
@@ -513,7 +492,7 @@ jobs:
               make -j2 install
             fi
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
-          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/tmp/deps-py/lib:/tmp/deps-py/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/tmp/deps-py CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=4 CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
+          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/opt/deps/current/lib:/opt/deps/current/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/opt/deps/current CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=4 CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           # Full pytest suite, restored 2026-06-08 now that the uninitialized-numpy-slot
           # crash is fixed in the bindings (see ADR-0006).  The build image is
@@ -523,7 +502,9 @@ jobs:
           # (and locally); the older blame on "MPFR 3.1.6" was a misdiagnosis.  Running
           # the full suite here is the in-container proof of the fix.  If it flakes or
           # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
-          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy pandas networkx matplotlib"
+          # mpi4py builds against the image's OpenMPI, so the MPI test modules run (at 1 rank)
+          # instead of skipping -- 0 skiptests on Linux, matching Windows/macOS.
+          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy pandas networkx matplotlib mpi4py"
           # The explicit `bertini2 --version` up front is a permanent smoke test of the
           # BUNDLED CLI BINARY: wheel repair rewrites its ELF metadata (patchelf via
           # auditwheel), and a bad rewrite segfaults in the dynamic loader before main()
@@ -535,7 +516,7 @@ jobs:
             cd {project} &&
             elf=$(python -c "import bertini,os;print(os.path.join(os.path.dirname(bertini.__file__),'_bin','bertini2'))") &&
             "$elf" --version &&
-            python -m pytest python/test/ -q
+            python -m pytest python/test/ -rs -q
 
       - name: ccache size (cold run = grows from nothing; warm run = hits)
         if: always()
