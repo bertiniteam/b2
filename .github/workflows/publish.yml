@@ -44,7 +44,7 @@ jobs:
   check_timing_freshness:
     name: Check tutorial timings are fresh
     # Only gate real releases -- prereleases (.dev/a/b/rc) are exactly when a timing refresh may not
-    # have happened yet.  A skipped job counts as satisfied for downstream `needs`.
+    # have happened yet, so this job is skipped for them.
     if: needs.check_version.outputs.is_prerelease == 'false'
     needs: check_version
     runs-on: ubuntu-latest
@@ -56,6 +56,11 @@ jobs:
   build_and_test:
     name: Build and test
     needs: [check_version, check_timing_freshness]
+    # A *skipped* freshness check (prerelease) must NOT skip the build -- only a *failed* one should.
+    # GitHub propagates a skipped `needs` as a skip under the default `if: success()`, so spell out
+    # the intent: run unless cancelled, require version-match, and treat freshness as a gate only
+    # when it actually ran and failed (skipped == satisfied).
+    if: ${{ !cancelled() && needs.check_version.result == 'success' && needs.check_timing_freshness.result != 'failure' }}
     uses: ./.github/workflows/build_and_test.yml
 
   publish-to-testpypi:
