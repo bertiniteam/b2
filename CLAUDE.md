@@ -146,15 +146,15 @@ compilers, and versions.  Rules that follow:
 
 - **GMP/MPFR/MPC** -- Arbitrary-precision arithmetic (found via custom CMake modules in `cmake/`)
 - **Eigen 3** -- Linear algebra. **Not** pinned in cmake (`find_package(Eigen3)`, no version floor). In practice the version is coupled to the eigenpy build: the wheel CI builds **eigen 3.4.0** and then builds eigenpy against it (a dev env may use newer, e.g. `eigen=5.0.1`). Newer Eigen is welcome -- we *want* upstream improvements -- but it must be matched by an eigenpy built against the same Eigen (they share Eigen types across the binding ABI).
-- **Boost** (serialization, filesystem, log, graph, regex, timer, chrono, thread, unit_test_framework, python) -- no minimum version pinned in cmake; `boost_system` is conditionally linked for Boost < 1.89 (header-only from 1.89). Boost.Python is ABI-locked to one CPython version, so CI rebuilds it per target Python.
-- **eigenpy** -- Eigen/NumPy bridge for Python bindings. Built **from source** in CI at a single pinned version (`EIGENPY_VERSION` in `build_and_test.yml`, currently `3.13.0`) against the chosen Eigen -- eigenpy and bertini must use the *same* Eigen. eigenpy >= 3.13 sets the Python floor (>= 3.10).
+- **Boost** (serialization, filesystem, log, graph, regex, timer, chrono, thread, unit_test_framework, python) -- no minimum version pinned in cmake; `boost_system` is conditionally linked for Boost < 1.89 (header-only from 1.89). Boost.Python is ABI-locked to one CPython version, so it is built **per target Python** -- but this now happens **once, up front, in the prebuilt CI deps** (Linux image / macOS tarballs, ADR-0049), *not* recompiled in every wheel run.
+- **eigenpy** -- Eigen/NumPy bridge for Python bindings. **Prebuilt** into the CI deps (image/tarballs), not built-from-source per run, against the chosen Eigen -- eigenpy and bertini must use the *same* Eigen. The version is single-sourced in `.github/ci-deps-versions.env` (`EIGENPY_VERSION`, currently `3.13.0`); eigenpy >= 3.13 sets the Python floor (>= 3.10).
 - **jrl-cmakemodules** -- CMake helper macros (auto-fetched via FetchContent if not found)
 
 ## Build System Notes
 
 - The root `CMakeLists.txt` uses `jrl-cmakemodules` (fetched automatically). It currently only adds `core/` as a subdirectory; `python_bindings/` and `python/` subdirectory calls are commented out (the wheel build via scikit-build-core handles them).
 - `pyproject.toml` configures scikit-build-core: wheel packages from `python/bertini/`, build dir is `bld/`.
-- Cross-platform: Linux uses manylinux Docker + `auditwheel`; macOS uses Homebrew; Windows uses conda + clang-cl (MSVC has template compilation issues).
+- Cross-platform: Linux builds in a **custom prebuilt manylinux image** (`ghcr.io/bertiniteam/b2-manylinux-deps`, ADR-0049) + `auditwheel`; macOS uses Homebrew + **prebuilt Boost/eigenpy tarballs** (the `ci-deps` release); Windows uses conda-forge (which already ships prebuilt Boost/eigenpy) + clang-cl (MSVC has template compilation issues).
 - `-Werror` is disabled globally. `-pedantic` is stripped from flags.
 
 ## CI/CD
@@ -165,7 +165,7 @@ compilers, and versions.  Rules that follow:
 
 ### Linux wheel test coverage
 
-Linux wheels are built inside a `manylinux_2_34` container (AlmaLinux 9, MPFR 4.1; set via `CIBW_MANYLINUX_X86_64_IMAGE`). The **full pytest suite runs on all three platforms** — on Linux it runs *inside* that container via `CIBW_TEST_COMMAND_LINUX`, and on macOS/Windows via the host-runner test jobs.
+Linux wheels are built inside the **custom prebuilt deps image** (`ghcr.io/bertiniteam/b2-manylinux-deps`, an `manylinux_2_34`/AlmaLinux 9 base with Boost+eigenpy baked in; set via `CIBW_MANYLINUX_X86_64_IMAGE`; ADR-0049). The **full pytest suite runs on all three platforms** — on Linux it runs *inside* that container via `CIBW_TEST_COMMAND_LINUX`, and on macOS/Windows via the host-runner test jobs. `mpi4py` is installed in every test env (the image ships OpenMPI), so the MPI test modules **run at 1 rank rather than skip** — the suites are 0-skip on all three platforms.
 
 This was not always so: for a while Linux ran an import smoke test only, because the suite was SIGABRT/SIGSEGV-crashing — a crash *misattributed* to the older `manylinux_2_28` container's MPFR 3.1.6. The real cause is a **version-independent** bug (uninitialized `mpfr`/`mpc` numpy slots), now fixed in the bindings. Do **not** try to fix Linux test crashes by bumping MPFR or the manylinux image (that was tried and does not work) or by building MPFR from source (specifically out of bounds). See `docs/adr/0006-eigenpy-uninitialized-numpy-slot-guards.md` for the fix and `docs/adr/0003-manylinux-no-full-pytest.md` for the (now reversed) smoke-test stopgap and its history.
 
@@ -199,4 +199,4 @@ Single-argument bindings and read-only `Vec<T> const&` bindings are unaffected. 
 
 - C++ standard: C++17. Headers use `.hpp` extension.
 - License: GPL v3 with additional terms (see `licenses/`, `core/ADDITIONAL_GPL_TERMS`).
-- Version is tracked in `pyproject.toml` (the `version = "..."` line), read at runtime via `importlib.metadata.version("bertini2")`.
+- Version single source of truth is the top-level **`VERSION`** file; `pyproject.toml` reads it *dynamically* (scikit-build-core), and `publish.yml`'s `check_version` asserts the release tag matches it. Read at runtime via `importlib.metadata.version("bertini2")`. Bumping requires a PR (develop is ruleset-guarded), but `VERSION` is in `paths-ignore` so a version-only PR runs no CI.
