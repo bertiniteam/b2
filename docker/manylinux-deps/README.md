@@ -25,14 +25,23 @@ error — it's a runtime `SIGABRT`/`SIGSEGV` (this repo has that history, ADR-00
   own `BOOST_VERSION`/`EIGENPY_VERSION` before building. Bump a version → new tag → new
   image; a stale image can never be silently consumed.
 
-## Layout the image provides
+## The complete build+test env
+
+The image is the whole Linux env, factored and assembled once — not just the C++ deps:
 
 - `/opt/deps/<cpXY-cpXY>/` — Boost (incl. `libboost_python3X`) + eigenpy for that CPython.
 - `/usr/local/` — Eigen headers (CPython-independent).
+- **OpenMPI** (`/usr/lib64/openmpi`, on `PATH`) — so `pip install mpi4py` builds in the
+  wheel *test* venv, which **un-skips the MPI tests** (`test_mpi_zerodim.py`,
+  `test_doc_example_scripts.py`). Toward the 0-skiptests goal.
+- **ccache** and a **pinned patchelf 0.17.2.1** — moved off `CIBW_BEFORE_ALL_LINUX`.
 
-Main CI (`build_and_test.yml`) sets, per active Python tag:
-`CMAKE_PREFIX_PATH=/opt/deps/<tag>` and `LD_LIBRARY_PATH=/opt/deps/<tag>/lib:...`, and its
-`CIBW_BEFORE_BUILD_LINUX` drops from "compile Boost+eigenpy" to a no-op.
+Main CI (`build_and_test.yml`) then sets, per active Python tag:
+`CMAKE_PREFIX_PATH=/opt/deps/<tag>` and `LD_LIBRARY_PATH=/opt/deps/<tag>/lib:...`;
+`CIBW_BEFORE_ALL_LINUX` collapses to ~nothing and `CIBW_BEFORE_BUILD_LINUX` drops from
+"compile Boost+eigenpy" to a no-op. Python test deps stay in `CIBW_TEST_REQUIRES_LINUX`
+(cibuildwheel's test phase is an isolated venv, so it re-pip-installs them — cheap for
+pure-Python deps; `mpi4py` now *builds* because OpenMPI is present).
 
 ## Building / publishing
 
