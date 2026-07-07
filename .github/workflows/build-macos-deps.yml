@@ -19,15 +19,15 @@ on:
     branches: [develop]
     paths:
       - '.github/workflows/build-macos-deps.yml'
+      - '.github/ci-deps-versions.env'   # a version bump here rebuilds the macOS tarballs
 
 concurrency:
   group: macos-deps-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  # Keep in lockstep with build_and_test.yml.
-  BOOST_VERSION: "1.90.0"
-  EIGENPY_VERSION: "3.13.0"
+  # BOOST_VERSION / EIGENPY_VERSION are single-sourced in .github/ci-deps-versions.env
+  # and loaded by the "Load dep versions" step below.
   RELEASE_TAG: "ci-deps"          # a permanent prerelease that just holds CI dep bundles
 
 jobs:
@@ -41,6 +41,9 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     steps:
+      - uses: actions/checkout@v5
+      - name: Load dep versions
+        run: cat .github/ci-deps-versions.env >> "$GITHUB_ENV"
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
