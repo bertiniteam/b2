@@ -1,0 +1,7 @@
+<map id="bertini::endgame::EventRecorder&lt; EndgameT &gt;" name="bertini::endgame::EventRecorder&lt; EndgameT &gt;">
+<area shape="rect" id="Node000001" title="Counts endgame events and captures their payloads, for tests and diagnostics." alt="" coords="5,167,241,207"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Observer.html" title=" " alt="" coords="52,79,195,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="126,133,126,166,121,166,121,133"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1AnyObserver.html" title="Strawman base class for Observer objects." alt="" coords="45,5,201,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="126,44,126,79,121,79,121,44"/>
+</map>

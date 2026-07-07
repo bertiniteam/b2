@@ -1,0 +1,15 @@
+<map id="core/include/bertini2/nag_algorithms/midpath_check.hpp" name="core/include/bertini2/nag_algorithms/midpath_check.hpp">
+<area shape="rect" id="Node000001" title="Provides methods for checking for path crossings." alt="" coords="149,5,334,60"/>
+<area shape="rect" id="Node000002" href="$sharpen_8hpp.html" title="Provides the algorithms for sharpening points." alt="" coords="32,115,243,155"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="206,72,159,117,155,113,202,68"/>
+<area shape="rect" id="Node000003" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="267,108,426,163"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="281,68,321,106,317,110,277,72"/>
+<area shape="rect" id="Node000004" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,211,240,251"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="272,170,169,213,167,208,270,165"/>
+<area shape="rect" id="Node000005" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,299,308,339"/>
+<area shape="poly" id="edge5_Node000003_Node000005" title=" " alt="" coords="319,175,218,300,213,297,315,172"/>
+<area shape="rect" id="Node000006" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="315,211,517,251"/>
+<area shape="poly" id="edge6_Node000003_Node000006" title=" " alt="" coords="368,172,397,209,393,212,364,176"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="151,259,185,297,181,300,147,263"/>
+<area shape="poly" id="edge7_Node000006_Node000003" title=" " alt="" coords="400,201,372,165,377,161,404,198"/>
+</map>

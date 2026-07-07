@@ -1,0 +1,1267 @@
+
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html"><link rel="next" title="🎨 The continuation cartoon, from real data — and seeing precision change" href="../homotopy_cartoon_from_real_data/index.html"><link rel="prev" title="Observing, metadata, and more" href="../index.html">
+        <link rel="prefetch" href="../../../_static/bpy_icon_.svg" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>👀 Watching the paths: observers and path data - Bertini 3.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4805ae4f" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">Bertini 3.0.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/bpy_icon_.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Bertini 3.0.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../welcome.html">👋 Welcome to Bertini 2</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../tutorials.html">🔦 Tutorials</a><input aria-label="Toggle navigation of 🔦 Tutorials" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../formulating_and_solving/index.html">Formulating and solving systems</a><input aria-label="Toggle navigation of Formulating and solving systems" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/all_solutions/index.html">🌐 Finding <em>all</em> the solutions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/zerodim_solver/index.html">🎯 Solving a system with ZeroDimSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/real_points/index.html">📍 A real point on every component (the Trott curve)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/critical_points/index.html">🎯 Critical points by rank deficiency (a null vector, not a determinant)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/eigenvalues_by_homotopy/index.html">🧮 Eigenvalues by homotopy continuation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/parameter_homotopy/index.html">🔁 Parameter homotopy: solve once, re-solve many times</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/concatenate_systems/index.html">🧱 Build a system in pieces with clone and concatenate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/randomize/index.html">🎲 Randomize an overdetermined system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/user_product_of_linears/index.html">🪢 Author your own start system: a product of linears</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/canonical_ordering/index.html">🧮 Canonical ordering, and opting out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/solution_dataframe/index.html">🗃️ A dataframe of solutions: filtering and plotting with pandas</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../manipulating_solutions/index.html">Manipulating solutions</a><input aria-label="Toggle navigation of Manipulating solutions" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../manipulating_solutions/intro_to_slices/index.html">✂️ Intro to slices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../manipulating_solutions/moving_slice/index.html">🛷 Move a slice, hold the system fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../settings_and_precision/index.html">Solver settings &amp; multiprecision</a><input aria-label="Toggle navigation of Solver settings &amp; multiprecision" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/carrying_settings/index.html">⚙️ Carrying settings across related solves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/crossed_paths/index.html">🪢 Crossed paths: when two paths become one</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/precision_matters/index.html">🎚️ When double precision is not enough</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/precision_models/index.html">🔬 Precision models: double, multiple, adaptive</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../parallelism/index.html">Parallelism in Python</a><input aria-label="Toggle navigation of Parallelism in Python" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../parallelism/solving_at_scale/index.html">🚀 Solving at scale: many cores, many machines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../parallelism/parallel_parameter_homotopy/index.html">⚗️ A bistable reaction network, mapped in parallel</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../index.html">Observing, metadata, and more</a><input aria-label="Toggle navigation of Observing, metadata, and more" checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">👀 Watching the paths: observers and path data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../homotopy_cartoon_from_real_data/index.html">🎨 The continuation cartoon, from real data — and seeing precision change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../classic_continuation_cartoon/index.html">🖼️ The classic continuation cartoon, from real data</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../performance_benchmarking/index.html">Performance and benchmarking</a><input aria-label="Toggle navigation of Performance and benchmarking" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../performance_benchmarking/bertini1_vs_bertini2_timing/index.html">⏱️ Timing Bertini 1 vs Bertini 2</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../record_keeping/index.html">The record-keeping system</a><input aria-label="Toggle navigation of The record-keeping system" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../record_keeping/automatic_record_keeping/index.html">Automatic record keeping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../record_keeping/chained_homotopies/index.html">Chained homotopies: provenance all the way back</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../doing_things_manually/index.html">Doing things manually</a><input aria-label="Toggle navigation of Doing things manually" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/evaluation_cyclic/index.html">♻️ Evaluation of cyclic-<span class="math notranslate nohighlight">\(n\)</span> polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/manual_endgame_usage/index.html">🎮 Using an endgame to compute singular endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/tracking_nonsingular/index.html">🛤 Tracking to nonsingular endpoints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed/everyday.html">🌟 Everyday API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../known_gotchas.html">⚠️ Known gotchas</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../detailed/api.html">🔎 Full API reference</a><input aria-label="Toggle navigation of 🔎 Full API reference" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.algorithms.html">bertini.algorithms</a><input aria-label="Toggle navigation of bertini.algorithms" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detailed/_autosummary/bertini.algorithms.zerodim.html">bertini.algorithms.zerodim</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.config.html">bertini.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.endgame.html">bertini.endgame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.logging.html">bertini.logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.multiprec.html">bertini.multiprec</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.nag_algorithm.html">bertini.nag_algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.operators.html">bertini.operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.parallel.html">bertini.parallel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.parse.html">bertini.parse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.random.html">bertini.random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.records.html">bertini.records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.symbolics.html">bertini.symbolics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.sympy_bridge.html">bertini.sympy_bridge</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.system.html">bertini.system</a><input aria-label="Toggle navigation of bertini.system" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detailed/_autosummary/bertini.system.start_system.html">bertini.system.start_system</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.html">bertini.tracking</a><input aria-label="Toggle navigation of bertini.tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.html">bertini.tracking.observers</a><input aria-label="Toggle navigation of bertini.tracking.observers" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.amp.html">bertini.tracking.observers.amp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.double.html">bertini.tracking.observers.double</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.multiple.html">bertini.tracking.observers.multiple</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.windows_dll_manager.html">bertini.windows_dll_manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../zbib.html">📚 Bibliography</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../../_sources/tutorials/observing_metadata_more/observers_and_path_data/index.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="watching-the-paths-observers-and-path-data">
+<h1>👀 Watching the paths: observers and path data<a class="headerlink" href="#watching-the-paths-observers-and-path-data" title="Link to this heading">¶</a></h1>
+<p>Bertini tracks solution paths, but by default you only see where they <em>end</em>.  An <strong>observer</strong>
+lets you watch what happens <em>along</em> the way: it is a small object you attach to a tracker (or to
+any observable), whose <code class="docutils literal notranslate"><span class="pre">Observe</span></code> method is called with an <strong>event</strong> every time something
+happens – a step succeeds, the precision changes, a path starts or ends.  This tutorial builds
+up from a one-line observer to a <em>meta-observer</em> that records every path of a whole solve into
+numpy arrays, and plots them.</p>
+<section id="writing-an-observer-in-python">
+<h2>Writing an observer in Python<a class="headerlink" href="#writing-an-observer-in-python" title="Link to this heading">¶</a></h2>
+<p>Subclass the precision-appropriate <code class="docutils literal notranslate"><span class="pre">CustomObserver</span></code> base (<code class="docutils literal notranslate"><span class="pre">amp</span></code> for adaptive precision,
+<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">multiple</span></code> for fixed) and override <code class="docutils literal notranslate"><span class="pre">Observe</span></code>.  Events arrive as objects you
+discriminate with <code class="xref py py-func docutils literal notranslate"><span class="pre">isinstance()</span></code>; every tracking event can hand you the live tracker via
+<code class="docutils literal notranslate"><span class="pre">event.tracker()</span></code>, from which you can read the current state of the path:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini.tracking</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tracking</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">StepPrinter</span><span class="p">(</span><span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">CustomObserver</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">SuccessfulStep</span><span class="p">):</span>
+            <span class="n">trk</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">tracker</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;t =&quot;</span><span class="p">,</span> <span class="nb">complex</span><span class="p">(</span><span class="n">trk</span><span class="o">.</span><span class="n">current_time</span><span class="p">()),</span>
+                  <span class="s2">&quot; |z| =&quot;</span><span class="p">,</span> <span class="n">trk</span><span class="o">.</span><span class="n">current_point</span><span class="p">(),</span>
+                  <span class="s2">&quot; cond =&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">trk</span><span class="o">.</span><span class="n">latest_condition_number</span><span class="p">()))</span>
+</pre></div>
+</div>
+<p>The tracker exposes the whole per-step state: <code class="docutils literal notranslate"><span class="pre">current_time()</span></code>, <code class="docutils literal notranslate"><span class="pre">current_point()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">current_precision()</span></code>, <code class="docutils literal notranslate"><span class="pre">current_stepsize()</span></code>, <code class="docutils literal notranslate"><span class="pre">delta_t()</span></code>, <code class="docutils literal notranslate"><span class="pre">latest_condition_number()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">latest_norm_of_step()</span></code> and <code class="docutils literal notranslate"><span class="pre">latest_error_estimate()</span></code>.</p>
+<p>Attach it to a tracker, run, and detach.  Here is a small adaptive-precision tracker on the
+one-variable homotopy <span class="math notranslate nohighlight">\(y - t\)</span> (whose single path runs from <span class="math notranslate nohighlight">\(y=1\)</span> at <span class="math notranslate nohighlight">\(t=1\)</span> to
+<span class="math notranslate nohighlight">\(y=0\)</span> at <span class="math notranslate nohighlight">\(t=0\)</span>) to watch:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini.multiprec</span><span class="w"> </span><span class="kn">import</span> <span class="n">complex_mp</span>
+
+<span class="n">y</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">)</span>
+<span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_path_variable</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">y</span><span class="p">]))</span>
+
+<span class="n">tracker</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">AMPTracker</span><span class="p">(</span><span class="n">sys</span><span class="p">)</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">Predictor</span><span class="o">.</span><span class="n">Euler</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="mf">1e5</span><span class="p">,</span>
+              <span class="n">tracking</span><span class="o">.</span><span class="n">SteppingConfig</span><span class="p">(),</span> <span class="n">tracking</span><span class="o">.</span><span class="n">NewtonConfig</span><span class="p">())</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">precision_setup</span><span class="p">(</span><span class="n">tracking</span><span class="o">.</span><span class="n">amp_config_from</span><span class="p">(</span><span class="n">sys</span><span class="p">))</span>
+
+<span class="n">printer</span> <span class="o">=</span> <span class="n">StepPrinter</span><span class="p">()</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">printer</span><span class="p">)</span>
+<span class="n">end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">num_variables</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">complex_mp</span><span class="p">)</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">track_path</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">complex_mp</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">complex_mp</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">complex_mp</span><span class="p">(</span><span class="mi">1</span><span class="p">)]))</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">printer</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>t = ...
+...
+</pre></div>
+</div>
+<p>For the common “call this function when that event happens” case there is a ready-made
+<code class="docutils literal notranslate"><span class="pre">CallbackObserver</span></code> so you do not even write a class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span> <span class="o">=</span> <span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">CallbackObserver</span><span class="p">()</span>
+<span class="n">obs</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">PrecisionChanged</span><span class="p">,</span>
+       <span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">previous</span><span class="p">(),</span> <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">next</span><span class="p">()))</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">event</span></code> object is only valid for the duration of the <code class="docutils literal notranslate"><span class="pre">Observe</span></code> call – it is a
+short-lived temporary, and so is anything <code class="docutils literal notranslate"><span class="pre">event.tracker()</span></code> hands back.  <strong>Read what you
+need and copy it out</strong> (into a list, a numpy array, …); never stash the event for later.
+An observer can also unsubscribe itself by <code class="docutils literal notranslate"><span class="pre">return</span></code>-ing
+<code class="docutils literal notranslate"><span class="pre">bertini.tracking.ObserveResult.Unsubscribe</span></code> (returning nothing means “keep observing”).</p>
+</div>
+</section>
+<section id="collecting-one-path-into-numpy">
+<h2>Collecting one path into numpy<a class="headerlink" href="#collecting-one-path-into-numpy" title="Link to this heading">¶</a></h2>
+<p>To <em>plot</em> a path we need its data as arrays.  <code class="docutils literal notranslate"><span class="pre">PathDataCollector</span></code> is an observer that, on every
+successful step, records the time, the space point, and a few diagnostics.  Adaptive precision
+hands back arbitrary-precision (mpfr) numbers, which do not all fit in one numpy array, so each
+value is cast to a plain python <code class="docutils literal notranslate"><span class="pre">complex</span></code>/<code class="docutils literal notranslate"><span class="pre">float</span></code> as it is collected (double precision is
+plenty for a picture).  The result is offered as several typed arrays:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">b</span> <span class="o">=</span> <span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">PathDataCollector</span><span class="p">()</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="n">end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">num_variables</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">complex_mp</span><span class="p">)</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">track_path</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">complex_mp</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">complex_mp</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">complex_mp</span><span class="p">(</span><span class="mi">1</span><span class="p">)]))</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+<span class="n">ts</span>  <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">times</span><span class="p">()</span>          <span class="c1"># complex,  shape (n_steps,)</span>
+<span class="n">zs</span>  <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">points</span><span class="p">()</span>         <span class="c1"># complex,  shape (n_steps, n_vars)</span>
+<span class="n">dgn</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">()</span>    <span class="c1"># float,    shape (n_steps, 4): |t|, condition number, precision, stepsize</span>
+
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">zs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">sys</span><span class="o">.</span><span class="n">num_variables</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If you have pandas installed, <code class="docutils literal notranslate"><span class="pre">b.as_dataframe()</span></code> returns the whole path as a labelled
+DataFrame (a <code class="docutils literal notranslate"><span class="pre">t</span></code> column, one <code class="docutils literal notranslate"><span class="pre">z0</span></code>, <code class="docutils literal notranslate"><span class="pre">z1</span></code>, … per variable, then the diagnostic columns).</p>
+</section>
+<section id="the-meta-observer-every-path-of-a-whole-solve">
+<h2>The meta-observer: every path of a whole solve<a class="headerlink" href="#the-meta-observer-every-path-of-a-whole-solve" title="Link to this heading">¶</a></h2>
+<p>A zero-dimensional solve tracks <em>many</em> paths, reusing <strong>one</strong> tracker for all of them.  We want
+one <code class="docutils literal notranslate"><span class="pre">PathDataCollector</span></code> per solution path – but a collector watches a tracker, while “which
+path are we on” is known only to the <em>solver</em>.  The elegant fix is an observer that, in response
+to the solver’s events, attaches and detaches <em>other</em> observers: a meta-observer.</p>
+<p>That is exactly <code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.SolutionPathCollector</span></code>.  You attach it to the
+<strong>solver</strong>.  The solver emits <code class="docutils literal notranslate"><span class="pre">PathStarted</span></code>/<code class="docutils literal notranslate"><span class="pre">PathComplete</span></code> around each path; on
+<code class="docutils literal notranslate"><span class="pre">PathStarted</span></code> the meta-observer spins up a fresh <code class="docutils literal notranslate"><span class="pre">PathDataCollector</span></code> and attaches it to the
+solver’s tracker, and on <code class="docutils literal notranslate"><span class="pre">PathComplete</span></code> it harvests that collector into <code class="docutils literal notranslate"><span class="pre">.series</span></code> and detaches
+it.  Each path gets its own collector with its own empty buffer – per-path isolation for free.</p>
+<p>Because the solver reuses its one tracker for a path’s main homotopy track <strong>and</strong> that path’s
+endgame sub-tracks, the collector that is attached for the whole <code class="docutils literal notranslate"><span class="pre">PathStarted</span></code>-to-
+<code class="docutils literal notranslate"><span class="pre">PathComplete</span></code> window captures the <em>entire</em> journey to <span class="math notranslate nohighlight">\(t \to 0\)</span>, endgame included –
+without any filtering.  (The attach and detach happen <em>from inside</em> <code class="docutils literal notranslate"><span class="pre">Observe</span></code>; the observable
+defers those changes until the current notification finishes, which is what makes it safe.)</p>
+<p>We will solve a degree-six univariate polynomial – a total-degree homotopy with six paths:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZeroDimSolver</span><span class="p">,</span> <span class="n">SolutionPathCollector</span>
+
+<span class="n">bertini</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># so you get exactly this picture</span>
+<span class="n">bertini</span><span class="o">.</span><span class="n">recording</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>            <span class="c1"># we are here to WATCH tracking -- see the note below</span>
+
+<span class="n">z</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">z</span><span class="p">]))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">SolutionPathCollector</span><span class="p">()</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>          <span class="c1"># one PathDataCollector per solution path</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Why turn recording off?  If ambient recording is on (see <a class="reference internal" href="../../record_keeping/automatic_record_keeping/index.html"><span class="doc">Automatic record keeping</span></a>),
+a solve whose exact ask was already answered <strong>recalls</strong> its results from the records
+instead of tracking – that is the resuming feature doing its job.  But a recalled
+solve tracks no paths, so observers have nothing to observe.  This tutorial re-solves
+the same system with the same seed on purpose (to compare collectors on identical
+paths), so we run bare.  <code class="docutils literal notranslate"><span class="pre">bertini.recording(True)</span></code> puts things back.</p>
+</div>
+</section>
+<section id="plotting-the-paths">
+<h2>Plotting the paths<a class="headerlink" href="#plotting-the-paths" title="Link to this heading">¶</a></h2>
+<p>Each tracked point lives in the homogenized coordinates the start system works in (column 0 is
+the homogenizing coordinate), so we divide it out to get the affine <span class="math notranslate nohighlight">\(z\)</span>, then draw each
+path in the complex plane:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;turbo&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">):</span>
+    <span class="n">pts</span>  <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()</span>
+    <span class="n">zaff</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">pts</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>                 <span class="c1"># dehomogenize to affine z</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">zaff</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">zaff</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">zaff</span><span class="o">.</span><span class="n">real</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">zaff</span><span class="o">.</span><span class="n">imag</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">mfc</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>  <span class="c1"># start, t near 1</span>
+
+<span class="n">sols</span> <span class="o">=</span> <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">solver</span><span class="o">.</span><span class="n">all_solutions</span><span class="p">()]</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">imag</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span>
+           <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">140</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;solutions&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.0</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>     <span class="c1"># 1:1 data scaling, square box</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Re(z)&#39;</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Im(z)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="../../../_images/observers_and_path_data.svg"><img alt="../../../_images/observers_and_path_data.svg" src="../../../_images/observers_and_path_data.svg" style="width: 70%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The six homotopy paths of <span class="math notranslate nohighlight">\(z^6 - 2z^2 + 2 = 0\)</span>.  Open circles are where each path is
+first sampled (near the start time <span class="math notranslate nohighlight">\(t=1\)</span>); stars are the computed solutions
+(<span class="math notranslate nohighlight">\(t \to 0\)</span>).  Each path runs all the way to its solution – the endgame sub-tracks,
+captured alongside the main track, carry it the last of the way in.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>If instead you want the bare tracker-level building block (one series per <em>track</em>, with endgame
+sub-tracks kept separate), attach a <code class="docutils literal notranslate"><span class="pre">bertini.tracking.observers.&lt;precision&gt;.PathCollectionObserver</span></code>
+to <code class="docutils literal notranslate"><span class="pre">solver.get_tracker()</span></code> directly; each of its series is tagged with a <code class="docutils literal notranslate"><span class="pre">start_time</span></code> so you can
+tell main tracks from endgame loops.  (Attaching to <code class="docutils literal notranslate"><span class="pre">solver.get_tracker()</span></code> like this only collects
+in a <strong>serial</strong> solve – set <code class="docutils literal notranslate"><span class="pre">num_threads</span> <span class="pre">=</span> <span class="pre">1</span></code> first; see <em>Observers, threads, and MPI</em> below for
+why, and use <code class="docutils literal notranslate"><span class="pre">SolutionPathCollector</span></code> if you want it to work threaded.)</p>
+</section>
+<section id="build-it-yourself-one-observer-that-attaches-another">
+<h2>Build it yourself: one observer that attaches another<a class="headerlink" href="#build-it-yourself-one-observer-that-attaches-another" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SolutionPathCollector</span></code> is handy to have ready-made, but the pattern behind it – a parent
+observer <strong>A</strong> that, in response to events, attaches a worker observer <strong>B</strong> and has <strong>B report
+its findings back to A</strong> – is worth being able to build yourself.  It is the whole point of the
+refactor: observers composing observers at run time.  Let’s reconstruct it from scratch.</p>
+<p>The division of labour matches the two observables in play.  <strong>B watches the tracker</strong>: it knows
+nothing about “paths”, it just records every successful step.  <strong>A watches the solver</strong>: it knows
+when a path starts and ends, but not the per-step detail.  So A spawns one B per path, and when
+the path finishes, B hands its haul back to A.</p>
+<p><strong>B</strong> – a tracker observer that records each step and, on request, reports back to its parent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini.tracking</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tracking</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZeroDimSolver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini.nag_algorithm</span><span class="w"> </span><span class="kn">import</span> <span class="n">observers</span> <span class="k">as</span> <span class="n">nag_observers</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PathRecorder</span><span class="p">(</span><span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">CustomObserver</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">path_index</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>     <span class="o">=</span> <span class="n">parent</span>          <span class="c1"># the observer we report back to</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_index</span> <span class="o">=</span> <span class="n">path_index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_times</span>     <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span>    <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">Observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">SuccessfulStep</span><span class="p">):</span>
+            <span class="n">trk</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">tracker</span><span class="p">()</span>
+            <span class="c1"># copy out *now* -- the event and tracker state are valid only during this call</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">trk</span><span class="o">.</span><span class="n">current_time</span><span class="p">()))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">trk</span><span class="o">.</span><span class="n">current_point</span><span class="p">()])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_index</span><span class="p">,</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">),</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">))</span>
+</pre></div>
+</div>
+<p><strong>A</strong> – a solver observer that attaches a fresh <code class="docutils literal notranslate"><span class="pre">PathRecorder</span></code> per path and collects its report:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyPathCollector</span><span class="p">(</span><span class="n">nag_observers</span><span class="o">.</span><span class="n">CustomObserver</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paths</span>   <span class="o">=</span> <span class="p">{}</span>     <span class="c1"># path_index -&gt; (times, points), filled in by B.report()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active</span> <span class="o">=</span> <span class="p">{}</span>     <span class="c1"># path_index -&gt; (tracker, live recorder)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">Observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">nag_observers</span><span class="o">.</span><span class="n">PathStarted</span><span class="p">):</span>
+            <span class="n">tracker</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">tracker</span><span class="p">()</span>      <span class="c1"># the tracker that RUNS this path (a thread-local</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">PathRecorder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">path_index</span><span class="p">())</span>   <span class="c1"># clone when threaded -- not the member</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>                  <span class="c1"># attach B ...   tracker)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_active</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">path_index</span><span class="p">()]</span> <span class="o">=</span> <span class="p">(</span><span class="n">tracker</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">nag_observers</span><span class="o">.</span><span class="n">PathComplete</span><span class="p">):</span>
+            <span class="n">tracker</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">path_index</span><span class="p">())</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>               <span class="c1"># ... and detach it when the path is done</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">report</span><span class="p">()</span>                               <span class="c1"># B hands its data back to A</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">receive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_index</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>    <span class="c1"># B calls this</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paths</span><span class="p">[</span><span class="n">path_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Attach <strong>A</strong> to the solver and run – one entry in <code class="docutils literal notranslate"><span class="pre">A.paths</span></code> per solution path:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bertini</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">z</span><span class="p">]))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">MyPathCollector</span><span class="p">()</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>                  <span class="c1"># same six paths SolutionPathCollector would give you</span>
+<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">times</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">paths</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>   <span class="c1"># each path actually captured steps</span>
+</pre></div>
+</div>
+<p>The subtle part is that A’s <code class="docutils literal notranslate"><span class="pre">add_observer</span></code>/<code class="docutils literal notranslate"><span class="pre">remove_observer</span></code> calls happen <em>from inside</em> B’s
+sibling notification – A is mutating the tracker’s observer list while the solver is mid-dispatch.
+That is exactly the case the observer subsystem is built to handle: an observable defers any
+attach/detach requested during a notification until the current one finishes, so neither call
+disturbs the dispatch in flight.  Attach-and-forget, compose freely.</p>
+<p>This hand-built <code class="docutils literal notranslate"><span class="pre">MyPathCollector</span></code> is essentially <code class="docutils literal notranslate"><span class="pre">SolutionPathCollector</span></code> – the real one just
+reuses the ready-made <code class="docutils literal notranslate"><span class="pre">PathDataCollector</span></code> for B (so you get diagnostics and <code class="docutils literal notranslate"><span class="pre">as_dataframe()</span></code>
+too) and harvests the collector object itself instead of a plain tuple.</p>
+</section>
+<section id="observers-threads-and-mpi">
+<h2>Observers, threads, and MPI<a class="headerlink" href="#observers-threads-and-mpi" title="Link to this heading">¶</a></h2>
+<p>A zero-dimensional solve is <strong>multi-threaded by default</strong> – it uses all your cores, tracking many
+paths at once.  That has one consequence you must know when writing observers, and it is the whole
+reason the examples above call <code class="docutils literal notranslate"><span class="pre">event.tracker()</span></code>.</p>
+<p>Under threading, <strong>each path runs on its own thread-local *clone* of the tracker</strong>, not on the
+solver’s one member tracker.  (A fresh tracker copy starts with an empty observer list – which is
+exactly what makes it safe to hand to another thread.)  So:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Attaching a per-path observer to <code class="docutils literal notranslate"><span class="pre">solver.get_tracker()</span></code> collects <strong>nothing</strong> during a threaded
+solve: the member tracker runs no paths.  Always attach to <strong>event.tracker()</strong> – the tracker
+that actually runs <em>this</em> path – as the meta-observers above do.  <code class="docutils literal notranslate"><span class="pre">event.tracker()</span></code> is the
+member tracker in a serial solve and the running clone in a threaded one, so the same code is
+correct either way.</p>
+</div>
+<p>Everything else the framework handles for you.  Your Python <code class="docutils literal notranslate"><span class="pre">Observe</span></code> is called safely from the
+worker threads: notifications are serialized and the GIL is re-acquired around each call, so you
+never see two <code class="docutils literal notranslate"><span class="pre">Observe</span></code> calls at once and never corrupt your own Python state.  The flip side is
+that a <em>heavy</em> <code class="docutils literal notranslate"><span class="pre">Observe</span></code> serializes the threads against each other – keep it to copying values
+out (as <code class="docutils literal notranslate"><span class="pre">PathRecorder</span></code> does); do the plotting and analysis afterwards.</p>
+<p>Two more things to expect under threads:</p>
+<ul class="simple">
+<li><p><strong>Paths complete out of order.</strong>  <code class="docutils literal notranslate"><span class="pre">PathComplete</span></code> arrives in finish order, not <code class="docutils literal notranslate"><span class="pre">path_index</span></code>
+order.  Key your bookkeeping by <code class="docutils literal notranslate"><span class="pre">event.path_index()</span></code> (the collectors above do) and sort at the
+end if you need a stable order.</p></li>
+<li><p><strong>Force serial when you must.</strong>  To pin a solve to one thread – e.g. to attach directly to the
+member tracker, or for a fully reproducible event order – set <code class="docutils literal notranslate"><span class="pre">num_threads</span> <span class="pre">=</span> <span class="pre">1</span></code>:</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZeroDimSolver</span><span class="p">,</span> <span class="n">SolutionPathCollector</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span>
+
+<span class="n">z</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">z</span><span class="p">]))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">nag_algorithm</span><span class="o">.</span><span class="n">ZeroDimConfig</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="mi">1</span>                 <span class="c1"># 0 = auto (all cores), 1 = serial, N = N threads</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">set_config</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">SolutionPathCollector</span><span class="p">()</span>         <span class="c1"># works the same in serial and threaded</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
+</pre></div>
+</div>
+<p>Under <strong>MPI</strong> the picture is different again, and observers do <strong>not</strong> span ranks.  In a distributed
+solve the manager rank coordinates while the <em>worker</em> ranks track the paths, so the per-path events
+(<code class="docutils literal notranslate"><span class="pre">PathStarted</span></code>/<code class="docutils literal notranslate"><span class="pre">PathComplete</span></code> and every tracker step) fire <strong>inside the worker processes</strong> –
+not on the manager where you launched the solve.  An observer is a per-process object: it only sees
+the events emitted in <em>its</em> process.  To collect path data across an MPI run you attach observers on
+the workers and gather their results yourself with MPI (e.g. <code class="docutils literal notranslate"><span class="pre">comm.gather</span></code>); a single observer on
+rank 0 will not see the paths.  For shared-memory threading there is nothing to gather – the worker
+threads share the one process, which is why <code class="docutils literal notranslate"><span class="pre">SolutionPathCollector</span></code> “just works” with threads but
+needs help under MPI.</p>
+</section>
+<section id="a-3-d-system-coloured-by-condition-number">
+<h2>A 3-D system, coloured by condition number<a class="headerlink" href="#a-3-d-system-coloured-by-condition-number" title="Link to this heading">¶</a></h2>
+<p>Nothing about this is special to one variable.  Let’s solve the <strong>cyclic-3</strong> system in three
+variables and plot the paths in <span class="math notranslate nohighlight">\((\operatorname{Re} x, \operatorname{Re} y,
+\operatorname{Re} z)\)</span> space – and this time colour each path by its <strong>condition number</strong>, the
+diagnostic <code class="docutils literal notranslate"><span class="pre">PathDataCollector</span></code> records at every step.  The condition number climbs as a path
+approaches a solution (and especially in the endgame), so the colouring shows where the tracking
+got hard:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.mplot3d.art3d</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line3DCollection</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZeroDimSolver</span><span class="p">,</span> <span class="n">SolutionPathCollector</span>
+
+<span class="n">bertini</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">z</span> <span class="o">+</span> <span class="n">z</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">SolutionPathCollector</span><span class="p">()</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+<span class="n">COND</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">DIAGNOSTIC_COLUMNS</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;condition_number&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">path.diagnostics()</span></code> is a float array whose columns are named by
+<code class="docutils literal notranslate"><span class="pre">PathDataCollector.DIAGNOSTIC_COLUMNS</span></code> (<code class="docutils literal notranslate"><span class="pre">abs_t</span></code>, <code class="docutils literal notranslate"><span class="pre">condition_number</span></code>, <code class="docutils literal notranslate"><span class="pre">precision</span></code>,
+<code class="docutils literal notranslate"><span class="pre">stepsize</span></code>) – so the condition number is just one column.  We draw each path as a 3-D line
+whose colour varies along it (a <code class="docutils literal notranslate"><span class="pre">Line3DCollection</span></code> with a shared log-scaled colour norm):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tracks</span><span class="p">,</span> <span class="n">all_cond</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">:</span>
+    <span class="n">aff</span>  <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">/</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>   <span class="c1"># dehomogenize -&gt; 3 affine coords</span>
+    <span class="n">real</span> <span class="o">=</span> <span class="n">aff</span><span class="o">.</span><span class="n">real</span>                                        <span class="c1"># (n, 3): Re(x), Re(y), Re(z)</span>
+    <span class="n">cond</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">()[:,</span> <span class="n">COND</span><span class="p">]</span>
+    <span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">real</span><span class="p">,</span> <span class="n">cond</span><span class="p">));</span> <span class="n">all_cond</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span>
+
+<span class="n">norm</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">LogNorm</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_cond</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+                       <span class="n">vmax</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_cond</span><span class="p">))</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">real</span><span class="p">,</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">:</span>
+    <span class="n">segs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">real</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">real</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>         <span class="c1"># consecutive points -&gt; segments</span>
+    <span class="n">lc</span> <span class="o">=</span> <span class="n">Line3DCollection</span><span class="p">(</span><span class="n">segs</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+    <span class="n">lc</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">cond</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">cond</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>             <span class="c1"># colour each segment by condition number</span>
+    <span class="n">lc</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_collection3d</span><span class="p">(</span><span class="n">lc</span><span class="p">)</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="n">lc</span>
+
+<span class="n">sols</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">all_solutions</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span>
+           <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span>
+           <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">depthshade</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Re(x)&#39;</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Re(y)&#39;</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Re(z)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>                               <span class="c1"># 1:1:1 data aspect ratio</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">last</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;condition number (log)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="../../../_images/cyclic3_paths.svg"><img alt="../../../_images/cyclic3_paths.svg" src="../../../_images/cyclic3_paths.svg" style="width: 80%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The six cyclic-3 homotopy paths in <span class="math notranslate nohighlight">\((\operatorname{Re} x, \operatorname{Re} y,
+\operatorname{Re} z)\)</span>, each coloured by its condition number on a log scale (stars: solutions).
+The warm end of the scale appears as the paths crowd in near the solutions, where the Jacobian
+is worst-conditioned.</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="watching-the-cauchy-endgame-at-a-singular-solution">
+<h2>Watching the Cauchy endgame at a singular solution<a class="headerlink" href="#watching-the-cauchy-endgame-at-a-singular-solution" title="Link to this heading">¶</a></h2>
+<p>When a path ends at a <strong>singular</strong> solution, ordinary tracking stalls and the <strong>Cauchy endgame</strong>
+takes over: it tracks the path around circles in <span class="math notranslate nohighlight">\(t\)</span> near <span class="math notranslate nohighlight">\(t=0\)</span> and averages, which is
+how it pins down a multiple root.  Because our per-path collector keeps recording through the
+endgame, we can <em>watch</em> those loops.  The classic stress test is the <strong>Griewank-Osborn</strong> system,
+whose only solution is a triple point at the origin:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fractions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fraction</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">LineCollection</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZeroDimSolver</span><span class="p">,</span> <span class="n">SolutionPathCollector</span>
+
+<span class="n">bertini</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">coefficient</span><span class="p">(</span><span class="n">Fraction</span><span class="p">(</span><span class="mi">29</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>  <span class="c1"># exact rational coeff</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">SolutionPathCollector</span><span class="p">()</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+<span class="c1"># let the solver classify which paths ended at a singular solution</span>
+<span class="n">singular_idx</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">path_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">solver</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_singular</span><span class="p">}</span>
+<span class="n">singular</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">series</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">path_index</span> <span class="ow">in</span> <span class="n">singular_idx</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The catch the plot has to deal with: each Cauchy loop is <strong>geometrically smaller</strong> than the last
+(its radius <span class="math notranslate nohighlight">\(\sim |t|^{1/c}\)</span>), so on a linear zoom they collapse onto the solution and you
+see nothing.  Plot the <span class="math notranslate nohighlight">\(x\)</span>-coordinate on a <strong>log-radial</strong> scale instead – map
+<span class="math notranslate nohighlight">\(x \mapsto (\log_{10}|x| - \log_{10}|x|_{\min})\, e^{i\arg x}\)</span> – and the shrinking loops
+open out into an even spiral winding into the centre:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">path</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">singular</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>                 <span class="c1"># one representative singular path</span>
+<span class="n">aff</span>  <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">/</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">xv</span>   <span class="o">=</span> <span class="n">aff</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">t</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">times</span><span class="p">())</span>
+<span class="n">eg</span>   <span class="o">=</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="mf">0.1</span>                                 <span class="c1"># the endgame portion (small |t|)</span>
+<span class="n">xv</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">xv</span><span class="p">[</span><span class="n">eg</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="n">eg</span><span class="p">]</span>
+
+<span class="n">r</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xv</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xv</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">+</span> <span class="mf">0.1</span>   <span class="c1"># log-radial coordinate</span>
+<span class="n">disp</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">xv</span><span class="p">))</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">pts</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">disp</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">disp</span><span class="o">.</span><span class="n">imag</span><span class="p">])</span>
+<span class="n">segs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">pts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">lc</span> <span class="o">=</span> <span class="n">LineCollection</span><span class="p">(</span><span class="n">segs</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;plasma&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">mcolors</span><span class="o">.</span><span class="n">LogNorm</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">t</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+<span class="n">lc</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">lc</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">160</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># the singular solution, at the centre</span>
+<span class="n">R</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xv</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()))</span> <span class="o">+</span> <span class="mf">0.3</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">lc</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;|t|  (log)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<figure class="align-center" id="id3">
+<a class="reference internal image-reference" href="../../../_images/griewank_osborn_endgame.svg"><img alt="../../../_images/griewank_osborn_endgame.svg" src="../../../_images/griewank_osborn_endgame.svg" style="width: 70%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The Cauchy endgame at the singular solution of Griewank-Osborn, on a log-radial scale (so the
+geometrically-shrinking loops stay visible).  As <span class="math notranslate nohighlight">\(|t|\to 0\)</span> (dark) the path winds inward
+toward the triple root at the centre – the loops the endgame integrates around to resolve the
+singular endpoint.</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>From here you can collect anything the tracker exposes: plot the condition number along each path
+to see where tracking got hard, colour by precision to watch adaptive precision kick in, or feed
+<code class="docutils literal notranslate"><span class="pre">as_dataframe()</span></code> straight into your favourite analysis tools.</p>
+</section>
+<section id="complete-example">
+<h2>Complete example<a class="headerlink" href="#complete-example" title="Link to this heading">¶</a></h2>
+<p>The whole tutorial as one runnable script – it saves the three figures shown above:</p>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">observers_and_path_data.py</span><a class="headerlink" href="#id4" title="Link to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;Watching the paths: observers and path data.</span>
+
+<span class="sd">An observer is a small object you attach to a tracker (or any observable); its ``Observe``</span>
+<span class="sd">method is called with an event every time something happens along a path.  This script builds</span>
+<span class="sd">up from a one-line observer, to ``PathDataCollector`` recording a single path into numpy, to the</span>
+<span class="sd">``SolutionPathCollector`` meta-observer that records every path of a whole solve -- and plots the</span>
+<span class="sd">results.  It produces three figures:</span>
+
+<span class="sd">    * observers_and_path_data  -- the six homotopy paths of z^6 - 2z^2 + 2 in the complex plane</span>
+<span class="sd">    * cyclic3_paths            -- the cyclic-3 paths in 3-D, coloured by condition number</span>
+<span class="sd">    * griewank_osborn_endgame  -- the Cauchy endgame loops at a singular solution, log-radial</span>
+
+<span class="sd">Run:  python observers_and_path_data.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fractions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fraction</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>                 <span class="c1"># headless: no display needed</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">LineCollection</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.mplot3d.art3d</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line3DCollection</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini.tracking</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tracking</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZeroDimSolver</span><span class="p">,</span> <span class="n">SolutionPathCollector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini.multiprec</span><span class="w"> </span><span class="kn">import</span> <span class="n">complex_mp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini.nag_algorithm</span><span class="w"> </span><span class="kn">import</span> <span class="n">observers</span> <span class="k">as</span> <span class="n">nag_observers</span>
+
+<span class="c1"># we are here to WATCH tracking: with ambient recording on, a repeated identical solve</span>
+<span class="c1"># recalls from the records and tracks nothing, so observers see nothing (see the</span>
+<span class="c1"># observers tutorial&#39;s note and the automatic record keeping tutorial)</span>
+<span class="n">bertini</span><span class="o">.</span><span class="n">recording</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">_OUT</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+
+
+<span class="c1"># --- Writing an observer in Python --------------------------------------------------------------</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">StepPrinter</span><span class="p">(</span><span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">CustomObserver</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">SuccessfulStep</span><span class="p">):</span>
+            <span class="n">trk</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">tracker</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;t =&quot;</span><span class="p">,</span> <span class="nb">complex</span><span class="p">(</span><span class="n">trk</span><span class="o">.</span><span class="n">current_time</span><span class="p">()),</span>
+                  <span class="s2">&quot; |z| =&quot;</span><span class="p">,</span> <span class="n">trk</span><span class="o">.</span><span class="n">current_point</span><span class="p">(),</span>
+                  <span class="s2">&quot; cond =&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">trk</span><span class="o">.</span><span class="n">latest_condition_number</span><span class="p">()))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_observer</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the y - t homotopy, attach a StepPrinter, track, and detach.  Returns the tracker.&quot;&quot;&quot;</span>
+    <span class="n">y</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">)</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_path_variable</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">y</span><span class="p">]))</span>
+
+    <span class="n">tracker</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">AMPTracker</span><span class="p">(</span><span class="n">sys</span><span class="p">)</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">Predictor</span><span class="o">.</span><span class="n">Euler</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="mf">1e5</span><span class="p">,</span>
+                  <span class="n">tracking</span><span class="o">.</span><span class="n">SteppingConfig</span><span class="p">(),</span> <span class="n">tracking</span><span class="o">.</span><span class="n">NewtonConfig</span><span class="p">())</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">precision_setup</span><span class="p">(</span><span class="n">tracking</span><span class="o">.</span><span class="n">amp_config_from</span><span class="p">(</span><span class="n">sys</span><span class="p">))</span>
+
+    <span class="n">printer</span> <span class="o">=</span> <span class="n">StepPrinter</span><span class="p">()</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">printer</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">num_variables</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">complex_mp</span><span class="p">)</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">track_path</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">complex_mp</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">complex_mp</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">complex_mp</span><span class="p">(</span><span class="mi">1</span><span class="p">)]))</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">printer</span><span class="p">)</span>
+
+    <span class="c1"># the ready-made CallbackObserver: attach a function without writing a class</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">CallbackObserver</span><span class="p">()</span>
+    <span class="n">obs</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">PrecisionChanged</span><span class="p">,</span>
+           <span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">previous</span><span class="p">(),</span> <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">next</span><span class="p">()))</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tracker</span><span class="p">,</span> <span class="n">sys</span>
+
+
+<span class="c1"># --- Collecting one path into numpy -------------------------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">collect_one_path</span><span class="p">(</span><span class="n">tracker</span><span class="p">,</span> <span class="n">sys</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;PathDataCollector records one path&#39;s time, points, and diagnostics into numpy arrays.&quot;&quot;&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">PathDataCollector</span><span class="p">()</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">num_variables</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">complex_mp</span><span class="p">)</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">track_path</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">complex_mp</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">complex_mp</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">complex_mp</span><span class="p">(</span><span class="mi">1</span><span class="p">)]))</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="n">ts</span>  <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">times</span><span class="p">()</span>          <span class="c1"># complex,  shape (n_steps,)</span>
+    <span class="n">zs</span>  <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">points</span><span class="p">()</span>         <span class="c1"># complex,  shape (n_steps, n_vars)</span>
+    <span class="n">dgn</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">()</span>    <span class="c1"># float,    shape (n_steps, 4): |t|, condition number, precision, stepsize</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">zs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">sys</span><span class="o">.</span><span class="n">num_variables</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ts</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">dgn</span>
+
+
+<span class="c1"># --- The meta-observer: every path of a whole solve ---------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_degree_six</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve z^6 - 2z^2 + 2 and collect every path with a SolutionPathCollector.  Returns solver, A.&quot;&quot;&quot;</span>
+    <span class="n">bertini</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># so you get exactly this picture</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">z</span><span class="p">]))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">SolutionPathCollector</span><span class="p">()</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>          <span class="c1"># one PathDataCollector per solution path</span>
+    <span class="k">return</span> <span class="n">solver</span><span class="p">,</span> <span class="n">A</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_degree_six</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw the six paths in the complex plane; save as observers_and_path_data.{svg,png}.&quot;&quot;&quot;</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;turbo&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">):</span>
+        <span class="n">pts</span>  <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()</span>
+        <span class="n">zaff</span> <span class="o">=</span> <span class="n">pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">pts</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>                 <span class="c1"># dehomogenize to affine z</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">zaff</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">zaff</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.3</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">zaff</span><span class="o">.</span><span class="n">real</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">zaff</span><span class="o">.</span><span class="n">imag</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">mfc</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>  <span class="c1"># start, t near 1</span>
+
+    <span class="n">sols</span> <span class="o">=</span> <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">solver</span><span class="o">.</span><span class="n">all_solutions</span><span class="p">()]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">imag</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span>
+               <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">140</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;solutions&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.0</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>     <span class="c1"># 1:1 data scaling, square box</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Re(z)&#39;</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Im(z)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_OUT</span><span class="p">,</span> <span class="s1">&#39;observers_and_path_data.svg&#39;</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_OUT</span><span class="p">,</span> <span class="s1">&#39;observers_and_path_data.png&#39;</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+
+<span class="c1"># --- Build it yourself: one observer that attaches another ---------------------------------------</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PathRecorder</span><span class="p">(</span><span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">CustomObserver</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">path_index</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>     <span class="o">=</span> <span class="n">parent</span>          <span class="c1"># the observer we report back to</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_index</span> <span class="o">=</span> <span class="n">path_index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_times</span>     <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span>    <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">Observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">tracking</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">SuccessfulStep</span><span class="p">):</span>
+            <span class="n">trk</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">tracker</span><span class="p">()</span>
+            <span class="c1"># copy out *now* -- the event and tracker state are valid only during this call</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">trk</span><span class="o">.</span><span class="n">current_time</span><span class="p">()))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">trk</span><span class="o">.</span><span class="n">current_point</span><span class="p">()])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_index</span><span class="p">,</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">),</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">))</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyPathCollector</span><span class="p">(</span><span class="n">nag_observers</span><span class="o">.</span><span class="n">CustomObserver</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paths</span>   <span class="o">=</span> <span class="p">{}</span>     <span class="c1"># path_index -&gt; (times, points), filled in by B.report()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active</span> <span class="o">=</span> <span class="p">{}</span>     <span class="c1"># path_index -&gt; (tracker, live recorder)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">Observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">nag_observers</span><span class="o">.</span><span class="n">PathStarted</span><span class="p">):</span>
+            <span class="n">tracker</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">tracker</span><span class="p">()</span>      <span class="c1"># the tracker that RUNS this path (a thread-local</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">PathRecorder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">path_index</span><span class="p">())</span>   <span class="c1"># clone when threaded -- not the member</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>                  <span class="c1"># attach B ...   tracker)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_active</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">path_index</span><span class="p">()]</span> <span class="o">=</span> <span class="p">(</span><span class="n">tracker</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">nag_observers</span><span class="o">.</span><span class="n">PathComplete</span><span class="p">):</span>
+            <span class="n">tracker</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">path_index</span><span class="p">())</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>               <span class="c1"># ... and detach it when the path is done</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">report</span><span class="p">()</span>                               <span class="c1"># B hands its data back to A</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">receive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_index</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>    <span class="c1"># B calls this</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paths</span><span class="p">[</span><span class="n">path_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">hand_built_collector</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reconstruct SolutionPathCollector from scratch with MyPathCollector + PathRecorder.&quot;&quot;&quot;</span>
+    <span class="n">bertini</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">z</span><span class="p">]))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">MyPathCollector</span><span class="p">()</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>                  <span class="c1"># same six paths SolutionPathCollector would give you</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">times</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">paths</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>   <span class="c1"># each path actually captured steps</span>
+    <span class="k">return</span> <span class="n">A</span>
+
+
+<span class="c1"># --- Observers, threads, and MPI: forcing a serial solve ----------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">serial_solve</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pin the solve to a single thread with num_threads = 1; SolutionPathCollector works the same.&quot;&quot;&quot;</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">z</span><span class="p">]))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">nag_algorithm</span><span class="o">.</span><span class="n">ZeroDimConfig</span><span class="p">)</span>
+    <span class="n">cfg</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="mi">1</span>                 <span class="c1"># 0 = auto (all cores), 1 = serial, N = N threads</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">set_config</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">SolutionPathCollector</span><span class="p">()</span>         <span class="c1"># works the same in serial and threaded</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
+    <span class="k">return</span> <span class="n">A</span>
+
+
+<span class="c1"># --- A 3-D system, coloured by condition number -------------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_cyclic3</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve the cyclic-3 system and collect every path.  Returns solver, A, COND column index.&quot;&quot;&quot;</span>
+    <span class="n">bertini</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">z</span> <span class="o">+</span> <span class="n">z</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">SolutionPathCollector</span><span class="p">()</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+    <span class="n">COND</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">DIAGNOSTIC_COLUMNS</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;condition_number&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">solver</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">COND</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_cyclic3</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">COND</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw the cyclic-3 paths in 3-D coloured by condition number; save cyclic3_paths.{svg,png}.&quot;&quot;&quot;</span>
+    <span class="n">tracks</span><span class="p">,</span> <span class="n">all_cond</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">series</span><span class="p">:</span>
+        <span class="n">aff</span>  <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">/</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>   <span class="c1"># dehomogenize -&gt; 3 affine coords</span>
+        <span class="n">real</span> <span class="o">=</span> <span class="n">aff</span><span class="o">.</span><span class="n">real</span>                                        <span class="c1"># (n, 3): Re(x), Re(y), Re(z)</span>
+        <span class="n">cond</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">()[:,</span> <span class="n">COND</span><span class="p">]</span>
+        <span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">real</span><span class="p">,</span> <span class="n">cond</span><span class="p">));</span> <span class="n">all_cond</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span>
+
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">LogNorm</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_cond</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+                           <span class="n">vmax</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_cond</span><span class="p">))</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">real</span><span class="p">,</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">:</span>
+        <span class="n">segs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">real</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">real</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>         <span class="c1"># consecutive points -&gt; segments</span>
+        <span class="n">lc</span> <span class="o">=</span> <span class="n">Line3DCollection</span><span class="p">(</span><span class="n">segs</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+        <span class="n">lc</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">cond</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">cond</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>             <span class="c1"># colour each segment by condition number</span>
+        <span class="n">lc</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_collection3d</span><span class="p">(</span><span class="n">lc</span><span class="p">)</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="n">lc</span>
+
+    <span class="n">sols</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">all_solutions</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span>
+               <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span>
+               <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sols</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">depthshade</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Re(x)&#39;</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Re(y)&#39;</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;Re(z)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>                               <span class="c1"># 1:1:1 data aspect ratio</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">last</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;condition number (log)&#39;</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_OUT</span><span class="p">,</span> <span class="s1">&#39;cyclic3_paths.svg&#39;</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_OUT</span><span class="p">,</span> <span class="s1">&#39;cyclic3_paths.png&#39;</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+
+<span class="c1"># --- Watching the Cauchy endgame at a singular solution -----------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_griewank_osborn</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve Griewank-Osborn and pick out the singular paths.  Returns the singular path list.&quot;&quot;&quot;</span>
+    <span class="n">bertini</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">coefficient</span><span class="p">(</span><span class="n">Fraction</span><span class="p">(</span><span class="mi">29</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>  <span class="c1"># exact rational coeff</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">SolutionPathCollector</span><span class="p">()</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+    <span class="c1"># let the solver classify which paths ended at a singular solution</span>
+    <span class="n">singular_idx</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">path_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">solver</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_singular</span><span class="p">}</span>
+    <span class="n">singular</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">series</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">path_index</span> <span class="ow">in</span> <span class="n">singular_idx</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">singular</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_griewank_osborn</span><span class="p">(</span><span class="n">singular</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw the Cauchy endgame loops on a log-radial scale; save griewank_osborn_endgame.{svg,png}.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">singular</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>                 <span class="c1"># one representative singular path</span>
+    <span class="n">aff</span>  <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">/</span> <span class="n">path</span><span class="o">.</span><span class="n">points</span><span class="p">()[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">xv</span>   <span class="o">=</span> <span class="n">aff</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">t</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">times</span><span class="p">())</span>
+    <span class="n">eg</span>   <span class="o">=</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="mf">0.1</span>                                 <span class="c1"># the endgame portion (small |t|)</span>
+    <span class="n">xv</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">xv</span><span class="p">[</span><span class="n">eg</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="n">eg</span><span class="p">]</span>
+
+    <span class="n">r</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xv</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xv</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">+</span> <span class="mf">0.1</span>   <span class="c1"># log-radial coordinate</span>
+    <span class="n">disp</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">xv</span><span class="p">))</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="n">pts</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">disp</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">disp</span><span class="o">.</span><span class="n">imag</span><span class="p">])</span>
+    <span class="n">segs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">pts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">lc</span> <span class="o">=</span> <span class="n">LineCollection</span><span class="p">(</span><span class="n">segs</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;plasma&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">mcolors</span><span class="o">.</span><span class="n">LogNorm</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">t</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+    <span class="n">lc</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">lc</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">160</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># the singular solution, at the centre</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xv</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()))</span> <span class="o">+</span> <span class="mf">0.3</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">lc</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;|t|  (log)&#39;</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_OUT</span><span class="p">,</span> <span class="s1">&#39;griewank_osborn_endgame.svg&#39;</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_OUT</span><span class="p">,</span> <span class="s1">&#39;griewank_osborn_endgame.png&#39;</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># observer basics + one-path collection on the y - t homotopy</span>
+    <span class="n">tracker</span><span class="p">,</span> <span class="n">sys</span> <span class="o">=</span> <span class="n">custom_observer</span><span class="p">()</span>
+    <span class="n">collect_one_path</span><span class="p">(</span><span class="n">tracker</span><span class="p">,</span> <span class="n">sys</span><span class="p">)</span>
+
+    <span class="c1"># meta-observer: every path of the degree-six solve, then plot (figure 1)</span>
+    <span class="n">solver</span><span class="p">,</span> <span class="n">A</span> <span class="o">=</span> <span class="n">solve_degree_six</span><span class="p">()</span>
+    <span class="n">plot_degree_six</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+
+    <span class="c1"># hand-built collector reconstructing SolutionPathCollector, and the serial-solve variant</span>
+    <span class="n">hand_built_collector</span><span class="p">()</span>
+    <span class="n">serial_solve</span><span class="p">()</span>
+
+    <span class="c1"># cyclic-3 in 3-D coloured by condition number (figure 2)</span>
+    <span class="n">c3_solver</span><span class="p">,</span> <span class="n">c3_A</span><span class="p">,</span> <span class="n">COND</span> <span class="o">=</span> <span class="n">solve_cyclic3</span><span class="p">()</span>
+    <span class="n">plot_cyclic3</span><span class="p">(</span><span class="n">c3_solver</span><span class="p">,</span> <span class="n">c3_A</span><span class="p">,</span> <span class="n">COND</span><span class="p">)</span>
+
+    <span class="c1"># Cauchy endgame at a singular Griewank-Osborn solution (figure 3)</span>
+    <span class="n">singular</span> <span class="o">=</span> <span class="n">solve_griewank_osborn</span><span class="p">()</span>
+    <span class="n">plot_griewank_osborn</span><span class="p">(</span><span class="n">singular</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+  
+        <div class="related-pages">
+          <a class="next-page" href="../homotopy_cartoon_from_real_data/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">🎨 The continuation cartoon, from real data — and seeing precision change</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Observing, metadata, and more</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2015-2026, Bertini Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+  
+  <div class="build-info" style="margin-top: 0.75rem; font-size: var(--font-size--small); color: var(--color-foreground-muted);">
+    Built from
+    <a href="https://github.com/bertiniteam/b2/commit/0d0ad6916fdc884789bb5e66c2cb67084adec30e"><code>0d0ad69</code></a> on 2026-07-07 20:10 UTC.
+  </div>
+  
+
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">👀 Watching the paths: observers and path data</a><ul>
+<li><a class="reference internal" href="#writing-an-observer-in-python">Writing an observer in Python</a></li>
+<li><a class="reference internal" href="#collecting-one-path-into-numpy">Collecting one path into numpy</a></li>
+<li><a class="reference internal" href="#the-meta-observer-every-path-of-a-whole-solve">The meta-observer: every path of a whole solve</a></li>
+<li><a class="reference internal" href="#plotting-the-paths">Plotting the paths</a></li>
+<li><a class="reference internal" href="#build-it-yourself-one-observer-that-attaches-another">Build it yourself: one observer that attaches another</a></li>
+<li><a class="reference internal" href="#observers-threads-and-mpi">Observers, threads, and MPI</a></li>
+<li><a class="reference internal" href="#a-3-d-system-coloured-by-condition-number">A 3-D system, coloured by condition number</a></li>
+<li><a class="reference internal" href="#watching-the-cauchy-endgame-at-a-singular-solution">Watching the Cauchy endgame at a singular solution</a></li>
+<li><a class="reference internal" href="#complete-example">Complete example</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../_static/documentation_options.js?v=acc74ff5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
+</html>

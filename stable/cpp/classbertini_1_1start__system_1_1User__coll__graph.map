@@ -1,0 +1,7 @@
+<map id="bertini::start_system::User" name="bertini::start_system::User">
+<area shape="rect" id="Node000001" title="The user&#45;provided start system for Numerical Algebraic Geometry." alt="" coords="5,167,163,207"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1start__system_1_1StartSystem.html" title="Abstract base class for other start systems." alt="" coords="5,79,163,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,133,87,166,81,166,81,133"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1System.html" title="The fundamental polynomial system class for Bertini2." alt="" coords="23,5,145,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="87,44,87,79,81,79,81,44"/>
+</map>

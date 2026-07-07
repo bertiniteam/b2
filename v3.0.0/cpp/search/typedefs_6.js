@@ -1,0 +1,5 @@
+var searchData=
+[
+  ['heldt_0',['heldt',['../classbertini_1_1Event_3_01ObsT_00_01true_01_4.html#afb51deb1e4638a98acd8031b3e20bb8e',1,'bertini::Event&lt; ObsT, true &gt;::HeldT'],['../classbertini_1_1Event_3_01ObsT_00_01false_01_4.html#a923226060d3d8e0896536db5eee57412',1,'bertini::Event&lt; ObsT, false &gt;::HeldT'],['../classbertini_1_1algorithm_1_1PathStarted.html#a32d7ad2ff59db60141aa36b0c8fd7dab',1,'bertini::algorithm::PathStarted::HeldT'],['../classbertini_1_1algorithm_1_1PathComplete.html#a8b7330c6ca2811074cf6286a52d22d53',1,'bertini::algorithm::PathComplete::HeldT'],['../structbertini_1_1nag__datatype_1_1policy_1_1Copy.html#af27ceda25eb5f7c93a80ad716a48e834',1,'bertini::nag_datatype::policy::Copy::HeldT'],['../structbertini_1_1nag__datatype_1_1policy_1_1Reference.html#ad7992d76db4a33311d7d4545c7c37f81',1,'bertini::nag_datatype::policy::Reference::HeldT'],['../structbertini_1_1nag__datatype_1_1policy_1_1SharedPtr.html#ad0854a75601b97a78a5b9d74b4f1d25b',1,'bertini::nag_datatype::policy::SharedPtr::HeldT']]],
+  ['heldtype_1',['HeldType',['../classbertini_1_1detail_1_1Pool.html#aefaa2059ab667da877f71a59fc976b4a',1,'bertini::detail::Pool']]]
+];

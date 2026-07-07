@@ -1,0 +1,5 @@
+<map id="bertini::algorithm::zero_dim_detail::OwnedHomotopy&lt; SystemType &gt;" name="bertini::algorithm::zero_dim_detail::OwnedHomotopy&lt; SystemType &gt;">
+<area shape="rect" id="Node000001" title="Owns and builds the target / start system / homotopy for a zero&#45;dim solve." alt="" coords="5,5,260,60"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1ZeroDimSolver.html" title="The zero&#45;dimensional solve algorithm: given a polynomial system, form a start system and a homotopy,..." alt="" coords="21,108,244,163"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="135,74,135,108,130,108,130,74"/>
+</map>
