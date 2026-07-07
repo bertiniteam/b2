@@ -628,7 +628,11 @@ jobs:
     # the manylinux_2_34 container via CIBW_TEST_COMMAND_LINUX (see
     # build_macos_ubuntu_wheels).  This host-runner job therefore covers macOS only;
     # Windows is covered by test_wheels_windows.
-    if: ${{ inputs.minimal != true }}
+    #
+    # Guard: this job's matrix EXCLUDES ubuntu, so when the os matrix is ubuntu-only (a non-develop
+    # base, or `-f os=linux`/`os=windows`) it would expand to zero combinations and FAIL the run
+    # with no job to point at.  Only run when the matrix actually contains macOS.
+    if: ${{ inputs.minimal != true && contains(fromJson(needs.set_matrix.outputs.os), 'macos-14') }}
     needs: [set_matrix, build_macos_ubuntu_wheels]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25   # backstop against a hang; healthy test runs are well under a minute
