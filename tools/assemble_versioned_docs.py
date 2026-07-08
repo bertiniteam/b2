@@ -2,10 +2,14 @@
 """Assemble a multi-version documentation tree for bertini2.org.
 
 The docs site keeps *historical* versions: each real release lives forever under its own
-``/vX.Y.Z/`` directory, a moving ``/stable/`` mirrors the newest release, and the site root is a
-landing page that lists the versions.  This script performs the accumulation step: it takes a
+``/vX.Y.Z/`` directory, a moving ``/stable/`` redirects to the newest release, and the site root is
+a landing page that lists the versions.  This script performs the accumulation step: it takes a
 freshly-built single-version ``site/`` and folds it into a persistent *store* directory (in CI, a
 checkout of the ``docs-store`` branch), without ever rebuilding older versions.
+
+GitHub Pages serves the store *directly from the ``docs-store`` branch* (Pages source = that
+branch), so pushing the store IS the deploy -- there is no ``actions/deploy-pages`` step.  The
+``/CNAME`` file (written when ``--cname`` is given) is what keeps the custom domain across builds.
 
 Truth vs. derived (mirrors the records doctrine, ADR-0045/0047): the ``v*/`` directories present in
 the store ARE the truth.  ``versions.json`` and the root ``index.html`` are *derived, rebuildable
@@ -18,7 +22,8 @@ Layout produced in the store::
     /versions.json        derived machine-readable version index
     /style.css            shared stylesheet (copied from the built site)
     /.nojekyll            so GitHub Pages serves _static/ etc. verbatim
-    /stable/              copy of the newest release (deep links work; it is a real copy)
+    /CNAME                custom domain (only when --cname is given); persists it across builds
+    /stable/              redirect stub to the newest release (a tiny page, NOT a byte-for-byte copy)
     /vX.Y.Z/              one durable directory per real release
     /vX.Y.Z/index.html      per-version landing (the built site's own index)
     /vX.Y.Z/{python,cpp,cli}/
@@ -48,6 +53,21 @@ from pathlib import Path
 # A version directory is 'v' + a PEP 440 public release, e.g. v3.0.0 (optionally v3.0.0.post1).
 # Prereleases are intentionally NOT matched: they never get a durable directory.
 _VDIR_RE = re.compile(r"^v(\d+)\.(\d+)\.(\d+)(?:\.post(\d+))?$")
+
+STABLE_REDIRECT_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=/{vdir}/">
+  <link rel="canonical" href="/{vdir}/">
+  <title>Bertini 2 -- stable documentation</title>
+</head>
+<body>
+  <p>The stable documentation is <a href="/{vdir}/">the latest release ({vdir})</a>.
+     Redirecting&hellip;</p>
+</body>
+</html>
+"""
 
 ROOT_INDEX_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
@@ -116,10 +136,22 @@ def parse_version(name: str):
 
 
 def copy_tree(src: Path, dst: Path) -> None:
-    """Replace ``dst`` with a fresh copy of ``src`` (idempotent for re-releases)."""
+    """Replace ``dst`` with a fresh copy of ``src`` (idempotent for re-releases).
+
+    Sphinx build intermediates (``.doctrees``) are never published -- they are pure caches, so we
+    drop them here as defense-in-depth even if the docs build forgot to redirect them out.
+    """
     if dst.exists():
         shutil.rmtree(dst)
-    shutil.copytree(src, dst)
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".doctrees"))
+
+
+def write_stable_redirect(dst: Path, vdir: str) -> None:
+    """Point ``/stable/`` at the newest release with a redirect stub (no byte-for-byte copy)."""
+    if dst.exists():
+        shutil.rmtree(dst)
+    dst.mkdir(parents=True)
+    (dst / "index.html").write_text(STABLE_REDIRECT_TEMPLATE.format(vdir=vdir))
 
 
 def discover_versions(store: Path):
@@ -182,6 +214,9 @@ def main(argv=None):
                     help="release date recorded for this version (default: today)")
     ap.add_argument("--style", type=Path,
                     help="stylesheet for the root landing (default: <site>/style.css if present)")
+    ap.add_argument("--cname", metavar="DOMAIN",
+                    help="write /CNAME with this custom domain (e.g. bertini2.org), so branch-source "
+                         "GitHub Pages keeps the domain across builds")
     args = ap.parse_args(argv)
 
     site: Path = args.site
@@ -197,11 +232,13 @@ def main(argv=None):
 
     store.mkdir(parents=True, exist_ok=True)
     (store / ".nojekyll").touch()
+    if args.cname:
+        (store / "CNAME").write_text(args.cname.strip() + "\n")
 
     vdir = f"v{args.version}"
     copy_tree(site, store / vdir)
     if args.stable:
-        copy_tree(site, store / "stable")
+        write_stable_redirect(store / "stable", vdir)
 
     # Shared stylesheet at the root, so the generated landing can reference /style.css.
     style_src = args.style or (site / "style.css")
@@ -231,7 +268,8 @@ def main(argv=None):
     )
     (store / "index.html").write_text(render_root_index(records, stable))
 
-    print(f"OK: {vdir} written{' + stable' if args.stable else ''}; "
+    print(f"OK: {vdir} written{' + stable redirect' if args.stable else ''}"
+          f"{' + CNAME ' + args.cname if args.cname else ''}; "
           f"{len(records)} version(s) in store, stable=v{stable}.")
     return 0
 

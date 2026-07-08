@@ -19,16 +19,24 @@ import assemble_versioned_docs as avd  # noqa: E402
 
 
 def make_site(tmp_path: Path, marker: str) -> Path:
-    """A minimal built-site fixture with an underscore dir (to exercise .nojekyll)."""
+    """A minimal built-site fixture with an underscore dir (to exercise .nojekyll) and a
+    ``.doctrees`` cache (to exercise the publish-junk drop)."""
     site = tmp_path / f"site_{marker}"
     (site / "python" / "_static").mkdir(parents=True, exist_ok=True)
+    (site / "python" / ".doctrees").mkdir(parents=True, exist_ok=True)
     (site / "cpp").mkdir(exist_ok=True)
     (site / "python" / "index.html").write_text(f"<h1>{marker}</h1>")
     (site / "python" / "_static" / "t.css").write_text("x")
+    (site / "python" / ".doctrees" / "environment.pickle").write_text("cache-junk")
     (site / "cpp" / "index.html").write_text(f"<h1>{marker}</h1>")
     (site / "index.html").write_text("<html>landing</html>")
     (site / "style.css").write_text(":root{}")
     return site
+
+
+def stable_target(store: Path) -> str:
+    """Return the redirect target embedded in the /stable/ stub (e.g. '/v3.1.0/')."""
+    return (store / "stable" / "index.html").read_text()
 
 
 def run(site, store, version, *, stable=False, date="2026-01-01"):
@@ -47,7 +55,11 @@ def test_first_release_creates_everything(tmp_path):
     rc = run(make_site(tmp_path, "3.0.0"), store, "3.0.0", stable=True, date="2026-07-14")
     assert rc == 0
     assert (store / "v3.0.0" / "python" / "index.html").read_text() == "<h1>3.0.0</h1>"
-    assert (store / "stable" / "cpp" / "index.html").exists()
+    # /stable/ is a redirect stub to the newest release, NOT a copy of it.
+    assert "/v3.0.0/" in stable_target(store)
+    assert not (store / "stable" / "cpp").exists()
+    # .doctrees caches are dropped, never published.
+    assert not (store / "v3.0.0" / "python" / ".doctrees").exists()
     assert (store / ".nojekyll").exists()
     assert (store / "style.css").exists()
     data = load_json(store)
@@ -69,8 +81,8 @@ def test_newer_release_moves_stable_and_preserves_old(tmp_path):
     assert [v["version"] for v in data["versions"]] == ["3.1.0", "3.0.0"]  # newest first
     dates = {v["version"]: v["released"] for v in data["versions"]}
     assert dates == {"3.0.0": "2026-07-14", "3.1.0": "2026-09-01"}
-    # /stable/ now mirrors 3.1.0
-    assert (store / "stable" / "python" / "index.html").read_text() == "<h1>3.1.0</h1>"
+    # /stable/ now redirects to 3.1.0
+    assert "/v3.1.0/" in stable_target(store)
 
 
 def test_patch_to_old_line_does_not_move_stable(tmp_path):
@@ -82,7 +94,7 @@ def test_patch_to_old_line_does_not_move_stable(tmp_path):
     data = load_json(store)
     assert data["stable"] == "3.1.0"  # unchanged
     assert [v["version"] for v in data["versions"]] == ["3.1.0", "3.0.1", "3.0.0"]
-    assert (store / "stable" / "python" / "index.html").read_text() == "<h1>3.1.0</h1>"
+    assert "/v3.1.0/" in stable_target(store)  # redirect unchanged (3.0.1 run had no --stable)
 
 
 def test_re_release_replaces_only_that_dir(tmp_path):
@@ -119,6 +131,20 @@ def test_empty_site_rejected(tmp_path):
     empty = tmp_path / "empty"
     empty.mkdir()
     assert run(empty, store, "3.0.0") == 2
+
+
+def test_cname_written_when_requested(tmp_path):
+    store = tmp_path / "store"
+    argv = ["--site", str(make_site(tmp_path, "3.0.0")), "--store", str(store),
+            "--version", "3.0.0", "--stable", "--cname", "bertini2.org"]
+    assert avd.main(argv) == 0
+    assert (store / "CNAME").read_text() == "bertini2.org\n"
+
+
+def test_no_cname_by_default(tmp_path):
+    store = tmp_path / "store"
+    run(make_site(tmp_path, "3.0.0"), store, "3.0.0", stable=True)
+    assert not (store / "CNAME").exists()
 
 
 def test_parse_version_ordering():

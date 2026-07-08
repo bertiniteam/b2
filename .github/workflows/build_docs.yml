@@ -133,7 +133,9 @@ jobs:
           BERTINI_GIT_SHA: ${{ steps.meta.outputs.sha }}
           BERTINI_BUILD_DATE: ${{ steps.meta.outputs.date }}
         run: |
-          sphinx-build -b html -W --keep-going source ../../site/python
+          # -d keeps the .doctrees pickle cache OUT of the published tree (site/python); it is a
+          # build intermediate, never part of the site.
+          sphinx-build -b html -W --keep-going -d ../../build/docs/py-doctrees source ../../site/python
 
       - name: Add landing page
         env:
@@ -162,10 +164,12 @@ jobs:
                  "(the site keeps only X.Y.Z versions -- deploy happens from real release tags)."
           fi
 
-      - name: Assemble the versioned docs store
+      - name: Assemble & publish the versioned docs store
         # Fold the freshly-built site/ into the persistent docs-store branch as /vX.Y.Z/, refresh
-        # /stable/ and the root landing (derived from every version present), and push it back.  The
-        # branch is the durable byte store; older versions are never rebuilt.  Public releases only.
+        # the /stable/ redirect + root landing (derived from every version present), and push it back.
+        # GitHub Pages serves this branch DIRECTLY (Pages source = docs-store), so this push IS the
+        # deploy -- no actions/deploy-pages, no artifact exchange.  The branch is the durable byte
+        # store; older versions are never rebuilt.  Public releases only.
         if: steps.relver.outputs.is_release == 'true' && inputs.deploy
         env:
           STORE_BRANCH: docs-store
@@ -178,58 +182,11 @@ jobs:
             echo "No $STORE_BRANCH yet; starting a fresh store."
             git init -q store && git -C store checkout -q -b "$STORE_BRANCH"
           fi
+          # --cname keeps the bertini2.org custom domain in the branch (branch-source Pages reads it).
           python tools/assemble_versioned_docs.py --site site --store store \
-            --version "${{ steps.relver.outputs.version }}" --stable
+            --version "${{ steps.relver.outputs.version }}" --stable --cname bertini2.org
           git -C store config user.name  "github-actions[bot]"
           git -C store config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C store add -A
           git -C store commit -q -m "docs: publish v${{ steps.relver.outputs.version }}" || echo "store unchanged"
           git -C store push -q "$REMOTE" HEAD:"$STORE_BRANCH"
-          rm -rf store/.git  # the Pages artifact must not carry the store's git metadata
-
-      - name: Upload Pages artifact (versioned store)
-        if: steps.relver.outputs.is_release == 'true' && inputs.deploy
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: store
-
-  deploy_docs:
-    name: Deploy to GitHub Pages
-    needs:
-      - build_docs
-    # Run whenever docs built and the caller asked to deploy.  Whether THIS ref is a public release
-    # is re-derived locally below (from VERSION) and gates the actual deploy step -- deliberately NOT
-    # via `needs.build_docs.outputs.*`.  A cross-job output feeding this `if` proved unreliable in the
-    # reusable-workflow context (issue #291): build_docs uploaded the Pages artifact and set the
-    # `is_release` output, yet this job still skipped.  Re-deriving in-job sidesteps that entirely,
-    # and for a prerelease build_docs uploads no artifact -- so the deploy step just no-ops (green),
-    # never clobbering the multi-version site.
-    if: needs.build_docs.result == 'success' && inputs.deploy
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ inputs.ref || github.ref }}
-      - name: Determine release version
-        # Mirrors build_docs' relver: only a public release (X.Y.Z, no pre/dev suffix) deploys.
-        id: relver
-        run: |
-          VERSION=$(tr -d '[:space:]' < VERSION)
-          if echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "is_release=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "is_release=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::VERSION '$VERSION' is not a public release; skipping Pages deploy "\
-                 "(build_docs uploaded no artifact to publish)."
-          fi
-      - name: Deploy
-        id: deployment
-        if: steps.relver.outputs.is_release == 'true'
-        uses: actions/deploy-pages@v4
