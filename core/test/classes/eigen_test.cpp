@@ -584,7 +584,39 @@ using bertini::KahanMatrix;
 		BOOST_CHECK((A-B).norm() < 1e-38);
 		BOOST_CHECK_EQUAL(Precision(B),100);
 
-	} 
+	}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+// issue #304: IsDistinct / IsSamePoint -- the infinity-norm tolerance point comparison.
+BOOST_AUTO_TEST_SUITE(point_distinctness)
+
+BOOST_AUTO_TEST_CASE(is_distinct_infinity_norm)
+{
+	using namespace bertini;
+
+	Vec<complex_mp> a(2), b(2), c(2);
+	a << complex_mp(1), complex_mp(2);
+	b << complex_mp(1), complex_mp(2) + complex_mp("1e-9");   // 1e-9 away in one coordinate
+	c << complex_mp(1), complex_mp(3);                        // 1 away
+
+	BOOST_CHECK(!IsDistinct(a, b, 1e-6));    // within tol -> same point
+	BOOST_CHECK( IsSamePoint(a, b, 1e-6));
+	BOOST_CHECK( IsDistinct(a, c, 1e-6));    // far apart -> distinct
+	BOOST_CHECK( IsDistinct(a, b, 1e-12));   // tighter tol -> distinct
+
+	Vec<complex_mp> shorter(1);
+	shorter << complex_mp(1);
+	BOOST_CHECK(IsDistinct(a, shorter, 1e-6));   // different length -> distinct, never same
+
+	// the same predicate works on plain doubles (so callers need not think about the number type)
+	Vec<double> da(2), db(2);
+	da << 1.0, 2.0;
+	db << 1.0, 2.0 + 1e-9;
+	BOOST_CHECK(!IsDistinct(da, db, 1e-6));
+	BOOST_CHECK( IsDistinct(da, db, 1e-12));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

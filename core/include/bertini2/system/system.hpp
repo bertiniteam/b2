@@ -1468,6 +1468,93 @@ namespace bertini {
 		}
 
 
+		/**
+		 \brief Append another system's functions to this one (issue #297).
+
+		 Syntactic sugar for ``AddFunctions(other.GetNaturalFunctions())`` -- handy for building a new
+		 system up from an existing one's equations (e.g. a critical-point system that starts from the
+		 original functions).  The functions are shared nodes, so the two systems' variables line up.
+
+		 \param other The system whose functions to copy in.
+		*/
+		void CopyFunctions(System const& other)
+		{
+			AddFunctions(other.GetNaturalFunctions());
+		}
+
+
+		/**
+		 \brief The FIFO index (0-based) of a variable group -- its position in the canonical FIFO
+		 ordering (``time_order_of_variable_groups_``), across affine and projective groups together.
+
+		 Matches by variable-node identity, so pass a group whose variables are the system's own.  Throws
+		 if the group is not one of this system's groups.
+
+		 \param g The variable group to locate.
+		*/
+		unsigned FIFOIndexOfGroup(VariableGroup const& g) const
+		{
+			unsigned affine_counter = 0, hom_counter = 0, fifo_i = 0;
+			for (auto const& iter : time_order_of_variable_groups_)
+			{
+				bool match = false;
+				switch (iter)
+				{
+					case VariableGroupType::Affine:      match = (variable_groups_[affine_counter++] == g); break;
+					case VariableGroupType::Homogeneous: match = (hom_variable_groups_[hom_counter++] == g); break;
+					case VariableGroupType::Ungrouped:   break;
+					default: throw std::runtime_error("unacceptable VariableGroupType in FIFOIndexOfGroup");
+				}
+				if (match)
+					return fifo_i;
+				++fifo_i;
+			}
+			throw std::runtime_error("FIFOIndexOfGroup: the given variable group is not a group of this system");
+		}
+
+
+		/**
+		 \brief Project a user-coordinate point onto one variable group: return just that group's
+		 coordinates.
+
+		 The point is in user (dehomogenized) coordinates -- length ``NumNaturalVariables()``, laid out in
+		 the FIFO group order.  Each group occupies a contiguous slice; this returns the slice for the
+		 group at FIFO position \p group_fifo_index.  Affine groups return their (dehomogenized) affine
+		 coordinates; **projective groups are returned as-is -- their coordinates are not dehomogenized**.
+		 Handy for an augmented system (critical points, deflation) where only one group's coordinates
+		 matter.
+
+		 \tparam T the point's number type (complex_dbl or complex_mp).
+		 \param user_point The point, in user coordinates.
+		 \param group_fifo_index The FIFO position of the group to extract (see FIFOIndexOfGroup).
+		*/
+		template<typename T>
+		Vec<T> CoordinatesOfGroup(Vec<T> const& user_point, unsigned group_fifo_index) const
+		{
+			unsigned affine_counter = 0, hom_counter = 0, fifo_i = 0, offset = 0;
+			for (auto const& iter : time_order_of_variable_groups_)
+			{
+				unsigned group_size;
+				switch (iter)
+				{
+					case VariableGroupType::Affine:      group_size = static_cast<unsigned>(variable_groups_[affine_counter++].size()); break;
+					case VariableGroupType::Homogeneous: group_size = static_cast<unsigned>(hom_variable_groups_[hom_counter++].size()); break;
+					case VariableGroupType::Ungrouped:   group_size = 1; break;
+					default: throw std::runtime_error("unacceptable VariableGroupType in CoordinatesOfGroup");
+				}
+				if (fifo_i == group_fifo_index)
+				{
+					if (offset + group_size > static_cast<unsigned>(user_point.size()))
+						throw std::runtime_error("CoordinatesOfGroup: point is shorter than the system's variable structure implies");
+					return user_point.segment(offset, group_size);
+				}
+				offset += group_size;
+				++fifo_i;
+			}
+			throw std::out_of_range("CoordinatesOfGroup: group index out of range");
+		}
+
+
 
 		/**
 		 Get the affine variable groups in the problem.

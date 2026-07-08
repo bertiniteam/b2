@@ -103,10 +103,12 @@ namespace bertini {
 		{
 			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
 			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems;
-			// kept REAL so a real slice stays real.  (A deeper pass on slice generation -- the constant
-			// column and the orthogonal=false path -- is still TODO.)
+			// kept REAL so a real slice stays real.  The orthogonal path is real too (real=true below):
+			// it QR-factors a matrix of REAL units, yielding a real orthogonal coefficient block (issue
+			// #294 -- previously the orthogonal path hardcoded the complex orthonormal matrix, so a
+			// "real" slice came out complex).
 			funtype gen = bertini::multiprecision::RandomRealBoundedModulusAssign;
-			return Make(v, dim, homogeneous, orthogonal, gen);
+			return Make(v, dim, homogeneous, orthogonal, /*real=*/true, gen);
 		}
 
 		/**
@@ -117,15 +119,23 @@ namespace bertini {
 			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
 			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems.
 			funtype gen = bertini::multiprecision::RandomComplexBoundedModulusAssign;
-			return Make(v, dim, homogeneous, orthogonal, gen);
+			return Make(v, dim, homogeneous, orthogonal, /*real=*/false, gen);
 		}
 
 		/**
 		\brief Factory for generating slices.  Generates the variable-coefficient block (optionally
 		orthonormalized by a QR factorization) and the constant column, then assembles the augmented
 		matrix the LinearFormsBlock holds.
+
+		\param v The variable group the slice is over.
+		\param dim The number of linear forms (the slice's dimension).
+		\param homogeneous Whether the slice is homogeneous (zero constant column).
+		\param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
+		\param real Whether the coefficients are real (a real orthonormal block on the orthogonal path,
+		            matching the real \p gen used on the non-orthogonal path and for the constant column).
+		\param gen The scalar generator used for the non-orthogonal coefficients and the constant column.
 		*/
-		static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, std::function<void(complex_mp&, unsigned)> gen)
+		static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, bool real, std::function<void(complex_mp&, unsigned)> gen)
 		{
 			const unsigned num_vars = static_cast<unsigned>(v.size());
 
@@ -136,9 +146,15 @@ namespace bertini {
 				// conjugate-orthonormal coefficient matrix (orthonormal linear forms), drawn the b1 way
 				// via RandomConjugateOrthonormalMatrix (ADR-0041) -- it generates square and truncates,
 				// so the old transpose dance is gone.  Built at max precision, like the rest of the slice.
+				// A real slice QR-factors a matrix of REAL units (a real orthogonal block); a complex
+				// slice uses complex units.  (Issue #294: the real path must stay real.)
 				auto prev_precision = DefaultPrecision();
 				DefaultPrecision(MaxPrecisionAllowed());
-				coeffs = bertini::RandomConjugateOrthonormalMatrix<complex_mp>(dim, num_vars);
+				if (real)
+					coeffs = bertini::RandomConjugateOrthonormalMatrix<real_mp>(dim, num_vars)
+					             .unaryExpr([](real_mp const& r){ return complex_mp(r); });
+				else
+					coeffs = bertini::RandomConjugateOrthonormalMatrix<complex_mp>(dim, num_vars);
 				DefaultPrecision(prev_precision);
 			}
 			else

@@ -222,25 +222,94 @@ namespace bertini{
 			throw std::runtime_error("could not interpret a supplied value as a number in eval");
 		}
 
-		// f.eval(x=2, y=5) --- evaluate this expression at a point given as keyword
-		// arguments naming the variables.  No System is required; the values are bound
-		// by variable name.  Every variable of the expression must be supplied, and
-		// every keyword must name a variable of the expression (see EvalExpression).
+		// Resolve a Python object naming a variable -- a Variable node or a name string -- to its name.
+		static std::string VariableNameOf(object const& key)
+		{
+			extract<std::string> as_str(key);
+			if (as_str.check())
+				return as_str();
+			extract<std::shared_ptr<node::Variable>> as_var(key);
+			if (as_var.check())
+				return as_var()->name();
+			throw std::runtime_error("eval: dictionary keys must be Variables or variable-name strings");
+		}
+
+		// f.eval(...) --- evaluate this expression at a point.  No System is required; values bind by
+		// variable name and the result is a complex_mp.  Three call forms (issue #300):
+		//   (a) keyword arguments naming the variables:  f.eval(x=2, y=5)
+		//   (b) a single positional dict {Variable-or-name: value}:  f.eval({x: 2, y: 5})
+		//   (c) a single positional 1-D array / list, mapped in order to the expression's variables()
+		//       (which are sorted by name); override that ordering with a variables= keyword:
+		//       f.eval(pt)  /  f.eval(pt, variables=[x, y, z])
+		// Every variable of the expression must be supplied a value.
 		static object NodeEvalRaw(tuple args, dict kwargs)
 		{
-			if (len(args) != 1)
-				throw std::runtime_error("eval takes the variable values as keyword arguments, e.g. f.eval(x=2, y=5)");
-
+			long const nargs = len(args);
+			if (nargs < 1)
+				throw std::runtime_error("eval: missing self");
 			std::shared_ptr<Node> self = extract<std::shared_ptr<Node>>(args[0]);
 
 			std::map<std::string, complex_mp> values;
-			list items = dict(kwargs).items();
-			for (long i = 0; i < len(items); ++i)
+
+			// (a) keyword form -- f.eval(x=2, y=5)
+			if (nargs == 1)
 			{
-				object pair = items[i];
-				std::string name = extract<std::string>(pair[0]);
-				values[name] = CoerceToMpfrComplex(object(pair[1]));
+				list items = dict(kwargs).items();
+				for (long i = 0; i < len(items); ++i)
+				{
+					object pair = items[i];
+					std::string name = extract<std::string>(pair[0]);
+					if (name == "variables")   // an ordering hint is only meaningful for the array form
+						continue;
+					values[name] = CoerceToMpfrComplex(object(pair[1]));
+				}
+				return object(bertini::EvalExpression<complex_mp>(self, values));
 			}
+
+			if (nargs > 2)
+				throw std::runtime_error("eval: pass either keyword arguments or a single positional point "
+				                         "(a dict, or a 1-D array/list); got too many positional arguments");
+
+			object point = args[1];
+
+			// (b) a dict {Variable-or-name: value}
+			extract<dict> as_dict(point);
+			if (as_dict.check())
+			{
+				dict d = as_dict();
+				list items = d.items();
+				for (long i = 0; i < len(items); ++i)
+				{
+					object pair = items[i];
+					values[VariableNameOf(object(pair[0]))] = CoerceToMpfrComplex(object(pair[1]));
+				}
+				return object(bertini::EvalExpression<complex_mp>(self, values));
+			}
+
+			// (c) a 1-D array/list mapped to a variable ordering (variables= override, else variables())
+			VariableGroup vars;
+			if (kwargs.has_key("variables"))
+			{
+				object vobj = kwargs["variables"];
+				extract<VariableGroup> as_vg(vobj);
+				if (as_vg.check())
+					vars = as_vg();
+				else
+					for (long i = 0; i < len(vobj); ++i)
+						vars.push_back(extract<std::shared_ptr<node::Variable>>(vobj[i])());
+			}
+			else
+			{
+				vars = bertini::node::GatherVariables(self);   // the expression's own variables, sorted by name
+			}
+
+			long const n = len(point);
+			if (static_cast<size_t>(n) != vars.size())
+				throw std::runtime_error("eval: the point has " + std::to_string(n) + " entries but the "
+				                         "expression has " + std::to_string(vars.size()) + " variables; "
+				                         "pass a variables= ordering if they differ");
+			for (long i = 0; i < n; ++i)
+				values[vars[static_cast<size_t>(i)]->name()] = CoerceToMpfrComplex(object(point[i]));
 
 			return object(bertini::EvalExpression<complex_mp>(self, values));
 		}
@@ -256,11 +325,12 @@ namespace bertini{
 			class_<NodeWrap, boost::noncopyable, Nodeptr >("AbstractNode", no_init)
 			.def(NodeVisitor<Node>())
 			.def("eval", raw_function(&NodeEvalRaw, 1),
-				"evaluate this expression at a point given as keyword arguments naming the "
-				"variables, e.g. f.eval(x=2, y=5).  No System is needed.  Evaluation is in "
-				"multiple precision at the current default precision; native Python floats "
-				"carry only float64 of information.  Every variable of the expression must be "
-				"supplied a value, and every keyword must name a variable of the expression.")
+				"evaluate this expression at a point, returning a complex_mp.  No System is needed.  "
+				"Three forms (issue #300): keyword args f.eval(x=2, y=5); a dict f.eval({x: 2, y: 5}); "
+				"or a 1-D array/list f.eval(pt) mapped in order to the expression's variables() (sorted "
+				"by name) -- override the ordering with variables=, e.g. f.eval(pt, variables=[x, y, z]).  "
+				"Evaluation is at the current default precision; native Python floats carry only float64 "
+				"of information.  Every variable of the expression must be supplied a value.")
 			.def("variables", &NodeVariables, (arg("self")),
 				"The distinct variables appearing in this expression, sorted by name.")
 			;

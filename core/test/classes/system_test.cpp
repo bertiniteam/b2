@@ -1934,6 +1934,70 @@ BOOST_AUTO_TEST_CASE(make_homotopy_with_colliding_pathvar_throws)
 }
 
 
+// issue #297: CopyFunctions appends another system's functions (sugar behind sys.copy_functions).
+BOOST_AUTO_TEST_CASE(copy_functions_appends_another_systems_functions)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+
+	System a;
+	a.AddFunction(pow(x, 2) + y);
+	a.AddFunction(x - y);
+	a.AddVariableGroup(VariableGroup{x, y});
+	BOOST_CHECK_EQUAL(a.GetNaturalFunctions().size(), 2u);
+
+	// build a new system up from a's equations
+	System b;
+	b.CopyFunctions(a);
+	BOOST_CHECK_EQUAL(b.GetNaturalFunctions().size(), 2u);
+
+	// and keep adding
+	b.AddFunction(x + y);
+	BOOST_CHECK_EQUAL(b.GetNaturalFunctions().size(), 3u);
+	BOOST_CHECK_EQUAL(a.GetNaturalFunctions().size(), 2u);   // a is untouched
+}
+
+
+// Cluster G: CoordinatesOfGroup / FIFOIndexOfGroup -- project a user-coordinate point onto one
+// variable group.  A system with an affine group [x,y] (FIFO 0) and a projective group [u,v] (FIFO 1).
+BOOST_AUTO_TEST_CASE(coordinates_of_group_projection)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var u = Variable::Make("u");
+	Var v = Variable::Make("v");
+
+	System sys;
+	sys.AddFunction(x + y);
+	sys.AddFunction(u - v);
+	sys.AddVariableGroup(VariableGroup{x, y});        // FIFO group 0 (affine)
+	sys.AddHomVariableGroup(VariableGroup{u, v});     // FIFO group 1 (projective)
+
+	// user-coordinate point [x, y, u, v] = [1, 2, 3, 4]
+	Vec<complex_mp> pt(4);
+	pt << complex_mp(1), complex_mp(2), complex_mp(3), complex_mp(4);
+
+	// by FIFO index: group 0 -> the affine coords (1,2); group 1 -> the projective coords (3,4)
+	auto g0 = sys.CoordinatesOfGroup(pt, 0);
+	BOOST_CHECK_EQUAL(g0.size(), 2);
+	BOOST_CHECK_EQUAL(g0(0), complex_mp(1));
+	BOOST_CHECK_EQUAL(g0(1), complex_mp(2));
+
+	auto g1 = sys.CoordinatesOfGroup(pt, 1);
+	BOOST_CHECK_EQUAL(g1.size(), 2);
+	BOOST_CHECK_EQUAL(g1(0), complex_mp(3));
+	BOOST_CHECK_EQUAL(g1(1), complex_mp(4));
+
+	// by group object (identity match)
+	BOOST_CHECK_EQUAL(sys.FIFOIndexOfGroup(VariableGroup{x, y}), 0u);
+	BOOST_CHECK_EQUAL(sys.FIFOIndexOfGroup(VariableGroup{u, v}), 1u);
+
+	// out-of-range index / unknown group throw
+	BOOST_CHECK_THROW(sys.CoordinatesOfGroup(pt, 2), std::out_of_range);
+	BOOST_CHECK_THROW(sys.FIFOIndexOfGroup(VariableGroup{x, u}), std::runtime_error);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

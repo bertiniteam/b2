@@ -202,6 +202,42 @@ namespace bertini{
 			.def("have_path_variable", &SystemBaseT::HavePathVariable, (arg("self")), "Asks whether the System has a path variable defined")
 			
 			.def("function", &SystemBaseT::Function, (arg("self"), arg("index")), "Get a function with a given index.  Problems ensue if out of range -- uses un-rangechecked version of underlying getter")
+			.def("functions",
+				+[](SystemBaseT const& self) {
+					boost::python::list out;
+					for (auto const& f : self.GetNaturalFunctions()) out.append(f);
+					return out;
+				},
+				(arg("self")),
+				"The system's functions, as a list of function-tree nodes (issue #297; structured blocks are expanded).  So `critpt_sys.add_functions(sys.functions())` copies them all in.")
+			.def("copy_functions",
+				+[](SystemBaseT& self, SystemBaseT const& other) -> SystemBaseT& {
+					self.CopyFunctions(other);
+					return self;
+				},
+				return_internal_reference<>(),
+				(arg("self"), arg("other")),
+				"Append another system's functions to this one and return self (issue #297; sugar for add_functions(other.functions())).")
+			.def("coordinates_of",
+				+[](SystemBaseT const& self, Vec<mpfr> point, boost::python::object group) -> boost::python::object {
+					boost::python::extract<unsigned> as_idx(group);
+					unsigned idx = as_idx.check() ? as_idx()
+						: self.FIFOIndexOfGroup(boost::python::extract<VariableGroup const&>(group)());
+					return boost::python::object(self.CoordinatesOfGroup(point, idx));
+				},
+				(arg("self"), arg("point"), arg("group")),
+				"Project a user-coordinate point onto one variable group: return just that group's coordinates.  "
+				"`group` is either the VariableGroup object or its 0-based FIFO index.  Affine groups return their "
+				"affine coordinates; projective groups are returned as-is (not dehomogenized).  Handy for an "
+				"augmented system (e.g. a critical-point system) where you only care about one group.")
+			.def("coordinates_of",
+				+[](SystemBaseT const& self, Vec<complex_dbl> point, boost::python::object group) -> boost::python::object {
+					boost::python::extract<unsigned> as_idx(group);
+					unsigned idx = as_idx.check() ? as_idx()
+						: self.FIFOIndexOfGroup(boost::python::extract<VariableGroup const&>(group)());
+					return boost::python::object(self.CoordinatesOfGroup(point, idx));
+				},
+				(arg("self"), arg("point"), arg("group")))
 			.def("symbolic_jacobian",
 				+[](SystemBaseT const& self, bool usercoordinates) {
 					auto J = self.SymbolicJacobian(usercoordinates);
