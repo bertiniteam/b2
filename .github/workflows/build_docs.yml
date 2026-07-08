@@ -53,8 +53,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # push the persistent docs-store branch (the durable versioned-docs store)
-    outputs:
-      is_release: ${{ steps.relver.outputs.is_release }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -199,17 +197,39 @@ jobs:
     name: Deploy to GitHub Pages
     needs:
       - build_docs
-    # Deploy only for public releases: prerelease/dev builds have no versioned artifact to publish,
-    # and deploying a flat build would clobber the multi-version site.
-    if: needs.build_docs.result == 'success' && inputs.deploy && needs.build_docs.outputs.is_release == 'true'
+    # Run whenever docs built and the caller asked to deploy.  Whether THIS ref is a public release
+    # is re-derived locally below (from VERSION) and gates the actual deploy step -- deliberately NOT
+    # via `needs.build_docs.outputs.*`.  A cross-job output feeding this `if` proved unreliable in the
+    # reusable-workflow context (issue #291): build_docs uploaded the Pages artifact and set the
+    # `is_release` output, yet this job still skipped.  Re-deriving in-job sidesteps that entirely,
+    # and for a prerelease build_docs uploads no artifact -- so the deploy step just no-ops (green),
+    # never clobbering the multi-version site.
+    if: needs.build_docs.result == 'success' && inputs.deploy
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pages: write
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - name: Determine release version
+        # Mirrors build_docs' relver: only a public release (X.Y.Z, no pre/dev suffix) deploys.
+        id: relver
+        run: |
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          if echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VERSION '$VERSION' is not a public release; skipping Pages deploy "\
+                 "(build_docs uploaded no artifact to publish)."
+          fi
       - name: Deploy
         id: deployment
+        if: steps.relver.outputs.is_release == 'true'
         uses: actions/deploy-pages@v4
