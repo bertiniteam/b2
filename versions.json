@@ -1,11 +1,11 @@
 {
-  "generated": "2026-07-07",
+  "generated": "2026-07-08",
   "stable": "3.0.0",
   "versions": [
     {
       "version": "3.0.0",
       "path": "v3.0.0/",
-      "released": "2026-07-07",
+      "released": "2026-07-08",
       "stable": true
     }
   ]
