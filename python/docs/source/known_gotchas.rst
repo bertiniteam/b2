@@ -33,23 +33,29 @@ Mixing float64 into multiprecision arrays
 ==========================================
 
 A Python ``float`` (or NumPy ``float64``) does **not** silently promote into a
-multiprecision array.  This is deliberate: ``0.1`` as a float64 is not the number you
+multiprecision *value*.  This is deliberate: ``0.1`` as a float64 is not the number you
 typed -- it carries binary noise past the 16th digit -- so anywhere a double could
 sneak into a high-precision computation, Bertini makes you say what you mean
 (construct from a *string*: ``real_mp('0.1')``).
 
-The visible consequences:
+The line is drawn at whether the float's *value* flows into the computation:
 
-* ``np.isclose(a, b)`` / ``np.allclose(a, b)`` raise ``DTypePromotionError`` on mp
-  arrays, because their float tolerances (``rtol=1e-05``, ``atol=1e-08``) cannot
-  promote.
+* **Tolerance comparisons against a float are allowed.**  ``np.abs(a - b) < 1e-10``
+  works: an ordering comparison yields a ``bool``, so no float ever enters a
+  multiprecision value -- and the comparison is *exact* (the mp value is compared
+  against the double, not rounded down to double first).  This matches the C++
+  solvers, whose tolerances are doubles.
+* **Mixed arithmetic is blocked** (``a + 0.1`` raises ``ufunc ... not supported``),
+  and so is **mixed equality** (``a == 0.1`` -- exact equality against a float
+  literal is precisely the trap the boundary exists for).
+* ``np.isclose(a, b)`` / ``np.allclose(a, b)`` raise ``DTypePromotionError``: they
+  *compute* ``atol + rtol*np.abs(b)`` with float64 values internally, which is
+  arithmetic, not comparison.
 * ``np.round(a, decimals)`` with nonzero ``decimals`` fails for the same reason (it
   scales by a float power of ten internally).  Plain ``np.round(a)`` /
   :func:`numpy.rint` work.
-* arithmetic between an mp array and a float scalar/array fails with
-  ``ufunc ... not supported``.
 
-Use all-multiprecision operands instead.  The closeness idiom:
+The closeness idiom is therefore just:
 
 .. doctest::
 
@@ -58,11 +64,15 @@ Use all-multiprecision operands instead.  The closeness idiom:
     >>> a = np.array([complex_mp(3), complex_mp(4)])
     >>> b = np.array([complex_mp(3), complex_mp(4)])
 
-    >>> # ✓ the all-mp replacement for np.allclose(a, b)
-    >>> bool(np.all(np.abs(a - b) <= real_mp('1e-10')))
+    >>> # ✓ the replacement for np.allclose(a, b): compare against a double tolerance
+    >>> bool(np.all(np.abs(a - b) < 1e-10))
     True
 
-    >>> # ✗ np.allclose itself cannot work: its float64 tolerances cannot promote
+    >>> # ✓ the comparison is exact -- 1e-22 is not lost against a 1e-30 tolerance
+    >>> bool(np.all(np.array([real_mp('1e-22')]) < 1e-30))
+    False
+
+    >>> # ✗ np.allclose itself cannot work: it computes with float64 tolerances
     >>> np.allclose(a, b)
     Traceback (most recent call last):
         ...
@@ -71,7 +81,8 @@ Use all-multiprecision operands instead.  The closeness idiom:
 Integers are fine in both directions of intent -- they are exact, so they convert and
 promote freely (``a * 3``, ``np.power(a, 2)``, ``real_mp(7)``).  And converting mp
 *down* to double is available when you ask for it explicitly (``float(x)``,
-``complex(z)``, ``arr.astype(complex)``) -- you are consciously truncating.
+``complex(z)``, ``arr.astype(float)``, ``arr.astype(complex)``) -- you are consciously
+truncating.
 
 .. _gotcha-complex-components:
 

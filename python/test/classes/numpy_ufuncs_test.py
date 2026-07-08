@@ -288,22 +288,68 @@ class TestReductions:
 
 
 class TestCloseness:
-    """np.isclose/np.allclose need float64 promotion, which stays disabled by
-    design (double -> mp casts are deliberately unsafe: the user has to think
-    about float-literal intent).  This is the sanctioned all-mp idiom."""
+    """The float64 boundary: tolerance ORDERINGS against a double are allowed
+    (a comparison yields a bool -- no float flows into a multiprecision value;
+    this mirrors the C++ solvers' double ToleranceT and the scalar
+    GreatLessVisitor<T, double>).  Everything that would let a float VALUE into
+    an mp computation stays closed: mixed equality, mixed arithmetic,
+    np.isclose's internal float tolerances."""
 
-    def test_allclose_idiom(self, dtype):
+    def test_tolerance_comparison_with_float(self, dtype):
+        v = _sample(dtype)
+        w = v + dtype('1e-20')
+        assert np.all(np.abs(v - w) <= 1e-10)
+        assert not np.all(np.abs(v - (w + dtype(1))) <= 1e-10)
+        # both operand orders, and float64 arrays as well as scalars
+        assert np.all(1e-10 >= np.abs(v - w))
+        assert np.all(np.abs(v - w) < np.full(len(v), 1e-10))
+
+    def test_tolerance_comparison_is_exact_not_sloppy(self):
+        # the double is compared exactly (boost mixed compare), not by rounding
+        # the mp value down to double first
+        tiny = real_mp('1e-22')
+        assert np.all(np.array([tiny]) < 1e-10)
+        assert not np.any(np.array([tiny]) < 1e-30)
+
+    def test_allclose_idiom_all_mp_still_works(self, dtype):
         v = _sample(dtype)
         w = v + dtype('1e-20')
         assert np.all(np.abs(v - w) <= real_mp('1e-10'))
-        assert not np.all(np.abs(v - (w + dtype(1))) <= real_mp('1e-10'))
+
+    def test_float_equality_stays_blocked(self, dtype):
+        # exact equality against a float literal is the 0.1-intent trap; it is
+        # not bound at the scalar level either
+        v = _sample(dtype)
+        with pytest.raises(TypeError):
+            v == 0.1
+
+    def test_float_arithmetic_stays_blocked(self, dtype):
+        v = _sample(dtype)
+        with pytest.raises(TypeError):
+            v + 0.1
 
     def test_isclose_itself_still_raises(self, dtype):
-        # if this ever starts passing, numpy grew user-dtype promotion --
-        # revisit the known-gotchas page
+        # its internal float64 rtol/atol cannot promote; if this ever starts
+        # passing, numpy grew user-dtype promotion -- revisit the gotchas page
         v = _sample(dtype)
         with pytest.raises(TypeError):
             np.isclose(v, v)
+
+
+class TestExplicitDownConversion:
+    """astype is the explicit, conscious truncation to double precision."""
+
+    def test_astype_float_and_complex(self):
+        v = np.array([real_mp('1.5'), real_mp(2)])
+        w = np.array([complex_mp(1, 2), complex_mp(3, 4)])
+        assert list(v.astype(float)) == [1.5, 2.0]
+        assert list(v.astype(complex)) == [1.5 + 0j, 2.0 + 0j]
+        assert list(w.astype(complex)) == [1 + 2j, 3 + 4j]
+
+    def test_astype_int_stays_forbidden(self, dtype):
+        v = np.array([dtype(1)])
+        with pytest.raises(TypeError):
+            v.astype(np.int64)
 
 
 class TestPrecisionPreservation:

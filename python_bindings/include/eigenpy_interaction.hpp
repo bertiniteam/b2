@@ -7,6 +7,7 @@
 
 #include "python_common.hpp"
 
+#include <complex>
 #include <cstring>
 #include <type_traits>
 
@@ -173,12 +174,15 @@ namespace eigenpy
 		struct op_subtract      { template <typename T> static T    apply(T const& x, T const& y) { return T(x - y); } };
 		struct op_multiply      { template <typename T> static T    apply(T const& x, T const& y) { return T(x * y); } };
 		struct op_divide        { template <typename T> static T    apply(T const& x, T const& y) { return T(x / y); } };
-		struct op_equal         { template <typename T> static bool apply(T const& x, T const& y) { return x == y; } };
-		struct op_not_equal     { template <typename T> static bool apply(T const& x, T const& y) { return x != y; } };
-		struct op_greater       { template <typename T> static bool apply(T const& x, T const& y) { return x > y; } };
-		struct op_less          { template <typename T> static bool apply(T const& x, T const& y) { return x < y; } };
-		struct op_greater_equal { template <typename T> static bool apply(T const& x, T const& y) { return x >= y; } };
-		struct op_less_equal    { template <typename T> static bool apply(T const& x, T const& y) { return x <= y; } };
+		// comparison functors are heterogeneous (two type parameters) so the same
+		// functor serves the mp-vs-mp loops AND the mp-vs-double tolerance loops
+		// (boost::multiprecision compares a number against a double exactly).
+		struct op_equal         { template <typename T, typename U> static bool apply(T const& x, U const& y) { return x == y; } };
+		struct op_not_equal     { template <typename T, typename U> static bool apply(T const& x, U const& y) { return x != y; } };
+		struct op_greater       { template <typename T, typename U> static bool apply(T const& x, U const& y) { return x > y; } };
+		struct op_less          { template <typename T, typename U> static bool apply(T const& x, U const& y) { return x < y; } };
+		struct op_greater_equal { template <typename T, typename U> static bool apply(T const& x, U const& y) { return x >= y; } };
+		struct op_less_equal    { template <typename T, typename U> static bool apply(T const& x, U const& y) { return x <= y; } };
 
 		struct op_negative { template <typename T> static T apply(T const& x) { return T(-x); } };
 		struct op_square   { template <typename T> static T apply(T const& x) { return T(x * x); } };
@@ -448,6 +452,44 @@ namespace eigenpy
 			}
 		}
 
+		// mixed mp-vs-float64 ORDERING comparison (Reversed swaps operand order:
+		// false = (mp, double), true = (double, mp)).  Comparisons against a
+		// double tolerance -- np.abs(a - b) < 1e-10 -- are safe: boost compares a
+		// number against a double exactly, and the result is a bool, so no float
+		// ever flows INTO a multiprecision value.  This mirrors the scalar
+		// bindings (GreatLessVisitor<T, double>) and the C++ solvers' double
+		// ToleranceT.  Deliberately orderings-only: mixed EQUALITY with a float
+		// literal is the 0.1-intent trap the unsafe double->mp cast exists to
+		// block, and it is not bound at the scalar level either.
+		template <typename T, typename Op, bool Reversed>
+		void guarded_mixed_compare_op(
+				char **args, EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *dimensions,
+				EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *steps, void * /*data*/)
+		{
+			npy_intp is0 = steps[0], is1 = steps[1], os = steps[2], n = *dimensions;
+			char *i0 = args[0], *i1 = args[1], *o = args[2];
+			const T zero(0);
+			for (npy_intp k = 0; k < n; ++k)
+			{
+				bool& res = *reinterpret_cast<bool*>(o);
+				if constexpr (Reversed)
+				{
+					double const& x = *reinterpret_cast<double const*>(i0);
+					T const& y = value_or_zero(*reinterpret_cast<T const*>(i1), zero);
+					res = Op::apply(x, y);
+				}
+				else
+				{
+					T const& x = value_or_zero(*reinterpret_cast<T const*>(i0), zero);
+					double const& y = *reinterpret_cast<double const*>(i1);
+					res = Op::apply(x, y);
+				}
+				i0 += is0;
+				i1 += is1;
+				o += os;
+			}
+		}
+
 		template <typename T, typename Op>
 		void guarded_unary_op(
 				char **args, EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *dimensions,
@@ -649,6 +691,32 @@ namespace eigenpy
 		}
 	};
 
+	// mp -> complex128, for the explicit down-conversion arr.astype(complex)
+	// (registered unsafe, like mp -> double: you consciously truncate).
+	// boost mp numbers have no conversion operator to std::complex, so go
+	// through the components.
+	template <>
+	struct cast<bertini::real_mp, std::complex<double>>
+	{
+		static std::complex<double> run(bertini::real_mp const& from)
+		{
+			if (internal::mpfr_slot<bertini::real_mp>::uninitialized(from))
+				return {0.0, 0.0};
+			return {from.convert_to<double>(), 0.0};
+		}
+	};
+
+	template <>
+	struct cast<bertini::complex_mp, std::complex<double>>
+	{
+		static std::complex<double> run(bertini::complex_mp const& from)
+		{
+			if (internal::mpfr_slot<bertini::complex_mp>::uninitialized(from))
+				return {0.0, 0.0};
+			return {from.real().convert_to<double>(), from.imag().convert_to<double>()};
+		}
+	};
+
 
 	// Install the zero-initialization setitem guard for an MPFR-backed dtype.
 	// Call immediately after eigenpy::registerNewType<NumT>(), before any arrays
@@ -829,6 +897,30 @@ namespace eigenpy
 			binary("less",          &internal::guarded_compare_op<Scalar, internal::op_less>,          bool_code);
 			binary("greater_equal", &internal::guarded_compare_op<Scalar, internal::op_greater_equal>, bool_code);
 			binary("less_equal",    &internal::guarded_compare_op<Scalar, internal::op_less_equal>,    bool_code);
+
+			// mixed mp-vs-float64 orderings, both operand orders: the tolerance
+			// idiom `np.abs(a - b) < 1e-10`.  Orderings ONLY -- see
+			// guarded_mixed_compare_op for why equality stays mp-vs-mp.
+			auto mixed_ordering = [&](char const* name, PyUFuncGenericFunction fwd,
+			                          PyUFuncGenericFunction rev)
+			{
+				int types_td[3] = {type_code, NPY_DOUBLE, bool_code};
+				int types_dt[3] = {NPY_DOUBLE, type_code, bool_code};
+				registerGuardedLoop(numpy, name, type_code, fwd, types_td, 3);
+				registerGuardedLoop(numpy, name, type_code, rev, types_dt, 3);
+			};
+			mixed_ordering("greater",
+			               &internal::guarded_mixed_compare_op<Scalar, internal::op_greater, false>,
+			               &internal::guarded_mixed_compare_op<Scalar, internal::op_greater, true>);
+			mixed_ordering("less",
+			               &internal::guarded_mixed_compare_op<Scalar, internal::op_less, false>,
+			               &internal::guarded_mixed_compare_op<Scalar, internal::op_less, true>);
+			mixed_ordering("greater_equal",
+			               &internal::guarded_mixed_compare_op<Scalar, internal::op_greater_equal, false>,
+			               &internal::guarded_mixed_compare_op<Scalar, internal::op_greater_equal, true>);
+			mixed_ordering("less_equal",
+			               &internal::guarded_mixed_compare_op<Scalar, internal::op_less_equal, false>,
+			               &internal::guarded_mixed_compare_op<Scalar, internal::op_less_equal, true>);
 
 			// real-only unary: rounding family, fabs, real-only transcendentals
 			unary("floor", &internal::guarded_unary_op<Scalar, internal::op_floor>, type_code);

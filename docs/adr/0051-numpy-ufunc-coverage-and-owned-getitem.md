@@ -73,14 +73,26 @@ that behavior faithfully.  Consequences:
    `SystemError` and keep the `initial=` idiom as the fallback for older numpy.
    `pyproject.toml` keeps `numpy` unpinned.
 
-5. **The float64 boundary stays closed** (reaffirmed 2026-07-08): `double → mp`
-   casts remain registered *unsafe*, so float64 scalars/arrays do not silently
-   promote into mp arrays.  The conversion itself is bit-exact, but a promoted
-   float64 `0.1` is not the decimal `0.1` the user typed — the user has to think.
-   Visible consequences, documented as gotchas rather than fixed:
-   `np.isclose`/`np.allclose` raise `DTypePromotionError` (sanctioned idiom:
-   `np.all(np.abs(a - b) <= real_mp('1e-10'))`), and `np.round(a, decimals≠0)`
-   fails (it scales by a float internally).
+5. **The float64 boundary stays closed for VALUES, open for tolerance
+   comparisons** (both decided 2026-07-08).  `double → mp` casts remain
+   registered *unsafe*, so float64 scalars/arrays do not silently promote into
+   mp arrays: the conversion itself is bit-exact, but a promoted float64 `0.1`
+   is not the decimal `0.1` the user typed — the user has to think.  However,
+   mixed mp-vs-float64 **ordering** loops (`<`, `<=`, `>`, `>=`, both operand
+   orders, real only) ARE registered: `np.abs(a - b) < 1e-10` is safe — the
+   result is a bool, no float flows into an mp value, the comparison is exact
+   (boost compares the number against the double directly), and it matches the
+   C++ solvers' double `ToleranceT` and the scalar `GreatLessVisitor<T,double>`
+   precedent.  Mixed EQUALITY stays unregistered (exact equality against a
+   float literal is the 0.1-intent trap; not bound at scalar level either), as
+   does mixed arithmetic; `np.isclose`/`np.allclose` still raise (they *compute*
+   with float64 tolerances internally).  `mp → complex128` casts are registered
+   unsafe alongside the pre-existing `mp → double`, so `arr.astype(complex)` /
+   `astype(float)` are the explicit, conscious truncations.  Registration-order
+   note: casts must be registered BEFORE the ufunc loops — registering the
+   mixed loops makes numpy query the mp↔double casts, and a cast first
+   registered after being queried is permanently ignored (numpy
+   RuntimeWarning).
 
 6. **Component access on complex arrays** goes through new array overloads of
    `multiprec.real`/`imag`/`arg` (returning `real_mp` arrays).  numpy cannot know

@@ -478,9 +478,12 @@ namespace bertini{
 			eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
 			eigenpy::HardenCompare<T>();   // element compare slot: np.sort/argsort/searchsorted
 			eigenpy::HardenArgMinMax<T>(); // argmax/argmin slots
-			// guarded loops (real type — orderings included); eigenpy's registerCommonUfunc
-			// loops read input slots unguarded and crash on never-written np.zeros/np.empty slots.
-			eigenpy::registerGuardedUfunct<T, true>();
+
+			// casts must be registered BEFORE the ufunc loops: registering the
+			// mixed mp-vs-double ordering loops makes numpy query the mp<->double
+			// casts, and a cast first registered after it has been queried is
+			// ignored (numpy RuntimeWarning "registered/modified ... after the
+			// cast had been used").
 
 			// you can convert from integer types with no fear
 			eigenpy::registerCast<long,T>(true);
@@ -497,6 +500,13 @@ namespace bertini{
 			// both directions are scary.
 			eigenpy::registerCast<T,double>(false);
 			eigenpy::registerCast<double,T>(false);
+			// explicit down-conversion arr.astype(complex) — unsafe, you consciously truncate
+			eigenpy::registerCast<T,std::complex<double>>(false);
+
+			// guarded loops (real type — orderings included, plus the mp-vs-double
+			// tolerance orderings); eigenpy's registerCommonUfunc loops read input
+			// slots unguarded and crash on never-written np.zeros/np.empty slots.
+			eigenpy::registerGuardedUfunct<T, true>();
 
 
 			IMPLICITLY_CONVERTIBLE(int,T);
@@ -573,8 +583,8 @@ namespace bertini{
 			eigenpy::registerNewType<T>();
 			eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
 			eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
-			eigenpy::registerUfunct_without_comparitors<T>();
 
+			// casts before ufunc loops — see the note in ExposeFloat.
 
 			// you can safely convert from integer types to Complex's, there's no loss possible
 			eigenpy::registerCast<long,T>(true);
@@ -590,9 +600,13 @@ namespace bertini{
 			// these conversions are unsafe.  you can, but you probably shouldn't
 			eigenpy::registerCast<T,double>(false);
 			eigenpy::registerCast<double,T>(false);
+			// explicit down-conversion arr.astype(complex) — unsafe, you consciously truncate
+			eigenpy::registerCast<T,std::complex<double>>(false);
 
 			// it's ok to convert from variable precision Float to Complex, that's ok!
 			eigenpy::registerCast<real_mp,T>(true);
+
+			eigenpy::registerUfunct_without_comparitors<T>();
 
 			IMPLICITLY_CONVERTIBLE(int,T);
 			IMPLICITLY_CONVERTIBLE(long,T);
