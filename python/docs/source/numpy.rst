@@ -138,6 +138,21 @@ input they work element-wise.  The builtin-shadowing names (``abs``, ``round``,
 never clobbers the Python builtins.  For the tolerance point comparison behind
 de-duplication, see :func:`bertini.is_distinct_up_to`.
 
+And for the whole vocabulary in one go -- the elementary functions *and* these
+helpers, working on symbolic expressions, multiprecision numbers, and numpy
+containers alike, dispatched per argument::
+
+    from bertini.operators import *
+
+    f = sin(x) + Pi*y            # symbolic (x, y Variables)
+    v = sin(real_mp('0.5'))      # numeric, full precision
+    m = abs(solutions[0])        # numpy containers, mp dtypes included
+    t = arg(complex_mp(1, 1))    # components: arg/real/imag/conj
+
+This star-import *does* shadow ``abs``/``round``/``sum`` in your namespace -- that is
+its point (they fall back to builtin behavior on plain python input), and it is
+opt-in.
+
 Boundaries by design
 =====================
 

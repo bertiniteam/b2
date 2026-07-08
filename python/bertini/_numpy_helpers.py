@@ -34,6 +34,7 @@ They also paper over the one true numpy limitation for user dtypes: the ndarray
 these helpers or ``bertini.multiprec.real/imag/arg``.
 """
 
+import builtins as _builtins
 import numpy as _np
 from decimal import Decimal as _Decimal, ROUND_HALF_EVEN as _ROUND_HALF_EVEN
 
@@ -88,7 +89,9 @@ def _imag_scalar(v):
 def _abs_scalar(v):
     if isinstance(v, (_complex_mp, _real_mp)):
         return _mp_abs(v)
-    return abs(v)
+    # explicitly the BUILTIN: this module's own `abs` shadows it at module scope,
+    # and the bare name recursed infinitely for plain python input
+    return _builtins.abs(v)
 
 
 def _conj_scalar(v):
@@ -110,7 +113,7 @@ def _round_scalar(v, decimals):
         return _complex_mp(_round_real_mp(v.real, decimals), _round_real_mp(v.imag, decimals))
     if isinstance(v, _real_mp):
         return _round_real_mp(v, decimals)
-    return round(v, decimals)
+    return _builtins.round(v, decimals)  # explicitly the builtin (module `round` shadows it)
 
 
 # --- the public helpers -----------------------------------------------------------------------
@@ -151,6 +154,26 @@ def conj(x):
     if _is_mp_array(x):
         return _np.conj(x)
     return _elementwise(_conj_scalar, x)
+
+
+def _arg_scalar(v):
+    if isinstance(v, _complex_mp):
+        return _mp.arg(v)
+    if isinstance(v, _real_mp):
+        return _mp.arg(_complex_mp(v))
+    import cmath
+    return cmath.phase(complex(v))
+
+
+def arg(x):
+    """Argument(s) -- the angle from 0 -- as ``real_mp``, over a scalar / list / array
+    (the ``np.angle`` replacement; numpy's own cannot work on mp dtypes).  Beware the
+    branch cut."""
+    if _is_mp_array(x) and x.ndim == 1:
+        if x.dtype == _np.dtype(_real_mp):
+            x = x.astype(_np.dtype(_complex_mp))   # registered safe cast, exact
+        return _mp.arg(x)
+    return _elementwise(_arg_scalar, x)
 
 
 def round(x, decimals=0):
