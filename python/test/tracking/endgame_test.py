@@ -137,9 +137,8 @@ def test_using_total_degree_ss():
 
     for soln in dehomogenized_solns:
         diff = exact_soln - soln
-        # NB: np.sum / np.prod / np.mean over multiprecision (mpfr/mpc) arrays can raise
-        # SystemError on some numpy + eigenpy builds -- numpy cannot construct the reduction
-        # identity element for these custom dtypes.  See the "Known gotchas" page in the docs.
-        # np.dot(diff, diff) == sum(diff_i**2) (numpy's dot does not conjugate) and goes through
-        # the dtype's dot slot, which works everywhere; it preserves this assertion exactly.
+        # np.dot(diff, diff) == sum(diff_i**2) (numpy's dot does not conjugate); it goes
+        # through the dtype's dot slot.  np.sum would work too on current numpy (see the
+        # reductions note on the "Known gotchas" docs page), but dot stays portable to
+        # older numpy builds where the identity-seeded reduce raised SystemError.
         assert mp.abs(np.sqrt(np.dot(diff, diff))) < 1e-10

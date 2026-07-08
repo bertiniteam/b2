@@ -41,8 +41,8 @@ Reading solutions: convert with ``complex()``
 
 The model changes the **type** of the numbers you get back. A double solve returns NumPy
 ``complex128``; a multiprecision solve returns arrays of :class:`bertini.complex_mp` (NumPy
-arrays with ``dtype`` ``Complex``). The portable habit -- works in every model -- is to convert each
-coordinate with :func:`complex`:
+arrays with ``dtype`` ``complex_mp``). The portable habit -- works in every model -- is to convert
+each coordinate with :func:`complex`:
 
 .. testcode::
 
