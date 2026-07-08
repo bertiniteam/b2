@@ -1130,7 +1130,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				if (records_)
 				{
 					EnsureRunRecorded();
-					indices_to_run = RecallRecordedPaths(all_indices);
+					// recall==false forces a fresh track of every path even when identical results are
+					// already recorded (e.g. to run path observers or benchmark); the fresh run is still
+					// recorded.  See ZeroDimConfig::recall.
+					if (this->template Get<ZeroDimConf>().recall)
+						indices_to_run = RecallRecordedPaths(all_indices);
 				}
 
 				// num_threads: 0 = auto (hardware_concurrency), 1 = serial, N = N threads;

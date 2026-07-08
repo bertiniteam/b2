@@ -194,6 +194,13 @@ struct ZeroDimConfig
 	/// Under MPI the per-rank thread count comes from OMP_NUM_THREADS, not this field.
 	unsigned num_threads = 0;
 
+	/// Whether an identical ask already present in the records directory may be RECALLED instead of
+	/// re-tracked (default true).  Set false to force a fresh track even when the paths are recorded --
+	/// e.g. to run path observers, benchmark the solve, or re-verify reproducibility.  Like num_threads
+	/// this is transient (it changes only WHETHER the work runs, not WHAT is computed), so it is
+	/// deliberately excluded from the configuration's identity/digest.  No effect when nothing is recorded.
+	bool recall = true;
+
 	mpq_rational start_time{1};          ///< Homotopy start time (t=1).
 	mpq_rational endgame_boundary{1, 10}; ///< Time at which tracking hands off to the endgame (t=1/10).
 	mpq_rational target_time{0};         ///< Homotopy target time (t=0).
