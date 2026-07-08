@@ -261,7 +261,8 @@ _SOLUTION_METADATA_FIELDS = (
 )
 
 
-def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_multiplicities=True):
+def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_multiplicities=True,
+                          group=None):
     """The solve as a pandas DataFrame -- one row per solution, the "database of solutions".
 
     Columns are ``solution`` -- the whole solution point, kept in a single cell -- then every
@@ -292,6 +293,10 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_m
         ``True`` by default.  Pass ``False`` to keep every endpoint, including the ``m-1``
         duplicate copies.  The grouping is the solver's own (the C++ clustering that computes
         multiplicity), read off ``multiplicity_representative``; this does not re-cluster.
+    group : VariableGroup or int, optional
+        Project each solution onto one variable group -- the ``solution`` cell then holds only that
+        group's coordinates (Cluster G).  Pass the ``VariableGroup`` object or its 0-based FIFO index.
+        ``None`` (default) keeps the whole point.
 
     Returns
     -------
@@ -330,7 +335,10 @@ def _zerodim_to_dataframe(self, *, user_coords=True, omit_infinite=True, merge_m
         # internal buffer, so storing the live vector (or its elements) and letting pandas read it
         # later would collapse every cell to one value.  The copy keeps the native element type, so
         # a multiprecision solve loses no precision.
-        row = {'solution': points[i].copy()}
+        sol = points[i].copy()
+        if group is not None:
+            sol = system.coordinates_of(sol, group)   # project onto one variable group (Cluster G)
+        row = {'solution': sol}
         for field in _SOLUTION_METADATA_FIELDS:
             row[field] = getattr(m, field)
         row['system'] = system          # a reference, so rows from different solves stay identifiable
@@ -351,6 +359,49 @@ def _attach_to_dataframe():
 
 
 _attach_to_dataframe()
+
+
+# --- group= : project each returned solution onto one variable group (Cluster G) ------------
+#
+# The reusable primitive is C++ (System.coordinates_of); here we just surface a `group=` keyword on
+# every point getter so `solver.solutions(group=xyz)` returns only that group's coordinates.  The
+# projection goes through the solver's target_system (whose FIFO layout the user-coord points follow).
+_POINT_GETTERS_FOR_GROUP = (
+    'all_solutions', 'solutions', 'finite_solutions', 'real_solutions',
+    'nonsingular_solutions', 'singular_solutions', 'infinite_solutions', 'nonsolutions',
+)
+
+
+def _make_group_getter(native):
+    def getter(self, *args, group=None, **kwargs):
+        points = native(self, *args, **kwargs)
+        if group is None:
+            return points
+        sysm = self.target_system()
+        return [sysm.coordinates_of(p, group) for p in points]
+    getter.__name__ = getattr(native, '__name__', 'solutions')
+    getter.__doc__ = (getattr(native, '__doc__', '') or '') + (
+        "\n\ngroup=<VariableGroup or 0-based FIFO index>: project each returned point onto that "
+        "variable group -- return only its coordinates (Cluster G).  Default None keeps the whole point.")
+    return getter
+
+
+def _attach_group_kwarg():
+    """Give every solver class a group= keyword on its point getters (idempotent)."""
+    for name in dir(_pybnalag):
+        if not name.startswith(('ZeroDimSolver', 'HomotopySolver')):
+            continue
+        cls = getattr(_pybnalag, name)
+        if not isinstance(cls, type) or getattr(cls, '_b2_has_group_kwarg', False):
+            continue
+        for getter_name in _POINT_GETTERS_FOR_GROUP:
+            native = getattr(cls, getter_name, None)
+            if native is not None:
+                setattr(cls, getter_name, _make_group_getter(native))
+        cls._b2_has_group_kwarg = True
+
+
+_attach_group_kwarg()
 
 
 # --- ZeroDimSolver: a friendly factory over the bound ZeroDimSolver<endgame x precision> classes ---

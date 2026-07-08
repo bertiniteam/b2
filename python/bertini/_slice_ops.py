@@ -57,10 +57,62 @@ def from_coefficients(cls, coefficients, variables, homogeneous=False):
     return _native['from_coefficients'](vg, M, homogeneous)
 
 
+def _coerce_slice_variables(variables, method_name):
+    """Coerce the `variables` argument of a random Slice factory to a single VariableGroup (issue #293).
+
+    Accepts a VariableGroup, a one-element list of groups (unwrapped), or a flat list of Variables
+    (wrapped).  A list of *several* groups -- the common mistake of passing ``sys.variable_groups()``
+    -- raises a precise message instead of the opaque converter TypeError.
+    """
+    from bertini._pybertini.container import VariableGroup as _VariableGroup
+    from bertini._pybertini.function_tree.symbol import Variable as _Variable
+
+    if isinstance(variables, _VariableGroup):
+        return variables
+    # Any other iterable: a list/tuple/ndarray of Variables, or a sequence of VariableGroups (e.g. the
+    # ListOfVariableGroup that system.variable_groups() returns -- NOT a plain Python list).
+    try:
+        seq = list(variables)
+    except TypeError:
+        seq = None
+    if seq is not None:
+        if len(seq) == 1 and isinstance(seq[0], _VariableGroup):
+            return seq[0]                                   # a one-element sequence of groups -- unwrap
+        if seq and all(isinstance(g, _VariableGroup) for g in seq):
+            raise TypeError(
+                "Slice.{m} wants ONE variable group, but was given a sequence of {n} of them (this is "
+                "what system.variable_groups() returns).  Pass a single group, e.g. "
+                "Slice.{m}(sys.variable_groups()[0], ...), or a flat list of Variables."
+                .format(m=method_name, n=len(seq)))
+        if seq and all(isinstance(v, _Variable) for v in seq):
+            return _VariableGroup(seq)                      # a flat list of Variables -- wrap
+    raise TypeError(
+        "Slice.{m}: `variables` must be a VariableGroup or a list of Variables (got a {t})"
+        .format(m=method_name, t=type(variables).__name__))
+
+
+def _make_random_slice_factory(native, method_name):
+    def factory(cls, variables, dim, homogeneous=False, orthogonal=True):
+        vg = _coerce_slice_variables(variables, method_name)
+        return native(vg, dim, homogeneous, orthogonal)
+    factory.__name__ = method_name
+    factory.__doc__ = (
+        "Make a random {kind} slice of `dim` linear forms over `variables` (a VariableGroup or a flat "
+        "list of Variables).  homogeneous=True zeroes the constant column; orthogonal=True (default) "
+        "orthonormalizes the coefficient block.".format(
+            kind='real' if method_name == 'random_real' else 'complex'))
+    return classmethod(factory)
+
+
 def install(Slice):
-    """Replace ``Slice.from_coefficients`` with the friendly, coercing classmethod (idempotent)."""
+    """Replace ``Slice.from_coefficients`` with the friendly, coercing classmethod (idempotent);
+    give the random factories clear variable-group coercion + errors (issue #293)."""
     if getattr(Slice, "_b2_slice_ops_installed", False):
         return
     _native['from_coefficients'] = Slice.from_coefficients   # native static: (variables, mpfr_matrix)
     Slice.from_coefficients = classmethod(from_coefficients)
+    for _name in ('random_complex', 'random_real'):
+        if hasattr(Slice, _name):
+            _native[_name] = getattr(Slice, _name)
+            setattr(Slice, _name, _make_random_slice_factory(_native[_name], _name))
     Slice._b2_slice_ops_installed = True
