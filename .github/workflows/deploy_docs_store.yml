@@ -1,0 +1,48 @@
+name: Deploy docs from store 🚀
+
+# Publish the durable versioned-docs store (the `docs-store` branch) straight to GitHub Pages,
+# WITHOUT rebuilding any docs.  The store already holds the assembled /vX.Y.Z/ + /stable/ + landing
+# (build_docs writes it there).  Use this to (re)publish the site after a build already ran, or to
+# recover a deploy that failed only at the Pages step.
+#
+# Runs only on demand.
+
+on:
+  workflow_dispatch:
+    inputs:
+      store_branch:
+        description: 'Branch holding the assembled docs bytes to publish.'
+        required: false
+        type: string
+        default: 'docs-store'
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish store to Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # read the docs-store branch
+      pages: write      # deploy
+      id-token: write   # deploy OIDC
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the docs store
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.store_branch }}
+          path: store
+      - name: Strip git metadata (Pages artifact must be plain files)
+        run: rm -rf store/.git
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: store
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
