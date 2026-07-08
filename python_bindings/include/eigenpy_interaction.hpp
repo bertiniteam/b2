@@ -285,14 +285,24 @@ namespace eigenpy
 		struct op_trunc { template <typename T> static T apply(T const& x) { return T(trunc(x)); } };
 		// numpy's rint is round-half-to-EVEN; boost's rint rounds half away from
 		// zero, so call mpfr directly in MPFR_RNDN (nearest, ties to even).
+		// Unlike the rest of the rounding family, numpy defines rint for complex
+		// (component-wise) — np.round on a complex array goes through it.
 		struct op_rint
 		{
-			template <typename T> static T apply(T const& x)
+			static bertini::real_mp rint_one(bertini::real_mp const& x)
 			{
-				T out(0);
+				bertini::real_mp out(0);
 				out.precision(x.precision());
 				mpfr_rint(out.backend().data(), x.backend().data(), MPFR_RNDN);
 				return out;
+			}
+
+			template <typename T> static T apply(T const& x)
+			{
+				if constexpr (is_complex_mp<T>::value)
+					return at_precision_of(T(rint_one(x.real()), rint_one(x.imag())), x);
+				else
+					return rint_one(x);
 			}
 		};
 
@@ -891,6 +901,10 @@ namespace eigenpy
 		unary("isinf",    &internal::guarded_unary_op_out<Scalar, bool, internal::op_isinf>,    bool_code);
 		unary("isfinite", &internal::guarded_unary_op_out<Scalar, bool, internal::op_isfinite>, bool_code);
 
+		// rint is the one rounding ufunc numpy defines for complex too
+		// (component-wise) — np.round dispatches through it
+		unary("rint", &internal::guarded_unary_op<Scalar, internal::op_rint>, type_code);
+
 		if constexpr (WithOrderingComparitors) // the ordering-dependent set; NOT defined for complex types
 		{
 			binary("greater",       &internal::guarded_compare_op<Scalar, internal::op_greater>,       bool_code);
@@ -922,11 +936,11 @@ namespace eigenpy
 			               &internal::guarded_mixed_compare_op<Scalar, internal::op_less_equal, false>,
 			               &internal::guarded_mixed_compare_op<Scalar, internal::op_less_equal, true>);
 
-			// real-only unary: rounding family, fabs, real-only transcendentals
+			// real-only unary: rounding family (sans rint, registered for both
+			// above), fabs, real-only transcendentals
 			unary("floor", &internal::guarded_unary_op<Scalar, internal::op_floor>, type_code);
 			unary("ceil",  &internal::guarded_unary_op<Scalar, internal::op_ceil>,  type_code);
 			unary("trunc", &internal::guarded_unary_op<Scalar, internal::op_trunc>, type_code);
-			unary("rint",  &internal::guarded_unary_op<Scalar, internal::op_rint>,  type_code);
 			unary("fabs",  &internal::guarded_unary_op<Scalar, internal::op_fabs>,  type_code);
 			unary("exp2",  &internal::guarded_unary_op<Scalar, internal::op_exp2>,  type_code);
 			unary("log2",  &internal::guarded_unary_op<Scalar, internal::op_log2>,  type_code);

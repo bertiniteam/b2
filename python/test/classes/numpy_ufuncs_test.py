@@ -175,6 +175,15 @@ class TestNumpySemanticsCorners:
                       real_mp('-0.5'), real_mp('-2.5')])
         assert [str(x) for x in np.rint(v)] == ['0', '2', '2', '-0', '-2']
 
+    def test_rint_and_round_on_complex(self):
+        # numpy defines rint (and hence np.round) for complex, component-wise
+        w = np.array([complex_mp('1.5', '2.5'), complex_mp('-0.5', '3.4')])
+        want = np.rint(np.array([1.5 + 2.5j, -0.5 + 3.4j]))
+        for got, ref in zip(np.rint(w), want):
+            assert complex(got) == ref
+        for got, ref in zip(np.round(w), want):
+            assert complex(got) == ref
+
     def test_floor_ceil_trunc(self):
         v = np.array([real_mp('1.7'), real_mp('-1.7')])
         assert [str(x) for x in np.floor(v)] == ['1', '-2']
