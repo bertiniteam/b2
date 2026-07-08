@@ -1,9 +1,0 @@
-bertini.tracking.observers.amp
-==============================
-.. automodule:: bertini.tracking.observers.amp
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-

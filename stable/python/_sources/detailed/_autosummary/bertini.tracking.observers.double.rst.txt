@@ -1,9 +1,0 @@
-bertini.tracking.observers.double
-=================================
-.. automodule:: bertini.tracking.observers.double
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-

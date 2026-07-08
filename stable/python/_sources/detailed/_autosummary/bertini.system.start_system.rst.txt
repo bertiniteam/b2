@@ -1,9 +1,0 @@
-bertini.system.start\_system
-============================
-.. automodule:: bertini.system.start_system
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-

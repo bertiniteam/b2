@@ -1,5 +1,0 @@
-var structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1classic2693653e6800c173d15d74cc2bdf56b =
-[
-    [ "T", "structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1classic2693653e6800c173d15d74cc2bdf56b.html#a5647153c4a8d9fc2c335b00990bf2001", null ],
-    [ "ConfigSettingParser", "structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1classic2693653e6800c173d15d74cc2bdf56b.html#a094b33484af8c9e5f854432f69f877ed", null ]
-];

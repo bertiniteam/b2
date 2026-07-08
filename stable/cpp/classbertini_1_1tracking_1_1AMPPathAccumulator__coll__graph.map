@@ -1,9 +1,0 @@
-<map id="bertini::tracking::AMPPathAccumulator&lt; TrackerT, EventT &gt;" name="bertini::tracking::AMPPathAccumulator&lt; TrackerT, EventT &gt;">
-<area shape="rect" id="Node000001" title="Example usage: PathAccumulator&lt;AMPTracker&gt; path_accumulator;." alt="" coords="5,269,177,324"/>
-<area shape="rect" id="Node000002" href="$classbertini_1_1TypedObserver.html" title="CRTP base that turns an observer into a set of typed Observe() overloads." alt="" coords="6,167,177,221"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="94,235,94,269,89,269,89,235"/>
-<area shape="rect" id="Node000003" href="$classbertini_1_1Observer.html" title="Actual observer type, which you should derive from to extract custom information from observable type..." alt="" coords="20,79,163,119"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="94,132,94,167,89,167,89,132"/>
-<area shape="rect" id="Node000004" href="$classbertini_1_1AnyObserver.html" title="Strawman base class for Observer objects." alt="" coords="13,5,169,31"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="94,44,94,79,89,79,89,44"/>
-</map>

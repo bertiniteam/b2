@@ -1,4 +1,0 @@
-var structbertini_1_1parsing_1_1classic_1_1ConfigParser_3_01detail_1_1TypeList_3_01Ts_8_8_8_01_4_01_4 =
-[
-    [ "Parse", "structbertini_1_1parsing_1_1classic_1_1ConfigParser_3_01detail_1_1TypeList_3_01Ts_8_8_8_01_4_01_4.html#a6c14ea2a9b5508503a1025af9ec5cd40", null ]
-];

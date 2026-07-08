@@ -1,9 +1,0 @@
-<map id="bertini::tracking::FirstPrecisionRecorder&lt; TrackerT &gt;" name="bertini::tracking::FirstPrecisionRecorder&lt; TrackerT &gt;">
-<area shape="rect" id="Node000001" title="Observer that records the starting precision and the first precision increase during a track." alt="" coords="707,35,873,89"/>
-<area shape="rect" id="Node000002" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="400,5,659,119"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="673,59,707,59,707,65,673,65"/>
-<area shape="rect" id="Node000003" href="$classbertini_1_1Observer.html" title="Actual observer type, which you should derive from to extract custom information from observable type..." alt="" coords="209,42,352,82"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="366,59,400,59,400,65,366,65"/>
-<area shape="rect" id="Node000004" href="$classbertini_1_1AnyObserver.html" title="Strawman base class for Observer objects." alt="" coords="5,49,161,75"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="175,59,209,59,209,65,175,65"/>
-</map>

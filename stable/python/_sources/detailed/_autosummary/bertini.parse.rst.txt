@@ -1,9 +1,0 @@
-﻿bertini.parse
-=============
-.. automodule:: bertini.parse
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-

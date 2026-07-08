@@ -1,4 +1,0 @@
-var structbertini_1_1detail_1_1ListCat_3_01TypeList_3_01Ps_8_8_8_01_4_00_01TypeList_3_01Qs_8_8_8_01_5c3a0e7ba096bb4397a808fd3547b9ef =
-[
-    [ "type", "structbertini_1_1detail_1_1ListCat_3_01TypeList_3_01Ps_8_8_8_01_4_00_01TypeList_3_01Qs_8_8_8_01_5c3a0e7ba096bb4397a808fd3547b9ef.html#a0118f8094d09bcd1b63e7fb113a30efa", null ]
-];

@@ -1,5 +1,0 @@
-<map id="bertini::VisitorBase" name="bertini::VisitorBase">
-<area shape="rect" id="Node000001" title="A strawman class for implementing the visitor pattern." alt="" coords="9,5,156,31"/>
-<area shape="rect" id="Node000002" href="$classbertini_1_1SLPCompiler.html" title="Compiles a System (or polynomial block) into a StraightLineProgram by visiting its function&#45;tree node..." alt="" coords="5,79,160,104"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="85,44,85,79,80,79,80,44"/>
-</map>

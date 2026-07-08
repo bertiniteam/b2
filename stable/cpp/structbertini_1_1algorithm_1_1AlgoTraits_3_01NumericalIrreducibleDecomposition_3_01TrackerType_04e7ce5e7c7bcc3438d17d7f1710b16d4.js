@@ -1,6 +1,0 @@
-var structbertini_1_1algorithm_1_1AlgoTraits_3_01NumericalIrreducibleDecomposition_3_01TrackerType_04e7ce5e7c7bcc3438d17d7f1710b16d4 =
-[
-    [ "BaseComplexT", "structbertini_1_1algorithm_1_1AlgoTraits_3_01NumericalIrreducibleDecomposition_3_01TrackerType_04e7ce5e7c7bcc3438d17d7f1710b16d4.html#a2305805509f5e0930e7f35c266f4dcae", null ],
-    [ "BaseRealT", "structbertini_1_1algorithm_1_1AlgoTraits_3_01NumericalIrreducibleDecomposition_3_01TrackerType_04e7ce5e7c7bcc3438d17d7f1710b16d4.html#a38d96f8b965ac0d3abeae3a924431e95", null ],
-    [ "NeededConfigs", "structbertini_1_1algorithm_1_1AlgoTraits_3_01NumericalIrreducibleDecomposition_3_01TrackerType_04e7ce5e7c7bcc3438d17d7f1710b16d4.html#a73b037bf1c4338dd84fd39043fe3631f", null ]
-];

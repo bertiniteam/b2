@@ -1,7 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" title=" " alt="" coords="5,64,100,89"/>
-<area shape="rect" id="Node000001" href="$structboost_1_1multiprecision_1_1is__compatible__arithmetic__type_3_01double_00_01number_3_01Backend_01_4_01_4.html" title=" " alt="" coords="148,5,423,60"/>
-<area shape="poly" id="edge136_Node000000_Node000001" title=" " alt="" coords="113,63,147,56,148,61,114,68"/>
-<area shape="rect" id="Node000002" href="$structboost_1_1multiprecision_1_1is__compatible__arithmetic__type_3_01mpq__rational_00_01number_3_01Backend_01_4_01_4.html" title=" " alt="" coords="177,85,394,154"/>
-<area shape="poly" id="edge137_Node000000_Node000002" title=" " alt="" coords="114,85,177,97,176,102,113,90"/>
-</map>

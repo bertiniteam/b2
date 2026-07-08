@@ -1,7 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" title=" " alt="" coords="5,41,153,81"/>
-<area shape="rect" id="Node000001" href="$structbertini_1_1generators_1_1BertiniNumPolicy.html" title="Karma real&#45;number formatting policy: always scientific, at the type&#39;s full precision." alt="" coords="201,5,405,45"/>
-<area shape="poly" id="edge103_Node000000_Node000001" title=" " alt="" coords="167,45,201,39,201,44,168,50"/>
-<area shape="rect" id="Node000002" href="$structbertini_1_1generators_1_1BertiniNumPolicy_3_01real__mp_01_4.html" title="BertiniNumPolicy specialization for multiprecision reals (precision follows the value)." alt="" coords="226,70,381,125"/>
-<area shape="poly" id="edge104_Node000000_Node000002" title=" " alt="" coords="167,73,226,82,226,88,167,78"/>
-</map>

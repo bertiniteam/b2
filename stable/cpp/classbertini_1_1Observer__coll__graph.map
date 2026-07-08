@@ -1,5 +1,0 @@
-<map id="bertini::Observer&lt; ObservedT &gt;" name="bertini::Observer&lt; ObservedT &gt;">
-<area shape="rect" id="Node000001" title="Actual observer type, which you should derive from to extract custom information from observable type..." alt="" coords="12,79,155,119"/>
-<area shape="rect" id="Node000002" href="$classbertini_1_1AnyObserver.html" title="Strawman base class for Observer objects." alt="" coords="5,5,161,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="86,44,86,79,81,79,81,44"/>
-</map>

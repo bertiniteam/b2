@@ -1,4 +1,0 @@
-var structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1RandomConfig_00_01Skipper_01_4 =
-[
-    [ "ConfigSettingParser", "structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1RandomConfig_00_01Skipper_01_4.html#a18237d4d23fb8564e6458f8413cf6266", null ]
-];

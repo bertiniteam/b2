@@ -1,9 +1,0 @@
-<map id="bertini::algorithm::AnyZeroDim" name="bertini::algorithm::AnyZeroDim">
-<area shape="rect" id="Node000001" title="Type&#45;erased base for a zero&#45;dimensional solve, exposing output and config entry points." alt="" coords="55,93,190,133"/>
-<area shape="rect" id="Node000003" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title="The continuation primitive: given a homotopy + a source of start points, track each path through the ..." alt="" coords="5,181,240,236"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="125,147,125,181,120,181,120,147"/>
-<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1AnyAlgorithm.html" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="55,5,190,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="125,59,125,93,120,93,120,59"/>
-<area shape="rect" id="Node000004" href="$structbertini_1_1algorithm_1_1ZeroDimSolver.html" title="The zero&#45;dimensional solve algorithm: given a polynomial system, form a start system and a homotopy,..." alt="" coords="11,284,234,339"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="125,250,125,284,120,284,120,250"/>
-</map>

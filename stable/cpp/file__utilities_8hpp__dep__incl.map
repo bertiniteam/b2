@@ -1,9 +1,0 @@
-<map id="core/include/bertini2/io/file_utilities.hpp" name="core/include/bertini2/io/file_utilities.hpp">
-<area shape="rect" id="Node000001" title="Provides the file_utilities screens for bertini2." alt="" coords="169,5,323,45"/>
-<area shape="rect" id="Node000002" href="$algorithm__builder_8hpp.html" title="A type which determines which algorithms etc, to run, and sets them up." alt="" coords="5,93,236,133"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="208,56,150,95,147,91,205,51"/>
-<area shape="rect" id="Node000003" href="$classic__utilities_8hpp.html" title="Provides utility functions for parsing classic bertini input files." alt="" coords="260,93,483,133"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="287,51,345,91,342,95,284,56"/>
-<area shape="rect" id="Node000004" href="$parsing_8hpp.html" title="A collective include file for parsing utilities." alt="" coords="294,181,449,221"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="374,147,374,181,369,181,369,147"/>
-</map>

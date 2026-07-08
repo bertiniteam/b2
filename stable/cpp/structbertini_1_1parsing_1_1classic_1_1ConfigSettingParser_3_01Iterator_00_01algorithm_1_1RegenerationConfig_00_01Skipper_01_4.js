@@ -1,5 +1,0 @@
-var structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1RegenerationConfig_00_01Skipper_01_4 =
-[
-    [ "T", "structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1RegenerationConfig_00_01Skipper_01_4.html#a7fd89fe938570cde948c9fab5c057fb0", null ],
-    [ "ConfigSettingParser", "structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1RegenerationConfig_00_01Skipper_01_4.html#af7dd920fb5f9498e3d07b33b47decde2", null ]
-];

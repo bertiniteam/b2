@@ -1,7 +1,0 @@
-<map id="bertini::start_system::TotalDegreeBinomial" name="bertini::start_system::TotalDegreeBinomial">
-<area shape="rect" id="Node000001" title="Roots&#45;of&#45;unity start system for 1&#45;homogeneous polynomial systems." alt="" coords="5,167,172,207"/>
-<area shape="rect" id="Node000002" href="$classbertini_1_1start__system_1_1StartSystem.html" title="Abstract base class for other start systems." alt="" coords="10,79,167,119"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="91,133,91,166,86,166,86,133"/>
-<area shape="rect" id="Node000003" href="$classbertini_1_1System.html" title="The fundamental polynomial system class for Bertini2." alt="" coords="28,5,149,31"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="91,44,91,79,86,79,86,44"/>
-</map>

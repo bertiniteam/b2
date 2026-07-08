@@ -1,9 +1,0 @@
-bertini.algorithms.zerodim
-==========================
-.. automodule:: bertini.algorithms.zerodim
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-

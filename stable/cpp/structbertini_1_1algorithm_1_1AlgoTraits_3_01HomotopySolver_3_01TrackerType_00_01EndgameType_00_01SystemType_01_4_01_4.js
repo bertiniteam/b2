@@ -1,6 +1,0 @@
-var structbertini_1_1algorithm_1_1AlgoTraits_3_01HomotopySolver_3_01TrackerType_00_01EndgameType_00_01SystemType_01_4_01_4 =
-[
-    [ "BaseComplexT", "structbertini_1_1algorithm_1_1AlgoTraits_3_01HomotopySolver_3_01TrackerType_00_01EndgameType_00_01SystemType_01_4_01_4.html#a2aa6274494a73404b42d77e1e457305e", null ],
-    [ "BaseRealT", "structbertini_1_1algorithm_1_1AlgoTraits_3_01HomotopySolver_3_01TrackerType_00_01EndgameType_00_01SystemType_01_4_01_4.html#a54c52014494e950e59806496b52f3bb9", null ],
-    [ "NeededConfigs", "structbertini_1_1algorithm_1_1AlgoTraits_3_01HomotopySolver_3_01TrackerType_00_01EndgameType_00_01SystemType_01_4_01_4.html#ae909e8881d60c6697be87adc537dd542", null ]
-];

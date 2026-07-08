@@ -1,5 +1,0 @@
-<map id="bertini::algorithm::AnyNID" name="bertini::algorithm::AnyNID">
-<area shape="rect" id="Node000001" title="Type&#45;erased base for the Numerical Irreducible Decomposition algorithm." alt="" coords="5,93,140,133"/>
-<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1AnyAlgorithm.html" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="5,5,140,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="75,59,75,93,70,93,70,59"/>
-</map>
