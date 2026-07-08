@@ -77,7 +77,15 @@ namespace eigenpy
 		}
 
 
-		// template specialization for real numbers
+		// template specialization for real numbers.
+		//
+		// NB: eigenpy's stock getitem (and an earlier version of this one) returns
+		// boost::ref(slot) — a Python object ALIASING the numpy buffer.  That is
+		// the root of the ADR-0031 hazard family (#259: stored elements silently
+		// collapse or SIGABRT once the buffer is reused/freed), and it makes
+		// scalars extracted from temporary arrays — np.sum/np.mean results, most
+		// visibly — dangle outright.  Returning an owned COPY kills the whole
+		// class: an indexed element is a durable value, as numpy users expect.
 		template <>
 		struct getitem<bertini::real_mp>
 		{
@@ -91,13 +99,14 @@ namespace eigenpy
 				{
 					mpfr_scalar = NumT(0);
 				}
-				boost::python::object m(boost::ref(mpfr_scalar));
+				boost::python::object m(mpfr_scalar); // owned copy — never boost::ref (see above)
 				Py_INCREF(m.ptr());
 				return m.ptr();
 			}
 		};
 
-		// a template specialization for complex numbers
+		// a template specialization for complex numbers; see the real one for the
+		// copy-not-ref rationale.
 		template <>
 		struct getitem<bertini::complex_mp>
 		{
@@ -111,7 +120,7 @@ namespace eigenpy
 				{
 					mpfr_scalar = NumT(0);
 				}
-				boost::python::object m(boost::ref(mpfr_scalar));
+				boost::python::object m(mpfr_scalar); // owned copy — never boost::ref (see above)
 				Py_INCREF(m.ptr());
 				return m.ptr();
 			}
