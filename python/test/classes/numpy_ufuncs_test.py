@@ -489,3 +489,71 @@ class TestComponentAccessors:
         w = np.array([complex_mp(1, 2)])
         assert w.real.dtype == np.dtype(complex_mp)   # not real_mp!
         assert w.imag[0] == complex_mp(0)             # wrong value, by numpy
+
+
+class TestGuardedNumpyComponentFunctions:
+    """np.real/np.imag/np.angle raise on plain mp-complex arrays instead of
+    silently returning wrong values (bertini._numpy_guard) -- a crash is better
+    than incorrect values.  Solution points override .real/.imag at the subclass
+    level and pass through correct."""
+
+    def test_np_real_imag_raise_on_plain_complex_mp_array(self):
+        w = np.array([complex_mp(1, 2), complex_mp(3, 4)])
+        with pytest.raises(TypeError, match="bertini.real"):
+            np.real(w)
+        with pytest.raises(TypeError, match="bertini.real"):
+            np.imag(w)
+        with pytest.raises(TypeError, match="bertini.real"):
+            np.angle(w)
+
+    def test_np_real_imag_raise_on_lists_of_complex_mp(self):
+        # a list converts to a plain mp array inside numpy, same wrong path
+        with pytest.raises(TypeError):
+            np.imag([complex_mp(1, 2)])
+
+    def test_guard_passes_everything_else_through(self):
+        # ordinary numpy is untouched
+        z = np.array([1 + 2j, 3 + 4j])
+        assert list(np.real(z)) == [1.0, 3.0]
+        assert list(np.imag(z)) == [2.0, 4.0]
+        assert np.angle(np.array([1j]))[0] == pytest.approx(np.pi / 2)
+        # real_mp arrays are not complex: base semantics are already correct
+        v = np.array([real_mp(1), real_mp(2)])
+        assert list(np.real(v)) == [real_mp(1), real_mp(2)]
+        assert list(np.imag(v)) == [real_mp(0), real_mp(0)]
+        # mp-complex SCALARS go through the (correct) scalar properties
+        assert np.real(complex_mp(1, 2)) == real_mp(1)
+        assert np.imag(complex_mp(1, 2)) == real_mp(2)
+
+    def test_guard_is_idempotent(self):
+        import bertini._numpy_guard as guard
+        before = np.real
+        guard.install()
+        assert np.real is before
+
+    def test_solution_real_imag_are_correct(self):
+        from bertini.records import Solution
+        s = Solution(np.array([complex_mp(1, 2), complex_mp(3, 4)]))
+        assert [str(x) for x in s.real] == ['1', '3']
+        assert [str(x) for x in s.imag] == ['2', '4']
+        assert s.real.dtype == np.dtype(real_mp)
+        # np.real/np.imag on a Solution route through the subclass property
+        assert [str(x) for x in np.real(s)] == ['1', '3']
+        assert [str(x) for x in np.imag(s)] == ['2', '4']
+
+    def test_solution_real_imag_correct_for_double_solves_too(self):
+        from bertini.records import Solution
+        s = Solution(np.array([1 + 2j, 3 + 4j]))
+        assert list(s.real) == [1.0, 3.0]
+        assert list(s.imag) == [2.0, 4.0]
+
+    def test_np_angle_raises_helpfully_for_all_mp_complex(self):
+        # np.angle branches on the DTYPE (never the .real/.imag attributes), so
+        # not even the Solution subclass can make it work -- the guard turns the
+        # cryptic arctan2 failure into a pointer at mp.arg, for every spelling
+        from bertini.records import Solution
+        for val in (np.array([complex_mp(1, 1)]),
+                    Solution(np.array([complex_mp(1, 1)])),
+                    complex_mp(1, 1)):
+            with pytest.raises(TypeError, match="arg"):
+                np.angle(val)

@@ -96,12 +96,26 @@ that behavior faithfully.  Consequences:
 
 6. **Component access on complex arrays** goes through new array overloads of
    `multiprec.real`/`imag`/`arg` (returning `real_mp` arrays).  numpy cannot know
-   a legacy user dtype is complex-like, so the ndarray `.real`/`.imag` attributes
-   (and `np.real`/`np.imag`/`np.angle`) return silently wrong values — `.real`
-   gives the complex values, `.imag` gives zeros.  Not hookable from the bindings;
-   documented, plus a pinning test.  (En route, fixed a copy-paste bug: the scalar
-   `mp.imag` was bound to `boost::multiprecision::real` and returned the real
-   part.)
+   a legacy user dtype is complex-like — `ndarray.real`/`.imag` are C getsets
+   gated on `PyArray_ISCOMPLEX`, a hardwired builtin-type-number check (verified
+   against numpy 2.4.x `getset.c`; neither the legacy user-dtype API nor the
+   NEP 42 new DType API offers a complex-like hook) — so on mp-complex arrays
+   `.real` returns the complex values and `.imag` returns zeros, silently.  Not
+   fixable at the attribute; defended everywhere reachable (decided 2026-07-08,
+   "a crash would be better than incorrect values"):
+
+   - `bertini.records.Solution` overrides `.real`/`.imag` at the subclass level —
+     solve results are simply correct;
+   - importing bertini wraps the module functions `np.real`/`np.imag`/`np.angle`
+     (`bertini._numpy_guard`): plain mp-complex arrays (and lists that would
+     convert to them) raise a `TypeError` naming the right tool; `np.angle`
+     raises for every mp-complex input since it branches on dtype and no subclass
+     property can reach it; everything else passes through untouched;
+   - the raw `.real`/`.imag` attributes on a plain self-built ndarray remain the
+     single lying spelling — documented with a warning and a pinning test.
+
+   (En route, fixed a copy-paste bug: the scalar `mp.imag` was bound to
+   `boost::multiprecision::real` and returned the real part.)
 
 ## Consequences
 

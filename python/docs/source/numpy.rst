@@ -74,18 +74,28 @@ Component access on complex arrays
 ===================================
 
 The one place numpy itself cannot be taught about a user-defined dtype: the ndarray
-attributes ``.real`` and ``.imag`` (and :func:`numpy.real` / :func:`numpy.imag` /
-:func:`numpy.angle`, which route through them).
+attributes ``.real`` and ``.imag``.  numpy hardwires them to its own built-in complex
+types -- on any other dtype ``.real`` returns the array itself and ``.imag`` returns
+zeros, with no hook for the bindings to fix or even detect it.
+
+Bertini defends every spelling it can reach:
+
+* **Solution points are simply correct.**  The arrays returned by ``bertini.solve``
+  override ``.real`` / ``.imag`` at the subclass level, so ``sol.real`` / ``sol.imag``
+  give the true components at full precision.
+* **The numpy functions fail loudly.**  Importing bertini wraps :func:`numpy.real` /
+  :func:`numpy.imag` / :func:`numpy.angle`: on a plain mp-complex array they raise a
+  ``TypeError`` naming the right tool, instead of silently returning wrong values.
+  All other inputs pass straight through to numpy.
 
 .. warning::
 
-   On ``complex_mp`` **arrays**, ``.real`` returns the complex values themselves and
-   ``.imag`` returns zeros -- silently.  numpy only knows its own built-in complex
-   types are complex-like; this is not hookable from the bindings.  (Complex
-   *scalars* are fine: ``w[0].imag`` is exact.)
+   The raw ``.real`` / ``.imag`` **attributes on a plain ndarray** are the one
+   spelling nothing can reach: on a ``complex_mp`` array you built yourself (not a
+   Solution), they return wrong values silently.  Complex *scalars* are fine --
+   ``w[0].imag`` is exact.
 
-Bertini provides the component accessors instead -- same results, full precision,
-array-capable:
+The component accessors -- same results, full precision, array-capable:
 
 .. doctest::
 

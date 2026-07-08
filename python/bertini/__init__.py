@@ -153,6 +153,13 @@ def __getattr__(name):
 # top-level module (bertini.abs, bertini.real, ...).  The builtin-shadowing names (abs, round, sum) are
 # deliberately kept OUT of __all__, so `from bertini import *` never clobbers the Python builtins.
 from . import _numpy_helpers as _numpy_helpers
+
+# make np.real/np.imag/np.angle raise (instead of silently returning wrong values)
+# on plain mp-complex arrays -- numpy has no user-dtype hook for component access,
+# and a crash is better than incorrect values.  See _numpy_guard for the story.
+from . import _numpy_guard as _numpy_guard
+_numpy_guard.install()
+
 real = _numpy_helpers.real
 imag = _numpy_helpers.imag
 conj = _numpy_helpers.conj
