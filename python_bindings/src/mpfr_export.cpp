@@ -38,6 +38,7 @@
 
 
 #include "mpfr_export.hpp"
+#include "bertini2/eigen_extensions.hpp"   // bertini::IsDistinct (issue #304)
 
 #include <sstream>
 #include <boost/archive/text_oarchive.hpp>
@@ -345,6 +346,35 @@ namespace bertini{
 
 			def("default_precision", def_prec1, "get the default precision for variable-precision numbers.  is digits, not bits.");
 			def("default_precision", def_prec2, "set the default precision for variable-precision numbers.  should be a positive number.  is digits, not bits.");
+
+			// is_distinct_up_to (issue #304): tolerance-based point inequality in the infinity norm.
+			// Overloaded for complex_mp and real_mp vectors (points and, e.g., projection-value vectors).
+			// Points are taken by const& (read-only), so the ADR-0001 writable-Ref + adjacent-scalar
+			// hazard does not apply.
+			def("is_distinct_up_to",
+				+[](Vec<complex_mp> const& p, Vec<complex_mp> const& q, double tol) -> bool {
+					return bertini::IsDistinct(p, q, tol); },
+				(arg("p"), arg("q"), arg("tol")),
+				"True if points p and q differ by more than tol in the infinity norm (max_i |p_i - q_i|); "
+				"False if they are the same to within tol.  The tolerance-based point-equality test "
+				"(issue #304).  Accepts complex_mp or real_mp vectors; different-length points are distinct.");
+			def("is_distinct_up_to",
+				+[](Vec<real_mp> const& p, Vec<real_mp> const& q, double tol) -> bool {
+					return bertini::IsDistinct(p, q, tol); },
+				(arg("p"), arg("q"), arg("tol")),
+				"True if real points p and q differ by more than tol in the infinity norm (issue #304).");
+			// ...and the double-precision points (complex_dbl / real_dbl), so callers need not think
+			// about which numeric type they are holding.
+			def("is_distinct_up_to",
+				+[](Vec<std::complex<double>> const& p, Vec<std::complex<double>> const& q, double tol) -> bool {
+					return bertini::IsDistinct(p, q, tol); },
+				(arg("p"), arg("q"), arg("tol")),
+				"True if complex-double points p and q differ by more than tol in the infinity norm (issue #304).");
+			def("is_distinct_up_to",
+				+[](Vec<double> const& p, Vec<double> const& q, double tol) -> bool {
+					return bertini::IsDistinct(p, q, tol); },
+				(arg("p"), arg("q"), arg("tol")),
+				"True if real-double points p and q differ by more than tol in the infinity norm (issue #304).");
 		}
 
 

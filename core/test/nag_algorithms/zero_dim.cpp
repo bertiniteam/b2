@@ -723,6 +723,44 @@ BOOST_AUTO_TEST_CASE(multiplicity_representative_marks_one_per_cluster)
 	BOOST_CHECK_EQUAL(reps2, 4u);
 }
 
+// issue #299 / #302: merge_multiplicities collapses a multiplicity-m cluster to one point, and
+// metadata_for(point) looks a solution's metadata up by point.  {x^2, y^2} has one solution (0,0)
+// of multiplicity 4 (Bezout 4 = four coincident endpoints).
+BOOST_AUTO_TEST_CASE(merge_multiplicities_and_metadata_for_point)
+{
+	using namespace bertini;
+
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	System sys;
+	sys.AddFunction(pow(x, 2));
+	sys.AddFunction(pow(y, 2));
+	sys.AddVariableGroup(VariableGroup{x, y});
+
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	// #299: the multiplicity-4 solution collapses to ONE representative with merge, stays 4 without.
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions(true, /*merge_multiplicities=*/true ).size(), 1u);
+	BOOST_CHECK_EQUAL(zd.FiniteSolutions(true, /*merge_multiplicities=*/false).size(), 4u);
+
+	// #302: look the (0,0) solution up by point -> the representative, carrying multiplicity 4.
+	auto const pt  = zd.FiniteSolutions(true, /*merge_multiplicities=*/true)[0];   // (0,0)
+	auto const rep = zd.MetadataForPoint(pt, 1e-5);
+	BOOST_CHECK(rep.multiplicity_representative);
+	BOOST_CHECK_EQUAL(rep.multiplicity, 4);
+
+	// coincident=true: every copy in the cluster (all four coincident endpoints).
+	BOOST_CHECK_EQUAL(zd.CoincidentMetadataForPoint(pt, 1e-5).size(), 4u);
+
+	// a point matching nothing throws.
+	auto far = pt;
+	for (int i = 0; i < far.size(); ++i)
+		far(i) = far(i) + 1000.0;
+	BOOST_CHECK_THROW(zd.MetadataForPoint(far, 1e-5), std::runtime_error);
+}
+
 // Regression: a fixed-multiple (MultiplePrecisionTracker) zero-dim solve used to throw at the start
 // of tracking -- "start point ... differing precision from default (20!=16)" -- because the tracker
 // (built at DefaultPrecision) and the config-driven ambient/thread precision (DoublePrecision)

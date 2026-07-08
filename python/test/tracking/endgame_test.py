@@ -138,7 +138,7 @@ def test_using_total_degree_ss():
     for soln in dehomogenized_solns:
         diff = exact_soln - soln
         # np.dot(diff, diff) == sum(diff_i**2) (numpy's dot does not conjugate); it goes
-        # through the dtype's dot slot.  np.sum would work too on current numpy (see the
-        # reductions note on the "Known gotchas" docs page), but dot stays portable to
-        # older numpy builds where the identity-seeded reduce raised SystemError.
+        # through the dtype's dot slot.  np.sum would work too on current numpy, but dot
+        # stays portable to older numpy builds where the identity-seeded reduce raised
+        # SystemError for user dtypes.
         assert mp.abs(np.sqrt(np.dot(diff, diff))) < 1e-10

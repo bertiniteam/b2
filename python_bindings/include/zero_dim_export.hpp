@@ -289,7 +289,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		"get ALL the computed solutions, one per tracked path (finite, at-infinity, and failed alike).  by default they are in the coordinates of YOUR variables (dehomogenized, depatched).  pass user_coords=False to decline, getting the solver's internal coordinates instead: homogenized, lying on the target system's patch -- the representation to use for continuing work.  the container is computed at most once per solve; repeated calls and indexing do not recompute it.  for the filtered view see solutions(); for the at-infinity ones see infinite_solutions.")
 	.def("solutions",
 		+[](AlgoT const& self, bool singular, bool real, bool nonreal, bool nonsingular,
-		    bool infinite, bool nonsolution, bool user_coords){
+		    bool infinite, bool nonsolution, bool user_coords, bool merge_multiplicities){
 			boost::python::list out;
 			// Each category flag toggles inclusion of one kind of endpoint.  A genuine finite
 			// solution is returned iff its singular-class AND its real-class are both enabled; the
@@ -302,14 +302,14 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 				bool real_ok = m.is_real    ? real     : nonreal;
 				return sing_ok && real_ok;
 			};
-			for (auto const& p : self.SolutionsWhere(pred, user_coords)) out.append(p);
+			for (auto const& p : self.SolutionsWhere(pred, user_coords, merge_multiplicities)) out.append(p);
 			return out;
 		},
 		(boost::python::arg("self"),
 		 boost::python::arg("singular") = true, boost::python::arg("real") = true,
 		 boost::python::arg("nonreal") = true, boost::python::arg("nonsingular") = true,
 		 boost::python::arg("infinite") = false, boost::python::arg("nonsolution") = false,
-		 boost::python::arg("user_coords") = true),
+		 boost::python::arg("user_coords") = true, boost::python::arg("merge_multiplicities") = true),
 		"the solutions, filtered by category (returns points, not metadata).  By DEFAULT every finite "
 		"genuine solution -- real and complex, simple and multiple -- and nothing else.  Each keyword "
 		"toggles a category: singular / nonsingular select by conditioning, real / nonreal by realness "
@@ -317,41 +317,43 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		"enabled), infinite=True also returns the at-infinity endpoints, and nonsolution=True also "
 		"returns the nonsolutions.  E.g. solutions(real=False) -> complex finite solutions only; "
 		"solutions(singular=False) -> nonsingular finite solutions; solutions(infinite=True) adds the "
-		"divergent paths.  user_coords=False gives the solver's internal coordinates.  See also "
-		"real_solutions / nonsingular_solutions / singular_solutions / infinite_solutions / nonsolutions "
-		"for the common single-category views, and all_solutions for the raw per-path list.")
+		"divergent paths.  merge_multiplicities=True (the DEFAULT) collapses a multiplicity-m solution "
+		"to its single representative (pass False to get all m coincident copies).  user_coords=False "
+		"gives the solver's internal coordinates.  See also real_solutions / nonsingular_solutions / "
+		"singular_solutions / infinite_solutions / nonsolutions for the common single-category views, "
+		"and all_solutions for the raw per-path list.")
 	.def("finite_solutions",
-		+[](AlgoT const& self, bool user_coords){
+		+[](AlgoT const& self, bool user_coords, bool merge_multiplicities){
 			boost::python::list out;
-			for (auto const& p : self.FiniteSolutions(user_coords)) out.append(p);
+			for (auto const& p : self.FiniteSolutions(user_coords, merge_multiplicities)) out.append(p);
 			return out;
 		},
-		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
-		"the FINITE solutions: successful endpoints the solver calls finite (is_finite applies endpoint_finite_threshold).  includes singular, nonsingular, and real solutions alike.  user coordinates by default; user_coords=False for internal coordinates.")
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true, boost::python::arg("merge_multiplicities") = true),
+		"the FINITE solutions: successful endpoints the solver calls finite (is_finite applies endpoint_finite_threshold).  includes singular, nonsingular, and real solutions alike.  merge_multiplicities=True (default) collapses each multiple solution to one representative.  user coordinates by default; user_coords=False for internal coordinates.")
 	.def("real_solutions",
-		+[](AlgoT const& self, bool user_coords){
+		+[](AlgoT const& self, bool user_coords, bool merge_multiplicities){
 			boost::python::list out;
-			for (auto const& p : self.RealSolutions(user_coords)) out.append(p);
+			for (auto const& p : self.RealSolutions(user_coords, merge_multiplicities)) out.append(p);
 			return out;
 		},
-		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
-		"the REAL finite solutions (is_real applies the configured tolerance).")
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true, boost::python::arg("merge_multiplicities") = true),
+		"the REAL finite solutions (is_real applies the configured tolerance).  merge_multiplicities=True (default) collapses each multiple solution to one representative.")
 	.def("nonsingular_solutions",
-		+[](AlgoT const& self, bool user_coords){
+		+[](AlgoT const& self, bool user_coords, bool merge_multiplicities){
 			boost::python::list out;
-			for (auto const& p : self.NonsingularSolutions(user_coords)) out.append(p);
+			for (auto const& p : self.NonsingularSolutions(user_coords, merge_multiplicities)) out.append(p);
 			return out;
 		},
-		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
-		"the NONSINGULAR finite solutions (simple, well-conditioned roots).")
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true, boost::python::arg("merge_multiplicities") = true),
+		"the NONSINGULAR finite solutions (simple, well-conditioned roots).  (Nonsingular solutions are simple, so merge_multiplicities is a no-op; kept for a uniform signature.)")
 	.def("singular_solutions",
-		+[](AlgoT const& self, bool user_coords){
+		+[](AlgoT const& self, bool user_coords, bool merge_multiplicities){
 			boost::python::list out;
-			for (auto const& p : self.SingularSolutions(user_coords)) out.append(p);
+			for (auto const& p : self.SingularSolutions(user_coords, merge_multiplicities)) out.append(p);
 			return out;
 		},
-		(boost::python::arg("self"), boost::python::arg("user_coords") = true),
-		"the SINGULAR finite solutions (multiple or ill-conditioned roots).")
+		(boost::python::arg("self"), boost::python::arg("user_coords") = true, boost::python::arg("merge_multiplicities") = true),
+		"the SINGULAR finite solutions (multiple or ill-conditioned roots).  merge_multiplicities=True (default) collapses each multiple solution to one representative.")
 	.def("nonsolutions",
 		+[](AlgoT const& self, bool user_coords){
 			boost::python::list out;
@@ -375,6 +377,28 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 		return_internal_reference<>(),
 		"get the prepared target system: the homogenized, auto-patched clone of the system you supplied.  its patch is the one internal-coordinate solutions lie on; use its dehomogenize_point/homogenize_point/variable_ordering to move between representations.")
 	.def("solution_metadata", &AlgoT::SolutionMetadata, return_internal_reference<>(), "get the metadata for the solutions at the target time")
+	.def("metadata_for",
+		// point taken BY VALUE (a copy from numpy) -- no writable Eigen::Ref, so the ADR-0001
+		// adjacent-scalar hazard does not apply.
+		+[](AlgoT const& self,
+		    Vec<typename AlgoT::BaseComplexT> point,
+		    double tol, bool coincident, bool user_coords) -> boost::python::object {
+			if (coincident) {
+				boost::python::list out;
+				for (auto const& m : self.CoincidentMetadataForPoint(point, tol, user_coords)) out.append(m);
+				return out;
+			}
+			return boost::python::object(self.MetadataForPoint(point, tol, user_coords));
+		},
+		(boost::python::arg("self"), boost::python::arg("point"), boost::python::arg("tol"),
+		 boost::python::arg("coincident") = false, boost::python::arg("user_coords") = true),
+		"the SolutionMetaData for the solution matching `point` (issue #302).  Matches by the infinity-norm "
+		"tolerance `tol` (see is_distinct_up_to).  The return type NEVER depends on the point's multiplicity: "
+		"by default returns exactly ONE record -- the multiplicity-cluster representative (it carries "
+		".multiplicity, so you still learn m).  coincident=True instead ALWAYS returns a LIST of every "
+		"coincident copy's record (their per-path condition number / residual / precision), length 1 for a "
+		"simple root.  Raises if no solution matches, or if the point matches more than one distinct cluster "
+		"(reduce tol).  `point` is in user coordinates unless user_coords=False.")
 	.def("endgame_boundary_solutions", &AlgoT::EndgameBoundarySolutions, return_internal_reference<>(), "get the solutions (per-path point data) at the endgame boundary, where regular tracking switches to the endgame")
 	.def("endgame_boundary_metadata", &AlgoT::EndgameBoundaryMetadata, return_internal_reference<>(), "get the MidpathCheckReport from the path-crossing check at the endgame boundary: how many crossings were detected, which paths, how many re-track attempts were made, and whether the check ultimately passed")
 	.def("report", &AlgoT::Report, "a concise end-of-solve diagnostic summary (a SolveReport): how every path ended up -- finite solutions, diverged, or FAILED (by named reason) -- plus singular/real counts, max condition number, the path-crossing outcome, and all_paths_resolved.  print(solver.report()) for a human-readable summary; a count alone can hide a path the tracker silently lost.")

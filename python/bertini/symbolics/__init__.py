@@ -66,21 +66,70 @@ def sqrt(x):
 VariableGroup.__str__ = lambda vg: '[{}]'.format(','.join([str(v) for v in vg]))
 
 
-def variables(base, indices, fmt='{base}{index}'):
-    """Make a list of integer-indexed Variables.
+def _variablegroup_matmul(self, coefficients):
+    """``vg @ coeffs`` -- the single linear-combination node sum_i vg[i]*coeffs[i].
+
+    ``coeffs`` is a length-``len(vg)`` 1-D iterable/array of exact values (see
+    :func:`bertini.coefficient`; Python floats are refused) or function-tree nodes.  Handy for a
+    projection / linear functional: ``pi = vg @ bertini.random_vector(len(vg), real=True)``.
+    """
+    import numpy as _np
+    from bertini._coefficients import coefficient as _coefficient
+    from bertini._pybertini.function_tree import AbstractNode as _AbstractNode
+
+    c = _np.asarray(coefficients, dtype=object).ravel()
+    if c.size != len(self):
+        raise ValueError(
+            "vg @ coeffs: expected {} coefficients (one per variable) but got {}"
+            .format(len(self), c.size))
+    terms = [var * (coef if isinstance(coef, _AbstractNode) else _coefficient(coef))
+             for var, coef in zip(self, c)]
+    result = terms[0]
+    for t in terms[1:]:
+        result = result + t
+    return result
+
+
+VariableGroup.__matmul__ = _variablegroup_matmul
+
+
+def variables(base, indices=None, fmt='{base}{index}'):
+    """Make a list of Variables.
+
+    Two forms:
 
     ::
 
-        base    -- name prefix, e.g. 'x'
-        indices -- an int n (shorthand for range(n)) or any iterable of ints
-        fmt     -- str.format template using {base} and {index};
-                   default '{base}{index}' gives x0, x1, x2, ...
+        # explicit names -- pass a list/tuple of names as the sole argument:
+        x, y, z = bertini.variables(['x', 'y', 'z'])
+
+        # integer-indexed -- a name prefix + a count (or an iterable of indices):
+        v = bertini.variables('v', 3)          # -> [v0, v1, v2]
+
+    Parameters
+    ----------
+    base : str or iterable of str
+        A name prefix (with ``indices``), OR -- when ``indices`` is omitted -- an iterable of the
+        explicit variable names.
+    indices : int or iterable of int, optional
+        An int ``n`` (shorthand for ``range(n)``) or any iterable of ints.  Omit to use the
+        explicit-names form.
+    fmt : str
+        ``str.format`` template using ``{base}`` and ``{index}``; default ``'{base}{index}'``
+        gives ``x0, x1, x2, ...``.
 
     Returns a ``list[Variable]``.  Wrap in a VariableGroup if desired::
 
         pb.VariableGroup(pb.variables('x', 5))
     """
     from bertini._pybertini.function_tree.symbol import Variable
+    # explicit-names form: variables(['x', 'y', 'z'])
+    if indices is None:
+        if isinstance(base, str):
+            raise TypeError(
+                "variables('x') needs a count or indices, e.g. variables('x', 3); to name variables "
+                "explicitly pass a list of names, e.g. variables(['x', 'y', 'z'])")
+        return [Variable(name) for name in base]
     if isinstance(indices, int):
         indices = range(indices)
     return [Variable(fmt.format(base=base, index=i)) for i in indices]

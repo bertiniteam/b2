@@ -85,6 +85,14 @@ BOOST_AUTO_TEST_CASE(slice_basic_real)
 
 	BOOST_CHECK_EQUAL(s.Dimension(),2);
 	BOOST_CHECK_EQUAL(s.NumVariables(),3);
+
+	// issue #294: a real slice's coefficients must actually be real.  Previously the orthogonal
+	// (default) path fell through to the COMPLEX conjugate-orthonormal matrix, so every "real"
+	// slice came out complex.  Every entry of the augmented coefficient matrix has zero imaginary part.
+	auto const& C = s.Coefficients();
+	for (int ii = 0; ii < C.rows(); ++ii)
+		for (int jj = 0; jj < C.cols(); ++jj)
+			BOOST_CHECK_EQUAL(C(ii,jj).imag(), real_mp(0));
 }
 
 

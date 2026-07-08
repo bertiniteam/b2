@@ -31,6 +31,7 @@
 #pragma once
 
 #include "bertini2/num_traits.hpp"
+#include "bertini2/eigen_extensions.hpp"   // bertini::IsDistinct (issues #302, #304)
 
 #include "bertini2/detail/visitable.hpp"
 #include "bertini2/tracking.hpp"
@@ -1227,14 +1228,22 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			solver's internal coordinates), mirroring SolutionsUserCoords / SolutionsInternalCoords.
 			*/
 			template<typename Pred>
-			SolnCont<Vec<BaseComplexT>> SolutionsWhere(Pred pred, bool user_coords = true) const
+			SolnCont<Vec<BaseComplexT>> SolutionsWhere(Pred pred, bool user_coords = true,
+			                                           bool merge_multiplicities = false) const
 			{
 				auto const& sols = user_coords ? SolutionsUserCoords() : SolutionsInternalCoords();
 				auto const& md   = SolutionMetadata();
 				SolnCont<Vec<BaseComplexT>> out;
 				for (size_t i = 0; i < md.size() && i < sols.size(); ++i)
+				{
+					// merge_multiplicities: keep only the chosen representative of each multiplicity
+					// cluster, so a multiplicity-m solution appears once rather than m times.  A no-op for
+					// simple / at-infinity / failed endpoints (each is its own representative).  Issue #299.
+					if (merge_multiplicities && !md[i].multiplicity_representative)
+						continue;
 					if (pred(md[i]))
 						out.push_back(sols[i]);
+				}
 				return out;
 			}
 
@@ -1244,31 +1253,31 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			Includes singular, nonsingular, and real solutions alike.
 			\see RealSolutions, SingularSolutions, NonsingularSolutions, Nonsolutions
 			*/
-			SolnCont<Vec<BaseComplexT>> FiniteSolutions(bool user_coords = true) const
+			SolnCont<Vec<BaseComplexT>> FiniteSolutions(bool user_coords = true, bool merge_multiplicities = false) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution; }, user_coords);
+					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution; }, user_coords, merge_multiplicities);
 			}
 
 			/// \brief The real finite solutions (is_real applies the configured tolerance).
-			SolnCont<Vec<BaseComplexT>> RealSolutions(bool user_coords = true) const
+			SolnCont<Vec<BaseComplexT>> RealSolutions(bool user_coords = true, bool merge_multiplicities = false) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_real; }, user_coords);
+					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_real; }, user_coords, merge_multiplicities);
 			}
 
 			/// \brief The nonsingular finite solutions (simple, well-conditioned roots).
-			SolnCont<Vec<BaseComplexT>> NonsingularSolutions(bool user_coords = true) const
+			SolnCont<Vec<BaseComplexT>> NonsingularSolutions(bool user_coords = true, bool merge_multiplicities = false) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution && !m.is_singular; }, user_coords);
+					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution && !m.is_singular; }, user_coords, merge_multiplicities);
 			}
 
 			/// \brief The singular finite solutions (multiple or ill-conditioned roots).
-			SolnCont<Vec<BaseComplexT>> SingularSolutions(bool user_coords = true) const
+			SolnCont<Vec<BaseComplexT>> SingularSolutions(bool user_coords = true, bool merge_multiplicities = false) const
 			{
 				return SolutionsWhere([](auto const& m){
-					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_singular; }, user_coords);
+					return m.endgame_success_code == SuccessCode::Success && m.is_finite && !m.is_nonsolution && m.is_singular; }, user_coords, merge_multiplicities);
 			}
 
 			/**
@@ -1305,6 +1314,72 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			const auto& SolutionMetadata() const
 			{
 				return solution_final_metadata_;
+			}
+
+			/**
+			\brief The metadata of the solution matching \p point -- the cluster REPRESENTATIVE (issue #302).
+
+			Matches \p point against the solutions (user coordinates by default) with the infinity-norm
+			tolerance \p tol (see IsDistinct), and returns the representative's metadata.  The return type
+			never depends on the point's multiplicity: this ALWAYS returns exactly one record (it carries
+			``multiplicity``, so you still learn m).  Throws if no solution matches, or if \p point matches
+			more than one distinct cluster (reduce \p tol).
+
+			\param point The point to look up, in user (dehomogenized) coordinates unless \p user_coords is false.
+			\param tol The infinity-norm match tolerance.
+			\param user_coords Whether \p point is in user coordinates (else the solver's internal coordinates).
+			\see CoincidentMetadataForPoint
+			*/
+			SolutionMetaDataT MetadataForPoint(Vec<BaseComplexT> const& point, double tol, bool user_coords = true) const
+			{
+				auto const& sols = user_coords ? SolutionsUserCoords() : SolutionsInternalCoords();
+				auto const& md   = SolutionMetadata();
+
+				std::vector<size_t> matches;
+				for (size_t i = 0; i < md.size() && i < sols.size(); ++i)
+					if (!bertini::IsDistinct(sols[i], point, tol))
+						matches.push_back(i);
+
+				if (matches.empty())
+					throw std::runtime_error("metadata_for: no solution matches the given point within tol");
+
+				// More than one representative among the matches => tol grouped two distinct clusters.
+				std::vector<size_t> reps;
+				for (auto i : matches)
+					if (md[i].multiplicity_representative)
+						reps.push_back(i);
+				if (reps.size() > 1)
+					throw std::runtime_error("metadata_for: the point matches more than one distinct solution cluster; reduce tol");
+				if (reps.size() == 1)
+					return md[reps.front()];
+				// The representative itself fell just outside tol but its duplicates matched; return a
+				// matched record (it still carries the cluster's multiplicity).
+				return md[matches.front()];
+			}
+
+			/**
+			\brief All metadata records for the paths coincident with \p point (issue #302).
+
+			Like MetadataForPoint, but returns EVERY coincident copy's record -- their individual per-path
+			diagnostics (condition number, residual, precision) -- ALWAYS as a list (length 1 for a simple
+			root).  Throws if no solution matches.
+
+			\param point The point to look up.
+			\param tol The infinity-norm match tolerance.
+			\param user_coords Whether \p point is in user coordinates.
+			\see MetadataForPoint
+			*/
+			std::vector<SolutionMetaDataT> CoincidentMetadataForPoint(Vec<BaseComplexT> const& point, double tol, bool user_coords = true) const
+			{
+				auto const& sols = user_coords ? SolutionsUserCoords() : SolutionsInternalCoords();
+				auto const& md   = SolutionMetadata();
+				std::vector<SolutionMetaDataT> out;
+				for (size_t i = 0; i < md.size() && i < sols.size(); ++i)
+					if (!bertini::IsDistinct(sols[i], point, tol))
+						out.push_back(md[i]);
+				if (out.empty())
+					throw std::runtime_error("metadata_for: no solution matches the given point within tol");
+				return out;
 			}
 
 			/**

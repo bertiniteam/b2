@@ -291,7 +291,7 @@ class TestReductions:
         assert list(np.cumsum(v)) == [dtype(1), dtype(3), dtype(6)]
 
     def test_reduce_with_explicit_initial_still_works(self, dtype):
-        # the old workaround from the gotchas page must keep working
+        # the old explicit-initial workaround must keep working (portable to old numpy)
         v = np.array([dtype(1), dtype(2)])
         assert np.add.reduce(v, initial=dtype(10)) == dtype(13)
 
@@ -339,7 +339,7 @@ class TestCloseness:
 
     def test_isclose_itself_still_raises(self, dtype):
         # its internal float64 rtol/atol cannot promote; if this ever starts
-        # passing, numpy grew user-dtype promotion -- revisit the gotchas page
+        # passing, numpy grew user-dtype promotion -- revisit the numpy docs page
         v = _sample(dtype)
         with pytest.raises(TypeError):
             np.isclose(v, v)
@@ -485,7 +485,7 @@ class TestComponentAccessors:
         # documenting-by-test: numpy cannot know a legacy user dtype is
         # complex-like, so ndarray .real returns the complex values themselves
         # and .imag returns zeros.  If numpy ever fixes this, the accessors
-        # above become optional and the gotchas page should be updated.
+        # above become optional and the numpy docs page should be updated.
         w = np.array([complex_mp(1, 2)])
         assert w.real.dtype == np.dtype(complex_mp)   # not real_mp!
         assert w.imag[0] == complex_mp(0)             # wrong value, by numpy

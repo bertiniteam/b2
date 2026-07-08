@@ -33,6 +33,12 @@ def random_matrix(rows, cols, real=False, units=False, orthonormal=True, symboli
     -----
     Reproducible via :func:`bertini.random.set_random_seed`.  A projection is just a linear
     functional with zero constant term, so its gradient row is exactly ``random_matrix(1, n)``.
+
+    For a **generic real** direction (e.g. a real projection), prefer :func:`bertini.random_vector`
+    with ``real=True``: a real *orthonormal* matrix is QR-factored from a matrix of real units (+/-1),
+    so its entries are **quantized** (a real ``random_matrix(3, 1)`` has entries +/-1/sqrt(3)) and look
+    seed-independent -- fine for conditioning, but not a generic direction.  ``random_vector`` draws
+    continuous bounded-modulus reals instead (generic and seed-reproducible).
     """
     if orthonormal:
         M = _np.array(_pybrand.conjugate_orthonormal_matrix(rows, cols, real))

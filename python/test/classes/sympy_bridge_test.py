@@ -186,3 +186,28 @@ def test_end_to_end_solve_matches_sympy(sxy):
     assert len(got) == len(want) == 2
     for g in got:
         assert min(np.linalg.norm(g - w) for w in want) < 1e-8
+
+
+# --- #295: nodes auto-sympify (the _sympy_ protocol) + lazy bertini.sympy_bridge ---
+
+def test_node_sympifies_via_protocol():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    f = x**2 + y**2 - 1
+    # sympy.sympify picks up the node's _sympy_ method directly
+    assert sp.sympify(f) == to_sympy(f)
+    assert sp.sympify(f) == sp.Symbol('x')**2 + sp.Symbol('y')**2 - 1
+
+
+def test_sympy_matrix_and_det_over_node_array():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    g = x**2 + y
+    J = np.array([[g.differentiate(x), g.differentiate(y)],
+                  [(x * y).differentiate(x), (x * y).differentiate(y)]], dtype=object)
+    M = sp.Matrix(J)                                  # each node auto-sympifies
+    # det [[2x, 1], [y, x]] = 2x^2 - y
+    assert sp.simplify(M.det() - (2 * sp.Symbol('x')**2 - sp.Symbol('y'))) == 0
+
+
+def test_sympy_bridge_reachable_at_top_level():
+    # bertini.sympy_bridge is exposed lazily (module __getattr__)
+    assert pb.sympy_bridge.to_sympy is to_sympy

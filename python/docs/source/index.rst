@@ -23,7 +23,7 @@ The Python bindings for Bertini 2
 .. toctree::
    :maxdepth: 2
 
-   known_gotchas
+   numpy
    detailed/api
    zbib
 

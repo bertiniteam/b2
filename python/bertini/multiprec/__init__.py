@@ -49,10 +49,10 @@ from bertini._pybertini.multiprec import *
 
 # (no Vector helper: eigenpy makes the mp number types work as numpy dtypes directly, so a plain
 # numpy array -- e.g. np.zeros(n, dtype=bertini.complex_mp) -- is the vector.  numpy ufuncs
-# (np.abs, np.exp, np.sum, ...) work on such arrays; the exceptions are documented on the
-# "Known gotchas" docs page.  For the real/imaginary parts or argument of a COMPLEX ARRAY use
-# this module's real()/imag()/arg() -- the ndarray .real/.imag attributes and np.angle return
-# silently wrong values for user-defined dtypes, a numpy limitation.)
+# (np.abs, np.exp, np.sum, ...) work on such arrays; see the "Multiprecision numbers and NumPy"
+# docs page.  For the real/imaginary parts or argument of a COMPLEX ARRAY use this module's
+# real()/imag()/arg() -- the ndarray .real/.imag attributes and np.angle return silently wrong
+# values for user-defined dtypes, a numpy limitation.)
 
 __all__ = dir(_pybmp)
 
