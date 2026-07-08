@@ -248,6 +248,21 @@ class TestSortingAndArgExtrema:
         assert str(np.max(v)) == '7'
         assert str(np.min(v)) == '1'
 
+    def test_identityless_reduce_does_not_corrupt_input(self):
+        # numpy >= 2.5 initializes the accumulator of an identityless reduce
+        # (np.min/np.max) by BITWISE copy of element 0, so the accumulator and
+        # v[0] share one mpfr allocation.  The loops must never free or write
+        # through an output slot's existing allocation (slot_write): before
+        # that rule, np.max silently rewrote v[0] and freed its storage, and
+        # the next reduce crashed the interpreter (use-after-free -> corrupted
+        # allocator).  Values AND the input array must survive, repeatedly.
+        v = np.array([real_mp(3), real_mp(1), real_mp(7), real_mp(2)])
+        for _ in range(3):
+            assert str(np.max(v)) == '7'
+            assert [str(x) for x in v] == ['3', '1', '7', '2']
+            assert str(np.min(v)) == '1'
+            assert [str(x) for x in v] == ['3', '1', '7', '2']
+
     def test_argmax_nan_wins(self):
         # numpy float semantics: the first nan is the arg-extremum
         v = np.array([real_mp(1), real_mp('nan'), real_mp(3)])

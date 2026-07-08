@@ -117,6 +117,24 @@ that behavior faithfully.  Consequences:
    (En route, fixed a copy-paste bug: the scalar `mp.imag` was bound to
    `boost::multiprecision::real` and returned the real part.)
 
+7. **Loops write output slots only through `slot_write`** (added 2026-07-08, after
+   CI segfaults on numpy 2.5.1): numpy may hand a loop an output slot that
+   **bitwise-aliases** another slot's mpfr allocation — numpy 2.5 initializes the
+   accumulator of an *identityless* reduce (`np.min`/`np.max`) by `memcpy` of
+   element 0, so the accumulator and `v[0]` share one set of limbs.  A plain
+   BMP assignment move-frees the slot's old limbs (freeing `v[0]`'s storage:
+   use-after-free → double-free → corrupted allocator → SIGSEGV several calls
+   later — the CI crash landed in `np.median`, three tests after the damage)
+   and writes through shared storage (`np.max(v)` silently rewrote `v[0]`).
+   `slot_write` computes the value first, memsets the slot to BMP's
+   uninitialized sentinel, and move-assigns the fresh value in — no existing
+   allocation is ever freed or written through.  Same crash-into-bounded-leak
+   trade as `HardenSetitem`.  Diagnosed with valgrind (UAF pair between the
+   `maximum` and `minimum` reduce loops); regression test
+   `test_identityless_reduce_does_not_corrupt_input` runs the reduces
+   repeatedly and asserts the input array survives.  numpy < 2.5 never
+   aliased, which is why every pre-2.5 environment was green.
+
 ## Consequences
 
 - The "Known gotchas" docs page shrinks to the real, permanent edges: the float64

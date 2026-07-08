@@ -167,8 +167,31 @@ namespace eigenpy
 		// These replace eigenpy's EIGENPY_REGISTER_{BINARY,UNARY}_UFUNC loop bodies
 		// (and its gufunc_matrix_multiply), which read input slots unguarded and
 		// segfault inside libmpfr/libmpc on never-written np.zeros/np.empty slots.
-		// Writes into the output slot go through BMP operator=, which initializes
-		// a zeroed destination itself.
+		//
+		// Writing an output slot: NEVER through BMP operator= on the slot's
+		// existing value.  numpy may hand a loop an output slot that bitwise-
+		// ALIASES another slot's mpfr allocation -- numpy 2.5 initializes the
+		// accumulator of an identityless reduce (np.min/np.max) by memcpy of
+		// element 0, so the accumulator and v[0] share one set of limbs.  A
+		// plain assignment move-frees the slot's old limbs (freeing v[0]'s
+		// storage out from under it: use-after-free, double-free, corrupted
+		// allocator, SIGSEGV a few calls later) and writes through shared
+		// storage (silently mutating v[0]'s value).  slot_write below is the
+		// only sanctioned store: compute the value FIRST (the slot may also be
+		// an input), memset the slot to BMP's uninitialized sentinel, then
+		// move the fresh value in -- no existing allocation is ever freed or
+		// written through.  If the slot held a uniquely-owned value, its
+		// allocation leaks (numpy never destructs user-dtype elements anyway);
+		// same crash-into-bounded-leak trade as HardenSetitem / ADR-0006.
+
+		// store `val` into a numpy-managed mp slot without freeing or writing
+		// through the slot's existing (possibly aliased) allocation.
+		template <typename T>
+		inline void slot_write(T& slot, T val)
+		{
+			std::memset(static_cast<void*>(&slot), 0, sizeof(T));
+			slot = std::move(val); // move into the sentinel: steals val's limbs, frees nothing
+		}
 
 		struct op_add           { template <typename T> static T    apply(T const& x, T const& y) { return T(x + y); } };
 		struct op_subtract      { template <typename T> static T    apply(T const& x, T const& y) { return T(x - y); } };
@@ -435,7 +458,7 @@ namespace eigenpy
 				T const& x = value_or_zero(*reinterpret_cast<T const*>(i0), zero);
 				T const& y = value_or_zero(*reinterpret_cast<T const*>(i1), zero);
 				T& res = *reinterpret_cast<T*>(o);
-				res = Op::apply(x, y);
+				slot_write(res, Op::apply(x, y)); // never plain operator= -- see slot_write
 				i0 += is0;
 				i1 += is1;
 				o += os;
@@ -512,7 +535,7 @@ namespace eigenpy
 			{
 				T const& x = value_or_zero(*reinterpret_cast<T const*>(i), zero);
 				T& res = *reinterpret_cast<T*>(o);
-				res = Op::apply(x);
+				slot_write(res, Op::apply(x)); // never plain operator= -- see slot_write
 				i += is;
 				o += os;
 			}
@@ -534,7 +557,10 @@ namespace eigenpy
 			{
 				T const& x = value_or_zero(*reinterpret_cast<T const*>(i), zero);
 				OutT& res = *reinterpret_cast<OutT*>(o);
-				res = Op::apply(x);
+				if constexpr (std::is_trivially_copyable_v<OutT>)
+					res = Op::apply(x);
+				else
+					slot_write(res, Op::apply(x)); // never plain operator= -- see slot_write
 				i += is;
 				o += os;
 			}
@@ -567,7 +593,7 @@ namespace eigenpy
 						b += is2_n;
 					}
 					T& res = *reinterpret_cast<T*>(op);
-					res = sum;
+					slot_write(res, std::move(sum)); // never plain operator= -- see slot_write
 					ip2 += is2_p;
 					op += os_p;
 				}
@@ -623,7 +649,7 @@ namespace eigenpy
 				p0 += is0;
 				p1 += is1;
 			}
-			*reinterpret_cast<T*>(op) = acc;
+			slot_write(*reinterpret_cast<T*>(op), std::move(acc)); // never plain operator= -- see slot_write
 		}
 
 		// guarded element comparison for the PyArray_ArrFuncs `compare` slot
