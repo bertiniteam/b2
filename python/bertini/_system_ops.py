@@ -186,15 +186,76 @@ def add_slices_as_products(self, slices):
     return add_products_of_linears(self, factors)
 
 
+def add_variable_group(self, *variables):
+    """Add an affine variable group -- accepts several forms, unambiguously (issue #293).
+
+    All of these work (a single :class:`Variable`, a :class:`VariableGroup`, and a ``list`` are
+    mutually distinguishable, so there is no ambiguity)::
+
+        sys.add_variable_group(x, y, z)                     # loose variables
+        sys.add_variable_group([x, y, z])                  # a list
+        sys.add_variable_group(x)                           # one variable -> a one-variable group
+        sys.add_variable_group(bertini.VariableGroup([x, y, z]))   # the explicit form
+
+    Returns ``self``.
+    """
+    from bertini._pybertini.container import VariableGroup as _VariableGroup
+    from bertini._pybertini.function_tree.symbol import Variable as _Variable
+
+    if len(variables) == 1:
+        obj = variables[0]
+        if isinstance(obj, _VariableGroup):
+            vg = obj
+        elif isinstance(obj, _Variable):
+            vg = _VariableGroup([obj])
+        elif isinstance(obj, (list, tuple, np.ndarray)):
+            elts = list(obj)
+            if not elts or not all(isinstance(v, _Variable) for v in elts):
+                raise TypeError("add_variable_group([...]): the list must be non-empty and hold only Variables")
+            vg = _VariableGroup(elts)
+        else:
+            raise TypeError(
+                f"add_variable_group does not know how to make a variable group from a "
+                f"{type(obj).__name__}; pass a VariableGroup, a list of Variables, or loose Variables")
+    else:
+        if not variables:
+            raise TypeError("add_variable_group() needs at least one variable")
+        if not all(isinstance(v, _Variable) for v in variables):
+            raise TypeError(
+                "add_variable_group(x, y, z): every positional argument must be a Variable; to add a "
+                "VariableGroup or a list, pass it as the single argument")
+        vg = _VariableGroup(list(variables))
+
+    _native['add_variable_group'](self, vg)
+    return self
+
+
+def clone(self):
+    """A copy of this System, ready to extend (issue #296).
+
+    Shares the immutable node DAG (variables, functions, subexpressions) with the original but gets its
+    own evaluation memory, so its variables line up with the original's (clone a set-up system, give the
+    clone different functions, concatenate the two).  The copy is unsealed and independently mutable;
+    adding/removing functions on one does not affect the other.  For a fully serialized deep copy use
+    ``copy.deepcopy``.
+    """
+    from bertini.system import clone as _clone
+    return _clone(self)
+
+
 def install(System):
     """Attach the friendly methods to the bound ``System`` class (idempotent).
 
-    Captures the native ``randomize`` first so the friendly override can still reach it.
+    Captures the native ``randomize`` / ``add_variable_group`` first so the friendly overrides can
+    still reach them.
     """
     if getattr(System, "_b2_system_ops_installed", False):
         return
     _native['randomize'] = System.randomize
+    _native['add_variable_group'] = System.add_variable_group
     System.add_functions = add_functions
+    System.add_variable_group = add_variable_group
+    System.clone = clone
     System.add_linear_forms = add_linear_forms
     System.add_linear = add_linear
     System.add_products_of_linears = add_products_of_linears

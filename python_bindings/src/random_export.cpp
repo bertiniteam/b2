@@ -35,6 +35,35 @@ void ExportRandom(){
 	def("real_unit", +[]() { return complex_mp(bertini::RandomUnit<bertini::real_mp>()); },
 		"Make a random real number of unit modulus (i.e. +1 or -1), as a complex number with imaginary part 0, in the current default precision");
 
+	// --- friendly factories (issue #294): make a random real / complex / vector directly ---
+	// Continuous bounded-modulus draws (away from 0 and infinity -- the Bertini genericity draw),
+	// so a random projection / linear functional is generic and changes with set_random_seed.  Unlike
+	// the orthonormal random_matrix, these are NOT quantized: a real random_vector is the right tool
+	// for a generic real projection direction.
+	def("random_real",
+		+[]() -> bertini::real_mp { return bertini::multiprecision::RandomRealBoundedModulus().real(); },
+		"Make a random real number (real_mp) of bounded modulus (box-uniform in [-1,1], away from 0), at the current default precision.  Reproducible via set_random_seed.");
+
+	def("random_complex",
+		+[]() -> complex_mp { return bertini::multiprecision::RandomComplexBoundedModulus(); },
+		"Make a random complex number (complex_mp) of bounded modulus (away from 0 and infinity), at the current default precision.  Reproducible via set_random_seed.");
+
+	def("random_vector",
+		+[](unsigned size, bool real) -> object {
+			if (real) {
+				bertini::Vec<bertini::real_mp> v(size);
+				for (unsigned i = 0; i < size; ++i)
+					v(i) = bertini::multiprecision::RandomRealBoundedModulus().real();
+				return object(v);
+			}
+			bertini::Vec<complex_mp> v(size);
+			for (unsigned i = 0; i < size; ++i)
+				v(i) = bertini::multiprecision::RandomComplexBoundedModulus();
+			return object(v);
+		},
+		(arg("size"), arg("real") = false),
+		"A random length-`size` vector of bounded-modulus numbers -- real_mp when real=True, else complex_mp -- at the current default precision.  The natural random projection / linear-functional coefficient vector (generic and seed-reproducible, unlike the quantized orthonormal random_matrix).");
+
 	def("conjugate_orthonormal_matrix",
 		+[](unsigned rows, unsigned cols, bool real) -> bertini::Mat<complex_mp> {
 			if (real) {

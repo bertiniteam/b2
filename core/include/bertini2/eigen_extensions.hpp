@@ -594,6 +594,44 @@ namespace bertini {
 		return Vec<NumberType>(size).unaryExpr([](NumberType const&) { return RandomUnit<NumberType>(); });
 	}
 
+
+	/**
+	\brief True if two points are the same to within \p tol in the infinity norm.
+
+	The tolerance-based point-equality test: ``max_i |a_i - b_i| <= tol``.  Points of different
+	lengths are never the same.  This is the primitive behind :func:`bertini.is_distinct_up_to` and
+	the solver's point->metadata lookup (issue #304).
+
+	\param a One point.
+	\param b The other point.
+	\param tol The (absolute) infinity-norm tolerance.
+	*/
+	template <typename DerivedA, typename DerivedB>
+	inline
+	bool IsSamePoint(Eigen::MatrixBase<DerivedA> const& a, Eigen::MatrixBase<DerivedB> const& b, double tol)
+	{
+		if (a.size() != b.size())
+			return false;
+		if (a.size() == 0)
+			return true;
+		return (a - b).template lpNorm<Eigen::Infinity>() <= tol;
+	}
+
+	/**
+	\brief True if two points differ by more than \p tol in the infinity norm (the negation of
+	:func:`IsSamePoint`).  Points of different lengths are distinct.  See issue #304.
+
+	\param a One point.
+	\param b The other point.
+	\param tol The (absolute) infinity-norm tolerance.
+	*/
+	template <typename DerivedA, typename DerivedB>
+	inline
+	bool IsDistinct(Eigen::MatrixBase<DerivedA> const& a, Eigen::MatrixBase<DerivedB> const& b, double tol)
+	{
+		return !IsSamePoint(a, b, tol);
+	}
+
 }
 
 

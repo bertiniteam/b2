@@ -38,7 +38,10 @@ def test_observer_with_temporary_system_does_not_crash():
     zd.add_observer(collector)
     zd.solve()                                   # must not segfault
 
-    assert len(zd.finite_solutions()) == 4       # (1,1) [singular], (-2,4), (4,16)
+    # finite_solutions() merges multiplicities by default (#299): (1,1) is a singular double root,
+    # so it counts once -> 3 distinct solutions {(1,1), (-2,4), (4,16)}; without merging it is 4 endpoints.
+    assert len(zd.finite_solutions()) == 3
+    assert len(zd.finite_solutions(merge_multiplicities=False)) == 4
     assert len(collector.series) == 6            # every path collected
     # the collected per-path data is usable after the solve (touches the shared nodes again).
     # as_dataframe() needs the optional pandas dependency (absent in CI); fall back to the

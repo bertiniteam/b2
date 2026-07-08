@@ -79,3 +79,28 @@ In short: anywhere you would reach for ``np.sum(a)`` / ``np.prod(a)`` / ``np.mea
 ``real_mp`` or ``complex_mp`` array, reach for ``np.add.reduce(a, initial=...)`` (or
 ``np.multiply.reduce(a, initial=...)``), ``np.dot`` / ``np.linalg.norm``, or a plain Python
 ``sum`` instead.
+
+The bertini helpers do this for you
+-----------------------------------
+
+The same boundary makes ``arr.real`` / ``np.abs(arr)`` / ``np.round(arr)`` unreliable on these
+dtypes.  So bertini ships elementwise helpers that operate over a scalar, a list, or a numpy array and
+return **mp-native** results (never a float64 collapse):
+
+.. code-block:: python
+
+    import bertini
+
+    bertini.real(pt)      # real parts, as real_mp        (replaces arr.real)
+    bertini.imag(pt)      # imaginary parts, as real_mp
+    bertini.abs(pt)       # magnitudes, as real_mp         (replaces np.abs)
+    bertini.conj(pt)      # complex conjugates
+    bertini.round(pt, 8)  # rounded, staying mp            (replaces np.round)
+    bertini.sum(pt)       # sum, staying mp                (sidesteps the reduction gotcha above)
+    bertini.norm(pt)      # Euclidean norm, as real_mp
+    bertini.is_real(pt)   # is every coordinate real (|imag| < tol)?  -> bool
+
+They live at the top level (``bertini.abs``, ...); the builtin-shadowing names (``abs``, ``round``,
+``sum``) are deliberately kept out of ``from bertini import *``, so a star-import never clobbers the
+Python builtins.  For the tolerance point comparison behind de-duplication, see
+:func:`bertini.is_distinct_up_to`.

@@ -153,6 +153,30 @@ BOOST_AUTO_TEST_CASE(per_path_streams_are_deterministic_and_domain_separated)
 	BOOST_CHECK(RandomMp(30) != path7_draw);             // never collides with a path stream
 }
 
+// ---- issue #294: the friendly factory draws are seeded and real-when-asked ----
+
+// The bounded-modulus factory draws (behind bertini.random_real / random_complex / random_vector)
+// are continuous, seed-reproducible, and -- for the real draw -- genuinely real.  This is the
+// generic-direction tool the notebook wanted, distinct from the quantized orthonormal random_matrix.
+BOOST_AUTO_TEST_CASE(bounded_modulus_factories_are_seeded_and_real_when_asked)
+{
+	using bertini::multiprecision::RandomRealBoundedModulus;
+	using bertini::multiprecision::RandomComplexBoundedModulus;
+
+	SetGlobalSeed(42);
+	auto const r1 = RandomRealBoundedModulus();
+	auto const c1 = RandomComplexBoundedModulus();
+
+	BOOST_CHECK_EQUAL(r1.imag(), real_mp(0));            // a real draw is actually real
+
+	SetGlobalSeed(42);                                   // same seed reproduces the draws, in order
+	BOOST_CHECK_EQUAL(RandomRealBoundedModulus(), r1);
+	BOOST_CHECK_EQUAL(RandomComplexBoundedModulus(), c1);
+
+	SetGlobalSeed(43);                                   // a different seed => a different draw
+	BOOST_CHECK(RandomRealBoundedModulus() != r1);       // (not the seed-independent orthonormal footgun)
+}
+
 // ---- the acceptance test: same seed => digest-identical homotopies ----
 
 BOOST_AUTO_TEST_CASE(same_seed_builds_digest_identical_homotopies)
