@@ -8,6 +8,7 @@
 #include "python_common.hpp"
 
 #include <cstring>
+#include <type_traits>
 
 #include <eigenpy/eigenpy.hpp>
 #include <eigenpy/user-type.hpp>
@@ -182,6 +183,222 @@ namespace eigenpy
 			}
 		};
 
+		// trait: is this scalar the complex mp type?  several ops (conjugate, sign,
+		// the isnan/isinf/isfinite predicates) need a different body for complex.
+		template <typename T> struct is_complex_mp : std::false_type {};
+		template <> struct is_complex_mp<bertini::complex_mp> : std::true_type {};
+
+		// re-tag `val` to carry `ref`'s precision.  guards against boost's mixed
+		// real/complex arithmetic occasionally mis-tagging the result's precision
+		// (division is the known offender); .precision(n) preserves the value.
+		template <typename T>
+		inline T at_precision_of(T val, T const& ref)
+		{
+			if (val.precision() != ref.precision())
+				val.precision(ref.precision());
+			return val;
+		}
+
+		// ----- unary ops, same-type output ------------------------------------
+		// bodies call the same boost::multiprecision free functions the multiprec
+		// module binds as scalar functions, so np.exp(arr)[i] == mp.exp(arr[i]).
+
+		struct op_positive   { template <typename T> static T apply(T const& x) { return x; } };
+		struct op_reciprocal
+		{
+			template <typename T> static T apply(T const& x)
+			{
+				T one(1);
+				one.precision(x.precision());
+				return at_precision_of(T(one / x), x);
+			}
+		};
+		struct op_conjugate
+		{
+			template <typename T> static T apply(T const& x)
+			{
+				if constexpr (is_complex_mp<T>::value)
+					return T(conj(x));
+				else
+					return x;
+			}
+		};
+		// numpy-2 sign semantics: real -> -1/0/+1; complex -> z/|z| (0 at 0).
+		struct op_sign
+		{
+			template <typename T> static T apply(T const& x)
+			{
+				if constexpr (is_complex_mp<T>::value)
+				{
+					if (x == 0)
+						return at_precision_of(T(0), x);
+					bertini::real_mp const mag(abs(x));
+					return at_precision_of(T(bertini::real_mp(x.real() / mag),
+					                         bertini::real_mp(x.imag() / mag)), x);
+				}
+				else
+				{
+					T res(x > 0 ? 1 : (x < 0 ? -1 : 0));
+					return at_precision_of(std::move(res), x);
+				}
+			}
+		};
+
+		struct op_exp    { template <typename T> static T apply(T const& x) { return T(exp(x)); } };
+		struct op_log    { template <typename T> static T apply(T const& x) { return T(log(x)); } };
+		struct op_log10  { template <typename T> static T apply(T const& x) { return T(log10(x)); } };
+		struct op_exp2   { template <typename T> static T apply(T const& x) { return T(exp2(x)); } };
+		struct op_log2   { template <typename T> static T apply(T const& x) { return T(log2(x)); } };
+		struct op_expm1  { template <typename T> static T apply(T const& x) { return T(expm1(x)); } };
+		struct op_log1p  { template <typename T> static T apply(T const& x) { return T(log1p(x)); } };
+		struct op_cbrt   { template <typename T> static T apply(T const& x) { return T(cbrt(x)); } };
+
+		struct op_sin    { template <typename T> static T apply(T const& x) { return T(sin(x)); } };
+		struct op_cos    { template <typename T> static T apply(T const& x) { return T(cos(x)); } };
+		struct op_tan    { template <typename T> static T apply(T const& x) { return T(tan(x)); } };
+		struct op_arcsin { template <typename T> static T apply(T const& x) { return T(asin(x)); } };
+		struct op_arccos { template <typename T> static T apply(T const& x) { return T(acos(x)); } };
+		struct op_arctan { template <typename T> static T apply(T const& x) { return T(atan(x)); } };
+		struct op_sinh   { template <typename T> static T apply(T const& x) { return T(sinh(x)); } };
+		struct op_cosh   { template <typename T> static T apply(T const& x) { return T(cosh(x)); } };
+		struct op_tanh   { template <typename T> static T apply(T const& x) { return T(tanh(x)); } };
+		struct op_arcsinh { template <typename T> static T apply(T const& x) { return T(asinh(x)); } };
+		struct op_arccosh { template <typename T> static T apply(T const& x) { return T(acosh(x)); } };
+		struct op_arctanh { template <typename T> static T apply(T const& x) { return T(atanh(x)); } };
+
+		// real-only rounding family
+		struct op_floor { template <typename T> static T apply(T const& x) { return T(floor(x)); } };
+		struct op_ceil  { template <typename T> static T apply(T const& x) { return T(ceil(x)); } };
+		struct op_trunc { template <typename T> static T apply(T const& x) { return T(trunc(x)); } };
+		// numpy's rint is round-half-to-EVEN; boost's rint rounds half away from
+		// zero, so call mpfr directly in MPFR_RNDN (nearest, ties to even).
+		struct op_rint
+		{
+			template <typename T> static T apply(T const& x)
+			{
+				T out(0);
+				out.precision(x.precision());
+				mpfr_rint(out.backend().data(), x.backend().data(), MPFR_RNDN);
+				return out;
+			}
+		};
+
+		// ----- unary ops, cross-type output -----------------------------------
+
+		// absolute: real -> real, complex -> real (the magnitude).
+		struct op_absolute
+		{
+			template <typename T> static bertini::real_mp apply(T const& x)
+			{
+				return bertini::real_mp(abs(x));
+			}
+		};
+		struct op_fabs { template <typename T> static T apply(T const& x) { return T(fabs(x)); } };
+
+		// predicates -> bool.  the isnan/isinf/isfinite family are function-like
+		// macros in C <math.h>, so call the boost versions qualified.
+		struct op_isnan
+		{
+			template <typename T> static bool apply(T const& x)
+			{
+				if constexpr (is_complex_mp<T>::value)
+					return boost::multiprecision::isnan(x.real()) || boost::multiprecision::isnan(x.imag());
+				else
+					return boost::multiprecision::isnan(x);
+			}
+		};
+		struct op_isinf
+		{
+			template <typename T> static bool apply(T const& x)
+			{
+				if constexpr (is_complex_mp<T>::value)
+					return boost::multiprecision::isinf(x.real()) || boost::multiprecision::isinf(x.imag());
+				else
+					return boost::multiprecision::isinf(x);
+			}
+		};
+		struct op_isfinite
+		{
+			template <typename T> static bool apply(T const& x)
+			{
+				if constexpr (is_complex_mp<T>::value)
+					return boost::multiprecision::isfinite(x.real()) && boost::multiprecision::isfinite(x.imag());
+				else
+					return boost::multiprecision::isfinite(x);
+			}
+		};
+		struct op_signbit
+		{
+			template <typename T> static bool apply(T const& x)
+			{
+				return boost::multiprecision::signbit(x);
+			}
+		};
+
+		// ----- binary ops ------------------------------------------------------
+
+		struct op_power    { template <typename T> static T apply(T const& x, T const& y) { return T(pow(x, y)); } };
+		struct op_arctan2  { template <typename T> static T apply(T const& x, T const& y) { return T(atan2(x, y)); } };
+		struct op_hypot    { template <typename T> static T apply(T const& x, T const& y) { return T(hypot(x, y)); } };
+		struct op_copysign { template <typename T> static T apply(T const& x, T const& y) { return T(copysign(x, y)); } };
+		// numpy fmod keeps C fmod's sign-of-dividend semantics
+		struct op_fmod     { template <typename T> static T apply(T const& x, T const& y) { return T(fmod(x, y)); } };
+		// numpy remainder/mod takes the sign of the DIVISOR (python % semantics)
+		struct op_remainder
+		{
+			template <typename T> static T apply(T const& x, T const& y)
+			{
+				T r(fmod(x, y));
+				if (r != 0 && ((r < 0) != (y < 0)))
+					r += y;
+				return r;
+			}
+		};
+		struct op_floor_divide
+		{
+			template <typename T> static T apply(T const& x, T const& y)
+			{
+				return T(floor(x / y));
+			}
+		};
+		// minimum/maximum propagate nan (numpy semantics); fmin/fmax ignore it
+		struct op_minimum
+		{
+			template <typename T> static T apply(T const& x, T const& y)
+			{
+				if (boost::multiprecision::isnan(x)) return x;
+				if (boost::multiprecision::isnan(y)) return y;
+				return y < x ? y : x;
+			}
+		};
+		struct op_maximum
+		{
+			template <typename T> static T apply(T const& x, T const& y)
+			{
+				if (boost::multiprecision::isnan(x)) return x;
+				if (boost::multiprecision::isnan(y)) return y;
+				return x < y ? y : x;
+			}
+		};
+		struct op_fmin
+		{
+			template <typename T> static T apply(T const& x, T const& y)
+			{
+				if (boost::multiprecision::isnan(x)) return y;
+				if (boost::multiprecision::isnan(y)) return x;
+				return y < x ? y : x;
+			}
+		};
+		struct op_fmax
+		{
+			template <typename T> static T apply(T const& x, T const& y)
+			{
+				if (boost::multiprecision::isnan(x)) return y;
+				if (boost::multiprecision::isnan(y)) return x;
+				return x < y ? y : x;
+			}
+		};
+
 		template <typename T, typename Op>
 		void guarded_binary_op(
 				char **args, EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *dimensions,
@@ -234,6 +451,28 @@ namespace eigenpy
 			{
 				T const& x = value_or_zero(*reinterpret_cast<T const*>(i), zero);
 				T& res = *reinterpret_cast<T*>(o);
+				res = Op::apply(x);
+				i += is;
+				o += os;
+			}
+		}
+
+		// unary loop with an output type different from the input type
+		// (absolute: complex -> real; the isnan family: T -> bool).  Writes into
+		// mp-typed output slots go through BMP operator=, which initializes a
+		// zeroed destination itself; bool slots are plain bytes.
+		template <typename T, typename OutT, typename Op>
+		void guarded_unary_op_out(
+				char **args, EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *dimensions,
+				EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *steps, void * /*data*/)
+		{
+			npy_intp is = steps[0], os = steps[1], n = *dimensions;
+			char *i = args[0], *o = args[1];
+			const T zero(0);
+			for (npy_intp k = 0; k < n; ++k)
+			{
+				T const& x = value_or_zero(*reinterpret_cast<T const*>(i), zero);
+				OutT& res = *reinterpret_cast<OutT*>(o);
 				res = Op::apply(x);
 				i += is;
 				o += os;
@@ -326,6 +565,53 @@ namespace eigenpy
 			*reinterpret_cast<T*>(op) = acc;
 		}
 
+		// guarded element comparison for the PyArray_ArrFuncs `compare` slot
+		// (np.sort / argsort / searchsorted / unique).  eigenpy leaves this slot
+		// empty for user dtypes ("type does not have compare function").  Only
+		// installed for the real type — complex has no ordering.  nan compares
+		// false both ways (weak-ordering violation, same as C doubles): sorting
+		// arrays containing nan gives an unspecified nan position, not a crash.
+		template <typename T>
+		int guarded_compare(const void *a, const void *b, void * /*arr*/)
+		{
+			const T zero(0);
+			T const& x = value_or_zero(*static_cast<T const*>(a), zero);
+			T const& y = value_or_zero(*static_cast<T const*>(b), zero);
+			if (x < y) return -1;
+			if (y < x) return 1;
+			return 0;
+		}
+
+		// guarded argmax/argmin for the PyArray_ArrFuncs slots (np.argmax /
+		// np.argmin / np.max / np.min dispatch through these for user dtypes on
+		// some numpy paths).  Mirrors numpy's float semantics: a nan wins
+		// immediately (first nan is the arg-extremum).  numpy hands these a
+		// contiguous buffer.
+		template <typename T, bool Max>
+		int guarded_argminmax(void *data, npy_intp n, npy_intp *extremum_ind, void * /*arr*/)
+		{
+			const T zero(0);
+			T const* p = static_cast<T const*>(data);
+			*extremum_ind = 0;
+			if (n == 0)
+				return 0;
+			T best = value_or_zero(p[0], zero);
+			if (boost::multiprecision::isnan(best))
+				return 0;
+			for (npy_intp k = 1; k < n; ++k)
+			{
+				T const& v = value_or_zero(p[k], zero);
+				if (boost::multiprecision::isnan(v) || (Max ? best < v : v < best))
+				{
+					*extremum_ind = k;
+					if (boost::multiprecision::isnan(v))
+						return 0;
+					best = v;
+				}
+			}
+			return 0;
+		}
+
 	} // namespace internal
 
 
@@ -378,6 +664,29 @@ namespace eigenpy
 		funcs->dotfunc = reinterpret_cast<PyArray_DotFunc*>(&internal::guarded_dotfunc<NumT>);
 	}
 
+	// Fill the element-comparison slot (empty in eigenpy's registration), enabling
+	// np.sort / np.argsort / np.searchsorted / np.unique.  Real type only —
+	// complex has no ordering.  Call immediately after eigenpy::registerNewType.
+	template <typename NumT>
+	void HardenCompare()
+	{
+		PyArray_Descr *descr = Register::getPyArrayDescr<NumT>();
+		PyArray_ArrFuncs *funcs = PyDataType_GetArrFuncs(descr);
+		funcs->compare = reinterpret_cast<PyArray_CompareFunc*>(&internal::guarded_compare<NumT>);
+	}
+
+	// Fill the argmax/argmin slots (empty in eigenpy's registration), enabling
+	// np.argmax / np.argmin ("data type not ordered" otherwise).  Real type only.
+	// Call immediately after eigenpy::registerNewType.
+	template <typename NumT>
+	void HardenArgMinMax()
+	{
+		PyArray_Descr *descr = Register::getPyArrayDescr<NumT>();
+		PyArray_ArrFuncs *funcs = PyDataType_GetArrFuncs(descr);
+		funcs->argmax = reinterpret_cast<PyArray_ArgFunc*>(&internal::guarded_argminmax<NumT, true>);
+		funcs->argmin = reinterpret_cast<PyArray_ArgFunc*>(&internal::guarded_argminmax<NumT, false>);
+	}
+
 	// register a single guarded loop on the named numpy ufunc, mirroring the
 	// error handling of eigenpy's EIGENPY_REGISTER_*_UFUNC macros.
 	inline void registerGuardedLoop(PyObject *numpy, char const *ufunc_name,
@@ -414,13 +723,20 @@ namespace eigenpy
 
 	// i lifted this from EigenPy and adapted it: all loops are the guarded
 	// versions from internal:: above (eigenpy's read input slots unguarded —
-	// see the header comment), and the ordering comparitors are a compile-time
-	// option because they are NOT defined for complex types (instantiating
-	// them for complex_mp would be a hard error).
+	// see the header comment), and the ordering-dependent set is a compile-time
+	// option because ordering is NOT defined for complex types (instantiating
+	// those functors for complex_mp would be a hard error).  Coverage beyond
+	// eigenpy's arithmetic core (absolute, conjugate, the transcendental family,
+	// rounding, min/max, the isnan predicates) closes the documented
+	// "ufunc not supported" gotchas — every loop body calls the same
+	// boost::multiprecision free function the multiprec module binds as the
+	// scalar function of the same name.
 	template <typename Scalar, bool WithOrderingComparitors>
 	void registerGuardedUfunct()
 	{
 		const int type_code = Register::getTypeCode<Scalar>();
+		const int bool_code = Register::getTypeCode<bool>();
+		const int real_code = Register::getTypeCode<bertini::real_mp>();
 
 		PyObject *numpy_str;
 #if PY_MAJOR_VERSION >= 3
@@ -434,6 +750,19 @@ namespace eigenpy
 
 		import_ufunc();
 
+		// registration helpers: (in...) -> out signatures.  the types array is
+		// copied by PyUFunc_RegisterLoopForType, so stack storage is fine.
+		auto unary = [&](char const* name, PyUFuncGenericFunction loop, int out_code)
+		{
+			int types[2] = {type_code, out_code};
+			registerGuardedLoop(numpy, name, type_code, loop, types, 2);
+		};
+		auto binary = [&](char const* name, PyUFuncGenericFunction loop, int out_code)
+		{
+			int types[3] = {type_code, type_code, out_code};
+			registerGuardedLoop(numpy, name, type_code, loop, types, 3);
+		};
+
 		// Matrix multiply
 		{
 			int types[3] = {type_code, type_code, type_code};
@@ -442,49 +771,81 @@ namespace eigenpy
 			                    types, 3);
 		}
 
-		// Binary operators
-		{
-			int types[3] = {type_code, type_code, type_code};
-			registerGuardedLoop(numpy, "add", type_code,
-			                    &internal::guarded_binary_op<Scalar, internal::op_add>, types, 3);
-			registerGuardedLoop(numpy, "subtract", type_code,
-			                    &internal::guarded_binary_op<Scalar, internal::op_subtract>, types, 3);
-			registerGuardedLoop(numpy, "multiply", type_code,
-			                    &internal::guarded_binary_op<Scalar, internal::op_multiply>, types, 3);
-			registerGuardedLoop(numpy, "divide", type_code,
-			                    &internal::guarded_binary_op<Scalar, internal::op_divide>, types, 3);
-		}
+		// Binary arithmetic
+		binary("add",      &internal::guarded_binary_op<Scalar, internal::op_add>,      type_code);
+		binary("subtract", &internal::guarded_binary_op<Scalar, internal::op_subtract>, type_code);
+		binary("multiply", &internal::guarded_binary_op<Scalar, internal::op_multiply>, type_code);
+		binary("divide",   &internal::guarded_binary_op<Scalar, internal::op_divide>,   type_code);
+		binary("power",    &internal::guarded_binary_op<Scalar, internal::op_power>,    type_code);
 
-		// Comparison operators
-		{
-			int types[3] = {type_code, type_code, Register::getTypeCode<bool>()};
-			registerGuardedLoop(numpy, "equal", type_code,
-			                    &internal::guarded_compare_op<Scalar, internal::op_equal>, types, 3);
-			registerGuardedLoop(numpy, "not_equal", type_code,
-			                    &internal::guarded_compare_op<Scalar, internal::op_not_equal>, types, 3);
+		// Equality comparisons (defined for real and complex alike)
+		binary("equal",     &internal::guarded_compare_op<Scalar, internal::op_equal>,     bool_code);
+		binary("not_equal", &internal::guarded_compare_op<Scalar, internal::op_not_equal>, bool_code);
 
-			if constexpr (WithOrderingComparitors) // NOT defined for complex types
-			{
-				registerGuardedLoop(numpy, "greater", type_code,
-				                    &internal::guarded_compare_op<Scalar, internal::op_greater>, types, 3);
-				registerGuardedLoop(numpy, "less", type_code,
-				                    &internal::guarded_compare_op<Scalar, internal::op_less>, types, 3);
-				registerGuardedLoop(numpy, "greater_equal", type_code,
-				                    &internal::guarded_compare_op<Scalar, internal::op_greater_equal>, types, 3);
-				registerGuardedLoop(numpy, "less_equal", type_code,
-				                    &internal::guarded_compare_op<Scalar, internal::op_less_equal>, types, 3);
-			}
-		}
+		// Unary, same-type output
+		unary("negative",   &internal::guarded_unary_op<Scalar, internal::op_negative>,   type_code);
+		unary("positive",   &internal::guarded_unary_op<Scalar, internal::op_positive>,   type_code);
+		unary("square",     &internal::guarded_unary_op<Scalar, internal::op_square>,     type_code);
+		unary("sqrt",       &internal::guarded_unary_op<Scalar, internal::op_sqrt>,       type_code);
+		unary("reciprocal", &internal::guarded_unary_op<Scalar, internal::op_reciprocal>, type_code);
+		unary("conjugate",  &internal::guarded_unary_op<Scalar, internal::op_conjugate>,  type_code);
+		unary("sign",       &internal::guarded_unary_op<Scalar, internal::op_sign>,       type_code);
+		unary("exp",        &internal::guarded_unary_op<Scalar, internal::op_exp>,        type_code);
+		unary("log",        &internal::guarded_unary_op<Scalar, internal::op_log>,        type_code);
+		unary("log10",      &internal::guarded_unary_op<Scalar, internal::op_log10>,      type_code);
+		unary("sin",        &internal::guarded_unary_op<Scalar, internal::op_sin>,        type_code);
+		unary("cos",        &internal::guarded_unary_op<Scalar, internal::op_cos>,        type_code);
+		unary("tan",        &internal::guarded_unary_op<Scalar, internal::op_tan>,        type_code);
+		unary("arcsin",     &internal::guarded_unary_op<Scalar, internal::op_arcsin>,     type_code);
+		unary("arccos",     &internal::guarded_unary_op<Scalar, internal::op_arccos>,     type_code);
+		unary("arctan",     &internal::guarded_unary_op<Scalar, internal::op_arctan>,     type_code);
+		unary("sinh",       &internal::guarded_unary_op<Scalar, internal::op_sinh>,       type_code);
+		unary("cosh",       &internal::guarded_unary_op<Scalar, internal::op_cosh>,       type_code);
+		unary("tanh",       &internal::guarded_unary_op<Scalar, internal::op_tanh>,       type_code);
+		unary("arcsinh",    &internal::guarded_unary_op<Scalar, internal::op_arcsinh>,    type_code);
+		unary("arccosh",    &internal::guarded_unary_op<Scalar, internal::op_arccosh>,    type_code);
+		unary("arctanh",    &internal::guarded_unary_op<Scalar, internal::op_arctanh>,    type_code);
 
-		// Unary operators
+		// absolute: real -> real, complex -> real (magnitude)
+		unary("absolute", &internal::guarded_unary_op_out<Scalar, bertini::real_mp, internal::op_absolute>, real_code);
+
+		// predicates -> bool
+		unary("isnan",    &internal::guarded_unary_op_out<Scalar, bool, internal::op_isnan>,    bool_code);
+		unary("isinf",    &internal::guarded_unary_op_out<Scalar, bool, internal::op_isinf>,    bool_code);
+		unary("isfinite", &internal::guarded_unary_op_out<Scalar, bool, internal::op_isfinite>, bool_code);
+
+		if constexpr (WithOrderingComparitors) // the ordering-dependent set; NOT defined for complex types
 		{
-			int types[2] = {type_code, type_code};
-			registerGuardedLoop(numpy, "negative", type_code,
-			                    &internal::guarded_unary_op<Scalar, internal::op_negative>, types, 2);
-			registerGuardedLoop(numpy, "square", type_code,
-			                    &internal::guarded_unary_op<Scalar, internal::op_square>, types, 2);
-			registerGuardedLoop(numpy, "sqrt", type_code,
-			                    &internal::guarded_unary_op<Scalar, internal::op_sqrt>, types, 2);
+			binary("greater",       &internal::guarded_compare_op<Scalar, internal::op_greater>,       bool_code);
+			binary("less",          &internal::guarded_compare_op<Scalar, internal::op_less>,          bool_code);
+			binary("greater_equal", &internal::guarded_compare_op<Scalar, internal::op_greater_equal>, bool_code);
+			binary("less_equal",    &internal::guarded_compare_op<Scalar, internal::op_less_equal>,    bool_code);
+
+			// real-only unary: rounding family, fabs, real-only transcendentals
+			unary("floor", &internal::guarded_unary_op<Scalar, internal::op_floor>, type_code);
+			unary("ceil",  &internal::guarded_unary_op<Scalar, internal::op_ceil>,  type_code);
+			unary("trunc", &internal::guarded_unary_op<Scalar, internal::op_trunc>, type_code);
+			unary("rint",  &internal::guarded_unary_op<Scalar, internal::op_rint>,  type_code);
+			unary("fabs",  &internal::guarded_unary_op<Scalar, internal::op_fabs>,  type_code);
+			unary("exp2",  &internal::guarded_unary_op<Scalar, internal::op_exp2>,  type_code);
+			unary("log2",  &internal::guarded_unary_op<Scalar, internal::op_log2>,  type_code);
+			unary("expm1", &internal::guarded_unary_op<Scalar, internal::op_expm1>, type_code);
+			unary("log1p", &internal::guarded_unary_op<Scalar, internal::op_log1p>, type_code);
+			unary("cbrt",  &internal::guarded_unary_op<Scalar, internal::op_cbrt>,  type_code);
+
+			unary("signbit", &internal::guarded_unary_op_out<Scalar, bool, internal::op_signbit>, bool_code);
+
+			// real-only binary
+			binary("arctan2",      &internal::guarded_binary_op<Scalar, internal::op_arctan2>,      type_code);
+			binary("hypot",        &internal::guarded_binary_op<Scalar, internal::op_hypot>,        type_code);
+			binary("copysign",     &internal::guarded_binary_op<Scalar, internal::op_copysign>,     type_code);
+			binary("fmod",         &internal::guarded_binary_op<Scalar, internal::op_fmod>,         type_code);
+			binary("remainder",    &internal::guarded_binary_op<Scalar, internal::op_remainder>,    type_code);
+			binary("floor_divide", &internal::guarded_binary_op<Scalar, internal::op_floor_divide>, type_code);
+			binary("minimum",      &internal::guarded_binary_op<Scalar, internal::op_minimum>,      type_code);
+			binary("maximum",      &internal::guarded_binary_op<Scalar, internal::op_maximum>,      type_code);
+			binary("fmin",         &internal::guarded_binary_op<Scalar, internal::op_fmin>,         type_code);
+			binary("fmax",         &internal::guarded_binary_op<Scalar, internal::op_fmax>,         type_code);
 		}
 
 		Py_DECREF(numpy);
