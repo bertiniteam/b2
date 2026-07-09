@@ -67,6 +67,131 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.1.0] - 2026-07-09
+
+Quality-of-life and correctness release on top of 3.0.0: a thorough NumPy
+interoperability pass for the multiprecision dtypes, a batch of Python UI
+ergonomics discovered while writing a real-cellular-decomposition notebook, a
+records-recall escape hatch, and CI / documentation-infrastructure work.
+
+### Added
+
+- **NumPy interoperability for `real_mp` / `complex_mp`** (#306): full ufunc
+  coverage, sorting slots, safe reductions (`sum`, `prod`, …), and
+  tolerance-based comparisons against `float64`; element access returns owned
+  copies. See ADR-0051.
+- **Python UI ergonomics** (#293–#304, #305):
+  - list form `x, y, z = bertini.variables(['x', 'y', 'z'])` and variadic
+    `System.add_variable_group(x, y, z)`;
+  - random factories `random_real()`, `random_complex()`,
+    `random_vector(n, real=…)`, all visible under `bertini.random`;
+  - `bertini.is_distinct_up_to(p, q, tol)` — infinity-norm point comparison,
+    accepting multiprecision and double vectors alike;
+  - `merge_multiplicities=` on every solution accessor (**default True**);
+  - `solver.metadata_for(point)` with a call-shape-determined return type;
+  - `System.functions()`, `System.copy_functions()`, `System.clone()`;
+  - a `group=` projection kwarg on every solution getter and `to_dataframe()`,
+    plus the `System.coordinates_of(point, group)` primitive behind it;
+  - a sympy auto-sympify bridge, so `sympy.Matrix([...nodes...]).det()` works;
+  - `node.eval(point | dict | array)` (previously keyword-only);
+  - `variable_group @ coefficients` dot-product sugar;
+  - NumPy-native helpers `bertini.real` / `imag` / `abs` / `conj` / `round` /
+    `sum` / `norm` / `is_real`.
+- **`ZeroDimConfig.recall`** (#308, default `True`): set `False` to force a
+  fresh re-track even when an identical ask is already recorded — the escape
+  hatch for path observers, benchmarking, and re-verification. Transient: it
+  does not affect the run's identity digest.
+
+### Changed
+
+- Solution accessors now **merge multiplicities by default**; pass
+  `merge_multiplicities=False` for the raw per-path endpoints (#299).
+- CI builds against **prebuilt dependency artifacts** — a custom manylinux
+  image plus macOS Boost / eigenpy tarballs (ADR-0049, #282) — cutting build
+  time and flakiness.
+- Documentation is served from a branch-source `docs-store` with per-version
+  snapshots (ADR-0050, #291, #292).
+
+### Fixed
+
+- Random seeding: `set_random_seed` now governs every draw, and real
+  projection directions come out actually real (#294).
+- NumPy 2.5 reduction use-after-free / uninitialized-slot hazards in the
+  eigenpy bindings (#306).
+- Windows wheel builds no longer spuriously fail on a precompiled-header
+  mtime race (`-fno-pch-timestamp`, #306).
+
+_______________________________________________________________________________
+
+## [3.0.0] - 2026-07-07
+
+The first stable release of the modernized Bertini 2: a rebuilt C++17 core and
+a much friendlier Python interface (`import bertini`), with the `bertini2` CLI
+shipped inside the wheel. Wheels for CPython 3.10 – 3.14 on Linux
+(manylinux_2_34), macOS (arm64), and Windows. This release consolidates ~70
+internal PRs; the full themed index, per-PR links, and the upstream issues it
+closes are in #238.
+
+### Added
+
+- **Durable, resumable output with provenance.** Every solve writes a
+  plain-text structured output directory — content-addressed inputs, one
+  results file per run, walkable provenance chains. Solves consult it first, so
+  a killed run *finishes* on rerun instead of restarting. Content-identity
+  digests mean `seed=42` reproduces the exact same homotopy forever, across
+  machines and versions.
+- **Content-addressed function trees and systems** — hash-consing / interning,
+  symbolic Jacobian, `Seal()` — so equal objects share an identity.
+- **Block-structured systems**, with the multihomogeneous start system exposed
+  to Python; **user-defined homotopies** with start points; automatic square-up
+  and filtering of overdetermined inputs; first-class randomization.
+- **sympy bridge** — exact two-way conversion and round-trip solving.
+- `to_dataframe()` for pandas; Unicode / emoji identifiers and string-valued
+  config fields.
+- **The `bertini2` CLI ships inside the wheel** (`bertini2` on your PATH after
+  `pip install`), emitting Bertini 1.7-compatible solution files.
+- Executable, **doctest-verified** tutorials; a C++ documentation-lint gate;
+  and ADRs for load-bearing design decisions. Docs at https://bertini2.org.
+
+### Changed
+
+- **Flattened, discoverable public Python API**; build systems from a list of
+  functions (`System.add_functions`) and get solutions back in your own
+  coordinates by default; a revamped configuration model.
+- **Parallel-by-default solving** on shared memory — **no MPI required** — with
+  MPI serialization and reproducibility fixes for multihomogeneous solves at
+  scale.
+- **~10× faster multiprecision evaluation** (tiered SLP arithmetic,
+  allocation-free eval, common-subexpression elimination, a stateful in-place
+  multiprecision LU solver) and **5 – 7× faster well-conditioned
+  adaptive-precision solves** by staying in double precision where it is
+  provably safe (cyclic-5: **11s → 3.5s**).
+- Rewritten predict / correct (per-track condition probe, pure kernel);
+  adaptive-numeric-type AMP endgames.
+
+### Fixed
+
+- Cauchy endgame **security and pole-zone guards** — never reports success at a
+  non-root.
+
+_______________________________________________________________________________
+
+## [2.0.2] - 2026-05-22
+
+Packaging and CI maintenance following the 2.0.1 PyPI debut.
+
+### Changed
+
+- Factored out the documentation workflow and added a `ref` input for tag
+  rebuilds (#223, #224).
+- Extended the Python support matrix in CI and updated cibuildwheel (#229).
+- Minor 2.0.1 follow-up fixes and MPI sync force-push handling (#226, #227).
+- Version bump to 2.0.2 and README Python-version refresh (#225, #230).
+
+Full changelog: <https://github.com/bertiniteam/b2/compare/v2.0.1...v2.0.2>
+
+_______________________________________________________________________________
+
 ## [2.0.1] - 2026-05-16
 
 First release under the `bertini2` PyPI name. This is the consolidation of
