@@ -1,0 +1,25 @@
+<map id="bertini::node::TrigOperator" name="bertini::node::TrigOperator">
+<area shape="rect" id="Node000001" title="Abstract class for trigonometric Operator types." alt="" coords="883,129,1075,155"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1node_1_1ArcCosOperator.html" title="Provides the arc cosine Operator." alt="" coords="1123,5,1337,31"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="1003,118,1055,78,1122,40,1154,28,1156,33,1124,44,1058,82,1006,122"/>
+<area shape="rect" id="Node000008" href="$classbertini_1_1node_1_1ArcSinOperator.html" title="Provides the inverse sine Operator." alt="" coords="1125,55,1335,80"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="1024,122,1122,89,1166,77,1167,83,1123,94,1026,127"/>
+<area shape="rect" id="Node000009" href="$classbertini_1_1node_1_1ArcTanOperator.html" title="Provides the inverse tangent Operator." alt="" coords="1124,104,1336,129"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="1088,128,1124,125,1124,130,1088,134"/>
+<area shape="rect" id="Node000010" href="$classbertini_1_1node_1_1CosOperator.html" title="Provides the cosine Operator." alt="" coords="1133,153,1327,179"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="1089,150,1133,154,1133,159,1088,155"/>
+<area shape="rect" id="Node000011" href="$classbertini_1_1node_1_1SinOperator.html" title="Provides the sine Operator." alt="" coords="1135,203,1325,228"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="1027,157,1123,189,1168,200,1167,205,1122,194,1026,162"/>
+<area shape="rect" id="Node000012" href="$classbertini_1_1node_1_1TanOperator.html" title="Provides the tangent Operator." alt="" coords="1135,252,1325,277"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="1006,161,1058,201,1124,238,1156,249,1154,254,1122,243,1055,205,1003,166"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1node_1_1UnaryOperator.html" title="Interface for all unary Operator types." alt="" coords="627,129,835,155"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="848,139,882,139,882,145,848,145"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1node_1_1Operator.html" title="Abstract Node type from which all Operators inherit." alt="" coords="409,129,579,155"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="593,139,626,139,626,145,593,145"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1node_1_1Node.html" title="An interface for all nodes in a function tree, and for a function object as well." alt="" coords="215,129,361,155"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="375,139,409,139,409,145,375,145"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1VisitableBase.html" title="The base class for visitable types." alt="" coords="5,90,167,130"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="180,122,214,128,214,133,180,128"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="9,154,163,194"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="177,157,214,151,215,156,178,162"/>
+</map>

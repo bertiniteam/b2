@@ -1,0 +1,15 @@
+<map id="core/include/bertini2/blackbox/algorithm_builder.hpp" name="core/include/bertini2/blackbox/algorithm_builder.hpp">
+<area shape="rect" id="Node000001" title="A type which determines which algorithms etc, to run, and sets them up." alt="" coords="195,5,426,45"/>
+<area shape="rect" id="Node000002" href="$file__utilities_8hpp.html" title="Provides the file_utilities screens for bertini2." alt="" coords="98,101,294,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="287,48,224,94,221,90,284,43"/>
+<area shape="rect" id="Node000007" href="$algorithm__base_8hpp.html" title="provides a common base type for algorithms to inherit from, for the abstraction layer above for calli..." alt="" coords="319,93,535,133"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="338,43,392,83,388,87,335,48"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,181,85,207"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="175,129,81,177,78,173,173,124"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="110,181,183,207"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="191,128,163,171,159,168,186,125"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="208,181,283,207"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="206,125,233,168,229,171,201,128"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="307,181,466,207"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="225,124,347,174,345,179,223,128"/>
+</map>

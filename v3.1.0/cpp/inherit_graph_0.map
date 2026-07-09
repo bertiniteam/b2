@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,45,128,70"/>
+<area shape="rect" id="Node000001" href="$classbertini_1_1algorithm_1_1PathComplete.html" title="The algorithm has finished work on one solution path, carrying its index." alt="" coords="176,5,397,45"/>
+<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="142,44,175,39,176,44,142,49"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1algorithm_1_1PathStarted.html" title="The algorithm is beginning work on one solution path, carrying its index." alt="" coords="184,69,389,109"/>
+<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="142,66,184,72,184,77,141,71"/>
+</map>

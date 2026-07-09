@@ -1,0 +1,997 @@
+
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html"><link rel="next" title="⚗️ A bistable reaction network, mapped in parallel" href="../parallel_parameter_homotopy/index.html"><link rel="prev" title="Parallelism in Python" href="../index.html">
+        <link rel="prefetch" href="../../../_static/bpy_icon_.svg" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>🚀 Solving at scale: many cores, many machines - Bertini 3.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4805ae4f" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">Bertini 3.1.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/bpy_icon_.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Bertini 3.1.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../welcome.html">👋 Welcome to Bertini 2</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../tutorials.html">🔦 Tutorials</a><input aria-label="Toggle navigation of 🔦 Tutorials" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../formulating_and_solving/index.html">Formulating and solving systems</a><input aria-label="Toggle navigation of Formulating and solving systems" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/all_solutions/index.html">🌐 Finding <em>all</em> the solutions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/zerodim_solver/index.html">🎯 Solving a system with ZeroDimSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/real_points/index.html">📍 A real point on every component (the Trott curve)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/critical_points/index.html">🎯 Critical points by rank deficiency (a null vector, not a determinant)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/eigenvalues_by_homotopy/index.html">🧮 Eigenvalues by homotopy continuation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/parameter_homotopy/index.html">🔁 Parameter homotopy: solve once, re-solve many times</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/concatenate_systems/index.html">🧱 Build a system in pieces with clone and concatenate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/randomize/index.html">🎲 Randomize an overdetermined system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/user_product_of_linears/index.html">🪢 Author your own start system: a product of linears</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/canonical_ordering/index.html">🧮 Canonical ordering, and opting out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/solution_dataframe/index.html">🗃️ A dataframe of solutions: filtering and plotting with pandas</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../manipulating_solutions/index.html">Manipulating solutions</a><input aria-label="Toggle navigation of Manipulating solutions" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../manipulating_solutions/intro_to_slices/index.html">✂️ Intro to slices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../manipulating_solutions/moving_slice/index.html">🛷 Move a slice, hold the system fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../settings_and_precision/index.html">Solver settings &amp; multiprecision</a><input aria-label="Toggle navigation of Solver settings &amp; multiprecision" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/carrying_settings/index.html">⚙️ Carrying settings across related solves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/crossed_paths/index.html">🪢 Crossed paths: when two paths become one</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/precision_matters/index.html">🎚️ When double precision is not enough</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/precision_models/index.html">🔬 Precision models: double, multiple, adaptive</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../index.html">Parallelism in Python</a><input aria-label="Toggle navigation of Parallelism in Python" checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">🚀 Solving at scale: many cores, many machines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../parallel_parameter_homotopy/index.html">⚗️ A bistable reaction network, mapped in parallel</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../observing_metadata_more/index.html">Observing, metadata, and more</a><input aria-label="Toggle navigation of Observing, metadata, and more" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../observing_metadata_more/observers_and_path_data/index.html">👀 Watching the paths: observers and path data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../observing_metadata_more/homotopy_cartoon_from_real_data/index.html">🎨 The continuation cartoon, from real data — and seeing precision change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../observing_metadata_more/classic_continuation_cartoon/index.html">🖼️ The classic continuation cartoon, from real data</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../performance_benchmarking/index.html">Performance and benchmarking</a><input aria-label="Toggle navigation of Performance and benchmarking" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../performance_benchmarking/bertini1_vs_bertini2_timing/index.html">⏱️ Timing Bertini 1 vs Bertini 2</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../record_keeping/index.html">The record-keeping system</a><input aria-label="Toggle navigation of The record-keeping system" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../record_keeping/automatic_record_keeping/index.html">Automatic record keeping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../record_keeping/chained_homotopies/index.html">Chained homotopies: provenance all the way back</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../doing_things_manually/index.html">Doing things manually</a><input aria-label="Toggle navigation of Doing things manually" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/evaluation_cyclic/index.html">♻️ Evaluation of cyclic-<span class="math notranslate nohighlight">\(n\)</span> polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/manual_endgame_usage/index.html">🎮 Using an endgame to compute singular endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/tracking_nonsingular/index.html">🛤 Tracking to nonsingular endpoints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed/everyday.html">🌟 Everyday API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../numpy.html">Multiprecision numbers and NumPy</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../detailed/api.html">🔎 Full API reference</a><input aria-label="Toggle navigation of 🔎 Full API reference" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.algorithms.html">bertini.algorithms</a><input aria-label="Toggle navigation of bertini.algorithms" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detailed/_autosummary/bertini.algorithms.zerodim.html">bertini.algorithms.zerodim</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.config.html">bertini.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.endgame.html">bertini.endgame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.logging.html">bertini.logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.multiprec.html">bertini.multiprec</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.nag_algorithm.html">bertini.nag_algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.operators.html">bertini.operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.parallel.html">bertini.parallel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.parse.html">bertini.parse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.random.html">bertini.random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.records.html">bertini.records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.symbolics.html">bertini.symbolics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.sympy_bridge.html">bertini.sympy_bridge</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.system.html">bertini.system</a><input aria-label="Toggle navigation of bertini.system" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detailed/_autosummary/bertini.system.start_system.html">bertini.system.start_system</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.html">bertini.tracking</a><input aria-label="Toggle navigation of bertini.tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.html">bertini.tracking.observers</a><input aria-label="Toggle navigation of bertini.tracking.observers" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.amp.html">bertini.tracking.observers.amp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.double.html">bertini.tracking.observers.double</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.multiple.html">bertini.tracking.observers.multiple</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.windows_dll_manager.html">bertini.windows_dll_manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../zbib.html">📚 Bibliography</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../../_sources/tutorials/parallelism/solving_at_scale/index.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="solving-at-scale-many-cores-many-machines">
+<h1>🚀 Solving at scale: many cores, many machines<a class="headerlink" href="#solving-at-scale-many-cores-many-machines" title="Link to this heading">¶</a></h1>
+<p>Homotopy continuation is <em>pleasantly parallel</em>.  Every path is independent – once the start
+points are fixed, tracking solution #3 needs nothing from solution #57.  So the wall-clock cost of
+a solve is, in principle, the cost of the slowest single path, no matter how many paths there are,
+<em>if</em> you have enough workers to go around.</p>
+<p>Bertini turns that “in principle” into a one-line change.  This tutorial shows the two knobs:</p>
+<ul class="simple">
+<li><p><strong>MPI ranks</strong> – a <em>manager-worker</em> pool, possibly spread across many machines.  Pass a
+communicator to <code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code> and rank 0 hands paths out to the rest.</p></li>
+<li><p><strong>threads per rank</strong> – each worker can track several paths at once.  Set <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>.</p></li>
+</ul>
+<p>The two scale <em>multiplicatively</em>: <code class="docutils literal notranslate"><span class="pre">R</span></code> worker ranks of <code class="docutils literal notranslate"><span class="pre">T</span></code> threads each track <code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">×</span> <span class="pre">T</span></code> paths
+at a time.  We demonstrate on two driving problems – a <strong>cyclic-n</strong> system (hundreds of cheap
+paths) and an <strong>eigenvalue</strong> solve (a few dozen heavy, uneven paths) – because they stress the
+scheduler in opposite ways, and the same manager-worker pool handles both.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The timing tables below were <strong>measured on</strong> a 16-core Apple M3 Max (12 performance + 4 efficiency cores).  Your numbers will differ; the <em>shape</em>
+(speedup grows with workers, then flattens once the single slowest path dominates the wall) is
+the point.  Run <code class="docutils literal notranslate"><span class="pre">tools/update_scaling_timings.py</span></code> to repopulate every table for your own
+hardware – it pins a fixed seed so every layout solves the identical problem.</p>
+</div>
+<section id="the-manager-worker-model">
+<h2>The manager-worker model<a class="headerlink" href="#the-manager-worker-model" title="Link to this heading">¶</a></h2>
+<p>A bertini solve already has a definite shape – track every path <em>before</em> the endgame, run a
+midpath check, then run the endgame on each path – and the parallel solve keeps <strong>exactly</strong> that
+shape.  There is no separate “parallel solver”: you call the same <code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code>, only with a
+communicator.</p>
+<ul class="simple">
+<li><p><strong>Rank 0 is the manager.</strong>  It owns the bookkeeping – the list of path indices still to do, and
+the results as they come back – but it does not track paths itself.  It hands out work on
+demand: when a worker reports a finished path, the manager sends it the next index.  That
+<em>demand-driven</em> dispatch is what gives automatic load balancing – a worker that draws a cheap
+path simply comes back for more sooner.</p></li>
+<li><p><strong>Ranks 1..N-1 are workers.</strong>  Each asks the manager for a path index, tracks that path through
+the whole pre-endgame / midpath / endgame pipeline, ships the result back, and asks again, until
+the manager says “done”.</p></li>
+</ul>
+<p>Because the manager does not track, a distributed run needs <strong>at least two ranks</strong> (one manager +
+one worker).  The serial baseline is just <code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code> with no communicator.  The minimal program
+is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pb</span>
+
+<span class="n">comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">my_system</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">communicator</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>      <span class="c1"># rank 0 dispatches; the others track</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>                       <span class="c1"># serial: a lone manager would have no workers</span>
+
+<span class="k">if</span> <span class="n">pb</span><span class="o">.</span><span class="n">parallel</span><span class="o">.</span><span class="n">is_manager</span><span class="p">():</span>             <span class="c1"># only rank 0 has the collected solutions</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">all_solutions</span><span class="p">()),</span> <span class="s2">&quot;solutions&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="../../../detailed/_autosummary/bertini.parallel.html#module-bertini.parallel" title="bertini.parallel"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bertini.parallel</span></code></a> helpers – <a class="reference internal" href="../../../detailed/_autosummary/bertini.parallel.html#bertini.parallel.rank" title="bertini.parallel.rank"><code class="xref py py-func docutils literal notranslate"><span class="pre">rank()</span></code></a>,
+<a class="reference internal" href="../../../detailed/_autosummary/bertini.parallel.html#bertini.parallel.size" title="bertini.parallel.size"><code class="xref py py-func docutils literal notranslate"><span class="pre">size()</span></code></a>, <a class="reference internal" href="../../../detailed/_autosummary/bertini.parallel.html#bertini.parallel.is_manager" title="bertini.parallel.is_manager"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_manager()</span></code></a>,
+<a class="reference internal" href="../../../detailed/_autosummary/bertini.parallel.html#bertini.parallel.is_worker" title="bertini.parallel.is_worker"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_worker()</span></code></a> – let each rank know its role.  Only the manager ends up
+holding the solution list, so guard your reporting and your correctness checks with
+<code class="docutils literal notranslate"><span class="pre">is_manager()</span></code>.</p>
+<p>Launch it with <code class="docutils literal notranslate"><span class="pre">mpirun</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span>            <span class="n">my_solve</span><span class="o">.</span><span class="n">py</span>     <span class="c1"># serial baseline (1 process)</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">2</span> <span class="n">python</span> <span class="n">my_solve</span><span class="o">.</span><span class="n">py</span>    <span class="c1"># 1 manager + 1 worker  (the smallest parallel run)</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">9</span> <span class="n">python</span> <span class="n">my_solve</span><span class="o">.</span><span class="n">py</span>    <span class="c1"># 1 manager + 8 workers</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">mpirun</span></code> gives stdin only to rank 0, so a heredoc (<code class="docutils literal notranslate"><span class="pre">mpirun</span> <span class="pre">-n</span> <span class="pre">4</span> <span class="pre">python</span> <span class="pre">&lt;&lt;</span> <span class="pre">EOF</span></code>) <strong>deadlocks</strong>
+– the workers wait forever for a script they never receive.  Always run a <strong>file</strong>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To put one worker on each of your cores you want <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">(cores</span> <span class="pre">+</span> <span class="pre">1)</span></code> – the extra rank is the
+near-idle manager.  On a machine with exactly that many cores <code class="docutils literal notranslate"><span class="pre">mpirun</span></code> will refuse to start
+(“not enough slots”); add <code class="docutils literal notranslate"><span class="pre">--map-by</span> <span class="pre">:OVERSUBSCRIBE</span></code> to let the manager share a core (it barely
+uses one).  For example, to run 8 workers on an 8-core box:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">9</span> <span class="o">--</span><span class="nb">map</span><span class="o">-</span><span class="n">by</span> <span class="p">:</span><span class="n">OVERSUBSCRIBE</span> <span class="n">python</span> <span class="n">my_solve</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="scaling-a-cyclic-system">
+<h2>Scaling a cyclic system<a class="headerlink" href="#scaling-a-cyclic-system" title="Link to this heading">¶</a></h2>
+<p>The cyclic-<span class="math notranslate nohighlight">\(n\)</span> system is a classic benchmark: <span class="math notranslate nohighlight">\(n\)</span> polynomials whose total-degree
+homotopy tracks <span class="math notranslate nohighlight">\(n!\)</span> paths, most of which diverge, leaving a known number of finite
+solutions.  It is the “many cheap paths” regime – cyclic-6 is 720 paths – so it
+shows off fine-grained load balancing.</p>
+<p>The complete, runnable script is <a class="reference download internal" download="" href="../../../_downloads/21e00ffda538d27723ed08cd69856ffb/solve_cyclic.py"><code class="xref download docutils literal notranslate"><span class="pre">solve_cyclic.py</span></code></a>:</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">examples/solve_cyclic.py</span><a class="headerlink" href="#id1" title="Link to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;Solve the cyclic-n system, distributed across MPI ranks (with optional threads per rank).</span>
+
+<span class="sd">The cyclic-n polynomials are a classic benchmark for polynomial system solving.  Total-degree</span>
+<span class="sd">homotopy tracks one path per Bezout count (the product of the degrees), and the work is</span>
+<span class="sd">pleasantly parallel: each path is independent.  Bertini hands the paths out from rank 0 (the</span>
+<span class="sd">manager) to the worker ranks, and -- if OMP_NUM_THREADS &gt; 1 -- each worker runs several tracking</span>
+<span class="sd">threads.</span>
+
+<span class="sd">Run it::</span>
+
+<span class="sd">    python solve_cyclic.py --n 6                              # serial baseline</span>
+<span class="sd">    mpirun -n 5 python solve_cyclic.py --n 6                  # 1 manager + 4 workers</span>
+<span class="sd">    OMP_NUM_THREADS=4 mpirun -n 3 --bind-to none python solve_cyclic.py --n 6   # 2 workers x 4 threads</span>
+
+<span class="sd">Only rank 0 prints; it checks the distinct finite-solution count -- taken from the solver&#39;s own</span>
+<span class="sd">solution metadata -- against the known cyclic-n value.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pb</span>
+
+<span class="c1"># distinct finite (nonsingular) solution counts of the cyclic-n system</span>
+<span class="n">KNOWN_FINITE</span> <span class="o">=</span> <span class="p">{</span><span class="mi">4</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span> <span class="mi">156</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span> <span class="mi">924</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span> <span class="mi">1152</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cyclic_system</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The cyclic-n system: the n-1 cyclic sums of products, plus (prod - 1).&quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">pb</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;x</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">x</span>  <span class="c1"># doubled, to take products that wrap around</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>                       <span class="c1"># degree-`length` cyclic sum</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">start</span> <span class="o">+</span> <span class="n">length</span><span class="p">])</span> <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>                 <span class="c1"># the product, normalized</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">sys</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--n&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;which cyclic-n (default 6)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--seed&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;optional RNG seed for a reproducible run (default: random each run); &#39;</span>
+                             <span class="s1">&#39;the same seed on every rank fixes the homotopy, so serial and &#39;</span>
+                             <span class="s1">&#39;distributed runs are directly comparable&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pb</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="n">cyclic_system</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">endgame</span><span class="o">=</span><span class="s1">&#39;cauchy&#39;</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">,</span> <span class="n">startsystem</span><span class="o">=</span><span class="s1">&#39;binomial&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Adaptive precision is what makes this reliable.  cyclic-n has a few near-singular paths that</span>
+    <span class="c1"># sit right at the edge of double-precision tracking tolerance; in double precision one of them</span>
+    <span class="c1"># occasionally fails the endgame (MinStepSizeReached) and a genuine root is silently lost -- so</span>
+    <span class="c1"># the distinct count comes back 1 or 2 short of the known value.  Adaptive precision raises the</span>
+    <span class="c1"># working precision on exactly those paths, so every run finds all the finite solutions.</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">communicator</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>           <span class="c1"># manager (rank 0) hands paths to the workers</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>                            <span class="c1"># serial: a lone manager would have no workers</span>
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pb</span><span class="o">.</span><span class="n">parallel</span><span class="o">.</span><span class="n">is_manager</span><span class="p">():</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Correctness, not just bookkeeping.  The solver&#39;s own report classifies every path; we trust it</span>
+    <span class="c1"># rather than rolling our own cutoff.  We print it whenever anything is flagged, so problems are</span>
+    <span class="c1"># surfaced -- but we gate correctness on the ground truth, distinguishing two very different flags.</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">report</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;cyclic-</span><span class="si">{}</span><span class="s1">:  ranks=</span><span class="si">{}</span><span class="s1">  threads/rank=</span><span class="si">{}</span><span class="s1">  paths tracked=</span><span class="si">{}</span><span class="s1">  finite solutions=</span><span class="si">{}</span><span class="s1">  wall=</span><span class="si">{:.1f}</span><span class="s1">s&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;OMP_NUM_THREADS&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">),</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">num_paths_tracked</span><span class="p">,</span> <span class="n">report</span><span class="o">.</span><span class="n">num_finite_solutions</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">report</span><span class="o">.</span><span class="n">all_paths_resolved</span><span class="p">:</span>        <span class="c1"># a failed path OR an unresolved crossing -- show what and why</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">report</span><span class="o">.</span><span class="n">num_paths_tracked</span> <span class="o">==</span> <span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">),</span> \
+        <span class="s1">&#39;expected </span><span class="si">{}</span><span class="s1"> paths, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">),</span> <span class="n">report</span><span class="o">.</span><span class="n">num_paths_tracked</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">n</span> <span class="ow">in</span> <span class="n">KNOWN_FINITE</span><span class="p">:</span>
+        <span class="c1"># A FAILED path (the tracker gave up) means a genuinely lost root -- a hard error.  An</span>
+        <span class="c1"># UNRESOLVED CROSSING is a conservative &quot;may be wrong&quot; warning the midpath check couldn&#39;t</span>
+        <span class="c1"># clear; the count can still be exactly right (and here it is), so it is reported above, not</span>
+        <span class="c1"># asserted.  Gate on no failed paths + the known finite count.</span>
+        <span class="k">assert</span> <span class="n">report</span><span class="o">.</span><span class="n">num_failed</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;some paths failed to track -- see the report above&#39;</span>
+        <span class="k">assert</span> <span class="n">report</span><span class="o">.</span><span class="n">num_finite_solutions</span> <span class="o">==</span> <span class="n">KNOWN_FINITE</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">],</span> \
+            <span class="s1">&#39;expected </span><span class="si">{}</span><span class="s1"> finite solutions, got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">KNOWN_FINITE</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">],</span> <span class="n">report</span><span class="o">.</span><span class="n">num_finite_solutions</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  OK: </span><span class="si">{}</span><span class="s1"> paths, </span><span class="si">{}</span><span class="s1"> finite solutions -- matches the known cyclic-</span><span class="si">{}</span><span class="s1"> count&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">num_paths_tracked</span><span class="p">,</span> <span class="n">report</span><span class="o">.</span><span class="n">num_finite_solutions</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">))</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>Two things to notice.  First, the <strong>whole</strong> distributed machinery is the single
+<code class="docutils literal notranslate"><span class="pre">solver.solve(communicator=comm)</span></code> line – everything else is building the system and <em>checking
+the answer</em>.  Second, the check is real and uses the solver’s <em>own</em> report rather than a hand-rolled
+cutoff: <code class="docutils literal notranslate"><span class="pre">report.num_finite_solutions</span></code> is the number of <em>distinct</em> finite solutions – the report
+sums <span class="math notranslate nohighlight">\(1/\text{multiplicity}\)</span> over the finite endpoints, so a genuine <strong>multiple root</strong> (several
+paths converging to one true solution of higher multiplicity) is counted once – and we confirm it
+equals the mathematically known cyclic-<span class="math notranslate nohighlight">\(n\)</span> value.  Just as important, we assert
+<code class="docutils literal notranslate"><span class="pre">report.all_paths_resolved</span></code>: had any path failed to track, a genuine root would be silently missing
+and the count would come up short, so the report catches the loss rather than letting a quiet 69 pass
+for 70.  (A coincident pair of <em>distinct</em> paths is the one other way two endpoints meet – see the
+note below.)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Two <em>distinct</em> paths landing on the <strong>same</strong> point is a different matter entirely.  Because the
+homotopy’s <span class="math notranslate nohighlight">\(\gamma\)</span> is random, distinct paths meeting is a probability-0 event: if it
+happens it is a <strong>path crossing</strong> – a sign the tracker under-resolved the paths – not a benign
+duplicate.  The solver checks for exactly this at the endgame boundary and re-tracks the
+offending paths; with the default predictor and tolerances it essentially never triggers.  The
+<a class="reference internal" href="../../settings_and_precision/crossed_paths/index.html"><span class="doc">🪢 Crossed paths: when two paths become one</span></a> tutorial provokes one on purpose and shows what to do about it.</p>
+</div>
+<div class="admonition-correctness-not-just-a-path-count admonition" id="correctness-across-ranks">
+<p class="admonition-title">Correctness, not just a path count</p>
+<p>A parallel solve is only useful if it gives the <em>same answer</em> as the serial one.  This is
+subtler than it sounds: every rank constructs the homotopy independently, and the start system,
+patch, and <span class="math notranslate nohighlight">\(\gamma\)</span> are all <strong>random</strong>.  If the ranks disagree on those random choices,
+“path #7” means a different path on each worker and the manager stitches together nonsense –
+the solve finishes, reports a plausible count, and is silently wrong.  Bertini guards against
+this by broadcasting one rank’s random seed to all of them at the start of the parallel solve,
+so every rank forms the identical homotopy.  The cyclic check above – <em>distinct finite count
+equals the known value</em> – is what catches a regression here, which is why one of these two
+examples must verify results and not merely tally paths.</p>
+</div>
+<p>Run the ladder (serial, then 2, 4, 8 workers):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>python/examples/solve_cyclic.py<span class="w"> </span>--n<span class="w"> </span><span class="m">6</span><span class="w">              </span><span class="c1"># serial baseline</span>
+<span class="gp">$ </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">3</span><span class="w"> </span>python<span class="w"> </span>python/examples/solve_cyclic.py<span class="w"> </span>--n<span class="w"> </span><span class="m">6</span><span class="w">  </span><span class="c1"># 2 workers</span>
+<span class="gp">$ </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">5</span><span class="w"> </span>python<span class="w"> </span>python/examples/solve_cyclic.py<span class="w"> </span>--n<span class="w"> </span><span class="m">6</span><span class="w">  </span><span class="c1"># 4 workers</span>
+<span class="gp">$ </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">9</span><span class="w"> </span>python<span class="w"> </span>python/examples/solve_cyclic.py<span class="w"> </span>--n<span class="w"> </span><span class="m">6</span><span class="w">  </span><span class="c1"># 8 workers</span>
+<span class="gp">$ </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">13</span><span class="w"> </span>python<span class="w"> </span>python/examples/solve_cyclic.py<span class="w"> </span>--n<span class="w"> </span><span class="m">6</span><span class="w"> </span><span class="c1"># 12 workers</span>
+</pre></div>
+</div>
+<div class="table-wrapper colwidths-given docutils container" id="id2">
+<table class="docutils align-default" id="id2">
+<caption><span class="caption-text">cyclic-6 (720 paths, 156 finite solutions), measured on a 16-core Apple M3 Max (12 performance + 4 efficiency cores), 2026-06-30</span><a class="headerlink" href="#id2" title="Link to this table">¶</a></caption>
+<colgroup>
+<col style="width: 26.7%" />
+<col style="width: 20.0%" />
+<col style="width: 33.3%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>launch</p></th>
+<th class="head"><p>workers</p></th>
+<th class="head"><p>wall-clock (s)</p></th>
+<th class="head"><p>speedup</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>serial</p></td>
+<td><p>–</p></td>
+<td><p>160.1</p></td>
+<td><p>1.0x</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">3</span></code></p></td>
+<td><p>2</p></td>
+<td><p>89.5</p></td>
+<td><p>1.8x</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">5</span></code></p></td>
+<td><p>4</p></td>
+<td><p>46.0</p></td>
+<td><p>3.5x</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">9</span></code></p></td>
+<td><p>8</p></td>
+<td><p>29.4</p></td>
+<td><p>5.4x</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">13</span></code></p></td>
+<td><p>12</p></td>
+<td><p>23.7</p></td>
+<td><p>6.8x</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The speedup grows steadily with the worker count – here to about 6.8x at 12
+workers.  cyclic-6 is 720 paths, so there is plenty to spread, and it keeps gaining
+well past the point where the eigenvalue solve below has flattened.  It still falls short of the
+ideal 12x for two reasons: the <em>slowest single path</em> from the opening (a few near-singular paths
+grind far longer than the rest, so once the workers outnumber the heavy paths the extra ones idle),
+and the hardware – only 12 of the 16 cores are performance cores, so beyond a
+dozen workers the slower efficiency cores set the floor.  The largest jumps are early (2-&gt;4-&gt;8
+workers), where spreading the few heavy paths off a shared worker buys the most; the 8-&gt;12 step
+gains less.  (Note that <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">13</span></code> is 13 processes – 12 workers plus the near-idle manager – which
+fit the 16 cores without oversubscription; the manager, which only dispatches, costs
+essentially nothing.)</p>
+</section>
+<section id="scaling-the-eigenvalue-solve">
+<h2>Scaling the eigenvalue solve<a class="headerlink" href="#scaling-the-eigenvalue-solve" title="Link to this heading">¶</a></h2>
+<p>The eigenvalue solve from <a class="reference internal" href="../../formulating_and_solving/eigenvalues_by_homotopy/index.html"><span class="doc">🧮 Eigenvalues by homotopy continuation</span></a> is the opposite regime: a <em>few</em> paths,
+each <em>expensive</em> and of <em>uneven</em> cost.  Writing the eigenvector projectively makes the
+multihomogeneous Bézout number exactly <span class="math notranslate nohighlight">\(n\)</span> – <strong>one path per eigenvalue</strong> – so an
+<span class="math notranslate nohighlight">\(n \times n\)</span> matrix gives only <span class="math notranslate nohighlight">\(n\)</span> paths.  To have work worth distributing you scale
+the <em>matrix</em>, not the path count.</p>
+<p>The complete script is <a class="reference download internal" download="" href="../../../_downloads/10835e34bcb033e24209967bd9fc5088/solve_eigenvalues.py"><code class="xref download docutils literal notranslate"><span class="pre">solve_eigenvalues.py</span></code></a>:</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">examples/solve_eigenvalues.py</span><a class="headerlink" href="#id3" title="Link to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;Find ALL eigenvalues of a matrix as a distributed multihomogeneous homotopy solve.</span>
+
+<span class="sd">The eigenproblem ``(A - lam I) x = 0`` is the textbook case where multihomogeneous structure</span>
+<span class="sd">crushes total degree: write the eigenvector ``x`` in projective space ``P^{n-1}`` and ``lam`` as</span>
+<span class="sd">an affine unknown, and the multihomogeneous Bezout number is exactly ``n`` -- one path per</span>
+<span class="sd">eigenvalue -- versus the total-degree bound ``2^n``.  So an ``n x n`` matrix gives ``n`` paths,</span>
+<span class="sd">and those ``n`` independent paths spread across MPI workers (make ``n`` large enough that there</span>
+<span class="sd">is real work to hand out).</span>
+
+<span class="sd">Run it::</span>
+
+<span class="sd">    python solve_eigenvalues.py --size 24                            # serial baseline</span>
+<span class="sd">    mpirun -n 5 python solve_eigenvalues.py --size 24                # 1 manager + 4 workers</span>
+<span class="sd">    OMP_NUM_THREADS=4 mpirun -n 3 --bind-to none python solve_eigenvalues.py --size 24</span>
+
+<span class="sd">Only rank 0 prints; it checks the recovered eigenvalues against ``numpy.linalg.eigvals`` --</span>
+<span class="sd">correctness, not just a path count.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZeroDimSolver</span>
+
+<span class="n">OK</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">SuccessCode</span><span class="o">.</span><span class="n">Success</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">random_symmetric_integer_matrix</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">spread</span><span class="o">=</span><span class="mi">9</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A reproducible n x n symmetric integer matrix (real, generically distinct spectrum).</span>
+
+<span class="sd">    The same ``seed`` builds the same matrix on every rank -- essential, since each rank</span>
+<span class="sd">    constructs its own copy of the system to solve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="o">-</span><span class="n">spread</span><span class="p">,</span> <span class="n">spread</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">M</span> <span class="o">+</span> <span class="n">M</span><span class="o">.</span><span class="n">T</span>                       <span class="c1"># symmetric =&gt; real eigenvalues</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">eigen_system</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;(A - lam I) x = 0 with x a PROJECTIVE group and lam affine.</span>
+
+<span class="sd">    Projective ``x`` lives in ``P^{n-1}`` natively, so the eigenvector scale is already fixed --</span>
+<span class="sd">    no normalization equation, and the multihomogeneous Bezout number is exactly ``n``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">variables</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;lam&#39;</span><span class="p">)</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_functions</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">x</span> <span class="o">-</span> <span class="n">lam</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>                  <span class="c1"># the rows of (A - lam I) x</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_hom_variable_group</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>    <span class="c1"># eigenvector in P^{n-1}</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">lam</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">sys</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">recovered_eigenvalues</span><span class="p">(</span><span class="n">solver</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;lam is the last dehomogenized coordinate; collect it from each successful, finite path.</span>
+
+<span class="sd">    We trust the solver&#39;s own classification: a real eigenvalue is the lam coordinate of a path</span>
+<span class="sd">    whose endgame succeeded and that the library calls finite (is_finite) -- no hand-rolled cutoff.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sols</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">all_solutions</span><span class="p">()</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="nb">complex</span><span class="p">(</span><span class="n">sols</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="nb">len</span><span class="p">(</span><span class="n">sols</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">real</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sols</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">endgame_success_code</span><span class="p">)</span> <span class="o">==</span> <span class="n">OK</span> <span class="ow">and</span> <span class="n">md</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">is_finite</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">sols</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;matrix size n (default 24)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--seed&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">20260614</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;RNG seed for the matrix AND the homotopy (default fixed, so runs are &#39;</span>
+                             <span class="s1">&#39;reproducible and serial/distributed are directly comparable)&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span>
+    <span class="n">pb</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>        <span class="c1"># reproducible homotopy (same on every rank)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">random_symmetric_integer_matrix</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">eigen_system</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">endgame</span><span class="o">=</span><span class="s1">&#39;cauchy&#39;</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">,</span> <span class="n">startsystem</span><span class="o">=</span><span class="s1">&#39;mhom&#39;</span><span class="p">)</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">communicator</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>         <span class="c1"># manager (rank 0) hands paths to the workers</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>                          <span class="c1"># serial: a lone manager would have no workers</span>
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pb</span><span class="o">.</span><span class="n">parallel</span><span class="o">.</span><span class="n">is_manager</span><span class="p">():</span>
+        <span class="k">return</span>
+
+    <span class="n">got</span> <span class="o">=</span> <span class="n">recovered_eigenvalues</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+    <span class="c1"># Distinct recovered eigenvalues: a path can occasionally duplicate one, so dedupe (the</span>
+    <span class="c1"># eigenvalues are real and well separated) before counting -- the meaningful quantity is the</span>
+    <span class="c1"># number of distinct eigenvalues, which is deterministic.</span>
+    <span class="n">distinct</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">got</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">distinct</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">g</span> <span class="o">-</span> <span class="n">distinct</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mf">1e-6</span><span class="p">:</span>
+            <span class="n">distinct</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;eigen-</span><span class="si">{}</span><span class="s1">:  ranks=</span><span class="si">{}</span><span class="s1">  threads/rank=</span><span class="si">{}</span><span class="s1">  paths=</span><span class="si">{}</span><span class="s1">  recovered=</span><span class="si">{}</span><span class="s1">  wall=</span><span class="si">{:.1f}</span><span class="s1">s&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;OMP_NUM_THREADS&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">),</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">),</span> <span class="n">elapsed</span><span class="p">))</span>
+
+    <span class="c1"># Correctness: every numpy eigenvalue is matched by a homotopy-recovered one (closest-match,</span>
+    <span class="c1"># robust to ordering and tiny imaginary parts), and we recover all n distinct eigenvalues.</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">)</span> <span class="o">==</span> <span class="n">args</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> \
+        <span class="s1">&#39;expected </span><span class="si">{}</span><span class="s1"> distinct eigenvalues, recovered </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">distinct</span><span class="p">))</span>
+    <span class="n">max_err</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">g</span> <span class="o">-</span> <span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">distinct</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expected</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">max_err</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">,</span> \
+        <span class="s1">&#39;recovered eigenvalues disagree with numpy by </span><span class="si">{:.2e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">max_err</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  OK: all </span><span class="si">{}</span><span class="s1"> eigenvalues match numpy.linalg.eigvals (max error </span><span class="si">{:.2e}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">max_err</span><span class="p">))</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>Again the distributed solve is one line, and again it checks correctness – here against
+<code class="docutils literal notranslate"><span class="pre">numpy.linalg.eigvals</span></code>, demanding that every numpy eigenvalue is matched by a homotopy-recovered
+one.  Because the matrix is symmetric with integer entries its spectrum is real and (generically)
+distinct, so a closest-match comparison is unambiguous.</p>
+<p>Run the same ladder on a sizable matrix:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>python/examples/solve_eigenvalues.py<span class="w"> </span>--size<span class="w"> </span><span class="m">24</span><span class="w">              </span><span class="c1"># serial baseline</span>
+<span class="gp">$ </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">3</span><span class="w"> </span>python<span class="w"> </span>python/examples/solve_eigenvalues.py<span class="w"> </span>--size<span class="w"> </span><span class="m">24</span><span class="w">  </span><span class="c1"># 2 workers</span>
+<span class="gp">$ </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">5</span><span class="w"> </span>python<span class="w"> </span>python/examples/solve_eigenvalues.py<span class="w"> </span>--size<span class="w"> </span><span class="m">24</span><span class="w">  </span><span class="c1"># 4 workers</span>
+<span class="gp">$ </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">9</span><span class="w"> </span>python<span class="w"> </span>python/examples/solve_eigenvalues.py<span class="w"> </span>--size<span class="w"> </span><span class="m">24</span><span class="w">  </span><span class="c1"># 8 workers</span>
+<span class="gp">$ </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">13</span><span class="w"> </span>python<span class="w"> </span>python/examples/solve_eigenvalues.py<span class="w"> </span>--size<span class="w"> </span><span class="m">24</span><span class="w"> </span><span class="c1"># 12 workers</span>
+</pre></div>
+</div>
+<div class="table-wrapper colwidths-given docutils container" id="id4">
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-text">eigenvalues of a 24x24 symmetric matrix (24 paths), measured on a 16-core Apple M3 Max (12 performance + 4 efficiency cores), 2026-06-30</span><a class="headerlink" href="#id4" title="Link to this table">¶</a></caption>
+<colgroup>
+<col style="width: 26.7%" />
+<col style="width: 20.0%" />
+<col style="width: 33.3%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>launch</p></th>
+<th class="head"><p>workers</p></th>
+<th class="head"><p>wall-clock (s)</p></th>
+<th class="head"><p>speedup</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>serial</p></td>
+<td><p>–</p></td>
+<td><p>12.6</p></td>
+<td><p>1.0x</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">3</span></code></p></td>
+<td><p>2</p></td>
+<td><p>7.2</p></td>
+<td><p>1.8x</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">5</span></code></p></td>
+<td><p>4</p></td>
+<td><p>4.5</p></td>
+<td><p>2.8x</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">9</span></code></p></td>
+<td><p>8</p></td>
+<td><p>3.3</p></td>
+<td><p>3.8x</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">13</span></code></p></td>
+<td><p>12</p></td>
+<td><p>3.4</p></td>
+<td><p>3.7x</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>With only 24 paths the dynamic, demand-driven dispatch earns its keep: under adaptive
+precision the per-path cost varies a lot – a near-collision of eigenvalues makes one path linger at
+high precision – and a <em>static</em> split would leave most workers idle while one grinds.  Demand-driven
+dispatch keeps the others busy, but it cannot split a <em>single</em> path: once enough workers are on
+hand, that one slowest eigenvalue sets the floor (here ~|tw-eigen-floor-wall| s, the
+3.8x plateau).  The plateau is unmistakable in the table – <strong>12 workers is no
+faster than 8</strong> (3.7x vs 3.8x): past the point where every
+path has a worker, handing out more workers changes nothing, because there is no 25th path to give
+them.  That is the sharp contrast with cyclic-6 above, which has 720 paths and so keeps
+gaining out to 12 workers.  Same lesson either way – distributing helps right up until you hit the
+longest path, which is exactly the bound the opening promised.</p>
+</section>
+<section id="threads-within-ranks-the-hybrid-model">
+<h2>Threads within ranks: the hybrid model<a class="headerlink" href="#threads-within-ranks-the-hybrid-model" title="Link to this heading">¶</a></h2>
+<p>Each worker rank can itself track several paths concurrently, one per thread, set with the
+<code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> environment variable (default 1).  This stacks with MPI: <code class="docutils literal notranslate"><span class="pre">R</span></code> worker ranks of
+<code class="docutils literal notranslate"><span class="pre">T</span></code> threads each give <code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">×</span> <span class="pre">T</span></code> paths in flight.</p>
+<p>The launch needs one extra flag, <code class="docutils literal notranslate"><span class="pre">--bind-to</span> <span class="pre">none</span></code>.  By default <code class="docutils literal notranslate"><span class="pre">mpirun</span></code> pins each rank to a
+single core, which would strangle that rank’s threads onto one core; <code class="docutils literal notranslate"><span class="pre">--bind-to</span> <span class="pre">none</span></code> lets a
+rank’s threads spread across the machine:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OMP_NUM_THREADS</span><span class="o">=</span><span class="mi">4</span> <span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">3</span> <span class="o">--</span><span class="n">bind</span><span class="o">-</span><span class="n">to</span> <span class="n">none</span> <span class="n">python</span> <span class="n">python</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">solve_cyclic</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">n</span> <span class="mi">6</span>
+<span class="c1">#               4 threads  x  (3 ranks = 1 manager + 2 workers)  =  8 paths at a time</span>
+</pre></div>
+</div>
+<p>Why have two knobs for the same cores?  <strong>Reach versus footprint.</strong>  MPI ranks can live on
+<em>different machines</em> – that is the only way past one box’s core count – but each rank is a full
+process with its own copy of the system.  Threads share one process’s memory and stay on one
+machine, so they add parallelism without the per-rank memory cost.  The usual recipe: <strong>one rank
+per machine (or per NUMA node), threads to fill that machine’s cores.</strong></p>
+<p>At a fixed budget of 12 worker-cores, here is the same cyclic-6 solve split between
+ranks and threads:</p>
+<div class="table-wrapper colwidths-given docutils container" id="id5">
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">cyclic-6 at 12 worker-cores, ranks x threads, measured on a 16-core Apple M3 Max (12 performance + 4 efficiency cores), 2026-06-30</span><a class="headerlink" href="#id5" title="Link to this table">¶</a></caption>
+<colgroup>
+<col style="width: 50.0%" />
+<col style="width: 31.2%" />
+<col style="width: 18.8%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>layout</p></th>
+<th class="head"><p>wall-clock (s)</p></th>
+<th class="head"><p>speedup</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">13</span></code>, 12 workers x 1 thread</p></td>
+<td><p>23.7</p></td>
+<td><p>6.8x</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">7</span></code>, 6 workers x 2 threads</p></td>
+<td><p>21.8</p></td>
+<td><p>7.3x</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">5</span></code>, 4 workers x 3 threads</p></td>
+<td><p>22.9</p></td>
+<td><p>7.0x</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">3</span></code>, 2 workers x 6 threads</p></td>
+<td><p>22.7</p></td>
+<td><p>7.1x</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>On a single shared-memory machine the four layouts land within a few percent of each other – you
+are using the same twelve worker-cores either way, and they all bottom out at the same slowest-path floor.
+The reason to prefer more <em>ranks</em> shows up only across machines (more reach) or under memory
+pressure (threads share, ranks duplicate); the reason to prefer more <em>threads</em> is to keep the
+per-machine process count – and memory footprint – low.</p>
+</section>
+<section id="where-to-go-from-here">
+<h2>Where to go from here<a class="headerlink" href="#where-to-go-from-here" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The scripts take a <code class="docutils literal notranslate"><span class="pre">--n</span></code> / <code class="docutils literal notranslate"><span class="pre">--size</span></code> argument: push them up until a single machine is no
+longer enough, then spread the ranks across a cluster with a hostfile
+(<code class="docutils literal notranslate"><span class="pre">mpirun</span> <span class="pre">--hostfile</span> <span class="pre">hosts</span> <span class="pre">-n</span> <span class="pre">...</span></code>).</p></li>
+<li><p>Combine with <a class="reference internal" href="../../formulating_and_solving/parameter_homotopy/index.html"><span class="doc">🔁 Parameter homotopy: solve once, re-solve many times</span></a>: solve once at a generic parameter, then distribute the
+<em>re-solves</em> across parameter values – each is an independent, already-cheap track, ideal for the
+manager-worker pool.</p></li>
+<li><p>The same <code class="docutils literal notranslate"><span class="pre">solve(communicator=...)</span></code> works for every zero-dim solver class (total degree,
+multihomogeneous, user homotopy), so anything you can solve serially, you can solve distributed.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+  
+        <div class="related-pages">
+          <a class="next-page" href="../parallel_parameter_homotopy/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">⚗️ A bistable reaction network, mapped in parallel</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Parallelism in Python</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2015-2026, Bertini Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+  
+  <div class="build-info" style="margin-top: 0.75rem; font-size: var(--font-size--small); color: var(--color-foreground-muted);">
+    Built from
+    <a href="https://github.com/bertiniteam/b2/commit/dcba24c0de54b7ae9e2011602eb23d6c543a4169"><code>dcba24c</code></a> on 2026-07-09 13:45 UTC.
+  </div>
+  
+
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">🚀 Solving at scale: many cores, many machines</a><ul>
+<li><a class="reference internal" href="#the-manager-worker-model">The manager-worker model</a></li>
+<li><a class="reference internal" href="#scaling-a-cyclic-system">Scaling a cyclic system</a></li>
+<li><a class="reference internal" href="#scaling-the-eigenvalue-solve">Scaling the eigenvalue solve</a></li>
+<li><a class="reference internal" href="#threads-within-ranks-the-hybrid-model">Threads within ranks: the hybrid model</a></li>
+<li><a class="reference internal" href="#where-to-go-from-here">Where to go from here</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
+</html>

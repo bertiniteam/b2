@@ -1,0 +1,600 @@
+
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html"><link rel="next" title="Observing, metadata, and more" href="../../observing_metadata_more/index.html"><link rel="prev" title="🚀 Solving at scale: many cores, many machines" href="../solving_at_scale/index.html">
+        <link rel="prefetch" href="../../../_static/bpy_icon_.svg" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>⚗️ A bistable reaction network, mapped in parallel - Bertini 3.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4805ae4f" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">Bertini 3.1.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/bpy_icon_.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Bertini 3.1.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../welcome.html">👋 Welcome to Bertini 2</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../tutorials.html">🔦 Tutorials</a><input aria-label="Toggle navigation of 🔦 Tutorials" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../formulating_and_solving/index.html">Formulating and solving systems</a><input aria-label="Toggle navigation of Formulating and solving systems" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/all_solutions/index.html">🌐 Finding <em>all</em> the solutions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/zerodim_solver/index.html">🎯 Solving a system with ZeroDimSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/real_points/index.html">📍 A real point on every component (the Trott curve)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/critical_points/index.html">🎯 Critical points by rank deficiency (a null vector, not a determinant)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/eigenvalues_by_homotopy/index.html">🧮 Eigenvalues by homotopy continuation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/parameter_homotopy/index.html">🔁 Parameter homotopy: solve once, re-solve many times</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/concatenate_systems/index.html">🧱 Build a system in pieces with clone and concatenate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/randomize/index.html">🎲 Randomize an overdetermined system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/user_product_of_linears/index.html">🪢 Author your own start system: a product of linears</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/canonical_ordering/index.html">🧮 Canonical ordering, and opting out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/solution_dataframe/index.html">🗃️ A dataframe of solutions: filtering and plotting with pandas</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../manipulating_solutions/index.html">Manipulating solutions</a><input aria-label="Toggle navigation of Manipulating solutions" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../manipulating_solutions/intro_to_slices/index.html">✂️ Intro to slices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../manipulating_solutions/moving_slice/index.html">🛷 Move a slice, hold the system fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../settings_and_precision/index.html">Solver settings &amp; multiprecision</a><input aria-label="Toggle navigation of Solver settings &amp; multiprecision" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/carrying_settings/index.html">⚙️ Carrying settings across related solves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/crossed_paths/index.html">🪢 Crossed paths: when two paths become one</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/precision_matters/index.html">🎚️ When double precision is not enough</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../settings_and_precision/precision_models/index.html">🔬 Precision models: double, multiple, adaptive</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../index.html">Parallelism in Python</a><input aria-label="Toggle navigation of Parallelism in Python" checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../solving_at_scale/index.html">🚀 Solving at scale: many cores, many machines</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">⚗️ A bistable reaction network, mapped in parallel</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../observing_metadata_more/index.html">Observing, metadata, and more</a><input aria-label="Toggle navigation of Observing, metadata, and more" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../observing_metadata_more/observers_and_path_data/index.html">👀 Watching the paths: observers and path data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../observing_metadata_more/homotopy_cartoon_from_real_data/index.html">🎨 The continuation cartoon, from real data — and seeing precision change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../observing_metadata_more/classic_continuation_cartoon/index.html">🖼️ The classic continuation cartoon, from real data</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../performance_benchmarking/index.html">Performance and benchmarking</a><input aria-label="Toggle navigation of Performance and benchmarking" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../performance_benchmarking/bertini1_vs_bertini2_timing/index.html">⏱️ Timing Bertini 1 vs Bertini 2</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../record_keeping/index.html">The record-keeping system</a><input aria-label="Toggle navigation of The record-keeping system" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../record_keeping/automatic_record_keeping/index.html">Automatic record keeping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../record_keeping/chained_homotopies/index.html">Chained homotopies: provenance all the way back</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../doing_things_manually/index.html">Doing things manually</a><input aria-label="Toggle navigation of Doing things manually" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/evaluation_cyclic/index.html">♻️ Evaluation of cyclic-<span class="math notranslate nohighlight">\(n\)</span> polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/manual_endgame_usage/index.html">🎮 Using an endgame to compute singular endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/tracking_nonsingular/index.html">🛤 Tracking to nonsingular endpoints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed/everyday.html">🌟 Everyday API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../numpy.html">Multiprecision numbers and NumPy</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../detailed/api.html">🔎 Full API reference</a><input aria-label="Toggle navigation of 🔎 Full API reference" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.algorithms.html">bertini.algorithms</a><input aria-label="Toggle navigation of bertini.algorithms" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detailed/_autosummary/bertini.algorithms.zerodim.html">bertini.algorithms.zerodim</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.config.html">bertini.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.endgame.html">bertini.endgame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.logging.html">bertini.logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.multiprec.html">bertini.multiprec</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.nag_algorithm.html">bertini.nag_algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.operators.html">bertini.operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.parallel.html">bertini.parallel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.parse.html">bertini.parse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.random.html">bertini.random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.records.html">bertini.records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.symbolics.html">bertini.symbolics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.sympy_bridge.html">bertini.sympy_bridge</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.system.html">bertini.system</a><input aria-label="Toggle navigation of bertini.system" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detailed/_autosummary/bertini.system.start_system.html">bertini.system.start_system</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.html">bertini.tracking</a><input aria-label="Toggle navigation of bertini.tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.html">bertini.tracking.observers</a><input aria-label="Toggle navigation of bertini.tracking.observers" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.amp.html">bertini.tracking.observers.amp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.double.html">bertini.tracking.observers.double</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.multiple.html">bertini.tracking.observers.multiple</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.windows_dll_manager.html">bertini.windows_dll_manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../zbib.html">📚 Bibliography</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../../_sources/tutorials/parallelism/parallel_parameter_homotopy/index.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="a-bistable-reaction-network-mapped-in-parallel">
+<h1>⚗️ A bistable reaction network, mapped in parallel<a class="headerlink" href="#a-bistable-reaction-network-mapped-in-parallel" title="Link to this heading">¶</a></h1>
+<p>A <strong>parameter homotopy</strong> is the right tool whenever you must solve the <em>same</em> polynomial system
+over and over at <em>different</em> coefficient values – a parameter sweep.  You pay for one hard solve
+at a generic parameter, then reach every value you care about by cheap tracking that reuses those
+start solutions (the <a class="reference internal" href="../../formulating_and_solving/parameter_homotopy/index.html"><span class="doc">🔁 Parameter homotopy: solve once, re-solve many times</span></a> tutorial introduces the idea).  This tutorial puts
+that to work on a real problem and then makes it <em>parallel on two levels at once</em>:</p>
+<ul class="simple">
+<li><p><strong>MPI across the parameter points</strong> – the points are independent, so hand each compute node a
+slice of them;</p></li>
+<li><p><strong>threads across the paths</strong> – inside each point’s solve, track the paths on all of that node’s
+cores (this is automatic – a solve is multi-threaded by default).</p></li>
+</ul>
+<p>The driving problem is a <strong>chemical reaction network</strong> and the question is <em>multistationarity</em>:
+for which rate constants does the network have more than one steady state?</p>
+<section id="the-schlogl-model">
+<h2>The Schlögl model<a class="headerlink" href="#the-schlogl-model" title="Link to this heading">¶</a></h2>
+<p>The Schlögl network is the textbook example of a bistable reaction network.  Its single species
+<span class="math notranslate nohighlight">\(X\)</span> has a steady state wherever production balances degradation, which works out to a cubic:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[k_2\,X^3 \;-\; k_1\,X^2 \;+\; k_4\,X \;-\; k_3 \;=\; 0 .\]</div>
+</div>
+<p>The rate constants <span class="math notranslate nohighlight">\(k_1,\dots,k_4\)</span> are the parameters, and they live in the <strong>positive
+orthant</strong> (rates are positive).  A <em>steady state</em> is a <strong>positive real</strong> root.  By Descartes’ rule
+of signs this cubic has either <strong>one</strong> or <strong>three</strong> positive real roots – monostable or bistable
+– and which one depends on where you are in parameter space.  Mapping that boundary is the goal.</p>
+<p>The family is one system at many coefficient values, so we build it with a factory over <strong>shared</strong>
+variables (a parameter homotopy interpolates coefficients, so every member must use the same
+<code class="docutils literal notranslate"><span class="pre">Variable</span></code> object):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini.nag_algorithm</span><span class="w"> </span><span class="kn">import</span> <span class="n">parameter_sweep</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_system</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span><span class="p">,</span> <span class="n">k4</span> <span class="o">=</span> <span class="n">params</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">X</span><span class="p">]))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">k2</span><span class="o">*</span><span class="n">X</span><span class="o">*</span><span class="n">X</span><span class="o">*</span><span class="n">X</span> <span class="o">-</span> <span class="n">k1</span><span class="o">*</span><span class="n">X</span><span class="o">*</span><span class="n">X</span> <span class="o">+</span> <span class="n">k4</span><span class="o">*</span><span class="n">X</span> <span class="o">-</span> <span class="n">k3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sys</span>
+</pre></div>
+</div>
+</section>
+<section id="let-the-solver-do-the-classification">
+<h2>Let the solver do the classification<a class="headerlink" href="#let-the-solver-do-the-classification" title="Link to this heading">¶</a></h2>
+<p>“How many positive real steady states?” is a question about the solutions’ <em>classification</em> –
+which are real, which are finite – and the solver already answers it.  <code class="docutils literal notranslate"><span class="pre">solver.to_dataframe()</span></code>
+hands back a pandas DataFrame with an <code class="docutils literal notranslate"><span class="pre">is_real</span></code> and <code class="docutils literal notranslate"><span class="pre">is_finite</span></code> column per solution (plus
+multiplicity and more), so we never re-derive real-ness with a hand-rolled tolerance; we just read
+the flags and keep the positive ones:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">positive_real_count</span><span class="p">(</span><span class="n">solver</span><span class="p">):</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;is_real&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;is_finite&#39;</span><span class="p">]:</span>
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;solution&#39;</span><span class="p">]</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="s1">&#39;__len__&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">sol</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">real</span> <span class="o">&gt;</span> <span class="mf">1e-9</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">n</span>
+</pre></div>
+</div>
+</section>
+<section id="the-sweep">
+<h2>The sweep<a class="headerlink" href="#the-sweep" title="Link to this heading">¶</a></h2>
+<p><a class="reference internal" href="../../../detailed/_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.parameter_sweep" title="bertini.nag_algorithm.parameter_sweep"><code class="xref py py-func docutils literal notranslate"><span class="pre">parameter_sweep()</span></code></a> is the whole engine: give it the factory, one
+<em>generic</em> (random complex) parameter value to solve once, and the list of parameter values you
+actually want.  It solves the generic member, then tracks to every target reusing those start
+solutions.  Here we sweep a grid of <span class="math notranslate nohighlight">\((k_1, k_3)\)</span> with <span class="math notranslate nohighlight">\(k_2 = 1, k_4 = 11\)</span> fixed, and
+reduce each solve straight to its positive-real count with <code class="docutils literal notranslate"><span class="pre">collect</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">multiprec</span><span class="o">.</span><span class="n">complex_mp</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">real_coeff</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>  <span class="k">return</span> <span class="n">C</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)),</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>   <span class="c1"># an exact real coefficient</span>
+
+<span class="n">generic</span> <span class="o">=</span> <span class="p">(</span><span class="n">C</span><span class="p">(</span><span class="s2">&quot;0.7&quot;</span><span class="p">,</span><span class="s2">&quot;0.4&quot;</span><span class="p">),</span> <span class="n">C</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span><span class="s2">&quot;0.3&quot;</span><span class="p">),</span> <span class="n">C</span><span class="p">(</span><span class="s2">&quot;0.31&quot;</span><span class="p">,</span><span class="s2">&quot;-0.52&quot;</span><span class="p">),</span> <span class="n">C</span><span class="p">(</span><span class="s2">&quot;1.2&quot;</span><span class="p">,</span><span class="s2">&quot;0.9&quot;</span><span class="p">))</span>
+
+<span class="n">k1s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">k3s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">targets</span> <span class="o">=</span> <span class="p">[(</span><span class="n">real_coeff</span><span class="p">(</span><span class="n">k1</span><span class="p">),</span> <span class="n">real_coeff</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">real_coeff</span><span class="p">(</span><span class="n">k3</span><span class="p">),</span> <span class="n">real_coeff</span><span class="p">(</span><span class="mi">11</span><span class="p">))</span>
+           <span class="k">for</span> <span class="n">k3</span> <span class="ow">in</span> <span class="n">k3s</span> <span class="k">for</span> <span class="n">k1</span> <span class="ow">in</span> <span class="n">k1s</span><span class="p">]</span>
+
+<span class="n">counts</span> <span class="o">=</span> <span class="n">parameter_sweep</span><span class="p">(</span><span class="n">make_system</span><span class="p">,</span> <span class="n">generic</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">collect</span><span class="o">=</span><span class="n">positive_real_count</span><span class="p">)</span>
+
+<span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">k3s</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">k1s</span><span class="p">))</span>
+<span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span> <span class="o">&lt;=</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">}</span>      <span class="c1"># Descartes: only 1 or 3 positive real roots</span>
+<span class="k">assert</span> <span class="p">(</span><span class="n">counts</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>                <span class="c1"># ... and the bistable region is in this window</span>
+</pre></div>
+</div>
+<p>That <code class="docutils literal notranslate"><span class="pre">parameter_sweep</span></code> call was already <strong>threaded</strong> – a solve uses every core by default, so
+the path tracking inside each grid point ran in parallel with no extra code.  For most users, on
+one machine, that is the whole story: parallelism for free through the ordinary interface.</p>
+</section>
+<section id="going-wide-mpi-across-the-grid">
+<h2>Going wide: MPI across the grid<a class="headerlink" href="#going-wide-mpi-across-the-grid" title="Link to this heading">¶</a></h2>
+<p>The grid points are independent, so to use <em>many machines</em> you hand each MPI rank a slice of the
+grid.  <code class="docutils literal notranslate"><span class="pre">parameter_sweep</span></code> does the splitting and gathering for you – pass a communicator and a
+<code class="docutils literal notranslate"><span class="pre">collect</span></code> (only the reduced value crosses ranks, since solver objects cannot), and <strong>every rank
+comes back with the full list of counts</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">parameter_sweep</span><span class="p">(</span><span class="n">make_system</span><span class="p">,</span> <span class="n">generic</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span>
+                         <span class="n">collect</span><span class="o">=</span><span class="n">positive_real_count</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">)</span>
+<span class="c1"># one extra argument (comm=) is the entire difference from the serial version</span>
+</pre></div>
+</div>
+<p>That is the two-level model in one call: MPI spreads the <em>points</em> across ranks, and each rank’s
+solves thread the <em>paths</em> across its cores.  The complete, runnable script – which builds the
+grid, runs the sweep, and draws the map – is
+<a class="reference download internal" download="" href="../../../_downloads/f6c8a237b1b1f13cf5ebbb7985938fa7/parallel_parameter_homotopy.py"><code class="xref download docutils literal notranslate"><span class="pre">parallel_parameter_homotopy.py</span></code></a>:</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">examples/parallel_parameter_homotopy.py</span><a class="headerlink" href="#id1" title="Link to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_system</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The Schlogl steady-state system at the given rate constants (k1, k2, k3, k4).&quot;&quot;&quot;</span>
+    <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span><span class="p">,</span> <span class="n">k4</span> <span class="o">=</span> <span class="n">params</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">X</span><span class="p">]))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">k2</span> <span class="o">*</span> <span class="n">X</span> <span class="o">*</span> <span class="n">X</span> <span class="o">*</span> <span class="n">X</span> <span class="o">-</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">X</span> <span class="o">*</span> <span class="n">X</span> <span class="o">+</span> <span class="n">k4</span> <span class="o">*</span> <span class="n">X</span> <span class="o">-</span> <span class="n">k3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sys</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">real_coeff</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An exact real coefficient node (a complex literal with zero imaginary part).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pb</span><span class="o">.</span><span class="n">multiprec</span><span class="o">.</span><span class="n">complex_mp</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)),</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">positive_real_count</span><span class="p">(</span><span class="n">solver</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of positive real steady states, from the solver&#39;s OWN classification.</span>
+
+<span class="sd">    ``to_dataframe`` tags each endpoint is_real / is_finite (and multiplicity, etc.); we keep the</span>
+<span class="sd">    real, finite ones and require the concentration to be positive -- a CRN steady state is a</span>
+<span class="sd">    positive real point.  We do not re-derive real-ness ourselves.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;is_real&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;is_finite&#39;</span><span class="p">]):</span>
+            <span class="k">continue</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;solution&#39;</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="s1">&#39;__len__&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">sol</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">real</span> <span class="o">&gt;</span> <span class="mf">1e-9</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">n</span>
+
+
+</pre></div>
+</div>
+</div>
+<p>Run it serially, or across ranks with threads inside each (the <code class="docutils literal notranslate"><span class="pre">--bind-to</span> <span class="pre">none</span></code> and
+<code class="docutils literal notranslate"><span class="pre">--map-by</span></code> notes from <a class="reference internal" href="../solving_at_scale/index.html"><span class="doc">🚀 Solving at scale: many cores, many machines</span></a> apply – and always run a <em>file</em>, never a heredoc):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">parallel_parameter_homotopy</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">grid</span> <span class="mi">28</span> <span class="o">--</span><span class="n">save</span> <span class="n">schlogl</span><span class="o">.</span><span class="n">svg</span>     <span class="c1"># serial + threads</span>
+<span class="n">OMP_NUM_THREADS</span><span class="o">=</span><span class="mi">3</span> <span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="o">--</span><span class="n">bind</span><span class="o">-</span><span class="n">to</span> <span class="n">none</span> \
+    <span class="n">python</span> <span class="n">parallel_parameter_homotopy</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">grid</span> <span class="mi">28</span> <span class="o">--</span><span class="n">save</span> <span class="n">schlogl</span><span class="o">.</span><span class="n">svg</span> <span class="c1"># 4 ranks x 3 threads</span>
+</pre></div>
+</div>
+<p>Both produce the <strong>identical</strong> map – parallelism changes the wall-clock, never the answer:</p>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="../../../_images/parallel_parameter_homotopy.svg"><img alt="../../../_images/parallel_parameter_homotopy.svg" src="../../../_images/parallel_parameter_homotopy.svg" style="width: 75%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The Schlögl network’s steady states over a slice of its positive-orthant parameter space.  The
+red tongue is the <strong>bistable</strong> region – three positive real steady states; outside it there is
+one.  Each pixel is one parameter homotopy track; the picture is an MPI-across-pixels,
+threads-within-pixel solve.</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="where-to-go-from-here">
+<h2>Where to go from here<a class="headerlink" href="#where-to-go-from-here" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Swap in your own network: any steady-state system that is <em>one shape with varying coefficients</em>
+drops straight into <code class="docutils literal notranslate"><span class="pre">make_system</span></code> + <code class="docutils literal notranslate"><span class="pre">parameter_sweep</span></code>.  Richer networks have more paths per
+point, so the per-point threading earns more.</p></li>
+<li><p>Push <code class="docutils literal notranslate"><span class="pre">--grid</span></code> up and spread the ranks across a cluster with a hostfile
+(<code class="docutils literal notranslate"><span class="pre">mpirun</span> <span class="pre">--hostfile</span> <span class="pre">hosts</span> <span class="pre">...</span></code>); the sweep code does not change.</p></li>
+<li><p>See <a class="reference internal" href="../solving_at_scale/index.html"><span class="doc">🚀 Solving at scale: many cores, many machines</span></a> for the other axis – distributing the <em>paths of a single solve</em>
+across ranks – and <a class="reference internal" href="../../observing_metadata_more/observers_and_path_data/index.html"><span class="doc">👀 Watching the paths: observers and path data</span></a> to watch the tracking itself.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+  
+        <div class="related-pages">
+          <a class="next-page" href="../../observing_metadata_more/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Observing, metadata, and more</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../solving_at_scale/index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">🚀 Solving at scale: many cores, many machines</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2015-2026, Bertini Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+  
+  <div class="build-info" style="margin-top: 0.75rem; font-size: var(--font-size--small); color: var(--color-foreground-muted);">
+    Built from
+    <a href="https://github.com/bertiniteam/b2/commit/dcba24c0de54b7ae9e2011602eb23d6c543a4169"><code>dcba24c</code></a> on 2026-07-09 13:45 UTC.
+  </div>
+  
+
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">⚗️ A bistable reaction network, mapped in parallel</a><ul>
+<li><a class="reference internal" href="#the-schlogl-model">The Schlögl model</a></li>
+<li><a class="reference internal" href="#let-the-solver-do-the-classification">Let the solver do the classification</a></li>
+<li><a class="reference internal" href="#the-sweep">The sweep</a></li>
+<li><a class="reference internal" href="#going-wide-mpi-across-the-grid">Going wide: MPI across the grid</a></li>
+<li><a class="reference internal" href="#where-to-go-from-here">Where to go from here</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
+</html>

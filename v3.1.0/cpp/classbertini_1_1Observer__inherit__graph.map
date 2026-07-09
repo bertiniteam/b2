@@ -1,0 +1,33 @@
+<map id="bertini::Observer&lt; ObservedT &gt;" name="bertini::Observer&lt; ObservedT &gt;">
+<area shape="rect" id="Node000001" title="Actual observer type, which you should derive from to extract custom information from observable type..." alt="" coords="209,473,352,513"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="475,5,680,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="280,459,287,388,305,296,320,248,340,199,366,154,398,114,433,88,474,70,476,75,436,92,402,118,370,157,345,202,325,249,310,298,292,389,286,460"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="448,129,707,242"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="288,459,302,414,325,359,356,302,398,253,421,235,446,220,449,225,424,239,402,257,361,305,329,361,307,415,293,461"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="400,267,755,365"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="305,461,346,418,399,376,422,363,425,368,401,381,350,422,309,465"/>
+<area shape="rect" id="Node000008" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="448,390,707,474"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="365,473,447,456,448,461,366,479"/>
+<area shape="rect" id="Node000010" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="437,498,718,611"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="366,508,437,523,436,528,365,513"/>
+<area shape="rect" id="Node000011" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="437,635,718,749"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="306,523,347,573,373,599,402,622,438,643,435,648,398,626,370,603,343,577,302,527"/>
+<area shape="rect" id="Node000012" href="$classbertini_1_1MultiObserver.html" title="A class which can glob together observer types into a new, single observer type." alt="" coords="464,773,691,813"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="289,526,300,579,321,643,354,706,376,735,402,759,431,777,465,787,463,792,429,781,398,763,372,738,350,709,316,645,295,580,284,528"/>
+<area shape="rect" id="Node000013" href="$classbertini_1_1TypedObserver.html" title="CRTP base that turns an observer into a set of typed Observe() overloads." alt="" coords="492,838,663,893"/>
+<area shape="poly" id="edge12_Node000001_Node000013" title=" " alt="" coords="286,526,294,590,313,671,328,713,347,753,372,791,402,823,422,838,444,848,492,860,491,866,442,853,419,842,398,827,367,794,342,756,323,715,308,672,289,591,281,527"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1AnyObserver.html" title="Strawman base class for Observer objects." alt="" coords="5,481,161,506"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="175,491,209,491,209,496,175,496"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1tracking_1_1FirstPrecisionRecorder.html" title="Observer that records the starting precision and the first precision increase during a track." alt="" coords="815,158,981,213"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="721,183,814,183,814,188,721,188"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1tracking_1_1MinMaxPrecisionRecorder.html" title="Observer that records the minimum and maximum precision reached during a track." alt="" coords="803,289,993,343"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="769,313,802,313,802,319,769,319"/>
+<area shape="rect" id="Node000009" href="$classbertini_1_1tracking_1_1StepFailScreenPrinter.html" title="Observer that prints a message to standard out whenever a step fails." alt="" coords="818,405,978,459"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="721,429,818,429,818,435,721,435"/>
+<area shape="rect" id="Node000014" href="$classbertini_1_1tracking_1_1FirstPrecisionRecorder.html" title=" " alt="" coords="815,759,981,814"/>
+<area shape="poly" id="edge13_Node000013_Node000014" title=" " alt="" coords="676,841,754,823,814,807,815,812,755,828,677,847"/>
+<area shape="rect" id="Node000015" href="$classbertini_1_1tracking_1_1MinMaxPrecisionRecorder.html" title=" " alt="" coords="803,838,993,893"/>
+<area shape="poly" id="edge14_Node000013_Node000015" title=" " alt="" coords="676,863,802,863,802,868,676,868"/>
+<area shape="rect" id="Node000016" href="$classbertini_1_1tracking_1_1AMPPathAccumulator.html" title="Example usage: PathAccumulator&lt;AMPTracker&gt; path_accumulator;." alt="" coords="812,917,984,971"/>
+<area shape="poly" id="edge15_Node000013_Node000016" title=" " alt="" coords="677,887,813,920,811,926,676,892"/>
+</map>

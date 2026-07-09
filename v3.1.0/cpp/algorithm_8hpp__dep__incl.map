@@ -1,0 +1,17 @@
+<map id="core/include/bertini2/io/parsing/settings_parsers/algorithm.hpp" name="core/include/bertini2/io/parsing/settings_parsers/algorithm.hpp">
+<area shape="rect" id="Node000001" title="Provides the parsing rules for algorithm&#45;related settings in bertini2." alt="" coords="170,5,342,60"/>
+<area shape="rect" id="Node000002" href="$settings__parsers_8hpp.html" title="Provides the parsers for settings in bertini2." alt="" coords="179,108,333,163"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="259,74,259,108,253,108,253,74"/>
+<area shape="rect" id="Node000003" href="$parsing_8hpp.html" title="A collective include file for parsing utilities." alt="" coords="88,218,243,258"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="225,175,185,219,181,216,221,171"/>
+<area shape="rect" id="Node000004" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="267,211,426,265"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="291,171,325,209,321,212,287,175"/>
+<area shape="rect" id="Node000005" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,313,240,353"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="272,273,169,316,167,311,270,268"/>
+<area shape="rect" id="Node000006" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,401,308,441"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="319,278,218,403,213,399,315,275"/>
+<area shape="rect" id="Node000007" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="315,313,517,353"/>
+<area shape="poly" id="edge7_Node000004_Node000007" title=" " alt="" coords="368,275,397,312,393,315,364,278"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="151,362,185,399,181,403,147,365"/>
+<area shape="poly" id="edge8_Node000007_Node000004" title=" " alt="" coords="400,303,372,267,377,264,404,300"/>
+</map>
