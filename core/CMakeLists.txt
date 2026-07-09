@@ -570,6 +570,15 @@ target_precompile_headers(bertini2_exe PRIVATE
     <bertini2/parallel.hpp>
 )
 
+# clang validates a PCH by the mtime of its input; when the wheel build configures
+# twice in one job (test build + wheel build sharing bld/), cmake regenerates an
+# IDENTICAL cmake_pch.cxx with a fresh mtime and clang refuses the still-valid PCH
+# ("has been modified since the precompiled header was built: mtime changed").
+# -fno-pch-timestamp exists precisely for this (see the ccache docs on PCH).
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(bertini2_exe PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-Xclang -fno-pch-timestamp>")
+endif()
+
 # todo: this should be made a devmode thing
 #target_compile_options(bertini2 PRIVATE -Wall -Wextra)
 

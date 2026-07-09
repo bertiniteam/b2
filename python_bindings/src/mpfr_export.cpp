@@ -260,9 +260,29 @@ namespace bertini{
 			using boost::multiprecision::imag;
 
 			real_mp (*reeeal)(const T&) = &boost::multiprecision::real;
-			real_mp (*imaaag)(const T&) = &boost::multiprecision::real;
+			// regression note: this was `&boost::multiprecision::real` (copy-paste),
+			// so mp.imag(z) returned the REAL part.
+			real_mp (*imaaag)(const T&) = &boost::multiprecision::imag;
 			def("real",reeeal, (arg("val")), "get the real part"); //,return_value_policy<copy_const_reference>()
 			def("imag",imaaag, (arg("val")), "get the imaginary part"); //,return_value_policy<copy_const_reference>()
+
+			// array overloads: numpy's .real/.imag ndarray attributes (and np.real /
+			// np.imag / np.angle) return silently WRONG values for legacy user
+			// dtypes -- numpy does not know complex_mp is complex-like, so .real
+			// returns the complex values themselves and .imag returns zeros.  These
+			// element-wise overloads are the sanctioned array component accessors.
+			def("real", +[](Vec<T> const& v) {
+				Vec<real_mp> r(v.size());
+				for (Eigen::Index i = 0; i < v.size(); ++i)
+					r(i) = v(i).real();
+				return r;
+			}, (arg("val")), "get the real parts of an array of complex numbers, as an array of real_mp");
+			def("imag", +[](Vec<T> const& v) {
+				Vec<real_mp> r(v.size());
+				for (Eigen::Index i = 0; i < v.size(); ++i)
+					r(i) = v(i).imag();
+				return r;
+			}, (arg("val")), "get the imaginary parts of an array of complex numbers, as an array of real_mp");
 
 			// and then a few more free functions
 			// def("abs2",&T::abs2);
@@ -277,6 +297,14 @@ namespace bertini{
 
 			real_mp (*aaaarg)(const T&) = &boost::multiprecision::arg;
 			def("arg",aaaarg, "the argument, or the angle from 0.  beware the branch cut.");
+			// array overload: the np.angle replacement (np.angle goes through the
+			// broken .imag/.real ndarray attributes -- see the note at real/imag).
+			def("arg", +[](Vec<T> const& v) {
+				Vec<real_mp> r(v.size());
+				for (Eigen::Index i = 0; i < v.size(); ++i)
+					r(i) = boost::multiprecision::arg(v(i));
+				return r;
+			}, (arg("val")), "the arguments (angles from 0) of an array of complex numbers, as an array of real_mp.  beware the branch cut.");
 
 			// def("square",&square);
 			// def("cube",&cube);
@@ -478,9 +506,14 @@ namespace bertini{
 			eigenpy::registerNewType<T>();
 			eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
 			eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
-			// guarded loops (real type — orderings included); eigenpy's registerCommonUfunc
-			// loops read input slots unguarded and crash on never-written np.zeros/np.empty slots.
-			eigenpy::registerGuardedUfunct<T, true>();
+			eigenpy::HardenCompare<T>();   // element compare slot: np.sort/argsort/searchsorted
+			eigenpy::HardenArgMinMax<T>(); // argmax/argmin slots
+
+			// casts must be registered BEFORE the ufunc loops: registering the
+			// mixed mp-vs-double ordering loops makes numpy query the mp<->double
+			// casts, and a cast first registered after it has been queried is
+			// ignored (numpy RuntimeWarning "registered/modified ... after the
+			// cast had been used").
 
 			// you can convert from integer types with no fear
 			eigenpy::registerCast<long,T>(true);
@@ -497,6 +530,13 @@ namespace bertini{
 			// both directions are scary.
 			eigenpy::registerCast<T,double>(false);
 			eigenpy::registerCast<double,T>(false);
+			// explicit down-conversion arr.astype(complex) — unsafe, you consciously truncate
+			eigenpy::registerCast<T,std::complex<double>>(false);
+
+			// guarded loops (real type — orderings included, plus the mp-vs-double
+			// tolerance orderings); eigenpy's registerCommonUfunc loops read input
+			// slots unguarded and crash on never-written np.zeros/np.empty slots.
+			eigenpy::registerGuardedUfunct<T, true>();
 
 
 			IMPLICITLY_CONVERTIBLE(int,T);
@@ -573,8 +613,8 @@ namespace bertini{
 			eigenpy::registerNewType<T>();
 			eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
 			eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
-			eigenpy::registerUfunct_without_comparitors<T>();
 
+			// casts before ufunc loops — see the note in ExposeFloat.
 
 			// you can safely convert from integer types to Complex's, there's no loss possible
 			eigenpy::registerCast<long,T>(true);
@@ -590,9 +630,13 @@ namespace bertini{
 			// these conversions are unsafe.  you can, but you probably shouldn't
 			eigenpy::registerCast<T,double>(false);
 			eigenpy::registerCast<double,T>(false);
+			// explicit down-conversion arr.astype(complex) — unsafe, you consciously truncate
+			eigenpy::registerCast<T,std::complex<double>>(false);
 
 			// it's ok to convert from variable precision Float to Complex, that's ok!
 			eigenpy::registerCast<real_mp,T>(true);
+
+			eigenpy::registerUfunct_without_comparitors<T>();
 
 			IMPLICITLY_CONVERTIBLE(int,T);
 			IMPLICITLY_CONVERTIBLE(long,T);

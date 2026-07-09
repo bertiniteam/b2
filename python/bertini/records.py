@@ -144,6 +144,32 @@ class Solution(_np.ndarray):
             result.annotations = {}
         return result
 
+    # numpy's ndarray .real/.imag are hardwired to its built-in complex types: on a
+    # multiprecision-complex array the base attributes return silently WRONG values
+    # (.real gives the complex values, .imag gives zeros), with no hook for user
+    # dtypes.  A python subclass property CAN shadow the C-level attribute, so
+    # solution points -- the mp-complex arrays users actually hold -- are correct.
+    # Plain ndarrays are covered by the guarded np.real/np.imag/np.angle (see
+    # bertini._numpy_guard) and by bertini.real/imag.
+
+    @property
+    def real(self):
+        """The real parts -- correct also for the multiprecision complex dtype."""
+        from bertini.multiprec import complex_mp
+        if self.dtype == _np.dtype(complex_mp):
+            from bertini import _numpy_helpers as _nh
+            return _nh.real(_np.asarray(self))
+        return _np.ndarray.real.__get__(self)
+
+    @property
+    def imag(self):
+        """The imaginary parts -- correct also for the multiprecision complex dtype."""
+        from bertini.multiprec import complex_mp
+        if self.dtype == _np.dtype(complex_mp):
+            from bertini import _numpy_helpers as _nh
+            return _nh.imag(_np.asarray(self))
+        return _np.ndarray.imag.__get__(self)
+
 
 class SolveResult:
     """What ``solve`` returns: the solutions plus a claim ticket on the recorded run.

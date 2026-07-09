@@ -15,28 +15,43 @@
 #
 #  Copyright(C) Bertini2 Development Team
 
-"""Vectorized element-wise helpers for the multiprecision types (issues #298, #301).
+"""Vectorized helpers for the multiprecision types (issues #298, #301).
 
-NumPy's ``.real`` / ``np.abs`` / ``np.round`` / identity-seeded reductions are unreliable on the
-custom ``real_mp`` / ``complex_mp`` dtypes -- that boundary cannot be patched in the bindings (see
-``docs/source/known_gotchas.rst``).  These helpers do the elementwise work themselves, over a scalar,
-a list, or a numpy array, and return **mp-native** results (a numpy object array for array input), so
-your values stay arbitrary-precision instead of collapsing to float64.
+The mp dtypes have full native numpy support (ufuncs, reductions, sorting -- see the
+"Multiprecision numbers and NumPy" docs page); these helpers are the everyday sugar on
+top.  They accept a scalar, a list, or a numpy array, and return **mp-native** results,
+so values stay arbitrary-precision instead of collapsing to float64.  On an mp-dtype
+ndarray they ride the native numpy loops; on lists/tuples and mixed input they work
+element-wise.
 
     bertini.real(pt)       # real parts, as real_mp
     bertini.abs(pt)        # magnitudes, as real_mp
     bertini.is_real(pt)    # is every coordinate real (imag within tol)?
+
+They also paper over the one true numpy limitation for user dtypes: the ndarray
+``.real`` / ``.imag`` attributes return silently wrong values on complex_mp arrays
+(numpy cannot know a user dtype is complex-like), so component access must go through
+these helpers or ``bertini.multiprec.real/imag/arg``.
 """
 
+import builtins as _builtins
 import numpy as _np
 from decimal import Decimal as _Decimal, ROUND_HALF_EVEN as _ROUND_HALF_EVEN
 
+import bertini.multiprec as _mp
 from bertini.multiprec import real_mp as _real_mp, complex_mp as _complex_mp
 from bertini.multiprec import abs as _mp_abs, conj as _mp_conj
+
+_MP_DTYPES = (_np.dtype(_real_mp), _np.dtype(_complex_mp))
 
 
 def _is_container(x):
     return isinstance(x, (list, tuple)) or (isinstance(x, _np.ndarray) and x.ndim > 0)
+
+
+def _is_mp_array(x):
+    """A numpy array of one of the mp dtypes -- eligible for the native ufunc loops."""
+    return isinstance(x, _np.ndarray) and x.ndim > 0 and x.dtype in _MP_DTYPES
 
 
 def _elementwise(fn, x):
@@ -74,7 +89,9 @@ def _imag_scalar(v):
 def _abs_scalar(v):
     if isinstance(v, (_complex_mp, _real_mp)):
         return _mp_abs(v)
-    return abs(v)
+    # explicitly the BUILTIN: this module's own `abs` shadows it at module scope,
+    # and the bare name recursed infinitely for plain python input
+    return _builtins.abs(v)
 
 
 def _conj_scalar(v):
@@ -96,29 +113,67 @@ def _round_scalar(v, decimals):
         return _complex_mp(_round_real_mp(v.real, decimals), _round_real_mp(v.imag, decimals))
     if isinstance(v, _real_mp):
         return _round_real_mp(v, decimals)
-    return round(v, decimals)
+    return _builtins.round(v, decimals)  # explicitly the builtin (module `round` shadows it)
 
 
 # --- the public helpers -----------------------------------------------------------------------
+# each takes the native numpy path when handed an mp-dtype array (the C++ loops --
+# fast, and the result is a proper mp-dtype array that keeps working with sort,
+# reductions, and friends), and falls back to element-wise work for lists and
+# mixed input.
 
 def real(x):
-    """Real part(s), as ``real_mp`` -- over a scalar / list / array (replaces numpy ``.real``)."""
+    """Real part(s), as ``real_mp`` -- over a scalar / list / array (replaces numpy ``.real``,
+    which returns silently wrong values on complex_mp arrays)."""
+    if _is_mp_array(x) and x.ndim == 1:
+        if x.dtype == _np.dtype(_complex_mp):
+            return _mp.real(x)
+        return x.copy()
     return _elementwise(_real_scalar, x)
 
 
 def imag(x):
-    """Imaginary part(s), as ``real_mp`` -- over a scalar / list / array (replaces numpy ``.imag``)."""
+    """Imaginary part(s), as ``real_mp`` -- over a scalar / list / array (replaces numpy ``.imag``,
+    which returns silently wrong values on complex_mp arrays)."""
+    if _is_mp_array(x) and x.ndim == 1:
+        if x.dtype == _np.dtype(_complex_mp):
+            return _mp.imag(x)
+        return _np.zeros(x.shape, dtype=_real_mp)
     return _elementwise(_imag_scalar, x)
 
 
 def abs(x):
-    """Magnitude(s), as ``real_mp`` -- over a scalar / list / array (replaces ``np.abs``)."""
+    """Magnitude(s), as ``real_mp`` -- over a scalar / list / array (same as ``np.abs``)."""
+    if _is_mp_array(x):
+        return _np.abs(x)
     return _elementwise(_abs_scalar, x)
 
 
 def conj(x):
-    """Complex conjugate(s) -- over a scalar / list / array."""
+    """Complex conjugate(s) -- over a scalar / list / array (same as ``np.conj``)."""
+    if _is_mp_array(x):
+        return _np.conj(x)
     return _elementwise(_conj_scalar, x)
+
+
+def _arg_scalar(v):
+    if isinstance(v, _complex_mp):
+        return _mp.arg(v)
+    if isinstance(v, _real_mp):
+        return _mp.arg(_complex_mp(v))
+    import cmath
+    return cmath.phase(complex(v))
+
+
+def arg(x):
+    """Argument(s) -- the angle from 0 -- as ``real_mp``, over a scalar / list / array
+    (the ``np.angle`` replacement; numpy's own cannot work on mp dtypes).  Beware the
+    branch cut."""
+    if _is_mp_array(x) and x.ndim == 1:
+        if x.dtype == _np.dtype(_real_mp):
+            x = x.astype(_np.dtype(_complex_mp))   # registered safe cast, exact
+        return _mp.arg(x)
+    return _elementwise(_arg_scalar, x)
 
 
 def round(x, decimals=0):
@@ -133,12 +188,19 @@ def is_real(point, tol=1e-10):
 
         just_real = [pt for pt in solutions if bertini.is_real(pt)]
     """
+    if _is_mp_array(point) and point.ndim == 1:
+        if point.dtype == _np.dtype(_real_mp):
+            return True
+        # mp-vs-float tolerance orderings are exact and native
+        return bool(_np.all(_np.abs(_mp.imag(point)) < tol))
     flat = _np.asarray(point, dtype=object).reshape(-1)
     return all(float(_abs_scalar(_imag_scalar(c))) < tol for c in flat)
 
 
 def sum(x):
-    """Sum of a 1-D collection, staying mp-native (sidesteps numpy's identity-reduction gotcha)."""
+    """Sum of a collection, staying mp-native."""
+    if _is_mp_array(x) and x.size > 0:
+        return _np.sum(x)
     flat = list(_np.asarray(x, dtype=object).reshape(-1))
     if not flat:
         return 0
@@ -150,6 +212,9 @@ def sum(x):
 
 def norm(x):
     """Euclidean (2-)norm of a 1-D collection, as ``real_mp`` -- ``sqrt(sum |x_i|^2)``."""
+    if _is_mp_array(x) and x.ndim == 1 and x.size > 0:
+        a = _np.abs(x)                     # magnitudes, as real_mp
+        return _mp.sqrt(_np.dot(a, a))     # dot slot + scalar sqrt, all mp
     flat = _np.asarray(x, dtype=object).reshape(-1)
     acc = None
     for v in flat:

@@ -122,9 +122,6 @@ _system_ops.install(system.System)
 from . import _slice_ops as _slice_ops
 _slice_ops.install(nag_algorithm.Slice)
 
-from . import operators                          # `from bertini.operators import *` -> just the math ops
-
-
 # --- sympy interop (#295) ----------------------------------------------------------------------
 # Make every function-tree node auto-convert to sympy (the `_sympy_` protocol), so sympy.sympify(node),
 # sympy.Matrix(array_of_nodes), and sympy.det(J) work directly.  sympy is an optional dependency; the
@@ -146,20 +143,38 @@ def __getattr__(name):
     raise AttributeError("module {!r} has no attribute {!r}".format(__name__, name))
 
 
-# --- numpy-compatible elementwise helpers for the mp types (#298, #301) ------------------------
-# Vectorized real/imag/abs/conj/round/sum/norm/is_real that stay mp-native (numpy's ufuncs/attrs on
-# the custom dtypes are unreliable -- see docs/source/known_gotchas.rst).  These are attributes of the
+# --- numpy-friendly elementwise helpers for the mp types (#298, #301) --------------------------
+# Vectorized real/imag/abs/conj/round/sum/norm/is_real that stay mp-native, riding the native numpy
+# ufunc loops on mp-dtype arrays and working element-wise on lists/mixed input (see the
+# "Multiprecision numbers and NumPy" docs page, docs/source/numpy.rst).  These are attributes of the
 # top-level module (bertini.abs, bertini.real, ...).  The builtin-shadowing names (abs, round, sum) are
 # deliberately kept OUT of __all__, so `from bertini import *` never clobbers the Python builtins.
 from . import _numpy_helpers as _numpy_helpers
+
+# make np.real/np.imag/np.angle raise (instead of silently returning wrong values)
+# on plain mp-complex arrays -- numpy has no user-dtype hook for component access,
+# and a crash is better than incorrect values.  See _numpy_guard for the story.
+from . import _numpy_guard as _numpy_guard
+_numpy_guard.install()
+
 real = _numpy_helpers.real
 imag = _numpy_helpers.imag
 conj = _numpy_helpers.conj
+arg = _numpy_helpers.arg
 norm = _numpy_helpers.norm
 is_real = _numpy_helpers.is_real
 abs = _numpy_helpers.abs        # noqa: A001  (bertini.abs; not exported via *)
 round = _numpy_helpers.round    # noqa: A001
 sum = _numpy_helpers.sum        # noqa: A001
+
+# --- the one-stop math vocabulary ---------------------------------------------------------------
+# `from bertini.operators import *` gives sin/cos/.../abs/arg/real/imag/... that work on symbolic
+# expressions AND numbers AND numpy containers alike, dispatching per argument.  The top-level
+# elementary functions are rebound to the polymorphic versions (a strict superset of the symbolic
+# ones bound above): bertini.sin(x) works for a Variable, a real_mp, or an array.
+from . import operators
+from .operators import (sin, cos, tan, asin, acos, atan, exp, log, sqrt,   # noqa: F811
+                        sinh, cosh, tanh, asinh, acosh, atanh)
 
 
 
@@ -170,7 +185,7 @@ __all__ = ['solve','save','load','annotate','solutions_of','provenance','recordi
            'jacobian','random_matrix','random_vector','random_real','random_complex','coefficient','coefficients',
            'complex_mp','real_mp','int_mp','rational_mp',
            'nag_algorithm','default_precision','is_distinct_up_to',
-           'real','imag','conj','norm','is_real',
+           'real','imag','conj','arg','norm','is_real',
            'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
            'operators',
            # everyday classes hoisted to the top level
@@ -181,6 +196,7 @@ __all__ = ['solve','save','load','annotate','solutions_of','provenance','recordi
            # symbolic constants
            'E','Pi','I',
            'sin','cos','tan','asin','acos','atan','exp','log','sqrt',
+           'sinh','cosh','tanh','asinh','acosh','atanh',
            'canonicalize','monomial_order']
 
 
