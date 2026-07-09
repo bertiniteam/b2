@@ -43,8 +43,9 @@ System encoding (ADR-0042):
   encoding changes without the bump.
 
 Deliberately excluded from encoding: `algorithm::RandomConfig` (the seed is its own slot
-in the ask identity, beside the config digest -- never inside it) and
-`ZeroDimConfig::num_threads` (thread count must not change what was computed).
+in the ask identity, beside the config digest -- never inside it) and the transient
+`ZeroDimConfig::num_threads` / `ZeroDimConfig::recall` (thread count and recall-vs-retrack
+change only whether/how the work runs, not what is computed).
 */
 
 #pragma once
@@ -104,7 +105,7 @@ std::string CanonicalEncoding(algorithm::RegenerationConfig const& c);
 /// \brief Canonical encoding of post-processing (classification) settings.
 std::string CanonicalEncoding(algorithm::PostProcessingConfig const& c);
 /// \brief Canonical encoding of top-level zero-dim solve settings.  Excludes
-/// num_threads (transient: thread count must not change identity).
+/// num_threads and recall (transient: they must not change identity).
 std::string CanonicalEncoding(algorithm::ZeroDimConfig const& c);
 /// \brief Canonical encoding of the algorithm (track-type) selection.
 std::string CanonicalEncoding(algorithm::MetaConfig const& c);

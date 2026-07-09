@@ -311,7 +311,8 @@ std::string CanonicalEncoding(algorithm::PostProcessingConfig const& c)
 
 std::string CanonicalEncoding(algorithm::ZeroDimConfig const& c)
 {
-	// num_threads deliberately excluded: transient (must not change what was computed).
+	// num_threads and recall deliberately excluded: transient (they change only whether/how the work
+	// runs, not what is computed), so they must not affect the config's identity.
 	std::ostringstream out;
 	out << "(cfg ZeroDim"
 	    << " initial_ambient_precision=" << c.initial_ambient_precision

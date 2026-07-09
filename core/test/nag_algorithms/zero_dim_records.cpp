@@ -194,6 +194,44 @@ BOOST_AUTO_TEST_CASE(recording_solve_then_full_recall)
 		BOOST_CHECK_SMALL((first[ii] - again[ii]).norm(), 1e-14);
 }
 
+// ZeroDimConfig::recall == false forces a fresh re-track of an identical ask that would otherwise be
+// recalled -- the escape hatch for path observers / benchmarking / re-verification.
+BOOST_AUTO_TEST_CASE(recall_false_forces_a_fresh_retrack)
+{
+	auto const dir = FreshDir("norecall");
+
+	// first solve records all four paths (nothing to recall yet)
+	SetGlobalSeed(42);
+	auto sys_a = TwoQuadrics();
+	ZD a(sys_a);
+	a.DefaultSetup();
+	a.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+	a.Solve();
+	BOOST_CHECK_EQUAL(a.NumPathsRecalled(), 0u);
+
+	// identical ask, recall = true (the default): recalls all four, tracks nothing
+	SetGlobalSeed(42);
+	auto sys_b = TwoQuadrics();
+	ZD b(sys_b);
+	b.DefaultSetup();
+	b.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+	b.Solve();
+	BOOST_CHECK_EQUAL(b.NumPathsRecalled(), 4u);
+
+	// identical ask, recall = false: re-tracks everything (recalls nothing) and still finds the roots
+	SetGlobalSeed(42);
+	auto sys_c = TwoQuadrics();
+	ZD c(sys_c);
+	c.DefaultSetup();
+	auto cfg = c.Get<algorithm::ZeroDimConfig>();
+	cfg.recall = false;
+	c.Set(cfg);
+	c.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+	c.Solve();
+	BOOST_CHECK_EQUAL(c.NumPathsRecalled(), 0u);
+	BOOST_CHECK_EQUAL(c.Report().num_finite_solutions, 4u);
+}
+
 BOOST_AUTO_TEST_CASE(partial_directory_resumes_computing_only_the_missing)
 {
 	auto const full_dir = FreshDir("resume_full");

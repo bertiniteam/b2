@@ -107,6 +107,12 @@ namespace bertini{
 				"(all available cores), 1 = serial (no thread pool), N = N threads. The "
 				"OMP_NUM_THREADS environment variable overrides this. Threading needs no MPI and "
 				"no free-threaded Python: the heavy tracking runs in C++ with the GIL released.")
+			.def_readwrite("recall", &ZeroDimConfig::recall,
+				"Whether an identical ask already in the records directory may be RECALLED instead of "
+				"re-tracked (default True). Set False to force a fresh track even when the paths are "
+				"recorded -- e.g. to run path observers, benchmark the solve, or re-verify a run; the "
+				"fresh track is still recorded. No effect when nothing is recorded. Transient: it does "
+				"not affect the run's identity/digest.")
 			;
 
 			// metadata types
