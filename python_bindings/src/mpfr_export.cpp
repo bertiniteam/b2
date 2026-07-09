@@ -355,7 +355,7 @@ namespace bertini{
 				+[](Vec<complex_mp> const& p, Vec<complex_mp> const& q, double tol) -> bool {
 					return bertini::IsDistinct(p, q, tol); },
 				(arg("p"), arg("q"), arg("tol")),
-				"True if points p and q differ by more than tol in the infinity norm (max_i |p_i - q_i|); "
+				"True if points p and q differ by more than tol in the infinity norm (max_i abs(p_i - q_i)); "
 				"False if they are the same to within tol.  The tolerance-based point-equality test "
 				"(issue #304).  Accepts complex_mp or real_mp vectors; different-length points are distinct.");
 			def("is_distinct_up_to",
