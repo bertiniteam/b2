@@ -293,6 +293,13 @@ endif()
 # from scratch, causing peak-RAM spikes during parallel builds and inflating log output.
 target_precompile_headers(_pybertini PRIVATE "include/python_common.hpp")
 
+# clang rejects a PCH whose input file's mtime changed, even with identical content --
+# which happens when the wheel build re-configures into a shared bld/.  See the note
+# beside bertini2_exe's PCH in core/CMakeLists.txt.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(_pybertini PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-Xclang -fno-pch-timestamp>")
+endif()
+
 cmake_print_variables(SKBUILD)
 if(${SKBUILD})
     # see https://stackoverflow.com/questions/1242904/finding-python-site-packages-directory-with-cmake

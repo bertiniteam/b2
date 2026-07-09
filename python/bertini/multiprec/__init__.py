@@ -33,12 +33,12 @@
 """
 Multiprecision types, and functions that operate on them.
 
-Numeric types exposed are 
+Numeric types exposed are
 
-* Complex (Boost.Multiprecision mpc)
-* Float (Boost.Multiprecision mpfr)
-* Int (Boost.Multiprecision mpz)
-* Rational (Boost.Multiprecision.mpq)
+* complex_mp (Boost.Multiprecision mpc)
+* real_mp (Boost.Multiprecision mpfr)
+* int_mp (Boost.Multiprecision mpz)
+* rational_mp (Boost.Multiprecision.mpq)
 
 This namespace also includes the mathematical operators, like `cos`, etc.
 """
@@ -48,7 +48,11 @@ from bertini._pybertini import multiprec as _pybmp
 from bertini._pybertini.multiprec import *
 
 # (no Vector helper: eigenpy makes the mp number types work as numpy dtypes directly, so a plain
-# numpy array -- e.g. np.zeros(n, dtype=bertini.complex_mp) -- is the vector.)
+# numpy array -- e.g. np.zeros(n, dtype=bertini.complex_mp) -- is the vector.  numpy ufuncs
+# (np.abs, np.exp, np.sum, ...) work on such arrays; see the "Multiprecision numbers and NumPy"
+# docs page.  For the real/imaginary parts or argument of a COMPLEX ARRAY use this module's
+# real()/imag()/arg() -- the ndarray .real/.imag attributes and np.angle return silently wrong
+# values for user-defined dtypes, a numpy limitation.)
 
 __all__ = dir(_pybmp)
 
