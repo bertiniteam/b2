@@ -118,7 +118,7 @@ conj    = _numeric_only('conj',    _nh.conj,    "Complex conjugate(s).")
 round   = _numeric_only('round',   _nh.round,   "Round to N DECIMAL digits, staying mp-native.") # noqa: A001
 sum     = _numeric_only('sum',     _nh.sum,     "Sum of a collection, staying mp-native.")       # noqa: A001
 norm    = _numeric_only('norm',    _nh.norm,    "Euclidean (2-)norm, as real_mp.")
-is_real = _numeric_only('is_real', _nh.is_real, "Is every coordinate real (|imag| < tol)?")
+is_real = _numeric_only('is_real', _nh.is_real, "Is every coordinate real (abs(imag) < tol)?")
 
 
 __all__ = [
