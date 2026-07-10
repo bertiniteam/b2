@@ -1,12 +1,18 @@
 {
-  "generated": "2026-07-09",
-  "stable": "3.1.0",
+  "generated": "2026-07-10",
+  "stable": "3.2.0",
   "versions": [
+    {
+      "version": "3.2.0",
+      "path": "v3.2.0/",
+      "released": "2026-07-10",
+      "stable": true
+    },
     {
       "version": "3.1.0",
       "path": "v3.1.0/",
       "released": "2026-07-09",
-      "stable": true
+      "stable": false
     },
     {
       "version": "3.0.0",

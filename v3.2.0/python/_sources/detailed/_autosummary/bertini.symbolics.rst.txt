@@ -1,0 +1,9 @@
+﻿bertini.symbolics
+=================
+.. automodule:: bertini.symbolics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

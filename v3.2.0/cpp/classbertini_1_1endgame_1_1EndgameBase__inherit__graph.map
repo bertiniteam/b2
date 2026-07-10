@@ -1,0 +1,9 @@
+<map id="bertini::endgame::EndgameBase&lt; FlavorT, PrecT &gt;" name="bertini::endgame::EndgameBase&lt; FlavorT, PrecT &gt;">
+<area shape="rect" id="Node000001" title="Base endgame class for all endgames offered in Bertini2." alt="" coords="240,77,443,117"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="5,5,192,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="206,58,266,74,264,79,205,63"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="69,84,128,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="142,94,240,94,240,99,142,99"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="25,133,172,159"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="175,128,242,114,243,119,176,133"/>
+</map>

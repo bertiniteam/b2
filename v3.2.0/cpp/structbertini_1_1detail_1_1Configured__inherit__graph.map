@@ -1,0 +1,23 @@
+<map id="bertini::detail::Configured&lt; Ts &gt;" name="bertini::detail::Configured&lt; Ts &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,199,192,239"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1endgame_1_1EndgameBase.html" title=" " alt="" coords="240,5,469,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="120,187,170,127,203,96,239,69,259,58,262,62,241,74,206,100,174,131,124,190"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1endgame_1_1EndgameBase.html" title=" " alt="" coords="249,84,460,139"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="150,191,239,149,271,136,273,141,241,154,152,195"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="268,163,441,203"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="205,202,268,193,268,198,206,207"/>
+<area shape="rect" id="Node000008" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="243,228,466,283"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="206,232,244,237,243,242,205,237"/>
+<area shape="rect" id="Node000009" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="243,307,466,361"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="146,244,241,293,269,304,267,309,239,298,144,249"/>
+<area shape="rect" id="Node000011" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="242,385,467,440"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="123,249,173,311,205,344,241,372,261,383,259,388,239,376,202,348,169,315,119,252"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1endgame_1_1CauchyEndgame.html" title="Class used to finish tracking paths during Homotopy Continuation." alt="" coords="533,13,723,53"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="483,30,533,30,533,35,483,35"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1endgame_1_1PowerSeriesEndgame.html" title="class used to finish tracking paths during Homotopy Continuation" alt="" coords="517,91,739,131"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="474,109,517,109,517,114,474,114"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1tracking_1_1AMPTracker.html" title="Functor&#45;like class for tracking paths on a system." alt="" coords="561,163,695,203"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="455,181,561,181,561,186,455,186"/>
+<area shape="rect" id="Node000010" href="$classbertini_1_1tracking_1_1FixedPrecisionTracker.html" title="CRTP base for trackers that work at a single fixed precision (double or fixed multiple)." alt="" coords="547,307,709,361"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="480,331,547,331,547,337,480,337"/>
+</map>
