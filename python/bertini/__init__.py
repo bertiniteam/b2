@@ -105,6 +105,8 @@ from .tracking import (AMPTracker, DoublePrecisionTracker, MultiplePrecisionTrac
 
 from ._calculus import jacobian
 from ._randomize import randomize
+# dense linear algebra for the mp types (solve / LU), backed by eigenpy's decompositions
+from . import linalg
 from .random import random_matrix
 from .random import random_vector, random_real, random_complex
 
@@ -183,7 +185,7 @@ from .operators import (sin, cos, tan, asin, acos, atan, exp, log, sqrt,   # noq
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
 __all__ = ['solve','save','load','annotate','solutions_of','provenance','recording','records_dir','runs','tracks','provenance_graph','plot_chain','Solution','SolveResult','records',
            'Variable','variables','gather_variables','VariableGroup','Named','system','System',
-           'jacobian','randomize','random_matrix','random_vector','random_real','random_complex','coefficient','coefficients',
+           'jacobian','randomize','linalg','random_matrix','random_vector','random_real','random_complex','coefficient','coefficients',
            'complex_mp','real_mp','int_mp','rational_mp',
            'nag_algorithm','default_precision','is_distinct_up_to',
            'real','imag','conj','arg','norm','is_real',

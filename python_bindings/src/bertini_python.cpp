@@ -55,6 +55,7 @@ namespace bertini { namespace python {
 void ExportContainers();
 void ExportDetails();
 void ExportMpfr();
+void ExportLinalg();
 void ExportRandom();
 void ExportAllSystems();
 void ExportParsers();
@@ -98,6 +99,10 @@ namespace bertini
 			ExportDetails();
 
 			ExportMpfr();
+
+			// after ExportMpfr: the mp types + their Eigen<->numpy converters are registered,
+			// which bertini.linalg's decomposition wrappers and solve() marshalling depend on.
+			ExportLinalg();
 
 			ExportRandom();
 
