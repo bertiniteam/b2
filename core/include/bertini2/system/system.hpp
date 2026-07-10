@@ -1243,6 +1243,24 @@ namespace bertini {
 		System Randomize() const;
 
 		/**
+		\brief Randomize down to a chosen number of functions, returning a NEW system.
+
+		Like the auto Randomize(), but instead of squaring to the affine dimension this produces
+		exactly `codimension` generic combinations of this system's natural functions -- the general
+		"randomize down to codimension c" used when studying lower-dimensional components (e.g. in
+		numerical irreducible decomposition), where `codimension` is the number of functions kept.
+		`codimension == 1` yields a single function.  The functions are sorted by descending degree
+		(on a copy -- this system is not mutated) so the `codimension` largest-degree functions land
+		on the identity block, keeping the total-degree path count optimal.
+
+		\param codimension The number of randomized functions to produce.  Must be positive and
+		strictly less than the number of natural functions (randomization must reduce the count).
+		\throws std::runtime_error if `codimension < 1`, or if `codimension` is greater than or equal
+		to the number of natural functions (cannot randomize to the same or more functions).
+		*/
+		System Randomize(int codimension) const;
+
+		/**
 		\brief Randomize using a caller-supplied (exact) coefficient matrix R, leaving the functions
 		in their current order.  R has one row per desired randomized function and one column per
 		natural function of this system.  Returns a NEW system; this one is not mutated.
@@ -1830,6 +1848,16 @@ namespace bertini {
 		/// copy, sorted or not) and a finished coefficient matrix, compute the per-row target
 		/// multidegrees, build the RandomizationBlock, and return a new system carrying it.
 		System AssembleRandomized(std::shared_ptr<System> operand, Mat<complex_mp> coefficients) const;
+
+		/// Build the `codimension` x N coefficient matrix for the auto Randomize paths, sorting the
+		/// operand's functions by descending degree (single affine group) so the `codimension`
+		/// largest-degree functions occupy the identity block, then filling the random tail; for
+		/// several variable groups a dense conjugate-orthonormal matrix is drawn instead.  Mutates
+		/// the operand's function order in the single-group case (the operand is a private copy).
+		/// \param operand The copied system whose natural functions are being combined.
+		/// \param codimension The number of rows (randomized functions) to produce.
+		/// \return The `codimension` x N randomization matrix.
+		Mat<complex_mp> BuildRandomizationMatrix(std::shared_ptr<System> operand, std::size_t codimension) const;
 
 		/**
 		\brief Get the sizes according to the FIFO ordering.

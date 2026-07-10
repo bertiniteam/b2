@@ -162,3 +162,58 @@ def test_float_coefficient_refused():
     original.add_function(2 * x * x - 1)
     with pytest.raises(TypeError):
         original.randomize([[1.5, 0, 0], [0, 1, 0]])   # Python float -> refused
+
+
+# ---- randomize to a chosen codimension -----------------------------------------------------
+
+def _overdetermined_3x2():
+    """The standard 3-function / 2-variable overdetermined system (degrees 2, 1, 2)."""
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = pb.System()
+    s.add_variable_group(pb.VariableGroup([x, y]))
+    s.add_function(x * x + y * y - 1)
+    s.add_function(x - y)
+    s.add_function(2 * x * x - 1)
+    return s
+
+
+def test_randomize_to_codimension_one():
+    original = _overdetermined_3x2()
+    randomized = original.randomize(codimension=1)
+    assert randomized.num_functions() == 1                  # reduced to a single function
+    assert list(randomized.degrees()) == [2]                 # the top-degree function after the sort
+    assert original.num_functions() == 3                     # original untouched
+
+
+def test_codimension_ge_num_functions_raises():
+    original = _overdetermined_3x2()                         # 3 natural functions
+    with pytest.raises(RuntimeError):
+        original.randomize(codimension=3)                    # == N: not a reduction
+    with pytest.raises(RuntimeError):
+        original.randomize(codimension=4)                    # >  N
+
+
+def test_codimension_non_positive_raises():
+    original = _overdetermined_3x2()
+    with pytest.raises(ValueError):
+        original.randomize(codimension=0)
+    with pytest.raises(ValueError):
+        original.randomize(codimension=-1)
+
+
+def test_codimension_and_matrix_together_raises():
+    original = _overdetermined_3x2()
+    with pytest.raises(ValueError):
+        original.randomize([[1, 0, 0], [0, 1, 0]], codimension=1)
+
+
+def test_free_function_randomize():
+    original = _overdetermined_3x2()
+
+    # the free function forwards to the method
+    assert pb.randomize(original, 1).num_functions() == 1
+    assert pb.randomize(original, codimension=1).num_functions() == 1
+
+    # omitting the codimension squares the system, matching the no-arg method
+    assert pb.randomize(original).num_functions() == 2
+    assert original.num_functions() == 3                     # original untouched

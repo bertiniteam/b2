@@ -206,6 +206,65 @@ BOOST_AUTO_TEST_CASE(underdetermined_throws)
 }
 
 
+// ---- randomize to a chosen codimension -----------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(randomize_to_codimension_one)
+{
+	DefaultPrecision(30);
+	System s = OverdeterminedSingleGroup();   // 3 functions, degrees (2,1,2)
+	BOOST_REQUIRE_EQUAL(s.NumNaturalFunctions(), 3u);
+
+	System r = s.Randomize(1);
+
+	BOOST_CHECK_EQUAL(r.NumNaturalFunctions(), 1u);   // reduced to a single function
+	auto d = r.Degrees();
+	BOOST_REQUIRE_EQUAL(d.size(), 1u);
+	BOOST_CHECK_EQUAL(d[0], 2);                        // leading (top-degree) function after the sort
+	// the original system is NOT mutated
+	BOOST_CHECK_EQUAL(s.NumNaturalFunctions(), 3u);
+}
+
+BOOST_AUTO_TEST_CASE(randomize_to_codimension_matches_square)
+{
+	DefaultPrecision(30);
+	System s = OverdeterminedSingleGroup();           // n = NumVariables - NumHomVariableGroups = 2
+	System r = s.Randomize(2);                          // explicit codimension == the affine dimension
+	BOOST_CHECK_EQUAL(r.NumNaturalFunctions(), 2u);    // same shape as the no-arg square Randomize()
+	BOOST_CHECK_EQUAL(s.Randomize().NumNaturalFunctions(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(randomize_codimension_zero_throws)
+{
+	DefaultPrecision(30);
+	System s = OverdeterminedSingleGroup();
+	BOOST_CHECK_THROW(s.Randomize(0), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(randomize_codimension_negative_throws)
+{
+	DefaultPrecision(30);
+	System s = OverdeterminedSingleGroup();
+	BOOST_CHECK_THROW(s.Randomize(-1), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(randomize_codimension_ge_num_functions_throws)
+{
+	DefaultPrecision(30);
+	System s = OverdeterminedSingleGroup();            // 3 natural functions
+	BOOST_CHECK_THROW(s.Randomize(3), std::runtime_error);   // == N: not a reduction
+	BOOST_CHECK_THROW(s.Randomize(4), std::runtime_error);   // >  N
+}
+
+BOOST_AUTO_TEST_CASE(codimension_row_matches_expansion)
+{
+	DefaultPrecision(40);
+	System r = OverdeterminedSingleGroup().Randomize(1);   // a single randomized function
+	AgreesWithExpansion(r);
+	r.Homogenize();                                        // exercises the h-power deficit
+	AgreesWithExpansion(r);
+}
+
+
 // ---- evaluation correctness via the expansion oracle ---------------------------------------
 
 BOOST_AUTO_TEST_CASE(affine_single_group_matches_expansion)
