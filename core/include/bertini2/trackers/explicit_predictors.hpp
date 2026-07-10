@@ -979,72 +979,76 @@ namespace bertini{
 				
 				
 				
-				// static const variables that store the Butcher table in mpq_rational form
+				// The Butcher tables in exact mpq_rational form.  Defined inline in-header
+				// (C++17 inline variables) so they need no out-of-line definition -- this is
+				// what lets the Windows link drop the /WHOLEARCHIVE workaround (issue #287).
+				// Each XxxPtr_ array is declared before its matrix, so the matrix initializer
+				// (which reads the array) is sequenced after it within any using TU.
 				// Euler
-				static const mpq_rational aEulerPtr_[];
-				static const Eigen::Matrix<mpq_rational,1,1> aEuler_;
-				static const mpq_rational bEulerPtr_[];
-				static const Eigen::Matrix<mpq_rational,1,1> bEuler_;
-				static const mpq_rational cEulerPtr_[];
-				static const Eigen::Matrix<mpq_rational,1,1> cEuler_;
+				inline static const mpq_rational aEulerPtr_[] = {mpq_rational(0,1)};
+				inline static const Eigen::Matrix<mpq_rational,1,1> aEuler_ = Eigen::Matrix<mpq_rational,1,1>(aEulerPtr_);
+				inline static const mpq_rational bEulerPtr_[] = {mpq_rational(1,1)};
+				inline static const Eigen::Matrix<mpq_rational,1,1> bEuler_ = Eigen::Matrix<mpq_rational,1,1>(bEulerPtr_);
+				inline static const mpq_rational cEulerPtr_[] = {mpq_rational(0,1)};
+				inline static const Eigen::Matrix<mpq_rational,1,1> cEuler_ = Eigen::Matrix<mpq_rational,1,1>(cEulerPtr_);
 
 				// Heun-Euler
-				static const mpq_rational aHeunEulerPtr_[];
-				static const Eigen::Matrix<mpq_rational,2,2> aHeunEuler_;
-				static const mpq_rational bHeunEulerPtr_[];
-				static const Eigen::Matrix<mpq_rational,2,1> bHeunEuler_;
-				static const mpq_rational b_minus_bstarHeunEulerPtr_[];
-				static const Eigen::Matrix<mpq_rational,2,1> b_minus_bstarHeunEuler_;
-				static const mpq_rational cHeunEulerPtr_[];
-				static const Eigen::Matrix<mpq_rational,2,1> cHeunEuler_;
+				inline static const mpq_rational aHeunEulerPtr_[] = {mpq_rational(0,1), mpq_rational(1,1), mpq_rational(0,1), mpq_rational(0,1)};
+				inline static const Eigen::Matrix<mpq_rational,2,2> aHeunEuler_ = Eigen::Matrix<mpq_rational,2,2>(aHeunEulerPtr_);
+				inline static const mpq_rational bHeunEulerPtr_[] = {mpq_rational(1,2), mpq_rational(1,2)};
+				inline static const Eigen::Matrix<mpq_rational,2,1> bHeunEuler_ = Eigen::Matrix<mpq_rational,2,1>(bHeunEulerPtr_);
+				inline static const mpq_rational b_minus_bstarHeunEulerPtr_[] = {mpq_rational(-1,2), mpq_rational(1,2)};
+				inline static const Eigen::Matrix<mpq_rational,2,1> b_minus_bstarHeunEuler_ = Eigen::Matrix<mpq_rational,2,1>(b_minus_bstarHeunEulerPtr_);
+				inline static const mpq_rational cHeunEulerPtr_[] = {mpq_rational(0,1), mpq_rational(1,1)};
+				inline static const Eigen::Matrix<mpq_rational,2,1> cHeunEuler_ = Eigen::Matrix<mpq_rational,2,1>(cHeunEulerPtr_);
 
 				// RK4
-				static const mpq_rational aRK4Ptr_[];
-				static const Eigen::Matrix<mpq_rational,4,4> aRK4_;
-				static const mpq_rational bRK4Ptr_[];
-				static const Eigen::Matrix<mpq_rational,4,1> bRK4_;
-				static const mpq_rational cRK4Ptr_[];
-				static const Eigen::Matrix<mpq_rational,4,1> cRK4_;
+				inline static const mpq_rational aRK4Ptr_[] = {mpq_rational(0,1), mpq_rational(1,2), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1,2), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+				inline static const Eigen::Matrix<mpq_rational,4,4> aRK4_ = Eigen::Matrix<mpq_rational,4,4>(aRK4Ptr_);
+				inline static const mpq_rational bRK4Ptr_[] = {mpq_rational(1,6), mpq_rational(1,3), mpq_rational(1,3),mpq_rational(1,6)};
+				inline static const Eigen::Matrix<mpq_rational,4,1> bRK4_ = Eigen::Matrix<mpq_rational,4,1>(bRK4Ptr_);
+				inline static const mpq_rational cRK4Ptr_[] = {mpq_rational(0,1), mpq_rational(1,2), mpq_rational(1,2),mpq_rational(1,1)};
+				inline static const Eigen::Matrix<mpq_rational,4,1> cRK4_ = Eigen::Matrix<mpq_rational,4,1>(cRK4Ptr_);
 
 				// RKF45
-				static const mpq_rational aRKF45Ptr_[];
-				static const Eigen::Matrix<mpq_rational,6,6> aRKF45_;
-				static const mpq_rational bRKF45Ptr_[];
-				static const Eigen::Matrix<mpq_rational,6,1> bRKF45_;
-				static const mpq_rational b_minus_bstarRKF45Ptr_[];
-				static const Eigen::Matrix<mpq_rational,6,1> b_minus_bstarRKF45_;
-				static const mpq_rational cRKF45Ptr_[];
-				static const Eigen::Matrix<mpq_rational,6,1> cRKF45_;
+				inline static const mpq_rational aRKF45Ptr_[] = {mpq_rational(0,1), mpq_rational(1,4),mpq_rational(3,32), mpq_rational(1932,2197),mpq_rational(439,216),mpq_rational(-8,27), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(9,32), mpq_rational(-7200,2197),mpq_rational(-8,1),mpq_rational(2,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(7296,2197),mpq_rational(3680,513),mpq_rational(-3544,2565), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(-845,4104),mpq_rational(1859,4104), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-11,40), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+				inline static const Eigen::Matrix<mpq_rational,6,6> aRKF45_ = Eigen::Matrix<mpq_rational,6,6>(aRKF45Ptr_);
+				inline static const mpq_rational bRKF45Ptr_[] = {mpq_rational(16,135), mpq_rational(0,1), mpq_rational(6656,12825), mpq_rational(28561,56430),mpq_rational(-9,50),mpq_rational(2,55)};
+				inline static const Eigen::Matrix<mpq_rational,6,1> bRKF45_ = Eigen::Matrix<mpq_rational,6,1>(bRKF45Ptr_);
+				inline static const mpq_rational b_minus_bstarRKF45Ptr_[] = {mpq_rational(1,360), mpq_rational(0,1), mpq_rational(-128,4275), mpq_rational(-2197,75240),mpq_rational(1,50),mpq_rational(2,55)};
+				inline static const Eigen::Matrix<mpq_rational,6,1> b_minus_bstarRKF45_ = Eigen::Matrix<mpq_rational,6,1>(b_minus_bstarRKF45Ptr_);
+				inline static const mpq_rational cRKF45Ptr_[] = {mpq_rational(0,1), mpq_rational(1,4), mpq_rational(3,8), mpq_rational(12,13),mpq_rational(1,1),mpq_rational(1,2)};
+				inline static const Eigen::Matrix<mpq_rational,6,1> cRKF45_ = Eigen::Matrix<mpq_rational,6,1>(cRKF45Ptr_);
 				
 				// RK Cash-Karp45
-				static const mpq_rational aRKCK45Ptr_[];
-				static const Eigen::Matrix<mpq_rational,6,6> aRKCK45_;
-				static const mpq_rational bRKCK45Ptr_[];
-				static const Eigen::Matrix<mpq_rational,6,1> bRKCK45_;
-				static const mpq_rational b_minus_bstarRKCK45Ptr_[];
-				static const Eigen::Matrix<mpq_rational,6,1> b_minus_bstarRKCK45_;
-				static const mpq_rational cRKCK45Ptr_[];
-				static const Eigen::Matrix<mpq_rational,6,1> cRKCK45_;
+				inline static const mpq_rational aRKCK45Ptr_[] = {mpq_rational(0,1), mpq_rational(1,5),mpq_rational(3,40), mpq_rational(3,10),mpq_rational(-11,54),mpq_rational(1631,55296), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(9,40), mpq_rational(-9,10),mpq_rational(5,2),mpq_rational(175,512), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(6,5),mpq_rational(-70,27),mpq_rational(575,13824), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(35,27),mpq_rational(44275,110592), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(253,4096), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+				inline static const Eigen::Matrix<mpq_rational,6,6> aRKCK45_ = Eigen::Matrix<mpq_rational,6,6>(aRKCK45Ptr_);
+				inline static const mpq_rational bRKCK45Ptr_[] = {mpq_rational(37,378), mpq_rational(0,1), mpq_rational(250,621), mpq_rational(125,594),mpq_rational(0,1),mpq_rational(512,1771)};
+				inline static const Eigen::Matrix<mpq_rational,6,1> bRKCK45_ = Eigen::Matrix<mpq_rational,6,1>(bRKCK45Ptr_);
+				inline static const mpq_rational b_minus_bstarRKCK45Ptr_[] = {mpq_rational(-277,64512), mpq_rational(0,1), mpq_rational(6925,370944), mpq_rational(-6925,202752),mpq_rational(-277,14336),mpq_rational(277,7084)};
+				inline static const Eigen::Matrix<mpq_rational,6,1> b_minus_bstarRKCK45_ = Eigen::Matrix<mpq_rational,6,1>(b_minus_bstarRKCK45Ptr_);
+				inline static const mpq_rational cRKCK45Ptr_[] = {mpq_rational(0,1), mpq_rational(1,5), mpq_rational(3,10), mpq_rational(3,5),mpq_rational(1,1),mpq_rational(7,8)};
+				inline static const Eigen::Matrix<mpq_rational,6,1> cRKCK45_ = Eigen::Matrix<mpq_rational,6,1>(cRKCK45Ptr_);
 
 				// RK Dormand-Prince 56
-				static const mpq_rational aRKDP56Ptr_[];
-				static const Eigen::Matrix<mpq_rational,8,8> aRKDP56_;
-				static const mpq_rational bRKDP56Ptr_[];
-				static const Eigen::Matrix<mpq_rational,8,1> bRKDP56_;
-				static const mpq_rational b_minus_bstarRKDP56Ptr_[];
-				static const Eigen::Matrix<mpq_rational,8,1> b_minus_bstarRKDP56_;
-				static const mpq_rational cRKDP56Ptr_[];
-				static const Eigen::Matrix<mpq_rational,8,1> cRKDP56_;
+				inline static const mpq_rational aRKDP56Ptr_[] = {mpq_rational(0,1), mpq_rational(1,10),mpq_rational(-2,81), mpq_rational(615,1372),mpq_rational(3243,5500),mpq_rational(-26492,37125),mpq_rational(5561,2376),mpq_rational(465467,266112), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(20,81), mpq_rational(-270,343),mpq_rational(-54,55),mpq_rational(72,55),mpq_rational(-35,11),mpq_rational(-2945,1232), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1053,1372),mpq_rational(50949,71500),mpq_rational(2808,23375),mpq_rational(-24117,31603),mpq_rational(-5610201,14158144), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(4998,17875),mpq_rational(-24206,37125),mpq_rational(899983,200772),mpq_rational(10513573,3212352), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(338,459),mpq_rational(-5225,1836),mpq_rational(-424325,205632), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(3925,4056),mpq_rational(376225,454272), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+				inline static const Eigen::Matrix<mpq_rational,8,8> aRKDP56_ = Eigen::Matrix<mpq_rational,8,8>(aRKDP56Ptr_);
+				inline static const mpq_rational bRKDP56Ptr_[] = {mpq_rational(821,10800), mpq_rational(0,1), mpq_rational(19683,71825), mpq_rational(175273,912600),mpq_rational(395,3672),mpq_rational(785,2704),mpq_rational(3,50),mpq_rational(0,1)};
+				inline static const Eigen::Matrix<mpq_rational,8,1> bRKDP56_ = Eigen::Matrix<mpq_rational,8,1>(bRKDP56Ptr_);
+				inline static const mpq_rational b_minus_bstarRKDP56Ptr_[] = {mpq_rational(13,2400), mpq_rational(0,1), mpq_rational(-19683,618800), mpq_rational(2401,31200),mpq_rational(-65,816),mpq_rational(15,416),mpq_rational(521,5600),mpq_rational(-1,10)};
+				inline static const Eigen::Matrix<mpq_rational,8,1> b_minus_bstarRKDP56_ = Eigen::Matrix<mpq_rational,8,1>(b_minus_bstarRKDP56Ptr_);
+				inline static const mpq_rational cRKDP56Ptr_[] = {mpq_rational(0,1), mpq_rational(1,10), mpq_rational(2,9), mpq_rational(3,7),mpq_rational(3,5),mpq_rational(4,5),mpq_rational(1,1),mpq_rational(1,1)};
+				inline static const Eigen::Matrix<mpq_rational,8,1> cRKDP56_ = Eigen::Matrix<mpq_rational,8,1>(cRKDP56Ptr_);
 
 				// RK Verner 67
-				static const mpq_rational aRKV67Ptr_[];
-				static const Eigen::Matrix<mpq_rational,10,10> aRKV67_;
-				static const mpq_rational bRKV67Ptr_[];
-				static const Eigen::Matrix<mpq_rational,10,1> bRKV67_;
-				static const mpq_rational b_minus_bstarRKV67Ptr_[];
-				static const Eigen::Matrix<mpq_rational,10,1> b_minus_bstarRKV67_;
-				static const mpq_rational cRKV67Ptr_[];
-				static const Eigen::Matrix<mpq_rational,10,1> cRKV67_;
+				inline static const mpq_rational aRKV67Ptr_[] = {mpq_rational(0,1), mpq_rational(1,12),mpq_rational(0,1), mpq_rational(1,16),mpq_rational(21,16),mpq_rational(1344688,250563),mpq_rational(-559,384),mpq_rational(-625,224),mpq_rational(-12253,99144),mpq_rational(30517,2512), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1,6), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(3,16),mpq_rational(-81,16),mpq_rational(-1709184,83521),mpq_rational(6,1),mpq_rational(12,1),mpq_rational(16,27),mpq_rational(-7296,157), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(9,2),mpq_rational(1365632,83521),mpq_rational(-204,47),mpq_rational(-456,47),mpq_rational(16,459),mpq_rational(268728,7379), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-78208,250563),mpq_rational(14,39),mpq_rational(48,91),mpq_rational(29072,161109),mpq_rational(2472,2041), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-4913,78208),mpq_rational(14739,136864),mpq_rational(-2023,75816),mpq_rational(-3522621,10743824), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(6,7),mpq_rational(112,12393),mpq_rational(132,157), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-12393,4396), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+				inline static const Eigen::Matrix<mpq_rational,10,10> aRKV67_ = Eigen::Matrix<mpq_rational,10,10>(aRKV67Ptr_);
+				inline static const mpq_rational bRKV67Ptr_[] = {mpq_rational(2881,40320), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1216,2961),mpq_rational(-2624,4095),mpq_rational(24137569,57482880),mpq_rational(-4,21),mpq_rational(0,1),mpq_rational(4131,3920),mpq_rational(-157,1260)};
+				inline static const Eigen::Matrix<mpq_rational,10,1> bRKV67_ = Eigen::Matrix<mpq_rational,10,1>(bRKV67Ptr_);
+				inline static const mpq_rational b_minus_bstarRKV67Ptr_[] = {mpq_rational(-17,2688), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(272,4935),mpq_rational(-272,273),mpq_rational(24137569,57482880),mpq_rational(-34,105),mpq_rational(-7,90),mpq_rational(4131,3920),mpq_rational(-157,1260)};
+				inline static const Eigen::Matrix<mpq_rational,10,1> b_minus_bstarRKV67_ = Eigen::Matrix<mpq_rational,10,1>(b_minus_bstarRKV67Ptr_);
+				inline static const mpq_rational cRKV67Ptr_[] = {mpq_rational(0,1), mpq_rational(1,12), mpq_rational(1,6), mpq_rational(1,4),mpq_rational(3,4),mpq_rational(16,17),mpq_rational(1,2),mpq_rational(1,1),mpq_rational(2,3),mpq_rational(1,1)};
+				inline static const Eigen::Matrix<mpq_rational,10,1> cRKV67_ = Eigen::Matrix<mpq_rational,10,1>(cRKV67Ptr_);
 
 
 				
