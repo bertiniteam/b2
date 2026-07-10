@@ -1275,36 +1275,31 @@ namespace bertini
 	}
 
 
-	System System::Randomize() const
+	Mat<complex_mp> System::BuildRandomizationMatrix(std::shared_ptr<System> operand, std::size_t codimension) const
 	{
-		const size_t G = NumVariableGroups();
-		const size_t N = NumNaturalFunctions();
-		const size_t n = NumVariables() - NumHomVariableGroups();
+		const size_t G = operand->NumVariableGroups();
+		const size_t N = operand->NumNaturalFunctions();
+		const size_t k = codimension;
 
-		if (N < n)
-			throw std::runtime_error("Randomize: system is underdetermined (fewer functions than variables), so it has no isolated solutions to capture.");
-
-		auto operand = std::make_shared<System>(*this);
-
-		Mat<complex_mp> R(static_cast<Eigen::Index>(n), static_cast<Eigen::Index>(N));
+		Mat<complex_mp> R(static_cast<Eigen::Index>(k), static_cast<Eigen::Index>(N));
 
 		if (G == 1)
 		{
 			// single affine group: sort the operand's functions by descending degree, then R = [I | C].
 			// The identity block makes g_i carry f_i with coefficient 1 (degree d_i); the random tail
 			// C folds the lower-degree functions in, padded by hom-var powers.  deg g_i = d_i, so the
-			// total-degree path count is the product of the n largest degrees -- optimal.
+			// total-degree path count is the product of the k largest degrees -- optimal.
 			//
 			// Only the C tail is random, and it is drawn conjugate-orthonormal (ADR-0041) -- matching
 			// Bertini 1, which builds every random complex matrix unitary.  C being dense leaves the
 			// degree-optimal structure intact: after the descending sort every tail function is lower
 			// degree than row i's leading f_i, so target_md[i] stays d_i regardless of C's nonzeros.
 			operand->ReorderFunctionsByDegreeDecreasing();
-			R.leftCols(static_cast<Eigen::Index>(n)).setIdentity();
-			if (N > n)
-				R.rightCols(static_cast<Eigen::Index>(N - n)) =
+			R.leftCols(static_cast<Eigen::Index>(k)).setIdentity();
+			if (N > k)
+				R.rightCols(static_cast<Eigen::Index>(N - k)) =
 					bertini::RandomConjugateOrthonormalMatrix<complex_mp>(
-						static_cast<unsigned>(n), static_cast<unsigned>(N - n));
+						static_cast<unsigned>(k), static_cast<unsigned>(N - k));
 		}
 		else
 		{
@@ -1312,9 +1307,38 @@ namespace bertini
 			// R with a common (componentwise-max) target multidegree -- correct, and optimal when the
 			// functions share a multidegree.  Drawn conjugate-orthonormal (ADR-0041), like b1.
 			R = bertini::RandomConjugateOrthonormalMatrix<complex_mp>(
-				static_cast<unsigned>(n), static_cast<unsigned>(N));
+				static_cast<unsigned>(k), static_cast<unsigned>(N));
 		}
 
+		return R;
+	}
+
+
+	System System::Randomize() const
+	{
+		const size_t N = NumNaturalFunctions();
+		const size_t n = NumVariables() - NumHomVariableGroups();
+
+		if (N < n)
+			throw std::runtime_error("Randomize: system is underdetermined (fewer functions than variables), so it has no isolated solutions to capture.");
+
+		auto operand = std::make_shared<System>(*this);
+		Mat<complex_mp> R = BuildRandomizationMatrix(operand, n);
+		return AssembleRandomized(operand, std::move(R));
+	}
+
+
+	System System::Randomize(int codimension) const
+	{
+		const size_t N = NumNaturalFunctions();
+
+		if (codimension < 1)
+			throw std::runtime_error("Randomize: codimension must be a positive number of functions.");
+		if (static_cast<size_t>(codimension) >= N)
+			throw std::runtime_error("Randomize: cannot randomize to the same or more functions than the system has; codimension must be less than the number of natural functions.");
+
+		auto operand = std::make_shared<System>(*this);
+		Mat<complex_mp> R = BuildRandomizationMatrix(operand, static_cast<size_t>(codimension));
 		return AssembleRandomized(operand, std::move(R));
 	}
 
