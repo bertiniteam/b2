@@ -67,6 +67,45 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.2.0] - 2026-07-10
+
+Multiprecision linear algebra and a more flexible randomization on the library
+side, plus a substantial CI / build-infrastructure pass that markedly shortens
+the release cycle.
+
+### Added
+
+- **`bertini.linalg`** (#317): multiprecision linear algebra — LU, QR, and SVD —
+  exposed by instantiating eigenpy's own decomposition visitors on the `real_mp`
+  / `complex_mp` matrix types (reuse, not re-export). One dtype-agnostic surface
+  that also handles `float64` / `complex128` via NumPy. See ADR-0054.
+- **`bertini.precision(A, n)`** (#317): set the working precision of an entire
+  vector or matrix in a single call.
+- **Randomization to any codimension** (#315): `System.randomize(codimension=…)`
+  and the `bertini.randomize(system, codimension)` free function generalize the
+  square case; all prior `randomize()` calls are unchanged. See the ADR-0025
+  amendment.
+
+### Changed
+
+- **Windows drops the `/WHOLEARCHIVE` link workaround** (#287): the
+  `ExplicitRKPredictor` Butcher tables are now C++17 inline members in the
+  header, so the Windows test executables link normally. See ADR-0052.
+- **Faster CI**: wheel builds now run concurrently with the C++ tests — they are
+  independent full compiles that shared no artifacts — and the Doxygen build runs
+  in parallel with the wheel in the docs workflow (#316, ADR-0053). The Windows
+  C++ test build now runs through ccache (#322).
+- A **wheel-free Python docstring lint** (`tools/py_doclint.py`) now runs beside
+  the C++ Doxygen lint as part of the cheap doc-lint gate (#316).
+
+### Fixed
+
+- Docstrings and tutorials: escaped absolute-value bars that reStructuredText
+  misread as substitution references, which had broken the documentation build
+  (#313).
+
+_______________________________________________________________________________
+
 ## [3.1.0] - 2026-07-09
 
 Quality-of-life and correctness release on top of 3.0.0: a thorough NumPy
