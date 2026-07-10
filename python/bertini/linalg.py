@@ -15,37 +15,33 @@
 #
 #  Copyright(C) Bertini2 Development Team
 
-"""Dense linear algebra for bertini's multiprecision types (``real_mp`` / ``complex_mp``).
+"""Dense linear algebra that works across all four scalar types, so you never type-if on dtype.
 
-numpy's ``np.linalg`` routes into LAPACK, which only knows ``float``/``complex128``, so it
-cannot solve or factor arrays of the multiprecision dtypes.  This module fills that gap **at full
-multiprecision**, backed by eigenpy's own Eigen decomposition wrappers instantiated on the mp
-scalars inside the native module -- the decompositions that a stock ``import eigenpy`` cannot do on
-these custom types (its compiled module only baked in the standard scalars).
+For the multiprecision types (``complex_mp`` / ``real_mp``) numpy's ``np.linalg`` is unavailable
+(LAPACK is float/complex128 only), so this module drives eigenpy's own Eigen decomposition wrappers
+instantiated on the mp scalars inside the native module -- the decompositions a stock
+``import eigenpy`` cannot do on these custom types.  For the native double types
+(``float64`` / ``complex128``) the same entry points transparently route to ``numpy.linalg`` (the
+right, fast tool there).  So one call site handles every dtype::
 
-Everyday entry points::
+    x  = bertini.linalg.solve(A, b)    # square system A x = b
+    x  = bertini.linalg.lstsq(A, b)    # least squares (A may be rectangular)
+    lu = bertini.linalg.lu(A)          # .solve / .determinant / .inverse
+    qr = bertini.linalg.qr(A)          # .solve / .rank
+    s  = bertini.linalg.svd(A)         # .singularValues / .matrixU / .matrixV / .solve / .rank
 
-    x  = bertini.linalg.solve(A, b)    # square system A x = b (partial-pivot LU)
-    x  = bertini.linalg.lstsq(A, b)    # least-squares (column-pivoting QR), possibly rectangular
-    lu = bertini.linalg.lu(A)          # reusable LU  (.solve/.determinant/.inverse)
-    qr = bertini.linalg.qr(A)          # reusable QR  (.solve/.rank/.matrixQR), rank-revealing
-    s  = bertini.linalg.svd(A)         # SVD          (.singularValues/.matrixU/.matrixV/.solve)
-
-Each factory dispatches on the array dtype (complex_mp / real_mp).  For a specific variant, the
-underlying eigenpy classes are exposed directly: ``PartialPivLU``, ``HouseholderQR``,
-``ColPivHouseholderQR``, ``JacobiSVD`` (and their ``...Real`` counterparts).
-
-For a start point that only needs to seed path tracking, casting to double and using
-``numpy.linalg`` is faster and enough; reach for this module when you need the answer in mp.
+The factories return objects sharing that common method surface for every dtype.  For mp arrays the
+object is the full eigenpy decomposition (extra methods: ``matrixLU``, ``permutationP``, ``rcond``,
+``matrixQR``, ...); for double arrays it is a thin numpy-backed adapter exposing the common methods.
 """
 
 import numpy as _np
 
 from bertini.multiprec import complex_mp as _complex_mp, real_mp as _real_mp
 
-# the native surface: solve() (overloaded for complex_mp / real_mp) and the decomposition classes.
+# the native mp surface: solve() (overloaded for complex_mp / real_mp) and the decomposition classes.
+from bertini._pybertini.linalg import solve as _native_solve
 from bertini._pybertini.linalg import (
-    solve,
     PartialPivLU, PartialPivLUReal,
     HouseholderQR, HouseholderQRReal,
     ColPivHouseholderQR, ColPivHouseholderQRReal,
@@ -59,57 +55,120 @@ _COMPUTE_FULL_U = 0x04
 _COMPUTE_FULL_V = 0x10
 
 
-def _dispatch(A, complex_cls, real_cls, what):
-    """Pick the complex_mp or real_mp class for array A, or raise for anything else."""
+def _classify(A):
+    """Return ('complex_mp' | 'real_mp' | 'double', array) for A, casting integers to double."""
     A = _np.asarray(A)
-    if A.dtype == _np.dtype(_complex_mp):
-        return complex_cls, A
-    if A.dtype == _np.dtype(_real_mp):
-        return real_cls, A
-    raise TypeError(
-        f"bertini.linalg.{what} needs a complex_mp or real_mp matrix, not dtype {A.dtype!r}; "
-        "for double-precision matrices use numpy.linalg")
+    dt = A.dtype
+    if dt == _np.dtype(_complex_mp):
+        return 'complex_mp', A
+    if dt == _np.dtype(_real_mp):
+        return 'real_mp', A
+    if _np.issubdtype(dt, _np.complexfloating) or _np.issubdtype(dt, _np.floating):
+        return 'double', A
+    if _np.issubdtype(dt, _np.integer):
+        return 'double', A.astype(float)
+    raise TypeError(f"bertini.linalg does not handle dtype {dt!r}")
 
 
-def lu(A):
-    """Partial-pivot LU factorization of a square multiprecision matrix.
+# --- numpy-backed adapters for the double types, mirroring the eigenpy decomposition API ---------
 
-    Returns the eigenpy LU object (``.solve(b)``, ``.determinant()``, ``.inverse()``,
-    ``.matrixLU()``, ``.permutationP()``), dispatched on dtype.
+class _DoubleLU:
+    """LU-decomposition adapter over numpy for float64 / complex128 (mirrors eigenpy PartialPivLU)."""
+    def __init__(self, A):
+        self._A = A
+    def solve(self, b):
+        return _np.linalg.solve(self._A, _np.asarray(b))
+    def determinant(self):
+        return _np.linalg.det(self._A)
+    def inverse(self):
+        return _np.linalg.inv(self._A)
+
+
+class _DoubleQR:
+    """Column-pivoting-QR adapter over numpy (mirrors eigenpy ColPivHouseholderQR)."""
+    def __init__(self, A):
+        self._A = A
+    def solve(self, b):
+        return _np.linalg.lstsq(self._A, _np.asarray(b), rcond=None)[0]
+    def rank(self):
+        return int(_np.linalg.matrix_rank(self._A))
+
+
+class _DoubleSVD:
+    """SVD adapter over numpy (mirrors eigenpy JacobiSVD: singularValues / matrixU / matrixV / solve).
+
+    numpy returns ``V**H`` (``Vh``); ``matrixV()`` returns ``V`` (``= Vh.conj().T``), matching the
+    eigenpy convention ``A = U S V**H``.
     """
-    cls, A = _dispatch(A, PartialPivLU, PartialPivLUReal, "lu")
-    return cls(A)
+    def __init__(self, A, full_matrices=False):
+        self._A = A
+        self._U, self._s, self._Vh = _np.linalg.svd(A, full_matrices=full_matrices)
+    def singularValues(self):
+        return self._s
+    def matrixU(self):
+        return self._U
+    def matrixV(self):
+        return self._Vh.conj().T
+    def solve(self, b):
+        return _np.linalg.lstsq(self._A, _np.asarray(b), rcond=None)[0]
+    def rank(self):
+        return int(_np.linalg.matrix_rank(self._A))
 
 
-def qr(A):
-    """Column-pivoting (rank-revealing) Householder QR of a multiprecision matrix.
+# --- the dtype-agnostic entry points ------------------------------------------------------------
 
-    Handles rectangular and rank-deficient matrices; exposes ``.solve(b)`` (least squares),
-    ``.rank()``, ``.matrixQR()``, ``.absDeterminant()``.  For the plain full-rank QR use the
-    ``HouseholderQR`` class directly.
-    """
-    cls, A = _dispatch(A, ColPivHouseholderQR, ColPivHouseholderQRReal, "qr")
-    return cls(A)
-
-
-def svd(A, full_matrices=False):
-    """Two-sided Jacobi SVD of a multiprecision matrix.
-
-    Computes the singular values and (by default, thin) U and V, so ``.singularValues()``,
-    ``.matrixU()``, ``.matrixV()`` and least-squares ``.solve(b)`` all work.  Pass
-    ``full_matrices=True`` for full U and V.
-    """
-    cls, A = _dispatch(A, JacobiSVD, JacobiSVDReal, "svd")
-    if full_matrices:
-        options = _COMPUTE_FULL_U | _COMPUTE_FULL_V
-    else:
-        options = _COMPUTE_THIN_U | _COMPUTE_THIN_V
-    return cls(A, options)
+def solve(A, b):
+    """Solve the square system ``A x = b`` (partial-pivot LU), for mp or double A/b."""
+    kind, A = _classify(A)
+    if kind == 'double':
+        return _np.linalg.solve(A, _np.asarray(b))
+    return _native_solve(A, _np.asarray(b))
 
 
 def lstsq(A, b):
-    """Least-squares solution of ``A x = b`` (A may be rectangular), via column-pivoting QR."""
-    return qr(A).solve(b)
+    """Least-squares solution of ``A x = b`` (A may be rectangular), for mp or double A/b."""
+    kind, A = _classify(A)
+    if kind == 'double':
+        return _np.linalg.lstsq(A, _np.asarray(b), rcond=None)[0]
+    return qr(A).solve(_np.asarray(b))
+
+
+def lu(A):
+    """Partial-pivot LU of a square matrix; returns an object with ``.solve/.determinant/.inverse``."""
+    kind, A = _classify(A)
+    if kind == 'complex_mp':
+        return PartialPivLU(A)
+    if kind == 'real_mp':
+        return PartialPivLUReal(A)
+    return _DoubleLU(A)
+
+
+def qr(A):
+    """Column-pivoting (rank-revealing) QR; returns an object with ``.solve`` (least squares) / ``.rank``.
+
+    For mp the object is eigenpy's ColPivHouseholderQR (also ``.matrixQR``, ``.absDeterminant``, ...);
+    for double it is a numpy adapter.  The plain full-rank QR is the ``HouseholderQR`` class.
+    """
+    kind, A = _classify(A)
+    if kind == 'complex_mp':
+        return ColPivHouseholderQR(A)
+    if kind == 'real_mp':
+        return ColPivHouseholderQRReal(A)
+    return _DoubleQR(A)
+
+
+def svd(A, full_matrices=False):
+    """SVD; returns an object with ``.singularValues/.matrixU/.matrixV/.solve/.rank``.
+
+    Computes (thin, by default) U and V so least-squares ``.solve`` works.  For mp the object is
+    eigenpy's JacobiSVD; for double it is a numpy adapter.  Pass ``full_matrices=True`` for full U/V.
+    """
+    kind, A = _classify(A)
+    if kind in ('complex_mp', 'real_mp'):
+        options = (_COMPUTE_FULL_U | _COMPUTE_FULL_V) if full_matrices else (_COMPUTE_THIN_U | _COMPUTE_THIN_V)
+        cls = JacobiSVD if kind == 'complex_mp' else JacobiSVDReal
+        return cls(A, options)
+    return _DoubleSVD(A, full_matrices)
 
 
 __all__ = ['solve', 'lstsq', 'lu', 'qr', 'svd',

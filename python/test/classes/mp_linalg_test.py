@@ -69,11 +69,6 @@ def test_lu_factory_dispatches_on_dtype():
     assert isinstance(pb.linalg.lu(Ar), pb.linalg.PartialPivLUReal)
 
 
-def test_lu_factory_rejects_double():
-    with pytest.raises(TypeError):
-        pb.linalg.lu(np.array([[1.0, 0.0], [0.0, 1.0]]))   # double array -> use numpy.linalg
-
-
 @pytest.mark.parametrize("precision", [30, 60, 100], indirect=True)
 def test_solve_is_genuinely_multiprecision(precision):
     # A = [[3,1],[1,3]], b = [1,0]  ->  x = [3/8, -1/8] exactly, at whatever precision is set.
@@ -149,13 +144,7 @@ def test_svd_real():
     assert abs(float(sv[0]) * float(sv[1]) - 5.0) < 1e-12
 
 
-# ---- factories dispatch on dtype and reject double -----------------------------------------
-
-@pytest.mark.parametrize("factory", ["lu", "qr", "svd"])
-def test_factories_reject_double(factory):
-    with pytest.raises(TypeError):
-        getattr(pb.linalg, factory)(np.eye(2))     # double -> use numpy.linalg
-
+# ---- factories dispatch on dtype (mp -> eigenpy classes) ------------------------------------
 
 def test_qr_svd_factories_dispatch_real_vs_complex():
     Ac, _ = _complex_system()
@@ -164,3 +153,59 @@ def test_qr_svd_factories_dispatch_real_vs_complex():
     assert isinstance(pb.linalg.qr(Ar), pb.linalg.ColPivHouseholderQRReal)
     assert isinstance(pb.linalg.svd(Ac), pb.linalg.JacobiSVD)
     assert isinstance(pb.linalg.svd(Ar), pb.linalg.JacobiSVDReal)
+
+
+# ---- dtype-agnostic: the same entry points also handle float64 / complex128 ----------------
+
+def _double_system(dtype):
+    A = np.array([[2, 1], [1, 3]], dtype=dtype)
+    b = np.array([3, 5], dtype=dtype)
+    return A, b
+
+
+@pytest.mark.parametrize("dtype", [float, complex])
+def test_solve_and_lstsq_on_double(dtype):
+    A, b = _double_system(dtype)
+    x = pb.linalg.solve(A, b)                       # routes to numpy for double
+    assert np.allclose(A @ x - b, 0)
+    assert np.allclose(pb.linalg.lstsq(A, b), x)
+
+
+@pytest.mark.parametrize("dtype", [float, complex])
+def test_lu_qr_svd_objects_on_double(dtype):
+    A, b = _double_system(dtype)
+    # lu: solve / determinant / inverse
+    lu = pb.linalg.lu(A)
+    assert np.allclose(A @ lu.solve(b) - b, 0)
+    assert abs(lu.determinant() - 5) < 1e-9
+    assert np.allclose(A @ lu.inverse(), np.eye(2))
+    # qr: solve / rank
+    qr = pb.linalg.qr(A)
+    assert qr.rank() == 2
+    assert np.allclose(A @ qr.solve(b) - b, 0)
+    # svd: singular values / U,V reconstruction / solve -- same method names as the mp object
+    s = pb.linalg.svd(A)
+    sv = s.singularValues()
+    assert abs(sv[0] * sv[1] - 5) < 1e-9
+    assert np.allclose(s.matrixU() @ np.diag(sv) @ s.matrixV().conj().T, A)
+    assert np.allclose(A @ s.solve(b) - b, 0)
+
+
+def test_double_result_matches_mp_result():
+    # the polymorphic entry point agrees, mp vs double, on the same system
+    Amp, bmp = _complex_system()
+    Ad = np.array([[2, 1], [1, 3]], dtype=complex)
+    bd = np.array([3, 5], dtype=complex)
+    xmp = [complex(v) for v in pb.linalg.solve(Amp, bmp)]
+    xd = list(pb.linalg.solve(Ad, bd))
+    assert np.allclose(xmp, xd)
+
+
+def test_no_type_iffing_one_call_site():
+    # one function, every dtype -- the whole point
+    def solve_anything(A, b):
+        return pb.linalg.solve(A, b)
+    Amp, bmp = _complex_system()
+    Ad, bd = _double_system(complex)
+    assert max(abs(complex(r)) for r in (Amp @ solve_anything(Amp, bmp) - bmp)) < 1e-18
+    assert np.allclose(Ad @ solve_anything(Ad, bd) - bd, 0)
