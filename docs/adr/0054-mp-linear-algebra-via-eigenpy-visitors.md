@@ -1,4 +1,4 @@
-# ADR-0052: Multiprecision linear algebra by instantiating eigenpy's own decomposition visitors
+# ADR-0054: Multiprecision linear algebra by instantiating eigenpy's own decomposition visitors
 
 **Status:** Accepted
 **Date:** 2026-07-10
