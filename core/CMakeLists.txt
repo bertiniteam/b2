@@ -990,29 +990,8 @@ if (ENABLE_UNIT_TESTING)
 
 endif (ENABLE_UNIT_TESTING)
 
-# lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj,
-# which holds all ExplicitRKPredictor Butcher-tableau statics) unless every object in
-# the archive is forced in. CMake 3.24+ LINK_LIBRARY:WHOLE_ARCHIVE places the archive
-# in the linker's input list (not just options) with the appropriate /WHOLEARCHIVE: flag.
-#
-# We strip the normal "bertini2" link entry first to avoid having the archive appear
-# twice. $<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2> re-adds it and propagates transitive
-# interface deps (gmp, mpfr, boost, MPI, etc.) automatically.
-# /FORCE:MULTIPLE: Boost.Serialization void_cast_register and oserializer templates are
-# instantiated in multiple TUs within bertini2 itself; /WHOLEARCHIVE exposes all copies
-# and /FORCE:MULTIPLE picks the first (same as weak/COMDAT on Linux/macOS).
-if(MSVC AND ENABLE_UNIT_TESTING)
-  foreach(_t test_classes test_blackbox test_classic test_endgames test_generating
-              test_nag_algorithms test_nag_datatypes test_pool test_settings
-              test_tracking_basics)
-    if(TARGET ${_t})
-      get_target_property(_ll ${_t} LINK_LIBRARIES)
-      if(_ll)
-        list(REMOVE_ITEM _ll bertini2)
-        set_target_properties(${_t} PROPERTIES LINK_LIBRARIES "${_ll}")
-      endif()
-      target_link_options(${_t} PRIVATE /FORCE:MULTIPLE)
-      target_link_libraries(${_t} "$<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2>")
-    endif()
-  endforeach()
-endif()
+# NOTE (issue #287): the Windows /WHOLEARCHIVE + /FORCE:MULTIPLE workaround that used to
+# live here is gone.  It existed only because the ExplicitRKPredictor Butcher tables were
+# data-only statics in explicit_predictors.obj that lld-link wouldn't pull; they are now
+# C++17 inline members in the header (COMDAT-emitted in each using TU), so the normal
+# archive pull + COMDAT folding suffices -- no whole-archive, hence no /FORCE:MULTIPLE.
