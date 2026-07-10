@@ -90,3 +90,77 @@ def test_singular_matrix_has_zero_determinant():
     A = np.array([[complex_mp('1'), complex_mp('2')],
                   [complex_mp('2'), complex_mp('4')]])
     assert complex(pb.linalg.lu(A).determinant()) == 0.0
+
+
+# ---- QR ------------------------------------------------------------------------------------
+
+def test_qr_solve_and_rank():
+    A, b = _complex_system()
+    qr = pb.linalg.qr(A)
+    assert qr.rank() == 2
+    x = qr.solve(b)
+    assert max(abs(complex(r)) for r in (A @ x - b)) < 1e-18
+
+
+def test_lstsq_overdetermined_exact_fit():
+    # A is 3x2 of rank 2; b lies in the column space, so the least-squares fit is exact: x = [1, 2].
+    A = np.array([[complex_mp('1'), complex_mp('0')],
+                  [complex_mp('0'), complex_mp('1')],
+                  [complex_mp('1'), complex_mp('1')]])
+    b = np.array([complex_mp('1'), complex_mp('2'), complex_mp('3')])
+    x = pb.linalg.lstsq(A, b)
+    assert [complex(v) for v in x] == [1.0, 2.0]
+    assert max(abs(complex(r)) for r in (A @ x - b)) < 1e-18
+
+
+def test_qr_rank_deficient():
+    A = np.array([[complex_mp('1'), complex_mp('2')],
+                  [complex_mp('2'), complex_mp('4')]])
+    assert pb.linalg.qr(A).rank() == 1
+
+
+# ---- SVD -----------------------------------------------------------------------------------
+
+def test_svd_singular_values_and_reconstruction():
+    A, _ = _complex_system()                       # [[2,1],[1,3]], det 5
+    s = pb.linalg.svd(A)
+    sv = s.singularValues()
+    assert sv.dtype == np.dtype(real_mp)           # singular values are real
+    # singular values are sorted descending and positive
+    assert float(sv[0]) >= float(sv[1]) > 0
+    # product of singular values == |det|
+    assert abs(float(sv[0]) * float(sv[1]) - 5.0) < 1e-12
+    # U S V* reconstructs A
+    U, V = _cmat(s.matrixU()), _cmat(s.matrixV())
+    S = np.diag([float(v) for v in sv])
+    assert np.allclose(U @ S @ V.conj().T, _cmat(A))
+
+
+def test_svd_least_squares_solve():
+    A, b = _complex_system()
+    x = pb.linalg.svd(A).solve(b)
+    assert max(abs(complex(r)) for r in (A @ x - b)) < 1e-18
+
+
+def test_svd_real():
+    A, _ = _real_system()
+    sv = pb.linalg.svd(A).singularValues()
+    assert sv.dtype == np.dtype(real_mp)
+    assert abs(float(sv[0]) * float(sv[1]) - 5.0) < 1e-12
+
+
+# ---- factories dispatch on dtype and reject double -----------------------------------------
+
+@pytest.mark.parametrize("factory", ["lu", "qr", "svd"])
+def test_factories_reject_double(factory):
+    with pytest.raises(TypeError):
+        getattr(pb.linalg, factory)(np.eye(2))     # double -> use numpy.linalg
+
+
+def test_qr_svd_factories_dispatch_real_vs_complex():
+    Ac, _ = _complex_system()
+    Ar, _ = _real_system()
+    assert isinstance(pb.linalg.qr(Ac), pb.linalg.ColPivHouseholderQR)
+    assert isinstance(pb.linalg.qr(Ar), pb.linalg.ColPivHouseholderQRReal)
+    assert isinstance(pb.linalg.svd(Ac), pb.linalg.JacobiSVD)
+    assert isinstance(pb.linalg.svd(Ar), pb.linalg.JacobiSVDReal)

@@ -20,13 +20,20 @@
 numpy's ``np.linalg`` routes into LAPACK, which only knows ``float``/``complex128``, so it
 cannot solve or factor arrays of the multiprecision dtypes.  This module fills that gap **at full
 multiprecision**, backed by eigenpy's own Eigen decomposition wrappers instantiated on the mp
-scalars inside the native module -- the LU that a stock ``import eigenpy`` cannot do on these
-custom types (its compiled module only baked in the standard scalars).
+scalars inside the native module -- the decompositions that a stock ``import eigenpy`` cannot do on
+these custom types (its compiled module only baked in the standard scalars).
 
 Everyday entry points::
 
-    x  = bertini.linalg.solve(A, b)   # solve the square system A x = b
-    lu = bertini.linalg.lu(A)         # a reusable LU factorization (.solve/.determinant/.inverse)
+    x  = bertini.linalg.solve(A, b)    # square system A x = b (partial-pivot LU)
+    x  = bertini.linalg.lstsq(A, b)    # least-squares (column-pivoting QR), possibly rectangular
+    lu = bertini.linalg.lu(A)          # reusable LU  (.solve/.determinant/.inverse)
+    qr = bertini.linalg.qr(A)          # reusable QR  (.solve/.rank/.matrixQR), rank-revealing
+    s  = bertini.linalg.svd(A)         # SVD          (.singularValues/.matrixU/.matrixV/.solve)
+
+Each factory dispatches on the array dtype (complex_mp / real_mp).  For a specific variant, the
+underlying eigenpy classes are exposed directly: ``PartialPivLU``, ``HouseholderQR``,
+``ColPivHouseholderQR``, ``JacobiSVD`` (and their ``...Real`` counterparts).
 
 For a start point that only needs to seed path tracking, casting to double and using
 ``numpy.linalg`` is faster and enough; reach for this module when you need the answer in mp.
@@ -36,26 +43,77 @@ import numpy as _np
 
 from bertini.multiprec import complex_mp as _complex_mp, real_mp as _real_mp
 
-# the native surface: solve() (overloaded for complex_mp / real_mp) and the LU classes.
-from bertini._pybertini.linalg import solve, PartialPivLU, PartialPivLUReal
+# the native surface: solve() (overloaded for complex_mp / real_mp) and the decomposition classes.
+from bertini._pybertini.linalg import (
+    solve,
+    PartialPivLU, PartialPivLUReal,
+    HouseholderQR, HouseholderQRReal,
+    ColPivHouseholderQR, ColPivHouseholderQRReal,
+    JacobiSVD, JacobiSVDReal,
+)
+
+# Eigen decomposition options (Eigen/src/Core/util/Constants.h), for JacobiSVD's U/V computation.
+_COMPUTE_THIN_U = 0x08
+_COMPUTE_THIN_V = 0x20
+_COMPUTE_FULL_U = 0x04
+_COMPUTE_FULL_V = 0x10
+
+
+def _dispatch(A, complex_cls, real_cls, what):
+    """Pick the complex_mp or real_mp class for array A, or raise for anything else."""
+    A = _np.asarray(A)
+    if A.dtype == _np.dtype(_complex_mp):
+        return complex_cls, A
+    if A.dtype == _np.dtype(_real_mp):
+        return real_cls, A
+    raise TypeError(
+        f"bertini.linalg.{what} needs a complex_mp or real_mp matrix, not dtype {A.dtype!r}; "
+        "for double-precision matrices use numpy.linalg")
 
 
 def lu(A):
     """Partial-pivot LU factorization of a square multiprecision matrix.
 
-    Dispatches on the array dtype and returns the matching eigenpy LU object (a
-    :class:`PartialPivLU` for ``complex_mp``, a :class:`PartialPivLUReal` for ``real_mp``).  The
-    result exposes ``solve(b)``, ``determinant()``, ``inverse()``, ``matrixLU()`` and
-    ``permutationP()``.
+    Returns the eigenpy LU object (``.solve(b)``, ``.determinant()``, ``.inverse()``,
+    ``.matrixLU()``, ``.permutationP()``), dispatched on dtype.
     """
-    A = _np.asarray(A)
-    if A.dtype == _np.dtype(_complex_mp):
-        return PartialPivLU(A)
-    if A.dtype == _np.dtype(_real_mp):
-        return PartialPivLUReal(A)
-    raise TypeError(
-        f"bertini.linalg.lu needs a complex_mp or real_mp matrix, not dtype {A.dtype!r}; "
-        "for double-precision matrices use numpy.linalg")
+    cls, A = _dispatch(A, PartialPivLU, PartialPivLUReal, "lu")
+    return cls(A)
 
 
-__all__ = ['solve', 'lu', 'PartialPivLU', 'PartialPivLUReal']
+def qr(A):
+    """Column-pivoting (rank-revealing) Householder QR of a multiprecision matrix.
+
+    Handles rectangular and rank-deficient matrices; exposes ``.solve(b)`` (least squares),
+    ``.rank()``, ``.matrixQR()``, ``.absDeterminant()``.  For the plain full-rank QR use the
+    ``HouseholderQR`` class directly.
+    """
+    cls, A = _dispatch(A, ColPivHouseholderQR, ColPivHouseholderQRReal, "qr")
+    return cls(A)
+
+
+def svd(A, full_matrices=False):
+    """Two-sided Jacobi SVD of a multiprecision matrix.
+
+    Computes the singular values and (by default, thin) U and V, so ``.singularValues()``,
+    ``.matrixU()``, ``.matrixV()`` and least-squares ``.solve(b)`` all work.  Pass
+    ``full_matrices=True`` for full U and V.
+    """
+    cls, A = _dispatch(A, JacobiSVD, JacobiSVDReal, "svd")
+    if full_matrices:
+        options = _COMPUTE_FULL_U | _COMPUTE_FULL_V
+    else:
+        options = _COMPUTE_THIN_U | _COMPUTE_THIN_V
+    return cls(A, options)
+
+
+def lstsq(A, b):
+    """Least-squares solution of ``A x = b`` (A may be rectangular), via column-pivoting QR."""
+    return qr(A).solve(b)
+
+
+__all__ = ['solve', 'lstsq', 'lu', 'qr', 'svd',
+           'PartialPivLU', 'PartialPivLUReal',
+           'HouseholderQR', 'HouseholderQRReal',
+           'ColPivHouseholderQR', 'ColPivHouseholderQRReal',
+           'JacobiSVD', 'JacobiSVDReal']

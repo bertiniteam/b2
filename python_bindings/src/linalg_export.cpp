@@ -45,6 +45,9 @@
 #include "bertini2/eigen_extensions.hpp"
 
 #include <eigenpy/decompositions/PartialPivLU.hpp>
+#include <eigenpy/decompositions/HouseholderQR.hpp>
+#include <eigenpy/decompositions/ColPivHouseholderQR.hpp>
+#include <eigenpy/decompositions/JacobiSVD.hpp>
 
 namespace bertini{
 	namespace python{
@@ -81,9 +84,21 @@ namespace bertini{
 				"instantiated on the mp scalars -- the LU that a stock `import eigenpy` cannot do "
 				"on these custom types.";
 
-			// eigenpy's own PartialPivLU visitor, instantiated on the mp matrix types.
+			// eigenpy's own decomposition visitors, instantiated on the mp matrix types.
+			// LU (square solve / determinant / inverse):
 			eigenpy::PartialPivLUSolverVisitor<Mat<complex_mp>>::expose("PartialPivLU");
 			eigenpy::PartialPivLUSolverVisitor<Mat<real_mp>>::expose("PartialPivLUReal");
+
+			// QR -- plain (fast, full-rank) and column-pivoting (rank-revealing, least-squares):
+			eigenpy::HouseholderQRSolverVisitor<Mat<complex_mp>>::expose("HouseholderQR");
+			eigenpy::HouseholderQRSolverVisitor<Mat<real_mp>>::expose("HouseholderQRReal");
+			eigenpy::ColPivHouseholderQRSolverVisitor<Mat<complex_mp>>::expose("ColPivHouseholderQR");
+			eigenpy::ColPivHouseholderQRSolverVisitor<Mat<real_mp>>::expose("ColPivHouseholderQRReal");
+
+			// SVD -- two-sided Jacobi (accurate; singular values, U/V, least-squares solve).
+			// The visitor is templated on the solver type (not the matrix type).
+			eigenpy::JacobiSVDVisitor<Eigen::JacobiSVD<Mat<complex_mp>>>::expose("JacobiSVD");
+			eigenpy::JacobiSVDVisitor<Eigen::JacobiSVD<Mat<real_mp>>>::expose("JacobiSVDReal");
 
 			// One-shot convenience: solve a square system A x = b at mp precision, partial-pivot LU.
 			def("solve",
