@@ -47,6 +47,23 @@ and (per ADR-0021) it fully defines its own rows.
 on an internal copy). The matrix is retrievable via `RandomizationMatrix()` (toward future
 `R · [f]` block stringification).
 
+### Codimension generalization (2026-07-10, PR #315)
+
+Squaring to `n` is the special case of a more general operation NID needs: **randomize down to a
+chosen number of functions.** `System::Randomize(int codimension)` produces exactly `codimension`
+generic combinations instead of `n`. The construction is unchanged — the descending-degree sort and
+`R = [I | C]` / dense-`R` logic are factored into a private
+`BuildRandomizationMatrix(operand, codim)` shared with the no-arg form, parameterized by the target
+row count rather than hard-coding `n`; so the `codimension` largest-degree functions land on the
+identity block and the reduced case keeps the optimal path count. Guard: `1 ≤ codimension < N` (a
+positive count, and strictly fewer than the natural-function count — randomization must *reduce*).
+The bound is `N` (function count), deliberately **not** `n` (variable count): randomizing to more
+functions than variables is permitted (any positive reduction), tightenable to `≤ n` in one line if
+NID wants it. The no-arg `Randomize()` is unchanged (squares to the affine dimension `n`, keeps its
+underdetermined `N < n` guard). Surfaced to Python as keyword-only `sys.randomize(codimension=…)`
+(all prior calls still valid) and the free function `bertini.randomize(system, codimension)`; covered
+by new `randomization_block_test.cpp` cases and `randomize_test.py`.
+
 ### Same homogenizing variables across the operand boundary
 
 The h-power factors must reference the *actual* homogenizing-variable nodes, not coincidentally
