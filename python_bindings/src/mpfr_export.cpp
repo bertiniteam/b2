@@ -315,13 +315,6 @@ namespace bertini{
 
 
 
-		template <typename T>
-		unsigned get_precision_vector(Eigen::Ref<Vec<T>> x)
-		{
-			return bertini::Precision(x);
-		}
-
-
 #define IMPLICITLY_CONVERTIBLE(T1,T2) \
   boost::python::implicitly_convertible<T1,T2>();
 
@@ -375,6 +368,33 @@ namespace bertini{
 					return bertini::IsDistinct(p, q, tol); },
 				(arg("p"), arg("q"), arg("tol")),
 				"True if real-double points p and q differ by more than tol in the infinity norm (issue #304).");
+
+			// -- bulk precision of whole vectors / matrices ------------------------------------
+			// getter: precision(A) -> the precision (in digits) of the container.
+			// setter: A = precision(A, digits) -> a NEW array with every entry re-cast to `digits`.
+			// A functional (returns-a-copy) form on purpose: eigenpy marshals mp arrays by copy, so
+			// an in-place setter would not write back to the caller's numpy buffer.  And remember --
+			// raising precision never adds correct digits the number did not already carry.
+			def("precision", +[](Vec<complex_mp> const& v){ return bertini::Precision(v); },
+				(arg("container")), "The precision, in digits, of a vector of complex_mp.");
+			def("precision", +[](Mat<complex_mp> const& v){ return bertini::Precision(v); },
+				(arg("container")), "The precision, in digits, of a matrix of complex_mp.");
+			def("precision", +[](Vec<real_mp> const& v){ return bertini::Precision(v); },
+				(arg("container")), "The precision, in digits, of a vector of real_mp.");
+			def("precision", +[](Mat<real_mp> const& v){ return bertini::Precision(v); },
+				(arg("container")), "The precision, in digits, of a matrix of real_mp.");
+			def("precision", +[](Vec<complex_mp> v, unsigned prec){ bertini::Precision(v, prec); return v; },
+				(arg("container"), arg("digits")),
+				"A copy of the complex_mp vector with every entry set to `digits` of precision.");
+			def("precision", +[](Mat<complex_mp> v, unsigned prec){ bertini::Precision(v, prec); return v; },
+				(arg("container"), arg("digits")),
+				"A copy of the complex_mp matrix with every entry set to `digits` of precision.");
+			def("precision", +[](Vec<real_mp> v, unsigned prec){ bertini::Precision(v, prec); return v; },
+				(arg("container"), arg("digits")),
+				"A copy of the real_mp vector with every entry set to `digits` of precision.");
+			def("precision", +[](Mat<real_mp> v, unsigned prec){ bertini::Precision(v, prec); return v; },
+				(arg("container"), arg("digits")),
+				"A copy of the real_mp matrix with every entry set to `digits` of precision.");
 		}
 
 
@@ -660,7 +680,8 @@ namespace bertini{
 			eigenpy::exposeType<T>();
 			eigenpy::exposeType<T, Eigen::RowMajor>();
 
-			boost::python::def("precision", &get_precision_vector<complex_mp>, "get the precision of a vector of complexes");
+			// the precision get/set free functions (vectors & matrices, complex & real) live in
+			// ExposeFreeNumFns, so they are registered once rather than per scalar type.
 
 			boost::python::def("default_align_bytes", &get_default_align);
 
