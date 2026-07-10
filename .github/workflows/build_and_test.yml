@@ -345,9 +345,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Write-Host "::endgroup::"
 
+  # The wheel build is an INDEPENDENT full compile (prebuilt deps image/tarball +
+  # cibuildwheel, ccache namespace ccache-wheels-*), sharing nothing with the C++
+  # test job (boost-base from source, ccache namespace ccache-cpp-*).  So it does
+  # NOT `needs` test_cpp_unix -- it runs CONCURRENTLY with the C++ tests behind the
+  # cheap doc_lint gate.  A C++-test failure still fails the run at the workflow
+  # level (and blocks publish); it just no longer serializes the wheel build behind
+  # ~7 min of tests.  set_matrix/set_versions are real inputs (matrix + dep versions).
   build_macos_ubuntu_wheels:
     name: ${{ matrix.os }} Python-${{ matrix.python-version }} wheels
-    needs: [set_matrix, test_cpp_unix, set_versions]
+    needs: [doc_lint, set_matrix, set_versions]
     if: ${{ !failure() && !cancelled() }}
     runs-on: ${{ matrix.os }}
     env:
@@ -531,9 +538,15 @@ jobs:
           path: ./wheelhouse/*.whl
           if-no-files-found: error
 
+  # Like the unix wheel build, this is an independent full compile that shares no
+  # artifacts with the Windows C++ test job -- so it does NOT `needs` test_cpp_windows
+  # and instead runs CONCURRENTLY with it behind the doc_lint gate.  That halves the
+  # Windows critical path (was ~22 min tests THEN ~22 min wheel build, serial).  This
+  # job hardcodes its own python matrix and reads no set_matrix/set_versions outputs,
+  # so doc_lint is its only dependency; the !failure() guard now keys on doc_lint.
   build_windows_wheels:
     name: Windows Python-${{ matrix.python-version }} wheels
-    needs: [set_matrix, test_cpp_windows]
+    needs: [doc_lint]
     if: ${{ inputs.minimal != true && !failure() && !cancelled() && (inputs.os == '' || inputs.os == 'all' || inputs.os == 'windows') }}
     runs-on: windows-latest
     env:
