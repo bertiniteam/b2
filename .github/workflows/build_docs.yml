@@ -42,14 +42,66 @@ jobs:
       minimal: true
       ref: ${{ inputs.ref }}
 
-  build_docs:
+  # The Doxygen C++ reference needs NO wheel, so it builds CONCURRENTLY with the
+  # wheel (the minimal `build_and_test` on dispatch, or the caller's build_and_test
+  # on workflow_call) instead of waiting behind it.  Its output is handed to
+  # python_docs as the `docs-cpp` artifact for final assembly.
+  cpp_docs:
+    name: Build C++ docs (Doxygen)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Compute build metadata
+        id: meta
+        run: |
+          SHORT=$(git rev-parse --short HEAD)
+          DATE=$(date -u +'%Y-%m-%d %H:%M UTC')
+          echo "short=$SHORT" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE"   >> "$GITHUB_OUTPUT"
+
+      - name: Install system dependencies (Doxygen)
+        run: |
+          sudo apt-get update
+          # texlive-binaries provides bibtex, which Doxygen needs to number and
+          # render the \cite references (CITE_BIB_FILES in the Doxyfile) into a
+          # bibliography in the published C++ docs.
+          sudo apt-get install -y doxygen graphviz texlive-binaries
+
+      - name: Fetch doxygen-awesome-css
+        run: |
+          curl -sSL https://github.com/jothepro/doxygen-awesome-css/archive/refs/tags/v2.3.4.tar.gz | tar -xz
+          mv doxygen-awesome-css-2.3.4 doxygen-awesome-css
+
+      - name: Build C++ docs (Doxygen)
+        env:
+          PROJECT_NUMBER: "${{ steps.meta.outputs.short }} (${{ steps.meta.outputs.date }})"
+        run: |
+          mkdir -p build/docs/cpp site
+          # Append PROJECT_NUMBER override via stdin; Doxygen reads stdin
+          # config when invoked with `-` and merges with the file.
+          (cat Doxyfile; echo "PROJECT_NUMBER = $PROJECT_NUMBER") | doxygen -
+          mv build/docs/cpp site/cpp
+
+      - name: Upload C++ docs artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: docs-cpp
+          path: site/cpp
+          if-no-files-found: error
+
+  python_docs:
     name: Build docs
-    needs: [build_and_test]
+    needs: [build_and_test, cpp_docs]
     # `build_and_test` is skipped when invoked via workflow_call; treat that
-    # as success so build_docs runs in both modes.
+    # as success so python_docs runs in both modes.  cpp_docs always runs, so it
+    # must genuinely succeed (its artifact is assembled into the final site).
     if: |
       always() &&
-      (needs.build_and_test.result == 'success' || needs.build_and_test.result == 'skipped')
+      (needs.build_and_test.result == 'success' || needs.build_and_test.result == 'skipped') &&
+      needs.cpp_docs.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write  # push the persistent docs-store branch (the durable versioned-docs store)
@@ -78,29 +130,6 @@ jobs:
           echo "date=$DATE"        >> "$GITHUB_OUTPUT"
           echo "Build metadata: $SHORT ($SHA) at $DATE"
 
-      - name: Install system dependencies (Doxygen)
-        run: |
-          sudo apt-get update
-          # texlive-binaries provides bibtex, which Doxygen needs to number and
-          # render the \cite references (CITE_BIB_FILES in the Doxyfile) into a
-          # bibliography in the published C++ docs.
-          sudo apt-get install -y doxygen graphviz texlive-binaries
-
-      - name: Fetch doxygen-awesome-css
-        run: |
-          curl -sSL https://github.com/jothepro/doxygen-awesome-css/archive/refs/tags/v2.3.4.tar.gz | tar -xz
-          mv doxygen-awesome-css-2.3.4 doxygen-awesome-css
-
-      - name: Build C++ docs (Doxygen)
-        env:
-          PROJECT_NUMBER: "${{ steps.meta.outputs.short }} (${{ steps.meta.outputs.date }})"
-        run: |
-          mkdir -p build/docs/cpp site
-          # Append PROJECT_NUMBER override via stdin; Doxygen reads stdin
-          # config when invoked with `-` and merges with the file.
-          (cat Doxyfile; echo "PROJECT_NUMBER = $PROJECT_NUMBER") | doxygen -
-          mv build/docs/cpp site/cpp
-
       - name: Install Python deps for Sphinx
         # The bertini2 wheel bundles the eigenpy C++ libraries it links
         # against; no Python `eigenpy` install is required to import bertini
@@ -119,6 +148,14 @@ jobs:
 
       - name: Install bertini from built wheel
         run: pip install --no-index --find-links dist/ bertini2
+
+      # The Doxygen C++ reference was built in parallel by the cpp_docs job; drop it
+      # into site/cpp so the assembled site/ has cpp + python + landing.
+      - name: Download C++ docs
+        uses: actions/download-artifact@v5
+        with:
+          name: docs-cpp
+          path: site/cpp
 
       - name: Run tutorial doctests (Sphinx)
         # Execute the `.. testcode::` / `>>>` blocks in the docs against the installed wheel, so
