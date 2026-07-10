@@ -1,19 +1,23 @@
 name: Documentation lint 📑
 
-# Cheap, fast doc-correctness gate -- runs Doxygen only (no compilation, no wheel,
-# no graphviz) so it can run on every PR in well under a minute.  This is the first
-# foothold of a broader linting initiative; future linters (clang-format,
-# clang-tidy, include-what-you-use, ...) can be added as additional jobs here.
+# Cheap, fast doc-correctness gate -- two independent jobs, both wheel-free and
+# with no compilation, so the whole workflow finishes on every PR in well under a
+# minute:
+#   * cpp_doc_lint    -- Doxygen doc correctness + undocumented ratchet (C++).
+#   * python_doc_lint -- ast-only docstring correctness + undocumented ratchet
+#                        (pure-Python package; tools/py_doclint.py).
+# This is the growing home of a broader linting initiative; future linters
+# (clang-format, clang-tidy, include-what-you-use, ...) can be added as more jobs.
 #
 # It does NOT belong in build_and_test.yml: that workflow is the expensive
 # build/test matrix, and it already `paths-ignore`s Doxyfile/doc_resources/docs, so
 # doc-only changes skip it and hit only this lint -- exactly the fast feedback we want.
 
-# Header (core/include) changes reach this lint through build_and_test.yml, which
-# calls it as a prerequisite gate (see workflow_call below).  The standalone
-# triggers here cover only the doc-config/tooling paths that build_and_test
-# deliberately `paths-ignore`s, so the lint still runs for doc-only changes without
-# double-running on a typical code PR.
+# Source changes (core/include headers; python/bertini/**) reach this lint through
+# build_and_test.yml, which calls the WHOLE workflow as a prerequisite gate (see
+# workflow_call below -- both jobs run).  The standalone triggers here cover only the
+# doc-config/tooling paths that build_and_test deliberately `paths-ignore`s, so the
+# lint still runs for those without double-running on a typical code PR.
 on:
   push:
     branches:
@@ -24,6 +28,8 @@ on:
       - 'doc_resources/**'
       - 'tools/doclint.sh'
       - 'tools/doc_undocumented_baseline.txt'
+      - 'tools/py_doclint.py'
+      - 'tools/py_doc_undocumented_baseline.txt'
       - '.github/workflows/doc_lint.yml'
   pull_request:
     paths:
@@ -31,6 +37,8 @@ on:
       - 'doc_resources/**'
       - 'tools/doclint.sh'
       - 'tools/doc_undocumented_baseline.txt'
+      - 'tools/py_doclint.py'
+      - 'tools/py_doc_undocumented_baseline.txt'
       - '.github/workflows/doc_lint.yml'
   workflow_dispatch:
   # Called by build_and_test.yml as a prerequisite gate, so no C++ compilation
@@ -44,8 +52,8 @@ env:
   DOXYGEN_VERSION: "1.13.2"
 
 jobs:
-  doc_lint:
-    name: Doxygen doc lint
+  cpp_doc_lint:
+    name: Doxygen doc lint (C++)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -61,3 +69,18 @@ jobs:
 
       - name: Lint C++ documentation
         run: bash tools/doclint.sh
+
+  # Runs in parallel with cpp_doc_lint.  Pure-stdlib ast, no build, no pip deps.
+  python_doc_lint:
+    name: Docstring lint (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Lint Python docstrings
+        run: python tools/py_doclint.py
