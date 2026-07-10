@@ -261,13 +261,17 @@ namespace bertini{
 				(arg("self")),
 				"Randomize an overdetermined system (N functions, n variables, N>n) down to a square one, returning a NEW system; this one is left untouched.  The square result has n generic combinations of the original functions, whose isolated solutions still contain this system's -- solve it, then discard the extraneous solutions by re-evaluating this system.  For a single affine variable group the functions are sorted by descending degree and R=[I|C], giving the optimal total-degree path count.")
 			.def("randomize",
+				+[](SystemBaseT const& self, int codimension) { return self.Randomize(codimension); },
+				(arg("self"), arg("codimension")),
+				"Randomize down to `codimension` functions (generic combinations of the natural functions), returning a NEW system; this one is left untouched.  Like the no-arg form, but reduces to a chosen number of functions rather than squaring -- `codimension=1` yields a single function, the general \"randomize down to codimension c\" used for lower-dimensional components.  Raises if codimension < 1 or >= the number of natural functions (randomization must reduce the count).")
+			.def("randomize",
 				+[](SystemBaseT const& self, bertini::Mat<mpfr> const& R) { return self.Randomize(R); },
 				(arg("self"), arg("matrix")),
 				"Randomize using a supplied coefficient matrix R (one row per randomized function, one column per natural function of this system); the functions are kept in their current order.  Returns a NEW system.")
 			.def("randomization_matrix",
 				+[](SystemBaseT const& self) { return self.RandomizationMatrix(); },
 				(arg("self")),
-				"The randomization matrix R (n x N, complex_mp) of a system produced by randomize().  Raises if the system has no randomization block.")
+				"The randomization matrix R (codimension x N, complex_mp) of a system produced by randomize().  Raises if the system has no randomization block.")
 			.def("reorder_functions_by_degree_decreasing", &SystemBaseT::ReorderFunctionsByDegreeDecreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("reorder_functions_by_degree_increasing", &SystemBaseT::ReorderFunctionsByDegreeIncreasing, (arg("self")),"Change the order of the functions to be in decreasing order")
 			.def("clear_variables", &SystemBaseT::ClearVariables, (arg("self")), "Remove the variable structure from the system")

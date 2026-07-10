@@ -154,13 +154,25 @@ def add_products_of_linears(self, factors):
     return self
 
 
-def randomize(self, matrix=None):
-    """Randomize an overdetermined System down to a square one, returning a NEW system.
+def randomize(self, matrix=None, *, codimension=None):
+    """Randomize a System, returning a NEW system (the original is not mutated).
 
-    ``matrix`` is an optional exact coefficient matrix R (one row per randomized function, one
-    column per natural function); when ``None`` bertini builds a generic R.  The original is not
-    mutated.  Coefficients must be exact.
+    With no arguments, an overdetermined System is squared down to its affine dimension.  Pass
+    ``codimension`` to instead randomize down to a chosen number of functions
+    (``sys.randomize(codimension=1)`` yields a single function); it must be a positive integer
+    strictly less than the number of natural functions (randomization must reduce the count).
+    Alternatively pass ``matrix``, an exact coefficient matrix R (one row per randomized function,
+    one column per natural function); its coefficients must be exact.  ``codimension`` and
+    ``matrix`` are mutually exclusive.
     """
+    if codimension is not None and matrix is not None:
+        raise ValueError("randomize: pass either a codimension or a matrix, not both")
+    if codimension is not None:
+        if isinstance(codimension, bool) or not isinstance(codimension, int):
+            raise TypeError("randomize: codimension must be an int")
+        if codimension < 1:
+            raise ValueError("randomize: codimension must be a positive integer")
+        return _native['randomize'](self, codimension)
     if matrix is None:
         return _native['randomize'](self)
     rows = [list(r) for r in matrix]
