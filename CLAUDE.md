@@ -197,6 +197,11 @@ Single-argument bindings and read-only `Vec<T> const&` bindings are unaffected. 
 
 `docs/adr/` contains ADRs for load-bearing design decisions — where the *why* would not be obvious from reading the code. Check there before undoing anything that looks strange.
 
+**Assess ADR need as part of every PR — both when opening it and before closing/merging it.** Ask: does this change *make* a load-bearing decision (a non-obvious tradeoff someone might later "helpfully" revert), or does it *supersede/invalidate* an existing ADR? If yes, the ADR belongs in the **same PR** as the change:
+- **New decision** → add `docs/adr/NNNN-title.md` (next free number; template in `docs/adr/README.md` — Status/Date/Context/Decision/Consequences) **and** a row in the README index table. Write the *Consequences* as a guardrail ("do not re-add X", "do not move Y back to a .cpp").
+- **Supersedes an existing ADR** → set the old one's `**Status:**` to `Superseded by ADR-NNNN` (and annotate its index row `_(superseded by NNNN)_`), then write the new one.
+- Bar for a *new* ADR: a reviewer reading only the diff couldn't reconstruct *why*, or the obvious-looking "cleanup" reintroduces a bug the change fixed. Pure mechanics, refactors, and bug fixes with a regression test usually don't need one.
+
 ## Conventions
 
 - C++ standard: C++17. Headers use `.hpp` extension.
