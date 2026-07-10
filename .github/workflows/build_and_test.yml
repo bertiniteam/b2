@@ -299,6 +299,16 @@ jobs:
           auto-activate: false
           channel-priority: strict
 
+      # Persist the compiler cache for the C++ test build (mirrors the Unix test jobs and the
+      # Windows wheel job).  Loose key -- always save fresh, restore newest; ccache self-invalidates.
+      - name: Cache ccache (Windows C++ tests)
+        uses: actions/cache@v5
+        with:
+          path: ${{ github.workspace }}\.ccache
+          key: ccache-win-cpp-${{ github.sha }}
+          restore-keys: |
+            ccache-win-cpp-
+
       - name: Configure and build C++ tests
         shell: pwsh
         run: |
@@ -319,15 +329,24 @@ jobs:
           $boostHeader = "$env:CONDA_PREFIX\Library\include\boost\archive\archive_exception.hpp"
           (Get-Content $boostHeader).Replace('public virtual std::exception', 'public std::exception') | Set-Content $boostHeader
 
+          # Run clang-cl through ccache (USE_CCACHE=ON default; ccache ships in environment-win.yml)
+          # and persist its dir (cached above).  The -DUSE_CCACHE=OFF "precaution" from 87bb4c61 is
+          # lifted: the Windows *wheel* job has built clang-cl through ccache for months without
+          # issue, so caching the C++ test build too can only warm it -- a cold cache is a normal
+          # build, never a break.
+          $env:CCACHE_DIR = "${{ github.workspace }}\.ccache"
+          $env:CCACHE_MAXSIZE = '400M'
+          ccache --zero-stats 2>$null
+
           cmake -B build `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DBUILD_PYTHON_BINDINGS=OFF `
             -DENABLE_UNIT_TESTING=ON `
-            -DUSE_CCACHE=OFF `
             -DINSTALL_DOCUMENTATION=OFF `
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON `
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel
+          ccache --show-stats
 
       # Run under both per-solve thread settings (see the unix C++ test job for the rationale).
       - name: Test (threaded + OMP_NUM_THREADS=1)
