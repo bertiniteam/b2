@@ -86,6 +86,8 @@ namespace bertini{
 			.def("degree", Deg2, (arg("self"),arg("vars")),"compute the algebraic degree of node in a function tree, with respect to a variable group. returns one integer.  negative is non-algebraic.")
 			.def("differentiate", Diff0, (arg("self")),"differentiate a node.  is with respect to all variables.  you get a Jacobian back, which represents derivatives wrt all variables simultaneously.")
 			.def("differentiate", Diff1, (arg("self")),"differentiate a node with respect to one variable.  You get a regular old Node in a Function Tree back.")
+			.def("differentiate", DiffN, (arg("self"),arg("var"),arg("count")),"differentiate a node with respect to one variable, `count` times (e.g. n.differentiate(x, 2) for the second partial).  count=0 returns the node itself.  You get a regular Node back.")
+			.def("differentiate", DiffList, (arg("self"),arg("vars")),"differentiate a node with respect to each variable in `vars`, in sequence -- a mixed partial (e.g. n.differentiate([x, x, y])).  Repeated entries are allowed; an empty list returns the node itself.  You get a regular Node back.")
 			.def("multidegree", &NodeBaseT::MultiDegree, (arg("self"),arg("vars")),"Compute an integer vector containing the degrees with respect to the variables in `vars`.  Negative entries indicate non-polynomiality")
 			.def("homogenized", &NodeBaseT::Homogenized, (arg("self"),arg("vars"), arg("homvar")), "Return a NEW homogenized copy of this function tree (non-mutating) with respect to the variables in `vars` using the homogenizing variable `homvar`.  Degree-deficient terms are padded with powers of `homvar` so all terms share the same degree.  The original tree is left untouched.")
 			.def("is_homogeneous", IsHom0,(arg("self")), "test if this Node is homogeneous with respect to all Variables.")
@@ -234,20 +236,40 @@ namespace bertini{
 			throw std::runtime_error("eval: dictionary keys must be Variables or variable-name strings");
 		}
 
+		// Parse a Python object naming a variable ordering -- a VariableGroup or a sequence of
+		// Variable nodes -- into a VariableGroup.
+		static VariableGroup OrderingOf(object const& vobj)
+		{
+			extract<VariableGroup> as_vg(vobj);
+			if (as_vg.check())
+				return as_vg();
+			VariableGroup vars;
+			for (long i = 0; i < len(vobj); ++i)
+				vars.push_back(extract<std::shared_ptr<node::Variable>>(vobj[i])());
+			return vars;
+		}
+
 		// f.eval(...) --- evaluate this expression at a point.  No System is required; values bind by
-		// variable name and the result is a complex_mp.  Three call forms (issue #300):
+		// variable name and the result is a complex_mp.  Call forms (issue #300):
 		//   (a) keyword arguments naming the variables:  f.eval(x=2, y=5)
 		//   (b) a single positional dict {Variable-or-name: value}:  f.eval({x: 2, y: 5})
-		//   (c) a single positional 1-D array / list, mapped in order to the expression's variables()
-		//       (which are sorted by name); override that ordering with a variables= keyword:
-		//       f.eval(pt)  /  f.eval(pt, variables=[x, y, z])
-		// Every variable of the expression must be supplied a value.
+		//   (c) a 1-D array / list, mapped in order to the expression's variables() (which are sorted
+		//       by name); override that ordering with a second positional argument or a variables=
+		//       keyword:  f.eval(pt)  /  f.eval(pt, [x, y, z])  /  f.eval(pt, variables=[x, y, z])
+		// A missing value for a variable of the expression always throws.  By default (strict=False)
+		// supplied names that are not variables of the expression are ignored (the expression is
+		// constant with respect to them) -- so one full point/ordering can be reused across an
+		// expression and its derivatives; pass strict=True to reject such extras as likely typos.
 		static object NodeEvalRaw(tuple args, dict kwargs)
 		{
 			long const nargs = len(args);
 			if (nargs < 1)
 				throw std::runtime_error("eval: missing self");
 			std::shared_ptr<Node> self = extract<std::shared_ptr<Node>>(args[0]);
+
+			bool strict = false;   // default: ignore variables the expression does not depend on
+			if (kwargs.has_key("strict"))
+				strict = extract<bool>(kwargs["strict"]);
 
 			std::map<std::string, complex_mp> values;
 
@@ -259,16 +281,16 @@ namespace bertini{
 				{
 					object pair = items[i];
 					std::string name = extract<std::string>(pair[0]);
-					if (name == "variables")   // an ordering hint is only meaningful for the array form
+					if (name == "variables" || name == "strict")   // control kwargs, not variable values
 						continue;
 					values[name] = CoerceToMpfrComplex(object(pair[1]));
 				}
-				return object(bertini::EvalExpression<complex_mp>(self, values));
+				return object(bertini::EvalExpression<complex_mp>(self, values, strict));
 			}
 
-			if (nargs > 2)
-				throw std::runtime_error("eval: pass either keyword arguments or a single positional point "
-				                         "(a dict, or a 1-D array/list); got too many positional arguments");
+			if (nargs > 3)
+				throw std::runtime_error("eval: pass a point (a dict, or a 1-D array/list) and at most "
+				                         "an ordering; got too many positional arguments");
 
 			object point = args[1];
 
@@ -276,6 +298,9 @@ namespace bertini{
 			extract<dict> as_dict(point);
 			if (as_dict.check())
 			{
+				if (nargs > 2)
+					throw std::runtime_error("eval: a variable ordering is meaningful only for a 1-D "
+					                         "array/list point, not a dict");
 				dict d = as_dict();
 				list items = d.items();
 				for (long i = 0; i < len(items); ++i)
@@ -283,35 +308,29 @@ namespace bertini{
 					object pair = items[i];
 					values[VariableNameOf(object(pair[0]))] = CoerceToMpfrComplex(object(pair[1]));
 				}
-				return object(bertini::EvalExpression<complex_mp>(self, values));
+				return object(bertini::EvalExpression<complex_mp>(self, values, strict));
 			}
 
-			// (c) a 1-D array/list mapped to a variable ordering (variables= override, else variables())
+			// (c) a 1-D array/list mapped to a variable ordering.  The ordering may be given as a
+			// second positional argument or a variables= keyword; otherwise it defaults to the
+			// expression's own variables() (sorted by name).
 			VariableGroup vars;
-			if (kwargs.has_key("variables"))
-			{
-				object vobj = kwargs["variables"];
-				extract<VariableGroup> as_vg(vobj);
-				if (as_vg.check())
-					vars = as_vg();
-				else
-					for (long i = 0; i < len(vobj); ++i)
-						vars.push_back(extract<std::shared_ptr<node::Variable>>(vobj[i])());
-			}
+			if (nargs > 2)
+				vars = OrderingOf(args[2]);
+			else if (kwargs.has_key("variables"))
+				vars = OrderingOf(kwargs["variables"]);
 			else
-			{
 				vars = bertini::node::GatherVariables(self);   // the expression's own variables, sorted by name
-			}
 
 			long const n = len(point);
 			if (static_cast<size_t>(n) != vars.size())
 				throw std::runtime_error("eval: the point has " + std::to_string(n) + " entries but the "
-				                         "expression has " + std::to_string(vars.size()) + " variables; "
-				                         "pass a variables= ordering if they differ");
+				                         "ordering has " + std::to_string(vars.size()) + " variables; "
+				                         "pass a matching ordering if they differ");
 			for (long i = 0; i < n; ++i)
 				values[vars[static_cast<size_t>(i)]->name()] = CoerceToMpfrComplex(object(point[i]));
 
-			return object(bertini::EvalExpression<complex_mp>(self, values));
+			return object(bertini::EvalExpression<complex_mp>(self, values, strict));
 		}
 
 		// f.variables() --- the distinct variables appearing in this expression, sorted by name.
@@ -326,11 +345,15 @@ namespace bertini{
 			.def(NodeVisitor<Node>())
 			.def("eval", raw_function(&NodeEvalRaw, 1),
 				"evaluate this expression at a point, returning a complex_mp.  No System is needed.  "
-				"Three forms (issue #300): keyword args f.eval(x=2, y=5); a dict f.eval({x: 2, y: 5}); "
-				"or a 1-D array/list f.eval(pt) mapped in order to the expression's variables() (sorted "
-				"by name) -- override the ordering with variables=, e.g. f.eval(pt, variables=[x, y, z]).  "
-				"Evaluation is at the current default precision; native Python floats carry only float64 "
-				"of information.  Every variable of the expression must be supplied a value.")
+				"Forms: keyword args f.eval(x=2, y=5); a dict f.eval({x: 2, y: 5}) (keys may be Variables "
+				"or name strings); or a 1-D array/list f.eval(pt) mapped in order to the expression's "
+				"variables() (sorted by name) -- override the ordering with a second positional argument "
+				"or variables=, e.g. f.eval(pt, [x, y, z]) or f.eval(pt, variables=[x, y, z]).  "
+				"By default (strict=False) supplied variables the expression does not depend on are "
+				"ignored (it is constant with respect to them), so one full point can be reused across "
+				"an expression and its derivatives; pass strict=True to reject such extras as typos.  A "
+				"missing value for a variable the expression DOES depend on always raises.  Evaluation is "
+				"at the current default precision; native Python floats carry only float64 of information.")
 			.def("variables", &NodeVariables, (arg("self")),
 				"The distinct variables appearing in this expression, sorted by name.")
 			;

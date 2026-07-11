@@ -402,6 +402,69 @@ BOOST_AUTO_TEST_SUITE_END() // simplify
 
 
 BOOST_AUTO_TEST_SUITE_END() // transform
+
+
+// The convenience Differentiate overloads: repeated single-variable, and sequential over a
+// group.  Both fold the virtual one-variable Differentiate, so they are checked by value at a
+// point (distinct non-identity coordinates x=3, y=5 so each term is separable).
+BOOST_AUTO_TEST_SUITE(differentiate_overloads)
+
+// Differentiate(v, count) applies the derivative `count` times: d^2/dx^2 (x^2 y) = 2y.
+BOOST_AUTO_TEST_CASE(repeated_matches_hand_nesting)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd f = x*x*y;
+
+	std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(3,0)}, {"y", complex_dbl(5,0)} };
+
+	auto twice = f->Differentiate(x, 2);                       // 2y
+	auto by_hand = f->Differentiate(x)->Differentiate(x);      // same
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(twice, pt) - complex_dbl(10,0)), 1e-14);
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(twice, pt) - EvalAt<complex_dbl>(by_hand, pt)), 1e-14);
+}
+
+// count == 0 is the identity: the node itself.
+BOOST_AUTO_TEST_CASE(repeated_zero_is_identity)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd f = x*x*y;
+
+	std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(3,0)}, {"y", complex_dbl(5,0)} };
+
+	BOOST_CHECK(f->Differentiate(x, 0) == f);                  // literally the same node
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(f->Differentiate(x, 0), pt) - complex_dbl(45,0)), 1e-14);
+}
+
+// Differentiate(vars) differentiates wrt each in sequence (mixed partial); duplicates allowed.
+// d^3/(dy dx^2) (x^2 y) = 2 (a bare constant -- all variables dropped).
+BOOST_AUTO_TEST_CASE(sequence_is_a_mixed_partial)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd f = x*x*y;
+
+	std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(3,0)}, {"y", complex_dbl(5,0)} };
+
+	auto d = f->Differentiate(bertini::VariableGroup{x, x, y});   // -> 2
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(d, pt) - complex_dbl(2,0)), 1e-14);
+
+	// the two-step prefix agrees with the repeated form
+	auto seq_xx = f->Differentiate(bertini::VariableGroup{x, x});
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(seq_xx, pt) - EvalAt<complex_dbl>(f->Differentiate(x, 2), pt)), 1e-14);
+}
+
+// An empty group is the identity: the node itself.
+BOOST_AUTO_TEST_CASE(empty_group_is_identity)
+{
+	auto x = Variable::Make("x");
+	Nd f = x*x;
+	BOOST_CHECK(f->Differentiate(bertini::VariableGroup{}) == f);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // differentiate_overloads
+
 BOOST_AUTO_TEST_SUITE_END() // function_tree
 
 

@@ -72,6 +72,8 @@ namespace bertini{
 		private:
 			static Nodeptr Diff0(NodeBaseT& self) { return self.Differentiate();}
 			Nodeptr (NodeBaseT::*Diff1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Differentiate;
+			Nodeptr (NodeBaseT::*DiffN)(std::shared_ptr<Variable> const&, unsigned) const= &NodeBaseT::Differentiate;
+			Nodeptr (NodeBaseT::*DiffList)(VariableGroup const&) const= &NodeBaseT::Differentiate;
 
 			static int Deg0(NodeBaseT& self) { return self.Degree();}
 			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;

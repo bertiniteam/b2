@@ -230,7 +230,31 @@ public:
 	\return The result of differentiation.  Jacobian or regular Node depending on what you passed in.
 	*/
 	virtual std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const = 0;
-	
+
+	/**
+	\brief Differentiate repeatedly with respect to a single variable.
+
+	Applies the single-variable derivative `count` times, e.g. `Differentiate(x, 2)` is the
+	second partial derivative with respect to `x`.  A `count` of zero returns the node itself.
+
+	\param v The variable to differentiate with respect to.
+	\param count How many times to differentiate.
+	\return The `count`-th partial derivative with respect to `v` (a regular Node).
+	*/
+	std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v, unsigned count) const;
+
+	/**
+	\brief Differentiate with respect to each variable in a group, in sequence.
+
+	Applies the single-variable derivative once for each variable in `vars`, in order, e.g.
+	`Differentiate({x, x, y})` is `∂³/∂y∂x²`.  Repeated entries are allowed.  An empty group
+	returns the node itself.  (For polynomials mixed partials commute, so the order is immaterial.)
+
+	\param vars The variables to differentiate with respect to, in application order.
+	\return The mixed partial derivative (a regular Node).
+	*/
+	std::shared_ptr<Node> Differentiate(VariableGroup const& vars) const;
+
 	/**
 	Compute the degree, optionally with respect to a single variable.
 

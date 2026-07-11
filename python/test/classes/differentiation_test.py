@@ -154,3 +154,39 @@ def test_derivative_trees_are_simplified():
     assert str(log(x).differentiate(x)) == '1/x'
     assert str((x**3 * y).differentiate(x).differentiate(x)) == '6*x*y'
     assert str((x / y).differentiate(y)) == '-x/y^2'
+
+
+# --- repeated / sequence differentiation overloads ---
+# differentiate(var, count) folds the single-variable derivative count times; differentiate(vars)
+# folds over a list in sequence (a mixed partial).  Both return a regular Node.
+
+def test_differentiate_repeated_count():
+    x, y = Variable('x'), Variable('y')
+    f = x**3 * y
+    # differentiate(x, 2) == differentiate(x).differentiate(x)
+    assert str(f.differentiate(x, 2)) == '6*x*y'
+    assert str(f.differentiate(x, 2)) == str(f.differentiate(x).differentiate(x))
+    # count of 1 matches the plain single-variable form; count of 0 is the identity
+    assert str(f.differentiate(x, 1)) == str(f.differentiate(x))
+    assert str(f.differentiate(x, 0)) == str(f)
+
+
+def test_differentiate_sequence_list():
+    x, y = Variable('x'), Variable('y')
+    f = x**3 * y
+    # d/dx d/dx -> 6*x*y ;  then d/dy -> 6*x  (all done in one call, duplicates allowed)
+    assert str(f.differentiate([x, x])) == '6*x*y'
+    assert str(f.differentiate([x, x, y])) == '6*x'
+    # the list prefix agrees with the repeated form
+    assert str(f.differentiate([x, x])) == str(f.differentiate(x, 2))
+    # an empty list is the identity
+    assert str(f.differentiate([])) == str(f)
+
+
+def test_differentiate_overloads_evaluate(diffvars, tol_mp):
+    # cross-check the overloads numerically (x=3, y=5: non-identity, distinct)
+    x, y, z, p, a, b, _ = diffvars
+    f = x * x * y                                  # d2/dx2 = 2y ; d3/(dy dx2) = 2
+    pt = dict(x=mpfr_complex("3"), y=mpfr_complex("5"))
+    assert mp.abs(eval_at(f.differentiate(x, 2), **pt) - mpfr_complex("10")) <= tol_mp
+    assert mp.abs(eval_at(f.differentiate([x, x, y]), **pt) - mpfr_complex("2")) <= tol_mp
