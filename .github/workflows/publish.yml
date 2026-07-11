@@ -85,6 +85,12 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v5
         with:
+          # ONLY the wheel artifacts. build_docs.yml's cpp_docs job also uploads a
+          # `docs-cpp` artifact (the whole Doxygen tree); without this pattern,
+          # merge-multiple would pull it into dist/ and it would be published /
+          # attached to the release (it polluted the v3.2.0 GitHub release with 509
+          # Doxygen files before dying mid-upload).
+          pattern: wheels-*
           merge-multiple: true
           path: dist/
       - name: Publish distribution 📦 to TestPyPI
@@ -111,6 +117,12 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v5
         with:
+          # ONLY the wheel artifacts. build_docs.yml's cpp_docs job also uploads a
+          # `docs-cpp` artifact (the whole Doxygen tree); without this pattern,
+          # merge-multiple would pull it into dist/ and it would be published /
+          # attached to the release (it polluted the v3.2.0 GitHub release with 509
+          # Doxygen files before dying mid-upload).
+          pattern: wheels-*
           merge-multiple: true
           path: dist/
       - name: Publish distribution 📦 to PyPI
@@ -140,6 +152,12 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v5
         with:
+          # ONLY the wheel artifacts. build_docs.yml's cpp_docs job also uploads a
+          # `docs-cpp` artifact (the whole Doxygen tree); without this pattern,
+          # merge-multiple would pull it into dist/ and it would be published /
+          # attached to the release (it polluted the v3.2.0 GitHub release with 509
+          # Doxygen files before dying mid-upload).
+          pattern: wheels-*
           merge-multiple: true
           path: dist/
 
