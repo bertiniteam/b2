@@ -49,6 +49,7 @@ using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Integer = bertini::node::Integer;
 using Rational = bertini::node::Rational;
+using Complex = bertini::node::Complex;
 using SumOperator = bertini::node::SumOperator;
 using MultOperator = bertini::node::MultOperator;
 
@@ -464,6 +465,112 @@ BOOST_AUTO_TEST_CASE(empty_group_is_identity)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // differentiate_overloads
+
+
+// Symbolic substitution Node::Subs (variable -> node).  Simultaneous, single-pass; results are
+// simplified (constants fold).  Checked by value at a point (distinct non-identity coordinates).
+BOOST_AUTO_TEST_SUITE(substitution)
+
+// Freeze a variable to a constant: (x^2 y).subs(x,3) -> 9*y (the constant power folds).
+BOOST_AUTO_TEST_CASE(freeze_variable_to_constant)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd f = x*x*y;
+	Nd g = f->Subs({ {"x", Integer::Make(3)} });
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(g, {{"y", complex_dbl(5,0)}}) - complex_dbl(45,0)), 1e-14);
+}
+
+// subs then eval agrees with substituting the value directly at eval.
+BOOST_AUTO_TEST_CASE(subs_then_eval_equals_joint_eval)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd f = x*x*y;
+	auto joint  = EvalAt<complex_dbl>(f, {{"x", complex_dbl(3,0)}, {"y", complex_dbl(5,0)}});
+	auto staged = EvalAt<complex_dbl>(f->Subs({ {"x", Integer::Make(3)} }), {{"y", complex_dbl(5,0)}});
+	BOOST_CHECK_SMALL(std::abs(joint - staged), 1e-14);
+}
+
+// Rename (var -> var) and compose (var -> expression).
+BOOST_AUTO_TEST_CASE(rename_and_compose)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto z = Variable::Make("z");
+	Nd f = x*x*y;
+	// rename x -> z: z^2 y at z=3, y=5 -> 45
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(f->Subs({{"x", z}}),
+		{{"z", complex_dbl(3,0)}, {"y", complex_dbl(5,0)}}) - complex_dbl(45,0)), 1e-14);
+	// compose x -> y+1: (y+1)^2 y at y=5 -> 36*5 = 180
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(f->Subs({{"x", y + Nd(Integer::Make(1))}}),
+		{{"y", complex_dbl(5,0)}}) - complex_dbl(180,0)), 1e-14);
+}
+
+// Simultaneous swap {x:y, y:x} must not cascade (x->y then y->x).
+BOOST_AUTO_TEST_CASE(simultaneous_swap_does_not_cascade)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd f = x*x*y;                                          // -> y^2 x
+	Nd g = f->Subs({ {"x", y}, {"y", x} });
+	// at x=3, y=5: y^2 x = 25*3 = 75 (not a cascade to x^3=27 or y^3=125)
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(g,
+		{{"x", complex_dbl(3,0)}, {"y", complex_dbl(5,0)}}) - complex_dbl(75,0)), 1e-14);
+}
+
+// A variable not present in the request is a no-op: the same node is returned.
+BOOST_AUTO_TEST_CASE(absent_variable_is_noop)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd f = x*x*y;
+	BOOST_CHECK(f->Subs({ {"z", Integer::Make(9)} }) == f);
+}
+
+// Subtract and divide structure is preserved through substitution.
+BOOST_AUTO_TEST_CASE(preserves_subtract_and_divide)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	// (x - y) subs x->3 -> 3 - y ; at y=5 -> -2
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>((x-y)->Subs({{"x", Integer::Make(3)}}),
+		{{"y", complex_dbl(5,0)}}) - complex_dbl(-2,0)), 1e-14);
+	// (x / y) subs x->6 -> 6 / y ; at y=2 -> 3
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>((x/y)->Subs({{"x", Integer::Make(6)}}),
+		{{"y", complex_dbl(2,0)}}) - complex_dbl(3,0)), 1e-14);
+}
+
+// Substitution reaches a variable exponent: (x^y).subs(y,2) -> x^2.
+BOOST_AUTO_TEST_CASE(substitutes_into_exponent)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	Nd f = pow(x, y);
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(f->Subs({{"y", Integer::Make(2)}}),
+		{{"x", complex_dbl(3,0)}}) - complex_dbl(9,0)), 1e-14);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // substitution
+
+
+// Constant-power folding in the Simplify machinery (feeds subs and differentiation).
+BOOST_AUTO_TEST_SUITE(constant_power_folding)
+
+BOOST_AUTO_TEST_CASE(integer_power_folds)
+{
+	BOOST_CHECK_EQUAL(SimplifiedForm(pow(Integer::Make(3), 2)), "9");    // 3^2 -> 9
+	BOOST_CHECK_EQUAL(SimplifiedForm(pow(Integer::Make(2), 10)), "1024"); // 2^10 -> 1024
+}
+
+BOOST_AUTO_TEST_CASE(imaginary_unit_squared_is_minus_one)
+{
+	auto i = Complex::Make(std::string("0"), std::string("1"));         // i = 0 + 1i
+	auto folded = bertini::Simplify(pow(i, 2));                          // i^2 -> -1
+	BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(folded) - complex_dbl(-1,0)), 1e-14);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // constant_power_folding
 
 BOOST_AUTO_TEST_SUITE_END() // function_tree
 

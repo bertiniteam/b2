@@ -178,6 +178,14 @@ namespace node{
 	std::shared_ptr<Node> TanOperator::Simplified()    const { return TanOperator::Make(operand_->Simplified()); }
 	std::shared_ptr<Node> ArcTanOperator::Simplified() const { return ArcTanOperator::Make(operand_->Simplified()); }
 
+	// ---- functional Subs(): rebuild same op type from the substituted operand ----
+	std::shared_ptr<Node> SinOperator::Subs(SubstitutionMap const& m)    const { return SinOperator::Make(operand_->Subs(m)); }
+	std::shared_ptr<Node> ArcSinOperator::Subs(SubstitutionMap const& m) const { return ArcSinOperator::Make(operand_->Subs(m)); }
+	std::shared_ptr<Node> CosOperator::Subs(SubstitutionMap const& m)    const { return CosOperator::Make(operand_->Subs(m)); }
+	std::shared_ptr<Node> ArcCosOperator::Subs(SubstitutionMap const& m) const { return ArcCosOperator::Make(operand_->Subs(m)); }
+	std::shared_ptr<Node> TanOperator::Subs(SubstitutionMap const& m)    const { return TanOperator::Make(operand_->Subs(m)); }
+	std::shared_ptr<Node> ArcTanOperator::Subs(SubstitutionMap const& m) const { return ArcTanOperator::Make(operand_->Subs(m)); }
+
 	// ---- functional Homogenized(): rebuild same op type from the homogenized operand ----
 	std::shared_ptr<Node> SinOperator::Homogenized(VariableGroup const& v, std::shared_ptr<Variable> const& h)    const { return SinOperator::Make(operand_->Homogenized(v,h)); }
 	std::shared_ptr<Node> ArcSinOperator::Homogenized(VariableGroup const& v, std::shared_ptr<Variable> const& h) const { return ArcSinOperator::Make(operand_->Homogenized(v,h)); }

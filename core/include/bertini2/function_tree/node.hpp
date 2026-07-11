@@ -46,6 +46,7 @@
 
 #include <iostream>
 #include <string>
+#include <map>
 #include <tuple>
 #include <optional>
 #include <typeinfo>
@@ -77,6 +78,9 @@ namespace bertini {
 
 /// An ordered group of variables (the unit of homogenization / variable grouping).
 using VariableGroup = std::vector< std::shared_ptr<node::Variable> >;
+
+/// A substitution request for Node::Subs: variable name -> the node to put in its place.
+using SubstitutionMap = std::map< std::string, std::shared_ptr<node::Node> >;
 
 
 
@@ -140,6 +144,25 @@ public:
 	\return A simplified tree (possibly the same node, if nothing simplified).
 	*/
 	virtual std::shared_ptr<Node> Simplified() const;
+
+	/**
+	\brief Symbolically substitute variables, returning a NEW tree.
+
+	Replaces each Variable leaf named in `substitutions` with its associated node, functionally
+	(the input tree is never modified).  Substitution is simultaneous and single-pass: a leaf is
+	replaced at most once and the replacement is not itself descended into, so `{x:y, y:z}` maps
+	`x+y` to `y+z` (no cascade) and the order of the map is irrelevant.  A variable absent from
+	the map is left unchanged.  The result is rebuilt through the simplifying factories (like
+	differentiation), so constants fold.  The default (leaves with nothing to replace) returns the
+	node unchanged -- structural sharing preserved.
+
+	Only Variable leaves are matched (variable -> node substitution); substituting into a Jacobian
+	tree containing Differentials is not supported.
+
+	\param substitutions A map from variable name to the node to put in that variable's place.
+	\return The substituted tree (possibly the same node, if nothing matched).
+	*/
+	virtual std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const;
 
 	/**
 	Virtual method for printing Nodes to arbitrary output streams.

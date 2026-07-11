@@ -97,6 +97,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		/// \brief Construct (and intern) a SinOperator node.
@@ -155,6 +156,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		/// \brief Construct (and intern) a ArcSinOperator node.
@@ -217,6 +219,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		/// \brief Construct (and intern) a CosOperator node.
@@ -278,6 +281,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		/// \brief Construct (and intern) a ArcCosOperator node.
@@ -345,6 +349,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		/// \brief Construct (and intern) a TanOperator node.
@@ -403,6 +408,7 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		/// \brief Construct (and intern) a ArcTanOperator node.

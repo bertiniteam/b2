@@ -90,6 +90,16 @@ std::shared_ptr<Node> NamedExpression::Homogenized(VariableGroup const& vars, st
 	return NamedExpression::Make(homogenized_entry, name());
 }
 
+std::shared_ptr<Node> NamedExpression::Subs(SubstitutionMap const& substitutions) const
+{
+	auto new_entry = entry_node_->Subs(substitutions);
+	if (new_entry == entry_node_)
+		return std::const_pointer_cast<Node>(shared_from_this());  // nothing substituted -- share, name preserved
+	// A substitution changed the contents, so this is no longer "the" named expression: return the
+	// bare substituted entry, un-named (substitution destroys named-ness).
+	return new_entry;
+}
+
 bool NamedExpression::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 {
 	return entry_node_->IsHomogeneous(v);

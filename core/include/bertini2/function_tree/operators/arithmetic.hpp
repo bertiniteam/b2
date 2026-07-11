@@ -85,6 +85,8 @@ namespace node{
 		
 		std::shared_ptr<Node> Simplified() const override;
 
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+
 		/// \brief Construct (and intern) a SumOperator node.
 		template<typename... Ts> 
 		static 
@@ -295,6 +297,8 @@ namespace node{
 	public:
 		
 		std::shared_ptr<Node> Simplified() const override;
+
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		/**
@@ -374,6 +378,8 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 		std::shared_ptr<Node> Simplified() const override;
+
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 
 
 		/// \brief Construct (and intern) a MultOperator node.
@@ -554,6 +560,8 @@ namespace node{
 
 		std::shared_ptr<Node> Simplified() const override;
 
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+
 		/// \brief Construct (and intern) a PowerOperator node.
 		template<typename... Ts> 
 		static 
@@ -700,6 +708,8 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		std::size_t HashImpl() const override;
 		bool IsSame(Node const& other) const override;
@@ -849,6 +859,8 @@ namespace node{
 	public:
 		
 		std::shared_ptr<Node> Simplified() const override;
+
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 		
 		void print(std::ostream & target) const override;
@@ -908,6 +920,8 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 
 		std::shared_ptr<Node> Simplified() const override;
+
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		/// \brief Construct (and intern) a ExpOperator node.
@@ -970,6 +984,8 @@ namespace node{
 		BERTINI_DEFAULT_VISITABLE()
 		
 		std::shared_ptr<Node> Simplified() const override;
+
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
 		/// \brief Construct (and intern) a LogOperator node.

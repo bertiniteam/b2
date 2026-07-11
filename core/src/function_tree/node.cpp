@@ -73,6 +73,14 @@ namespace node{
 		return std::const_pointer_cast<Node>(shared_from_this());
 	}
 
+	// Default: nothing to substitute (leaves other than Variable, and Differentials) -- return
+	// this node unchanged.  Variable overrides to match; operators/NamedExpression override to
+	// recurse + reassemble through the Simplified* factories.
+	std::shared_ptr<Node> Node::Subs(SubstitutionMap const& /*substitutions*/) const
+	{
+		return std::const_pointer_cast<Node>(shared_from_this());
+	}
+
 	// Default: nothing to homogenize (leaves) -- return this node unchanged.  Operators that
 	// can carry degree-deficient summands (and their ancestors) override to rebuild functionally.
 	std::shared_ptr<Node> Node::Homogenized(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) const

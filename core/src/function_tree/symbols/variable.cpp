@@ -55,6 +55,14 @@ std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v
 		return v.get() == this ? Integer::Make(1) : Integer::Make(0);
 }
 
+std::shared_ptr<Node> Variable::Subs(SubstitutionMap const& substitutions) const
+{
+	auto it = substitutions.find(name());
+	if (it != substitutions.end())
+		return it->second;
+	return std::const_pointer_cast<Node>(shared_from_this());
+}
+
 int Variable::Degree(std::shared_ptr<Variable> const& v) const
 {
 	if (v)
