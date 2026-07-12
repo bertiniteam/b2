@@ -43,6 +43,13 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 
 namespace bertini
 {
+	/// \brief The numeric type used to hold error/tolerance magnitudes throughout Bertini2 --
+	/// tracking tolerances, Newton residuals, condition numbers, same-point tolerances.  Declared
+	/// here in the foundational num_traits header (included nearly everywhere) so tolerance-typed
+	/// parameters can spell this alias instead of a bare double without any header adding a new
+	/// include -- keeping recompilation frequency and scope unchanged.
+	using NumErrorT = double;
+
 	/// \brief Get a random complex number of unit modulus, in number type T.
 	template<typename T>
 	T RandomUnit();
