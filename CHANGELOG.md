@@ -67,6 +67,66 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.3.0] - 2026-07-12
+
+A large pass on the symbolic and solve/result ergonomics: symbolic substitution and
+richer differentiation on the function tree, a friendlier solve/settings surface, and a
+typed result taxonomy — plus internal tolerance typing and a documentation refresh.
+
+### Added
+
+- **Symbolic `subs`, richer differentiation, eval ergonomics** (#327): leaf-level
+  `node.subs({var: expr})` symbolic substitution; `differentiate(x, 2)` /
+  `differentiate([x, x, y])` repeated / sequence differentiation; positional eval with an
+  explicit coordinate ordering and a `strict=False` option; constant-power folding (so
+  `I**2 → -1`); `node.simplify()`; and a Python `__repr__` that renders `**`.
+- **`solver.solve()` returns a `SolveResult`** (#330), and `solver.result()` re-derives it:
+  the bare `ZeroDimSolver` / `HomotopySolver` record themselves, so they hand back the same
+  records-aware result that `bertini.solve` returns.
+- **`ZeroDimResult`** (#331): the typed *answer* of a zero-dimensional solve — the distinct
+  finite solutions plus `real` / `singular` / `nonsingular` / `at_infinity` / `nonsolutions`
+  views. `SolveResult` is now a records decorator around `.answer`; both `ZeroDimSolver` and
+  `HomotopySolver` produce one.
+- **Config settings at solve / construction** (#330): `solve(**settings)` and
+  `ZeroDimSolver(..., **settings)` (keywords or a `settings={...}` dict), plus
+  `get_settings(as_dict=True)` for a flat `{field: value}` view.
+- **Random symbolic constants** (#330): `random_real(symbolic=True)` /
+  `random_complex(symbolic=True)` / `random_vector(..., symbolic=True)` and
+  `symbolics.random_real()` / `random_complex()` produce random constant *nodes*.
+- **`metadata_for(pt)` needs no explicit tolerance** (#330): it defaults to the solver's own
+  same-point tolerance (`default_point_match_tolerance()`).
+
+### Changed
+
+- **`precision=` is now an integer number of digits; `mptype=` is the precision model**
+  (`'double'` / `'multiple'` / `'adaptive'`) everywhere — `ZeroDimSolver`, `bertini.solve`,
+  `HomotopySolver`, `user_homotopy` (#330). A *string* `precision=` is still honored as the
+  old model alias for one release, with a `DeprecationWarning`.
+- **Clearer errors**: a SymPy expression passed to `add_function` now points at
+  `bertini.sympy_bridge.from_sympy`; `bertini.solve` on a positive-dimensional
+  (under-determined) system raises a clear "needs numerical irreducible decomposition, not
+  yet implemented" instead of a raw solver error (#330, #331).
+- **`NumErrorT` for tolerance typing** (#329): the error / tolerance type now lives in
+  `num_traits.hpp` and types the tolerance parameters across the trackers, endgames, and
+  point-comparison helpers (readability only — `NumErrorT` is `double`).
+- An informative `repr(solver)` replaces the default object line (#330); the CLI splash drops
+  its stale primary-authors block (#332).
+
+### Fixed
+
+- **A `Complex` (constant) node is accepted as a coefficient** (#326, #328), matching the
+  existing `complex_mp` behavior.
+- **Publishing downloads only the wheel artifacts** (#325): the Doxygen `docs-cpp` artifact
+  no longer leaks into the release upload.
+
+### Documentation
+
+- The classic continuation-cartoon figure now auto-fits the finite paths, uses a
+  total-degree linear-product start so start points do not overlap, and marks divergences
+  with ∞ (inside the axes) and the start system with a green play triangle (#329).
+
+_______________________________________________________________________________
+
 ## [3.2.0] - 2026-07-10
 
 Multiprecision linear algebra and a more flexible randomization on the library
