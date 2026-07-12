@@ -156,7 +156,7 @@ def make_plot(paths, out_stem):
                 edge = top if up else bot
                 dy = y[i] - y[i - 1] if i > 0 else 1.0       # crossing point, interpolated
                 xe = x[i - 1] + (edge - y[i - 1]) / dy * (x[i] - x[i - 1]) if i > 0 and dy != 0 else x[i]
-                inset = 0.04 * (top - bot)
+                inset = 0.012 * (top - bot)                  # sit right under the axis line
                 ax.text(xe, edge - inset if up else edge + inset, r"$\infty$", color=st["color"],
                         fontsize=13, ha="center", va="top" if up else "bottom", zorder=6)
         else:

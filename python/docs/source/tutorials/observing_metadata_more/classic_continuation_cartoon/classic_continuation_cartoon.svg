@@ -1674,7 +1674,7 @@ L 670.192031 396.808281
    </g>
    <g id="text_11">
     <!-- $\infty$ -->
-    <g style="fill: #6a1b9a" transform="translate(238.254483 67.649681) scale(0.13 -0.13)">
+    <g style="fill: #6a1b9a" transform="translate(238.254483 56.992522) scale(0.13 -0.13)">
      <defs>
       <path id="DejaVuSans-221e" d="M 2916 1091 
 Q 2819 1203 2666 1466 
@@ -1719,7 +1719,7 @@ z
    </g>
    <g id="text_12">
     <!-- $\infty$ -->
-    <g style="fill: #6a1b9a" transform="translate(295.629484 67.649681) scale(0.13 -0.13)">
+    <g style="fill: #6a1b9a" transform="translate(295.629484 56.992522) scale(0.13 -0.13)">
      <use xlink:href="#DejaVuSans-221e" transform="translate(0 0.3125)"/>
     </g>
    </g>
