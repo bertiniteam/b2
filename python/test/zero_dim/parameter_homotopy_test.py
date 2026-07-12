@@ -45,13 +45,13 @@ def test_solve_once_then_sweep_a_parameter():
         assert _roots_real(solver.all_solutions()) == expected
 
 
-def test_user_homotopy_rejects_bad_precision():
+def test_user_homotopy_rejects_bad_mptype():
     x, t = pb.Variable('x'), pb.Variable('t')
     H = pb.System(); H.add_variable_group(pb.VariableGroup([x])); H.add_function(x * x - (4 - 3 * t)); H.add_path_variable(t)
     target = pb.System(); target.add_variable_group(pb.VariableGroup([x])); target.add_function(x * x - 1)
     import pytest
     with pytest.raises(ValueError):
-        pb.nag_algorithm.user_homotopy(H, [], target, precision='quadruple')
+        pb.nag_algorithm.user_homotopy(H, [], target, mptype='quadruple')
 
 
 def test_user_homotopy_rejects_solver_as_start_points():

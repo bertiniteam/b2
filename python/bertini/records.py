@@ -282,7 +282,7 @@ def _coerce_start_point(point, precision):
                       for v in arr.ravel()], dtype=mp_dtype)
 
 
-def _chained_solver(system, homotopy, start, where, *, precision, endgame):
+def _chained_solver(system, homotopy, start, where, *, mptype, endgame):
     """Build the HomotopySolver for a chained solve, plus the per-path provenance refs
     and the start-data identity that joins the ask."""
     import hashlib
@@ -305,14 +305,14 @@ def _chained_solver(system, homotopy, start, where, *, precision, endgame):
         _json.dumps(refs, sort_keys=True).encode()).hexdigest()
 
     solver = _nag.HomotopySolver(homotopy,
-                                 [_coerce_start_point(pt, precision) for pt in points],
-                                 system, precision=precision, endgame=endgame)
+                                 [_coerce_start_point(pt, mptype) for pt in points],
+                                 system, mptype=mptype, endgame=endgame)
     return solver, refs, identity
 
 
 # --- the three verbs ------------------------------------------------------------------
 
-def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauchy',
+def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, endgame='cauchy',
           homotopy=None, start=None):
     """Solve a polynomial system, recording and resuming automatically.
 
@@ -344,9 +344,14 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
         with full provenance -- the records link every new endpoint back through the
         prior run, all the way to the beginning.  Raw points (arrays) are archived as a
         *given*: provenance bottoms out honestly at data you supplied.
-    precision, endgame : str
-        Passed through to :func:`bertini.nag_algorithm.ZeroDimSolver` (``mptype`` /
-        ``endgame``).
+    mptype : str
+        The precision MODEL (``'double'`` / ``'multiple'`` / ``'adaptive'``), passed to
+        :func:`bertini.nag_algorithm.ZeroDimSolver`.
+    precision : int, optional
+        The number of DIGITS, applied via ``bertini.default_precision``.  A *string* here is the
+        deprecated old spelling of ``mptype`` and warns.
+    endgame : str
+        Passed through to :func:`bertini.nag_algorithm.ZeroDimSolver`.
 
     Returns
     -------
@@ -369,15 +374,19 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
         seed = _derive_seed()
     _set_seed(seed)
 
+    # precision= is an integer number of digits (applied via default_precision); mptype= is the
+    # precision model.  A string precision is the deprecated old model alias (warns).
+    mptype = _nag._precision_model(mptype, precision)
+
     where = str(directory if directory is not None else records_dir())
     if homotopy is not None:
         zd, refs, identity = _chained_solver(system, homotopy, start, where,
-                                             precision=precision, endgame=endgame)
+                                             mptype=mptype, endgame=endgame)
         if _recording_enabled:
             zd.record_to(where)
             zd.set_recorded_start_provenance(_json.dumps(refs), identity)
     else:
-        zd = _nag.ZeroDimSolver(system, mptype=precision, endgame=endgame)
+        zd = _nag.ZeroDimSolver(system, mptype=mptype, endgame=endgame)
         if _recording_enabled:
             zd.record_to(where)
     # A bare solve() already returns a SolveResult built from the solver's own records state

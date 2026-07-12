@@ -78,7 +78,7 @@ def cubic_crossing_homotopy():
 def _solve(resolve_attempts, predictor=pb.Predictor.Euler, step=COARSE_STEP, tol=LOOSE_TOL):
     """Track the planted cubic and return (report, sorted distinct real roots)."""
     H, target, start_points = cubic_crossing_homotopy()
-    solver = pb.nag_algorithm.user_homotopy(H, start_points, target, precision='double')
+    solver = pb.nag_algorithm.user_homotopy(H, start_points, target, mptype='double')
 
     solver.get_tracker().predictor(predictor)
     solver.get_tracker().get_stepping().update(initial_step_size=step, max_step_size=step)

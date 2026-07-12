@@ -72,12 +72,23 @@ def test_factory_returns_a_real_solver():
     assert len(solver.all_solutions()) == 2
 
 
-def test_precision_is_an_alias_for_mptype():
-    assert isinstance(ZeroDimSolver(_system(), precision='amp'),
-                      _n.ZeroDimSolverCauchyAdaptivePrecision)
-    # precision overrides mptype when both are given
-    assert isinstance(ZeroDimSolver(_system(), mptype='double', precision='adaptive'),
-                      _n.ZeroDimSolverCauchyAdaptivePrecision)
+def test_precision_is_an_integer_number_of_digits():
+    import bertini as b
+    # precision= is now a DIGIT COUNT, applied via default_precision -- not the model selector
+    b.default_precision(16)
+    solver = ZeroDimSolver(_system(), mptype='multiple', precision=80)
+    assert b.default_precision() == 80                     # the digit count took effect
+    assert isinstance(solver, _n.ZeroDimSolverCauchyFixedMultiplePrecision)   # mptype picked the class
+
+
+def test_precision_as_a_string_is_the_deprecated_model_alias():
+    import warnings
+    # a STRING precision is the old model-selector alias: honored, but warns
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always')
+        solver = ZeroDimSolver(_system(), precision='amp')
+    assert isinstance(solver, _n.ZeroDimSolverCauchyAdaptivePrecision)
+    assert any(issubclass(x.category, DeprecationWarning) for x in w)
 
 
 def test_user_startsystem_points_at_homotopy_solver():

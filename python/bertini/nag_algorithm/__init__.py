@@ -552,6 +552,30 @@ def _infer_start_system(system):
     return 'mhom'
 
 
+def _precision_model(mptype, precision):
+    """Resolve the precision *model* (mptype) and apply an integer *digit count* (precision).
+
+    ``precision`` is the integer number of digits; it is applied via ``bertini.default_precision``
+    at construction (the documented "set precision, then build" step, which the fixed-multiple and
+    adaptive trackers read at construction).  ``mptype`` is the precision MODEL
+    (``'double'`` / ``'multiple'`` / ``'adaptive'``).
+
+    A **string** ``precision`` is the old, confusing model-selector alias -- honored as ``mptype``
+    with a ``DeprecationWarning`` for one release.  Returns the mptype string to build with.
+    """
+    import warnings
+    if isinstance(precision, str):
+        warnings.warn(
+            "precision={0!r} as a precision-MODEL is deprecated and will be removed: pass "
+            "mptype={0!r} for the model, and reserve precision= for an integer number of digits."
+            .format(precision), DeprecationWarning, stacklevel=3)
+        return precision
+    if precision is not None:
+        import bertini
+        bertini.default_precision(int(precision))     # the "set precision, then build" step
+    return mptype
+
+
 def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
                   precision=None, settings=None, **field_settings):
     """Construct a zero-dim solver by name, with friendly defaults.
@@ -571,8 +595,10 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
     ----------
     system : the polynomial :class:`~bertini.System` to solve.
     endgame : ``'cauchy'`` (default) or ``'powerseries'``.
-    mptype : the precision -- ``'double'``, ``'multiple'``, or ``'adaptive'`` (``'amp'``, the default).
-    precision : an alias for ``mptype``; if given (not ``None``) it overrides ``mptype``.
+    mptype : the precision MODEL -- ``'double'``, ``'multiple'``, or ``'adaptive'`` (``'amp'``, the default).
+    precision : the number of DIGITS (an ``int``), applied via ``bertini.default_precision`` at
+        construction -- meaningful for ``'multiple'``/``'adaptive'`` (``'double'`` is always 16).  A
+        *string* here is the deprecated old spelling of ``mptype`` and warns.
     startsystem : ``'infer'`` (default -- choose from the variable-group structure, matching the
         C++ blackbox), or force it with ``'binomial'`` / ``'linearproduct'`` / ``'mhom'``.  To run from a homotopy you
         built yourself with given start points, use :class:`HomotopySolver` / :func:`blend_homotopy`
@@ -598,8 +624,7 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
         >>> solver.solve()                             # doctest: +SKIP
         >>> solver.all_solutions()                         # doctest: +SKIP
     """
-    if precision is not None:
-        mptype = precision
+    mptype = _precision_model(mptype, precision)
     start_key = str(startsystem).strip().lower().replace('-', '_').replace('_', '')
     # user-homotopy can't be built from a system alone -- point at the right entry point.
     if start_key in ('user', 'userhomotopy'):
@@ -666,7 +691,7 @@ class _HomotopySolverHolder:
         return repr(object.__getattribute__(self, '_solver'))
 
 
-def HomotopySolver(homotopy, start_points, target, *, precision='adaptive', endgame='cauchy'):
+def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='cauchy'):
     """Track a homotopy you constructed, from a list of start points you already have (e.g. the
     solutions of an earlier solve) -- the continuation primitive (parameter-homotopy workflow).
 
@@ -685,23 +710,27 @@ def HomotopySolver(homotopy, start_points, target, *, precision='adaptive', endg
     target : System
         The system the solutions satisfy at t=0 -- used for dehomogenize / residual and for the
         solver's consistency check.  It must NOT have a path variable.
-    precision : {'adaptive', 'double', 'multiple'}
-        'adaptive' (default) is the robust path.
+    mptype : {'adaptive', 'double', 'multiple'}
+        The precision MODEL; 'adaptive' (default) is the robust path.
+    precision : int, optional
+        The number of DIGITS, applied via ``bertini.default_precision`` at construction.  A string
+        here is the deprecated old spelling of ``mptype`` and warns.
     endgame : {'cauchy', 'powerseries'}
 
     Returns a solver: call ``.solve()`` then ``.all_solutions()`` as for any solver.
     """
+    mptype = _precision_model(mptype, precision)
     prec = {'double': 'double', 'multiple': 'multiple', 'fixed_multiple': 'multiple',
-            'adaptive': 'adaptive'}.get(precision, precision)
+            'adaptive': 'adaptive'}.get(mptype, mptype)
     eg = {'cauchy': 'cauchy', 'powerseries': 'powerseries',
           'power_series': 'powerseries'}.get(endgame, endgame)
     try:
         cls_name = _HOMOTOPY_SOLVER_CLASSES[(prec, eg)]
     except KeyError:
         raise ValueError(
-            "HomotopySolver: unknown (precision, endgame) = ({!r}, {!r}); "
-            "precision in {{'adaptive','double','multiple'}}, endgame in {{'cauchy','powerseries'}}"
-            .format(precision, endgame))
+            "HomotopySolver: unknown (mptype, endgame) = ({!r}, {!r}); "
+            "mptype in {{'adaptive','double','multiple'}}, endgame in {{'cauchy','powerseries'}}"
+            .format(mptype, endgame))
     solver_cls = getattr(_pybnalag, cls_name)
     # A frequent mix-up (issue #258): passing the start-point *solver* instead of its
     # start *points*.  A solver is not iterable, so list(start_points) below would
@@ -720,9 +749,9 @@ def HomotopySolver(homotopy, start_points, target, *, precision='adaptive', endg
     return _HomotopySolverHolder(solver, homotopy, target, user_start)
 
 
-def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endgame='cauchy'):
+def user_homotopy(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='cauchy'):
     """Thin forwarder to :func:`HomotopySolver`, kept for back-compatibility."""
-    return HomotopySolver(homotopy, start_points, target, precision=precision, endgame=endgame)
+    return HomotopySolver(homotopy, start_points, target, mptype=mptype, precision=precision, endgame=endgame)
 
 
 def coefficient_parameter_homotopy(target, generic, path_variable='t'):
@@ -892,7 +921,7 @@ def parameter_sweep(make_system, generic_parameters, target_parameters,
     for i in my_indices:
         target = make_system(targets[i])
         H = coefficient_parameter_homotopy(target, generic)
-        solver = HomotopySolver(H, start_points, target, precision=mptype, endgame=endgame)
+        solver = HomotopySolver(H, start_points, target, mptype=mptype, endgame=endgame)
         solver.solve()
         local.append((i, collect(solver) if collect is not None else solver))
 
