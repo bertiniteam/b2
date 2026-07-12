@@ -211,3 +211,46 @@ def test_sympy_matrix_and_det_over_node_array():
 def test_sympy_bridge_reachable_at_top_level():
     # bertini.sympy_bridge is exposed lazily (module __getattr__)
     assert pb.sympy_bridge.to_sympy is to_sympy
+
+
+# --- helpful error when a SymPy expr is passed where a node is expected ---
+
+def _system_with_xy():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    return sys, x, y
+
+
+def test_add_function_rejects_sympy_with_pointer_to_from_sympy(sxy):
+    sx, sy = sxy
+    sys, x, y = _system_with_xy()
+    with pytest.raises(TypeError) as ei:
+        sys.add_function(sx**2 + sy)                  # a SymPy Add, not a bertini node
+    msg = str(ei.value)
+    assert 'SymPy' in msg
+    assert 'from_sympy' in msg                        # tells the user the exact fix
+
+
+def test_add_functions_rejects_sympy_with_index_and_pointer(sxy):
+    sx, sy = sxy
+    sys, x, y = _system_with_xy()
+    with pytest.raises(TypeError) as ei:
+        sys.add_functions([x**2 - 1, sx * sy])        # element 1 is SymPy
+    msg = str(ei.value)
+    assert 'expression 1' in msg                      # names which element
+    assert 'from_sympy' in msg
+
+
+def test_add_function_still_accepts_a_bertini_node(sxy):
+    # the guard must not get in the way of the normal path
+    sys, x, y = _system_with_xy()
+    sys.add_function(x * x - 1)
+    assert sys.num_functions() == 1
+
+
+def test_converted_sympy_node_is_accepted(sxy):
+    sx, sy = sxy
+    sys, x, y = _system_with_xy()
+    sys.add_function(from_sympy(sx**2 + sy, variables=[x, y]))   # the recommended path works
+    assert sys.num_functions() == 1
