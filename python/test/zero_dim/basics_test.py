@@ -80,6 +80,37 @@ def test_repr_counts_distinct_solutions_for_a_multiple_root():
     assert len(solver.finite_solutions()) == 1       # matches the merged accessor
 
 
+def test_settings_accepted_in_constructor(circle_intersection_solver):
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    sys.add_function(x ** 2 + y ** 2 - 1)
+    sys.add_function(x + y)
+    solver = ZeroDimSolver(sys, final_tolerance=1e-13)     # one-line make+set
+    assert float(solver.get_config(TolerancesConfig).final_tolerance) == 1e-13
+    solver.solve()
+    assert len(solver.all_solutions()) == 2                # still solves correctly
+
+
+def test_settings_accepted_in_solve(circle_intersection_solver):
+    solver = circle_intersection_solver
+    result = solver.solve(final_tolerance=1e-12)           # set-then-solve in one call
+    assert float(solver.get_config(TolerancesConfig).final_tolerance) == 1e-12
+    from bertini.records import SolveResult
+    assert isinstance(result, SolveResult)
+
+
+def test_bad_setting_name_is_a_clear_error(circle_intersection_solver):
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    sys.add_function(x ** 2 + y ** 2 - 1)
+    sys.add_function(x + y)
+    with pytest.raises(Exception) as ei:
+        ZeroDimSolver(sys, not_a_real_setting=5)
+    assert 'not_a_real_setting' in str(ei.value)           # names the offending field
+
+
 def test_custom_tolerances(circle_intersection_solver):
     """Changing tolerances before solving should still yield correct solutions.
 
