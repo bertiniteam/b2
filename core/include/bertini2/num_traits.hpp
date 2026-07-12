@@ -78,7 +78,7 @@ namespace bertini
 
 		/// \brief Convert a tracking tolerance to a number of significant digits.
 		inline
-		static unsigned TolToDigits(double tol)
+		static unsigned TolToDigits(NumErrorT tol)
 		{
 			return static_cast<unsigned>(ceil(-log10(tol)));
 		}

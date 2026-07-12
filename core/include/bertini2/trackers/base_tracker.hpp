@@ -168,8 +168,8 @@ namespace bertini{
 			Pass the tracker the configuration for tracking, to get it set up.
 			*/
 			void Setup(Predictor new_predictor_choice,
-			           double const& tracking_tolerance,
-						double const& path_truncation_threshold,
+			           NumErrorT const& tracking_tolerance,
+						NumErrorT const& path_truncation_threshold,
 						SteppingConfig const& stepping,
 						NewtonConfig const& newton)
 			{
@@ -199,7 +199,7 @@ namespace bertini{
 
 			\param tracking_tolerance The new value.  Newton iterations are performed until the step length is less than this number, or the max number of iterations has been reached, in which case the overall predict-correct step is viewed as a failure, and the step is undone.  This number must be positive.
 			*/
-			void SetTrackingTolerance(double const& tracking_tolerance)
+			void SetTrackingTolerance(NumErrorT const& tracking_tolerance)
 			{
 				if (tracking_tolerance <= 0)
 					throw std::runtime_error("tracking tolerance must be strictly positive");
@@ -211,7 +211,7 @@ namespace bertini{
 
 			/// \brief Set the threshold beyond which a path is judged to be going to infinity (and truncated).
 			/// \param tol The new (strictly positive) truncation threshold.
-			void SetInfiniteTruncationTolerance(double const& tol)
+			void SetInfiniteTruncationTolerance(NumErrorT const& tol)
 			{
 				if (tol <= 0)
 					throw std::runtime_error("truncation threshold must be strictly positive");
@@ -347,7 +347,7 @@ namespace bertini{
 			*/
 			template<typename C>
 			SuccessCode Refine(Vec<C> & new_space,
-								Vec<C> const& start_point, C const& current_time, double const& tolerance, unsigned max_iterations) const
+								Vec<C> const& start_point, C const& current_time, NumErrorT const& tolerance, unsigned max_iterations) const
 			{
 				static_assert(detail::IsTemplateParameter<C,NeededTypes>::value,"complex type for refinement must be a used type for the tracker");
 

@@ -105,7 +105,7 @@ namespace bertini{
 			\return The value of the right hand side of Criterion B
 			*/
 			inline 
-			double CriterionBRHS(double const& norm_J, double const& norm_J_inverse, unsigned num_newton_iterations_remaining, double const& tracking_tolerance, double const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			double CriterionBRHS(double const& norm_J, double const& norm_J_inverse, unsigned num_newton_iterations_remaining, NumErrorT const& tracking_tolerance, double const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return AMP_config.safety_digits_1 + D(norm_J, norm_J_inverse, AMP_config) + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining);
 			}
@@ -129,10 +129,10 @@ namespace bertini{
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
 			template<typename NumT>
-			bool CriterionB(double const& norm_J, 
-							double const& norm_J_inverse, 
-							unsigned num_newton_iterations_remaining, 
-							double const& tracking_tolerance, 
+			bool CriterionB(double const& norm_J,
+							double const& norm_J_inverse,
+							unsigned num_newton_iterations_remaining,
+							NumErrorT const& tracking_tolerance,
 							double const& norm_of_latest_newton_residual, 
 							AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
@@ -156,9 +156,9 @@ namespace bertini{
 			\return The value of the right hand side of the inequality from Criterion C.
 			*/
 			inline
-			double CriterionCRHS(double const& norm_J_inverse, 
-								 double const& norm_z, 
-								 double const& tracking_tolerance, 
+			double CriterionCRHS(double const& norm_J_inverse,
+								 double const& norm_z,
+								 NumErrorT const& tracking_tolerance,
 								 AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + norm_z);
@@ -179,9 +179,9 @@ namespace bertini{
 			\return The value of the right hand side of the inequality from Criterion C.
 			*/
 			template<typename Derived>
-			double CriterionCRHS(double const& norm_J_inverse, 
-								const Eigen::MatrixBase<Derived>& z, 
-								double tracking_tolerance, 
+			double CriterionCRHS(double const& norm_J_inverse,
+								const Eigen::MatrixBase<Derived>& z,
+								NumErrorT tracking_tolerance,
 								AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return CriterionCRHS(norm_J_inverse, double(z.norm()), tracking_tolerance, AMP_config);
@@ -203,7 +203,7 @@ namespace bertini{
 			\return A boolean indicating whether the criterion is satisfied.  True means path tracking can continue without modifying tracking settings.  False means that corrective action should be taken. 
 			*/
 			template<typename NumT, typename Derived>
-			bool CriterionC(double const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, double tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			bool CriterionC(double const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, NumErrorT tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return NumTraits<NumT>::NumDigits() > CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config);
 			}
