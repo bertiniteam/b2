@@ -55,31 +55,40 @@ namespace bertini {
 	expression (memoized on the node) and run at the point.  Variables are matched to values by
 	name, which is unambiguous because variables are canonical by name across the whole session.
 
-	Every variable appearing in the expression must have a supplied value, and every supplied
-	name must appear in the expression; either kind of mismatch throws.  The latter is a
-	guard against typos --- a value silently going nowhere is almost always a mistake.
+	Every variable appearing in the expression must have a supplied value; a missing value
+	always throws (there is no number to return without it).  When `strict` is true (the
+	default), every supplied name must also appear in the expression --- a guard against
+	typos, since a value silently going nowhere is usually a mistake.  When `strict` is
+	false, names that are not variables of the expression are ignored: the expression is
+	simply constant with respect to them.  This lets one full point be reused across an
+	expression and its derivatives (which drop variables), without pre-filtering.
 
 	\tparam T The evaluation number type (`complex_dbl` or `complex_mp`).
 	\param expr The expression to evaluate.
 	\param variable_values A map from variable name to the value to substitute.
+	\param strict When true, reject supplied names absent from the expression; when false, ignore them.
 	\return The value of the expression at the given point.
 	*/
 	template<typename T>
 	T EvalExpression(std::shared_ptr<node::Node> const& expr,
-	                 std::map<std::string, T> const& variable_values)
+	                 std::map<std::string, T> const& variable_values,
+	                 bool strict = true)
 	{
 		auto vars = node::GatherVariables(expr); // distinct, sorted by name
 
-		// Guard against typos: every supplied name must be a variable of the expression.
-		for (auto const& named_value : variable_values)
-		{
-			bool appears = false;
-			for (auto const& v : vars)
-				if (v->name() == named_value.first) { appears = true; break; }
-			if (!appears)
-				throw std::runtime_error("value supplied for '" + named_value.first +
-					"', which is not a variable of the expression being evaluated");
-		}
+		// Guard against typos: when strict, every supplied name must be a variable of the
+		// expression.  When not strict, extra names are simply ignored (the point-binding loop
+		// below only ever reads names that are variables of the expression).
+		if (strict)
+			for (auto const& named_value : variable_values)
+			{
+				bool appears = false;
+				for (auto const& v : vars)
+					if (v->name() == named_value.first) { appears = true; break; }
+				if (!appears)
+					throw std::runtime_error("value supplied for '" + named_value.first +
+						"', which is not a variable of the expression being evaluated");
+			}
 
 		// Bind values into the System's variable order (which is the name order of `vars`).
 		Vec<T> point(static_cast<Eigen::Index>(vars.size()));

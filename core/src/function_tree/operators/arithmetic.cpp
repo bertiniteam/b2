@@ -123,6 +123,56 @@ namespace{
 			return std::static_pointer_cast<Node>(Integer::Make(numerator(v)));
 		return std::static_pointer_cast<Node>(Rational::Make(v, mpq_rational(0)));
 	}
+
+	// If `base` is an exact literal number, return base^exp folded to a single literal node; else
+	// nullptr (the caller keeps the power node).  Handles Integer and real Rational (exactly) and
+	// Complex (so the imaginary unit Complex(0,1) squares to -1).  Callers handle exponents 0 and 1;
+	// negative exponents and very large ones (a guard against pathological blow-up of a purely
+	// cosmetic fold) are left unfolded.
+	constexpr int kMaxFoldExponent = 1000;
+	std::shared_ptr<Node> FoldConstantPower(std::shared_ptr<Node> const& base, int exp)
+	{
+		if (exp < 2 || exp > kMaxFoldExponent)
+			return nullptr;
+
+		if (auto as_int = std::dynamic_pointer_cast<Integer>(base))
+		{
+			mpz_int const& v = as_int->GetValue();
+			mpz_int r = v;
+			for (int ii = 1; ii < exp; ++ii) r *= v;
+			return Integer::Make(r);
+		}
+		if (auto as_rat = std::dynamic_pointer_cast<Rational>(base))
+		{
+			if (as_rat->GetValueImag() != 0)
+				return nullptr;   // a complex rational -- leave unfolded
+			mpq_rational const& v = as_rat->GetValueReal();
+			mpq_rational r = v;
+			for (int ii = 1; ii < exp; ++ii) r *= v;
+			return RationalToNode(r);
+		}
+		if (auto as_cplx = std::dynamic_pointer_cast<Complex>(base))
+		{
+			complex_mp const& v = as_cplx->GetValue();
+			complex_mp r = v;
+			for (int ii = 1; ii < exp; ++ii) r *= v;
+			return Complex::Make(r);
+		}
+		return nullptr;
+	}
+
+	// PowerOperator variant: fold base^exp when the exponent node is a small non-negative literal
+	// Integer (delegates to FoldConstantPower); else nullptr.
+	std::shared_ptr<Node> FoldConstantIntPower(std::shared_ptr<Node> const& base, std::shared_ptr<Node> const& exp)
+	{
+		auto as_int_exp = std::dynamic_pointer_cast<Integer>(exp);
+		if (!as_int_exp)
+			return nullptr;
+		mpz_int const& e = as_int_exp->GetValue();
+		if (e < 2 || e > kMaxFoldExponent)
+			return nullptr;
+		return FoldConstantPower(base, static_cast<int>(e));
+	}
 }
 
 std::shared_ptr<Node> SimplifiedSum(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms)
@@ -366,6 +416,7 @@ std::shared_ptr<Node> PowerOperator::Simplified() const
 	auto exp_s  = exponent_->Simplified();
 	if (exp_s->IsLiteralZero()) return Integer::Make(1);   // x^0 -> 1
 	if (exp_s->IsLiteralOne())  return base_s;             // x^1 -> x
+	if (auto folded = FoldConstantIntPower(base_s, exp_s)) return folded;   // constant^constant
 	return PowerOperator::Make(base_s, exp_s);
 }
 
@@ -374,6 +425,7 @@ std::shared_ptr<Node> IntegerPowerOperator::Simplified() const
 	if (exponent_ == 0) return Integer::Make(1);           // x^0 -> 1
 	auto op_s = operand_->Simplified();
 	if (exponent_ == 1) return op_s;                       // x^1 -> x
+	if (auto folded = FoldConstantPower(op_s, exponent_)) return folded;    // constant^n -> constant
 	return IntegerPowerOperator::Make(op_s, exponent_);
 }
 
@@ -390,6 +442,67 @@ std::shared_ptr<Node> ExpOperator::Simplified() const
 std::shared_ptr<Node> LogOperator::Simplified() const
 {
 	return LogOperator::Make(operand_->Simplified());
+}
+
+// Subs (variable -> node substitution) mirrors Simplified, but recurses with ->Subs(m) so it
+// replaces Variable leaves along the way, reassembling through the same Simplified* factories so
+// the substituted tree comes out folded.
+
+std::shared_ptr<Node> SumOperator::Subs(SubstitutionMap const& m) const
+{
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> terms;
+	terms.reserve(operands_.size());
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+		terms.emplace_back(operands_[ii]->Subs(m), signs_[ii]);
+	return SimplifiedSum(terms);
+}
+
+std::shared_ptr<Node> MultOperator::Subs(SubstitutionMap const& m) const
+{
+	std::vector<std::pair<std::shared_ptr<Node>, bool>> factors;
+	factors.reserve(operands_.size());
+	for (size_t ii = 0; ii < operands_.size(); ++ii)
+		factors.emplace_back(operands_[ii]->Subs(m), mult_or_div_[ii]);
+	return SimplifiedMult(factors);
+}
+
+std::shared_ptr<Node> NegateOperator::Subs(SubstitutionMap const& m) const
+{
+	return SimplifiedNegate(operand_->Subs(m));
+}
+
+std::shared_ptr<Node> PowerOperator::Subs(SubstitutionMap const& m) const
+{
+	auto base_s = base_->Subs(m);
+	auto exp_s  = exponent_->Subs(m);   // substitute into the exponent too (variable exponents)
+	if (exp_s->IsLiteralZero()) return Integer::Make(1);   // x^0 -> 1
+	if (exp_s->IsLiteralOne())  return base_s;             // x^1 -> x
+	if (auto folded = FoldConstantIntPower(base_s, exp_s)) return folded;   // constant^constant
+	return PowerOperator::Make(base_s, exp_s);
+}
+
+std::shared_ptr<Node> IntegerPowerOperator::Subs(SubstitutionMap const& m) const
+{
+	if (exponent_ == 0) return Integer::Make(1);           // x^0 -> 1
+	auto op_s = operand_->Subs(m);
+	if (exponent_ == 1) return op_s;                       // x^1 -> x
+	if (auto folded = FoldConstantPower(op_s, exponent_)) return folded;    // constant^n -> constant
+	return IntegerPowerOperator::Make(op_s, exponent_);
+}
+
+std::shared_ptr<Node> SqrtOperator::Subs(SubstitutionMap const& m) const
+{
+	return SqrtOperator::Make(operand_->Subs(m));
+}
+
+std::shared_ptr<Node> ExpOperator::Subs(SubstitutionMap const& m) const
+{
+	return ExpOperator::Make(operand_->Subs(m));
+}
+
+std::shared_ptr<Node> LogOperator::Subs(SubstitutionMap const& m) const
+{
+	return LogOperator::Make(operand_->Subs(m));
 }
 
 void SumOperator::print(std::ostream & target) const

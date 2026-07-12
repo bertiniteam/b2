@@ -75,11 +75,19 @@ def test_eval_missing_variable_is_an_error():
         f.eval(x=1)  # y omitted
 
 
-def test_eval_unknown_variable_is_an_error():
+def test_eval_unknown_variable_ignored_by_default():
+    # strict=False is the default: a value supplied for a variable the expression does not
+    # depend on is ignored (the expression is constant with respect to it).
+    x = Variable('x')
+    f = x * x
+    assert mp.abs(f.eval(x=3, z=9) - mpfr_complex("9")) < TOL  # z ignored, 3^2 == 9
+
+
+def test_eval_unknown_variable_is_an_error_when_strict():
     x = Variable('x')
     f = x * x
     with pytest.raises(Exception):
-        f.eval(x=2, z=9)  # z is not in the expression (typo guard)
+        f.eval(x=3, z=9, strict=True)  # typo guard on demand
 
 
 def test_eval_positional_argument_is_an_error():
@@ -117,3 +125,41 @@ def test_every_operator_evaluates_through_the_slp():
 def test_pi_constant_evaluates_through_the_slp():
     x = Variable('x')
     assert mp.abs((Pi() * x).eval(x=1) - mpfr_complex("3.14159265358979323846")) < mpfr_float("1e-15")
+
+
+# --- evaluating variable-dropped (differentiated) nodes against a full coordinate ordering ---
+
+def test_eval_ordering_second_positional():
+    # Differentiating drops variables; eval the reduced node at a full point by giving the
+    # coordinate ordering as a second positional argument (x=3, y=5, non-identity/distinct).
+    x, y = Variable('x'), Variable('y')
+    f = x * x * y
+    # d/dy = x^2 ; at (3, 5) -> 9, with y unused (dropped) but present in the point/ordering
+    assert mp.abs(f.differentiate(y).eval([3, 5], [x, y]) - mpfr_complex("9")) < TOL
+    # d3/(dy dx2) = 2 (constant): both variables dropped, still fine against the full ordering
+    assert mp.abs(f.differentiate([x, x, y]).eval([3, 5], [x, y]) - mpfr_complex("2")) < TOL
+
+
+def test_eval_ordering_positional_matches_keyword():
+    x, y = Variable('x'), Variable('y')
+    d = (x * x * y).differentiate(y)  # x^2
+    assert d.eval([3, 5], [x, y]) == d.eval([3, 5], variables=[x, y])
+
+
+def test_eval_variable_keyed_dict():
+    # dict keys may be Variable nodes, not just name strings
+    x, y = Variable('x'), Variable('y')
+    f = x * x * y
+    assert mp.abs(f.eval({x: 3, y: 5}) - mpfr_complex("45")) < TOL
+    # a superset dict is tolerated by default (strict=False) on a reduced node
+    assert mp.abs(f.differentiate(y).eval({x: 3, y: 5}) - mpfr_complex("9")) < TOL
+    # ... and rejected on demand
+    with pytest.raises(Exception):
+        f.differentiate(y).eval({x: 3, y: 5}, strict=True)  # y not in x^2
+
+
+def test_eval_wrong_length_point_is_an_error():
+    x, y = Variable('x'), Variable('y')
+    f = x * x * y
+    with pytest.raises(Exception):
+        f.eval([3, 5, 7], [x, y])  # 3 values, 2-variable ordering

@@ -102,6 +102,16 @@ namespace node{
 		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		/**
+		 Substitutes this variable: if its name is a key in `substitutions`, returns the associated
+		 replacement node; otherwise returns this variable unchanged.  This is the match site of the
+		 tree-wide Node::Subs.
+
+		 \param substitutions A map from variable name to the node to put in that variable's place.
+		 \return The replacement node if this variable is named in the map, else this variable.
+		 */
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+
+		/**
 		Compute the degree with respect to a single variable.
 
 		If this is the variable, then the degree is 1.  Otherwise, 0.

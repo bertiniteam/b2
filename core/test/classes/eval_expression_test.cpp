@@ -94,6 +94,34 @@ BOOST_AUTO_TEST_CASE(value_for_unknown_variable_is_an_error)
 	BOOST_CHECK_THROW(EvalExpression<complex_dbl>(f, values), std::runtime_error);
 }
 
+// With strict=false, a value supplied for a name not in the expression is ignored: the
+// expression is simply constant with respect to it (so one superset point serves an
+// expression and its variable-dropping derivatives).
+BOOST_AUTO_TEST_CASE(strict_false_ignores_unknown_variable)
+{
+	auto x = Variable::Make("x");
+
+	Nd f = x*x; // x=3 -> 9; the stray 'z' is ignored
+
+	std::map<std::string,complex_dbl> values{ {"x", complex_dbl(3,0)}, {"z", complex_dbl(7,0)} };
+	auto result = EvalExpression<complex_dbl>(f, values, /*strict=*/false);
+
+	BOOST_CHECK_SMALL(std::abs(result - complex_dbl(9,0)), 1e-14);
+}
+
+// strict=false relaxes only the extra-name guard: a variable the expression DOES depend on
+// still must be supplied a value, or evaluation throws.
+BOOST_AUTO_TEST_CASE(strict_false_still_requires_needed_variable)
+{
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+
+	Nd f = x + y;
+
+	std::map<std::string,complex_dbl> values{ {"x", complex_dbl(3,0)} }; // y omitted
+	BOOST_CHECK_THROW(EvalExpression<complex_dbl>(f, values, /*strict=*/false), std::runtime_error);
+}
+
 // The same expression evaluates correctly in multiple precision.
 BOOST_AUTO_TEST_CASE(evaluates_in_multiple_precision)
 {

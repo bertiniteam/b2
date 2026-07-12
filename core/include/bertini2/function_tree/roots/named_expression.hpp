@@ -101,6 +101,8 @@ namespace node{
 
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 
+		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 		bool IsHomogeneous(VariableGroup const& vars) const override;
 

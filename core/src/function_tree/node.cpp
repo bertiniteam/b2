@@ -73,6 +73,14 @@ namespace node{
 		return std::const_pointer_cast<Node>(shared_from_this());
 	}
 
+	// Default: nothing to substitute (leaves other than Variable, and Differentials) -- return
+	// this node unchanged.  Variable overrides to match; operators/NamedExpression override to
+	// recurse + reassemble through the Simplified* factories.
+	std::shared_ptr<Node> Node::Subs(SubstitutionMap const& /*substitutions*/) const
+	{
+		return std::const_pointer_cast<Node>(shared_from_this());
+	}
+
 	// Default: nothing to homogenize (leaves) -- return this node unchanged.  Operators that
 	// can carry degree-deficient summands (and their ancestors) override to rebuild functionally.
 	std::shared_ptr<Node> Node::Homogenized(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) const
@@ -111,6 +119,30 @@ namespace node{
 	bool Node::IsPolynomial(VariableGroup const&v) const
 	{
 		return Degree(v)>=0;
+	}
+
+	// Convenience: repeated single-variable differentiation.  Folds the virtual one-variable
+	// Differentiate `count` times; count==0 is the identity (the node itself).
+	std::shared_ptr<Node> Node::Differentiate(std::shared_ptr<Variable> const& v, unsigned count) const
+	{
+		if (count==0)
+			return std::const_pointer_cast<Node>(shared_from_this());
+		auto result = Differentiate(v);
+		for (unsigned i = 1; i < count; ++i)
+			result = result->Differentiate(v);
+		return result;
+	}
+
+	// Convenience: sequential differentiation wrt each variable in the group (mixed partials).
+	// Folds the virtual one-variable Differentiate over `vars` in order; empty is the identity.
+	std::shared_ptr<Node> Node::Differentiate(VariableGroup const& vars) const
+	{
+		if (vars.empty())
+			return std::const_pointer_cast<Node>(shared_from_this());
+		auto result = Differentiate(vars.front());
+		for (size_t i = 1; i < vars.size(); ++i)
+			result = result->Differentiate(vars[i]);
+		return result;
 	}
 
 	Node::Node()
