@@ -723,7 +723,19 @@ namespace eigenpy
 		{
 			if (internal::mpfr_slot<bertini::complex_mp>::uninitialized(from))
 				return To(0);
-			return static_cast<To>(from);
+			// complex_mp -> real target.  The only such registered cast is
+			// complex_mp -> double (complex_mp -> complex128 has its own
+			// specialization below; -> integer is unregistered).  Mirror numpy's
+			// builtin complex->real cast, which DISCARDS the imaginary part, by
+			// converting the real component.  `static_cast<To>(from)` instead
+			// routes through boost.multiprecision's complex->scalar conversion,
+			// which THROWS std::runtime_error("Could not convert imaginary number
+			// to scalar.") whenever the imaginary part is nonzero -- and that C++
+			// throw, escaping numpy's C cast loop (an implicitly-noexcept context),
+			// calls std::terminate() -> SIGABRT, hard-crashing the interpreter.
+			// It bites the moment a complex_mp value with any imaginary part is
+			// stored into a real array, e.g. `M = np.zeros(...); M[i,j] = z`.
+			return static_cast<To>(from.real());
 		}
 	};
 
