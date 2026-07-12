@@ -740,3 +740,52 @@ jobs:
           & $py -m pip install --no-index --find-links dist/ bertini2
           & $py -m pip install pytest pytest-timeout numpy sympy pandas networkx matplotlib
           & $py -m pytest python/test/ -v
+
+  # Build the documentation on every PR/push -- the SAME sphinx doctest + `-b html -W`
+  # (warnings-as-errors) build publish.yml runs at deploy time.  This closes the gap where a
+  # reStructuredText mistake in a docstring or tutorial (e.g. a malformed inline literal) only
+  # surfaced at the release deploy, never on the PR.  It reuses the ubuntu wheel this workflow
+  # already built (no extra compile), and needs no Doxygen (the Sphinx site is self-contained; the
+  # C++ reference is assembled separately only at deploy).  Skipped for the minimal reusable call
+  # (build_docs.yml builds the docs itself at deploy time).
+  docs_gate:
+    name: Docs build (doctest + html -W)
+    if: ${{ inputs.minimal != true }}
+    needs: [build_macos_ubuntu_wheels]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # gitpython in conf.py derives the version from the git history
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps for Sphinx
+        run: |
+          python -m pip install --upgrade pip
+          pip install sphinx furo sphinxcontrib-bibtex gitpython \
+            scikit-build-core build numpy matplotlib pandas sympy networkx
+
+      - name: Download built wheel
+        uses: actions/download-artifact@v5
+        with:
+          name: wheels-ubuntu-latest-3.11
+          path: dist/
+
+      - name: Install bertini from built wheel
+        run: pip install --no-index --find-links dist/ bertini2
+
+      - name: Tutorial doctests (Sphinx)
+        # Execute the docs' `.. testcode::` / `>>>` blocks against the wheel -- verified code, not
+        # just prose.  (These likewise did not run on PRs before.)
+        working-directory: python/docs
+        run: sphinx-build -b doctest --keep-going source ../../build/docs/doctest
+
+      - name: Build Python docs (Sphinx, warnings as errors)
+        # -W turns reST warnings into errors -- the same gate the deploy uses -- so a docstring or
+        # tutorial reST mistake fails the PR here, not the release.
+        working-directory: python/docs
+        run: sphinx-build -b html -W --keep-going -d ../../build/docs/py-doctrees source ../../build/docs/html
