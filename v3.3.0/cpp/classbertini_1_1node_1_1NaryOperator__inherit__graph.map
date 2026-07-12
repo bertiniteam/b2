@@ -1,0 +1,15 @@
+<map id="bertini::node::NaryOperator" name="bertini::node::NaryOperator">
+<area shape="rect" id="Node000001" title="Abstract interface for n&#45;ary Operator types." alt="" coords="115,240,315,265"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1node_1_1MultOperator.html" title="Multiplication and division Operator." alt="" coords="5,313,204,339"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="187,275,124,315,121,311,185,271"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1node_1_1SumOperator.html" title="Represents summation and difference Operator." alt="" coords="228,313,427,339"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="247,271,310,311,308,315,244,275"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1node_1_1Operator.html" title="Abstract Node type from which all Operators inherit." alt="" coords="131,167,300,192"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="218,206,218,240,213,240,213,206"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1node_1_1Node.html" title="An interface for all nodes in a function tree, and for a function object as well." alt="" coords="142,93,289,119"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="218,132,218,167,213,167,213,132"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1VisitableBase.html" title="The base class for visitable types." alt="" coords="44,5,205,45"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="159,52,203,91,200,95,155,56"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="230,5,385,45"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="276,56,231,95,227,91,273,52"/>
+</map>

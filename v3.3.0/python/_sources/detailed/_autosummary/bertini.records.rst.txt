@@ -1,0 +1,9 @@
+﻿bertini.records
+===============
+.. automodule:: bertini.records
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

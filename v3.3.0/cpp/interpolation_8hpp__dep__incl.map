@@ -1,0 +1,24 @@
+<map id="core/include/bertini2/endgames/interpolation.hpp" name="core/include/bertini2/endgames/interpolation.hpp">
+<area shape="rect" id="Node000001" title="Contains interpolation and extrapolation functions used in the endgames for estimating singular (and ..." alt="" coords="91,5,301,45"/>
+<area shape="rect" id="Node000002" href="$base__endgame_8hpp.html" title="Contains parent class, Endgame, the parent class for all endgames." alt="" coords="83,93,309,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="199,59,199,93,193,93,193,59"/>
+<area shape="rect" id="Node000003" href="$cauchy_8hpp.html" title="The concrete Cauchy endgame type." alt="" coords="5,181,176,221"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="164,144,116,183,112,179,161,140"/>
+<area shape="rect" id="Node000009" href="$powerseries_8hpp.html" title=" " alt="" coords="200,181,405,221"/>
+<area shape="poly" id="edge12_Node000002_Node000009" title=" " alt="" coords="232,140,281,179,277,183,229,144"/>
+<area shape="rect" id="Node000004" href="$endgames_8hpp.html" title="Collects the various header files which define the Bertini2 endgames." alt="" coords="119,269,273,309"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="126,228,174,267,171,271,123,232"/>
+<area shape="rect" id="Node000005" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="79,460,313,500"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="199,323,199,459,193,459,193,323"/>
+<area shape="rect" id="Node000006" href="$user__homotopy_8hpp.html" title=" " alt="" coords="88,548,304,588"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="167,320,113,381,88,419,69,461,64,481,69,499,81,514,95,526,129,546,127,550,92,531,77,517,64,501,58,481,64,459,83,417,109,378,163,317"/>
+<area shape="rect" id="Node000007" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="271,357,430,412"/>
+<area shape="poly" id="edge7_Node000004_Node000007" title=" " alt="" coords="241,314,308,355,306,360,238,319"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="199,514,199,548,193,548,193,514"/>
+<area shape="poly" id="edge8_Node000007_Node000005" title=" " alt="" coords="297,421,229,462,226,458,294,417"/>
+<area shape="poly" id="edge9_Node000007_Node000006" title=" " alt="" coords="353,426,346,465,338,484,327,502,296,530,259,550,256,545,293,526,323,498,333,482,340,463,347,425"/>
+<area shape="rect" id="Node000008" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="389,460,590,500"/>
+<area shape="poly" id="edge10_Node000007_Node000008" title=" " alt="" coords="394,418,455,458,452,462,391,422"/>
+<area shape="poly" id="edge11_Node000008_Node000007" title=" " alt="" coords="456,454,396,414,399,410,459,450"/>
+<area shape="poly" id="edge13_Node000009_Node000004" title=" " alt="" coords="270,232,221,271,218,267,267,228"/>
+</map>

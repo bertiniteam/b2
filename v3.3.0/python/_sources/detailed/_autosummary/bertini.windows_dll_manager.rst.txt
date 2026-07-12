@@ -1,0 +1,9 @@
+﻿bertini.windows\_dll\_manager
+=============================
+.. automodule:: bertini.windows_dll_manager
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

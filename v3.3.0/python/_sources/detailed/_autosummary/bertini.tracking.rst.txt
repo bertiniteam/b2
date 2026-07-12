@@ -1,0 +1,17 @@
+﻿bertini.tracking
+================
+.. automodule:: bertini.tracking
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+
+.. rubric:: Submodules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   observers
+

@@ -1,0 +1,19 @@
+<map id="core/include/bertini2/trackers/observers.hpp" name="core/include/bertini2/trackers/observers.hpp">
+<area shape="rect" id="Node000001" title="Contains the trackers/observers base types." alt="" coords="277,5,451,45"/>
+<area shape="rect" id="Node000002" href="$tracking_8hpp.html" title="Includes all files for tracking in Bertini2." alt="" coords="287,93,441,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="367,59,367,93,361,93,361,59"/>
+<area shape="rect" id="Node000003" href="$nag__algorithms_2numerical__irreducible__decomposition_8hpp.html" title="Provides the NID algorithms for Bertini2." alt="" coords="5,181,235,236"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="303,141,190,184,188,179,301,136"/>
+<area shape="rect" id="Node000004" href="$sharpen_8hpp.html" title="Provides the algorithms for sharpening points." alt="" coords="259,189,469,229"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="367,147,367,189,361,189,361,147"/>
+<area shape="rect" id="Node000005" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="494,181,653,236"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="420,137,515,179,513,184,418,141"/>
+<area shape="rect" id="Node000006" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="232,284,467,324"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="499,244,395,286,393,282,497,239"/>
+<area shape="rect" id="Node000007" href="$user__homotopy_8hpp.html" title=" " alt="" coords="319,372,535,412"/>
+<area shape="poly" id="edge7_Node000005_Node000007" title=" " alt="" coords="545,249,444,373,440,370,541,245"/>
+<area shape="rect" id="Node000008" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="542,284,743,324"/>
+<area shape="poly" id="edge8_Node000005_Node000008" title=" " alt="" coords="595,246,623,282,619,286,590,249"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="377,332,412,370,408,374,373,336"/>
+<area shape="poly" id="edge9_Node000008_Node000005" title=" " alt="" coords="626,274,599,238,603,235,631,271"/>
+</map>
