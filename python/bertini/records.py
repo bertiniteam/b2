@@ -203,6 +203,35 @@ class SolveResult:
         """The underlying solver object (all_solutions, solution_metadata, ...)."""
         return self._solver
 
+    @classmethod
+    def from_solver(cls, solver, directory=None):
+        """Build a :class:`SolveResult` from a solver that has already been ``solve()``d.
+
+        Reads the answer (finite solutions, each carrying its records provenance) and the
+        records ticket (run id, directory, recall count) straight off the solver.  The bare
+        solver records *itself* -- it attaches an output directory and writes every path as it
+        completes -- so this needs nothing from :func:`solve`; it is exactly how both a bare
+        ``solver.solve()`` and the :func:`solve` convenience produce the same result type.
+
+        Parameters
+        ----------
+        solver : object
+            A zero-dim / homotopy solver on which ``solve()`` has run.
+        directory : str, optional
+            The records directory to record on the result; defaults to the solver's own
+            attached records path (``records_path()``) when it recorded, else ``None``.
+        """
+        run_id = solver.records_run_id()
+        all_sols = solver.all_solutions()
+        solutions = [Solution(all_sols[int(m.path_index)],
+                              provenance=({'run': run_id, 'index': int(m.path_index)}
+                                          if run_id else None))
+                     for m in solver.solution_metadata() if m.is_finite]
+        if directory is None and run_id:
+            directory = solver.records_path()
+        return cls(solutions, run_id, directory if run_id else None,
+                   int(solver.num_paths_recalled()), solver)
+
 
 # --- chained solves -------------------------------------------------------------------
 
@@ -253,7 +282,7 @@ def _coerce_start_point(point, precision):
                       for v in arr.ravel()], dtype=mp_dtype)
 
 
-def _chained_solver(system, homotopy, start, where, *, precision, endgame):
+def _chained_solver(system, homotopy, start, where, *, mptype, endgame):
     """Build the HomotopySolver for a chained solve, plus the per-path provenance refs
     and the start-data identity that joins the ask."""
     import hashlib
@@ -276,14 +305,14 @@ def _chained_solver(system, homotopy, start, where, *, precision, endgame):
         _json.dumps(refs, sort_keys=True).encode()).hexdigest()
 
     solver = _nag.HomotopySolver(homotopy,
-                                 [_coerce_start_point(pt, precision) for pt in points],
-                                 system, precision=precision, endgame=endgame)
+                                 [_coerce_start_point(pt, mptype) for pt in points],
+                                 system, mptype=mptype, endgame=endgame)
     return solver, refs, identity
 
 
 # --- the three verbs ------------------------------------------------------------------
 
-def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauchy',
+def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, endgame='cauchy',
           homotopy=None, start=None):
     """Solve a polynomial system, recording and resuming automatically.
 
@@ -315,9 +344,14 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
         with full provenance -- the records link every new endpoint back through the
         prior run, all the way to the beginning.  Raw points (arrays) are archived as a
         *given*: provenance bottoms out honestly at data you supplied.
-    precision, endgame : str
-        Passed through to :func:`bertini.nag_algorithm.ZeroDimSolver` (``mptype`` /
-        ``endgame``).
+    mptype : str
+        The precision MODEL (``'double'`` / ``'multiple'`` / ``'adaptive'``), passed to
+        :func:`bertini.nag_algorithm.ZeroDimSolver`.
+    precision : int, optional
+        The number of DIGITS, applied via ``bertini.default_precision``.  A *string* here is the
+        deprecated old spelling of ``mptype`` and warns.
+    endgame : str
+        Passed through to :func:`bertini.nag_algorithm.ZeroDimSolver`.
 
     Returns
     -------
@@ -340,34 +374,28 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
         seed = _derive_seed()
     _set_seed(seed)
 
+    # precision= is an integer number of digits (applied via default_precision); mptype= is the
+    # precision model.  A string precision is the deprecated old model alias (warns).
+    mptype = _nag._precision_model(mptype, precision)
+
     where = str(directory if directory is not None else records_dir())
     if homotopy is not None:
         zd, refs, identity = _chained_solver(system, homotopy, start, where,
-                                             precision=precision, endgame=endgame)
+                                             mptype=mptype, endgame=endgame)
         if _recording_enabled:
             zd.record_to(where)
             zd.set_recorded_start_provenance(_json.dumps(refs), identity)
     else:
-        zd = _nag.ZeroDimSolver(system, mptype=precision, endgame=endgame)
+        zd = _nag.ZeroDimSolver(system, mptype=mptype, endgame=endgame)
         if _recording_enabled:
             zd.record_to(where)
-    zd.solve()
-
-    run_id = zd.records_run_id()
-    # finite solutions, carrying their TRUE path indices as provenance ({run, index}
-    # is exactly how the records reference points); with recording off there is no
-    # run to reference, so provenance is honestly absent
-    all_sols = zd.all_solutions()
-    solutions = [Solution(all_sols[int(m.path_index)],
-                          provenance=({'run': run_id, 'index': int(m.path_index)}
-                                      if run_id else None))
-                 for m in zd.solution_metadata() if m.is_finite]
-
-    result = SolveResult(solutions, run_id, where if run_id else None,
-                         int(zd.num_paths_recalled()), zd)
-    if run_id:
+    # A bare solve() already returns a SolveResult built from the solver's own records state
+    # (the solver records itself); the free function differs only in the setup + recall
+    # orchestration above and the auto-declare below.  Same result type either way.
+    result = zd.solve()
+    if result.run_id:
         # top-level solves auto-declare their deliverable: "what were my solutions?"
-        save("solutions [run %s]" % run_id, result,
+        save("solutions [run %s]" % result.run_id, result,
              description="finite solutions, auto-declared by bertini.solve",
              directory=where)
     return result

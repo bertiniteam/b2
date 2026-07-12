@@ -404,6 +404,105 @@ def _attach_group_kwarg():
 _attach_group_kwarg()
 
 
+# --- solve() returns a SolveResult; result() re-derives it -----------------------------------
+#
+# The solver records ITSELF (record_to / the ambient directory), so it can hand back the same
+# records-aware SolveResult that bertini.solve returns -- no dependence on the records-layer
+# orchestration.  This makes solver.solve() and bertini.solve() return the same type (removing the
+# "the bare solver returns nothing" inconsistency), and result() re-derives it if the caller
+# dropped the return value.
+def _solver_result(self):
+    """This solve's :class:`~bertini.records.SolveResult`: the finite solutions plus the records
+    ticket (run id, directory, recall count), read from the solver's own recorded state.
+
+    A bare ``solver.solve()`` already returns this; ``result()`` re-derives it (call it after
+    ``solve()``) if you did not keep the return value.
+    """
+    from bertini.records import SolveResult
+    return SolveResult.from_solver(self)
+
+
+def _describe_solver_class(cls_name):
+    """A friendly label from a bound solver class name, e.g.
+    'ZeroDimSolverCauchyAdaptivePrecision' -> 'ZeroDimSolver[cauchy, adaptive precision]'."""
+    for kind in ('ZeroDimSolver', 'HomotopySolver'):
+        if cls_name.startswith(kind):
+            rest = cls_name[len(kind):]
+            eg = ('cauchy' if 'Cauchy' in rest else
+                  'power-series' if 'PowerSeries' in rest else '?')
+            prec = ('double' if 'Double' in rest else
+                    'fixed-multiple' if 'FixedMultiple' in rest else
+                    'adaptive' if 'Adaptive' in rest else '?')
+            return '{}[{}, {} precision]'.format(kind, eg, prec)
+    return cls_name
+
+
+def _solver_repr(self):
+    """A readable one-line summary: the solver kind, and once solved its solution tally.
+
+    Replaces the useless default ``<...object at 0x...>``.  Before solving: the kind plus a nudge
+    to call ``.solve()``.  After: finite/real/singular counts out of the paths tracked, and the
+    records run id when the solve recorded.
+    """
+    label = _describe_solver_class(type(self).__name__)
+    try:
+        md = self.solution_metadata()
+    except Exception:
+        return '<{}>'.format(label)
+    if not len(md):
+        return '<{}: not yet solved -- call .solve()>'.format(label)
+    # count DISTINCT finite solutions (multiplicity representatives), matching the default
+    # merge_multiplicities view of finite_solutions(); len(md) is the raw path count.
+    reps = [m for m in md if m.is_finite and m.multiplicity_representative]
+    n_finite = len(reps)
+    n_real = sum(1 for m in reps if m.is_real)
+    n_sing = sum(1 for m in reps if m.is_singular)
+    run = self.records_run_id()
+    tail = ', run {}'.format(run) if run else ''
+    return ('<{}: {} finite solution{} ({} real, {} singular) of {} path{}{}>'
+            .format(label, n_finite, '' if n_finite == 1 else 's',
+                    n_real, n_sing, len(md), '' if len(md) == 1 else 's', tail))
+
+
+def _make_solve_returning_result(native_solve):
+    def solve(self, communicator=None, settings=None, **field_settings):
+        # settings= : a dict of config fields; **field_settings: the same by keyword.  Both are
+        # applied via set() before solving -- collapsing make/set/solve to one line.  communicator
+        # and settings are reserved names (MPI is a solve-time opt-in), never config fields.
+        combined = dict(settings or {}, **field_settings)
+        if combined:
+            self.set(**combined)
+        native_solve(self, communicator)
+        return self.result()
+    solve.__name__ = 'solve'
+    solve.__doc__ = ((getattr(native_solve, '__doc__', '') or '') +
+        "\n\nSettings: pass config fields either as a dict (settings={'final_tolerance': 1e-13}) or by "
+        "keyword (solve(final_tolerance=1e-13)); each is applied via set() before solving, so "
+        "make/set/solve becomes a single call.  communicator= is reserved for MPI (never a setting).\n\n"
+        "Returns a bertini.records.SolveResult -- the finite solutions plus this solve's records "
+        "ticket (run id, directory, recall count), read from the solver's own records (the solver "
+        "records itself, on by default).  Drop it freely: solver.result() re-derives it, and the "
+        "records hold the truth.")
+    return solve
+
+
+def _attach_result_and_solve():
+    """Make every solver's solve() return a SolveResult and give it result() (idempotent)."""
+    for name in dir(_pybnalag):
+        if not name.startswith(('ZeroDimSolver', 'HomotopySolver')):
+            continue
+        cls = getattr(_pybnalag, name)
+        if not isinstance(cls, type) or getattr(cls, '_b2_has_result', False):
+            continue
+        cls.result = _solver_result
+        cls.solve = _make_solve_returning_result(cls.solve)
+        cls.__repr__ = _solver_repr
+        cls._b2_has_result = True
+
+
+_attach_result_and_solve()
+
+
 # --- ZeroDimSolver: a friendly factory over the bound ZeroDimSolver<endgame x precision> classes ---
 
 # Each bound solver class is named ZeroDimSolver<Endgame><Precision> (the start system is NO
@@ -453,8 +552,32 @@ def _infer_start_system(system):
     return 'mhom'
 
 
+def _precision_model(mptype, precision):
+    """Resolve the precision *model* (mptype) and apply an integer *digit count* (precision).
+
+    ``precision`` is the integer number of digits; it is applied via ``bertini.default_precision``
+    at construction (the documented "set precision, then build" step, which the fixed-multiple and
+    adaptive trackers read at construction).  ``mptype`` is the precision MODEL
+    (``'double'`` / ``'multiple'`` / ``'adaptive'``).
+
+    A **string** ``precision`` is the old, confusing model-selector alias -- honored as ``mptype``
+    with a ``DeprecationWarning`` for one release.  Returns the mptype string to build with.
+    """
+    import warnings
+    if isinstance(precision, str):
+        warnings.warn(
+            "precision={0!r} as a precision-MODEL is deprecated and will be removed: pass "
+            "mptype={0!r} for the model, and reserve precision= for an integer number of digits."
+            .format(precision), DeprecationWarning, stacklevel=3)
+        return precision
+    if precision is not None:
+        import bertini
+        bertini.default_precision(int(precision))     # the "set precision, then build" step
+    return mptype
+
+
 def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
-                  precision=None):
+                  precision=None, settings=None, **field_settings):
     """Construct a zero-dim solver by name, with friendly defaults.
 
     ``ZeroDimSolver(system)`` is the Cauchy endgame in adaptive precision with the start system
@@ -464,12 +587,18 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
 
         ZeroDimSolver(system, endgame='cauchy', mptype='amp', startsystem='mhom')
 
+    Config settings may be applied at construction (via ``set``) so no separate ``set()`` is needed
+    before solving -- either as a dict (``ZeroDimSolver(sys, settings={'final_tolerance': 1e-13})``)
+    or by keyword (``ZeroDimSolver(sys, final_tolerance=1e-13)``); the same go to ``solve(...)`` too.
+
     Parameters
     ----------
     system : the polynomial :class:`~bertini.System` to solve.
     endgame : ``'cauchy'`` (default) or ``'powerseries'``.
-    mptype : the precision -- ``'double'``, ``'multiple'``, or ``'adaptive'`` (``'amp'``, the default).
-    precision : an alias for ``mptype``; if given (not ``None``) it overrides ``mptype``.
+    mptype : the precision MODEL -- ``'double'``, ``'multiple'``, or ``'adaptive'`` (``'amp'``, the default).
+    precision : the number of DIGITS (an ``int``), applied via ``bertini.default_precision`` at
+        construction -- meaningful for ``'multiple'``/``'adaptive'`` (``'double'`` is always 16).  A
+        *string* here is the deprecated old spelling of ``mptype`` and warns.
     startsystem : ``'infer'`` (default -- choose from the variable-group structure, matching the
         C++ blackbox), or force it with ``'binomial'`` / ``'linearproduct'`` / ``'mhom'``.  To run from a homotopy you
         built yourself with given start points, use :class:`HomotopySolver` / :func:`blend_homotopy`
@@ -495,8 +624,7 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
         >>> solver.solve()                             # doctest: +SKIP
         >>> solver.all_solutions()                         # doctest: +SKIP
     """
-    if precision is not None:
-        mptype = precision
+    mptype = _precision_model(mptype, precision)
     start_key = str(startsystem).strip().lower().replace('-', '_').replace('_', '')
     # user-homotopy can't be built from a system alone -- point at the right entry point.
     if start_key in ('user', 'userhomotopy'):
@@ -517,7 +645,13 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
     # Every start system is built through its explicit factory.  (Previously total_degree
     # short-circuited to the default constructor, which silently substituted the *default* start
     # system -- the facade quirk that made startsystem='totaldegree' secretly solve the default.)
-    return cls(system, _pybnalag.start_system_factory(start_enum))
+    solver = cls(system, _pybnalag.start_system_factory(start_enum))
+    # config fields as a dict (settings={...}) and/or by keyword, applied at construction so a one-line
+    # ZeroDimSolver(sys, final_tolerance=1e-13) needs no separate set() before solve().
+    combined = dict(settings or {}, **field_settings)
+    if combined:
+        solver.set(**combined)
+    return solver
 
 
 # --- HomotopySolver: track a homotopy YOU built, from start points YOU have ----------------------
@@ -552,8 +686,12 @@ class _HomotopySolverHolder:
     def __getattr__(self, name):
         return getattr(object.__getattribute__(self, '_solver'), name)
 
+    def __repr__(self):
+        # special methods bypass __getattr__, so delegate the friendly repr explicitly
+        return repr(object.__getattribute__(self, '_solver'))
 
-def HomotopySolver(homotopy, start_points, target, *, precision='adaptive', endgame='cauchy'):
+
+def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='cauchy'):
     """Track a homotopy you constructed, from a list of start points you already have (e.g. the
     solutions of an earlier solve) -- the continuation primitive (parameter-homotopy workflow).
 
@@ -572,23 +710,27 @@ def HomotopySolver(homotopy, start_points, target, *, precision='adaptive', endg
     target : System
         The system the solutions satisfy at t=0 -- used for dehomogenize / residual and for the
         solver's consistency check.  It must NOT have a path variable.
-    precision : {'adaptive', 'double', 'multiple'}
-        'adaptive' (default) is the robust path.
+    mptype : {'adaptive', 'double', 'multiple'}
+        The precision MODEL; 'adaptive' (default) is the robust path.
+    precision : int, optional
+        The number of DIGITS, applied via ``bertini.default_precision`` at construction.  A string
+        here is the deprecated old spelling of ``mptype`` and warns.
     endgame : {'cauchy', 'powerseries'}
 
     Returns a solver: call ``.solve()`` then ``.all_solutions()`` as for any solver.
     """
+    mptype = _precision_model(mptype, precision)
     prec = {'double': 'double', 'multiple': 'multiple', 'fixed_multiple': 'multiple',
-            'adaptive': 'adaptive'}.get(precision, precision)
+            'adaptive': 'adaptive'}.get(mptype, mptype)
     eg = {'cauchy': 'cauchy', 'powerseries': 'powerseries',
           'power_series': 'powerseries'}.get(endgame, endgame)
     try:
         cls_name = _HOMOTOPY_SOLVER_CLASSES[(prec, eg)]
     except KeyError:
         raise ValueError(
-            "HomotopySolver: unknown (precision, endgame) = ({!r}, {!r}); "
-            "precision in {{'adaptive','double','multiple'}}, endgame in {{'cauchy','powerseries'}}"
-            .format(precision, endgame))
+            "HomotopySolver: unknown (mptype, endgame) = ({!r}, {!r}); "
+            "mptype in {{'adaptive','double','multiple'}}, endgame in {{'cauchy','powerseries'}}"
+            .format(mptype, endgame))
     solver_cls = getattr(_pybnalag, cls_name)
     # A frequent mix-up (issue #258): passing the start-point *solver* instead of its
     # start *points*.  A solver is not iterable, so list(start_points) below would
@@ -607,9 +749,9 @@ def HomotopySolver(homotopy, start_points, target, *, precision='adaptive', endg
     return _HomotopySolverHolder(solver, homotopy, target, user_start)
 
 
-def user_homotopy(homotopy, start_points, target, *, precision='adaptive', endgame='cauchy'):
+def user_homotopy(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='cauchy'):
     """Thin forwarder to :func:`HomotopySolver`, kept for back-compatibility."""
-    return HomotopySolver(homotopy, start_points, target, precision=precision, endgame=endgame)
+    return HomotopySolver(homotopy, start_points, target, mptype=mptype, precision=precision, endgame=endgame)
 
 
 def coefficient_parameter_homotopy(target, generic, path_variable='t'):
@@ -779,7 +921,7 @@ def parameter_sweep(make_system, generic_parameters, target_parameters,
     for i in my_indices:
         target = make_system(targets[i])
         H = coefficient_parameter_homotopy(target, generic)
-        solver = HomotopySolver(H, start_points, target, precision=mptype, endgame=endgame)
+        solver = HomotopySolver(H, start_points, target, mptype=mptype, endgame=endgame)
         solver.solve()
         local.append((i, collect(solver) if collect is not None else solver))
 

@@ -40,6 +40,41 @@ from bertini._pybertini.function_tree import AbstractNode as _AbstractNode
 _native = {}
 
 
+def _as_function_node(e, index=None):
+    """Return ``e`` if it is a function-tree node, else raise a targeted ``TypeError``.
+
+    Special-cases a SymPy expression -- the common mistake -- by pointing at
+    :func:`bertini.sympy_bridge.from_sympy`, instead of letting the raw Boost.Python
+    ``add_function`` signature error (which mentions SymPy internals such as ``Add``) surface.
+    Detection is by module name, so SymPy need not be importable.
+    """
+    if isinstance(e, _AbstractNode):
+        return e
+    where = "the expression" if index is None else f"expression {index}"
+    if type(e).__module__.split('.', 1)[0] == 'sympy':
+        raise TypeError(
+            f"{where} is a SymPy {type(e).__name__}, not a bertini function-tree node.  "
+            "bertini does not accept SymPy objects directly (a SymPy float would silently cap the "
+            "precision of the arbitrary-precision function tree).  Convert it first with "
+            "bertini.sympy_bridge.from_sympy(expr) -- passing your bertini Variables -- and add the "
+            "result."
+        )
+    raise TypeError(
+        f"{where} is a {type(e).__name__}, not a function-tree node; "
+        "did a coefficient fail to combine with a variable (or a whole expression get built)?"
+    )
+
+
+def add_function(self, expression):
+    """Add a single expression as a function to the system.
+
+    A thin guard over the native ``add_function`` that turns the common mistakes into a clear
+    message -- most usefully, passing a SymPy expression instead of a bertini node (convert with
+    :func:`bertini.sympy_bridge.from_sympy` first).  Returns whatever the native call returns.
+    """
+    return _native['add_function'](self, _as_function_node(expression))
+
+
 def add_functions(self, expressions):
     """Add a vector/array of expressions as individual functions; returns the count added.
 
@@ -52,13 +87,7 @@ def add_functions(self, expressions):
         expressions = [expressions]
     flat = np.array(expressions, dtype=object).reshape(-1)
     for i in range(flat.size):
-        e = flat[i]
-        if not isinstance(e, _AbstractNode):
-            raise TypeError(
-                f"expression {i} is a {type(e).__name__}, not a function-tree node; "
-                "did a coefficient fail to combine with a variable?"
-            )
-        self.add_function(e)
+        _native['add_function'](self, _as_function_node(flat[i], i))
     return int(flat.size)
 
 
@@ -265,6 +294,8 @@ def install(System):
         return
     _native['randomize'] = System.randomize
     _native['add_variable_group'] = System.add_variable_group
+    _native['add_function'] = System.add_function
+    System.add_function = add_function
     System.add_functions = add_functions
     System.add_variable_group = add_variable_group
     System.clone = clone

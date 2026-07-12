@@ -754,6 +754,16 @@ BOOST_AUTO_TEST_CASE(merge_multiplicities_and_metadata_for_point)
 	// coincident=true: every copy in the cluster (all four coincident endpoints).
 	BOOST_CHECK_EQUAL(zd.CoincidentMetadataForPoint(pt, 1e-5).size(), 4u);
 
+	// DefaultPointMatchTolerance is exactly the solver's same-point tolerance (final_tolerance *
+	// same_point_tolerance_multiplier) -- the default the binding uses when a caller omits tol, so a
+	// solution taken from the solver's own lists matches itself back with no explicit tolerance.
+	auto const expected_tol =
+		zd.Get<algorithm::TolerancesConfig>().final_tolerance *
+		zd.Get<algorithm::PostProcessingConfig>().same_point_tolerance_multiplier;
+	BOOST_CHECK_EQUAL(zd.DefaultPointMatchTolerance(), expected_tol);
+	auto const rep_default = zd.MetadataForPoint(pt, zd.DefaultPointMatchTolerance());
+	BOOST_CHECK_EQUAL(rep_default.multiplicity, 4);
+
 	// a point matching nothing throws.
 	auto far = pt;
 	for (int i = 0; i < far.size(); ++i)

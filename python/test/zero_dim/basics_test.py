@@ -45,6 +45,92 @@ def test_solution_count(circle_intersection_solver):
     assert len(solns) == 2
 
 
+def test_solve_returns_a_result_and_repr_is_informative(circle_intersection_solver):
+    from bertini.records import SolveResult
+    solver = circle_intersection_solver
+
+    # before solving: repr says so, not the useless default object line
+    r = repr(solver)
+    assert 'object at 0x' not in r
+    assert 'not yet solved' in r
+    assert 'ZeroDimSolver' in r and 'cauchy' in r and 'adaptive' in r   # kind is spelled out
+
+    # solve() returns a SolveResult; repr now carries the tally
+    result = solver.solve()
+    assert isinstance(result, SolveResult)
+    r = repr(solver)
+    assert 'object at 0x' not in r
+    assert '2 finite solutions' in r
+    assert 'of 2 paths' in r
+
+
+def test_repr_counts_distinct_solutions_for_a_multiple_root():
+    # {u^2, v^2}: one solution (0,0) of multiplicity 4 -- repr shows 1 finite (singular), 4 paths
+    u, v = pb.Variable('u'), pb.Variable('v')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([u, v]))
+    sys.add_function(u * u)
+    sys.add_function(v * v)
+    solver = ZeroDimSolver(sys)
+    solver.solve()
+    r = repr(solver)
+    assert '1 finite solution ' in r                 # distinct, singular pluralization
+    assert '1 singular' in r
+    assert 'of 4 paths' in r
+    assert len(solver.finite_solutions()) == 1       # matches the merged accessor
+
+
+def test_settings_accepted_in_constructor(circle_intersection_solver):
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    sys.add_function(x ** 2 + y ** 2 - 1)
+    sys.add_function(x + y)
+    solver = ZeroDimSolver(sys, final_tolerance=1e-13)     # one-line make+set
+    assert float(solver.get_config(TolerancesConfig).final_tolerance) == 1e-13
+    solver.solve()
+    assert len(solver.all_solutions()) == 2                # still solves correctly
+
+
+def test_settings_accepted_in_solve(circle_intersection_solver):
+    solver = circle_intersection_solver
+    result = solver.solve(final_tolerance=1e-12)           # set-then-solve in one call
+    assert float(solver.get_config(TolerancesConfig).final_tolerance) == 1e-12
+    from bertini.records import SolveResult
+    assert isinstance(result, SolveResult)
+
+
+def test_settings_dict_accepted_in_constructor_and_solve(circle_intersection_solver):
+    x, y = pb.Variable('x'), pb.Variable('y')
+
+    def sq():
+        s = pb.System()
+        s.add_variable_group(pb.VariableGroup([x, y]))
+        s.add_function(x ** 2 + y ** 2 - 1)
+        s.add_function(x + y)
+        return s
+
+    # settings= dict in the constructor
+    solver = ZeroDimSolver(sq(), settings={'final_tolerance': 1e-13})
+    assert float(solver.get_config(TolerancesConfig).final_tolerance) == 1e-13
+
+    # settings= dict in solve(), merged with keyword form
+    s2 = ZeroDimSolver(sq())
+    s2.solve(settings={'final_tolerance': 1e-12}, newton_before_endgame=1e-4)
+    assert float(s2.get_config(TolerancesConfig).final_tolerance) == 1e-12
+
+
+def test_bad_setting_name_is_a_clear_error(circle_intersection_solver):
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    sys.add_function(x ** 2 + y ** 2 - 1)
+    sys.add_function(x + y)
+    with pytest.raises(Exception) as ei:
+        ZeroDimSolver(sys, not_a_real_setting=5)
+    assert 'not_a_real_setting' in str(ei.value)           # names the offending field
+
+
 def test_custom_tolerances(circle_intersection_solver):
     """Changing tolerances before solving should still yield correct solutions.
 

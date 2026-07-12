@@ -300,6 +300,26 @@ def test_get_settings_is_a_named_dict_of_configs():
     assert isinstance(settings['tolerances'], TolerancesConfig)
 
 
+def test_get_settings_as_dict_is_a_flat_field_dict():
+    a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
+    a.update(final_tolerance="1e-12")
+    flat = a.get_settings(as_dict=True)
+    # flat {field: value}, no struct layer (fields from all the solver-owned configs)
+    assert 'final_tolerance' in flat and 'condition_number_threshold' in flat
+    assert all(not hasattr(v, 'to_dict') for v in flat.values())
+    assert float(flat['final_tolerance']) == 1e-12
+    # the config-keyed default is unchanged (still what set_settings consumes)
+    assert set(a.get_settings()) == set(a.config_names())
+
+
+def test_get_settings_as_dict_round_trips_through_set():
+    a = ZeroDimSolver(_square(), mptype='adaptive')
+    a.update(final_tolerance="1e-10")
+    b = ZeroDimSolver(_square(), mptype='adaptive')
+    b.set(**a.get_settings(as_dict=True))       # flat dict applies straight through set()
+    assert b.get_config(TolerancesConfig).final_tolerance == 1e-10
+
+
 def test_settings_round_trip_onto_another_solver():
     from bertini.nag_algorithm import ZeroDimConfig
     a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
