@@ -151,15 +151,14 @@ def make_plot(paths, out_stem):
             ax.scatter([x[0]], [y[0]], facecolor="gold", edgecolor="black", s=70, zorder=4, marker="o")
             if len(outside):
                 # the line is simply cut off where it leaves the window (no end marker); the infinity
-                # symbol sits at that exit point, JUST BARELY OUTSIDE the axis, saying where it went.
+                # symbol sits at that exit point, just INSIDE the axis, saying where it went.
                 up = y[i] > top
                 edge = top if up else bot
                 dy = y[i] - y[i - 1] if i > 0 else 1.0       # crossing point, interpolated
                 xe = x[i - 1] + (edge - y[i - 1]) / dy * (x[i] - x[i - 1]) if i > 0 and dy != 0 else x[i]
-                offset = 0.025 * (top - bot)
-                ax.text(xe, edge + offset if up else edge - offset, r"$\infty$", color=st["color"],
-                        fontsize=13, ha="center", va="bottom" if up else "top", zorder=6,
-                        clip_on=False)          # allowed to render outside the axes box
+                inset = 0.04 * (top - bot)
+                ax.text(xe, edge - inset if up else edge + inset, r"$\infty$", color=st["color"],
+                        fontsize=13, ha="center", va="top" if up else "bottom", zorder=6)
         else:
             ax.plot(x, y, ls=st["ls"], color=st["color"], lw=1.8, alpha=0.9, label=lbl, zorder=2)
             ax.scatter([x[0]], [y[0]], facecolor="gold", edgecolor="black", s=70, zorder=4, marker="o")
@@ -173,6 +172,10 @@ def make_plot(paths, out_stem):
     tx = ax.get_xaxis_transform()                            # x in data coords, y in axes coords
     for size, col in [(380, "#c62828"), (190, "white"), (60, "#c62828")]:
         ax.scatter([0.0], [1.07], s=size, c=col, transform=tx, clip_on=False, zorder=10)
+    # a green "play" triangle just above t=1 marks where the homotopy STARTS -- press play, and the
+    # paths flow left from the start system to the target.
+    ax.scatter([1.0], [1.07], s=320, marker=">", facecolor="#2e7d32", edgecolor="black",
+               transform=tx, clip_on=False, zorder=10)
     ax.axvline(ENDGAME_BOUNDARY, color="purple", ls="--", lw=1.4)
     ax.text(ENDGAME_BOUNDARY, bot, " endgame boundary",
             color="purple", va="bottom", ha="left", fontsize=9, rotation=90)
