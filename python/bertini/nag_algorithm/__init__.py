@@ -404,6 +404,53 @@ def _attach_group_kwarg():
 _attach_group_kwarg()
 
 
+# --- solve() returns a SolveResult; result() re-derives it -----------------------------------
+#
+# The solver records ITSELF (record_to / the ambient directory), so it can hand back the same
+# records-aware SolveResult that bertini.solve returns -- no dependence on the records-layer
+# orchestration.  This makes solver.solve() and bertini.solve() return the same type (removing the
+# "the bare solver returns nothing" inconsistency), and result() re-derives it if the caller
+# dropped the return value.
+def _solver_result(self):
+    """This solve's :class:`~bertini.records.SolveResult`: the finite solutions plus the records
+    ticket (run id, directory, recall count), read from the solver's own recorded state.
+
+    A bare ``solver.solve()`` already returns this; ``result()`` re-derives it (call it after
+    ``solve()``) if you did not keep the return value.
+    """
+    from bertini.records import SolveResult
+    return SolveResult.from_solver(self)
+
+
+def _make_solve_returning_result(native_solve):
+    def solve(self, *args, **kwargs):
+        native_solve(self, *args, **kwargs)
+        return self.result()
+    solve.__name__ = 'solve'
+    solve.__doc__ = ((getattr(native_solve, '__doc__', '') or '') +
+        "\n\nReturns a bertini.records.SolveResult -- the finite solutions plus this solve's records "
+        "ticket (run id, directory, recall count), read from the solver's own records (the solver "
+        "records itself, on by default).  Drop it freely: solver.result() re-derives it, and the "
+        "records hold the truth.")
+    return solve
+
+
+def _attach_result_and_solve():
+    """Make every solver's solve() return a SolveResult and give it result() (idempotent)."""
+    for name in dir(_pybnalag):
+        if not name.startswith(('ZeroDimSolver', 'HomotopySolver')):
+            continue
+        cls = getattr(_pybnalag, name)
+        if not isinstance(cls, type) or getattr(cls, '_b2_has_result', False):
+            continue
+        cls.result = _solver_result
+        cls.solve = _make_solve_returning_result(cls.solve)
+        cls._b2_has_result = True
+
+
+_attach_result_and_solve()
+
+
 # --- ZeroDimSolver: a friendly factory over the bound ZeroDimSolver<endgame x precision> classes ---
 
 # Each bound solver class is named ZeroDimSolver<Endgame><Precision> (the start system is NO

@@ -203,6 +203,35 @@ class SolveResult:
         """The underlying solver object (all_solutions, solution_metadata, ...)."""
         return self._solver
 
+    @classmethod
+    def from_solver(cls, solver, directory=None):
+        """Build a :class:`SolveResult` from a solver that has already been ``solve()``d.
+
+        Reads the answer (finite solutions, each carrying its records provenance) and the
+        records ticket (run id, directory, recall count) straight off the solver.  The bare
+        solver records *itself* -- it attaches an output directory and writes every path as it
+        completes -- so this needs nothing from :func:`solve`; it is exactly how both a bare
+        ``solver.solve()`` and the :func:`solve` convenience produce the same result type.
+
+        Parameters
+        ----------
+        solver : object
+            A zero-dim / homotopy solver on which ``solve()`` has run.
+        directory : str, optional
+            The records directory to record on the result; defaults to the solver's own
+            attached records path (``records_path()``) when it recorded, else ``None``.
+        """
+        run_id = solver.records_run_id()
+        all_sols = solver.all_solutions()
+        solutions = [Solution(all_sols[int(m.path_index)],
+                              provenance=({'run': run_id, 'index': int(m.path_index)}
+                                          if run_id else None))
+                     for m in solver.solution_metadata() if m.is_finite]
+        if directory is None and run_id:
+            directory = solver.records_path()
+        return cls(solutions, run_id, directory if run_id else None,
+                   int(solver.num_paths_recalled()), solver)
+
 
 # --- chained solves -------------------------------------------------------------------
 
@@ -351,23 +380,13 @@ def solve(system, seed=None, directory=None, precision='adaptive', endgame='cauc
         zd = _nag.ZeroDimSolver(system, mptype=precision, endgame=endgame)
         if _recording_enabled:
             zd.record_to(where)
-    zd.solve()
-
-    run_id = zd.records_run_id()
-    # finite solutions, carrying their TRUE path indices as provenance ({run, index}
-    # is exactly how the records reference points); with recording off there is no
-    # run to reference, so provenance is honestly absent
-    all_sols = zd.all_solutions()
-    solutions = [Solution(all_sols[int(m.path_index)],
-                          provenance=({'run': run_id, 'index': int(m.path_index)}
-                                      if run_id else None))
-                 for m in zd.solution_metadata() if m.is_finite]
-
-    result = SolveResult(solutions, run_id, where if run_id else None,
-                         int(zd.num_paths_recalled()), zd)
-    if run_id:
+    # A bare solve() already returns a SolveResult built from the solver's own records state
+    # (the solver records itself); the free function differs only in the setup + recall
+    # orchestration above and the auto-declare below.  Same result type either way.
+    result = zd.solve()
+    if result.run_id:
         # top-level solves auto-declare their deliverable: "what were my solutions?"
-        save("solutions [run %s]" % run_id, result,
+        save("solutions [run %s]" % result.run_id, result,
              description="finite solutions, auto-declared by bertini.solve",
              directory=where)
     return result

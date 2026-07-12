@@ -48,6 +48,51 @@ def test_solve_records_and_rerun_recalls(tmp_path):
         assert all(abs(complex(u) - complex(v)) < 1e-12 for u, v in zip(a, b))
 
 
+def test_bare_solver_solve_returns_a_solveresult(tmp_path):
+    # the bare solver records ITSELF, so solve() hands back the same records-aware SolveResult
+    # bertini.solve returns -- no dependence on the records-layer convenience.
+    from bertini.records import SolveResult
+    d = str(tmp_path / 'records')
+    solver = pb.ZeroDimSolver(circle_line())
+    solver.record_to(d)
+    result = solver.solve()
+    assert isinstance(result, SolveResult)
+    assert len(result) == 2
+    assert result.run_id                         # it recorded on its own
+    assert result.directory == d
+    assert result.num_recalled == 0
+    assert result.solver is solver
+
+
+def test_solver_result_re_derives_the_solveresult(tmp_path):
+    # result() re-derives the SolveResult if the caller dropped solve()'s return
+    from bertini.records import SolveResult
+    d = str(tmp_path / 'records')
+    solver = pb.ZeroDimSolver(circle_line())
+    solver.record_to(d)
+    solver.solve()                               # return value discarded
+    again = solver.result()
+    assert isinstance(again, SolveResult)
+    assert again.run_id and len(again) == 2
+
+
+def test_bare_solver_result_recalls_like_bertini_solve(tmp_path):
+    # the bare solver's own recall shows up in its SolveResult.num_recalled
+    d = str(tmp_path / 'records')
+    pb.random.set_random_seed(7)
+    first = pb.ZeroDimSolver(circle_line())
+    first.record_to(d)
+    r1 = first.solve()
+    assert r1.num_recalled == 0
+
+    pb.random.set_random_seed(7)
+    second = pb.ZeroDimSolver(circle_line())
+    second.record_to(d)
+    r2 = second.solve()
+    assert r2.run_id == r1.run_id                # same ask -> same run, recalled
+    assert r2.num_recalled == 2
+
+
 def test_solutions_are_points_that_remember(tmp_path):
     r = pb.solve(circle_line(), seed=42, directory=str(tmp_path / 'records'))
     s = r[0]
