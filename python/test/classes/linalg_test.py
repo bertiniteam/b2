@@ -121,6 +121,28 @@ def test_add_linear_forms_refuses_floats():
         sys.add_linear_forms([[2.5, 1, 0]])
 
 
+def test_add_linear_forms_accepts_complex_symbol_nodes():
+    # issue #326: a complex_mp value was accepted but the Complex *node* wrapping it was not.
+    # A constant node (Complex, and mixed with int / string / complex_mp) is now a valid coefficient.
+    from bertini.symbolics import Complex
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    # 2x + 3y + 1, spelled with a Complex node, an int, and a complex_mp -- at (1,1) -> 6
+    sys.add_linear_forms([[Complex('2'), 3, mp.complex_mp('1')]])
+    v = sys.eval(np.array([mp.complex_mp('1'), mp.complex_mp('1')], dtype=mp.complex_mp))
+    assert abs(complex(v[0]) - 6) < 1e-10
+
+
+def test_add_linear_forms_refuses_nonconstant_node():
+    # a node that still contains a variable is not a constant coefficient
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    with pytest.raises(TypeError):
+        sys.add_linear_forms([[x, 1, 0]])
+
+
 # --- add_linear: the auto-target (A @ x + b = 0 as a LinearFormsBlock) ---
 
 def test_add_linear_matches_scalar_expansion():

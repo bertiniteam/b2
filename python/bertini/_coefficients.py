@@ -118,8 +118,26 @@ def _exact_to_mpfr(value):
     """Convert a single exact value to a multiprec.complex_mp (refusing Python floats).
 
     Mirrors :func:`coefficient`'s exact-only rule, but produces a multiprecision *value*
-    (for a coefficient matrix) rather than a function-tree node.
+    (for a coefficient matrix) rather than a function-tree node.  Accepts the same exact
+    spellings as :func:`coefficient`, including a bertini constant *node* -- e.g. a
+    ``symbolics.Complex`` -- so a value good enough for :func:`coefficient` is good enough
+    here too (issue #326).
     """
+    # A function-tree constant node (as coefficient() / Complex() / Integer() / Rational()
+    # produce): accept it, the symmetric partner to the complex_mp case below.  A Complex node
+    # carries a full-precision complex_mp directly; any other constant node is evaluated (it
+    # holds no variables).  This closes the gap where a complex_mp was accepted but the Complex
+    # *node* wrapping the same value was not (issue #326).
+    if isinstance(value, _AbstractNode):
+        if isinstance(value, Complex):
+            return _mp.complex_mp(value.value())
+        try:
+            return _mp.complex_mp(value.eval())
+        except Exception as e:
+            raise TypeError(
+                "cannot use a non-constant node as a coefficient (it still contains "
+                f"variables): {value!r}"
+            ) from e
     if _MP_VALUE_TYPES and isinstance(value, _MP_VALUE_TYPES):
         return _mp.complex_mp(value)
     if isinstance(value, bool):
