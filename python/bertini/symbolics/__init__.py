@@ -63,6 +63,30 @@ def sqrt(x):
     return _Sqrt(x)
 
 
+def random_real():
+    """A random real number as a constant node (a real :class:`Complex` leaf, imaginary part 0).
+
+    The always-symbolic shortcut for ``bertini.random_real(symbolic=True)`` -- a random real
+    *coefficient* to drop straight into an expression, at the current default precision (set
+    ``bertini.default_precision`` first for more digits).  For a precision-independent *exact*
+    random constant use :meth:`Rational.rand_real` instead.
+    """
+    from bertini.random import random_real as _rr
+    return _rr(symbolic=True)
+
+
+def random_complex():
+    """A random complex number as a constant node (a :class:`Complex` leaf).
+
+    The always-symbolic shortcut for ``bertini.random_complex(symbolic=True)`` -- a random complex
+    *coefficient* to drop straight into an expression, at the current default precision (set
+    ``bertini.default_precision`` first for more digits).  For a precision-independent *exact*
+    random constant use :meth:`Rational.rand` instead.
+    """
+    from bertini.random import random_complex as _rc
+    return _rc(symbolic=True)
+
+
 VariableGroup.__str__ = lambda vg: '[{}]'.format(','.join([str(v) for v in vg]))
 
 
@@ -140,4 +164,4 @@ __all__ = list(dict.fromkeys(
     + [n for n in dir(_pybft.symbol) if n not in _HIDDEN]
     + [n for n in dir(_pybft.operator) if n not in _HIDDEN]
     + [n for n in dir(_pybft.root) if n not in _HIDDEN]
-    + ['VariableGroup', 'variables', 'sqrt']))
+    + ['VariableGroup', 'variables', 'sqrt', 'random_real', 'random_complex']))

@@ -4,6 +4,91 @@ from bertini._pybertini import random as _pybrand
 from bertini._pybertini.random import *
 
 
+def random_real(symbolic=False):
+    """A random real number of bounded modulus, at the current default precision.
+
+    Box-uniform in ``[-1, 1]`` and pulled away from 0 -- the Bertini genericity draw.
+    Reproducible via :func:`set_random_seed`.
+
+    Parameters
+    ----------
+    symbolic : bool, default False
+        When False (default) return a numeric ``multiprec.real_mp`` value.  When True return a
+        constant function-tree *node* (a real :class:`~bertini.symbolics.Complex` leaf, imaginary
+        part 0) ready to drop straight into an expression -- the spelling to reach for when you
+        want a random coefficient rather than a random value.  ``bertini.symbolics.random_real``
+        is the always-symbolic shortcut.
+
+    Notes
+    -----
+    The node carries exactly the digits drawn, i.e. the current default precision -- set
+    ``bertini.default_precision(1000)`` first for a 1000-digit constant.  (A random float can be no
+    more precise than its draw; for a *precision-independent* exact random constant use
+    ``bertini.symbolics.Rational.rand_real`` instead.)
+    """
+    v = _pybrand.random_real()
+    if symbolic:
+        from bertini._coefficients import coefficient
+        return coefficient(v)
+    return v
+
+
+def random_complex(symbolic=False):
+    """A random complex number of bounded modulus, at the current default precision.
+
+    Modulus pulled toward 1 (away from 0 and infinity) -- the Bertini genericity draw.
+    Reproducible via :func:`set_random_seed`.
+
+    Parameters
+    ----------
+    symbolic : bool, default False
+        When False (default) return a numeric ``multiprec.complex_mp`` value.  When True return a
+        constant function-tree *node* (a :class:`~bertini.symbolics.Complex` leaf) ready to drop
+        straight into an expression.  ``bertini.symbolics.random_complex`` is the always-symbolic
+        shortcut.
+
+    Notes
+    -----
+    The node carries exactly the digits drawn, i.e. the current default precision -- set
+    ``bertini.default_precision(1000)`` first for a 1000-digit constant.  For a
+    *precision-independent* exact random constant use ``bertini.symbolics.Rational.rand`` instead.
+    """
+    v = _pybrand.random_complex()
+    if symbolic:
+        from bertini._coefficients import coefficient
+        return coefficient(v)
+    return v
+
+
+def random_vector(size, real=False, symbolic=False):
+    """A random length-``size`` vector of bounded-modulus numbers, at the current default precision.
+
+    The natural random projection / linear-functional coefficient vector (generic and
+    seed-reproducible, unlike the quantized orthonormal :func:`random_matrix`).
+
+    Parameters
+    ----------
+    size : int
+        The length of the vector.
+    real : bool, default False
+        When True the entries are real (``real_mp``); otherwise complex (``complex_mp``).
+    symbolic : bool, default False
+        When True return a numpy object array of constant coefficient *nodes* (via
+        :func:`bertini.coefficients`) rather than numeric multiprecision values -- each entry a
+        :class:`~bertini.symbolics.Complex` leaf.
+
+    Notes
+    -----
+    As for :func:`random_real`, a symbolic entry carries the current default precision's worth of
+    digits; set ``bertini.default_precision`` first if you need more.
+    """
+    v = _pybrand.random_vector(size, real)
+    if symbolic:
+        from bertini._coefficients import coefficients
+        return coefficients(v)
+    return v
+
+
 def random_matrix(rows, cols, real=False, units=False, orthonormal=True, symbolic=False):
     """A ``rows`` x ``cols`` random matrix, at the current default precision.
 
