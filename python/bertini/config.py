@@ -412,22 +412,36 @@ def update(self, **fields):
     return self
 
 
-def get_settings(self):
-    """This owner's whole configuration as a carryable dict ``{config_name: config}``.
+def get_settings(self, as_dict=False):
+    """This owner's whole configuration as a carryable dict.
 
-    Each value is a copy of one of the owner's configs (e.g. ``{'stepping': SteppingConfig(...),
-    'tolerances': TolerancesConfig(...)}``), keyed by the same short names config_names() lists.  The
-    configs are independent copies (and picklable), so the dict is a plain Python value you can stash,
-    tweak, and apply to other owners -- the way to carry one set of tracking settings across a series
-    of related solves::
+    By default (``as_dict=False``) the value is ``{config_name: config}`` -- each a copy of one of
+    the owner's configs (e.g. ``{'stepping': SteppingConfig(...), 'tolerances': TolerancesConfig(...)}``),
+    keyed by the short names config_names() lists.  The configs are independent copies (and picklable),
+    so the dict is a plain Python value you can stash, tweak, and apply to other owners -- the way to
+    carry one set of tracking settings across a series of related solves::
 
         settings = first_solver.get_settings()
         next_solver.set_settings(settings)
 
-    See set_settings() for applying one back.
+    Pass ``as_dict=True`` for the flat, human-readable view instead: one ``{field_name: value}`` dict
+    across ALL configs (field names are unique across an owner's configs, so there is no collision).
+    That form drops the struct layer nobody wants to poke at, and round-trips through ``set``::
+
+        flat = solver.get_settings(as_dict=True)   # {'final_tolerance': ..., 'max_step_size': ..., ...}
+        other.set(**flat)
+
+    (The config-keyed default is kept because ``set_settings`` consumes it; use whichever fits.)  See
+    set_settings() for applying the config-keyed form back.
     """
-    return {config_key(cls): self.get_config(cls)
-            for cls in self.config_types() if cls is not None}
+    configs = {config_key(cls): self.get_config(cls)
+               for cls in self.config_types() if cls is not None}
+    if not as_dict:
+        return configs
+    flat = {}
+    for cfg in configs.values():
+        flat.update(cfg.to_dict())
+    return flat
 
 
 def set_settings(self, settings, strict=False):

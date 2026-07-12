@@ -100,6 +100,26 @@ def test_settings_accepted_in_solve(circle_intersection_solver):
     assert isinstance(result, SolveResult)
 
 
+def test_settings_dict_accepted_in_constructor_and_solve(circle_intersection_solver):
+    x, y = pb.Variable('x'), pb.Variable('y')
+
+    def sq():
+        s = pb.System()
+        s.add_variable_group(pb.VariableGroup([x, y]))
+        s.add_function(x ** 2 + y ** 2 - 1)
+        s.add_function(x + y)
+        return s
+
+    # settings= dict in the constructor
+    solver = ZeroDimSolver(sq(), settings={'final_tolerance': 1e-13})
+    assert float(solver.get_config(TolerancesConfig).final_tolerance) == 1e-13
+
+    # settings= dict in solve(), merged with keyword form
+    s2 = ZeroDimSolver(sq())
+    s2.solve(settings={'final_tolerance': 1e-12}, newton_before_endgame=1e-4)
+    assert float(s2.get_config(TolerancesConfig).final_tolerance) == 1e-12
+
+
 def test_bad_setting_name_is_a_clear_error(circle_intersection_solver):
     x, y = pb.Variable('x'), pb.Variable('y')
     sys = pb.System()

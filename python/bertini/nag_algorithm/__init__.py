@@ -465,19 +465,20 @@ def _solver_repr(self):
 
 
 def _make_solve_returning_result(native_solve):
-    def solve(self, communicator=None, **settings):
-        # settings= : any config field by name (e.g. final_tolerance=1e-13), applied via set()
-        # before solving -- collapses the make/set/solve dance to one line.  communicator is
-        # reserved (MPI is a solve-time opt-in), never a setting.
-        if settings:
-            self.set(**settings)
+    def solve(self, communicator=None, settings=None, **field_settings):
+        # settings= : a dict of config fields; **field_settings: the same by keyword.  Both are
+        # applied via set() before solving -- collapsing make/set/solve to one line.  communicator
+        # and settings are reserved names (MPI is a solve-time opt-in), never config fields.
+        combined = dict(settings or {}, **field_settings)
+        if combined:
+            self.set(**combined)
         native_solve(self, communicator)
         return self.result()
     solve.__name__ = 'solve'
     solve.__doc__ = ((getattr(native_solve, '__doc__', '') or '') +
-        "\n\nSettings: pass any config field by name (e.g. solve(final_tolerance=1e-13)); each is "
-        "applied via set() before solving, so make/set/solve becomes a single call.  communicator= "
-        "is reserved for MPI (never a setting).\n\n"
+        "\n\nSettings: pass config fields either as a dict (settings={'final_tolerance': 1e-13}) or by "
+        "keyword (solve(final_tolerance=1e-13)); each is applied via set() before solving, so "
+        "make/set/solve becomes a single call.  communicator= is reserved for MPI (never a setting).\n\n"
         "Returns a bertini.records.SolveResult -- the finite solutions plus this solve's records "
         "ticket (run id, directory, recall count), read from the solver's own records (the solver "
         "records itself, on by default).  Drop it freely: solver.result() re-derives it, and the "
@@ -552,7 +553,7 @@ def _infer_start_system(system):
 
 
 def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
-                  precision=None, **settings):
+                  precision=None, settings=None, **field_settings):
     """Construct a zero-dim solver by name, with friendly defaults.
 
     ``ZeroDimSolver(system)`` is the Cauchy endgame in adaptive precision with the start system
@@ -562,9 +563,9 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
 
         ZeroDimSolver(system, endgame='cauchy', mptype='amp', startsystem='mhom')
 
-    Any further keyword is treated as a **config setting** applied at construction (via ``set``), so
-    ``ZeroDimSolver(sys, final_tolerance=1e-13)`` needs no separate ``set()`` before solving; the same
-    settings may instead be passed to ``solve(...)``.
+    Config settings may be applied at construction (via ``set``) so no separate ``set()`` is needed
+    before solving -- either as a dict (``ZeroDimSolver(sys, settings={'final_tolerance': 1e-13})``)
+    or by keyword (``ZeroDimSolver(sys, final_tolerance=1e-13)``); the same go to ``solve(...)`` too.
 
     Parameters
     ----------
@@ -620,10 +621,11 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
     # short-circuited to the default constructor, which silently substituted the *default* start
     # system -- the facade quirk that made startsystem='totaldegree' secretly solve the default.)
     solver = cls(system, _pybnalag.start_system_factory(start_enum))
-    # settings= : any config field by name (e.g. final_tolerance=1e-13), applied at construction so
-    # a one-line ZeroDimSolver(sys, final_tolerance=1e-13) needs no separate set() before solve().
-    if settings:
-        solver.set(**settings)
+    # config fields as a dict (settings={...}) and/or by keyword, applied at construction so a one-line
+    # ZeroDimSolver(sys, final_tolerance=1e-13) needs no separate set() before solve().
+    combined = dict(settings or {}, **field_settings)
+    if combined:
+        solver.set(**combined)
     return solver
 
 
