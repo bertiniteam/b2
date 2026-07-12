@@ -16,8 +16,8 @@ reached by two paths) and simple roots at x=-2, 4 (**nonsingular**).  The total-
 has 6 paths, so the remaining two **diverge to infinity** (the homogenizing coordinate -> 0).
 
 Run (needs matplotlib):
-    python python/examples/classic_continuation_cartoon.py            # writes SVG + PNG to cwd
-    python python/examples/classic_continuation_cartoon.py /tmp/out
+    python .../classic_continuation_cartoon/classic_continuation_cartoon.py           # SVG + PNG to cwd
+    python .../classic_continuation_cartoon/classic_continuation_cartoon.py /tmp/out
 """
 import os
 import sys
@@ -28,10 +28,10 @@ from bertini.nag_algorithm import ZeroDimSolver, observers as nobs
 ENDGAME_BOUNDARY = 0.1
 HOMVAR_INDEX = 0   # homogenize() prepends the homogenizing coordinate; affine coord = z[k]/z[0]
 # Height = Re of a fixed GENERIC complex projection of ALL dehomogenized coordinates.  A single
-# coordinate's real part collapses the structured total-degree start points (scaled roots of unity)
-# onto a few heights; a generic projection (mixing all coordinates with complex weights) separates
-# every distinct point.  The diverging paths then run off to large height, so the y-axis is symlog
-# (linear near 0 for the finite paths, logarithmic out to the diverging ones).  Fixed for reproducibility.
+# coordinate's real part collapses distinct points onto a few heights; a generic projection (mixing
+# all coordinates with complex weights) separates every distinct point.  The diverging paths run off
+# to large height, so the plot windows on the finite paths and lets the diverging ones exit the top.
+# Fixed for reproducibility.
 PROJECTION = (0.6 + 0.8j, -0.9 + 0.4j)
 
 # endpoint-flavor styling (solid lines; color + endpoint marker per flavor), echoing the cartoon
@@ -59,10 +59,34 @@ def classify(meta):
     return "singular" if meta.is_singular else "nonsingular"
 
 
-def collect():
+def height(df):
+    """A fixed GENERIC complex projection of the dehomogenized point down to one real number.
+
+    A single coordinate's real part collapses distinct points onto a few heights; mixing all
+    coordinates with fixed complex weights separates them.  ``df`` is one path's samples (columns
+    ``t``, ``z0`` = homogenizing coord, ``z1..`` = the rest).
+    """
+    import numpy as np
+    hom = df["z{}".format(HOMVAR_INDEX)].to_numpy()
+    n_aff = sum(c.startswith("z") for c in df.columns) - 1   # affine coords (drop homvar)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        proj = np.zeros(len(df), dtype=complex)
+        for k in range(n_aff):
+            proj += PROJECTION[k % len(PROJECTION)] * (df["z{}".format(k + 1)].to_numpy() / hom)
+    return np.real(proj)
+
+
+SEED = 12  # chosen for a clean picture: start points well separated, finite paths not grazing infinity,
+           # and BOTH diverging paths leaving upward (so their infinity markers sit above the plot)
+
+
+def collect(seed=SEED):
     """Solve and return [(flavor, DataFrame), ...], one per path."""
-    pb.random.set_random_seed(1)
-    zd = ZeroDimSolver(target_system(), mptype="adaptive")
+    pb.random.set_random_seed(seed)
+    # total-degree LINEAR-PRODUCT start: its start points are intersections of random linear forms,
+    # generically separated -- unlike the binomial total-degree start's scaled roots of unity, which
+    # can land on top of each other under the height projection.
+    zd = ZeroDimSolver(target_system(), mptype="adaptive", startsystem="linearproduct")
     coll = nobs.SolutionPathCollector()
     zd.add_observer(coll)
     zd.solve()
@@ -83,18 +107,10 @@ def make_plot(paths, out_stem):
 
     fig, ax = plt.subplots(figsize=(11, 6.5))
 
-    def height(df):
-        hom = df["z{}".format(HOMVAR_INDEX)].to_numpy()
-        n_aff = sum(c.startswith("z") for c in df.columns) - 1   # affine coords (drop homvar)
-        with np.errstate(divide="ignore", invalid="ignore"):
-            proj = np.zeros(len(df), dtype=complex)
-            for k in range(n_aff):
-                proj += PROJECTION[k % len(PROJECTION)] * (df["z{}".format(k + 1)].to_numpy() / hom)
-        return np.real(proj)                 # generic real projection of the dehomogenized point
-
     seen = set()
     curves = []     # (flavor, x, y) for every path
-    fin_y = []      # heights of the FINITE endpoints, to size the window
+    fin_y = []      # EVERY height along the finite paths (bulk sizes the window)
+    fin_end = []    # the finite ENDPOINTS (roots) -- always kept fully in view
     for flavor, df in paths:
         x = np.real(df["t"].to_numpy())
         y = height(df)
@@ -103,12 +119,20 @@ def make_plot(paths, out_stem):
         if len(x) >= 2:
             curves.append((flavor, x, y))
             if flavor != "infinite":
-                fin_y.append(y[-1])
+                fin_y.extend(y)          # the whole finite path...
+                fin_end.append(y[-1])    # ...and, kept in view no matter what, its endpoint
 
-    # Window sized to contain the FINITE roots; paths diverging to infinity run off the top, so they
-    # do not compress everything else into a flat line (the whole reason for a cutoff).
-    lo, hi = (min(fin_y), max(fin_y)) if fin_y else (-1.0, 1.0)
-    pad = 0.35 * (hi - lo) + 1.0
+    # Auto-fit the finite paths so switching the system needs no manual axis tweaking.  Use a ROBUST
+    # range (1st-99th percentile of all finite-path heights) rather than raw min/max: a finite path
+    # can momentarily spike when it passes near the hyperplane at infinity (its dehomogenized height
+    # blows up mid-flight), and one such transient must not compress everything else into a flat band.
+    # The actual roots (finite endpoints) are always unioned in, so no endpoint is ever clipped.
+    if fin_y:
+        lo, hi = np.percentile(fin_y, [1, 99])
+        lo, hi = min(lo, min(fin_end)), max(hi, max(fin_end))
+    else:
+        lo, hi = -1.0, 1.0
+    pad = 0.15 * (hi - lo) + 0.5
     ax.set_ylim(lo - pad, hi + pad)
     top, bot = ax.get_ylim()[1], ax.get_ylim()[0]
 
@@ -127,14 +151,15 @@ def make_plot(paths, out_stem):
             ax.scatter([x[0]], [y[0]], facecolor="gold", edgecolor="black", s=70, zorder=4, marker="o")
             if len(outside):
                 # the line is simply cut off where it leaves the window (no end marker); the infinity
-                # symbol just inside the axis says where it was heading.
+                # symbol sits at that exit point, JUST BARELY OUTSIDE the axis, saying where it went.
                 up = y[i] > top
                 edge = top if up else bot
                 dy = y[i] - y[i - 1] if i > 0 else 1.0       # crossing point, interpolated
                 xe = x[i - 1] + (edge - y[i - 1]) / dy * (x[i] - x[i - 1]) if i > 0 and dy != 0 else x[i]
-                inset = 0.05 * (top - bot)
-                ax.text(xe, edge - inset if up else edge + inset, r"$\infty$", color=st["color"],
-                        fontsize=13, ha="center", va="top" if up else "bottom", zorder=6)
+                offset = 0.025 * (top - bot)
+                ax.text(xe, edge + offset if up else edge - offset, r"$\infty$", color=st["color"],
+                        fontsize=13, ha="center", va="bottom" if up else "top", zorder=6,
+                        clip_on=False)          # allowed to render outside the axes box
         else:
             ax.plot(x, y, ls=st["ls"], color=st["color"], lw=1.8, alpha=0.9, label=lbl, zorder=2)
             ax.scatter([x[0]], [y[0]], facecolor="gold", edgecolor="black", s=70, zorder=4, marker="o")
