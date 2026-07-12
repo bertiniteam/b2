@@ -127,16 +127,7 @@ std::string Owners()
 	return ss.str();
 }
 
-/// \brief Get the names of the Bertini2 code authors.
-inline
-std::string Authors()
-{
-	std::stringstream ss;
-	ss << "S. Amethyst, J. Collins, T. Hodges";
-	return ss.str();
-}
-
-/// \brief Get the multi-line splash screen text (trademark, authors, URLs, version, license).
+/// \brief Get the multi-line splash screen text (trademark, URLs, version, license).
 inline
 std::string SplashScreen()
 {
@@ -144,7 +135,6 @@ std::string SplashScreen()
 
 	ss << "    Bertini(TM) 2\n\n";
 	ss << "  The Bertini Trademark is owned by\n" << Owners() << "\n\n";
-	ss << "  The code is primarily authored by\n" << Authors() << "\n\n";
 	ss << "  Source available online at\n" << SourceURL() << "\n\n";
 	ss << "  Wiki online at\n" << WikiURL() << "\n\n";
 	ss << "  This is version\n" << Version() << "\n";
