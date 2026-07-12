@@ -34,6 +34,50 @@ def circle_line():
     return s
 
 
+def test_solveresult_wraps_a_zerodim_answer(tmp_path):
+    from bertini.records import ZeroDimResult
+    r = pb.solve(circle_line(), seed=42, directory=str(tmp_path / 'records'))
+    # the answer is a typed ZeroDimResult...
+    assert isinstance(r.answer, ZeroDimResult)
+    assert len(r.answer) == 2
+    # ...with category views
+    for name in ('finite', 'real', 'singular', 'nonsingular', 'at_infinity', 'nonsolutions'):
+        assert isinstance(getattr(r.answer, name), list)
+    # ...and the SolveResult still behaves like the list of solutions it used to be
+    assert len(r) == 2 and len(r.solutions) == 2
+    assert list(r) == r.answer.finite
+    assert r[0] is r.answer.finite[0]
+
+
+def test_homotopy_solver_also_produces_a_zerodim_result():
+    # both solver families give a zero-dimensional answer (isolated points), so both wrap a
+    # ZeroDimResult -- the name is about the answer's dimensionality, not the solver.
+    from bertini.records import ZeroDimResult
+    import bertini.nag_algorithm as nag
+    x = Variable('x')
+    gen = System(); gen.add_variable_group(VariableGroup([x])); gen.add_function(x * x - 2)
+    gsol = pb.ZeroDimSolver(gen)
+    gr = gsol.solve()
+    assert isinstance(gr.answer, ZeroDimResult)                      # ZeroDimSolver
+
+    tgt = System(); tgt.add_variable_group(VariableGroup([x])); tgt.add_function(x * x - 3)
+    H = nag.coefficient_parameter_homotopy(tgt, gen)
+    hr = nag.HomotopySolver(H, gsol.all_solutions(), tgt).solve()
+    assert isinstance(hr.answer, ZeroDimResult)                      # HomotopySolver too
+    assert len(hr.answer.finite) == 2 and len(hr.answer.real) == 2   # +-sqrt(3)
+
+
+def test_zerodim_result_categories_for_a_multiple_root():
+    # {x^2, y^2}: one distinct finite solution (0,0), singular (multiplicity 4)
+    x, y = Variable('x'), Variable('y')
+    s = System(); s.add_variable_group(VariableGroup([x, y]))
+    s.add_function(x * x); s.add_function(y * y)
+    ans = pb.ZeroDimSolver(s).solve().answer
+    assert len(ans.finite) == 1                    # distinct, not the 4 coincident copies
+    assert len(ans.singular) == 1 and len(ans.nonsingular) == 0
+    assert len(ans.finite) == len(ans.real)        # (0,0) is real
+
+
 def test_solve_records_and_rerun_recalls(tmp_path):
     d = str(tmp_path / 'records')
     first = pb.solve(circle_line(), seed=42, directory=d)
