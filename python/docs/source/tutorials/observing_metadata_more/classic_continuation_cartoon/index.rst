@@ -41,26 +41,22 @@ flavor, so we can style each curve:
    :start-at: def classify(meta):
    :end-at: return out
 
-.. note::
-
-   The collector records the **start point** too, not just the accepted steps.  Its
-   ``PathDataCollector`` watches ``TrackingStarted`` (which fires at :math:`t=1`, before any step)
-   in addition to ``SuccessfulStep`` — so every path begins at its start-system root on the right,
-   exactly as the cartoon shows.  A step-only collector would start one step in, near
-   :math:`t \approx 0.9`.
-
 Drawing it
 ==========
 
 A few choices turn the data into the cartoon:
 
 * **height** is a fixed *generic complex projection* of the dehomogenized coordinates down to one
-  real number.  A single coordinate's real part would make the structured total-degree start points
-  (scaled roots of unity) land on top of each other; a generic projection separates them.
-* the vertical axis is given a **finite window sized to the finite roots**, so the two paths that
-  diverge to infinity do not compress everything else into a flat line.  Each diverging path is drawn
-  only up to where it leaves the window, then cut off with an :math:`\infty` just inside the axis (no
-  endpoint marker) — the cartoon's "burst".
+  real number.  A single coordinate's real part would make distinct points land on top of each other;
+  a generic projection separates them.
+* the **start system** is the total-degree *linear product* (start points are intersections of
+  random linear forms), so the start points on the right are generically separated rather than
+  piling up.
+* the vertical axis **auto-fits the finite paths** — robustly (the central bulk of every finite path,
+  so a path momentarily grazing infinity does not blow up the window), so swapping the system needs no
+  manual axis tweaking.  The two paths that diverge to infinity run off the top; each is drawn up to
+  where it leaves the window and cut there, with an :math:`\infty` just **outside** the axis at that
+  exit point (no endpoint marker) — the cartoon's "burst".
 * each flavor gets a distinct **line style and color and endpoint marker** (so it survives grayscale
   / color-blind viewing): nonsingular solid ``▽``, singular dashed ``★``, infinite dash-dot.
 * a bullseye marks the **target** :math:`f(z)=0` at :math:`t=0`, the start points (gold) sit on the
@@ -68,7 +64,7 @@ A few choices turn the data into the cartoon:
 
 Run it (needs ``matplotlib``)::
 
-    python python/docs/source/tutorials/classic_continuation_cartoon/classic_continuation_cartoon.py .
+    python python/docs/source/tutorials/observing_metadata_more/classic_continuation_cartoon/classic_continuation_cartoon.py .
 
 .. image:: classic_continuation_cartoon.png
    :width: 100%

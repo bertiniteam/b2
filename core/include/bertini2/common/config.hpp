@@ -65,7 +65,9 @@ namespace bertini
 
 	};
 
-	using NumErrorT = double;
+	// NumErrorT (the error/tolerance numeric type) now lives in num_traits.hpp -- the foundational
+	// header included nearly everywhere -- so tolerance-typed parameters can name it without any
+	// header adding a new include.  It is NOT redefined here to keep a single source of truth.
 } // namespace bertini
 
 #include "bertini2/common/stream_enum.hpp"

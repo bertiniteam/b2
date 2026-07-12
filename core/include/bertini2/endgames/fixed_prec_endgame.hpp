@@ -78,7 +78,7 @@ public:
 	}
 
 	/// \brief Refine a single sample point at the (fixed) working precision.
-	SuccessCode RefineSampleImpl(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, double tol, unsigned max_iterations) const
+	SuccessCode RefineSampleImpl(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, NumErrorT tol, unsigned max_iterations) const
 	{
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 		                          	tol,

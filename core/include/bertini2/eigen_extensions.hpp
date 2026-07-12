@@ -608,7 +608,7 @@ namespace bertini {
 	*/
 	template <typename DerivedA, typename DerivedB>
 	inline
-	bool IsSamePoint(Eigen::MatrixBase<DerivedA> const& a, Eigen::MatrixBase<DerivedB> const& b, double tol)
+	bool IsSamePoint(Eigen::MatrixBase<DerivedA> const& a, Eigen::MatrixBase<DerivedB> const& b, NumErrorT tol)
 	{
 		if (a.size() != b.size())
 			return false;
@@ -627,7 +627,7 @@ namespace bertini {
 	*/
 	template <typename DerivedA, typename DerivedB>
 	inline
-	bool IsDistinct(Eigen::MatrixBase<DerivedA> const& a, Eigen::MatrixBase<DerivedB> const& b, double tol)
+	bool IsDistinct(Eigen::MatrixBase<DerivedA> const& a, Eigen::MatrixBase<DerivedB> const& b, NumErrorT tol)
 	{
 		return !IsSamePoint(a, b, tol);
 	}
