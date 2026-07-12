@@ -275,7 +275,7 @@ class SolveResult:
 
     @classmethod
     def from_solver(cls, solver, directory=None):
-        """Build a :class:`SolveResult` from a solver that has already been ``solve()``d.
+        """Build a :class:`SolveResult` from a solver on which ``solve()`` has already run.
 
         Snapshots the typed answer (a :class:`ZeroDimResult`, its finite solutions carrying records
         provenance) and reads the records ticket (run id, directory, recall count) straight off the
