@@ -45,6 +45,41 @@ def test_solution_count(circle_intersection_solver):
     assert len(solns) == 2
 
 
+def test_solve_returns_a_result_and_repr_is_informative(circle_intersection_solver):
+    from bertini.records import SolveResult
+    solver = circle_intersection_solver
+
+    # before solving: repr says so, not the useless default object line
+    r = repr(solver)
+    assert 'object at 0x' not in r
+    assert 'not yet solved' in r
+    assert 'ZeroDimSolver' in r and 'cauchy' in r and 'adaptive' in r   # kind is spelled out
+
+    # solve() returns a SolveResult; repr now carries the tally
+    result = solver.solve()
+    assert isinstance(result, SolveResult)
+    r = repr(solver)
+    assert 'object at 0x' not in r
+    assert '2 finite solutions' in r
+    assert 'of 2 paths' in r
+
+
+def test_repr_counts_distinct_solutions_for_a_multiple_root():
+    # {u^2, v^2}: one solution (0,0) of multiplicity 4 -- repr shows 1 finite (singular), 4 paths
+    u, v = pb.Variable('u'), pb.Variable('v')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([u, v]))
+    sys.add_function(u * u)
+    sys.add_function(v * v)
+    solver = ZeroDimSolver(sys)
+    solver.solve()
+    r = repr(solver)
+    assert '1 finite solution ' in r                 # distinct, singular pluralization
+    assert '1 singular' in r
+    assert 'of 4 paths' in r
+    assert len(solver.finite_solutions()) == 1       # matches the merged accessor
+
+
 def test_custom_tolerances(circle_intersection_solver):
     """Changing tolerances before solving should still yield correct solutions.
 

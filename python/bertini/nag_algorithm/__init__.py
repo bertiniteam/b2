@@ -422,6 +422,48 @@ def _solver_result(self):
     return SolveResult.from_solver(self)
 
 
+def _describe_solver_class(cls_name):
+    """A friendly label from a bound solver class name, e.g.
+    'ZeroDimSolverCauchyAdaptivePrecision' -> 'ZeroDimSolver[cauchy, adaptive precision]'."""
+    for kind in ('ZeroDimSolver', 'HomotopySolver'):
+        if cls_name.startswith(kind):
+            rest = cls_name[len(kind):]
+            eg = ('cauchy' if 'Cauchy' in rest else
+                  'power-series' if 'PowerSeries' in rest else '?')
+            prec = ('double' if 'Double' in rest else
+                    'fixed-multiple' if 'FixedMultiple' in rest else
+                    'adaptive' if 'Adaptive' in rest else '?')
+            return '{}[{}, {} precision]'.format(kind, eg, prec)
+    return cls_name
+
+
+def _solver_repr(self):
+    """A readable one-line summary: the solver kind, and once solved its solution tally.
+
+    Replaces the useless default ``<...object at 0x...>``.  Before solving: the kind plus a nudge
+    to call ``.solve()``.  After: finite/real/singular counts out of the paths tracked, and the
+    records run id when the solve recorded.
+    """
+    label = _describe_solver_class(type(self).__name__)
+    try:
+        md = self.solution_metadata()
+    except Exception:
+        return '<{}>'.format(label)
+    if not len(md):
+        return '<{}: not yet solved -- call .solve()>'.format(label)
+    # count DISTINCT finite solutions (multiplicity representatives), matching the default
+    # merge_multiplicities view of finite_solutions(); len(md) is the raw path count.
+    reps = [m for m in md if m.is_finite and m.multiplicity_representative]
+    n_finite = len(reps)
+    n_real = sum(1 for m in reps if m.is_real)
+    n_sing = sum(1 for m in reps if m.is_singular)
+    run = self.records_run_id()
+    tail = ', run {}'.format(run) if run else ''
+    return ('<{}: {} finite solution{} ({} real, {} singular) of {} path{}{}>'
+            .format(label, n_finite, '' if n_finite == 1 else 's',
+                    n_real, n_sing, len(md), '' if len(md) == 1 else 's', tail))
+
+
 def _make_solve_returning_result(native_solve):
     def solve(self, *args, **kwargs):
         native_solve(self, *args, **kwargs)
@@ -445,6 +487,7 @@ def _attach_result_and_solve():
             continue
         cls.result = _solver_result
         cls.solve = _make_solve_returning_result(cls.solve)
+        cls.__repr__ = _solver_repr
         cls._b2_has_result = True
 
 
@@ -598,6 +641,10 @@ class _HomotopySolverHolder:
 
     def __getattr__(self, name):
         return getattr(object.__getattribute__(self, '_solver'), name)
+
+    def __repr__(self):
+        # special methods bypass __getattr__, so delegate the friendly repr explicitly
+        return repr(object.__getattribute__(self, '_solver'))
 
 
 def HomotopySolver(homotopy, start_points, target, *, precision='adaptive', endgame='cauchy'):
