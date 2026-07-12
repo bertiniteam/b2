@@ -93,3 +93,18 @@ def test_underdetermined_system_raises_helpful_error():
 
     with pytest.raises(RuntimeError, match='under-determined'):
         ZeroDimSolver(sys, mptype='adaptive')
+
+
+def test_bertini_solve_on_positive_dimensional_system_says_nid_not_yet():
+    # bertini.solve routes the under-determined case to a clear positive-dimensional / NID message
+    # (the other member of the result taxonomy) rather than the raw solver RuntimeError.
+    x, y = _xy()
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    sys.add_function(x * x + y * y - 1)   # one equation, two variables -> a curve
+
+    with pytest.raises(NotImplementedError) as ei:
+        pb.solve(sys)
+    msg = str(ei.value)
+    assert 'positive-dimensional' in msg
+    assert 'NID' in msg or 'irreducible decomposition' in msg

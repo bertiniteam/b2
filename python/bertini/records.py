@@ -171,32 +171,102 @@ class Solution(_np.ndarray):
         return _np.ndarray.imag.__get__(self)
 
 
-class SolveResult:
-    """What ``solve`` returns: the solutions plus a claim ticket on the recorded run.
+class ZeroDimResult:
+    """The *answer* of a zero-dimensional solve: the finite solutions and their category views.
 
-    Forgetting to capture it loses nothing -- the records hold the truth; another
-    ``solve`` of the same ask re-mints an equivalent result (recalled, not recomputed).
+    A portable snapshot, independent of the solver.  Iterate it (or index it, or take ``len``) for
+    the finite solutions -- the deliverable -- and read a category view for the rest:
+
+    * :attr:`finite` -- the finite solutions (each carrying its records provenance when recorded)
+    * :attr:`real`, :attr:`singular`, :attr:`nonsingular` -- the finite solutions by class
+    * :attr:`at_infinity` -- endpoints that diverged (no finite value)
+    * :attr:`nonsolutions` -- finite endpoints that are not solutions of the target
+
+    This is the zero-dimensional member of the result taxonomy.  A positive-dimensional solve
+    (numerical irreducible decomposition) will return an ``NIDResult`` of witness sets instead; a
+    :class:`SolveResult` is the records decorator that wraps whichever answer type.
     """
 
-    def __init__(self, solutions, run_id, directory, num_recalled, solver):
-        self.solutions = solutions          #: list[Solution]: the finite solutions, user coordinates
+    def __init__(self, finite, real, singular, nonsingular, at_infinity, nonsolutions):
+        self.finite = finite                #: list: the finite solutions (the deliverable)
+        self.real = real                    #: list: the real finite solutions
+        self.singular = singular            #: list: the singular (multiple / ill-conditioned) finite solutions
+        self.nonsingular = nonsingular      #: list: the nonsingular (simple) finite solutions
+        self.at_infinity = at_infinity      #: list: the endpoints at infinity (diverged)
+        self.nonsolutions = nonsolutions    #: list: finite endpoints that are not solutions of the target
+
+    def __len__(self):
+        return len(self.finite)
+
+    def __iter__(self):
+        return iter(self.finite)
+
+    def __getitem__(self, k):
+        return self.finite[k]
+
+    def __repr__(self):
+        return ("ZeroDimResult(%d finite: %d real, %d singular, %d nonsingular; "
+                "%d at infinity, %d nonsolutions)"
+                % (len(self.finite), len(self.real), len(self.singular),
+                   len(self.nonsingular), len(self.at_infinity), len(self.nonsolutions)))
+
+    @classmethod
+    def from_solver(cls, solver, run_id=None):
+        """Snapshot a solved solver's answer.  ``run_id`` (when recording) tags the finite
+        solutions with their records provenance ``{run, index}``."""
+        all_sols = solver.all_solutions()
+        # the DISTINCT finite solutions (one per multiplicity cluster), consistent with the merged
+        # category views below and with solver.finite_solutions(); each keeps its representative
+        # path's records provenance.
+        finite = [Solution(all_sols[int(m.path_index)],
+                           provenance=({'run': run_id, 'index': int(m.path_index)}
+                                       if run_id else None))
+                  for m in solver.solution_metadata()
+                  if m.is_finite and m.multiplicity_representative]
+        return cls(finite=finite,
+                   real=list(solver.real_solutions()),
+                   singular=list(solver.singular_solutions()),
+                   nonsingular=list(solver.nonsingular_solutions()),
+                   at_infinity=list(solver.infinite_solutions()),
+                   nonsolutions=list(solver.nonsolutions()))
+
+
+class SolveResult:
+    """What ``solve`` returns: the typed :attr:`answer` plus a claim ticket on the recorded run.
+
+    A thin **records decorator** around the answer (a :class:`ZeroDimResult` today; an ``NIDResult``
+    once numerical irreducible decomposition lands) -- it adds the run id, records directory, and
+    recall count.  Iterating / indexing / ``len`` and :attr:`solutions` delegate to the answer's
+    finite solutions, so a ``SolveResult`` still behaves like the list of solutions it used to be.
+
+    Forgetting to capture it loses nothing -- the records hold the truth; another ``solve`` of the
+    same ask re-mints an equivalent result (recalled, not recomputed).
+    """
+
+    def __init__(self, answer, run_id, directory, num_recalled, solver):
+        self.answer = answer                #: ZeroDimResult (or later NIDResult): the typed answer
         self.run_id = run_id                #: str: the recorded run's id ({run, index} is a point reference)
         self.directory = directory          #: str: the records directory this run lives in
         self.num_recalled = num_recalled    #: int: paths taken from the records instead of computed
         self._solver = solver               # kept alive: the power-user escape hatch
 
+    @property
+    def solutions(self):
+        """The finite solutions (delegates to ``answer.finite``)."""
+        return self.answer.finite
+
     def __len__(self):
-        return len(self.solutions)
+        return len(self.answer)
 
     def __iter__(self):
-        return iter(self.solutions)
+        return iter(self.answer)
 
     def __getitem__(self, k):
-        return self.solutions[k]
+        return self.answer[k]
 
     def __repr__(self):
         return ("SolveResult(%d solutions, run %s, %d recalled, records at %s)"
-                % (len(self.solutions), self.run_id, self.num_recalled, self.directory))
+                % (len(self.answer), self.run_id, self.num_recalled, self.directory))
 
     @property
     def solver(self):
@@ -207,11 +277,11 @@ class SolveResult:
     def from_solver(cls, solver, directory=None):
         """Build a :class:`SolveResult` from a solver that has already been ``solve()``d.
 
-        Reads the answer (finite solutions, each carrying its records provenance) and the
-        records ticket (run id, directory, recall count) straight off the solver.  The bare
-        solver records *itself* -- it attaches an output directory and writes every path as it
-        completes -- so this needs nothing from :func:`solve`; it is exactly how both a bare
-        ``solver.solve()`` and the :func:`solve` convenience produce the same result type.
+        Snapshots the typed answer (a :class:`ZeroDimResult`, its finite solutions carrying records
+        provenance) and reads the records ticket (run id, directory, recall count) straight off the
+        solver.  The bare solver records *itself* -- it attaches an output directory and writes every
+        path as it completes -- so this needs nothing from :func:`solve`; it is exactly how both a
+        bare ``solver.solve()`` and the :func:`solve` convenience produce the same result type.
 
         Parameters
         ----------
@@ -222,14 +292,10 @@ class SolveResult:
             attached records path (``records_path()``) when it recorded, else ``None``.
         """
         run_id = solver.records_run_id()
-        all_sols = solver.all_solutions()
-        solutions = [Solution(all_sols[int(m.path_index)],
-                              provenance=({'run': run_id, 'index': int(m.path_index)}
-                                          if run_id else None))
-                     for m in solver.solution_metadata() if m.is_finite]
+        answer = ZeroDimResult.from_solver(solver, run_id or None)
         if directory is None and run_id:
             directory = solver.records_path()
-        return cls(solutions, run_id, directory if run_id else None,
+        return cls(answer, run_id, directory if run_id else None,
                    int(solver.num_paths_recalled()), solver)
 
 
@@ -386,7 +452,24 @@ def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, 
             zd.record_to(where)
             zd.set_recorded_start_provenance(_json.dumps(refs), identity)
     else:
-        zd = _nag.ZeroDimSolver(system, mptype=mptype, endgame=endgame)
+        try:
+            zd = _nag.ZeroDimSolver(system, mptype=mptype, endgame=endgame)
+        except RuntimeError as e:
+            # An under-determined system (more variables than equations) has a
+            # positive-dimensional solution set, not a finite set of points -- a zero-dim solve
+            # does not apply.  That needs numerical irreducible decomposition, which returns an
+            # NIDResult of witness sets (the other member of the result taxonomy).  NID is not
+            # implemented yet, so say so clearly rather than surface the raw solver error.
+            if 'under-determined' in str(e):
+                raise NotImplementedError(
+                    "bertini.solve: this system looks positive-dimensional (under-determined -- "
+                    "more variables than equations), so its solutions form a positive-dimensional "
+                    "variety, not isolated points.  That needs numerical irreducible decomposition "
+                    "(NID), which is not implemented yet; a zero-dimensional solve does not apply "
+                    "here.  Square the system (add slices / randomize) to solve a zero-dimensional "
+                    "slice in the meantime."
+                ) from e
+            raise
         if _recording_enabled:
             zd.record_to(where)
     # A bare solve() already returns a SolveResult built from the solver's own records state
