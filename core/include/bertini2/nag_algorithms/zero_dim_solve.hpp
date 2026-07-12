@@ -1321,6 +1321,22 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			}
 
 			/**
+			\brief The default point-match tolerance for MetadataForPoint / CoincidentMetadataForPoint.
+
+			The solver's OWN same-point tolerance -- ``final_tolerance * same_point_tolerance_multiplier``,
+			the very tolerance ComputeMultiplicities uses to cluster coincident endpoints.  Using it as the
+			match default means a point taken straight from this solver's own solution lists (solutions(),
+			real_solutions(), ...) matches itself back, and matches no OTHER cluster (the solver already
+			deemed distinct clusters at least this far apart).  Returned as \ref NumErrorT, the error/tolerance
+			type (currently an alias for double), matching \ref IsDistinct -- not a bare double.
+			*/
+			NumErrorT DefaultPointMatchTolerance() const
+			{
+				return this->template Get<Tolerances>().final_tolerance *
+				       this->template Get<PostProcessing>().same_point_tolerance_multiplier;
+			}
+
+			/**
 			\brief The metadata of the solution matching \p point -- the cluster REPRESENTATIVE (issue #302).
 
 			Matches \p point against the solutions (user coordinates by default) with the infinity-norm
@@ -1334,7 +1350,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			\param user_coords Whether \p point is in user coordinates (else the solver's internal coordinates).
 			\see CoincidentMetadataForPoint
 			*/
-			SolutionMetaDataT MetadataForPoint(Vec<BaseComplexT> const& point, double tol, bool user_coords = true) const
+			SolutionMetaDataT MetadataForPoint(Vec<BaseComplexT> const& point, NumErrorT tol, bool user_coords = true) const
 			{
 				auto const& sols = user_coords ? SolutionsUserCoords() : SolutionsInternalCoords();
 				auto const& md   = SolutionMetadata();
@@ -1373,7 +1389,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			\param user_coords Whether \p point is in user coordinates.
 			\see MetadataForPoint
 			*/
-			std::vector<SolutionMetaDataT> CoincidentMetadataForPoint(Vec<BaseComplexT> const& point, double tol, bool user_coords = true) const
+			std::vector<SolutionMetaDataT> CoincidentMetadataForPoint(Vec<BaseComplexT> const& point, NumErrorT tol, bool user_coords = true) const
 			{
 				auto const& sols = user_coords ? SolutionsUserCoords() : SolutionsInternalCoords();
 				auto const& md   = SolutionMetadata();

@@ -77,6 +77,48 @@ def test_metadata_for_missing_point_raises(double_root):
         solver.metadata_for(far, tol=1e-5)
 
 
+def test_metadata_for_defaults_tol_to_solver_same_point_tolerance(four_simple_roots):
+    # omitting tol uses the solver's own same-point tolerance, so metadata_for(pt) Just Works
+    # on a point taken straight from the solver's solution lists (the motivating loop).
+    _, solver = four_simple_roots
+    got = 0
+    for r in solver.real_solutions():
+        md = solver.metadata_for(r)                                    # no tol -> default
+        assert md.multiplicity == 1
+        got += 1
+    assert got == 4
+
+
+def test_default_point_match_tolerance_is_exposed_and_positive(four_simple_roots):
+    _, solver = four_simple_roots
+    tol = solver.default_point_match_tolerance()
+    assert isinstance(tol, float)                                      # NumErrorT -> Python float
+    assert tol > 0
+    # omitting tol matches passing exactly this value
+    r = solver.real_solutions()[0]
+    a = solver.metadata_for(r)
+    b = solver.metadata_for(r, tol=tol)
+    assert a.multiplicity == b.multiplicity
+
+
+def test_metadata_for_nonpositive_tol_is_treated_as_default(four_simple_roots):
+    # the sentinel contract: tol <= 0 means "use the solver default", not "match nothing"
+    _, solver = four_simple_roots
+    r = solver.real_solutions()[0]
+    md = solver.metadata_for(r, tol=0.0)
+    assert md.multiplicity == 1
+    md = solver.metadata_for(r, tol=-1.0)
+    assert md.multiplicity == 1
+
+
+def test_metadata_for_default_tol_coincident_list(double_root):
+    # default tol works for the coincident (list) form too -- (0,0) has multiplicity 4
+    _, solver = double_root
+    all_md = solver.metadata_for(solver.finite_solutions()[0], coincident=True)
+    assert isinstance(all_md, list)
+    assert len(all_md) == 4
+
+
 # --- #304: is_distinct_up_to on solution points ----------------------------------------------
 
 def test_is_distinct_up_to_tells_solutions_apart(four_simple_roots):
