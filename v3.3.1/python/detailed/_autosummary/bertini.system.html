@@ -1,0 +1,1071 @@
+
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="bertini.system.start_system" href="bertini.system.start_system.html"><link rel="prev" title="bertini.sympy_bridge" href="bertini.sympy_bridge.html">
+        <link rel="prefetch" href="../../_static/bpy_icon_.svg" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>bertini.system - Bertini 3.3.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4805ae4f" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">Bertini 3.3.1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/bpy_icon_.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Bertini 3.3.1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../welcome.html">👋 Welcome to Bertini 2</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/tutorials.html">🔦 Tutorials</a><input aria-label="Toggle navigation of 🔦 Tutorials" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/formulating_and_solving/index.html">Formulating and solving systems</a><input aria-label="Toggle navigation of Formulating and solving systems" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/all_solutions/index.html">🌐 Finding <em>all</em> the solutions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/zerodim_solver/index.html">🎯 Solving a system with ZeroDimSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/real_points/index.html">📍 A real point on every component (the Trott curve)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/critical_points/index.html">🎯 Critical points by rank deficiency (a null vector, not a determinant)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/eigenvalues_by_homotopy/index.html">🧮 Eigenvalues by homotopy continuation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/parameter_homotopy/index.html">🔁 Parameter homotopy: solve once, re-solve many times</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/concatenate_systems/index.html">🧱 Build a system in pieces with clone and concatenate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/randomize/index.html">🎲 Randomize an overdetermined system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/user_product_of_linears/index.html">🪢 Author your own start system: a product of linears</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/canonical_ordering/index.html">🧮 Canonical ordering, and opting out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/solution_dataframe/index.html">🗃️ A dataframe of solutions: filtering and plotting with pandas</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/manipulating_solutions/index.html">Manipulating solutions</a><input aria-label="Toggle navigation of Manipulating solutions" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/manipulating_solutions/intro_to_slices/index.html">✂️ Intro to slices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/manipulating_solutions/moving_slice/index.html">🛷 Move a slice, hold the system fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/settings_and_precision/index.html">Solver settings &amp; multiprecision</a><input aria-label="Toggle navigation of Solver settings &amp; multiprecision" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/settings_and_precision/carrying_settings/index.html">⚙️ Carrying settings across related solves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/settings_and_precision/crossed_paths/index.html">🪢 Crossed paths: when two paths become one</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/settings_and_precision/precision_matters/index.html">🎚️ When double precision is not enough</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/settings_and_precision/precision_models/index.html">🔬 Precision models: double, multiple, adaptive</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/parallelism/index.html">Parallelism in Python</a><input aria-label="Toggle navigation of Parallelism in Python" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/parallelism/solving_at_scale/index.html">🚀 Solving at scale: many cores, many machines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/parallelism/parallel_parameter_homotopy/index.html">⚗️ A bistable reaction network, mapped in parallel</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/observing_metadata_more/index.html">Observing, metadata, and more</a><input aria-label="Toggle navigation of Observing, metadata, and more" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/observing_metadata_more/observers_and_path_data/index.html">👀 Watching the paths: observers and path data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/observing_metadata_more/homotopy_cartoon_from_real_data/index.html">🎨 The continuation cartoon, from real data — and seeing precision change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/observing_metadata_more/classic_continuation_cartoon/index.html">🖼️ The classic continuation cartoon, from real data</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/performance_benchmarking/index.html">Performance and benchmarking</a><input aria-label="Toggle navigation of Performance and benchmarking" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/performance_benchmarking/bertini1_vs_bertini2_timing/index.html">⏱️ Timing Bertini 1 vs Bertini 2</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/record_keeping/index.html">The record-keeping system</a><input aria-label="Toggle navigation of The record-keeping system" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/record_keeping/automatic_record_keeping/index.html">Automatic record keeping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/record_keeping/chained_homotopies/index.html">Chained homotopies: provenance all the way back</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/doing_things_manually/index.html">Doing things manually</a><input aria-label="Toggle navigation of Doing things manually" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/doing_things_manually/evaluation_cyclic/index.html">♻️ Evaluation of cyclic-<span class="math notranslate nohighlight">\(n\)</span> polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/doing_things_manually/manual_endgame_usage/index.html">🎮 Using an endgame to compute singular endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/doing_things_manually/tracking_nonsingular/index.html">🛤 Tracking to nonsingular endpoints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../everyday.html">🌟 Everyday API</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../numpy.html">Multiprecision numbers and NumPy</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">🔎 Full API reference</a><input aria-label="Toggle navigation of 🔎 Full API reference" checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="bertini.algorithms.html">bertini.algorithms</a><input aria-label="Toggle navigation of bertini.algorithms" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="bertini.algorithms.zerodim.html">bertini.algorithms.zerodim</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.config.html">bertini.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.endgame.html">bertini.endgame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.logging.html">bertini.logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.multiprec.html">bertini.multiprec</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.nag_algorithm.html">bertini.nag_algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.operators.html">bertini.operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.parallel.html">bertini.parallel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.parse.html">bertini.parse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.random.html">bertini.random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.records.html">bertini.records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.symbolics.html">bertini.symbolics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.sympy_bridge.html">bertini.sympy_bridge</a></li>
+<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">bertini.system</a><input aria-label="Toggle navigation of bertini.system" checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="bertini.system.start_system.html">bertini.system.start_system</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="bertini.tracking.html">bertini.tracking</a><input aria-label="Toggle navigation of bertini.tracking" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="bertini.tracking.observers.html">bertini.tracking.observers</a><input aria-label="Toggle navigation of bertini.tracking.observers" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="bertini.tracking.observers.amp.html">bertini.tracking.observers.amp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bertini.tracking.observers.double.html">bertini.tracking.observers.double</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bertini.tracking.observers.multiple.html">bertini.tracking.observers.multiple</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bertini.windows_dll_manager.html">bertini.windows_dll_manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../zbib.html">📚 Bibliography</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/detailed/_autosummary/bertini.system.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-bertini.system">
+<span id="bertini-system"></span><h1>bertini.system<a class="headerlink" href="#module-bertini.system" title="Link to this heading">¶</a></h1>
+<p>Provides utilities for working with systems of functions – polynomials are intended, although you can work with functions involving things like trig functions, arbitrary powers, etc.</p>
+<p>Making a new <cite>System</cite> is the starting point you want, probably some of these things:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">dehomogenize_point</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="bertini.system.System">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">bertini.system.</span></span><span class="sig-name descname"><span class="pre">System</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(object)arg1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">instance</span></code></p>
+<p>The type in Bertini for systems of simultaneous equations.  Add functions and variable groups via member functions.</p>
+<dl class="simple">
+<dt>__init__( (object)arg1, (bertini._pybertini.container.ListOfNode)functions) -&gt; None :</dt><dd><p>Construct a System from a list of functions (bare expressions).  The variables are auto-discovered from the functions and placed into a single affine variable group, ordered alphabetically by name.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(object)arg1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#bertini.system.System.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>__init__( (object)arg1, (bertini._pybertini.container.ListOfNode)functions) -&gt; None :</dt><dd><p>Construct a System from a list of functions (bare expressions).  The variables are auto-discovered from the functions and placed into a single affine variable group, ordered alphabetically by name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objects</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.add" title="Link to this definition">¶</a></dt>
+<dd><p>Add functions and/or variable groups to the System, dispatched by type.</p>
+<dl class="simple">
+<dt>Each argument may be:</dt><dd><ul class="simple">
+<li><p>a function-tree expression (e.g. <code class="docutils literal notranslate"><span class="pre">x**2</span> <span class="pre">+</span> <span class="pre">y</span> <span class="pre">-</span> <span class="pre">1</span></code>, or a lone <code class="docutils literal notranslate"><span class="pre">Variable</span></code>) -&gt; added
+as a function;</p></li>
+<li><p>a <code class="xref py py-class docutils literal notranslate"><span class="pre">VariableGroup</span></code> -&gt; added as an affine variable group;</p></li>
+<li><p>a numpy array / list / tuple of the above -&gt; each element is added (so
+<code class="docutils literal notranslate"><span class="pre">sys.add(A</span> <span class="pre">&#64;</span> <span class="pre">x</span> <span class="pre">-</span> <span class="pre">lam*x)</span></code>, <code class="docutils literal notranslate"><span class="pre">sys.add([f,</span> <span class="pre">g])</span></code>, and <code class="docutils literal notranslate"><span class="pre">sys.add(grp,</span> <span class="pre">f,</span> <span class="pre">g)</span></code> work).</p></li>
+</ul>
+</dd>
+</dl>
+<p>Projective groups still use <a class="reference internal" href="#bertini.system.System.add_hom_variable_group" title="bertini.system.System.add_hom_variable_group"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_hom_variable_group()</span></code></a>; structured blocks use
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">add_linear()</span></code>.  Returns <code class="docutils literal notranslate"><span class="pre">self</span></code> for chaining.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_function">
+<span class="sig-name descname"><span class="pre">add_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expression</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.add_function" title="Link to this definition">¶</a></dt>
+<dd><p>Add a single expression as a function to the system.</p>
+<p>A thin guard over the native <code class="docutils literal notranslate"><span class="pre">add_function</span></code> that turns the common mistakes into a clear
+message – most usefully, passing a SymPy expression instead of a bertini node (convert with
+<a class="reference internal" href="bertini.sympy_bridge.html#bertini.sympy_bridge.from_sympy" title="bertini.sympy_bridge.from_sympy"><code class="xref py py-func docutils literal notranslate"><span class="pre">bertini.sympy_bridge.from_sympy()</span></code></a> first).  Returns whatever the native call returns.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_functions">
+<span class="sig-name descname"><span class="pre">add_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expressions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.add_functions" title="Link to this definition">¶</a></dt>
+<dd><p>Add a vector/array of expressions as individual functions; returns the count added.</p>
+<p><code class="docutils literal notranslate"><span class="pre">expressions</span></code> may be a numpy object array, a (possibly nested) list, or a single
+expression node:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">add_functions</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">x</span> <span class="o">-</span> <span class="n">lam</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_hom_variable_group">
+<span class="sig-name descname"><span class="pre">add_hom_variable_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(bertini._pybertini.container.VariableGroup)group</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.add_hom_variable_group" title="Link to this definition">¶</a></dt>
+<dd><p>Add a projective or homogeneous variable group to the System</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_linear">
+<span class="sig-name descname"><span class="pre">add_linear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.add_linear" title="Link to this definition">¶</a></dt>
+<dd><p>Add the linear conditions <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">x</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">==</span> <span class="pre">0</span></code> as one LinearFormsBlock.</p>
+<p><code class="docutils literal notranslate"><span class="pre">A</span></code> is an exact (m x n) coefficient matrix; <code class="docutils literal notranslate"><span class="pre">x</span></code> a length-n vector of the system’s variables
+(each already in a variable group); <code class="docutils literal notranslate"><span class="pre">b</span></code> an optional length-m exact constant vector (default
+zero).  Coefficients must be exact.  Returns self.  Homogenization-aware.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_linear_forms">
+<span class="sig-name descname"><span class="pre">add_linear_forms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coefficients</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.add_linear_forms" title="Link to this definition">¶</a></dt>
+<dd><p>Add an affine-linear-forms block f(x) = M [x;1] (one LinearFormsBlock).</p>
+<p><code class="docutils literal notranslate"><span class="pre">coefficients</span></code> is an (m x num_vars+1) array/list of EXACT values – one row per function,
+the trailing column being each form’s constant term.  Python floats are refused.  Returns self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_linear_forms_block">
+<span class="sig-name descname"><span class="pre">add_linear_forms_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(int)num_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(numpy.ndarray)coefficients</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.add_linear_forms_block" title="Link to this definition">¶</a></dt>
+<dd><p>Add a block of affine linear forms f(x) = M [x;1] to the System, evaluated as a single matrix-vector product rather than as scalar expressions.  coefficients is an complex_mp matrix with one row per function and num_vars+1 columns; the trailing column carries each form’s constant term.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_path_variable">
+<span class="sig-name descname"><span class="pre">add_path_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(bertini._pybertini.function_tree.symbol.Variable)pathvar</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.add_path_variable" title="Link to this definition">¶</a></dt>
+<dd><p>Add a path variable to the System</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_products_of_linears">
+<span class="sig-name descname"><span class="pre">add_products_of_linears</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.add_products_of_linears" title="Link to this definition">¶</a></dt>
+<dd><p>Add a products-of-linear-forms block: f_i(x) = prod_r ( c_{i,r} . [x;1] ).</p>
+<p><code class="docutils literal notranslate"><span class="pre">factors</span></code> is a list with one entry per function; entry i is an exact (k_i x num_vars+1)
+matrix (one row per linear factor, trailing column the factor’s constant).  A product of k
+factors is one function of degree k.  Coefficients must be exact.  Returns self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_products_of_linears_block">
+<span class="sig-name descname"><span class="pre">add_products_of_linears_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(int)num_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(list)factors</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.add_products_of_linears_block" title="Link to this definition">¶</a></dt>
+<dd><p>Add a block of products-of-linear-forms f_i(x) = prod_r ( c_{i,r} . [x;1] ) to the System, evaluated as matrix-multiplies-then-row-products rather than as scalar expressions.  factors is a list with one entry per function; entry i is an complex_mp matrix with one row per linear factor and num_vars+1 columns (the trailing column carries each factor’s constant term).  Each function’s degree is its number of factors.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_slices_as_products">
+<span class="sig-name descname"><span class="pre">add_slices_as_products</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.add_slices_as_products" title="Link to this definition">¶</a></dt>
+<dd><p>Add one products-of-linears function per slice (the regeneration bridge).</p>
+<p>Each <code class="xref py py-class docutils literal notranslate"><span class="pre">Slice</span></code> becomes a single function that is the product of its linear forms.  Slice
+coefficient columns must follow the system’s variable ordering.  Returns self.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.add_variable_group">
+<span class="sig-name descname"><span class="pre">add_variable_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.add_variable_group" title="Link to this definition">¶</a></dt>
+<dd><p>Add an affine variable group – accepts several forms, unambiguously (issue #293).</p>
+<p>All of these work (a single <code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code>, a <code class="xref py py-class docutils literal notranslate"><span class="pre">VariableGroup</span></code>, and a <code class="docutils literal notranslate"><span class="pre">list</span></code> are
+mutually distinguishable, so there is no ambiguity):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>                     <span class="c1"># loose variables</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span>                  <span class="c1"># a list</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>                           <span class="c1"># one variable -&gt; a one-variable group</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">bertini</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]))</span>   <span class="c1"># the explicit form</span>
+</pre></div>
+</div>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.auto_patch">
+<span class="sig-name descname"><span class="pre">auto_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.auto_patch" title="Link to this definition">¶</a></dt>
+<dd><p>Apply a patch to the system, given its current variable group structure.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.clear_variables">
+<span class="sig-name descname"><span class="pre">clear_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.clear_variables" title="Link to this definition">¶</a></dt>
+<dd><p>Remove the variable structure from the system</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.clone">
+<span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.clone" title="Link to this definition">¶</a></dt>
+<dd><p>A copy of this System, ready to extend (issue #296).</p>
+<p>Shares the immutable node DAG (variables, functions, subexpressions) with the original but gets its
+own evaluation memory, so its variables line up with the original’s (clone a set-up system, give the
+clone different functions, concatenate the two).  The copy is unsealed and independently mutable;
+adding/removing functions on one does not affect the other.  For a fully serialized deep copy use
+<code class="docutils literal notranslate"><span class="pre">copy.deepcopy</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.content_digest">
+<span class="sig-name descname"><span class="pre">content_digest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.content_digest" title="Link to this definition">¶</a></dt>
+<dd><p>The persistent content digest of the system: SHA-256 of its canonical exact encoding, as 64 lowercase hex characters.  Stable across sessions, machines, and versions of the encoding format (a format change bumps the version inside the encoding, changing digests loudly rather than silently).  Everything evaluation-relevant is identity – functions, variable groups and ordering, path variable, patch and randomization coefficients, gamma; randomness included.  Transient state (precision, current variable values, differentiation) is not.  This is the key a database of solutions references systems and homotopies by.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.coordinates_of">
+<span class="sig-name descname"><span class="pre">coordinates_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(numpy.ndarray)point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(object)group</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">object</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.coordinates_of" title="Link to this definition">¶</a></dt>
+<dd><p>Project a user-coordinate point onto one variable group: return just that group’s coordinates.  <cite>group</cite> is either the VariableGroup object or its 0-based FIFO index.  Affine groups return their affine coordinates; projective groups are returned as-is (not dehomogenized).  Handy for an augmented system (e.g. a critical-point system) where you only care about one group.</p>
+<p>coordinates_of( (System)self, (numpy.ndarray)point, (object)group) -&gt; object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.copy_functions">
+<span class="sig-name descname"><span class="pre">copy_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(System)other</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.copy_functions" title="Link to this definition">¶</a></dt>
+<dd><p>Append another system’s functions to this one and return self (issue #297; sugar for add_functions(other.functions())).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.copy_patches">
+<span class="sig-name descname"><span class="pre">copy_patches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(System)other</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.copy_patches" title="Link to this definition">¶</a></dt>
+<dd><p>Copy the patches from another system into this one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.copy_variable_structure">
+<span class="sig-name descname"><span class="pre">copy_variable_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(System)other</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.copy_variable_structure" title="Link to this definition">¶</a></dt>
+<dd><p>Copy the variable structure from another System</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.degrees">
+<span class="sig-name descname"><span class="pre">degrees</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bertini._pybertini.container.ListOfInt</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.degrees" title="Link to this definition">¶</a></dt>
+<dd><p>Get a list of the degrees of the functions in the system, with respect to all variables in all groups (and in fact overall)</p>
+<dl class="simple">
+<dt>degrees( (System)self, (bertini._pybertini.container.VariableGroup)group) -&gt; bertini._pybertini.container.ListOfInt :</dt><dd><p>Get a list of the degrees of the functions in the system, with respect to a variable_group passed in to this function.  Negative numbers indicate non-polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.dehomogenize_point">
+<span class="sig-name descname"><span class="pre">dehomogenize_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(numpy.ndarray)point</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.dehomogenize_point" title="Link to this definition">¶</a></dt>
+<dd><p>Dehomogenize a vector of doubles (complex), using the variable structure in this System</p>
+<dl class="simple">
+<dt>dehomogenize_point( (System)self, (numpy.ndarray)point) -&gt; numpy.ndarray :</dt><dd><p>Dehomogenize a vector of mpfr’s (complex), using the variable structure in this System</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.describe">
+<span class="sig-name descname"><span class="pre">describe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(bool)verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.describe" title="Link to this definition">¶</a></dt>
+<dd><p>A human-facing description of the system, block by block (the same as str(system) when verbose=False).  verbose=True reveals the actual coefficients/matrices and the underlying functions of randomization / blend blocks.  For reading, not re-parsing.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.differentiate">
+<span class="sig-name descname"><span class="pre">differentiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.differentiate" title="Link to this definition">¶</a></dt>
+<dd><p>differentiate the system with respect to the declared variable groups</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.eval">
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.eval" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the system in multiple precision, using already-set variable values.</p>
+<dl class="simple">
+<dt>eval( (System)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the system in double precision, using already-set variable values.</p>
+</dd>
+<dt>eval( (System)arg1, (numpy.ndarray)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the system in multiple precision, using space variable values passed into this function.</p>
+</dd>
+<dt>eval( (System)arg1, (numpy.ndarray)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the system in double precision, using space variable values passed into this function.</p>
+</dd>
+<dt>eval( (System)arg1, (numpy.ndarray)arg2, (bertini._pybertini.multiprec.complex_mp)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the system in multiple precision using space and time values passed into this function.  Throws if doesn’t use a time variable</p>
+</dd>
+<dt>eval( (System)arg1, (numpy.ndarray)arg2, (complex)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the system in double precision using space and time values passed into this function.  Throws if doesn’t use a time variable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.eval_jacobian">
+<span class="sig-name descname"><span class="pre">eval_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.eval_jacobian" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.</p>
+<dl class="simple">
+<dt>eval_jacobian( (System)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.</p>
+</dd>
+<dt>eval_jacobian( (System)arg1, (numpy.ndarray)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function</p>
+</dd>
+<dt>eval_jacobian( (System)arg1, (numpy.ndarray)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function</p>
+</dd>
+<dt>eval_jacobian( (System)arg1, (numpy.ndarray)arg2, (complex)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn’t use a time variable</p>
+</dd>
+<dt>eval_jacobian( (System)arg1, (numpy.ndarray)arg2, (bertini._pybertini.multiprec.complex_mp)self) -&gt; numpy.ndarray :</dt><dd><p>Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn’t use a time variable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.eval_time_derivative">
+<span class="sig-name descname"><span class="pre">eval_time_derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(numpy.ndarray)space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(bertini._pybertini.multiprec.complex_mp)time</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.eval_time_derivative" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate dH/dt (the time derivative) in multiple precision at the given space and time values.  Rows of t-independent blocks are zero.</p>
+<dl class="simple">
+<dt>eval_time_derivative( (System)self, (numpy.ndarray)space, (complex)time) -&gt; numpy.ndarray :</dt><dd><p>Evaluate dH/dt (the time derivative) in double precision at the given space and time values.  Rows of t-independent blocks are zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.function">
+<span class="sig-name descname"><span class="pre">function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(int)index</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bertini._pybertini.function_tree.AbstractNode</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.function" title="Link to this definition">¶</a></dt>
+<dd><p>Get a function with a given index.  Problems ensue if out of range – uses un-rangechecked version of underlying getter</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.functions">
+<span class="sig-name descname"><span class="pre">functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.functions" title="Link to this definition">¶</a></dt>
+<dd><p>The system’s functions, as a list of function-tree nodes (issue #297; structured blocks are expanded).  So <cite>critpt_sys.add_functions(sys.functions())</cite> copies them all in.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.get_patch">
+<span class="sig-name descname"><span class="pre">get_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">object</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.get_patch" title="Link to this definition">¶</a></dt>
+<dd><p>Get (a reference to) the patches from the system.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.have_path_variable">
+<span class="sig-name descname"><span class="pre">have_path_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.have_path_variable" title="Link to this definition">¶</a></dt>
+<dd><p>Asks whether the System has a path variable defined</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.hom_variable_groups">
+<span class="sig-name descname"><span class="pre">hom_variable_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bertini._pybertini.container.ListOfVariableGroup</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.hom_variable_groups" title="Link to this definition">¶</a></dt>
+<dd><p>Get the list of projective / homogeneous variable_groups from the system</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.homogenize">
+<span class="sig-name descname"><span class="pre">homogenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.homogenize" title="Link to this definition">¶</a></dt>
+<dd><p>Homogenize the system, adding new homogenizing variables if necessary.  This may change your polynomials; that is, it has side effects.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.homogenize_point">
+<span class="sig-name descname"><span class="pre">homogenize_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(numpy.ndarray)point</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.homogenize_point" title="Link to this definition">¶</a></dt>
+<dd><p>Take a point in user (dehomogenized) coordinates to this system’s internal coordinates: inserts the homogenizing coordinate for each affine variable group, then rescales onto the system’s patch if patched.  Inverse of dehomogenize_point.</p>
+<dl class="simple">
+<dt>homogenize_point( (System)self, (numpy.ndarray)point) -&gt; numpy.ndarray :</dt><dd><p>Take a point in user (dehomogenized) coordinates to this system’s internal coordinates: inserts the homogenizing coordinate for each affine variable group, then rescales onto the system’s patch if patched.  Inverse of dehomogenize_point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.is_homogeneous">
+<span class="sig-name descname"><span class="pre">is_homogeneous</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.is_homogeneous" title="Link to this definition">¶</a></dt>
+<dd><p>Determines whether all polynomials in the system have the same degree.  Non-polynomial functions are not homogeneous.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.is_patched">
+<span class="sig-name descname"><span class="pre">is_patched</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.is_patched" title="Link to this definition">¶</a></dt>
+<dd><p>Check whether the system is patched.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.is_polynomial">
+<span class="sig-name descname"><span class="pre">is_polynomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.is_polynomial" title="Link to this definition">¶</a></dt>
+<dd><p>Determines whether all polynomials are polynomial.  Transcendental functions, e.g., are non-polynomial.  Returns a bool.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.is_same">
+<span class="sig-name descname"><span class="pre">is_same</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(System)other</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.is_same" title="Link to this definition">¶</a></dt>
+<dd><p>Content equality: True iff the two systems have equal content digests (identical canonical encodings).  Independently built systems with the same mathematical content compare equal; systems differing in any identity-bearing way (functions, grouping, patch, gamma, …) do not.  Does NOT change ==/hash semantics of the Python object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.is_sealed">
+<span class="sig-name descname"><span class="pre">is_sealed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.is_sealed" title="Link to this definition">¶</a></dt>
+<dd><p>Whether the system has been sealed against structural mutation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.jacobian">
+<span class="sig-name descname"><span class="pre">jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">usercoordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.jacobian" title="Link to this definition">¶</a></dt>
+<dd><p>The symbolic Jacobian of the system, as a 2-D numpy object array of expression nodes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">J[i,</span> <span class="pre">j]</span></code> is the partial derivative of function <code class="docutils literal notranslate"><span class="pre">i</span></code> with respect to variable <code class="docutils literal notranslate"><span class="pre">j</span></code> – an
+expression tree, not a number (contrast <a class="reference internal" href="#bertini.system.System.eval_jacobian" title="bertini.system.System.eval_jacobian"><code class="xref py py-meth docutils literal notranslate"><span class="pre">eval_jacobian()</span></code></a>, which is numeric).  Ready to
+<code class="docutils literal notranslate"><span class="pre">numpy.vstack</span></code> onto a coefficient row and <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> a vector of variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>usercoordinates</strong> (<em>bool</em><em>, </em><em>default True</em>) – When True, differentiate the functions <em>as authored</em> (the natural, pre-homogenization
+functions) with respect to the user-declared affine/projective variable groups: the
+solver-added homogenizing variables never appear and patches are omitted.  When False,
+differentiate the functions <em>as currently stored</em> (possibly homogenized) with respect to
+the full internal variable ordering (homogenizing variables included), with the patch’s
+rows appended when the system is patched.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>For a system that has <em>already</em> been homogenized, the user-coordinate Jacobian relies on the
+natural functions snapshotted at homogenization time.  Build the system affinely and call
+<code class="docutils literal notranslate"><span class="pre">jacobian</span></code> before homogenizing/solving for the cleanest result.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.num_functions">
+<span class="sig-name descname"><span class="pre">num_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.num_functions" title="Link to this definition">¶</a></dt>
+<dd><p>The total number of functions in the system.  Does not include patches.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.num_hom_variable_groups">
+<span class="sig-name descname"><span class="pre">num_hom_variable_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.num_hom_variable_groups" title="Link to this definition">¶</a></dt>
+<dd><p>The number of homogeneous or projective variable groups.  The number of homogenizing variables should eventually equal this.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.num_hom_variables">
+<span class="sig-name descname"><span class="pre">num_hom_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.num_hom_variables" title="Link to this definition">¶</a></dt>
+<dd><p>The number of homogenizing variables defined in the system.  Should be equal to the number of homvargroups</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.num_ungrouped_variables">
+<span class="sig-name descname"><span class="pre">num_ungrouped_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.num_ungrouped_variables" title="Link to this definition">¶</a></dt>
+<dd><p>The number of variables, not grouped into an affine or projective space</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.num_variable_groups">
+<span class="sig-name descname"><span class="pre">num_variable_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.num_variable_groups" title="Link to this definition">¶</a></dt>
+<dd><p>The number of affine variable groups.  This should probably be renamed to num_affine_variable_groups</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.num_variables">
+<span class="sig-name descname"><span class="pre">num_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.num_variables" title="Link to this definition">¶</a></dt>
+<dd><p>the <em>total</em> number of variables in the system.  Includes homogenizing variables</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.precision" title="Link to this definition">¶</a></dt>
+<dd><p>Get the current precision of the system.  Returns a postive number, representing the number of digits (not bits) at which the system is currently represented.  (there is a reference-level precision stored, so you can change this up / down mostly fearlessly)</p>
+<dl class="simple">
+<dt>precision( (System)self, (int)precision) -&gt; None :</dt><dd><p>Set / change the precision of the system.  Feed in a positive number, representing the digits (not bits) of the precision.  Double precision is 16, but that only effects the multi-precision precision…  you can eval in double precision without changing the precision to 16.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.randomization_matrix">
+<span class="sig-name descname"><span class="pre">randomization_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.randomization_matrix" title="Link to this definition">¶</a></dt>
+<dd><p>The randomization matrix R (codimension x N, complex_mp) of a system produced by randomize().  Raises if the system has no randomization block.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.randomize">
+<span class="sig-name descname"><span class="pre">randomize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">codimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bertini.system.System.randomize" title="Link to this definition">¶</a></dt>
+<dd><p>Randomize a System, returning a NEW system (the original is not mutated).</p>
+<p>With no arguments, an overdetermined System is squared down to its affine dimension.  Pass
+<code class="docutils literal notranslate"><span class="pre">codimension</span></code> to instead randomize down to a chosen number of functions
+(<code class="docutils literal notranslate"><span class="pre">sys.randomize(codimension=1)</span></code> yields a single function); it must be a positive integer
+strictly less than the number of natural functions (randomization must reduce the count).
+Alternatively pass <code class="docutils literal notranslate"><span class="pre">matrix</span></code>, an exact coefficient matrix R (one row per randomized function,
+one column per natural function); its coefficients must be exact.  <code class="docutils literal notranslate"><span class="pre">codimension</span></code> and
+<code class="docutils literal notranslate"><span class="pre">matrix</span></code> are mutually exclusive.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.reorder_functions_by_degree_decreasing">
+<span class="sig-name descname"><span class="pre">reorder_functions_by_degree_decreasing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.reorder_functions_by_degree_decreasing" title="Link to this definition">¶</a></dt>
+<dd><p>Change the order of the functions to be in decreasing order</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.reorder_functions_by_degree_increasing">
+<span class="sig-name descname"><span class="pre">reorder_functions_by_degree_increasing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.reorder_functions_by_degree_increasing" title="Link to this definition">¶</a></dt>
+<dd><p>Change the order of the functions to be in decreasing order</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.rescale_point_to_fit_patch">
+<span class="sig-name descname"><span class="pre">rescale_point_to_fit_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(numpy.ndarray)point</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.rescale_point_to_fit_patch" title="Link to this definition">¶</a></dt>
+<dd><p>Return a rescaled version of the input point, which fits the patch for the system.</p>
+<dl class="simple">
+<dt>rescale_point_to_fit_patch( (System)self, (numpy.ndarray)point) -&gt; numpy.ndarray :</dt><dd><p>Return a rescaled version of the input point, which fits the patch for the system.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.rescale_point_to_fit_patch_in_place">
+<span class="sig-name descname"><span class="pre">rescale_point_to_fit_patch_in_place</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(numpy.ndarray)point</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.rescale_point_to_fit_patch_in_place" title="Link to this definition">¶</a></dt>
+<dd><p>Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.</p>
+<dl class="simple">
+<dt>rescale_point_to_fit_patch_in_place( (System)self, (numpy.ndarray)point) -&gt; None :</dt><dd><p>Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.seal">
+<span class="sig-name descname"><span class="pre">seal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.seal" title="Link to this definition">¶</a></dt>
+<dd><p>Seal the system: memoize its content digest and forbid structural mutation (hashcons-on-freeze).  After sealing, structural mutators (add_function, homogenize, auto_patch, …) raise; evaluation, precision changes, and differentiation still work.  Copying (clone / deepcopy) yields an unsealed copy.  Idempotent.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.set_path_variable">
+<span class="sig-name descname"><span class="pre">set_path_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(complex)values</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.set_path_variable" title="Link to this definition">¶</a></dt>
+<dd><p>Set the value of the path variable.  This one’s double-precision.  Throws if path variable not defined.</p>
+<dl class="simple">
+<dt>set_path_variable( (System)self, (bertini._pybertini.multiprec.complex_mp)values) -&gt; None :</dt><dd><p>Set the value of the path variable.  This one’s variable-precision.  Throws if path variable not defined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.set_variable_groups">
+<span class="sig-name descname"><span class="pre">set_variable_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(bertini._pybertini.container.ListOfVariableGroup)groups</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.set_variable_groups" title="Link to this definition">¶</a></dt>
+<dd><p>Replace the entire variable-group structure of the System with the given list of (affine) variable groups.  Clears existing groups but preserves the path variable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.set_variables">
+<span class="sig-name descname"><span class="pre">set_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(numpy.ndarray)values</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.set_variables" title="Link to this definition">¶</a></dt>
+<dd><p>Set the values of the variables. Expects a vector of doubles</p>
+<dl class="simple">
+<dt>set_variables( (System)self, (numpy.ndarray)values) -&gt; None :</dt><dd><p>Set the values of the variables. Expects a vector of complex mpfr’s</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.slices">
+<span class="sig-name descname"><span class="pre">slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.slices" title="Link to this definition">¶</a></dt>
+<dd><p>The linear-form slices embedded in this system, one per linear-forms block (an empty list if none).  Lets you back out the slice structure of a system that was built from a slice – the inverse of Slice.as_system().</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.symbolic_jacobian">
+<span class="sig-name descname"><span class="pre">symbolic_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(bool)usercoordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.symbolic_jacobian" title="Link to this definition">¶</a></dt>
+<dd><p>The symbolic Jacobian of the system, as a list of rows of expression nodes (NOT numeric – contrast eval_jacobian).  usercoordinates=True (default): differentiate the natural (pre-homogenization) functions w.r.t. the user-declared affine/projective variable groups – homogenizing variables never appear, patches omitted.  usercoordinates=False: differentiate the current (possibly homogenized) functions w.r.t. the full internal variable ordering (homogenizing variables included), with the patch’s rows appended when patched.  Prefer bertini.System.jacobian(…), which returns a 2-D numpy object array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.to_classic_input">
+<span class="sig-name descname"><span class="pre">to_classic_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(int)mptype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(int)odepredictor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(float)tracktolbeforeeg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(float)tracktolduringeg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(float)finaltol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-11</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(float)maxstepsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(float)stepsuccessfactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(float)stepfailfactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(int)stepsforincrease</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(int)maxnumbersteps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100000</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(int)maxnewtonits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(int)maxcrossedpathresolves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.to_classic_input" title="Link to this definition">¶</a></dt>
+<dd><p>Emit this system as a Bertini 1 classic input file (a CONFIG + INPUT string) so the same problem can be solved in Bertini 1 for cross-validation.  Every tracking knob that governs path resolution – predictor, tolerances, and the FULL step-size cadence (maxstepsize / stepsuccessfactor / stepfailfactor / stepsforincrease) plus maxnewtonits – is settable, so the emitted file is fully controlled against a Bertini 2 solve (defaults mirror Bertini 2’s).  mptype: 0 double, 1 fixed-multiple, 2 adaptive.  odepredictor: 0 Euler, 2 RK4, 5 RKF45, 6 Cash-Karp.  AMP coeff/degree bounds are derived from the system.  Run <cite>bertini1</cite> on the result in a SCRATCH dir (it writes many files into its CWD).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.variable_groups">
+<span class="sig-name descname"><span class="pre">variable_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bertini._pybertini.container.ListOfVariableGroup</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.variable_groups" title="Link to this definition">¶</a></dt>
+<dd><p>Get the list of (affine) variable_groups from the system</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bertini.system.System.variable_ordering">
+<span class="sig-name descname"><span class="pre">variable_ordering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bertini._pybertini.container.VariableGroup</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.System.variable_ordering" title="Link to this definition">¶</a></dt>
+<dd><p>The ordering of variables saying what each coordinate of a point in THIS system’s coordinates means.  On your original system these are your variables; on a solver’s target_system() the homogenizing variables appear too.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bertini.system.clone">
+<span class="sig-prename descclassname"><span class="pre">bertini.system.</span></span><span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.clone" title="Link to this definition">¶</a></dt>
+<dd><p>Copy a System.  The copy shares the immutable node DAG (variables, functions, subexpressions) with the original but gets its own evaluation memory, so it is safe to evaluate concurrently AND its variables line up with the original’s – which is what lets you clone a set-up system, give the clone different functions, and concatenate the two (issue #256).  Adding/removing functions on one does not affect the other.  For a fully serialized deep copy use copy.deepcopy or pickle.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bertini.system.concatenate">
+<span class="sig-prename descclassname"><span class="pre">bertini.system.</span></span><span class="sig-name descname"><span class="pre">concatenate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(System)other</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.concatenate" title="Link to this definition">¶</a></dt>
+<dd><p>concatenate two Systems to produce a new one.  Appends the second’s functions onto a copy of the first.  The two must share variable ordering (cloning one from the other, or just reusing the same variables, guarantees this – variables are canonical by name).  If exactly one is patched, the result takes that patch.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bertini.system.intern_system">
+<span class="sig-prename descclassname"><span class="pre">bertini.system.</span></span><span class="sig-name descname"><span class="pre">intern_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(object)system</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.intern_system" title="Link to this definition">¶</a></dt>
+<dd><p>Hash-cons a System: return the live SEALED representative with an equal content_digest() if one exists, else seal and register this one.  Two equal systems interned in one session come back as the SAME object (s1 is s2).  The representative is sealed – structural mutators raise; clone() it to get a mutable copy.  The intern table holds systems weakly, so it never keeps them alive on its own.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bertini.system.make_homotopy">
+<span class="sig-prename descclassname"><span class="pre">bertini.system.</span></span><span class="sig-name descname"><span class="pre">make_homotopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(System)start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(str)path_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t'</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(bertini._pybertini.function_tree.AbstractNode)gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.make_homotopy" title="Link to this definition">¶</a></dt>
+<dd><p>Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start, with the path variable added.  At t=1 the homotopy is gamma*start (so start’s solutions are its roots) and at t=0 it is target.  When start carries a structured block (e.g. a products-of-linears start system) the two systems are combined with a blend block; otherwise node arithmetic is used.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bertini.system.make_moving_homotopy">
+<span class="sig-prename descclassname"><span class="pre">bertini.system.</span></span><span class="sig-name descname"><span class="pre">make_moving_homotopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(System)fixed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(System)start_moving</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(System)end_moving</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(str)path_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t'</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">(bertini._pybertini.function_tree.AbstractNode)gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.make_moving_homotopy" title="Link to this definition">¶</a></dt>
+<dd><p>Form a homotopy that moves ONLY the moving rows, leaving the fixed system evaluated once.  H = [ fixed’s blocks ; (1-t)*end_moving + gamma*t*start_moving ]: the fixed equations (polynomial system + any static slices) stay as their own blocks (evaluated once, contributing zero to dH/dt) while only the moving rows slide.  At t=1 the moving rows are gamma*start_moving, at t=0 they are end_moving.  start_moving and end_moving hold just the moving rows and share fixed’s variable structure.  The fixed rows come first, then the moving rows; build the matching target as fixed concatenated with end_moving.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bertini.system.simplify">
+<span class="sig-prename descclassname"><span class="pre">bertini.system.</span></span><span class="sig-name descname"><span class="pre">simplify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(object)self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.simplify" title="Link to this definition">¶</a></dt>
+<dd><p>Perform all possible simplifications.  Has side effects of modifying your functions, if held separately.  Shared nodes between multiple systems may have adverse effects</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bertini.system.symbolic_jacobian">
+<span class="sig-prename descclassname"><span class="pre">bertini.system.</span></span><span class="sig-name descname"><span class="pre">symbolic_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">(object)functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">(object)variables</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span> <span class="pre">:</span></span></span><a class="headerlink" href="#bertini.system.symbolic_jacobian" title="Link to this definition">¶</a></dt>
+<dd><p>The symbolic Jacobian of a list of functions with respect to a list of variables: J[i][j] = d functions[i] / d variables[j], as a list of rows of expression nodes.  Purely symbolic (no evaluation).  Prefer bertini.jacobian(…), which returns a 2-D numpy object array.</p>
+</dd></dl>
+
+<p class="rubric">Submodules</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="bertini.system.start_system.html#module-bertini.system.start_system" title="bertini.system.start_system"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_system</span></code></a></p></td>
+<td><p>Start systems</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+  
+        <div class="related-pages">
+          <a class="next-page" href="bertini.system.start_system.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">bertini.system.start_system</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="bertini.sympy_bridge.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">bertini.sympy_bridge</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2015-2026, Bertini Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+  
+  <div class="build-info" style="margin-top: 0.75rem; font-size: var(--font-size--small); color: var(--color-foreground-muted);">
+    Built from
+    <a href="https://github.com/bertiniteam/b2/commit/15aec06561258aaa4befdfc8316e439d57076ff1"><code>15aec06</code></a> on 2026-07-13 04:03 UTC.
+  </div>
+  
+
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">bertini.system</a><ul>
+<li><a class="reference internal" href="#bertini.system.System"><code class="docutils literal notranslate"><span class="pre">System</span></code></a><ul>
+<li><a class="reference internal" href="#bertini.system.System.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add"><code class="docutils literal notranslate"><span class="pre">add()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_function"><code class="docutils literal notranslate"><span class="pre">add_function()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_functions"><code class="docutils literal notranslate"><span class="pre">add_functions()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_hom_variable_group"><code class="docutils literal notranslate"><span class="pre">add_hom_variable_group()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_linear"><code class="docutils literal notranslate"><span class="pre">add_linear()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_linear_forms"><code class="docutils literal notranslate"><span class="pre">add_linear_forms()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_linear_forms_block"><code class="docutils literal notranslate"><span class="pre">add_linear_forms_block()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_path_variable"><code class="docutils literal notranslate"><span class="pre">add_path_variable()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_products_of_linears"><code class="docutils literal notranslate"><span class="pre">add_products_of_linears()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_products_of_linears_block"><code class="docutils literal notranslate"><span class="pre">add_products_of_linears_block()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_slices_as_products"><code class="docutils literal notranslate"><span class="pre">add_slices_as_products()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.add_variable_group"><code class="docutils literal notranslate"><span class="pre">add_variable_group()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.auto_patch"><code class="docutils literal notranslate"><span class="pre">auto_patch()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.clear_variables"><code class="docutils literal notranslate"><span class="pre">clear_variables()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.clone"><code class="docutils literal notranslate"><span class="pre">clone()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.content_digest"><code class="docutils literal notranslate"><span class="pre">content_digest()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.coordinates_of"><code class="docutils literal notranslate"><span class="pre">coordinates_of()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.copy_functions"><code class="docutils literal notranslate"><span class="pre">copy_functions()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.copy_patches"><code class="docutils literal notranslate"><span class="pre">copy_patches()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.copy_variable_structure"><code class="docutils literal notranslate"><span class="pre">copy_variable_structure()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.degrees"><code class="docutils literal notranslate"><span class="pre">degrees()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.dehomogenize_point"><code class="docutils literal notranslate"><span class="pre">dehomogenize_point()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.describe"><code class="docutils literal notranslate"><span class="pre">describe()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.differentiate"><code class="docutils literal notranslate"><span class="pre">differentiate()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.eval"><code class="docutils literal notranslate"><span class="pre">eval()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.eval_jacobian"><code class="docutils literal notranslate"><span class="pre">eval_jacobian()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.eval_time_derivative"><code class="docutils literal notranslate"><span class="pre">eval_time_derivative()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.function"><code class="docutils literal notranslate"><span class="pre">function()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.functions"><code class="docutils literal notranslate"><span class="pre">functions()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.get_patch"><code class="docutils literal notranslate"><span class="pre">get_patch()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.have_path_variable"><code class="docutils literal notranslate"><span class="pre">have_path_variable()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.hom_variable_groups"><code class="docutils literal notranslate"><span class="pre">hom_variable_groups()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.homogenize"><code class="docutils literal notranslate"><span class="pre">homogenize()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.homogenize_point"><code class="docutils literal notranslate"><span class="pre">homogenize_point()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.is_homogeneous"><code class="docutils literal notranslate"><span class="pre">is_homogeneous()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.is_patched"><code class="docutils literal notranslate"><span class="pre">is_patched()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.is_polynomial"><code class="docutils literal notranslate"><span class="pre">is_polynomial()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.is_same"><code class="docutils literal notranslate"><span class="pre">is_same()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.is_sealed"><code class="docutils literal notranslate"><span class="pre">is_sealed()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.jacobian"><code class="docutils literal notranslate"><span class="pre">jacobian()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.num_functions"><code class="docutils literal notranslate"><span class="pre">num_functions()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.num_hom_variable_groups"><code class="docutils literal notranslate"><span class="pre">num_hom_variable_groups()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.num_hom_variables"><code class="docutils literal notranslate"><span class="pre">num_hom_variables()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.num_ungrouped_variables"><code class="docutils literal notranslate"><span class="pre">num_ungrouped_variables()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.num_variable_groups"><code class="docutils literal notranslate"><span class="pre">num_variable_groups()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.num_variables"><code class="docutils literal notranslate"><span class="pre">num_variables()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.precision"><code class="docutils literal notranslate"><span class="pre">precision()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.randomization_matrix"><code class="docutils literal notranslate"><span class="pre">randomization_matrix()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.randomize"><code class="docutils literal notranslate"><span class="pre">randomize()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.reorder_functions_by_degree_decreasing"><code class="docutils literal notranslate"><span class="pre">reorder_functions_by_degree_decreasing()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.reorder_functions_by_degree_increasing"><code class="docutils literal notranslate"><span class="pre">reorder_functions_by_degree_increasing()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.rescale_point_to_fit_patch"><code class="docutils literal notranslate"><span class="pre">rescale_point_to_fit_patch()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.rescale_point_to_fit_patch_in_place"><code class="docutils literal notranslate"><span class="pre">rescale_point_to_fit_patch_in_place()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.seal"><code class="docutils literal notranslate"><span class="pre">seal()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.set_path_variable"><code class="docutils literal notranslate"><span class="pre">set_path_variable()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.set_variable_groups"><code class="docutils literal notranslate"><span class="pre">set_variable_groups()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.set_variables"><code class="docutils literal notranslate"><span class="pre">set_variables()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.slices"><code class="docutils literal notranslate"><span class="pre">slices()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.symbolic_jacobian"><code class="docutils literal notranslate"><span class="pre">symbolic_jacobian()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.to_classic_input"><code class="docutils literal notranslate"><span class="pre">to_classic_input()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.variable_groups"><code class="docutils literal notranslate"><span class="pre">variable_groups()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.System.variable_ordering"><code class="docutils literal notranslate"><span class="pre">variable_ordering()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bertini.system.clone"><code class="docutils literal notranslate"><span class="pre">clone()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.concatenate"><code class="docutils literal notranslate"><span class="pre">concatenate()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.intern_system"><code class="docutils literal notranslate"><span class="pre">intern_system()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.make_homotopy"><code class="docutils literal notranslate"><span class="pre">make_homotopy()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.make_moving_homotopy"><code class="docutils literal notranslate"><span class="pre">make_moving_homotopy()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.simplify"><code class="docutils literal notranslate"><span class="pre">simplify()</span></code></a></li>
+<li><a class="reference internal" href="#bertini.system.symbolic_jacobian"><code class="docutils literal notranslate"><span class="pre">symbolic_jacobian()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=9ac01507"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

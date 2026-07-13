@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['rand_5fvector_5f_0',['rand_vector_',['../classbertini_1_1endgame_1_1PowerSeriesEndgame.html#ae7364b2ee1d9ed57b00be152ccda7e1e',1,'bertini::endgame::PowerSeriesEndgame']]],
+  ['random_5fseed_1',['random_seed',['../structbertini_1_1algorithm_1_1RandomConfig.html#aaf20a63befcbb9e4c7b6baee545bf349',1,'bertini::algorithm::RandomConfig']]],
+  ['randomderivationversion_2',['RandomDerivationVersion',['../namespacebertini_1_1records.html#a9412184a5860aaaccfff73d840ae06de',1,'bertini::records']]],
+  ['randomization_5fmatrix_5f_3',['randomization_matrix_',['../structbertini_1_1algorithm_1_1zero__dim__detail_1_1OwnedHomotopy.html#a7c98b66d877b23bb7dfd85cbe2f10686',1,'bertini::algorithm::zero_dim_detail::OwnedHomotopy']]],
+  ['rat_5fimag_4',['rat_imag',['../structbertini_1_1ConstantRecipe.html#a7ab9c4bf3c4618fa8d2c3cc982afe272',1,'bertini::ConstantRecipe']]],
+  ['rat_5freal_5',['rat_real',['../structbertini_1_1ConstantRecipe.html#a09f943b5f08b4353a972df9d3c687e0a',1,'bertini::ConstantRecipe']]],
+  ['ratio_5fcutoff_5ftime_6',['ratio_cutoff_time',['../structbertini_1_1endgame_1_1CauchyConfig.html#a1ca5b8faff9d235d2af94d0d55c50025',1,'bertini::endgame::CauchyConfig']]],
+  ['ratio_5ftolerance_7',['ratio_tolerance',['../structbertini_1_1algorithm_1_1SharpeningConfig.html#a57b7be9d8b8886fd26cb4ad0ece84fd5',1,'bertini::algorithm::SharpeningConfig']]],
+  ['real_5fthreshold_8',['real_threshold',['../structbertini_1_1algorithm_1_1PostProcessingConfig.html#a5c453be5bae8b4350cbc3cf8db9b3a27',1,'bertini::algorithm::PostProcessingConfig']]],
+  ['recall_9',['recall',['../structbertini_1_1algorithm_1_1ZeroDimConfig.html#afb0b72b143c5afe43aaf8aa1d378026f',1,'bertini::algorithm::ZeroDimConfig']]],
+  ['recalling_5f_10',['recalling_',['../structbertini_1_1algorithm_1_1HomotopySolver.html#aaca7d8cceb46c3cf7a26df1bdb5ae63f',1,'bertini::algorithm::HomotopySolver']]],
+  ['records_5f_11',['records_',['../structbertini_1_1algorithm_1_1HomotopySolver.html#a3563defd63a6a56c59aadce3180f0196',1,'bertini::algorithm::HomotopySolver']]],
+  ['records_5frun_5fid_5f_12',['records_run_id_',['../structbertini_1_1algorithm_1_1HomotopySolver.html#ad0588f70ea3afff9cc888bbd65ef9675',1,'bertini::algorithm::HomotopySolver']]],
+  ['records_5frun_5fresumed_5f_13',['records_run_resumed_',['../structbertini_1_1algorithm_1_1HomotopySolver.html#a2ccce2ef680f574ec509d8b5fe421047',1,'bertini::algorithm::HomotopySolver']]],
+  ['records_5fstart_5fidentity_5f_14',['records_start_identity_',['../structbertini_1_1algorithm_1_1HomotopySolver.html#a6c8cff20545cda6dca7752fca0ac414e',1,'bertini::algorithm::HomotopySolver']]],
+  ['records_5fstart_5frefs_5f_15',['records_start_refs_',['../structbertini_1_1algorithm_1_1HomotopySolver.html#a1eeea00ea2299958b7cfd440c1b504c8',1,'bertini::algorithm::HomotopySolver']]],
+  ['recordschemaversion_16',['RecordSchemaVersion',['../namespacebertini_1_1records.html#ae75d2150507bdd1f0f6ba1822c9fd27a',1,'bertini::records']]],
+  ['refine_5fwhen_5fincreasing_5fprecision_17',['refine_when_increasing_precision',['../structbertini_1_1endgame_1_1EndgameConfig.html#ada81883c70729555263d79451b3b9c7f',1,'bertini::endgame::EndgameConfig']]],
+  ['registers_5f_18',['registers_',['../classbertini_1_1SLPMemory.html#ac69e9ef16cc5baf124ba3c34eb07655d',1,'bertini::SLPMemory']]],
+  ['reinitialize_5fstepsize_5f_19',['reinitialize_stepsize_',['../classbertini_1_1tracking_1_1Tracker.html#a7fc5d3ff21822ede10911b6c7f7e6079',1,'bertini::tracking::Tracker']]],
+  ['remove_5finfinite_5fendpoints_20',['remove_infinite_endpoints',['../structbertini_1_1algorithm_1_1RegenerationConfig.html#a0149749470dff65eb4e7f45940c13525',1,'bertini::algorithm::RegenerationConfig']]],
+  ['root_5frule_5f_21',['root_rule_',['../structbertini_1_1parsing_1_1classic_1_1MpfrFloatParser.html#ac3808d80416606e24105584667d27e7c',1,'bertini::parsing::classic::MpfrFloatParser::root_rule_'],['../structbertini_1_1parsing_1_1classic_1_1MpfrComplexParser.html#adff268e1245f99c6a24c049f2d6af947',1,'bertini::parsing::classic::MpfrComplexParser::root_rule_']]],
+  ['rows_22',['rows',['../structbertini_1_1NodeMatrix.html#a2539c139e4690cc16507513ab82dd442',1,'bertini::NodeMatrix']]]
+];

@@ -1,0 +1,172 @@
+\documentclass{article}
+\usepackage{ifthen}
+\usepackage{epsfig}
+\usepackage[utf8]{inputenc}
+\usepackage{xcolor}
+\usepackage{newunicodechar}
+  \makeatletter
+    \def\doxynewunicodechar#1#2{%
+    \@tempswafalse
+    \edef\nuc@tempa{\detokenize{#1}}%
+    \if\relax\nuc@tempa\relax
+      \nuc@emptyargerr
+    \else
+      \edef\@tempb{\expandafter\@car\nuc@tempa\@nil}%
+      \nuc@check
+      \if@tempswa
+        \@namedef{u8:\nuc@tempa}{#2}%
+      \fi
+    \fi
+  }
+  \makeatother
+  \doxynewunicodechar{⁻}{${}^{-}$}% Superscript minus
+  \doxynewunicodechar{²}{${}^{2}$}% Superscript two
+  \doxynewunicodechar{³}{${}^{3}$}% Superscript three
+
+\pagestyle{empty}
+\begin{document}
+$\pi$
+\pagebreak
+
+$e$
+\pagebreak
+
+$i$
+\pagebreak
+
+$2$
+\pagebreak
+
+$1$
+\pagebreak
+
+$0$
+\pagebreak
+
+$\in [-1,\,1]$
+\pagebreak
+
+$f$
+\pagebreak
+
+$x$
+\pagebreak
+
+$x_i^{d_i} - r_i$
+\pagebreak
+
+$d_i$
+\pagebreak
+
+$r_i$
+\pagebreak
+
+$r_i^{1/d_i}$
+\pagebreak
+
+$n$
+\pagebreak
+
+$\prod_{j=1}^{d_i} (a_{ij}\cdot x + b_{ij})$
+\pagebreak
+
+$\prod_i d_i$
+\pagebreak
+
+$n\times n$
+\pagebreak
+
+$S$
+\pagebreak
+
+$t$
+\pagebreak
+
+$\frac{dS}{dt}$
+\pagebreak
+
+$\in \mathbb{C}$
+\pagebreak
+
+$\in \mathbb{C}^n$
+\pagebreak
+
+$D$
+\pagebreak
+
+$C(P)$
+\pagebreak
+
+$ 101.47 + 1.59 P $
+\pagebreak
+
+$C(P) = 10.35 + 0.04 P_\mathrm{bits}$
+\pagebreak
+
+$10.35 + 0.13 P$
+\pagebreak
+
+$(p, h)$
+\pagebreak
+
+$[p_{\min}, p_{\max}]$
+\pagebreak
+
+$J$
+\pagebreak
+
+$J^{-1}$
+\pagebreak
+
+$\Delta x$
+\pagebreak
+
+$d$
+\pagebreak
+
+$N$
+\pagebreak
+
+$ P > \sigma_1 + \log_{10} [ ||J^{-1}|| \epsilon (||J|| + \Phi)   ]  $
+\pagebreak
+
+$ P > \sigma_1 + D + (\tau + \log_{10} ||d||) / (N-i)  $
+\pagebreak
+
+$ D = \log_{10} [||J^{-1}||((2 + \epsilon)||J|| + \epsilon \Phi) | 1] $
+\pagebreak
+
+$ P > \sigma_2 + \tau + \log_{10}(||J^{-1}|| \Psi + ||z||)  $
+\pagebreak
+
+$\epsilon$
+\pagebreak
+
+$2^n$
+\pagebreak
+
+$\Phi$
+\pagebreak
+
+$\Psi$
+\pagebreak
+
+$B$
+\pagebreak
+
+$ D*(D-1)*B $
+\pagebreak
+
+$ D*B $
+\pagebreak
+
+$1^2$
+\pagebreak
+
+$t_0$
+\pagebreak
+
+$x_0$
+\pagebreak
+
+\end{document}

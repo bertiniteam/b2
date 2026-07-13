@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['parsedargs_0',['ParsedArgs',['../structbertini_1_1ParsedArgs.html',1,'bertini']]],
+  ['partialpivlu_1',['PartialPivLU',['../classbertini_1_1linalg_1_1PartialPivLU.html',1,'bertini::linalg']]],
+  ['patch_2',['Patch',['../classbertini_1_1Patch.html',1,'bertini']]],
+  ['pathcomplete_3',['PathComplete',['../classbertini_1_1algorithm_1_1PathComplete.html',1,'bertini::algorithm']]],
+  ['pathstarted_4',['PathStarted',['../classbertini_1_1algorithm_1_1PathStarted.html',1,'bertini::algorithm']]],
+  ['pi_5',['Pi',['../classbertini_1_1node_1_1special__number_1_1Pi.html',1,'bertini::node::special_number']]],
+  ['pointpool_6',['PointPool',['../classbertini_1_1PointPool.html',1,'bertini']]],
+  ['polynomialblock_7',['PolynomialBlock',['../classbertini_1_1blocks_1_1PolynomialBlock.html',1,'bertini::blocks']]],
+  ['pool_8',['Pool',['../classbertini_1_1detail_1_1Pool.html',1,'bertini::detail']]],
+  ['pool_3c_20system_20_3e_9',['Pool&lt; System &gt;',['../classbertini_1_1detail_1_1Pool.html',1,'bertini::detail']]],
+  ['pool_3c_20vec_3c_20numt_20_3e_20_3e_10',['Pool&lt; Vec&lt; NumT &gt; &gt;',['../classbertini_1_1detail_1_1Pool.html',1,'bertini::detail']]],
+  ['poolshutdownsentinel_11',['PoolShutdownSentinel',['../structbertini_1_1parallel_1_1PoolShutdownSentinel.html',1,'bertini::parallel']]],
+  ['postprocessingconfig_12',['PostProcessingConfig',['../structbertini_1_1algorithm_1_1PostProcessingConfig.html',1,'bertini::algorithm']]],
+  ['poweroperator_13',['PowerOperator',['../classbertini_1_1node_1_1PowerOperator.html',1,'bertini::node']]],
+  ['powerseriesconfig_14',['PowerSeriesConfig',['../structbertini_1_1endgame_1_1PowerSeriesConfig.html',1,'bertini::endgame']]],
+  ['powerseriesendgame_15',['PowerSeriesEndgame',['../classbertini_1_1endgame_1_1PowerSeriesEndgame.html',1,'bertini::endgame']]],
+  ['precisionaccumulator_16',['PrecisionAccumulator',['../classbertini_1_1tracking_1_1PrecisionAccumulator.html',1,'bertini::tracking']]],
+  ['precisionchanged_17',['precisionchanged',['../classbertini_1_1endgame_1_1PrecisionChanged.html',1,'bertini::endgame::PrecisionChanged&lt; ObservedT &gt;'],['../classbertini_1_1tracking_1_1PrecisionChanged.html',1,'bertini::tracking::PrecisionChanged&lt; ObservedT &gt;']]],
+  ['precisiondecreased_18',['PrecisionDecreased',['../classbertini_1_1tracking_1_1PrecisionDecreased.html',1,'bertini::tracking']]],
+  ['precisionincreased_19',['PrecisionIncreased',['../classbertini_1_1tracking_1_1PrecisionIncreased.html',1,'bertini::tracking']]],
+  ['precon_20',['Precon',['../structbertini_1_1system_1_1Precon.html',1,'bertini::system']]],
+  ['productsoflinearsblock_21',['ProductsOfLinearsBlock',['../classbertini_1_1blocks_1_1ProductsOfLinearsBlock.html',1,'bertini::blocks']]]
+];

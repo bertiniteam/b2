@@ -1,0 +1,9 @@
+<map id="core/include/bertini2/function_tree/find.hpp" name="core/include/bertini2/function_tree/find.hpp">
+<area shape="rect" id="Node000001" title="Discover named nodes of a given kind in a function tree (sympy&#39;s find)." alt="" coords="55,5,223,45"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,101,83,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="119,48,69,93,66,89,116,44"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="107,101,170,126"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="141,46,141,87,136,87,136,46"/>
+<area shape="rect" id="Node000004" href="$forward__declares_8hpp.html" title="Forward declarations for types in the node:: namespace." alt="" coords="194,93,361,133"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="170,43,237,84,234,89,168,48"/>
+</map>

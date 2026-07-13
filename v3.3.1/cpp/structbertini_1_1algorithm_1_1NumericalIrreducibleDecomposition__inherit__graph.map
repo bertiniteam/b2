@@ -1,0 +1,11 @@
+<map id="bertini::algorithm::NumericalIrreducibleDecomposition&lt; TrackerType, EndgameType, SystemType &gt;" name="bertini::algorithm::NumericalIrreducibleDecomposition&lt; TrackerType, EndgameType, SystemType &gt;">
+<area shape="rect" id="Node000001" title="forward declare of the NumericalIrreducibleDecomposition algorithm." alt="" coords="551,55,865,110"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1AnyNID.html" title="Type&#45;erased base for the Numerical Irreducible Decomposition algorithm." alt="" coords="278,5,413,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="427,35,551,55,550,60,426,41"/>
+<area shape="rect" id="Node000003" href="$structbertini_1_1algorithm_1_1AnyAlgorithm.html" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="5,5,140,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="154,23,278,23,278,28,154,28"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="272,70,419,95"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="433,80,550,80,550,85,433,85"/>
+<area shape="rect" id="Node000005" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="188,120,503,189"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="516,118,569,107,570,113,517,123"/>
+</map>

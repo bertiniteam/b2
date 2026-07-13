@@ -1,0 +1,5 @@
+<map id="bertini::start_system::StartSystem" name="bertini::start_system::StartSystem">
+<area shape="rect" id="Node000001" title="Abstract base class for other start systems." alt="" coords="5,79,163,119"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1System.html" title="The fundamental polynomial system class for Bertini2." alt="" coords="23,5,145,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,44,87,79,81,79,81,44"/>
+</map>
