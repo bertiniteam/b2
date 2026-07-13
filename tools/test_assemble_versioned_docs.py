@@ -66,7 +66,11 @@ def test_first_release_creates_everything(tmp_path):
     assert data["stable"] == "3.0.0"
     assert [v["version"] for v in data["versions"]] == ["3.0.0"]
     assert data["versions"][0]["stable"] is True
-    assert "v3.0.0/" in (store / "index.html").read_text()
+    # root is a redirect to the current release (not a chooser); the chooser is /versions.html.
+    root = (store / "index.html").read_text()
+    assert 'http-equiv="refresh"' in root and "url=/v3.0.0/" in root
+    versions = (store / "versions.html").read_text()
+    assert "All versions" in versions and 'href="v3.0.0/"' in versions
 
 
 def test_newer_release_moves_stable_and_preserves_old(tmp_path):
@@ -83,6 +87,10 @@ def test_newer_release_moves_stable_and_preserves_old(tmp_path):
     assert dates == {"3.0.0": "2026-07-14", "3.1.0": "2026-09-01"}
     # /stable/ now redirects to 3.1.0
     assert "/v3.1.0/" in stable_target(store)
+    # root redirect follows stable to the newest release; the chooser lists both.
+    assert "url=/v3.1.0/" in (store / "index.html").read_text()
+    versions = (store / "versions.html").read_text()
+    assert 'href="v3.1.0/"' in versions and 'href="v3.0.0/"' in versions
 
 
 def test_patch_to_old_line_does_not_move_stable(tmp_path):

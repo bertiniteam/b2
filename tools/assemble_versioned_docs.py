@@ -12,13 +12,18 @@ branch), so pushing the store IS the deploy -- there is no ``actions/deploy-page
 ``/CNAME`` file (written when ``--cname`` is given) is what keeps the custom domain across builds.
 
 Truth vs. derived (mirrors the records doctrine, ADR-0045/0047): the ``v*/`` directories present in
-the store ARE the truth.  ``versions.json`` and the root ``index.html`` are *derived, rebuildable
-views* -- regenerated from whatever version directories exist, every run.  Delete a ``v*/`` dir and
-re-run and it simply drops out of the listing.
+the store ARE the truth.  ``versions.json``, the root ``index.html``, and ``versions.html`` are
+*derived, rebuildable views* -- regenerated from whatever version directories exist, every run.
+Delete a ``v*/`` dir and re-run and it simply drops out of the listing.
+
+The site root redirects straight to the current release -- most visitors do not want to pick a
+version.  The human-readable chooser lives at ``/versions.html`` (root links to it), and
+``/versions.json`` is the machine-readable index.
 
 Layout produced in the store::
 
-    /                     root landing page (this script generates it) -- lists versions
+    /                     root: redirect to the current release (falls back to the chooser if none)
+    /versions.html        the human-readable version chooser (lists every version)
     /versions.json        derived machine-readable version index
     /style.css            shared stylesheet (copied from the built site)
     /.nojekyll            so GitHub Pages serves _static/ etc. verbatim
@@ -69,7 +74,25 @@ STABLE_REDIRECT_TEMPLATE = """<!DOCTYPE html>
 </html>
 """
 
-ROOT_INDEX_TEMPLATE = """<!DOCTYPE html>
+# The site root sends visitors straight to the current release -- most people do not want to pick a
+# version.  The human-readable version chooser lives at /versions.html (linked here for the few who
+# do), and /versions.json is the machine-readable index.
+ROOT_REDIRECT_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=/{vdir}/">
+  <link rel="canonical" href="/{vdir}/">
+  <title>Bertini 2 -- Documentation</title>
+</head>
+<body>
+  <p>Redirecting to the <a href="/{vdir}/">latest documentation ({vdir})</a>&hellip;
+     &nbsp;&middot;&nbsp; <a href="/versions.html">all versions</a></p>
+</body>
+</html>
+"""
+
+VERSIONS_PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -179,8 +202,8 @@ def load_prior(store: Path):
     return dates, data.get("stable")
 
 
-def render_root_index(records, stable) -> str:
-    """Build the root landing HTML from the derived version records."""
+def render_versions_page(records, stable) -> str:
+    """Build the /versions.html chooser HTML from the derived version records."""
     items = []
     for rec in records:
         tag = ' <span class="tag">stable</span>' if rec["version"] == stable else ""
@@ -191,7 +214,7 @@ def render_root_index(records, stable) -> str:
         )
     stable_href = f"v{stable}/" if stable else (records[0]["path"] if records else "#")
     stable_label = f" (v{html.escape(stable)})" if stable else ""
-    return ROOT_INDEX_TEMPLATE.format(
+    return VERSIONS_PAGE_TEMPLATE.format(
         stable_href=html.escape(stable_href),
         stable_label=stable_label,
         version_items="\n".join(items) if items else "      <li>No versions yet.</li>",
@@ -266,7 +289,13 @@ def main(argv=None):
     (store / "versions.json").write_text(
         json.dumps({"generated": today, "stable": stable, "versions": records}, indent=2) + "\n"
     )
-    (store / "index.html").write_text(render_root_index(records, stable))
+    # Root sends visitors to the current release; the chooser is a separate /versions.html.  With no
+    # stable version yet (bootstrap), fall back to serving the chooser at the root.
+    (store / "versions.html").write_text(render_versions_page(records, stable))
+    if stable:
+        (store / "index.html").write_text(ROOT_REDIRECT_TEMPLATE.format(vdir=f"v{stable}"))
+    else:
+        (store / "index.html").write_text(render_versions_page(records, stable))
 
     print(f"OK: {vdir} written{' + stable redirect' if args.stable else ''}"
           f"{' + CNAME ' + args.cname if args.cname else ''}; "
