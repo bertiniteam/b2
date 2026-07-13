@@ -16,3 +16,4 @@ figure, through ``tools/refresh_doc_artifacts.py`` so they stay current with the
    :maxdepth: 1
 
    monodromy_loom/index
+   flight_recorder/index

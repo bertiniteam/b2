@@ -116,6 +116,10 @@ def _plots():
              SHOWPIECES / "monodromy_loom" / "monodromy_loom.py",
              ["monodromy_loom.png", "monodromy_loom_teaching.png"],
              note="showpiece: raster PNG only (a 3-D render has no meaningful SVG)"),
+        Plot("flight_recorder",
+             SHOWPIECES / "flight_recorder" / "flight_recorder.py",
+             ["flight_recorder.png", "flight_recorder_setup.png"],
+             note="showpiece: raster PNG only; tight-tolerance mult-35 solve -> slow (~1 min)"),
     ]
 
 
