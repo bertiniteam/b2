@@ -69,7 +69,8 @@ _______________________________________________________________________________
 
 ## [3.3.2] - 2026-07-13
 
-A `metadata_for` robustness patch: feed a solver result straight back in and it resolves.
+A `metadata_for` robustness patch (feed a solver result straight back in and it resolves), plus a
+documentation showcase and a friendlier docs site.
 
 ### Fixed
 
@@ -90,6 +91,17 @@ A `metadata_for` robustness patch: feed a solver result straight back in and it 
   endpoints into multiplicities.  `default_point_match_tolerance()` now returns `final_tolerance`.
 - **`metadata_for(..., representatives_only=False)`** — a debugging view that matches against every
   endpoint, including non-representative multiplicity copies.
+
+### Documentation
+
+- **New "Showpieces" gallery** (#341): beautiful renders generated entirely from real tracked data.
+  *The Monodromy Loom* — a 3-D braid of solution paths as a parameter loops the discriminant, showing
+  a family's monodromy (its Galois action). *The Flight Recorder* — one hard path to a
+  multiplicity-35 singular point with the adaptive-precision tracker's full telemetry (endgame spiral,
+  precision staircase into mpfr, condition blow-up, step-size sawtooth), plus a system-level view of
+  all 35 paths converging.
+- **`bertini2.org` lands on the current release** (#340): the docs-site root now redirects straight to
+  the latest version instead of a version chooser (which moves to `/versions.html`).
 
 ## [3.3.1] - 2026-07-13
 
