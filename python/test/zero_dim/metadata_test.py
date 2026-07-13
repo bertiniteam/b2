@@ -99,3 +99,56 @@ def test_postprocessing_config_defaults_match_bertini1():
     assert pp.same_point_tolerance_multiplier == pytest.approx(10.0)
     assert pp.condition_number_threshold == pytest.approx(1e8)
     assert pp.real_threshold == pytest.approx(1e-8)
+
+
+# ---- metadata_for round-trip: a solver result fed straight back must resolve -----------------
+
+def test_point_match_tolerance_is_tighter_than_same_point_tolerance():
+    """The default match tolerance is final_tolerance; same_point_tolerance is that times the
+    multiplier.  Matching against representatives at the tighter scale is what makes the round-trip
+    unambiguous (representatives are at least same_point_tolerance apart)."""
+    solver = _one_var_solver(lambda x: x * x - 1)
+    solver.solve()
+    pp = solver.get_config(pb.nag_algorithm.PostProcessingConfig)
+    assert solver.same_point_tolerance() == pytest.approx(
+        solver.default_point_match_tolerance() * pp.same_point_tolerance_multiplier)
+    assert solver.default_point_match_tolerance() < solver.same_point_tolerance()
+
+
+def test_metadata_for_roundtrip_resolves_every_solution_to_its_representative():
+    """Feed every solution the solver returns back into metadata_for: each must resolve (never
+    'ambiguous') to a multiplicity representative -- at the default tolerance AND at one far tighter
+    than the clustering tolerance.  This is the contract that a result taken from the solver and
+    fed straight back Just Works."""
+    solver = _one_var_solver(lambda x: x * x - 1)        # simple roots +/- 1
+    solver.solve()
+    for r in solver.real_solutions():                    # representatives (merge default)
+        m = solver.metadata_for(r)                       # default tol
+        assert m.multiplicity_representative
+        m_tight = solver.metadata_for(r, tol=1e-13)      # far tighter than same_point_tolerance
+        assert m_tight.multiplicity_representative
+
+
+def test_metadata_for_multiple_root_no_spurious_ambiguity():
+    """A multiple (singular) root fed back must NOT raise 'more than one distinct solution cluster'
+    -- the regression.  It resolves to the representative (carrying the multiplicity), and
+    coincident=True returns every copy in the cluster."""
+    solver = _one_var_solver(lambda x: x * x)            # double root at 0, multiplicity 2
+    solver.solve()
+    reps = solver.real_solutions()
+    assert len(reps) >= 1
+    r0 = reps[0]
+    m = solver.metadata_for(r0, tol=1e-13)               # tight tol, the notebook's mistake
+    assert m.multiplicity_representative
+    assert m.multiplicity == 2
+    assert len(solver.metadata_for(r0, coincident=True)) == 2   # the whole cluster
+
+
+def test_metadata_for_representatives_only_false_escape_hatch():
+    """representatives_only=False matches against every endpoint (incl. non-representative copies) --
+    a debugging view; it still resolves and carries the cluster's multiplicity."""
+    solver = _one_var_solver(lambda x: x * x)            # double root at 0
+    solver.solve()
+    r0 = solver.real_solutions()[0]
+    m = solver.metadata_for(r0, tol=1e-13, representatives_only=False)
+    assert m.multiplicity == 2
