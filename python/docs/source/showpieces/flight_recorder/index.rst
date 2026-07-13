@@ -22,14 +22,15 @@ singularity, and the tracker's struggle, get arbitrarily worse.
 
 On the left is the geometry: two roses whose petals all pass through the origin.  On the right is
 the solve — all 35 homotopy paths, each a different colour, wandering out through the complex plane
-from their start points and converging on the singular target (the ring).  These are the paths'
-*real-time* trajectories: the Cauchy endgame's circular sampling has been filtered out (keep only
-the steps where :math:`|t|` reaches a new minimum), leaving the loop-free descent.
+from their start points (dots) and converging on the singular target (the ring).  These are the
+paths' *real-time* trajectories, computed with the **power-series endgame**, which tracks radially
+toward :math:`t \to 0` — unlike the Cauchy endgame it does not sample circles, so each path is an
+honest single-valued descent onto the point with no loops to explain away:
 
 .. literalinclude:: flight_recorder.py
    :language: python
-   :start-at: def _descent_spine(
-   :end-at: return np.append
+   :start-at: def record_convergence(
+   :end-at: return dict(m=m, n=n, rotation=rotation, multiplicity=multiplicity, trajectories=trajectories)
 
 The Flight Recorder: one path, all instruments
 ==============================================

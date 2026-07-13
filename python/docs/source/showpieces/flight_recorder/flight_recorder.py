@@ -81,67 +81,62 @@ def rose_curve(k, rotation=0.0, n=1400):
     c, s = math.cos(rotation), math.sin(rotation)
     return c * X - s * Y, s * X + c * Y
 
-def _descent_spine(path):
-    """Keep only the real-time continuation steps: those where |t| reaches a new minimum.  This
-    drops the Cauchy endgame's circular sampling (steps at constant |t|), leaving the loop-free
-    descent.  Returns (abs_t, affine) on the spine, with the singular endpoint (0,0) appended."""
-    abs_t = np.abs(path.times())
-    affine = path.points()[:, 1:] / path.points()[:, 0:1]
-    runmin = np.minimum.accumulate(abs_t)
-    keep = np.concatenate([[True], runmin[1:] < runmin[:-1]])
-    at, af = abs_t[keep], affine[keep]
-    return np.append(at, at[-1] * 1e-2), np.vstack([af, np.zeros((1, af.shape[1]))])
+# --- solving and recording ----------------------------------------------------------------------
 
-
-# --- fly one hard path and record everything ----------------------------------------------------
-
-def record_hard_path(m=7, n=5, final_tolerance=1e-20, seed=2):
-    """Solve system_rhodonea(m, n) with tight accuracy, collecting every path; return the richest
-    singular path's telemetry (the one that escalates precision the most) plus its metadata."""
+def _solve(m, n, seed, endgame, final_tolerance=None):
+    """One serial, deterministic solve of system_rhodonea(m, n) with the chosen endgame, every path
+    collected.  Returns (collector, meta, rotation)."""
     bertini.recording(False)                        # WATCH tracking, do not recall it
     bertini.random.set_random_seed(seed)            # deterministic system + solve -> stable picture
-
     system, rotation = system_rhodonea(m, n)
-    solver = ZeroDimSolver(system, mptype='adaptive')
-    tol = solver.get_config(bertini.nag_algorithm.TolerancesConfig)
-    tol.final_tolerance = final_tolerance
-    solver.set_config(tol)
+    solver = ZeroDimSolver(system, mptype='adaptive', endgame=endgame)
+    if final_tolerance is not None:
+        tol = solver.get_config(bertini.nag_algorithm.TolerancesConfig)
+        tol.final_tolerance = final_tolerance
+        solver.set_config(tol)
     cfg = solver.get_config(bertini.nag_algorithm.ZeroDimConfig)
     cfg.num_threads = 1                              # serial -> deterministic path ordering / picture
     solver.set_config(cfg)
-
     collector = SolutionPathCollector()
     solver.add_observer(collector)
     solver.solve()
-
     meta = {int(md.path_index): md for md in solver.solution_metadata()}
-    cols = collector.series[0].DIAGNOSTIC_COLUMNS
-    P = cols.index('precision')
+    return collector, meta, rotation
 
+def record_hard_path(m=7, n=5, final_tolerance=1e-24, seed=2):
+    """The per-path cockpit: a tight-tolerance CAUCHY solve (its spiral IS the point), returning the
+    richest singular path's telemetry (the one that escalates precision the most) plus its metadata."""
+    collector, meta, _ = _solve(m, n, seed, 'cauchy', final_tolerance)
+    P = collector.series[0].DIAGNOSTIC_COLUMNS.index('precision')
     best = None
-    singular_paths = []
     for path in collector.series:
         md = meta.get(path.path_index)
         if not (md and md.is_singular):
             continue
-        singular_paths.append(path)
         dgn = path.diagnostics()
         key = (int(dgn[:, P].max()), len(dgn))       # most precision, then most steps
         if best is None or key > best[0]:
             best = (key, path, md)
     _, path, md = best
-
     dgn = path.diagnostics()
-    cockpit = dict(m=m, n=n, final_tolerance=final_tolerance, path_index=int(path.path_index),
-                   affine=path.points()[:, 1:] / path.points()[:, 0:1],
-                   abs_t=dgn[:, 0], condition=dgn[:, 1], precision=dgn[:, 2], stepsize=dgn[:, 3],
-                   cycle=int(md.cycle_num), multiplicity=int(md.multiplicity),
-                   precision_digits=int(md.precision_digits), accuracy_digits=int(md.accuracy_digits))
+    return dict(m=m, n=n, final_tolerance=final_tolerance, path_index=int(path.path_index),
+                affine=path.points()[:, 1:] / path.points()[:, 0:1],
+                abs_t=dgn[:, 0], condition=dgn[:, 1], precision=dgn[:, 2], stepsize=dgn[:, 3],
+                cycle=int(md.cycle_num), multiplicity=int(md.multiplicity),
+                precision_digits=int(md.precision_digits), accuracy_digits=int(md.accuracy_digits))
 
-    # system-level companion: the two roses, and every singular path's loop-free descent
-    setup = dict(m=m, n=n, rotation=rotation, multiplicity=int(md.multiplicity),
-                 spines=[_descent_spine(p) for p in singular_paths])
-    return cockpit, setup
+def record_convergence(m=7, n=5, seed=2):
+    """The system-level companion: a POWER-SERIES solve, whose endgame tracks radially toward t=0
+    (no Cauchy loops), so every singular path is an honest single-valued real-time descent onto the
+    singular point.  Returns the rotation and each path's (abs_t, affine) trajectory."""
+    collector, meta, rotation = _solve(m, n, seed, 'powerseries')
+    trajectories, multiplicity = [], 1
+    for path in collector.series:
+        md = meta.get(path.path_index)
+        if md and md.is_singular:
+            trajectories.append((np.abs(path.times()), path.points()[:, 1:] / path.points()[:, 0:1]))
+            multiplicity = int(md.multiplicity)
+    return dict(m=m, n=n, rotation=rotation, multiplicity=multiplicity, trajectories=trajectories)
 
 
 # --- the cockpit --------------------------------------------------------------------------------
@@ -258,10 +253,11 @@ def render_setup(setup, out):
     # --- the solve: every singular path's loop-free descent, converging on (0,0) ---
     _style_axis(axC)
     cmap = plt.get_cmap('turbo')
-    npath = len(setup['spines'])
-    order = np.argsort([float(np.angle(s[1][0, 0])) for s in setup['spines']])  # hue by start angle
+    trajs = setup['trajectories']
+    npath = len(trajs)
+    order = np.argsort([float(np.angle(s[1][0, 0])) for s in trajs])  # hue by start angle
     for rank, i in enumerate(order):
-        abs_t, affine = setup['spines'][i]
+        abs_t, affine = trajs[i]
         xv = affine[:, 0]                             # one coordinate's complex plane
         pts = np.column_stack([xv.real, xv.imag])
         segs = np.stack([pts[:-1], pts[1:]], axis=1)
@@ -272,7 +268,7 @@ def render_setup(setup, out):
     axC.autoscale(); axC.set_aspect(1.0)
     axC.set_xlabel('Re(x)'); axC.set_ylabel('Im(x)')
     axC.set_title(f"the solve — {npath} homotopy paths converge on it\n"
-                  "real-time continuation (Cauchy endgame loops filtered out)", color=_INK, fontsize=10, pad=6)
+                  "real-time continuation (power-series endgame: no Cauchy loops)", color=_INK, fontsize=10, pad=6)
 
     fig.text(0.06, 0.945, "THE SINGULAR RENDEZVOUS", color='#4de0c0', fontsize=14, fontweight='bold')
     fig.savefig(out, dpi=150, facecolor=_BG)
@@ -280,9 +276,10 @@ def render_setup(setup, out):
 
 
 def main():
-    cockpit, setup = record_hard_path(m=7, n=5, final_tolerance=1e-24, seed=2)
-    render_setup(setup, os.path.join(_OUT, 'flight_recorder_setup.png'))
-    render(cockpit, os.path.join(_OUT, 'flight_recorder.png'))
+    render_setup(record_convergence(m=7, n=5, seed=2),
+                 os.path.join(_OUT, 'flight_recorder_setup.png'))
+    render(record_hard_path(m=7, n=5, final_tolerance=1e-24, seed=2),
+           os.path.join(_OUT, 'flight_recorder.png'))
 
 
 if __name__ == '__main__':
