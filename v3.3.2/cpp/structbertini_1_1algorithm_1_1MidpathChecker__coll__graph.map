@@ -1,0 +1,5 @@
+<map id="bertini::algorithm::MidpathChecker&lt; RealT, ComplexT, MetaDataType &gt;" name="bertini::algorithm::MidpathChecker&lt; RealT, ComplexT, MetaDataType &gt;">
+<area shape="rect" id="Node000001" title="Detects whether any solution paths crossed during tracking, before the endgame." alt="" coords="5,93,215,148"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="17,5,203,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,59,113,93,107,93,107,59"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="core/include/bertini2/blackbox/argc_argv.hpp" name="core/include/bertini2/blackbox/argc_argv.hpp">
+<area shape="rect" id="Node000001" title="Provides the methods for parsing the command&#45;line arguments." alt="" coords="5,5,185,45"/>
+<area shape="rect" id="Node000002" href="$bertini_8hpp.html" title="The main file for including the entirety of Bertini&#39;s header files." alt="" coords="18,181,173,221"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="67,57,54,75,45,94,40,113,44,132,58,158,77,179,72,183,54,161,40,134,35,113,39,92,50,72,63,54"/>
+<area shape="rect" id="Node000003" href="$main__mode__switch_8hpp.html" title="Provides the main mode switch for the Bertini2 executable program." alt="" coords="54,93,297,133"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="124,54,160,91,156,95,120,57"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="150,145,115,183,111,179,146,142"/>
+</map>

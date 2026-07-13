@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="5,64,192,104"/>
+<area shape="rect" id="Node000001" href="$structbertini_1_1algorithm_1_1MidpathChecker.html" title=" " alt="" coords="240,5,497,75"/>
+<area shape="poly" id="edge70_Node000000_Node000001" title=" " alt="" coords="205,64,239,58,240,64,206,69"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1MidpathChecker.html" title="Detects whether any solution paths crossed during tracking, before the endgame." alt="" coords="264,99,473,154"/>
+<area shape="poly" id="edge71_Node000000_Node000002" title=" " alt="" coords="206,98,264,107,263,113,205,103"/>
+</map>

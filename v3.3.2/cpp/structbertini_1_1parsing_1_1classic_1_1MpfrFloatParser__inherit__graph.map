@@ -1,0 +1,5 @@
+<map id="bertini::parsing::classic::MpfrFloatParser&lt; Iterator, Skipper &gt;" name="bertini::parsing::classic::MpfrFloatParser&lt; Iterator, Skipper &gt;">
+<area shape="rect" id="Node000001" title="A Qi grammar parsing a real multiprecision number, at a precision matching the input&#39;s digits." alt="" coords="236,13,436,67"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,188,75"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="202,37,236,37,236,43,202,43"/>
+</map>

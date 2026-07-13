@@ -1,0 +1,1412 @@
+
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html">
+        <link rel="prefetch" href="../../_static/bpy_icon_.svg" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>bertini.nag_algorithm - Bertini 3.3.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4805ae4f" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">Bertini 3.3.2 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/bpy_icon_.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Bertini 3.3.2 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../welcome.html">👋 Welcome to Bertini 2</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/tutorials.html">🔦 Tutorials</a><input aria-label="Toggle navigation of 🔦 Tutorials" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/formulating_and_solving/index.html">Formulating and solving systems</a><input aria-label="Toggle navigation of Formulating and solving systems" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/all_solutions/index.html">🌐 Finding <em>all</em> the solutions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/zerodim_solver/index.html">🎯 Solving a system with ZeroDimSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/real_points/index.html">📍 A real point on every component (the Trott curve)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/critical_points/index.html">🎯 Critical points by rank deficiency (a null vector, not a determinant)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/eigenvalues_by_homotopy/index.html">🧮 Eigenvalues by homotopy continuation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/parameter_homotopy/index.html">🔁 Parameter homotopy: solve once, re-solve many times</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/concatenate_systems/index.html">🧱 Build a system in pieces with clone and concatenate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/randomize/index.html">🎲 Randomize an overdetermined system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/user_product_of_linears/index.html">🪢 Author your own start system: a product of linears</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/canonical_ordering/index.html">🧮 Canonical ordering, and opting out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/formulating_and_solving/solution_dataframe/index.html">🗃️ A dataframe of solutions: filtering and plotting with pandas</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/manipulating_solutions/index.html">Manipulating solutions</a><input aria-label="Toggle navigation of Manipulating solutions" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/manipulating_solutions/intro_to_slices/index.html">✂️ Intro to slices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/manipulating_solutions/moving_slice/index.html">🛷 Move a slice, hold the system fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/settings_and_precision/index.html">Solver settings &amp; multiprecision</a><input aria-label="Toggle navigation of Solver settings &amp; multiprecision" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/settings_and_precision/carrying_settings/index.html">⚙️ Carrying settings across related solves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/settings_and_precision/crossed_paths/index.html">🪢 Crossed paths: when two paths become one</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/settings_and_precision/precision_matters/index.html">🎚️ When double precision is not enough</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/settings_and_precision/precision_models/index.html">🔬 Precision models: double, multiple, adaptive</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/parallelism/index.html">Parallelism in Python</a><input aria-label="Toggle navigation of Parallelism in Python" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/parallelism/solving_at_scale/index.html">🚀 Solving at scale: many cores, many machines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/parallelism/parallel_parameter_homotopy/index.html">⚗️ A bistable reaction network, mapped in parallel</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/observing_metadata_more/index.html">Observing, metadata, and more</a><input aria-label="Toggle navigation of Observing, metadata, and more" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/observing_metadata_more/observers_and_path_data/index.html">👀 Watching the paths: observers and path data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/observing_metadata_more/homotopy_cartoon_from_real_data/index.html">🎨 The continuation cartoon, from real data — and seeing precision change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/observing_metadata_more/classic_continuation_cartoon/index.html">🖼️ The classic continuation cartoon, from real data</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/performance_benchmarking/index.html">Performance and benchmarking</a><input aria-label="Toggle navigation of Performance and benchmarking" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/performance_benchmarking/bertini1_vs_bertini2_timing/index.html">⏱️ Timing Bertini 1 vs Bertini 2</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/record_keeping/index.html">The record-keeping system</a><input aria-label="Toggle navigation of The record-keeping system" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/record_keeping/automatic_record_keeping/index.html">Automatic record keeping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/record_keeping/chained_homotopies/index.html">Chained homotopies: provenance all the way back</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../tutorials/doing_things_manually/index.html">Doing things manually</a><input aria-label="Toggle navigation of Doing things manually" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/doing_things_manually/evaluation_cyclic/index.html">♻️ Evaluation of cyclic-<span class="math notranslate nohighlight">\(n\)</span> polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/doing_things_manually/manual_endgame_usage/index.html">🎮 Using an endgame to compute singular endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../tutorials/doing_things_manually/tracking_nonsingular/index.html">🛤 Tracking to nonsingular endpoints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../detailed/everyday.html">🌟 Everyday API</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../showpieces/index.html">✨ Showpieces</a><input aria-label="Toggle navigation of ✨ Showpieces" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../showpieces/monodromy_loom/index.html">🧬 The Monodromy Loom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../showpieces/flight_recorder/index.html">✈️ The Flight Recorder</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../numpy.html">Multiprecision numbers and NumPy</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../detailed/api.html">🔎 Full API reference</a><input aria-label="Toggle navigation of 🔎 Full API reference" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../detailed/_autosummary/bertini.algorithms.html">bertini.algorithms</a><input aria-label="Toggle navigation of bertini.algorithms" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detailed/_autosummary/bertini.algorithms.zerodim.html">bertini.algorithms.zerodim</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.config.html">bertini.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.endgame.html">bertini.endgame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.logging.html">bertini.logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.multiprec.html">bertini.multiprec</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.nag_algorithm.html">bertini.nag_algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.operators.html">bertini.operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.parallel.html">bertini.parallel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.parse.html">bertini.parse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.random.html">bertini.random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.records.html">bertini.records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.symbolics.html">bertini.symbolics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.sympy_bridge.html">bertini.sympy_bridge</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../detailed/_autosummary/bertini.system.html">bertini.system</a><input aria-label="Toggle navigation of bertini.system" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detailed/_autosummary/bertini.system.start_system.html">bertini.system.start_system</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../detailed/_autosummary/bertini.tracking.html">bertini.tracking</a><input aria-label="Toggle navigation of bertini.tracking" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../detailed/_autosummary/bertini.tracking.observers.html">bertini.tracking.observers</a><input aria-label="Toggle navigation of bertini.tracking.observers" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../detailed/_autosummary/bertini.tracking.observers.amp.html">bertini.tracking.observers.amp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../detailed/_autosummary/bertini.tracking.observers.double.html">bertini.tracking.observers.double</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../detailed/_autosummary/bertini.tracking.observers.multiple.html">bertini.tracking.observers.multiple</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detailed/_autosummary/bertini.windows_dll_manager.html">bertini.windows_dll_manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../zbib.html">📚 Bibliography</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for bertini.nag_algorithm</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This file is part of Bertini 2.</span>
+<span class="c1"># </span>
+<span class="c1"># python/bertini/nag_algorithms/__init__.py is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1"># </span>
+<span class="c1"># python/bertini/nag_algorithms/__init__.py is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1"># </span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with python/bertini/nag_algorithms/__init__.py.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1"># </span>
+<span class="c1">#  Copyright(C) Bertini2 Development Team</span>
+<span class="c1"># </span>
+<span class="c1">#  See &lt;http://www.gnu.org/licenses/&gt; for a copy of the license, </span>
+<span class="c1">#  as well as COPYING.  Bertini2 is provided with permitted </span>
+<span class="c1">#  additional terms in the b2/licenses/ directory.</span>
+
+<span class="c1">#  individual authors of this file include:</span>
+<span class="c1"># </span>
+<span class="c1">#  silviana amethyst</span>
+<span class="c1">#  UWEC</span>
+<span class="c1">#  Spring 2023</span>
+<span class="c1"># </span>
+
+
+
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">nag_algorithms</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini._pybertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">nag_algorithms</span> <span class="k">as</span> <span class="n">_pybnalag</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bertini._pybertini.nag_algorithms</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Ensure tracker classes have gained their .observers attribute (and PathDataCollector),</span>
+<span class="c1"># which SolutionPathCollector relies on.  No cycle: bertini.tracking does not import this.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">tracking</span> <span class="k">as</span> <span class="n">_tracking</span>
+
+<span class="c1"># config structs gain update()/repr/to_dict/...; algorithm classes gain configure().</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..config</span><span class="w"> </span><span class="kn">import</span> <span class="n">_enhance_all</span><span class="p">,</span> <span class="n">_enhance_owners</span>
+<span class="n">_enhance_all</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">)</span>
+<span class="n">_enhance_owners</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">)</span>
+
+
+<span class="c1"># --- Slice: a Python sequence of linear forms ----------------------------------------------</span>
+<span class="c1">#</span>
+<span class="c1"># A Slice is a stack of linear forms; treat it as a Python sequence, following list semantics:</span>
+<span class="c1">#   * an integer index selects an ELEMENT -- the i-th form&#39;s coefficient VECTOR (a 1-D array);</span>
+<span class="c1">#     &quot;a single linear form is a vector&quot;.  Iterating the slice yields these form vectors.</span>
+<span class="c1">#   * a Python slice (s[i:j]) selects a SUB-COLLECTION -- a new (sub-)Slice (same type).  A list /</span>
+<span class="c1">#     tuple of indices likewise selects a sub-Slice (a numpy-flavoured multi-select).</span>
+<span class="c1"># The whole coefficient matrix is `coefficients()` (always 2-D); see the coefficients wrapper below.</span>
+<span class="c1">#</span>
+<span class="c1"># The vector-vs-matrix distinction is thus explicit (element index vs collection slice / matrix</span>
+<span class="c1"># accessor), never an emergent property of the form count -- which is exactly the eigenpy 1-D</span>
+<span class="c1"># &quot;collapse&quot; footgun we are insulating callers from.  See docs/adr for the eigenpy shape rule.</span>
+
+<span class="c1"># eigenpy collapses a 1-row Eigen matrix to a 1-D numpy array, so the bound coefficients() is 1-D for</span>
+<span class="c1"># a single-form slice and 2-D otherwise -- a data-dependent shape.  Wrap it to ALWAYS return 2-D,</span>
+<span class="c1"># reshaped to (num_forms, num_variables+1) using the dimensions we know in C++ (orientation-correct).</span>
+<span class="n">_slice_coefficients_native</span> <span class="o">=</span> <span class="n">_pybnalag</span><span class="o">.</span><span class="n">Slice</span><span class="o">.</span><span class="n">coefficients</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">,</span> <span class="s1">&#39;Slice&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_slice_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The augmented coefficient matrix of the slice&#39;s linear forms -- **always 2-D**.</span>
+
+<span class="sd">    Shape ``(num_forms, num_variables + 1)``: one row per linear form, the trailing column carrying</span>
+<span class="sd">    each form&#39;s constant term.  This holds even for a single-form slice, where the underlying</span>
+<span class="sd">    binding library would otherwise hand back a 1-D array (eigenpy collapses a one-row matrix).  The</span>
+<span class="sd">    2-D shape is part of *this* accessor&#39;s contract -- ours, not the binding&#39;s -- so it is stable</span>
+<span class="sd">    across binding libraries; see ``docs/adr/0033``.  For one form&#39;s coefficient *vector*, index an</span>
+<span class="sd">    element: ``slice[i]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import bertini                                                   # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; import bertini                                                   # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; x, y = bertini.Variable(&#39;x&#39;), bertini.Variable(&#39;y&#39;)             # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; bertini.Slice.from_coefficients([[2, 3, 1]], [x, y]).coefficients().shape  # doctest: +SKIP</span>
+<span class="sd">    (1, 3)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">_slice_coefficients_native</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">raw</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_variables</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_slice_getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Index a slice like a Python sequence of its linear forms.</span>
+
+<span class="sd">    * ``slice[i]`` (an integer) -&gt; the i-th form&#39;s coefficient **vector**, a 1-D array of length</span>
+<span class="sd">      ``num_variables + 1`` (trailing entry = constant term).  Iterating (``for form in slice``)</span>
+<span class="sd">      yields these vectors.  &quot;A single linear form is a vector.&quot;</span>
+<span class="sd">    * ``slice[i:j]`` (a Python slice) -&gt; a **sub-Slice**, a new Slice of those forms.  A list/tuple</span>
+<span class="sd">      of indices (``slice[[0, 2]]``) likewise -&gt; a sub-Slice.</span>
+
+<span class="sd">    So the vector view and the matrix view are *named* (element index vs slice / :meth:`coefficients`),</span>
+<span class="sd">    never inferred from the form count.  See ``docs/adr/0033``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import bertini                                                   # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; import bertini                                                   # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; x, y = bertini.Variable(&#39;x&#39;), bertini.Variable(&#39;y&#39;)             # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; s = bertini.Slice.from_coefficients([[2, 3, 1], [1, -1, 4]], [x, y])  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; s[0]                       # an ELEMENT: the first form&#39;s vector  # doctest: +SKIP</span>
+<span class="sd">    array([2, 3, 1], dtype=object)</span>
+<span class="sd">    &gt;&gt;&gt; s[:1].dimension()          # a SUB-COLLECTION: a one-form Slice   # doctest: +SKIP</span>
+<span class="sd">    1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">key</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">n</span><span class="p">))))</span>                 <span class="c1"># sub-Slice (a sub-collection)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">key</span><span class="p">])</span>   <span class="c1"># sub-Slice</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">+=</span> <span class="n">n</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;slice form index </span><span class="si">{!r}</span><span class="s2"> out of range [0, </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span><span class="p">()[</span><span class="n">k</span><span class="p">]</span>                                      <span class="c1"># element: the form&#39;s vector</span>
+
+
+<span class="n">_SLICE_DOC</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;A linear slice: a stack of linear forms M [x ; 1] that cuts a positive-dimensional</span>
+<span class="s2">component down to witness points.  The linear part of a witness set.</span>
+
+<span class="s2">A slice is a Python **sequence of its linear forms**:</span>
+
+<span class="s2">* ``len(slice)`` -- the number of forms (the slice&#39;s dimension).</span>
+<span class="s2">* ``slice[i]`` (integer) -- the i-th form&#39;s coefficient **vector** (1-D, length num_variables+1).</span>
+<span class="s2">  Iterating yields these vectors.  A single linear form is a vector.</span>
+<span class="s2">* ``slice[i:j]`` / ``slice[[i, j]]`` -- a **sub-Slice** (a sub-collection of forms).</span>
+<span class="s2">* ``slice.coefficients()`` -- the whole augmented coefficient matrix, **always 2-D**</span>
+<span class="s2">  ``(num_forms, num_variables+1)``.</span>
+
+<span class="s2">The vector view vs the matrix view is named (element index vs slice / coefficients), never inferred</span>
+<span class="s2">from the form count -- so it is stable regardless of the binding library&#39;s shape conventions</span>
+<span class="s2">(docs/adr/0033).</span>
+
+<span class="s2">A slice does NOT own homogenization -- the system does.  ``slice.add_to(system)`` appends the forms</span>
+<span class="s2">to a system (folding the constant onto the homogenizing variable if the system was homogenized);</span>
+<span class="s2">``slice.as_system()`` returns a standalone System of just the forms.  Build slices with</span>
+<span class="s2">``Slice.random_complex`` / ``Slice.random_real`` / ``Slice.from_coefficients`` (or</span>
+<span class="s2">``bertini.bertini.Slice.from_coefficients`` for exact numpy/list coefficients).</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">,</span> <span class="s1">&#39;Slice&#39;</span><span class="p">):</span>
+    <span class="n">_pybnalag</span><span class="o">.</span><span class="n">Slice</span><span class="o">.</span><span class="n">coefficients</span> <span class="o">=</span> <span class="n">_slice_coefficients</span>
+    <span class="n">_pybnalag</span><span class="o">.</span><span class="n">Slice</span><span class="o">.</span><span class="fm">__getitem__</span> <span class="o">=</span> <span class="n">_slice_getitem</span>
+    <span class="n">_pybnalag</span><span class="o">.</span><span class="n">Slice</span><span class="o">.</span><span class="fm">__len__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_pybnalag</span><span class="o">.</span><span class="n">Slice</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">_SLICE_DOC</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="k">pass</span>   <span class="c1"># some Boost.Python builds make the class docstring read-only; the methods carry docs</span>
+
+
+<span class="c1"># --- Bertini 1 / classic emission -----------------------------------------------------------</span>
+<span class="c1">#</span>
+<span class="c1"># A slice&#39;s linear forms are ordinary System functions (the classic writer expands the</span>
+<span class="c1"># LinearFormsBlock), so a slice emits to a Bertini 1 input file via its standalone system.  A</span>
+<span class="c1"># witness set emits its SQUARE system -- the witness set&#39;s system with the slice&#39;s forms appended</span>
+<span class="c1"># (concatenate) -- which is what you would track in Bertini 1 for cross-validation.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_slice_to_classic_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Emit this slice&#39;s linear forms as a Bertini 1 classic input file (see System.to_classic_input).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_system</span><span class="p">()</span><span class="o">.</span><span class="n">to_classic_input</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_witness_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The square system whose isolated solutions are the witness points: this witness set&#39;s system</span>
+<span class="sd">    with the slice&#39;s linear forms appended.  Requires the slice and system to share variables.</span>
+
+<span class="sd">    Built by cloning the system (a copy sharing the variable nodes, so the witness set is left</span>
+<span class="sd">    unmutated) and slice.add_to()-ing the clone.  add_to is homogenization-aware -- if the system was</span>
+<span class="sd">    homogenized, it folds the slice&#39;s constant onto the homogenizing variable so the appended forms</span>
+<span class="sd">    match the rest of the system -- which plain concatenate (a generic same-structure append) is not.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bertini.system</span><span class="w"> </span><span class="kn">import</span> <span class="n">clone</span>
+    <span class="n">sys</span> <span class="o">=</span> <span class="n">clone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_system</span><span class="p">())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">sys</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sys</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_witness_to_classic_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Emit the witness (square) system as a Bertini 1 classic input file (see System.to_classic_input).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">witness_system</span><span class="p">()</span><span class="o">.</span><span class="n">to_classic_input</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">,</span> <span class="s1">&#39;Slice&#39;</span><span class="p">):</span>
+    <span class="n">_pybnalag</span><span class="o">.</span><span class="n">Slice</span><span class="o">.</span><span class="n">to_classic_input</span> <span class="o">=</span> <span class="n">_slice_to_classic_input</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plural</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">noun</span><span class="p">):</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">noun</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">noun</span><span class="si">}</span><span class="s2">s&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_witness_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A concise summary: the component&#39;s dimension and degree, and a one-line description of the</span>
+<span class="sd">    system and slice it carries.  (The slice and system have their own detailed reprs.)&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">consistent</span> <span class="o">=</span> <span class="s1">&#39;consistent&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_consistent</span><span class="p">()</span> <span class="k">else</span> <span class="s1">&#39;INCONSISTENT&#39;</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">consistent</span> <span class="o">=</span> <span class="s1">&#39;consistency unknown&#39;</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;WitnessSet -- dimension </span><span class="si">{}</span><span class="s2">, degree </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">degree</span><span class="p">(),</span> <span class="n">consistent</span><span class="p">)]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  slice:  </span><span class="si">{}</span><span class="s2"> on </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">_plural</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dimension</span><span class="p">(),</span> <span class="s1">&#39;linear form&#39;</span><span class="p">),</span> <span class="n">_plural</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">num_variables</span><span class="p">(),</span> <span class="s1">&#39;variable&#39;</span><span class="p">)))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  slice:  &lt;none&gt;&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sysm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system</span><span class="p">()</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  system: </span><span class="si">{}</span><span class="s2"> on </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">_plural</span><span class="p">(</span><span class="n">sysm</span><span class="o">.</span><span class="n">num_functions</span><span class="p">(),</span> <span class="s1">&#39;function&#39;</span><span class="p">),</span> <span class="n">_plural</span><span class="p">(</span><span class="n">sysm</span><span class="o">.</span><span class="n">num_variables</span><span class="p">(),</span> <span class="s1">&#39;variable&#39;</span><span class="p">)))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  system: &lt;none&gt;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+
+<span class="k">for</span> <span class="n">_ws_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">_ws_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;WitnessSet&#39;</span><span class="p">):</span>
+        <span class="n">_ws_cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">,</span> <span class="n">_ws_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_ws_cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+            <span class="n">_ws_cls</span><span class="o">.</span><span class="n">witness_system</span> <span class="o">=</span> <span class="n">_witness_system</span>
+            <span class="n">_ws_cls</span><span class="o">.</span><span class="n">to_classic_input</span> <span class="o">=</span> <span class="n">_witness_to_classic_input</span>
+            <span class="n">_ws_cls</span><span class="o">.</span><span class="fm">__repr__</span> <span class="o">=</span> <span class="n">_witness_repr</span>
+            <span class="n">_ws_cls</span><span class="o">.</span><span class="fm">__str__</span> <span class="o">=</span> <span class="n">_witness_repr</span>
+
+
+<span class="c1"># --- to_dataframe: a ZeroDim solve as a pandas DataFrame -- the &quot;database of solutions&quot; ---</span>
+<span class="c1">#</span>
+<span class="c1"># One ROW per solution (per tracked path), columns = the coordinates (x0, x1, ...) followed by</span>
+<span class="c1"># every field of the per-solution metadata.  Once it is a DataFrame, every category and its</span>
+<span class="c1"># metadata is a one-line filter -- df[df.is_finite], df[df.is_real &amp; ~df.is_singular],</span>
+<span class="c1"># df[~df.is_finite] (at infinity) -- which is what the point/category accessors give you ad hoc.</span>
+<span class="c1">#</span>
+<span class="c1"># pandas is an OPTIONAL dependency (mirrors meta_observer&#39;s collector-as-DataFrame): the point</span>
+<span class="c1"># accessors (all_solutions / finite_solutions / solution_metadata / ...) are the no-pandas path;</span>
+<span class="c1"># to_dataframe raises a helpful ImportError if pandas is missing.</span>
+
+<span class="c1"># The metadata columns, in a fixed order (so the DataFrame&#39;s shape is stable across solves and</span>
+<span class="c1"># precision models).  Mirrors the fields exposed on SolutionMetaData (see zero_dim_export.hpp);</span>
+<span class="c1"># the classification flags come first since they are what you filter on.</span>
+<span class="n">_SOLUTION_METADATA_FIELDS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;path_index&#39;</span><span class="p">,</span> <span class="s1">&#39;solution_index&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_finite&#39;</span><span class="p">,</span> <span class="s1">&#39;is_real&#39;</span><span class="p">,</span> <span class="s1">&#39;is_singular&#39;</span><span class="p">,</span> <span class="s1">&#39;is_nonsolution&#39;</span><span class="p">,</span> <span class="s1">&#39;multiplicity&#39;</span><span class="p">,</span> <span class="s1">&#39;multiplicity_representative&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;condition_number&#39;</span><span class="p">,</span> <span class="s1">&#39;function_residual&#39;</span><span class="p">,</span> <span class="s1">&#39;newton_residual&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;accuracy_estimate&#39;</span><span class="p">,</span> <span class="s1">&#39;accuracy_estimate_user_coords&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;precision_digits&#39;</span><span class="p">,</span> <span class="s1">&#39;accuracy_digits&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cycle_num&#39;</span><span class="p">,</span> <span class="s1">&#39;endgame_success_code&#39;</span><span class="p">,</span> <span class="s1">&#39;pre_endgame_success_code&#39;</span><span class="p">,</span> <span class="s1">&#39;final_time_used&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;precision_changed&#39;</span><span class="p">,</span> <span class="s1">&#39;max_precision_used&#39;</span><span class="p">,</span> <span class="s1">&#39;time_of_first_prec_increase&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;path_time_seconds&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_zerodim_to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user_coords</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">omit_infinite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">merge_multiplicities</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The solve as a pandas DataFrame -- one row per solution, the &quot;database of solutions&quot;.</span>
+
+<span class="sd">    Columns are ``solution`` -- the whole solution point, kept in a single cell -- then every</span>
+<span class="sd">    per-solution metadata field (``is_finite``, ``is_real``, ``is_singular``, ``multiplicity``,</span>
+<span class="sd">    ``condition_number``, ``endgame_success_code``, ``max_precision_used``, ...), and finally ``system``,</span>
+<span class="sd">    a reference to the (target) system these solutions satisfy (so rows accumulated from several</span>
+<span class="sd">    solves stay identifiable).  Each category is then a one-line filter, e.g.</span>
+<span class="sd">    ``df[df.is_real &amp; ~df.is_singular]`` (nonsingular real) or ``df[~df.is_finite]`` (at infinity).</span>
+
+<span class="sd">    The ``solution`` cell is an independent copy of the solution vector (a numpy array of Python</span>
+<span class="sd">    ``complex`` for a double solve, of :class:`bertini.complex_mp` for a multiprecision one,</span>
+<span class="sd">    so no precision is lost).  Coordinates are deliberately **not** exploded into ``x0, x1, ...``</span>
+<span class="sd">    columns; split them yourself if you want them, e.g.</span>
+<span class="sd">    ``df[&#39;x&#39;] = [v[0] for v in df.solution]``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_coords : bool</span>
+<span class="sd">        Coordinates in YOUR variables (dehomogenized; default), or the solver&#39;s internal</span>
+<span class="sd">        homogenized on-patch coordinates when ``False`` -- the same choice as :meth:`all_solutions`.</span>
+<span class="sd">    omit_infinite : bool</span>
+<span class="sd">        Drop the endpoints not classified finite (``is_finite`` False) -- the at-infinity and</span>
+<span class="sd">        failed paths.  ``True`` by default, so the frame holds just the genuine finite solutions;</span>
+<span class="sd">        pass ``False`` to get every tracked path (their coordinate cells may be empty/NaN).</span>
+<span class="sd">    merge_multiplicities : bool</span>
+<span class="sd">        Collapse a multiplicity-``m`` solution -- which the solver returns as ``m`` coincident</span>
+<span class="sd">        endpoints -- to its single representative row (``multiplicity`` still records ``m``).</span>
+<span class="sd">        ``True`` by default.  Pass ``False`` to keep every endpoint, including the ``m-1``</span>
+<span class="sd">        duplicate copies.  The grouping is the solver&#39;s own (the C++ clustering that computes</span>
+<span class="sd">        multiplicity), read off ``multiplicity_representative``; this does not re-cluster.</span>
+<span class="sd">    group : VariableGroup or int, optional</span>
+<span class="sd">        Project each solution onto one variable group -- the ``solution`` cell then holds only that</span>
+<span class="sd">        group&#39;s coordinates (Cluster G).  Pass the ``VariableGroup`` object or its 0-based FIFO index.</span>
+<span class="sd">        ``None`` (default) keeps the whole point.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        One row per solution; the ``solution`` cell is a copied vector whose elements are Python</span>
+<span class="sd">        ``complex`` for a double-precision solve and :class:`bertini.complex_mp` for a</span>
+<span class="sd">        multiprecision one (kept native, so no precision is lost).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    ``pandas`` is an optional dependency; this raises :class:`ImportError` if it is absent.  The</span>
+<span class="sd">    point accessors -- :meth:`all_solutions`, :meth:`finite_solutions`, :meth:`solution_metadata`</span>
+<span class="sd">    -- are the no-pandas path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;ZeroDim.to_dataframe() needs the optional &#39;pandas&#39; dependency (install it, e.g. &quot;</span>
+            <span class="s2">&quot;`pip install pandas`).  Without pandas, use the point accessors instead: &quot;</span>
+            <span class="s2">&quot;all_solutions(), finite_solutions(), solution_metadata().&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_solutions</span><span class="p">(</span><span class="n">user_coords</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_system</span><span class="p">()</span>       <span class="c1"># the system these solutions satisfy (one shared reference)</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">metadata</span><span class="p">))):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">omit_infinite</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">m</span><span class="o">.</span><span class="n">is_finite</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">merge_multiplicities</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">m</span><span class="o">.</span><span class="n">multiplicity_representative</span><span class="p">:</span>
+            <span class="k">continue</span>                    <span class="c1"># a duplicate copy of an already-kept multiple solution</span>
+        <span class="c1"># The whole solution lives in one cell.  .copy() snapshots the eigenpy vector&#39;s buffer --</span>
+        <span class="c1"># essential, because indexing that vector lazily returns scalars that alias a reused</span>
+        <span class="c1"># internal buffer, so storing the live vector (or its elements) and letting pandas read it</span>
+        <span class="c1"># later would collapse every cell to one value.  The copy keeps the native element type, so</span>
+        <span class="c1"># a multiprecision solve loses no precision.</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">coordinates_of</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span>   <span class="c1"># project onto one variable group (Cluster G)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;solution&#39;</span><span class="p">:</span> <span class="n">sol</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">_SOLUTION_METADATA_FIELDS</span><span class="p">:</span>
+            <span class="n">row</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;system&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">system</span>          <span class="c1"># a reference, so rows from different solves stay identifiable</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_attach_to_dataframe</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Give every bound solver class (ZeroDimSolver*, HomotopySolver*) a to_dataframe method (idempotent).&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s1">&#39;ZeroDimSolver&#39;</span><span class="p">,</span> <span class="s1">&#39;HomotopySolver&#39;</span><span class="p">)):</span>
+            <span class="k">continue</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;_b2_has_to_dataframe&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">to_dataframe</span> <span class="o">=</span> <span class="n">_zerodim_to_dataframe</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_b2_has_to_dataframe</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="n">_attach_to_dataframe</span><span class="p">()</span>
+
+
+<span class="c1"># --- group= : project each returned solution onto one variable group (Cluster G) ------------</span>
+<span class="c1">#</span>
+<span class="c1"># The reusable primitive is C++ (System.coordinates_of); here we just surface a `group=` keyword on</span>
+<span class="c1"># every point getter so `solver.solutions(group=xyz)` returns only that group&#39;s coordinates.  The</span>
+<span class="c1"># projection goes through the solver&#39;s target_system (whose FIFO layout the user-coord points follow).</span>
+<span class="n">_POINT_GETTERS_FOR_GROUP</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;all_solutions&#39;</span><span class="p">,</span> <span class="s1">&#39;solutions&#39;</span><span class="p">,</span> <span class="s1">&#39;finite_solutions&#39;</span><span class="p">,</span> <span class="s1">&#39;real_solutions&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nonsingular_solutions&#39;</span><span class="p">,</span> <span class="s1">&#39;singular_solutions&#39;</span><span class="p">,</span> <span class="s1">&#39;infinite_solutions&#39;</span><span class="p">,</span> <span class="s1">&#39;nonsolutions&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_make_group_getter</span><span class="p">(</span><span class="n">native</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">native</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">points</span>
+        <span class="n">sysm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_system</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">sysm</span><span class="o">.</span><span class="n">coordinates_of</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+    <span class="n">getter</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">native</span><span class="p">,</span> <span class="s1">&#39;__name__&#39;</span><span class="p">,</span> <span class="s1">&#39;solutions&#39;</span><span class="p">)</span>
+    <span class="n">getter</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">native</span><span class="p">,</span> <span class="s1">&#39;__doc__&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">group=&lt;VariableGroup or 0-based FIFO index&gt;: project each returned point onto that &quot;</span>
+        <span class="s2">&quot;variable group -- return only its coordinates (Cluster G).  Default None keeps the whole point.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">getter</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_attach_group_kwarg</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Give every solver class a group= keyword on its point getters (idempotent).&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s1">&#39;ZeroDimSolver&#39;</span><span class="p">,</span> <span class="s1">&#39;HomotopySolver&#39;</span><span class="p">)):</span>
+            <span class="k">continue</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;_b2_has_group_kwarg&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">getter_name</span> <span class="ow">in</span> <span class="n">_POINT_GETTERS_FOR_GROUP</span><span class="p">:</span>
+            <span class="n">native</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">getter_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">native</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">getter_name</span><span class="p">,</span> <span class="n">_make_group_getter</span><span class="p">(</span><span class="n">native</span><span class="p">))</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_b2_has_group_kwarg</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="n">_attach_group_kwarg</span><span class="p">()</span>
+
+
+<span class="c1"># --- solve() returns a SolveResult; result() re-derives it -----------------------------------</span>
+<span class="c1">#</span>
+<span class="c1"># The solver records ITSELF (record_to / the ambient directory), so it can hand back the same</span>
+<span class="c1"># records-aware SolveResult that bertini.solve returns -- no dependence on the records-layer</span>
+<span class="c1"># orchestration.  This makes solver.solve() and bertini.solve() return the same type (removing the</span>
+<span class="c1"># &quot;the bare solver returns nothing&quot; inconsistency), and result() re-derives it if the caller</span>
+<span class="c1"># dropped the return value.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_solver_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This solve&#39;s :class:`~bertini.records.SolveResult`: the finite solutions plus the records</span>
+<span class="sd">    ticket (run id, directory, recall count), read from the solver&#39;s own recorded state.</span>
+
+<span class="sd">    A bare ``solver.solve()`` already returns this; ``result()`` re-derives it (call it after</span>
+<span class="sd">    ``solve()``) if you did not keep the return value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bertini.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">SolveResult</span>
+    <span class="k">return</span> <span class="n">SolveResult</span><span class="o">.</span><span class="n">from_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_describe_solver_class</span><span class="p">(</span><span class="n">cls_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A friendly label from a bound solver class name, e.g.</span>
+<span class="sd">    &#39;ZeroDimSolverCauchyAdaptivePrecision&#39; -&gt; &#39;ZeroDimSolver[cauchy, adaptive precision]&#39;.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ZeroDimSolver&#39;</span><span class="p">,</span> <span class="s1">&#39;HomotopySolver&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cls_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">kind</span><span class="p">):</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="n">cls_name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">kind</span><span class="p">):]</span>
+            <span class="n">eg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;cauchy&#39;</span> <span class="k">if</span> <span class="s1">&#39;Cauchy&#39;</span> <span class="ow">in</span> <span class="n">rest</span> <span class="k">else</span>
+                  <span class="s1">&#39;power-series&#39;</span> <span class="k">if</span> <span class="s1">&#39;PowerSeries&#39;</span> <span class="ow">in</span> <span class="n">rest</span> <span class="k">else</span> <span class="s1">&#39;?&#39;</span><span class="p">)</span>
+            <span class="n">prec</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;double&#39;</span> <span class="k">if</span> <span class="s1">&#39;Double&#39;</span> <span class="ow">in</span> <span class="n">rest</span> <span class="k">else</span>
+                    <span class="s1">&#39;fixed-multiple&#39;</span> <span class="k">if</span> <span class="s1">&#39;FixedMultiple&#39;</span> <span class="ow">in</span> <span class="n">rest</span> <span class="k">else</span>
+                    <span class="s1">&#39;adaptive&#39;</span> <span class="k">if</span> <span class="s1">&#39;Adaptive&#39;</span> <span class="ow">in</span> <span class="n">rest</span> <span class="k">else</span> <span class="s1">&#39;?&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">[</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1"> precision]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">eg</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cls_name</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_solver_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A readable one-line summary: the solver kind, and once solved its solution tally.</span>
+
+<span class="sd">    Replaces the useless default ``&lt;...object at 0x...&gt;``.  Before solving: the kind plus a nudge</span>
+<span class="sd">    to call ``.solve()``.  After: finite/real/singular counts out of the paths tracked, and the</span>
+<span class="sd">    records run id when the solve recorded.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">_describe_solver_class</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">md</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">{}</span><span class="s1">: not yet solved -- call .solve()&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+    <span class="c1"># count DISTINCT finite solutions (multiplicity representatives), matching the default</span>
+    <span class="c1"># merge_multiplicities view of finite_solutions(); len(md) is the raw path count.</span>
+    <span class="n">reps</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">md</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_finite</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">multiplicity_representative</span><span class="p">]</span>
+    <span class="n">n_finite</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span>
+    <span class="n">n_real</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">reps</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_real</span><span class="p">)</span>
+    <span class="n">n_sing</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">reps</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_singular</span><span class="p">)</span>
+    <span class="n">run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">records_run_id</span><span class="p">()</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="s1">&#39;, run </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">run</span><span class="p">)</span> <span class="k">if</span> <span class="n">run</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;&lt;</span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> finite solution</span><span class="si">{}</span><span class="s1"> (</span><span class="si">{}</span><span class="s1"> real, </span><span class="si">{}</span><span class="s1"> singular) of </span><span class="si">{}</span><span class="s1"> path</span><span class="si">{}{}</span><span class="s1">&gt;&#39;</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">n_finite</span><span class="p">,</span> <span class="s1">&#39;&#39;</span> <span class="k">if</span> <span class="n">n_finite</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span>
+                    <span class="n">n_real</span><span class="p">,</span> <span class="n">n_sing</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">md</span><span class="p">),</span> <span class="s1">&#39;&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">md</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">tail</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_make_solve_returning_result</span><span class="p">(</span><span class="n">native_solve</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">communicator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">field_settings</span><span class="p">):</span>
+        <span class="c1"># settings= : a dict of config fields; **field_settings: the same by keyword.  Both are</span>
+        <span class="c1"># applied via set() before solving -- collapsing make/set/solve to one line.  communicator</span>
+        <span class="c1"># and settings are reserved names (MPI is a solve-time opt-in), never config fields.</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">settings</span> <span class="ow">or</span> <span class="p">{},</span> <span class="o">**</span><span class="n">field_settings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">combined</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">combined</span><span class="p">)</span>
+        <span class="n">native_solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">communicator</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+    <span class="n">solve</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="s1">&#39;solve&#39;</span>
+    <span class="n">solve</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">((</span><span class="nb">getattr</span><span class="p">(</span><span class="n">native_solve</span><span class="p">,</span> <span class="s1">&#39;__doc__&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span>
+        <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Settings: pass config fields either as a dict (settings={&#39;final_tolerance&#39;: 1e-13}) or by &quot;</span>
+        <span class="s2">&quot;keyword (solve(final_tolerance=1e-13)); each is applied via set() before solving, so &quot;</span>
+        <span class="s2">&quot;make/set/solve becomes a single call.  communicator= is reserved for MPI (never a setting).</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;Returns a bertini.records.SolveResult -- the finite solutions plus this solve&#39;s records &quot;</span>
+        <span class="s2">&quot;ticket (run id, directory, recall count), read from the solver&#39;s own records (the solver &quot;</span>
+        <span class="s2">&quot;records itself, on by default).  Drop it freely: solver.result() re-derives it, and the &quot;</span>
+        <span class="s2">&quot;records hold the truth.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">solve</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_attach_result_and_solve</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make every solver&#39;s solve() return a SolveResult and give it result() (idempotent).&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s1">&#39;ZeroDimSolver&#39;</span><span class="p">,</span> <span class="s1">&#39;HomotopySolver&#39;</span><span class="p">)):</span>
+            <span class="k">continue</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;_b2_has_result&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">_solver_result</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">solve</span> <span class="o">=</span> <span class="n">_make_solve_returning_result</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">solve</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="fm">__repr__</span> <span class="o">=</span> <span class="n">_solver_repr</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_b2_has_result</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="n">_attach_result_and_solve</span><span class="p">()</span>
+
+
+<span class="c1"># --- ZeroDimSolver: a friendly factory over the bound ZeroDimSolver&lt;endgame x precision&gt; classes ---</span>
+
+<span class="c1"># Each bound solver class is named ZeroDimSolver&lt;Endgame&gt;&lt;Precision&gt; (the start system is NO</span>
+<span class="c1"># longer part of the type -- it is chosen at construction).  Select endgame + precision by string to</span>
+<span class="c1"># pick the class, then pick the start system separately (default total_degree_binomial, else a factory).</span>
+<span class="n">_ZD_ENDGAMES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;cauchy&#39;</span><span class="p">:</span> <span class="s1">&#39;Cauchy&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;powerseries&#39;</span><span class="p">:</span> <span class="s1">&#39;PowerSeries&#39;</span><span class="p">,</span> <span class="s1">&#39;power_series&#39;</span><span class="p">:</span> <span class="s1">&#39;PowerSeries&#39;</span><span class="p">,</span> <span class="s1">&#39;pseg&#39;</span><span class="p">:</span> <span class="s1">&#39;PowerSeries&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_ZD_PRECISIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;double&#39;</span><span class="p">:</span> <span class="s1">&#39;DoublePrecision&#39;</span><span class="p">,</span> <span class="s1">&#39;dbl&#39;</span><span class="p">:</span> <span class="s1">&#39;DoublePrecision&#39;</span><span class="p">,</span> <span class="s1">&#39;fixed_double&#39;</span><span class="p">:</span> <span class="s1">&#39;DoublePrecision&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;multiple&#39;</span><span class="p">:</span> <span class="s1">&#39;FixedMultiplePrecision&#39;</span><span class="p">,</span> <span class="s1">&#39;mp&#39;</span><span class="p">:</span> <span class="s1">&#39;FixedMultiplePrecision&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;fixed_multiple&#39;</span><span class="p">:</span> <span class="s1">&#39;FixedMultiplePrecision&#39;</span><span class="p">,</span> <span class="s1">&#39;multiprecision&#39;</span><span class="p">:</span> <span class="s1">&#39;FixedMultiplePrecision&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;adaptive&#39;</span><span class="p">:</span> <span class="s1">&#39;AdaptivePrecision&#39;</span><span class="p">,</span> <span class="s1">&#39;amp&#39;</span><span class="p">:</span> <span class="s1">&#39;AdaptivePrecision&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="c1"># string -&gt; the StartSystemType enum value name on _pybnalag (the C++ blackbox::type::Start).</span>
+<span class="n">_ZD_START_SYSTEMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;totaldegreebinomial&#39;</span><span class="p">:</span> <span class="s1">&#39;total_degree_binomial&#39;</span><span class="p">,</span> <span class="s1">&#39;binomial&#39;</span><span class="p">:</span> <span class="s1">&#39;total_degree_binomial&#39;</span><span class="p">,</span> <span class="s1">&#39;tdb&#39;</span><span class="p">:</span> <span class="s1">&#39;total_degree_binomial&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;totaldegreelinearproduct&#39;</span><span class="p">:</span> <span class="s1">&#39;total_degree_linear_product&#39;</span><span class="p">,</span> <span class="s1">&#39;linearproduct&#39;</span><span class="p">:</span> <span class="s1">&#39;total_degree_linear_product&#39;</span><span class="p">,</span> <span class="s1">&#39;tdlp&#39;</span><span class="p">:</span> <span class="s1">&#39;total_degree_linear_product&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mhom&#39;</span><span class="p">:</span> <span class="s1">&#39;mhomogeneous&#39;</span><span class="p">,</span> <span class="s1">&#39;mhomogeneous&#39;</span><span class="p">:</span> <span class="s1">&#39;mhomogeneous&#39;</span><span class="p">,</span> <span class="s1">&#39;multihomogeneous&#39;</span><span class="p">:</span> <span class="s1">&#39;mhomogeneous&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_zd_select</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+    <span class="n">frag</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">or</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">frag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ZeroDimSolver: unknown </span><span class="si">{}</span><span class="s2"> </span><span class="si">{!r}</span><span class="s2">; choose from </span><span class="si">{}</span><span class="s2">&quot;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">table</span><span class="p">})))</span>
+    <span class="k">return</span> <span class="n">frag</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_infer_start_system</span><span class="p">(</span><span class="n">system</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pick the start system from the system&#39;s variable-group structure.</span>
+
+<span class="sd">    Mirrors the C++ blackbox ``InferStartType`` (core/.../blackbox/switches_zerodim.hpp): a single</span>
+<span class="sd">    affine variable group with no homogeneous/projective groups is the 1-homogeneous case; anything</span>
+<span class="sd">    else -- two or more variable groups, or any homogeneous group -- is multihomogeneous (a</span>
+<span class="sd">    total-degree start would be the wrong, over-counting choice there).</span>
+
+<span class="sd">    The single-affine-group case infers ``total_degree_binomial`` -- the default: it is as reliable</span>
+<span class="sd">    as the linear-product total-degree start and faster, so it stays the default for 1-homogeneous /</span>
+<span class="sd">    1-affine systems.  See core/.../nag_algorithms/common/policies.hpp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">system</span><span class="o">.</span><span class="n">num_variable_groups</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">system</span><span class="o">.</span><span class="n">num_hom_variable_groups</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;binomial&#39;</span>
+    <span class="k">return</span> <span class="s1">&#39;mhom&#39;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_precision_model</span><span class="p">(</span><span class="n">mptype</span><span class="p">,</span> <span class="n">precision</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve the precision *model* (mptype) and apply an integer *digit count* (precision).</span>
+
+<span class="sd">    ``precision`` is the integer number of digits; it is applied via ``bertini.default_precision``</span>
+<span class="sd">    at construction (the documented &quot;set precision, then build&quot; step, which the fixed-multiple and</span>
+<span class="sd">    adaptive trackers read at construction).  ``mptype`` is the precision MODEL</span>
+<span class="sd">    (``&#39;double&#39;`` / ``&#39;multiple&#39;`` / ``&#39;adaptive&#39;``).</span>
+
+<span class="sd">    A **string** ``precision`` is the old, confusing model-selector alias -- honored as ``mptype``</span>
+<span class="sd">    with a ``DeprecationWarning`` for one release.  Returns the mptype string to build with.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">precision</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;precision=</span><span class="si">{0!r}</span><span class="s2"> as a precision-MODEL is deprecated and will be removed: pass &quot;</span>
+            <span class="s2">&quot;mptype=</span><span class="si">{0!r}</span><span class="s2"> for the model, and reserve precision= for an integer number of digits.&quot;</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">precision</span><span class="p">),</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">precision</span>
+    <span class="k">if</span> <span class="n">precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span>
+        <span class="n">bertini</span><span class="o">.</span><span class="n">default_precision</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">precision</span><span class="p">))</span>     <span class="c1"># the &quot;set precision, then build&quot; step</span>
+    <span class="k">return</span> <span class="n">mptype</span>
+
+
+<div class="viewcode-block" id="ZeroDimSolver">
+<a class="viewcode-back" href="../../detailed/api.html#bertini.nag_algorithm.ZeroDimSolver">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ZeroDimSolver</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">endgame</span><span class="o">=</span><span class="s1">&#39;cauchy&#39;</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">,</span> <span class="n">startsystem</span><span class="o">=</span><span class="s1">&#39;infer&#39;</span><span class="p">,</span>
+                  <span class="n">precision</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">field_settings</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct a zero-dim solver by name, with friendly defaults.</span>
+
+<span class="sd">    ``ZeroDimSolver(system)`` is the Cauchy endgame in adaptive precision with the start system</span>
+<span class="sd">    **inferred from the system&#39;s variable-group structure** -- total degree for a single affine group,</span>
+<span class="sd">    multihomogeneous otherwise -- so a multi-group (e.g. eigenvalue) system gets MHom automatically</span>
+<span class="sd">    rather than an over-counting total-degree start.  Override any piece with a string::</span>
+
+<span class="sd">        ZeroDimSolver(system, endgame=&#39;cauchy&#39;, mptype=&#39;amp&#39;, startsystem=&#39;mhom&#39;)</span>
+
+<span class="sd">    Config settings may be applied at construction (via ``set``) so no separate ``set()`` is needed</span>
+<span class="sd">    before solving -- either as a dict (``ZeroDimSolver(sys, settings={&#39;final_tolerance&#39;: 1e-13})``)</span>
+<span class="sd">    or by keyword (``ZeroDimSolver(sys, final_tolerance=1e-13)``); the same go to ``solve(...)`` too.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    system : the polynomial :class:`~bertini.System` to solve.</span>
+<span class="sd">    endgame : ``&#39;cauchy&#39;`` (default) or ``&#39;powerseries&#39;``.</span>
+<span class="sd">    mptype : the precision MODEL -- ``&#39;double&#39;``, ``&#39;multiple&#39;``, or ``&#39;adaptive&#39;`` (``&#39;amp&#39;``, the default).</span>
+<span class="sd">    precision : the number of DIGITS (an ``int``), applied via ``bertini.default_precision`` at</span>
+<span class="sd">        construction -- meaningful for ``&#39;multiple&#39;``/``&#39;adaptive&#39;`` (``&#39;double&#39;`` is always 16).  A</span>
+<span class="sd">        *string* here is the deprecated old spelling of ``mptype`` and warns.</span>
+<span class="sd">    startsystem : ``&#39;infer&#39;`` (default -- choose from the variable-group structure, matching the</span>
+<span class="sd">        C++ blackbox), or force it with ``&#39;binomial&#39;`` / ``&#39;linearproduct&#39;`` / ``&#39;mhom&#39;``.  To run from a homotopy you</span>
+<span class="sd">        built yourself with given start points, use :class:`HomotopySolver` / :func:`blend_homotopy`</span>
+<span class="sd">        instead (their construction needs the homotopy and start points, not just a system).</span>
+
+<span class="sd">    Returns a solver; call ``.solve()`` then ``.all_solutions()`` as for any zero-dim solver.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    The default infers the start system; strings pick the rest::</span>
+
+<span class="sd">        &gt;&gt;&gt; import bertini</span>
+<span class="sd">        &gt;&gt;&gt; from bertini.nag_algorithm import ZeroDimSolver</span>
+<span class="sd">        &gt;&gt;&gt; x = bertini.Variable(&#39;x&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; sys = bertini.System()</span>
+<span class="sd">        &gt;&gt;&gt; sys.add_variable_group(bertini.VariableGroup([x]))</span>
+<span class="sd">        &gt;&gt;&gt; sys.add_function(x * x - 1)</span>
+<span class="sd">        &gt;&gt;&gt; type(ZeroDimSolver(sys)).__name__</span>
+<span class="sd">        &#39;ZeroDimSolverCauchyAdaptivePrecision&#39;</span>
+<span class="sd">        &gt;&gt;&gt; type(ZeroDimSolver(sys, mptype=&#39;amp&#39;, startsystem=&#39;mhom&#39;)).__name__</span>
+<span class="sd">        &#39;ZeroDimSolverCauchyAdaptivePrecision&#39;</span>
+<span class="sd">        &gt;&gt;&gt; solver = ZeroDimSolver(sys, mptype=&#39;adaptive&#39;)   # robust path</span>
+<span class="sd">        &gt;&gt;&gt; solver.solve()                             # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; solver.all_solutions()                         # doctest: +SKIP</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mptype</span> <span class="o">=</span> <span class="n">_precision_model</span><span class="p">(</span><span class="n">mptype</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+    <span class="n">start_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">startsystem</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="c1"># user-homotopy can&#39;t be built from a system alone -- point at the right entry point.</span>
+    <span class="k">if</span> <span class="n">start_key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;userhomotopy&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;ZeroDimSolver does not build the homotopy solver (its construction needs a homotopy &quot;</span>
+            <span class="s2">&quot;and start points, not just a system); build the homotopy with &quot;</span>
+            <span class="s2">&quot;nag_algorithm.blend_homotopy / coefficient_parameter_homotopy and solve it with &quot;</span>
+            <span class="s2">&quot;nag_algorithm.HomotopySolver(homotopy, start_points, target).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">start_key</span> <span class="o">==</span> <span class="s1">&#39;infer&#39;</span><span class="p">:</span>
+        <span class="n">startsystem</span> <span class="o">=</span> <span class="n">_infer_start_system</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+    <span class="c1"># the solver class encodes only endgame + precision now; the start system is a constructor choice.</span>
+    <span class="n">cls_name</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ZeroDimSolver&#39;</span>
+                <span class="o">+</span> <span class="n">_zd_select</span><span class="p">(</span><span class="n">endgame</span><span class="p">,</span> <span class="n">_ZD_ENDGAMES</span><span class="p">,</span> <span class="s1">&#39;endgame&#39;</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">_zd_select</span><span class="p">(</span><span class="n">mptype</span><span class="p">,</span> <span class="n">_ZD_PRECISIONS</span><span class="p">,</span> <span class="s1">&#39;mptype&#39;</span><span class="p">))</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">,</span> <span class="n">cls_name</span><span class="p">)</span>
+    <span class="n">start_enum</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="o">.</span><span class="n">StartSystemType</span><span class="p">,</span>
+                         <span class="n">_zd_select</span><span class="p">(</span><span class="n">startsystem</span><span class="p">,</span> <span class="n">_ZD_START_SYSTEMS</span><span class="p">,</span> <span class="s1">&#39;startsystem&#39;</span><span class="p">))</span>
+    <span class="c1"># Every start system is built through its explicit factory.  (Previously total_degree</span>
+    <span class="c1"># short-circuited to the default constructor, which silently substituted the *default* start</span>
+    <span class="c1"># system -- the facade quirk that made startsystem=&#39;totaldegree&#39; secretly solve the default.)</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">_pybnalag</span><span class="o">.</span><span class="n">start_system_factory</span><span class="p">(</span><span class="n">start_enum</span><span class="p">))</span>
+    <span class="c1"># config fields as a dict (settings={...}) and/or by keyword, applied at construction so a one-line</span>
+    <span class="c1"># ZeroDimSolver(sys, final_tolerance=1e-13) needs no separate set() before solve().</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">settings</span> <span class="ow">or</span> <span class="p">{},</span> <span class="o">**</span><span class="n">field_settings</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">combined</span><span class="p">:</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">combined</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">solver</span></div>
+
+
+
+<span class="c1"># --- HomotopySolver: track a homotopy YOU built, from start points YOU have ----------------------</span>
+<span class="c1">#</span>
+<span class="c1"># The continuation primitive: given a homotopy with a path variable and a list of start points,</span>
+<span class="c1"># track each path through the endgame and classify the endpoints.  This is the SAME machinery the</span>
+<span class="c1"># zero-dim solve uses, with the homotopy + start points supplied rather than generated.</span>
+
+<span class="n">_HOMOTOPY_SOLVER_CLASSES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="s1">&#39;double&#39;</span><span class="p">,</span>   <span class="s1">&#39;cauchy&#39;</span><span class="p">):</span>      <span class="s1">&#39;HomotopySolverCauchyDoublePrecision&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">&#39;double&#39;</span><span class="p">,</span>   <span class="s1">&#39;powerseries&#39;</span><span class="p">):</span> <span class="s1">&#39;HomotopySolverPowerSeriesDoublePrecision&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">&#39;multiple&#39;</span><span class="p">,</span> <span class="s1">&#39;cauchy&#39;</span><span class="p">):</span>      <span class="s1">&#39;HomotopySolverCauchyFixedMultiplePrecision&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">&#39;multiple&#39;</span><span class="p">,</span> <span class="s1">&#39;powerseries&#39;</span><span class="p">):</span> <span class="s1">&#39;HomotopySolverPowerSeriesFixedMultiplePrecision&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">&#39;adaptive&#39;</span><span class="p">,</span> <span class="s1">&#39;cauchy&#39;</span><span class="p">):</span>      <span class="s1">&#39;HomotopySolverCauchyAdaptivePrecision&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">&#39;adaptive&#39;</span><span class="p">,</span> <span class="s1">&#39;powerseries&#39;</span><span class="p">):</span> <span class="s1">&#39;HomotopySolverPowerSeriesAdaptivePrecision&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_HomotopySolverHolder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A thin holder around a bound HomotopySolver.</span>
+
+<span class="sd">    The underlying solver keeps *references* to the homotopy, the target system, and the start</span>
+<span class="sd">    system, so this holder retains all three to keep them alive, and forwards every attribute</span>
+<span class="sd">    and method (``solve``, ``all_solutions``, ``solution_metadata``, ``get_tracker``, ...) to the</span>
+<span class="sd">    wrapped solver.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver</span><span class="p">,</span> <span class="o">*</span><span class="n">kept_alive</span><span class="p">):</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_solver&#39;</span><span class="p">,</span> <span class="n">solver</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_kept_alive&#39;</span><span class="p">,</span> <span class="n">kept_alive</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">object</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_solver&#39;</span><span class="p">),</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># special methods bypass __getattr__, so delegate the friendly repr explicitly</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">object</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_solver&#39;</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="HomotopySolver">
+<a class="viewcode-back" href="../../detailed/api.html#bertini.nag_algorithm.HomotopySolver">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">HomotopySolver</span><span class="p">(</span><span class="n">homotopy</span><span class="p">,</span> <span class="n">start_points</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">endgame</span><span class="o">=</span><span class="s1">&#39;cauchy&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Track a homotopy you constructed, from a list of start points you already have (e.g. the</span>
+<span class="sd">    solutions of an earlier solve) -- the continuation primitive (parameter-homotopy workflow).</span>
+
+<span class="sd">    This reuses the entire tracking pipeline (pre-endgame tracking, the midpath check, the</span>
+<span class="sd">    endgame, post-processing); it differs from :func:`ZeroDimSolver` only in that the homotopy and</span>
+<span class="sd">    the start points are supplied, not generated.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    homotopy : System</span>
+<span class="sd">        The homotopy to track, with a path variable; tracked from the start time (default 1)</span>
+<span class="sd">        down to 0.  Its t=1 slice must vanish at the given ``start_points``.</span>
+<span class="sd">    start_points : iterable of vectors</span>
+<span class="sd">        The start points (at the start time).  An earlier solve&#39;s ``all_solutions()`` works directly</span>
+<span class="sd">        when the variable coordinates line up (e.g. an affine homotopy).</span>
+<span class="sd">    target : System</span>
+<span class="sd">        The system the solutions satisfy at t=0 -- used for dehomogenize / residual and for the</span>
+<span class="sd">        solver&#39;s consistency check.  It must NOT have a path variable.</span>
+<span class="sd">    mptype : {&#39;adaptive&#39;, &#39;double&#39;, &#39;multiple&#39;}</span>
+<span class="sd">        The precision MODEL; &#39;adaptive&#39; (default) is the robust path.</span>
+<span class="sd">    precision : int, optional</span>
+<span class="sd">        The number of DIGITS, applied via ``bertini.default_precision`` at construction.  A string</span>
+<span class="sd">        here is the deprecated old spelling of ``mptype`` and warns.</span>
+<span class="sd">    endgame : {&#39;cauchy&#39;, &#39;powerseries&#39;}</span>
+
+<span class="sd">    Returns a solver: call ``.solve()`` then ``.all_solutions()`` as for any solver.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mptype</span> <span class="o">=</span> <span class="n">_precision_model</span><span class="p">(</span><span class="n">mptype</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+    <span class="n">prec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;double&#39;</span><span class="p">:</span> <span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="s1">&#39;multiple&#39;</span><span class="p">:</span> <span class="s1">&#39;multiple&#39;</span><span class="p">,</span> <span class="s1">&#39;fixed_multiple&#39;</span><span class="p">:</span> <span class="s1">&#39;multiple&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;adaptive&#39;</span><span class="p">:</span> <span class="s1">&#39;adaptive&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mptype</span><span class="p">,</span> <span class="n">mptype</span><span class="p">)</span>
+    <span class="n">eg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cauchy&#39;</span><span class="p">:</span> <span class="s1">&#39;cauchy&#39;</span><span class="p">,</span> <span class="s1">&#39;powerseries&#39;</span><span class="p">:</span> <span class="s1">&#39;powerseries&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;power_series&#39;</span><span class="p">:</span> <span class="s1">&#39;powerseries&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">endgame</span><span class="p">,</span> <span class="n">endgame</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cls_name</span> <span class="o">=</span> <span class="n">_HOMOTOPY_SOLVER_CLASSES</span><span class="p">[(</span><span class="n">prec</span><span class="p">,</span> <span class="n">eg</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;HomotopySolver: unknown (mptype, endgame) = (</span><span class="si">{!r}</span><span class="s2">, </span><span class="si">{!r}</span><span class="s2">); &quot;</span>
+            <span class="s2">&quot;mptype in {{&#39;adaptive&#39;,&#39;double&#39;,&#39;multiple&#39;}}, endgame in {{&#39;cauchy&#39;,&#39;powerseries&#39;}}&quot;</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mptype</span><span class="p">,</span> <span class="n">endgame</span><span class="p">))</span>
+    <span class="n">solver_cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">,</span> <span class="n">cls_name</span><span class="p">)</span>
+    <span class="c1"># A frequent mix-up (issue #258): passing the start-point *solver* instead of its</span>
+    <span class="c1"># start *points*.  A solver is not iterable, so list(start_points) below would</span>
+    <span class="c1"># raise a cryptic &quot;object is not iterable&quot; naming an opaque class.  Catch it here and</span>
+    <span class="c1"># say what to do.  (A list / numpy array / tuple of vectors has no .all_solutions/.get_tracker.)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">start_points</span><span class="p">,</span> <span class="s1">&#39;all_solutions&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">start_points</span><span class="p">,</span> <span class="s1">&#39;get_tracker&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;HomotopySolver: start_points must be the actual start *points* (an iterable of &quot;</span>
+            <span class="s2">&quot;solution vectors), but a </span><span class="si">{}</span><span class="s2"> solver was passed.  Call its .solve() and then pass &quot;</span>
+            <span class="s2">&quot;its .all_solutions():</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;    start_solver.solve()</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;    nag_algorithm.HomotopySolver(homotopy, start_solver.all_solutions(), target)&quot;</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">start_points</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+    <span class="n">user_start</span> <span class="o">=</span> <span class="n">_pybnalag</span><span class="o">.</span><span class="n">UserStartSystem</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">start_points</span><span class="p">))</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">solver_cls</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">user_start</span><span class="p">,</span> <span class="n">homotopy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_HomotopySolverHolder</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">homotopy</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">user_start</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="user_homotopy">
+<a class="viewcode-back" href="../../detailed/_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.user_homotopy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">user_homotopy</span><span class="p">(</span><span class="n">homotopy</span><span class="p">,</span> <span class="n">start_points</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">endgame</span><span class="o">=</span><span class="s1">&#39;cauchy&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Thin forwarder to :func:`HomotopySolver`, kept for back-compatibility.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">HomotopySolver</span><span class="p">(</span><span class="n">homotopy</span><span class="p">,</span> <span class="n">start_points</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="n">mptype</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span> <span class="n">endgame</span><span class="o">=</span><span class="n">endgame</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="coefficient_parameter_homotopy">
+<a class="viewcode-back" href="../../detailed/_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.coefficient_parameter_homotopy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">coefficient_parameter_homotopy</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">generic</span><span class="p">,</span> <span class="n">path_variable</span><span class="o">=</span><span class="s1">&#39;t&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a parameter homotopy interpolating two systems of the same shape.</span>
+
+<span class="sd">    Returns H = (1 - t) * target + t * generic with ``t`` added as its path variable, so at t=1</span>
+<span class="sd">    it is ``generic`` (whose solutions are your start points) and at t=0 it is ``target``.  Pair</span>
+<span class="sd">    it with :func:`user_homotopy`: solve ``generic`` once, then reuse its solutions to move to</span>
+<span class="sd">    ``target`` (and to any number of further targets that share ``generic``)::</span>
+
+<span class="sd">        gen_solver = nag_algorithm.ZeroDimSolver(generic, mptype=&#39;adaptive&#39;)</span>
+<span class="sd">        gen_solver.solve()</span>
+<span class="sd">        H = nag_algorithm.coefficient_parameter_homotopy(target, generic)</span>
+<span class="sd">        solver = nag_algorithm.HomotopySolver(H, gen_solver.all_solutions(), target)</span>
+<span class="sd">        solver.solve()</span>
+
+<span class="sd">    ``target`` and ``generic`` must be built over the SAME variable objects (the interpolation</span>
+<span class="sd">    combines their function trees).</span>
+
+<span class="sd">    For robustness the generic system&#39;s coefficients should be *generic* (random complex), so the</span>
+<span class="sd">    straight-line parameter path avoids the (measure-zero) singular locus.  This is the</span>
+<span class="sd">    no-gamma-trick member of the family; if ``generic`` is *structured* (e.g. a products-of-linears</span>
+<span class="sd">    start), it cannot be fused by System node arithmetic, so it is combined with a blend block --</span>
+<span class="sd">    the same machinery as :func:`blend_homotopy`, but with the start coefficient fixed at 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># H = (1-t)*target + 1*t*generic.  Delegating to make_homotopy with gamma = the constant 1</span>
+    <span class="c1"># (a) keeps the (1-t)/t semantics (no gamma trick) and (b) lets a structured-block ``generic``</span>
+    <span class="c1"># be blended rather than SILENTLY DROPPED by System node arithmetic, which only combines the</span>
+    <span class="c1"># polynomial block (see ADR-0020).</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bertini.symbolics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Integer</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bertini._pybertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">system</span> <span class="k">as</span> <span class="n">_system</span>
+    <span class="k">return</span> <span class="n">_system</span><span class="o">.</span><span class="n">make_homotopy</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">generic</span><span class="p">,</span> <span class="n">path_variable</span><span class="p">,</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="blend_homotopy">
+<a class="viewcode-back" href="../../detailed/_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.blend_homotopy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">blend_homotopy</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">path_variable</span><span class="o">=</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Form the gamma-trick homotopy H = (1-t)*target + gamma*t*start for a start system you built.</span>
+
+<span class="sd">    Unlike :func:`coefficient_parameter_homotopy` (node arithmetic, for two polynomial systems of the</span>
+<span class="sd">    same shape), this also works when ``start`` carries a *structured evaluation block* -- e.g. a</span>
+<span class="sd">    products-of-linears start system built with :meth:`~bertini.System.add_products_of_linears`.  Such</span>
+<span class="sd">    a block cannot be fused by node arithmetic, so the two systems are combined with a blend block</span>
+<span class="sd">    that evaluates whole Systems; this is the same construction the zero-dim solver uses internally</span>
+<span class="sd">    for its generated (total-degree / multihomogeneous) start systems.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : System</span>
+<span class="sd">        The system whose solutions you want, reached at t=0.</span>
+<span class="sd">    start : System</span>
+<span class="sd">        A start system you authored, whose (known) solutions are the start points.  At t=1 the</span>
+<span class="sd">        homotopy is ``gamma*start``, so those solutions are its roots.</span>
+<span class="sd">    path_variable : str</span>
+<span class="sd">        Name of the path variable t added to the homotopy (default ``&#39;t&#39;``).</span>
+<span class="sd">    gamma : node or None</span>
+<span class="sd">        The gamma coefficient.  ``None`` (default) draws a random rational gamma.  Pass an exact</span>
+<span class="sd">        node (e.g. from :func:`bertini.coefficient`) off the real axis for a reproducible path.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    System</span>
+<span class="sd">        The homotopy; pair it with :func:`user_homotopy` and your start points to solve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bertini._pybertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">system</span> <span class="k">as</span> <span class="n">_system</span>
+    <span class="k">return</span> <span class="n">_system</span><span class="o">.</span><span class="n">make_homotopy</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">path_variable</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="moving_homotopy">
+<a class="viewcode-back" href="../../detailed/_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.moving_homotopy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">moving_homotopy</span><span class="p">(</span><span class="n">fixed</span><span class="p">,</span> <span class="n">start_moving</span><span class="p">,</span> <span class="n">end_moving</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">path_variable</span><span class="o">=</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Form a homotopy that moves ONLY the moving rows, leaving the fixed system evaluated once.</span>
+
+<span class="sd">    The regeneration / moving-slice homotopy:</span>
+
+<span class="sd">        H = [ fixed&#39;s blocks ;  (1-t)*end_moving + gamma*t*start_moving ]</span>
+
+<span class="sd">    ``fixed`` holds the equations that do not move -- the polynomial system and any *static* linear</span>
+<span class="sd">    slices -- and stays as its own evaluation block(s); ``start_moving`` and ``end_moving`` hold just</span>
+<span class="sd">    the rows that move (a linear slice that slides, or a products-of-linears that deforms into a</span>
+<span class="sd">    polynomial), agreeing in function count and sharing ``fixed``&#39;s variable structure.  Only the</span>
+<span class="sd">    moving rows carry the path variable: the fixed blocks are evaluated once per point and contribute</span>
+<span class="sd">    zero to ``dH/dt`` as the moving rows slide -- the fixed system is never re-evaluated or scaled by</span>
+<span class="sd">    the path coefficient.</span>
+
+<span class="sd">    At t=1 the moving rows are ``gamma*start_moving`` (so the start points are the roots of ``fixed``</span>
+<span class="sd">    together with ``start_moving``); at t=0 they are ``end_moving``.  The fixed rows come first, then</span>
+<span class="sd">    the moving rows; build the matching ``target`` for :func:`user_homotopy` as ``fixed`` concatenated</span>
+<span class="sd">    with ``end_moving`` (e.g. via ``bertini.system.concatenate``).  ``gamma=None`` draws a random</span>
+<span class="sd">    rational gamma.</span>
+
+<span class="sd">    Returns the homotopy System; pair it with :func:`user_homotopy` and your start points to solve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bertini._pybertini</span><span class="w"> </span><span class="kn">import</span> <span class="n">system</span> <span class="k">as</span> <span class="n">_system</span>
+    <span class="k">return</span> <span class="n">_system</span><span class="o">.</span><span class="n">make_moving_homotopy</span><span class="p">(</span><span class="n">fixed</span><span class="p">,</span> <span class="n">start_moving</span><span class="p">,</span> <span class="n">end_moving</span><span class="p">,</span> <span class="n">path_variable</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parameter_sweep">
+<a class="viewcode-back" href="../../detailed/_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.parameter_sweep">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parameter_sweep</span><span class="p">(</span><span class="n">make_system</span><span class="p">,</span> <span class="n">generic_parameters</span><span class="p">,</span> <span class="n">target_parameters</span><span class="p">,</span>
+                    <span class="o">*</span><span class="p">,</span> <span class="n">collect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="s1">&#39;adaptive&#39;</span><span class="p">,</span> <span class="n">endgame</span><span class="o">=</span><span class="s1">&#39;cauchy&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve a whole family of systems that differ only in their coefficients.</span>
+
+<span class="sd">    This is the *parameter homotopy* workhorse: pay for the hard ab-initio solve **once**, at a</span>
+<span class="sd">    generic parameter value, then reach every parameter point you actually care about by cheap</span>
+<span class="sd">    tracking that reuses those start solutions.  It is also the unit of parallelism -- the points</span>
+<span class="sd">    are independent, so pass an MPI communicator and the sweep spreads across the ranks for you.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    make_system : callable</span>
+<span class="sd">        ``make_system(parameters) -&gt; bertini.System``.  Must return systems of the SAME shape</span>
+<span class="sd">        every call -- same variables and same monomials -- with only the coefficient *values*</span>
+<span class="sd">        depending on ``parameters``.  (Until first-class coefficient parameters land, this factory</span>
+<span class="sd">        is how you say &quot;the same system at a different parameter value&quot;.)</span>
+<span class="sd">    generic_parameters</span>
+<span class="sd">        The parameter value for the one-time generic solve.  For robustness this should be</span>
+<span class="sd">        *generic* -- random complex values -- so the straight-line coefficient path to each target</span>
+<span class="sd">        avoids the measure-zero singular locus.</span>
+<span class="sd">    target_parameters : iterable</span>
+<span class="sd">        The parameter values you want solved.  Results line up with this order.</span>
+<span class="sd">    collect : callable, optional</span>
+<span class="sd">        ``collect(solver) -&gt; value``.  If given, each solved point is reduced to ``collect(solver)``</span>
+<span class="sd">        and the return is the list of those values (instead of the solvers).  **Required** when</span>
+<span class="sd">        ``comm`` is given -- solver objects cannot cross MPI ranks, so what is gathered must be a</span>
+<span class="sd">        picklable value (e.g. a solution count, or ``solver.to_dataframe()``).</span>
+<span class="sd">    comm : mpi4py communicator, optional</span>
+<span class="sd">        If given, ``target_parameters`` is split across the ranks (each rank solves the generic</span>
+<span class="sd">        once, then tracks its slice -- with the path tracking inside each solve threaded across the</span>
+<span class="sd">        rank&#39;s cores via ``OMP_NUM_THREADS``).  The collected results are gathered and **every rank</span>
+<span class="sd">        returns the full list in the original order**.  This is the two-level model: MPI across</span>
+<span class="sd">        parameter points, threads across paths -- one extra argument, no manual scatter/gather.</span>
+<span class="sd">    mptype, endgame</span>
+<span class="sd">        Passed through to the solves (see :func:`ZeroDim`).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list, one entry per ``target_parameters``: the solved :class:`ZeroDim` solvers, or -- if</span>
+<span class="sd">    ``collect`` is given -- the ``collect(solver)`` values.  A solver exposes ``.all_solutions()``,</span>
+<span class="sd">    ``.solution_metadata()`` and ``.to_dataframe()`` (let the solver do the real/finite</span>
+<span class="sd">    classification -- don&#39;t redo it by hand).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Serial / threaded (threads are automatic -- a solve uses all cores by default)::</span>
+
+<span class="sd">        solvers = parameter_sweep(make_system, generic, targets)</span>
+<span class="sd">        counts  = [positive_real_count(s) for s in solvers]</span>
+
+<span class="sd">    Across MPI ranks, threads within -- the user-facing MPI code is just ``comm=`` and ``collect=``::</span>
+
+<span class="sd">        from mpi4py import MPI</span>
+<span class="sd">        counts = parameter_sweep(make_system, generic, targets,</span>
+<span class="sd">                                 collect=positive_real_count, comm=MPI.COMM_WORLD)</span>
+<span class="sd">        # every rank now holds the full `counts` list, in `targets` order</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">target_parameters</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">comm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">collect</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;parameter_sweep(comm=...) needs collect=&lt;solver -&gt; picklable value&gt;: &quot;</span>
+                         <span class="s2">&quot;solver objects cannot be gathered across MPI ranks.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">comm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">my_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">my_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">comm</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">),</span> <span class="n">comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">())</span>
+
+    <span class="n">generic</span> <span class="o">=</span> <span class="n">make_system</span><span class="p">(</span><span class="n">generic_parameters</span><span class="p">)</span>
+    <span class="n">gen_solver</span> <span class="o">=</span> <span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">generic</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="n">mptype</span><span class="p">,</span> <span class="n">endgame</span><span class="o">=</span><span class="n">endgame</span><span class="p">)</span>
+    <span class="n">gen_solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+    <span class="n">start_points</span> <span class="o">=</span> <span class="n">gen_solver</span><span class="o">.</span><span class="n">all_solutions</span><span class="p">()</span>
+
+    <span class="n">local</span> <span class="o">=</span> <span class="p">[]</span>   <span class="c1"># (index, solver-or-collected) for this rank&#39;s slice, in index order</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">my_indices</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">make_system</span><span class="p">(</span><span class="n">targets</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">coefficient_parameter_homotopy</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">generic</span><span class="p">)</span>
+        <span class="n">solver</span> <span class="o">=</span> <span class="n">HomotopySolver</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">start_points</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">mptype</span><span class="o">=</span><span class="n">mptype</span><span class="p">,</span> <span class="n">endgame</span><span class="o">=</span><span class="n">endgame</span><span class="p">)</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+        <span class="n">local</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">collect</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span> <span class="k">if</span> <span class="n">collect</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">solver</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">comm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">value</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">local</span><span class="p">]</span>
+
+    <span class="c1"># Gather every rank&#39;s (index, value) pairs and reassemble in the original target order, so</span>
+    <span class="c1"># every rank returns the same full list.</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span><span class="n">local</span><span class="p">):</span>
+        <span class="n">merged</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">chunk</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">merged</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">))]</span></div>
+
+
+
+<span class="c1"># --- SolutionPathCollector: collect every solution path of a whole solve, for plotting ---</span>
+<span class="c1">#</span>
+<span class="c1"># A two-level meta-observer.  Attach one to a ZeroDim solver; on each PathStarted it spins</span>
+<span class="c1"># up a fresh tracking PathDataCollector, attaches it to the solver&#39;s tracker, and on the</span>
+<span class="c1"># matching PathComplete harvests it into .series and detaches it.  Because the solver reuses</span>
+<span class="c1"># one tracker for a path&#39;s main homotopy track AND its endgame sub-tracks, the per-path</span>
+<span class="c1"># collector captures the *whole* journey to t -&gt; 0 -- one clean series per solution path,</span>
+<span class="c1"># endgame included (no start-time filtering needed).</span>
+<div class="viewcode-block" id="SolutionPathCollector">
+<a class="viewcode-back" href="../../detailed/api.html#bertini.nag_algorithm.SolutionPathCollector">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SolutionPathCollector</span><span class="p">(</span><span class="n">_pybnalag</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">CustomObserver</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collects each solution path of a ZeroDim solve into its own time series.</span>
+
+<span class="sd">    Usage::</span>
+
+<span class="sd">        a = SolutionPathCollector()</span>
+<span class="sd">        solver.add_observer(a)</span>
+<span class="sd">        solver.solve()</span>
+<span class="sd">        for path in a.series:          # one tracking.PathDataCollector per solution path</span>
+<span class="sd">            t, z = path.times(), path.points()</span>
+<span class="sd">            ...</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SolutionPathCollector.__init__">
+<a class="viewcode-back" href="../../detailed/api.html#bertini.nag_algorithm.SolutionPathCollector.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">series</span> <span class="o">=</span> <span class="p">[]</span>        <span class="c1"># finished PathDataCollector per solution path, in completion order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active</span> <span class="o">=</span> <span class="p">{}</span>       <span class="c1"># path_index -&gt; (tracker, collector)</span></div>
+
+
+<div class="viewcode-block" id="SolutionPathCollector.Observe">
+<a class="viewcode-back" href="../../detailed/api.html#bertini.nag_algorithm.SolutionPathCollector.Observe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">_pybnalag</span><span class="o">.</span><span class="n">observers</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">PathStarted</span><span class="p">):</span>
+            <span class="c1"># event.tracker() is the tracker that ACTUALLY runs this path: the solver&#39;s member</span>
+            <span class="c1"># tracker in a serial solve, or the thread-local clone in a threaded solve.  Attaching</span>
+            <span class="c1"># here (rather than to event.solver().get_tracker()) is what makes per-path collection</span>
+            <span class="c1"># work identically with and without threads -- under threading the member tracker runs</span>
+            <span class="c1"># nothing, so collecting from it would silently yield empty series.</span>
+            <span class="n">tracker</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">tracker</span><span class="p">()</span>
+            <span class="c1"># tracker.observers is the precision-appropriate module (set in bertini.tracking)</span>
+            <span class="n">collector</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">PathDataCollector</span><span class="p">()</span>
+            <span class="n">collector</span><span class="o">.</span><span class="n">path_index</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">path_index</span><span class="p">()</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">collector</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_active</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">path_index</span><span class="p">()]</span> <span class="o">=</span> <span class="p">(</span><span class="n">tracker</span><span class="p">,</span> <span class="n">collector</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">PathComplete</span><span class="p">):</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">path_index</span><span class="p">(),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tracker</span><span class="p">,</span> <span class="n">collector</span> <span class="o">=</span> <span class="n">entry</span>
+                <span class="n">tracker</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">collector</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">collector</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">_pybnalag</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">SolutionPathCollector</span> <span class="o">=</span> <span class="n">SolutionPathCollector</span>
+
+
+<span class="c1"># NID (numerical irreducible decomposition) is framework scaffolding whose Solve() is not yet</span>
+<span class="c1"># implemented, and its witness-set datatypes ride with it -- hide them from the public surface</span>
+<span class="c1"># (import * / tab-completion / docs) until it works.  They stay importable by explicit name.</span>
+<span class="n">_HIDDEN</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s1">&#39;NID&#39;</span><span class="p">,</span> <span class="s1">&#39;NumericalIrreducibleDecomposition&#39;</span><span class="p">,</span> <span class="s1">&#39;WitnessSet&#39;</span><span class="p">)))</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">_pybnalag</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_HIDDEN</span><span class="p">]</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;ZeroDimSolver&#39;</span><span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;HomotopySolver&#39;</span><span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;user_homotopy&#39;</span><span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;coefficient_parameter_homotopy&#39;</span><span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;parameter_sweep&#39;</span><span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;moving_homotopy&#39;</span><span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;blend_homotopy&#39;</span><span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;SolutionPathCollector&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># DoublePrecisionTotalDegree = bertini._pybertini.nag_algorithms.ZeroDimCauchyDoublePrecisionTotalDegree</span>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+  
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2015-2026, Bertini Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+  
+  <div class="build-info" style="margin-top: 0.75rem; font-size: var(--font-size--small); color: var(--color-foreground-muted);">
+    Built from
+    <a href="https://github.com/bertiniteam/b2/commit/40f953d0aa640bba0b57dbbe838bcd6475473c12"><code>40f953d</code></a> on 2026-07-13 21:17 UTC.
+  </div>
+  
+
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=ad389f6d"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
