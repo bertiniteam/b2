@@ -67,6 +67,27 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.3.1] - 2026-07-12
+
+A bindings-robustness patch.
+
+### Fixed
+
+- **Storing a multiprecision complex into a real numpy array no longer crashes the
+  interpreter** (#336). Assigning a `complex_mp` that carries a nonzero imaginary part into a
+  `float64` array — e.g. `M = np.zeros(...); M[i, j] = solver.real_solutions()[k][0]`, whose
+  solution coordinates carry ~1e-13 imaginary noise — routed through a `complex_mp → double`
+  cast that threw a C++ exception (`"Could not convert imaginary number to scalar."`) *out of*
+  numpy's C cast loop, calling `std::terminate()` → SIGABRT. The cast now mirrors numpy's
+  builtin `complex128 → float64` behavior (keep the real part, discard the imaginary part).
+  See ADR-0055.
+
+### Internal
+
+- The `eigenpy_numpy` numpy-interop test suite was never collected by pytest (its filename
+  matched neither `test_*.py` nor `*_test.py`); renamed to `eigenpy_numpy_test.py` so it runs,
+  and added regression coverage for the mp → narrower-dtype casts.
+
 ## [3.3.0] - 2026-07-12
 
 A large pass on the symbolic and solve/result ergonomics: symbolic substitution and
