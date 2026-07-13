@@ -36,6 +36,7 @@ Run standalone:  python monodromy_loom.py
 
 import math
 import os
+from fractions import Fraction
 
 import numpy as np
 
@@ -58,58 +59,49 @@ _BG = '#05060a'
 
 # --- the engine: bake the whole parameter loop into one homotopy --------------------------------
 #
-# Node arithmetic promotes ints, exposes the exact constants bertini.Pi and bertini.I, and honours
-# ** -- so the tree is written almost verbatim: x**degree, 2*bertini.Pi, bertini.I.  The one thing
-# the library will not do implicitly is turn a Python float/complex into a coefficient (a 16-digit
-# literal would silently cap the arbitrary-precision tree), so a float parameter goes through its
-# exact decimal string via _const.
+# Every constant here is EXACT and nothing reaches for a float: the loop parameters are rationals
+# (fractions.Fraction) and the phase is a rational multiple of pi.  Node arithmetic promotes ints,
+# exposes the exact constants bertini.Pi and bertini.I, honours **, and bertini.coefficient accepts
+# exact values -- so the homotopy is written verbatim, with no coercion to defeat.
 
-def _const(z):
-    """An exact constant node from a Python number, via coefficient's exact-string path: a real
-    number -> its decimal; a complex -> re + im * bertini.I."""
-    z = complex(z)
-    node = bertini.coefficient(repr(z.real))
-    return node if z.imag == 0 else node + bertini.coefficient(repr(z.imag)) * bertini.I
+def _c_of_theta(theta, center, radius):
+    """The loop's moving coefficient c = center + radius * (cos theta + i sin theta), as a node.
+    ``center`` / ``radius`` are exact (int or fractions.Fraction); ``theta`` is a node."""
+    return (bertini.coefficient(center)
+            + bertini.coefficient(radius) * (bertini.cos(theta) + bertini.I * bertini.sin(theta)))
 
-def loom_homotopy(degree, center, radius, phi):
-    """H(x, t) = x^d - d*x - c(t),  c(t) = center + radius*exp(i*(theta + phi)),  theta = 2pi(1-t).
+def loom_homotopy(degree, center, radius, phi_over_pi):
+    """H(x, t) = x^d - d*x - c(t),  c(t) = center + radius*exp(i*(theta + phi)),
+    theta = 2pi(1-t),  phi = phi_over_pi * pi.
 
-    At t=1 theta=0 (the start configuration); at t=0 theta=2pi (the loop has closed).  Tracking a
-    root of the start configuration from t=1 to t=0 carries it once around the loop.
+    At t=1 theta=phi (the start configuration); at t=0 the loop has closed.  Tracking a root of the
+    start configuration from t=1 to t=0 carries it once around the loop.
     """
     x = bertini.Variable('x')
     t = bertini.Variable('t')
-    theta = 2 * bertini.Pi * (1 - t) + _const(phi)
-    c_t = _const(center) + _const(radius) * (bertini.cos(theta) + bertini.I * bertini.sin(theta))
+    theta = 2 * bertini.Pi * (1 - t) + bertini.coefficient(phi_over_pi) * bertini.Pi
     sys = bertini.System()
-    sys.add_function(x**degree - degree * x - c_t)
+    sys.add_function(x**degree - degree * x - _c_of_theta(theta, center, radius))
     sys.add_path_variable(t)
     sys.add_variable_group(bertini.VariableGroup([x]))
     return sys
 
-def start_configuration(degree, center, radius, phi):
-    """The roots of the start configuration f(x) = x^d - d*x - c0, c0 = c(theta=0)."""
-    c0 = center + radius * complex(math.cos(phi), math.sin(phi))
+def start_configuration(degree, center, radius, phi_over_pi):
+    """The roots of the start configuration f(x) = x^d - d*x - c(t=1), where theta = phi at t=1."""
     x = bertini.Variable('x')
+    theta_start = bertini.coefficient(phi_over_pi) * bertini.Pi
     sys = bertini.System()
     sys.add_variable_group(bertini.VariableGroup([x]))
-    sys.add_function(x**degree - degree * x - _const(c0))
+    sys.add_function(x**degree - degree * x - _c_of_theta(theta_start, center, radius))
     solver = bertini.nag_algorithm.ZeroDimSolver(sys, mptype='adaptive')
     solver.solve()
     return [complex(s[0]) for s in solver.all_solutions()]
 
-def branch_values(degree):
-    """The (d-1) branch values of x^d - d*x - c: c = x^d - d*x at each critical point (the
-    (d-1)-th roots of unity, where d*x^{d-1} - d = 0).  All share one modulus."""
-    crit = [complex(math.cos(2 * math.pi * k / (degree - 1)),
-                    math.sin(2 * math.pi * k / (degree - 1))) for k in range(degree - 1)]
-    return [z**degree - degree * z for z in crit]
-
-def track_loop(degree, center, radius, phi, tol=1e-10):
+def track_loop(degree, center, radius, phi_over_pi, tol=1e-10):
     """Track every strand once around the loop.  Returns a list of per-strand dicts with the loop
     angle ``theta``, the complex position ``x``, and the tracker diagnostics along the path."""
-    H = loom_homotopy(degree, center, radius, phi)
-    roots = start_configuration(degree, center, radius, phi)
+    H = loom_homotopy(degree, center, radius, phi_over_pi)
+    roots = start_configuration(degree, center, radius, phi_over_pi)
 
     tracker = bertini.AMPTracker(H)
     tracker.setup(bertini.tracking.Predictor.RK4, tol, 1e6,
@@ -224,11 +216,11 @@ def render(strands, out, title, subtitle):
 def teaching_frame(out):
     """x^3 - 3x - c: a loop around ONE branch point (c = +2) -> a single transposition."""
     bertini.random.set_random_seed(1)     # deterministic start-root ordering -> stable render
-    # branch points at c = +/-2; put the loop centre right of +2 so it encircles +2, excludes -2,
-    # and its closest approach (the pinch) lands at theta = pi, mid-loop.
-    radius, graze = 1.5, 0.02
-    center = 2.0 + (radius - graze)
-    strands, _ = track_loop(3, complex(center, 0.0), radius, phi=0.0)
+    # x^d - d*x has branch points at c = +/-(d-1); for d=3 that is +/-2.  Centre the loop right of
+    # +2 so it encircles +2, excludes -2, and its closest approach (the pinch) is at theta = pi.
+    graze, radius = Fraction(1, 50), Fraction(3, 2)     # 0.02, 1.5
+    center = (3 - 1) + (radius - graze)                 # 2 + (radius - graze)
+    strands, _ = track_loop(3, center, radius, phi_over_pi=0)
     render(strands, out,
            'The Monodromy Loom — teaching case:  $x^3 - 3x - c$',
            'loop one branch point  →  two roots SWAP (a transposition); the third rides straight')
@@ -236,8 +228,8 @@ def teaching_frame(out):
 def showpiece_frame(out):
     """x^5 - 5x - c: a loop around ALL FOUR branch points -> a full 5-cycle, four pinches."""
     bertini.random.set_random_seed(1)     # deterministic start-root ordering -> stable render
-    radius = abs(branch_values(5)[0]) + 0.15       # circle |c| = R just outside the branch orbit
-    strands, _ = track_loop(5, 0.0 + 0.0j, radius, phi=math.pi / 4)   # phi keeps pinches off the seam
+    radius = (5 - 1) + Fraction(3, 20)     # circle |c| = R just outside the branch orbit |c| = 4
+    strands, _ = track_loop(5, 0, radius, phi_over_pi=Fraction(1, 4))   # phi = pi/4 keeps pinches off the seam
     render(strands, out,
            'The Monodromy Loom — showpiece:  $x^5 - 5x - c$',
            'loop encircles four branch points  →  a full 5-cycle; four pinches where the tracker sweats')
