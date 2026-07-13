@@ -231,6 +231,7 @@ def render(strands, out, title, subtitle):
 
 def teaching_frame(out):
     """x^3 - 3x - c: a loop around ONE branch point (c = +2) -> a single transposition."""
+    bertini.random.set_random_seed(1)     # deterministic start-root ordering -> stable render
     # branch points at c = +/-2; put the loop centre right of +2 so it encircles +2, excludes -2,
     # and its closest approach (the pinch) lands at theta = pi, mid-loop.
     radius, graze = 1.5, 0.02
@@ -242,6 +243,7 @@ def teaching_frame(out):
 
 def showpiece_frame(out):
     """x^5 - 5x - c: a loop around ALL FOUR branch points -> a full 5-cycle, four pinches."""
+    bertini.random.set_random_seed(1)     # deterministic start-root ordering -> stable render
     radius = abs(branch_values(5)[0]) + 0.15       # circle |c| = R just outside the branch orbit
     strands, _ = track_loop(5, 0.0 + 0.0j, radius, phi=math.pi / 4)   # phi keeps pinches off the seam
     render(strands, out,
