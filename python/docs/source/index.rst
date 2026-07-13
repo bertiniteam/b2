@@ -16,6 +16,7 @@ The Python bindings for Bertini 2
    welcome
    tutorials/tutorials
    detailed/everyday
+   showpieces/index
 
 🏛 Reference materials
 ============================

@@ -40,6 +40,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 TUT = REPO / "python" / "docs" / "source" / "tutorials"
+SHOWPIECES = REPO / "python" / "docs" / "source" / "showpieces"
 EXAMPLES = REPO / "python" / "examples"
 
 # A fixed salt makes matplotlib's SVG element ids deterministic run-to-run (same matplotlib
@@ -111,6 +112,14 @@ def _plots():
              argv=["--plot", "{outdir}/chain_progression"],
              env={"BERTINI_RECORDS_DIR": "{tmpdir}"},
              note="records go to a scratch dir; only the drawn chain is the artifact"),
+        Plot("monodromy_loom",
+             SHOWPIECES / "monodromy_loom" / "monodromy_loom.py",
+             ["monodromy_loom.png", "monodromy_loom_teaching.png"],
+             note="showpiece: raster PNG only (a 3-D render has no meaningful SVG)"),
+        Plot("flight_recorder",
+             SHOWPIECES / "flight_recorder" / "flight_recorder.py",
+             ["flight_recorder.png", "flight_recorder_setup.png"],
+             note="showpiece: raster PNG only; tight-tolerance mult-35 solve -> slow (~1 min)"),
     ]
 
 
