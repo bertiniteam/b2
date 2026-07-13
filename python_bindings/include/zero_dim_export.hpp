@@ -380,11 +380,13 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 	.def("metadata_for",
 		// point taken BY VALUE (a copy from numpy) -- no writable Eigen::Ref, so the ADR-0001
 		// adjacent-scalar hazard does not apply.  tol defaults to a sentinel (<= 0): when the caller
-		// omits it, use the solver's own same-point tolerance so metadata_for(pt) Just Works on a point
-		// taken from the solver's own solution lists (the common case, issue's motivation).
+		// omits it, use the solver's own point-match tolerance (final_tolerance) so metadata_for(pt)
+		// Just Works on a point taken from the solver's own solution lists (the common case, issue's
+		// motivation).  Matching is against the multiplicity REPRESENTATIVES by default, so a fed-back
+		// solution point resolves to its representative and can never be reported ambiguous.
 		+[](AlgoT const& self,
 		    Vec<typename AlgoT::BaseComplexT> point,
-		    NumErrorT tol, bool coincident, bool user_coords) -> boost::python::object {
+		    NumErrorT tol, bool coincident, bool user_coords, bool representatives_only) -> boost::python::object {
 			if (tol <= 0.0)
 				tol = self.DefaultPointMatchTolerance();
 			if (coincident) {
@@ -392,25 +394,35 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 				for (auto const& m : self.CoincidentMetadataForPoint(point, tol, user_coords)) out.append(m);
 				return out;
 			}
-			return boost::python::object(self.MetadataForPoint(point, tol, user_coords));
+			return boost::python::object(self.MetadataForPoint(point, tol, user_coords, representatives_only));
 		},
 		(boost::python::arg("self"), boost::python::arg("point"), boost::python::arg("tol") = -1.0,
-		 boost::python::arg("coincident") = false, boost::python::arg("user_coords") = true),
+		 boost::python::arg("coincident") = false, boost::python::arg("user_coords") = true,
+		 boost::python::arg("representatives_only") = true),
 		"the SolutionMetaData for the solution matching `point` (issue #302).  Matches by the infinity-norm "
-		"tolerance `tol` (see is_distinct_up_to).  tol is OPTIONAL: omit it (or pass a non-positive value) "
-		"to use the solver's own same-point tolerance (final_tolerance * same_point_tolerance_multiplier, via "
-		"default_point_match_tolerance()), so `solver.metadata_for(pt)` Just Works for a `pt` taken straight "
-		"from solutions() / real_solutions() / etc.  The return type NEVER depends on the point's "
-		"multiplicity: by default returns exactly ONE record -- the multiplicity-cluster representative (it "
-		"carries .multiplicity, so you still learn m).  coincident=True instead ALWAYS returns a LIST of every "
-		"coincident copy's record (their per-path condition number / residual / precision), length 1 for a "
-		"simple root.  Raises if no solution matches, or if the point matches more than one distinct cluster "
-		"(reduce tol).  `point` is in user coordinates unless user_coords=False.  Accepts any numpy array of "
-		"the solver's complex type -- which is exactly what the solution lists return.")
+		"tolerance `tol` (see is_distinct_up_to) against the multiplicity REPRESENTATIVES -- one candidate per "
+		"distinct solution.  tol is OPTIONAL: omit it (or pass a non-positive value) to use "
+		"default_point_match_tolerance() (the solver's final_tolerance).  Because representatives are at least "
+		"the same-point tolerance apart and the default window is smaller, a `pt` taken straight from "
+		"solutions() / real_solutions() / etc. (which return representatives) matches its own representative "
+		"back and is NEVER reported ambiguous -- feed a solver result straight back in and it Just Works.  The "
+		"return type NEVER depends on the point's multiplicity: by default returns exactly ONE record -- the "
+		"multiplicity-cluster representative (it carries .multiplicity, so you still learn m).  coincident=True "
+		"instead ALWAYS returns a LIST of every coincident copy's record (their per-path condition number / "
+		"residual / precision), length 1 for a simple root.  representatives_only=False matches against EVERY "
+		"endpoint including non-representative multiplicity copies -- a debugging view, rarely what you want.  "
+		"Raises if no solution matches within tol, or (only for a deliberately coarse tol) if the point matches "
+		"more than one distinct cluster.  `point` is in user coordinates unless user_coords=False.  Accepts any "
+		"numpy array of the solver's complex type -- which is exactly what the solution lists return.")
 	.def("default_point_match_tolerance", &AlgoT::DefaultPointMatchTolerance,
-		"the default infinity-norm tolerance metadata_for() uses when you omit `tol`: the solver's own "
-		"same-point tolerance (final_tolerance * same_point_tolerance_multiplier), the same one that clusters "
-		"coincident endpoints into multiplicities.")
+		"the default infinity-norm tolerance metadata_for() uses when you omit `tol`: the solver's "
+		"final_tolerance (the accuracy each endpoint is computed to).  Since metadata_for matches against "
+		"representatives -- which are at least the same-point clustering tolerance apart -- this tight default "
+		"still resolves a fed-back solution to itself while making an ambiguous match structurally impossible.")
+	.def("same_point_tolerance", &AlgoT::SamePointTolerance,
+		"the same-point (clustering) tolerance, final_tolerance * same_point_tolerance_multiplier: the looser "
+		"tolerance the solver uses to decide two endpoints are the SAME solution and cluster them into one "
+		"multiplicity (and that metadata_for(coincident=True) uses to gather a cluster's copies).")
 	.def("endgame_boundary_solutions", &AlgoT::EndgameBoundarySolutions, return_internal_reference<>(), "get the solutions (per-path point data) at the endgame boundary, where regular tracking switches to the endgame")
 	.def("endgame_boundary_metadata", &AlgoT::EndgameBoundaryMetadata, return_internal_reference<>(), "get the MidpathCheckReport from the path-crossing check at the endgame boundary: how many crossings were detected, which paths, how many re-track attempts were made, and whether the check ultimately passed")
 	.def("report", &AlgoT::Report, "a concise end-of-solve diagnostic summary (a SolveReport): how every path ended up -- finite solutions, diverged, or FAILED (by named reason) -- plus singular/real counts, max condition number, the path-crossing outcome, and all_paths_resolved.  print(solver.report()) for a human-readable summary; a count alone can hide a path the tracker silently lost.")

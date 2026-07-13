@@ -754,15 +754,31 @@ BOOST_AUTO_TEST_CASE(merge_multiplicities_and_metadata_for_point)
 	// coincident=true: every copy in the cluster (all four coincident endpoints).
 	BOOST_CHECK_EQUAL(zd.CoincidentMetadataForPoint(pt, 1e-5).size(), 4u);
 
-	// DefaultPointMatchTolerance is exactly the solver's same-point tolerance (final_tolerance *
-	// same_point_tolerance_multiplier) -- the default the binding uses when a caller omits tol, so a
-	// solution taken from the solver's own lists matches itself back with no explicit tolerance.
-	auto const expected_tol =
-		zd.Get<algorithm::TolerancesConfig>().final_tolerance *
-		zd.Get<algorithm::PostProcessingConfig>().same_point_tolerance_multiplier;
-	BOOST_CHECK_EQUAL(zd.DefaultPointMatchTolerance(), expected_tol);
+	// The default point-match tolerance is the solver's final_tolerance (the accuracy each endpoint is
+	// computed to) -- NOT the looser same-point clustering tolerance.  metadata_for matches against
+	// representatives, which are at least SamePointTolerance apart, so this tight default still resolves
+	// a fed-back solution to itself while making an ambiguous match structurally impossible.
+	BOOST_CHECK_EQUAL(zd.DefaultPointMatchTolerance(),
+	                  zd.Get<algorithm::TolerancesConfig>().final_tolerance);
+	BOOST_CHECK_EQUAL(zd.SamePointTolerance(),
+	                  zd.Get<algorithm::TolerancesConfig>().final_tolerance *
+	                  zd.Get<algorithm::PostProcessingConfig>().same_point_tolerance_multiplier);
+
+	// the round-trip: a solution fed straight back resolves to its representative, at the default AND at
+	// a tolerance far TIGHTER than the same-point clustering tolerance (regression: a tight tol used to
+	// be able to split a scattered singular cluster and report a spurious ambiguity).
 	auto const rep_default = zd.MetadataForPoint(pt, zd.DefaultPointMatchTolerance());
+	BOOST_CHECK(rep_default.multiplicity_representative);
 	BOOST_CHECK_EQUAL(rep_default.multiplicity, 4);
+	auto const rep_tight = zd.MetadataForPoint(pt, 1e-13);
+	BOOST_CHECK(rep_tight.multiplicity_representative);
+	BOOST_CHECK_EQUAL(rep_tight.multiplicity, 4);
+
+	// representatives_only=false: matching against every endpoint (incl. non-representative copies)
+	// still resolves -- the debugging view.
+	auto const rep_all = zd.MetadataForPoint(pt, zd.DefaultPointMatchTolerance(), /*user_coords=*/true,
+	                                         /*representatives_only=*/false);
+	BOOST_CHECK_EQUAL(rep_all.multiplicity, 4);
 
 	// a point matching nothing throws.
 	auto far = pt;

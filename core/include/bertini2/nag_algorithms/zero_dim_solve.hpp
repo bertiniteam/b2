@@ -1323,14 +1323,32 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			/**
 			\brief The default point-match tolerance for MetadataForPoint / CoincidentMetadataForPoint.
 
-			The solver's OWN same-point tolerance -- ``final_tolerance * same_point_tolerance_multiplier``,
-			the very tolerance ComputeMultiplicities uses to cluster coincident endpoints.  Using it as the
-			match default means a point taken straight from this solver's own solution lists (solutions(),
-			real_solutions(), ...) matches itself back, and matches no OTHER cluster (the solver already
-			deemed distinct clusters at least this far apart).  Returned as \ref NumErrorT, the error/tolerance
-			type (currently an alias for double), matching \ref IsDistinct -- not a bare double.
+			The solver's ``final_tolerance`` -- the accuracy each endpoint is computed to.  This is the right
+			scale for "does this point equal that solution", and it is deliberately NOT the (looser)
+			same-point clustering tolerance (\ref SamePointTolerance).  MetadataForPoint matches against the
+			multiplicity REPRESENTATIVES, which are at least SamePointTolerance apart by construction; since
+			``final_tolerance`` is that divided by ``same_point_tolerance_multiplier`` (>= 1), a match window
+			this size holds at most one representative -- so a point taken straight from this solver's own
+			solution lists (solutions(), real_solutions(), ..., which return representatives by default)
+			matches its own representative back and can never be reported ambiguous.  Returned as
+			\ref NumErrorT, the error/tolerance type (an alias for double), matching \ref IsDistinct.
+			\see SamePointTolerance
 			*/
 			NumErrorT DefaultPointMatchTolerance() const
+			{
+				return this->template Get<Tolerances>().final_tolerance;
+			}
+
+			/**
+			\brief The same-point (clustering) tolerance: ``final_tolerance * same_point_tolerance_multiplier``.
+
+			The tolerance ComputeMultiplicities uses to decide two endpoints are the SAME solution and cluster
+			them into one multiplicity.  Looser than \ref DefaultPointMatchTolerance on purpose: distinct
+			paths to a single (especially singular) solution land farther apart than one endpoint's own
+			accuracy.  CoincidentMetadataForPoint uses it to gather all copies of a matched cluster.
+			\see DefaultPointMatchTolerance
+			*/
+			NumErrorT SamePointTolerance() const
 			{
 				return this->template Get<Tolerances>().final_tolerance *
 				       this->template Get<PostProcessing>().same_point_tolerance_multiplier;
@@ -1346,24 +1364,38 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			more than one distinct cluster (reduce \p tol).
 
 			\param point The point to look up, in user (dehomogenized) coordinates unless \p user_coords is false.
-			\param tol The infinity-norm match tolerance.
+			\param tol The infinity-norm match tolerance.  Defaults (via the binding sentinel) to
+			           \ref DefaultPointMatchTolerance.
 			\param user_coords Whether \p point is in user coordinates (else the solver's internal coordinates).
+			\param representatives_only Match \p point only against the multiplicity representatives (the
+			           default -- one candidate per distinct solution, so a point fed back from the solver's
+			           own solution lists resolves to its representative and never reports ambiguity).  Pass
+			           false to match against EVERY endpoint including non-representative multiplicity copies
+			           -- a debugging view, not the usual case.
 			\see CoincidentMetadataForPoint
 			*/
-			SolutionMetaDataT MetadataForPoint(Vec<BaseComplexT> const& point, NumErrorT tol, bool user_coords = true) const
+			SolutionMetaDataT MetadataForPoint(Vec<BaseComplexT> const& point, NumErrorT tol,
+			                                   bool user_coords = true, bool representatives_only = true) const
 			{
 				auto const& sols = user_coords ? SolutionsUserCoords() : SolutionsInternalCoords();
 				auto const& md   = SolutionMetadata();
 
 				std::vector<size_t> matches;
 				for (size_t i = 0; i < md.size() && i < sols.size(); ++i)
+				{
+					if (representatives_only && !md[i].multiplicity_representative)
+						continue;
 					if (!bertini::IsDistinct(sols[i], point, tol))
 						matches.push_back(i);
+				}
 
 				if (matches.empty())
 					throw std::runtime_error("metadata_for: no solution matches the given point within tol");
 
 				// More than one representative among the matches => tol grouped two distinct clusters.
+				// With representatives_only (the default) and the default tol this cannot happen -- distinct
+				// representatives are at least SamePointTolerance apart and the window is smaller -- so it
+				// only fires for a deliberately coarse user-supplied tol, where it is the honest answer.
 				std::vector<size_t> reps;
 				for (auto i : matches)
 					if (md[i].multiplicity_representative)
@@ -1372,8 +1404,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					throw std::runtime_error("metadata_for: the point matches more than one distinct solution cluster; reduce tol");
 				if (reps.size() == 1)
 					return md[reps.front()];
-				// The representative itself fell just outside tol but its duplicates matched; return a
-				// matched record (it still carries the cluster's multiplicity).
+				// No representative matched (only reachable with representatives_only=false, when the point
+				// is a non-representative copy whose representative fell outside tol); return the matched
+				// copy's own record (it still carries the cluster's multiplicity).
 				return md[matches.front()];
 			}
 
@@ -1382,10 +1415,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 			Like MetadataForPoint, but returns EVERY coincident copy's record -- their individual per-path
 			diagnostics (condition number, residual, precision) -- ALWAYS as a list (length 1 for a simple
-			root).  Throws if no solution matches.
+			root).  The point is matched to its cluster REPRESENTATIVE (nearest representative within \p tol,
+			like MetadataForPoint), then the whole cluster is gathered: every endpoint within
+			\ref SamePointTolerance of that representative -- i.e. exactly the paths ComputeMultiplicities
+			grouped together.  So the returned count is the multiplicity, independent of \p tol.  Throws if no
+			representative matches within \p tol.
 
 			\param point The point to look up.
-			\param tol The infinity-norm match tolerance.
+			\param tol The infinity-norm match tolerance for finding the cluster's representative.
 			\param user_coords Whether \p point is in user coordinates.
 			\see MetadataForPoint
 			*/
@@ -1393,12 +1430,28 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			{
 				auto const& sols = user_coords ? SolutionsUserCoords() : SolutionsInternalCoords();
 				auto const& md   = SolutionMetadata();
+
+				// Find the representative NEAREST the point (within tol).  Nearest, not "all within tol", so
+				// the cluster is identified unambiguously even for a coarse tol.
+				size_t rep = md.size();
+				NumErrorT best = std::numeric_limits<NumErrorT>::infinity();
+				for (size_t i = 0; i < md.size() && i < sols.size(); ++i)
+				{
+					if (!md[i].multiplicity_representative)
+						continue;
+					NumErrorT d = static_cast<NumErrorT>((sols[i] - point).template lpNorm<Eigen::Infinity>());
+					if (d <= tol && d < best) { best = d; rep = i; }
+				}
+				if (rep == md.size())
+					throw std::runtime_error("metadata_for: no solution matches the given point within tol");
+
+				// Gather the whole cluster: every endpoint the solver deemed the same solution as the
+				// representative (within the same-point clustering tolerance).
+				const NumErrorT same_tol = SamePointTolerance();
 				std::vector<SolutionMetaDataT> out;
 				for (size_t i = 0; i < md.size() && i < sols.size(); ++i)
-					if (!bertini::IsDistinct(sols[i], point, tol))
+					if (!bertini::IsDistinct(sols[i], sols[rep], same_tol))
 						out.push_back(md[i]);
-				if (out.empty())
-					throw std::runtime_error("metadata_for: no solution matches the given point within tol");
 				return out;
 			}
 
@@ -2040,9 +2093,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			*/
 			void ComputeMultiplicities()
 			{
-				const NumErrorT same_tol =
-					this->template Get<Tolerances>().final_tolerance *
-					this->template Get<PostProcessing>().same_point_tolerance_multiplier;
+				const NumErrorT same_tol = this->SamePointTolerance();
 
 				std::vector<Vec<BaseComplexT>> user_pts(num_start_points_);
 				std::vector<char> eligible(num_start_points_, 0);
