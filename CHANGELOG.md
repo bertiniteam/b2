@@ -67,6 +67,30 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.3.2] - 2026-07-13
+
+A `metadata_for` robustness patch: feed a solver result straight back in and it resolves.
+
+### Fixed
+
+- **`metadata_for(point)` no longer reports a spurious "more than one distinct solution cluster"
+  for a point taken from the solver's own results** (#338).  It now matches against the multiplicity
+  REPRESENTATIVES (one per distinct solution) rather than the complete set of coincident copies, and
+  defaults the match tolerance to `final_tolerance` (the accuracy each endpoint is computed to) instead
+  of the looser same-point clustering tolerance.  Because representatives are at least the same-point
+  tolerance apart, a `final_tolerance` window holds at most one — so a solution fed straight back
+  resolves to its representative (carrying its `.multiplicity`) and can never be called ambiguous, even
+  at a tolerance far tighter than the clustering scale.  This bit hardest on singular points.  See
+  ADR-0056.
+
+### Added
+
+- **`solver.same_point_tolerance()`** — the clustering tolerance
+  (`final_tolerance × same_point_tolerance_multiplier`), the scale the solver uses to group coincident
+  endpoints into multiplicities.  `default_point_match_tolerance()` now returns `final_tolerance`.
+- **`metadata_for(..., representatives_only=False)`** — a debugging view that matches against every
+  endpoint, including non-representative multiplicity copies.
+
 ## [3.3.1] - 2026-07-13
 
 A bindings-robustness patch.
