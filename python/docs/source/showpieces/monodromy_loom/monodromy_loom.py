@@ -56,28 +56,20 @@ _HUES = ['#3fe0ff', '#ff4fa3', '#ffd24a', '#8aff5a', '#c07bff', '#ff8a3f']
 _BG = '#05060a'
 
 
-# --- coefficient-node helpers -------------------------------------------------------------------
-
-def _cnode(z):
-    """A constant complex function-tree node carrying the exact digits of python complex z."""
-    return bertini.coefficient(complex_mp(repr(float(z.real)), repr(float(z.imag))))
-
-def _rnode(x):
-    """A constant real (zero-imaginary) node."""
-    return bertini.coefficient(complex_mp(repr(float(x)), '0'))
-
-def _xpow(x, d):
-    """x**d built by repeated multiplication (keeps the tree an explicit product)."""
-    e = x
-    for _ in range(d - 1):
-        e = e * x
-    return e
-
-_I = _cnode(1j)
-_TWO_PI = _rnode(2 * math.pi)
-
-
 # --- the engine: bake the whole parameter loop into one homotopy --------------------------------
+#
+# Node arithmetic promotes ints, exposes the exact constants bertini.Pi and bertini.I, and honours
+# ** -- so the tree is written almost verbatim: x**degree, 2*bertini.Pi, bertini.I.  The one thing
+# the library will not do implicitly is turn a Python float/complex into a coefficient (a 16-digit
+# literal would silently cap the arbitrary-precision tree), so a float parameter goes through its
+# exact decimal string via _const.
+
+def _const(z):
+    """An exact constant node from a Python number, via coefficient's exact-string path: a real
+    number -> its decimal; a complex -> re + im * bertini.I."""
+    z = complex(z)
+    node = bertini.coefficient(repr(z.real))
+    return node if z.imag == 0 else node + bertini.coefficient(repr(z.imag)) * bertini.I
 
 def loom_homotopy(degree, center, radius, phi):
     """H(x, t) = x^d - d*x - c(t),  c(t) = center + radius*exp(i*(theta + phi)),  theta = 2pi(1-t).
@@ -87,10 +79,10 @@ def loom_homotopy(degree, center, radius, phi):
     """
     x = bertini.Variable('x')
     t = bertini.Variable('t')
-    theta = _TWO_PI * (_rnode(1) - t) + _rnode(phi)
-    c_t = _cnode(center) + _rnode(radius) * (bertini.cos(theta) + _I * bertini.sin(theta))
+    theta = 2 * bertini.Pi * (1 - t) + _const(phi)
+    c_t = _const(center) + _const(radius) * (bertini.cos(theta) + bertini.I * bertini.sin(theta))
     sys = bertini.System()
-    sys.add_function(_xpow(x, degree) - _rnode(degree) * x - c_t)
+    sys.add_function(x**degree - degree * x - c_t)
     sys.add_path_variable(t)
     sys.add_variable_group(bertini.VariableGroup([x]))
     return sys
@@ -101,7 +93,7 @@ def start_configuration(degree, center, radius, phi):
     x = bertini.Variable('x')
     sys = bertini.System()
     sys.add_variable_group(bertini.VariableGroup([x]))
-    sys.add_function(_xpow(x, degree) - _rnode(degree) * x - _cnode(c0))
+    sys.add_function(x**degree - degree * x - _const(c0))
     solver = bertini.nag_algorithm.ZeroDimSolver(sys, mptype='adaptive')
     solver.solve()
     return [complex(s[0]) for s in solver.all_solutions()]
