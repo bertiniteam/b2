@@ -338,4 +338,126 @@ BOOST_AUTO_TEST_CASE(serialization_roundtrip)
 }
 
 
+// ---- through a point (affine) --------------------------------------------------------
+
+// The exact primitive: given a bare coefficient block A and a point p, the augmented matrix
+// is [A | -A*p], so every form vanishes at p.  A = [[2,3],[1,-1]], p = (2,-3) gives constants
+// -(2*2+3*-3)=5 and -(1*2-1*-3)=-5.
+BOOST_AUTO_TEST_CASE(through_point_primitive_vanishes)
+{
+	DefaultPrecision(30);
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x,y};
+
+	Mat<complex_mp> A(2,2);
+	A << complex_mp(2), complex_mp(3),
+	     complex_mp(1), complex_mp(-1);
+	Vec<complex_mp> p(2); p << complex_mp(2), complex_mp(-3);
+
+	auto s = Slice::ThroughPoint(vars, A, p);
+
+	BOOST_CHECK_EQUAL(s.Dimension(), 2);
+	BOOST_CHECK(!s.IsHomogeneous());
+	// the left (variable-coefficient) block is exactly A
+	BOOST_CHECK(abs(s.Coefficients()(0,0) - complex_mp(2))  < real_mp("1e-25"));
+	BOOST_CHECK(abs(s.Coefficients()(1,1) - complex_mp(-1)) < real_mp("1e-25"));
+	// the assembled constant column is -A*p = (5, -5)
+	BOOST_CHECK(abs(s.Coefficients()(0,2) - complex_mp(5))  < real_mp("1e-25"));
+	BOOST_CHECK(abs(s.Coefficients()(1,2) - complex_mp(-5)) < real_mp("1e-25"));
+
+	// every form vanishes at p
+	Vec<complex_dbl> p_dbl(2); p_dbl << complex_dbl(2), complex_dbl(-3);
+	BOOST_CHECK_SMALL(s.Eval(p_dbl).norm(), 1e-11);
+}
+
+
+BOOST_AUTO_TEST_CASE(through_point_rejects_wrong_length)
+{
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x,y};
+
+	Mat<complex_mp> A(2,2);
+	A << complex_mp(2), complex_mp(3),
+	     complex_mp(1), complex_mp(-1);
+
+	// point of the wrong length
+	Vec<complex_mp> p3(3); p3 << complex_mp(2), complex_mp(-3), complex_mp(7);
+	BOOST_CHECK_THROW(Slice::ThroughPoint(vars, A, p3), std::runtime_error);
+
+	// coefficient block with the wrong number of columns (not num_variables)
+	Mat<complex_mp> Awide(1,3); Awide << complex_mp(2), complex_mp(3), complex_mp(4);
+	Vec<complex_mp> p2(2); p2 << complex_mp(2), complex_mp(-3);
+	BOOST_CHECK_THROW(Slice::ThroughPoint(vars, Awide, p2), std::runtime_error);
+}
+
+
+BOOST_AUTO_TEST_CASE(random_complex_through_point_vanishes)
+{
+	DefaultPrecision(30);
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	VariableGroup vars{x,y,z};
+
+	Vec<complex_mp> p(3); p << complex_mp(2), complex_mp(-3), complex_mp(5);
+
+	auto s = Slice::RandomComplex(vars, 2, /*homogeneous=*/false, /*orthogonal=*/true, &p);
+
+	BOOST_CHECK_EQUAL(s.Dimension(), 2);
+	BOOST_CHECK(!s.IsHomogeneous());
+	// the coefficient block is non-degenerate (not all zero)
+	BOOST_CHECK(s.Coefficients().leftCols(3).norm() > real_mp("1e-3"));
+
+	Vec<complex_dbl> p_dbl(3); p_dbl << complex_dbl(2), complex_dbl(-3), complex_dbl(5);
+	BOOST_CHECK_SMALL(s.Eval(p_dbl).norm(), 1e-10);
+}
+
+
+BOOST_AUTO_TEST_CASE(random_real_through_point_vanishes)
+{
+	DefaultPrecision(30);
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	VariableGroup vars{x,y,z};
+
+	Vec<complex_mp> p(3); p << complex_mp(2), complex_mp(-3), complex_mp(5);
+
+	auto s = Slice::RandomReal(vars, 2, /*homogeneous=*/false, /*orthogonal=*/true, &p);
+
+	BOOST_CHECK(!s.IsHomogeneous());
+
+	Vec<complex_dbl> p_dbl(3); p_dbl << complex_dbl(2), complex_dbl(-3), complex_dbl(5);
+	BOOST_CHECK_SMALL(s.Eval(p_dbl).norm(), 1e-10);
+}
+
+
+// A real slice through a (real) point keeps a real variable-coefficient block; only the
+// constant column carries -A*p (which would be complex only for a complex point).
+BOOST_AUTO_TEST_CASE(real_through_point_real_coefficients)
+{
+	DefaultPrecision(30);
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	VariableGroup vars{x,y,z};
+
+	Vec<complex_mp> p(3); p << complex_mp(2), complex_mp(-3), complex_mp(5);
+
+	auto s = Slice::RandomReal(vars, 2, /*homogeneous=*/false, /*orthogonal=*/true, &p);
+
+	auto const& C = s.Coefficients();
+	for (int ii = 0; ii < C.rows(); ++ii)
+		for (int jj = 0; jj < C.cols() - 1; ++jj)   // the variable block (all but the constant column)
+			BOOST_CHECK_EQUAL(C(ii,jj).imag(), real_mp(0));
+}
+
+
+// Temporary guard (task 6 replaces this with the homogeneous through-point construction):
+// a slice cannot yet be both homogeneous and through a point.
+BOOST_AUTO_TEST_CASE(through_point_rejects_homogeneous)
+{
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	VariableGroup vars{x,y,z};
+
+	Vec<complex_mp> p(3); p << complex_mp(2), complex_mp(-3), complex_mp(5);
+	BOOST_CHECK_THROW(Slice::RandomComplex(vars, 2, /*homogeneous=*/true, /*orthogonal=*/true, &p),
+	                  std::runtime_error);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

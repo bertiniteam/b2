@@ -97,9 +97,38 @@ namespace bertini {
 		}
 
 		/**
-		\brief Produce a random real slice on a variable group, slicing a given number of dimensions.
+		\brief Build an affine slice whose every linear form vanishes at a given point.
+
+		Given a bare (non-augmented) coefficient block A and a point p, this assembles the augmented
+		matrix [ A | -A*p ], so each form A_i*x - A_i*p = 0 passes through p.  The result is affine
+		(non-homogeneous): a homogeneous form cannot pass through an arbitrary point via a constant
+		term (it would need its rows orthogonal to p -- see the random factories' homogeneous
+		through-point path).
+
+		\param v The variables the slice is a function of.
+		\param coefficients The bare coefficient block, (number-of-forms) x v.size() (NOT augmented).
+		\param point The point the slice must pass through, length v.size().
 		*/
-		static Slice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
+		static Slice ThroughPoint(VariableGroup const& v, Mat<complex_mp> const& coefficients, Vec<complex_mp> const& point)
+		{
+			if (static_cast<size_t>(coefficients.cols()) != v.size())
+				throw std::runtime_error("Slice::ThroughPoint coefficient block must have num_variables columns (it is not augmented)");
+			if (static_cast<size_t>(point.size()) != v.size())
+				throw std::runtime_error("Slice::ThroughPoint point must have num_variables entries");
+
+			return FromCoefficients(v, AugmentAffineThroughPoint(coefficients, point), /*homogeneous=*/false);
+		}
+
+		/**
+		\brief Produce a random real slice on a variable group, slicing a given number of dimensions.
+
+		\param v The variable group the slice is over.
+		\param dim The number of linear forms (the slice's dimension).
+		\param homogeneous Whether the slice is homogeneous (zero constant column).
+		\param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
+		\param through_point If non-null, a point the slice must pass through (affine anchoring, length v.size()).
+		*/
+		static Slice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true, Vec<complex_mp> const* through_point = nullptr)
 		{
 			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
 			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems;
@@ -108,18 +137,24 @@ namespace bertini {
 			// #294 -- previously the orthogonal path hardcoded the complex orthonormal matrix, so a
 			// "real" slice came out complex).
 			funtype gen = bertini::multiprecision::RandomRealBoundedModulusAssign;
-			return Make(v, dim, homogeneous, orthogonal, /*real=*/true, gen);
+			return Make(v, dim, homogeneous, orthogonal, /*real=*/true, gen, through_point);
 		}
 
 		/**
 		\brief Generate a random complex slice.
+
+		\param v The variable group the slice is over.
+		\param dim The number of linear forms (the slice's dimension).
+		\param homogeneous Whether the slice is homogeneous (zero constant column).
+		\param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
+		\param through_point If non-null, a point the slice must pass through (affine anchoring, length v.size()).
 		*/
-		static Slice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
+		static Slice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true, Vec<complex_mp> const* through_point = nullptr)
 		{
 			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
 			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems.
 			funtype gen = bertini::multiprecision::RandomComplexBoundedModulusAssign;
-			return Make(v, dim, homogeneous, orthogonal, /*real=*/false, gen);
+			return Make(v, dim, homogeneous, orthogonal, /*real=*/false, gen, through_point);
 		}
 
 		/**
@@ -134,10 +169,21 @@ namespace bertini {
 		\param real Whether the coefficients are real (a real orthonormal block on the orthogonal path,
 		            matching the real \p gen used on the non-orthogonal path and for the constant column).
 		\param gen The scalar generator used for the non-orthogonal coefficients and the constant column.
+		\param through_point If non-null, a point the slice must pass through (affine anchoring, length v.size());
+		                     overrides the random constant column.
 		*/
-		static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, bool real, std::function<void(complex_mp&, unsigned)> gen)
+		static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, bool real, std::function<void(complex_mp&, unsigned)> gen, Vec<complex_mp> const* through_point = nullptr)
 		{
 			const unsigned num_vars = static_cast<unsigned>(v.size());
+
+			// A slice through a point is affine: the constant column carries -A*p, so a homogeneous
+			// (zero-constant) slice cannot also pass through an arbitrary point.  (Task 6 -- the
+			// homogeneous through-a-point construction projects the rows orthogonal to p instead --
+			// will replace this guard.)
+			if (through_point && homogeneous)
+				throw std::runtime_error("Slice: a slice cannot yet be both homogeneous and through a point");
+			if (through_point && static_cast<unsigned>(through_point->size()) != num_vars)
+				throw std::runtime_error("Slice: through_point must have num_variables entries");
 
 			Mat<complex_mp> coeffs(dim, num_vars); // the variable coefficients (one row per form)
 
@@ -166,6 +212,10 @@ namespace bertini {
 
 			assert(static_cast<unsigned>(coeffs.rows()) == dim);
 			assert(static_cast<unsigned>(coeffs.cols()) == num_vars);
+
+			// Through a point (affine): the constant column is -A*p, so every form vanishes at p.
+			if (through_point)
+				return FromCoefficients(v, AugmentAffineThroughPoint(coeffs, *through_point), /*homogeneous=*/false);
 
 			// Assemble the augmented matrix: [ coeffs | constants ].  A homogeneous slice's constant
 			// column is zero; otherwise it is freshly generated.
@@ -361,6 +411,36 @@ namespace bertini {
 		}
 
 	private:
+
+		/**
+		\brief Assemble the augmented matrix [ A | -A*p ] for an affine slice through a point.
+
+		The whole computation runs at MaxPrecisionAllowed() (the point and coefficient block are
+		re-materialized to that precision first, matching how Make builds the coefficient block), so
+		the stored constant column carries full precision and there is no mixed-precision -A*p.
+
+		\param coeffs The bare coefficient block A, (number-of-forms) x num_variables.
+		\param point The point p the slice must pass through, length num_variables.
+		*/
+		static Mat<complex_mp> AugmentAffineThroughPoint(Mat<complex_mp> const& coeffs, Vec<complex_mp> const& point)
+		{
+			const auto num_vars = coeffs.cols();
+
+			auto prev_precision = DefaultPrecision();
+			DefaultPrecision(MaxPrecisionAllowed());
+
+			Mat<complex_mp> A = coeffs;   // copies, re-materialized at max precision below
+			Vec<complex_mp> p = point;
+			bertini::Precision(A, MaxPrecisionAllowed());   // qualify: class has member Precision overloads
+			bertini::Precision(p, MaxPrecisionAllowed());
+
+			Mat<complex_mp> augmented(coeffs.rows(), num_vars + 1);
+			augmented.leftCols(num_vars) = A;
+			augmented.col(num_vars) = -(A * p);   // b = -A*p, so A*p + b = 0
+
+			DefaultPrecision(prev_precision);
+			return augmented;
+		}
 
 		friend class boost::serialization::access;
 

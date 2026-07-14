@@ -67,6 +67,23 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.4.0] - 2026-07-14
+
+A one-call way to build a linear slice that passes through a chosen point.
+
+### Added
+
+- **`Slice.through_point(variables, point, dim=1, coefficients=None, real=False, orthogonal=True, homogeneous=False)`**
+  — the single place to make a slice through a given point.  With `coefficients=None` (the default) it
+  draws a random block of `dim` linear forms (complex, or real with `real=True`; orthonormalized when
+  `orthogonal`) and sets the constant column so every form vanishes at `point`; pass `coefficients` (a
+  bare, non-augmented block) to use exactly those directional coefficients.  Backed by the new C++
+  primitives `Slice::ThroughPoint` and a `through_point` option on `Slice::RandomReal` /
+  `Slice::RandomComplex`.  `homogeneous=True` builds a projective slice through the point (rows
+  orthogonal to it); it is random-only.
+
+_______________________________________________________________________________
+
 ## [3.3.2] - 2026-07-13
 
 A `metadata_for` robustness patch (feed a solver result straight back in and it resolves), plus a

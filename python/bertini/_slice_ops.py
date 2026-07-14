@@ -27,7 +27,7 @@ the friendly override -- which takes exact values first, coerces them, and accep
 of variables -- can still reach it.
 """
 
-from bertini._coefficients import _coerce_mpfr_matrix
+from bertini._coefficients import _coerce_mpfr_matrix, _coerce_mpfr_vector
 from bertini._pybertini.container import VariableGroup as _VariableGroup
 
 _native = {}
@@ -55,6 +55,52 @@ def from_coefficients(cls, coefficients, variables, homogeneous=False):
             "(one column per variable plus a trailing constant-term column)"
         )
     return _native['from_coefficients'](vg, M, homogeneous)
+
+
+def through_point(cls, variables, point, dim=1, coefficients=None, real=False,
+                  orthogonal=True, homogeneous=False):
+    """Build a :class:`Slice` through a given point -- the one place to do this.
+
+    ``variables`` is the vector of variables the slice is over (a :class:`~bertini.VariableGroup`
+    or a flat list of :class:`~bertini.Variable`).  ``point`` is the point every linear form must
+    vanish at -- a length-``num_variables`` vector of EXACT values (see :func:`bertini.coefficient`;
+    Python floats are refused).
+
+    With ``coefficients=None`` (the default) a random block of ``dim`` linear forms is generated
+    (complex, or real if ``real=True``; orthonormalized when ``orthogonal``) and anchored so it
+    passes through ``point``::
+
+        s = bertini.Slice.through_point([x, y], pt)          # a random line through pt
+
+    Pass ``coefficients`` (a bare ``dim x num_variables`` block of EXACT values, NOT augmented) to
+    use exactly those directional coefficients; ``dim``/``real``/``orthogonal`` are then ignored.
+
+    ``homogeneous=True`` builds a projective slice through ``point`` (each form ``a.x = 0`` with
+    ``a.point = 0``); it is random-only, so it cannot be combined with an explicit ``coefficients``.
+
+    Returns a ``bertini.Slice``.
+    """
+    vg = _coerce_slice_variables(variables, "through_point")
+    p, plen = _coerce_mpfr_vector(point, "through_point point")
+    if plen != len(vg):
+        raise ValueError(
+            f"through_point point has {plen} entries but needs num_variables = {len(vg)}")
+
+    if coefficients is not None:
+        if homogeneous:
+            raise ValueError(
+                "through_point: homogeneous=True is random-only for now -- do not also pass "
+                "coefficients (projecting supplied rows onto the point's complement would "
+                "silently rewrite them)")
+        M, _, ncol = _coerce_mpfr_matrix(coefficients, "through_point coefficients")
+        if ncol != len(vg):
+            raise ValueError(
+                f"through_point coefficients has {ncol} columns but needs num_variables = "
+                f"{len(vg)} (a bare block, not augmented)")
+        return _native['through_point'](vg, M, p)
+
+    native = _native['random_real'] if real else _native['random_complex']
+    return native(vg, dim, homogeneous, orthogonal, p)
 
 
 def _coerce_slice_variables(variables, method_name):
@@ -115,4 +161,7 @@ def install(Slice):
         if hasattr(Slice, _name):
             _native[_name] = getattr(Slice, _name)
             setattr(Slice, _name, _make_random_slice_factory(_native[_name], _name))
+    # through_point dispatches to the native through_point (exact) or random factories (random).
+    _native['through_point'] = Slice.through_point           # native static: (variables, coeffs, point)
+    Slice.through_point = classmethod(through_point)
     Slice._b2_slice_ops_installed = True

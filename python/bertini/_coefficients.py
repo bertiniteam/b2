@@ -177,3 +177,18 @@ def _coerce_mpfr_matrix(coefficients, context):
         for j, entry in enumerate(row):
             M[i, j] = _exact_to_mpfr(entry)
     return M, len(rows), ncol
+
+
+def _coerce_mpfr_vector(values, context):
+    """Coerce a 1-D sequence of exact values to an mpfr_complex vector.
+
+    Returns ``(numpy_object_vector, length)``.  Refuses Python floats (same exact-value
+    contract as :func:`_coerce_mpfr_matrix`).
+    """
+    entries = list(values)
+    if not entries:
+        raise ValueError(f"{context} must have at least one entry")
+    v = np.empty(len(entries), dtype=_mp.complex_mp)
+    for i, entry in enumerate(entries):
+        v[i] = _exact_to_mpfr(entry)
+    return v, len(entries)
