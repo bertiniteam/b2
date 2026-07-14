@@ -55,6 +55,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
+#include <limits>
 #include <mutex>
 #include <iostream>
 #include <map>
@@ -192,7 +193,7 @@ struct SolutionMetaData
 
 
 	///// things computed in endgame only
-	NumErrorT condition_number; 				///< The latest estimate of the condition number.
+	NumErrorT condition_number; 				///< Spectral-norm condition number of the target system's Jacobian at the endpoint (the quantity `condition_number_threshold` is specified against).
 	NumErrorT newton_residual; 				///< The latest Newton residual.
 	ComplexT final_time_used;   			///< The final value of time tracked to.
 	NumErrorT accuracy_estimate; 			///< Accuracy estimate between extrapolations.
@@ -1981,7 +1982,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				}
 				smd.function_residual = static_cast<NumErrorT>(ctx.target_sys.Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>());
 				smd.final_time_used = ctx.endgame.LatestTime();
-				smd.condition_number = ctx.tracker.LatestConditionNumber();
+				smd.condition_number = EndpointSpectralConditionNumber(ctx.target_sys, solutions_post_endgame_[soln_ind]);
 				smd.newton_residual = ctx.tracker.LatestNormOfStep();
 
 				smd.accuracy_estimate = ctx.endgame.ApproximateError();
@@ -2130,8 +2131,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			\brief Classify each successful endpoint as singular or not.
 
 			Matching Bertini 1: an endpoint is singular if it is the endpoint of multiple paths
-			(multiplicity > 1), or if the approximation of its condition number (spectral norm, as
-			estimated by the tracker) exceeds `condition_number_threshold`.
+			(multiplicity > 1), or if the approximation of its condition number, in the spectral
+			norm, exceeds `condition_number_threshold`.  The condition number compared here is the
+			one computed at the endpoint by `EndpointSpectralConditionNumber` -- see that function
+			for why the tracker's running estimate must not be substituted.
 			*/
 			void ClassifySingular()
 			{
@@ -2143,6 +2146,42 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 						continue;
 					smd.is_singular = (smd.multiplicity > 1) || (smd.condition_number > cond_threshold);
 				}
+			}
+
+			/**
+			\brief The spectral-norm condition number of the system's Jacobian at an endpoint.
+
+			This is the quantity Bertini 1's `CondNumThreshold` is specified against ("an
+			approximation of the condition number, in the spectral norm"): \f$\sigma_{max} /
+			\sigma_{min}\f$ of the homogenized, patched target system's Jacobian, evaluated AT the
+			endpoint, at the endpoint's own precision.
+
+			The tracker's running estimate (`LatestConditionNumber()`: `norm_J * norm_J_inverse`
+			from a random-RHS LU probe, refreshed only every `frequency_of_CN_estimation` steps,
+			on the homotopy mid-path) is NOT a substitute and must not be used for classification:
+			endpoints lying exactly on a positive-dimensional component -- whose Jacobian is
+			provably rank-deficient, spectral condition number effectively infinite -- have been
+			observed carrying tracker estimates as low as ~1e3, silently classifying as
+			nonsingular.  The tracker estimate remains available per-step via observers.
+
+			A singular-to-working-precision Jacobian (smallest singular value 0, or an empty
+			singular value list) yields +infinity, which compares correctly against any threshold.
+
+			\param sys The (homogenized, patched) system whose Jacobian to measure; its precision
+			           must already match the endpoint's.
+			\param endpoint The solution point, in the system's own (homogenized) coordinates.
+			\return The spectral condition number, as `NumErrorT`.
+			*/
+			static NumErrorT EndpointSpectralConditionNumber(SystemType const& sys, Vec<BaseComplexT> const& endpoint)
+			{
+				const auto J = sys.Jacobian(endpoint);
+				const auto singular_values = Eigen::JacobiSVD<Mat<BaseComplexT>>(J).singularValues();
+				if (singular_values.size() == 0)
+					return std::numeric_limits<NumErrorT>::infinity();
+				const auto& smallest = singular_values(singular_values.size()-1);
+				if (smallest <= 0)
+					return std::numeric_limits<NumErrorT>::infinity();
+				return static_cast<NumErrorT>(singular_values(0) / smallest);
 			}
 
 
