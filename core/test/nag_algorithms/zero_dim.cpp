@@ -1179,6 +1179,65 @@ BOOST_AUTO_TEST_CASE(condition_number_threshold_is_applied)
 }
 
 
+// REGRESSION: endpoints landing ON a positive-dimensional component must classify singular.
+// Their Jacobian is provably rank-deficient (spectral condition number effectively infinite),
+// but the tracker's RUNNING condition estimate -- which used to be what ClassifySingular
+// compared against the threshold -- can report such endpoints as well-conditioned (~1e3),
+// silently classifying them nonsingular.  The metadata condition number is now the
+// spectral-norm value of the target Jacobian AT the endpoint.
+//
+// V(s*y, s*z, x+2y+3z-5) with s = x^2+y^2+z^2-1: V(F) = the line {y=z=0} union the sphere
+// {s=0}; cut by the plane, the square system has ONE isolated nonsingular solution (5,0,0)
+// plus a whole conic (sphere ∩ plane) of non-isolated solutions that paths land on.
+BOOST_AUTO_TEST_CASE(endpoint_on_positive_dimensional_component_is_singular)
+{
+	using namespace bertini;
+	System sys;
+	auto x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	sys.AddVariableGroup(VariableGroup{x, y, z});
+	auto s = x*x + y*y + z*z - 1;
+	sys.AddFunction(s*y);
+	sys.AddFunction(s*z);
+	sys.AddFunction(x + 2*y + 3*z - 5);          // misses the sphere ∩ line points
+
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys)>(sys);
+	zd.DefaultSetup();
+	zd.Solve();
+
+	auto const& md  = zd.SolutionMetadata();
+	auto const& pts = zd.SolutionsUserCoords();
+
+	unsigned on_sphere = 0, isolated = 0;
+	for (size_t ii = 0; ii < md.size(); ++ii)
+	{
+		if (md[ii].endgame_success_code != SuccessCode::Success || !md[ii].is_finite)
+			continue;
+		const auto& p = pts[ii];
+		const double sphere_residual =
+			abs(p(0)*p(0) + p(1)*p(1) + p(2)*p(2) - 1.0);
+
+		if (sphere_residual < 1e-5)
+		{
+			// on the sphere: a non-isolated endpoint.  It must be singular, and singular BY
+			// CONDITION NUMBER (not merely by path multiplicity) -- the spectral condition
+			// number of a rank-deficient Jacobian exceeds any sane threshold.
+			++on_sphere;
+			BOOST_CHECK(md[ii].is_singular);
+			BOOST_CHECK_GT(md[ii].condition_number, 1e8);
+		}
+		else if (abs(p(0) - 5.0) < 1e-6 && abs(p(1)) < 1e-6 && abs(p(2)) < 1e-6)
+		{
+			// the line ∩ plane point: genuinely isolated and well-conditioned.
+			++isolated;
+			BOOST_CHECK(!md[ii].is_singular);
+			BOOST_CHECK_LT(md[ii].condition_number, 1e8);
+		}
+	}
+	BOOST_CHECK_GE(on_sphere, 1u);               // the junk paths must actually be exercised
+	BOOST_CHECK_EQUAL(isolated, 1u);
+}
+
+
 // the PostProcessing config round-trips through Get/Set.
 BOOST_AUTO_TEST_CASE(postprocessing_config_roundtrip)
 {
