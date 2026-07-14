@@ -126,7 +126,7 @@ namespace bertini {
 		\param dim The number of linear forms (the slice's dimension).
 		\param homogeneous Whether the slice is homogeneous (zero constant column).
 		\param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
-		\param through_point If non-null, a point the slice must pass through (affine anchoring, length v.size()).
+		\param through_point If non-null, a point the slice must pass through (length v.size(); affine, or homogeneous when homogeneous=true).
 		*/
 		static Slice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true, Vec<complex_mp> const* through_point = nullptr)
 		{
@@ -147,7 +147,7 @@ namespace bertini {
 		\param dim The number of linear forms (the slice's dimension).
 		\param homogeneous Whether the slice is homogeneous (zero constant column).
 		\param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
-		\param through_point If non-null, a point the slice must pass through (affine anchoring, length v.size()).
+		\param through_point If non-null, a point the slice must pass through (length v.size(); affine, or homogeneous when homogeneous=true).
 		*/
 		static Slice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true, Vec<complex_mp> const* through_point = nullptr)
 		{
@@ -169,19 +169,13 @@ namespace bertini {
 		\param real Whether the coefficients are real (a real orthonormal block on the orthogonal path,
 		            matching the real \p gen used on the non-orthogonal path and for the constant column).
 		\param gen The scalar generator used for the non-orthogonal coefficients and the constant column.
-		\param through_point If non-null, a point the slice must pass through (affine anchoring, length v.size());
+		\param through_point If non-null, a point the slice must pass through (length v.size(); affine, or homogeneous when the slice is homogeneous);
 		                     overrides the random constant column.
 		*/
 		static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, bool real, std::function<void(complex_mp&, unsigned)> gen, Vec<complex_mp> const* through_point = nullptr)
 		{
 			const unsigned num_vars = static_cast<unsigned>(v.size());
 
-			// A slice through a point is affine: the constant column carries -A*p, so a homogeneous
-			// (zero-constant) slice cannot also pass through an arbitrary point.  (Task 6 -- the
-			// homogeneous through-a-point construction projects the rows orthogonal to p instead --
-			// will replace this guard.)
-			if (through_point && homogeneous)
-				throw std::runtime_error("Slice: a slice cannot yet be both homogeneous and through a point");
 			if (through_point && static_cast<unsigned>(through_point->size()) != num_vars)
 				throw std::runtime_error("Slice: through_point must have num_variables entries");
 
@@ -213,7 +207,10 @@ namespace bertini {
 			assert(static_cast<unsigned>(coeffs.rows()) == dim);
 			assert(static_cast<unsigned>(coeffs.cols()) == num_vars);
 
-			// Through a point (affine): the constant column is -A*p, so every form vanishes at p.
+			// Through a point.  Homogeneous: project the rows into p's orthogonal complement (a.p = 0),
+			// zero constant column.  Affine: the constant column is -A*p, so every form vanishes at p.
+			if (through_point && homogeneous)
+				return FromCoefficients(v, AugmentHomogeneousThroughPoint(coeffs, *through_point, orthogonal), /*homogeneous=*/true);
 			if (through_point)
 				return FromCoefficients(v, AugmentAffineThroughPoint(coeffs, *through_point), /*homogeneous=*/false);
 
@@ -437,6 +434,59 @@ namespace bertini {
 			Mat<complex_mp> augmented(coeffs.rows(), num_vars + 1);
 			augmented.leftCols(num_vars) = A;
 			augmented.col(num_vars) = -(A * p);   // b = -A*p, so A*p + b = 0
+
+			DefaultPrecision(prev_precision);
+			return augmented;
+		}
+
+		/**
+		\brief Assemble the augmented matrix for a homogeneous slice through a projective point.
+
+		A homogeneous form a.x = 0 contains the projective point p iff a.p = 0, so there is no constant
+		column to set -- instead each row is projected into p's orthogonal complement:
+		a' = a - (a.p / (pbar.p)) pbar, giving a'.p = 0 exactly (pbar.p = ||p||^2 > 0, so no
+		isotropic-vector blow-up).  Every linear combination of the projected rows is likewise
+		orthogonal to p, so when \p orthogonal is set the projected rows are re-orthonormalized (QR)
+		without leaving p's complement.  Runs entirely at MaxPrecisionAllowed(), like the affine helper.
+
+		\param coeffs The bare coefficient block A, (number-of-forms) x num_variables.
+		\param point The projective point p the slice must pass through, length num_variables.
+		\param orthogonal Whether to re-orthonormalize the projected rows.
+		*/
+		static Mat<complex_mp> AugmentHomogeneousThroughPoint(Mat<complex_mp> const& coeffs, Vec<complex_mp> const& point, bool orthogonal)
+		{
+			const auto dim = coeffs.rows();
+			const auto num_vars = coeffs.cols();
+
+			auto prev_precision = DefaultPrecision();
+			DefaultPrecision(MaxPrecisionAllowed());
+
+			Mat<complex_mp> A = coeffs;
+			Vec<complex_mp> p = point;
+			bertini::Precision(A, MaxPrecisionAllowed());   // qualify: class has member Precision overloads
+			bertini::Precision(p, MaxPrecisionAllowed());
+
+			real_mp p_norm_sq = p.squaredNorm();            // pbar.p = ||p||^2, real-positive for p != 0
+			if (p_norm_sq == real_mp(0))
+				throw std::runtime_error("Slice: a homogeneous slice through a point needs a nonzero point");
+
+			// project every row into p's orthogonal complement (bilinear a.p = 0): subtract the
+			// rank-one correction (A*p) pbar^T / ||p||^2.
+			Vec<complex_mp> Ap = A * p;                      // bilinear a_i . p, one per row
+			A = A - (Ap / complex_mp(p_norm_sq)) * p.conjugate().transpose();
+
+			if (orthogonal)
+			{
+				// orthonormalize the projected rows via a QR of A^T: the columns of Q span the row
+				// space of A (which lies in p's complement), so Q^T's rows stay orthogonal to p.
+				Eigen::HouseholderQR<Mat<complex_mp>> qr(A.transpose());
+				Mat<complex_mp> Q = qr.householderQ() * Mat<complex_mp>::Identity(num_vars, num_vars);
+				A = Q.leftCols(dim).transpose();
+			}
+
+			Mat<complex_mp> augmented(dim, num_vars + 1);
+			augmented.leftCols(num_vars) = A;
+			augmented.col(num_vars).setZero();              // homogeneous: no constant term
 
 			DefaultPrecision(prev_precision);
 			return augmented;

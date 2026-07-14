@@ -447,16 +447,65 @@ BOOST_AUTO_TEST_CASE(real_through_point_real_coefficients)
 }
 
 
-// Temporary guard (task 6 replaces this with the homogeneous through-point construction):
-// a slice cannot yet be both homogeneous and through a point.
-BOOST_AUTO_TEST_CASE(through_point_rejects_homogeneous)
+// ---- through a point (homogeneous / projective) --------------------------------------
+
+// A homogeneous slice through a projective point: each form a.x = 0 with a.p = 0 (the rows are
+// projected into p's orthogonal complement).  There is no constant column.
+BOOST_AUTO_TEST_CASE(homogeneous_through_point_vanishes)
 {
+	DefaultPrecision(30);
 	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 	VariableGroup vars{x,y,z};
 
 	Vec<complex_mp> p(3); p << complex_mp(2), complex_mp(-3), complex_mp(5);
-	BOOST_CHECK_THROW(Slice::RandomComplex(vars, 2, /*homogeneous=*/true, /*orthogonal=*/true, &p),
-	                  std::runtime_error);
+
+	auto s = Slice::RandomComplex(vars, 2, /*homogeneous=*/true, /*orthogonal=*/true, &p);
+
+	BOOST_CHECK(s.IsHomogeneous());
+	// no constant term
+	BOOST_CHECK(s.Coefficients().rightCols(1).norm() < real_mp("1e-30"));
+	// every form vanishes at the projective point
+	Vec<complex_dbl> p_dbl(3); p_dbl << complex_dbl(2), complex_dbl(-3), complex_dbl(5);
+	BOOST_CHECK_SMALL(s.Eval(p_dbl).norm(), 1e-10);
+
+	// orthonormal rows (Hermitian): A A^H = I
+	Mat<complex_mp> A = s.Coefficients().leftCols(3);
+	Mat<complex_mp> gram = A * A.adjoint();
+	BOOST_CHECK((gram - Mat<complex_mp>::Identity(2,2)).norm() < real_mp("1e-25"));
+}
+
+
+BOOST_AUTO_TEST_CASE(homogeneous_through_point_real_vanishes)
+{
+	DefaultPrecision(30);
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	VariableGroup vars{x,y,z};
+
+	Vec<complex_mp> p(3); p << complex_mp(2), complex_mp(-3), complex_mp(5);
+
+	auto s = Slice::RandomReal(vars, 1, /*homogeneous=*/true, /*orthogonal=*/true, &p);
+
+	BOOST_CHECK(s.IsHomogeneous());
+	Vec<complex_dbl> p_dbl(3); p_dbl << complex_dbl(2), complex_dbl(-3), complex_dbl(5);
+	BOOST_CHECK_SMALL(s.Eval(p_dbl).norm(), 1e-10);
+}
+
+
+// A homogeneous through-point slice with a non-orthogonal block still vanishes at p (the rows are
+// projected, just not re-orthonormalized).
+BOOST_AUTO_TEST_CASE(homogeneous_through_point_non_orthogonal_vanishes)
+{
+	DefaultPrecision(30);
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	VariableGroup vars{x,y,z};
+
+	Vec<complex_mp> p(3); p << complex_mp(2), complex_mp(-3), complex_mp(5);
+
+	auto s = Slice::RandomComplex(vars, 2, /*homogeneous=*/true, /*orthogonal=*/false, &p);
+
+	BOOST_CHECK(s.IsHomogeneous());
+	Vec<complex_dbl> p_dbl(3); p_dbl << complex_dbl(2), complex_dbl(-3), complex_dbl(5);
+	BOOST_CHECK_SMALL(s.Eval(p_dbl).norm(), 1e-10);
 }
 
 

@@ -130,6 +130,15 @@ def test_through_point_exact_coefficients_vanishes():
     assert np.linalg.norm(np.asarray(s.eval(pt), dtype=complex)) < 1e-20
 
 
+def test_through_point_homogeneous_vanishes():
+    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    pt = _mpvec(2, -3, 5)
+    s = Slice.through_point(pb.VariableGroup([x, y, z]), pt, dim=2, homogeneous=True)
+    assert s.is_homogeneous()
+    # homogeneous: no constant column, so eval at the projective point is just A*p == 0
+    assert np.linalg.norm(np.asarray(s.eval(pt), dtype=complex)) < 1e-20
+
+
 def test_through_point_refuses_python_floats():
     x, y = pb.Variable('x'), pb.Variable('y')
     with pytest.raises(TypeError):
