@@ -50,19 +50,32 @@ namespace bertini{
 				(arg("variables"), arg("coefficients"), arg("homogeneous")=false),
 				"Build a slice from an augmented coefficient matrix: one row per linear form, num_variables+1 columns, the trailing column carrying each form's constant term (zero, for a homogeneous slice).")
 			.staticmethod("from_coefficients")
-			.def("random_complex",
-				+[](VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal){
-					return Slice::RandomComplex(v, dim, homogeneous, orthogonal);
+			.def("through_point",
+				+[](VariableGroup const& v, bertini::Mat<complex_mp> const& coefficients, bertini::Vec<complex_mp> const& point){
+					return Slice::ThroughPoint(v, coefficients, point);
 				},
-				(arg("variables"), arg("dim"), arg("homogeneous")=false, arg("orthogonal")=true),
-				"A random complex linear slice of `dim` dimensions (forms) on the given variables.")
+				(arg("variables"), arg("coefficients"), arg("point")),
+				"Build an affine slice through a point from a bare (non-augmented) coefficient block: assembles [A | -A*p], so every form vanishes at the point.")
+			.staticmethod("through_point")
+			.def("random_complex",
+				+[](VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, boost::python::object through_point){
+					if (through_point.is_none())
+						return Slice::RandomComplex(v, dim, homogeneous, orthogonal);
+					bertini::Vec<complex_mp> p = boost::python::extract<bertini::Vec<complex_mp>>(through_point)();
+					return Slice::RandomComplex(v, dim, homogeneous, orthogonal, &p);
+				},
+				(arg("variables"), arg("dim"), arg("homogeneous")=false, arg("orthogonal")=true, arg("through_point")=boost::python::object()),
+				"A random complex linear slice of `dim` dimensions (forms) on the given variables.  through_point (if given) is a point the slice must pass through.")
 			.staticmethod("random_complex")
 			.def("random_real",
-				+[](VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal){
-					return Slice::RandomReal(v, dim, homogeneous, orthogonal);
+				+[](VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, boost::python::object through_point){
+					if (through_point.is_none())
+						return Slice::RandomReal(v, dim, homogeneous, orthogonal);
+					bertini::Vec<complex_mp> p = boost::python::extract<bertini::Vec<complex_mp>>(through_point)();
+					return Slice::RandomReal(v, dim, homogeneous, orthogonal, &p);
 				},
-				(arg("variables"), arg("dim"), arg("homogeneous")=false, arg("orthogonal")=true),
-				"A random real linear slice of `dim` dimensions (forms) on the given variables.")
+				(arg("variables"), arg("dim"), arg("homogeneous")=false, arg("orthogonal")=true, arg("through_point")=boost::python::object()),
+				"A random real linear slice of `dim` dimensions (forms) on the given variables.  through_point (if given) is a point the slice must pass through.")
 			.staticmethod("random_real")
 			.def("coefficients",
 				+[](Slice const& s){ return bertini::Mat<complex_mp>(s.Coefficients()); },

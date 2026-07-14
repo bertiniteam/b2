@@ -99,6 +99,65 @@ def test_random_real_slice():
     assert s.dimension() == 2
 
 
+# ---- through a point (affine) --------------------------------------------------------------
+
+def test_through_point_random_complex_vanishes():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    pt = _mpvec(2, -3)
+    s = Slice.through_point([x, y], pt)          # random line through pt, default dim=1
+    assert s.dimension() == 1
+    assert not s.is_homogeneous()
+    assert np.linalg.norm(np.asarray(s.eval(pt), dtype=complex)) < 1e-20
+
+
+def test_through_point_random_real_vanishes():
+    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    pt = _mpvec(2, -3, 5)
+    s = Slice.through_point(pb.VariableGroup([x, y, z]), pt, dim=2, real=True)
+    assert s.dimension() == 2
+    assert np.linalg.norm(np.asarray(s.eval(pt), dtype=complex)) < 1e-20
+
+
+def test_through_point_exact_coefficients_vanishes():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    pt = _mpvec(2, -3)
+    # bare block A = [[2, 3], [1, -1]]; constants become -A*p = (5, -5)
+    s = Slice.through_point([x, y], pt, coefficients=[[2, 3], [1, -1]])
+    C = np.asarray(s.coefficients())
+    assert C.shape == (2, 3)                       # augmented: bare block + constant column
+    assert abs(complex(C[0, 2]) - 5) < 1e-20
+    assert abs(complex(C[1, 2]) + 5) < 1e-20
+    assert np.linalg.norm(np.asarray(s.eval(pt), dtype=complex)) < 1e-20
+
+
+def test_through_point_homogeneous_vanishes():
+    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    pt = _mpvec(2, -3, 5)
+    s = Slice.through_point(pb.VariableGroup([x, y, z]), pt, dim=2, homogeneous=True)
+    assert s.is_homogeneous()
+    # homogeneous: no constant column, so eval at the projective point is just A*p == 0
+    assert np.linalg.norm(np.asarray(s.eval(pt), dtype=complex)) < 1e-20
+
+
+def test_through_point_refuses_python_floats():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    with pytest.raises(TypeError):
+        Slice.through_point([x, y], [2.0, -3.0])   # float point capped precision -- refused
+
+
+def test_through_point_wrong_length_coefficients_raises():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    with pytest.raises(ValueError):
+        # a bare block must have num_variables (2) columns, not 3
+        Slice.through_point([x, y], _mpvec(2, -3), coefficients=[[2, 3, 1]])
+
+
+def test_through_point_homogeneous_with_coefficients_raises():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    with pytest.raises(ValueError):
+        Slice.through_point([x, y], _mpvec(2, -3), coefficients=[[2, 3]], homogeneous=True)
+
+
 # ---- row subsetting / composition ----------------------------------------------------------
 
 def test_slice_getitem_slice_is_a_subcollection():
