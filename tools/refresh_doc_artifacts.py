@@ -120,6 +120,10 @@ def _plots():
              SHOWPIECES / "flight_recorder" / "flight_recorder.py",
              ["flight_recorder.png", "flight_recorder_setup.png"],
              note="showpiece: raster PNG only; tight-tolerance mult-35 solve -> slow (~1 min)"),
+        Plot("homotopy_basins",
+             SHOWPIECES / "homotopy_basins" / "homotopy_basins.py",
+             ["homotopy_basins.png", "homotopy_basins_teaching.png"],
+             note="showpiece: raster PNG only; ~17M tracked paths -> SLOW (~10-15 min on 12 cores)"),
     ]
 
 
