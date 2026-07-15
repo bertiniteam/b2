@@ -185,12 +185,18 @@ BOOST_AUTO_TEST_CASE(condition_number_refresh_honors_frequency)
 	DefaultPrecision(100);
 	using namespace bertini::tracking;
 
+	Var x = Variable::Make("x");
 	Var y = Variable::Make("y");
 	Var t = Variable::Make("t");
 
+	// TWO variables, deliberately: for a univariate system the estimate is constant BY
+	// ALGEBRA -- ||J||*||J^{-1} r|| = |J|*|r|/|J| = |r|, the fixed probe's norm -- so a
+	// 1-var version of this test can only "pass" through floating-point jitter (and on
+	// macOS it doesn't).  Here J = [[2x, 2y], [1, -1]] genuinely varies along the path.
 	System sys;
-	VariableGroup v{y};
-	sys.AddFunction(y*y - t - 1);          // J = 2y varies smoothly along the path
+	VariableGroup v{x, y};
+	sys.AddFunction(x*x + y*y - t - 1);
+	sys.AddFunction(x - y - t/2);
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
@@ -209,10 +215,12 @@ BOOST_AUTO_TEST_CASE(condition_number_refresh_honors_frequency)
 	CondNumberRecorder recorder;
 	tracker.AddObserver(recorder);
 
-	Vec<complex_dbl> y_start(1);
-	y_start << complex_dbl(sqrt(2.0));            // on V(y^2 - t - 1) at t = 1
-	Vec<complex_dbl> y_end;
-	auto code = tracker.TrackPath(y_end, complex_dbl(1), complex_dbl(0), y_start);
+	// a real solution at t = 1:  x = y + 1/2,  2y^2 + y + 1/4 = 2
+	const double y0 = (-1.0 + sqrt(15.0)) / 4.0;
+	Vec<complex_dbl> start(2);
+	start << complex_dbl(y0 + 0.5), complex_dbl(y0);
+	Vec<complex_dbl> end_point;
+	auto code = tracker.TrackPath(end_point, complex_dbl(1), complex_dbl(0), start);
 	tracker.RemoveObserver(recorder);
 	BOOST_CHECK(code==bertini::SuccessCode::Success);
 
