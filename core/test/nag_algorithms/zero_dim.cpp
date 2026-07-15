@@ -874,11 +874,50 @@ BOOST_AUTO_TEST_CASE(double_precision_rejects_a_different_precision)
 // |t|, working precision, and the tracker's condition-number estimate -- so we can SEE whether the
 // condition number (||J|| * ||J^{-1}||) spikes then RECOVERS along the actual seed-6 path, and at
 // what |t| (mid-path vs the t->0 endgame region).
+// REGRESSION: max_precision_used must be harvested even when the ENDGAME FAILS.
+// The failure path used to return before the observer harvest, so a path that escalated
+// precision during the endgame and then failed reported its pre-endgame precision (e.g.
+// 16 digits while the endgame ran far higher).  Force escalate-then-fail deterministically:
+// demand a final tolerance far beyond what a lowered AMP precision ceiling can deliver.
+BOOST_AUTO_TEST_CASE(max_precision_used_is_recorded_on_failed_endgames)
+{
+	using namespace bertini;
+	using namespace bertini::tracking;
+	SetGlobalSeed(2);
+
+	System sys;
+	auto x = Variable::Make("x");
+	sys.AddVariableGroup(bertini::VariableGroup{x});
+	sys.AddFunction(x*x - 1);
+
+	auto zd = algorithm::ZeroDimSolver<AMPTracker,
+	              bertini::endgame::EndgameSelector<AMPTracker>::Cauchy,
+	              decltype(sys)>(sys);
+	zd.DefaultSetup();
+
+	auto tols = zd.Get<algorithm::TolerancesConfig>();
+	tols.final_tolerance = 1e-60;                 // needs ~60+ digits of working precision...
+	zd.Set(tols);
+
+	auto amp = AMPConfigFrom(zd.TargetSystem());
+	amp.maximum_precision = 25;                   // ...which this ceiling forbids
+	zd.GetTracker().PrecisionSetup(amp);
+
+	zd.Solve();
+
+	unsigned failed_after_escalating = 0;
+	for (auto const& m : zd.SolutionMetadata())
+	{
+		if (m.endgame_success_code == SuccessCode::Success)
+			continue;
+		// the endgame escalated past double before failing; the metadata must say so
+		BOOST_CHECK_GE(m.max_precision_used, 20u);
+		++failed_after_escalating;
+	}
+	BOOST_CHECK_GE(failed_after_escalating, 1u);   // the scenario must actually occur
+}
+
 template <class TrackerT>
-
-
-
-
 
 
 BOOST_AUTO_TEST_SUITE_END()

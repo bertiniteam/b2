@@ -1946,17 +1946,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 				smd.endgame_success_code = eg_success;
 
-				// an unsuccessful endgame has no final approximation, so the final-point-dependent
-				// metadata cannot be computed.
-				if (eg_success != SuccessCode::Success)
-				{
-					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-					{
-						ctx.tracker.RemoveObserver(ctx.first_prec_rec);
-						ctx.tracker.RemoveObserver(ctx.min_max_prec);
-					}
-					return;
-				}
+				// Harvest the AMP observers REGARDLESS of the endgame outcome: the precision a
+				// path used is a fact about the tracking that happened, and it is exactly the
+				// FAILED paths -- e.g. slow divergers escalating in the mp lane -- whose
+				// precision honesty matters most for diagnostics.  (Previously the failure
+				// path returned before this harvest, so a path that escalated to 70 digits
+				// and then failed reported its pre-endgame precision, e.g. 16.)
 				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 				{
 					if (!smd.precision_changed)
@@ -1973,6 +1968,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					smd.max_precision_used =
 						max(smd.max_precision_used, ctx.min_max_prec.MaxPrecision());
 				}
+
+				// an unsuccessful endgame has no final approximation, so the final-point-dependent
+				// metadata cannot be computed.
+				if (eg_success != SuccessCode::Success)
+					return;
 				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 				{
 					assert(Precision(solutions_post_endgame_[soln_ind])==Precision(ctx.endgame.template FinalApproximation<BaseComplexT>()));
