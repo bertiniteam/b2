@@ -170,6 +170,21 @@ def test_construct():
     t = mp.complex_mp(mp.real_mp("4.32"), "6e2")
 
 
+def test_construct_from_python_complex():
+    # a python complex is exactly a pair of doubles, so it constructs like one (issue #348
+    # fallout: this raised a raw converter ArgumentError while complex_mp(0.5, 0.25) worked)
+    t = mp.complex_mp(0.5 + 0.25j)
+    assert complex(t) == 0.5 + 0.25j
+    assert complex(mp.complex_mp(1j)) == 1j
+
+
+def test_python_complex_still_not_implicitly_convertible():
+    # the constructor overload must NOT register an implicit conversion: a lossy python
+    # complex where a complex_mp is expected stays refused (doctrine note in mpfr_export.cpp)
+    with pytest.raises(TypeError):
+        mp.real_mp("2.0") + (0.5 + 0.25j)
+
+
 def test_arith_mp_float(cvals):
     x, y, z, p, tol = cvals
     a = mp.real_mp("3.12"); b = mp.real_mp("-5.92")

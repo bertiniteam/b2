@@ -594,6 +594,10 @@ namespace bertini{
 			.def(init<std::string, real_mp>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a string and a variable-precision float"))
 			.def(init<real_mp, std::string>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a variable-precision float and a string"))
 			.def(init<std::string, std::string>((arg("self"),arg("real"),arg("imag")),"Construct variable-precision complex number from a pair of strings.  the best way to construct one and be sure you have padded with zeros to the end, in the current working precision"))
+			// a Python complex is exactly a pair of doubles, so accept it wherever a pair of
+			// doubles is accepted (issue #348 fallout: complex_mp(0.5+0.25j) raised a raw
+			// converter ArgumentError while complex_mp(0.5, 0.25) worked)
+			.def("__init__", boost::python::make_constructor(+[](std::complex<double> z) { return std::make_shared<T>(z.real(), z.imag()); }, boost::python::default_call_policies(), (arg("value"))), "Construct variable-precision complex number from a python complex.  do this with caution, as 0.1 is not what you think it is -- there's noise at the end.")
 
 			.def(init<T>((arg("self"),arg("value")),"Construct variable-precision complex number from another one"))
 
