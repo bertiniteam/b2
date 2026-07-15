@@ -691,6 +691,70 @@ class _HomotopySolverHolder:
         return repr(object.__getattribute__(self, '_solver'))
 
 
+def _coerce_start_point_coordinate(entry, which_point, which_coordinate):
+    """One start-point coordinate, as a ``complex_mp`` the native layer accepts.
+
+    Start points are *transported values* (the tracker refines them), so anything that IS a
+    number is welcome: multiprecision scalars, Python/numpy numerics, and CONSTANT symbolic
+    nodes (evaluated).  An expression still containing variables is not a number, and gets a
+    math error saying so; anything else gets a TypeError naming the accepted kinds.
+    """
+    from bertini._pybertini.multiprec import complex_mp as _complex_mp, real_mp as _real_mp
+    from bertini._pybertini.function_tree import AbstractNode as _AbstractNode
+
+    if isinstance(entry, _complex_mp):
+        return entry
+    if isinstance(entry, _real_mp):
+        return _complex_mp(entry)
+    if isinstance(entry, _AbstractNode):
+        vars_inside = [str(v) for v in entry.variables()]
+        if vars_inside:
+            raise ValueError(
+                "start point {} coordinate {}: a start point must be a NUMBER, but this "
+                "coordinate is a symbolic expression still containing the variable(s) {} -- "
+                "evaluate or substitute it down to a constant first"
+                .format(which_point, which_coordinate, vars_inside))
+        return entry.eval()
+    if isinstance(entry, bool):
+        # bool is an int subclass; a True/False coordinate is a bug, not a number.
+        raise TypeError(
+            "start point {} coordinate {}: got a bool; start-point coordinates must be numbers"
+            .format(which_point, which_coordinate))
+    if isinstance(entry, int):
+        return _complex_mp(entry)
+    try:
+        z = complex(entry)  # Python float/complex and every numpy scalar kind land here
+    except (TypeError, ValueError):
+        raise TypeError(
+            "start point {} coordinate {}: cannot interpret a {} as a number.  Start-point "
+            "coordinates may be bertini multiprecision scalars (complex_mp / real_mp), Python "
+            "or numpy numbers, or constant symbolic nodes (e.g. bertini.symbolics.Complex)"
+            .format(which_point, which_coordinate, type(entry).__name__)) from None
+    return _complex_mp(z.real, z.imag)
+
+
+def _coerce_start_points(start_points):
+    """The user's start points, normalized to vectors of ``complex_mp``.
+
+    This is the tolerant seam between "whatever numbers the user has" and the native solver,
+    which needs multiprecision vectors: each point may be a list/tuple/numpy array (any
+    numeric dtype, including object arrays of mp values or constant symbolic nodes), and each
+    coordinate goes through :func:`_coerce_start_point_coordinate`.  Issue #347.
+    """
+    import numpy as np
+    pts = []
+    for k, pt in enumerate(start_points):
+        if isinstance(pt, (str, bytes)) or not hasattr(pt, '__iter__'):
+            raise TypeError(
+                "start point {}: each start point must be a vector of coordinates (a list, "
+                "tuple, or numpy array), got a {}".format(k, type(pt).__name__))
+        coerced = [_coerce_start_point_coordinate(e, k, j) for j, e in enumerate(pt)]
+        # no dtype= here: complex_mp registers its own numpy dtype, and inference finds it;
+        # an explicit dtype=object array is NOT accepted by the native converter.
+        pts.append(np.array(coerced))
+    return pts
+
+
 def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='cauchy'):
     """Track a homotopy you constructed, from a list of start points you already have (e.g. the
     solutions of an earlier solve) -- the continuation primitive (parameter-homotopy workflow).
@@ -706,7 +770,11 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
         down to 0.  Its t=1 slice must vanish at the given ``start_points``.
     start_points : iterable of vectors
         The start points (at the start time).  An earlier solve's ``all_solutions()`` works directly
-        when the variable coordinates line up (e.g. an affine homotopy).
+        when the variable coordinates line up (e.g. an affine homotopy).  Each point may be a list,
+        tuple, or numpy array; coordinates may be multiprecision scalars (``complex_mp`` /
+        ``real_mp``), Python or numpy numbers, or constant symbolic nodes -- they are all coerced
+        to multiprecision for you.  (Start points are transported values, refined by the tracker,
+        so double-precision input is fine here.)
     target : System
         The system the solutions satisfy at t=0 -- used for dehomogenize / residual and for the
         solver's consistency check.  It must NOT have a path variable.
@@ -744,7 +812,7 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
             "    start_solver.solve()\n"
             "    nag_algorithm.HomotopySolver(homotopy, start_solver.all_solutions(), target)"
             .format(type(start_points).__name__))
-    user_start = _pybnalag.UserStartSystem(target, list(start_points))
+    user_start = _pybnalag.UserStartSystem(target, _coerce_start_points(start_points))
     solver = solver_cls(target, user_start, homotopy)
     return _HomotopySolverHolder(solver, homotopy, target, user_start)
 
