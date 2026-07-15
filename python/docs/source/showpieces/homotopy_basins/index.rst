@@ -18,13 +18,17 @@ texture — every channel is tracked data.
    :alt: neon comet cluster: eight glowing discriminant arcs with rainbow spiral vortices at their
          curled roots, striped basins streaming to the right
 
-The **hue** is the phase of a landing *fingerprint* :math:`\sum_k \zeta^k x_k` over the nine
-destinations: smooth inside a basin, jumping exactly where the homotopy's swept discriminant
-permutes which root each path reaches.  The **brightness** is the tracker's own step count — the
+The **hue** is the phase of the *start–end correlation*
+:math:`s(c) = \sum_k \zeta^k x_k(c)` — each path contributes (its start root) × (its landing
+point).  The naive unweighted sum of the landings would be permutation-blind (for this family it
+is the :math:`x^8` coefficient: identically zero); the start-root weights break that symmetry, so
+:math:`s` is holomorphic in :math:`c` inside each basin and *jumps* exactly where the homotopy's
+swept discriminant permutes which root each path reaches — swapping the destinations of paths
+:math:`j` and :math:`k` kicks it by :math:`(\zeta^j-\zeta^k)(x_j-x_k)`.  The **brightness** is the tracker's own step count — the
 blazing arcs are the set of :math:`c` for which the straight-line homotopy passes through a
 singular system at some :math:`t`, and the adaptive stepper piles up tiny steps exactly there.
-The **stripes** are level bands of the fingerprint's magnitude, and the rainbow whirlpools are
-its zeros, coiled at the roots of the arcs.
+The **stripes** are level bands of :math:`\log|s|` — cosmetic contours of tracked data, not
+singularities — and the rainbow whirlpools are the zeros of :math:`s`, where its phase winds.
 
 The gamma trick, photographed
 =============================
@@ -36,8 +40,8 @@ through *system space*, and that line grazes the discriminant along one arc per 
 
 .. math::
 
-   c(\mu) \;=\; -\,\frac{4\,\zeta}{(1+\mu)^{1/4}} \;-\; \mu,
-   \qquad \mu \in \gamma\cdot(0,\infty),
+   c(\mu) \;=\; -\,\frac{8\,\zeta}{(1+\mu)^{1/8}} \;-\; \mu,
+   \qquad \mu = \frac{\gamma\,t}{1-t} \in \gamma\cdot(0,\infty),\quad \zeta^8 = 1,
 
 each arc leaving its branch point and trailing to infinity in the :math:`-\gamma` direction.
 That is the **gamma trick** made visible: the arcs are precisely the *bad* target systems for
@@ -60,8 +64,8 @@ points at :math:`c = -4\zeta,\ \zeta^4=1`, one glowing arc each, five basins:
    :alt: the degree-5 version: four glowing arcs with spiral vortices, five striped basins
 
 Crossing an arc means the straight-line homotopy passed the discriminant on one side rather than
-the other, so the destinations of exactly two of the tracked paths trade places — the hue field
-jumps by the corresponding transposition's fingerprint.  Walking a small loop *around* an arc's
+the other, so the destinations of exactly two of the tracked paths trade places — the start–end correlation,
+and with it the hue, jumps by the transposition's kick :math:`(\zeta^j-\zeta^k)(x_j-x_k)`.  Walking a small loop *around* an arc's
 endpoint (the branch point itself) is precisely the monodromy loop of
 :doc:`the Monodromy Loom </showpieces/monodromy_loom/index>` — the two showpieces are the same
 mathematics seen from parameter space and from solution space.
@@ -78,7 +82,7 @@ deterministic):
    :start-at: def _track_pixel(
    :end-at: return (lands
 
-The rest — the fingerprint reduction, the stress normalization, the banding and bloom — is
+The rest — the start–end correlation reduction, the stress normalization, the banding and bloom — is
 rendering; see ``homotopy_basins.py`` in full.
 
 .. note::
