@@ -117,7 +117,17 @@ namespace bertini {
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
 			{
 				complex_mp a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
-				complex_mp b = pow(RandomValue<complex_mp>(ii), one / degrees_[ii]);
+
+				// Round the random value DOWN to working precision BEFORE taking the root.
+				// The Complex node stores its value at its (max) creation precision, and the
+				// variable-precision backend computes pow at the OPERAND's precision -- hundreds
+				// of digits of transcendental arithmetic whose extra digits the Precision call
+				// below then discarded.  Profiled at 93% of start-point generation time (~300x
+				// the working-precision cost); the master value stays exact, so regenerating at
+				// a higher ThreadPrecision still refines toward the same point.
+				complex_mp root_base = RandomValue<complex_mp>(ii);
+				Precision(root_base, ThreadPrecision());
+				complex_mp b = pow(root_base, one / degrees_[ii]);
 
 				Precision(a,ThreadPrecision());
 				Precision(b,ThreadPrecision());
