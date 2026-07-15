@@ -13,16 +13,19 @@ and track all d start roots (the roots of unity) from t=1 to t=0 with the
 ``DoublePrecisionTracker``.  Nothing in the image is a synthetic texture -- every channel is
 tracked data:
 
-    * hue        -- the phase of a landing *fingerprint* ``sum_k zeta^k x_k`` over the d
-                    destinations (zeta = exp(2 pi i / d)).  It varies smoothly inside a basin
-                    and jumps exactly where the homotopy's swept discriminant permutes which
-                    root each path reaches;
+    * hue        -- the phase of the *start-end correlation* ``s(c) = sum_k zeta^k x_k``:
+                    each path contributes (its start root) * (its landing point), with
+                    zeta = exp(2 pi i / d).  The unweighted sum of landings would be
+                    permutation-blind (here identically zero -- it is the x^(d-1) coefficient);
+                    the start-root weights make s holomorphic in c inside each basin and make it
+                    jump exactly where the homotopy's swept discriminant permutes which root
+                    each path reaches;
     * brightness -- the tracker's own total step count.  The blazing arcs are the discriminant
                     of H swept through system space: the set of c for which the straight-line
                     homotopy passes through a singular system at some t.  The adaptive stepper
                     piles up tiny steps exactly there;
-    * stripes    -- level bands of the fingerprint's magnitude (honest domain coloring); the
-                    rainbow whirlpools are its zeros, sitting at the curled roots of the arcs;
+    * stripes    -- level bands of log|s| (honest domain coloring; cosmetic, not singularity);
+                    the rainbow whirlpools are the zeros of s, coiled at the roots of the arcs;
     * white speckle -- pixels where a path actually failed near a singular system.
 
 The geometry is the gamma trick, photographed.  The family's branch points form the ring
@@ -88,7 +91,7 @@ def _cnode(re_exact, im_exact):
 def _track_pixel(c_re, c_im):
     """All d total-degree paths for the target x^d - d*x - c at one exact pixel value c.
 
-    Returns (fingerprint, total_steps, num_failures)."""
+    Returns (start-end correlation s, total_steps, num_failures)."""
     bertini = _worker['bertini']
     tracking = bertini.tracking
     d = _worker['degree']
@@ -119,7 +122,7 @@ def _track_pixel(c_re, c_im):
 
 
 def _row(args):
-    """One raster row: track every pixel, reduce to (fingerprint, steps, failures) arrays."""
+    """One raster row: track every pixel, reduce to (correlation s, steps, failures) arrays."""
     j, c_res, c_im = args
     finger = np.zeros(len(c_res), dtype=complex)
     steps = np.zeros(len(c_res), dtype=np.int32)
@@ -131,7 +134,7 @@ def _row(args):
 
 def compute(degree, gamma, center, halfwidth, w, h):
     """Track the whole window (w x h pixels, all d paths each).  Returns per-pixel arrays
-    (fingerprint, steps, failures)."""
+    (correlation s, steps, failures)."""
     halfheight = halfwidth * h / w
     xs = [Fraction(round((center[0] - halfwidth + 2 * halfwidth * i / (w - 1)) * _DENOM), _DENOM)
           for i in range(w)]
@@ -170,8 +173,8 @@ def _downsample(img, factor):
 
 
 def render(finger, steps, fails, out_png):
-    """Map the tracked channels to color: hue from the fingerprint phase, brightness from
-    tracker effort, stripes from the fingerprint magnitude, speckle from failures."""
+    """Map the tracked channels to color: hue from the phase of the start-end correlation s, brightness from
+    tracker effort, stripes from |s|, speckle from failures."""
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.colors as mcolors
