@@ -114,10 +114,43 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab )
 	Vec< BCT > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
-	BOOST_CHECK( norm(first_approx(0) - ComplexFromString("0.9999999767578209232082898114211261253459","0")) < 1e-7); 
-	// answer was found using matlab for a check. difference is diff is 2.32422e-08
+	// The unique Hermite interpolant of this data, evaluated at 0, is EXACTLY the terminating
+	// decimal below (computed independently in exact rational arithmetic).  The previous
+	// expectation (0.99999997675782..., attributed to matlab) was not the Hermite value, and the
+	// loose 1e-7 tolerance let a mis-indexed Horner reconstruction pass against it.
+	BOOST_CHECK( norm(first_approx(0) - ComplexFromString("0.999999998837890625","0")) < 1e-20);
 
 }//end basic hermite test case mp against matlab
+
+
+/**
+Regression: Hermite interpolation with n nodes (values + derivatives) is a degree 2n-1 method, so
+it must reproduce t^3 from 3 nodes EXACTLY -- extrapolating to 0 gives 0, to roundoff.  The old
+Horner reconstruction walked the doubled node list at half speed, evaluating a polynomial that was
+not the interpolant: this data came back ~1.6e-5 from 0, five orders above the samples' support.
+*/
+BOOST_AUTO_TEST_CASE( hermite_reproduces_low_degree_polynomials_exactly )
+{
+	DefaultPrecision(ambient_precision);
+
+	BCT target_time(0,0);
+	unsigned int num_samples = 3;
+
+	bertini::TimeCont<BCT> times;
+	bertini::SampCont<BCT> samples, derivatives;
+	Vec<BCT> sample(1), derivative(1);
+
+	for (auto const& t_str : {".1", ".05", ".025"})
+	{
+		BCT t = ComplexFromString(t_str);
+		times.push_back(t);
+		sample << pow(t,3);                samples.push_back(sample);         // f(t)  = t^3
+		derivative << BCT(3)*pow(t,2);     derivatives.push_back(derivative); // f'(t) = 3t^2
+	}
+
+	Vec<BCT> approx = HermiteInterpolateAndSolve(target_time, num_samples, times, samples, derivatives);
+	BOOST_CHECK( norm(approx(0)) < 1e-20 );
+}//end hermite_reproduces_low_degree_polynomials_exactly
 
 
 
@@ -217,9 +250,13 @@ BOOST_AUTO_TEST_CASE(hermite_interpolation)
 
 	Vec< BCT > third_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
-	BOOST_CHECK((first_approx - correct).norm() < 1e-10);
-	BOOST_CHECK((second_approx - correct).norm() < 1e-10);	
-	BOOST_CHECK((third_approx - correct).norm() < 1e-10);
+	// Tolerances calibrated to the TRUE Hermite interpolation errors of these windows (exact
+	// rational arithmetic): 1.162e-9, 4.539e-12, 1.773e-14 -- shrinking ~256x per halving.
+	// The old flat 1e-10 was calibrated to a mis-indexed Horner that happened to land closer
+	// to the truth than the actual interpolant does on the first window.
+	BOOST_CHECK((first_approx - correct).norm() < 2e-9);
+	BOOST_CHECK((second_approx - correct).norm() < 1e-11);
+	BOOST_CHECK((third_approx - correct).norm() < 1e-13);
 
 }//end hermite test case
 

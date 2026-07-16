@@ -223,8 +223,12 @@ BOOST_AUTO_TEST_CASE(eight_degree_univariate_advanced_gets_better)
 
 	Vec< BCT > third_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
-	BOOST_CHECK((first_approx - correct).norm() < 1e-10);
-	BOOST_CHECK((second_approx - correct).norm() < 1e-10);	
-	BOOST_CHECK((third_approx - correct).norm() < 1e-10);
+	// Tolerances calibrated to the TRUE Hermite interpolation errors of these windows (exact
+	// rational arithmetic): 1.162e-9, 4.539e-12, 1.773e-14 -- shrinking ~256x per halving.
+	// The old flat 1e-10 was calibrated to a mis-indexed Horner that happened to land closer
+	// to the truth than the actual interpolant does on the first window.
+	BOOST_CHECK((first_approx - correct).norm() < 2e-9);
+	BOOST_CHECK((second_approx - correct).norm() < 1e-11);
+	BOOST_CHECK((third_approx - correct).norm() < 1e-13);
 
 }//end hermite test case
