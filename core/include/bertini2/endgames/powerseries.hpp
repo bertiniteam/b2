@@ -378,13 +378,22 @@ public:
 
 		RealT estimate = log(static_cast<RealT>(this->EndgameSettings().sample_factor))/log(abs(rand_sum2/rand_sum1));
 
-		if (estimate < 1) // would be nan if sample points are same as each other
+		const auto& ps_config = this->template Get<PowerSeriesConfig>();
+		if (estimate < 1)
 		  	upper_bound_on_cycle_number_ = 1;
 		else
 		{
-			using std::max;
-			auto upper_bound = unsigned(round(estimate)*this->template Get<PowerSeriesConfig>().cycle_number_amplification);
-			upper_bound_on_cycle_number_ = max(upper_bound,this->template Get<PowerSeriesConfig>().max_cycle_number);
+			// max_cycle_number is a CEILING on the candidate search (each candidate costs a full
+			// Hermite solve).  Clamp before any conversion to unsigned: near-unity sample ratios
+			// (slow convergence -- high multiplicity, or a slow diverger) drive the estimate toward
+			// +inf, and unsigned(inf) is undefined behavior.  The !(a < b) form also routes NaN to
+			// the ceiling.  This was `max` -- the ceiling was a floor, and the search was unbounded.
+			using std::round;
+			RealT amplified = round(estimate) * static_cast<RealT>(ps_config.cycle_number_amplification);
+			if (!(amplified < static_cast<RealT>(ps_config.max_cycle_number)))
+				upper_bound_on_cycle_number_ = ps_config.max_cycle_number;
+			else
+				upper_bound_on_cycle_number_ = std::max(1u, static_cast<unsigned>(amplified));
 		}
 
 		return upper_bound_on_cycle_number_;
