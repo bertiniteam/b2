@@ -122,7 +122,8 @@ def _plots():
              note="showpiece: raster PNG only; tight-tolerance mult-35 solve -> slow (~1 min)"),
         Plot("homotopy_basins",
              SHOWPIECES / "homotopy_basins" / "homotopy_basins.py",
-             ["homotopy_basins.png", "homotopy_basins_teaching.png"],
+             ["homotopy_basins.png", "homotopy_basins_annotated.png",
+              "homotopy_basins_teaching.png", "homotopy_basins_teaching_annotated.png"],
              note="showpiece: raster PNG only; ~17M tracked paths -> SLOW (~10-15 min on 12 cores)"),
     ]
 
