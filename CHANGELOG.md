@@ -67,20 +67,60 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
-## [3.4.0] - 2026-07-14
+## [3.4.0] - 2026-07-16
 
-A one-call way to build a linear slice that passes through a chosen point.
+A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening
+sweep (power series and Cauchy both), and friendlier start-point handling in the Python layer.
 
 ### Added
 
 - **`Slice.through_point(variables, point, dim=1, coefficients=None, real=False, orthogonal=True, homogeneous=False)`**
-  — the single place to make a slice through a given point.  With `coefficients=None` (the default) it
+  — the single place to make a slice through a given point (#343).  With `coefficients=None` (the default) it
   draws a random block of `dim` linear forms (complex, or real with `real=True`; orthonormalized when
   `orthogonal`) and sets the constant column so every form vanishes at `point`; pass `coefficients` (a
   bare, non-augmented block) to use exactly those directional coefficients.  Backed by the new C++
   primitives `Slice::ThroughPoint` and a `through_point` option on `Slice::RandomReal` /
   `Slice::RandomComplex`.  `homogeneous=True` builds a projective slice through the point (rows
   orthogonal to it); it is random-only.
+- **`HomotopySolver` accepts start points in any faithful numeric representation** (#350, fixing #347):
+  multiprecision scalars, Python/numpy numbers, and *constant* symbolic nodes (an ndarray of
+  `symbolics.Complex` previously crashed with a raw eigenpy converter error).  Start points are
+  transported values — the tracker refines them — so lossy doubles are welcome here; expressions still
+  containing variables are refused as the math errors they are, with an error that names the variables.
+  `complex_mp` now constructs explicitly from a Python `complex` (still no implicit conversion).
+
+### Fixed
+
+- **The power-series endgame's Hermite interpolation now evaluates the actual Hermite
+  interpolant** (#353).  The Horner walk over the doubled node list advanced at half speed, evaluating
+  a different (lower-order) interpolant — the limit was still correct, but convergence order was
+  degraded.  This changes computed results at agreeing inputs: approximations land measurably closer
+  to the truth (the old test oracle values were themselves off and have been re-pinned exactly).
+- **`max_cycle_number` is enforced as a ceiling, not a floor** (#353).  The bound was applied with
+  `max()`, and a near-unity sample ratio could push the estimate through an unsigned conversion of
+  infinity (UB).  Clamped before conversion; cycle-number candidates now default sanely on
+  degenerate samples.
+- **NaN is a failure, never `Converged`** (#354).  IEEE comparison semantics made every NaN
+  comparison false, so a NaN correction step exited the convergence loop as success, and the
+  security valve (`norm > max_norm`) was blind to NaN norms.  Both endgames now fail fast on NaN
+  approximations (new `bertini::ContainsNaN` in `eigen_extensions.hpp` — component-wise, because
+  multiprecision complex NaN compares *equal* to itself) and the valve is NaN-aware.
+- **Slow divergers truncate honestly in the Cauchy endgame** (#355).  Paths diverging to infinity
+  slower than the shrinking time zones could grind precision escalation for minutes before dying.
+  The security valve now also arms below B1's `cycle_cutoff_time` and watches the *loop floor* — the
+  minimum dehomogenized norm over the Cauchy loop samples — which exceeds `max_norm` only when the
+  entire loop is beyond it (single-sample spikes on legitimate paths cannot trip it).
+- **Singularity classification uses the endpoint's spectral-norm condition number** (#344, the B1
+  `CondNumThreshold` spec), instead of a mixed-norm estimate that mislabeled borderline endpoints.
+- **`frequency_of_CN_estimation` was inert** (#345): the tracker's condition-number refresh counter
+  was passed by value, so the estimate never refreshed at the configured cadence.
+- **`max_precision_used` is harvested from failed endgames too** (#349); previously a path that
+  failed after escalating precision reported as if it had never left double.
+
+### Changed
+
+- **Binomial start points are computed at working precision** (#346) — about 3.2× faster on small
+  total-degree solves, with start-point accuracy unchanged (start points are transported values).
 
 _______________________________________________________________________________
 
