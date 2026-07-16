@@ -326,6 +326,17 @@ public:
 		return this->template Get<SecurityConfig>();
 	}
 
+	/// \return True when a dehomogenized norm calls for security truncation: above max_norm, or
+	/// NaN.  NaN must count as beyond -- every IEEE comparison against NaN is false, so a plain
+	/// `norm > max_norm` valve is BLIND to exactly the paths most likely to be diverging (a NaN
+	/// dehom norm means the homogenizing coordinate vanished: the path is at infinity).
+	template<typename RealT>
+	bool BeyondSecurityMaxNorm(RealT const& norm) const
+	{
+		using std::isnan;
+		return isnan(norm) || norm > static_cast<RealT>(this->SecuritySettings().max_norm);
+	}
+
 	/// \brief Construct the endgame for a tracker, with its configuration as a tuple.
 	explicit EndgameBase(TrackerType const& tr, const ConfigsAsTuple& settings ) :
       	EndgamePrecPolicyBase<TrackerType>(tr), Configured( settings ), PrecT(tr)

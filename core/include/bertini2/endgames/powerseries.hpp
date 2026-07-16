@@ -443,6 +443,11 @@ public:
 
 		auto min_found_difference = Eigen::NumTraits<RealT>::highest();
 
+		// Default the selection before the candidate loop: if every candidate's difference is
+		// NaN (poisoned samples), the comparisons below are all false and nothing is assigned --
+		// a fresh endgame would otherwise carry cycle number 0 into TransformToSPlane and throw.
+		this->cycle_number_ = 1;
+
 		TimeCont<ComplexT> s_times(num_pts);
 		SampCont<ComplexT> s_derivatives(num_pts);
 
@@ -589,6 +594,12 @@ public:
 
 		Precision(result, Precision(s_derivatives.back()));
 		result = HermiteInterpolateAndSolve(ComplexT(0), num_pts, s_times, std::get<SampCont<ComplexT> >(samples_), s_derivatives, ContStart::Back);
+		// A NaN extrapolation must be a FAILURE code.  The run loop converges on
+		// `approx_error > FinalTolerance()` becoming false, and every IEEE comparison against
+		// NaN is false -- so a NaN approximation would exit the loop down the SUCCESS path,
+		// reporting Converged with a poisoned answer.
+		if (bertini::ContainsNaN(result))
+			return SuccessCode::FailedToConverge;
 		return SuccessCode::Success;
 	}//end ComputeApproximationOfXAtT0
 
@@ -783,7 +794,7 @@ public:
 	 		if(this->SecuritySettings().level <= 0)
 	 		{
 	 			norm_of_dehom_of_latest_approx = this->GetSystem().InfinityNormOfDehomogenized(latest_approx);
-		 		if(norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm && norm_of_dehom_of_prev_approx > this->SecuritySettings().max_norm)
+		 		if(this->BeyondSecurityMaxNorm(norm_of_dehom_of_latest_approx) && this->BeyondSecurityMaxNorm(norm_of_dehom_of_prev_approx))
 		 		{
 		 			NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
 	 				return SuccessCode::SecurityMaxNormReached;
@@ -876,7 +887,7 @@ public:
 			if (this->SecuritySettings().level <= 0)
 			{
 				norm_latest = this->GetSystem().InfinityNormOfDehomogenized(this->final_approximation_);
-				if (norm_latest > this->SecuritySettings().max_norm && norm_prev > this->SecuritySettings().max_norm)
+				if (this->BeyondSecurityMaxNorm(norm_latest) && this->BeyondSecurityMaxNorm(norm_prev))
 				{
 					NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
 					return SuccessCode::SecurityMaxNormReached;

@@ -153,6 +153,55 @@ BOOST_AUTO_TEST_CASE( hermite_reproduces_low_degree_polynomials_exactly )
 }//end hermite_reproduces_low_degree_polynomials_exactly
 
 
+/**
+Regression: a NaN extrapolation must come back as a FAILURE code, never Success.  The run loop
+converges on `approx_error > FinalTolerance()` going false, and every IEEE comparison against NaN
+is false -- so a NaN approximation used to exit the loop down the SUCCESS path, reporting
+Converged with a poisoned answer.
+*/
+BOOST_AUTO_TEST_CASE(nan_sample_yields_failure_code_not_success)
+{
+	DefaultPrecision(ambient_precision);
+
+	bertini::System sys;
+	Var x = Variable::Make("x"), t = Variable::Make("t");
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_settings, newton_settings);
+	tracker.PrecisionSetup(precision_config);
+
+	bertini::TimeCont<BCT> times;
+	bertini::SampCont<BCT> samples;
+	Vec<BCT> sample(1);
+
+	times.push_back(ComplexFromString(".1"));
+	sample << ComplexFromString("0.5");     samples.push_back(sample);
+	times.push_back(ComplexFromString(".05"));
+	sample << ComplexFromString("0.6");     samples.push_back(sample);
+	times.push_back(ComplexFromString(".025"));
+	sample << BCT(std::numeric_limits<BRT>::quiet_NaN());   samples.push_back(sample);   // poisoned
+
+	bertini::endgame::EndgameConfig endgame_settings;
+	TestedEGType my_endgame(tracker, endgame_settings);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
+	my_endgame.template ComputeAllDerivatives<BCT>();
+	my_endgame.SetRandVec<BCT>(1);
+	my_endgame.CycleNumber(1);
+
+	Vec<BCT> approx(1);
+	auto code = my_endgame.template ComputeApproximationOfXAtT0<BCT>(approx, BCT(0));
+	BOOST_CHECK(code != SuccessCode::Success);
+}//end nan_sample_yields_failure_code_not_success
+
+
 
 
 

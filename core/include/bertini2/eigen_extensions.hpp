@@ -313,6 +313,26 @@ namespace bertini {
 
 
 	/**
+	\brief True when any entry of a complex-valued Eigen object has a NaN real or imaginary part.
+
+	Component-wise isnan is REQUIRED for correctness: the self-inequality trick (`z != z`) does
+	not work for complex_mp, whose equality does not follow IEEE NaN semantics (a NaN complex_mp
+	compares EQUAL to itself) -- which also makes Eigen's own hasNaN() unreliable there.
+	*/
+	template<typename Derived>
+	inline
+	bool ContainsNaN(Eigen::MatrixBase<Derived> const & v)
+	{
+		using std::isnan;
+		for (Eigen::Index ii = 0; ii < v.rows(); ++ii)
+			for (Eigen::Index jj = 0; jj < v.cols(); ++jj)
+				if (isnan(v(ii,jj).real()) || isnan(v(ii,jj).imag()))
+					return true;
+		return false;
+	}
+
+
+	/**
 	\brief Get the precision of an Eigen object. If the object is empty, it's the precision of a default-constructed Scalar.  If it actually has content, then it's the precision of the first element.
 
 	If you require that the object be of uniform precision when you check, use PrecisionRequireUniform

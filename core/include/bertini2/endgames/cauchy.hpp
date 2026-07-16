@@ -1051,6 +1051,11 @@ public:
 			result += cau_samples[ii];
 		result /= this->CycleNumber() * this->EndgameSettings().num_sample_points;
 
+		// A NaN mean must be a FAILURE code, never Success: NaN compares false against
+		// everything, so downstream convergence and security comparisons are blind to it.
+		if (bertini::ContainsNaN(result))
+			return SuccessCode::FailedToConverge;
+
 		return SuccessCode::Success;
 
 	}
@@ -1377,8 +1382,8 @@ public:
 				if (in_operating_zone)
 				{
 					norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(latest_approx);
-					if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&
-						norm_of_dehom_latest > this->SecuritySettings().max_norm  )
+					if (this->BeyondSecurityMaxNorm(norm_of_dehom_prev) &&
+						this->BeyondSecurityMaxNorm(norm_of_dehom_latest))
 					{
 						NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
 						return SuccessCode::SecurityMaxNormReached;
@@ -1515,8 +1520,8 @@ public:
 				if (in_operating_zone)
 				{
 					norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(this->final_approximation_);
-					if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&
-					    norm_of_dehom_latest > this->SecuritySettings().max_norm)
+					if (this->BeyondSecurityMaxNorm(norm_of_dehom_prev) &&
+					    this->BeyondSecurityMaxNorm(norm_of_dehom_latest))
 					{
 						NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
 						return SuccessCode::SecurityMaxNormReached;
