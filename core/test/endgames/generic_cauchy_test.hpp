@@ -1111,6 +1111,51 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 }// end compute_cauchy_approximation_cycle_num_1
 
 
+/**
+Regression: a NaN in the loop samples must make the trapezoidal mean come back as a FAILURE
+code, never Success -- NaN compares false against everything, so downstream convergence and
+security comparisons are blind to a poisoned approximation.
+*/
+BOOST_AUTO_TEST_CASE(nan_cauchy_sample_yields_failure_code_not_success)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+
+	bertini::TimeCont<BCT> cauchy_times;
+	bertini::SampCont<BCT> cauchy_samples;
+	Vec<BCT> sample(1);
+
+	// cycle 1 x num_sample_points samples + the closing copy, one poisoned with NaN
+	cauchy_times.push_back(ComplexFromString("0.1"));        sample << ComplexFromString("0.8");  cauchy_samples.push_back(sample);
+	cauchy_times.push_back(ComplexFromString("0", "0.1"));   sample << ComplexFromString("0.81"); cauchy_samples.push_back(sample);
+	cauchy_times.push_back(ComplexFromString("-0.1"));       sample << BCT(std::numeric_limits<BRT>::quiet_NaN()); cauchy_samples.push_back(sample);
+	cauchy_times.push_back(ComplexFromString("0.1"));        sample << ComplexFromString("0.8");  cauchy_samples.push_back(sample);
+
+	TestedEGType my_endgame(tracker);
+	my_endgame.SetCauchyTimes(cauchy_times);
+	my_endgame.SetCauchySamples(cauchy_samples);
+	my_endgame.CycleNumber(1);
+
+	Vec<BCT> approx;
+	auto code = my_endgame.template ComputeCauchyApproximationOfXAtT0<BCT>(approx);
+	BOOST_CHECK(code != SuccessCode::Success);
+}// end nan_cauchy_sample_yields_failure_code_not_success
+
+
 
 /**
 	This test case uses all the sample points collected by CircleTrack around a non-singular point to compute an extrapolant using the 
