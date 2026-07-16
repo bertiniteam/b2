@@ -156,5 +156,62 @@ BOOST_AUTO_TEST_CASE(tight_tolerance_forces_double_to_mpfr_migration)
 BOOST_AUTO_TEST_SUITE_END() // re: adaptive_numeric_type_migration
 
 
+// REGRESSION: slowly-diverging paths must be truncated by the security valve, not left to
+// crawl.  A diverger like x = t^(-1/2) (from x^2*t - 1 = 0) carries significant pole mass
+// at every radius, so it is never pole-mass-in-zone; before B1's CycleTimeCutoff semantics
+// were wired in (below cycle_cutoff_time, the valve arms unconditionally), the valve never
+// armed and such paths ground toward the tracker's far-larger truncation threshold
+// (measured on an NID workload: ~117k extra steps over 3 decades of |t| at up to 70 digits).
+BOOST_AUTO_TEST_SUITE(divergent_path_truncation)
+
+using namespace bertini;
+using namespace bertini::endgame;
+
+using TrackerType   = bertini::tracking::AMPTracker;
+using TestedEGType  = EndgameSelector<TrackerType>::Cauchy;
+using PrecisionConfig = bertini::tracking::TrackerTraits<TrackerType>::PrecisionConfig;
+
+BOOST_AUTO_TEST_CASE(slow_diverger_hits_security_max_norm_below_cycle_cutoff)
+{
+	DefaultPrecision(DoublePrecision());
+
+	System sys;
+	auto x = node::Variable::Make("x");
+	auto t = node::Variable::Make("t");
+	sys.AddFunction( pow(x,2)*t - 1 );        // x(t) = t^(-1/2): an honest slow diverger
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	tracker.Setup(bertini::tracking::Predictor::HeunEuler, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+
+	complex_mp time(real_mp("0.1"), real_mp("0.0"));
+	Vec<complex_mp> sample(1);
+	sample << complex_mp(real_mp("3.162277660168379331998893544432719"), real_mp("0.0"));  // 0.1^(-1/2)
+
+	TestedEGType eg(tracker);
+	eg.SetBoundaryTime(time);
+
+	auto code = eg.Run(sample);
+	BOOST_TEST_MESSAGE("diverger endgame code: " << int(code) << "  |t| " << double(abs(eg.LatestTime())));
+
+	// truncated by the valve, not ground down to the tracker's threshold or min track time
+	BOOST_CHECK(code == SuccessCode::SecurityMaxNormReached);
+	// ...and truncated EARLY: at/below the cycle cutoff (1e-8) the valve arms; the norm
+	// crosses max_norm (1e4) at |t| ~ 1e-8, so death should come around that scale --
+	// not after descending to ~1e-14 (ratio cutoff / old-crawl territory)
+	using std::abs;
+	BOOST_CHECK_GT(static_cast<double>(abs(eg.LatestTime())), 1e-11);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // re: divergent_path_truncation
+
+
 BOOST_AUTO_TEST_SUITE_END() // re:
 
