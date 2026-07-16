@@ -1,0 +1,662 @@
+"""The Nebula.
+
+A showpiece: **one solve, every step**.  Where Homotopy Basins photographs *parameter* space --
+many solves, one endpoint each -- the Nebula photographs *solution space in transit*.  Take a single
+polynomial system with a lot of paths (cyclic-7: 5040 total-degree paths), track every one of them
+from t=1 to t=0, keep **every accepted tracker step** along the way, project each C^n sample down to
+a plane, and expose all of it onto one additive buffer.  Thousands of translucent trails pile up
+into a gas cloud: bright knots where paths converge on solutions, filaments where bundles of paths
+shear past the discriminant, voids where nothing travels.
+
+It is a long exposure, and the exposure is literal:
+
+    brightness  =  time spent
+
+Each segment between two tracked samples carries the path-time ``|dt|`` the tracker spent crossing
+it, spread evenly along the segment's footprint.  A path that crawls burns bright; a path that
+races to infinity leaves a faint comet streak.  Brightness is *dwell*, spatially resolved -- and
+because the energy of a segment is fixed regardless of how many samples the tracker chose to leave
+on it, the picture is of the **path**, not of the stepper.  Nothing here is a synthetic texture:
+every photon is real tracked data.
+
+Channels (all honest)
+---------------------
+* **position**  -- a fixed complex-linear functional ``l(x) = sum a_k x_k``, plotted as
+  ``(Re l, Im l)``.  Choosing ``l`` is this piece's composition knob (gamma was Basins').
+* **brightness** -- dwell, as above.
+* **colour**    -- temperature by ``log|t|``: cool where the path starts, white-hot in the endgame.
+  Flow direction without arrows, and the knots at the solutions come out incandescent.
+  (Note that colouring by ``arg l(x)`` would be *degenerate*: position already IS ``(Re l, Im l)``,
+  so ``arg l`` is nothing but the screen polar angle -- a pinwheel carrying no information.)
+
+Why the power-series endgame
+----------------------------
+The Cauchy endgame samples in *circles* around t=0, so ``|t|`` is deliberately multi-sheeted and
+non-monotone, and a path's data can teleport back to the endgame boundary.  The power-series endgame
+descends radially instead: measured over 5880 cyclic-5/6/7 paths, ``|t|`` is monotone on **every**
+path and there are **zero** teleports.  The same lesson was learned the hard way by the Flight
+Recorder showpiece (commit 0cbc7567).  It also keeps the piece cheap: under Cauchy, samples/path
+explode superlinearly (259 -> 970 -> 11861 for n=5,6,7) and cyclic-7 becomes a ~29-hour render;
+under power-series they stay flat (202 -> 462 -> 335) and cyclic-7 is **68 seconds**.
+
+Determinism
+-----------
+There is a genuine random draw here (the total-degree start system and its gamma), unlike Basins
+where every coefficient is exact.  So the seed IS the parameter: ``bertini.random.set_random_seed``
+immediately before building, and ``num_threads = 1``.  Serial is not a compromise -- with a Python
+observer attached, threading is ~7x *slower* (12 threads convoy on the GIL, one acquire per step).
+
+Regenerated through ``tools/refresh_doc_artifacts.py`` (see that tool).  This is a raster showpiece:
+PNG only (the image IS an accumulation buffer; there is no meaningful vector form), so it is exempt
+from the tutorial figures' png+svg rule.  It is NOT a doctest -- the docs page embeds the
+pre-rendered image.
+
+Run standalone:  python nebula.py
+"""
+
+import argparse
+import datetime
+import os
+import time
+
+import numpy as np
+
+import bertini
+import bertini.nag_algorithm
+from bertini import ZeroDimSolver, SolutionPathCollector
+
+_OUT = os.path.dirname(os.path.abspath(__file__))
+
+# supersampling: expose at SS x the output size, box-downsample for silky filaments
+_SS = 2
+
+# a segment whose |t| RATIO to the previous sample exceeds this is a teleport, not a step.
+# Power-series never produces one (measured: 0 in 5880 paths), but the Cauchy endgame does -- a jump
+# back to the endgame boundary is ~512x, while a legitimate Cauchy chord dips only ~1.95x.  |dt|
+# alone CANNOT discriminate: a teleport's |dt| is ~0.0998, inside the max_step_size=0.1 cap.
+_TELEPORT_RATIO = 3.0
+
+# subsample spacing along a segment, in pixels, when rasterising the polyline
+_STEP_PX = 0.5
+
+
+# --- the subjects ---------------------------------------------------------------------------------
+
+def cyclic_system(n):
+    """The cyclic-n system: n! total-degree paths (cyclic-7 -> 5040).  Highly symmetric."""
+    x = [bertini.Variable('x' + str(i)) for i in range(n)]
+    y = list(x) + list(x)
+    sys_ = bertini.System()
+    sys_.add_variable_group(bertini.VariableGroup(x))
+    for ii in range(n - 1):
+        sys_.add_function(np.sum([np.prod(y[jj:jj + ii + 1]) for jj in range(n)]))
+    sys_.add_function(np.prod(x) - 1)
+    return sys_
+
+
+def noon_system(n):
+    """Noonburg's neural network: x_i (1 + sum_{j != i} x_j^2) - 1.  3^n paths, not symmetric."""
+    x = [bertini.Variable('x' + str(i)) for i in range(n)]
+    sys_ = bertini.System()
+    sys_.add_variable_group(bertini.VariableGroup(x))
+    for i in range(n):
+        sys_.add_function(x[i] * (1 + np.sum([x[j]**2 for j in range(n) if j != i])) - 1)
+    return sys_
+
+
+def katsura_system(n):
+    """The Katsura-n system: 2^n paths.  A classic, and not symmetric."""
+    x = [bertini.Variable('x' + str(i)) for i in range(n + 1)]
+
+    def u(k):
+        return x[abs(k)] if abs(k) <= n else None
+
+    sys_ = bertini.System()
+    sys_.add_variable_group(bertini.VariableGroup(x))
+    for i in range(n):
+        terms = [u(j) * u(i - j) for j in range(-n, n + 1)
+                 if u(j) is not None and u(i - j) is not None]
+        sys_.add_function(np.sum(terms) - u(i))
+    sys_.add_function(np.sum([u(j) for j in range(-n, n + 1) if u(j) is not None]) - 1)
+    return sys_
+
+
+def dense_system(num_vars, degree, seed=0):
+    """A random dense system: ``degree**num_vars`` paths, no structure and no symmetry at all.
+
+    The note's own suggestion for the true nebula -- a system with nothing special about it.  Every
+    coefficient is an EXACT rational drawn from a seeded RNG, per the library's coercion doctrine,
+    so the system is reproducible and no float ever reaches the function tree.
+    """
+    from fractions import Fraction
+    rng = np.random.default_rng(seed)
+    x = [bertini.Variable('x' + str(i)) for i in range(num_vars)]
+    sys_ = bertini.System()
+    sys_.add_variable_group(bertini.VariableGroup(x))
+
+    def monomials(d):
+        """Every exponent tuple of total degree <= d."""
+        out = [()]
+        for _ in range(num_vars):
+            out = [e + (k,) for e in out for k in range(d + 1) if sum(e) + k <= d]
+        return out
+
+    monos = monomials(degree)
+    for _ in range(num_vars):
+        f = None
+        for e in monos:
+            if sum(e) > degree:
+                continue
+            c = bertini.coefficient(Fraction(int(rng.integers(-9, 10)), 10)) \
+                + bertini.I * bertini.coefficient(Fraction(int(rng.integers(-9, 10)), 10))
+            term = c
+            for xi, k in zip(x, e):
+                if k:
+                    term = term * xi**k
+            f = term if f is None else f + term
+        sys_.add_function(f)
+    return sys_
+
+
+_SYSTEMS = {
+    'cyclic5': (lambda: cyclic_system(5), 'cyclic-5', 120),
+    'cyclic6': (lambda: cyclic_system(6), 'cyclic-6', 720),
+    'cyclic7': (lambda: cyclic_system(7), 'cyclic-7', 5040),
+    'noon6': (lambda: noon_system(6), 'noonburg-6', 729),
+    'katsura8': (lambda: katsura_system(8), 'katsura-8', 256),
+    'dense2': (lambda: dense_system(2, 24), 'dense random 2-var deg-24', 576),
+    'dense3': (lambda: dense_system(3, 9), 'dense random 3-var deg-9', 729),
+}
+
+
+# --- the engine: one solve, every step ------------------------------------------------------------
+
+class _Camera(SolutionPathCollector):
+    """Streaming meta-observer: compact each finished path to numpy, then drop it.
+
+    ``SolutionPathCollector`` spins up a ``PathDataCollector`` per path on ``PathStarted`` and
+    harvests it on ``PathComplete`` -- capturing EVERY path the solver starts, whatever its
+    outcome.  Left alone it holds all of them to the end; cyclic-7's 1.7M samples as Python lists
+    of boxed complexes would be gigabytes.  So subclass it (the attach/detach dance and its
+    re-entrancy rules are subtle and already correct) and drain ``series`` as it fills: memory
+    stays O(one path).
+
+    The splat deliberately does NOT happen here.  Observers re-acquire the GIL on every event, so
+    any real work in ``Observe`` serialises; compacting is cheap, rendering is not.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.points = []        # list of (n_k, n_vars+1) complex64, homogeneous
+        self.times = []         # list of (n_k,) complex128
+
+    def Observe(self, event):
+        super().Observe(event)                 # the base does all the tracker attach/detach work
+        while self.series:
+            c = self.series.pop()
+            self.points.append(c.points().astype(np.complex64))
+            self.times.append(c.times())
+
+
+def track(system_name, seed=2, max_step_size=None, mptype='double', endgame='powerseries'):
+    """Solve once and keep every accepted step of every path.
+
+    Parameters
+    ----------
+    system_name : str
+        A key of :data:`_SYSTEMS`.
+    seed : int
+        The random seed.  This is the piece's only entropy: the total-degree start system and its
+        gamma are drawn from it.  Set immediately before building -- a previous solve advances the
+        RNG state and would change the picture.
+    max_step_size : str or None
+        Cap on the tracker's step size, as an EXACT rational -- pass a string ("0.005"), never a
+        float.  Smaller caps sample the same path more finely (the mathematics is unchanged, and
+        the dwell weighting is invariant to sampling density); ``None`` keeps the default 0.1.
+    mptype : str
+        ``'double'`` (fast, for prototyping) or ``'adaptive'``.
+    endgame : str
+        ``'powerseries'`` -- see the module docstring on why not Cauchy.
+
+    Returns
+    -------
+    dict
+        The cache: ``points`` (n_samples, n_vars+1) complex64 homogeneous coordinates, ``times``
+        (n_samples,) complex128, ``path_id`` (n_samples,) int32, plus provenance.
+    """
+    build, label, _ = _SYSTEMS[system_name]
+    bertini.random.set_random_seed(seed)
+    bertini.recording(False)                   # millions of throwaway samples: do not archive them
+    solver = ZeroDimSolver(build(), mptype=mptype, endgame=endgame)
+    cfg = solver.get_config(bertini.nag_algorithm.ZeroDimConfig)
+    cfg.num_threads = 1                        # serial: deterministic, and faster than threading here
+    solver.set_config(cfg)
+    if max_step_size is not None:
+        solver.get_tracker().configure(stepping={'max_step_size': max_step_size})
+
+    cam = _Camera()
+    solver.add_observer(cam)
+    t0 = time.perf_counter()
+    solver.solve()
+    dt = time.perf_counter() - t0
+
+    path_id = np.concatenate([np.full(len(t), i, dtype=np.int32)
+                              for i, t in enumerate(cam.times)])
+    cache = dict(points=np.concatenate(cam.points), times=np.concatenate(cam.times),
+                 path_id=path_id, system=system_name, label=label, seed=seed,
+                 mptype=mptype, endgame=endgame,
+                 max_step_size=str(max_step_size), n_paths=len(cam.times),
+                 n_solutions=len(solver.finite_solutions()), seconds=dt)
+    print(f'  tracked {cache["n_paths"]} paths, {len(path_id):,} samples, '
+          f'{cache["n_solutions"]} finite solutions, {dt:.1f}s')
+    return cache
+
+
+def save_cache(cache, path):
+    """Write a tracked cache to an .npz.  Tracking is the expensive part; rendering is not."""
+    np.savez_compressed(path, **cache)
+    print('  cached', path)
+
+
+def load_cache(path):
+    """Read a cache written by :func:`save_cache`."""
+    z = np.load(path, allow_pickle=False)
+    return {k: (z[k] if z[k].ndim else z[k].item()) for k in z.files}
+
+
+# --- projection: C^n -> the plane -----------------------------------------------------------------
+#
+# These coefficients are applied POST-HOC, to tracked data, at render time.  They are part of the
+# camera, not of the homotopy -- so unlike every other showpiece's constants they need not be exact
+# values.  No node ever sees them.
+
+def ell_dft(n, j):
+    """The j-th cyclic character, ``a_k = exp(2 pi i j k / n)``.
+
+    For cyclic-n this is an eigenvector of the cyclic shift, so the *solution set* maps to itself
+    under rotation by 2 pi / n.  The paths are not symmetric though -- the start system and gamma
+    break it -- so expect a near-mandala rather than an exact one.
+    """
+    return np.exp(2j * np.pi * j * np.arange(n) / n)
+
+
+def ell_random(n, seed=0):
+    """Generic unit coefficients: a projection that respects no symmetry of the system."""
+    rng = np.random.default_rng(seed)
+    return np.exp(2j * np.pi * rng.random(n))
+
+
+_PROJECTIONS = {
+    'dft1': lambda n: ell_dft(n, 1),
+    'dft2': lambda n: ell_dft(n, 2),
+    'dft3': lambda n: ell_dft(n, 3),
+    'coord0': lambda n: np.eye(n, dtype=complex)[0],
+    'random0': lambda n: ell_random(n, 0),
+    'random1': lambda n: ell_random(n, 1),
+}
+
+
+def project(cache, ell):
+    """Dehomogenize and apply ``l(x)``.  Returns the complex screen coordinate per sample.
+
+    The solver homogenizes and patches, so the cached points carry a homogenizing coordinate in
+    column 0 and are *bounded*; dividing it out here is what lets divergers fly off frame instead
+    of overflowing the cache.  Paths that reach infinity drive that coordinate to zero, which
+    yields inf/nan -- masked at splat time, not patched over.
+    """
+    pts = cache['points']
+    with np.errstate(divide='ignore', invalid='ignore'):
+        aff = pts[:, 1:] / pts[:, 0][:, None]
+    return aff @ ell
+
+
+# --- the exposure ---------------------------------------------------------------------------------
+
+def _segment_energy(cache):
+    """Per-segment path-time ``|dt|``, and a mask of which segments are real.
+
+    A segment joins samples k and k+1 of the SAME path.  Rejected: cross-path joins, zero-energy
+    steps, and teleports -- a solver reuses one tracker for the main track and the endgame
+    sub-tracks, so a path's data is a concatenation and can jump.  Power-series never jumps
+    (measured), but guard anyway; the guard is free and the failure is spectacular (a full-frame
+    streak carrying the largest energy in the image).
+    """
+    t = cache['times']
+    pid = cache['path_id']
+    at = np.abs(t)
+    energy = np.abs(np.diff(t))
+    same = pid[1:] == pid[:-1]
+    not_teleport = at[1:] <= _TELEPORT_RATIO * np.maximum(at[:-1], 1e-300)
+    return energy, same & not_teleport & (energy > 0)
+
+
+_RAMP = np.array([[1.00, 1.00, 0.95],                     # white-hot: arriving at the solution
+                  [1.00, 0.62, 0.20],                     # orange
+                  [0.85, 0.25, 0.75],                     # violet
+                  [0.35, 0.35, 1.00],                     # blue
+                  [0.13, 0.60, 1.00]])                    # cool: t = 1, the start system
+
+
+# log10|t| stops for the ramp above.  These are FIXED, not fitted to the data, and that is
+# deliberate -- it is the one tuning decision this piece really has, and it was made by looking.
+#
+# Measured on cyclic-7: 95% of the *energy* lies in log|t| in [-1.9, 0] (the endgame carries 24% of
+# the samples but only 8.4% of the dwell).  The tempting move is to spread the five stops across
+# that bulk so the whole ramp gets used.  Do not: it makes the picture WORSE.  Additive blending
+# sums the hues that overlap in a pixel, so spreading the bulk across white/orange/violet/blue
+# blends thousands of crossing trails into beige mud.  Coherence beats coverage.  Keep the bulk of
+# the dwell inside ONE cool family (here [-1.5, 0] -> violet..cyan, so the main track is coloured
+# but never muddy) and spend the warm end on the endgame alone, which is spatially concentrated at
+# the solutions and so stays vivid instead of averaging out.
+_TEMP_STOPS = np.array([-5.0, -3.0, -1.5, -0.7, 0.0])
+
+
+def _temperature(logt, stops=_TEMP_STOPS):
+    """Colour by ``log|t|``: cool where paths start, white-hot in the endgame.
+
+    Coherent under additive blending -- thousands of *hues* would sum to grey, but a temperature
+    ramp sums to a hotter temperature, which is what a long exposure of converging paths should do.
+    Below the first stop (the deep endgame) everything clips to white-hot, which is where the knots
+    at the solutions come from.
+    """
+    x = np.clip(logt, stops[0], stops[-1])
+    return np.stack([np.interp(x, stops, _RAMP[:, k]) for k in range(3)], axis=-1)
+
+
+def _phase_hue(cache, ok, ell2, value=1.0):
+    """Hue from ``arg l2(x)`` for a SECOND, independent projection ``l2``.
+
+    Not ``arg l(x)``: position already IS ``(Re l, Im l)``, so ``arg l`` is nothing but the screen
+    polar angle -- a pinwheel that carries no information at all.  An independent ``l2`` is a
+    genuinely different direction in C^n, invisible in the projection, and it varies smoothly along
+    a path, so trails come out as coherent bands of colour rather than noise.
+    """
+    import matplotlib.colors as mcolors
+    z2 = project(cache, ell2)[:-1][ok]
+    hue = (np.angle(z2) / (2 * np.pi)) % 1.0
+    hsv = np.stack([hue, np.full_like(hue, 0.85), np.full_like(hue, value)], axis=-1)
+    return mcolors.hsv_to_rgb(hsv)
+
+
+def _clip_to_frame(u0, v0, u1, v1, w, h):
+    """Liang-Barsky: clip each segment to the frame, returning the surviving [s0, s1] fractions.
+
+    Essential, not cosmetic: a diverger's segment can be a million pixels long, and subdividing it
+    before clipping would allocate millions of subsamples for a line that crosses a few. Energy is
+    uniform per unit length, so a clipped segment keeps energy * (s1 - s0) -- the photons that left
+    the frame are simply lost, as in any camera.
+    """
+    du, dv = u1 - u0, v1 - v0
+    s0 = np.zeros_like(u0)
+    s1 = np.ones_like(u0)
+    for p, q in ((-du, u0 - 0), (du, w - u0), (-dv, v0 - 0), (dv, h - v0)):
+        with np.errstate(divide='ignore', invalid='ignore'):
+            r = np.where(p != 0, q / p, np.inf)
+        enter = (p < 0)
+        s0 = np.where(enter, np.maximum(s0, r), s0)
+        s1 = np.where(p > 0, np.minimum(s1, r), s1)
+        # p == 0 and q < 0: the segment is parallel to and outside this edge
+        s1 = np.where((p == 0) & (q < 0), -1.0, s1)
+    return s0, s1
+
+
+def _deposit(buf, uu, vv, weight, rgb):
+    """Bilinear (anti-aliased) point splat of weighted photons into an (h, w, 3) buffer."""
+    h, w = buf.shape[:2]
+    x, y = uu - 0.5, vv - 0.5
+    x0 = np.floor(x).astype(np.int64)
+    y0 = np.floor(y).astype(np.int64)
+    fx, fy = x - x0, y - y0
+    for dx in (0, 1):
+        for dy in (0, 1):
+            xi, yi = x0 + dx, y0 + dy
+            a = weight * (fx if dx else 1 - fx) * (fy if dy else 1 - fy)
+            ok = (xi >= 0) & (xi < w) & (yi >= 0) & (yi < h) & (a > 0) & np.isfinite(a)
+            if not ok.any():
+                continue
+            flat = yi[ok] * w + xi[ok]
+            for ch in range(3):
+                buf[..., ch] += np.bincount(flat, weights=a[ok] * rgb[ok, ch],
+                                            minlength=h * w).reshape(h, w)
+
+
+def _splat_segments(buf, u0, v0, du, dv, energy, rgb):
+    """Subdivide each segment along its footprint and deposit its energy.
+
+    ``m = max(1, ceil(L / step))`` subsamples each carry ``E/m``, so the sum is exactly ``E`` for
+    any length -- long segments spread to ``E/L`` per pixel (dwell per unit length = 1/speed),
+    sub-pixel segments dump all of ``E`` into one pixel with no ``1/L -> inf`` singularity.
+    """
+    L = np.hypot(du, dv)
+    m = np.maximum(1, np.ceil(L / _STEP_PX)).astype(np.int64)
+    seg = np.repeat(np.arange(len(m)), m)                       # which segment each subsample is on
+    off = np.arange(int(m.sum())) - np.repeat(np.cumsum(m) - m, m)
+    f = (off + 0.5) / m[seg]
+    _deposit(buf, u0[seg] + du[seg] * f, v0[seg] + dv[seg] * f,
+             energy[seg] / m[seg], rgb[seg])
+
+
+def expose(cache, ell, center, halfwidth, w, h, color='temperature', ell2=None):
+    """The long exposure: splat every tracked segment into an (h, w, 3) float buffer.
+
+    Each segment deposits its path-time energy ``E = |dt|``, spread evenly over
+    ``m = max(1, ceil(L / step))`` subsamples along its rasterised footprint.  The sum over the
+    subsamples is exactly ``E`` for any length, so:
+
+    * long segments  -> ``E/L`` per pixel = dwell per unit length = 1/speed.  A literal long
+      exposure of a moving particle.
+    * sub-pixel segments (the endgame) -> ``m = 1``, all of ``E`` in one pixel.  No ``1/L -> inf``
+      singularity: the pixel is the sensor, and motion below it is not resolvable.
+
+    Subdividing is line rasterisation -- the geometry we already asserted by drawing a polyline
+    through the samples, exactly as the Loom draws ribbons between its samples.  It invents no
+    tracked data.  The energy is conserved regardless, which is what ``--selftest`` checks.
+    """
+    z = project(cache, ell)
+    energy, ok = _segment_energy(cache)
+
+    halfheight = halfwidth * h / w
+    u = (z.real - (center[0] - halfwidth)) / (2 * halfwidth) * w
+    v = (z.imag - (center[1] - halfheight)) / (2 * halfheight) * h
+
+    u0, u1 = u[:-1], u[1:]
+    v0, v1 = v[:-1], v[1:]
+    ok = ok & np.isfinite(u0) & np.isfinite(u1) & np.isfinite(v0) & np.isfinite(v1)
+
+    s0, s1 = _clip_to_frame(u0, v0, u1, v1, w, h)
+    ok = ok & (s1 > s0)
+    if not ok.any():
+        return np.zeros((h, w, 3)), 0.0
+
+    u0, u1, v0, v1 = u0[ok], u1[ok], v0[ok], v1[ok]
+    s0, s1, E = s0[ok], s1[ok], energy[ok]
+    du, dv = u1 - u0, v1 - v0
+    # the surviving piece of each segment, and the share of its energy that piece carries
+    cu0, cv0 = u0 + du * s0, v0 + dv * s0
+    cdu, cdv = du * (s1 - s0), dv * (s1 - s0)
+    E = E * (s1 - s0)
+
+    logt = np.log10(np.maximum(np.abs(cache['times'][:-1][ok]), 1e-300))
+    if color == 'temperature':
+        rgb = _temperature(logt)
+    elif color == 'phase2':
+        rgb = _phase_hue(cache, ok, ell2)
+    elif color == 'both':
+        # hue from the independent direction, brightened toward white as the endgame closes in
+        hot = np.clip((logt - _TEMP_STOPS[2]) / (_TEMP_STOPS[0] - _TEMP_STOPS[2]), 0, 1)
+        rgb = _phase_hue(cache, ok, ell2) * (1 - hot)[:, None] + hot[:, None]
+    else:
+        raise ValueError(f'unknown colour mode {color!r}')
+
+    buf = np.zeros((h, w, 3))
+    _splat_segments(buf, cu0, cv0, cdu, cdv, E, rgb)
+    # what the buffer SHOULD total if every photon landed: each segment writes E into 3 channels
+    # scaled by its colour, so the expectation carries the colour weights too.
+    return buf, float((E * rgb.sum(axis=1)).sum())
+
+
+# --- rendering ------------------------------------------------------------------------------------
+
+def _downsample(img, factor):
+    """Box-average downsample of an (h, w, 3) image by an integer factor."""
+    h, w = img.shape[:2]
+    return img[:h - h % factor, :w - w % factor]\
+        .reshape(h // factor, factor, w // factor, factor, -1).mean(axis=(1, 3))
+
+
+def tone_map(buf, exposure=4.0, gamma=1.8, ss=_SS):
+    """The HDR curve.  The accumulation IS the bloom; no bloom pass is needed.
+
+    Downsample in LINEAR light first, so ``exposure`` means the same thing at any resolution, then
+    ``1 - exp(-k*b)`` -- the classic film response, which is why the long exposure is literal.  Each
+    channel saturates at its own rate, so the hottest knots bleach to white on their own.
+    """
+    img = _downsample(buf, ss)
+    lit = img[img > 0]
+    scale = np.percentile(lit, 99.5) if lit.size else 1.0
+    img = 1 - np.exp(-exposure * img / max(scale, 1e-30))
+    return np.clip(img ** (1 / gamma), 0, 1)
+
+
+def render(cache, ell, center, halfwidth, w, h, out_png, exposure=4.0, gamma=1.8):
+    """Expose, tone-map, write.  Returns the image."""
+    import matplotlib.image as mimage
+    buf, _ = expose(cache, ell, center, halfwidth, w * _SS, h * _SS)
+    img = tone_map(buf, exposure=exposure, gamma=gamma)
+    mimage.imsave(out_png, img, origin='lower')
+    print('  wrote', out_png)
+    return img
+
+
+def suggest_window(cache, ell, quantile=99.0):
+    """A dwell-weighted window for a projection: where do the photons actually land?
+
+    Weight by energy, or the divergers -- which travel furthest and dwell least -- drag the frame
+    out to infinity.  Prints a suggestion to paste in as a literal constant; auto-windowing at
+    render time would make a committed PNG depend on run-to-run data.
+    """
+    z = project(cache, ell)
+    energy, ok = _segment_energy(cache)
+    ok = ok & np.isfinite(z[:-1])
+    zz, ee = z[:-1][ok], energy[ok]
+    order = np.argsort(np.abs(zz))
+    cw = np.cumsum(ee[order]) / ee.sum()
+    r = np.abs(zz[order][np.searchsorted(cw, quantile / 100.0)])
+    cen = np.average(zz[order][cw <= quantile / 100.0].real), \
+        np.average(zz[order][cw <= quantile / 100.0].imag)
+    return (round(float(cen[0]), 3), round(float(cen[1]), 3)), round(float(r), 3)
+
+
+# --- prototyping ----------------------------------------------------------------------------------
+
+_PROTO = os.path.expanduser('~/nebula_prototype_images')
+
+
+def _stamp(name):
+    """A datetime-stamped path in the prototype image record."""
+    os.makedirs(_PROTO, exist_ok=True)
+    ts = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+    return os.path.join(_PROTO, f'{name}_{ts}.png')
+
+
+def scout(system_name='cyclic5', seed=2, w=480, h=270, max_step_size=None):
+    """Contact sheet: ONE solve, every projection.
+
+    The tracked data does not depend on ``l`` -- that is the whole point of caching the track -- so
+    a single solve renders every candidate projection.  Each panel is captioned and the sheet is
+    stamped into the prototype record.
+    """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    print(f'scouting {system_name}:')
+    cache = track(system_name, seed=seed, max_step_size=max_step_size)
+    n = cache['points'].shape[1] - 1
+
+    keys = list(_PROJECTIONS)
+    cols = 3
+    rows = (len(keys) + cols - 1) // cols
+    fig, axes = plt.subplots(rows, cols, figsize=(4.5 * cols, 2.7 * rows), facecolor='#05060a')
+    for ax, key in zip(np.ravel(axes), keys):
+        ell = _PROJECTIONS[key](n)
+        center, halfwidth = suggest_window(cache, ell)
+        buf, _ = expose(cache, ell, center, halfwidth, w * _SS, h * _SS)
+        ax.imshow(tone_map(buf), origin='lower')
+        ax.set_title(f'{key}   center={center} halfwidth={halfwidth}',
+                     color='#c9d3e0', fontsize=8)
+        print(f'  {key:8} center={center} halfwidth={halfwidth}')
+    for ax in np.ravel(axes):
+        ax.set_xticks([]); ax.set_yticks([])
+    fig.suptitle(f'{cache["label"]}  --  {cache["n_paths"]} paths, '
+                 f'{len(cache["path_id"]):,} samples, seed {seed}', color='#e8eef7')
+    out = _stamp(f'scout_{system_name}')
+    fig.savefig(out, dpi=110, facecolor='#05060a', bbox_inches='tight')
+    plt.close(fig)
+    print('  wrote', out)
+    return cache
+
+
+def selftest(system_name='cyclic5'):
+    """Assert the exposure conserves energy -- the sharpest invariant this piece has.
+
+    Every photon in the buffer is some segment's path-time.  Two checks:
+
+    1. **Synthetic, strictly interior**: conservation must be EXACT (to float tolerance).  This
+       isolates the subdivision and the bilinear deposit from any real-data effect.  Segments of
+       wildly different lengths -- including sub-pixel ones -- must all conserve.
+    2. **Real tracked data**: the buffer will fall slightly short, because a bilinear splat at the
+       frame border drops the neighbours that lie outside it.  That is honest photon loss (a camera
+       does the same), so it is reported, not asserted away.
+    """
+    rng = np.random.default_rng(0)
+    h, w = 64, 96
+    n = 400
+    u0 = rng.uniform(8, w - 8, n)
+    v0 = rng.uniform(8, h - 8, n)
+    ang = rng.uniform(0, 2 * np.pi, n)
+    length = 10 ** rng.uniform(-1.5, 1.2, n)          # 0.03 px (sub-pixel) .. 16 px
+    du, dv = length * np.cos(ang), length * np.sin(ang)
+    E = rng.uniform(0.1, 5.0, n)
+    rgb = rng.uniform(0.2, 1.0, (n, 3))
+    buf = np.zeros((h, w, 3))
+    _splat_segments(buf, u0, v0, du, dv, E, rgb)
+    want = float((E * rgb.sum(axis=1)).sum())
+    got = float(buf.sum())
+    print(f'  synthetic: want {want:.9f}, got {got:.9f}, rel err {abs(got - want) / want:.2e}')
+    assert abs(got - want) / want < 1e-9, 'the splat does not conserve energy'
+    assert (m := (length < 1).sum()) > 0, 'test needs sub-pixel segments to be meaningful'
+    print(f'             ({m} of {n} segments were sub-pixel)')
+
+    cache = track(system_name, seed=2)
+    ell = _PROJECTIONS['dft1'](cache['points'].shape[1] - 1)
+    center, halfwidth = suggest_window(cache, ell)
+    buf, expected = expose(cache, ell, center, halfwidth, 480, 270)
+    got = float(buf.sum())
+    print(f'  tracked  : want {expected:.6f}, got {got:.6f}, '
+          f'{100 * (1 - got / expected):.3f}% lost at the frame border')
+    assert got <= expected * (1 + 1e-9), 'the exposure created energy from nowhere'
+    assert got > expected * 0.9, 'the exposure lost more than 10% -- that is not border loss'
+    print('  PASS')
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    p.add_argument('--scout', metavar='SYSTEM', nargs='?', const='cyclic5',
+                   help='render a projection contact sheet from one solve')
+    p.add_argument('--selftest', action='store_true', help='assert the exposure conserves energy')
+    p.add_argument('--seed', type=int, default=2)
+    p.add_argument('--max-step-size', default=None,
+                   help='exact rational as a string, e.g. "0.005"')
+    args = p.parse_args()
+
+    if args.selftest:
+        selftest()
+    elif args.scout:
+        scout(args.scout, seed=args.seed, max_step_size=args.max_step_size)
+    else:
+        print('the hero frame is not chosen yet; use --scout')
+
+
+if __name__ == '__main__':
+    main()
