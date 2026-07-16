@@ -1061,6 +1061,34 @@ public:
 	}
 
 	/**
+	\brief The FLOOR of the current Cauchy loop: the smallest dehomogenized infinity-norm over
+	the loop samples.
+
+	This is the divergence signal the mean cannot give: around a closed loop the branches of a
+	fractional pole t^(-p/q) cancel, so the Cauchy mean stays near 0 while every SAMPLE has norm
+	~r^(-p/q).  The floor exceeds a bound only when the ENTIRE loop is beyond it, so a transient
+	single-sample spike (the cyclic-6 hazard that forbade watching samples directly) cannot lift
+	it.  NaN samples are skipped; a loop with no finite samples returns the largest value (a
+	fully-poisoned loop counts as beyond any bound).
+
+	\tparam ComplexT The complex number type of the samples to inspect.
+	*/
+	template<typename ComplexT>
+	NumErrorT MinDehomNormOverLoopSamples() const
+	{
+		const auto& cau_samples = std::get<SampCont<ComplexT> >(cauchy_samples_);
+		using std::min; using std::isnan;
+		NumErrorT floor_of_loop = std::numeric_limits<NumErrorT>::max();
+		for (const auto& s : cau_samples)
+		{
+			auto n = static_cast<NumErrorT>(this->GetSystem().InfinityNormOfDehomogenized(s));
+			if (!isnan(n))
+				floor_of_loop = min(floor_of_loop, n);
+		}
+		return floor_of_loop;
+	}
+
+	/**
 	\brief Collects samples while tracking around the target time, until we close the loop, or exceed the limit on # of loops.
 
 		## Input:
@@ -1301,19 +1329,20 @@ public:
 			return cauchy_loop_success;
 
 
-		// The security check watches the extrapolated ENDPOINT for divergence to
-		// infinity.  A genuinely-infinite endpoint -- a patched projective path leaving
-		// the affine chart -- has an approximation whose dehomogenized norm grows to
-		// infinity, and it grows FASTER than any finite loop sample along the way (the
-		// endpoint IS the infinity; the samples are all finite), so the endpoint is the
-		// earliest, strongest divergence signal.  Watching the loop samples instead
-		// over-truncates finite paths whose samples transiently spike above max_norm
-		// before settling (found via cyclic-6: 156 -> 153 lost, all nonsingular).  The
-		// pole-annihilation case -- a Laurent pole whose Cauchy mean is a STATIONARY
-		// FINITE number, which no norm check can catch -- is handled separately by the
-		// pole-component operating-zone check below, so this check need only see honest
-		// infinity.  Tracked across consecutive IN-ZONE rounds only (see below);
-		// initialized to 0 so the check never reads indeterminate values.
+		// The security check watches TWO honest divergence signals, taking the stronger:
+		// (1) the extrapolated ENDPOINT -- a genuinely-infinite endpoint (a patched
+		// projective path leaving the affine chart) has a dehomogenized norm growing to
+		// infinity FASTER than any finite loop sample, the earliest signal there; and
+		// (2) the loop FLOOR (min over loop samples) -- a fractional-pole diverger's
+		// branches cancel around the closed loop, so its mean/endpoint stays ~0 while
+		// every sample sits at ~r^(-p/q); only the floor sees it.  The floor is safe
+		// where watching samples DIRECTLY was not (any single sample transiently spiking
+		// above max_norm truncated finite cyclic-6 paths, 156 -> 153): a transient spike
+		// lifts the max, never the min.  The pole-annihilation case -- a Laurent pole
+		// whose Cauchy mean is a STATIONARY FINITE number -- is handled separately by
+		// the pole-component operating-zone check below.  Tracked across consecutive
+		// ARMED rounds only (see below); initialized to 0 so the check never reads
+		// indeterminate values.
 		RealT norm_of_dehom_prev(0), norm_of_dehom_latest(0);
 
 		// Cycle-number consistency: refuse to accept a converged approximation until the cycle number
@@ -1360,6 +1389,23 @@ public:
 			auto const pole_mass = PoleComponentMass<ComplexT>();
 			bool const in_operating_zone = !PoleMassSignificant(pole_mass,
 				static_cast<NumErrorT>(latest_approx.template lpNorm<Eigen::Infinity>()));
+			// B1's CycleTimeCutoff semantics (manual E.5.9): below cycle_cutoff_time the
+			// zone heuristics stop being consulted and the endgame behaves as if in the
+			// operating zone.  Applied here to the SECURITY VALVE ONLY: a slowly-diverging
+			// path (fractional-order blowup) carries significant pole mass at every radius,
+			// so it is never pole-mass-in-zone and the valve never arms -- it crawls to the
+			// tracker's far-larger truncation threshold (measured: a t^(-1/3) diverger took
+			// ~117k extra steps over 3 more decades of |t| at up to 70 digits).  Below the
+			// cutoff a genuinely convergent path's mean has long stabilized at a finite
+			// value, so arming the valve cannot reintroduce the cyclic-6 false truncations.
+			// Deliberately NOT applied to acceptance: forcing the zone there would re-open
+			// the junk-success hole (a Laurent pole's stationary FINITE mean would be
+			// accepted once below the cutoff); pole junk still runs to its honest
+			// non-Success terminal.
+			using std::abs;
+			bool const below_cycle_cutoff =
+				static_cast<NumErrorT>(abs(this->LatestTime() - target_time))
+					< GetCauchySettings().cycle_cutoff_time;
 
 			if (in_operating_zone
 			    && approx_error < this->FinalTolerance()
@@ -1379,9 +1425,17 @@ public:
 			// An out-of-zone round restarts the two-consecutive count.
 			if (this->SecuritySettings().level <= 0)
 			{
-				if (in_operating_zone)
+				if (in_operating_zone || below_cycle_cutoff)
 				{
-					norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(latest_approx);
+					// Watch the STRONGER of two honest divergence signals: the endpoint (the
+					// earliest signal for a clean infinite endpoint) and the loop FLOOR (min
+					// over loop samples) -- the mean is structurally blind to fractional-pole
+					// divergers, whose branches cancel around the closed loop while every
+					// sample sits at ~r^(-p/q).  See MinDehomNormOverLoopSamples.
+					using std::max;
+					norm_of_dehom_latest = max(
+						this->GetSystem().InfinityNormOfDehomogenized(latest_approx),
+						static_cast<RealT>(MinDehomNormOverLoopSamples<ComplexT>()));
 					if (this->BeyondSecurityMaxNorm(norm_of_dehom_prev) &&
 						this->BeyondSecurityMaxNorm(norm_of_dehom_latest))
 					{
@@ -1504,6 +1558,23 @@ public:
 			auto const pole_mass = PoleComponentMassAMP();
 			bool const in_operating_zone = !PoleMassSignificant(pole_mass,
 				static_cast<NumErrorT>(this->final_approximation_.template lpNorm<Eigen::Infinity>()));
+			// B1's CycleTimeCutoff semantics (manual E.5.9): below cycle_cutoff_time the
+			// zone heuristics stop being consulted and the endgame behaves as if in the
+			// operating zone.  Applied here to the SECURITY VALVE ONLY: a slowly-diverging
+			// path (fractional-order blowup) carries significant pole mass at every radius,
+			// so it is never pole-mass-in-zone and the valve never arms -- it crawls to the
+			// tracker's far-larger truncation threshold (measured: a t^(-1/3) diverger took
+			// ~117k extra steps over 3 more decades of |t| at up to 70 digits).  Below the
+			// cutoff a genuinely convergent path's mean has long stabilized at a finite
+			// value, so arming the valve cannot reintroduce the cyclic-6 false truncations.
+			// Deliberately NOT applied to acceptance: forcing the zone there would re-open
+			// the junk-success hole (a Laurent pole's stationary FINITE mean would be
+			// accepted once below the cutoff); pole junk still runs to its honest
+			// non-Success terminal.
+			using std::abs;
+			bool const below_cycle_cutoff =
+				static_cast<NumErrorT>(abs(this->LatestTime() - this->AtActivePrecisionScalar(target_time)))
+					< GetCauchySettings().cycle_cutoff_time;
 
 			if (in_operating_zone
 			    && this->approximate_error_ < this->FinalTolerance()
@@ -1517,9 +1588,17 @@ public:
 			// out-of-zone round restarts the two-consecutive count.  See RunImpl.
 			if (this->SecuritySettings().level <= 0)
 			{
-				if (in_operating_zone)
+				if (in_operating_zone || below_cycle_cutoff)
 				{
-					norm_of_dehom_latest = this->GetSystem().InfinityNormOfDehomogenized(this->final_approximation_);
+					// The stronger of endpoint norm and loop floor; the loop samples live in
+					// whichever lane is active.  See RunImpl and MinDehomNormOverLoopSamples.
+					NumErrorT loop_floor = (this->current_endgame_precision_ == DoublePrecision())
+						? MinDehomNormOverLoopSamples<complex_dbl>()
+						: MinDehomNormOverLoopSamples<complex_mp>();
+					using std::max;
+					norm_of_dehom_latest = max(
+						this->GetSystem().InfinityNormOfDehomogenized(this->final_approximation_),
+						static_cast<RealT>(loop_floor));
 					if (this->BeyondSecurityMaxNorm(norm_of_dehom_prev) &&
 					    this->BeyondSecurityMaxNorm(norm_of_dehom_latest))
 					{
