@@ -121,6 +121,57 @@ def katsura_system(n):
     return sys_
 
 
+def kuramoto_system(n, seed=0):
+    """Equilibria of the Kuramoto model: ``n`` coupled oscillators, ``4**(n-1)`` paths.
+
+    The Kuramoto model is how a crowd of oscillators with different natural frequencies pulls
+    itself into synchrony -- fireflies flashing together, a power grid locking to 50 Hz.  Its
+    equilibria satisfy
+
+        omega_i  -  (K/n) * sum_j sin(theta_i - theta_j)  =  0 ,
+
+    which is not polynomial until you set ``s_i = sin theta_i``, ``c_i = cos theta_i`` and carry
+    ``s_i^2 + c_i^2 = 1`` along; then ``sin(theta_i - theta_j) = s_i c_j - c_i s_j`` and the whole
+    thing is a square polynomial system.  That algebraization is exactly how the model's equilibria
+    have been *counted* by homotopy continuation, so this is a system Bertini is genuinely for.
+
+    Two constraints the mathematics imposes, both load-bearing:
+
+    * **Gauge.** Rotating every phase by the same angle maps equilibria to equilibria, so the
+      solution set is positive-dimensional (curves, not points) and a zero-dim solve would be
+      meaningless.  Pin the last oscillator at ``theta = 0`` (``s = 0``, ``c = 1``) to quotient the
+      symmetry out.
+    * **Frequencies must sum to zero**, or no equilibrium exists at all: summing the equations
+      kills the coupling term (it is antisymmetric in i, j) and leaves ``sum omega_i = 0``.  So the
+      last frequency is *derived*, never drawn.
+
+    The frequencies are exact rationals from a seeded RNG -- generic enough to break every symmetry
+    of the system, and exact per the library's coercion doctrine.
+    """
+    from fractions import Fraction
+    rng = np.random.default_rng(seed)
+    omega = [Fraction(int(rng.integers(-9, 10)), 10) for _ in range(n - 1)]
+    omega.append(-sum(omega))                    # sum omega_i = 0, or there is no equilibrium
+
+    s = [bertini.Variable('s' + str(i)) for i in range(n - 1)]
+    c = [bertini.Variable('c' + str(i)) for i in range(n - 1)]
+    s_all = list(s) + [0]                        # the gauge: theta_{n-1} = 0
+    c_all = list(c) + [1]
+
+    sys_ = bertini.System()
+    sys_.add_variable_group(bertini.VariableGroup(s + c))
+    coupling = bertini.coefficient(Fraction(1, n))          # K = 1
+    for i in range(n - 1):
+        interaction = None
+        for j in range(n):
+            term = s_all[i] * c_all[j] - c_all[i] * s_all[j]
+            interaction = term if interaction is None else interaction + term
+        sys_.add_function(bertini.coefficient(omega[i]) - coupling * interaction)
+    for i in range(n - 1):
+        sys_.add_function(s[i]**2 + c[i]**2 - 1)
+    return sys_
+
+
 def dense_system(num_vars, degree, seed=0):
     """A random dense system: ``degree**num_vars`` paths, no structure and no symmetry at all.
 
@@ -164,6 +215,9 @@ _SYSTEMS = {
     'cyclic7': (lambda: cyclic_system(7), 'cyclic-7', 5040),
     'noon6': (lambda: noon_system(6), 'noonburg-6', 729),
     'katsura8': (lambda: katsura_system(8), 'katsura-8', 256),
+    'kuramoto5': (lambda: kuramoto_system(5), 'Kuramoto, 5 oscillators', 256),
+    'kuramoto6': (lambda: kuramoto_system(6), 'Kuramoto, 6 oscillators', 1024),
+    'kuramoto7': (lambda: kuramoto_system(7), 'Kuramoto, 7 oscillators', 4096),
     'dense2': (lambda: dense_system(2, 24), 'dense random 2-var deg-24', 576),
     'dense3': (lambda: dense_system(3, 9), 'dense random 3-var deg-9', 729),
 }
@@ -286,7 +340,27 @@ def ell_random(n, seed=0):
     return np.exp(2j * np.pi * rng.random(n))
 
 
+def ell_order(nvars):
+    """The Kuramoto **order parameter**, ``r e^{i psi} = (1/N) sum_j e^{i theta_j}``.
+
+    The one projection in this file that is not a choice.  In the ``(s, c)`` coordinates
+    ``e^{i theta_j} = c_j + i s_j``, so the order parameter -- the physical measure of how
+    synchronised the oscillators are, ``r = 1`` locked and ``r = 0`` incoherent -- is *exactly a
+    complex-linear functional of the variables*.  Projecting along it means the frame IS
+    synchronisation space, and every trail is a path's journey toward (or away from) sync.
+
+    The pinned oscillator contributes a constant ``1/N``, which merely translates the picture; the
+    window's centre absorbs it.
+    """
+    n_osc = nvars // 2 + 1                       # nvars = 2 * (n_osc - 1) after the gauge
+    a = np.zeros(nvars, dtype=complex)
+    a[:n_osc - 1] = 1j / n_osc                   # the s_j
+    a[n_osc - 1:] = 1.0 / n_osc                  # the c_j
+    return a
+
+
 _PROJECTIONS = {
+    'order': ell_order,
     'dft1': lambda n: ell_dft(n, 1),
     'dft2': lambda n: ell_dft(n, 2),
     'dft3': lambda n: ell_dft(n, 3),
