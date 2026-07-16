@@ -172,6 +172,178 @@ def kuramoto_system(n, seed=0):
     return sys_
 
 
+def stewart_gough_system(seed=0):
+    """Forward kinematics of a Stewart-Gough platform: 8192 paths, the classic 40 poses.
+
+    This is the problem numerical algebraic geometry grew up on -- Bertini's own authors wrote the
+    book on polynomial systems arising in kinematics.  A Stewart-Gough platform is a rigid plate
+    held over a base by six legs of adjustable length (flight simulators, machine tools, telescope
+    mounts).  *Inverse* kinematics is trivial: pick a pose, measure the legs.  **Forward**
+    kinematics is the hard one -- given the six leg lengths, where is the platform?  The famous
+    answer is that a general platform admits **40** poses for the same six lengths, and that count
+    was settled by homotopy continuation.
+
+    Unknowns: a unit quaternion ``q`` for the orientation and a translation ``t``, so seven of them.
+    Equations: each leg pins a distance, ``|R(q) a_i + t - b_i|^2 = L_i^2``, plus ``|q|^2 = 1``.
+    ``R(q)`` is quadratic in ``q``, so each leg equation has total degree 4 and the total-degree
+    homotopy tracks ``4**6 * 2 = 8192`` paths for 40 answers -- a ratio that is itself the reason
+    the field invented better start systems.
+
+    The leg lengths are not invented: a pose is *chosen* and the lengths are computed from it
+    exactly, so the system is guaranteed to have that pose among its solutions.  The chosen
+    quaternion is an exact unit quaternion ``(1, 2, 2, 4)/5`` -- a Pythagorean quadruple, since an
+    exact rational point on the unit sphere cannot be had by rounding.
+    """
+    from fractions import Fraction
+    rng = np.random.default_rng(seed)
+
+    def frac():
+        return Fraction(int(rng.integers(-9, 10)), 5)
+
+    a = [[frac() for _ in range(3)] for _ in range(6)]      # platform joints, in the moving frame
+    b = [[frac() for _ in range(3)] for _ in range(6)]      # base joints, in the fixed frame
+
+    # the pose we will hide in the answer: an EXACT unit quaternion (1,2,2,4)/5, |q|^2 = 25/25 = 1
+    q_star = [Fraction(1, 5), Fraction(2, 5), Fraction(2, 5), Fraction(4, 5)]
+    t_star = [frac() for _ in range(3)]
+
+    def rot(q):
+        """R(q) for a UNIT quaternion q, entries quadratic in q.  Works on Fractions or on nodes."""
+        w, i, j, k = q
+        return [[w*w + i*i - j*j - k*k, 2*(i*j - w*k), 2*(i*k + w*j)],
+                [2*(i*j + w*k), w*w - i*i + j*j - k*k, 2*(j*k - w*i)],
+                [2*(i*k - w*j), 2*(j*k + w*i), w*w - i*i - j*j + k*k]]
+
+    # the leg lengths, computed EXACTLY from the chosen pose -- so it is genuinely a solution
+    R_star = rot(q_star)
+    leg_sq = []
+    for ai, bi in zip(a, b):
+        d = [sum(R_star[r][c] * ai[c] for c in range(3)) + t_star[r] - bi[r] for r in range(3)]
+        leg_sq.append(sum(x * x for x in d))
+
+    qv = [bertini.Variable(n) for n in ('q0', 'q1', 'q2', 'q3')]
+    tv = [bertini.Variable(n) for n in ('t0', 't1', 't2')]
+    sys_ = bertini.System()
+    sys_.add_variable_group(bertini.VariableGroup(qv + tv))
+
+    R = rot(qv)
+    for ai, bi, Lsq in zip(a, b, leg_sq):
+        f = None
+        for r in range(3):
+            d = R[r][0] * bertini.coefficient(ai[0]) \
+                + R[r][1] * bertini.coefficient(ai[1]) \
+                + R[r][2] * bertini.coefficient(ai[2]) \
+                + tv[r] - bertini.coefficient(bi[r])
+            f = d * d if f is None else f + d * d
+        sys_.add_function(f - bertini.coefficient(Lsq))
+    sys_.add_function(qv[0]**2 + qv[1]**2 + qv[2]**2 + qv[3]**2 - 1)
+    return sys_
+
+
+def mass_action_system(species, reactions, conserved, seed=0):
+    """Steady states of a chemical reaction network under mass-action kinetics.
+
+    The polynomials are *derived*, not transcribed: mass action is a fixed rule, so a network
+    determines its own system.  For each reaction ``sum_i a_i X_i -> sum_i b_i X_i`` with rate
+    constant ``k``, the flux is ``k * prod_i x_i**a_i``, and each species accumulates
+    ``dx_i/dt = sum_reactions (b_i - a_i) * flux``.  Steady state sets every ``dx_i/dt = 0``.
+
+    Those equations are never independent: a reaction network conserves things (total enzyme, total
+    substrate), so the stoichiometric matrix is rank-deficient and the naive system is singular --
+    a positive-dimensional solution set, useless to a zero-dim solver.  For each conservation law
+    one ODE must be *replaced* by the corresponding linear conservation equation.  That is what
+    ``conserved`` does, and it is what makes the system square and zero-dimensional.
+
+    Parameters
+    ----------
+    species : list of str
+        Species names, in order; they become the variables.
+    reactions : list of (dict, dict)
+        Each reaction as ``(reactants, products)``, mapping species name -> stoichiometry.  Rate
+        constants are drawn as exact rationals from ``seed``.
+    conserved : list of (list of str, str)
+        Each conservation law as ``(species in the sum, the species whose ODE it replaces)``.  The
+        conserved total is drawn as an exact rational.
+    seed : int
+        Seeds the rate constants and conserved totals.  Exact rationals throughout, per the
+        library's coercion doctrine.
+    """
+    from fractions import Fraction
+    rng = np.random.default_rng(seed)
+    x = {s: bertini.Variable(s) for s in species}
+
+    def rational():
+        return bertini.coefficient(Fraction(int(rng.integers(1, 10)), 10))
+
+    # flux of each reaction: k * prod reactant^stoichiometry
+    fluxes = []
+    for reactants, _ in reactions:
+        flux = rational()
+        for s, a in reactants.items():
+            for _ in range(a):
+                flux = flux * x[s]
+        fluxes.append(flux)
+
+    # dx_i/dt = sum_j (b_ij - a_ij) * flux_j
+    ode = {s: None for s in species}
+    for (reactants, products), flux in zip(reactions, fluxes):
+        for s in set(reactants) | set(products):
+            net = products.get(s, 0) - reactants.get(s, 0)
+            if net == 0:
+                continue
+            term = net * flux
+            ode[s] = term if ode[s] is None else ode[s] + term
+
+    replaced = {victim for _, victim in conserved}
+    sys_ = bertini.System()
+    sys_.add_variable_group(bertini.VariableGroup([x[s] for s in species]))
+    for s in species:
+        if s not in replaced and ode[s] is not None:
+            sys_.add_function(ode[s])
+    for members, _ in conserved:
+        total = None
+        for s in members:
+            total = x[s] if total is None else total + x[s]
+        sys_.add_function(total - rational())
+    return sys_
+
+
+def phosphorylation_network(n, seed=0):
+    """The n-site distributive sequential phosphorylation network: ``2**(3n)`` paths.
+
+    The workhorse of chemical reaction network theory, and the standard example of
+    *multistationarity* -- a cell switch.  A kinase E walks a substrate up the ladder
+    ``S_0 -> S_1 -> ... -> S_n`` one phosphate at a time, a phosphatase F walks it back down, and
+    each step goes through an enzyme-substrate complex::
+
+        S_i + E <-> ES_i -> S_{i+1} + E        (i = 0 .. n-1)
+        S_i + F <-> FS_i -> S_{i-1} + F        (i = 1 .. n)
+
+    Three things are conserved -- total kinase, total phosphatase, total substrate -- so three of
+    the ODEs are redundant and are replaced by those conservation laws (see
+    :func:`mass_action_system`).  n=3 gives 512 paths, n=4 gives 4096.
+    """
+    S = ['S{}'.format(i) for i in range(n + 1)]
+    ES = ['ES{}'.format(i) for i in range(n)]
+    FS = ['FS{}'.format(i + 1) for i in range(n)]
+    species = S + ['E', 'F'] + ES + FS
+
+    reactions = []
+    for i in range(n):                                  # kinase: S_i + E <-> ES_i -> S_{i+1} + E
+        reactions.append(({S[i]: 1, 'E': 1}, {ES[i]: 1}))
+        reactions.append(({ES[i]: 1}, {S[i]: 1, 'E': 1}))
+        reactions.append(({ES[i]: 1}, {S[i + 1]: 1, 'E': 1}))
+    for i in range(1, n + 1):                           # phosphatase: S_i + F <-> FS_i -> S_{i-1} + F
+        reactions.append(({S[i]: 1, 'F': 1}, {FS[i - 1]: 1}))
+        reactions.append(({FS[i - 1]: 1}, {S[i]: 1, 'F': 1}))
+        reactions.append(({FS[i - 1]: 1}, {S[i - 1]: 1, 'F': 1}))
+
+    conserved = [(['E'] + ES, 'E'),                     # total kinase, free + bound
+                 (['F'] + FS, 'F'),                     # total phosphatase
+                 (S + ES + FS, S[0])]                   # total substrate, in every form
+    return mass_action_system(species, reactions, conserved, seed=seed)
+
+
 def dense_system(num_vars, degree, seed=0):
     """A random dense system: ``degree**num_vars`` paths, no structure and no symmetry at all.
 
@@ -218,6 +390,9 @@ _SYSTEMS = {
     'kuramoto5': (lambda: kuramoto_system(5), 'Kuramoto, 5 oscillators', 256),
     'kuramoto6': (lambda: kuramoto_system(6), 'Kuramoto, 6 oscillators', 1024),
     'kuramoto7': (lambda: kuramoto_system(7), 'Kuramoto, 7 oscillators', 4096),
+    'phos3': (lambda: phosphorylation_network(3), '3-site phosphorylation', 512),
+    'phos4': (lambda: phosphorylation_network(4), '4-site phosphorylation', 4096),
+    'stewart': (lambda: stewart_gough_system(), 'Stewart-Gough platform', 8192),
     'dense2': (lambda: dense_system(2, 24), 'dense random 2-var deg-24', 576),
     'dense3': (lambda: dense_system(3, 9), 'dense random 3-var deg-9', 729),
 }
