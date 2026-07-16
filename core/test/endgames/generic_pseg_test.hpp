@@ -114,10 +114,43 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab )
 	Vec< BCT > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
-	BOOST_CHECK( norm(first_approx(0) - ComplexFromString("0.9999999767578209232082898114211261253459","0")) < 1e-7); 
-	// answer was found using matlab for a check. difference is diff is 2.32422e-08
+	// The unique Hermite interpolant of this data, evaluated at 0, is EXACTLY the terminating
+	// decimal below (computed independently in exact rational arithmetic).  The previous
+	// expectation (0.99999997675782..., attributed to matlab) was not the Hermite value, and the
+	// loose 1e-7 tolerance let a mis-indexed Horner reconstruction pass against it.
+	BOOST_CHECK( norm(first_approx(0) - ComplexFromString("0.999999998837890625","0")) < 1e-20);
 
 }//end basic hermite test case mp against matlab
+
+
+/**
+Regression: Hermite interpolation with n nodes (values + derivatives) is a degree 2n-1 method, so
+it must reproduce t^3 from 3 nodes EXACTLY -- extrapolating to 0 gives 0, to roundoff.  The old
+Horner reconstruction walked the doubled node list at half speed, evaluating a polynomial that was
+not the interpolant: this data came back ~1.6e-5 from 0, five orders above the samples' support.
+*/
+BOOST_AUTO_TEST_CASE( hermite_reproduces_low_degree_polynomials_exactly )
+{
+	DefaultPrecision(ambient_precision);
+
+	BCT target_time(0,0);
+	unsigned int num_samples = 3;
+
+	bertini::TimeCont<BCT> times;
+	bertini::SampCont<BCT> samples, derivatives;
+	Vec<BCT> sample(1), derivative(1);
+
+	for (auto const& t_str : {".1", ".05", ".025"})
+	{
+		BCT t = ComplexFromString(t_str);
+		times.push_back(t);
+		sample << pow(t,3);                samples.push_back(sample);         // f(t)  = t^3
+		derivative << BCT(3)*pow(t,2);     derivatives.push_back(derivative); // f'(t) = 3t^2
+	}
+
+	Vec<BCT> approx = HermiteInterpolateAndSolve(target_time, num_samples, times, samples, derivatives);
+	BOOST_CHECK( norm(approx(0)) < 1e-20 );
+}//end hermite_reproduces_low_degree_polynomials_exactly
 
 
 
@@ -217,9 +250,13 @@ BOOST_AUTO_TEST_CASE(hermite_interpolation)
 
 	Vec< BCT > third_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
-	BOOST_CHECK((first_approx - correct).norm() < 1e-10);
-	BOOST_CHECK((second_approx - correct).norm() < 1e-10);	
-	BOOST_CHECK((third_approx - correct).norm() < 1e-10);
+	// Tolerances calibrated to the TRUE Hermite interpolation errors of these windows (exact
+	// rational arithmetic): 1.162e-9, 4.539e-12, 1.773e-14 -- shrinking ~256x per halving.
+	// The old flat 1e-10 was calibrated to a mis-indexed Horner that happened to land closer
+	// to the truth than the actual interpolant does on the first window.
+	BOOST_CHECK((first_approx - correct).norm() < 2e-9);
+	BOOST_CHECK((second_approx - correct).norm() < 1e-11);
+	BOOST_CHECK((third_approx - correct).norm() < 1e-13);
 
 }//end hermite test case
 
@@ -298,7 +335,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 	my_endgame.ComputeBoundOnCycleNumber<BCT>();
 
 
-	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 5); // round(estimate)*amplification = 5, under the ceiling of 6
 
 	[[maybe_unused]] auto first_upper_bound = my_endgame.UpperBoundOnCycleNumber();
 
@@ -319,9 +356,75 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 	my_endgame.ComputeBoundOnCycleNumber<BCT>();
 
 
-	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 5); // round(estimate)*amplification = 5, under the ceiling of 6
 
-} // end compute bound on cycle number 
+} // end compute bound on cycle number
+
+
+/**
+Regression: max_cycle_number is a CEILING on the cycle-number candidate search.  It was applied
+with max() instead of min(), so a near-unity sample ratio (slow convergence -- high multiplicity,
+or a slow diverger) made the amplified estimate the bound: hundreds of candidates, each costing a
+full Hermite solve -- and a ratio close enough to 1 makes the amplified estimate exceed UINT_MAX,
+where the old unclamped conversion to unsigned was undefined behavior.
+*/
+BOOST_AUTO_TEST_CASE(cycle_number_upper_bound_capped_for_near_unity_sample_ratios)
+{
+	DefaultPrecision(ambient_precision);
+
+	bertini::System sys;
+	Var x = Variable::Make("x");
+	sys.AddFunction(pow(x-1,3));
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_settings, newton_settings);
+	tracker.PrecisionSetup(precision_config);
+
+	bertini::TimeCont<BCT> times;
+	bertini::SampCont<BCT> samples;
+	Vec<BCT> sample(1);
+
+	// consecutive sample differences shrink by a ratio of 0.99: the estimate
+	// log(sample_factor)/log(0.99) ~ 69, amplified ~ 345 -- far above the ceiling
+	times.push_back(ComplexFromString(".1"));
+	sample << ComplexFromString("1.0");     samples.push_back(sample);
+	times.push_back(ComplexFromString(".05"));
+	sample << ComplexFromString("2.0");     samples.push_back(sample);   // diff 1
+	times.push_back(ComplexFromString(".025"));
+	sample << ComplexFromString("2.99");    samples.push_back(sample);   // diff 0.99
+
+	bertini::endgame::EndgameConfig endgame_settings;
+	TestedEGType my_endgame(tracker, endgame_settings);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
+	my_endgame.SetRandVec<BCT>(1);
+
+	my_endgame.ComputeBoundOnCycleNumber<BCT>();
+	auto ceiling = bertini::endgame::PowerSeriesConfig().max_cycle_number;
+	BOOST_CHECK_EQUAL(my_endgame.UpperBoundOnCycleNumber(), ceiling);
+
+	// ratio within 1e-14 of 1: the amplified estimate is ~3.5e14 > UINT_MAX -- the old
+	// unclamped conversion to unsigned was undefined behavior; the bound must be the ceiling
+	samples.clear(); times.clear();
+	times.push_back(ComplexFromString(".1"));
+	sample << ComplexFromString("1.0");                samples.push_back(sample);
+	times.push_back(ComplexFromString(".05"));
+	sample << ComplexFromString("2.0");                samples.push_back(sample);   // diff 1
+	times.push_back(ComplexFromString(".025"));
+	sample << ComplexFromString("2.99999999999999");   samples.push_back(sample);   // diff 1 - 1e-14
+
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
+	my_endgame.ComputeBoundOnCycleNumber<BCT>();
+	BOOST_CHECK_EQUAL(my_endgame.UpperBoundOnCycleNumber(), ceiling);
+} // end cycle_number_upper_bound_capped_for_near_unity_sample_ratios 
 
 
 

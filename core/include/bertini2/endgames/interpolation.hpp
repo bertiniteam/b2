@@ -112,20 +112,19 @@ template<typename ComplexT>
 		}
 	}
 
-	//Start of Result from Hermite polynomial, this is using the diagonal of the 
-	//finite difference matrix.
-	Vec<ComplexT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
-
-
-	//This builds the hermite polynomial from the highest term down. 
-	//As we multiply the previous result we will construct the highest term down to the last term.
-	for (unsigned ii=num_sample_points-1; ii >= 1; --ii)
-	{
-		Result = ((Result*(target_time - time_differences(ii)) + space_differences(2*ii, 2*ii)) * (target_time - time_differences(ii-1)) + space_differences(2*ii-1, 2*ii-1)).eval();  
-	}
-	
-	// Last term in hermite polynomial.
-	return (Result * (target_time - time_differences(0)) + space_differences(0,0)).eval(); 
+	//The interpolant in Newton form is  P(x) = sum_k a_k prod_{j<k}(x - z_j),  with a_k the
+	//divided-difference diagonal and z the DOUBLED node list (each time appears twice).
+	//Horner from the top: multiply by (x - z_k) before adding a_k, for k = 2n-2 down to 0.
+	//
+	//This loop previously indexed the doubled node list at half speed (z_ii paired with
+	//a_{2*ii}), evaluating a polynomial that is NOT the Hermite interpolant: it failed to
+	//reproduce even a cubic exactly.  The limit as the sample window slides to the target was
+	//unaffected, so the endgame still converged -- but at a degraded order, costing extra
+	//iterations and delivering poorer approximations than the samples support.
+	Vec<ComplexT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1);
+	for (int k = 2*static_cast<int>(num_sample_points) - 2; k >= 0; --k)
+		Result = (Result*(target_time - time_differences(k)) + space_differences(k,k)).eval();
+	return Result;
 } //re: HermiteInterpolateAndSolve
 
 }}  // re: namespaces
