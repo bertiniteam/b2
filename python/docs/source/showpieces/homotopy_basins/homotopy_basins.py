@@ -32,10 +32,14 @@ The geometry is the gamma trick, photographed.  The family's branch points form 
 c = -(d-1) * zeta with zeta^(d-1) = 1; each grows one glowing arc, and every arc trails off to
 infinity in the -gamma direction (rotating gamma literally re-aims the comet tails).
 
-Two frames are produced:
+Four frames are produced (each window contains the family's whole branch-point ring; each
+degree is rendered twice from one computation, full-bleed and as an annotated map with labeled
+Re(c)/Im(c) axes and every arc center c = -(d-1) zeta marked on its ring):
 
-    * homotopy_basins_teaching.png -- d = 5: four branch points, four arcs, the lesson legible.
-    * homotopy_basins.png          -- d = 9: the eight-arc comet cluster, the show-off.
+    * homotopy_basins_teaching.png / homotopy_basins_teaching_annotated.png
+                                    -- d = 5: four branch points, four arcs, the lesson legible.
+    * homotopy_basins.png / homotopy_basins_annotated.png
+                                    -- d = 9: the eight-arc comet cluster, the show-off.
 
 Every coefficient fed to the function tree is EXACT (fractions.Fraction; pixel coordinates are
 snapped to rationals), per the library's coercion doctrine.  There is no randomness anywhere --
@@ -172,13 +176,12 @@ def _downsample(img, factor):
         .reshape(h // factor, factor, w // factor, factor, -1).mean(axis=(1, 3))
 
 
-def render(finger, steps, fails, out_png):
-    """Map the tracked channels to color: hue from the phase of the start-end correlation s, brightness from
-    tracker effort, stripes from |s|, speckle from failures."""
+def _shade(finger, steps, fails):
+    """Map the tracked channels to an RGB image: hue from the phase of the start-end
+    correlation s, brightness from tracker effort, stripes from |s|, speckle from failures."""
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.colors as mcolors
-    import matplotlib.image as mimage
 
     w = steps.shape[1]
     hue = (np.angle(finger) / (2 * np.pi)) % 1.0
@@ -202,37 +205,105 @@ def render(finger, steps, fails, out_png):
     img = 1 - (1 - rgb) * (1 - np.clip(1.3 * glow, 0, 1))
     img = np.clip(img + (fails > 0)[..., None] * 0.55, 0, 1)     # failure speckle, white-hot
 
-    img = _downsample(img, _SS)
-    mimage.imsave(out_png, np.clip(img, 0, 1), origin='lower')
+    return np.clip(_downsample(img, _SS), 0, 1)
+
+
+def render(finger, steps, fails, out_png):
+    """The full-bleed frame: just the shaded image, no chrome."""
+    import matplotlib.image as mimage
+    mimage.imsave(out_png, _shade(finger, steps, fails), origin='lower')
+    print('  wrote', out_png)
+
+
+def render_annotated(finger, steps, fails, degree, extent, out_png):
+    """The same tracked data as a *map*: labeled Re(c)/Im(c) axes, and every arc center --
+    the family's branch points c = -(d-1) zeta, zeta^(d-1) = 1 -- marked on the ring."""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    img = _shade(finger, steps, fails)
+    bg = '#05060a'
+    plt.rcParams.update({'figure.facecolor': bg, 'axes.facecolor': bg})
+    fig, ax = plt.subplots(figsize=(12, 7.4))
+    ax.imshow(img, origin='lower', extent=extent, interpolation='bilinear')
+
+    radius = degree - 1
+    branch = -radius * np.exp(2j * np.pi * np.arange(degree - 1) / (degree - 1))
+    ax.scatter(branch.real, branch.imag, s=130, facecolors='none',
+               edgecolors='white', linewidths=1.6, zorder=5)
+    for b in branch:
+        if abs(b.imag) < 1e-9:                              # on the real axis: -8 or 8
+            label = f'${round(b.real)}$'
+        elif abs(b.real) < 1e-9:                            # on the imaginary axis: -8i or 8i
+            label = f'${round(b.imag)}i$'.replace('1i', 'i')
+        else:                                               # diagonal: exact polar form
+            label = f'${radius}e^{{{np.angle(b) / np.pi:+.2g}\\pi i}}$'
+        ax.annotate(label, (b.real, b.imag), textcoords='offset points', xytext=(9, 9),
+                    color='white', fontsize=9)
+    theta = np.linspace(0, 2 * np.pi, 400)
+    ax.plot((degree - 1) * np.cos(theta), (degree - 1) * np.sin(theta),
+            color='white', lw=0.6, ls=':', alpha=0.45,
+            label=f'branch-point ring  $|c| = {degree - 1}$')
+
+    ax.set_xlabel(r'$\operatorname{Re}\, c$', color='#c9d3e0')
+    ax.set_ylabel(r'$\operatorname{Im}\, c$', color='#c9d3e0')
+    ax.tick_params(colors='#8896aa')
+    for spine in ax.spines.values():
+        spine.set_color('#223')
+    ax.set_title(f'arc centers: the branch points  $c = -{degree - 1}\\zeta$,  '
+                 f'$\\zeta^{{{degree - 1}}} = 1$   (each arc trails toward $-\\gamma\\infty$)',
+                 color='#e8eef7', fontsize=11)
+    leg = ax.legend(loc='lower right', framealpha=0.15, labelcolor='#c9d3e0', fontsize=9)
+    leg.get_frame().set_edgecolor('#223')
+    fig.savefig(out_png, dpi=110, facecolor=bg, bbox_inches='tight')
+    plt.close(fig)
     print('  wrote', out_png)
 
 
 # --- the two frames ------------------------------------------------------------------------------
 
-def teaching_frame(out):
-    """d = 5: four branch points (c = -4 zeta, zeta^4 = 1), four arcs -- the lesson legible."""
+def _extent(center, halfwidth, w, h):
+    """The imshow extent [x0, x1, y0, y1] matching compute()'s pixel grid."""
+    halfheight = halfwidth * h / w
+    return [center[0] - halfwidth, center[0] + halfwidth,
+            center[1] - halfheight, center[1] + halfheight]
+
+
+def teaching_frame(out, out_annotated):
+    """d = 5: four branch points (c = -4 zeta, zeta^4 = 1), four arcs -- the lesson legible.
+    The window contains the whole branch-point ring |c| = 4; the same tracked data is rendered
+    full-bleed and as an annotated map with the four arc centers marked."""
     print('teaching frame (d=5):')
+    center, halfwidth = (1.2, -0.2), 9.0
+    w, h = 800 * _SS, 450 * _SS
     finger, steps, fails = compute(degree=5,
                                    gamma=(Fraction(-24, 25), Fraction(7, 25)),
-                                   center=(1.0, -0.4), halfwidth=7.0,
-                                   w=800 * _SS, h=450 * _SS)
+                                   center=center, halfwidth=halfwidth, w=w, h=h)
     render(finger, steps, fails, out)
+    render_annotated(finger, steps, fails, 5, _extent(center, halfwidth, w, h), out_annotated)
 
 
-def showpiece_frame(out):
-    """d = 9: the eight-arc comet cluster streaming in the -gamma direction -- the show-off."""
+def showpiece_frame(out, out_annotated):
+    """d = 9: the eight-arc comet cluster streaming in the -gamma direction -- the show-off.
+    The window contains the whole branch-point ring |c| = 8; the same tracked data is rendered
+    twice, full-bleed and as an annotated map with the eight arc centers marked."""
     print('showpiece frame (d=9):')
+    center, halfwidth = (2.5, -0.3), 16.4
+    w, h = 1200 * _SS, 675 * _SS
     finger, steps, fails = compute(degree=9,
                                    gamma=(Fraction(-24, 25), Fraction(7, 25)),
-                                   center=(2.0, -0.8), halfwidth=12.5,
-                                   w=1200 * _SS, h=675 * _SS)
+                                   center=center, halfwidth=halfwidth, w=w, h=h)
     render(finger, steps, fails, out)
+    render_annotated(finger, steps, fails, 9, _extent(center, halfwidth, w, h), out_annotated)
 
 
 def main():
-    """Generate both frames next to this script."""
-    teaching_frame(os.path.join(_OUT, 'homotopy_basins_teaching.png'))
-    showpiece_frame(os.path.join(_OUT, 'homotopy_basins.png'))
+    """Generate all four frames next to this script."""
+    teaching_frame(os.path.join(_OUT, 'homotopy_basins_teaching.png'),
+                   os.path.join(_OUT, 'homotopy_basins_teaching_annotated.png'))
+    showpiece_frame(os.path.join(_OUT, 'homotopy_basins.png'),
+                    os.path.join(_OUT, 'homotopy_basins_annotated.png'))
 
 
 if __name__ == '__main__':

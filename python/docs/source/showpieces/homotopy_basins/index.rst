@@ -44,6 +44,13 @@ through *system space*, and that line grazes the discriminant along one arc per 
    \qquad \mu = \frac{\gamma\,t}{1-t} \in \gamma\cdot(0,\infty),\quad \zeta^8 = 1,
 
 each arc leaving its branch point and trailing to infinity in the :math:`-\gamma` direction.
+Here is the same tracked data as a *map* — coordinates on, all eight arc centers marked:
+
+.. image:: homotopy_basins_annotated.png
+   :width: 100%
+   :align: center
+   :alt: the degree-9 render with labeled Re(c)/Im(c) axes, the eight branch points marked on
+         the dotted ring |c| = 8
 That is the **gamma trick** made visible: the arcs are precisely the *bad* target systems for
 this choice of :math:`\gamma`, a measure-zero set that a different :math:`\gamma` re-aims
 elsewhere — rotate :math:`\gamma` and the whole comet cluster swings around the ring.  For a
@@ -65,7 +72,14 @@ points at :math:`c = -4\zeta,\ \zeta^4=1`, one glowing arc each, five basins:
 
 Crossing an arc means the straight-line homotopy passed the discriminant on one side rather than
 the other, so the destinations of exactly two of the tracked paths trade places — the start–end correlation,
-and with it the hue, jumps by the transposition's kick :math:`(\zeta^j-\zeta^k)(x_j-x_k)`.  Walking a small loop *around* an arc's
+and with it the hue, jumps by the transposition's kick :math:`(\zeta^j-\zeta^k)(x_j-x_k)`.
+With coordinates on, the four arc centers sit at :math:`c = \pm 4,\ \pm 4i`:
+
+.. image:: homotopy_basins_teaching_annotated.png
+   :width: 92%
+   :align: center
+   :alt: the degree-5 render with labeled Re(c)/Im(c) axes and the four branch points marked on
+         the dotted ring |c| = 4  Walking a small loop *around* an arc's
 endpoint (the branch point itself) is precisely the monodromy loop of
 :doc:`the Monodromy Loom </showpieces/monodromy_loom/index>` — the two showpieces are the same
 mathematics seen from parameter space and from solution space.
