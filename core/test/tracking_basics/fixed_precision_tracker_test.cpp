@@ -157,6 +157,83 @@ BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 }
 
 
+// REGRESSION: the predictor's condition-number refresh counter was passed to SetNormsCond
+// BY VALUE.  The tracker initializes the counter TO frequency_of_CN_estimation, so with the
+// by-value bug the member never advanced past that value and `counter >= frequency` was true
+// on EVERY step -- i.e. the estimate silently refreshed every step and the frequency knob was
+// inert (harmless at the default of 1, wrong for anything larger).  With the counter passed by
+// reference, the estimate must hold constant between refreshes: on a path whose conditioning
+// varies continuously, the recorded estimate may change at most every frequency-th step.
+namespace {
+struct CondNumberRecorder : public bertini::Observer<bertini::tracking::DoublePrecisionTracker>
+{
+	using Emitter = bertini::tracking::TrackerTraits<bertini::tracking::DoublePrecisionTracker>::EventEmitterType;
+
+	std::vector<double> conds; ///< LatestConditionNumber after each successful step.
+
+	bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+	{
+		if (auto p = dynamic_cast<const bertini::tracking::SuccessfulStep<Emitter>*>(&e))
+			conds.push_back(static_cast<double>(p->Get().LatestConditionNumber()));
+		return bertini::ObserveResult::KeepObserving;
+	}
+};
+}
+
+BOOST_AUTO_TEST_CASE(condition_number_refresh_honors_frequency)
+{
+	DefaultPrecision(100);
+	using namespace bertini::tracking;
+
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	// TWO variables, deliberately: for a univariate system the estimate is constant BY
+	// ALGEBRA -- ||J||*||J^{-1} r|| = |J|*|r|/|J| = |r|, the fixed probe's norm -- so a
+	// 1-var version of this test can only "pass" through floating-point jitter (and on
+	// macOS it doesn't).  Here J = [[2x, 2y], [1, -1]] genuinely varies along the path.
+	System sys;
+	VariableGroup v{x, y};
+	sys.AddFunction(x*x + y*y - t - 1);
+	sys.AddFunction(x - y - t/2);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	DoublePrecisionTracker tracker(sys);
+
+	SteppingConfig stepping_preferences;
+	stepping_preferences.frequency_of_CN_estimation = 3;
+	stepping_preferences.max_step_size = 0.01;    // plenty of steps to observe the cadence
+	NewtonConfig newton_preferences;
+	tracker.Setup(Predictor::Euler,
+	              double(1e-5),
+	              double(1e5),
+	              stepping_preferences,
+	              newton_preferences);
+
+	CondNumberRecorder recorder;
+	tracker.AddObserver(recorder);
+
+	// a real solution at t = 1:  x = y + 1/2,  2y^2 + y + 1/4 = 2
+	const double y0 = (-1.0 + sqrt(15.0)) / 4.0;
+	Vec<complex_dbl> start(2);
+	start << complex_dbl(y0 + 0.5), complex_dbl(y0);
+	Vec<complex_dbl> end_point;
+	auto code = tracker.TrackPath(end_point, complex_dbl(1), complex_dbl(0), start);
+	tracker.RemoveObserver(recorder);
+	BOOST_CHECK(code==bertini::SuccessCode::Success);
+
+	BOOST_REQUIRE_GE(recorder.conds.size(), 9u);
+	unsigned changes = 0;
+	for (size_t ii = 1; ii < recorder.conds.size(); ++ii)
+		if (recorder.conds[ii] != recorder.conds[ii-1])
+			++changes;
+
+	BOOST_CHECK_GE(changes, 1u);                         // it does refresh...
+	BOOST_CHECK_LT(2*changes, recorder.conds.size());    // ...but at most every 3rd step,
+	                                                     // not every step (the by-value bug)
+}
 
 
 

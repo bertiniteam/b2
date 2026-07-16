@@ -636,10 +636,10 @@ namespace bertini{
 				/// \param[out] norm_J Set to ||J||.
 				/// \param[out] norm_J_inverse Set to the estimate of ||J^{-1}||.
 				/// \param[out] condition_number_estimate Set to the product of the two norms.
-				/// \param num_steps_since_last_condition_number_computation Steps elapsed since the last estimate.
+				/// \param[in,out] num_steps_since_last_condition_number_computation Steps elapsed since the last estimate; advanced/reset here, so it MUST be the caller's counter by reference (passing by value silently turns any frequency > 1 into "never refresh").
 				/// \param frequency_of_CN_estimation Recompute the estimate once this many steps have passed.
 				template<typename ComplexT>
-				void SetNormsCond(NumErrorT & norm_J, NumErrorT & norm_J_inverse, NumErrorT & condition_number_estimate, unsigned num_steps_since_last_condition_number_computation, unsigned frequency_of_CN_estimation)
+				void SetNormsCond(NumErrorT & norm_J, NumErrorT & norm_J_inverse, NumErrorT & condition_number_estimate, unsigned & num_steps_since_last_condition_number_computation, unsigned frequency_of_CN_estimation)
 				{
 					// Calculate condition number and update if needed
 					linalg::PartialPivLU<ComplexT>& LUref = std::get< linalg::PartialPivLU<ComplexT> >(LU_);
@@ -1079,9 +1079,9 @@ namespace bertini{
 		    Vec<complex_mp>&, System const&, Vec<complex_mp> const&, complex_mp const&, complex_mp const&);
 
 		extern template void ExplicitRKPredictor::SetNormsCond<complex_dbl>(
-		    double&, double&, double&, unsigned, unsigned);
+		    double&, double&, double&, unsigned&, unsigned);
 		extern template void ExplicitRKPredictor::SetNormsCond<complex_mp>(
-		    double&, double&, double&, unsigned, unsigned);
+		    double&, double&, double&, unsigned&, unsigned);
 
 		extern template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_dbl>(double&, complex_dbl const&);
 		extern template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_mp>(double&, complex_mp const&);

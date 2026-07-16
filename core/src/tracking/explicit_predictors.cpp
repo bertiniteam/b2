@@ -50,9 +50,9 @@ namespace bertini{
 		    Vec<complex_mp>&, System const&, Vec<complex_mp> const&, complex_mp const&, complex_mp const&);
 
 		template void ExplicitRKPredictor::SetNormsCond<complex_dbl>(
-		    double&, double&, double&, unsigned, unsigned);
+		    double&, double&, double&, unsigned&, unsigned);
 		template void ExplicitRKPredictor::SetNormsCond<complex_mp>(
-		    double&, double&, double&, unsigned, unsigned);
+		    double&, double&, double&, unsigned&, unsigned);
 
 		template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_dbl>(double&, complex_dbl const&);
 		template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_mp>(double&, complex_mp const&);
