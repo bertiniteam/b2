@@ -1,0 +1,9 @@
+<map id="bertini::tracking::AMPTracker" name="bertini::tracking::AMPTracker">
+<area shape="rect" id="Node000001" title="Functor&#45;like class for tracking paths on a system." alt="" coords="107,181,240,221"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="87,93,260,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="176,147,176,181,171,181,171,147"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="5,13,152,38"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="104,45,154,91,151,95,100,49"/>
+<area shape="rect" id="Node000004" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="176,5,363,45"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="239,57,196,95,193,91,236,53"/>
+</map>

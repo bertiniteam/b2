@@ -1,0 +1,19 @@
+<map id="core/include/bertini2/trackers/fixed_precision_utilities.hpp" name="core/include/bertini2/trackers/fixed_precision_utilities.hpp">
+<area shape="rect" id="Node000001" title=" " alt="" coords="51,5,230,60"/>
+<area shape="rect" id="Node000002" href="$fixed__prec__endgame_8hpp.html" title="Contains the policy for fixed precision endgame types." alt="" coords="59,108,223,163"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="143,74,143,108,138,108,138,74"/>
+<area shape="rect" id="Node000003" href="$endgames_8hpp.html" title="Collects the various header files which define the Bertini2 endgames." alt="" coords="63,211,218,251"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="143,176,143,211,138,211,138,176"/>
+<area shape="rect" id="Node000004" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="23,401,258,441"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="143,264,143,401,138,401,138,264"/>
+<area shape="rect" id="Node000005" href="$user__homotopy_8hpp.html" title=" " alt="" coords="33,489,249,529"/>
+<area shape="poly" id="edge5_Node000003_Node000005" title=" " alt="" coords="112,262,58,322,33,361,14,402,8,422,14,440,25,455,40,468,74,487,72,492,37,472,22,459,9,443,3,422,9,400,28,358,54,319,108,258"/>
+<area shape="rect" id="Node000006" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="216,299,375,353"/>
+<area shape="poly" id="edge6_Node000003_Node000006" title=" " alt="" coords="185,256,253,296,250,301,183,260"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="143,455,143,489,138,489,138,455"/>
+<area shape="poly" id="edge7_Node000006_Node000004" title=" " alt="" coords="242,363,173,403,171,399,239,358"/>
+<area shape="poly" id="edge8_Node000006_Node000005" title=" " alt="" coords="297,368,290,406,283,425,272,443,241,472,204,492,201,487,237,467,268,440,278,423,285,404,292,367"/>
+<area shape="rect" id="Node000007" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="333,401,535,441"/>
+<area shape="poly" id="edge9_Node000006_Node000007" title=" " alt="" coords="339,359,400,399,397,403,336,363"/>
+<area shape="poly" id="edge10_Node000007_Node000006" title=" " alt="" coords="401,396,341,356,344,351,404,391"/>
+</map>

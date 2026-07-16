@@ -1,0 +1,9 @@
+﻿bertini.endgame
+===============
+.. automodule:: bertini.endgame
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

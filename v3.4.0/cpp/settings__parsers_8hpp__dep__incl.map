@@ -1,0 +1,15 @@
+<map id="core/include/bertini2/io/parsing/settings_parsers.hpp" name="core/include/bertini2/io/parsing/settings_parsers.hpp">
+<area shape="rect" id="Node000001" title="Provides the parsers for settings in bertini2." alt="" coords="179,5,333,60"/>
+<area shape="rect" id="Node000002" href="$parsing_8hpp.html" title="A collective include file for parsing utilities." alt="" coords="88,115,243,155"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="225,72,185,117,181,113,221,69"/>
+<area shape="rect" id="Node000003" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="267,108,426,163"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="291,69,325,106,321,110,287,72"/>
+<area shape="rect" id="Node000004" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,211,240,251"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="272,170,169,213,167,208,270,165"/>
+<area shape="rect" id="Node000005" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,299,308,339"/>
+<area shape="poly" id="edge5_Node000003_Node000005" title=" " alt="" coords="319,175,218,300,213,297,315,172"/>
+<area shape="rect" id="Node000006" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="315,211,517,251"/>
+<area shape="poly" id="edge6_Node000003_Node000006" title=" " alt="" coords="368,172,397,209,393,212,364,176"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="151,259,185,297,181,300,147,263"/>
+<area shape="poly" id="edge7_Node000006_Node000003" title=" " alt="" coords="400,201,372,165,377,161,404,198"/>
+</map>

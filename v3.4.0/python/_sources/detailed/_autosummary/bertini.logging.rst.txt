@@ -1,0 +1,9 @@
+﻿bertini.logging
+===============
+.. automodule:: bertini.logging
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

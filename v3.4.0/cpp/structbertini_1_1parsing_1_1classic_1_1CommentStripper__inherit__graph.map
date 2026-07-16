@@ -1,0 +1,5 @@
+<map id="bertini::parsing::classic::CommentStripper&lt; Iterator, Skipper &gt;" name="bertini::parsing::classic::CommentStripper&lt; Iterator, Skipper &gt;">
+<area shape="rect" id="Node000001" title="Qi Parser object for removing comments from a line of text and then returns the uncommented line." alt="" coords="5,108,217,163"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="27,5,196,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="114,74,114,108,109,108,109,74"/>
+</map>

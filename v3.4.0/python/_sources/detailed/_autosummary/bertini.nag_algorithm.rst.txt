@@ -1,0 +1,9 @@
+﻿bertini.nag\_algorithm
+======================
+.. automodule:: bertini.nag_algorithm
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+
