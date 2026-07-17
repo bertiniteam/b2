@@ -889,10 +889,46 @@ def selftest(system_name='cyclic5'):
     print('  PASS')
 
 
+# --- the two frames -------------------------------------------------------------------------------
+#
+# The windows are LITERAL CONSTANTS, deliberately.  suggest_window() proposes them from the tracked
+# data and prints them; they are then pasted here.  Auto-windowing at render time would make a
+# committed PNG depend on run-to-run data and churn the diff on every regeneration.  Constants are
+# reviewable.  Both frames project onto coord0 -- the first coordinate's own complex plane -- which
+# was chosen by looking at contact sheets, not by argument.
+
+def teaching_frame(out):
+    """Noonburg-6: 729 paths, 717 solutions, ~3s.  The lesson, legible.
+
+    Few enough paths that individual strands stay separate, so you can see what the piece IS: each
+    filament is one tracked path, fanning out of the start system and converging on a solution,
+    brightening as it slows.  The wing-like plumes are bundles of paths that travel together.
+    """
+    print('teaching frame (noonburg-6):')
+    cache = track('noon6', seed=2)
+    ell = _PROJECTIONS['coord0'](cache['points'].shape[1] - 1)
+    render(cache, ell, center=(0.1, -0.502), halfwidth=1.357, w=960, h=540,
+           out_png=out, exposure=2.0, gamma=2.4)
+
+
+def showpiece_frame(out):
+    """Kuramoto, 7 oscillators: 4096 paths, 124 equilibria, ~40s.  The show-off.
+
+    Dense enough to be a cloud rather than a set of strands.  Two blazing knots where whole bundles
+    of paths converge, and thousands of filaments streaming between them: a solve, photographed.
+    """
+    print('showpiece frame (Kuramoto-7):')
+    cache = track('kuramoto7', seed=2)
+    ell = _PROJECTIONS['coord0'](cache['points'].shape[1] - 1)
+    render(cache, ell, center=(0.278, 0.322), halfwidth=5.418, w=960, h=540,
+           out_png=out, exposure=2.0, gamma=2.4)
+
+
 def main():
+    """Generate both frames next to this script, or scout/selftest while prototyping."""
     p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     p.add_argument('--scout', metavar='SYSTEM', nargs='?', const='cyclic5',
-                   help='render a projection contact sheet from one solve')
+                   help='contact sheet of every projection, from ONE solve (prototyping)')
     p.add_argument('--selftest', action='store_true', help='assert the exposure conserves energy')
     p.add_argument('--seed', type=int, default=2)
     p.add_argument('--max-step-size', default=None,
@@ -904,7 +940,8 @@ def main():
     elif args.scout:
         scout(args.scout, seed=args.seed, max_step_size=args.max_step_size)
     else:
-        print('the hero frame is not chosen yet; use --scout')
+        teaching_frame(os.path.join(_OUT, 'nebula_teaching.png'))
+        showpiece_frame(os.path.join(_OUT, 'nebula.png'))
 
 
 if __name__ == '__main__':
