@@ -94,8 +94,43 @@ def cyclic_system(n):
     return sys_
 
 
-def noon_system(n):
-    """Noonburg's neural network: x_i (1 + sum_{j != i} x_j^2) - 1.  3^n paths, not symmetric."""
+def noon_system(n, c=None):
+    """The noon-n benchmark -- Noonburg's neural network, ``3**n`` paths::
+
+        x_i * (sum_{j != i} x_j^2)  -  c * x_i  +  1  =  0,     i = 1 .. n
+
+    A Lotka-Volterra-style model of n interacting neurons (Noonburg, 1989), and a long-standing
+    benchmark family for polynomial system solvers; the standard member is ``c = 11/10``, which is
+    the default here.  Exact rational, per the coercion doctrine.
+    """
+    from fractions import Fraction
+    c = Fraction(11, 10) if c is None else Fraction(c)
+    x = [bertini.Variable('x' + str(i)) for i in range(n)]
+    sys_ = bertini.System()
+    sys_.add_variable_group(bertini.VariableGroup(x))
+    cc = bertini.coefficient(c)
+    for i in range(n):
+        sys_.add_function(x[i] * np.sum([x[j]**2 for j in range(n) if j != i]) - cc * x[i] + 1)
+    return sys_
+
+
+def noonburg_like_system(n):
+    """A Noonburg-*style* neural network, ``3**n`` paths -- and NOT the noon-n benchmark::
+
+        x_i * (1 + sum_{j != i} x_j^2)  -  1  =  0,     i = 1 .. n
+
+    Be precise about what this is, because it is the Nebula's teaching frame and it would be easy
+    to mis-cite.  It is a sibling of :func:`noon_system`, not a member of it: writing noon's form as
+    ``x_i sum_{j != i} x_j^2 - c x_i + 1``, this has the ``x_i`` coefficient of ``c = -1`` but the
+    opposite constant.  Substituting ``x -> -x`` does carry it onto noon at ``c = -1``, so the two
+    have mirror-image *solution sets*.
+
+    Their **paths differ regardless**, which is what matters to a picture of paths: a total-degree
+    homotopy runs from a FIXED start system to the target, so reflecting the target does not reflect
+    the journey.  Measured, this system leaves 108k tracked samples where noon at ``c = -1`` leaves
+    25k, and the two render quite differently.  This one fans into two broad wings; it was chosen by
+    looking.
+    """
     x = [bertini.Variable('x' + str(i)) for i in range(n)]
     sys_ = bertini.System()
     sys_.add_variable_group(bertini.VariableGroup(x))
@@ -385,7 +420,8 @@ _SYSTEMS = {
     'cyclic5': (lambda: cyclic_system(5), 'cyclic-5', 120),
     'cyclic6': (lambda: cyclic_system(6), 'cyclic-6', 720),
     'cyclic7': (lambda: cyclic_system(7), 'cyclic-7', 5040),
-    'noon6': (lambda: noon_system(6), 'noonburg-6', 729),
+    'noon6': (lambda: noonburg_like_system(6), 'Noonburg-style, 6 neurons', 729),
+    'noon6_benchmark': (lambda: noon_system(6), 'noon-6 benchmark (c = 11/10)', 729),
     'katsura8': (lambda: katsura_system(8), 'katsura-8', 256),
     'kuramoto5': (lambda: kuramoto_system(5), 'Kuramoto, 5 oscillators', 256),
     'kuramoto6': (lambda: kuramoto_system(6), 'Kuramoto, 6 oscillators', 1024),
@@ -898,7 +934,7 @@ def selftest(system_name='cyclic5'):
 # was chosen by looking at contact sheets, not by argument.
 
 def teaching_frame(out):
-    """Noonburg-6: 729 paths, 717 solutions, ~3s.  The lesson, legible.
+    """A Noonburg-style network on 6 neurons: 729 paths, 717 solutions, ~3s.  The lesson, legible.
 
     Few enough paths that individual strands stay separate, so you can see what the piece IS: each
     filament is one tracked path, fanning out of the start system and converging on a solution,
