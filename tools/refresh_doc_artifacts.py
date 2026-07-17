@@ -120,6 +120,11 @@ def _plots():
              SHOWPIECES / "flight_recorder" / "flight_recorder.py",
              ["flight_recorder.png", "flight_recorder_setup.png"],
              note="showpiece: raster PNG only; tight-tolerance mult-35 solve -> slow (~1 min)"),
+        Plot("nebula",
+             SHOWPIECES / "nebula" / "nebula.py",
+             ["nebula.png", "nebula_teaching.png"],
+             note="showpiece: raster PNG only (the image IS an accumulation buffer); two solves, "
+                  "4825 paths, ~530k tracked samples -> ~40s"),
     ]
 
 
