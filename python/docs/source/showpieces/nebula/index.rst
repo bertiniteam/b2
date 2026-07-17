@@ -56,8 +56,9 @@ Start simple: one path, one strand
 ==================================
 
 Four thousand paths is a cloud.  To see what a cloud is *made of*, here is the same program on a
-smaller system — Noonburg's neural-network equations for six neurons, **729 paths** and **717
-solutions**, in under three seconds:
+smaller system — a Noonburg-style neural network on six neurons,
+:math:`x_i(1 + \sum_{j \neq i} x_j^2) - 1 = 0`, giving **729 paths** and **717 solutions** in under
+three seconds:
 
 .. image:: nebula_teaching.png
    :width: 88%
