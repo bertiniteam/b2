@@ -184,7 +184,18 @@ namespace bertini{
 			cl
 			.def(init<TrackerT const&, endgame::CauchyConfig const&>((arg("self"),arg("tracker"),arg("cauchyconfig"))))
 			.def(init<TrackerT const&, endgame::EndgameConfig const&>((arg("self"),arg("tracker"),arg("endgameconfig"))))
-			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))));
+			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))))
+
+			// flavor-config accessors, mirroring the generic get/set_endgame_settings on EndgameBaseVisitor.
+			// Without these the CauchyConfig (maximum_cauchy_ratio, ...) is constructor-only -- unreachable
+			// once the endgame is built (e.g. the one a HomotopySolver owns).  get returns a detached copy;
+			// mutate it and hand it back through set.
+			.def("get_cauchy_settings", &EndgameT::template Get<endgame::CauchyConfig>,
+				 return_value_policy<copy_const_reference>(), arg("self"),
+				 "Get a copy of the Cauchy-specific endgame settings (maximum_cauchy_ratio, etc.)")
+			.def("set_cauchy_settings", &EndgameT::template Set<endgame::CauchyConfig>,
+				 (arg("self"), arg("settings")),
+				 "Set the Cauchy-specific endgame settings");
 		}
 
 
@@ -197,7 +208,18 @@ namespace bertini{
 			cl
 			.def(init<TrackerT const&, endgame::PowerSeriesConfig const&>((arg("self"),arg("tracker"),arg("powerseriesconfig"))))
 			.def(init<TrackerT const&, endgame::EndgameConfig const&>((arg("self"),arg("tracker"),arg("endgameconfig"))))
-			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))));
+			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))))
+
+			// flavor-config accessors, mirroring the generic get/set_endgame_settings on EndgameBaseVisitor.
+			// Without these the PowerSeriesConfig (max_cycle_number, ...) is constructor-only -- unreachable
+			// once the endgame is built (e.g. the one a HomotopySolver owns).  get returns a detached copy;
+			// mutate it and hand it back through set.
+			.def("get_powerseries_settings", &EndgameT::template Get<endgame::PowerSeriesConfig>,
+				 return_value_policy<copy_const_reference>(), arg("self"),
+				 "Get a copy of the power-series-specific endgame settings (max cycle number, etc.)")
+			.def("set_powerseries_settings", &EndgameT::template Set<endgame::PowerSeriesConfig>,
+				 (arg("self"), arg("settings")),
+				 "Set the power-series-specific endgame settings");
 		}
 
 

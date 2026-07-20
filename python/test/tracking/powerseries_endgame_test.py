@@ -244,3 +244,46 @@ def test_amp_pseg_full_run(cubic_homotopy, precision):
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
     assert mp.abs(fa[0] - mpfr_complex(1)) < 1e-11
+
+
+# ---------------------------------------------------------------------------
+# flavor-config runtime accessors (get/set_powerseries_settings)
+# ---------------------------------------------------------------------------
+
+def test_amp_pseg_flavor_config_setters(cubic_homotopy):
+    """get/set_powerseries_settings round-trips, returns a DETACHED copy, and a
+    mutated endgame still converges the cycle-3 endpoint.  Regression for the
+    constructor-only flavor-config gap: the PowerSeriesConfig (max_cycle_number,
+    ...) was unreachable once the endgame was built.  The accessors are forwarded
+    through the pure-Python endgame wrapper, so this is the path the port uses."""
+    s, x, t = cubic_homotopy
+    ampconfig = amp_config_from(s)
+    tracker = AMPTracker(s)
+    tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, SteppingConfig(), NewtonConfig())
+    tracker.precision_setup(ampconfig)
+
+    start = np.array([mpfr_complex(-1)])
+    bdry = np.array(np.zeros(1, dtype=np.int64), dtype=mpfr_complex)
+    code = tracker.track_path(bdry, mpfr_complex(1), mpfr_complex("0.1"), start)
+    assert code == SuccessCode.Success
+
+    eg = AMPPowerSeriesEndgame(tracker, mpfr_complex("0.1"))
+
+    got = eg.get_powerseries_settings()
+    assert got.max_cycle_number == 6  # library default
+
+    got.max_cycle_number = 12
+    eg.set_powerseries_settings(got)
+
+    back = eg.get_powerseries_settings()
+    assert back.max_cycle_number == 12
+
+    # get returns a DETACHED copy -- mutating it must not reach into the endgame
+    back.max_cycle_number = 3
+    assert eg.get_powerseries_settings().max_cycle_number == 12
+
+    # a mutated endgame still converges the cycle-3 triple root
+    code = eg.run(bdry)
+    assert code == SuccessCode.Success
+    assert mp.abs(eg.final_approximation()[0] - mpfr_complex(1)) < 1e-11
+    assert eg.cycle_number() == 3
