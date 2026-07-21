@@ -78,6 +78,33 @@ def test_parse_emoji_variable():
     assert abs(sys.eval(vals)[0] - (-0.5)) < 1e-12
 
 
+def test_parse_tolerates_config_and_input_wrapper():
+    # Regression: the native SystemParser wanted just the body; a leading CONFIG...END;
+    # block or the INPUT/END; separators (which System.to_classic_input EMITS) made it
+    # fail, so parse.system(sys.to_classic_input()) did not round-trip and callers had to
+    # hand-split.  parse.system now tolerates both forms; a raw body still parses.
+    body = 'variable_group x, y, z; function f; f = x^2 + y^2 + z^2 - 1;'
+    wrapped = 'INPUT\n' + body + '\nEND;'
+    with_config = 'CONFIG\ntracktype: 0;\nmptype: 2;\nEND;\n\nINPUT\n' + body + '\nEND;'
+    for text in (body, wrapped, with_config):
+        sys = pp.system(text)
+        assert sys.num_variables() == 3
+        assert len(list(sys.functions())) == 1
+
+
+def test_to_classic_input_round_trips_through_parse():
+    # The full round-trip: a System's own classic-input text parses straight back.
+    sys = System()
+    x, y, z = variables(list('xyz'))
+    sys.add_variable_group([x, y, z])
+    sys.add_function(x**2 + y**2 + z**2 - 1)
+    back = pp.system(sys.to_classic_input())
+    assert back.num_variables() == 3
+    assert len(list(back.functions())) == 1
+    v = np.array((complex(0.5, 0.0), complex(0.25, 0.0), complex(0.0, 0.0)))
+    assert abs(back.eval(v)[0] - (0.25 + 0.0625 - 1)) < 1e-12
+
+
 def _f_eval(expr, vals):
     """Parse 'f = <expr>' over x,y,z and evaluate at vals."""
     return pp.system(f'function f; variable_group x,y,z; f = {expr};').eval(vals)[0]
