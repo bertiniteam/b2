@@ -92,6 +92,26 @@ def test_parse_tolerates_config_and_input_wrapper():
         assert len(list(sys.functions())) == 1
 
 
+def test_parse_complex_coefficient_literals():
+    # Regression: to_classic_input writes complex coefficients as (re,im), which the
+    # FunctionParser could not read (it wants (re+im*I)) -- so a complex-coefficient
+    # system's own text did not round-trip.  parse.system now rewrites (re,im) -> (re+im*I).
+    s = System()
+    x, y, z = variables(list('xyz'))
+    s.add_variable_group([x, y, z])
+    c1 = coefficient(complex_mp('0.3', '-0.5'))
+    c2 = coefficient(complex_mp('1.2', '0.7'))
+    s.add_function(c1 * x + y**2 - z * c2)
+    back = pp.system(s.to_classic_input())
+    v = np.array((complex(0.5, 0.1), complex(0.5, -0.2), complex(0.3, 0.4)))
+    a = np.array([complex(w) for w in s.eval(v)])
+    b = np.array([complex(w) for w in back.eval(v)])
+    assert np.allclose(a, b)
+    # scientific-notation complex coefficients too
+    s2 = pp.system('variable_group x; function f; f = (1.5e-3,-2.0e2)*x + 1;')
+    assert abs(complex(s2.eval(np.array((complex(1, 0),)))[0]) - (1.0015 - 200j)) < 1e-9
+
+
 def test_to_classic_input_round_trips_through_parse():
     # The full round-trip: a System's own classic-input text parses straight back.
     sys = System()
