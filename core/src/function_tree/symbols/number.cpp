@@ -61,11 +61,15 @@ void Integer::print(std::ostream & target) const
 void Complex::print(std::ostream & target) const
 {
 	// real-valued floats print bare; the complex pair form is reserved for
-	// genuinely complex values
+	// genuinely complex values.  str(0) prints EVERY digit the stored value
+	// carries: streaming the number directly would use the ostream's default
+	// precision (6 significant digits), silently truncating every printed
+	// system -- a coefficient must round-trip exactly through classic input.
 	if (highest_precision_value_.imag() == 0)
-		target << highest_precision_value_.real();
+		target << highest_precision_value_.real().str(0);
 	else
-		target << highest_precision_value_;
+		target << "(" << highest_precision_value_.real().str(0) << ","
+		       << highest_precision_value_.imag().str(0) << ")";
 }
 
 
