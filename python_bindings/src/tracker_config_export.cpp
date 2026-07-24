@@ -25,6 +25,7 @@ namespace bertini{
 				;
 
 			enum_<SuccessCode>("SuccessCode")
+				.value("NeverStarted", SuccessCode::NeverStarted)
 				.value("Success", SuccessCode::Success)
 				.value("HigherPrecisionNecessary", SuccessCode::HigherPrecisionNecessary)
 				.value("ReduceStepSize", SuccessCode::ReduceStepSize)
