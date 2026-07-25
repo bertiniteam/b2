@@ -106,6 +106,7 @@ from .tracking import (AMPTracker, DoublePrecisionTracker, MultiplePrecisionTrac
 
 from ._calculus import jacobian
 from ._randomize import randomize
+from ._refine import newton_refine
 # dense linear algebra for the mp types (solve / LU), backed by eigenpy's decompositions
 from . import linalg
 from .random import random_matrix

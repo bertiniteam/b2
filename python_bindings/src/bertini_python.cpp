@@ -46,6 +46,7 @@
 #include "eigenpy_interaction.hpp"   // EnableEigenPy()
 #include "parallel_export.hpp"       // ExportParallel()
 #include "records_export.hpp"        // ExportRecords()
+#include "newton_refine_export.hpp"  // ExportNewtonRefine()
 #include "bertini2/fast_allocator.hpp"  // InstallFastAllocator()
 
 namespace bertini { namespace python {
@@ -150,6 +151,8 @@ namespace bertini
 			ExportZeroDim();
 
 			ExportRecords();
+
+			ExportNewtonRefine();
 
 			ExportNID();
 
