@@ -8,7 +8,7 @@ points, where deflation restores the quadratic convergence the plain system lose
 
 import numpy as np
 
-import _pybertini
+from bertini import _pybertini
 
 from .multiprec import complex_mp
 
