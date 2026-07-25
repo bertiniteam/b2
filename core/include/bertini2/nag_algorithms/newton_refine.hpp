@@ -39,7 +39,7 @@ calling to sharpen beyond their current precision.
 #pragma once
 
 #include "bertini2/system/system.hpp"
-#include "bertini2/trackers/config.hpp"
+#include "bertini2/common/config.hpp"
 #include "bertini2/linalg/lu_solver.hpp"
 
 namespace bertini {
@@ -53,7 +53,7 @@ namespace algorithm {
 template <typename ComplexT>
 struct NewtonRefineResult
 {
-	tracking::SuccessCode code;  ///< Success when the step norm reached the tolerance; FailedToConverge or MatrixSolveFailure otherwise.
+	SuccessCode code;  ///< Success when the step norm reached the tolerance; FailedToConverge or MatrixSolveFailure otherwise.
 	Vec<ComplexT> point;         ///< The refined point (the best iterate reached, even on failure).
 	NumErrorT achieved;          ///< Infinity norm of the last Newton step -- the consecutive-approximation agreement actually achieved.
 	unsigned iterations;         ///< Number of Newton iterations taken.
@@ -108,13 +108,16 @@ NewtonRefineResult<ComplexT> NewtonRefine(System const& S,
 		throw std::runtime_error(ss.str());
 	}
 
-	NewtonRefineResult<ComplexT> result{tracking::SuccessCode::FailedToConverge,
+	NewtonRefineResult<ComplexT> result{SuccessCode::FailedToConverge,
 	                                    start, static_cast<NumErrorT>(-1), 0};
 
 	Vec<ComplexT> f(n_funcs);
 	Mat<ComplexT> J(n_funcs, n_vars);
 	Vec<ComplexT> step(n_vars);
 	linalg::PartialPivLU<ComplexT> lu;
+	lu.ChangeSize(static_cast<unsigned>(n_vars));   // the LU workspace is stateful:
+	                                                // without this, Factor/Solve run
+	                                                // over a 0-dimensional system
 
 	for (unsigned it = 0; it < max_iterations; ++it)
 	{
@@ -127,7 +130,7 @@ NewtonRefineResult<ComplexT> NewtonRefine(System const& S,
 
 		if (lu.Factor(J) != MatrixSuccessCode::Success)
 		{
-			result.code = tracking::SuccessCode::MatrixSolveFailure;
+			result.code = SuccessCode::MatrixSolveFailure;
 			return result;
 		}
 		lu.Solve(f, step);          // step = +J^{-1} f = -(Newton step)
@@ -138,7 +141,7 @@ NewtonRefineResult<ComplexT> NewtonRefine(System const& S,
 
 		if (result.achieved <= tolerance)
 		{
-			result.code = tracking::SuccessCode::Success;
+			result.code = SuccessCode::Success;
 			return result;
 		}
 	}

@@ -32,17 +32,19 @@ comments -- the same recipe the tracking layer uses in production.
 */
 
 #include <boost/test/unit_test.hpp>
+#include <iostream>
 
 #include "bertini2/nag_algorithms/newton_refine.hpp"
 #include "bertini2/system/system.hpp"
 
 using bertini::System;
 using bertini::Vec;
+using bertini::Mat;
 using bertini::complex_mp;
 using bertini::DefaultPrecision;
 using bertini::node::Variable;
 using bertini::algorithm::NewtonRefine;
-using bertini::tracking::SuccessCode;
+using bertini::SuccessCode;
 
 BOOST_AUTO_TEST_SUITE(standalone_newton_refine)
 
@@ -63,7 +65,7 @@ BOOST_AUTO_TEST_CASE(nonsingular_root_refines_quadratically)
 	BOOST_CHECK(r.code == SuccessCode::Success);
 	BOOST_CHECK(r.achieved <= 1e-40);
 	BOOST_CHECK(r.iterations <= 10);         // quadratic: ~3 doublings needed
-	using mpfr_float = bertini::mpfr_float;
+	using mpfr_float = bertini::real_mp;
 	mpfr_float residual = abs(pow(r.point(0),2) - complex_mp(2));
 	BOOST_CHECK(residual < mpfr_float("1e-38"));
 }
@@ -136,7 +138,7 @@ BOOST_AUTO_TEST_CASE(double_cone_singularity_refines_on_deflated_system)
 	auto r = NewtonRefine(S, start, 1e-45, 50);
 	BOOST_CHECK(r.code == SuccessCode::Success);
 	BOOST_CHECK(r.achieved <= 1e-45);
-	using mpfr_float = bertini::mpfr_float;
+	using mpfr_float = bertini::real_mp;
 	mpfr_float dist = max(abs(r.point(0)), max(abs(r.point(1)), abs(r.point(2))));
 	BOOST_CHECK(dist < mpfr_float("1e-40"));  // landed ON the singularity
 }
@@ -176,7 +178,7 @@ BOOST_AUTO_TEST_CASE(whitney_handle_point_refines_on_deflated_system)
 	auto r = NewtonRefine(S, start, 1e-45, 50);
 	BOOST_CHECK(r.code == SuccessCode::Success);
 	BOOST_CHECK(r.achieved <= 1e-45);
-	using mpfr_float = bertini::mpfr_float;
+	using mpfr_float = bertini::real_mp;
 	mpfr_float dist = max(abs(r.point(0)),
 	                      max(abs(r.point(1)), abs(r.point(2) - complex_mp(1))));
 	BOOST_CHECK(dist < mpfr_float("1e-40"));  // landed ON the handle point
@@ -235,7 +237,7 @@ BOOST_AUTO_TEST_CASE(whitney_pinch_point_needs_and_gets_second_deflation)
 	auto r = NewtonRefine(S2, start, 1e-45, 50);
 	BOOST_CHECK(r.code == SuccessCode::Success);
 	BOOST_CHECK(r.achieved <= 1e-45);
-	using mpfr_float = bertini::mpfr_float;
+	using mpfr_float = bertini::real_mp;
 	mpfr_float dist = max(abs(r.point(0)), max(abs(r.point(1)), abs(r.point(2))));
 	BOOST_CHECK(dist < mpfr_float("1e-40"));  // landed ON the pinch point
 }
