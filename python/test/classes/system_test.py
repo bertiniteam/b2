@@ -388,3 +388,53 @@ def test_mult_system_node():
     assert np.abs(sysEval[0].imag / (0.42) - 1) <= tol_d
     assert np.abs(sysEval[1].real / (39.3240) - 1) <= tol_d
     assert np.abs(sysEval[1].imag / (-37.5584) - 1) <= tol_d
+
+
+def test_system_eval_any_point_precision():
+    """A multiprecision point of any precision is accepted by eval: the input
+    defines the working precision and the system follows it, in both directions.
+    No more pre-alignment footgun for library consumers."""
+    s = pb.parse.system('function f; variable_group x, y; f = x*y;')
+    s.precision(30)
+
+    pb.default_precision(50)
+    v = np.array((mpfr_complex(2), mpfr_complex(3)))
+    e = s.eval(v)
+    assert s.precision() == 50
+    assert e[0] == mpfr_complex(6)
+
+    pb.default_precision(20)
+    v = np.array((mpfr_complex(2), mpfr_complex(3)))
+    e = s.eval(v)
+    assert s.precision() == 20
+    assert e[0] == mpfr_complex(6)
+
+
+def test_system_eval_mixed_time_space_precision_raises_nicely():
+    """Space and time are both supplied in ONE eval call, so a precision mismatch
+    between them is caller incoherence and must raise -- with a message naming
+    BOTH precisions and saying they must be aligned."""
+    pb.default_precision(30)
+    x = Variable("mtx")
+    t = Variable("mtt")
+    s = System()
+    vg = pb.VariableGroup()
+    vg.append(x)
+    s.add_variable_group(vg)
+    s.add_path_variable(t)
+    s.add_function((1 - t) * x)
+
+    v = np.array((mpfr_complex(2),))            # precision 30
+    pb.default_precision(50)
+    time_hi = mpfr_complex(1)                   # precision 50: incoherent
+
+    with pytest.raises(RuntimeError) as excinfo:
+        s.eval(v, time_hi)
+    msg = str(excinfo.value)
+    assert '30' in msg and '50' in msg
+    assert 'align' in msg.lower()
+
+    pb.default_precision(30)
+    time_ok = mpfr_complex(1)
+    e = s.eval(v, time_ok)
+    assert e[0] == mpfr_complex(0)              # (1-1)*2
