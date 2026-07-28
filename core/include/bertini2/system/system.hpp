@@ -333,9 +333,9 @@ namespace bertini {
 		/**
 		 Evaluate the system, provided a path variable is defined for the system, in place.
 
-		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
+		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match, or if (for multiprecision types) the precisions of ``variable_values`` and ``path_variable_value`` differ -- both are supplied in the same call, so align them before evaluating.
 		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
-		 
+
 		 \param function_values The vector to write the function values into.
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
@@ -351,6 +351,24 @@ namespace bertini {
 				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
+
+			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+				// The variables and the time are BOTH caller-supplied in this one call, so a
+				// precision mismatch between them is caller incoherence, not internal-state
+				// drift -- silently promoting either one would guess intent and mask exactly
+				// the ambient-precision-drift bugs this check exists to expose.  (Unlike the
+				// system's own precision, which follows the input point; see SetVariables.)
+				if constexpr (!std::is_same<T,complex_dbl>::value) {
+					if (variable_values.size() > 0
+					    && Precision(variable_values) != Precision(path_variable_value))
+						throw std::runtime_error(
+							"precision of the variable values ("
+							+ std::to_string(Precision(variable_values))
+							+ ") differs from the precision of the path-variable value ("
+							+ std::to_string(Precision(path_variable_value))
+							+ ") in the same evaluation call; align them before evaluating");
+				}
+			#endif
 
 			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
@@ -514,8 +532,8 @@ namespace bertini {
 		
 		/**
 		 Evaluate the Jacobian of the system, provided a path variable is defined for the system, in place.
-		 
-		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
+
+		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match, or if (for multiprecision types) the precisions of ``variable_values`` and ``path_variable_value`` differ -- both are supplied in the same call, so align them before evaluating.
 
 		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 
@@ -530,10 +548,26 @@ namespace bertini {
 
 			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
-			
+
 			if (!HavePathVariable())
 				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
-			
+
+			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+				// same coherence rule as EvalInPlace: both arguments came from this one
+				// call, so a precision mismatch between them is caller incoherence, not
+				// internal-state drift (which SetVariables absorbs by following the input)
+				if constexpr (!std::is_same<T,complex_dbl>::value) {
+					if (variable_values.size() > 0
+					    && Precision(variable_values) != Precision(path_variable_value))
+						throw std::runtime_error(
+							"precision of the variable values ("
+							+ std::to_string(Precision(variable_values))
+							+ ") differs from the precision of the path-variable value ("
+							+ std::to_string(Precision(path_variable_value))
+							+ ") in the same jacobian call; align them before evaluating");
+				}
+			#endif
+
 			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
 			JacobianInPlace(J);
@@ -877,13 +911,18 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably complex_dbl=std::complex<double>, or complex_mp=bertini::complex_mp.
 		 \throws std::runtime_error if the number of variables doesn't match.
 
-		 The ordering of the variables matters.  
+		 The ordering of the variables matters.
 
 		 * The AffHomUng ordering is 1) variable groups, with homogenizing variable first. 2) homogeneous variable groups. 3) ungrouped variables.
 		 * The FIFO ordering uses the order in which the variable groups were added.
 
 		 The path variable is not considered a variable for this operation.  It is set separately.
-		 
+
+		 A multiprecision point of any precision is accepted: the input defines the
+		 working precision, and the system's internal precision is changed to match.
+		 Callers need not pre-align a point to the system.  Under
+		 BERTINI_DISABLE_PRECISION_CHECKS no alignment (nor any check) is performed.
+
 		 \param new_values The new updated values for the variables.
 
 		 \see SetPathVariable
@@ -903,8 +942,10 @@ namespace bertini {
 				if (new_values.size() > 0)
 				{
 					if constexpr (!std::is_same<T,complex_dbl>::value) {
-						if (Precision(new_values) != this->precision())
-							throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
+						const auto point_prec = Precision(new_values);
+						if (point_prec != this->precision())
+							this->precision(point_prec);   // the input defines the
+							                               // working precision (#377)
 					}
 				}
 			#endif

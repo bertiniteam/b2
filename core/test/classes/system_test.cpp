@@ -497,6 +497,75 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 }
 
 
+/**
+\class bertini::System
+\test \b system_evaluate_mpfr_any_point_precision Evaluate at multiprecision points whose precision differs from the system's -- the input defines the working precision, and the system follows it in both directions.
+*/
+BOOST_AUTO_TEST_CASE(system_evaluate_mpfr_any_point_precision)
+{
+	bertini::DefaultPrecision(30);
+
+	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
+	bertini::System sys;
+	[[maybe_unused]] bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
+	{ // higher-precision point: the system follows the input up
+		bertini::DefaultPrecision(50);
+		Vec<mpfr> values(2);
+		values << mpfr(2), mpfr(3);
+		auto v = sys.Eval(values);
+		BOOST_CHECK_EQUAL(sys.precision(), 50u);
+		BOOST_CHECK_EQUAL(Precision(v), 50u);
+		BOOST_CHECK_EQUAL(v(0), mpfr(36));
+
+		auto J = sys.Jacobian(values);
+		BOOST_CHECK_EQUAL(J(0,0), mpfr(36));   // 2*x1*x2^2 at (2,3)
+		BOOST_CHECK_EQUAL(J(0,1), mpfr(24));   // 2*x1^2*x2 at (2,3)
+	}
+
+	{ // lower-precision point: the system follows the input down, too
+		bertini::DefaultPrecision(20);
+		Vec<mpfr> values(2);
+		values << mpfr(2), mpfr(3);
+		auto v = sys.Eval(values);
+		BOOST_CHECK_EQUAL(sys.precision(), 20u);
+		BOOST_CHECK_EQUAL(v(0), mpfr(36));
+	}
+}
+
+
+/**
+\class bertini::System
+\test \b system_evaluate_mixed_time_precision_throws The variables and the time value are both supplied in one evaluation call, so a precision mismatch between THEM is caller incoherence and throws; aligned inputs evaluate at their common precision.
+*/
+BOOST_AUTO_TEST_CASE(system_evaluate_mixed_time_precision_throws)
+{
+	bertini::DefaultPrecision(30);
+
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+	bertini::System S;
+	S.AddUngroupedVariable(x);
+	S.AddPathVariable(t);
+	S.AddFunction((1-t)*x);
+
+	Vec<mpfr> v(1);
+	v << mpfr(2);                                  // precision 30
+
+	bertini::DefaultPrecision(50);
+	mpfr time_hi(1);                               // precision 50: incoherent with v
+	BOOST_CHECK_THROW(S.Eval(v, time_hi), std::runtime_error);
+	Mat<mpfr> J(S.NumTotalFunctions(), S.NumVariables());
+	BOOST_CHECK_THROW(S.JacobianInPlace(J, v, time_hi), std::runtime_error);
+
+	bertini::DefaultPrecision(30);
+	mpfr time_ok(1);                               // precision 30: coherent
+	auto out = S.Eval(v, time_ok);
+	BOOST_CHECK_EQUAL(Precision(out), 30u);
+	BOOST_CHECK_EQUAL(out(0), mpfr(0));            // (1-1)*2
+}
+
+
 BOOST_AUTO_TEST_CASE(system_jacobian)
 {
 	auto x = Variable::Make("x");
