@@ -267,6 +267,38 @@ BOOST_AUTO_TEST_CASE(rejects_non_moving_row_in_moving_block)
 	BOOST_CHECK_THROW(MakeMovingHomotopy(fixed, sm, em, "t", Gamma()), std::runtime_error);
 }
 
+// REGRESSION (issue #391): the identity of the moving rows is decided on the CANONICAL ENCODING
+// (exact values), never on operator<<.  The stream render carries only 6 significant digits, so two
+// genuinely DIFFERENT rows that agree to 6 digits used to render identically and the deformation was
+// refused -- a valid homotopy rejected with a message asserting its two endpoints were the same row.
+// The collision is ~1e-6 RELATIVE, so it bites at every scale, not only at large coordinates: both a
+// large constant (2408.97 vs 2408.971, the surface-decomposition failure that found this) and an
+// order-one one (0.162749 vs 0.1627491) collided before the fix.
+BOOST_AUTO_TEST_CASE(accepts_moving_rows_differing_below_stream_render_precision)
+{
+	DefaultPrecision(30);
+	auto x = Variable::Make("x"), y = Variable::Make("y");
+	System fixed; fixed.AddVariableGroup(VariableGroup{x, y});
+	fixed.AddFunction(x*x + y*y - node::Integer::Make(1));
+
+	auto row = [&](std::string const& c) {
+		System s; s.AddVariableGroup(VariableGroup{x, y});
+		s.AddFunction(node::Complex::Make(complex_mp("0.735966", "0")) * x
+		            + node::Complex::Make(complex_mp("0.593277", "0")) * y
+		            - node::Complex::Make(complex_mp(c, "0")));
+		return s;
+	};
+
+	// large scale: 1e-3 apart on a constant of ~2409 (4e-7 relative)
+	BOOST_CHECK_NO_THROW(MakeMovingHomotopy(fixed, row("2408.97"), row("2408.971"), "t", Gamma()));
+	// order one: 1e-7 apart on a constant of ~0.163 (6e-7 relative)
+	BOOST_CHECK_NO_THROW(MakeMovingHomotopy(fixed, row("0.162749"), row("0.1627491"), "t", Gamma()));
+
+	// ...and the guard is NOT weakened: a row that really is identical still throws.
+	BOOST_CHECK_THROW(MakeMovingHomotopy(fixed, row("2408.97"), row("2408.97"), "t", Gamma()),
+	                  std::runtime_error);
+}
+
 // Regression: Clone(System) is now a Memory-isolating shallow copy --- it shares the
 // immutable node DAG and the compiled SLP Program, but copies the per-thread evaluation Memory at
 // every level, INCLUDING a BlendBlock's nested operand Systems (which are deep-copied via the
