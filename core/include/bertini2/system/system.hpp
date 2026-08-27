@@ -897,17 +897,29 @@ namespace bertini {
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
 			}
 
-			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
-				// A system with no variables (a constant) has an empty point: there is no
-				// precision to read from it, so skip the check.
-				if (new_values.size() > 0)
-				{
-					if constexpr (!std::is_same<T,complex_dbl>::value) {
-						if (Precision(new_values) != this->precision())
-							throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
-					}
-				}
-			#endif
+			// ALIGN to the incoming point rather than refusing it (#377).  A System's
+			// precision is not an invariant the caller must maintain by hand: the caller's
+			// intent is always just "evaluate f at x", and x carries the precision that
+			// evaluation should happen at.  Aligning here pushes the new precision down to
+			// every block (each block re-tags its SLP's memory and rebuilds its constants
+			// from their exact recipes), to the stored path value, and to the patch, so the
+			// whole System is consistent for the evaluation that follows.
+			//
+			// Refusing was not merely unergonomic, it was inescapable in one direction: a
+			// block's SLP takes its memory precision from the ambient DefaultPrecision() at
+			// lazy compile time while the System keeps whatever it was told, and once those
+			// diverge, System::precision(n) cannot repair it -- both it and
+			// StraightLineProgram::precision(n) short-circuit when handed the value they
+			// already hold.  See the SLP-side note in SetVariableValues.
+			//
+			// Deliberately NOT behind BERTINI_DISABLE_PRECISION_CHECKS: this is required
+			// behaviour, not a debug assertion.  A system with no variables (a constant) has
+			// an empty point and so carries no precision to read.
+			if constexpr (!std::is_same<T,complex_dbl>::value)
+			{
+				if (new_values.size() > 0 && Precision(new_values) != this->precision())
+					this->precision(Precision(new_values));
+			}
 
 			// Blocks are value-in: the polynomial block feeds this stored vector into its SLP, the
 			// structured blocks compute on it directly, and the patch reads it too (see
