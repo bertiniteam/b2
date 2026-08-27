@@ -67,6 +67,38 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Added
+
+- Python bindings for two endgame accessors that already existed in C++ but were unreachable:
+  `previous_approximation()` and `approximate_error()`, alongside the already-bound
+  `final_approximation()`.  Together they give the pair of successive root approximations the
+  endgame's own convergence test compares, plus the infinity norm between them -- a second
+  sample of the root at a known, coarser accuracy, which is what lets a caller judge how a
+  derived quantity (the singular values of a Jacobian, say) behaves as the approximation
+  improves, rather than thresholding it at one point.
+
+### Fixed
+
+- The power series endgame left `previous_approximation_` holding a COPY of
+  `final_approximation_` after every successful run.  It assigned the two at the bottom of its
+  convergence loop while testing the loop condition at the top, so the assignment ran one final
+  time on the way out.  The Cauchy endgame never had this -- it returns from its acceptance gate
+  before the corresponding assignment -- so the two endgames disagreed about their own post-run
+  state.  Power series now matches Cauchy.  Consequences: `PreviousApproximation()` is now a
+  genuine predecessor for both endgames, and `ZeroDimSolver`'s reported
+  `accuracy_estimate_user_coords` -- computed as the distance between the final approximation and
+  the previous one -- is no longer identically zero for power-series solves, which had it
+  reporting an exactly-perfect accuracy for every such path.
+- `EndgameBase::approximate_error_` was left uninitialized, so `ApproximateError()` read an
+  indeterminate value before any run.  Now initialized to infinity, which is the only safe
+  sentinel: the convergence gates compare it in both directions, and NaN -- which loses every
+  relational comparison -- would make the power series loop's `error > tolerance` test false and
+  skip the loop entirely, reporting instant success.
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening
