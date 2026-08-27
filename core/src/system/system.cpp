@@ -950,6 +950,16 @@ namespace bertini
 
 		RealT bound(0);
 
+		// A system with no functions -- or no variables -- has no coefficient bound; same
+		// convention as DegreeBound() below, which returns 0 for the same reason.  This is
+		// not merely tidiness: either way f_vals and dh_dx below are EMPTY (dh_dx is
+		// functions x variables), and Eigen's maxCoeff() on an empty array is UNDEFINED
+		// BEHAVIOUR -- it asserts in a debug build and reads out of bounds in a release one.
+		// `bertini.System().to_classic_input()` reached here (the CONFIG section emits
+		// `coefficientbound:`) and segfaulted the interpreter.  See #395.
+		if (NumTotalFunctions()==0 || NumVariables()==0)
+			return bound;
+
 		for (unsigned ii=0; ii < num_evaluations; ii++)
 		{	
 			Vec<ComplexT> randy = RandomOfUnits<ComplexT>(static_cast<unsigned>(NumVariables()));

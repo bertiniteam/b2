@@ -57,6 +57,8 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <cctype>
+#include <cstring>
 #include <string>
 
 #include "bertini2/io/parsing/unicode_ident.hpp"
@@ -78,6 +80,64 @@ inline void StripUTF8BOM(std::string& s)
 	{
 		s.erase(0, 3);
 	}
+}
+
+/// \brief Unwrap a Bertini 1 classic input FILE down to the declarations the grammar reads.
+///
+/// `System::to_classic_input()` emits a complete Bertini 1 file --
+/// `CONFIG ... END;` then `INPUT ... END;` -- because its purpose is running the same
+/// problem in Bertini 1.  The grammar reads only the INPUT-section BODY.  The two therefore
+/// were not inverses, and the mismatch did not announce itself: the wrapped text matched
+/// nothing and the caller received an empty System.  See #396.
+///
+/// Comply rather than refuse: handing a system parser a classic input file means one thing.
+/// The CONFIG section holds tracking settings a System does not carry, so it is dropped.
+/// Text that is already a bare body is returned untouched, so this is a no-op for every
+/// caller that was working before.
+inline void StripClassicFileWrappers(std::string& s)
+{
+	auto skip_ws = [](std::string const& t, size_t i) {
+		while (i < t.size() && std::isspace(static_cast<unsigned char>(t[i]))) ++i;
+		return i;
+	};
+	// case-insensitive check for `word` at position i, followed by a non-identifier char
+	auto keyword_at = [](std::string const& t, size_t i, char const* word) {
+		size_t n = std::strlen(word);
+		if (i + n > t.size()) return false;
+		for (size_t k = 0; k < n; ++k)
+			if (std::toupper(static_cast<unsigned char>(t[i+k])) != word[k]) return false;
+		if (i + n < t.size())
+		{
+			unsigned char c = static_cast<unsigned char>(t[i+n]);
+			if (std::isalnum(c) || c=='_') return false;
+		}
+		return true;
+	};
+
+	size_t i = skip_ws(s, 0);
+
+	// a leading CONFIG section, if present, runs to its first END;
+	if (keyword_at(s, i, "CONFIG"))
+	{
+		size_t e = s.find("END;", i);
+		if (e == std::string::npos)
+			return;                       // malformed; let the grammar report it
+		i = skip_ws(s, e + 4);
+	}
+
+	// an INPUT section wrapper, if present: drop the keyword and the matching trailing END;
+	if (keyword_at(s, i, "INPUT"))
+	{
+		size_t body = skip_ws(s, i + 5);
+		size_t e = s.rfind("END;");
+		if (e == std::string::npos || e < body)
+			return;                       // malformed; let the grammar report it
+		s = s.substr(body, e - body);
+		return;
+	}
+
+	if (i != 0)
+		s = s.substr(i);
 }
 
 /// \brief Format a human-readable parse-error message (line, column, expected, and found text).
