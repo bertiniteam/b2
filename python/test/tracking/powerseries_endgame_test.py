@@ -196,7 +196,6 @@ def test_fixed_multiple_pseg_full_run(cubic_homotopy, precision):
     Mirrors fixed_multiple_powerseries_test.cpp/pseg_full_run.
     """
     s, x, t = cubic_homotopy
-    s.precision(precision)
 
     tracker = MultiplePrecisionTracker(s)
     tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, SteppingConfig(), NewtonConfig())

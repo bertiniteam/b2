@@ -79,7 +79,11 @@ namespace bertini
 			// generate at MaxPrecisionAllowed so the block's master is precision-faithful.
 			{
 				auto const saved_prec = DefaultPrecision();
-				DefaultPrecision(MaxPrecisionAllowed());
+				// Only the AMBIENT default matters here: it governs the precision new mp values are
+			// BORN at, and this loop is building the block's exact MASTER.  The system's working
+			// precision is an evaluation concern and has no business in coefficient generation
+			// -- ADR-0057.
+			DefaultPrecision(MaxPrecisionAllowed());
 
 				linear_coeffs_ = Mat<Mat<complex_mp>>(degree_matrix_.rows(), degree_matrix_.cols());
 				for (Eigen::Index ii = 0; ii < degree_matrix_.rows(); ++ii)
@@ -125,9 +129,12 @@ namespace bertini
 			// block's master is precision-faithful.
 			{
 				auto const saved_prec = DefaultPrecision();
-				DefaultPrecision(MaxPrecisionAllowed());
-				this->precision(MaxPrecisionAllowed());
-
+				// Only the AMBIENT default matters here: it governs the precision new mp values are
+			// BORN at, and this loop is building the block's exact MASTER.  The system's working
+			// precision is an evaluation concern and has no business in coefficient generation
+			// -- ADR-0057.
+			DefaultPrecision(MaxPrecisionAllowed());
+	
 				const VariableGroup& vars = this->Variables();
 				std::map<node::Node const*, Eigen::Index> col_of;
 				for (Eigen::Index c = 0; c < static_cast<Eigen::Index>(vars.size()); ++c)
@@ -178,8 +185,7 @@ namespace bertini
 				this->AddBlock(blocks::ProductsOfLinearsBlock(static_cast<size_t>(n), std::move(per_function)));
 
 				DefaultPrecision(saved_prec);
-				this->precision(saved_prec);
-			}
+				}
 
 		}// M-Hom constructor
 

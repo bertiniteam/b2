@@ -258,7 +258,10 @@ namespace bertini {
 
 				if (auto p = dynamic_cast<const Initializing<EmitterT,complex_dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(static_cast<int>(p->Get().GetSystem().precision()))
+					// digits to print come from the VALUES being printed -- not from the ambient
+					// default, which need not be the precision anything here was computed at, and
+					// not from the System, which no longer carries one (ADR-0057)
+					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(static_cast<int>(DoublePrecision()))
 						<< "initializing in double, tracking path\nfrom\tt = "
 						<< p->StartTime() << "\nto\tt = " << p->EndTime()
 						<< "\n from\tx = \n" << p->StartPoint()
@@ -266,7 +269,8 @@ namespace bertini {
 				}
 				else if (auto p = dynamic_cast<const Initializing<EmitterT,complex_mp>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(static_cast<int>(p->Get().GetSystem().precision()))
+					// ditto: ask the point being logged
+					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(static_cast<int>(Precision(p->StartPoint())))
 						 << "initializing in multiprecision, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint()
 						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}

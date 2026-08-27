@@ -625,8 +625,9 @@ namespace bertini{
 			/// \brief Check that the system, thread precision, and all tracker state are at the expected precision.
 			bool PrecisionSanityCheck() const
 			{
-				return GetSystem().precision() == precision_ &&
-						ThreadPrecision()==precision_ &&
+				// the System is no longer checked here: it carries no precision of its own, and
+				// evaluation materializes it from the point it is handed (ADR-0057)
+				return ThreadPrecision()==precision_ &&
 						std::get<Vec<complex_mp> >(current_space_)(0).precision() == precision_ &&
 						std::get<Vec<complex_mp> >(tentative_space_)(0).precision() == precision_ &&
 						std::get<Vec<complex_mp> >(temporary_space_)(0).precision() == precision_ &&

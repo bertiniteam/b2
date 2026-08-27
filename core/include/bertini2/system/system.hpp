@@ -116,7 +116,7 @@ namespace bertini {
 		/**
 		\brief The default constructor for a system.
 		*/
-		System() : have_path_variable_(false), is_patched_(false), is_differentiated_(false), have_ordering_(false), precision_(DefaultPrecision())
+		System() : have_path_variable_(false), is_patched_(false), is_differentiated_(false), have_ordering_(false)
 		{}
 
 		/**
@@ -167,20 +167,17 @@ namespace bertini {
 		*/
 		friend void swap(System & a, System & b);
 
-		/**
-		Change the precision of the entire system's functions, subfunctions, and all other nodes.
+		// There is deliberately NO way to set a precision on a System, and nothing to fan out.
+		// Every evaluable type -- each block, the patch, the SLP -- self-aligns to the precision
+		// of the point it is handed, under SyncPrecision.  See ADR-0057.
 
-		\param new_precision The new precision, in digits, to work in.  This only affects the complex_mp types, not double.  To use low-precision (doubles), use that number type in the templated functions.
-		*/
-		void precision(unsigned new_precision) const;
-
-		/**
-		\brief Get the current precision of a system.
-		*/
-		unsigned precision() const
-		{
-			return precision_;
-		}
+		// There is deliberately NO precision() accessor.  A System carries no precision of its
+		// own: evaluation happens at the precision of the point it is handed, and the objects
+		// that actually hold multiprecision values -- each block's working coefficients, the
+		// patch, the SLP's memory -- each keep their own "materialized at" tag and short-circuit
+		// when already there.  A System-level copy was a duplicate of those, and exposing it
+		// invited callers to read it, compute a target, and hand it back, which is exactly the
+		// hand-alignment ADR-0057 removes.
 
 		/**
 		 \brief Compute and internally store the symbolic Jacobian of the system.
@@ -915,11 +912,9 @@ namespace bertini {
 			// Deliberately NOT behind BERTINI_DISABLE_PRECISION_CHECKS: this is required
 			// behaviour, not a debug assertion.  A system with no variables (a constant) has
 			// an empty point and so carries no precision to read.
-			if constexpr (!std::is_same<T,complex_dbl>::value)
-			{
-				if (new_values.size() > 0 && Precision(new_values) != this->precision())
-					this->precision(Precision(new_values));
-			}
+			// NO fan-out.  Every evaluable type self-aligns from the point it is handed --
+			// each block, the patch and the SLP all do it under SyncPrecision -- so there is
+			// nothing to push down from here and nothing to keep in sync (ADR-0057).
 
 			// Blocks are value-in: the polynomial block feeds this stored vector into its SLP, the
 			// structured blocks compute on it directly, and the patch reads it too (see
@@ -1786,10 +1781,10 @@ namespace bertini {
 		void CopyVariableStructure(System const& other);
 		
 		// The Please/Dont AssumeUniformPrecision family was removed: the setter had
-		// ignored its argument (always storing false) for ages, so the early-out in
-		// System::precision() it was meant to enable was dead code, and skipping the
-		// propagation is unsound anyway (e.g. the SLP can be at a different precision
-		// than precision_ claims).  precision() now always propagates.
+		// ignored its argument (always storing false) for ages, so the early-out it was
+		// meant to enable was dead code, and skipping the propagation is unsound anyway.
+		// A System no longer carries a precision at all, and there is nothing to fan out
+		// (ADR-0057): every evaluable type self-aligns to the point it is handed.
 
 		/**
 		\brief Simplify the functions contained in the system.
@@ -2080,9 +2075,11 @@ namespace bertini {
 		/// assignment into it preserves the destination entry's precision.  So writing a
 		/// 20-digit block value into a result entry that was allocated at, say,
 		/// MaxPrecisionAllowed leaves a 20-digit value carried at 1000-digit precision.  The
-		/// adaptive tracker then propagates that over-precise value as the path point and the
-		/// next System::SetVariables throws (point precision != system precision).  Coercing the
-		/// whole result to precision_ here makes a block-composed System honor the contract that
+		/// adaptive tracker then propagates that over-precise value as the path point.  (That
+		/// used to make the next SetVariables THROW; since ADR-0057 it aligns instead, but the
+		/// contract below is still worth honoring -- results should come out at the precision
+		/// they were computed at, not at whatever the caller's buffer was allocated at.)  Coercing the
+		/// whole result to the staged point's precision here makes a block-composed System honor the contract that
 		/// its evaluations come out at its working precision, exactly as the SLP path does.
 		/// No-op for double (which carries no precision).
 		template <typename Derived>
@@ -2092,7 +2089,9 @@ namespace bertini {
 			if constexpr (!std::is_same<Scalar, complex_dbl>::value)
 			{
 				using bertini::Precision;
-				Precision(result, precision_);
+				// the working precision IS the staged point's -- derived, not stored (ADR-0057)
+				auto const& staged = std::get<Vec<complex_mp> >(current_variable_values_);
+				Precision(result, staged.size() ? Precision(staged) : DefaultPrecision());
 			}
 		}
 
@@ -2192,7 +2191,6 @@ namespace bertini {
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
 		mutable bool have_ordering_ = false;
 
-		mutable unsigned precision_; ///< the current working precision of the system
 
 
 
@@ -2226,7 +2224,8 @@ namespace bertini {
 
 
 			// now for the cached / mutable things
-			ar & precision_;
+			// precision_ is gone (ADR-0057): a System has no precision of its own, and
+			// transient evaluation state is not archived (see current_variable_values_ below)
 
 			ar & is_differentiated_;
 

@@ -1335,8 +1335,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	for (unsigned ii = 0; ii < num_paths_to_run; ++ii)
 	{
 		DefaultPrecision(ambient_precision);
-		final_system.precision(ambient_precision);
-		TD.precision(ambient_precision);
 		auto start_point = TD.StartPoint<BCT>(ii);
 
 		Vec<BCT> result;

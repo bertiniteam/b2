@@ -99,7 +99,6 @@ def test_tracker_quad(xyzt):
     s.add_path_variable(t)
     s.add_variable_group(vars)
 
-    s.precision(30)
 
     ampconfig = amp_config_from(s)
 
@@ -134,7 +133,6 @@ def test_tracker_sqrt(xyzt):
     s.add_function(y**2 - x)
     s.add_path_variable(t)
     s.add_variable_group(vars)
-    s.precision(30)
     ampconfig = amp_config_from(s)
 
     tracker = AMPTracker(s)
@@ -382,7 +380,6 @@ def test_tracker_singular_start(xyzt):
     s.add_function(y**2 + (1-t)*y)
     s.add_path_variable(t)
     s.add_variable_group(vars)
-    s.precision(30)
     ampconfig = amp_config_from(s)
 
     tracker = AMPTracker(s)

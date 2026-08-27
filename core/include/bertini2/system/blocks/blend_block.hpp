@@ -262,14 +262,17 @@ public:
 	/// \brief Set the block's working precision (propagated to the operand systems).
 	void Precision(unsigned new_precision) const
 	{
-		for (auto const& op : operands_)
-			op->precision(new_precision);
+		// short-circuit when already materialized here.  Each holder of mp values keeps its
+		// own "materialized at" tag; System deliberately keeps none and simply fans out on
+		// every evaluation, which is cheap precisely because of this early return (ADR-0057).
+		if (precision_==new_precision)
+			return;
+		// operands are Systems: they self-align from the point they are evaluated at, so
+		// nothing is pushed into them here (ADR-0057)
 		// The coefficients are evaluated through the coefficient sub-system's SLP (which carries
 		// its own precision; see EvalCoefficients), so the coefficient nodes and the shared path
 		// variable are no longer evaluated during tracking.  Their precision is vestigial and
 		// left untouched, keeping the shared node DAG read-only across threads (ADR-0027).
-		if (coefficient_system_)
-			coefficient_system_->precision(new_precision);
 		precision_ = new_precision;
 	}
 
@@ -352,7 +355,6 @@ private:
 			for (auto const& c : derivative_coefficients_)
 				sys->AddFunction(c);
 			sys->AddVariableGroup(VariableGroup{path_variable_});
-			sys->precision(precision_);
 			coefficient_system_ = sys;
 		}
 		return *coefficient_system_;
@@ -362,9 +364,8 @@ private:
 	template <typename T>
 	Vec<T> EvalCoefficients(T const& path_value) const
 	{
+		// cs is a System: it self-aligns from t_point below, so nothing is pushed into it here
 		auto& cs = EnsureCoefficientSystem();
-		if constexpr (!std::is_same<T, complex_dbl>::value)
-			cs.precision(bertini::Precision(path_value));
 		Vec<T> t_point(1);
 		t_point(0) = path_value;
 		return cs.template Eval<T>(t_point);

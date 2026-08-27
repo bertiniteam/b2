@@ -174,7 +174,6 @@ def test_fixed_multiple_cauchy_cycle_num_1(linear_homotopy, precision):
     Mirrors fixed_multiple_cauchy_test.cpp/full_test_cycle_num_1 at precision 16/30/50.
     """
     s, x, t = linear_homotopy
-    s.precision(precision)
 
     tracker = MultiplePrecisionTracker(s)
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), NewtonConfig())
@@ -198,7 +197,6 @@ def test_fixed_multiple_cauchy_cycle_num_2(quadratic_homotopy, precision):
     Mirrors fixed_multiple_cauchy_test.cpp/full_test_cycle_num_greater_than_1.
     """
     s, x, t = quadratic_homotopy
-    s.precision(precision)
 
     tracker = MultiplePrecisionTracker(s)
     nc = NewtonConfig()

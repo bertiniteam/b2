@@ -96,7 +96,6 @@ BOOST_AUTO_TEST_CASE(eval_mpfr)
 {
 	DefaultPrecision(30);
 	auto sys = MakeBlockSystem();
-	sys.precision(30);                 // propagate precision to variables and blocks
 
 	bertini::Vec<complex_mp> x(2); x << complex_mp(1), complex_mp(1);
 	auto v = sys.Eval(x);

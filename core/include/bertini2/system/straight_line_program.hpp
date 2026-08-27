@@ -826,6 +826,25 @@ namespace bertini {
 		*/
 		void precision(unsigned new_precision) const;
 
+		/// \brief Materialize this program's memory at the precision of the point being evaluated.
+		///
+		/// Every evaluable type self-aligns under this name -- the blocks, the patch, and here --
+		/// so no caller and no owning System has to fan a precision out beforehand (ADR-0057).
+		/// precision() short-circuits when already there, so the steady state is one integer
+		/// compare.  No-op for double, which carries no precision.
+		///
+		/// \param variable_values The point about to be evaluated at.
+		template<typename Derived>
+		void SyncPrecision(Eigen::MatrixBase<Derived> const& variable_values) const
+		{
+			using NumT = typename Derived::Scalar;
+			if constexpr (!std::is_same<NumT,complex_dbl>::value)
+			{
+				if (variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_)
+					this->precision(Precision(variable_values));
+			}
+		}
+
 		/**
 		 \brief Does this SLP have a path variable?
 
@@ -870,11 +889,7 @@ namespace bertini {
 			// An empty variable vector (a constant program with no variables) has no
 			// precision to read.  Re-tagging refills the constants from their exact recipes
 			// at the new precision, so accuracy is rebuilt rather than padded with zeros.
-			if constexpr (!std::is_same<NumT,complex_dbl>::value)
-			{
-				if (variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_)
-					this->precision(Precision(variable_values));
-			}
+			SyncPrecision(variable_values);
 
 			auto& memory = memory_.Get<NumT>(); // unpack for local reference
 

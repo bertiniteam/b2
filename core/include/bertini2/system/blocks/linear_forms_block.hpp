@@ -186,6 +186,11 @@ public:
 	/// Set the working precision; recasts the mpfr working coefficients from the master.
 	void Precision(unsigned new_precision) const
 	{
+		// short-circuit when already materialized here.  Each holder of mp values keeps its
+		// own "materialized at" tag; System deliberately keeps none and simply fans out on
+		// every evaluation, which is cheap precisely because of this early return (ADR-0057).
+		if (precision_==new_precision)
+			return;
 		if (new_precision > DoublePrecision())
 		{
 			auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
@@ -211,6 +216,7 @@ public:
 	template <typename T>
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
 	{
+		SyncPrecision(vars);
 		// affine: f(x) = W * [x ; 1] (the trailing 1 carries each row's constant in the last
 		// column).  homogeneous (post-Homogenize): every column is a variable column, so it is
 		// just W * vars (the old constant is now the homogenizing variable's coefficient).
@@ -224,13 +230,17 @@ public:
 	\brief Evaluate the block's Jacobian (d f_i / d x_j) into a caller-provided block.
 
 	The Jacobian of f(x) = M x + b is simply M (its variable columns) -- constant in x.
-	The variable values and path variable are unused (constant Jacobian; autonomous).
+	The path variable is unused (autonomous).
 
 	\param J  A NumFunctions() x NumVariables() block to write into.
+	\param vars Length-NumVariables() current variable values.  The Jacobian does not depend
+	            on them, but they carry the PRECISION to evaluate at: the block materializes
+	            its working coefficients to match before writing them out (ADR-0057).
 	*/
 	template <typename T>
-	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& /*vars*/, T const& /*path_value*/) const
+	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& /*path_value*/) const
 	{
+		SyncPrecision(vars);
 		// homogeneous: every column is d f / d x.  affine: drop the trailing constant column.
 		if (homogeneous_)
 			J = Working<T>();
@@ -249,6 +259,25 @@ public:
 	}
 
 private:
+	/// Materialize the working coefficients at the precision of the point being evaluated.
+	/// Every evaluable type self-aligns this way (blend_block established the pattern), so no
+	/// caller and no owning System has to fan a precision out beforehand -- ADR-0057.
+	/// Precision() short-circuits when already there, so the steady state is one integer
+	/// compare.  No-op for double, which carries no precision.
+	template <typename T>
+	void SyncPrecision(Vec<T> const& vars) const
+	{
+		if constexpr (!std::is_same<T, complex_dbl>::value)
+		{
+			if (vars.size() > 0)
+			{
+				const unsigned p = bertini::Precision(vars(0));
+				if (p != precision_)
+					Precision(p);
+			}
+		}
+	}
+
 	template <typename T>
 	const Mat<T>& Working() const
 	{
