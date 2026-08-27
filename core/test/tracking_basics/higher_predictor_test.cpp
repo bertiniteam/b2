@@ -1013,7 +1013,6 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 	
 	
 	
-	sys.precision(50);
 	AMP = bertini::tracking::AMPConfigFrom(sys);
 	
 	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
@@ -1280,7 +1279,6 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp_change_precision)
 	
 	
 	
-	sys.precision(50);
 	AMP = bertini::tracking::AMPConfigFrom(sys);
 	
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);

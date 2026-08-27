@@ -1804,7 +1804,6 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	for (unsigned ii = 0; ii < griewank_TD.NumStartPoints(); ++ii)
 	{
 		DefaultPrecision(ambient_precision);
-		final_griewank_osborn_system.precision(ambient_precision);
 		auto start_point = griewank_TD.StartPoint<BCT>(ii);
 
 		Vec<BCT> result;
@@ -1847,7 +1846,6 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	{
 		auto init_prec = Precision(s(0));
 		DefaultPrecision(init_prec);
-		final_griewank_osborn_system.precision(init_prec);
 
 		my_endgame.SetBoundaryTime(t_endgame_boundary);
 		SuccessCode endgame_success = my_endgame.Run(s);
@@ -1976,7 +1974,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	{
 		DefaultPrecision(ambient_precision);
 		BCT t_endgame_boundary{0.1};
-		final_system.precision(ambient_precision);
 		auto start_point = TD.StartPoint<BCT>(ii);
 
 		Vec<BCT> result;
@@ -2022,7 +2019,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	{
 		auto eg_prec = Precision(s);
 		DefaultPrecision(eg_prec);
-		final_system.precision(eg_prec);
 		SuccessCode endgame_success = my_endgame.Run(s);
 		if(endgame_success == SuccessCode::Success)
 		{

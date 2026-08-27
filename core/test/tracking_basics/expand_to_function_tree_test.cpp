@@ -105,8 +105,6 @@ BOOST_AUTO_TEST_CASE(polynomial_block_roundtrip)
 		CompareEvalJac<complex_dbl>(sys, expanded, RandomVecD(2), 1e-13);
 
 	DefaultPrecision(50);
-	sys.precision(50);
-	expanded.precision(50);
 	for (int trial = 0; trial < 4; ++trial)
 		CompareEvalJac<complex_mp>(sys, expanded, RandomOfUnits<complex_mp>(2), 1e-40);
 }
@@ -145,8 +143,6 @@ BOOST_AUTO_TEST_CASE(products_of_linears_block_matches)
 		CompareEvalJac<complex_dbl>(sys, expanded, RandomVecD(2), 1e-12);
 
 	DefaultPrecision(50);
-	sys.precision(50);
-	expanded.precision(50);
 	for (int trial = 0; trial < 4; ++trial)
 		CompareEvalJac<complex_mp>(sys, expanded, RandomOfUnits<complex_mp>(2), 1e-40);
 }
@@ -193,8 +189,6 @@ BOOST_AUTO_TEST_CASE(blend_block_matches)
 	}
 
 	DefaultPrecision(50);
-	H.precision(50);
-	expanded.precision(50);
 	for (int trial = 0; trial < 4; ++trial)
 	{
 		Vec<complex_mp> p = RandomOfUnits<complex_mp>(2);

@@ -67,6 +67,36 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Removed
+
+- **A System no longer carries a precision.**  `System::precision(unsigned)`,
+  `System::precision()` and the `precision_` member are all gone, in C++ and in Python.
+  Evaluation happens at the precision of the point it is handed, so there is nothing for a
+  caller to set and nothing to keep in sync -- that hand-alignment
+  (`target = max(point, system, ambient); system.precision(target); ...`) was the complaint
+  in #377, and refusing to evaluate on a mismatch could wedge a System outright, with no
+  escape through either setter.
+  The "materialized at" tag now lives with each holder of multiprecision values -- every
+  block's working coefficients, the patch, the SLP's memory -- each of which returns
+  immediately when already there, so `SetVariables` fans out on every evaluation for the
+  cost of a few integer compares.  The elision is deliberately per-holder and not at the
+  System: holders can legitimately disagree (that disagreement IS #377), and a System-level
+  cache would skip the very repair such a case needs.
+  There is also nothing to prepare and nothing to fan out.  Every evaluable type -- each of
+  the four blocks, the patch, and the SLP -- self-aligns to the precision of the point it is
+  handed, under one uniform `SyncPrecision`.  Two of them already did this independently;
+  the change makes the pattern and the name uniform, and the patch had a commented-out
+  assert demanding callers match its precision, which it now honours by aligning itself.
+  See ADR-0057.
+  **Archive format changed**: `precision_` is no longer serialized (transient evaluation
+  state, which the same `serialize` already excludes elsewhere), so a System archived by an
+  older build will not load into a newer one.  Boost archives carry Systems between MPI ranks
+  of one run; durable storage is the records/JSON path and is unaffected.
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening

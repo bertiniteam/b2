@@ -1518,8 +1518,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 							ZeroDimConf zdc = this->template Get<ZeroDimConf>();
 							zdc.initial_ambient_precision = fp.precision;  // -> thread + start-point precision
 							this->template Set<ZeroDimConf>(zdc);
-							TargetSystem().precision(fp.precision);
-							Homotopy().precision(fp.precision);
 						}
 				}
 
@@ -1978,7 +1976,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				{
 					assert(Precision(solutions_post_endgame_[soln_ind])==Precision(ctx.endgame.template FinalApproximation<BaseComplexT>()));
 					SetThreadPrecision(Precision(solutions_post_endgame_[soln_ind]));
-					ctx.target_sys.precision(Precision(solutions_post_endgame_[soln_ind]));
+					// the system no longer needs aligning by hand -- the Eval below does it
+					// from the point it is handed (#377)
 				}
 				smd.function_residual = static_cast<NumErrorT>(ctx.target_sys.Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>());
 				smd.final_time_used = ctx.endgame.LatestTime();

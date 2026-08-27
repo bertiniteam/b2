@@ -217,7 +217,6 @@ public:
 		if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
 		{
 			auto max_precision = this->EnsureAtUniformPrecision(times, samples);
-			this->GetSystem().precision(max_precision);
 		}
 
 		return SuccessCode::Success;

@@ -117,7 +117,6 @@ Vec<ComplexT> result;
 for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 {
     DefaultPrecision(ambient_precision);
-    my_homotopy.precision(ambient_precision); // making sure our precision is all set up
     auto start_point = TD_start_sys.StartPoint<ComplexT>(ii);
 
     tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
@@ -718,7 +717,6 @@ public:
 		{
 			//Ensure all samples are of the same precision.
 			auto new_precision = this->EnsureAtUniformPrecision(times, samples);
-			this->GetSystem().precision(new_precision);
 		}
 
 		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),this->FinalTolerance(),this->EndgameSettings().max_num_refinements);
@@ -1030,7 +1028,6 @@ public:
 		if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
 			auto new_precision = this->EnsureAtUniformPrecision(cau_times, cau_samples);
-			this->GetSystem().precision(new_precision);
 		}
 
 
@@ -1516,7 +1513,6 @@ public:
 			{
 				this->current_endgame_precision_ = this->NextEscalatedPrecision();
 				SetThreadPrecision(this->current_endgame_precision_);
-				this->GetSystem().precision(this->current_endgame_precision_);
 				continue;
 			}
 			if (init_code != SuccessCode::Success)
@@ -1756,7 +1752,6 @@ public:
 
 		if (this->final_approximation_.size()    > 0) Precision(this->final_approximation_,    newprec);
 		if (this->previous_approximation_.size() > 0) Precision(this->previous_approximation_, newprec);
-		this->GetSystem().precision(newprec);
 
 		if (this->EndgameSettings().refine_when_increasing_precision)
 		{

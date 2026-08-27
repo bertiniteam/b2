@@ -1463,7 +1463,6 @@ namespace bertini{
 				current_precision_ = DoublePrecision();
 				SetThreadPrecision(DoublePrecision());
 
-				GetSystem().precision(16);
 
 				std::get<Vec<complex_dbl> >(current_space_) = source_point;
 			}
@@ -1495,7 +1494,6 @@ namespace bertini{
 
 				AdjustCurrentPrecision(DoublePrecision());
 
-				GetSystem().precision(DoublePrecision()); 
 
 				// copy the current space in.
 				if (std::get<Vec<complex_dbl> >(current_space_).size()!=source_point.size())
@@ -1634,7 +1632,6 @@ namespace bertini{
 
 			void AdjustInternalsPrecision(unsigned new_precision) const
 			{
-				GetSystem().precision(new_precision);
 				predictor_.ChangePrecision(new_precision);
 				corrector_.ChangePrecision(new_precision);
 

@@ -379,8 +379,6 @@ BOOST_AUTO_TEST_CASE(mhom_homotopy_block_matches_function_tree)
 
 	// mpfr at 80 digits
 	DefaultPrecision(80);
-	H.precision(80);
-	He.precision(80);
 	for (int trial = 0; trial < 5; ++trial)
 	{
 		Vec<complex_mp> p = RandomOfUnits<complex_mp>(static_cast<unsigned int>(n));

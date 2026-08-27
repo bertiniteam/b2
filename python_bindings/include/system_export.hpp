@@ -88,8 +88,8 @@ namespace bertini{
 		private:
 
 			// precision functions
-			void (bertini::System::*set_prec_)(unsigned) const = &bertini::System::precision;
-			unsigned (bertini::System::*get_prec_)(void) const = &bertini::System::precision;
+			// Neither a setter nor a getter: a System carries no precision at all.  Evaluation
+			// happens at the precision of the point it is handed (ADR-0057).
 
 
 
