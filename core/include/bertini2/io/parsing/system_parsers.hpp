@@ -53,7 +53,7 @@ namespace bertini {
 				using boost::phoenix::ref;
 				
 				SystemParser<Iterator> S;
-				
+
 				System s{};
 				bool r = phrase_parse(first, last,
 									  S,
@@ -84,6 +84,9 @@ namespace bertini {
 		// stray leading character by the grammar.
 		std::string cleaned = input;
 		parsing::classic::StripUTF8BOM(cleaned);
+		// accept a full Bertini 1 classic file (CONFIG/INPUT wrappers), not just the bare
+		// INPUT-section body that the grammar reads -- see #396
+		parsing::classic::StripClassicFileWrappers(cleaned);
 
 		std::string::const_iterator iter = cleaned.begin();
 		std::string::const_iterator end = cleaned.end();

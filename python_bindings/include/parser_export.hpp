@@ -43,6 +43,8 @@
 #include <bertini2/io/parsing/system_parsers.hpp>
 
 
+#include <type_traits>
+
 #include "python_common.hpp"
 
 
@@ -61,8 +63,39 @@ namespace bertini{
 		{
 			// Treat input as UTF-8; drop a leading BOM so it is not parsed as a stray character.
 			bertini::parsing::classic::StripUTF8BOM(str);
+			// accept a full Bertini 1 classic file, which is exactly what
+			// System.to_classic_input() emits -- see #396
+			bertini::parsing::classic::StripClassicFileWrappers(str);
 			ResultT res;
-			bertini::parsing::classic::parse(str.begin(), str.end(), res);
+			// The return value is NOT optional to check.  parse() answers false when the
+			// grammar matched nothing or did not consume the whole input, and it leaves the
+			// result untouched -- so ignoring it handed Python a structurally valid, entirely
+			// EMPTY System and reported nothing.  A caller round-tripping through text then
+			// carried on with a system of zero functions.  See #396.
+			if (!bertini::parsing::classic::parse(str.begin(), str.end(), res))
+			{
+				std::string shown = str.size() > 80 ? str.substr(0, 80) + "..." : str;
+				throw std::runtime_error(
+					"[SystemParser] could not parse a system from the input.  Expected classic "
+					"declarations (variable_group / function / definitions), optionally wrapped "
+					"in a Bertini 1 `INPUT ... END;` section with an optional leading "
+					"`CONFIG ... END;` section.  Input began: \"" + shown + "\"");
+			}
+			// parse() also answers TRUE for input that declares NOTHING -- an empty string, or
+			// an `INPUT ... END;` section with an empty body -- because matching zero
+			// declarations is a successful match of the grammar.  The caller still ends up
+			// holding an empty System they did not ask for, which is the whole complaint in
+			// #396, so refuse that too.  A system with variables but no functions is left
+			// alone: that is a real, if unusual, declaration.
+			if constexpr (std::is_same<ResultT, System>::value)
+			{
+				if (res.NumVariables()==0 && res.NumTotalFunctions()==0)
+					throw std::runtime_error(
+						"[SystemParser] the input declared no variables and no functions, so "
+						"there is no system to return.  Expected classic declarations "
+						"(variable_group / function / definitions), optionally wrapped in a "
+						"Bertini 1 `INPUT ... END;` section.");
+			}
 			return res;
 		};
 		
