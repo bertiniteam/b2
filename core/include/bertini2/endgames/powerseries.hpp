@@ -681,6 +681,21 @@ public:
 		this->EnsureAtPrecision(times.back(),Precision(samples.back()));
 
 		NotifyObservers(SampleRefined<EmitterType>(*this));
+		// the rung is complete once the new sample has been refined -- emit the
+		// REFINED value, not the freshly-tracked one pushed above
+		// ComputedSamplePoint carries the sample/time at BaseComplexT, like CircleAdvanced.
+		// The fixed/mpfr lane emits directly; the complex_dbl fast lane would have to convert
+		// the point to mpfr for the event, so we only pay that when something is observing
+		// (temporaries live through the synchronous NotifyObservers).
+		if constexpr (std::is_same<ComplexT, BCT>::value)
+			NotifyObservers(ComputedSamplePoint<EmitterType>(*this, samples.back(), times.back()));
+		else if (this->HasObservers())
+		{
+			Vec<BCT> ev_pt(samples.back().size());
+			for (Eigen::Index i = 0; i < samples.back().size(); ++i) ev_pt(i) = BCT(samples.back()(i));
+			BCT ev_t(times.back());
+			NotifyObservers(ComputedSamplePoint<EmitterType>(*this, ev_pt, ev_t));
+		}
 
 		// we keep one more samplepoint than needed around, for estimating the cycle number
 		if (times.size() > this->EndgameSettings().num_sample_points+1)

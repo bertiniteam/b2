@@ -86,6 +86,62 @@ namespace bertini {
 	ADD_BERTINI_EVENT_TYPE(TimeAdvanced,EndgameEvent);
 
 	/**
+	\brief A new sample point on the path was computed, completing one rung of the
+	endgame's approach to the target time.
+
+	Emitted by BOTH endgame flavors, wherever a new path sample becomes final: the
+	power series endgame's time advance (after the new sample is refined), and the
+	Cauchy endgame's rotation onto its power-series window (as tracked -- Cauchy does
+	not refine at that site).  Together the emissions form a time-indexed ladder of
+	points approaching the root, which is what lets a consumer watch a derived
+	quantity -- the singular values of a Jacobian, say -- behave as a function of
+	distance to the root, rather than thresholding it at a single point.
+
+	The sample and its time ride ON the event, as with CircleAdvanced, so an observer
+	never has to know which flavor emitted it: the two flavors keep their samples in
+	differently-named containers (GetSamples() versus GetPSEGSamples()).
+
+	Distinct from TimeAdvanced, which announces only that time moved and carries no
+	payload, and from SampleRefined, which fires once per EXISTING sample when the
+	whole window is re-refined rather than once per new rung.
+	*/
+	template<class ObservedT>
+	class ComputedSamplePoint : public EndgameEvent<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+
+		using ComplexT = typename ObservedT::BaseComplexT;  ///< The complex number type.
+
+		/**
+		\brief The constructor for a ComputedSamplePoint event.
+
+		\param obs The observable emitting the event.
+		\param new_point The newly computed sample point on the path.
+		\param new_time The time value at which the sample was computed.
+		*/
+		ComputedSamplePoint(const ObservedT & obs,
+		                    Vec<ComplexT> const& new_point,
+		                    ComplexT const& new_time) : EndgameEvent<ObservedT>(obs),
+		                                                new_point_(new_point),
+		                                                new_time_(new_time)
+		{}
+
+		virtual ~ComputedSamplePoint() = default;
+		ComputedSamplePoint() = delete;
+
+		/// \return The newly computed sample point on the path.
+		const auto& NewSample() const {return new_point_;}
+
+		/// \return The time value at which the sample was computed.
+		const auto& NewTime() const {return new_time_;}
+
+	private:
+		const Vec<ComplexT>& new_point_;
+		const ComplexT& new_time_;
+	};
+
+
+	/**
 	\brief Advanced around the circle around target time
 	*/
 	template<class ObservedT>

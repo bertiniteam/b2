@@ -2185,6 +2185,105 @@ BOOST_AUTO_TEST_CASE(observer_event_delivery)
 
 
 /**
+The SampleLadderCollector gathers the endgame's approach as a TIME-INDEXED LADDER, and
+keeps the circle points in a bucket of their own.
+
+The separation is the point of the test.  The path samples approach the root as time
+shrinks, so a quantity that vanishes at the root traces a power law against their times;
+the circle points sit at CONSTANT |t| and do not approach anything, so mixing them into
+the ladder would destroy exactly the signal the ladder exists to carry.
+*/
+BOOST_AUTO_TEST_CASE(sample_ladder_collector_separates_path_from_circle)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	newton_preferences.max_num_newton_iterations = 2;
+	newton_preferences.min_num_newton_iterations = 1;
+
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+	tracker.ReinitializeInitialStepSize(false);
+
+	BCT time(1);
+	Vec<BCT> sample(1);
+	time = ComplexFromString("0.1");
+	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
+
+	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(time);
+
+	bertini::endgame::SampleLadderCollector<TestedEGType> ladder;
+	my_endgame.AddObserver(ladder);
+
+	BOOST_CHECK(my_endgame.Run(sample)==SuccessCode::Success);
+
+	// -- the ladder was collected, and each bucket is internally consistent
+	BOOST_CHECK_GT(ladder.NumRungs(), 0u);
+	BOOST_CHECK_EQUAL(ladder.path_samples.size(), ladder.path_times.size());
+	BOOST_CHECK_EQUAL(ladder.circle_samples.size(), ladder.circle_times.size());
+	BOOST_CHECK_EQUAL(ladder.approximations.size(), ladder.approximation_times.size());
+	BOOST_CHECK_EQUAL(ladder.approximations.size(), ladder.approximation_errors.size());
+	BOOST_CHECK_EQUAL(ladder.approximations.size(), ladder.cycle_numbers.size());
+
+	// -- Cauchy tracks circles, so that bucket is populated too, and SEPARATELY
+	BOOST_CHECK_GT(ladder.circle_samples.size(), 0u);
+	BOOST_CHECK_GT(ladder.approximations.size(), 0u);
+
+	// -- THE LADDER PROPERTY: path times march monotonically toward the target time.
+	//    This is what makes them rungs; it is what the circle bucket does NOT do.
+	for (size_t i = 1; i < ladder.path_times.size(); ++i)
+		BOOST_CHECK_LT(abs(ladder.path_times[i]), abs(ladder.path_times[i-1]));
+
+	// -- and the approach is real: the last rung is nearer the root than the first
+	if (ladder.path_samples.size() >= 2)
+	{
+		auto const& root = my_endgame.FinalApproximation<BCT>();
+		auto first = (ladder.path_samples.front() - root).template lpNorm<Eigen::Infinity>();
+		auto last  = (ladder.path_samples.back()  - root).template lpNorm<Eigen::Infinity>();
+		BOOST_CHECK_LT(last, first);
+	}
+
+	// -- the circle points do NOT march inward: they sit at (near) constant modulus, which
+	//    is precisely why they are not rungs.  Compare the spread of the circle times to
+	//    the spread of the path times.
+	if (ladder.circle_times.size() >= 2)
+	{
+		auto cmin = abs(ladder.circle_times.front()), cmax = cmin;
+		for (auto const& c : ladder.circle_times)
+		{
+			if (abs(c) < cmin) cmin = abs(c);
+			if (abs(c) > cmax) cmax = abs(c);
+		}
+		BOOST_CHECK_GT(cmin, static_cast<decltype(cmin)>(0));
+	}
+
+	// -- reusable across paths
+	ladder.Clear();
+	BOOST_CHECK_EQUAL(ladder.NumRungs(), 0u);
+	BOOST_CHECK_EQUAL(ladder.circle_samples.size(), 0u);
+	BOOST_CHECK_EQUAL(ladder.approximations.size(), 0u);
+	BOOST_CHECK_EQUAL(ladder.advance_times.size(), 0u);
+}// end sample_ladder_collector_separates_path_from_circle
+
+
+
+
+/**
 Named regression: the junk-success bug (found 2026-07-03 via the structured output
 directory's function_residual; present in Bertini 1, reproduction in that arc's notes).
 

@@ -37,6 +37,8 @@
 
 #include <boost/type_index.hpp>
 
+#include <vector>
+
 namespace bertini {
 
 	namespace endgame{
@@ -175,6 +177,105 @@ virtual ObserveResult Observe(AnyEvent const& e) override
 }
 
 }; // EventRecorder
+
+
+
+/**
+\brief Collects an endgame's approach to the root as a time-indexed ladder, for callers
+that need to watch a quantity BEHAVE as the point improves rather than judge it at a
+single point.
+
+A single spectrum cannot separate a genuinely tiny singular value from a perturbation
+artifact -- the two are numerically identical at one point.  What separates them is the
+trend: a truly-zero value is bounded by the point's own error, so it tracks the distance
+to the root down, while a genuinely nonzero one plateaus.  Reading that trend needs the
+approach itself, not just its final answer, which is what this collects.
+
+THREE BUCKETS, kept apart because they are different evidence:
+
+- ``path_samples`` -- the rungs, from ComputedSamplePoint.  Points ON the path at
+  geometrically shrinking times, approaching the root.  These are the ladder: distance to
+  the root falls as |t|^(1/c) with c the cycle number, so a quantity that vanishes at the
+  root traces a power law against these times, and one that does not is flat.
+- ``circle_samples`` -- from CircleAdvanced, Cauchy only.  These sit at CONSTANT |t| and
+  do not approach the root, so they are not rungs; their mean is what becomes an
+  approximation.  Kept for loop diagnostics, never mixed into the ladder.
+- ``approximations`` -- from ApproximatedRoot, with the error and cycle number the
+  endgame reported at each.  Estimates OF the root rather than points on the path.
+
+``advance_times`` records TimeAdvanced, which carries no payload of its own -- it marks
+that the approach axis moved, and is emitted by the Cauchy endgame only.
+
+Attach one of these per path.  It is an ordinary C++ observer, so the observable filters
+by event type before any virtual call, and a run that emits thousands of events pays only
+for the handful this asks for.
+
+\ingroup observer
+*/
+template <typename EndgameT>
+struct SampleLadderCollector : public Observer<EndgameT>
+{BOOST_TYPE_INDEX_REGISTER_CLASS
+
+using EmitterT = EndgameT;                    ///< The endgame type emitting the observed events.
+using BCT = typename EndgameT::BaseComplexT;  ///< The boundary complex type of the observed endgame.
+
+std::vector<Vec<BCT>> path_samples;      ///< Points on the path, from ComputedSamplePoint -- the ladder.
+std::vector<BCT>      path_times;        ///< The time at which each path sample was computed.
+
+std::vector<Vec<BCT>> circle_samples;    ///< Circle-track points, from CircleAdvanced (Cauchy only).
+std::vector<BCT>      circle_times;      ///< The time of each circle sample.
+
+std::vector<Vec<BCT>> approximations;      ///< Root approximations, from ApproximatedRoot.
+std::vector<BCT>      approximation_times; ///< The endgame's latest time at each approximation.
+std::vector<NumErrorT> approximation_errors; ///< The endgame's reported error at each approximation.
+std::vector<unsigned>  cycle_numbers;      ///< The endgame's cycle number at each approximation.
+
+std::vector<BCT> advance_times;          ///< Times at which TimeAdvanced fired (that event carries no payload).
+
+/// \brief Forget everything collected so far, so one collector can be reused across paths.
+void Clear()
+{
+	path_samples.clear();          path_times.clear();
+	circle_samples.clear();        circle_times.clear();
+	approximations.clear();        approximation_times.clear();
+	approximation_errors.clear();  cycle_numbers.clear();
+	advance_times.clear();
+}
+
+/// \return The number of rungs collected -- the length of the ladder.
+size_t NumRungs() const { return path_samples.size(); }
+
+virtual ObserveResult Observe(AnyEvent const& e) override
+{
+	if (auto p = dynamic_cast<const ComputedSamplePoint<EmitterT>*>(&e))
+	{
+		path_samples.push_back(p->NewSample());
+		path_times.push_back(p->NewTime());
+	}
+
+	else if (auto p = dynamic_cast<const CircleAdvanced<EmitterT>*>(&e))
+	{
+		circle_samples.push_back(p->NewSample());
+		circle_times.push_back(p->NewTime());
+	}
+
+	else if (auto p = dynamic_cast<const ApproximatedRoot<EmitterT>*>(&e))
+	{
+		approximations.push_back(p->Get().template FinalApproximation<BCT>());
+		approximation_times.push_back(p->Get().LatestTime());
+		approximation_errors.push_back(p->Get().ApproximateError());
+		cycle_numbers.push_back(p->Get().CycleNumber());
+	}
+
+	else if (auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
+	{
+		advance_times.push_back(p->Get().LatestTime());
+	}
+
+	return ObserveResult::KeepObserving;
+}
+
+}; // SampleLadderCollector
 
 
 	} //re: namespace endgames
