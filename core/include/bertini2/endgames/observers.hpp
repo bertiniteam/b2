@@ -232,6 +232,13 @@ std::vector<unsigned>  cycle_numbers;      ///< The endgame's cycle number at ea
 
 std::vector<BCT> advance_times;          ///< Times at which TimeAdvanced fired (that event carries no payload).
 
+// Run boundaries.  One entry per endgame Run, holding the size each bucket had when that
+// run began -- so a collector attached to a whole solve can still tell one path from the
+// next.  Rungs of run j are path_samples[run_path_starts[j] .. run_path_starts[j+1]).
+std::vector<size_t> run_path_starts;     ///< Index into path_samples where each run's rungs begin.
+std::vector<size_t> run_circle_starts;   ///< Index into circle_samples where each run's circle points begin.
+std::vector<size_t> run_approx_starts;   ///< Index into approximations where each run's approximations begin.
+
 /// \brief Forget everything collected so far, so one collector can be reused across paths.
 void Clear()
 {
@@ -240,7 +247,12 @@ void Clear()
 	approximations.clear();        approximation_times.clear();
 	approximation_errors.clear();  cycle_numbers.clear();
 	advance_times.clear();
+	run_path_starts.clear();       run_circle_starts.clear();
+	run_approx_starts.clear();
 }
+
+/// \return The number of endgame runs observed -- the number of paths, when attached to a solver.
+size_t NumRuns() const { return run_path_starts.size(); }
 
 /// \return The number of rungs collected -- the length of the ladder.
 size_t NumRungs() const { return path_samples.size(); }
@@ -270,6 +282,13 @@ virtual ObserveResult Observe(AnyEvent const& e) override
 	else if (auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
 	{
 		advance_times.push_back(p->Get().LatestTime());
+	}
+
+	else if (dynamic_cast<const Initializing<EmitterT>*>(&e))
+	{
+		run_path_starts.push_back(path_samples.size());
+		run_circle_starts.push_back(circle_samples.size());
+		run_approx_starts.push_back(approximations.size());
 	}
 
 	return ObserveResult::KeepObserving;

@@ -189,6 +189,11 @@ public:
 	SuccessCode Run(Vec<BCT> const& start_point)
 	{
 		using bertini::Precision;
+		// EVERY path enters here, so this is the per-run boundary an observer needs to tell
+		// one path's samples from the next -- without it, a collector attached to a solver's
+		// endgame concatenates every path into one undifferentiated heap.  Initializing was
+		// declared, and handled by GoryDetailLogger, but emitted by nothing.
+		NotifyObservers(Initializing<EmitterType>(this->AsFlavor()));
 		auto prec = Precision(start_point);
 		BCT t  = start_time_;   Precision(t,  prec);
 		BCT t0 = target_time_;  Precision(t0, prec);

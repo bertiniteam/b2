@@ -1665,6 +1665,10 @@ BOOST_AUTO_TEST_CASE(sample_ladder_collector_serves_power_series_too)
 	BOOST_CHECK_EQUAL(ladder.circle_times.size(), 0u);
 	BOOST_CHECK_EQUAL(ladder.advance_times.size(), 0u);
 
+	// -- exactly one endgame run was observed, and its rungs start at the beginning
+	BOOST_CHECK_EQUAL(ladder.NumRuns(), 1u);
+	BOOST_CHECK_EQUAL(ladder.run_path_starts.front(), 0u);
+
 	// THE LADDER PROPERTY: rungs march toward the target time
 	for (size_t i = 1; i < ladder.path_times.size(); ++i)
 		BOOST_CHECK_LT(abs(ladder.path_times[i]), abs(ladder.path_times[i-1]));

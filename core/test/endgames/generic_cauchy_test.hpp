@@ -2272,12 +2272,17 @@ BOOST_AUTO_TEST_CASE(sample_ladder_collector_separates_path_from_circle)
 		BOOST_CHECK_GT(cmin, static_cast<decltype(cmin)>(0));
 	}
 
+	// -- exactly one endgame run was observed, and its rungs start at the beginning
+	BOOST_CHECK_EQUAL(ladder.NumRuns(), 1u);
+	BOOST_CHECK_EQUAL(ladder.run_path_starts.front(), 0u);
+
 	// -- reusable across paths
 	ladder.Clear();
 	BOOST_CHECK_EQUAL(ladder.NumRungs(), 0u);
 	BOOST_CHECK_EQUAL(ladder.circle_samples.size(), 0u);
 	BOOST_CHECK_EQUAL(ladder.approximations.size(), 0u);
 	BOOST_CHECK_EQUAL(ladder.advance_times.size(), 0u);
+	BOOST_CHECK_EQUAL(ladder.NumRuns(), 0u);
 }// end sample_ladder_collector_separates_path_from_circle
 
 
