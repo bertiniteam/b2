@@ -208,6 +208,32 @@ public:
 	}
 
 
+	/**
+	\brief Announce a completed sample point on the path, as a ComputedSamplePoint.
+
+	The payload rides at BaseComplexT, so the adaptive endgame's hardware-double fast
+	lane must convert -- and only pays for that when something is actually observing.
+	Shared by the initial window here and by each flavor's time advance, so the
+	conversion rule lives in one place.
+
+	\param sample The newly completed sample point on the path.
+	\param time The time value at which it was computed.
+	\tparam ComplexT The complex number type the endgame is currently working in.
+	*/
+	template<typename ComplexT>
+	void EmitComputedSample(Vec<ComplexT> const& sample, ComplexT const& time)
+	{
+		if constexpr (std::is_same<ComplexT, BCT>::value)
+			NotifyObservers(ComputedSamplePoint<EmitterType>(AsFlavor(), sample, time));
+		else if (this->HasObservers())
+		{
+			Vec<BCT> ev_pt(sample.size());
+			for (Eigen::Index i = 0; i < sample.size(); ++i) ev_pt(i) = BCT(sample(i));
+			BCT ev_t(time);
+			NotifyObservers(ComputedSamplePoint<EmitterType>(AsFlavor(), ev_pt, ev_t));
+		}
+	}
+
 	/// \brief Refine every sample point to the endgame's refinement tolerance.
 	template<typename ComplexT>
 	SuccessCode RefineAllSamples(SampCont<ComplexT> & samples, TimeCont<ComplexT> & times)
@@ -491,6 +517,12 @@ public:
 
 		samples.push_back(x_endgame_start);
 		times.push_back(start_time);
+		// The endgame's own input point, AT the boundary time: the coarsest rung of
+		// the approach, and the widest |t| any consumer will ever see.  Without these
+		// the ladder starts at boundary * sample_factor^(num_sample_points-1) --
+		// measured, 0.1 -> 1.25e-2, throwing away most of the span before anyone
+		// looks at it.
+		EmitComputedSample(samples[0], times[0]);
 
 		auto num_vars = this->GetSystem().NumVariables();
 		//start at 1, because the input point is the 0th element.
@@ -504,6 +536,8 @@ public:
 
 			if (tracking_success!=SuccessCode::Success)
 				return tracking_success;
+
+			EmitComputedSample(samples[ii], times[ii]);
 		}
 
 		return SuccessCode::Success;
