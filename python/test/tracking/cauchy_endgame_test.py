@@ -270,3 +270,47 @@ def test_amp_cauchy_cycle_num_2(quadratic_homotopy, precision):
     assert code == SuccessCode.Success
     assert mp.abs(fa[0] - mpfr_complex(1)) < 1e-5
     assert eg.cycle_number() == 2
+
+
+# ---------------------------------------------------------------------------
+# flavor-config runtime accessors (get/set_cauchy_settings)
+# ---------------------------------------------------------------------------
+
+def test_amp_cauchy_flavor_config_setters(quadratic_homotopy):
+    """get/set_cauchy_settings round-trips, returns a DETACHED copy, and a mutated
+    endgame still runs.  Regression for the constructor-only flavor-config gap:
+    the CauchyConfig (maximum_cauchy_ratio, ...) was unreachable once the endgame
+    was built (e.g. the one a HomotopySolver owns).  The accessors are forwarded
+    through the pure-Python endgame wrapper, so this is the path the port uses."""
+    s, x, t = quadratic_homotopy
+    ampconfig = amp_config_from(s)
+    tracker = AMPTracker(s)
+    nc = NewtonConfig()
+    nc.max_num_newton_iterations = 2
+    nc.min_num_newton_iterations = 1
+    tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), nc)
+    tracker.precision_setup(ampconfig)
+
+    eg = AMPCauchyEndgame(tracker, mpfr_complex("0.1"))
+
+    got = eg.get_cauchy_settings()
+    assert float(got.maximum_cauchy_ratio) == 0.5  # library default
+
+    got.maximum_cauchy_ratio = 0.9999999
+    got.num_consecutive_same_cycle_number = 3
+    eg.set_cauchy_settings(got)
+
+    back = eg.get_cauchy_settings()
+    assert float(back.maximum_cauchy_ratio) == pytest.approx(0.9999999)
+    assert back.num_consecutive_same_cycle_number == 3
+
+    # get returns a DETACHED copy -- mutating it must not reach into the endgame
+    back.maximum_cauchy_ratio = 0.1
+    assert float(eg.get_cauchy_settings().maximum_cauchy_ratio) == pytest.approx(0.9999999)
+
+    # a mutated endgame still runs to the cycle-2 double root
+    sample = np.array([mpfr_complex("9.000000000000001e-01", "4.358898943540673e-01")])
+    code = eg.run(sample)
+    assert code == SuccessCode.Success
+    assert mp.abs(eg.final_approximation()[0] - mpfr_complex(1)) < 1e-5
+    assert eg.cycle_number() == 2
