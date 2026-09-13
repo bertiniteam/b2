@@ -111,7 +111,7 @@ namespace tracking{
 		unsigned consecutive_successful_steps_before_stepsize_increase = 5; ///< What it says.  If you can come up with a better name, please suggest it.  StepsForIncrease
 
 		unsigned min_num_steps = 1; ///< The minimum number of steps allowed during tracking.
-		unsigned max_num_steps = 1e5; ///< The maximum number of steps allowed during tracking.  This is per call to TrackPath.  MaxNumberSteps
+		unsigned max_num_steps = 1e5; ///< The maximum number of steps allowed during tracking, counting FAILED steps as well as successful ones.  This is per call to TrackPath.  MaxNumberSteps
 
 		unsigned frequency_of_CN_estimation = 1; ///< Estimate the condition number every so many steps.  Eh.
 	};

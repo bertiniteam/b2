@@ -111,7 +111,11 @@ namespace bertini{
 			*/
 			SuccessCode PreIterationCheck() const override
 			{
-				if (this->num_successful_steps_taken_ >= Get<Stepping>().max_num_steps)
+				// The budget counts EVERY step, not only the successful ones.  A path that
+				// fails steps has spent the effort whether or not it advanced, and counting
+				// only successes leaves a failing path un-budgeted: it can fail forever at
+				// 0% of its allowance.  See issue #410.
+				if (this->NumTotalStepsTaken() >= Get<Stepping>().max_num_steps)
 					return SuccessCode::MaxNumStepsTaken;
 				if (this->current_stepsize_ < Get<Stepping>().min_step_size)
 					return SuccessCode::MinStepSizeReached;
