@@ -238,6 +238,63 @@ BOOST_AUTO_TEST_CASE(condition_number_refresh_honors_frequency)
 
 
 
+// Regression test for the step budget (b2 #410, second half).
+//
+// max_num_steps is documented as "the maximum number of steps allowed during tracking",
+// but it was compared against num_successful_steps_taken_ only.  A path whose steps FAIL
+// therefore never approached its budget -- it could fail indefinitely while sitting at 0%
+// of its allowance.  Observed in the wild: 3.9 million failed steps against 343 successful
+// ones, thirty minutes at 100% CPU, the enclosing Solve() never returning.
+//
+// Here every step fails on purpose: a tracking tolerance of 1e-30 is unreachable in double
+// precision, so the corrector never converges and every iteration is a failed step.  With
+// max_num_steps = 10 the budget must stop it.
+//
+// The case DISCRIMINATES.  Counting only successes, this path never reaches the budget
+// (successes stay at 0) and instead halves its stepsize ~330 times down to the 1e-100
+// min_step_size floor, returning MinStepSizeReached.  Counting every step, it returns
+// MaxNumStepsTaken after 10.  So the asserted code distinguishes the fix from its absence.
+BOOST_AUTO_TEST_CASE(step_budget_counts_failed_steps_not_only_successes)
+{
+	DefaultPrecision(30);
+	using namespace bertini::tracking;
+
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	System sys;
+	VariableGroup v{y};
+	sys.AddFunction(y*y - t);          // sqrt path: a genuine tracking problem
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	bertini::tracking::DoublePrecisionTracker tracker(sys);
+
+	SteppingConfig stepping_preferences;
+	stepping_preferences.max_num_steps = 10;      // the budget under test
+	NewtonConfig newton_preferences;
+
+	tracker.Setup(Predictor::Euler,
+	              double(1e-30),                  // UNREACHABLE at double precision
+	              double(1e5),
+	              stepping_preferences,
+	              newton_preferences);
+
+	complex_dbl t_start(1);
+	complex_dbl t_end(0);
+	Vec<complex_dbl> start_point(1);
+	start_point << complex_dbl(1);
+
+	Vec<complex_dbl> end_point;
+	auto code = tracker.TrackPath(end_point, t_start, t_end, start_point);
+
+	BOOST_CHECK(code != bertini::SuccessCode::Success);
+	BOOST_CHECK(code == bertini::SuccessCode::MaxNumStepsTaken);
+	// and the budget is what stopped it: total steps did not exceed the allowance
+	BOOST_CHECK_LE(tracker.NumTotalStepsTaken(), 11u);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
