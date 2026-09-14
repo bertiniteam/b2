@@ -29,6 +29,7 @@ single-operand sum).
 
 #include <cstdlib>
 #include <sstream>
+#include <chrono>
 #include <map>
 #include "bertini2/function_tree.hpp"
 #include "bertini2/function_tree/canonical.hpp"
@@ -257,6 +258,40 @@ BOOST_AUTO_TEST_CASE(guard_restores_global_canonicalization_state)
 	// left it back at the default (on, GrevLex) so they cannot leak into other suites.
 	BOOST_CHECK(bertini::node::CanonicalizeByDefault());
 	BOOST_CHECK(bertini::node::CurrentMonomialOrder() == bertini::node::MonomialOrder::GrevLex);
+}
+
+
+// Regression test for b2 #417: MultiDegree must cost O(DAG), not O(expansion).
+//
+// The graph is hash-consed, so this expression's DAG grows ~3 nodes per level while its
+// EXPANDED form doubles -- ~260k terms against a DAG under 60 nodes at 18 levels.  A walk
+// that visits the tree costs O(expansion); one memoized by node identity costs O(DAG).
+//
+// MEASURED, same machine, same binary shape:  510 ms unmemoized, 293 ms with the
+// per-traversal memo.  The budget sits between them with margin on both sides.
+BOOST_AUTO_TEST_CASE(multidegree_cost_follows_the_dag_not_the_expansion)
+{
+	using namespace bertini::node;
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto z = Variable::Make("z");
+
+	auto start = std::chrono::steady_clock::now();
+	std::shared_ptr<Node> e = x + y;
+	for (int level = 0; level < 18; ++level)
+		e = (e + z) * (e + x);
+	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+	              std::chrono::steady_clock::now() - start).count();
+
+	BOOST_TEST_MESSAGE("18 levels built in " << ms << " ms (unmemoized: 510 ms)");
+	BOOST_CHECK_LT(ms, 420);
+
+	// the memo must not change the answer
+	bertini::VariableGroup vars{x, y, z};
+	auto degs = e->MultiDegree(vars);
+	BOOST_CHECK_EQUAL(degs.size(), 3u);
+	for (auto d : degs)
+		BOOST_CHECK_GT(d, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // canonicalization
