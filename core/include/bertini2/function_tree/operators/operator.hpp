@@ -110,11 +110,16 @@ namespace node{
 		
 		
 		/**
-		 Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
+		 \brief Degree with respect to one variable (all variables when `v` is null).
+
+		 The default is the non-polynomial rule shared by sqrt, exp, log and the trigonometric
+		 operators: 0 when the operand is free of the variable (the node is then a constant),
+		 -1 otherwise (not a polynomial).  The degree-preserving unaries, NegateOperator and
+		 IntegerPowerOperator, override.
 		 */
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
 
+		/// \brief Degree with respect to a variable group, by the same rule as the one-variable form.
 		int Degree(VariableGroup const& vars) const override;
 
 

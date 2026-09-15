@@ -67,6 +67,21 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Fixed
+
+- Negating a sum inflated its degree with respect to a variable group: `NegateOperator`
+  inherited `UnaryOperator`'s group degree, which summed the per-variable degrees -- correct
+  only for a single monomial -- so `-(x^2+y^2)` reported degree 4, and `System::DegreeBound()`,
+  which sizes adaptive precision, followed it.  This is the defect #397 found in
+  `PowerOperator`, in the other class that inherited the sum.  Negation now passes its
+  operand's degree and multidegree through, and the non-polynomial rule (a variable-free
+  operand makes a constant; anything else is not a polynomial) lives once in `UnaryOperator`
+  instead of in four identical copies in `sqrt`, `exp`, `log` and the trigonometric operators.
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening

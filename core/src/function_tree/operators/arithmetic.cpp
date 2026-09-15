@@ -1333,17 +1333,6 @@ std::shared_ptr<Node> SqrtOperator::Differentiate(std::shared_ptr<Variable> cons
 	});
 }
 
-int SqrtOperator::Degree(std::shared_ptr<Variable> const& v) const
-{
-	if (operand_->Degree(v)==0)
-	{
-		return 0;
-	}
-	else
-	{
-		return -1;
-	}
-}
 
 
 
@@ -1390,17 +1379,6 @@ std::shared_ptr<Node> ExpOperator::Differentiate(std::shared_ptr<Variable> const
 }
 
 
-int ExpOperator::Degree(std::shared_ptr<Variable> const& v) const
-{
-	if (operand_->Degree(v)==0)
-	{
-		return 0;
-	}
-	else
-	{
-		return -1;
-	}
-}
 
 
 
@@ -1441,17 +1419,6 @@ std::shared_ptr<Node> LogOperator::Differentiate(std::shared_ptr<Variable> const
 }
 
 
-int LogOperator::Degree(std::shared_ptr<Variable> const& v) const
-{
-	if (operand_->Degree(v)==0)
-	{
-		return 0;
-	}
-	else
-	{
-		return -1;
-	}
-}
 
 
 

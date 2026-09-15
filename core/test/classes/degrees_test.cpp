@@ -349,4 +349,73 @@ BOOST_AUTO_TEST_CASE(integer_power_of_a_sum_group_degree)
 	BOOST_CHECK(expr->IsHomogeneous(vars));
 }
 
+
+BOOST_AUTO_TEST_CASE(negation_of_a_sum_has_the_sum_degree)
+{
+	// the twin of the integer-power case above: NegateOperator inherited UnaryOperator's group
+	// degree, which summed the per-variable degrees -- right for a monomial only -- so a negated
+	// sum reported an inflated degree, and System::DegreeBound() (which sizes adaptive precision)
+	// followed it.  Negation preserves its operand's degree and multidegree.
+	DefaultPrecision(30);
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	VariableGroup vars{x, y, z};
+
+	BOOST_CHECK_EQUAL((-(pow(x, 2) + pow(y, 2)))->Degree(vars), 2);   // was 4
+	BOOST_CHECK_EQUAL((-(pow(x, 3) + x * y))->Degree(vars), 3);        // was 4
+	BOOST_CHECK_EQUAL((-(x * y))->Degree(vars), 2);                    // a monomial: always was right
+	BOOST_CHECK_EQUAL((-(pow(x, 2) + pow(y, 2)))->Degree(x), 2);
+	BOOST_CHECK_EQUAL((-(pow(x, 2) + pow(y, 2)))->Degree(), 2);
+
+	auto md = (-(pow(x, 3) + x * y))->MultiDegree(vars);
+	BOOST_REQUIRE_EQUAL(md.size(), 3u);
+	BOOST_CHECK_EQUAL(md[0], 3);
+	BOOST_CHECK_EQUAL(md[1], 1);
+	BOOST_CHECK_EQUAL(md[2], 0);
+
+	// a negated sum inside a homogeneous function is still recognized as such
+	auto expr = -(pow(x, 2) + pow(y, 2)) + pow(z, 2);
+	BOOST_CHECK_EQUAL(expr->Degree(vars), 2);
+	BOOST_CHECK(expr->IsHomogeneous(vars));
+
+	// and the system's degree bound is the true degree
+	System sys;
+	sys.AddVariableGroup(vars);
+	sys.AddFunction(-(pow(x, 2) + pow(y, 2)) + z);
+	BOOST_CHECK_EQUAL(sys.DegreeBound(), 2);   // was 4
+}
+
+
+BOOST_AUTO_TEST_CASE(non_polynomial_unary_operators_share_one_degree_rule)
+{
+	// sqrt, exp, log and the trigonometric functions: applied to something free of the variables
+	// asked about they are constants (degree 0); applied to anything else they are not
+	// polynomials (degree -1).  The rule is UnaryOperator's; the subclasses carry no copies.
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup xy{x, y}, only_y{y};
+
+	for (auto const& n : {sqrt(x + y), exp(x + y), log(x + y), sin(x + y), cos(x * y), tan(x)})
+	{
+		BOOST_CHECK_EQUAL(n->Degree(xy), -1);
+		BOOST_CHECK_EQUAL(n->Degree(x), -1);
+		BOOST_CHECK(!n->IsPolynomial(xy));
+		BOOST_CHECK(!n->IsHomogeneous(xy));
+	}
+	// x does not involve y: with respect to {y} these are constants
+	for (auto const& n : {sqrt(x), exp(x), log(x), sin(x), cos(x), tan(x)})
+	{
+		BOOST_CHECK_EQUAL(n->Degree(only_y), 0);
+		BOOST_CHECK_EQUAL(n->Degree(y), 0);
+		BOOST_CHECK(n->IsHomogeneous(only_y));
+	}
+	// and of a genuine constant they are constants in every sense
+	auto two = Integer::Make(2);
+	for (auto const& n : {sqrt(two), exp(two), log(two), sin(two)})
+	{
+		BOOST_CHECK_EQUAL(n->Degree(), 0);
+		BOOST_CHECK_EQUAL(n->Degree(xy), 0);
+		BOOST_CHECK(n->IsPolynomial(xy));
+		BOOST_CHECK(n->IsHomogeneous(xy));
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
