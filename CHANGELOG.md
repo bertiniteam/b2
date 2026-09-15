@@ -67,6 +67,20 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Changed
+
+- `RandomConjugateOrthonormalMatrix(rows, cols)` factored a square matrix of the *larger*
+  dimension and truncated it, so an `8 x 4908` randomization matrix for an isosingular deflation
+  became a `4908 x 4908` multiprecision factorization that did not finish in 900 s.  It now
+  factors a matrix sized to the request (the longer side by the shorter, transposed when the
+  shape is wide): the same distribution, at O(max * min^2) instead of O(max^3) -- milliseconds.
+  Square requests draw and factor exactly as before; non-square ones consume fewer random draws
+  and so differ from the old recipe for the same seed.  (#401)
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening

@@ -576,12 +576,19 @@ namespace bertini {
 	columns when rows>=cols), to the current default precision.
 
 	Bertini 1 builds every random complex matrix conjugate-orthonormal (unitary), and when it needs a
-	non-square shape it generates a SQUARE one and truncates.  This mirrors that: draw a square random
-	matrix of the larger dimension, QR-factor it to a unitary Q, and return the leading rows x cols
-	block.  The QR launders the seed draw away -- the result is conjugate-orthonormal regardless of how
-	the seed was drawn -- and perfectly conditioned, which is the point: genericity without scaling
-	trouble.  Use it for every random *matrix* (slices, the randomization tail) the way the
-	bounded-modulus scalar draw is used for individual coefficients (ADR-0041).
+	non-square shape it generates a SQUARE one and truncates.  This produces the same distribution
+	by a factorization sized to the shape requested: draw a tall random matrix (the longer side by
+	the shorter), QR-factor it to a Q with orthonormal columns, and transpose when the requested
+	shape is wide.  The leading block of a Haar-distributed unitary IS a Haar-distributed
+	orthonormal frame, so nothing changes statistically; the cost drops from O(max^3) to
+	O(max * min^2) -- an 8 x 4908 randomization matrix for an isosingular deflation, which as a
+	4908 x 4908 factorization did not finish in 900 s, now takes milliseconds (b2#401).  The QR
+	launders the seed draw away -- the result is conjugate-orthonormal regardless of how the seed
+	was drawn -- and perfectly conditioned, which is the point: genericity without scaling trouble.
+	Use it for every random *matrix* (slices, the randomization tail) the way the bounded-modulus
+	scalar draw is used for individual coefficients (ADR-0041).  A square request draws and
+	factors exactly as before, so seeded square matrices are unchanged; non-square ones consume
+	fewer random draws than the old recipe and therefore differ for the same seed.
 
 	\param rows The number of rows of the returned matrix.
 	\param cols The number of columns of the returned matrix.
@@ -592,11 +599,15 @@ namespace bertini {
 	Mat<NumberType> RandomConjugateOrthonormalMatrix(unsigned int rows, unsigned int cols)
 	{
 		using std::max;
-		const unsigned int dim = max(rows, cols);   // generate square, then truncate -- Bertini 1's recipe
-		Mat<NumberType> seed = RandomOfUnits<NumberType>(dim, dim);
+		using std::min;
+		const unsigned int tall = max(rows, cols);
+		const unsigned int thin = min(rows, cols);
+		Mat<NumberType> seed = RandomOfUnits<NumberType>(tall, thin);
 		Eigen::HouseholderQR<Mat<NumberType> > qr(seed);
-		Mat<NumberType> Q = qr.householderQ() * Mat<NumberType>::Identity(dim, dim);
-		return Q.topLeftCorner(rows, cols);
+		Mat<NumberType> Q = qr.householderQ() * Mat<NumberType>::Identity(tall, thin);   // tall x thin, orthonormal columns
+		if (rows >= cols)
+			return Q;
+		return Q.transpose();   // rows x cols with orthonormal rows: M M^H = (Q^H Q)^T = I
 	}
 
 	/**
