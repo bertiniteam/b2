@@ -67,6 +67,23 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Fixed
+
+- A power with a non-integer exponent and no variable in it -- `5^(1/2)`, which is how Bertini 1
+  input spells a square root -- answered "not homogeneous" while reporting degree 0.  A system
+  with such a constant among its coefficients (the Barth sextic with the golden ratio written
+  as `(5^(1/2)+1)/2`) therefore homogenized to nothing and `AutoPatch()` refused the result
+  with "requesting to AutoPatch a system which is not homogenized".  A variable-free power is a
+  constant and is now homogeneous whatever its exponent, in agreement with its degree.  A
+  table-driven test pins the variable-free form of every operator (`sqrt`, `exp`, `log`, the
+  trigonometric functions, rational powers, and compositions of them) as degree 0, polynomial
+  and homogeneous, both on its own and as a coefficient of a system that must homogenize and
+  patch.  (#419)
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening
