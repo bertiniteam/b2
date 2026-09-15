@@ -238,6 +238,57 @@ BOOST_AUTO_TEST_CASE(condition_number_refresh_honors_frequency)
 
 
 
+// b2#404: the path-truncation check measures the LARGEST coordinate (the infinity norm), like the
+// endgame's security check and the post-processing finiteness threshold, and like Bertini 1.
+// With the 2-norm, a point whose coordinates all sat just under the threshold was truncated once
+// sqrt(n) carried the norm over it.
+BOOST_AUTO_TEST_CASE(truncation_threshold_applies_to_the_largest_coordinate)
+{
+	using namespace bertini::tracking;
+	using bertini::node::Integer;
+
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	Var t = Variable::Make("t");
+	auto one = Integer::Make(1);
+
+	// a straight path from the origin at t=1 to (a, a, a) at t=0, with a just under the threshold:
+	// largest coordinate 8e4 < 1e5, but the 2-norm 8e4*sqrt(3) = 1.39e5 exceeds it
+	auto a = Integer::Make(80000);
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y, z});
+	sys.AddPathVariable(t);
+	sys.AddFunction(x - a * (one - t));
+	sys.AddFunction(y - a * (one - t));
+	sys.AddFunction(z - a * (one - t));
+
+	DoublePrecisionTracker tracker(sys);
+	tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+
+	Vec<complex_dbl> start(3);
+	start << complex_dbl(0), complex_dbl(0), complex_dbl(0);
+	Vec<complex_dbl> end;
+
+	auto code = tracker.TrackPath(end, complex_dbl(1), complex_dbl(0), start);
+	BOOST_CHECK(code == bertini::SuccessCode::Success);
+	BOOST_REQUIRE_EQUAL(end.size(), 3);
+	for (int ii = 0; ii < 3; ++ii)
+		BOOST_CHECK_SMALL(abs(end(ii) - complex_dbl(80000)), 1e-2);
+
+	// a coordinate that genuinely exceeds the threshold is still truncated
+	auto b = Integer::Make(120000);
+	System far;
+	far.AddVariableGroup(VariableGroup{x, y, z});
+	far.AddPathVariable(t);
+	far.AddFunction(x - b * (one - t));
+	far.AddFunction(y - (one - t));
+	far.AddFunction(z - (one - t));
+
+	DoublePrecisionTracker tracker_far(far);
+	tracker_far.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+	code = tracker_far.TrackPath(end, complex_dbl(1), complex_dbl(0), start);
+	BOOST_CHECK(code == bertini::SuccessCode::GoingToInfinity);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

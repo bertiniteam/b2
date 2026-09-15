@@ -67,6 +67,20 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Fixed
+
+- The tracker's path-truncation check measured the 2-norm of the point while the endgame's
+  `Security::max_norm` check and the post-processing `endpoint_finite_threshold` measure the
+  infinity norm (the largest coordinate), so the three thresholds did not measure the same
+  quantity: a path whose coordinates all stayed under `path_truncation_threshold` was truncated
+  once `sqrt(n)` carried its 2-norm over the line.  The tracker now uses the infinity norm too,
+  as Bertini 1 does.  The never-incremented `num_total_steps_taken_` member is gone
+  (`NumTotalStepsTaken()` already computed the sum).  (#404)
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening
