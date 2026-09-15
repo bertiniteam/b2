@@ -492,6 +492,48 @@ BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
 }
 
 
+BOOST_AUTO_TEST_CASE(system_with_an_affine_products_of_linears_block_homogenizes_and_expands)
+{
+	// b2#376: the regeneration shape -- the products-of-linears start rows as a block beside a
+	// polynomial slice -- must homogenize as a whole, expand to nodes with the block's values,
+	// and patch.  The block's Homogenize was a no-op that reported success, so the expansion
+	// threw "variable count mismatch" and the system could not be tracked projectively.
+	bertini::DefaultPrecision(30);
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	VariableGroup vars{x, y};
+
+	bertini::Mat<bertini::complex_mp> f0(2, 3);   // (x - 1)(x + 1)
+	f0 << bertini::complex_mp(1), bertini::complex_mp(0), bertini::complex_mp(-1),
+	      bertini::complex_mp(1), bertini::complex_mp(0), bertini::complex_mp(1);
+
+	bertini::System sys;
+	sys.AddVariableGroup(vars);
+	sys.AddBlock(bertini::blocks::ProductsOfLinearsBlock(2, std::vector<bertini::Mat<bertini::complex_mp>>{f0}));
+	sys.AddFunction(y - bertini::node::Rational::Make(1, 2, 0, 1));   // the static slice y = 1/2
+
+	BOOST_CHECK(sys.IsPolynomial());
+	BOOST_CHECK(!sys.IsHomogeneous());
+
+	sys.Homogenize();
+	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK_EQUAL(sys.NumVariables(), 3u);
+
+	// the node expansion agrees with the block evaluation at a generic projective point
+	bertini::System expanded = sys.ExpandToFunctionTree();
+	bertini::Vec<bertini::complex_mp> pt(3);
+	pt << bertini::complex_mp("0.7", "0.2"), bertini::complex_mp("-0.4", "0.9"), bertini::complex_mp("1.3", "-0.5");
+	auto a = sys.Eval(pt);
+	auto b = expanded.Eval(pt);
+	BOOST_REQUIRE_EQUAL(a.size(), b.size());
+	for (Eigen::Index i = 0; i < a.size(); ++i)
+		BOOST_CHECK(abs(a(i) - b(i)) < bertini::real_mp("1e-25"));
+
+	BOOST_CHECK_NO_THROW(sys.AutoPatch());
+	BOOST_CHECK(sys.IsPatched());
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

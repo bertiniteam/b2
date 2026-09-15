@@ -67,6 +67,20 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Fixed
+
+- An affine products-of-linears block (`add_products_of_linears`, the shape of a regeneration
+  deformation) did not homogenize: its `Homogenize` was a no-op written for the m-homogeneous
+  start system's already-homogeneous form, and its `IsHomogeneous` always answered true, so a
+  homogenized system kept an affine block with the wrong variable count and could neither be
+  expanded to nodes ("variable count mismatch") nor tracked projectively.  The block now folds
+  each factor's constant column onto the homogenizing variable, exactly as the linear-forms
+  block does, and reports homogeneity from its shape.  (#376)
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening

@@ -1009,22 +1009,25 @@ namespace bertini
 	//
 	namespace {
 
-		// Build the function-tree node for a single linear form  sum_c M(r,c)*var_c + M(r,n),
-		// where row r of M holds the (augmented) coefficients and `vars` are the ordered variable
-		// nodes (column c <-> vars[c]); the last column is the constant / augmenting term.  Zero
-		// coefficients are skipped to keep the tree compact (and exact: a skipped term is +0).
+		// Build the function-tree node for a single linear form  sum_c M(r,c)*var_c (+ M(r,n)),
+		// where row r of M holds the coefficients and `vars` are the ordered variable nodes
+		// (column c <-> vars[c]).  When `augmented`, the last column is the constant / augmenting
+		// term; a homogenized block has no such column (its old constant is now a variable
+		// coefficient).  Zero coefficients are skipped to keep the tree compact (and exact: a
+		// skipped term is +0).
 		Nd LinearFormNode(Mat<complex_mp> const& M, Eigen::Index r,
-		                  VariableGroup const& vars, size_t num_vars)
+		                  VariableGroup const& vars, size_t num_vars, bool augmented)
 		{
-			Nd form = node::Complex::Make(M(r, static_cast<Eigen::Index>(num_vars))); // constant term
+			Nd form = augmented ? Nd(node::Complex::Make(M(r, static_cast<Eigen::Index>(num_vars)))) : nullptr;
 			for (size_t c = 0; c < num_vars; ++c)
 			{
 				complex_mp const& coeff = M(r, static_cast<Eigen::Index>(c));
 				if (coeff.real() == 0 && coeff.imag() == 0)
 					continue;
-				form = form + node::Complex::Make(coeff) * vars[c];
+				Nd term = node::Complex::Make(coeff) * vars[c];
+				form = form ? (form + term) : term;
 			}
-			return form;
+			return form ? form : Nd(node::Integer::Make(0));
 		}
 
 	} // anonymous namespace
@@ -1051,16 +1054,18 @@ namespace bertini
 				}
 				else if constexpr (std::is_same_v<B, blocks::ProductsOfLinearsBlock>)
 				{
-					// f_i = prod_r ( row r of factor-matrix i . [vars ; 1] )
+					// f_i = prod_r ( row r of factor-matrix i . [vars ; 1] ), or . [vars] once the
+					// block is homogenized (the constant column has become a variable column)
 					const size_t n = b.NumVariables();
 					if (static_cast<size_t>(vars.size()) != n)
 						throw std::runtime_error("ExpandToFunctionTree: products-of-linears variable count mismatch");
+					const bool augmented = !b.IsHomogenized();
 					for (auto const& M : b.Factors())
 					{
 						Nd prod = nullptr;
 						for (Eigen::Index r = 0; r < M.rows(); ++r)
 						{
-							Nd factor = LinearFormNode(M, r, vars, n);
+							Nd factor = LinearFormNode(M, r, vars, n, augmented);
 							prod = prod ? (prod * factor) : factor;
 						}
 						out.push_back(prod ? prod : Nd(Integer::Make(1))); // empty product == 1
@@ -1147,7 +1152,7 @@ namespace bertini
 						}
 						else
 						{
-							out.push_back(LinearFormNode(M, r, vars, n));   // augmented: last col is the constant
+							out.push_back(LinearFormNode(M, r, vars, n, true));   // augmented: last col is the constant
 						}
 					}
 				}
