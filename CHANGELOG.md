@@ -67,6 +67,17 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Fixed
+
+- `to_classic_input()` left out the `pathvariable t;` declaration, so the classic text of a
+  homotopy did not parse back: the functions used a variable the file never declared.  A
+  homotopy is a system too; the declaration is now emitted with the variable groups, and a
+  homotopy round-trips through the classic writer and parser.  (#366)
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening
