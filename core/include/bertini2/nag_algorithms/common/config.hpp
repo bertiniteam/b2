@@ -47,7 +47,7 @@ enum class EndgameChoice
 /// \brief Selects which endgame to use (classic input).
 struct EndgameChoiceConfig
 {
-	EndgameChoice endgame = EndgameChoice::Cauchy;  ///< The chosen endgame.
+	EndgameChoice endgame = EndgameChoice::PowerSeries;  ///< The chosen endgame.  Power series is Bertini 1's documented default (EndgameNum 1); see ADR-0058.
 };
 
 enum class AlgoChoice

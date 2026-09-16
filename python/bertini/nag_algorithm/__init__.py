@@ -577,7 +577,7 @@ def _precision_model(mptype, precision):
     return mptype
 
 
-def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='infer',
+def ZeroDimSolver(system, *, endgame='powerseries', mptype='adaptive', startsystem='infer',
                   precision=None, settings=None, **field_settings):
     """Construct a zero-dim solver by name, with friendly defaults.
 
@@ -595,7 +595,7 @@ def ZeroDimSolver(system, *, endgame='cauchy', mptype='adaptive', startsystem='i
     Parameters
     ----------
     system : the polynomial :class:`~bertini.System` to solve.
-    endgame : ``'cauchy'`` (default) or ``'powerseries'``.
+    endgame : ``'powerseries'`` (default, matching Bertini 1; ADR-0058) or ``'cauchy'``.
     mptype : the precision MODEL -- ``'double'``, ``'multiple'``, or ``'adaptive'`` (``'amp'``, the default).
     precision : the number of DIGITS (an ``int``), applied via ``bertini.default_precision`` at
         construction -- meaningful for ``'multiple'``/``'adaptive'`` (``'double'`` is always 16).  A
@@ -756,7 +756,7 @@ def _coerce_start_points(start_points):
     return pts
 
 
-def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='cauchy'):
+def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='powerseries'):
     """Track a homotopy you constructed, from a list of start points you already have (e.g. the
     solutions of an earlier solve) -- the continuation primitive (parameter-homotopy workflow).
 
@@ -838,7 +838,7 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
     return _HomotopySolverHolder(solver, homotopy, target, user_start)
 
 
-def user_homotopy(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='cauchy'):
+def user_homotopy(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='powerseries'):
     """Thin forwarder to :func:`HomotopySolver`, kept for back-compatibility."""
     return HomotopySolver(homotopy, start_points, target, mptype=mptype, precision=precision, endgame=endgame)
 
@@ -940,7 +940,7 @@ def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma
 
 
 def parameter_sweep(make_system, generic_parameters, target_parameters,
-                    *, collect=None, comm=None, mptype='adaptive', endgame='cauchy'):
+                    *, collect=None, comm=None, mptype='adaptive', endgame='powerseries'):
     """Solve a whole family of systems that differ only in their coefficients.
 
     This is the *parameter homotopy* workhorse: pay for the hard ab-initio solve **once**, at a

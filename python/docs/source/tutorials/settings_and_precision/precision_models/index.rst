@@ -28,9 +28,9 @@ story), see :doc:`/tutorials/settings_and_precision/precision_matters/index`.
 
    names = {mptype: type(bertini.ZeroDimSolver(system, mptype=mptype)).__name__
             for mptype in ('double', 'multiple', 'adaptive')}
-   assert names['double']   == 'ZeroDimSolverCauchyDoublePrecision'
-   assert names['multiple'] == 'ZeroDimSolverCauchyFixedMultiplePrecision'
-   assert names['adaptive'] == 'ZeroDimSolverCauchyAdaptivePrecision'
+   assert names['double']   == 'ZeroDimSolverPowerSeriesDoublePrecision'
+   assert names['multiple'] == 'ZeroDimSolverPowerSeriesFixedMultiplePrecision'
+   assert names['adaptive'] == 'ZeroDimSolverPowerSeriesAdaptivePrecision'
 
    # The solver type encodes the endgame and the precision model, but NOT the start system -- that is
    # a construction choice now (the algorithm holds the start system polymorphically), so it no longer
