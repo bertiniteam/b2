@@ -67,6 +67,23 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Added
+
+- `SolutionMetaData.singular_values`: the singular values of the target system's Jacobian at the
+  endpoint, largest first, at the endpoint's own precision -- the spectrum `condition_number` was
+  already computed from and threw away.  Published raw, archived with each path record and
+  restored on recall, so a caller can read a numerical rank at a tolerance of its own choosing;
+  no rank verdict is baked in, because no single tolerance suits every endpoint.  (#409)
+- `SolutionMetaData.crossing_unresolved`: true for a path that was flagged as crossing another at
+  the endgame boundary and whose crossing re-tracking did not resolve.  Its success codes may
+  still read `Success`; this flag is the per-path form of the solver's "the affected solutions
+  may be wrong" warning, and it is recomputed on recall from the archived boundary data.  Also a
+  column of `to_dataframe()`.  (#365)
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening

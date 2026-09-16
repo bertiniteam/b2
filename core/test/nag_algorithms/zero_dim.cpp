@@ -37,6 +37,8 @@
 #include <chrono>
 #include <iostream>
 #include <iomanip>
+#include <memory>
+#include <set>
 #include <typeindex>
 
 
@@ -1067,6 +1069,147 @@ BOOST_AUTO_TEST_CASE(clean_solve_reports_no_crossings)
 	BOOST_CHECK_EQUAL(report.num_crossings_detected, 0u);
 	BOOST_CHECK_EQUAL(report.num_resolve_attempts, 0u);
 	BOOST_CHECK(zd.EndgameBoundarySolutions().size() > 0u);
+}
+
+
+namespace {
+
+// A planted crossing (the C++ twin of python/test/zero_dim/crossed_paths_test.py): a cubic
+// homotopy (x - a(t))(x - 1)(x + 2) whose curved root a(t) = 1 + 1/10 + 10 (t - 9/10)^2 passes
+// within 1/10 of the flat root 1 at t = 9/10 -- exactly where one Euler step of size 1/10 from
+// t = 1 lands -- so with a loose tolerance the curved path jumps onto the flat one.  Returns the
+// solver after Solve(), configured with the given number of crossed-path re-track attempts.
+struct PlantedCrossing
+{
+	using TrackerT = bertini::tracking::DoublePrecisionTracker;
+	using SolverT  = bertini::algorithm::HomotopySolver<TrackerT,
+	                     bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System>;
+
+	bertini::System H, target;
+	bertini::SampCont<bertini::complex_mp> start_points;
+	std::unique_ptr<bertini::start_system::User> start;
+	std::unique_ptr<SolverT> solver;
+
+	explicit PlantedCrossing(unsigned resolve_attempts)
+	{
+		using namespace bertini;
+		using namespace bertini::node;
+		using bertini::mpq_rational;
+		auto x = Variable::Make("x");
+		auto t = Variable::Make("t");
+		auto R = [](long n, long d){ return std::static_pointer_cast<Node>(Rational::Make(n, d, 0, 1)); };
+
+		auto t0 = R(9, 10);
+		auto a_of_t = R(1, 1) + R(1, 10) + R(10, 1) * pow(t - t0, 2);
+		H.AddVariableGroup(VariableGroup{x});
+		H.AddFunction((x - a_of_t) * (x - R(1, 1)) * (x + R(2, 1)));
+		H.AddPathVariable(t);
+
+		auto a_at_0 = R(92, 10);                                   // 1 + 1/10 + 10 (9/10)^2
+		target.AddVariableGroup(VariableGroup{x});
+		target.AddFunction((x - a_at_0) * (x - R(1, 1)) * (x + R(2, 1)));
+
+		for (auto v : {complex_mp("1.2"), complex_mp(1), complex_mp(-2)})   // the t = 1 roots
+		{
+			Vec<complex_mp> p(1); p(0) = v;
+			start_points.push_back(p);
+		}
+		start  = std::make_unique<start_system::User>(target, start_points);
+		solver = std::make_unique<SolverT>(target, *start, H);
+		solver->DefaultSetup();
+
+		auto& tracker = solver->GetTracker();
+		tracker.SetPredictor(tracking::Predictor::Euler);
+		auto stepping = tracker.template Get<tracking::SteppingConfig>();
+		stepping.initial_step_size = mpq_rational(1, 10);
+		stepping.max_step_size     = mpq_rational(1, 10);
+		tracker.template Set<tracking::SteppingConfig>(stepping);
+		tracker.ReinitializeInitialStepSize(true);
+
+		auto tol = solver->template Get<algorithm::TolerancesConfig>();
+		tol.newton_before_endgame = 1e-3;
+		tol.newton_during_endgame = 1e-4;
+		solver->template Set<algorithm::TolerancesConfig>(tol);
+
+		auto zdc = solver->template Get<algorithm::ZeroDimConfig>();
+		zdc.max_num_crossed_path_resolve_attempts = resolve_attempts;
+		solver->template Set<algorithm::ZeroDimConfig>(zdc);
+
+		solver->Solve();
+	}
+};
+
+} // namespace
+
+
+// b2#365: a path whose crossing was detected but NOT resolved carries crossing_unresolved in its
+// metadata, so a consumer need not parse the warning to learn that its Success codes are not to
+// be trusted.  With re-tracking enabled and the crossing resolved, no path carries the flag.
+BOOST_AUTO_TEST_CASE(unresolved_crossing_is_flagged_on_the_affected_paths)
+{
+	PlantedCrossing detect_only(0);
+	auto const& report = detect_only.solver->EndgameBoundaryMetadata();
+	auto const& md     = detect_only.solver->SolutionMetadata();
+	BOOST_REQUIRE(!report.passed);
+	BOOST_REQUIRE(report.num_crossings_detected > 0u);
+
+	std::set<unsigned long long> crossed(report.crossed_path_indices.begin(), report.crossed_path_indices.end());
+	for (size_t i = 0; i < md.size(); ++i)
+		BOOST_CHECK_EQUAL(md[i].crossing_unresolved, crossed.count(i) > 0);
+
+	PlantedCrossing resolved(2);
+	auto const& report2 = resolved.solver->EndgameBoundaryMetadata();
+	auto const& md2     = resolved.solver->SolutionMetadata();
+	BOOST_CHECK(report2.num_crossings_detected > 0u);        // the same crossing was seen ...
+	if (report2.passed)                                       // ... and, once resolved, nobody is flagged
+		for (auto const& m : md2)
+			BOOST_CHECK(!m.crossing_unresolved);
+}
+
+
+// b2#409: the singular values of the target Jacobian at each endpoint are kept, largest first,
+// and condition_number is their first-over-last -- so a caller can read a numerical rank at a
+// tolerance of its own choosing instead of trusting one fixed threshold.
+BOOST_AUTO_TEST_CASE(endpoint_singular_values_are_the_spectrum_behind_the_condition_number)
+{
+	using namespace bertini;
+	using TrackerT = tracking::DoublePrecisionTracker;
+	auto x = Variable::Make("x");
+
+	auto solve = [&](std::shared_ptr<node::Node> f)
+	{
+		System sys;
+		sys.AddVariableGroup(VariableGroup{x});
+		sys.AddFunction(f);
+		auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+		zd.DefaultSetup();
+		zd.Solve();
+		return zd.SolutionMetadata();
+	};
+
+	// two simple roots: a full-rank Jacobian everywhere, modest condition numbers
+	for (auto const& m : solve(x*x - 1))
+	{
+		if (m.endgame_success_code != SuccessCode::Success) continue;
+		BOOST_REQUIRE_EQUAL(m.singular_values.size(), 2);          // the homogenized, patched target has two variables
+		BOOST_CHECK(m.singular_values(0) >= m.singular_values(1)); // largest first
+		BOOST_CHECK(m.singular_values(1) > 0);
+		BOOST_CHECK_CLOSE(m.condition_number, m.singular_values(0) / m.singular_values(1), 1e-9);
+		BOOST_CHECK_LT(m.condition_number, 1e6);
+		BOOST_CHECK(!m.is_singular);
+	}
+
+	// a double root: the smallest singular value collapses, and the classification agrees
+	bool saw_collapse = false;
+	for (auto const& m : solve((x - 1) * (x - 1)))
+	{
+		if (m.endgame_success_code != SuccessCode::Success) continue;
+		BOOST_REQUIRE_EQUAL(m.singular_values.size(), 2);
+		if (m.singular_values(1) < 1e-3 * m.singular_values(0))
+			saw_collapse = true;
+		BOOST_CHECK(m.is_singular);
+	}
+	BOOST_CHECK(saw_collapse);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

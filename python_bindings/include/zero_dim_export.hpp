@@ -102,6 +102,11 @@ void ExposeSolutionMetaData(std::string const& class_name){
 	.def_readwrite("condition_number",&MDT::condition_number,
 		"The latest estimate of the condition number (spectral norm) near the endpoint. Used, "
 		"together with multiplicity, to classify the endpoint as singular.")
+	.def_readwrite("singular_values",&MDT::singular_values,
+		"The singular values of the (homogenized, patched) target system's Jacobian at the endpoint, "
+		"largest first, at the endpoint's own precision; condition_number is the first over the last.  "
+		"Read a numerical rank from it at a tolerance of your choosing -- no single tolerance suits "
+		"every endpoint, so none is applied here.  Empty for a path whose endgame did not succeed.")
 	.def_readwrite("newton_residual",&MDT::newton_residual,
 		"The latest Newton step norm near the endpoint.")
 	.def_readwrite("final_time_used",&MDT::final_time_used,
@@ -151,6 +156,11 @@ void ExposeSolutionMetaData(std::string const& class_name){
 		"the target system -- the extraneous nonsolutions introduced when ZeroDimSolver squares up an "
 		"over-determined system.  Orthogonal to is_finite; excluded from the finite/real/singular "
 		"solution accessors and surfaced by nonsolutions().  Load-bearing for regeneration cascades.")
+	.def_readwrite("crossing_unresolved",&MDT::crossing_unresolved,
+		"Whether this path was flagged as crossing another at the endgame boundary and the crossing "
+		"was NOT resolved by re-tracking.  Its success codes may still read Success, but the solver "
+		"has warned that this endpoint may be wrong; check this before building on the endpoint.  "
+		"See endgame_boundary_metadata() for the whole-solve report.")
 	;
 }
 
