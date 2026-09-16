@@ -616,7 +616,10 @@ namespace bertini{
 			*/
 			SuccessCode PreIterationCheck() const override
 			{
-				if (num_successful_steps_taken_ >= Get<Stepping>().max_num_steps)
+				// The budget counts EVERY step, not only the successful ones -- see the
+				// same check in FixedPrecisionTracker and issue #410.  This is the guard
+				// that bounds a path whose steps fail without ever advancing.
+				if (NumTotalStepsTaken() >= Get<Stepping>().max_num_steps)
 					return SuccessCode::MaxNumStepsTaken;
 				if (current_stepsize_ < Get<Stepping>().min_step_size)
 					return SuccessCode::MinStepSizeReached;

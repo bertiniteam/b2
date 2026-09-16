@@ -38,6 +38,7 @@
 */
 
 #include <iostream>
+#include <limits>   // std::numeric_limits, for approximate_error_'s infinity sentinel
 #include <typeinfo>
 
 
@@ -131,7 +132,12 @@ protected:
 	mutable Vec<BCT> final_approximation_;       ///< The latest computed approximation of the endpoint.
 	mutable Vec<BCT> previous_approximation_;     ///< The previous approximation of the endpoint.
 	mutable unsigned int cycle_number_ = 0;       ///< The current estimate of the cycle number.
-	mutable NumErrorT approximate_error_;         ///< The error estimate between successive approximations.
+	/// The error estimate between successive approximations.  Initialized to infinity, not
+	/// left indeterminate: ApproximateError() is a public accessor, so a caller may read it
+	/// before any endgame has run.  Infinity is also the only safe sentinel here -- every
+	/// convergence gate in the flavors has the shape `approximate_error_ < FinalTolerance()`,
+	/// and an indeterminate value that happened to be small would be a false convergence.
+	mutable NumErrorT approximate_error_ = std::numeric_limits<NumErrorT>::infinity();
 
 	// The adaptive-numeric-type state (current_endgame_precision_, adaptive_numeric_type_active_) lives in
 	// the AMP precision policy, AMPEndgame -- the flavors reach it through this-> (it is a base via PrecT).
