@@ -650,6 +650,38 @@ BOOST_AUTO_TEST_CASE(classic_writer_round_trips_a_system)
 }
 
 
+// b2#366: a homotopy is a system too.  Its path variable must be declared in the emitted text,
+// or the functions that use it do not parse back and the round trip fails.
+BOOST_AUTO_TEST_CASE(classic_writer_round_trips_a_homotopy_with_its_path_variable)
+{
+	using namespace bertini;
+	auto x = node::Variable::Make("x");
+	auto y = node::Variable::Make("y");
+	auto t = node::Variable::Make("t");
+	auto one = node::Integer::Make(1);
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x, y});
+	sys.AddPathVariable(t);
+	sys.AddFunction((one - t) * (x*x + y*y - one) + t * (x*x - one));
+	sys.AddFunction(x - y * t);
+
+	std::string const emitted = classic::SystemToClassic(sys);
+	BOOST_CHECK(emitted.find("pathvariable t;") != std::string::npos);
+
+	System reparsed{ emitted };
+	BOOST_CHECK(reparsed.HavePathVariable());
+	BOOST_CHECK_EQUAL(reparsed.NumNaturalFunctions(), sys.NumNaturalFunctions());
+
+	Vec<complex_dbl> pt(2); pt << complex_dbl(0.3, 0.7), complex_dbl(-0.4, 0.2);
+	complex_dbl const time(0.37, -0.11);
+	auto a = sys.Eval(pt, time);
+	auto b = reparsed.Eval(pt, time);
+	BOOST_REQUIRE_EQUAL(a.size(), b.size());
+	for (Eigen::Index i = 0; i < a.size(); ++i)
+		BOOST_CHECK_SMALL(abs(a(i) - b(i)), 1e-12);
+}
+
+
 // Regression: a classic input FILE with '%' comments must parse.  The blackbox reads files via
 // the Path overload of SplitIntoConfigAndInput, which used to split the raw text WITHOUT running
 // the CommentStripper first -- so a '%' comment (Bertini 1's comment marker) survived into the

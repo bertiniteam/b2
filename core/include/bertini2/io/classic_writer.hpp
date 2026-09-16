@@ -70,6 +70,11 @@ namespace bertini{
 			emit_groups("variable_group", sys.VariableGroups());
 			emit_groups("hom_variable_group", sys.HomVariableGroups());
 
+			// a homotopy is a system too: its path variable must be declared, or the functions that
+			// use it do not parse back and the file does not round-trip (b2#366)
+			if (sys.HavePathVariable())
+				out << "pathvariable " << *sys.GetPathVariable() << ";\n";
+
 			auto functions = sys.NaturalFunctionsAsNodes();
 
 			// Named subexpressions are not stored separately; they are discovered inside the function
