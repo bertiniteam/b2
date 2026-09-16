@@ -237,8 +237,8 @@ def test_slice_repr_is_readable():
 
 
 def test_head_tail_rows_methods():
-    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
-    s = Slice.random_complex(pb.VariableGroup([x, y, z]), 4)
+    w, x, y, z = pb.Variable('w'), pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    s = Slice.random_complex(pb.VariableGroup([w, x, y, z]), 4)   # four forms need four variables (#380)
     assert s.head(2).dimension() == 2
     assert s.tail(1).dimension() == 1
     assert s.rows([0, 3]).dimension() == 2
