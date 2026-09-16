@@ -34,6 +34,8 @@ At t=1: x^3+1=0 (three simple roots).
 At t=0: (x-1)^3=0 (triple root x=1, cycle number = 3).
 """
 
+import math
+
 import numpy as np
 import pytest
 
@@ -244,3 +246,47 @@ def test_amp_pseg_full_run(cubic_homotopy, precision):
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
     assert mp.abs(fa[0] - mpfr_complex(1)) < 1e-11
+
+
+def test_pseg_approximation_accessors_are_a_coherent_triple(cubic_homotopy):
+    """final_approximation / previous_approximation / approximate_error are one triple.
+
+    The error the endgame reports must be the infinity norm of the difference between the
+    two vectors it hands back -- otherwise a caller asking for a second, coarser sample of
+    the root (to watch how a derived quantity moves as the approximation improves) gets a
+    number that describes a pair they cannot see.
+
+    REGRESSION: the power series endgame used to overwrite previous_approximation with a
+    copy of final_approximation on its way out of the convergence loop, so the two came
+    back equal on every successful run.  Cauchy never did.
+    """
+    s, x, t = cubic_homotopy
+
+    tracker = DoublePrecisionTracker(s)
+    tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, SteppingConfig(), NewtonConfig())
+
+    eg = FixedDoublePowerSeriesEndgame(tracker, complex(0.1, 0))
+
+    # no approximation computed yet -> no estimate.  infinity, not nan: the convergence
+    # gates compare this in both directions, and nan loses every comparison.
+    assert math.isinf(eg.approximate_error())
+
+    current_space = np.array([complex(5.000000000000001e-01, 9.084258952712920e-17)])
+    code = eg.run(current_space)
+    assert code == SuccessCode.Success
+
+    fa = np.atleast_1d(np.asarray(eg.final_approximation()))
+    pa = np.atleast_1d(np.asarray(eg.previous_approximation()))
+    assert fa.shape == pa.shape == current_space.shape
+
+    err = eg.approximate_error()
+    assert err <= eg.get_endgame_settings().final_tolerance
+
+    # relative to err, not anchored: the converged error is below any absolute tolerance
+    # one would think to write, so an anchored check passes even when previous is a copy
+    # of final (gap 0 vs err ~1e-12).  Relative, that bug is a ratio of exactly 1.
+    gap = max(abs(complex(a) - complex(b)) for a, b in zip(fa, pa))
+    if err == 0.0:
+        assert gap == 0.0
+    else:
+        assert abs(gap - err) <= 1e-6 * err
