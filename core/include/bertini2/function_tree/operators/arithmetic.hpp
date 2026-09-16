@@ -194,7 +194,7 @@ namespace node{
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 		*/
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
 		
 		/// \return The per-term signs (true = added, false = subtracted), parallel to the operands.
 		inline
@@ -488,7 +488,7 @@ namespace node{
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 		*/
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
 		
 
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
@@ -643,7 +643,7 @@ namespace node{
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 		*/
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
 		
 
 

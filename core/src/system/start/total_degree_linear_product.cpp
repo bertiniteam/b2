@@ -109,6 +109,10 @@ namespace bertini {
 		void TotalDegreeLinearProduct::SeedLinearCoeffs(System const& s)
 		{
 			auto const saved_prec = DefaultPrecision();
+			// Only the AMBIENT default matters here: it governs the precision new mp values are
+			// BORN at, and this loop is building the block's exact MASTER.  The system's working
+			// precision is an evaluation concern and has no business in coefficient generation
+			// -- ADR-0057.
 			DefaultPrecision(MaxPrecisionAllowed());
 
 			const Eigen::Index n = static_cast<Eigen::Index>(s.NumNaturalVariables());
@@ -139,8 +143,11 @@ namespace bertini {
 		void TotalDegreeLinearProduct::BuildBlock(System const& /*s*/)
 		{
 			auto const saved_prec = DefaultPrecision();
+			// Only the AMBIENT default matters here: it governs the precision new mp values are
+			// BORN at, and this loop is building the block's exact MASTER.  The system's working
+			// precision is an evaluation concern and has no business in coefficient generation
+			// -- ADR-0057.
 			DefaultPrecision(MaxPrecisionAllowed());
-			this->precision(MaxPrecisionAllowed());
 
 			const VariableGroup& vars = this->Variables();
 			std::map<node::Node const*, Eigen::Index> col_of;
@@ -180,7 +187,6 @@ namespace bertini {
 			this->AddBlock(blocks::ProductsOfLinearsBlock(static_cast<size_t>(n), std::move(per_function)));
 
 			DefaultPrecision(saved_prec);
-			this->precision(saved_prec);
 		}
 
 

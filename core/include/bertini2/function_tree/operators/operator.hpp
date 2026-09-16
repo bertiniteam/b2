@@ -126,7 +126,7 @@ namespace node{
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 		*/
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
 
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 		

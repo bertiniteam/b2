@@ -48,15 +48,15 @@ def reading_solutions(system):
 
 
 def setting_precision(system):
-    """Fixed multiple works at one precision everywhere; adaptive manages its own."""
+    """Fixed multiple works at one precision everywhere (the system needs nothing set: it evaluates
+    at the precision of the points it is handed); adaptive manages its own."""
     bertini.default_precision(40)                  # 40 digits for this solve
-    system.precision(40)                           # the system must match
     m = bertini.ZeroDimSolver(system, mptype='multiple')
     m.solve()
     assert len(m.all_solutions()) == 2
+    assert m.all_solutions()[0][0].precision == 40  # the points carry the digits
 
     bertini.default_precision(30)                  # restore a modest default
-    system.precision(30)
 
     from bertini.tracking import AMPConfig
     amp = bertini.ZeroDimSolver(system, mptype='adaptive')

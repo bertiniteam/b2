@@ -97,7 +97,7 @@ namespace node{
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		int Degree(VariableGroup const& vars) const override;
 
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
 
 		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
 

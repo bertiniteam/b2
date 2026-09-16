@@ -114,7 +114,6 @@ Vec<ComplexT> result;
 for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 {
     DefaultPrecision(ambient_precision);
-    my_homotopy.precision(ambient_precision); // making sure our precision is all set up 
     auto start_point = TD_start_sys.StartPoint<ComplexT>(ii);
 
     tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
@@ -500,7 +499,6 @@ public:
 		if constexpr (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
 		{
 			auto max_precision = this->EnsureAtUniformPrecision(times, samples);
-			this->GetSystem().precision(max_precision);
 		}
 
 		//Compute dx_dt for each sample.
@@ -805,6 +803,18 @@ public:
 	 		
 
 
+			// CONVERGED.  Break BEFORE the assignment below so previous_approximation_ keeps
+			// holding the genuine PREDECESSOR of final_approximation_.  The Cauchy flavor
+			// already behaves this way -- it returns from its acceptance gate before the
+			// corresponding assignment -- and the two must agree, because the public
+			// accessors FinalApproximation()/PreviousApproximation()/ApproximateError() are
+			// only coherent as a triple: overwriting here made previous == final on every
+			// successful run, so the reported error described a pair the caller could not
+			// see.  The loop's own condition is left in place so a FinalTolerance() >= 1
+			// still refuses to enter at all, exactly as before.
+			if (approx_error <= this->FinalTolerance())
+				break;
+
 	 		Precision(prev_approx, Precision(latest_approx));
 	 		prev_approx = latest_approx;
 		} //end while	
@@ -851,7 +861,6 @@ public:
 			{
 				this->current_endgame_precision_ = this->NextEscalatedPrecision();
 				SetThreadPrecision(this->current_endgame_precision_);
-				this->GetSystem().precision(this->current_endgame_precision_);
 				continue;
 			}
 			if (code != SuccessCode::Success)
@@ -894,6 +903,18 @@ public:
 				}
 				norm_prev = norm_latest;
 			}
+
+			// CONVERGED.  Break BEFORE the assignment below so previous_approximation_ keeps
+			// holding the genuine PREDECESSOR of final_approximation_.  The Cauchy flavor
+			// already behaves this way -- it returns from its acceptance gate before the
+			// corresponding assignment -- and the two must agree, because the public
+			// accessors FinalApproximation()/PreviousApproximation()/ApproximateError() are
+			// only coherent as a triple: overwriting here made previous == final on every
+			// successful run, so the reported error described a pair the caller could not
+			// see.  The loop's own condition is left in place so a FinalTolerance() >= 1
+			// still refuses to enter at all, exactly as before.
+			if (this->approximate_error_ <= this->FinalTolerance())
+				break;
 
 			this->previous_approximation_ = this->final_approximation_;
 		}
@@ -1029,7 +1050,6 @@ public:
 		}
 		if (this->final_approximation_.size()    > 0) Precision(this->final_approximation_,    newprec);
 		if (this->previous_approximation_.size() > 0) Precision(this->previous_approximation_, newprec);
-		this->GetSystem().precision(newprec);
 	}
 
 

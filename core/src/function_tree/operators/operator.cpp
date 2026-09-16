@@ -63,7 +63,7 @@ int UnaryOperator::Degree(VariableGroup const& vars) const
 	return operand_->Degree(vars) == 0 ? 0 : -1;
 }
 
-std::vector<int> UnaryOperator::MultiDegree(VariableGroup const& vars) const
+std::vector<int> UnaryOperator::MultiDegreeImpl(VariableGroup const& vars) const
 {
 	
 	std::vector<int> deg(vars.size());
