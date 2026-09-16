@@ -201,6 +201,12 @@ boost::json::object EncodeFullPathResult(parallel::FullPathResult<ComplexT> cons
 	out["endpoint"] = EncodePoint(r.solution);
 	out["function_residual"] = ExactDoubleText(r.function_residual);
 	out["condition_number"] = ExactDoubleText(r.condition_number);
+	{
+		boost::json::array sv;
+		for (Eigen::Index i = 0; i < r.singular_values.size(); ++i)
+			sv.push_back(boost::json::value(ExactDoubleText(r.singular_values(i))));
+		out["singular_values"] = std::move(sv);
+	}
 	out["newton_residual"] = ExactDoubleText(r.newton_residual);
 	out["final_time_used"] = EncodeComplexScalar(r.final_time_used);
 	out["accuracy_estimate"] = ExactDoubleText(r.accuracy_estimate);
@@ -235,6 +241,14 @@ parallel::FullPathResult<ComplexT> DecodeFullPathResult(boost::json::object cons
 	r.solution = DecodePoint<ComplexT>(rec.at("endpoint").as_array());
 	r.function_residual = DoubleFromText(std::string(rec.at("function_residual").as_string()));
 	r.condition_number = DoubleFromText(std::string(rec.at("condition_number").as_string()));
+	// records written before the spectrum was archived simply lack it
+	if (auto const* sv = rec.if_contains("singular_values"))
+	{
+		auto const& arr = sv->as_array();
+		r.singular_values.resize(static_cast<Eigen::Index>(arr.size()));
+		for (std::size_t i = 0; i < arr.size(); ++i)
+			r.singular_values(static_cast<Eigen::Index>(i)) = DoubleFromText(std::string(arr[i].as_string()));
+	}
 	r.newton_residual = DoubleFromText(std::string(rec.at("newton_residual").as_string()));
 	r.final_time_used = DecodeComplexScalar<ComplexT>(rec.at("final_time_used").as_array());
 	r.accuracy_estimate = DoubleFromText(std::string(rec.at("accuracy_estimate").as_string()));

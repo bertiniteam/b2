@@ -115,6 +115,7 @@ struct FullPathResult
 	Vec<ComplexT> solution;  ///< The solution point (final endpoint of the path).
 	double        function_residual              = 0;  ///< Residual of the system at the final solution.
 	double        condition_number               = 0;  ///< Condition-number estimate at the final solution.
+	Vec<double>   singular_values;  ///< Singular values of the target Jacobian at the final solution, largest first (the spectrum behind condition_number).
 	double        newton_residual                = 0;  ///< Final Newton residual.
 	ComplexT      final_time_used;  ///< The time value the endgame finished at.
 	double        accuracy_estimate              = 0;  ///< Estimated accuracy of the final solution.
@@ -144,6 +145,7 @@ struct FullPathResult
 		ar & solution;
 		ar & function_residual;
 		ar & condition_number;
+		ar & singular_values;
 		ar & newton_residual;
 		ar & final_time_used;
 		ar & accuracy_estimate;

@@ -98,14 +98,14 @@ def _solve(resolve_attempts, predictor=pb.Predictor.Euler, step=COARSE_STEP, tol
     report = solver.endgame_boundary_metadata()
     roots = sorted({round(complex(v[0]).real, 3)
                     for v in solver.all_solutions() if len(v) > 0})
-    return report, roots
+    return report, roots, solver.solution_metadata()
 
 
 def test_crossing_is_detected_then_resolved():
     """Report-only loses a solution to the crossing; re-tracking recovers it."""
     # With re-tracking disabled the crossing is detected but left unresolved: two paths funnel onto
     # B=1, so the curved path's true endpoint (A(0)) is lost and the distinct count comes up short.
-    report_only, roots_unresolved = _solve(resolve_attempts=0)
+    report_only, roots_unresolved, _ = _solve(resolve_attempts=0)
     assert not report_only.passed
     assert report_only.num_resolve_attempts == 0
     assert report_only.num_crossings_detected > 0
@@ -115,7 +115,7 @@ def test_crossing_is_detected_then_resolved():
 
     # Re-enable re-tracking: the same crossing is detected, then resolved, and the lost solution is
     # recovered -- the count is now exactly right and A(0) is back.
-    resolved, roots_resolved = _solve(resolve_attempts=2)
+    resolved, roots_resolved, _ = _solve(resolve_attempts=2)
     assert resolved.num_crossings_detected > 0
     assert resolved.num_resolve_attempts >= 1
     assert resolved.passed
@@ -125,8 +125,23 @@ def test_crossing_is_detected_then_resolved():
 
 def test_clean_solve_reports_no_crossings():
     """With a good (higher-order) predictor the curve is tracked correctly: no crossing at all."""
-    report, roots = _solve(resolve_attempts=0, predictor=pb.Predictor.RK4)
+    report, roots, _ = _solve(resolve_attempts=0, predictor=pb.Predictor.RK4)
     assert report.passed
     assert report.num_crossings_detected == 0
     assert report.num_resolve_attempts == 0
     assert roots == sorted([float(C_ROOT), float(B_ROOT), LOST_ROOT])
+
+
+def test_unresolved_crossing_is_flagged_on_the_affected_paths():
+    """The per-path form of the warning: with re-tracking off, exactly the crossed paths carry
+    crossing_unresolved; once the crossing is resolved, nobody does."""
+    report, _, md = _solve(resolve_attempts=0)
+    assert not report.passed
+    crossed = set(report.crossed_path_indices)
+    assert crossed
+    for i, m in enumerate(md):
+        assert m.crossing_unresolved == (i in crossed)
+
+    resolved, _, md_resolved = _solve(resolve_attempts=2)
+    assert resolved.passed
+    assert not any(m.crossing_unresolved for m in md_resolved)

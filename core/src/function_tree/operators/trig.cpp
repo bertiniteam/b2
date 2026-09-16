@@ -30,19 +30,6 @@
 namespace bertini {
 namespace node{	
 
-	int TrigOperator::Degree(std::shared_ptr<Variable> const& v) const
-	{
-		if (operand_->Degree(v)==0)
-		{
-			return 0;
-		}
-		else
-		{
-			return -1;
-		}
-	}
-
-
 	void SinOperator::print(std::ostream & target) const
 	{
 		target << "sin(";

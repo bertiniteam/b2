@@ -7,6 +7,7 @@ regression that motivated the work (the flags used to never be computed, and the
 never applied).
 """
 
+import numpy as np
 import pytest
 
 import bertini as pb
@@ -56,6 +57,30 @@ def test_singular_double_root():
     assert len(succ) >= 1
     assert all(m.is_finite for m in succ)
     assert all(m.is_singular for m in succ)             # multiple and/or ill-conditioned
+
+
+def test_singular_values_are_the_spectrum_behind_condition_number():
+    """The endpoint Jacobian's singular values are published raw, largest first; condition_number
+    is their first over last.  A clean solve flags no path as an unresolved crossing."""
+    solver = _one_var_solver(lambda x: x * x - 1)        # two simple roots
+    solver.solve()
+    seen = 0
+    for m in solver.solution_metadata():
+        if int(m.endgame_success_code) != OK:
+            continue
+        seen += 1
+        sv = np.asarray(m.singular_values, dtype=float)
+        assert sv.shape == (2,)                          # the homogenized, patched target has two variables
+        assert sv[0] >= sv[1] > 0
+        assert m.condition_number == pytest.approx(sv[0] / sv[1], rel=1e-9)
+        assert not m.crossing_unresolved
+    assert seen == 2
+
+    double = _one_var_solver(lambda x: (x - 1) * (x - 1))   # a double root: the smallest singular value collapses
+    double.solve()
+    collapsed = [m for m in double.solution_metadata()
+                 if int(m.endgame_success_code) == OK and m.singular_values[1] < 1e-3 * m.singular_values[0]]
+    assert collapsed
 
 
 def test_endpoint_finite_threshold_is_applied():

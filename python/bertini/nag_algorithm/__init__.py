@@ -251,7 +251,8 @@ for _ws_name in dir(_pybnalag):
 # the classification flags come first since they are what you filter on.
 _SOLUTION_METADATA_FIELDS = (
     'path_index', 'solution_index',
-    'is_finite', 'is_real', 'is_singular', 'is_nonsolution', 'multiplicity', 'multiplicity_representative',
+    'is_finite', 'is_real', 'is_singular', 'is_nonsolution', 'crossing_unresolved',
+    'multiplicity', 'multiplicity_representative',
     'condition_number', 'function_residual', 'newton_residual',
     'accuracy_estimate', 'accuracy_estimate_user_coords',
     'precision_digits', 'accuracy_digits',

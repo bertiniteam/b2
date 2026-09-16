@@ -45,25 +45,22 @@ std::shared_ptr<Node> UnaryOperator::Operand() const
 
 
 
+// The default unary operator is a non-polynomial function of its operand -- sqrt, exp, log,
+// the trigonometric functions.  Applied to something free of the variable(s) asked about it
+// is a constant (degree 0); applied to anything else it is not a polynomial (degree -1).
+// The rule lives here once; the two degree-PRESERVING unaries, NegateOperator and
+// IntegerPowerOperator, override.  (The previous group version summed the per-variable
+// degrees, which equals the total degree only for a single monomial: NegateOperator inherited
+// it and reported -(x^2+y^2) as degree 4, inflating System::DegreeBound() -- the same defect
+// #397 found in PowerOperator.)
 int UnaryOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
-	return operand_->Degree(v);
+	return operand_->Degree(v) == 0 ? 0 : -1;
 }
-
-
-
 
 int UnaryOperator::Degree(VariableGroup const& vars) const
 {
-	auto multideg = MultiDegree(vars);
-	auto deg = 0;
-	std::for_each(multideg.begin(),multideg.end(),[&](int n){
-					if (n < 0)
-						deg = n;
-					else
-						deg += n;
-					});
-	return deg;
+	return operand_->Degree(vars) == 0 ? 0 : -1;
 }
 
 std::vector<int> UnaryOperator::MultiDegreeImpl(VariableGroup const& vars) const
