@@ -532,11 +532,16 @@ namespace bertini{
 
 			/// \brief Check, at a given complex type, whether the current space value exceeds the truncation threshold.
 			/// \tparam ComplexT The complex number type at which to perform the check.
-			/// \return SuccessCode::GoingToInfinity if the dehomogenized norm exceeds the threshold, else SuccessCode::Success.
+			/// \return SuccessCode::GoingToInfinity if the infinity norm of the dehomogenized point exceeds the threshold, else SuccessCode::Success.
+			///
+			/// The infinity norm, so that this threshold, the endgame's `Security::max_norm` and the
+			/// post-processing `endpoint_finite_threshold` all measure the same quantity -- the largest
+			/// coordinate -- as Bertini 1 does.  With the 2-norm a point of n coordinates each just under
+			/// the threshold was truncated once sqrt(n) carried the norm over it (b2#404).
 			template <typename ComplexT>
 			SuccessCode CheckGoingToInfinity() const
 			{
-				if (GetSystem().DehomogenizePoint(std::get<Vec<ComplexT> >(current_space_)).norm() > path_truncation_threshold_)
+				if (GetSystem().DehomogenizePoint(std::get<Vec<ComplexT> >(current_space_)).template lpNorm<Eigen::Infinity>() > path_truncation_threshold_)
 					return SuccessCode::GoingToInfinity;
 				else
 					return SuccessCode::Success;
@@ -570,7 +575,6 @@ namespace bertini{
 				num_successful_steps_taken_ = 0;
 				num_failed_steps_taken_ = 0;
 				num_consecutive_failed_steps_ = 0;
-				num_total_steps_taken_ = 0;
 			}
 
 
@@ -628,7 +632,6 @@ namespace bertini{
 			bool reinitialize_stepsize_ = true; ///< Whether should re-initialize the stepsize with each call to Trackpath.  On by default.
 
 			// tracking the numbers of things
-			mutable unsigned num_total_steps_taken_; ///< The number of steps taken, including failures and successes.
 			mutable unsigned num_successful_steps_taken_;  ///< The number of successful steps taken so far.
 			mutable unsigned num_consecutive_successful_steps_; ///< The number of CONSECUTIVE successful steps taken in a row.
 			mutable unsigned num_consecutive_failed_steps_; ///< The number of CONSECUTIVE failed steps taken in a row.
