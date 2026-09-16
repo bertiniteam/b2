@@ -29,6 +29,7 @@
 #include "bertini2/system/system.hpp"
 #include "bertini2/system/slice.hpp"   // for System::Slices() (needs the full Slice type)
 #include "bertini2/function_tree/find.hpp"
+#include "bertini2/function_tree/canonical_encoding.hpp"  // exact-value identity (issue #391)
 
 #include <algorithm>
 #include <sstream>
@@ -71,7 +72,6 @@ namespace bertini
 		swap(a.blocks_,b.blocks_);
 		swap(a.is_differentiated_,b.is_differentiated_);
 
-		swap(a.precision_,b.precision_);
 		swap(a.is_patched_,b.is_patched_);
 		swap(a.patch_,b.patch_);
 	}
@@ -107,8 +107,6 @@ namespace bertini
 
 		variable_ordering_ = other.variable_ordering_;
 		have_ordering_ =  other.have_ordering_;
-
-		precision_ = other.precision_;
 
 
 		explicit_parameters_  = other .explicit_parameters_;
@@ -225,24 +223,6 @@ namespace bertini
 	}
 
 
-	void System::precision(unsigned new_precision) const
-	{
-		// Each block precisions its own evaluator (its SLP / coefficient sub-system).  The
-		// parameter / function / variable nodes are no longer evaluated during tracking, so their
-		// precision is vestigial and left untouched -- this keeps the shared node DAG read-only
-		// across threads (ADR-0027).
-		for (auto const& blk : blocks_)
-			std::visit([&](auto const& b){ b.Precision(new_precision); }, blk);
-
-		using bertini::Precision;
-		Precision(std::get<Vec<complex_mp> >(current_variable_values_),new_precision);
-		Precision(std::get<complex_mp>(current_path_value_),new_precision);
-
-		if (IsPatched())
-			patch_.Precision(new_precision);
-
-		precision_ = new_precision;
-	}
 
 
 	void System::Differentiate() const
@@ -949,6 +929,16 @@ namespace bertini
 		using ComplexT = NumT;
 
 		RealT bound(0);
+
+		// A system with no functions -- or no variables -- has no coefficient bound; same
+		// convention as DegreeBound() below, which returns 0 for the same reason.  This is
+		// not merely tidiness: either way f_vals and dh_dx below are EMPTY (dh_dx is
+		// functions x variables), and Eigen's maxCoeff() on an empty array is UNDEFINED
+		// BEHAVIOUR -- it asserts in a debug build and reads out of bounds in a release one.
+		// `bertini.System().to_classic_input()` reached here (the CONFIG section emits
+		// `coefficientbound:`) and segfaulted the interpreter.  See #395.
+		if (NumTotalFunctions()==0 || NumVariables()==0)
+			return bound;
 
 		for (unsigned ii=0; ii < num_evaluations; ii++)
 		{	
@@ -1829,41 +1819,53 @@ namespace bertini
 			throw std::runtime_error("MakeMovingHomotopy: the fixed and moving systems must not already have a path variable.");
 
 		// Catch the equations being placed in the wrong block.  Compare top-level functions
-		// structurally (their serialized form, the same one the classic writer emits), expanding any
-		// structured block via NaturalFunctionsAsNodes so polynomial and slice/products rows alike are
-		// covered.  Two failure modes:
+		// structurally, expanding any structured block via NaturalFunctionsAsNodes so polynomial
+		// and slice/products rows alike are covered.  Two failure modes:
 		//   * a fixed equation also living in the moving rows -- the rows that move must be ONLY the
 		//     moving rows, so a fixed function appearing there is a duplicate (the typical cause:
 		//     concatenating the fixed system into start_moving/end_moving; see issue #258); and
 		//   * a moving row identical at both endpoints -- it does not actually move and belongs in
 		//     `fixed`.  The blend pairs the moving rows by position, so this check is positional.
-		auto function_strings = [](System const& s) {
+		//
+		// IDENTITY IS DECIDED ON THE CANONICAL ENCODING, NEVER ON operator<<.  The stream render is
+		// PRESENTATION: the default ostream precision is 6 significant digits, so two genuinely
+		// different rows that agree to 6 digits render identically and were falsely refused --
+		// a valid homotopy rejected with a message asserting the two endpoints were the same
+		// (issue #391; measured refusals at rows 1e-3 apart on a constant of 2409, and 1.6e-7 apart
+		// on a constant of 0.163, so it is a ~1e-6 RELATIVE collision at every scale).  The
+		// canonical encoding is the exact-value form the content digests are built on (ADR-0042),
+		// which is precisely the preimage-not-presentation distinction that rule exists to enforce.
+		// operator<< is still used for the human-readable message text, which is what it is for.
+		auto function_keys = [](System const& s) {
 			std::vector<std::string> out;
 			for (auto const& f : s.NaturalFunctionsAsNodes())
-			{
-				std::ostringstream ss;
-				ss << f;
-				out.push_back(ss.str());
-			}
+				out.push_back(node::CanonicalEncoding(f));
 			return out;
 		};
-		auto const fixed_funcs = function_strings(fixed);
-		auto const start_funcs = function_strings(start_moving);
-		auto const end_funcs   = function_strings(end_moving);
+		auto readable = [](auto const& f) {   // generic: whatever NaturalFunctionsAsNodes yields
+			std::ostringstream ss;
+			ss << f;
+			return ss.str();
+		};
+		auto const fixed_nodes = fixed.NaturalFunctionsAsNodes();
+		auto const start_nodes = start_moving.NaturalFunctionsAsNodes();
+		auto const fixed_funcs = function_keys(fixed);
+		auto const start_funcs = function_keys(start_moving);
+		auto const end_funcs   = function_keys(end_moving);
 
-		for (auto const& f : fixed_funcs)
-			if (std::find(start_funcs.begin(), start_funcs.end(), f) != start_funcs.end()
-			 || std::find(end_funcs.begin(),   end_funcs.end(),   f) != end_funcs.end())
+		for (size_t i = 0; i < fixed_funcs.size(); ++i)
+			if (std::find(start_funcs.begin(), start_funcs.end(), fixed_funcs[i]) != start_funcs.end()
+			 || std::find(end_funcs.begin(),   end_funcs.end(),   fixed_funcs[i]) != end_funcs.end())
 				throw std::runtime_error(
-					"MakeMovingHomotopy: the function `" + f + "` appears in both the fixed system and "
-					"the moving rows.  start_moving/end_moving must contain ONLY the rows that move "
-					"(e.g. the sliding slice), not the fixed system as well -- did you concatenate the "
-					"fixed system into them?");
+					"MakeMovingHomotopy: the function `" + readable(fixed_nodes[i]) + "` appears in both "
+					"the fixed system and the moving rows.  start_moving/end_moving must contain ONLY "
+					"the rows that move (e.g. the sliding slice), not the fixed system as well -- did "
+					"you concatenate the fixed system into them?");
 
 		for (size_t i = 0; i < start_funcs.size(); ++i)   // start/end agree in count (checked above)
 			if (start_funcs[i] == end_funcs[i])
 				throw std::runtime_error(
-					"MakeMovingHomotopy: moving row " + std::to_string(i) + " (`" + start_funcs[i]
+					"MakeMovingHomotopy: moving row " + std::to_string(i) + " (`" + readable(start_nodes[i])
 					+ "`) is identical in start_moving and end_moving, so it does not move; put "
 					"non-moving equations in `fixed` instead.");
 

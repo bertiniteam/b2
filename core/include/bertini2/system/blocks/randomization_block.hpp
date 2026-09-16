@@ -304,6 +304,11 @@ public:
 	/// a low-precision operand value).
 	void Precision(unsigned new_precision) const
 	{
+		// short-circuit when already materialized here.  Each holder of mp values keeps its
+		// own "materialized at" tag; System deliberately keeps none and simply fans out on
+		// every evaluation, which is cheap precisely because of this early return (ADR-0057).
+		if (precision_==new_precision)
+			return;
 		if (new_precision > DoublePrecision())
 		{
 			auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
@@ -315,7 +320,7 @@ public:
 						wm(r, c) = coefficients_highest_precision_(r, c);
 				}
 		}
-		operand_->precision(new_precision);
+		// operand_ is a System: it self-aligns from the point it is evaluated at (ADR-0057)
 		precision_ = new_precision;
 	}
 
@@ -403,6 +408,25 @@ public:
 	}
 
 private:
+	/// Materialize the working coefficients at the precision of the point being evaluated.
+	/// Every evaluable type self-aligns this way (blend_block established the pattern), so no
+	/// caller and no owning System has to fan a precision out beforehand -- ADR-0057.
+	/// Precision() short-circuits when already there, so the steady state is one integer
+	/// compare.  No-op for double, which carries no precision.
+	template <typename T>
+	void SyncPrecision(Vec<T> const& vars) const
+	{
+		if constexpr (!std::is_same<T, complex_dbl>::value)
+		{
+			if (vars.size() > 0)
+			{
+				const unsigned p = bertini::Precision(vars(0));
+				if (p != precision_)
+					Precision(p);
+			}
+		}
+	}
+
 	template <typename T>
 	const Mat<T>& Working() const { return std::get<Mat<T>>(coefficients_working_); }
 
@@ -490,20 +514,6 @@ private:
 			if (a[k] != b[k])
 				return false;
 		return true;
-	}
-
-	template <typename T>
-	void SyncPrecision(Vec<T> const& vars) const
-	{
-		if constexpr (!std::is_same<T, complex_dbl>::value)
-		{
-			if (vars.size() > 0)
-			{
-				const unsigned p = bertini::Precision(vars(0));
-				if (p != precision_)
-					Precision(p);
-			}
-		}
 	}
 
 	void BuildWorking() const

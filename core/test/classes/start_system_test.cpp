@@ -486,8 +486,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_precision_16)
 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		DefaultPrecision(static_cast<unsigned int>(this_test_precision));
-		final_system.precision(static_cast<unsigned int>(this_test_precision));
-		TD.precision(static_cast<unsigned int>(this_test_precision));
 		auto start_point = TD.StartPoint<complex_mp>(ii);
 		BOOST_CHECK_EQUAL(bertini::Precision(start_point), this_test_precision);
 	}
@@ -535,8 +533,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		DefaultPrecision(static_cast<unsigned int>(this_test_precision));
-		final_system.precision(static_cast<unsigned int>(this_test_precision));
-		TD.precision(static_cast<unsigned int>(this_test_precision));
 		auto start_point = TD.StartPoint<complex_mp>(ii);
 		BOOST_CHECK_EQUAL(bertini::Precision(start_point), this_test_precision);
 	}

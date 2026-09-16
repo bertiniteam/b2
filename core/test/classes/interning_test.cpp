@@ -29,6 +29,7 @@ single-operand sum).
 
 #include <cstdlib>
 #include <sstream>
+#include <chrono>
 #include <map>
 #include "bertini2/function_tree.hpp"
 #include "bertini2/function_tree/canonical.hpp"
@@ -257,6 +258,65 @@ BOOST_AUTO_TEST_CASE(guard_restores_global_canonicalization_state)
 	// left it back at the default (on, GrevLex) so they cannot leak into other suites.
 	BOOST_CHECK(bertini::node::CanonicalizeByDefault());
 	BOOST_CHECK(bertini::node::CurrentMonomialOrder() == bertini::node::MonomialOrder::GrevLex);
+}
+
+
+// Regression test for b2 #417: MultiDegree must cost O(DAG), not O(expansion).
+//
+// The graph is hash-consed, so this expression's DAG grows ~3 nodes per level while its
+// EXPANDED form doubles -- ~260k terms against a DAG under 60 nodes at 18 levels.  A walk
+// that visits the tree costs O(expansion); one memoized by node identity costs O(DAG).
+//
+// The verdict is SCALING, not a wall-clock budget.  A budget encodes one machine's speed
+// (293 ms here measured 1057 ms on a CI runner) and fails on anything slower.  Six more
+// levels multiply the expansion by 2^6 = 64 and the DAG by about 1.5, so an O(DAG)
+// MultiDegree grows by a small factor and an O(expansion) one by ~64; the cut leaves an
+// order of magnitude on each side, and no runner speed can move a ratio.
+//
+// Only MultiDegree itself is timed.  Building the expression is still O(expansion) for now
+// (the canonicalization tie-break renders every operand -- the remaining half of #417), so
+// a build-time ratio could not tell the memo apart from its absence.
+BOOST_AUTO_TEST_CASE(multidegree_cost_follows_the_dag_not_the_expansion)
+{
+	using namespace bertini::node;
+
+	// two independent copies of the same shape, on distinct variable names, so the hash-consed
+	// graphs share nothing and neither timing benefits from the other's interned nodes
+	auto build = [](std::string const& tag, int levels)
+	{
+		auto x = Variable::Make("x" + tag);
+		auto y = Variable::Make("y" + tag);
+		auto z = Variable::Make("z" + tag);
+		std::shared_ptr<Node> e = x + y;
+		for (int level = 0; level < levels; ++level)
+			e = (e + z) * (e + x);
+		return std::make_pair(e, bertini::VariableGroup{x, y, z});
+	};
+	auto const [e12, vars12] = build("a", 12);
+	auto const [e18, vars18] = build("b", 18);
+
+	// repeated calls so the timer sees well above its resolution; each call is one traversal
+	auto time_multidegree = [](std::shared_ptr<Node> const& e, bertini::VariableGroup const& vars)
+	{
+		e->MultiDegree(vars);   // warm-up
+		auto start = std::chrono::steady_clock::now();
+		for (int rep = 0; rep < 50; ++rep)
+			e->MultiDegree(vars);
+		return std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
+	};
+	double const us12 = time_multidegree(e12, vars12);
+	double const us18 = time_multidegree(e18, vars18);
+	double const ratio = us18 / us12;
+
+	BOOST_TEST_MESSAGE("MultiDegree x50: 12 levels " << us12 << " us, 18 levels " << us18
+	                   << " us, ratio " << ratio << " (O(DAG) ~1.5, O(expansion) ~64)");
+	BOOST_CHECK_LT(ratio, 8.0);
+
+	// the memo must not change the answer
+	auto degs = e18->MultiDegree(vars18);
+	BOOST_CHECK_EQUAL(degs.size(), 3u);
+	for (auto d : degs)
+		BOOST_CHECK_GT(d, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // canonicalization
