@@ -1220,7 +1220,13 @@ bool IntegerPowerOperator::IsSame(Node const& other) const
 
 bool PowerOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 {
-	// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
+	// A power involving no variable at all is a constant, hence homogeneous of degree 0,
+	// whatever its exponent: 5^(1/2) is as constant as sqrt(5).  Degree() already answers 0
+	// for it, and the two verdicts must agree -- disagreeing left Homogenize() with nothing
+	// to do and AutoPatch() refusing the result (b2#419, an algebraic constant as coefficient).
+	if (Degree(v) == 0)
+		return true;
+	// otherwise the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
 	if (exponent_->Degree(v)==0)
 	{
 		complex_dbl exp_val = ConstantExponentValue(exponent_);
@@ -1235,7 +1241,10 @@ bool PowerOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 
 bool PowerOperator::IsHomogeneous(VariableGroup const& v) const
 {
-	// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
+	// a constant power is homogeneous whatever its exponent; see the single-variable overload
+	if (Degree(v) == 0)
+		return true;
+	// otherwise the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
 	if (exponent_->Degree(v)==0)
 	{
 		complex_dbl exp_val = ConstantExponentValue(exponent_);

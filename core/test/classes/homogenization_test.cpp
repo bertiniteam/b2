@@ -493,6 +493,172 @@ BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
 
 
 
+// ---- a variable-free subtree of ANY operator is a constant (b2#419) ----
+//
+// An algebraic constant written symbolically -- the golden ratio (1+sqrt(5))/2, or its
+// Bertini 1 spelling (5^(1/2)+1)/2 -- is a polynomial of degree 0 and homogeneous, whatever
+// operator builds it.  Every classifier must agree: Degree, IsPolynomial and IsHomogeneous
+// are consulted by different callers, and when IsHomogeneous disagreed with Degree for a
+// power with a non-integer exponent, Homogenize() found nothing to pad and AutoPatch()
+// refused the result.  Table-driven over the operators, so a new one that breaks the
+// agreement fails here by name.
+
+namespace {
+
+using Nd = std::shared_ptr<bertini::node::Node>;
+
+struct VariableFreeCase
+{
+	std::string name;
+	Nd node;
+};
+
+std::vector<VariableFreeCase> VariableFreeSubtrees()
+{
+	using namespace bertini::node;
+	using bertini::mpq_rational;
+	Nd one = Integer::Make(1), two = Integer::Make(2), three = Integer::Make(3), five = Integer::Make(5);
+	return {
+		{"sqrt(5)",        sqrt(five)},
+		{"exp(1)",         exp(one)},
+		{"log(2)",         log(two)},
+		{"sin(1)",         sin(one)},
+		{"cos(1)",         cos(one)},
+		{"tan(1)",         tan(one)},
+		{"5^(1/2)",        pow(five, mpq_rational(1, 2))},   // a power with a rational exponent: the #419 case
+		{"5^(3/2)",        pow(five, mpq_rational(3, 2))},
+		{"(1+sqrt(5))/2",  (sqrt(five) + one) / two},
+		{"(5^(1/2)+1)/2",  (pow(five, mpq_rational(1, 2)) + one) / two},   // Bertini 1's spelling of phi
+		{"sqrt(2)^3",      pow(sqrt(two), 3)},
+		{"exp(sqrt(2))",   exp(sqrt(two))},
+		{"-sqrt(3)",       -sqrt(three)},
+		{"sqrt(pi)",       sqrt(Pi())},
+	};
+}
+
+} // namespace
+
+
+BOOST_AUTO_TEST_CASE(variable_free_subtree_of_every_operator_is_a_degree_zero_homogeneous_constant)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+	VariableGroup vars{x, y, z};
+
+	for (auto const& c : VariableFreeSubtrees())
+	{
+		BOOST_TEST_CONTEXT(c.name)
+		{
+			BOOST_CHECK_EQUAL(c.node->Degree(), 0);
+			BOOST_CHECK_EQUAL(c.node->Degree(x), 0);
+			BOOST_CHECK_EQUAL(c.node->Degree(vars), 0);
+			BOOST_CHECK(c.node->IsPolynomial(vars));
+			BOOST_CHECK(c.node->IsHomogeneous(x));
+			BOOST_CHECK(c.node->IsHomogeneous(vars));
+
+			// used as a coefficient, it must leave the polynomial's degree and homogeneity alone
+			Nd f = c.node * pow(x, 2) - pow(y, 2) + pow(z, 2);
+			BOOST_CHECK_EQUAL(f->Degree(vars), 2);
+			BOOST_CHECK(f->IsPolynomial(vars));
+			BOOST_CHECK(f->IsHomogeneous(vars));
+		}
+	}
+}
+
+
+BOOST_AUTO_TEST_CASE(system_with_a_symbolic_constant_coefficient_homogenizes_and_patches)
+{
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+	VariableGroup vars{x, y, z};
+
+	for (auto const& c : VariableFreeSubtrees())
+	{
+		BOOST_TEST_CONTEXT(c.name)
+		{
+			bertini::System sys;
+			sys.AddVariableGroup(vars);
+			sys.AddFunction(c.node * pow(x, 2) - pow(y, 2) + pow(z, 2));   // already homogeneous
+			sys.AddFunction(c.node * pow(x, 2) - y);                        // needs a homogenizing variable on y
+
+			BOOST_CHECK(sys.IsPolynomial());
+			BOOST_CHECK(!sys.IsHomogeneous());
+
+			sys.Homogenize();
+			BOOST_CHECK(sys.IsHomogeneous());
+			BOOST_CHECK_EQUAL(sys.NumVariables(), 4u);
+			BOOST_CHECK_NO_THROW(sys.AutoPatch());
+			BOOST_CHECK(sys.IsPatched());
+		}
+	}
+}
+
+
+BOOST_AUTO_TEST_CASE(barth_sextic_with_the_golden_ratio_as_a_node_homogenizes_and_patches)
+{
+	// the reproduction from b2#419, with phi in Bertini 1's spelling (5^(1/2)+1)/2 -- a power
+	// with a rational exponent, which is how bertini_real's test/surface/barth6/input writes it
+	using namespace bertini::node;
+	using bertini::mpq_rational;
+
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+	VariableGroup vars{x, y, z};
+
+	Nd one = Integer::Make(1), two = Integer::Make(2), four = Integer::Make(4), five = Integer::Make(5);
+	Nd phi = (pow(five, mpq_rational(1, 2)) + one) / two;
+	Nd phi2 = pow(phi, 2);
+	Nd f = four * (phi2 * pow(x, 2) - pow(y, 2)) * (phi2 * pow(y, 2) - pow(z, 2)) * (phi2 * pow(z, 2) - pow(x, 2))
+	       - (one + two * phi) * pow(pow(x, 2) + pow(y, 2) + pow(z, 2) - one, 2);
+
+	BOOST_CHECK_EQUAL(f->Degree(vars), 6);
+	BOOST_CHECK(f->IsPolynomial(vars));
+
+	bertini::System sys;
+	sys.AddVariableGroup(vars);
+	sys.AddFunction(f);
+	sys.Homogenize();
+	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK_NO_THROW(sys.AutoPatch());
+	BOOST_CHECK(sys.IsPatched());
+}
+
+
+BOOST_AUTO_TEST_CASE(variable_dependent_non_polynomial_subtrees_stay_non_polynomial)
+{
+	// the other side of the same line: once a variable is inside, these are not polynomials,
+	// not homogeneous, and their degree is negative
+	using namespace bertini::node;
+	using bertini::mpq_rational;
+
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	VariableGroup vars{x, y};
+
+	std::vector<VariableFreeCase> cases = {
+		{"sqrt(x)",   sqrt(x)},
+		{"exp(x)",    exp(x)},
+		{"log(x)",    log(x)},
+		{"sin(x)",    sin(x)},
+		{"x^(1/2)",   pow(x, mpq_rational(1, 2))},
+		{"sqrt(x*y)", sqrt(x * y)},
+		{"2^x",       pow(Integer::Make(2), x)},
+	};
+	for (auto const& c : cases)
+	{
+		BOOST_TEST_CONTEXT(c.name)
+		{
+			BOOST_CHECK_LT(c.node->Degree(vars), 0);
+			BOOST_CHECK(!c.node->IsPolynomial(vars));
+			BOOST_CHECK(!c.node->IsHomogeneous(vars));
+		}
+	}
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
