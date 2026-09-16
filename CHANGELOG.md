@@ -69,6 +69,9 @@ _______________________________________________________________________________
 
 ## [3.5.0] - unreleased
 
+A correctness fix to the `MakeMovingHomotopy` guards: they decided function identity on a
+*presentation* rendering, which silently refused valid homotopies.
+
 ### Removed
 
 - **A System no longer carries a precision.**  `System::precision(unsigned)`,
@@ -107,6 +110,16 @@ _______________________________________________________________________________
 
 ### Fixed
 
+- `MakeMovingHomotopy` no longer rejects a valid deformation whose two moving endpoints merely
+  *print* the same.  Both of its guards (a fixed function duplicated in the moving rows, and a
+  moving row identical at both endpoints) compared functions via `operator<<`, whose default
+  stream precision is **6 significant digits** -- so two genuinely different rows agreeing to 6
+  digits compared equal and the homotopy was refused with a message asserting the endpoints were
+  the same row.  The collision is ~1e-6 *relative*, so it bit at every coordinate scale.  Identity
+  is now decided on `node::CanonicalEncoding` -- the exact-value encoding the content digests are
+  built on (ADR-0042) -- while `operator<<` is still used for the human-readable message text.
+  Found by a surface cell decomposition whose slice values were 1.9e-5 apart at a magnitude of
+  2409, and reproduced at order one (0.162749 vs 0.1627491).  (bertiniteam/b2#391)
 - The power series endgame left `previous_approximation_` holding a COPY of
   `final_approximation_` after every successful run.  It assigned the two at the bottom of its
   convergence loop while testing the loop condition at the top, so the assignment ran one final
