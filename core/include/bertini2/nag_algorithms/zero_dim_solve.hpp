@@ -194,6 +194,12 @@ struct SolutionMetaData
 
 	///// things computed in endgame only
 	NumErrorT condition_number; 				///< Spectral-norm condition number of the target system's Jacobian at the endpoint (the quantity `condition_number_threshold` is specified against).
+	/// The singular values of the (homogenized, patched) target system's Jacobian at the endpoint,
+	/// largest first, at the endpoint's own precision -- `condition_number` is the ratio of the first
+	/// to the last.  Published raw so a caller can read a numerical rank at a tolerance of ITS
+	/// choosing: no single tolerance is right for every endpoint, and a rank verdict baked in here
+	/// would misjudge someone's regular root (b2#409).  Empty when the endgame did not succeed.
+	Vec<NumErrorT> singular_values;
 	NumErrorT newton_residual; 				///< The latest Newton residual.
 	ComplexT final_time_used;   			///< The final value of time tracked to.
 	NumErrorT accuracy_estimate; 			///< Accuracy estimate between extrapolations.
@@ -218,6 +224,11 @@ struct SolutionMetaData
 	bool is_real = false;       		///< Whether the (dehomogenized) endpoint is real.
 	bool is_finite = false;     		///< Whether the endpoint is finite (not at infinity).
 	bool is_singular = false;       		///< Whether the endpoint is singular (multiple, or ill-conditioned).
+	/// Whether this path was flagged as crossing another at the endgame boundary and the crossing
+	/// was NOT resolved by re-tracking.  Its success codes may still read Success, but the library
+	/// has already warned that this endpoint may be wrong; consumers that build on the endpoint
+	/// should check this flag, not just the codes (b2#365).
+	bool crossing_unresolved = false;
 	// nonsolution flag: a finite, successful endpoint that is NOT a solution of the actual target
 	// system -- a nonsolution.  ZeroDimSolver sets this when it squares up an over-determined system:
 	// the randomized square system has extraneous roots that satisfy the random combinations but not
@@ -251,6 +262,10 @@ struct SolutionMetaData
 			 && this->is_finite == other.is_finite
 			 && this->is_singular == other.is_singular
 			 && this->is_nonsolution == other.is_nonsolution
+			 && this->crossing_unresolved == other.crossing_unresolved
+			 && this->singular_values.size() == other.singular_values.size()
+			 && (this->singular_values.size() == 0
+			     || (this->singular_values.array() == other.singular_values.array()).all())
 		;
 
 		return result; }
@@ -271,6 +286,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 	out << "pre_endgame_success_code = " << meta.pre_endgame_success_code << std::endl;
 
 	out << "condition_number = " << meta.condition_number << std::endl;
+	out << "singular_values = " << meta.singular_values.transpose() << std::endl;
 	out << "newton_residual = " << meta.newton_residual << std::endl;
 	out << "final_time_used = " << meta.final_time_used << std::endl;
 	out << "accuracy_estimate = " << meta.accuracy_estimate << std::endl;
@@ -288,6 +304,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 	out << "is_finite = " << meta.is_finite << std::endl;
 	out << "is_singular = " << meta.is_singular << std::endl;
 	out << "is_nonsolution = " << meta.is_nonsolution << std::endl;
+	out << "crossing_unresolved = " << meta.crossing_unresolved << std::endl;
 
 	return out;
 }
@@ -785,6 +802,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					}
 					midpath_report_.num_resolve_attempts = num_resolve_attempts;
 					midpath_report_.passed = passed;
+					FlagUnresolvedCrossings(passed);
 					if (!passed)
 						std::cerr << "warning: " << midpath_report_.num_crossings_detected
 						          << " path crossing(s) detected at the endgame boundary remained unresolved "
@@ -1895,6 +1913,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 				midpath_report_.num_resolve_attempts = num_resolve_attempts;
 				midpath_report_.passed = passed;
+				FlagUnresolvedCrossings(passed);
 
 				if (!passed)
 					std::cerr << "warning: " << midpath_report_.num_crossings_detected
@@ -1904,6 +1923,25 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 					          << "or a tighter tracking tolerance.  See EndgameBoundaryMetadata()." << std::endl;
 			}
 
+
+			/**
+			\brief Mark every path still flagged after the last crossing check as unresolved.
+
+			Called once the resolve rounds are over, in both the serial flow and the distributed
+			manager, so the per-path verdict matches the report and the warning: an endpoint the
+			library cannot vouch for carries `crossing_unresolved = true` in its metadata even
+			though its success codes may read Success (b2#365).  A re-run in a later round installs
+			fresh metadata, so nothing set here survives a successful resolve.
+
+			\param passed Whether the last check found no crossings.
+			*/
+			void FlagUnresolvedCrossings(bool passed)
+			{
+				if (passed)
+					return;
+				for (auto const& v : midpath_.GetCrossedPaths())
+					solution_final_metadata_[static_cast<SolnIndT>(v.index())].crossing_unresolved = true;
+			}
 
 			/**
 			\brief Run the endgame on one path (boundary→target), against `ctx`.
@@ -1981,7 +2019,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				}
 				smd.function_residual = static_cast<NumErrorT>(ctx.target_sys.Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>());
 				smd.final_time_used = ctx.endgame.LatestTime();
-				smd.condition_number = EndpointSpectralConditionNumber(ctx.target_sys, solutions_post_endgame_[soln_ind]);
+				smd.singular_values  = EndpointSingularValues(ctx.target_sys, solutions_post_endgame_[soln_ind]);
+				smd.condition_number = SpectralConditionNumberOf(smd.singular_values);
 				smd.newton_residual = ctx.tracker.LatestNormOfStep();
 
 				smd.accuracy_estimate = ctx.endgame.ApproximateError();
@@ -2173,14 +2212,47 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			*/
 			static NumErrorT EndpointSpectralConditionNumber(SystemType const& sys, Vec<BaseComplexT> const& endpoint)
 			{
+				return SpectralConditionNumberOf(EndpointSingularValues(sys, endpoint));
+			}
+
+			/**
+			\brief The singular values of the system's Jacobian at an endpoint, largest first.
+
+			The spectrum behind `EndpointSpectralConditionNumber`, kept whole: it is what a caller
+			needs to read a numerical rank at a tolerance of its own choosing (b2#409).
+
+			\param sys The (homogenized, patched) system whose Jacobian to measure; its precision
+			           must already match the endpoint's.
+			\param endpoint The solution point, in the system's own (homogenized) coordinates.
+			\return The singular values in decreasing order, as `NumErrorT`.
+			*/
+			static Vec<NumErrorT> EndpointSingularValues(SystemType const& sys, Vec<BaseComplexT> const& endpoint)
+			{
 				const auto J = sys.Jacobian(endpoint);
-				const auto singular_values = Eigen::JacobiSVD<Mat<BaseComplexT>>(J).singularValues();
+				const auto sv = Eigen::JacobiSVD<Mat<BaseComplexT>>(J).singularValues();
+				Vec<NumErrorT> out(sv.size());
+				for (Eigen::Index i = 0; i < sv.size(); ++i)
+					out(i) = static_cast<NumErrorT>(sv(i));
+				return out;
+			}
+
+			/**
+			\brief The spectral condition number from a spectrum: largest over smallest singular value.
+
+			A singular-to-working-precision Jacobian (smallest singular value 0, or an empty list)
+			yields +infinity, which compares correctly against any threshold.
+
+			\param singular_values The singular values, largest first (see EndpointSingularValues).
+			\return The spectral condition number, as `NumErrorT`.
+			*/
+			static NumErrorT SpectralConditionNumberOf(Vec<NumErrorT> const& singular_values)
+			{
 				if (singular_values.size() == 0)
 					return std::numeric_limits<NumErrorT>::infinity();
-				const auto& smallest = singular_values(singular_values.size()-1);
+				const NumErrorT smallest = singular_values(singular_values.size()-1);
 				if (smallest <= 0)
 					return std::numeric_limits<NumErrorT>::infinity();
-				return static_cast<NumErrorT>(singular_values(0) / smallest);
+				return singular_values(0) / smallest;
 			}
 
 
@@ -2211,6 +2283,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				r.solution    = solutions_post_endgame_[idx];
 				r.function_residual = smd.function_residual;
 				r.condition_number  = smd.condition_number;
+				r.singular_values   = smd.singular_values;
 				r.newton_residual   = smd.newton_residual;
 				r.final_time_used   = smd.final_time_used;
 				r.accuracy_estimate = smd.accuracy_estimate;
@@ -2243,6 +2316,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				smd.endgame_success_code     = r.endgame_success_code;
 				smd.function_residual   = r.function_residual;
 				smd.condition_number    = r.condition_number;
+				smd.singular_values     = r.singular_values;
 				smd.newton_residual     = r.newton_residual;
 				smd.final_time_used     = r.final_time_used;
 				smd.accuracy_estimate   = r.accuracy_estimate;
