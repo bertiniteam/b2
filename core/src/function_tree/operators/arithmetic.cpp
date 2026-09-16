@@ -591,7 +591,7 @@ int SumOperator::Degree(VariableGroup const& vars) const
 }
 
 
-std::vector<int> SumOperator::MultiDegree(VariableGroup const& vars) const
+std::vector<int> SumOperator::MultiDegreeImpl(VariableGroup const& vars) const
 {
 	std::vector<int> deg(vars.size(),0);
 	for (auto iter : operands_)
@@ -892,7 +892,7 @@ int MultOperator::Degree(VariableGroup const& vars) const
 	return deg;
 }
 
-std::vector<int> MultOperator::MultiDegree(VariableGroup const& vars) const
+std::vector<int> MultOperator::MultiDegreeImpl(VariableGroup const& vars) const
 {
 	std::vector<int> deg(vars.size(),0);
 	for (auto iter : operands_)
@@ -1101,7 +1101,7 @@ int PowerOperator::Degree(VariableGroup const& vars) const
 }
 
 
-std::vector<int> PowerOperator::MultiDegree(VariableGroup const& vars) const
+std::vector<int> PowerOperator::MultiDegreeImpl(VariableGroup const& vars) const
 {
 	std::vector<int> deg(vars.size(),0);
 	for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
