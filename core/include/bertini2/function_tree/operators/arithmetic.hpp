@@ -330,12 +330,6 @@ namespace node{
 			return operand_->Degree(vars);
 		}
 
-		/// \brief Multidegree in a variable group: negation preserves its operand's multidegree.
-		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override
-		{
-			return operand_->MultiDegree(vars);
-		}
-
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			return operand_->IsHomogeneous(v);
