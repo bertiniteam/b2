@@ -132,6 +132,7 @@ set(PYBERTINI_HEADERS
     include/eigenpy_interaction.hpp
     include/function_tree_export.hpp
     include/mpfr_export.hpp
+    include/newton_refine_export.hpp
     include/random_export.hpp
     include/node_export.hpp
     include/symbol_export.hpp
@@ -165,6 +166,7 @@ set(PYBERTINI_SOURCES
     src/endgame_double_export.cpp
     src/endgame_mp_export.cpp
     src/endgame_amp_export.cpp
+    src/newton_refine_export.cpp
     src/random_export.cpp
     src/mpfr_export.cpp
     src/linalg_export.cpp

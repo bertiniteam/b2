@@ -255,6 +255,24 @@ namespace bertini {
 			return precision_;
 		}
 
+		/// Materialize the working coefficients at the precision of the point being evaluated.
+		/// Every evaluable type self-aligns this way, so no caller and no owning System has to
+		/// fan a precision out beforehand -- ADR-0057.  Precision() short-circuits when already
+		/// there, so the steady state is one integer compare.  No-op for double.
+		template <typename T>
+		void SyncPrecision(Vec<T> const& x) const
+		{
+			if constexpr (!std::is_same<T, complex_dbl>::value)
+			{
+				if (x.size() > 0)
+				{
+					const unsigned p = bertini::Precision(x(0));
+					if (p != precision_)
+						Precision(p);
+				}
+			}
+		}
+
 		/**
 		\brief Set the precision of the patch.
 	
@@ -309,6 +327,8 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
 
+			SyncPrecision(x);
+
 			#ifndef BERTINI_DISABLE_ASSERTS
 			if (! (function_values.size()>=NumVariableGroups()) )
 			{
@@ -316,8 +336,9 @@ namespace bertini {
 				ss << "container for function values must be of length at least as long as the number of variable groups.  the input vector into which to write is of length " << function_values.size();
 				throw std::runtime_error(ss.str());
 			}
-//			assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
-//			 		&& "precision of input vector must match current working precision of patch during evaluation"
+			// Formerly an assert that the input's precision MATCHED the patch's -- disabled long
+			// ago because it could not be honoured.  A patch is an evaluable type, so it now
+			// self-aligns instead of demanding to be aligned for: ADR-0057.
 //			 	  );
 			#endif
 
@@ -366,7 +387,9 @@ namespace bertini {
 		void JacobianInPlace(Eigen::MatrixBase<Derived> & jacobian, Vec<T> const& x) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
-			(void)x; // only used in asserts; the jacobian of a patch is constant
+
+			SyncPrecision(x);   // the jacobian is constant in x, but it is written FROM the
+			                    // working coefficients, so they must be at x's precision
 
 
 			#ifndef BERTINI_DISABLE_ASSERTS

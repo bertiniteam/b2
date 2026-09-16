@@ -50,6 +50,32 @@ namespace bertini{
 	namespace tracking{
 
 		/**
+		\brief Whether a failed step leaves the tracker with no corrective action taken.
+
+		The stepping loop answers an ordinary failed step by adjusting precision and/or
+		stepsize and trying again, so the retry differs from the attempt that failed.  A
+		few outcomes admit no such adjustment: the tracker's state is left exactly as it
+		was, and retrying would repeat the identical step forever.  Those outcomes are
+		terminal -- the path must fail with that code instead of being retried.
+
+		Currently the sole member is \c FailedToSelectPrecisionAndStepsize, which the AMP
+		adjusters report when MinimizeTrackingCost finds no valid (precision, stepsize)
+		pair anywhere in the allowed window.  It assigns neither, so \c current_precision_
+		and \c current_stepsize_ survive the failure unchanged.
+
+		\param c The code returned by a tracker iteration.
+		\return True if the tracking loop must stop rather than retry.
+
+		\see Tracker::TrackPath
+		*/
+		inline
+		bool StepFailureIsTerminal(SuccessCode c)
+		{
+			return c == SuccessCode::FailedToSelectPrecisionAndStepsize;
+		}
+
+
+		/**
 		\class Tracker
 
 		\brief Base tracker class for trackers offered in Bertini2.
@@ -296,7 +322,17 @@ namespace bertini{
 					else if (step_success_code_==SuccessCode::Success)
 						OnStepSuccess();
 					else
+					{
 						OnStepFail();
+						// A terminal failure adjusted nothing, so the next iteration would be
+						// bit-identical to the one that just failed -- an infinite loop that
+						// burns a core forever instead of failing the path.
+						if (StepFailureIsTerminal(step_success_code_))
+						{
+							PostTrackCleanup();
+							return step_success_code_;
+						}
+					}
 
 				}// re: while
 

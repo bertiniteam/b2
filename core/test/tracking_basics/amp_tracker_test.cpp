@@ -1049,6 +1049,82 @@ BOOST_AUTO_TEST_CASE(minimize_tracking_cost_throws_when_no_precision_satisfies_m
 	);
 }
 
+// Regression test for the AMP stepping deadlock (b2 #410).
+//
+// MinimizeTrackingCost throws when no (precision, stepsize) pair anywhere in the
+// allowed window satisfies criterion B.  Both AMP adjusters catch that throw and
+// report FailedToSelectPrecisionAndStepsize -- but the throw happens BEFORE either
+// value is assigned, so current_precision_ and current_stepsize_ survive the failed
+// step untouched.  The stepping loop used to treat that code like any other failed
+// step and simply try again; with nothing changed, the retry was bit-identical, and
+// TrackPath never returned.  Observed in the wild: 750k failed steps at a frozen
+// precision of 20 and a frozen stepsize, one core pegged, no progress, forever.
+//
+// Here the window is emptied on purpose -- a tracking tolerance demanding ~40 digits
+// against maximum_precision = 20 -- so no valid pair exists.  TrackPath must RETURN.
+// The timeout is the regression guard: without the fix this case hangs rather than
+// fails, which would wedge CI instead of reporting.
+BOOST_AUTO_TEST_CASE(amp_tracker_terminates_when_no_precision_stepsize_pair_exists,
+                     * boost::unit_test::timeout(60))
+{
+	DefaultPrecision(16);
+	using namespace bertini::tracking;
+
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	System sys;
+	VariableGroup v{x, y};
+	sys.AddVariableGroup(v);
+	sys.AddPathVariable(t);
+	sys.AddFunction(t * (pow(x, 2) - 1) + (1 - t) * (pow(x, 2) + pow(y, 2) - 4));
+	sys.AddFunction(t * (y - 1) + (1 - t) * (2 * x + 5 * y));
+
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
+	AMP.maximum_precision = 20;   // ceiling BELOW the digits the tolerance demands
+
+	bertini::tracking::AMPTracker tracker(sys);
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
+
+	tracker.Setup(Predictor::Euler,
+	              1e-40,          // ~40 digits required; the ceiling is 20
+	              1e5,
+	              stepping_preferences,
+	              newton_preferences);
+	tracker.PrecisionSetup(AMP);
+
+	mpfr t_start(1);
+	mpfr t_end(0);
+
+	Vec<mpfr> start_point(2);
+	start_point << mpfr(1), mpfr(1);
+
+	Vec<mpfr> end_point;
+	auto tracking_success = tracker.TrackPath(end_point, t_start, t_end, start_point);
+
+	// The point of the test: it comes back at all, and it comes back a failure.
+	BOOST_CHECK(tracking_success != bertini::SuccessCode::Success);
+	BOOST_CHECK(tracking_success == bertini::SuccessCode::FailedToSelectPrecisionAndStepsize);
+}
+
+// The predicate the stepping loop consults.  A terminal code is one for which the
+// tracker took no corrective action, so retrying repeats the identical step.
+BOOST_AUTO_TEST_CASE(terminal_step_codes_are_exactly_the_ones_that_adjust_nothing)
+{
+	using namespace bertini::tracking;
+
+	BOOST_CHECK(StepFailureIsTerminal(bertini::SuccessCode::FailedToSelectPrecisionAndStepsize));
+
+	// every one of these leaves the tracker adjusted, so the loop may retry
+	BOOST_CHECK(!StepFailureIsTerminal(bertini::SuccessCode::Success));
+	BOOST_CHECK(!StepFailureIsTerminal(bertini::SuccessCode::HigherPrecisionNecessary));
+	BOOST_CHECK(!StepFailureIsTerminal(bertini::SuccessCode::FailedToConverge));
+	BOOST_CHECK(!StepFailureIsTerminal(bertini::SuccessCode::MatrixSolveFailure));
+	BOOST_CHECK(!StepFailureIsTerminal(bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction));
+}
+
 BOOST_AUTO_TEST_CASE(set_start_precision_overrides_to_higher_precision)
 {
 	DefaultPrecision(16);
