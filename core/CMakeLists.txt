@@ -151,6 +151,7 @@ set(detail_headers
     include/bertini2/records/config_encoding.hpp
     include/bertini2/records/derive.hpp
     include/bertini2/records/output_directory.hpp
+    include/bertini2/records/load_system.hpp
     include/bertini2/records/draw_functions.hpp
 )
 
@@ -187,6 +188,7 @@ set(functiontreeinclude_HEADERS
 	include/bertini2/function_tree/simplify.hpp
 	include/bertini2/function_tree/canonical.hpp
 	include/bertini2/function_tree/canonical_encoding.hpp
+	include/bertini2/function_tree/canonical_decoding.hpp
 	include/bertini2/function_tree/reintern.hpp
 )
 
@@ -353,6 +355,7 @@ set(basics_sources
     src/records/config_encoding.cpp
     src/records/derive.cpp
     src/records/output_directory.cpp
+    src/records/load_system.cpp
     src/records/producer.cpp
 )
 
@@ -363,6 +366,7 @@ set(function_tree_sources
     src/function_tree/simplify.cpp
     src/function_tree/canonical.cpp
     src/function_tree/canonical_encoding.cpp
+    src/function_tree/canonical_decoding.cpp
     src/function_tree/reintern.cpp
     src/function_tree/operators/arithmetic.cpp
     src/function_tree/operators/trig.cpp
@@ -386,6 +390,7 @@ set(system_source_files
     src/system/start_base.cpp
     src/system/system.cpp
     src/system/content_identity.cpp
+    src/system/canonical_decoding.cpp
     src/system/straight_line_program.cpp
     src/system/start/total_degree_linear_product.cpp
     src/system/start/total_degree_binomial.cpp
@@ -835,6 +840,7 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/function_tree_transform.cpp
 		test/classes/structural_hash_test.cpp
 		test/classes/canonical_encoding_test.cpp
+		test/classes/canonical_decoding_test.cpp
 		test/classes/reintern_test.cpp
 		test/classes/interning_test.cpp
 		test/classes/system_test.cpp

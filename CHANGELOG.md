@@ -67,6 +67,20 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Added
+
+- The records archive is reloadable.  Every system and homotopy a solve records is stored as its
+  exact canonical encoding (the text its content digest is the hash of); there is now a reader for
+  that text: `System.from_canonical(text)` rebuilds a system from it, `System.canonical_encoding()`
+  produces it, and `bertini.records.load_system(digest, directory)` fetches and rebuilds an
+  archived one.  The rebuilt system's content digest equals the archived one, and that equality is
+  checked on load.  Classic (Bertini 1) text plays no part in persistence.  (C++:
+  `System::FromCanonicalEncoding`, `records::LoadSystem`, `node::DecodeCanonical`.)
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening

@@ -863,6 +863,42 @@ def annotate(point, key, value, directory=None):
         point.annotations[str(key)] = value
 
 
+def load_system(digest, directory=None):
+    """Load a system or homotopy the archive stored, by its content digest.
+
+    Every recording solve files the system it was asked about and the homotopy it tracked
+    under ``definitions/systems/``, each as its exact canonical encoding.  This rebuilds one
+    of them: ``load_system(result.target_digest)`` or, for any :class:`~bertini.System`,
+    ``load_system(sys.content_digest())``.  The rebuilt system's ``content_digest()`` equals
+    the digest asked for -- that equality is checked, and is the proof it is the archived
+    object.
+
+    Parameters
+    ----------
+    digest : str
+        The content digest (64 hex characters), as ``System.content_digest()`` gives it and
+        the run records carry it.
+    directory : path-like, optional
+        The records directory; defaults to the ambient one (:func:`records_dir`).
+
+    Returns
+    -------
+    bertini.System
+        The archived system, interned: an equal system already alive in this process is what
+        comes back (the underlying object is shared, though the Python handle may be a new
+        one).  Sealed, like any interned system; ``clone()`` for a mutable copy.
+
+    Raises
+    ------
+    RuntimeError
+        When no definition has that digest, when the encoding is of a version this build
+        does not read or was written under other canonicalization settings, or when the
+        rebuilt digest differs from the one asked for.
+    """
+    from bertini._pybertini.records import load_system as _load_system
+    return _load_system(_directory(directory), str(digest))
+
+
 def load(name=None, directory=None):
     """Load saved results by name -- the other half of :func:`save`.
 

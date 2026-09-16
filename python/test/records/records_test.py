@@ -662,3 +662,26 @@ def test_chained_deficient_target_paths_never_junk_success(tmp_path):
     for m in r2.solver.solution_metadata():
         # a path recorded successful must actually sit on a root
         assert float(m.function_residual) < 1e-6
+
+
+def test_archived_system_reloads_by_digest(tmp_path):
+    # the archive stores each system as its canonical encoding; load_system rebuilds it, and
+    # the content digest is the proof it is the same object (an interface check -- the
+    # reader's coverage of every node and block kind is in the C++ tests)
+    d = str(tmp_path / 'records')
+    sys = circle_line()
+    pb.solve(sys, seed=42, directory=d)
+
+    loaded = pb.records.load_system(sys.content_digest(), d)
+    assert loaded.is_same(sys)
+    assert loaded.content_digest() == sys.content_digest()
+    assert pb.records.load_system(sys.content_digest(), d).is_same(loaded)   # and again
+
+    text = sys.canonical_encoding()
+    assert text.startswith('b2sysenc/')
+    assert System.from_canonical(text).is_same(sys)
+
+    with pytest.raises(RuntimeError):
+        pb.records.load_system('0' * 64, d)                  # nothing filed there
+    with pytest.raises(RuntimeError):
+        System.from_canonical(text.replace('b2sysenc/1', 'b2sysenc/9', 1))   # a version this build does not read

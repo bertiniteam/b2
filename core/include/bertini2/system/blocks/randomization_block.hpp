@@ -216,6 +216,27 @@ public:
 		}
 	}
 
+	/**
+	\brief Mark the block homogenized with the given homogenizing variables, WITHOUT touching the
+	operand -- for a loader restoring an archived block whose operand is already homogenized
+	(the canonical-encoding reader).  Never call this after Homogenize.
+
+	\param hom_vars The homogenizing variable of each affine variable group, in group order.
+	*/
+	void RestoreHomogenization(std::vector<Var> hom_vars)
+	{
+		if (hom_vars.size() != num_groups_)
+			throw std::invalid_argument("RandomizationBlock: " + std::to_string(hom_vars.size())
+				+ " homogenizing variables for " + std::to_string(num_groups_) + " variable groups");
+		hom_vars_ = std::move(hom_vars);
+		homogenized_ = true;
+		hom_var_index_.assign(num_groups_, -1);
+		auto const& ordering = operand_->Variables();
+		for (size_t g = 0; g < num_groups_; ++g)
+			for (size_t k = 0; k < ordering.size(); ++k)
+				if (ordering[k] == hom_vars_[g]) { hom_var_index_[g] = static_cast<int>(k); break; }
+	}
+
 	/// The randomization itself adds no path-variable dependence; it inherits the operand's.
 	bool DependsOnPathVariable() const { return operand_->HavePathVariable(); }
 

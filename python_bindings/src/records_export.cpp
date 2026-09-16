@@ -27,6 +27,7 @@ of bertini2 produce byte-identical structure.
 
 #include "records_export.hpp"
 #include <bertini2/records/output_directory.hpp>
+#include <bertini2/records/load_system.hpp>
 
 namespace bertini { namespace python {
 
@@ -117,7 +118,25 @@ void ExportRecords()
 			"(Re)write INDEX.txt: one line per run.")
 		.def("describe", &records::OutputDirectory::Describe, (arg("self")),
 			"One human line: how much is here.")
+		.def("get_definition", &records::OutputDirectory::GetDefinition, (arg("self"), arg("id")),
+			"The stored definition document with the given id (the content of the file under "
+			"definitions/), as a string.  Raises RuntimeError if there is no such definition.")
+		.def("has_definition", &records::OutputDirectory::HasDefinition, (arg("self"), arg("id")),
+			"Whether a definition with the given id is stored.")
 		;
+
+	def("load_system",
+		+[](records::OutputDirectory const& directory, std::string const& digest_hex) {
+			// the representative is sealed; a non-const handle is safe in the same sense the
+			// C++ const is (structural mutators raise) -- see intern_system
+			return std::const_pointer_cast<System>(records::LoadSystem(directory, digest_hex));
+		},
+		(arg("directory"), arg("digest")),
+		"Load the system archived under the given content digest in the records directory: "
+		"decode its canonical encoding, verify the rebuilt system's content_digest() equals the "
+		"digest it was filed under, and intern it (an equal system already alive in this process "
+		"comes back as that object).  Raises RuntimeError when there is no such definition, when "
+		"the encoding cannot be read by this build, or when the digests differ.");
 }
 
 }} // namespaces
