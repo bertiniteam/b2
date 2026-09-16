@@ -67,7 +67,7 @@ int Differential::Degree(VariableGroup const& /*vars*/) const
 	return 0;
 }
 
-std::vector<int> Differential::MultiDegree(VariableGroup const& vars) const
+std::vector<int> Differential::MultiDegreeImpl(VariableGroup const& vars) const
 {
 	return std::vector<int>(vars.size(),0);
 }

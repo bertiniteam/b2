@@ -187,6 +187,42 @@ namespace node{
 		bucket.push_back(candidate);                               // miss: register and keep
 		return candidate;
 	}
+
+	namespace {
+		/// Memo for one top-level MultiDegree call: node identity -> its degrees.  Thread-local
+		/// because node graphs are shared across threads but a traversal is not.  Null when no
+		/// traversal is in flight, which is how the outermost call knows to own the memo.
+		thread_local std::unordered_map<Node const*, std::vector<int>>* multidegree_memo = nullptr;
+		/// The variable group the in-flight memo was built for.  A multidegree is only
+		/// meaningful relative to a variable group, so a nested call asking about a DIFFERENT
+		/// group must not read this memo -- it computes unmemoized instead.  Within one
+		/// traversal the same `vars` reference is handed down, so identity is the right test.
+		thread_local VariableGroup const* multidegree_memo_vars = nullptr;
+	}
+
+	std::vector<int> Node::MultiDegree(VariableGroup const& vars) const
+	{
+		if (multidegree_memo && multidegree_memo_vars != &vars)
+			return this->MultiDegreeImpl(vars);      // different variable group: do not memoize
+
+		if (multidegree_memo)                       // inside a traversal: consult the memo
+		{
+			auto found = multidegree_memo->find(this);
+			if (found != multidegree_memo->end())
+				return found->second;
+			auto computed = this->MultiDegreeImpl(vars);
+			(*multidegree_memo)[this] = computed;
+			return computed;
+		}
+
+		// outermost call: own the memo, and clear it however we leave
+		std::unordered_map<Node const*, std::vector<int>> memo;
+		multidegree_memo      = &memo;
+		multidegree_memo_vars = &vars;
+		struct Guard { ~Guard() { multidegree_memo = nullptr; multidegree_memo_vars = nullptr; } } guard;
+		return this->MultiDegreeImpl(vars);
+	}
+
 } // namespace node
 } // namespace bertini
 

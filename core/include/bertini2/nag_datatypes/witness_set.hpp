@@ -260,7 +260,9 @@ public:
 				// const (they mutate only the system's mutable evaluation state), so this restores
 				// the held system in place regardless of object-management policy.
 				GetSystem().Differentiate();
-				GetSystem().precision(GetSystem().precision());
+				// the precision self-assignment that used to sit here (a re-materialize at the
+				// value already held) is unnecessary: the first evaluation after load
+				// materializes the system at the precision of the point it is given (#377)
 			}
 
 			BOOST_SERIALIZATION_SPLIT_MEMBER()

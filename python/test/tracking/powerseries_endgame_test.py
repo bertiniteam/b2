@@ -34,6 +34,8 @@ At t=1: x^3+1=0 (three simple roots).
 At t=0: (x-1)^3=0 (triple root x=1, cycle number = 3).
 """
 
+import math
+
 import numpy as np
 import pytest
 
@@ -196,7 +198,6 @@ def test_fixed_multiple_pseg_full_run(cubic_homotopy, precision):
     Mirrors fixed_multiple_powerseries_test.cpp/pseg_full_run.
     """
     s, x, t = cubic_homotopy
-    s.precision(precision)
 
     tracker = MultiplePrecisionTracker(s)
     tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, SteppingConfig(), NewtonConfig())
@@ -244,3 +245,90 @@ def test_amp_pseg_full_run(cubic_homotopy, precision):
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
     assert mp.abs(fa[0] - mpfr_complex(1)) < 1e-11
+
+
+# ---------------------------------------------------------------------------
+# flavor-config runtime accessors (get/set_powerseries_settings)
+# ---------------------------------------------------------------------------
+
+def test_amp_pseg_flavor_config_setters(cubic_homotopy):
+    """get/set_powerseries_settings round-trips, returns a DETACHED copy, and a
+    mutated endgame still converges the cycle-3 endpoint.  Regression for the
+    constructor-only flavor-config gap: the PowerSeriesConfig (max_cycle_number,
+    ...) was unreachable once the endgame was built.  The accessors are forwarded
+    through the pure-Python endgame wrapper, so this is the path the port uses."""
+    s, x, t = cubic_homotopy
+    ampconfig = amp_config_from(s)
+    tracker = AMPTracker(s)
+    tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, SteppingConfig(), NewtonConfig())
+    tracker.precision_setup(ampconfig)
+
+    start = np.array([mpfr_complex(-1)])
+    bdry = np.array(np.zeros(1, dtype=np.int64), dtype=mpfr_complex)
+    code = tracker.track_path(bdry, mpfr_complex(1), mpfr_complex("0.1"), start)
+    assert code == SuccessCode.Success
+
+    eg = AMPPowerSeriesEndgame(tracker, mpfr_complex("0.1"))
+
+    got = eg.get_powerseries_settings()
+    assert got.max_cycle_number == 6  # library default
+
+    got.max_cycle_number = 12
+    eg.set_powerseries_settings(got)
+
+    back = eg.get_powerseries_settings()
+    assert back.max_cycle_number == 12
+
+    # get returns a DETACHED copy -- mutating it must not reach into the endgame
+    back.max_cycle_number = 3
+    assert eg.get_powerseries_settings().max_cycle_number == 12
+
+    # a mutated endgame still converges the cycle-3 triple root
+    code = eg.run(bdry)
+    assert code == SuccessCode.Success
+    assert mp.abs(eg.final_approximation()[0] - mpfr_complex(1)) < 1e-11
+    assert eg.cycle_number() == 3
+
+
+def test_pseg_approximation_accessors_are_a_coherent_triple(cubic_homotopy):
+    """final_approximation / previous_approximation / approximate_error are one triple.
+
+    The error the endgame reports must be the infinity norm of the difference between the
+    two vectors it hands back -- otherwise a caller asking for a second, coarser sample of
+    the root (to watch how a derived quantity moves as the approximation improves) gets a
+    number that describes a pair they cannot see.
+
+    REGRESSION: the power series endgame used to overwrite previous_approximation with a
+    copy of final_approximation on its way out of the convergence loop, so the two came
+    back equal on every successful run.  Cauchy never did.
+    """
+    s, x, t = cubic_homotopy
+
+    tracker = DoublePrecisionTracker(s)
+    tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, SteppingConfig(), NewtonConfig())
+
+    eg = FixedDoublePowerSeriesEndgame(tracker, complex(0.1, 0))
+
+    # no approximation computed yet -> no estimate.  infinity, not nan: the convergence
+    # gates compare this in both directions, and nan loses every comparison.
+    assert math.isinf(eg.approximate_error())
+
+    current_space = np.array([complex(5.000000000000001e-01, 9.084258952712920e-17)])
+    code = eg.run(current_space)
+    assert code == SuccessCode.Success
+
+    fa = np.atleast_1d(np.asarray(eg.final_approximation()))
+    pa = np.atleast_1d(np.asarray(eg.previous_approximation()))
+    assert fa.shape == pa.shape == current_space.shape
+
+    err = eg.approximate_error()
+    assert err <= eg.get_endgame_settings().final_tolerance
+
+    # relative to err, not anchored: the converged error is below any absolute tolerance
+    # one would think to write, so an anchored check passes even when previous is a copy
+    # of final (gap 0 vs err ~1e-12).  Relative, that bug is a ratio of exactly 1.
+    gap = max(abs(complex(a) - complex(b)) for a, b in zip(fa, pa))
+    if err == 0.0:
+        assert gap == 0.0
+    else:
+        assert abs(gap - err) <= 1e-6 * err
