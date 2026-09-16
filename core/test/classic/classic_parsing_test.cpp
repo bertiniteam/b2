@@ -812,6 +812,105 @@ BOOST_AUTO_TEST_CASE(multipoint_emoji_variable_parses)
 }
 
 
+
+// ---- the classic-input round trip, and the three defects found in it -----------------
+//
+// SystemToClassicFile() emits a complete Bertini 1 file (CONFIG ... END; then
+// INPUT ... END;) because its purpose is running the same problem in Bertini 1.  The
+// grammar reads the INPUT-section body.  The two must round-trip, and where they cannot,
+// they must say so rather than yield an empty system.  See #395, #396, #397.
+
+namespace {
+	/// f = (x^2+y^2+z^2+3)^2 - 16(x^2+y^2) -- a torus.  TOTAL DEGREE 4.
+	bertini::System TorusSystem()
+	{
+		using bertini::node::Variable;
+		auto x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+		bertini::System sys;
+		bertini::VariableGroup vars{x, y, z};
+		sys.AddVariableGroup(vars);
+		sys.AddFunction(pow(pow(x,2)+pow(y,2)+pow(z,2)+3, 2) - 16*(pow(x,2)+pow(y,2)));
+		return sys;
+	}
+}
+
+BOOST_AUTO_TEST_CASE(classic_file_of_a_system_with_no_functions_does_not_crash)
+{
+	// REGRESSION (#395): this SEGFAULTED.  CoefficientBound ends in
+	//   max(f_vals.array().abs().maxCoeff(), dh_dx.array().abs().maxCoeff(), bound)
+	// and with no functions both arrays are EMPTY -- Eigen's maxCoeff() on an empty array
+	// is undefined behaviour.  SystemToClassicFile reaches it because the CONFIG section
+	// emits `coefficientbound:`.  DegreeBound(), in the same file, already guarded the
+	// identical case; CoefficientBound never did.
+	bertini::System empty;
+	BOOST_CHECK_NO_THROW(bertini::classic::SystemToClassicFile(empty));
+	BOOST_CHECK_EQUAL(empty.CoefficientBound<bertini::complex_dbl>(), 0.0);
+
+	using bertini::node::Variable;
+	bertini::System vars_only;
+	bertini::VariableGroup vg{Variable::Make("x")};
+	vars_only.AddVariableGroup(vg);          // variables, but still no functions
+	BOOST_CHECK_NO_THROW(bertini::classic::SystemToClassicFile(vars_only));
+}
+
+BOOST_AUTO_TEST_CASE(a_full_classic_file_parses_back_into_the_same_system)
+{
+	// REGRESSION (#396): the emitted file could not be read back -- it failed at line 2 on
+	// the CONFIG block, `expected "=" found "tracktype: 0;"`.
+	auto sys = TorusSystem();
+	auto text = bertini::classic::SystemToClassicFile(sys);
+
+	bertini::System back;
+	BOOST_REQUIRE_NO_THROW(back = bertini::System(text));
+	BOOST_CHECK_EQUAL(back.NumTotalFunctions(), 1);
+	BOOST_CHECK_EQUAL(back.NumVariables(), 3);
+
+	// The CONFIG section is deliberately NOT compared: `coefficientbound` is estimated by
+	// evaluating at RANDOM points, so two emissions of one system differ there.
+	auto body = [](std::string const& t){ return t.substr(t.find("INPUT")); };
+	BOOST_CHECK_EQUAL(body(text), body(bertini::classic::SystemToClassicFile(back)));
+}
+
+BOOST_AUTO_TEST_CASE(a_bare_input_section_body_still_parses)
+{
+	// the pre-existing calling convention: unwrapping must be a no-op for a bare body
+	bertini::System s("variable_group x, y, z;\nfunction f0;\nf0 = x^2+y^2+z^2-1;\n");
+	BOOST_CHECK_EQUAL(s.NumTotalFunctions(), 1);
+	BOOST_CHECK_EQUAL(s.NumVariables(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(power_of_a_sum_reports_its_total_degree_not_the_sum_of_per_variable_degrees)
+{
+	// REGRESSION (#397): PowerOperator::Degree(VariableGroup) summed the per-variable
+	// degrees, which is valid only for a MONOMIAL.  (x+y)^2 has degree 2 in x and 2 in y
+	// but TOTAL degree 2 -- it reported 4, and (x^2+y^2+z^2+3)^2 reported 12 instead of 4.
+	//
+	// Invisible from C++/Python integer powers, which build an IntegerPowerOperator whose
+	// group degree was always right; only the classic parser builds the generic
+	// PowerOperator.  And invisible in ungrouped Degrees() -- it showed only through
+	// Degrees(Variables()), which is what DegreeBound() calls, and DegreeBound feeds AMP.
+	struct Case { char const* expr; int total_degree; };
+	for (auto const& c : { Case{"x^4", 4}, Case{"(x+y)^2", 2},
+	                       Case{"(x^2+y^2)^2", 4}, Case{"(x^2+y^2+z^2+3)^2", 4} })
+	{
+		bertini::System s(std::string("variable_group x, y, z;\nfunction f0;\nf0 = ")
+		                  + c.expr + ";\n");
+		BOOST_CHECK_MESSAGE(s.DegreeBound() == c.total_degree,
+			"DegreeBound() for " << c.expr << " was " << s.DegreeBound()
+			<< ", expected " << c.total_degree);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(degree_bound_agrees_between_a_built_and_a_parsed_system)
+{
+	// The consequence that matters: a system round-tripped through classic input must track
+	// under the SAME AMP degree bound as the one it was built from.
+	auto built = TorusSystem();
+	bertini::System parsed(bertini::classic::SystemToClassicFile(built));
+	BOOST_CHECK_EQUAL(built.DegreeBound(), 4);
+	BOOST_CHECK_EQUAL(parsed.DegreeBound(), built.DegreeBound());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

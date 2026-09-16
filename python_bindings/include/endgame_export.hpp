@@ -78,6 +78,26 @@ namespace bertini{
 				return self.template FinalApproximation<T>();
 			}
 
+			// Returned BY VALUE, like the final approximation above: the endgame owns its
+			// approximation vectors and overwrites them on the next run, so handing Python a
+			// reference into that storage would alias live endgame state (ADR-0051's
+			// owned-copy doctrine for eigenpy-backed vectors).
+			template <typename T>
+			static
+			Vec<T> return_previous_approximation(EndgameT const& self)
+			{
+				return self.template PreviousApproximation<T>();
+			}
+
+			// Free function rather than a member pointer, for the same reason CycleNumber
+			// needs GetCycleNumberFn(): the accessor lives on the CRTP base, and naming it
+			// through the derived endgame type keeps overload resolution unambiguous.
+			static
+			NumErrorT return_approximate_error(EndgameT const& self)
+			{
+				return self.ApproximateError();
+			}
+
 		};// EndgameVisitor class
 
 
@@ -151,6 +171,17 @@ namespace bertini{
 			.def("get_system",  &EndgameT::GetSystem,  return_internal_reference<>(),arg("self"),"Get the tracked system.  This is a reference to the internal system.")
 
 			.def("final_approximation", &return_final_approximation<BCT>,arg("self"),"Get the current approximation of the root, in the ambient numeric type for the tracker being used")
+
+			.def("previous_approximation", &return_previous_approximation<BCT>,arg("self"),
+				"Get the second-most-recent approximation of the root, in the ambient numeric type for the tracker being used.  "
+				"Together with final_approximation() this is the pair the endgame's own convergence test compares, so the two "
+				"give you a second sample of the root at a KNOWN, coarser accuracy -- useful for judging how a quantity computed "
+				"at the root (a Jacobian's singular values, say) behaves as the approximation improves.  Empty before a run.")
+
+			.def("approximate_error", &return_approximate_error,arg("self"),
+				"Get the endgame's most recent accuracy estimate: the infinity norm of the difference between "
+				"final_approximation() and previous_approximation().  This is the quantity the endgame compares against the "
+				"final tolerance to decide it has converged.  Returns infinity when no approximation has been computed yet.")
 
 			.def("run", &EndgameBaseVisitor::WrapRun,
 				 (arg("self"), "start_point"),
