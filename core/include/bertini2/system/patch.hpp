@@ -37,6 +37,8 @@
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 #include <Eigen/Dense>
@@ -190,6 +192,51 @@ namespace bertini {
 				}
 
 				assert(Precision(coefficients_mpfr[ii](0))==precision_);
+			}
+		}
+
+
+		/**
+		\brief Construct a patch from given coefficients -- for a loader restoring an archived
+		patch exactly (the canonical-encoding reader), never for making a fresh one (use Random).
+
+		\param sizes The sizes of the variable groups, including homogenizing variables.
+		\param coefficients One coefficient vector per group, each of that group's size; every
+		       entry is kept at its own precision.
+		*/
+		Patch(std::vector<unsigned> const& sizes, std::vector<Vec<complex_mp>> const& coefficients)
+			: variable_group_sizes_(sizes), precision_(DefaultPrecision())
+		{
+			if (coefficients.size() != sizes.size())
+				throw std::invalid_argument("Patch: " + std::to_string(coefficients.size())
+					+ " coefficient vectors for " + std::to_string(sizes.size()) + " variable groups");
+
+			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(coefficients_working_);
+			std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(coefficients_working_);
+
+			coefficients_highest_precision_.resize(sizes.size());
+			coefficients_dbl.resize(sizes.size());
+			coefficients_mpfr.resize(sizes.size());
+
+			for (size_t ii=0; ii<sizes.size(); ++ii)
+			{
+				if (static_cast<size_t>(coefficients[ii].size()) != sizes[ii])
+					throw std::invalid_argument("Patch: group " + std::to_string(ii) + " has "
+						+ std::to_string(coefficients[ii].size()) + " coefficients for "
+						+ std::to_string(sizes[ii]) + " variables");
+
+				coefficients_highest_precision_[ii].resize(sizes[ii]);
+				coefficients_dbl[ii].resize(sizes[ii]);
+				coefficients_mpfr[ii].resize(sizes[ii]);
+				for (unsigned jj=0; jj<sizes[ii]; ++jj)
+				{
+					// set the precision first so the copy is exact at the source's precision
+					coefficients_highest_precision_[ii](jj).precision(coefficients[ii](jj).precision());
+					coefficients_highest_precision_[ii](jj) = coefficients[ii](jj);
+					coefficients_dbl[ii](jj) = complex_dbl(coefficients_highest_precision_[ii](jj));
+					coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
+					coefficients_mpfr[ii](jj).precision(precision_);
+				}
 			}
 		}
 

@@ -47,6 +47,8 @@ plus per-type working copies, with Precision() recasting the mpfr copy.  bertini
 
 #pragma once
 
+#include <stdexcept>
+#include <string>
 #include <tuple>
 
 #include "bertini2/num_traits.hpp"
@@ -79,6 +81,30 @@ public:
 	{
 		assert(static_cast<size_t>(coefficients_highest_precision_.cols()) == num_vars_ + 1 &&
 		       "a linear-forms coefficient matrix must have num_vars+1 columns");
+		BuildWorking();
+	}
+
+	/**
+	\brief Construct a block in a stated homogenization state -- for a loader restoring an
+	archived block as it was, without re-running Homogenize.
+
+	\param num_vars The number of variables the block reads (the homogenizing variable
+	       included when `homogenized`).
+	\param coefficients The coefficient matrix exactly as the block held it: `num_vars + 1`
+	       columns (the last the constant term) when affine, `num_vars` columns when homogenized.
+	\param homogenized Whether the constant column has already been folded onto a
+	       homogenizing variable.
+	*/
+	LinearFormsBlock(size_t num_vars, Mat<complex_mp> coefficients, bool homogenized)
+		: num_vars_(num_vars), coefficients_highest_precision_(std::move(coefficients)),
+		  precision_(DefaultPrecision())
+	{
+		homogeneous_ = homogenized;
+		if (static_cast<size_t>(coefficients_highest_precision_.cols()) != num_vars_ + (homogenized ? 0 : 1))
+			throw std::invalid_argument("LinearFormsBlock: the coefficient matrix has "
+				+ std::to_string(coefficients_highest_precision_.cols()) + " columns, but a block on "
+				+ std::to_string(num_vars_) + " variables that " + (homogenized ? "is" : "is not")
+				+ " homogenized needs " + std::to_string(num_vars_ + (homogenized ? 0 : 1)));
 		BuildWorking();
 	}
 

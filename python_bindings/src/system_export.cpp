@@ -130,6 +130,15 @@ namespace bertini{
 				+[](SystemBaseT const& self){ return self.ContentDigest().Hex(); },
 				(arg("self")),
 				"The persistent content digest of the system: SHA-256 of its canonical exact encoding, as 64 lowercase hex characters.  Stable across sessions, machines, and versions of the encoding format (a format change bumps the version inside the encoding, changing digests loudly rather than silently).  Everything evaluation-relevant is identity -- functions, variable groups and ordering, path variable, patch and randomization coefficients, gamma; randomness included.  Transient state (precision, current variable values, differentiation) is not.  This is the key a database of solutions references systems and homotopies by.")
+			.def("canonical_encoding",
+				+[](SystemBaseT const& self){ return self.CanonicalEncodingText(); },
+				(arg("self")),
+				"The exact canonical encoding text of the system: the text content_digest() is the SHA-256 of, and the text the records archive stores for every system and homotopy.  Versioned (its first word is the format version, e.g. b2sysenc/1) and complete: variable groups, path variable, every block with its exact coefficients, the patch, and operand systems inside randomization and blend blocks.  System.from_canonical(text) rebuilds an equal system from it.")
+			.def("from_canonical",
+				+[](std::string const& text){ return std::make_shared<System>(System::FromCanonicalEncoding(text)); },
+				(arg("text")),
+				"Rebuild a System from its canonical encoding text (see canonical_encoding()).  The rebuilt system has the same content_digest() as the one the text came from -- that equality is the proof it is the same system.  Raises RuntimeError for an encoding of a version this build does not read, one written under other session canonicalization settings, or damaged text.")
+			.staticmethod("from_canonical")
 			.def("is_same",
 				+[](SystemBaseT const& self, System const& other){ return self.IsSame(other); },
 				(arg("self"), arg("other")),

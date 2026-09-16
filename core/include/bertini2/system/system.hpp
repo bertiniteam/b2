@@ -55,6 +55,7 @@
 #include "bertini2/detail/sha256.hpp"
 #include "bertini2/function_tree.hpp"
 #include "bertini2/function_tree/reintern.hpp"
+#include "bertini2/function_tree/canonical_decoding.hpp"
 #include "bertini2/system/patch.hpp"
 
 #include "bertini2/system/straight_line_program.hpp"
@@ -1155,6 +1156,28 @@ namespace bertini {
 		std::string CanonicalEncodingText() const;
 
 		/**
+		\brief Rebuild a system from its canonical encoding text -- the inverse of
+		CanonicalEncodingText(), and the way an archived system comes back to life.
+
+		The records archive stores every system and homotopy as this exact text (the digest
+		preimage), so this is what makes a record reloadable: the rebuilt system's
+		ContentDigest() equals the archived digest, which is the proof it is the same object.
+		Every node is rebuilt through the intern tables, every block with its exact
+		coefficients (at their stored precisions), the patch with its coefficients, and operand
+		systems inside randomization and blend blocks recursively.
+
+		Refuses loudly (std::runtime_error) an encoding whose version is not the one this build
+		writes, one written under different session canonicalization settings (monomial order,
+		canonicalize-by-default, power-fold: they are in the header because they shape the
+		trees, so decoding under other settings would not reproduce the digest), and any text
+		that does not fit the grammar.
+
+		\param text The canonical encoding, as CanonicalEncodingText() produced it.
+		\return The rebuilt system, unsealed and mutable like a freshly parsed one.
+		*/
+		static System FromCanonicalEncoding(std::string const& text);
+
+		/**
 		\brief The persistent content digest: SHA-256 of CanonicalEncodingText().
 
 		Stable across runs, compilers, and sessions -- the L2 identity key a solutions
@@ -2148,6 +2171,11 @@ namespace bertini {
 		// within one encoding unit.  The public CanonicalEncodingText() wraps this with a fresh
 		// context; the recursion for operand systems passes the same one.  (ADR-0042)
 		void EncodeCanonical(std::ostream& out, node::EncodingContext& ctx) const;
+
+		// Read this system's canonical encoding from `cursor` (the inverse of EncodeCanonical,
+		// section by section), sharing `ctx` so back-references into operand systems resolve
+		// the way the encoder numbered them.  Replaces this system's content wholesale.
+		void DecodeCanonicalFrom(node::DecodingCursor& cursor, node::DecodingContext& ctx);
 
 		// Guard for structural mutators: throws std::logic_error naming `operation` if the
 		// system is sealed (ADR-0042).  First line of every structural mutator.

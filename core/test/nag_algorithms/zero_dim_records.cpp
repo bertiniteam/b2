@@ -38,6 +38,7 @@ homotopy identical, so recalled and computed results are directly comparable.
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/records/output_directory.hpp"
+#include "bertini2/records/load_system.hpp"
 
 using namespace bertini;
 using Variable = node::Variable;
@@ -641,6 +642,49 @@ BOOST_AUTO_TEST_CASE(sliced_system_records_and_recalls)
 	b.Solve();
 	BOOST_CHECK_EQUAL(b.NumPathsRecalled(), 2u);   // degrees {2,1,1}: two paths
 	BOOST_CHECK_EQUAL(b.RecordsRunId(), a.RecordsRunId());
+}
+
+// The archive is reloadable: the system and the homotopy a solve recorded come back from the
+// directory by digest, with the digest itself as the proof they are the archived objects.
+BOOST_AUTO_TEST_CASE(archived_system_and_homotopy_reload_by_digest)
+{
+	auto const dir = FreshDir("reload");
+
+	SetGlobalSeed(7);
+	auto sys = TwoQuadrics();
+	ZD zd(sys);
+	zd.DefaultSetup();
+	zd.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+	zd.Solve();
+
+	std::string target_id, homotopy_id;
+	for (auto const& rec : zd.Records()->Scan())
+		if (std::string(rec.at("kind").as_string()) == "run")
+		{
+			target_id = std::string(rec.at("target_digest").as_string());
+			homotopy_id = std::string(rec.at("ask").as_object().at("homotopy").as_string());
+		}
+	BOOST_REQUIRE(!target_id.empty());
+	BOOST_REQUIRE(!homotopy_id.empty());
+
+	auto target = records::LoadSystem(*zd.Records(), target_id);
+	BOOST_CHECK(target->IsSame(sys));
+	BOOST_CHECK_EQUAL(target->ContentDigest().Hex(), target_id);
+	BOOST_CHECK_EQUAL(target->NumNaturalFunctions(), 2u);
+
+	auto homotopy = records::LoadSystem(*zd.Records(), homotopy_id);
+	BOOST_CHECK_EQUAL(homotopy->ContentDigest().Hex(), homotopy_id);
+	BOOST_CHECK(homotopy->HavePathVariable());
+	BOOST_CHECK_EQUAL(homotopy->NumTotalFunctions(), homotopy->NumVariables());   // square: it was tracked
+
+	// loading is interning: the same digest twice is one object
+	BOOST_CHECK(records::LoadSystem(*zd.Records(), target_id) == target);
+
+	// a document filed under a digest it does not reproduce is refused
+	auto const forged = zd.Records()->PutDefinition(zd.Records()->GetDefinition(target_id), "systems",
+	                                                 "00000000000000000000000000000000000000000000000000000000deadbeef");
+	BOOST_CHECK_THROW(records::LoadSystem(*zd.Records(), forged), std::runtime_error);
+	BOOST_CHECK_THROW(records::LoadSystem(*zd.Records(), "no-such-definition"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
