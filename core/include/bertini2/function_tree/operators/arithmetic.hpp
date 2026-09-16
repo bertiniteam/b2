@@ -317,6 +317,19 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 
+		/// \brief Degree in one variable: negation preserves its operand's degree.
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return operand_->Degree(v);
+		}
+
+		/// \brief Degree in a variable group: negation preserves its operand's degree.  (The
+		/// UnaryOperator default is the non-polynomial rule, which is wrong for negation.)
+		int Degree(VariableGroup const& vars) const override
+		{
+			return operand_->Degree(vars);
+		}
+
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			return operand_->IsHomogeneous(v);
@@ -871,13 +884,6 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
-		/**
-		 Compute the degree with respect to a single variable.
-		 
-		 For the square root function, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
 
 		virtual ~SqrtOperator() = default;
 		
@@ -948,13 +954,6 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
-		/**
-		 Compute the degree with respect to a single variable.
-		 
-		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
 
 		virtual ~ExpOperator() = default;
 		
@@ -1011,13 +1010,6 @@ namespace node{
 		 Differentiates the exponential function.
 		 */
 		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-		/**
-		 Compute the degree with respect to a single variable.
-		 
-		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 
 		virtual ~LogOperator() = default;
