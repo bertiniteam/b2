@@ -88,7 +88,7 @@ int Variable::Degree(VariableGroup const& vars) const
 }
 
 
-std::vector<int> Variable::MultiDegree(VariableGroup const& vars) const
+std::vector<int> Variable::MultiDegreeImpl(VariableGroup const& vars) const
 {
 	std::vector<int> deg;
 	for (auto iter=vars.begin(); iter!=vars.end(); iter++)

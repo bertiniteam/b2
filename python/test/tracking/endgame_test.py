@@ -107,7 +107,6 @@ def test_using_total_degree_ss():
 
     for i in range(n):
         default_precision(AMBIENT_PRECISION)
-        final_system.precision(AMBIENT_PRECISION)
         start_point = td.start_point_mp(i)
 
         bdry_pt = np.array(np.zeros((3)).astype(np.int64), dtype=mpfr_complex)
@@ -123,7 +122,6 @@ def test_using_total_degree_ss():
     final_homogenized_solutions = [np.empty(dtype=mpfr_complex, shape=(3,)) for i in range(n)]
 
     for i in range(n):
-        final_system.precision(bdry_points[i][0].precision)
 
         track_success_code = my_endgame.run(bdry_points[i])
 

@@ -69,8 +69,107 @@ _______________________________________________________________________________
 
 ## [3.5.0] - unreleased
 
+A correctness fix to the `MakeMovingHomotopy` guards: they decided function identity on a
+*presentation* rendering, which silently refused valid homotopies.
+
+### Removed
+
+- **A System no longer carries a precision.**  `System::precision(unsigned)`,
+  `System::precision()` and the `precision_` member are all gone, in C++ and in Python.
+  Evaluation happens at the precision of the point it is handed, so there is nothing for a
+  caller to set and nothing to keep in sync -- that hand-alignment
+  (`target = max(point, system, ambient); system.precision(target); ...`) was the complaint
+  in #377, and refusing to evaluate on a mismatch could wedge a System outright, with no
+  escape through either setter.
+  The "materialized at" tag now lives with each holder of multiprecision values -- every
+  block's working coefficients, the patch, the SLP's memory -- each of which returns
+  immediately when already there, so `SetVariables` fans out on every evaluation for the
+  cost of a few integer compares.  The elision is deliberately per-holder and not at the
+  System: holders can legitimately disagree (that disagreement IS #377), and a System-level
+  cache would skip the very repair such a case needs.
+  There is also nothing to prepare and nothing to fan out.  Every evaluable type -- each of
+  the four blocks, the patch, and the SLP -- self-aligns to the precision of the point it is
+  handed, under one uniform `SyncPrecision`.  Two of them already did this independently;
+  the change makes the pattern and the name uniform, and the patch had a commented-out
+  assert demanding callers match its precision, which it now honours by aligning itself.
+  See ADR-0057.
+  **Archive format changed**: `precision_` is no longer serialized (transient evaluation
+  state, which the same `serialize` already excludes elsewhere), so a System archived by an
+  older build will not load into a newer one.  Boost archives carry Systems between MPI ranks
+  of one run; durable storage is the records/JSON path and is unaffected.
+
+### Added
+
+- The records archive is reloadable.  Every system and homotopy a solve records is stored as its
+  exact canonical encoding (the text its content digest is the hash of); there is now a reader for
+  that text: `System.from_canonical(text)` rebuilds a system from it, `System.canonical_encoding()`
+  produces it, and `bertini.records.load_system(digest, directory)` fetches and rebuilds an
+  archived one.  The rebuilt system's content digest equals the archived one, and that equality is
+  checked on load.  Classic (Bertini 1) text plays no part in persistence.  (C++:
+  `System::FromCanonicalEncoding`, `records::LoadSystem`, `node::DecodeCanonical`.)
+- `SolutionMetaData.singular_values`: the singular values of the target system's Jacobian at the
+  endpoint, largest first, at the endpoint's own precision -- the spectrum `condition_number` was
+  already computed from and threw away.  Published raw, archived with each path record and
+  restored on recall, so a caller can read a numerical rank at a tolerance of its own choosing;
+  no rank verdict is baked in, because no single tolerance suits every endpoint.  (#409)
+- `SolutionMetaData.crossing_unresolved`: true for a path that was flagged as crossing another at
+  the endgame boundary and whose crossing re-tracking did not resolve.  Its success codes may
+  still read `Success`; this flag is the per-path form of the solver's "the affected solutions
+  may be wrong" warning, and it is recomputed on recall from the archived boundary data.  Also a
+  column of `to_dataframe()`.  (#365)
+- Python bindings for two endgame accessors that already existed in C++ but were unreachable:
+  `previous_approximation()` and `approximate_error()`, alongside the already-bound
+  `final_approximation()`.  Together they give the pair of successive root approximations the
+  endgame's own convergence test compares, plus the infinity norm between them -- a second
+  sample of the root at a known, coarser accuracy, which is what lets a caller judge how a
+  derived quantity (the singular values of a Jacobian, say) behaves as the approximation
+  improves, rather than thresholding it at one point.
+
 ### Fixed
 
+- A power with a non-integer exponent and no variable in it -- `5^(1/2)`, which is how Bertini 1
+  input spells a square root -- answered "not homogeneous" while reporting degree 0.  A system
+  with such a constant among its coefficients (the Barth sextic with the golden ratio written
+  as `(5^(1/2)+1)/2`) therefore homogenized to nothing and `AutoPatch()` refused the result
+  with "requesting to AutoPatch a system which is not homogenized".  A variable-free power is a
+  constant and is now homogeneous whatever its exponent, in agreement with its degree.  A
+  table-driven test pins the variable-free form of every operator (`sqrt`, `exp`, `log`, the
+  trigonometric functions, rational powers, and compositions of them) as degree 0, polynomial
+  and homogeneous, both on its own and as a coefficient of a system that must homogenize and
+  patch.  (#419)
+- Negating a sum inflated its degree with respect to a variable group: `NegateOperator`
+  inherited `UnaryOperator`'s group degree, which summed the per-variable degrees -- correct
+  only for a single monomial -- so `-(x^2+y^2)` reported degree 4, and `System::DegreeBound()`,
+  which sizes adaptive precision, followed it.  This is the defect #397 found in
+  `PowerOperator`, in the other class that inherited the sum.  Negation now passes its
+  operand's degree and multidegree through, and the non-polynomial rule (a variable-free
+  operand makes a constant; anything else is not a polynomial) lives once in `UnaryOperator`
+  instead of in four identical copies in `sqrt`, `exp`, `log` and the trigonometric operators.
+- The tracker's path-truncation check measured the 2-norm of the point while the endgame's
+  `Security::max_norm` check and the post-processing `endpoint_finite_threshold` measure the
+  infinity norm (the largest coordinate), so the three thresholds did not measure the same
+  quantity: a path whose coordinates all stayed under `path_truncation_threshold` was truncated
+  once `sqrt(n)` carried its 2-norm over the line.  The tracker now uses the infinity norm too,
+  as Bertini 1 does.  The never-incremented `num_total_steps_taken_` member is gone
+  (`NumTotalStepsTaken()` already computed the sum).  (#404)
+- `RandomConjugateOrthonormalMatrix(rows, cols)` factored a square matrix of the *larger*
+  dimension and truncated it, so an `8 x 4908` randomization matrix for an isosingular deflation
+  became a `4908 x 4908` multiprecision factorization that did not finish in 900 s.  It now
+  factors a matrix sized to the request (the longer side by the shorter, transposed when the
+  shape is wide): the same distribution, at O(max * min^2) instead of O(max^3) -- milliseconds.
+  Square requests draw and factor exactly as before; non-square ones consume fewer random draws
+  and so differ from the old recipe for the same seed.  (#401)
+- `to_classic_input()` left out the `pathvariable t;` declaration, so the classic text of a
+  homotopy did not parse back: the functions used a variable the file never declared.  A
+  homotopy is a system too; the declaration is now emitted with the variable groups, and a
+  homotopy round-trips through the classic writer and parser.  (#366)
+- An affine products-of-linears block (`add_products_of_linears`, the shape of a regeneration
+  deformation) did not homogenize: its `Homogenize` was a no-op written for the m-homogeneous
+  start system's already-homogeneous form, and its `IsHomogeneous` always answered true, so a
+  homogenized system kept an affine block with the wrong variable count and could neither be
+  expanded to nodes ("variable count mismatch") nor tracked projectively.  The block now folds
+  each factor's constant column onto the homogenizing variable, exactly as the linear-forms
+  block does, and reports homogeneity from its shape.  (#376)
 - Four Python-boundary defects where a caller error killed the interpreter or came back as a raw
   Boost.Python error, now Python exceptions that name the problem: a start point with the wrong
   number of coordinates, or a homotopy with more functions than variables, handed to
@@ -85,6 +184,34 @@ _______________________________________________________________________________
   endgame was silently reverted at every `solve()` by the solver's own copy.  The solver's value
   now flows into the endgame at setup and whenever the solver's value changes, so whichever was
   set last wins and nothing is reverted without a word.
+- Asking for a random slice with more linear forms than variables (`Slice.random_complex(vars,
+  dim)` with `dim > len(vars)`, and the real and through-point forms alike) silently produced
+  dependent rows; it is now a `ValueError` (C++ `std::invalid_argument`) that says so.  (#380)
+- `MakeMovingHomotopy` no longer rejects a valid deformation whose two moving endpoints merely
+  *print* the same.  Both of its guards (a fixed function duplicated in the moving rows, and a
+  moving row identical at both endpoints) compared functions via `operator<<`, whose default
+  stream precision is **6 significant digits** -- so two genuinely different rows agreeing to 6
+  digits compared equal and the homotopy was refused with a message asserting the endpoints were
+  the same row.  The collision is ~1e-6 *relative*, so it bit at every coordinate scale.  Identity
+  is now decided on `node::CanonicalEncoding` -- the exact-value encoding the content digests are
+  built on (ADR-0042) -- while `operator<<` is still used for the human-readable message text.
+  Found by a surface cell decomposition whose slice values were 1.9e-5 apart at a magnitude of
+  2409, and reproduced at order one (0.162749 vs 0.1627491).  (bertiniteam/b2#391)
+- The power series endgame left `previous_approximation_` holding a COPY of
+  `final_approximation_` after every successful run.  It assigned the two at the bottom of its
+  convergence loop while testing the loop condition at the top, so the assignment ran one final
+  time on the way out.  The Cauchy endgame never had this -- it returns from its acceptance gate
+  before the corresponding assignment -- so the two endgames disagreed about their own post-run
+  state.  Power series now matches Cauchy.  Consequences: `PreviousApproximation()` is now a
+  genuine predecessor for both endgames, and `ZeroDimSolver`'s reported
+  `accuracy_estimate_user_coords` -- computed as the distance between the final approximation and
+  the previous one -- is no longer identically zero for power-series solves, which had it
+  reporting an exactly-perfect accuracy for every such path.
+- `EndgameBase::approximate_error_` was left uninitialized, so `ApproximateError()` read an
+  indeterminate value before any run.  Now initialized to infinity, which is the only safe
+  sentinel: the convergence gates compare it in both directions, and NaN -- which loses every
+  relational comparison -- would make the power series loop's `error > tolerance` test false and
+  skip the loop entirely, reporting instant success.
 
 _______________________________________________________________________________
 

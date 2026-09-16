@@ -155,6 +155,11 @@ public:
 	/// \brief Set the block's working precision (delegated to the compiled SLP).
 	void Precision(unsigned new_precision) const
 	{
+		// short-circuit when already materialized here.  Each holder of mp values keeps its
+		// own "materialized at" tag; System deliberately keeps none and simply fans out on
+		// every evaluation, which is cheap precisely because of this early return (ADR-0057).
+		if (precision_==new_precision)
+			return;
 		// The SLP (its per-thread Memory) is the sole evaluator and carries its own precision; the
 		// function / derivative / variable nodes are no longer evaluated during tracking, so their
 		// precision is vestigial and left untouched (keeps the shared node DAG read-only).
