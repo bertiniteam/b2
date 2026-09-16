@@ -656,14 +656,12 @@ BOOST_AUTO_TEST_CASE(precision_change_recomputes_constants)
 	auto sys = ConstantSubexpressionSystem();
 
 	bertini::DefaultPrecision(30);
-	sys.precision(30);
 	Vec<complex_mp> p30(1);
 	p30(0) = complex_mp(2);
 	auto f30 = sys.Eval(p30);
 	BOOST_CHECK(abs(f30(0) - (complex_mp(2) + sin(complex_mp(1)))) < 1e-25);
 
 	bertini::DefaultPrecision(50);
-	sys.precision(50);
 	Vec<complex_mp> p50(1);
 	p50(0) = complex_mp(2);
 	auto f50 = sys.Eval(p50);

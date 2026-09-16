@@ -293,7 +293,30 @@ public:
 
 	 \return A vector containing the degrees.  Negative entries indicate non-polynomiality.
 	*/
-	virtual std::vector<int> MultiDegree(VariableGroup const& vars) const = 0;
+	/**
+	 Compute the multidegree with respect to a variable group.
+
+	 DAG-AWARE: this is a non-virtual wrapper that memoizes by node identity FOR THE DURATION
+	 OF ONE TOP-LEVEL CALL, so a shared subtree is visited once however many times it is
+	 reached.  The per-type work lives in MultiDegreeImpl.
+
+	 Why it exists (b2#417): the node graph is hash-consed, so a small DAG can stand for an
+	 enormous expansion -- measured, a 46-node expression whose printed form is 196 KB.  A
+	 plain recursive walk visits the TREE, so it costs O(expansion) where the structure is
+	 O(DAG).  `CanonicalizeNaryOperands` calls this for every operand of every n-ary
+	 construction, which is how a 46-node expression came to cost 13 ms to multiply by a
+	 variable, and how a cofactor expansion inside a deflation stage came to run for hours
+	 with a DAG that never exceeded 1102 nodes.
+
+	 Caching the RESULT between calls does not fix this and was measured 29% SLOWER -- filling
+	 such a cache costs the same walk it is trying to avoid, so it only pays from a node's
+	 second mention.  The memo has to be inside the traversal, which is what this is.
+	*/
+	std::vector<int> MultiDegree(VariableGroup const& vars) const;
+
+	/// \brief Per-node-type multidegree.  Recurses through MultiDegree(), so children are
+	/// memoized; never call this directly unless you want the unmemoized walk.
+	virtual std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const = 0;
 
 	/**
 	 Compute the overall degree with respect to a variable group.

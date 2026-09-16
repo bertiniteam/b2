@@ -102,7 +102,7 @@ namespace node{
 		The degree of a number is always 0.  It's a number.
 		*/
 		inline
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override
+		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override
 		{
 			return std::vector<int>(vars.size(), 0);
 		}

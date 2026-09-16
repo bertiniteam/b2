@@ -64,8 +64,10 @@ namespace bertini{
 		void SystemVisitor<SystemBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("precision", get_prec_, (arg("self")), "Get the current precision of the system.  Returns a postive number, representing the number of digits (not bits) at which the system is currently represented.  (there is a reference-level precision stored, so you can change this up / down mostly fearlessly)")
-			.def("precision", set_prec_, (arg("self"), arg("precision")),"Set / change the precision of the system.  Feed in a positive number, representing the digits (not bits) of the precision.  Double precision is 16, but that only effects the multi-precision precision...  you can eval in double precision without changing the precision to 16.")
+			// No precision() at all: a System does not carry one.  Evaluation happens at the
+			// precision of the point you hand it, rebuilding constants and patch coefficients
+			// from their exact masters, so there is nothing to read and nothing to set
+			// (ADR-0057).  If you need to know what precision something is at, ask the point.
 			.def("differentiate", &SystemBaseT::Differentiate, (arg("self")), "differentiate the system with respect to the declared variable groups")
 
 			.def("to_classic_input",
@@ -384,7 +386,9 @@ namespace bertini{
 					ia >> sys;
 				}
 				sys.Differentiate();
-				sys.precision(sys.precision());
+				// the precision self-assignment that used to sit here is unnecessary: a System
+				// carries no precision, and the first evaluation after load materializes it from
+				// the point it is handed (ADR-0057)
 			}
 		};
 

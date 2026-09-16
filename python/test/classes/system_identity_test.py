@@ -34,6 +34,24 @@ def circle_line():
     return s
 
 
+
+def _evaluate_at(system, digits):
+    """Materialize `system` at `digits` the only way there is now: evaluate it there.
+
+    There is deliberately no `System.precision(n)` setter -- a system's precision is not a
+    property callers manage, it follows the point handed to it (#377).
+    """
+    import numpy as np
+    from bertini.multiprec import complex_mp
+    saved = pb.default_precision()
+    pb.default_precision(digits)
+    try:
+        pt = np.array([complex_mp('1', '0')] * system.num_variables())
+        system.eval(pt)
+    finally:
+        pb.default_precision(saved)
+
+
 def test_content_digest_is_64_hex_and_deterministic():
     a, b = circle_line(), circle_line()
     d = a.content_digest()
@@ -65,7 +83,7 @@ def test_seal_blocks_structural_mutation_but_not_eval():
         s.homogenize()
 
     # transient operations still work
-    s.precision(50)
+    _evaluate_at(s, 50)
     s.differentiate()
     assert s.is_sealed()
 
@@ -88,8 +106,16 @@ def test_intern_system_unifies_equal_systems():
     # two handles are one C++ System.
     assert rep_a.is_sealed() and rep_b.is_sealed()
     assert rep_a.is_same(rep_b)
-    rep_a.precision(77)
-    assert rep_b.precision() == 77
+    # Stage a point through ONE handle, then evaluate with no arguments through the OTHER.
+    # The no-argument form consumes the system's staged values, so this only works if the two
+    # handles share them -- i.e. if they are one C++ System.  (This used to be shown by
+    # setting a precision through one handle and reading it back through the other; a System
+    # no longer carries a precision, ADR-0057, so the proof now uses the staged point, which
+    # is the shared transient state that actually remains.)
+    import numpy as np
+    rep_a.eval(np.array([complex(3, 0), complex(1, 0)]))
+    through_b = [complex(v) for v in np.atleast_1d(np.asarray(rep_b.eval()))]
+    assert through_b == [complex(9, 0), complex(2, 0)]
 
     x = Variable('x')
     other = pb.System()
@@ -102,7 +128,7 @@ def test_intern_system_unifies_equal_systems():
 def test_digest_ignores_transient_state():
     s = circle_line()
     before = s.content_digest()
-    s.precision(60)
+    _evaluate_at(s, 60)
     s.differentiate()
     assert s.content_digest() == before
 
