@@ -882,6 +882,28 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 				DefaultSystemSetup();
 				DefaultTrackerSetup();
 				DefaultMidpathSetup();
+				PushFinalToleranceToEndgame();
+			}
+
+
+			/**
+			\brief Flow the solver's `final_tolerance` into the endgame -- when it has changed.
+
+			The solver's Tolerances.final_tolerance is how tightly a solve converges its endpoints, and
+			the endgame keeps its own EndgameConfig.final_tolerance for standalone use.  The solver's
+			value flows into the endgame at setup and again whenever the solver's own value has changed
+			since the last push -- and NOT unconditionally at every solve, which silently overwrote a
+			value set directly on the endgame and made that setter a no-op (b2#392).  So whichever was
+			set last wins: `solver.set(final_tolerance=...)` re-pushes; a later
+			`endgame.set_endgame_settings(...)` sticks across solves.
+			*/
+			void PushFinalToleranceToEndgame()
+			{
+				const NumErrorT ft = this->template Get<Tolerances>().final_tolerance;
+				if (ft == pushed_final_tolerance_)
+					return;
+				endgame_.SetFinalTolerance(ft);
+				pushed_final_tolerance_ = ft;
 			}
 
 
@@ -1531,12 +1553,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 				SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);
 
-				// The solver's Tolerances.final_tolerance is the single source of truth for how tightly
-				// a solve converges its endpoints.  Flow it into the endgame here (the endgame keeps its
-				// own EndgameConfig.final_tolerance for standalone, solver-independent use, but under a
-				// solve the solver wins).  Without this the endgame would silently ignore the solver's
-				// final_tolerance -- e.g. a classic-input FinalTol -- and use its own default instead.
-				endgame_.SetFinalTolerance(this->template Get<Tolerances>().final_tolerance);
+				PushFinalToleranceToEndgame();
 
 				// Default the start-point precision to the initial ambient precision.  A caller can
 				// override it via SetStartPointPrecision (e.g. to carry a higher precision forward
@@ -2677,6 +2694,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 			unsigned long long num_start_points_;  ///< Number of start points the start system produces.
 			NumErrorT midpath_retrack_tolerance_;  ///< Tolerance used when re-tracking paths flagged by the midpath check.
 			MidpathCheckReport midpath_report_; ///< populated by EGBoundaryAction; exposed via EndgameBoundaryMetadata()
+			NumErrorT pushed_final_tolerance_ = std::numeric_limits<NumErrorT>::quiet_NaN(); ///< The solver final_tolerance last flowed into the endgame (NaN: never), so a push happens only on change.
 			unsigned start_point_precision_ = DoublePrecision(); ///< precision at which start points are computed; defaults to initial ambient precision (see PreSolveSetup)
 			bool start_point_precision_set_by_user_ = false;  ///< Whether the start-point precision was set explicitly by the user.
 

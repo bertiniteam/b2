@@ -473,6 +473,27 @@ def set_settings(self, settings, strict=False):
     return self
 
 
+def _accept_config_names(cls):
+    """Let get_config()/set_config() take a config's short NAME as well as its class.
+
+    ``config_names()`` advertises names such as ``'tolerances'``; before this, ``get_config`` took
+    only the class and refused those very strings with a KeyError, so two adjacent methods on the
+    same object did not compose (issue #392).  A name resolves through the same table
+    ``configure()`` uses; the class form is unchanged.
+    """
+    native_get = cls.get_config
+
+    def get_config(self, config):
+        """The named config, by class (``TolerancesConfig``) or by short name (``'tolerances'``,
+        as ``config_names()`` lists them)."""
+        if isinstance(config, str):
+            config = _resolve_config_class(self, config)
+        return native_get(self, config)
+
+    get_config.__doc__ = (native_get.__doc__ or "").rstrip() + "\n\n" + get_config.__doc__
+    cls.get_config = get_config
+
+
 def _enhance_owner_class(cls):
     """Attach configure()/config_names() to a tracker/algorithm class (idempotent)."""
     if getattr(cls, "_b2_owner_enhanced", False):
@@ -483,6 +504,8 @@ def _enhance_owner_class(cls):
     cls.set = update               # `set` reads more naturally to many users; same behavior
     cls.get_settings = get_settings
     cls.set_settings = set_settings
+    if hasattr(cls, "get_config"):
+        _accept_config_names(cls)
     cls._b2_owner_enhanced = True
     return cls
 

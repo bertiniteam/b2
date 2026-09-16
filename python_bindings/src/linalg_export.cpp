@@ -44,6 +44,9 @@
 #include "bertini2/mpfr_extensions.hpp"
 #include "bertini2/eigen_extensions.hpp"
 
+#include <stdexcept>
+#include <string>
+
 #include <eigenpy/decompositions/PartialPivLU.hpp>
 #include <eigenpy/decompositions/HouseholderQR.hpp>
 #include <eigenpy/decompositions/ColPivHouseholderQR.hpp>
@@ -60,6 +63,18 @@ namespace bertini{
 			template<typename T>
 			Vec<T> SolveLinearSystem(Mat<T> const& A, Vec<T> const& b)
 			{
+				// Eigen's partial-pivot LU asserts its shape preconditions only in debug builds; in a
+				// release build a wrong shape corrupts the heap instead of raising (b2#390).  Refuse
+				// here, before Eigen sees the operands.  (Boost.Python maps invalid_argument to
+				// ValueError; the Python wrapper checks first and raises numpy's LinAlgError.)
+				if (A.rows() != A.cols())
+					throw std::invalid_argument("bertini.linalg.solve needs a square matrix, got "
+						+ std::to_string(A.rows()) + " x " + std::to_string(A.cols())
+						+ "; use lstsq for a rectangular system");
+				if (b.size() != A.rows())
+					throw std::invalid_argument("bertini.linalg.solve: the right-hand side has "
+						+ std::to_string(b.size()) + " entries but the matrix has "
+						+ std::to_string(A.rows()) + " rows");
 				return Vec<T>(A.partialPivLu().solve(b));
 			}
 

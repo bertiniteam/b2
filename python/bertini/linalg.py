@@ -117,12 +117,34 @@ class _DoubleSVD:
 
 # --- the dtype-agnostic entry points ------------------------------------------------------------
 
+def _require_square_system(A, b):
+    """Raise numpy's LinAlgError, as the double path does, when A is not square or b does not fit.
+
+    The multiprecision path hands A and b to Eigen's partial-pivot LU, whose shape preconditions
+    are only asserted in debug builds; a wrong shape there corrupts the heap instead of raising
+    (issue #390).  So the check lives here, before anything touches Eigen, and names the shape.
+    """
+    if A.ndim != 2 or A.shape[0] != A.shape[1]:
+        raise _np.linalg.LinAlgError(
+            "bertini.linalg.solve needs a square matrix, got shape {}; for a least-squares "
+            "solution of a rectangular system use bertini.linalg.lstsq".format(A.shape))
+    if b.ndim == 0 or b.shape[0] != A.shape[0]:
+        raise _np.linalg.LinAlgError(
+            "bertini.linalg.solve: the right-hand side has shape {} but the matrix is {} x {}"
+            .format(b.shape, A.shape[0], A.shape[1]))
+
+
 def solve(A, b):
-    """Solve the square system ``A x = b`` (partial-pivot LU), for mp or double A/b."""
+    """Solve the square system ``A x = b`` (partial-pivot LU), for mp or double A/b.
+
+    Raises ``numpy.linalg.LinAlgError`` when ``A`` is not square or ``b`` does not fit it, for
+    every dtype alike."""
     kind, A = _classify(A)
+    b = _np.asarray(b)
+    _require_square_system(A, b)
     if kind == 'double':
-        return _np.linalg.solve(A, _np.asarray(b))
-    return _native_solve(A, _np.asarray(b))
+        return _np.linalg.solve(A, b)
+    return _native_solve(A, b)
 
 
 def lstsq(A, b):

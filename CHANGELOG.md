@@ -67,6 +67,27 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Fixed
+
+- Four Python-boundary defects where a caller error killed the interpreter or came back as a raw
+  Boost.Python error, now Python exceptions that name the problem: a start point with the wrong
+  number of coordinates, or a homotopy with more functions than variables, handed to
+  `HomotopySolver` aborted the process from inside the tracker (`ValueError` at construction;
+  #369, #383, #386); a non-square matrix, or a right-hand side of the wrong length, handed to
+  `bertini.linalg.solve` corrupted the heap inside Eigen's LU (`numpy.linalg.LinAlgError`, as the
+  double path already raised, and the native layer refuses too; #390); `System.eval` did not
+  accept a plain list as the point (#367); a `Slice` was not accepted by `System.add` or by
+  `moving_homotopy` where a system of linear forms was meant (#372, #381).
+- Two solver-configuration traps (#392): `get_config()` refused the very names `config_names()`
+  lists (it takes them now, alongside the class); and `final_tolerance` set directly on the
+  endgame was silently reverted at every `solve()` by the solver's own copy.  The solver's value
+  now flows into the endgame at setup and whenever the solver's value changes, so whichever was
+  set last wins and nothing is reverted without a word.
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening
