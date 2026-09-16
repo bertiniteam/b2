@@ -84,8 +84,10 @@ namespace bertini {
 		// stray leading character by the grammar.
 		std::string cleaned = input;
 		parsing::classic::StripUTF8BOM(cleaned);
+		// comments first (a commented-out INPUT or END; must not fool the unwrapping), then
 		// accept a full Bertini 1 classic file (CONFIG/INPUT wrappers), not just the bare
-		// INPUT-section body that the grammar reads -- see #396
+		// INPUT-section body that the grammar reads -- see #407 and #396
+		parsing::classic::StripClassicComments(cleaned);
 		parsing::classic::StripClassicFileWrappers(cleaned);
 
 		std::string::const_iterator iter = cleaned.begin();
