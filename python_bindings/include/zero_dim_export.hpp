@@ -102,7 +102,10 @@ void ExposeSolutionMetaData(std::string const& class_name){
 	.def_readwrite("condition_number",&MDT::condition_number,
 		"The latest estimate of the condition number (spectral norm) near the endpoint. Used, "
 		"together with multiplicity, to classify the endpoint as singular.")
-	.def_readwrite("singular_values",&MDT::singular_values,
+	// by value: a reference to an Eigen vector member has no registered Python class, a value
+	// converts through eigenpy to a numpy array
+	.add_property("singular_values",
+		+[](MDT const& m){ return bertini::Vec<double>(m.singular_values); },
 		"The singular values of the (homogenized, patched) target system's Jacobian at the endpoint, "
 		"largest first, at the endpoint's own precision; condition_number is the first over the last.  "
 		"Read a numerical rank from it at a tolerance of your choosing -- no single tolerance suits "
