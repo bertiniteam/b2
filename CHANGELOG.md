@@ -100,6 +100,17 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- The endgames announce every sample point they compute along a path (`ComputedSamplePoint`,
+  carrying the point and its time), from both the power series and the Cauchy endgame, and a
+  `SampleSequenceCollector` observer (C++ and Python, `bertini.endgame.*.SampleSequenceCollector`)
+  gathers them: the sequence of points on the path at shrinking times, kept apart from the
+  Cauchy loop's circle points and from the successive approximations of the root, with run
+  boundaries so one collector attached to a solver's endgame can tell one path from the next.
+  This is what lets a caller watch a quantity such as a Jacobian's singular values as a
+  function of distance to the root instead of judging it at one point.  Every endgame run now
+  announces `Initializing`, and an adaptive endgame that abandons an attempt and starts over
+  at a higher precision announces `Restarting`, so the collector drops the abandoned samples as
+  the endgame does.  (#361, in part)
 - The records archive is reloadable.  Every system and homotopy a solve records is stored as its
   exact canonical encoding (the text its content digest is the hash of); there is now a reader for
   that text: `System.from_canonical(text)` rebuilds a system from it, `System.canonical_encoding()`
@@ -124,6 +135,17 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   sample of the root at a known, coarser accuracy, which is what lets a caller judge how a
   derived quantity (the singular values of a Jacobian, say) behaves as the approximation
   improves, rather than thresholding it at one point.
+
+### Changed
+
+- **The default endgame is the power series endgame**, matching Bertini 1's documented default
+  (`EndgameNum: 1`), at every choice point: the configuration default (so the CLI and a classic
+  input without `endgamenum`), and the Python factories `ZeroDimSolver`, `HomotopySolver`,
+  `user_homotopy`, `parameter_sweep` and `bertini.solve`.  Measured on a regeneration workload,
+  the Cauchy default cost 190 s where power series takes 2.5 s, because slowly diverging paths
+  are a Cauchy-specific pathology.  Cauchy remains available by explicit request
+  (`endgamenum: 2`, `endgame='cauchy'`).  A solve that relied on the default is now a different
+  computation, so its records are new asks rather than recalls.  See ADR-0058.
 
 ### Fixed
 
@@ -184,6 +206,11 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   endgame was silently reverted at every `solve()` by the solver's own copy.  The solver's value
   now flows into the endgame at setup and whenever the solver's value changes, so whichever was
   set last wins and nothing is reverted without a word.
+- Classic input with Bertini 1 comments (`%` to the end of the line) is accepted by every
+  parse entry point (`System(text)`, `parse.system`, the CLI), including a comment that
+  mentions `INPUT` or `END;`: comments are removed in C++ before the file wrappers are
+  unwrapped and the grammar runs.  The Python text-scanning shim that looked for the INPUT
+  section is gone.  (#407)
 - Asking for a random slice with more linear forms than variables (`Slice.random_complex(vars,
   dim)` with `dim > len(vars)`, and the real and through-point forms alike) silently produced
   dependent rows; it is now a `ValueError` (C++ `std::invalid_argument`) that says so.  (#380)
