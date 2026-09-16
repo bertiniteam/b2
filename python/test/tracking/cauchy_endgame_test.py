@@ -35,6 +35,8 @@ Three homotopies are used:
   cubic:     f(x,t) = (x-1)^3*(1-t) + (x^3+1)*t   cycle_num=3 at x=1
 """
 
+import math
+
 import numpy as np
 import pytest
 
@@ -270,3 +272,41 @@ def test_amp_cauchy_cycle_num_2(quadratic_homotopy, precision):
     assert code == SuccessCode.Success
     assert mp.abs(fa[0] - mpfr_complex(1)) < 1e-5
     assert eg.cycle_number() == 2
+
+
+def test_cauchy_approximation_accessors_are_a_coherent_triple(cubic_homotopy):
+    """final_approximation / previous_approximation / approximate_error are one triple.
+
+    Cauchy returns from its acceptance gate before overwriting the previous approximation,
+    so it always had this property; asserted here so the two endgames stay in agreement.
+    Note the error may legitimately be exactly zero when two successive approximations
+    agree bitwise -- coherence is the invariant, a nonzero gap is not.
+    """
+    s, x, t = cubic_homotopy
+
+    tracker = DoublePrecisionTracker(s)
+    tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), NewtonConfig())
+
+    eg = FixedDoubleCauchyEndgame(tracker, complex(0.1, 0))
+
+    assert math.isinf(eg.approximate_error())
+
+    current_space = np.array([complex(5.000000000000001e-01, 9.084258952712920e-17)])
+    code = eg.run(current_space)
+    assert code == SuccessCode.Success
+
+    fa = np.atleast_1d(np.asarray(eg.final_approximation()))
+    pa = np.atleast_1d(np.asarray(eg.previous_approximation()))
+    assert fa.shape == pa.shape == current_space.shape
+
+    err = eg.approximate_error()
+    assert err <= eg.get_endgame_settings().final_tolerance
+
+    # relative to err, not anchored: the converged error is below any absolute tolerance
+    # one would think to write, so an anchored check passes even when previous is a copy
+    # of final (gap 0 vs err ~1e-12).  Relative, that bug is a ratio of exactly 1.
+    gap = max(abs(complex(a) - complex(b)) for a, b in zip(fa, pa))
+    if err == 0.0:
+        assert gap == 0.0
+    else:
+        assert abs(gap - err) <= 1e-6 * err

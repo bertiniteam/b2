@@ -2336,3 +2336,93 @@ BOOST_AUTO_TEST_CASE(singular_affine_user_homotopy_success_implies_at_the_root)
 		// any non-Success code is an honest failure: also acceptable
 	}
 }// end singular_affine_user_homotopy_success_implies_at_the_root
+
+
+/**
+The three approximation accessors -- FinalApproximation(), PreviousApproximation() and
+ApproximateError() -- are only useful as a COHERENT TRIPLE: the error must be the infinity
+norm of the difference between the two vectors the caller can actually see.  A caller who
+wants a second, deliberately coarser sample of the root (to watch how a derived quantity --
+the singular values of a Jacobian, say -- moves as the approximation improves) gets nothing
+from a `previous` that is a copy of `final`.
+
+REGRESSION: the power series endgame used to assign previous_approximation_ =
+final_approximation_ at the BOTTOM of its convergence loop, while testing the loop condition
+at the top.  On every successful run the assignment therefore ran one last time and the two
+vectors came back EQUAL, while ApproximateError() still reported the last nonzero gap.  The
+Cauchy flavor never had the bug -- it returns from its acceptance gate before the
+corresponding assignment -- so the two endgames also disagreed about their own post-run
+state.  Asserted here for both, at every tracker precision.
+*/
+BOOST_AUTO_TEST_CASE(approximation_accessors_are_a_coherent_triple)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+
+	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+
+	auto time = ComplexFromString(".1");
+	Vec<BCT> sample(1);
+	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19");
+
+	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(time);
+
+	// BEFORE any run there is no estimate.  Infinity, not an indeterminate value and not
+	// NaN: every convergence gate compares this against the final tolerance, and the
+	// power series loop's gate has the shape `error > tolerance` -- a NaN would make that
+	// false and skip the loop entirely, reporting instant success.
+	BOOST_CHECK_EQUAL(my_endgame.ApproximateError(),
+	                  std::numeric_limits<bertini::NumErrorT>::infinity());
+
+	auto code = my_endgame.Run(sample);
+	BOOST_REQUIRE(code == SuccessCode::Success);
+
+	auto const& fin  = my_endgame.template FinalApproximation<BCT>();
+	auto const& prev = my_endgame.template PreviousApproximation<BCT>();
+
+	BOOST_REQUIRE_EQUAL(fin.size(), sample.size());
+	BOOST_REQUIRE_EQUAL(prev.size(), sample.size());
+
+	// having converged, the reported error is what the endgame's own gate accepted
+	auto const err = my_endgame.ApproximateError();
+	BOOST_CHECK(err <= my_endgame.FinalTolerance());
+
+	// ... and it must DESCRIBE the pair the caller can actually see.  This is the check
+	// that catches a `previous` overwritten with a copy of `final`: the gap collapses to
+	// zero while the reported error keeps the last real value.
+	//
+	// Deliberately NOT asserting err > 0.  An endgame may legitimately converge with the
+	// error exactly zero when two successive approximations agree bitwise -- measured on
+	// fixed_multiple_cauchy at precision 16 against this very system, whose root is exactly
+	// 1.  Coherence is the invariant; a nonzero gap is not.
+	//
+	// Compared RELATIVE to the error itself, deliberately.  The converged error is smaller
+	// than any absolute tolerance one would think to write, so an ANCHORED comparison
+	// silently passes against the bug: the gap collapses to 0 while err stays ~1e-12, and
+	// `diff <= 1e-10 * max(1, err)` reduces to `1e-12 <= 1e-10`.  Measured -- an anchored
+	// form of this check passed against the unfixed endgame.  Relative, the bug is a ratio
+	// of exactly 1 and cannot hide.
+	auto const gap = static_cast<bertini::NumErrorT>(
+		(fin - prev).template lpNorm<Eigen::Infinity>());
+	auto const diff = gap > err ? gap - err : err - gap;
+	if (err == static_cast<bertini::NumErrorT>(0))
+		BOOST_CHECK_EQUAL(gap, static_cast<bertini::NumErrorT>(0));
+	else
+		BOOST_CHECK(diff <= static_cast<bertini::NumErrorT>(1e-6) * err);
+
+}// end approximation_accessors_are_a_coherent_triple

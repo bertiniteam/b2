@@ -1061,15 +1061,43 @@ int PowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 
 int PowerOperator::Degree(VariableGroup const& vars) const
 {
-	auto multideg = MultiDegree(vars);
-	auto deg = 0;
-	std::for_each(multideg.begin(),multideg.end(),[&](int n){
-					if (n < 0)
-						deg = -1;
-					else
-						deg += n;
-					});
-	return deg;
+	// TOTAL degree with respect to the group -- NOT the sum of the per-variable degrees,
+	// which is what this used to compute.  Summing is valid only for a monomial: for
+	// (x+y)^2 the degree in x is 2 and the degree in y is 2, but the TOTAL degree is 2,
+	// not 4.  The error scales with the number of variables in the base -- measured
+	// (x^2+y^2+z^2+3)^2 reported 12 instead of 4 -- and it reaches AMP through
+	// System::DegreeBound(), which calls Degrees(Variables()).
+	//
+	// It stayed hidden because the two ways of building the same expression take different
+	// paths: an integer exponent written in C++ or Python builds an IntegerPowerOperator,
+	// whose Degree(VariableGroup) is base_deg*exponent and always was right, while the
+	// classic-input parser builds this generic PowerOperator.  So a system round-tripped
+	// through classic input tracked with a different degree bound than the original.
+	//
+	// Same shape as Degree(v) above, with the base's group degree in place of its degree in
+	// one variable.
+	auto base_deg = base_->Degree(vars);
+	auto exp_deg = exponent_->Degree(vars);
+
+	if (exp_deg!=0)
+		return -1;   // a variable exponent is not polynomial
+
+	complex_dbl exp_val = ConstantExponentValue(exponent_);
+	bool exp_is_int = false;
+	if (fabs(imag(exp_val)) < 10*std::numeric_limits<double>::epsilon())
+		if (fabs(real(exp_val) - std::round(real(exp_val))) < 10*std::numeric_limits<double>::epsilon())
+			exp_is_int = true;
+
+	if (!exp_is_int)
+		return base_deg==0 ? 0 : -1;
+
+	if (abs(exp_val-complex_dbl(0.0)) < 10*std::numeric_limits<double>::epsilon())
+		return 0;
+	if (real(exp_val)<0)
+		return -1;
+	if (base_deg<0)
+		return -1;
+	return base_deg*static_cast<int>(std::round(real(exp_val)));
 }
 
 

@@ -852,16 +852,29 @@ namespace bertini {
 		void SetVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
 			using NumT = typename Derived::Scalar;
 
-#if !defined(BERTINI_DISABLE_PRECISION_CHECKS)
-// && _WIN32
+			// The Memory's precision is an ARTIFACT OF THE CURRENT EVALUATION, never an
+			// invariant to defend.  The compiled Program is a precision-independent tape of
+			// operations; only the Memory holding values carries digits.  So evaluating at
+			// whatever precision the caller brings is always meaningful, and the right
+			// response to a mismatch is to RE-TAG THE MEMORY, not to refuse.
+			//
+			// Refusing was a genuine trap, not merely unergonomic.  A Memory takes its
+			// precision from the ambient DefaultPrecision() when the program is lazily
+			// compiled, while the owning System keeps whatever it was told, so the two
+			// diverge the moment anything moves the ambient default -- which an AMP tracker
+			// or endgame does as a matter of course.  The System was then WEDGED with no way
+			// out: evaluating at its own reported precision raised here, and
+			// System::precision(n) could not repair it, because both setters short-circuit
+			// when the value they are handed already equals the one they hold.  See #377.
+			//
 			// An empty variable vector (a constant program with no variables) has no
-			// precision to read or check.
-			if (!std::is_same<NumT,complex_dbl>::value && variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_){
-				std::stringstream err_msg;
-				err_msg << "variable_values and SLP must be of same precision.  respective precisions: " << Precision(variable_values) << " " << memory_.precision_ << std::endl;
-				throw std::runtime_error(err_msg.str());
+			// precision to read.  Re-tagging refills the constants from their exact recipes
+			// at the new precision, so accuracy is rebuilt rather than padded with zeros.
+			if constexpr (!std::is_same<NumT,complex_dbl>::value)
+			{
+				if (variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_)
+					this->precision(Precision(variable_values));
 			}
-#endif
 
 			auto& memory = memory_.Get<NumT>(); // unpack for local reference
 
@@ -883,14 +896,15 @@ namespace bertini {
 		template<typename ComplexT>
 		void SetPathVariable(ComplexT const& time) const{
 
-#if !defined(BERTINI_DISABLE_PRECISION_CHECKS)
-// && _WIN32
-			if (Precision(time)!= DoublePrecision() && Precision(time)!=memory_.precision_){
-				std::stringstream err_msg;
-				err_msg << "time value and SLP must be of same precision.  respective precisions: " << Precision(time) << " " << memory_.precision_ << std::endl;
-				throw std::runtime_error(err_msg.str());
+			// Same doctrine as SetVariableValues, but this one only ever raises: the
+			// variables have already been written into memory by the time the path variable
+			// arrives, so re-tagging DOWNWARD here would truncate them.  Memory therefore
+			// ends an evaluation at the max of its arguments' precisions.
+			if constexpr (!std::is_same<ComplexT,complex_dbl>::value)
+			{
+				if (Precision(time) > memory_.precision_)
+					this->precision(Precision(time));
 			}
-#endif
 
 			if (!this->HavePathVariable())
 				throw std::runtime_error("calling Eval with path variable, but this StraightLineProgram doesn't have one.");
@@ -899,6 +913,10 @@ namespace bertini {
 			auto& memory = memory_.Get<ComplexT>(); // unpack for local reference
 
 			memory[program_->input_locations_.Time] = time;
+			// assigning an mp value adopts the SOURCE's precision, so a lower-precision time
+			// would otherwise leave one slot out of step with the rest of memory
+			if constexpr (!std::is_same<ComplexT,complex_dbl>::value)
+				Precision(memory[program_->input_locations_.Time], memory_.precision_);
 			memory_.is_evaluated_ = false;
 		}
 

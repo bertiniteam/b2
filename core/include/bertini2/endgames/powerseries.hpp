@@ -805,6 +805,18 @@ public:
 	 		
 
 
+			// CONVERGED.  Break BEFORE the assignment below so previous_approximation_ keeps
+			// holding the genuine PREDECESSOR of final_approximation_.  The Cauchy flavor
+			// already behaves this way -- it returns from its acceptance gate before the
+			// corresponding assignment -- and the two must agree, because the public
+			// accessors FinalApproximation()/PreviousApproximation()/ApproximateError() are
+			// only coherent as a triple: overwriting here made previous == final on every
+			// successful run, so the reported error described a pair the caller could not
+			// see.  The loop's own condition is left in place so a FinalTolerance() >= 1
+			// still refuses to enter at all, exactly as before.
+			if (approx_error <= this->FinalTolerance())
+				break;
+
 	 		Precision(prev_approx, Precision(latest_approx));
 	 		prev_approx = latest_approx;
 		} //end while	
@@ -894,6 +906,18 @@ public:
 				}
 				norm_prev = norm_latest;
 			}
+
+			// CONVERGED.  Break BEFORE the assignment below so previous_approximation_ keeps
+			// holding the genuine PREDECESSOR of final_approximation_.  The Cauchy flavor
+			// already behaves this way -- it returns from its acceptance gate before the
+			// corresponding assignment -- and the two must agree, because the public
+			// accessors FinalApproximation()/PreviousApproximation()/ApproximateError() are
+			// only coherent as a triple: overwriting here made previous == final on every
+			// successful run, so the reported error described a pair the caller could not
+			// see.  The loop's own condition is left in place so a FinalTolerance() >= 1
+			// still refuses to enter at all, exactly as before.
+			if (this->approximate_error_ <= this->FinalTolerance())
+				break;
 
 			this->previous_approximation_ = this->final_approximation_;
 		}
