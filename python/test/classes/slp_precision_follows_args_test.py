@@ -53,7 +53,6 @@ def test_eval_after_the_ambient_default_moved_underneath_the_system():
     it -- the System was unusable in both directions."""
     bertini.default_precision(30)
     s = two_var_system()
-    s.precision(30)
 
     bertini.default_precision(16)          # what an AMP tracker/endgame leaves behind
 
@@ -64,7 +63,6 @@ def test_eval_after_the_ambient_default_moved_underneath_the_system():
 def test_jacobian_after_the_ambient_default_moved_underneath_the_system():
     bertini.default_precision(30)
     s = two_var_system()
-    s.precision(30)
     bertini.default_precision(16)
 
     J = np.atleast_2d(np.asarray(s.eval_jacobian(point_at(30, 3))))
@@ -120,7 +118,6 @@ def test_path_variable_precision_only_ever_increases_memory_precision():
     s.add_functions([x * t])
 
     bertini.default_precision(30)
-    s.precision(30)
     pt = np.array([complex_mp('2', '0')])
 
     bertini.default_precision(60)
