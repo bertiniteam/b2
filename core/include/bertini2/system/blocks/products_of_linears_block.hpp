@@ -95,14 +95,55 @@ public:
 	/// \brief Per-function degrees with respect to a given variable group (same as the total degrees).
 	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
 
-	// The products-of-linears block is the m-homogeneous start system, constructed already
-	// homogenized (each factor carries its group's homogenizing variable).  So Homogenize is a
-	// no-op and it reports homogeneous + polynomial.
-	/// \brief No-op: the block is constructed already homogenized.
-	void Homogenize(VariableGroup const&, std::shared_ptr<node::Variable> const&) {}
-	/// \brief Always true: a products-of-linears block is homogeneous.
-	bool IsHomogeneous(VariableGroup const&) const { return true; }
-	/// \brief Always true: a products-of-linears block is polynomial.
+	/// \brief Whether Homogenize has folded the constant column onto a homogenizing variable.
+	/// Then every column is a variable column and the block evaluates M*[vars] with no augmenting
+	/// 1.  Derived from the shape (a constructed block always has num_vars+1 columns), so it adds
+	/// no state and the canonical encoding is unchanged.
+	bool IsHomogenized() const
+	{
+		return !factors_highest_precision_.empty()
+		       && static_cast<size_t>(factors_highest_precision_.front().cols()) == num_vars_;
+	}
+
+	/// \brief Homogenize with respect to an affine variable group: fold each factor's constant
+	/// column onto the homogenizing variable.  The System prepends the homogenizing variable to
+	/// the ordering, so its column is the old constant column moved to the front -- exactly what
+	/// LinearFormsBlock does.  The m-homogeneous start system builds its block already homogeneous
+	/// (zero constant column, homogenizing variables among the columns) and is never asked; an
+	/// affine block built by add_products_of_linears -- a regeneration deformation, say -- used to
+	/// meet a no-op here and then be reported homogeneous, so a homogenized System kept an affine
+	/// block with the wrong variable count and could neither be expanded to nodes nor tracked
+	/// projectively (b2#376).  A second affine group is not yet supported and throws.
+	void Homogenize(VariableGroup const& /*group*/, std::shared_ptr<node::Variable> const& /*hom_var*/)
+	{
+		if (IsHomogenized())
+			throw std::runtime_error("ProductsOfLinearsBlock::Homogenize: block is already homogenized "
+				"(multiple affine variable groups are not yet supported for products-of-linears blocks)");
+		const Eigen::Index n = static_cast<Eigen::Index>(num_vars_);
+		for (auto& M : factors_highest_precision_)
+		{
+			Mat<complex_mp> Mh(M.rows(), M.cols());   // same column count, n+1: now all variable columns
+			Mh.col(0) = M.col(n);                      // constant -> the homogenizing variable, in front
+			Mh.rightCols(n) = M.leftCols(n);           // the original variable columns
+			M = Mh;
+		}
+		num_vars_ += 1;
+		BuildWorking();
+	}
+	/// \brief Homogeneous once Homogenize has run, or when every factor's constant column is zero
+	/// (the form the m-homogeneous start system builds directly).
+	bool IsHomogeneous(VariableGroup const&) const
+	{
+		if (IsHomogenized())
+			return true;
+		const Eigen::Index n = static_cast<Eigen::Index>(num_vars_);
+		for (auto const& M : factors_highest_precision_)
+			for (Eigen::Index r = 0; r < M.rows(); ++r)
+				if (M(r, n).real() != 0 || M(r, n).imag() != 0)
+					return false;
+		return true;
+	}
+	/// \brief Always true: a product of linear forms is a polynomial.
 	bool IsPolynomial(VariableGroup const&) const { return true; }
 
 	/// Number of variables the block expects in the input vector.
@@ -134,7 +175,7 @@ public:
 				for (Eigen::Index r = 0; r < k; ++r)
 				{
 					out << (r ? " * " : "") << "(";
-					describe_detail::PrintLinearFormVerbose(out, M, r, vars, num_vars_, false);
+					describe_detail::PrintLinearFormVerbose(out, M, r, vars, num_vars_, IsHomogenized());
 					out << ")";
 				}
 			}
@@ -302,6 +343,8 @@ private:
 	template <typename T>
 	Vec<T> Augment(Vec<T> const& vars) const
 	{
+		if (IsHomogenized())
+			return vars;                // every column is a variable column; nothing to append
 		Vec<T> aug(static_cast<Eigen::Index>(num_vars_ + 1));
 		aug.head(static_cast<Eigen::Index>(num_vars_)) = vars;
 		T one(1);
