@@ -36,6 +36,9 @@
 #include <Eigen/Dense>
 #include <Eigen/LU>
 
+#include <algorithm>
+#include <chrono>
+
 #include "externs.hpp"
 
 
@@ -616,6 +619,62 @@ BOOST_AUTO_TEST_CASE(is_distinct_infinity_norm)
 	db << 1.0, 2.0 + 1e-9;
 	BOOST_CHECK(!IsDistinct(da, db, 1e-6));
 	BOOST_CHECK( IsDistinct(da, db, 1e-12));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+
+// b2#401: the random conjugate-orthonormal matrix comes from a factorization sized to the shape
+// requested, not from a square one of the larger dimension truncated afterwards.
+BOOST_AUTO_TEST_SUITE(random_conjugate_orthonormal)
+
+BOOST_AUTO_TEST_CASE(shape_and_orthonormality_both_ways)
+{
+	using namespace bertini;
+	DefaultPrecision(30);
+
+	auto check = [](unsigned rows, unsigned cols)
+	{
+		Mat<complex_mp> M = RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);
+		BOOST_REQUIRE_EQUAL(M.rows(), static_cast<Eigen::Index>(rows));
+		BOOST_REQUIRE_EQUAL(M.cols(), static_cast<Eigen::Index>(cols));
+		auto const k = static_cast<Eigen::Index>(std::min(rows, cols));
+		Mat<complex_mp> const I = Mat<complex_mp>::Identity(k, k);
+		// wide: orthonormal rows (M M^H = I); tall or square: orthonormal columns (M^H M = I)
+		Mat<complex_mp> const G = (rows <= cols) ? Mat<complex_mp>(M * M.adjoint())
+		                                         : Mat<complex_mp>(M.adjoint() * M);
+		BOOST_CHECK_SMALL((G - I).norm(), real_mp("1e-25"));
+	};
+	check(3, 7);
+	check(7, 3);
+	check(5, 5);
+	check(1, 6);
+	check(6, 1);
+
+	Mat<complex_dbl> Md = RandomConjugateOrthonormalMatrix<complex_dbl>(2, 9);
+	BOOST_CHECK_SMALL((Md * Md.adjoint() - Mat<complex_dbl>::Identity(2, 2)).norm(), 1e-13);
+}
+
+BOOST_AUTO_TEST_CASE(cost_scales_with_the_shape_requested)
+{
+	// 4 x 1000 against 4 x 2000 at multiprecision: a factorization sized to the request is linear
+	// in the long side (ratio ~2); the old square-then-truncate recipe was cubic in it (ratio ~8,
+	// and the 2000 x 2000 factorization alone runs for minutes).  The cut leaves room on both sides.
+	using namespace bertini;
+	DefaultPrecision(30);
+
+	auto time_one = [](unsigned rows, unsigned cols)
+	{
+		RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);   // warm-up
+		auto start = std::chrono::steady_clock::now();
+		RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);
+		return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+	};
+	double const t1000 = time_one(4, 1000);
+	double const t2000 = time_one(4, 2000);
+	BOOST_TEST_MESSAGE("4x1000: " << t1000 << " s, 4x2000: " << t2000 << " s, ratio " << t2000 / t1000);
+	BOOST_CHECK_LT(t2000 / t1000, 4.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
