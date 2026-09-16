@@ -79,6 +79,15 @@ namespace bertini {
 	*/
 	ADD_BERTINI_EVENT_TYPE(Initializing,EndgameEvent);
 
+	/**
+	\brief The adaptive endgame is starting its approach over at a higher precision, because
+	the attempt at the lower one could not be set up.  Everything computed since Initializing
+	(the sample window, its refinements, the first approximation) is abandoned by the endgame,
+	and an observer keeping a record of the approach should drop it too.  Emitted after the
+	matching PrecisionChanged.
+	*/
+	ADD_BERTINI_EVENT_TYPE(Restarting,EndgameEvent);
+
 
 	/**
 	\brief Time advancing
@@ -86,13 +95,13 @@ namespace bertini {
 	ADD_BERTINI_EVENT_TYPE(TimeAdvanced,EndgameEvent);
 
 	/**
-	\brief A new sample point on the path was computed, completing one rung of the
+	\brief A new sample point on the path was computed, adding one point to the sequence of the
 	endgame's approach to the target time.
 
 	Emitted by BOTH endgame flavors, wherever a new path sample becomes final: the
 	power series endgame's time advance (after the new sample is refined), and the
 	Cauchy endgame's rotation onto its power-series window (as tracked -- Cauchy does
-	not refine at that site).  Together the emissions form a time-indexed ladder of
+	not refine at that site).  Together the emissions form a time-indexed sequence of
 	points approaching the root, which is what lets a consumer watch a derived
 	quantity -- the singular values of a Jacobian, say -- behave as a function of
 	distance to the root, rather than thresholding it at a single point.
@@ -103,7 +112,7 @@ namespace bertini {
 
 	Distinct from TimeAdvanced, which announces only that time moved and carries no
 	payload, and from SampleRefined, which fires once per EXISTING sample when the
-	whole window is re-refined rather than once per new rung.
+	whole window is re-refined rather than once per new sample.
 	*/
 	template<class ObservedT>
 	class ComputedSamplePoint : public EndgameEvent<ObservedT>

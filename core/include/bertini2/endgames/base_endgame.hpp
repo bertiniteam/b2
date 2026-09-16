@@ -517,9 +517,9 @@ public:
 
 		samples.push_back(x_endgame_start);
 		times.push_back(start_time);
-		// The endgame's own input point, AT the boundary time: the coarsest rung of
+		// The endgame's own input point, AT the boundary time: the coarsest sample of
 		// the approach, and the widest |t| any consumer will ever see.  Without these
-		// the ladder starts at boundary * sample_factor^(num_sample_points-1) --
+		// the sequence starts at boundary * sample_factor^(num_sample_points-1) --
 		// measured, 0.1 -> 1.25e-2, throwing away most of the span before anyone
 		// looks at it.
 		EmitComputedSample(samples[0], times[0]);

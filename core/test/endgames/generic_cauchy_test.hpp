@@ -2185,15 +2185,15 @@ BOOST_AUTO_TEST_CASE(observer_event_delivery)
 
 
 /**
-The SampleLadderCollector gathers the endgame's approach as a TIME-INDEXED LADDER, and
+The SampleSequenceCollector gathers the endgame's approach as a TIME-INDEXED SEQUENCE, and
 keeps the circle points in a bucket of their own.
 
 The separation is the point of the test.  The path samples approach the root as time
 shrinks, so a quantity that vanishes at the root traces a power law against their times;
 the circle points sit at CONSTANT |t| and do not approach anything, so mixing them into
-the ladder would destroy exactly the signal the ladder exists to carry.
+the sequence would destroy exactly the signal the sequence exists to carry.
 */
-BOOST_AUTO_TEST_CASE(sample_ladder_collector_separates_path_from_circle)
+BOOST_AUTO_TEST_CASE(sample_sequence_collector_separates_path_from_circle)
 {
 	DefaultPrecision(ambient_precision);
 
@@ -2227,44 +2227,44 @@ BOOST_AUTO_TEST_CASE(sample_ladder_collector_separates_path_from_circle)
 	TestedEGType my_endgame(tracker);
 	my_endgame.SetBoundaryTime(time);
 
-	bertini::endgame::SampleLadderCollector<TestedEGType> ladder;
-	my_endgame.AddObserver(ladder);
+	bertini::endgame::SampleSequenceCollector<TestedEGType> sequence;
+	my_endgame.AddObserver(sequence);
 
 	BOOST_CHECK(my_endgame.Run(sample)==SuccessCode::Success);
 
-	// -- the ladder was collected, and each bucket is internally consistent
-	BOOST_CHECK_GT(ladder.NumRungs(), 0u);
-	BOOST_CHECK_EQUAL(ladder.path_samples.size(), ladder.path_times.size());
-	BOOST_CHECK_EQUAL(ladder.circle_samples.size(), ladder.circle_times.size());
-	BOOST_CHECK_EQUAL(ladder.approximations.size(), ladder.approximation_times.size());
-	BOOST_CHECK_EQUAL(ladder.approximations.size(), ladder.approximation_errors.size());
-	BOOST_CHECK_EQUAL(ladder.approximations.size(), ladder.cycle_numbers.size());
+	// -- the sequence was collected, and each bucket is internally consistent
+	BOOST_CHECK_GT(sequence.NumSamples(), 0u);
+	BOOST_CHECK_EQUAL(sequence.path_samples.size(), sequence.path_times.size());
+	BOOST_CHECK_EQUAL(sequence.circle_samples.size(), sequence.circle_times.size());
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.approximation_times.size());
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.approximation_errors.size());
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.cycle_numbers.size());
 
 	// -- Cauchy tracks circles, so that bucket is populated too, and SEPARATELY
-	BOOST_CHECK_GT(ladder.circle_samples.size(), 0u);
-	BOOST_CHECK_GT(ladder.approximations.size(), 0u);
+	BOOST_CHECK_GT(sequence.circle_samples.size(), 0u);
+	BOOST_CHECK_GT(sequence.approximations.size(), 0u);
 
-	// -- THE LADDER PROPERTY: path times march monotonically toward the target time.
-	//    This is what makes them rungs; it is what the circle bucket does NOT do.
-	for (size_t i = 1; i < ladder.path_times.size(); ++i)
-		BOOST_CHECK_LT(abs(ladder.path_times[i]), abs(ladder.path_times[i-1]));
+	// -- THE SEQUENCE PROPERTY: path times march monotonically toward the target time.
+	//    This is what makes them a sequence toward the root; it is what the circle bucket does NOT do.
+	for (size_t i = 1; i < sequence.path_times.size(); ++i)
+		BOOST_CHECK_LT(abs(sequence.path_times[i]), abs(sequence.path_times[i-1]));
 
-	// -- and the approach is real: the last rung is nearer the root than the first
-	if (ladder.path_samples.size() >= 2)
+	// -- and the approach is real: the last sample is nearer the root than the first
+	if (sequence.path_samples.size() >= 2)
 	{
 		auto const& root = my_endgame.FinalApproximation<BCT>();
-		auto first = (ladder.path_samples.front() - root).template lpNorm<Eigen::Infinity>();
-		auto last  = (ladder.path_samples.back()  - root).template lpNorm<Eigen::Infinity>();
+		auto first = (sequence.path_samples.front() - root).template lpNorm<Eigen::Infinity>();
+		auto last  = (sequence.path_samples.back()  - root).template lpNorm<Eigen::Infinity>();
 		BOOST_CHECK_LT(last, first);
 	}
 
 	// -- the circle points do NOT march inward: they sit at (near) constant modulus, which
-	//    is precisely why they are not rungs.  Compare the spread of the circle times to
+	//    is precisely why they are not part of the sequence.  Compare the spread of the circle times to
 	//    the spread of the path times.
-	if (ladder.circle_times.size() >= 2)
+	if (sequence.circle_times.size() >= 2)
 	{
-		auto cmin = abs(ladder.circle_times.front()), cmax = cmin;
-		for (auto const& c : ladder.circle_times)
+		auto cmin = abs(sequence.circle_times.front()), cmax = cmin;
+		for (auto const& c : sequence.circle_times)
 		{
 			if (abs(c) < cmin) cmin = abs(c);
 			if (abs(c) > cmax) cmax = abs(c);
@@ -2272,18 +2272,18 @@ BOOST_AUTO_TEST_CASE(sample_ladder_collector_separates_path_from_circle)
 		BOOST_CHECK_GT(cmin, static_cast<decltype(cmin)>(0));
 	}
 
-	// -- exactly one endgame run was observed, and its rungs start at the beginning
-	BOOST_CHECK_EQUAL(ladder.NumRuns(), 1u);
-	BOOST_CHECK_EQUAL(ladder.run_path_starts.front(), 0u);
+	// -- exactly one endgame run was observed, and its samples start at the beginning
+	BOOST_CHECK_EQUAL(sequence.NumRuns(), 1u);
+	BOOST_CHECK_EQUAL(sequence.run_path_starts.front(), 0u);
 
 	// -- reusable across paths
-	ladder.Clear();
-	BOOST_CHECK_EQUAL(ladder.NumRungs(), 0u);
-	BOOST_CHECK_EQUAL(ladder.circle_samples.size(), 0u);
-	BOOST_CHECK_EQUAL(ladder.approximations.size(), 0u);
-	BOOST_CHECK_EQUAL(ladder.advance_times.size(), 0u);
-	BOOST_CHECK_EQUAL(ladder.NumRuns(), 0u);
-}// end sample_ladder_collector_separates_path_from_circle
+	sequence.Clear();
+	BOOST_CHECK_EQUAL(sequence.NumSamples(), 0u);
+	BOOST_CHECK_EQUAL(sequence.circle_samples.size(), 0u);
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), 0u);
+	BOOST_CHECK_EQUAL(sequence.advance_times.size(), 0u);
+	BOOST_CHECK_EQUAL(sequence.NumRuns(), 0u);
+}// end sample_sequence_collector_separates_path_from_circle
 
 
 

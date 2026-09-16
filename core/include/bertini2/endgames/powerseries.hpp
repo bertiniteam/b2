@@ -681,7 +681,7 @@ public:
 		this->EnsureAtPrecision(times.back(),Precision(samples.back()));
 
 		NotifyObservers(SampleRefined<EmitterType>(*this));
-		// the rung is complete once the new sample has been refined -- emit the
+		// the sample is complete once the new sample has been refined -- emit the
 		// REFINED value, not the freshly-tracked one pushed above
 		// ComputedSamplePoint carries the sample/time at BaseComplexT, like CircleAdvanced.
 		// The fixed/mpfr lane emits directly; the complex_dbl fast lane would have to convert
@@ -874,8 +874,13 @@ public:
 				: SetupSegmentT<complex_mp>(this->AtActivePrecisionScalar(start_time), this->AtActivePrecisionVec(start_point), this->AtActivePrecisionScalar(target_time));
 			if (code == SuccessCode::HigherPrecisionNecessary)
 			{
+				auto const previous_precision = this->current_endgame_precision_;
 				this->current_endgame_precision_ = this->NextEscalatedPrecision();
 				SetThreadPrecision(this->current_endgame_precision_);
+				// the abandoned attempt already announced its samples; say so, so a collector
+				// can drop them as the endgame does
+				NotifyObservers(PrecisionChanged<EmitterType>(*this, previous_precision, this->current_endgame_precision_));
+				NotifyObservers(Restarting<EmitterType>(*this));
 				continue;
 			}
 			if (code != SuccessCode::Success)

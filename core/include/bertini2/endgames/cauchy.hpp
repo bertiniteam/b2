@@ -1176,7 +1176,7 @@ public:
 		RotateOntoPS(next_time, next_sample);
 
 		NotifyObservers(TimeAdvanced<EmitterType>(*this));
-		// the rung is complete here: Cauchy does not refine the new power-series
+		// the sample is complete here: Cauchy does not refine the new power-series
 		// sample at this site (RefineAllSamples does the window later), so the
 		// event carries the sample as tracked
 		// ComputedSamplePoint carries the sample/time at BaseComplexT, like CircleAdvanced.
@@ -1527,8 +1527,13 @@ public:
 
 			if (init_code == SuccessCode::HigherPrecisionNecessary)
 			{
+				auto const previous_precision = this->current_endgame_precision_;
 				this->current_endgame_precision_ = this->NextEscalatedPrecision();
 				SetThreadPrecision(this->current_endgame_precision_);
+				// the abandoned attempt already announced its samples; say so, so a collector
+				// can drop them as the endgame does
+				NotifyObservers(PrecisionChanged<EmitterType>(*this, previous_precision, this->current_endgame_precision_));
+				NotifyObservers(Restarting<EmitterType>(*this));
 				continue;
 			}
 			if (init_code != SuccessCode::Success)

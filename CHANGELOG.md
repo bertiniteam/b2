@@ -100,6 +100,17 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- The endgames announce every sample point they compute along a path (`ComputedSamplePoint`,
+  carrying the point and its time), from both the power series and the Cauchy endgame, and a
+  `SampleSequenceCollector` observer (C++ and Python, `bertini.endgame.*.SampleSequenceCollector`)
+  gathers them: the sequence of points on the path at shrinking times, kept apart from the
+  Cauchy loop's circle points and from the successive approximations of the root, with run
+  boundaries so one collector attached to a solver's endgame can tell one path from the next.
+  This is what lets a caller watch a quantity such as a Jacobian's singular values as a
+  function of distance to the root instead of judging it at one point.  Every endgame run now
+  announces `Initializing`, and an adaptive endgame that abandons an attempt and starts over
+  at a higher precision announces `Restarting`, so the collector drops the abandoned samples as
+  the endgame does.  (#361, in part)
 - The records archive is reloadable.  Every system and homotopy a solve records is stored as its
   exact canonical encoding (the text its content digest is the hash of); there is now a reader for
   that text: `System.from_canonical(text)` rebuilds a system from it, `System.canonical_encoding()`

@@ -87,13 +87,13 @@ boost::python::list VectorOfScalarsToList(ContT const& c)
 
 
 /**
-\brief Exposes the three buckets of a SampleLadderCollector as Python lists.
+\brief Exposes the three buckets of a SampleSequenceCollector as Python lists.
 
 Each bucket is copied out on access -- the collector owns its vectors and keeps
 collecting, so handing Python a view would alias a container that grows.
 */
 template<typename ObsT>
-struct SampleLadderVisitor: public def_visitor<SampleLadderVisitor<ObsT> >
+struct SampleSequenceVisitor: public def_visitor<SampleSequenceVisitor<ObsT> >
 {
 	friend class ::boost::python::def_visitor_access;
 
@@ -103,14 +103,14 @@ public:
 	void visit(PyClass& cl) const {
 		cl
 		.def("path_samples", &PathSamples, arg("self"),
-			"The ladder: points ON the path, at geometrically shrinking times, approaching the root.  "
+			"The sequence: points ON the path, at geometrically shrinking times, approaching the root.  "
 			"These are what a trend read wants -- a quantity that vanishes at the root traces a power "
 			"law against the matching path_times, and one that does not is flat.")
 		.def("path_times", &PathTimes, arg("self"),
 			"The time at which each path sample was computed.  Same length as path_samples.")
 		.def("circle_samples", &CircleSamples, arg("self"),
 			"Circle-track points (Cauchy only).  These sit at CONSTANT |t| and do not approach the "
-			"root, so they are NOT rungs of the ladder -- their mean is what becomes an approximation.  "
+			"root, so they are NOT part of the sequence -- their mean is what becomes an approximation.  "
 			"Kept separate for loop diagnostics.")
 		.def("circle_times", &CircleTimes, arg("self"),
 			"The time of each circle sample.  Same length as circle_samples.")
@@ -128,13 +128,17 @@ public:
 		.def("advance_times", &AdvanceTimes, arg("self"),
 			"Times at which TimeAdvanced fired.  That event carries no payload of its own, and is "
 			"emitted by the Cauchy endgame only.")
-		.def("num_rungs", &ObsT::NumRungs, arg("self"),
-			"The number of rungs collected -- the length of the ladder.")
+		.def("num_samples", &ObsT::NumSamples, arg("self"),
+			"The number of samples collected -- the length of the sequence.")
+		.def("num_restarts", &NumRestarts, arg("self"),
+			"How many times an adaptive endgame abandoned an attempt and started the approach over at a "
+			"higher precision.  The abandoned samples are dropped from the sequence, as the endgame "
+			"dropped them, so path_times keep marching toward the target within each run.")
 		.def("num_runs", &ObsT::NumRuns, arg("self"),
 			"The number of endgame runs observed -- the number of paths, when attached to a solver's "
 			"endgame via get_endgame().")
 		.def("run_path_starts", &RunPathStarts, arg("self"),
-			"Index into path_samples where each run's rungs begin, so one path's ladder can be told "
+			"Index into path_samples where each run's samples begin, so one path's sequence can be told "
 			"from the next: run j owns path_samples[run_path_starts[j] : run_path_starts[j+1]].")
 		.def("run_circle_starts", &RunCircleStarts, arg("self"),
 			"Index into circle_samples where each run's circle points begin.")
@@ -146,6 +150,7 @@ public:
 	}
 
 private:
+	static size_t NumRestarts(ObsT const& self)                      { return self.num_restarts; }
 	static boost::python::list PathSamples(ObsT const& self)         { return VectorOfPointsToList(self.path_samples); }
 	static boost::python::list PathTimes(ObsT const& self)           { return VectorOfScalarsToList(self.path_times); }
 	static boost::python::list CircleSamples(ObsT const& self)       { return VectorOfPointsToList(self.circle_samples); }

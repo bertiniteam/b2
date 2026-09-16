@@ -181,7 +181,7 @@ virtual ObserveResult Observe(AnyEvent const& e) override
 
 
 /**
-\brief Collects an endgame's approach to the root as a time-indexed ladder, for callers
+\brief Collects an endgame's approach to the root as a time-indexed sequence, for callers
 that need to watch a quantity BEHAVE as the point improves rather than judge it at a
 single point.
 
@@ -193,13 +193,13 @@ approach itself, not just its final answer, which is what this collects.
 
 THREE BUCKETS, kept apart because they are different evidence:
 
-- ``path_samples`` -- the rungs, from ComputedSamplePoint.  Points ON the path at
-  geometrically shrinking times, approaching the root.  These are the ladder: distance to
+- ``path_samples`` -- the samples, from ComputedSamplePoint.  Points ON the path at
+  geometrically shrinking times, approaching the root.  These are the sequence: distance to
   the root falls as |t|^(1/c) with c the cycle number, so a quantity that vanishes at the
   root traces a power law against these times, and one that does not is flat.
 - ``circle_samples`` -- from CircleAdvanced, Cauchy only.  These sit at CONSTANT |t| and
-  do not approach the root, so they are not rungs; their mean is what becomes an
-  approximation.  Kept for loop diagnostics, never mixed into the ladder.
+  do not approach the root, so they are not part of the sequence; their mean is what becomes an
+  approximation.  Kept for loop diagnostics, never mixed into the sequence.
 - ``approximations`` -- from ApproximatedRoot, with the error and cycle number the
   endgame reported at each.  Estimates OF the root rather than points on the path.
 
@@ -213,13 +213,13 @@ for the handful this asks for.
 \ingroup observer
 */
 template <typename EndgameT>
-struct SampleLadderCollector : public Observer<EndgameT>
+struct SampleSequenceCollector : public Observer<EndgameT>
 {BOOST_TYPE_INDEX_REGISTER_CLASS
 
 using EmitterT = EndgameT;                    ///< The endgame type emitting the observed events.
 using BCT = typename EndgameT::BaseComplexT;  ///< The boundary complex type of the observed endgame.
 
-std::vector<Vec<BCT>> path_samples;      ///< Points on the path, from ComputedSamplePoint -- the ladder.
+std::vector<Vec<BCT>> path_samples;      ///< Points on the path, from ComputedSamplePoint -- the sequence.
 std::vector<BCT>      path_times;        ///< The time at which each path sample was computed.
 
 std::vector<Vec<BCT>> circle_samples;    ///< Circle-track points, from CircleAdvanced (Cauchy only).
@@ -234,10 +234,12 @@ std::vector<BCT> advance_times;          ///< Times at which TimeAdvanced fired 
 
 // Run boundaries.  One entry per endgame Run, holding the size each bucket had when that
 // run began -- so a collector attached to a whole solve can still tell one path from the
-// next.  Rungs of run j are path_samples[run_path_starts[j] .. run_path_starts[j+1]).
-std::vector<size_t> run_path_starts;     ///< Index into path_samples where each run's rungs begin.
+// next.  Samples of run j are path_samples[run_path_starts[j] .. run_path_starts[j+1]).
+std::vector<size_t> run_path_starts;     ///< Index into path_samples where each run's samples begin.
 std::vector<size_t> run_circle_starts;   ///< Index into circle_samples where each run's circle points begin.
 std::vector<size_t> run_approx_starts;   ///< Index into approximations where each run's approximations begin.
+
+size_t num_restarts = 0;   ///< How many times an adaptive endgame abandoned an attempt and started over at a higher precision (Restarting); the abandoned samples are not in the sequence.
 
 /// \brief Forget everything collected so far, so one collector can be reused across paths.
 void Clear()
@@ -249,13 +251,14 @@ void Clear()
 	advance_times.clear();
 	run_path_starts.clear();       run_circle_starts.clear();
 	run_approx_starts.clear();
+	num_restarts = 0;
 }
 
 /// \return The number of endgame runs observed -- the number of paths, when attached to a solver.
 size_t NumRuns() const { return run_path_starts.size(); }
 
-/// \return The number of rungs collected -- the length of the ladder.
-size_t NumRungs() const { return path_samples.size(); }
+/// \return The number of samples collected -- the length of the sequence.
+size_t NumSamples() const { return path_samples.size(); }
 
 virtual ObserveResult Observe(AnyEvent const& e) override
 {
@@ -291,10 +294,30 @@ virtual ObserveResult Observe(AnyEvent const& e) override
 		run_approx_starts.push_back(approximations.size());
 	}
 
+	else if (dynamic_cast<const Restarting<EmitterT>*>(&e))
+	{
+		// The adaptive endgame abandoned everything since this run began (its attempt at the
+		// lower precision could not be set up) and starts the approach over from the boundary.
+		// Drop the abandoned samples as the endgame did, so the sequence holds only the
+		// approach that was kept -- and its times keep marching toward the target.
+		if (!run_path_starts.empty())
+		{
+			path_samples.resize(run_path_starts.back());
+			path_times.resize(run_path_starts.back());
+			circle_samples.resize(run_circle_starts.back());
+			circle_times.resize(run_circle_starts.back());
+			approximations.resize(run_approx_starts.back());
+			approximation_times.resize(run_approx_starts.back());
+			approximation_errors.resize(run_approx_starts.back());
+			cycle_numbers.resize(run_approx_starts.back());
+		}
+		++num_restarts;
+	}
+
 	return ObserveResult::KeepObserving;
 }
 
-}; // SampleLadderCollector
+}; // SampleSequenceCollector
 
 
 	} //re: namespace endgames
