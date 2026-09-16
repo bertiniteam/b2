@@ -110,9 +110,7 @@ never differentiated as the slice moves -- while only the moving row is nonzero:
     pt = np.array([bertini.multiprec.complex_mp('0.3'),
                    bertini.multiprec.complex_mp('0.4'),
                    bertini.multiprec.complex_mp('0.5')])
-    # the adaptive solve above left H at double precision; match it to the evaluation point's
-    # precision before evaluating the homotopy directly.
-    H.precision(pt[0].precision)
+    # H evaluates at the precision of the point it is given; nothing to align first.
     dHdt = H.eval_time_derivative(pt, bertini.multiprec.complex_mp('0.5'))
     assert abs(complex(dHdt[0])) == 0.0      # sphere row: out of dH/dt
     assert abs(complex(dHdt[1])) == 0.0      # static slice row: out of dH/dt

@@ -107,7 +107,7 @@ namespace node{
 
 		int Degree(VariableGroup const& vars) const override;
 		
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
 
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 

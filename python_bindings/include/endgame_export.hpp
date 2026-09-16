@@ -78,6 +78,26 @@ namespace bertini{
 				return self.template FinalApproximation<T>();
 			}
 
+			// Returned BY VALUE, like the final approximation above: the endgame owns its
+			// approximation vectors and overwrites them on the next run, so handing Python a
+			// reference into that storage would alias live endgame state (ADR-0051's
+			// owned-copy doctrine for eigenpy-backed vectors).
+			template <typename T>
+			static
+			Vec<T> return_previous_approximation(EndgameT const& self)
+			{
+				return self.template PreviousApproximation<T>();
+			}
+
+			// Free function rather than a member pointer, for the same reason CycleNumber
+			// needs GetCycleNumberFn(): the accessor lives on the CRTP base, and naming it
+			// through the derived endgame type keeps overload resolution unambiguous.
+			static
+			NumErrorT return_approximate_error(EndgameT const& self)
+			{
+				return self.ApproximateError();
+			}
+
 		};// EndgameVisitor class
 
 
@@ -152,6 +172,17 @@ namespace bertini{
 
 			.def("final_approximation", &return_final_approximation<BCT>,arg("self"),"Get the current approximation of the root, in the ambient numeric type for the tracker being used")
 
+			.def("previous_approximation", &return_previous_approximation<BCT>,arg("self"),
+				"Get the second-most-recent approximation of the root, in the ambient numeric type for the tracker being used.  "
+				"Together with final_approximation() this is the pair the endgame's own convergence test compares, so the two "
+				"give you a second sample of the root at a KNOWN, coarser accuracy -- useful for judging how a quantity computed "
+				"at the root (a Jacobian's singular values, say) behaves as the approximation improves.  Empty before a run.")
+
+			.def("approximate_error", &return_approximate_error,arg("self"),
+				"Get the endgame's most recent accuracy estimate: the infinity norm of the difference between "
+				"final_approximation() and previous_approximation().  This is the quantity the endgame compares against the "
+				"final tolerance to decide it has converged.  Returns infinity when no approximation has been computed yet.")
+
 			.def("run", &EndgameBaseVisitor::WrapRun,
 				 (arg("self"), "start_point"),
 				 "Run the endgame from the stored boundary time to the stored target time. "
@@ -184,7 +215,18 @@ namespace bertini{
 			cl
 			.def(init<TrackerT const&, endgame::CauchyConfig const&>((arg("self"),arg("tracker"),arg("cauchyconfig"))))
 			.def(init<TrackerT const&, endgame::EndgameConfig const&>((arg("self"),arg("tracker"),arg("endgameconfig"))))
-			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))));
+			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))))
+
+			// flavor-config accessors, mirroring the generic get/set_endgame_settings on EndgameBaseVisitor.
+			// Without these the CauchyConfig (maximum_cauchy_ratio, ...) is constructor-only -- unreachable
+			// once the endgame is built (e.g. the one a HomotopySolver owns).  get returns a detached copy;
+			// mutate it and hand it back through set.
+			.def("get_cauchy_settings", &EndgameT::template Get<endgame::CauchyConfig>,
+				 return_value_policy<copy_const_reference>(), arg("self"),
+				 "Get a copy of the Cauchy-specific endgame settings (maximum_cauchy_ratio, etc.)")
+			.def("set_cauchy_settings", &EndgameT::template Set<endgame::CauchyConfig>,
+				 (arg("self"), arg("settings")),
+				 "Set the Cauchy-specific endgame settings");
 		}
 
 
@@ -197,7 +239,18 @@ namespace bertini{
 			cl
 			.def(init<TrackerT const&, endgame::PowerSeriesConfig const&>((arg("self"),arg("tracker"),arg("powerseriesconfig"))))
 			.def(init<TrackerT const&, endgame::EndgameConfig const&>((arg("self"),arg("tracker"),arg("endgameconfig"))))
-			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))));
+			.def(init<TrackerT const&, endgame::SecurityConfig const&>((arg("self"),arg("tracker"),arg("securityconfig"))))
+
+			// flavor-config accessors, mirroring the generic get/set_endgame_settings on EndgameBaseVisitor.
+			// Without these the PowerSeriesConfig (max_cycle_number, ...) is constructor-only -- unreachable
+			// once the endgame is built (e.g. the one a HomotopySolver owns).  get returns a detached copy;
+			// mutate it and hand it back through set.
+			.def("get_powerseries_settings", &EndgameT::template Get<endgame::PowerSeriesConfig>,
+				 return_value_policy<copy_const_reference>(), arg("self"),
+				 "Get a copy of the power-series-specific endgame settings (max cycle number, etc.)")
+			.def("set_powerseries_settings", &EndgameT::template Set<endgame::PowerSeriesConfig>,
+				 (arg("self"), arg("settings")),
+				 "Set the power-series-specific endgame settings");
 		}
 
 

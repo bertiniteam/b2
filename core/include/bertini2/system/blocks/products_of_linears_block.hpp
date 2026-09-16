@@ -157,6 +157,11 @@ public:
 	/// Set the working precision; recasts the mpfr working coefficients from the master.
 	void Precision(unsigned new_precision) const
 	{
+		// short-circuit when already materialized here.  Each holder of mp values keeps its
+		// own "materialized at" tag; System deliberately keeps none and simply fans out on
+		// every evaluation, which is cheap precisely because of this early return (ADR-0057).
+		if (precision_==new_precision)
+			return;
 		if (new_precision > DoublePrecision())
 		{
 			auto& wm = std::get<std::vector<Mat<complex_mp>>>(factors_working_);
@@ -183,6 +188,7 @@ public:
 	template <typename T>
 	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
 	{
+		SyncPrecision(vars);
 		const auto& W = Working<T>();
 		// aug = [vars ; 1].  The trailing 1 lets each coefficient row carry its constant
 		// term in its last column, so a linear factor is just the dot product (row . aug).
@@ -212,6 +218,7 @@ public:
 	template <typename T>
 	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& /*path_value*/) const
 	{
+		SyncPrecision(vars);
 		const auto& W = Working<T>();
 		const Vec<T> aug = Augment<T>(vars);          // [vars ; 1]; see EvalInPlace
 
@@ -267,6 +274,25 @@ public:
 	}
 
 private:
+	/// Materialize the working coefficients at the precision of the point being evaluated.
+	/// Every evaluable type self-aligns this way (blend_block established the pattern), so no
+	/// caller and no owning System has to fan a precision out beforehand -- ADR-0057.
+	/// Precision() short-circuits when already there, so the steady state is one integer
+	/// compare.  No-op for double, which carries no precision.
+	template <typename T>
+	void SyncPrecision(Vec<T> const& vars) const
+	{
+		if constexpr (!std::is_same<T, complex_dbl>::value)
+		{
+			if (vars.size() > 0)
+			{
+				const unsigned p = bertini::Precision(vars(0));
+				if (p != precision_)
+					Precision(p);
+			}
+		}
+	}
+
 	template <typename T>
 	const std::vector<Mat<T>>& Working() const
 	{
