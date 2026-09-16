@@ -136,6 +136,17 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   derived quantity (the singular values of a Jacobian, say) behaves as the approximation
   improves, rather than thresholding it at one point.
 
+### Changed
+
+- **The default endgame is the power series endgame**, matching Bertini 1's documented default
+  (`EndgameNum: 1`), at every choice point: the configuration default (so the CLI and a classic
+  input without `endgamenum`), and the Python factories `ZeroDimSolver`, `HomotopySolver`,
+  `user_homotopy`, `parameter_sweep` and `bertini.solve`.  Measured on a regeneration workload,
+  the Cauchy default cost 190 s where power series takes 2.5 s, because slowly diverging paths
+  are a Cauchy-specific pathology.  Cauchy remains available by explicit request
+  (`endgamenum: 2`, `endgame='cauchy'`).  A solve that relied on the default is now a different
+  computation, so its records are new asks rather than recalls.  See ADR-0058.
+
 ### Fixed
 
 - A power with a non-integer exponent and no variable in it -- `5^(1/2)`, which is how Bertini 1
@@ -195,6 +206,11 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   endgame was silently reverted at every `solve()` by the solver's own copy.  The solver's value
   now flows into the endgame at setup and whenever the solver's value changes, so whichever was
   set last wins and nothing is reverted without a word.
+- Classic input with Bertini 1 comments (`%` to the end of the line) is accepted by every
+  parse entry point (`System(text)`, `parse.system`, the CLI), including a comment that
+  mentions `INPUT` or `END;`: comments are removed in C++ before the file wrappers are
+  unwrapped and the grammar runs.  The Python text-scanning shim that looked for the INPUT
+  section is gone.  (#407)
 - Asking for a random slice with more linear forms than variables (`Slice.random_complex(vars,
   dim)` with `dim > len(vars)`, and the real and through-point forms alike) silently produced
   dependent rows; it is now a `ValueError` (C++ `std::invalid_argument`) that says so.  (#380)
