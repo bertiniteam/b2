@@ -176,6 +176,16 @@ namespace bertini {
 		{
 			const unsigned num_vars = static_cast<unsigned>(v.size());
 
+			// more forms than variables cannot be independent: the orthonormalization below would
+			// hand back dependent rows without a word, and the slice would cut nothing new (b2#380)
+			if (dim > num_vars)
+				throw std::invalid_argument("Slice: " + std::to_string(dim) + " linear forms on "
+					+ std::to_string(num_vars) + " variables; a slice cannot have more forms than variables");
+			if (homogeneous && through_point && dim + 1 > num_vars)
+				throw std::invalid_argument("Slice: " + std::to_string(dim) + " homogeneous linear forms through a point on "
+					+ std::to_string(num_vars) + " variables; the forms live in the point's orthogonal complement, which has "
+					+ std::to_string(num_vars - 1) + " dimensions");
+
 			if (through_point && static_cast<unsigned>(through_point->size()) != num_vars)
 				throw std::runtime_error("Slice: through_point must have num_variables entries");
 

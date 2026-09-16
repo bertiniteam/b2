@@ -64,14 +64,14 @@ BOOST_AUTO_TEST_CASE(slice_basic_complex)
 
 BOOST_AUTO_TEST_CASE(slice_basic_crazy_overslice)
 {
+	// six forms on three variables cannot be independent; since b2#380 this is refused rather
+	// than handed back with dependent rows (it used to pin only that the shape came out 6x3)
 	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
-	auto s = Slice::RandomComplex(vars,6);
-
-	BOOST_CHECK_EQUAL(s.Dimension(),6);
-	BOOST_CHECK_EQUAL(s.NumVariables(),3);
+	BOOST_CHECK_THROW(Slice::RandomComplex(vars,6), std::invalid_argument);
+	BOOST_CHECK_EQUAL(Slice::RandomComplex(vars,3).Dimension(),3);   // as many forms as variables is the most
 }
 
 
@@ -150,14 +150,14 @@ BOOST_AUTO_TEST_CASE(jacobian_is_variable_coefficient_block)
 BOOST_AUTO_TEST_CASE(head_tail_rows_subsetting)
 {
 	DefaultPrecision(30);
-	Var w = Variable::Make("w"), x = Variable::Make("x"), y = Variable::Make("y");
-	VariableGroup vars{w,x,y};
+	Var w = Variable::Make("w"), x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	VariableGroup vars{w,x,y,z};   // four variables, so four forms is a full (independent) slice
 
 	auto s = Slice::RandomComplex(vars,4);
 
 	auto h = s.Head(2);
 	BOOST_CHECK_EQUAL(h.Dimension(),2);
-	BOOST_CHECK_EQUAL(h.NumVariables(),3);
+	BOOST_CHECK_EQUAL(h.NumVariables(),4);
 	// the head's forms are exactly the slice's first two forms.
 	BOOST_CHECK((h.Coefficients() - s.Coefficients().topRows(2)).norm() < real_mp("1e-30"));
 
@@ -508,5 +508,28 @@ BOOST_AUTO_TEST_CASE(homogeneous_through_point_non_orthogonal_vanishes)
 	BOOST_CHECK_SMALL(s.Eval(p_dbl).norm(), 1e-10);
 }
 
+
+// b2#380: more linear forms than variables cannot be independent -- the orthonormalization
+// would hand back dependent rows silently.  Every random factory refuses, and says why.
+BOOST_AUTO_TEST_CASE(more_forms_than_variables_is_refused)
+{
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	VariableGroup vars{x,y};
+
+	BOOST_CHECK_THROW(Slice::RandomComplex(vars, 3), std::invalid_argument);
+	BOOST_CHECK_THROW(Slice::RandomReal(vars, 3), std::invalid_argument);
+	BOOST_CHECK_THROW(Slice::RandomComplex(vars, 3, true), std::invalid_argument);            // homogeneous
+	BOOST_CHECK_THROW(Slice::RandomComplex(vars, 3, false, false), std::invalid_argument);    // non-orthogonal too
+
+	Vec<complex_mp> p(2); p << complex_mp(2), complex_mp(-3);
+	BOOST_CHECK_THROW(Slice::RandomComplex(vars, 3, false, true, &p), std::invalid_argument);
+	// homogeneous through a point: the forms live in the point's complement, one dimension fewer
+	BOOST_CHECK_THROW(Slice::RandomComplex(vars, 2, true, true, &p), std::invalid_argument);
+
+	// the boundary cases still work
+	BOOST_CHECK_EQUAL(Slice::RandomComplex(vars, 2).Dimension(), 2u);
+	BOOST_CHECK_EQUAL(Slice::RandomComplex(vars, 1, true, true, &p).Dimension(), 1u);
+	BOOST_CHECK_EQUAL(Slice::RandomReal(vars, 2, false, true, &p).Dimension(), 2u);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

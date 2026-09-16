@@ -67,6 +67,16 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [3.5.0] - unreleased
+
+### Fixed
+
+- Asking for a random slice with more linear forms than variables (`Slice.random_complex(vars,
+  dim)` with `dim > len(vars)`, and the real and through-point forms alike) silently produced
+  dependent rows; it is now a `ValueError` (C++ `std::invalid_argument`) that says so.  (#380)
+
+_______________________________________________________________________________
+
 ## [3.4.0] - 2026-07-16
 
 A one-call way to build a linear slice that passes through a chosen point, an endgame-hardening
