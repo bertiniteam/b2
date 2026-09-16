@@ -813,7 +813,27 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
             "    start_solver.solve()\n"
             "    nag_algorithm.HomotopySolver(homotopy, start_solver.all_solutions(), target)"
             .format(type(start_points).__name__))
-    user_start = _pybnalag.UserStartSystem(target, _coerce_start_points(start_points))
+    points = _coerce_start_points(start_points)
+    # Validate the shapes HERE, at the Python boundary.  The native tracker checks them too, but
+    # it throws from inside the tracking loop (possibly on a worker thread), where the exception
+    # cannot propagate: the process aborts with no traceback, taking every computation in flight
+    # with it (issues #369, #383).  A mismatch is a caller error, so it must be a Python exception.
+    n_vars = homotopy.num_variables()
+    for k, p in enumerate(points):
+        if len(p) != n_vars:
+            raise ValueError(
+                "HomotopySolver: start point {} has {} coordinate(s) but the homotopy has {} "
+                "variable(s) (the path variable is not a coordinate); every start point needs "
+                "exactly one coordinate per variable, in the homotopy's variable order"
+                .format(k, len(p), n_vars))
+    n_fun = homotopy.num_functions()
+    if n_fun != n_vars:
+        raise ValueError(
+            "HomotopySolver: the homotopy has {} function(s) in {} variable(s), and tracking needs "
+            "a SQUARE system.  Square it first -- randomize it down to the variable count "
+            "(System.randomize) or cut it with a slice -- instead of tracking the overdetermined "
+            "system.".format(n_fun, n_vars))
+    user_start = _pybnalag.UserStartSystem(target, points)
     solver = solver_cls(target, user_start, homotopy)
     return _HomotopySolverHolder(solver, homotopy, target, user_start)
 
@@ -908,9 +928,14 @@ def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma
     with ``end_moving`` (e.g. via ``bertini.system.concatenate``).  ``gamma=None`` draws a random
     rational gamma.
 
+    Any of ``fixed``, ``start_moving`` and ``end_moving`` may be a :class:`~bertini.Slice`; it is
+    taken as the system of its linear forms (a moving slice is the common case, issue #381).
+
     Returns the homotopy System; pair it with :func:`user_homotopy` and your start points to solve.
     """
     from bertini._pybertini import system as _system
+    fixed, start_moving, end_moving = (s.as_system() if isinstance(s, _pybnalag.Slice) else s
+                                       for s in (fixed, start_moving, end_moving))
     return _system.make_moving_homotopy(fixed, start_moving, end_moving, path_variable, gamma)
 
 

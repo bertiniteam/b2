@@ -1210,6 +1210,35 @@ BOOST_AUTO_TEST_CASE(endpoint_singular_values_are_the_spectrum_behind_the_condit
 	BOOST_CHECK(saw_collapse);
 }
 
+
+// b2#392: the solver's final_tolerance flows into the endgame at setup and whenever the solver's
+// own value changes -- not unconditionally at every solve, which silently reverted a value set
+// directly on the endgame.  Whichever was set last wins.
+BOOST_AUTO_TEST_CASE(final_tolerance_set_on_the_endgame_survives_a_solve)
+{
+	using namespace bertini;
+	using TrackerT = tracking::DoublePrecisionTracker;
+	auto x = Variable::Make("x");
+	System sys;
+	sys.AddVariableGroup(VariableGroup{x});
+	sys.AddFunction(x*x - 1);
+	auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+	zd.DefaultSetup();
+
+	const double solver_default = zd.template Get<algorithm::TolerancesConfig>().final_tolerance;
+	BOOST_CHECK_EQUAL(double(zd.GetEndgame().FinalTolerance()), solver_default);   // setup pushed it
+
+	zd.GetEndgame().SetFinalTolerance(1e-8);     // set directly on the endgame ...
+	zd.Solve();
+	BOOST_CHECK_CLOSE(double(zd.GetEndgame().FinalTolerance()), 1e-8, 1e-9);   // ... survives the solve
+
+	auto tol = zd.template Get<algorithm::TolerancesConfig>();
+	tol.final_tolerance = 1e-9;
+	zd.template Set<algorithm::TolerancesConfig>(tol);   // a later solver-level setting wins
+	zd.Solve();
+	BOOST_CHECK_CLOSE(double(zd.GetEndgame().FinalTolerance()), 1e-9, 1e-9);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
