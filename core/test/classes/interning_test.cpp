@@ -27,7 +27,9 @@ node (the bug where SimplifiedSum did Make(first) then AddOperand(rest), corrupt
 single-operand sum).
 */
 
+#include <algorithm>
 #include <cstdlib>
+#include <limits>
 #include <sstream>
 #include <chrono>
 #include <map>
@@ -304,8 +306,16 @@ BOOST_AUTO_TEST_CASE(multidegree_cost_follows_the_dag_not_the_expansion)
 			e->MultiDegree(vars);
 		return std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
 	};
-	double const us12 = time_multidegree(e12, vars12);
-	double const us18 = time_multidegree(e18, vars18);
+	// The intrinsic cost is the MINIMUM over several trials: a shared CI runner can stall one
+	// trial for milliseconds (a single stall once read as a ratio of 11.5 on macOS), and only
+	// the minimum is immune to that.  The trials are interleaved so a slow stretch of the
+	// machine cannot land on all of one size's trials.
+	double us12 = std::numeric_limits<double>::infinity(), us18 = us12;
+	for (int trial = 0; trial < 7; ++trial)
+	{
+		us12 = std::min(us12, time_multidegree(e12, vars12));
+		us18 = std::min(us18, time_multidegree(e18, vars18));
+	}
 	double const ratio = us18 / us12;
 
 	BOOST_TEST_MESSAGE("MultiDegree x50: 12 levels " << us12 << " us, 18 levels " << us18
