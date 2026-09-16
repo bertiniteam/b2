@@ -65,23 +65,24 @@ each coordinate with :func:`complex`:
 Setting the precision
 =====================
 
-A **fixed multiple** solve works at one precision *everywhere*: the system, the tracker, and the
-points must all agree. So set the default precision and lift the system to it before constructing the
-solver:
+A **fixed multiple** solve works at one precision *everywhere*: the tracker and every point it
+produces carry the same number of digits, taken from the default precision when the solver is
+constructed. There is nothing to set on the system. A ``System`` carries no precision of its own --
+it evaluates at the precision of whatever point it is handed -- so the same ``system`` object serves
+a 16-digit solve, a 40-digit solve and an adaptive solve unchanged:
 
 .. testcode::
 
    bertini.default_precision(40)                  # 40 digits for this solve
-   system.precision(40)                           # the system must match
    m = bertini.ZeroDimSolver(system, mptype='multiple')
    m.solve()
    assert len(m.all_solutions()) == 2
+   assert m.all_solutions()[0][0].precision == 40  # the points carry the digits
 
    bertini.default_precision(30)                  # restore a modest default
-   system.precision(30)
 
-(Mismatch is reported, not silently tolerated: constructing a multiple-precision solve whose system
-sits at a different precision raises rather than tracking at the wrong precision.)
+(Earlier versions required ``system.precision(40)`` to match the solver, and raised on a mismatch.
+That call no longer exists: the precision belongs to the points, and a system follows them.)
 
 An **adaptive** solve manages precision itself; its knobs live in the AMP config -- most usefully
 ``maximum_precision``, the ceiling above which a path is declared to have failed:

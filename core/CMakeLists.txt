@@ -239,6 +239,7 @@ set(io_parsing_settings_headers
 
 set(nag_algorithms_headers
 	include/bertini2/nag_algorithms/midpath_check.hpp
+	include/bertini2/nag_algorithms/newton_refine.hpp
 	include/bertini2/nag_algorithms/numerical_irreducible_decomposition.hpp
 	include/bertini2/nag_algorithms/output.hpp
 	include/bertini2/nag_algorithms/sharpen.hpp
@@ -931,6 +932,7 @@ if (ENABLE_UNIT_TESTING)
 		test/nag_algorithms/zero_dim_records.cpp
 		test/nag_algorithms/numerical_irreducible_decomposition.cpp
 		test/nag_algorithms/trace.cpp
+		test/nag_algorithms/newton_refine.cpp
 	)
 
 	add_executable(test_nag_algorithms ${B2_NAG_ALGORITHMS_TEST})

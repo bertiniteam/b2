@@ -37,3 +37,32 @@ def test_mptype_and_predictor_are_selectable():
     assert 'mptype: 0;' in _circle_line().to_classic_input(mptype=0)     # double
     assert 'odepredictor: 0;' in _circle_line().to_classic_input(odepredictor=0)
     assert 'odepredictor: 5;' in _circle_line().to_classic_input()       # RKF45 default
+
+
+def test_float_coefficients_print_full_precision():
+    """A coefficient must round-trip EXACTLY through classic input: streaming at the
+    ostream default (6 significant digits) silently truncated every printed system
+    (found via a cellcap bundle whose crit-curve system was a 1e-6 impostor)."""
+    import bertini
+    bertini.default_precision(30)
+    third = bertini.multiprec.real_mp(1) / bertini.multiprec.real_mp(3)
+    x, = bertini.variables(['x'])
+    s = bertini.System()
+    s.add_variable_group([x])
+    s.add_function(x - bertini.coefficient(third))
+    txt = s.to_classic_input()
+    assert '0.333333333333333333333333333' in txt, txt   # full digits, not 0.333333
+    import numpy as np
+    s2 = bertini.parse.system(txt)
+    # the reparsed coefficient is the IDENTICAL binary value
+    val = s2.eval(np.array([bertini.multiprec.complex_mp(third)]))
+    assert float(abs(complex(np.asarray(val).ravel()[0]))) == 0.0
+
+    # complex coefficients: both components at full precision through the pair form
+    c = bertini.multiprec.complex_mp(third, -third)
+    s3 = bertini.System()
+    s3.add_variable_group([x])
+    s3.add_function(x - bertini.coefficient(c))
+    s4 = bertini.parse.system(s3.to_classic_input())
+    val = s4.eval(np.array([c]))
+    assert float(abs(complex(np.asarray(val).ravel()[0]))) == 0.0

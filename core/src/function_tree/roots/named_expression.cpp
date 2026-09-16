@@ -68,7 +68,7 @@ int NamedExpression::Degree(VariableGroup const& vars) const
 	return entry_node_->Degree(vars);
 }
 
-std::vector<int> NamedExpression::MultiDegree(VariableGroup const& vars) const
+std::vector<int> NamedExpression::MultiDegreeImpl(VariableGroup const& vars) const
 {
 
 	std::vector<int> deg(vars.size());
