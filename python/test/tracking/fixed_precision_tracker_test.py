@@ -79,7 +79,6 @@ def test_multiple_precision_tracker_linear(linear_system_y_minus_t):
     s, y, t = linear_system_y_minus_t
 
     bertini.default_precision(100)
-    s.precision(100)
 
     tracker = MultiplePrecisionTracker(s)
     tracker.setup(Predictor.Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig())

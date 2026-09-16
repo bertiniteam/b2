@@ -126,12 +126,28 @@ BOOST_AUTO_TEST_CASE(variable_names_are_identity)
 
 // ---- transient state is NOT identity ----
 
+namespace {
+	/// Move a system's working precision the ONLY way there is now: evaluate it there.
+	/// There is no setter -- a System carries no precision, it follows the point (ADR-0057).
+	void EvaluateAt(bertini::System const& sys, unsigned digits)
+	{
+		auto const saved = bertini::DefaultPrecision();
+		bertini::DefaultPrecision(digits);
+		bertini::Vec<bertini::complex_mp> pt(sys.NumVariables());
+		for (Eigen::Index i = 0; i < pt.size(); ++i)
+			pt(i) = bertini::complex_mp(bertini::real_mp("1"), bertini::real_mp("0"));
+		bertini::Precision(pt, digits);
+		sys.Eval(pt);
+		bertini::DefaultPrecision(saved);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(precision_and_differentiation_do_not_change_digest)
 {
 	auto sys = Parse(kCircleLine);
 	auto const before = sys.ContentDigest();
 
-	sys.precision(50);
+	EvaluateAt(sys, 50);   // working at another precision must not change identity
 	BOOST_CHECK(before == sys.ContentDigest());
 
 	sys.Differentiate();
@@ -271,7 +287,7 @@ BOOST_AUTO_TEST_CASE(transient_operations_work_on_a_sealed_system)
 	sys.Seal();
 	auto const digest = sys.ContentDigest();
 
-	sys.precision(50);      // transient
+	EvaluateAt(sys, 50);    // transient
 	sys.Differentiate();    // derived cache
 
 	// evaluation on a sealed system
@@ -460,7 +476,7 @@ BOOST_AUTO_TEST_CASE(loaded_blend_homotopy_unifies_recursively)
 	BOOST_CHECK(loaded.GetPathVariable() == homotopy.GetPathVariable());
 
 	// evaluation still works after the remap (blocks recompiled against reinterned nodes)
-	loaded.precision(30);
+	// no precision setup needed: evaluation aligns the system to its point (#377)
 	bertini::Vec<bertini::complex_dbl> values(loaded.NumTotalFunctions()), point(loaded.NumVariables());
 	for (Eigen::Index ii = 0; ii < point.size(); ++ii)
 		point(ii) = bertini::complex_dbl(0.5, 0.25);

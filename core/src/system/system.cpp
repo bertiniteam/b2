@@ -71,7 +71,6 @@ namespace bertini
 		swap(a.blocks_,b.blocks_);
 		swap(a.is_differentiated_,b.is_differentiated_);
 
-		swap(a.precision_,b.precision_);
 		swap(a.is_patched_,b.is_patched_);
 		swap(a.patch_,b.patch_);
 	}
@@ -107,8 +106,6 @@ namespace bertini
 
 		variable_ordering_ = other.variable_ordering_;
 		have_ordering_ =  other.have_ordering_;
-
-		precision_ = other.precision_;
 
 
 		explicit_parameters_  = other .explicit_parameters_;
@@ -225,24 +222,6 @@ namespace bertini
 	}
 
 
-	void System::precision(unsigned new_precision) const
-	{
-		// Each block precisions its own evaluator (its SLP / coefficient sub-system).  The
-		// parameter / function / variable nodes are no longer evaluated during tracking, so their
-		// precision is vestigial and left untouched -- this keeps the shared node DAG read-only
-		// across threads (ADR-0027).
-		for (auto const& blk : blocks_)
-			std::visit([&](auto const& b){ b.Precision(new_precision); }, blk);
-
-		using bertini::Precision;
-		Precision(std::get<Vec<complex_mp> >(current_variable_values_),new_precision);
-		Precision(std::get<complex_mp>(current_path_value_),new_precision);
-
-		if (IsPatched())
-			patch_.Precision(new_precision);
-
-		precision_ = new_precision;
-	}
 
 
 	void System::Differentiate() const

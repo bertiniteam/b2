@@ -249,7 +249,6 @@ BOOST_AUTO_TEST_CASE(slp_evaluates_after_the_ambient_default_moved_underneath_it
 {
 	DefaultPrecision(30);
 	auto sys = TwoVarSystem();
-	sys.precision(30);
 
 	// an AMP tracker or endgame leaves the ambient default somewhere else entirely
 	DefaultPrecision(16);
@@ -331,7 +330,6 @@ BOOST_AUTO_TEST_CASE(slp_memory_ends_at_the_max_of_its_arguments_precisions)
 	sys.AddFunction(x * t);
 
 	DefaultPrecision(30);
-	sys.precision(30);
 	auto pt = PointAt(30, "2");
 	bertini::Vec<complex_mp> one(1);
 	one << pt(0);                      // x = 2 at 30 digits
