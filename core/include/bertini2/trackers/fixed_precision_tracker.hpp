@@ -111,7 +111,11 @@ namespace bertini{
 			*/
 			SuccessCode PreIterationCheck() const override
 			{
-				if (this->num_successful_steps_taken_ >= Get<Stepping>().max_num_steps)
+				// The budget counts EVERY step, not only the successful ones.  A path that
+				// fails steps has spent the effort whether or not it advanced, and counting
+				// only successes leaves a failing path un-budgeted: it can fail forever at
+				// 0% of its allowance.  See issue #410.
+				if (this->NumTotalStepsTaken() >= Get<Stepping>().max_num_steps)
 					return SuccessCode::MaxNumStepsTaken;
 				if (this->current_stepsize_ < Get<Stepping>().min_step_size)
 					return SuccessCode::MinStepSizeReached;
@@ -625,8 +629,9 @@ namespace bertini{
 			/// \brief Check that the system, thread precision, and all tracker state are at the expected precision.
 			bool PrecisionSanityCheck() const
 			{
-				return GetSystem().precision() == precision_ &&
-						ThreadPrecision()==precision_ &&
+				// the System is no longer checked here: it carries no precision of its own, and
+				// evaluation materializes it from the point it is handed (ADR-0057)
+				return ThreadPrecision()==precision_ &&
 						std::get<Vec<complex_mp> >(current_space_)(0).precision() == precision_ &&
 						std::get<Vec<complex_mp> >(tentative_space_)(0).precision() == precision_ &&
 						std::get<Vec<complex_mp> >(temporary_space_)(0).precision() == precision_ &&
