@@ -1601,3 +1601,91 @@ BOOST_AUTO_TEST_CASE(approximation_accessors_are_a_coherent_triple)
 		BOOST_CHECK(diff <= static_cast<bertini::NumErrorT>(1e-6) * err);
 
 }// end approximation_accessors_are_a_coherent_triple
+
+
+
+
+/**
+The SAME SampleSequenceCollector serves the power series endgame, and the buckets that do
+not apply to it stay EMPTY.
+
+This is the cross-flavor half of the contract: a consumer attaches one collector without
+knowing which endgame it is watching, and reads path_samples for the sequence.  Power
+series has no circle tracking, so circle_samples must be empty here -- where the Cauchy
+test requires it non-empty.  TimeAdvanced is likewise emitted by Cauchy only.
+
+The sample/time payload rides ON the ComputedSamplePoint event precisely so this works:
+the two flavors keep their samples in differently-named containers (GetSamples versus
+GetPSEGSamples), which an observer must never have to know about.
+*/
+BOOST_AUTO_TEST_CASE(sample_sequence_collector_serves_power_series_too)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+
+	// a genuine cycle-number-3 approach, so the sequence has real structure
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+
+	auto time = ComplexFromString(".1");
+	Vec<BCT> sample(1);
+	sample << ComplexFromString("5.000000000000001e-01", "9.084258952712920e-17");
+
+	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(time);
+
+	bertini::endgame::SampleSequenceCollector<TestedEGType> sequence;
+	my_endgame.AddObserver(sequence);
+
+	BOOST_REQUIRE(my_endgame.Run(sample)==SuccessCode::Success);
+
+	// the sequence was collected
+	BOOST_CHECK_GT(sequence.NumSamples(), 0u);
+	BOOST_CHECK_EQUAL(sequence.path_samples.size(), sequence.path_times.size());
+	BOOST_CHECK_GT(sequence.approximations.size(), 0u);
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.approximation_errors.size());
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.cycle_numbers.size());
+
+	// the buckets that do not apply to this flavor stay empty -- power series tracks no
+	// circles, and emits no TimeAdvanced
+	BOOST_CHECK_EQUAL(sequence.circle_samples.size(), 0u);
+	BOOST_CHECK_EQUAL(sequence.circle_times.size(), 0u);
+	BOOST_CHECK_EQUAL(sequence.advance_times.size(), 0u);
+
+	// -- exactly one endgame run was observed, and its samples start at the beginning
+	BOOST_CHECK_EQUAL(sequence.NumRuns(), 1u);
+	BOOST_CHECK_EQUAL(sequence.run_path_starts.front(), 0u);
+
+	// THE SEQUENCE PROPERTY: samples march toward the target time
+	for (size_t i = 1; i < sequence.path_times.size(); ++i)
+		BOOST_CHECK_LT(abs(sequence.path_times[i]), abs(sequence.path_times[i-1]));
+
+	// the sequence starts at the boundary point the endgame was handed, whether or not an
+	// adaptive endgame needed a higher precision first (it then recomputes its sample window
+	// at the new precision and the superseded samples are dropped, so the kept approach
+	// still begins at the boundary)
+	BOOST_REQUIRE(!sequence.path_times.empty());
+	BOOST_CHECK_SMALL(abs(sequence.path_times.front() - time), static_cast<decltype(abs(time))>(1e-12));
+
+	// and they genuinely approach the root
+	if (sequence.path_samples.size() >= 2)
+	{
+		auto const& root = my_endgame.template FinalApproximation<BCT>();
+		auto first = (sequence.path_samples.front() - root).template lpNorm<Eigen::Infinity>();
+		auto last  = (sequence.path_samples.back()  - root).template lpNorm<Eigen::Infinity>();
+		BOOST_CHECK_LT(last, first);
+	}
+}// end sample_sequence_collector_serves_power_series_too
