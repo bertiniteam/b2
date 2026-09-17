@@ -1,0 +1,20 @@
+# The repository's whitespace rule, in the form every editor picks up on its own:
+# spaces (four per level in C++, Python and CMake), LF, UTF-8, no trailing whitespace,
+# one newline at the end of the file.  tools/whitespace_lint.py checks the same rule in
+# CI and rewrites files to it with --fix.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.md]
+# two trailing spaces are a line break in Markdown
+trim_trailing_whitespace = false

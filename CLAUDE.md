@@ -210,6 +210,9 @@ Single-argument bindings and read-only `Vec<T> const&` bindings are unaffected. 
 
 ## Conventions
 
+- Whitespace: spaces, four per level (C++, Python, CMake), no tabs, no trailing whitespace, LF,
+  one newline at the end of every file -- `.editorconfig` states it and `tools/whitespace_lint.py`
+  gates it in CI (zero tolerance; `--fix` rewrites a file to the rule).
 - C++ standard: C++17. Headers use `.hpp` extension.
 - License: GPL v3 with additional terms (see `licenses/`, `core/ADDITIONAL_GPL_TERMS`).
 - Version single source of truth is the top-level **`VERSION`** file; `pyproject.toml` reads it *dynamically* (scikit-build-core), and `publish.yml`'s `check_version` asserts the release tag matches it. Read at runtime via `importlib.metadata.version("bertini2")`. Bumping requires a PR (develop is ruleset-guarded), but `VERSION` is in `paths-ignore` so a version-only PR runs no CI.

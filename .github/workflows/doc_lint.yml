@@ -6,6 +6,9 @@ name: Documentation lint 📑
 #   * cpp_doc_lint    -- Doxygen doc correctness + undocumented ratchet (C++).
 #   * python_doc_lint -- ast-only docstring correctness + undocumented ratchet
 #                        (pure-Python package; tools/py_doclint.py).
+#   * whitespace_lint -- no tabs, no trailing whitespace, LF, one final newline, in
+#                        every source file (tools/whitespace_lint.py; zero tolerance;
+#                        --fix rewrites).  The rule itself lives in .editorconfig.
 # This is the growing home of a broader linting initiative; future linters
 # (clang-format, clang-tidy, include-what-you-use, ...) can be added as more jobs.
 #
@@ -30,6 +33,8 @@ on:
       - 'tools/doc_undocumented_baseline.txt'
       - 'tools/py_doclint.py'
       - 'tools/py_doc_undocumented_baseline.txt'
+      - 'tools/whitespace_lint.py'
+      - '.editorconfig'
       - '.github/workflows/doc_lint.yml'
   pull_request:
     paths:
@@ -39,6 +44,8 @@ on:
       - 'tools/doc_undocumented_baseline.txt'
       - 'tools/py_doclint.py'
       - 'tools/py_doc_undocumented_baseline.txt'
+      - 'tools/whitespace_lint.py'
+      - '.editorconfig'
       - '.github/workflows/doc_lint.yml'
   workflow_dispatch:
   # Called by build_and_test.yml as a prerequisite gate, so no C++ compilation
@@ -84,3 +91,19 @@ jobs:
 
       - name: Lint Python docstrings
         run: python tools/py_doclint.py
+
+  # Runs in parallel with the two above.  Pure stdlib, no build, no pip deps; the one
+  # rule is in .editorconfig, and `python tools/whitespace_lint.py --fix` applies it.
+  whitespace_lint:
+    name: Whitespace lint (tabs, trailing whitespace, line endings)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Lint whitespace
+        run: python tools/whitespace_lint.py
