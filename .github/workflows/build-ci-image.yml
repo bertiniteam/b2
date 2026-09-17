@@ -39,8 +39,20 @@ jobs:
         pytag: [cp310-cp310, cp311-cp311, cp312-cp312, cp313-cp313, cp314-cp314]
     steps:
       - uses: actions/checkout@v5
+      # SOURCE the file, then write the three values out by name.  Do NOT cat it into
+      # $GITHUB_ENV: that file carries comments, and GitHub rejects the whole command with
+      # "Invalid format '# Single source of truth ...'" / "Unable to process file command
+      # 'env' successfully".  That is exactly what happened when the file was introduced, and
+      # it meant no image was ever built for the tag the wheel matrix asks for, so every
+      # Linux wheel job failed with "No such image" for two months.
       - name: Load dep versions
-        run: cat .github/ci-deps-versions.env >> "$GITHUB_ENV"
+        run: |
+          set -a; . .github/ci-deps-versions.env; set +a
+          {
+            echo "BOOST_VERSION=$BOOST_VERSION"
+            echo "EIGEN_VERSION=$EIGEN_VERSION"
+            echo "EIGENPY_VERSION=$EIGENPY_VERSION"
+          } >> "$GITHUB_ENV"
       - name: Build Boost+eigenpy for ${{ matrix.pytag }} (manylinux)
         run: |
           docker run --rm -v "$PWD:/work" -w /work \
@@ -63,8 +75,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Sourced, not cat'd -- see the note on the same step in build-deps above.
       - name: Load dep versions
-        run: cat .github/ci-deps-versions.env >> "$GITHUB_ENV"
+        run: |
+          set -a; . .github/ci-deps-versions.env; set +a
+          {
+            echo "BOOST_VERSION=$BOOST_VERSION"
+            echo "EIGEN_VERSION=$EIGEN_VERSION"
+            echo "EIGENPY_VERSION=$EIGENPY_VERSION"
+          } >> "$GITHUB_ENV"
 
       - name: Collect prebuilt deps into the build context
         uses: actions/download-artifact@v5
