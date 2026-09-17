@@ -378,7 +378,7 @@ def _chained_solver(system, homotopy, start, where, *, mptype, endgame):
 
 # --- the three verbs ------------------------------------------------------------------
 
-def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, endgame='cauchy',
+def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, endgame='powerseries',
           homotopy=None, start=None):
     """Solve a polynomial system, recording and resuming automatically.
 

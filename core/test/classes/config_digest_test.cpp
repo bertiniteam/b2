@@ -237,7 +237,9 @@ BOOST_AUTO_TEST_CASE(encoding_version_is_bumped_when_the_encoding_changes)
 	{ algorithm::PostProcessingConfig c; all << CanonicalEncoding(c) << '\n'; }
 	{ algorithm::ZeroDimConfig c; c.initial_ambient_precision = 30; all << CanonicalEncoding(c) << '\n'; }
 	{ algorithm::MetaConfig c; all << CanonicalEncoding(c) << '\n'; }
-	{ algorithm::classic::EndgameChoiceConfig c; all << CanonicalEncoding(c) << '\n'; }
+	// pinned to Cauchy: the keyspace measures the ENCODER, not the default value.  The default
+	// became PowerSeries (ADR-0058); the text the encoder produces for Cauchy is unchanged.
+	{ algorithm::classic::EndgameChoiceConfig c; c.endgame = algorithm::classic::EndgameChoice::Cauchy; all << CanonicalEncoding(c) << '\n'; }
 
 	auto const keyspace = detail::Sha256(all.str()).Hex();
 
