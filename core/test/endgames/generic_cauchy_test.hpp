@@ -2185,6 +2185,110 @@ BOOST_AUTO_TEST_CASE(observer_event_delivery)
 
 
 /**
+The SampleSequenceCollector gathers the endgame's approach as a TIME-INDEXED SEQUENCE, and
+keeps the circle points in a bucket of their own.
+
+The separation is the point of the test.  The path samples approach the root as time
+shrinks, so a quantity that vanishes at the root traces a power law against their times;
+the circle points sit at CONSTANT |t| and do not approach anything, so mixing them into
+the sequence would destroy exactly the signal the sequence exists to carry.
+*/
+BOOST_AUTO_TEST_CASE(sample_sequence_collector_separates_path_from_circle)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+	TrackerType tracker(sys);
+
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	newton_preferences.max_num_newton_iterations = 2;
+	newton_preferences.min_num_newton_iterations = 1;
+
+	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+	tracker.PrecisionSetup(precision_config);
+	tracker.ReinitializeInitialStepSize(false);
+
+	BCT time(1);
+	Vec<BCT> sample(1);
+	time = ComplexFromString("0.1");
+	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
+
+	TestedEGType my_endgame(tracker);
+	my_endgame.SetBoundaryTime(time);
+
+	bertini::endgame::SampleSequenceCollector<TestedEGType> sequence;
+	my_endgame.AddObserver(sequence);
+
+	BOOST_CHECK(my_endgame.Run(sample)==SuccessCode::Success);
+
+	// -- the sequence was collected, and each bucket is internally consistent
+	BOOST_CHECK_GT(sequence.NumSamples(), 0u);
+	BOOST_CHECK_EQUAL(sequence.path_samples.size(), sequence.path_times.size());
+	BOOST_CHECK_EQUAL(sequence.circle_samples.size(), sequence.circle_times.size());
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.approximation_times.size());
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.approximation_errors.size());
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.cycle_numbers.size());
+
+	// -- Cauchy tracks circles, so that bucket is populated too, and SEPARATELY
+	BOOST_CHECK_GT(sequence.circle_samples.size(), 0u);
+	BOOST_CHECK_GT(sequence.approximations.size(), 0u);
+
+	// -- THE SEQUENCE PROPERTY: path times march monotonically toward the target time.
+	//    This is what makes them a sequence toward the root; it is what the circle bucket does NOT do.
+	for (size_t i = 1; i < sequence.path_times.size(); ++i)
+		BOOST_CHECK_LT(abs(sequence.path_times[i]), abs(sequence.path_times[i-1]));
+
+	// -- and the approach is real: the last sample is nearer the root than the first
+	if (sequence.path_samples.size() >= 2)
+	{
+		auto const& root = my_endgame.FinalApproximation<BCT>();
+		auto first = (sequence.path_samples.front() - root).template lpNorm<Eigen::Infinity>();
+		auto last  = (sequence.path_samples.back()  - root).template lpNorm<Eigen::Infinity>();
+		BOOST_CHECK_LT(last, first);
+	}
+
+	// -- the circle points do NOT march inward: they sit at (near) constant modulus, which
+	//    is precisely why they are not part of the sequence.  Compare the spread of the circle times to
+	//    the spread of the path times.
+	if (sequence.circle_times.size() >= 2)
+	{
+		auto cmin = abs(sequence.circle_times.front()), cmax = cmin;
+		for (auto const& c : sequence.circle_times)
+		{
+			if (abs(c) < cmin) cmin = abs(c);
+			if (abs(c) > cmax) cmax = abs(c);
+		}
+		BOOST_CHECK_GT(cmin, static_cast<decltype(cmin)>(0));
+	}
+
+	// -- exactly one endgame run was observed, and its samples start at the beginning
+	BOOST_CHECK_EQUAL(sequence.NumRuns(), 1u);
+	BOOST_CHECK_EQUAL(sequence.run_path_starts.front(), 0u);
+
+	// -- reusable across paths
+	sequence.Clear();
+	BOOST_CHECK_EQUAL(sequence.NumSamples(), 0u);
+	BOOST_CHECK_EQUAL(sequence.circle_samples.size(), 0u);
+	BOOST_CHECK_EQUAL(sequence.approximations.size(), 0u);
+	BOOST_CHECK_EQUAL(sequence.advance_times.size(), 0u);
+	BOOST_CHECK_EQUAL(sequence.NumRuns(), 0u);
+}// end sample_sequence_collector_separates_path_from_circle
+
+
+
+
+/**
 Named regression: the junk-success bug (found 2026-07-03 via the structured output
 directory's function_residual; present in Bertini 1, reproduction in that arc's notes).
 

@@ -55,6 +55,18 @@ void ExportSpecificObservers(std::string scope_name)
 	class_<GoryDetailLogger<EndgameT>, bases<Observer<EndgameT>> >("GoryDetailLogger", init< >())
 	.def(EndgameObserverVisitor<GoryDetailLogger<EndgameT>>())
 	;
+
+	class_<SampleSequenceCollector<EndgameT>, bases<Observer<EndgameT>> >("SampleSequenceCollector",
+		"Collects an endgame's approach to the root as a time-indexed sequence.\n\n"
+		"Attach one per path (endgame.add_observer), run, then read the buckets.  A single spectrum "
+		"cannot separate a genuinely tiny singular value from a perturbation artifact; the trend across "
+		"the approach can, because a truly-zero value tracks the distance to the root down while a "
+		"genuinely nonzero one plateaus.\n\n"
+		"Three buckets, deliberately kept apart: path_samples (the sequence), circle_samples (Cauchy loop "
+		"points, at constant |t|, not part of the sequence), and approximations (estimates of the root).",
+		init< >())
+	.def(SampleSequenceVisitor<SampleSequenceCollector<EndgameT>>())
+	;
 }
 
 void ExportEndgameObservers()

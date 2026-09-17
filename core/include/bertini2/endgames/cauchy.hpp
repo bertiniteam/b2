@@ -1176,6 +1176,22 @@ public:
 		RotateOntoPS(next_time, next_sample);
 
 		NotifyObservers(TimeAdvanced<EmitterType>(*this));
+		// the sample is complete here: Cauchy does not refine the new power-series
+		// sample at this site (RefineAllSamples does the window later), so the
+		// event carries the sample as tracked
+		// ComputedSamplePoint carries the sample/time at BaseComplexT, like CircleAdvanced.
+		// The fixed/mpfr lane emits directly; the complex_dbl fast lane would have to convert
+		// the point to mpfr for the event, so we only pay that when something is observing
+		// (temporaries live through the synchronous NotifyObservers).
+		if constexpr (std::is_same<ComplexT, BCT>::value)
+			NotifyObservers(ComputedSamplePoint<EmitterType>(*this, next_sample, next_time));
+		else if (this->HasObservers())
+		{
+			Vec<BCT> ev_pt(next_sample.size());
+			for (Eigen::Index i = 0; i < next_sample.size(); ++i) ev_pt(i) = BCT(next_sample(i));
+			BCT ev_t(next_time);
+			NotifyObservers(ComputedSamplePoint<EmitterType>(*this, ev_pt, ev_t));
+		}
 		return SuccessCode::Success;
 	}
 
@@ -1511,8 +1527,13 @@ public:
 
 			if (init_code == SuccessCode::HigherPrecisionNecessary)
 			{
+				auto const previous_precision = this->current_endgame_precision_;
 				this->current_endgame_precision_ = this->NextEscalatedPrecision();
 				SetThreadPrecision(this->current_endgame_precision_);
+				// the samples announced at the lower precision are superseded (the window is
+				// tracked again at the new one); say so, so a collector drops them as we do
+				NotifyObservers(PrecisionChanged<EmitterType>(*this, previous_precision, this->current_endgame_precision_));
+				NotifyObservers(SamplesRecomputedAtHigherPrecision<EmitterType>(*this));
 				continue;
 			}
 			if (init_code != SuccessCode::Success)
