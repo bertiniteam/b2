@@ -164,11 +164,17 @@ std::string CanonicalEncoding(tracking::AdaptiveMultiplePrecisionConfig const& c
 {
     std::ostringstream out;
     out << "(cfg AdaptiveMultiplePrecision"
+        // Three of the field names below are deliberately NOT the member names: `epsilon`, `Phi`
+        // and `Psi`.  This text is a digest preimage, not presentation.  Every config ever
+        // recorded was digested with these spellings, and changing them would change the keyspace
+        // hash, forcing a b2cfgenc version bump and making every existing record a new ask rather
+        // than a recall.  The members were renamed because a Greek letter told a caller nothing;
+        // the preimage keeps the old spellings for exactly as long as this encoding version does.
         << " coefficient_bound=" << ExactDouble(c.coefficient_bound)
         << " degree_bound=" << ExactDouble(c.degree_bound)
-        << " epsilon=" << ExactDouble(c.epsilon)
-        << " Phi=" << ExactDouble(c.Phi)
-        << " Psi=" << ExactDouble(c.Psi)
+        << " epsilon=" << ExactDouble(c.linear_solve_error_bound)
+        << " Phi=" << ExactDouble(c.jacobian_eval_error_bound)
+        << " Psi=" << ExactDouble(c.function_eval_error_bound)
         << " safety_digits_1=" << c.safety_digits_1
         << " safety_digits_2=" << c.safety_digits_2
         << " maximum_precision=" << c.maximum_precision

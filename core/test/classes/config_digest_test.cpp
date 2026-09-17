@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(golden_digests_match_committed_fixture)
     }
     {
         tracking::AdaptiveMultiplePrecisionConfig c;   // defaults; epsilon/Phi/Psi zero-init
-        c.epsilon = 4.0; c.Phi = 20000.0; c.Psi = 5000.0;
+        c.linear_solve_error_bound = 4.0; c.jacobian_eval_error_bound = 20000.0; c.function_eval_error_bound = 5000.0;
         actual["amp_explicit"] = ConfigDigest(c).Hex();
     }
     {
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(encoding_version_is_bumped_when_the_encoding_changes)
     { tracking::SteppingConfig c; all << CanonicalEncoding(c) << '\n'; }
     { tracking::NewtonConfig c; c.max_num_newton_iterations = 3; c.min_num_newton_iterations = 1; all << CanonicalEncoding(c) << '\n'; }
     { tracking::FixedPrecisionConfig c; all << CanonicalEncoding(c) << '\n'; }
-    { tracking::AdaptiveMultiplePrecisionConfig c; c.epsilon = 4.0; c.Phi = 20000.0; c.Psi = 5000.0; all << CanonicalEncoding(c) << '\n'; }
+    { tracking::AdaptiveMultiplePrecisionConfig c; c.linear_solve_error_bound = 4.0; c.jacobian_eval_error_bound = 20000.0; c.function_eval_error_bound = 5000.0; all << CanonicalEncoding(c) << '\n'; }
     all << CanonicalEncoding(tracking::Predictor::RKF45) << '\n';
     { endgame::SecurityConfig c; all << CanonicalEncoding(c) << '\n'; }
     { endgame::EndgameConfig c; all << CanonicalEncoding(c) << '\n'; }

@@ -191,16 +191,29 @@ namespace tracking{
         NumErrorT coefficient_bound;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision).
         NumErrorT degree_bound; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision).
 
-        NumErrorT epsilon;  ///< Bound on growth in error from linear solves.  This is \f$\epsilon\f$ in \cite AMP1, \cite AMP2, and is used for AMP criteria A and B.  See top of page 13 of \cite AMP1.  A pessimistic bound is \f$2^n\f$.
-        // rename to linear_solve_error_bound.
+        /// \brief Bound on the growth in error from a linear solve.  Used for AMP criteria A and
+        /// B, where it is called \f$\epsilon\f$ in \cite AMP1 and \cite AMP2; see the top of page
+        /// 13 of the former.  A pessimistic bound is \f$2^n\f$; we use \f$n^2\f$ in the number of
+        /// variables.
+        NumErrorT linear_solve_error_bound;
 
-        NumErrorT Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
-        // \f$\Phi\f$ is error in Jacobian evaluation divided by the unit roundoff error, \f$10^{-P}\f$
-        // rename to jacobian_eval_error_bound
+        /// \brief Bound on the error of evaluating the Jacobian, divided by the unit roundoff
+        /// error \f$10^{-P}\f$.  Used for AMP criteria A and B, where it is called \f$\Phi\f$
+        /// in \cite AMP1 and \cite AMP2.
+        ///
+        /// For a polynomial system this is \f$D(D-1)B\f$ in the degree and coefficient bounds
+        /// below; that recipe is what SetErrorBoundsFromDegreeAndCoefficient applies.  The
+        /// quantity itself is more general than the recipe, which is why it is spelled out
+        /// rather than named after a Greek letter: a caller with a system that has no degree
+        /// can set this directly.
+        NumErrorT jacobian_eval_error_bound;
 
-        NumErrorT Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
-        // Error in function evaluation, divided by the precision-dependent unit roundoff error.
-        // rename to function_eval_error_bound
+        /// \brief Bound on the error of evaluating the functions, divided by the unit roundoff
+        /// error.  Used for AMP criterion C, where it is called \f$\Psi\f$ in \cite AMP1 and
+        /// \cite AMP2.
+        ///
+        /// For a polynomial system this is \f$DB\f$; see the note above.
+        NumErrorT function_eval_error_bound;
 
         int safety_digits_1 = 1; ///< User-chosen setting for the number of safety digits used during Criteria A & B.
         int safety_digits_2 = 1; ///< User-chosen setting for the number of safety digits used during Criterion C.
@@ -217,18 +230,19 @@ namespace tracking{
 
 
         /**
-         \brief Set epsilon, degree bound, and coefficient bound from system.
+         \brief Set the linear-solve error bound, the degree bound and the coefficient bound from
+         a system.
 
-         * Epsilon is set as the square of the number of variables.
+         * The linear-solve error bound is the square of the number of variables.
          * Bound on degree is set from a call to System class.  Let this be \f$D\f$  \see System::DegreeBound().
          * Bound on absolute values of coeffs is set from a call to System class.  Let this be \f$B\f$.  \see System::CoefficientBound().
         */
-        void SetBoundsAndEpsilonFrom(System const& sys)
+        void SetBoundsFrom(System const& sys)
         {
             using std::pow;
 
             // Refuse before DegreeBound() does, so the message is about what the caller was
-            // trying to do rather than about degrees.  Phi and Psi are bounds on the error of
+            // trying to do rather than about degrees.  The two bounds are on the error of
             // evaluating the Jacobian and the functions; the degree and coefficient bounds are
             // merely the recipe for them that holds for polynomials.  There is no accepted
             // recipe for an analytic system -- see issue #439 -- so we do not invent one.
@@ -236,54 +250,65 @@ namespace tracking{
                 throw std::runtime_error("adaptive precision derives its error bounds from the "
                     "degree of the system, and this system is not a polynomial one, so it has no "
                     "degree.  Two ways on: track with a fixed-precision tracker, at double or at "
-                    "multiple precision, which needs no such bound; or set this config's Phi and "
-                    "Psi yourself (or its degree_bound, followed by SetPhiPsiFromBounds) and hand "
-                    "it to the tracker, choosing values you can defend for your system.");
+                    "multiple precision, which needs no such bound; or set this config's "
+                    "jacobian_eval_error_bound and function_eval_error_bound yourself and hand it "
+                    "to the tracker, choosing values you can defend for your system.");
 
-            epsilon = pow(NumErrorT(sys.NumVariables()),2);
+            linear_solve_error_bound = pow(NumErrorT(sys.NumVariables()),2);
             degree_bound = sys.DegreeBound();
             coefficient_bound = sys.CoefficientBound<complex_dbl>();
         }
 
 
-        /**
-         Sets values epsilon, Phi, Psi, degree_bound, and coefficient_bound from input system.
-
-         * Phi becomes \f$ D*(D-1)*B \f$.
-         * Psi is set as \f$ D*B \f$.
-        */
-        /// \brief Set Phi and Psi from the degree and coefficient bounds.
-        void SetPhiPsiFromBounds()
+        /// \brief Set the two evaluation error bounds from the degree and coefficient bounds.
+        ///
+        /// The polynomial recipe from \cite AMP1: with \f$D\f$ the degree bound and \f$B\f$ the
+        /// coefficient bound, the Jacobian evaluation error is bounded by \f$D(D-1)B\f$ and the
+        /// function evaluation error by \f$DB\f$.  It applies only to polynomial systems, which
+        /// is the only kind that has a \f$D\f$; a caller with an analytic system sets the two
+        /// bounds directly instead.
+        void SetErrorBoundsFromDegreeAndCoefficient()
         {
-            Phi = degree_bound*(degree_bound-NumErrorT(1))*coefficient_bound;
-            Psi = degree_bound*coefficient_bound;  //Psi from the AMP paper.
+            jacobian_eval_error_bound = degree_bound*(degree_bound-NumErrorT(1))*coefficient_bound;
+            function_eval_error_bound = degree_bound*coefficient_bound;
         }
 
-        /// \brief Set all AMP criteria (bounds, epsilon, Phi, Psi) from a system.
+        /// \brief Set every system-derived AMP setting from a system: the degree, coefficient and
+        /// linear-solve bounds, and the two evaluation error bounds derived from them.
         void SetAMPConfigFrom(System const& sys)
         {
-            SetBoundsAndEpsilonFrom(sys);
-            SetPhiPsiFromBounds();
+            SetBoundsFrom(sys);
+            SetErrorBoundsFromDegreeAndCoefficient();
         }
 
         /// \brief Construct with default AMP bounds and safety digits.
         ///
-        /// epsilon, Phi, and Psi are error bounds that are normally recomputed from the
-        /// system before tracking (\see SetAMPConfigFrom).  They are nonetheless initialized
-        /// here so that a default-constructed config is fully deterministic: epsilon takes the
-        /// single-variable value (\f$1^2\f$), and Phi/Psi are derived from the default bounds so
-        /// the object is internally consistent.  Leaving them uninitialized produced garbage
-        /// (e.g. NaN) that broke value comparison and pickle round-tripping.
-        AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), epsilon(1), safety_digits_1(1), safety_digits_2(1), maximum_precision(300)
+        /// The three error bounds are normally recomputed from the system before tracking
+        /// (\see SetAMPConfigFrom).  They are nonetheless initialized here so that a
+        /// default-constructed config is fully deterministic: the linear-solve bound takes the
+        /// single-variable value (\f$1^2\f$), and the two evaluation bounds are derived from the
+        /// default degree and coefficient bounds so the object is internally consistent.  Leaving
+        /// them uninitialized produced garbage (e.g. NaN) that broke value comparison and pickle
+        /// round-tripping.
+        AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), linear_solve_error_bound(1), safety_digits_1(1), safety_digits_2(1), maximum_precision(300)
         {
-            SetPhiPsiFromBounds();
+            SetErrorBoundsFromDegreeAndCoefficient();
         }
 
-        /// \brief Construct AMP settings derived from a system's bounds.
+        /// \brief Construct AMP settings derived from a system's bounds, where that is possible.
+        ///
+        /// A system that is not polynomial has no degree bound, so there is nothing to derive from
+        /// and the defaults are kept.  This constructor is what a solver's automatic setup calls,
+        /// and it must not refuse, or an analytic homotopy could not be handed a configuration the
+        /// caller chose: the refusal would fire first, during construction.  The defaults are
+        /// internally consistent and are NOT a claim about such a system, so
+        /// \see SetAMPConfigFrom, which a deliberate caller uses, does refuse.  A caller who wants
+        /// adaptive precision here supplies the two evaluation error bounds themselves.
         explicit
         AdaptiveMultiplePrecisionConfig(System const& sys) : AdaptiveMultiplePrecisionConfig()
         {
-            SetAMPConfigFrom(sys);
+            if (sys.IsPolynomial())
+                SetAMPConfigFrom(sys);
         }
     }; // re: AdaptiveMultiplePrecisionConfig
 
@@ -293,9 +318,9 @@ namespace tracking{
     {
         out << "coefficient_bound: " << AMP.coefficient_bound << "\n";
         out << "degree_bound: " << AMP.degree_bound << "\n";
-        out << "epsilon: " << AMP.epsilon << "\n";
-        out << "Phi: " << AMP.Phi << "\n";
-        out << "Psi: " << AMP.Psi << "\n";
+        out << "linear_solve_error_bound: " << AMP.linear_solve_error_bound << "\n";
+        out << "jacobian_eval_error_bound: " << AMP.jacobian_eval_error_bound << "\n";
+        out << "function_eval_error_bound: " << AMP.function_eval_error_bound << "\n";
         out << "safety_digits_1: " << AMP.safety_digits_1 << "\n";
         out << "safety_digits_2: " << AMP.safety_digits_2 << "\n";
         out << "max_num_precision_decreases: " << AMP.max_num_precision_decreases << "\n";
@@ -308,8 +333,8 @@ namespace tracking{
 
 
 
-    \see AdaptiveMultiplePrecisionConfig::SetBoundsAndEpsilonFrom
-    \see AdaptiveMultiplePrecisionConfig::SetPhiPsiFromBounds
+    \see AdaptiveMultiplePrecisionConfig::SetBoundsFrom
+    \see AdaptiveMultiplePrecisionConfig::SetErrorBoundsFromDegreeAndCoefficient
     \see AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom
     */
     inline
