@@ -877,10 +877,10 @@ public:
 				auto const previous_precision = this->current_endgame_precision_;
 				this->current_endgame_precision_ = this->NextEscalatedPrecision();
 				SetThreadPrecision(this->current_endgame_precision_);
-				// the abandoned attempt already announced its samples; say so, so a collector
-				// can drop them as the endgame does
+				// the samples announced at the lower precision are superseded (the window is
+				// tracked again at the new one); say so, so a collector drops them as we do
 				NotifyObservers(PrecisionChanged<EmitterType>(*this, previous_precision, this->current_endgame_precision_));
-				NotifyObservers(Restarting<EmitterType>(*this));
+				NotifyObservers(SamplesRecomputedAtHigherPrecision<EmitterType>(*this));
 				continue;
 			}
 			if (code != SuccessCode::Success)

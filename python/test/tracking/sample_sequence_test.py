@@ -1,6 +1,6 @@
 """The SampleSequenceCollector from Python: attach, run, read the sequence.
 
-Interface checks only -- the events, the per-run boundaries and the restart handling are
+Interface checks only -- the events, the per-run boundaries and the precision handling are
 covered in C++ (generic_pseg_test.hpp, generic_cauchy_test.hpp).  Here: the collector is
 reachable under bertini.endgame.observers.<flavor>, attaches to an endgame, and hands back
 its buckets as Python lists that mean what they say.
@@ -55,10 +55,10 @@ def test_sequence_collector_on_the_adaptive_power_series_endgame(cubic_homotopy)
     assert abs(complex(seq.path_times()[0]) - 0.1) < 1e-12      # starting at the boundary
     assert len(seq.approximations()) == len(seq.approximation_errors()) == len(seq.cycle_numbers()) > 0
     assert seq.circle_samples() == [] and seq.advance_times() == []   # power series has no circle
-    assert isinstance(seq.num_restarts(), int)
+    assert isinstance(seq.num_precision_increases(), int)
 
     seq.clear()
-    assert seq.num_samples() == 0 and seq.num_runs() == 0 and seq.num_restarts() == 0
+    assert seq.num_samples() == 0 and seq.num_runs() == 0 and seq.num_precision_increases() == 0
 
 
 def test_sequence_collector_on_the_cauchy_endgame_keeps_circle_points_apart(cubic_homotopy):

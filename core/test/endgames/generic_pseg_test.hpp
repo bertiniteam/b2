@@ -1674,8 +1674,9 @@ BOOST_AUTO_TEST_CASE(sample_sequence_collector_serves_power_series_too)
 		BOOST_CHECK_LT(abs(sequence.path_times[i]), abs(sequence.path_times[i-1]));
 
 	// the sequence starts at the boundary point the endgame was handed, whether or not an
-	// adaptive endgame abandoned a first attempt and started over (a restart drops the
-	// abandoned samples, so the kept approach still begins at the boundary)
+	// adaptive endgame needed a higher precision first (it then recomputes its sample window
+	// at the new precision and the superseded samples are dropped, so the kept approach
+	// still begins at the boundary)
 	BOOST_REQUIRE(!sequence.path_times.empty());
 	BOOST_CHECK_SMALL(abs(sequence.path_times.front() - time), static_cast<decltype(abs(time))>(1e-12));
 

@@ -80,13 +80,16 @@ namespace bertini {
 	ADD_BERTINI_EVENT_TYPE(Initializing,EndgameEvent);
 
 	/**
-	\brief The adaptive endgame is starting its approach over at a higher precision, because
-	the attempt at the lower one could not be set up.  Everything computed since Initializing
-	(the sample window, its refinements, the first approximation) is abandoned by the endgame,
-	and an observer keeping a record of the approach should drop it too.  Emitted after the
-	matching PrecisionChanged.
+	\brief The adaptive endgame needed a higher precision before it had its first
+	approximation, and recomputes its sample window at the new precision.
+
+	The samples it announced at the lower precision are superseded -- the endgame discards
+	them and tracks the window again from the boundary point -- so an observer keeping the
+	sequence of samples should drop them too.  (A precision increase LATER in the run, once
+	approximations exist, keeps the samples and widens them in place; that one announces only
+	PrecisionChanged.)  Emitted right after the matching PrecisionChanged.
 	*/
-	ADD_BERTINI_EVENT_TYPE(Restarting,EndgameEvent);
+	ADD_BERTINI_EVENT_TYPE(SamplesRecomputedAtHigherPrecision,EndgameEvent);
 
 
 	/**

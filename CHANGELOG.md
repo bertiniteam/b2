@@ -108,9 +108,10 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   boundaries so one collector attached to a solver's endgame can tell one path from the next.
   This is what lets a caller watch a quantity such as a Jacobian's singular values as a
   function of distance to the root instead of judging it at one point.  Every endgame run now
-  announces `Initializing`, and an adaptive endgame that abandons an attempt and starts over
-  at a higher precision announces `Restarting`, so the collector drops the abandoned samples as
-  the endgame does.  (#361, in part)
+  announces `Initializing`; an adaptive endgame that needs a higher precision before its first
+  approximation recomputes its sample window at the new precision and announces
+  `SamplesRecomputedAtHigherPrecision`, so the collector drops the superseded samples as the
+  endgame does, and counts every precision increase (`num_precision_increases`).  (#361, in part)
 - The records archive is reloadable.  Every system and homotopy a solve records is stored as its
   exact canonical encoding (the text its content digest is the hash of); there is now a reader for
   that text: `System.from_canonical(text)` rebuilds a system from it, `System.canonical_encoding()`

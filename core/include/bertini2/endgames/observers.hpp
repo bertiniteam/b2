@@ -239,7 +239,7 @@ std::vector<size_t> run_path_starts;     ///< Index into path_samples where each
 std::vector<size_t> run_circle_starts;   ///< Index into circle_samples where each run's circle points begin.
 std::vector<size_t> run_approx_starts;   ///< Index into approximations where each run's approximations begin.
 
-size_t num_restarts = 0;   ///< How many times an adaptive endgame abandoned an attempt and started over at a higher precision (Restarting); the abandoned samples are not in the sequence.
+size_t num_precision_increases = 0;   ///< How many times the endgame raised its working precision (PrecisionChanged), over every run observed.  When that happens before the first approximation the sample window is recomputed at the new precision and the superseded samples are dropped from the sequence (SamplesRecomputedAtHigherPrecision).
 
 /// \brief Forget everything collected so far, so one collector can be reused across paths.
 void Clear()
@@ -251,7 +251,7 @@ void Clear()
 	advance_times.clear();
 	run_path_starts.clear();       run_circle_starts.clear();
 	run_approx_starts.clear();
-	num_restarts = 0;
+	num_precision_increases = 0;
 }
 
 /// \return The number of endgame runs observed -- the number of paths, when attached to a solver.
@@ -294,12 +294,17 @@ virtual ObserveResult Observe(AnyEvent const& e) override
 		run_approx_starts.push_back(approximations.size());
 	}
 
-	else if (dynamic_cast<const Restarting<EmitterT>*>(&e))
+	else if (dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
 	{
-		// The adaptive endgame abandoned everything since this run began (its attempt at the
-		// lower precision could not be set up) and starts the approach over from the boundary.
-		// Drop the abandoned samples as the endgame did, so the sequence holds only the
-		// approach that was kept -- and its times keep marching toward the target.
+		++num_precision_increases;
+	}
+
+	else if (dynamic_cast<const SamplesRecomputedAtHigherPrecision<EmitterT>*>(&e))
+	{
+		// The endgame needed a higher precision before it had its first approximation, and
+		// tracks its sample window again at the new precision.  The samples it announced at
+		// the lower precision are superseded: drop them as the endgame does, so the sequence
+		// holds one approach at one precision and its times keep marching toward the target.
 		if (!run_path_starts.empty())
 		{
 			path_samples.resize(run_path_starts.back());
@@ -311,7 +316,6 @@ virtual ObserveResult Observe(AnyEvent const& e) override
 			approximation_errors.resize(run_approx_starts.back());
 			cycle_numbers.resize(run_approx_starts.back());
 		}
-		++num_restarts;
 	}
 
 	return ObserveResult::KeepObserving;

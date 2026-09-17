@@ -130,10 +130,11 @@ public:
 			"emitted by the Cauchy endgame only.")
 		.def("num_samples", &ObsT::NumSamples, arg("self"),
 			"The number of samples collected -- the length of the sequence.")
-		.def("num_restarts", &NumRestarts, arg("self"),
-			"How many times an adaptive endgame abandoned an attempt and started the approach over at a "
-			"higher precision.  The abandoned samples are dropped from the sequence, as the endgame "
-			"dropped them, so path_times keep marching toward the target within each run.")
+		.def("num_precision_increases", &NumPrecisionIncreases, arg("self"),
+			"How many times the endgame raised its working precision, over every run observed.  When "
+			"that happens before the first approximation exists, the endgame recomputes its sample "
+			"window at the new precision and the superseded samples are dropped from the sequence, so "
+			"path_times keep marching toward the target within each run.")
 		.def("num_runs", &ObsT::NumRuns, arg("self"),
 			"The number of endgame runs observed -- the number of paths, when attached to a solver's "
 			"endgame via get_endgame().")
@@ -150,7 +151,7 @@ public:
 	}
 
 private:
-	static size_t NumRestarts(ObsT const& self)                      { return self.num_restarts; }
+	static size_t NumPrecisionIncreases(ObsT const& self)            { return self.num_precision_increases; }
 	static boost::python::list PathSamples(ObsT const& self)         { return VectorOfPointsToList(self.path_samples); }
 	static boost::python::list PathTimes(ObsT const& self)           { return VectorOfScalarsToList(self.path_times); }
 	static boost::python::list CircleSamples(ObsT const& self)       { return VectorOfPointsToList(self.circle_samples); }
