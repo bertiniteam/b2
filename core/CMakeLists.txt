@@ -842,6 +842,7 @@ if (ENABLE_UNIT_TESTING)
 		test/classes/structural_hash_test.cpp
 		test/classes/canonical_encoding_test.cpp
 		test/classes/canonical_decoding_test.cpp
+		test/classes/print_dialect_test.cpp
 		test/classes/reintern_test.cpp
 		test/classes/interning_test.cpp
 		test/classes/system_test.cpp

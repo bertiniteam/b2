@@ -134,7 +134,7 @@ namespace {
 void System::EncodeCanonical(std::ostream& out, node::EncodingContext& ctx) const
 {
 	// 1. format version + the session-global, identity-affecting canonicalization settings
-	out << "b2sysenc/1 order=" << OrderName(node::CurrentMonomialOrder())
+	out << SystemEncodingVersion << " order=" << OrderName(node::CurrentMonomialOrder())
 	    << " canon=" << (node::CanonicalizeByDefault() ? 1 : 0)
 	    << " powerfold=" << (node::PowerFoldByDefault() ? 1 : 0) << '\n';
 

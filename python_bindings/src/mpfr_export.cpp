@@ -489,6 +489,7 @@ namespace bertini{
 			class_<T>("real_mp", init<>("Default Construct a variable-precision float"))
 			.def_pickle(BoostArchivePickle<T>())
 			.def(init<std::string>((arg("self"),arg("val")),"Construct a variable-precision float from a string.  The best way."))
+			.def(init<std::string, unsigned>((arg("self"),arg("val"),arg("precision")),"Construct a variable-precision float from a string at a chosen precision (decimal digits), whatever the current default precision is.  This is what repr() of a multiprecision constant emits, so eval(repr(x)) rebuilds x exactly."))
 			.def(init<long int>((arg("self"),arg("val")),"Construct a variable-precision float from a regular old integer."))
 			.def(init<T>((arg("self"),arg("val")),"Construct a variable-precision float from another."))
 

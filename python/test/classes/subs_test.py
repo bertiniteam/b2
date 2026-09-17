@@ -18,8 +18,8 @@
 """node.subs(...): symbolic substitution (variable -> node), returning a NEW expression.
 
 Substitution is simultaneous and single-pass; results are simplified (constants fold).  It is
-kept distinct from eval (which is numeric).  Structural assertions use str() (the classic '^'
-form); numeric cross-checks go through eval.  Non-identity values (x=3, y=5) are used so terms
+kept distinct from eval (which is numeric).  Structural assertions use str() (the Python
+spelling, '**' for powers); numeric cross-checks go through eval.  Non-identity values (x=3, y=5) are used so terms
 stay separable.
 """
 
@@ -53,15 +53,15 @@ def test_dict_keys_may_be_variables_or_names():
 def test_rename_and_compose():
     x, y, z = Variable('x'), Variable('y'), Variable('z')
     f = x * x * y
-    assert str(f.subs(x, z)) == 'z^2*y'          # rename
-    assert str(f.subs(x, y + 1)) == '(y+1)^2*y'  # compose with an expression
+    assert str(f.subs(x, z)) == 'z**2*y'          # rename
+    assert str(f.subs(x, y + 1)) == '(y+1)**2*y'  # compose with an expression
 
 
 def test_simultaneous_swap_does_not_cascade():
     x, y = Variable('x'), Variable('y')
     f = x * x * y
     g = f.subs({x: y, y: x})                      # -> y^2 x, NOT a cascade
-    assert str(g) == 'y^2*x'
+    assert str(g) == 'y**2*x'
     # numerically: at x=3, y=5, y^2 x = 25*3 = 75
     assert mp.abs(g.eval(x=3, y=5) - mpfr_complex("75")) < TOL
 
@@ -69,7 +69,7 @@ def test_simultaneous_swap_does_not_cascade():
 def test_absent_variable_is_noop():
     x, y, z = Variable('x'), Variable('y'), Variable('z')
     f = x * x * y
-    assert str(f.subs({z: 9})) == 'x^2*y'
+    assert str(f.subs({z: 9})) == 'x**2*y'
 
 
 def test_fraction_folds_to_rational():
@@ -80,7 +80,7 @@ def test_fraction_folds_to_rational():
 
 def test_substitutes_into_exponent():
     x, y = Variable('x'), Variable('y')
-    assert str((x ** y).subs(y, 2)) == 'x^2'
+    assert str((x ** y).subs(y, 2)) == 'x**2'
 
 
 def test_subs_then_eval_equals_joint_eval():
@@ -104,8 +104,10 @@ def test_simplify_folds_constant_powers():
 
 def test_repr_uses_python_power_operator():
     x, y = Variable('x'), Variable('y')
-    # str keeps the classic '^' (round-trips with the parser); repr is copy-pasteable Python '**'
-    assert str(x ** 2) == 'x^2'
+    # str and repr are both Python spellings ('**'); to_classic() is Bertini 1's ('^') and is
+    # what the classic parser reads back
+    assert str(x ** 2) == 'x**2'
     assert repr(x ** 2) == 'x**2'
-    assert str((y + 1) ** 2) == '(y+1)^2'
+    assert (x ** 2).to_classic() == 'x^2'
+    assert str((y + 1) ** 2) == '(y+1)**2'
     assert repr((y + 1) ** 2) == '(y+1)**2'

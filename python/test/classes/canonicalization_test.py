@@ -55,14 +55,14 @@ def test_commutative_product_prints_the_same_either_way():
 def test_coefficient_prints_first_within_a_monomial():
     x = Variable('x')
     # the degree-0 constant sorts ahead of the variables: 3*x^2, not x^2*3
-    assert str(3 * x**2) == '3*x^2'
-    assert str(x**2 * 3) == '3*x^2'
+    assert str(3 * x**2) == '3*x**2'
+    assert str(x**2 * 3) == '3*x**2'
 
 
 def test_constant_term_of_a_sum_stays_last():
     x = Variable('x')
     # within a sum, terms order by degree (the constant term is last), so this is conventional
-    assert str(x**2 + 2 * x - Integer(1)) == 'x^2+2*x-1'
+    assert str(x**2 + 2 * x - Integer(1)) == 'x**2+2*x-1'
 
 
 def test_subtracted_sum_leads_with_a_positive_term():
@@ -85,6 +85,6 @@ def test_monomial_order_is_selectable():
     lex = str(x**2 + y**3)          # lexicographic: x before y
     pb.monomial_order(MonomialOrder.GrevLex)
     grev = str(x**2 + y**3)         # graded: higher total degree (y^3) leads
-    assert lex == 'x^2+y^3'
-    assert grev == 'y^3+x^2'
+    assert lex == 'x**2+y**3'
+    assert grev == 'y**3+x**2'
     assert lex != grev

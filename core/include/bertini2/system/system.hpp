@@ -2418,6 +2418,18 @@ namespace bertini {
 	*/
 	std::shared_ptr<const System> LoadSystemUnified(std::istream& in);
 
+	/**
+	\brief The version token of the System canonical encoding -- the first word of every
+	encoding text and the schema of every archived system definition.
+
+	Bump it (and regenerate the golden digest fixture, and APPEND to the version registry, in
+	the same commit) whenever the emitted text changes in any way, including the ORDER the
+	session canonicalization gives operands: the encoder writes them in that order.
+	History: `b2sysenc/1` (ADR-0042); `b2sysenc/2` when the canonicalization tie-break moved
+	from the printed form to the canonical encoding (ADR-0059).
+	*/
+	inline constexpr char SystemEncodingVersion[] = "b2sysenc/2";
+
 	/// \cond INTERNAL
 	// Explicit instantiation declarations for the two concrete numeric types.
 	// Definitions live in core/src/system/system.cpp.

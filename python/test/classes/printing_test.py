@@ -83,12 +83,15 @@ def test_division_groups(xyz):
 
 def test_power_printing(xyz):
     x, y, z = xyz
-    assert str(x ** 2) == 'x^2'
-    assert str((x + y) ** 2) == '(x+y)^2'
-    assert str(x ** 2 * y) == 'x^2*y'
-    assert str(x ** -2) == 'x^(-2)'
-    assert str(x ** y) == 'x^y'
-    assert str((x ** y) ** z) == '(x^y)^z'
+    # str is the Python spelling (** for powers); to_classic() is Bertini 1's (^)
+    assert str(x ** 2) == 'x**2'
+    assert str((x + y) ** 2) == '(x+y)**2'
+    assert str(x ** 2 * y) == 'x**2*y'
+    assert str(x ** -2) == 'x**(-2)'
+    assert str(x ** y) == 'x**y'
+    assert str((x ** y) ** z) == '(x**y)**z'
+    assert (x ** 2).to_classic() == 'x^2'
+    assert ((x ** y) ** z).to_classic() == '(x^y)^z'
 
 
 def test_negation_printing(xyz):
@@ -102,19 +105,22 @@ def test_negation_printing(xyz):
 def test_function_call_operators_self_delimit(xyz):
     x, y, _ = xyz
     assert str(sin(x * y)) == 'sin(x*y)'
-    assert str(sin(x) ** 2) == 'sin(x)^2'
+    assert str(sin(x) ** 2) == 'sin(x)**2'
 
 
 def test_real_constants_print_bare(xyz):
     x, _, _ = xyz
     assert str(Rational('1/3') * x) == '1/3*x'
     assert str(x / Rational('1/3')) == 'x/(1/3)'  # a divisor that prints with '/' must group
-    assert str(Rational('1/3', '1/2') * x) == '(1/3,1/2)*x'  # genuinely complex: pair form
+    assert str(Rational('1/3', '1/2') * x) == '(1/3+1/2*I)*x'  # genuinely complex: the one form Bertini 1 reads
+    assert (Rational('1/3', '1/2') * x).to_classic() == '(1/3+1/2*I)*x'
+    assert str(Rational('1/3', '-1/2') * x) == '(1/3-1/2*I)*x'
 
 
 def test_the_motivating_example(xyz):
     x, y, _ = xyz
-    assert str(x**2 + 2 * x * y - Integer(1)) == 'x^2+2*x*y-1'
+    assert str(x**2 + 2 * x * y - Integer(1)) == 'x**2+2*x*y-1'
+    assert (x**2 + 2 * x * y - Integer(1)).to_classic() == 'x^2+2*x*y-1'
 
 
 def test_printed_form_reparses_to_same_values(xyz):
@@ -122,7 +128,7 @@ def test_printed_form_reparses_to_same_values(xyz):
     x, y, z = xyz
     expr = (x + y) * z - x / (y + z) + 3 * x**2 * y - Rational('1/3') * (x - (y - z))
 
-    text = f'function f; variable_group x,y,z; f = {expr};'
+    text = f'function f; variable_group x,y,z; f = {expr.to_classic()};'   # the classic parser reads Bertini 1's spelling
     reparsed = parse.system(text)
 
     vals = np.array([complex(-2.43, .21), complex(4.84, -1.94), complex(-6.48, -.731)])

@@ -172,9 +172,10 @@ void System::DecodeCanonicalFrom(DecodingCursor& cur, DecodingContext& ctx)
 	// 1. format version + the session-global canonicalization settings the trees were shaped by
 	cur.Expect("b2sysenc/");
 	auto const version = cur.ReadUnsigned();
-	if (version != 1)
-		throw std::runtime_error("canonical encoding: version b2sysenc/" + std::to_string(version)
-			+ " is not readable by this build, which reads b2sysenc/1");
+	std::string const version_token = "b2sysenc/" + std::to_string(version);
+	if (version_token != SystemEncodingVersion)
+		throw std::runtime_error("canonical encoding: version " + version_token
+			+ " is not readable by this build, which reads " + SystemEncodingVersion);
 	cur.Expect(" order=");
 	auto const order = cur.ReadWord();
 	cur.Expect(" canon=");

@@ -24,8 +24,8 @@ term of a sum stays last -- so printed expressions read the conventional way.
 
    assert str(x + y) == str(y + x) == 'x+y'      # commutative: one canonical form (and one node)
    assert str(x * y) == str(y * x) == 'x*y'
-   assert str(3 * x**2) == '3*x^2'               # the coefficient leads its monomial
-   assert str(x**2 + 2*x - 1) == 'x^2+2*x-1'     # degree-descending; the constant term is last
+   assert str(3 * x**2) == '3*x**2'               # the coefficient leads its monomial
+   assert str(x**2 + 2*x - 1) == 'x**2+2*x-1'     # degree-descending; the constant term is last
 
 You can ask whether canonicalization is on, and toggle it, with :func:`bertini.canonicalize`.
 
@@ -47,8 +47,8 @@ expressions share a node.
    bertini.monomial_order(MonomialOrder.GrevLex)
    grev = str(x**2 + y**3)                        # graded: the higher-degree y^3 leads
 
-   assert lex == 'x^2+y^3'
-   assert grev == 'y^3+x^2'
+   assert lex == 'x**2+y**3'
+   assert grev == 'y**3+x**2'
 
    bertini.monomial_order(MonomialOrder.GrevLex)  # restore the default
 

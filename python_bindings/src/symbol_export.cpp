@@ -127,6 +127,8 @@ namespace bertini{
 			.def("__init__", make_constructor(&Complex::template Make<real_mp const&, real_mp const&>))
 			.def("__init__", make_constructor(&Complex::template Make<std::string const&>))
 			.def("__init__", make_constructor(&Complex::template Make<std::string const&, std::string const&>))
+			.def("__init__", make_constructor(&Complex::template Make<std::string const&, std::string const&, unsigned const&>),
+				"Complex(real, imag, precision): the literal at a chosen precision (decimal digits), whatever the current default precision is -- what repr() of a complex constant emits, so eval(repr(c)) rebuilds c exactly.")
 			.def("__init__", make_constructor(&Complex::template Make<complex_mp const&>))
 			.def("value", &Complex::GetValue, return_value_policy<copy_const_reference>(), "the literal value this node represents, at its stored (highest) precision")
 			;

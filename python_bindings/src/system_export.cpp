@@ -133,7 +133,7 @@ namespace bertini{
 			.def("canonical_encoding",
 				+[](SystemBaseT const& self){ return self.CanonicalEncodingText(); },
 				(arg("self")),
-				"The exact canonical encoding text of the system: the text content_digest() is the SHA-256 of, and the text the records archive stores for every system and homotopy.  Versioned (its first word is the format version, e.g. b2sysenc/1) and complete: variable groups, path variable, every block with its exact coefficients, the patch, and operand systems inside randomization and blend blocks.  System.from_canonical(text) rebuilds an equal system from it.")
+				"The exact canonical encoding text of the system: the text content_digest() is the SHA-256 of, and the text the records archive stores for every system and homotopy.  Versioned (its first word is the format version, e.g. b2sysenc/2) and complete: variable groups, path variable, every block with its exact coefficients, the patch, and operand systems inside randomization and blend blocks.  System.from_canonical(text) rebuilds an equal system from it.")
 			.def("from_canonical",
 				+[](std::string const& text){ return std::make_shared<System>(System::FromCanonicalEncoding(text)); },
 				(arg("text")),
@@ -313,8 +313,14 @@ namespace bertini{
 				+[](SystemBaseT const& self, bool verbose) { std::ostringstream ss; self.Describe(ss, verbose); return ss.str(); },
 				(arg("self"), arg("verbose") = false),
 				"A human-facing description of the system, block by block (the same as str(system) when verbose=False).  verbose=True reveals the actual coefficients/matrices and the underlying functions of randomization / blend blocks.  For reading, not re-parsing.")
-			.def(self_ns::str(self_ns::self))//, "String representation of the system (terse; structured blocks shown with placeholder symbols)
-			.def(self_ns::repr(self_ns::self))//, "String representation of the system
+			// str/repr print in the Python dialect (powers as **, complex constants as
+			// (re+im*I)); to_classic_input() is the Bertini 1 spelling.  See print_dialect.hpp.
+			.def("__str__",
+				+[](SystemBaseT const& self){ std::ostringstream ss; node::SetDialect(ss, node::PrintDialect::PythonReadable); ss << self; return ss.str(); },
+				(arg("self")), "String representation of the system (terse; structured blocks shown with placeholder symbols), in Python spelling.")
+			.def("__repr__",
+				+[](SystemBaseT const& self){ std::ostringstream ss; node::SetDialect(ss, node::PrintDialect::PythonReadable); ss << self; return ss.str(); },
+				(arg("self")), "String representation of the system, in Python spelling.")
 			.def(self += self)
 			.def(self + self) 
 			.def(self *= std::shared_ptr<node::Node>())//, "'Scalar-multiply' a system"

@@ -16,8 +16,8 @@ def on_by_default():
 
     assert str(x + y) == str(y + x) == 'x+y'      # commutative: one canonical form (and one node)
     assert str(x * y) == str(y * x) == 'x*y'
-    assert str(3 * x**2) == '3*x^2'               # the coefficient leads its monomial
-    assert str(x**2 + 2*x - 1) == 'x^2+2*x-1'     # degree-descending; the constant term is last
+    assert str(3 * x**2) == '3*x**2'               # the coefficient leads its monomial
+    assert str(x**2 + 2*x - 1) == 'x**2+2*x-1'     # degree-descending; the constant term is last
 
     assert bertini.canonicalize() is True         # on by default
 
@@ -31,8 +31,8 @@ def choosing_the_monomial_order(x, y):
     bertini.monomial_order(MonomialOrder.GrevLex)
     grev = str(x**2 + y**3)                        # graded: the higher-degree y^3 leads
 
-    assert lex == 'x^2+y^3'
-    assert grev == 'y^3+x^2'
+    assert lex == 'x**2+y**3'
+    assert grev == 'y**3+x**2'
 
     bertini.monomial_order(MonomialOrder.GrevLex)  # restore the default
 
