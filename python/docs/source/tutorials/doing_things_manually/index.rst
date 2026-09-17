@@ -10,3 +10,4 @@ Doing things manually
    evaluation_cyclic/index
    manual_endgame_usage/index
    tracking_nonsingular/index
+   tracking_analytic/index
