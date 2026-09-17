@@ -139,6 +139,21 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Changed
 
+- **Printing is a family of dialects, one per audience** (ADR-0059).  `str(node)` and
+  `str(system)` are the Python spelling: powers as `**`.  `repr(node)` is the exact Python
+  spelling: `eval` of it in the `bertini` namespace rebuilds an equal node at full precision
+  (`real_mp('digits', precision)`, `Complex('re', 'im', precision)`, `Rational('p/q')`; integers
+  and values a Python literal holds exactly stay bare).  `node.to_classic()`,
+  `System.to_classic_input()` and the CLI write Bertini 1's spelling: `^`, and a complex
+  constant as `(re+im*I)` -- the only complex form Bertini 1 reads.  The `(re,im)` pair form is
+  gone from every output, and so are the two Python shims that patched around it (the `^` to
+  `**` character replace in `repr`, the `(re,im)` regex in `parse.system`).  `real_mp(text,
+  precision)` and `Complex(re, im, precision)` construct a value at a chosen precision.
+- **The system encoding version is `b2sysenc/2`.**  Canonicalization breaks multidegree ties
+  between operands on the canonical encoding instead of on printed text, and the encoder writes
+  operands in that order.  Records written by earlier versions carry `b2sysenc/1` and are not
+  recalled; the "records read forever" promise is withdrawn until the identity of the algorithm
+  itself is part of a record's ask (#420).
 - **The default endgame is the power series endgame**, matching Bertini 1's documented default
   (`EndgameNum: 1`), at every choice point: the configuration default (so the CLI and a classic
   input without `endgamenum`), and the Python factories `ZeroDimSolver`, `HomotopySolver`,
@@ -207,6 +222,10 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   endgame was silently reverted at every `solve()` by the solver's own copy.  The solver's value
   now flows into the endgame at setup and whenever the solver's value changes, so whichever was
   set last wins and nothing is reverted without a word.
+- Building a large expression no longer costs its expansion (the second half of #417, closing
+  it): canonicalization broke multidegree ties by printing the operands, and the printer walks
+  the tree -- a 46-node graph printed as 196 KB at every level.  Ties are now broken on the
+  canonical encoding, which is linear in the graph, computed only when two operands tie.
 - Classic input with Bertini 1 comments (`%` to the end of the line) is accepted by every
   parse entry point (`System(text)`, `parse.system`, the CLI), including a comment that
   mentions `INPUT` or `END;`: comments are removed in C++ before the file wrappers are

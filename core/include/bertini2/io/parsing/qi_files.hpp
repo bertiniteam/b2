@@ -82,6 +82,34 @@ inline void StripUTF8BOM(std::string& s)
 	}
 }
 
+/// \brief Remove Bertini 1 comments from \p s in place: everything from a `%` to the end of
+///        its line.  A classic input file may carry comments anywhere -- whole lines, or the
+///        tail of a declaration -- and the grammars have no skip rule for them, so an
+///        uncommented text is what every parse entry point must start from.  Bertini 1 has no
+///        string literals, so a `%` is always a comment marker.  Line breaks are kept, so
+///        error positions still name the right line.  See #407.
+inline void StripClassicComments(std::string& s)
+{
+	std::string out;
+	out.reserve(s.size());
+	bool in_comment = false;
+	for (char c : s)
+	{
+		if (c == '\n')
+		{
+			in_comment = false;
+			out.push_back(c);
+		}
+		else if (in_comment)
+			continue;
+		else if (c == '%')
+			in_comment = true;
+		else
+			out.push_back(c);
+	}
+	s.swap(out);
+}
+
 /// \brief Unwrap a Bertini 1 classic input FILE down to the declarations the grammar reads.
 ///
 /// `System::to_classic_input()` emits a complete Bertini 1 file --

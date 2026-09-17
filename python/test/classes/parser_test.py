@@ -92,6 +92,18 @@ def test_parse_tolerates_config_and_input_wrapper():
         assert len(list(sys.functions())) == 1
 
 
+def test_parse_tolerates_comments():
+    # #407: Bertini 1 comments (% to end of line) anywhere in the input, including a comment
+    # that mentions INPUT or END;, are removed in C++ before parsing -- there is no Python
+    # text-scanning shim any more.  Interface check; the cases are pinned in C++.
+    clean = 'variable_group x, y; function f, g; f = x^2 + y^2 - 1; g = x - y;'
+    commented = ('% title\nvariable_group x, y; % unknowns\n% END; INPUT inside a comment\n'
+                 'function f, g;\nf = x^2 + y^2 - 1; % circle\n%g = x + y;\ng = x - y; % line')
+    expected = pp.system(clean)
+    assert pp.system(commented).is_same(expected)
+    assert pp.system('CONFIG % c\ntracktype: 0;\nEND;\nINPUT % i\n' + commented + '\nEND;').is_same(expected)
+
+
 def test_parse_complex_coefficient_literals():
     # Regression: to_classic_input writes complex coefficients as (re,im), which the
     # FunctionParser could not read (it wants (re+im*I)) -- so a complex-coefficient
