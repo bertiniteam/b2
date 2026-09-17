@@ -46,78 +46,78 @@
 #include <eigenpy/decompositions/JacobiSVD.hpp>
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+        template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+        template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
-		namespace {
+        namespace {
 
-			template<typename T>
-			Vec<T> SolveLinearSystem(Mat<T> const& A, Vec<T> const& b)
-			{
-				// Eigen's partial-pivot LU asserts its shape preconditions only in debug builds; in a
-				// release build a wrong shape corrupts the heap instead of raising (b2#390).  Refuse
-				// here, before Eigen sees the operands.  (Boost.Python maps invalid_argument to
-				// ValueError; the Python wrapper checks first and raises numpy's LinAlgError.)
-				if (A.rows() != A.cols())
-					throw std::invalid_argument("bertini.linalg.solve needs a square matrix, got "
-						+ std::to_string(A.rows()) + " x " + std::to_string(A.cols())
-						+ "; use lstsq for a rectangular system");
-				if (b.size() != A.rows())
-					throw std::invalid_argument("bertini.linalg.solve: the right-hand side has "
-						+ std::to_string(b.size()) + " entries but the matrix has "
-						+ std::to_string(A.rows()) + " rows");
-				return Vec<T>(A.partialPivLu().solve(b));
-			}
+            template<typename T>
+            Vec<T> SolveLinearSystem(Mat<T> const& A, Vec<T> const& b)
+            {
+                // Eigen's partial-pivot LU asserts its shape preconditions only in debug builds; in a
+                // release build a wrong shape corrupts the heap instead of raising (b2#390).  Refuse
+                // here, before Eigen sees the operands.  (Boost.Python maps invalid_argument to
+                // ValueError; the Python wrapper checks first and raises numpy's LinAlgError.)
+                if (A.rows() != A.cols())
+                    throw std::invalid_argument("bertini.linalg.solve needs a square matrix, got "
+                        + std::to_string(A.rows()) + " x " + std::to_string(A.cols())
+                        + "; use lstsq for a rectangular system");
+                if (b.size() != A.rows())
+                    throw std::invalid_argument("bertini.linalg.solve: the right-hand side has "
+                        + std::to_string(b.size()) + " entries but the matrix has "
+                        + std::to_string(A.rows()) + " rows");
+                return Vec<T>(A.partialPivLu().solve(b));
+            }
 
-		} // anonymous namespace
+        } // anonymous namespace
 
 
-		void ExportLinalg()
-		{
-			using namespace boost::python;
+        void ExportLinalg()
+        {
+            using namespace boost::python;
 
-			// Build the bertini.linalg submodule (same idiom as bertini.multiprec / bertini.function_tree).
-			scope current_scope;
-			std::string submodule_name(extract<const char*>(current_scope.attr("__name__")));
-			submodule_name.append(".linalg");
-			object linalg_module(borrowed(PyImport_AddModule(submodule_name.c_str())));
-			current_scope.attr("linalg") = linalg_module;
+            // Build the bertini.linalg submodule (same idiom as bertini.multiprec / bertini.function_tree).
+            scope current_scope;
+            std::string submodule_name(extract<const char*>(current_scope.attr("__name__")));
+            submodule_name.append(".linalg");
+            object linalg_module(borrowed(PyImport_AddModule(submodule_name.c_str())));
+            current_scope.attr("linalg") = linalg_module;
 
-			scope linalg_scope = linalg_module;
-			linalg_scope.attr("__doc__") =
-				"Dense linear algebra for bertini's multiprecision types (real_mp / complex_mp), "
-				"at full multiprecision.  Backed by eigenpy's own Eigen decomposition wrappers "
-				"instantiated on the mp scalars -- the LU that a stock `import eigenpy` cannot do "
-				"on these custom types.";
+            scope linalg_scope = linalg_module;
+            linalg_scope.attr("__doc__") =
+                "Dense linear algebra for bertini's multiprecision types (real_mp / complex_mp), "
+                "at full multiprecision.  Backed by eigenpy's own Eigen decomposition wrappers "
+                "instantiated on the mp scalars -- the LU that a stock `import eigenpy` cannot do "
+                "on these custom types.";
 
-			// eigenpy's own decomposition visitors, instantiated on the mp matrix types.
-			// LU (square solve / determinant / inverse):
-			eigenpy::PartialPivLUSolverVisitor<Mat<complex_mp>>::expose("PartialPivLU");
-			eigenpy::PartialPivLUSolverVisitor<Mat<real_mp>>::expose("PartialPivLUReal");
+            // eigenpy's own decomposition visitors, instantiated on the mp matrix types.
+            // LU (square solve / determinant / inverse):
+            eigenpy::PartialPivLUSolverVisitor<Mat<complex_mp>>::expose("PartialPivLU");
+            eigenpy::PartialPivLUSolverVisitor<Mat<real_mp>>::expose("PartialPivLUReal");
 
-			// QR -- plain (fast, full-rank) and column-pivoting (rank-revealing, least-squares):
-			eigenpy::HouseholderQRSolverVisitor<Mat<complex_mp>>::expose("HouseholderQR");
-			eigenpy::HouseholderQRSolverVisitor<Mat<real_mp>>::expose("HouseholderQRReal");
-			eigenpy::ColPivHouseholderQRSolverVisitor<Mat<complex_mp>>::expose("ColPivHouseholderQR");
-			eigenpy::ColPivHouseholderQRSolverVisitor<Mat<real_mp>>::expose("ColPivHouseholderQRReal");
+            // QR -- plain (fast, full-rank) and column-pivoting (rank-revealing, least-squares):
+            eigenpy::HouseholderQRSolverVisitor<Mat<complex_mp>>::expose("HouseholderQR");
+            eigenpy::HouseholderQRSolverVisitor<Mat<real_mp>>::expose("HouseholderQRReal");
+            eigenpy::ColPivHouseholderQRSolverVisitor<Mat<complex_mp>>::expose("ColPivHouseholderQR");
+            eigenpy::ColPivHouseholderQRSolverVisitor<Mat<real_mp>>::expose("ColPivHouseholderQRReal");
 
-			// SVD -- two-sided Jacobi (accurate; singular values, U/V, least-squares solve).
-			// The visitor is templated on the solver type (not the matrix type).
-			eigenpy::JacobiSVDVisitor<Eigen::JacobiSVD<Mat<complex_mp>>>::expose("JacobiSVD");
-			eigenpy::JacobiSVDVisitor<Eigen::JacobiSVD<Mat<real_mp>>>::expose("JacobiSVDReal");
+            // SVD -- two-sided Jacobi (accurate; singular values, U/V, least-squares solve).
+            // The visitor is templated on the solver type (not the matrix type).
+            eigenpy::JacobiSVDVisitor<Eigen::JacobiSVD<Mat<complex_mp>>>::expose("JacobiSVD");
+            eigenpy::JacobiSVDVisitor<Eigen::JacobiSVD<Mat<real_mp>>>::expose("JacobiSVDReal");
 
-			// One-shot convenience: solve a square system A x = b at mp precision, partial-pivot LU.
-			def("solve",
-				+[](Mat<complex_mp> const& A, Vec<complex_mp> const& b){ return SolveLinearSystem<complex_mp>(A, b); },
-				(arg("A"), arg("b")),
-				"Solve the square linear system A x = b at multiprecision (complex_mp), via partial-pivot LU.  Returns x.");
-			def("solve",
-				+[](Mat<real_mp> const& A, Vec<real_mp> const& b){ return SolveLinearSystem<real_mp>(A, b); },
-				(arg("A"), arg("b")),
-				"Solve the square linear system A x = b at multiprecision (real_mp), via partial-pivot LU.  Returns x.");
-		}
+            // One-shot convenience: solve a square system A x = b at mp precision, partial-pivot LU.
+            def("solve",
+                +[](Mat<complex_mp> const& A, Vec<complex_mp> const& b){ return SolveLinearSystem<complex_mp>(A, b); },
+                (arg("A"), arg("b")),
+                "Solve the square linear system A x = b at multiprecision (complex_mp), via partial-pivot LU.  Returns x.");
+            def("solve",
+                +[](Mat<real_mp> const& A, Vec<real_mp> const& b){ return SolveLinearSystem<real_mp>(A, b); },
+                (arg("A"), arg("b")),
+                "Solve the square linear system A x = b at multiprecision (real_mp), via partial-pivot LU.  Returns x.");
+        }
 
-	} // namespace python
+    } // namespace python
 } // namespace bertini

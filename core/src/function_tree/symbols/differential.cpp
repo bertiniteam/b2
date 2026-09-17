@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/function_tree/symbols/differential.hpp"
@@ -25,28 +25,28 @@
 
 
 namespace bertini{
-	namespace node{
+    namespace node{
 
 Differential::Differential(std::shared_ptr<const Variable> diff_variable, std::string var_name) : NamedSymbol('d'+ var_name), differential_variable_(diff_variable)
 {
 }
 
 
-const std::shared_ptr<const Variable>& Differential::GetVariable() const 
+const std::shared_ptr<const Variable>& Differential::GetVariable() const
 {
-	return differential_variable_;
-}	
+    return differential_variable_;
+}
 
 void Differential::print(std::ostream & target) const
 {
-	target << name();
+    target << name();
 }
 
 
 std::shared_ptr<Node> Differential::Differentiate(std::shared_ptr<Variable> const& /*v*/) const
 {
-	throw std::runtime_error("differentiating a differential is not correctly implemented yet");
-	return Integer::Make(0);
+    throw std::runtime_error("differentiating a differential is not correctly implemented yet");
+    return Integer::Make(0);
 }
 
 /**
@@ -54,23 +54,23 @@ Compute the degree with respect to a single variable.   For differentials, the d
 */
 int Differential::Degree(std::shared_ptr<Variable> const& /*v*/) const
 {
-	return 0;
+    return 0;
 }
 
 int Differential::Degree(VariableGroup const& /*vars*/) const
 {
-	return 0;
+    return 0;
 }
 
 std::vector<int> Differential::MultiDegreeImpl(VariableGroup const& vars) const
 {
-	return std::vector<int>(vars.size(),0);
+    return std::vector<int>(vars.size(),0);
 }
 
 
 bool Differential::IsHomogeneous(std::shared_ptr<Variable> const& /*v*/) const
 {
-	return true;
+    return true;
 }
 
 /**
@@ -78,13 +78,13 @@ Check for homogeneity, with respect to a variable group.
 */
 bool Differential::IsHomogeneous(VariableGroup const& /*vars*/) const
 {
-	return true;
+    return true;
 }
 
 
 /**
  Change the precision of this variable-precision tree node.
- 
+
  \param prec the number of digits to change precision to.
  */
 
@@ -93,5 +93,5 @@ bool Differential::IsHomogeneous(VariableGroup const& /*vars*/) const
 
 
 
-	} // re: namespace node
+    } // re: namespace node
 } // re: namespace bertini

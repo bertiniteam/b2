@@ -40,86 +40,86 @@ static_assert(bertini::blocks::is_block_v<Blend>,
 //   dH/dx = 0.5*[1,2] + 0.5*[y,x]=0.5*[1,1] = [1, 1.5]
 static Blend MakeTestBlend()
 {
-	auto x = node::Variable::Make("x");
-	auto y = node::Variable::Make("y");
+    auto x = node::Variable::Make("x");
+    auto y = node::Variable::Make("y");
 
-	auto A = std::make_shared<System>();
-	A->AddVariableGroup(VariableGroup{x, y});
-	A->AddFunction(x + 2 * y);
+    auto A = std::make_shared<System>();
+    A->AddVariableGroup(VariableGroup{x, y});
+    A->AddFunction(x + 2 * y);
 
-	auto B = std::make_shared<System>();
-	B->AddVariableGroup(VariableGroup{x, y});
-	B->AddFunction(x * y);
+    auto B = std::make_shared<System>();
+    B->AddVariableGroup(VariableGroup{x, y});
+    B->AddFunction(x * y);
 
-	auto t = node::Variable::Make("t");
-	std::vector<std::shared_ptr<node::Node>> coeffs{node::Integer::Make(1) - t, t};
-	std::vector<std::shared_ptr<const System>> ops{A, B};
+    auto t = node::Variable::Make("t");
+    std::vector<std::shared_ptr<node::Node>> coeffs{node::Integer::Make(1) - t, t};
+    std::vector<std::shared_ptr<const System>> ops{A, B};
 
-	return Blend(t, coeffs, ops);
+    return Blend(t, coeffs, ops);
 }
 
 BOOST_AUTO_TEST_CASE(shape)
 {
-	DefaultPrecision(30);
-	auto blend = MakeTestBlend();
-	BOOST_CHECK_EQUAL(blend.NumFunctions(), 1u);
-	BOOST_CHECK(blend.DependsOnPathVariable());
+    DefaultPrecision(30);
+    auto blend = MakeTestBlend();
+    BOOST_CHECK_EQUAL(blend.NumFunctions(), 1u);
+    BOOST_CHECK(blend.DependsOnPathVariable());
 }
 
 BOOST_AUTO_TEST_CASE(eval_double)
 {
-	DefaultPrecision(30);
-	auto blend = MakeTestBlend();
+    DefaultPrecision(30);
+    auto blend = MakeTestBlend();
 
-	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
-	bertini::Vec<complex_dbl> result(1);
-	blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(0.5));
+    bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
+    bertini::Vec<complex_dbl> result(1);
+    blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(0.5));
 
-	BOOST_CHECK_CLOSE(result(0).real(), 2.0, 1e-11);
-	BOOST_CHECK_SMALL(result(0).imag(), 1e-11);
+    BOOST_CHECK_CLOSE(result(0).real(), 2.0, 1e-11);
+    BOOST_CHECK_SMALL(result(0).imag(), 1e-11);
 }
 
 BOOST_AUTO_TEST_CASE(jacobian_double)
 {
-	DefaultPrecision(30);
-	auto blend = MakeTestBlend();
+    DefaultPrecision(30);
+    auto blend = MakeTestBlend();
 
-	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
-	bertini::Mat<complex_dbl> J(1, 2);
-	blend.JacobianInPlace<complex_dbl>(J, x, complex_dbl(0.5));
+    bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
+    bertini::Mat<complex_dbl> J(1, 2);
+    blend.JacobianInPlace<complex_dbl>(J, x, complex_dbl(0.5));
 
-	BOOST_CHECK_CLOSE(J(0, 0).real(), 1.0, 1e-11);
-	BOOST_CHECK_CLOSE(J(0, 1).real(), 1.5, 1e-11);
+    BOOST_CHECK_CLOSE(J(0, 0).real(), 1.0, 1e-11);
+    BOOST_CHECK_CLOSE(J(0, 1).real(), 1.5, 1e-11);
 }
 
 BOOST_AUTO_TEST_CASE(time_derivative_double)
 {
-	DefaultPrecision(30);
-	auto blend = MakeTestBlend();
+    DefaultPrecision(30);
+    auto blend = MakeTestBlend();
 
-	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
-	bertini::Vec<complex_dbl> dHdt(1);
-	blend.TimeDerivInPlace<complex_dbl>(dHdt, x, complex_dbl(0.5));
+    bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
+    bertini::Vec<complex_dbl> dHdt(1);
+    blend.TimeDerivInPlace<complex_dbl>(dHdt, x, complex_dbl(0.5));
 
-	BOOST_CHECK_CLOSE(dHdt(0).real(), -2.0, 1e-11);
+    BOOST_CHECK_CLOSE(dHdt(0).real(), -2.0, 1e-11);
 }
 
 BOOST_AUTO_TEST_CASE(eval_and_time_derivative_mpfr)
 {
-	DefaultPrecision(30);
-	auto blend = MakeTestBlend();
-	blend.Precision(30);
+    DefaultPrecision(30);
+    auto blend = MakeTestBlend();
+    blend.Precision(30);
 
-	bertini::Vec<complex_mp> x(2); x << complex_mp(1), complex_mp(1);
-	complex_mp t("0.5");
+    bertini::Vec<complex_mp> x(2); x << complex_mp(1), complex_mp(1);
+    complex_mp t("0.5");
 
-	bertini::Vec<complex_mp> result(1);
-	blend.EvalInPlace<complex_mp>(result, x, t);
-	BOOST_CHECK(abs(result(0) - complex_mp(2)) < real_mp("1e-25"));
+    bertini::Vec<complex_mp> result(1);
+    blend.EvalInPlace<complex_mp>(result, x, t);
+    BOOST_CHECK(abs(result(0) - complex_mp(2)) < real_mp("1e-25"));
 
-	bertini::Vec<complex_mp> dHdt(1);
-	blend.TimeDerivInPlace<complex_mp>(dHdt, x, t);
-	BOOST_CHECK(abs(dHdt(0) - complex_mp(-2)) < real_mp("1e-25"));
+    bertini::Vec<complex_mp> dHdt(1);
+    blend.TimeDerivInPlace<complex_mp>(dHdt, x, t);
+    BOOST_CHECK(abs(dHdt(0) - complex_mp(-2)) < real_mp("1e-25"));
 }
 
 // The coefficients are evaluated through a cached coefficient System (compiled once,
@@ -127,26 +127,26 @@ BOOST_AUTO_TEST_CASE(eval_and_time_derivative_mpfr)
 // value --- must keep giving the right answer, exercising the cache across invocations.
 BOOST_AUTO_TEST_CASE(repeated_evaluation_reuses_coefficients_consistently)
 {
-	DefaultPrecision(30);
-	auto blend = MakeTestBlend();
+    DefaultPrecision(30);
+    auto blend = MakeTestBlend();
 
-	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
-	bertini::Vec<complex_dbl> result(1);
+    bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
+    bertini::Vec<complex_dbl> result(1);
 
-	// First call builds the cached coefficient system; subsequent calls reuse it.
-	blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(0.5));
-	BOOST_CHECK_CLOSE(result(0).real(), 2.0, 1e-11);
+    // First call builds the cached coefficient system; subsequent calls reuse it.
+    blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(0.5));
+    BOOST_CHECK_CLOSE(result(0).real(), 2.0, 1e-11);
 
-	blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(0.5));
-	BOOST_CHECK_CLOSE(result(0).real(), 2.0, 1e-11);
+    blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(0.5));
+    BOOST_CHECK_CLOSE(result(0).real(), 2.0, 1e-11);
 
-	// A different path value: H = (1-t)*3 + t*1 = 3 - 2t; at t=0 -> 3.
-	blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(0.0));
-	BOOST_CHECK_CLOSE(result(0).real(), 3.0, 1e-11);
+    // A different path value: H = (1-t)*3 + t*1 = 3 - 2t; at t=0 -> 3.
+    blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(0.0));
+    BOOST_CHECK_CLOSE(result(0).real(), 3.0, 1e-11);
 
-	// And at t=1 -> 1.
-	blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(1.0));
-	BOOST_CHECK_CLOSE(result(0).real(), 1.0, 1e-11);
+    // And at t=1 -> 1.
+    blend.EvalInPlace<complex_dbl>(result, x, complex_dbl(1.0));
+    BOOST_CHECK_CLOSE(result(0).real(), 1.0, 1e-11);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

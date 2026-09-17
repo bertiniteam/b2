@@ -15,14 +15,14 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 //
 // silviana amethyst, university of wisconsin-eau claire
 
 /**
-\file bertini2/blackbox/switches_zerodim.hpp 
+\file bertini2/blackbox/switches_zerodim.hpp
 
 \brief A sequence of switches for getting a particular instantiation of a ZeroDim algorithm, based on runtime options.
 */
@@ -52,12 +52,12 @@ ZeroDimSpecify* switch chain resolves into concrete compile-time template parame
 */
 struct ZeroDimRT
 {
-	// INTERIM default = TotalDegreeBinomial (see policies.hpp): the linear-product TotalDegreeLinearProduct is the
-	// eventual default but currently stalls the Cauchy endgame on harder systems, so the safe
-	// default stays roots of unity until that is fixed.
-	type::Start start = type::Start::TotalDegreeBinomial;  ///< Which start system to use.
-	type::Tracker tracker = type::Tracker::Adaptive;       ///< Which path tracker to use.
-	type::Endgame endgame = type::Endgame::Cauchy;         ///< Which endgame to use.
+    // INTERIM default = TotalDegreeBinomial (see policies.hpp): the linear-product TotalDegreeLinearProduct is the
+    // eventual default but currently stalls the Cauchy endgame on harder systems, so the safe
+    // default stays roots of unity until that is fixed.
+    type::Start start = type::Start::TotalDegreeBinomial;  ///< Which start system to use.
+    type::Tracker tracker = type::Tracker::Adaptive;       ///< Which path tracker to use.
+    type::Endgame endgame = type::Endgame::Cauchy;         ///< Which endgame to use.
 };
 
 
@@ -76,12 +76,12 @@ User-defined homotopies are not inferred here; they come with their own start sy
 */
 inline type::Start InferStartType(System const& sys)
 {
-	// INTERIM: a single affine group infers TotalDegreeBinomial (the safe default).  The eventual choice
-	// here is TotalDegreeLinearProduct (general position), gated on the Cauchy-endgame fix; see policies.hpp.
-	if (sys.NumVariableGroups() == 1 && sys.NumHomVariableGroups() == 0)
-		return type::Start::TotalDegreeBinomial;
-	else
-		return type::Start::MHom;
+    // INTERIM: a single affine group infers TotalDegreeBinomial (the safe default).  The eventual choice
+    // here is TotalDegreeLinearProduct (general position), gated on the Cauchy-endgame fix; see policies.hpp.
+    if (sys.NumVariableGroups() == 1 && sys.NumHomVariableGroups() == 0)
+        return type::Start::TotalDegreeBinomial;
+    else
+        return type::Start::MHom;
 }
 
 
@@ -105,10 +105,10 @@ ZeroDimSolver can be constructed.  The blackbox always clones and builds its own
 template <typename TrackerType, typename EndgameType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyComplete(ConstTs const& ...ts)
 {
-	// the blackbox always clones + builds (ZeroDimSolver); ts... = (target, start_factory).
-	return std::make_unique<
-			algorithm::ZeroDimSolver<TrackerType, EndgameType, System>
-			>(ts...);
+    // the blackbox always clones + builds (ZeroDimSolver); ts... = (target, start_factory).
+    return std::make_unique<
+            algorithm::ZeroDimSolver<TrackerType, EndgameType, System>
+            >(ts...);
 }
 
 /**
@@ -123,18 +123,18 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyComplete(ConstTs const& ...
 template <typename TrackerType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyEndgame(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
-	switch (rt.endgame)
-	{
-		case type::Endgame::PowerSeries:
-			// honor the requested endgame!  until 2026-06-12 this hardcoded Cauchy.
-			return ZeroDimSpecifyComplete<TrackerType,
-					typename endgame::EndgameSelector<TrackerType>::PSEG>(ts...);
+    switch (rt.endgame)
+    {
+        case type::Endgame::PowerSeries:
+            // honor the requested endgame!  until 2026-06-12 this hardcoded Cauchy.
+            return ZeroDimSpecifyComplete<TrackerType,
+                    typename endgame::EndgameSelector<TrackerType>::PSEG>(ts...);
 
-		case type::Endgame::Cauchy:
-			return ZeroDimSpecifyComplete<TrackerType,
-					typename endgame::EndgameSelector<TrackerType>::Cauchy>(ts...);
-	}
-	throw std::runtime_error("unrecognized endgame type in ZeroDimSpecifyEndgame");
+        case type::Endgame::Cauchy:
+            return ZeroDimSpecifyComplete<TrackerType,
+                    typename endgame::EndgameSelector<TrackerType>::Cauchy>(ts...);
+    }
+    throw std::runtime_error("unrecognized endgame type in ZeroDimSpecifyEndgame");
 }
 
 /**
@@ -148,16 +148,16 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyEndgame(ZeroDimRT const& rt
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyTracker(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
-	switch (rt.tracker)
-	{
-		case type::Tracker::FixedDouble:
-			return ZeroDimSpecifyEndgame<tracking::DoublePrecisionTracker>(rt, ts...);
-		case type::Tracker::FixedMultiple:
-			return ZeroDimSpecifyEndgame<tracking::MultiplePrecisionTracker>(rt, ts...);
-		case type::Tracker::Adaptive:
-			return ZeroDimSpecifyEndgame<tracking::AMPTracker>(rt, ts...);
-	}
-	throw std::runtime_error("unrecognized tracker type in ZeroDimSpecifyTracker");
+    switch (rt.tracker)
+    {
+        case type::Tracker::FixedDouble:
+            return ZeroDimSpecifyEndgame<tracking::DoublePrecisionTracker>(rt, ts...);
+        case type::Tracker::FixedMultiple:
+            return ZeroDimSpecifyEndgame<tracking::MultiplePrecisionTracker>(rt, ts...);
+        case type::Tracker::Adaptive:
+            return ZeroDimSpecifyEndgame<tracking::AMPTracker>(rt, ts...);
+    }
+    throw std::runtime_error("unrecognized tracker type in ZeroDimSpecifyTracker");
 }
 
 /**
@@ -174,19 +174,19 @@ Appends the chosen start-system factory to the argument pack before continuing d
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyStart(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
-	// append the start-system factory to the argument pack; ZeroDimSolver consumes (target, factory).
-	switch (rt.start)
-	{
-		case type::Start::TotalDegreeLinearProduct:
-			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegreeLinearProduct>());
-		case type::Start::TotalDegreeBinomial:
-			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegreeBinomial>());
-		case type::Start::MHom:
-			return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::MHomogeneous>());
-		case type::Start::User:
-			throw std::runtime_error("trying to use generic zero dim with user homotopy.  use the specific UserBlaBla instead");
-	}
-	throw std::runtime_error("unrecognized start system type in ZeroDimSpecifyStart");
+    // append the start-system factory to the argument pack; ZeroDimSolver consumes (target, factory).
+    switch (rt.start)
+    {
+        case type::Start::TotalDegreeLinearProduct:
+            return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegreeLinearProduct>());
+        case type::Start::TotalDegreeBinomial:
+            return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::TotalDegreeBinomial>());
+        case type::Start::MHom:
+            return ZeroDimSpecifyTracker(rt, ts..., start_system::MakeStartFactory<start_system::MHomogeneous>());
+        case type::Start::User:
+            throw std::runtime_error("trying to use generic zero dim with user homotopy.  use the specific UserBlaBla instead");
+    }
+    throw std::runtime_error("unrecognized start system type in ZeroDimSpecifyStart");
 }
 
 /**
@@ -203,7 +203,7 @@ into the corresponding compile-time template parameter and constructs the solver
 template <typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> MakeZeroDim(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
-	return ZeroDimSpecifyStart(rt, ts...);
+    return ZeroDimSpecifyStart(rt, ts...);
 }
 
 

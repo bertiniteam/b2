@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // differential.hpp:  Declares the class SpecialNumber.
@@ -40,114 +40,114 @@
 
 namespace bertini {
 namespace node{
-	class Variable;
+    class Variable;
 
 
-	/**
-	\brief Provides the differential type for differentiation of expression trees.
+    /**
+    \brief Provides the differential type for differentiation of expression trees.
 
-	This class represents differentials.  These are produced in the course of differentiation of a non-constant expression tree.
-	*/
-	class Differential : public NamedSymbol
-	{
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-
-
-		/// \brief Construct (and intern) a Differential node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Differential> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<Differential>(Intern(std::shared_ptr<Node>( new Differential(ts...) )));
-		}
+    This class represents differentials.  These are produced in the course of differentiation of a non-constant expression tree.
+    */
+    class Differential : public NamedSymbol
+    {
+    public:
+        BERTINI_DEFAULT_VISITABLE()
 
 
-	private:
-		/**
-		 Input shared_ptr to a Variable.
-		 */
-		Differential(std::shared_ptr<const Variable> diff_variable, std::string var_name);
-
-	public:
-
+        /// \brief Construct (and intern) a Differential node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<Differential> Make(Ts&& ...ts){
+            return std::static_pointer_cast<Differential>(Intern(std::shared_ptr<Node>( new Differential(ts...) )));
+        }
 
 
-		/// \return The variable this differential is taken with respect to.
-		const std::shared_ptr<const Variable>& GetVariable() const;
+    private:
+        /**
+         Input shared_ptr to a Variable.
+         */
+        Differential(std::shared_ptr<const Variable> diff_variable, std::string var_name);
 
-
-		void print(std::ostream & target) const override;
+    public:
 
 
 
-		/**
-		 Differentiates a number.
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        /// \return The variable this differential is taken with respect to.
+        const std::shared_ptr<const Variable>& GetVariable() const;
 
-		virtual ~Differential() = default;
 
+        void print(std::ostream & target) const override;
 
 
 
-		/**
-		Compute the degree with respect to a single variable.   For differentials, the degree is 0.
-		*/
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+        /**
+         Differentiates a number.
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 
-		int Degree(VariableGroup const& vars) const override;
-		
-		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
-
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override;
-		
-
-		/**
-		 Change the precision of this variable-precision tree node.
-		 
-		 \param prec the number of digits to change precision to.
-		 */
-
-		
-	protected:
-		// This should never be called for a Differential.  Only for Jacobians.
-		
-
-
-		
+        virtual ~Differential() = default;
 
 
 
-	private:
-		Differential() = default;
-		std::shared_ptr<const Variable> differential_variable_;
+
+        /**
+        Compute the degree with respect to a single variable.   For differentials, the degree is 0.
+        */
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        int Degree(VariableGroup const& vars) const override;
+
+        std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
+
+        bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /**
+        Check for homogeneity, with respect to a variable group.
+        */
+        bool IsHomogeneous(VariableGroup const& vars) const override;
 
 
-		friend class boost::serialization::access;
-		
-		template<class Archive>
-		void save(Archive & ar, const unsigned int /*version*/) const
-		{
-			ar & boost::serialization::base_object<NamedSymbol>(*this);
-			ar & differential_variable_;
-			// ar & const_cast<std::shared_ptr<const Variable> >(differential_variable_);
-		}
-		
-		template<class Archive>
-		void load(Archive & ar, const unsigned int /*version*/)
-		{
-			ar & boost::serialization::base_object<NamedSymbol>(*this);
-			ar & std::const_pointer_cast<Variable>(differential_variable_);
-		}
-		
-		// BOOST_SERIALIZATION_SPLIT_MEMBER()
+        /**
+         Change the precision of this variable-precision tree node.
 
-	};
+         \param prec the number of digits to change precision to.
+         */
+
+
+    protected:
+        // This should never be called for a Differential.  Only for Jacobians.
+
+
+
+
+
+
+
+    private:
+        Differential() = default;
+        std::shared_ptr<const Variable> differential_variable_;
+
+
+        friend class boost::serialization::access;
+
+        template<class Archive>
+        void save(Archive & ar, const unsigned int /*version*/) const
+        {
+            ar & boost::serialization::base_object<NamedSymbol>(*this);
+            ar & differential_variable_;
+            // ar & const_cast<std::shared_ptr<const Variable> >(differential_variable_);
+        }
+
+        template<class Archive>
+        void load(Archive & ar, const unsigned int /*version*/)
+        {
+            ar & boost::serialization::base_object<NamedSymbol>(*this);
+            ar & std::const_pointer_cast<Variable>(differential_variable_);
+        }
+
+        // BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    };
 
 } // re: namespace node
 } // re: namespace bertini

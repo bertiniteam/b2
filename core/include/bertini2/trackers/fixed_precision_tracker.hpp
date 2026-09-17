@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -32,626 +32,623 @@
 
 namespace bertini{
 
-	namespace tracking{
+    namespace tracking{
 
-		using std::max;
-		using std::min;
-		using std::pow;
+        using std::max;
+        using std::min;
+        using std::pow;
 
-		using bertini::max;
+        using bertini::max;
 
 
-	
 
 
 
 
-		/**
-		\class FixedPrecisionTracker
 
-		\brief CRTP base for trackers that work at a single fixed precision (double or fixed multiple).
-		*/
-		template<class DerivedT>
-		class FixedPrecisionTracker : public Tracker<FixedPrecisionTracker<DerivedT>>
-		{	
-		public:
+        /**
+        \class FixedPrecisionTracker
 
-			using BaseComplexT = typename TrackerTraits<DerivedT>::BaseComplexT;  ///< The complex number type.
-			using BaseRealT = typename TrackerTraits<DerivedT>::BaseRealT;  ///< The real number type.
+        \brief CRTP base for trackers that work at a single fixed precision (double or fixed multiple).
+        */
+        template<class DerivedT>
+        class FixedPrecisionTracker : public Tracker<FixedPrecisionTracker<DerivedT>>
+        {
+        public:
 
-			using ComplexT = BaseComplexT;  ///< The complex number type.
-			using RealT = BaseRealT;  ///< The real number type.
+            using BaseComplexT = typename TrackerTraits<DerivedT>::BaseComplexT;  ///< The complex number type.
+            using BaseRealT = typename TrackerTraits<DerivedT>::BaseRealT;  ///< The real number type.
 
-			virtual ~FixedPrecisionTracker() = default;
+            using ComplexT = BaseComplexT;  ///< The complex number type.
+            using RealT = BaseRealT;  ///< The real number type.
 
-			using EmitterType = FixedPrecisionTracker<DerivedT>;  ///< The event-emitter type for this tracker.
-			using Base = Tracker<FixedPrecisionTracker<DerivedT>>;  ///< The base tracker type.
+            virtual ~FixedPrecisionTracker() = default;
 
-			using Config =  typename Base::Config;  ///< The configuration-holding base type.
-			FORWARD_GET_CONFIGURED
-			using Stepping = typename Base::Stepping;  ///< The stepping configuration type.
-			using Newton = typename Base::Newton;  ///< The Newton corrector configuration type.
+            using EmitterType = FixedPrecisionTracker<DerivedT>;  ///< The event-emitter type for this tracker.
+            using Base = Tracker<FixedPrecisionTracker<DerivedT>>;  ///< The base tracker type.
 
-			/// \brief Construct a fixed-precision tracker for a system.
-			FixedPrecisionTracker(System const& sys) : Base(sys){}
+            using Config =  typename Base::Config;  ///< The configuration-holding base type.
+            FORWARD_GET_CONFIGURED
+            using Stepping = typename Base::Stepping;  ///< The stepping configuration type.
+            using Newton = typename Base::Newton;  ///< The Newton corrector configuration type.
 
-			/**
-			\brief An additional no-op call, provided for conformity of interface with AMP tracker in generic code.
-			*/
-			void PrecisionSetup(FixedPrecisionConfig const&)
-			{ }
+            /// \brief Construct a fixed-precision tracker for a system.
+            FixedPrecisionTracker(System const& sys) : Base(sys){}
 
+            /**
+            \brief An additional no-op call, provided for conformity of interface with AMP tracker in generic code.
+            */
+            void PrecisionSetup(FixedPrecisionConfig const&)
+            { }
 
-			/// \brief Get the current space point of the track.
-			Vec<ComplexT> CurrentPoint() const override
-			{
-				return std::get<Vec<ComplexT>>(this->current_space_);
-			}
 
+            /// \brief Get the current space point of the track.
+            Vec<ComplexT> CurrentPoint() const override
+            {
+                return std::get<Vec<ComplexT>>(this->current_space_);
+            }
 
 
-			void ResetCounters() const override
-			{
-				Base::ResetCountersBase();
 
-				this->num_successful_steps_since_stepsize_increase_ = 0;
-				// initialize to the frequency so guaranteed to compute it the first try 	
-				this->num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
-			}
+            void ResetCounters() const override
+            {
+                Base::ResetCountersBase();
 
+                this->num_successful_steps_since_stepsize_increase_ = 0;
+                // initialize to the frequency so guaranteed to compute it the first try
+                this->num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
+            }
 
-			/**
-			\brief Ensure that number of steps, stepsize, and precision still ok.
 
-			\return Success if ok to keep going, and a different code otherwise. 
-			*/
-			SuccessCode PreIterationCheck() const override
-			{
-				// The budget counts EVERY step, not only the successful ones.  A path that
-				// fails steps has spent the effort whether or not it advanced, and counting
-				// only successes leaves a failing path un-budgeted: it can fail forever at
-				// 0% of its allowance.  See issue #410.
-				if (this->NumTotalStepsTaken() >= Get<Stepping>().max_num_steps)
-					return SuccessCode::MaxNumStepsTaken;
-				if (this->current_stepsize_ < Get<Stepping>().min_step_size)
-					return SuccessCode::MinStepSizeReached;
+            /**
+            \brief Ensure that number of steps, stepsize, and precision still ok.
 
-				return SuccessCode::Success;
-			}
+            \return Success if ok to keep going, and a different code otherwise.
+            */
+            SuccessCode PreIterationCheck() const override
+            {
+                // The budget counts EVERY step, not only the successful ones.  A path that
+                // fails steps has spent the effort whether or not it advanced, and counting
+                // only successes leaves a failing path un-budgeted: it can fail forever at
+                // 0% of its allowance.  See issue #410.
+                if (this->NumTotalStepsTaken() >= Get<Stepping>().max_num_steps)
+                    return SuccessCode::MaxNumStepsTaken;
+                if (this->current_stepsize_ < Get<Stepping>().min_step_size)
+                    return SuccessCode::MinStepSizeReached;
 
+                return SuccessCode::Success;
+            }
 
 
 
 
 
-			
-			
 
 
-			void PostTrackCleanup() const override
-			{
-				this->NotifyObservers(TrackingEnded<EmitterType>(*this));
-			}
 
-			/**
-			\brief Copy from the internally stored current solution into a final solution.
-			
-			If preservation of precision is on, this function first returns to the initial precision.
 
-			\param[out] solution_at_endtime The solution at the end time
-			*/
-			void CopySolution(Vec<ComplexT> & solution_at_endtime) const override
-			{
 
-				// the current precision is the precision of the output solution point.
+            void PostTrackCleanup() const override
+            {
+                this->NotifyObservers(TrackingEnded<EmitterType>(*this));
+            }
 
-				unsigned num_vars = static_cast<unsigned>(this->GetSystem().NumVariables());
-				solution_at_endtime.resize(num_vars);
-				for (unsigned ii=0; ii<num_vars; ii++)
-				{
-					solution_at_endtime(ii) = std::get<Vec<ComplexT> >(this->current_space_)(ii);
-				}
+            /**
+            \brief Copy from the internally stored current solution into a final solution.
 
-			}
+            If preservation of precision is on, this function first returns to the initial precision.
 
+            \param[out] solution_at_endtime The solution at the end time
+            */
+            void CopySolution(Vec<ComplexT> & solution_at_endtime) const override
+            {
 
+                // the current precision is the precision of the output solution point.
 
+                unsigned num_vars = static_cast<unsigned>(this->GetSystem().NumVariables());
+                solution_at_endtime.resize(num_vars);
+                for (unsigned ii=0; ii<num_vars; ii++)
+                {
+                    solution_at_endtime(ii) = std::get<Vec<ComplexT> >(this->current_space_)(ii);
+                }
 
-			/**
-			\brief Run an iteration of the tracker loop.
+            }
 
-			Predict and correct, adjusting precision and stepsize as necessary.
 
-			\return Success if the step was successful, and a non-success code if something went wrong, such as a linear algebra failure or AMP Criterion violation.
-			*/
-			SuccessCode TrackerIteration() const override
-			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealT>::Real, 
-			              				typename Eigen::NumTraits<ComplexT>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
 
-				this->NotifyObservers(NewStep<EmitterType >(*this));
 
-				Vec<ComplexT>& predicted_space = std::get<Vec<ComplexT> >(this->temporary_space_); // this will be populated in the Predict step
-				Vec<ComplexT>& current_space = std::get<Vec<ComplexT> >(this->current_space_); // the thing we ultimately wish to update
-				ComplexT current_time = ComplexT(this->current_time_);
-				ComplexT delta_t = ComplexT(this->delta_t_);
+            /**
+            \brief Run an iteration of the tracker loop.
 
-				SuccessCode predictor_code = Predict(predicted_space, current_space, current_time, delta_t);
+            Predict and correct, adjusting precision and stepsize as necessary.
 
-				if (predictor_code!=SuccessCode::Success)
-				{
-					this->NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType >(*this));
+            \return Success if the step was successful, and a non-success code if something went wrong, such as a linear algebra failure or AMP Criterion violation.
+            */
+            SuccessCode TrackerIteration() const override
+            {
+                static_assert(std::is_same< typename Eigen::NumTraits<RealT>::Real,
+                                        typename Eigen::NumTraits<ComplexT>::Real>::value,
+                                        "underlying complex type and the type for comparisons must match");
 
-					this->next_stepsize_ = RealT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
+                this->NotifyObservers(NewStep<EmitterType >(*this));
 
-					UpdateStepsize();
+                Vec<ComplexT>& predicted_space = std::get<Vec<ComplexT> >(this->temporary_space_); // this will be populated in the Predict step
+                Vec<ComplexT>& current_space = std::get<Vec<ComplexT> >(this->current_space_); // the thing we ultimately wish to update
+                ComplexT current_time = ComplexT(this->current_time_);
+                ComplexT delta_t = ComplexT(this->delta_t_);
 
-					return predictor_code;
-				}
+                SuccessCode predictor_code = Predict(predicted_space, current_space, current_time, delta_t);
 
-				this->NotifyObservers(SuccessfulPredict<EmitterType , ComplexT>(*this, predicted_space));
+                if (predictor_code!=SuccessCode::Success)
+                {
+                    this->NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType >(*this));
 
-				Vec<ComplexT>& tentative_next_space = std::get<Vec<ComplexT> >(this->tentative_space_); // this will be populated in the Correct step
+                    this->next_stepsize_ = RealT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
 
-				ComplexT tentative_next_time = current_time + delta_t;
+                    UpdateStepsize();
 
-				SuccessCode corrector_code = Correct(tentative_next_space,
-													 predicted_space,
-													 tentative_next_time);
+                    return predictor_code;
+                }
 
-				if (corrector_code == SuccessCode::GoingToInfinity)
-				{
-					// there is no corrective action possible...
-					return corrector_code;
-				}
-				else if (corrector_code!=SuccessCode::Success)
-				{
-					this->NotifyObservers(CorrectorMatrixSolveFailure<EmitterType >(*this));
+                this->NotifyObservers(SuccessfulPredict<EmitterType , ComplexT>(*this, predicted_space));
 
-					this->next_stepsize_ = RealT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
-					UpdateStepsize();
+                Vec<ComplexT>& tentative_next_space = std::get<Vec<ComplexT> >(this->tentative_space_); // this will be populated in the Correct step
 
-					return corrector_code;
-				}
+                ComplexT tentative_next_time = current_time + delta_t;
 
-				
-				this->NotifyObservers(SuccessfulCorrect<EmitterType , ComplexT>(*this, tentative_next_space));
+                SuccessCode corrector_code = Correct(tentative_next_space,
+                                                     predicted_space,
+                                                     tentative_next_time);
 
-				// copy the tentative vector into the current space vector;
-				current_space = tentative_next_space;
-				return SuccessCode::Success;
-			}
+                if (corrector_code == SuccessCode::GoingToInfinity)
+                {
+                    // there is no corrective action possible...
+                    return corrector_code;
+                }
+                else if (corrector_code!=SuccessCode::Success)
+                {
+                    this->NotifyObservers(CorrectorMatrixSolveFailure<EmitterType >(*this));
 
+                    this->next_stepsize_ = RealT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
+                    UpdateStepsize();
 
-			/**
-			Check whether the path is going to infinity.
-			*/
-			SuccessCode CheckGoingToInfinity() const override
-			{
-				return Base::template CheckGoingToInfinity<ComplexT>();
-			}
+                    return corrector_code;
+                }
 
-			
 
+                this->NotifyObservers(SuccessfulCorrect<EmitterType , ComplexT>(*this, tentative_next_space));
 
+                // copy the tentative vector into the current space vector;
+                current_space = tentative_next_space;
+                return SuccessCode::Success;
+            }
 
-			/**
-			\brief Commit the next stepsize, and adjust internals.
-			*/
-			SuccessCode UpdateStepsize() const
-			{
-				this->SetStepSize(this->next_stepsize_);
-				return SuccessCode::Success;
-			}
 
+            /**
+            Check whether the path is going to infinity.
+            */
+            SuccessCode CheckGoingToInfinity() const override
+            {
+                return Base::template CheckGoingToInfinity<ComplexT>();
+            }
 
 
 
 
-			///////////
-			//
-			//  overrides for counter adjustment after a TrackerIteration()
-			//
-			////////////////
 
-			/**
-			\brief Increment and reset counters after a successful TrackerIteration()
-			*/
-			void OnStepSuccess() const override
-			{
-				Base::IncrementBaseCountersSuccess();
-				this->NotifyObservers(SuccessfulStep<EmitterType >(*this));
-			}
+            /**
+            \brief Commit the next stepsize, and adjust internals.
+            */
+            SuccessCode UpdateStepsize() const
+            {
+                this->SetStepSize(this->next_stepsize_);
+                return SuccessCode::Success;
+            }
 
-			/**
-			\brief Increment and reset counters after a failed TrackerIteration()
-			*/
-			void OnStepFail() const override
-			{
-				Base::IncrementBaseCountersFail();
-				this->num_successful_steps_since_stepsize_increase_ = 0;
-				this->NotifyObservers(FailedStep<EmitterType >(*this));
-			}
 
 
 
-			/// \brief React to a path being truncated for going to infinity, by notifying observers.
-			void OnInfiniteTruncation() const override
-			{
-				this->NotifyObservers(InfinitePathTruncation<EmitterType>(*this));
-			}
 
-			//////////////
-			//
-			//
+            ///////////
+            //
+            //  overrides for counter adjustment after a TrackerIteration()
+            //
+            ////////////////
 
+            /**
+            \brief Increment and reset counters after a successful TrackerIteration()
+            */
+            void OnStepSuccess() const override
+            {
+                Base::IncrementBaseCountersSuccess();
+                this->NotifyObservers(SuccessfulStep<EmitterType >(*this));
+            }
 
-			/**
-			\brief Wrapper function for calling the correct predictor.
-			
-			This function computes the next predicted space value, and sets some internals based on the prediction, such as the norm of the Jacobian.
+            /**
+            \brief Increment and reset counters after a failed TrackerIteration()
+            */
+            void OnStepFail() const override
+            {
+                Base::IncrementBaseCountersFail();
+                this->num_successful_steps_since_stepsize_increase_ = 0;
+                this->NotifyObservers(FailedStep<EmitterType >(*this));
+            }
 
-			The real type and complex type must be commensurate.
 
-			\param[out] predicted_space The result of the prediction
-			\param current_space The current space point.
-			\param current_time The current time value.
-			\param delta_t The time differential for this step.  Allowed to be complex.
-			*/
-			SuccessCode Predict(Vec<ComplexT> & predicted_space, 
-								Vec<ComplexT> const& current_space, 
-								ComplexT const& current_time, ComplexT const& delta_t) const
-			{
 
-				return this->predictor_.Predict(
-			                predicted_space,
-							this->last_step_,
-							this->tracked_system_,
-							current_space, current_time,
-							delta_t,
-							this->num_steps_since_last_condition_number_computation_,
-							Get<Stepping>().frequency_of_CN_estimation,
-							this->tracking_tolerance_);
-			}
+            /// \brief React to a path being truncated for going to infinity, by notifying observers.
+            void OnInfiniteTruncation() const override
+            {
+                this->NotifyObservers(InfinitePathTruncation<EmitterType>(*this));
+            }
 
+            //////////////
+            //
+            //
 
 
-			/**
-			\brief Run Newton's method.
+            /**
+            \brief Wrapper function for calling the correct predictor.
 
-			Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
+            This function computes the next predicted space value, and sets some internals based on the prediction, such as the norm of the Jacobian.
 
-			\param[out] corrected_space The spatial result of the correction loop.
-			\param current_space The start point in space for running the corrector loop.
-			\param current_time The current time value.
+            The real type and complex type must be commensurate.
 
-			\return A SuccessCode indicating whether the loop was successful in converging in the max number of allowable newton steps, to the current path tolerance.
-			*/
-			SuccessCode Correct(Vec<ComplexT> & corrected_space, 
-								Vec<ComplexT> const& current_space, 
-								ComplexT const& current_time) const
-			{
-				return this->corrector_.Correct(corrected_space,
-												this->last_step_,
-												this->tracked_system_,
-												current_space,
-												current_time,
-												this->tracking_tolerance_,
-												Get<Newton>().min_num_newton_iterations,
-												Get<Newton>().max_num_newton_iterations);
-			}
+            \param[out] predicted_space The result of the prediction
+            \param current_space The current space point.
+            \param current_time The current time value.
+            \param delta_t The time differential for this step.  Allowed to be complex.
+            */
+            SuccessCode Predict(Vec<ComplexT> & predicted_space,
+                                Vec<ComplexT> const& current_space,
+                                ComplexT const& current_time, ComplexT const& delta_t) const
+            {
 
+                return this->predictor_.Predict(
+                            predicted_space,
+                            this->last_step_,
+                            this->tracked_system_,
+                            current_space, current_time,
+                            delta_t,
+                            this->num_steps_since_last_condition_number_computation_,
+                            Get<Stepping>().frequency_of_CN_estimation,
+                            this->tracking_tolerance_);
+            }
 
 
-			/**
-			\brief Run Newton's method from a start point with a current time.  
 
-			Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
+            /**
+            \brief Run Newton's method.
 
+            Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
 
-			\param[out] new_space The result of running the refinement.
-			\param start_point The base point for running Newton's method.
-			\param current_time The current time value.
+            \param[out] corrected_space The spatial result of the correction loop.
+            \param current_space The start point in space for running the corrector loop.
+            \param current_time The current time value.
 
-			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
-			*/
-			SuccessCode RefineImpl(Vec<ComplexT> & new_space,
-								Vec<ComplexT> const& start_point, ComplexT const& current_time) const
-			{
-				return this->corrector_.Correct(new_space,
-							   this->last_step_,
-							   this->tracked_system_,
-							   start_point,
-							   current_time,
-							   this->tracking_tolerance_,
-							   Get<Newton>().min_num_newton_iterations,
-							   Get<Newton>().max_num_newton_iterations);
-			}
+            \return A SuccessCode indicating whether the loop was successful in converging in the max number of allowable newton steps, to the current path tolerance.
+            */
+            SuccessCode Correct(Vec<ComplexT> & corrected_space,
+                                Vec<ComplexT> const& current_space,
+                                ComplexT const& current_time) const
+            {
+                return this->corrector_.Correct(corrected_space,
+                                                this->last_step_,
+                                                this->tracked_system_,
+                                                current_space,
+                                                current_time,
+                                                this->tracking_tolerance_,
+                                                Get<Newton>().min_num_newton_iterations,
+                                                Get<Newton>().max_num_newton_iterations);
+            }
 
 
 
+            /**
+            \brief Run Newton's method from a start point with a current time.
 
+            Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
 
 
-			/**
-			\brief Run Newton's method from a start point with a current time.  
+            \param[out] new_space The result of running the refinement.
+            \param start_point The base point for running Newton's method.
+            \param current_time The current time value.
 
-			Returns new space point by reference, as new_space.  Operates at current precision.
+            \return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
+            */
+            SuccessCode RefineImpl(Vec<ComplexT> & new_space,
+                                Vec<ComplexT> const& start_point, ComplexT const& current_time) const
+            {
+                return this->corrector_.Correct(new_space,
+                               this->last_step_,
+                               this->tracked_system_,
+                               start_point,
+                               current_time,
+                               this->tracking_tolerance_,
+                               Get<Newton>().min_num_newton_iterations,
+                               Get<Newton>().max_num_newton_iterations);
+            }
 
 
-			\param[out] new_space The result of running the refinement.
-			\param start_point The base point for running Newton's method.
-			\param current_time The current time value.
-			\param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
-			\param max_iterations The maximum number of permitted Newton iterations.  
 
-			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
-			*/
-			SuccessCode RefineImpl(Vec<ComplexT> & new_space,
-								Vec<ComplexT> const& start_point, ComplexT const& current_time,
-								NumErrorT const& tolerance, unsigned max_iterations) const
-			{
-				return this->corrector_.Correct(new_space,
-							   this->last_step_,
-							   this->tracked_system_,
-							   start_point,
-							   current_time,
-							   tolerance,
-							   1,
-							   max_iterations);
-			}
 
 
-			/////////////////////////////////////////////
-			//////////////////////////////////////
-			/////////////////////////////
-			////////////////////  data members stored in this class
-			////////////
-			//////
-			//
 
-			// no additional state variables needed for the FixedPrecision base tracker types
+            /**
+            \brief Run Newton's method from a start point with a current time.
 
-		};
+            Returns new space point by reference, as new_space.  Operates at current precision.
 
 
+            \param[out] new_space The result of running the refinement.
+            \param start_point The base point for running Newton's method.
+            \param current_time The current time value.
+            \param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
+            \param max_iterations The maximum number of permitted Newton iterations.
 
+            \return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
+            */
+            SuccessCode RefineImpl(Vec<ComplexT> & new_space,
+                                Vec<ComplexT> const& start_point, ComplexT const& current_time,
+                                NumErrorT const& tolerance, unsigned max_iterations) const
+            {
+                return this->corrector_.Correct(new_space,
+                               this->last_step_,
+                               this->tracked_system_,
+                               start_point,
+                               current_time,
+                               tolerance,
+                               1,
+                               max_iterations);
+            }
 
-		/// \brief A tracker that works entirely in hardware double precision.
-		class DoublePrecisionTracker : public FixedPrecisionTracker<DoublePrecisionTracker>
-		{
-		public:
-			using BaseComplexT = complex_dbl;  ///< The complex number type.
-			using BaseRealT = double;  ///< The real number type.
 
-			using EmitterType = typename TrackerTraits<DoublePrecisionTracker>::EventEmitterType;  ///< The event-emitter type for this tracker.
+            /////////////////////////////////////////////
+            //////////////////////////////////////
+            /////////////////////////////
+            ////////////////////  data members stored in this class
+            ////////////
+            //////
+            //
 
+            // no additional state variables needed for the FixedPrecision base tracker types
 
-			/**
-			\brief Construct a tracker, associating to it a System.
-			*/
-			DoublePrecisionTracker(class System const& sys) : FixedPrecisionTracker<DoublePrecisionTracker>(sys)
-			{
-				// Report the precision honestly: double tracking is always DoublePrecision() digits.
-				FixedPrecisionConfig c = this->template Get<FixedPrecisionConfig>();
-				c.precision = DoublePrecision();
-				this->template Set<FixedPrecisionConfig>(c);
-			}
+        };
 
 
-			DoublePrecisionTracker() = delete;
 
-			virtual ~DoublePrecisionTracker() = default;
 
+        /// \brief A tracker that works entirely in hardware double precision.
+        class DoublePrecisionTracker : public FixedPrecisionTracker<DoublePrecisionTracker>
+        {
+        public:
+            using BaseComplexT = complex_dbl;  ///< The complex number type.
+            using BaseRealT = double;  ///< The real number type.
 
-			/// \brief Get the current working precision (always DoublePrecision() for this tracker).
-			unsigned CurrentPrecision() const override
-			{
-				return DoublePrecision();
-			}
+            using EmitterType = typename TrackerTraits<DoublePrecisionTracker>::EventEmitterType;  ///< The event-emitter type for this tracker.
 
-			/**
-			\brief Double-precision tracking is fixed at DoublePrecision() digits.  Accept that value (or
-			the 0 sentinel), but reject any attempt to set a different precision -- use mptype 'multiple'
-			or 'adaptive' for more digits.
-			*/
-			void PrecisionSetup(FixedPrecisionConfig const& c)
-			{
-				if (c.precision != 0 && c.precision != DoublePrecision())
-					throw std::runtime_error("double-precision tracking is fixed at "
-						+ std::to_string(DoublePrecision())
-						+ " digits; cannot set precision to " + std::to_string(c.precision)
-						+ " (use mptype 'multiple' or 'adaptive')");
-			}
 
+            /**
+            \brief Construct a tracker, associating to it a System.
+            */
+            DoublePrecisionTracker(class System const& sys) : FixedPrecisionTracker<DoublePrecisionTracker>(sys)
+            {
+                // Report the precision honestly: double tracking is always DoublePrecision() digits.
+                FixedPrecisionConfig c = this->template Get<FixedPrecisionConfig>();
+                c.precision = DoublePrecision();
+                this->template Set<FixedPrecisionConfig>(c);
+            }
 
-			/**
-			\brief Set up the internals of the tracker for a fresh start.  
 
-			Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
+            DoublePrecisionTracker() = delete;
 
-			\param start_time The time at which to start tracking.
-			\param end_time The time to which to track.
-			\param start_point The space values from which to start tracking.
-			*/
-			SuccessCode TrackerLoopInitialization(BaseComplexT const& start_time,
-			                               BaseComplexT const& end_time,
-										   Vec<BaseComplexT> const& start_point) const override
-			{
-				this->NotifyObservers(Initializing<EmitterType,BaseComplexT>(*this,start_time, end_time, start_point));
+            virtual ~DoublePrecisionTracker() = default;
 
-				// set up the master current time and the current step size
-				this->current_time_ = start_time;
-				this->endtime_ = end_time;
-				std::get<Vec<BaseComplexT> >(this->current_space_) = start_point;
-				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(BaseRealT(Get<Stepping>().initial_step_size),abs(start_time-end_time)/Get<Stepping>().min_num_steps));
 
-				ResetCounters();
+            /// \brief Get the current working precision (always DoublePrecision() for this tracker).
+            unsigned CurrentPrecision() const override
+            {
+                return DoublePrecision();
+            }
 
-				return SuccessCode::Success;
-			}
+            /**
+            \brief Double-precision tracking is fixed at DoublePrecision() digits.  Accept that value (or
+            the 0 sentinel), but reject any attempt to set a different precision -- use mptype 'multiple'
+            or 'adaptive' for more digits.
+            */
+            void PrecisionSetup(FixedPrecisionConfig const& c)
+            {
+                if (c.precision != 0 && c.precision != DoublePrecision())
+                    throw std::runtime_error("double-precision tracking is fixed at "
+                        + std::to_string(DoublePrecision())
+                        + " digits; cannot set precision to " + std::to_string(c.precision)
+                        + " (use mptype 'multiple' or 'adaptive')");
+            }
 
 
-		private:
+            /**
+            \brief Set up the internals of the tracker for a fresh start.
 
-		}; // re: DoublePrecisionTracker
+            Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
 
+            \param start_time The time at which to start tracking.
+            \param end_time The time to which to track.
+            \param start_point The space values from which to start tracking.
+            */
+            SuccessCode TrackerLoopInitialization(BaseComplexT const& start_time,
+                                           BaseComplexT const& end_time,
+                                           Vec<BaseComplexT> const& start_point) const override
+            {
+                this->NotifyObservers(Initializing<EmitterType,BaseComplexT>(*this,start_time, end_time, start_point));
 
-		/// \brief A tracker that works at a fixed multiprecision (set from the default precision at construction).
-		class MultiplePrecisionTracker : public FixedPrecisionTracker<MultiplePrecisionTracker>
-		{
-		public:
-			using BaseComplexT = complex_mp;  ///< The complex number type.
-			using BaseRealT = real_mp;  ///< The real number type.
+                // set up the master current time and the current step size
+                this->current_time_ = start_time;
+                this->endtime_ = end_time;
+                std::get<Vec<BaseComplexT> >(this->current_space_) = start_point;
+                if (this->reinitialize_stepsize_)
+                    this->SetStepSize(min(BaseRealT(Get<Stepping>().initial_step_size),abs(start_time-end_time)/Get<Stepping>().min_num_steps));
 
-			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;  ///< The event-emitter type for this tracker.
+                ResetCounters();
 
+                return SuccessCode::Success;
+            }
 
-			/**
-			\brief Construct a tracker, associating to it a System.
 
-			The precision of the tracker will be whatever the current default is.  The tracker cannot change its precision, and will require the default precision to be this precision whenever tracking is started.  That is, the precision is fixed.
-			*/
-			MultiplePrecisionTracker(class System const& sys) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(DefaultPrecision())
-			{
-				SyncPrecisionToConfig();
-			}
+        private:
 
+        }; // re: DoublePrecisionTracker
 
-			MultiplePrecisionTracker() = delete;
 
-			virtual ~MultiplePrecisionTracker() = default;
+        /// \brief A tracker that works at a fixed multiprecision (set from the default precision at construction).
+        class MultiplePrecisionTracker : public FixedPrecisionTracker<MultiplePrecisionTracker>
+        {
+        public:
+            using BaseComplexT = complex_mp;  ///< The complex number type.
+            using BaseRealT = real_mp;  ///< The real number type.
 
+            using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;  ///< The event-emitter type for this tracker.
 
-			/// \brief Get the current (fixed multiple) working precision of this tracker.
-			unsigned CurrentPrecision() const override
-			{
-				return precision_;
-			}
 
-			/**
-			\brief Set the fixed precision this tracker works at.
+            /**
+            \brief Construct a tracker, associating to it a System.
 
-			The next TrackPath re-precisions all of the tracker's state to this value
-			(TrackerLoopInitialization does it).  The caller must also ensure the system, the working
-			(thread) precision, and the start points are at this precision -- the zero-dim algorithm
-			does this from FixedPrecisionConfig.precision.
-			*/
-			void SetPrecision(unsigned p)
-			{
-				precision_ = p;
-				SyncPrecisionToConfig();
-			}
+            The precision of the tracker will be whatever the current default is.  The tracker cannot change its precision, and will require the default precision to be this precision whenever tracking is started.  That is, the precision is fixed.
+            */
+            MultiplePrecisionTracker(class System const& sys) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(DefaultPrecision())
+            {
+                SyncPrecisionToConfig();
+            }
 
-			/**
-			\brief Adopt the precision named in a FixedPrecisionConfig (its sentinel 0 means "leave as
-			is").  Replaces the base no-op so the fixed-multiple precision is configurable.
-			*/
-			void PrecisionSetup(FixedPrecisionConfig const& c)
-			{
-				if (c.precision != 0)
-					SetPrecision(c.precision);
-			}
 
+            MultiplePrecisionTracker() = delete;
 
-			/**
-			\brief Set up the internals of the tracker for a fresh start.  
+            virtual ~MultiplePrecisionTracker() = default;
 
-			Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
 
-			\param start_time The time at which to start tracking.
-			\param end_time The time to which to track.
-			\param start_point The space values from which to start tracking.
-			*/
-			SuccessCode TrackerLoopInitialization(BaseComplexT const& start_time,
-			                               BaseComplexT const& end_time,
-										   Vec<BaseComplexT> const& start_point) const override
-			{
+            /// \brief Get the current (fixed multiple) working precision of this tracker.
+            unsigned CurrentPrecision() const override
+            {
+                return precision_;
+            }
 
-				// ThreadPrecision: thread-local read, correct both on the main thread
-				// (where it equals the global) and on std::thread workers.
-				if (start_point(0).precision()!=ThreadPrecision())
-				{
-					std::stringstream err_msg;
-					err_msg << "start point for fixed multiple precision tracker has differing precision from default (" << start_point(0).precision() << "!=" << ThreadPrecision() << "), tracking cannot start";
-					throw std::runtime_error(err_msg.str());
-				}
+            /**
+            \brief Set the fixed precision this tracker works at.
 
-				if (start_point(0).precision()!=this->CurrentPrecision())
-				{
-					std::stringstream err_msg;
-					err_msg << "start point for fixed multiple precision tracker has differing precision from tracker's precision (" << start_point(0).precision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
-					throw std::runtime_error(err_msg.str());
-				}
+            The next TrackPath re-precisions all of the tracker's state to this value
+            (TrackerLoopInitialization does it).  The caller must also ensure the system, the working
+            (thread) precision, and the start points are at this precision -- the zero-dim algorithm
+            does this from FixedPrecisionConfig.precision.
+            */
+            void SetPrecision(unsigned p)
+            {
+                precision_ = p;
+                SyncPrecisionToConfig();
+            }
 
-				if (ThreadPrecision()!=this->CurrentPrecision())
-				{
-					std::stringstream err_msg;
-					err_msg << "current default precision differs from tracker's precision (" << ThreadPrecision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
-					throw std::runtime_error(err_msg.str());
-				}
+            /**
+            \brief Adopt the precision named in a FixedPrecisionConfig (its sentinel 0 means "leave as
+            is").  Replaces the base no-op so the fixed-multiple precision is configurable.
+            */
+            void PrecisionSetup(FixedPrecisionConfig const& c)
+            {
+                if (c.precision != 0)
+                    SetPrecision(c.precision);
+            }
 
 
-				this->NotifyObservers(Initializing<EmitterType,BaseComplexT>(*this,start_time, end_time, start_point));
+            /**
+            \brief Set up the internals of the tracker for a fresh start.
 
-				// Reset precision of all persistent members before assignment so that
-				// BMP preserve_related_precision doesn't propagate stale high precision
-				// from a previous TrackPath call into the new one.
-				this->current_time_.precision(precision_);
-				this->endtime_.precision(precision_);
-				this->delta_t_.precision(precision_);
-				this->current_stepsize_.precision(precision_);
-				this->next_stepsize_.precision(precision_);
-				Precision(std::get<Vec<BaseComplexT>>(this->current_space_), precision_);
-				Precision(std::get<Vec<BaseComplexT>>(this->temporary_space_), precision_);
-				Precision(std::get<Vec<BaseComplexT>>(this->tentative_space_), precision_);
-				this->predictor_.ChangePrecision(precision_);
-				this->corrector_.ChangePrecision(precision_);
+            Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
 
-				// set up the master current time and the current step size
-				this->current_time_ = start_time;
-				this->endtime_ = end_time;
-				std::get<Vec<BaseComplexT> >(this->current_space_) = start_point;
-				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(real_mp(Get<Stepping>().initial_step_size),real_mp(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
+            \param start_time The time at which to start tracking.
+            \param end_time The time to which to track.
+            \param start_point The space values from which to start tracking.
+            */
+            SuccessCode TrackerLoopInitialization(BaseComplexT const& start_time,
+                                           BaseComplexT const& end_time,
+                                           Vec<BaseComplexT> const& start_point) const override
+            {
 
-				ResetCounters();
+                // ThreadPrecision: thread-local read, correct both on the main thread
+                // (where it equals the global) and on std::thread workers.
+                if (start_point(0).precision()!=ThreadPrecision())
+                {
+                    std::stringstream err_msg;
+                    err_msg << "start point for fixed multiple precision tracker has differing precision from default (" << start_point(0).precision() << "!=" << ThreadPrecision() << "), tracking cannot start";
+                    throw std::runtime_error(err_msg.str());
+                }
 
-				return SuccessCode::Success;
-			}
+                if (start_point(0).precision()!=this->CurrentPrecision())
+                {
+                    std::stringstream err_msg;
+                    err_msg << "start point for fixed multiple precision tracker has differing precision from tracker's precision (" << start_point(0).precision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
+                    throw std::runtime_error(err_msg.str());
+                }
 
-			/// \brief Check that the system, thread precision, and all tracker state are at the expected precision.
-			bool PrecisionSanityCheck() const
-			{
-				// the System is no longer checked here: it carries no precision of its own, and
-				// evaluation materializes it from the point it is handed (ADR-0057)
-				return ThreadPrecision()==precision_ &&
-						std::get<Vec<complex_mp> >(current_space_)(0).precision() == precision_ &&
-						std::get<Vec<complex_mp> >(tentative_space_)(0).precision() == precision_ &&
-						std::get<Vec<complex_mp> >(temporary_space_)(0).precision() == precision_ &&
-						Precision(this->endtime_)==precision_
-						        ;				
-			}
-		private:
+                if (ThreadPrecision()!=this->CurrentPrecision())
+                {
+                    std::stringstream err_msg;
+                    err_msg << "current default precision differs from tracker's precision (" << ThreadPrecision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
+                    throw std::runtime_error(err_msg.str());
+                }
 
-			// Keep the stored FixedPrecisionConfig.precision equal to the tracker's actual precision,
-			// so reading the config tells you the precision in effect (not the 0 sentinel).
-			void SyncPrecisionToConfig()
-			{
-				FixedPrecisionConfig c = this->template Get<FixedPrecisionConfig>();
-				c.precision = precision_;
-				this->template Set<FixedPrecisionConfig>(c);
-			}
 
-			unsigned precision_;  ///< The fixed working precision (number of digits) this tracker operates at.
-		}; // re: MultiplePrecisionTracker
-	} // namespace tracking
+                this->NotifyObservers(Initializing<EmitterType,BaseComplexT>(*this,start_time, end_time, start_point));
+
+                // Reset precision of all persistent members before assignment so that
+                // BMP preserve_related_precision doesn't propagate stale high precision
+                // from a previous TrackPath call into the new one.
+                this->current_time_.precision(precision_);
+                this->endtime_.precision(precision_);
+                this->delta_t_.precision(precision_);
+                this->current_stepsize_.precision(precision_);
+                this->next_stepsize_.precision(precision_);
+                Precision(std::get<Vec<BaseComplexT>>(this->current_space_), precision_);
+                Precision(std::get<Vec<BaseComplexT>>(this->temporary_space_), precision_);
+                Precision(std::get<Vec<BaseComplexT>>(this->tentative_space_), precision_);
+                this->predictor_.ChangePrecision(precision_);
+                this->corrector_.ChangePrecision(precision_);
+
+                // set up the master current time and the current step size
+                this->current_time_ = start_time;
+                this->endtime_ = end_time;
+                std::get<Vec<BaseComplexT> >(this->current_space_) = start_point;
+                if (this->reinitialize_stepsize_)
+                    this->SetStepSize(min(real_mp(Get<Stepping>().initial_step_size),real_mp(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
+
+                ResetCounters();
+
+                return SuccessCode::Success;
+            }
+
+            /// \brief Check that the system, thread precision, and all tracker state are at the expected precision.
+            bool PrecisionSanityCheck() const
+            {
+                // the System is no longer checked here: it carries no precision of its own, and
+                // evaluation materializes it from the point it is handed (ADR-0057)
+                return ThreadPrecision()==precision_ &&
+                        std::get<Vec<complex_mp> >(current_space_)(0).precision() == precision_ &&
+                        std::get<Vec<complex_mp> >(tentative_space_)(0).precision() == precision_ &&
+                        std::get<Vec<complex_mp> >(temporary_space_)(0).precision() == precision_ &&
+                        Precision(this->endtime_)==precision_
+                                ;
+            }
+        private:
+
+            // Keep the stored FixedPrecisionConfig.precision equal to the tracker's actual precision,
+            // so reading the config tells you the precision in effect (not the 0 sentinel).
+            void SyncPrecisionToConfig()
+            {
+                FixedPrecisionConfig c = this->template Get<FixedPrecisionConfig>();
+                c.precision = precision_;
+                this->template Set<FixedPrecisionConfig>(c);
+            }
+
+            unsigned precision_;  ///< The fixed working precision (number of digits) this tracker operates at.
+        }; // re: MultiplePrecisionTracker
+    } // namespace tracking
 } // namespace bertini
 
 
 #endif
-
-
-

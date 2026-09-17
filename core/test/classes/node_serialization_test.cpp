@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  node_serialization.cpp
@@ -68,87 +68,87 @@ using System = bertini::System;
 
 BOOST_AUTO_TEST_CASE(serialize_variable)
 {
-	std::shared_ptr<Variable> x = Variable::Make("x");
+    std::shared_ptr<Variable> x = Variable::Make("x");
 
 
-	{
-		std::ofstream fout("serialization_test_node");
-		
-		boost::archive::text_oarchive oa(fout);
-		
-		// write class instance to archive
-		oa << x;
-	}
-	
-	std::shared_ptr<Variable> x2;
-	{
-		std::ifstream fin("serialization_test_node");
-		
-		boost::archive::text_iarchive ia(fin);
-		// read class state from archive
-		ia >> x2;
-	}
+    {
+        std::ofstream fout("serialization_test_node");
 
-	BOOST_CHECK(x->name()==x2->name());
+        boost::archive::text_oarchive oa(fout);
+
+        // write class instance to archive
+        oa << x;
+    }
+
+    std::shared_ptr<Variable> x2;
+    {
+        std::ifstream fin("serialization_test_node");
+
+        boost::archive::text_iarchive ia(fin);
+        // read class state from archive
+        ia >> x2;
+    }
+
+    BOOST_CHECK(x->name()==x2->name());
 }
 
 
 BOOST_AUTO_TEST_CASE(serialize_float)
 {
-	std::shared_ptr<Complex> two_point_oh_four = Complex::Make("2.04");
+    std::shared_ptr<Complex> two_point_oh_four = Complex::Make("2.04");
 
-	{
-		std::ofstream fout("serialization_test_node");
-		
-		boost::archive::text_oarchive oa(fout);
-		
-		// write class instance to archive
-		oa << two_point_oh_four;
-	}
-	
-	std::shared_ptr<Complex> two_point_oh_four2;
-	{
-		std::ifstream fin("serialization_test_node");
-		
-		boost::archive::text_iarchive ia(fin);
-		// read class state from archive
-		ia >> two_point_oh_four2;
-	}
+    {
+        std::ofstream fout("serialization_test_node");
 
-	BOOST_CHECK(EvalAt<complex_dbl>(two_point_oh_four)==EvalAt<complex_dbl>(two_point_oh_four2));
+        boost::archive::text_oarchive oa(fout);
+
+        // write class instance to archive
+        oa << two_point_oh_four;
+    }
+
+    std::shared_ptr<Complex> two_point_oh_four2;
+    {
+        std::ifstream fin("serialization_test_node");
+
+        boost::archive::text_iarchive ia(fin);
+        // read class state from archive
+        ia >> two_point_oh_four2;
+    }
+
+    BOOST_CHECK(EvalAt<complex_dbl>(two_point_oh_four)==EvalAt<complex_dbl>(two_point_oh_four2));
 }
 
 BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
 {
-	std::shared_ptr<Variable> x = Variable::Make("x");
+    std::shared_ptr<Variable> x = Variable::Make("x");
 
-	auto f = exp(sqrt(pow(pow(x*x+ (-x) -sin(x)+cos(x)+tan(x),x),3)))/x;
+    auto f = exp(sqrt(pow(pow(x*x+ (-x) -sin(x)+cos(x)+tan(x),x),3)))/x;
 
-	{
-		std::ofstream fout("serialization_test_node");
-		
-		boost::archive::text_oarchive oa(fout);
-		
-		// write class instance to archive
-		oa << x;
-		oa << f;
-	}
-	
-	std::shared_ptr<Node> f2;
-	std::shared_ptr<Variable> x2;
-	{
-		std::ifstream fin("serialization_test_node");
-		
-		boost::archive::text_iarchive ia(fin);
-		// read class state from archive
-		ia >> x2;
-		ia >> f2;
-	}
+    {
+        std::ofstream fout("serialization_test_node");
 
-	BOOST_CHECK(x->name()==x2->name());
+        boost::archive::text_oarchive oa(fout);
 
-	std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(1.2,0.9)} };
-	BOOST_CHECK(abs(EvalAt<complex_dbl>(f, pt) - EvalAt<complex_dbl>(f2, pt)) < threshold_clearance_d);
+        // write class instance to archive
+        oa << x;
+        oa << f;
+    }
+
+    std::shared_ptr<Node> f2;
+    std::shared_ptr<Variable> x2;
+    {
+        std::ifstream fin("serialization_test_node");
+
+        boost::archive::text_iarchive ia(fin);
+        // read class state from archive
+        ia >> x2;
+        ia >> f2;
+    }
+
+    BOOST_CHECK(x->name()==x2->name());
+
+    std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(1.2,0.9)} };
+    BOOST_CHECK(abs(EvalAt<complex_dbl>(f, pt) - EvalAt<complex_dbl>(f2, pt)) < threshold_clearance_d);
 
 }
 
@@ -159,59 +159,59 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes)
 {
 
 
-	
-	Vec<complex_dbl> values(2);
 
-	values(0) = complex_dbl(2.0);
-	values(1) = complex_dbl(3.0);
+    Vec<complex_dbl> values(2);
 
-	
-	
-	{ // to create a scope
-
-		bertini::System sys;
-		auto x = Variable::Make("x");
-		auto y = Variable::Make("y");
-
-		bertini::VariableGroup vg{x,y};
-
-		sys.AddVariableGroup(vg);
-
-		sys.AddFunction(x+y);
-		sys.AddFunction(x-y);
+    values(0) = complex_dbl(2.0);
+    values(1) = complex_dbl(3.0);
 
 
-		std::ofstream fout("serialization_test_node");
-		
-		boost::archive::text_oarchive oa(fout);
-		
-		// write class instance to archive
-		oa << sys;
-	}
-	
-	
-	{
-		std::ifstream fin("serialization_test_node");
-		
-		boost::archive::text_iarchive ia(fin);
-		// read class state from archive
-		bertini::System sys2;
-		ia >> sys2;
 
-		Vec<complex_dbl> v = sys2.Eval(values);
+    { // to create a scope
+
+        bertini::System sys;
+        auto x = Variable::Make("x");
+        auto y = Variable::Make("y");
+
+        bertini::VariableGroup vg{x,y};
+
+        sys.AddVariableGroup(vg);
+
+        sys.AddFunction(x+y);
+        sys.AddFunction(x-y);
 
 
-		BOOST_CHECK_EQUAL(v.size(),2);
+        std::ofstream fout("serialization_test_node");
+
+        boost::archive::text_oarchive oa(fout);
+
+        // write class instance to archive
+        oa << sys;
+    }
 
 
-		BOOST_CHECK_EQUAL(v(0).real(), 5);
-		BOOST_CHECK_EQUAL(v(0).imag(), 0);
-		BOOST_CHECK_EQUAL(v(1).real(), -1);
-		BOOST_CHECK_EQUAL(v(1).imag(), 0);
+    {
+        std::ifstream fin("serialization_test_node");
+
+        boost::archive::text_iarchive ia(fin);
+        // read class state from archive
+        bertini::System sys2;
+        ia >> sys2;
+
+        Vec<complex_dbl> v = sys2.Eval(values);
 
 
-	}
-	
+        BOOST_CHECK_EQUAL(v.size(),2);
+
+
+        BOOST_CHECK_EQUAL(v(0).real(), 5);
+        BOOST_CHECK_EQUAL(v(0).imag(), 0);
+        BOOST_CHECK_EQUAL(v(1).real(), -1);
+        BOOST_CHECK_EQUAL(v(1).imag(), 0);
+
+
+    }
+
 }
 
 
@@ -220,50 +220,50 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes_via_parsing)
 {
 
 
-	
-	Vec<complex_dbl> x(2);
 
-	x(0) = complex_dbl(2.0);
-	x(1) = complex_dbl(3.0);
+    Vec<complex_dbl> x(2);
 
-	Vec<complex_dbl> y_before(2);
-	
-	{ // to create a scope
+    x(0) = complex_dbl(2.0);
+    x(1) = complex_dbl(3.0);
 
-		std::string str = "function f1, f2; variable_group x1, x2;  f1 = x1^2 * x2^2; f2 = x1^2*x2; ";
+    Vec<complex_dbl> y_before(2);
 
-		bertini::System sys;
-		bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+    { // to create a scope
 
+        std::string str = "function f1, f2; variable_group x1, x2;  f1 = x1^2 * x2^2; f2 = x1^2*x2; ";
 
-		y_before = sys.Eval(x);
-
-		std::ofstream fout("serialization_test_node");
-		boost::archive::text_oarchive oa(fout);
-		
-		// write class instance to archive
-		oa << sys;
-	}
-	
-	
-	{
-		std::ifstream fin("serialization_test_node");
-		
-		boost::archive::text_iarchive ia(fin);
-		// read class state from archive
-		bertini::System sys2;
-		ia >> sys2;
-
-		Vec<complex_dbl> y_after = sys2.Eval(x);
+        bertini::System sys;
+        bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 
-		BOOST_CHECK_EQUAL(y_after.size(),2);
+        y_before = sys.Eval(x);
 
-		BOOST_CHECK_EQUAL(y_before(0), y_after(0));
-		BOOST_CHECK_EQUAL(y_before(1), y_after(1));
+        std::ofstream fout("serialization_test_node");
+        boost::archive::text_oarchive oa(fout);
 
-	}
-	
+        // write class instance to archive
+        oa << sys;
+    }
+
+
+    {
+        std::ifstream fin("serialization_test_node");
+
+        boost::archive::text_iarchive ia(fin);
+        // read class state from archive
+        bertini::System sys2;
+        ia >> sys2;
+
+        Vec<complex_dbl> y_after = sys2.Eval(x);
+
+
+        BOOST_CHECK_EQUAL(y_after.size(),2);
+
+        BOOST_CHECK_EQUAL(y_before(0), y_after(0));
+        BOOST_CHECK_EQUAL(y_before(1), y_after(1));
+
+    }
+
 }
 
 
@@ -274,49 +274,49 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes_using_subfunctions_via_parsing)
 {
 
 
-	
-	Vec<complex_dbl> values(2);
 
-	values(0) = complex_dbl(2.0);
-	values(1) = complex_dbl(3.0);
+    Vec<complex_dbl> values(2);
 
-	
-	
-	{ // to create a scope
-
-		std::string str = "function f1, f2; variable_group x1, x2; y = x1*x2; f1 = y*y; f2 = x1*y; ";
-
-		bertini::System sys;
-		bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+    values(0) = complex_dbl(2.0);
+    values(1) = complex_dbl(3.0);
 
 
-		std::ofstream fout("serialization_test_node");
-		
-		boost::archive::text_oarchive oa(fout);
-		
-		// write class instance to archive
-		oa << sys;
-	}
-	
-	
-	{
-		std::ifstream fin("serialization_test_node");
-		
-		boost::archive::text_iarchive ia(fin);
-		// read class state from archive
-		bertini::System sys2;
-		ia >> sys2;
 
-		Vec<complex_dbl> v = sys2.Eval(values);
+    { // to create a scope
+
+        std::string str = "function f1, f2; variable_group x1, x2; y = x1*x2; f1 = y*y; f2 = x1*y; ";
+
+        bertini::System sys;
+        bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 
-		BOOST_CHECK_EQUAL(v.size(),2);
+        std::ofstream fout("serialization_test_node");
 
-		BOOST_CHECK_EQUAL(v(0), 36.0);
-		BOOST_CHECK_EQUAL(v(1), 12.0);
+        boost::archive::text_oarchive oa(fout);
 
-	}
-	
+        // write class instance to archive
+        oa << sys;
+    }
+
+
+    {
+        std::ifstream fin("serialization_test_node");
+
+        boost::archive::text_iarchive ia(fin);
+        // read class state from archive
+        bertini::System sys2;
+        ia >> sys2;
+
+        Vec<complex_dbl> v = sys2.Eval(values);
+
+
+        BOOST_CHECK_EQUAL(v.size(),2);
+
+        BOOST_CHECK_EQUAL(v(0), 36.0);
+        BOOST_CHECK_EQUAL(v(1), 12.0);
+
+    }
+
 }
 
 
@@ -325,60 +325,56 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes_using_subfunctions_via_parsing)
 
 BOOST_AUTO_TEST_CASE(system_clone)
 {
-	std::string str = "function f1, f2; variable_group x1, x2; y = x1*x2; f1 = y*y; f2 = x1*y; ";
+    std::string str = "function f1, f2; variable_group x1, x2; y = x1*x2; f1 = y*y; f2 = x1*y; ";
 
-	bertini::System sys1;
-	bertini::parsing::classic::parse(str.begin(), str.end(), sys1);
+    bertini::System sys1;
+    bertini::parsing::classic::parse(str.begin(), str.end(), sys1);
 
-	
-	auto sys2 = Clone(sys1);
-	
 
-	Vec<complex_dbl> values(2);
+    auto sys2 = Clone(sys1);
 
-	values(0) = complex_dbl(2.0);
-	values(1) = complex_dbl(3.0);
 
-	Vec<complex_dbl> v = sys2.Eval(values);
+    Vec<complex_dbl> values(2);
 
-	BOOST_CHECK_EQUAL(v.size(),2);
+    values(0) = complex_dbl(2.0);
+    values(1) = complex_dbl(3.0);
 
-	BOOST_CHECK_EQUAL(v(0), 36.0);
-	BOOST_CHECK_EQUAL(v(1), 12.0);
+    Vec<complex_dbl> v = sys2.Eval(values);
 
-	auto variables1 = sys1.Variables();
-	auto variables2 = sys2.Variables();
+    BOOST_CHECK_EQUAL(v.size(),2);
 
-	BOOST_CHECK_EQUAL(variables1.size(), variables2.size());
+    BOOST_CHECK_EQUAL(v(0), 36.0);
+    BOOST_CHECK_EQUAL(v(1), 12.0);
 
-	// Clone is now a Memory-isolating shallow copy: it SHARES the immutable node DAG,
-	// so the clone's variables are the very same (interned) nodes as the original's.  Independence
-	// lives in the per-thread evaluation Memory, not in the nodes.
-	for (size_t ii=0; ii<variables2.size(); ++ii)
-	{
-		BOOST_CHECK(variables1[ii].get() == variables2[ii].get());
-	}
+    auto variables1 = sys1.Variables();
+    auto variables2 = sys2.Variables();
 
-	// Evaluation is still independent: evaluating the original at a different point does not change
-	// the clone's result.
-	Vec<complex_dbl> other(2); other(0) = complex_dbl(5.0); other(1) = complex_dbl(7.0);
-	(void) sys1.Eval(other);
-	Vec<complex_dbl> v2 = sys2.Eval(values);
-	BOOST_CHECK_EQUAL(v2(0), 36.0);
-	BOOST_CHECK_EQUAL(v2(1), 12.0);
+    BOOST_CHECK_EQUAL(variables1.size(), variables2.size());
+
+    // Clone is now a Memory-isolating shallow copy: it SHARES the immutable node DAG,
+    // so the clone's variables are the very same (interned) nodes as the original's.  Independence
+    // lives in the per-thread evaluation Memory, not in the nodes.
+    for (size_t ii=0; ii<variables2.size(); ++ii)
+    {
+        BOOST_CHECK(variables1[ii].get() == variables2[ii].get());
+    }
+
+    // Evaluation is still independent: evaluating the original at a different point does not change
+    // the clone's result.
+    Vec<complex_dbl> other(2); other(0) = complex_dbl(5.0); other(1) = complex_dbl(7.0);
+    (void) sys1.Eval(other);
+    Vec<complex_dbl> v2 = sys2.Eval(values);
+    BOOST_CHECK_EQUAL(v2(0), 36.0);
+    BOOST_CHECK_EQUAL(v2(1), 12.0);
 }
 
 
 BOOST_AUTO_TEST_CASE(clone_griewank_osborn)
 {
 
-	auto gw = bertini::system::Precon::GriewankOsborn();
+    auto gw = bertini::system::Precon::GriewankOsborn();
 
-	auto clone = bertini::Clone(gw);
+    auto clone = bertini::Clone(gw);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-
-

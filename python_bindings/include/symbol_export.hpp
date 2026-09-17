@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/symbol_export.hpp:  Header file for exposing symbol nodes to python.
@@ -38,102 +38,102 @@
 
 
 namespace bertini{
-	namespace python{
-		
-		using namespace bertini::node;
+    namespace python{
+
+        using namespace bertini::node;
 
 
-		
-		// the main function for exporting symbols into python.
-		void ExportSymbols();
 
-		
-
-		
-		/**
-		 NamedSymbol class(abstract)
-		 */
-		template<typename NodeBaseT>
-		class NamedSymbolVisitor: public def_visitor<NamedSymbolVisitor<NodeBaseT> >
-		{
-			friend class ::boost::python::def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-			
-		private:
-			const std::string& (NodeBaseT::*getname)() const = &NodeBaseT::name;
-			void (NodeBaseT::*setname)(const std::string &) = &NodeBaseT::name;
-
-		};
-
-		
-
-		/**
-		 Integer class 
-		 */
-		template<typename NodeBaseT>
-		class IntegerVisitor: public def_visitor<IntegerVisitor<NodeBaseT> >
-		{
-			friend class ::boost::python::def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-			
-		};
-
-		
-		
-		
-		/** 
-		 Rational class
-		 */
-		template<typename NodeBaseT>
-		class RationalVisitor: public def_visitor<RationalVisitor<NodeBaseT> >
-		{
-			friend class ::boost::python::def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-			
-		};
+        // the main function for exporting symbols into python.
+        void ExportSymbols();
 
 
-		
-		
-		/**
-		 Variable class 
-		 */
-		template<typename NodeBaseT>
-		class VariableVisitor: public def_visitor<VariableVisitor<NodeBaseT> >
-		{
-			friend class ::boost::python::def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
 
-		};
 
-		
-		
-		/**
-		 Differential class
-		*/
-		template<typename NodeBaseT>
-		class DifferentialVisitor: public def_visitor<DifferentialVisitor<NodeBaseT> >
-		{
-			friend class ::boost::python::def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-		};
-		
-	}//namespace python
+        /**
+         NamedSymbol class(abstract)
+         */
+        template<typename NodeBaseT>
+        class NamedSymbolVisitor: public def_visitor<NamedSymbolVisitor<NodeBaseT> >
+        {
+            friend class ::boost::python::def_visitor_access;
+
+        public:
+            template<class PyClass>
+            void visit(PyClass& cl) const;
+
+        private:
+            const std::string& (NodeBaseT::*getname)() const = &NodeBaseT::name;
+            void (NodeBaseT::*setname)(const std::string &) = &NodeBaseT::name;
+
+        };
+
+
+
+        /**
+         Integer class
+         */
+        template<typename NodeBaseT>
+        class IntegerVisitor: public def_visitor<IntegerVisitor<NodeBaseT> >
+        {
+            friend class ::boost::python::def_visitor_access;
+
+        public:
+            template<class PyClass>
+            void visit(PyClass& cl) const;
+
+        };
+
+
+
+
+        /**
+         Rational class
+         */
+        template<typename NodeBaseT>
+        class RationalVisitor: public def_visitor<RationalVisitor<NodeBaseT> >
+        {
+            friend class ::boost::python::def_visitor_access;
+
+        public:
+            template<class PyClass>
+            void visit(PyClass& cl) const;
+
+        };
+
+
+
+
+        /**
+         Variable class
+         */
+        template<typename NodeBaseT>
+        class VariableVisitor: public def_visitor<VariableVisitor<NodeBaseT> >
+        {
+            friend class ::boost::python::def_visitor_access;
+
+        public:
+            template<class PyClass>
+            void visit(PyClass& cl) const;
+
+        };
+
+
+
+        /**
+         Differential class
+        */
+        template<typename NodeBaseT>
+        class DifferentialVisitor: public def_visitor<DifferentialVisitor<NodeBaseT> >
+        {
+            friend class ::boost::python::def_visitor_access;
+
+        public:
+            template<class PyClass>
+            void visit(PyClass& cl) const;
+        };
+
+    }//namespace python
 } // namespace bertini
 
 #endif

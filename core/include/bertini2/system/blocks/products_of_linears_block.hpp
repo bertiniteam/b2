@@ -63,334 +63,334 @@ provided segment, so the block is self-contained and unit-testable without a Sys
 class ProductsOfLinearsBlock
 {
 public:
-	ProductsOfLinearsBlock() : num_vars_(0), precision_(DefaultPrecision()) {}
+    ProductsOfLinearsBlock() : num_vars_(0), precision_(DefaultPrecision()) {}
 
-	/**
-	\param num_vars The number of variables (n).  Each coefficient row has n+1 entries
-	(the trailing entry multiplies the augmenting 1 -- the constant / homogenizing term).
-	\param factors One augmented coefficient matrix per function; matrix i has shape
-	(number-of-factors_i) x (num_vars + 1).
-	*/
-	ProductsOfLinearsBlock(size_t num_vars, std::vector<Mat<complex_mp>> factors)
-		: num_vars_(num_vars), factors_highest_precision_(std::move(factors)), precision_(DefaultPrecision())
-	{
+    /**
+    \param num_vars The number of variables (n).  Each coefficient row has n+1 entries
+    (the trailing entry multiplies the augmenting 1 -- the constant / homogenizing term).
+    \param factors One augmented coefficient matrix per function; matrix i has shape
+    (number-of-factors_i) x (num_vars + 1).
+    */
+    ProductsOfLinearsBlock(size_t num_vars, std::vector<Mat<complex_mp>> factors)
+        : num_vars_(num_vars), factors_highest_precision_(std::move(factors)), precision_(DefaultPrecision())
+    {
 #ifndef NDEBUG
-		for (auto const& M : factors_highest_precision_)
-			assert(static_cast<size_t>(M.cols()) == num_vars_ + 1 &&
-			       "every products-of-linears coefficient matrix must have num_vars+1 columns");
+        for (auto const& M : factors_highest_precision_)
+            assert(static_cast<size_t>(M.cols()) == num_vars_ + 1 &&
+                   "every products-of-linears coefficient matrix must have num_vars+1 columns");
 #endif
-		BuildWorking();
-	}
+        BuildWorking();
+    }
 
-	/// Number of functions (rows the block contributes to the system).
-	size_t NumFunctions() const { return factors_highest_precision_.size(); }
+    /// Number of functions (rows the block contributes to the system).
+    size_t NumFunctions() const { return factors_highest_precision_.size(); }
 
-	/// Each function is a product of its linear factors, so its degree is the factor count.
-	std::vector<int> Degrees() const
-	{
-		std::vector<int> d; d.reserve(factors_highest_precision_.size());
-		for (auto const& M : factors_highest_precision_) d.push_back(static_cast<int>(M.rows()));
-		return d;
-	}
-	/// \brief Per-function degrees with respect to a given variable group (same as the total degrees).
-	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
+    /// Each function is a product of its linear factors, so its degree is the factor count.
+    std::vector<int> Degrees() const
+    {
+        std::vector<int> d; d.reserve(factors_highest_precision_.size());
+        for (auto const& M : factors_highest_precision_) d.push_back(static_cast<int>(M.rows()));
+        return d;
+    }
+    /// \brief Per-function degrees with respect to a given variable group (same as the total degrees).
+    std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
 
-	/// \brief Whether Homogenize has folded the constant column onto a homogenizing variable.
-	/// Then every column is a variable column and the block evaluates M*[vars] with no augmenting
-	/// 1.  Derived from the shape (a constructed block always has num_vars+1 columns), so it adds
-	/// no state and the canonical encoding is unchanged.
-	bool IsHomogenized() const
-	{
-		return !factors_highest_precision_.empty()
-		       && static_cast<size_t>(factors_highest_precision_.front().cols()) == num_vars_;
-	}
+    /// \brief Whether Homogenize has folded the constant column onto a homogenizing variable.
+    /// Then every column is a variable column and the block evaluates M*[vars] with no augmenting
+    /// 1.  Derived from the shape (a constructed block always has num_vars+1 columns), so it adds
+    /// no state and the canonical encoding is unchanged.
+    bool IsHomogenized() const
+    {
+        return !factors_highest_precision_.empty()
+               && static_cast<size_t>(factors_highest_precision_.front().cols()) == num_vars_;
+    }
 
-	/// \brief Homogenize with respect to an affine variable group: fold each factor's constant
-	/// column onto the homogenizing variable.  The System prepends the homogenizing variable to
-	/// the ordering, so its column is the old constant column moved to the front -- exactly what
-	/// LinearFormsBlock does.  The m-homogeneous start system builds its block already homogeneous
-	/// (zero constant column, homogenizing variables among the columns) and is never asked; an
-	/// affine block built by add_products_of_linears -- a regeneration deformation, say -- used to
-	/// meet a no-op here and then be reported homogeneous, so a homogenized System kept an affine
-	/// block with the wrong variable count and could neither be expanded to nodes nor tracked
-	/// projectively (b2#376).  A second affine group is not yet supported and throws.
-	void Homogenize(VariableGroup const& /*group*/, std::shared_ptr<node::Variable> const& /*hom_var*/)
-	{
-		if (IsHomogenized())
-			throw std::runtime_error("ProductsOfLinearsBlock::Homogenize: block is already homogenized "
-				"(multiple affine variable groups are not yet supported for products-of-linears blocks)");
-		const Eigen::Index n = static_cast<Eigen::Index>(num_vars_);
-		for (auto& M : factors_highest_precision_)
-		{
-			Mat<complex_mp> Mh(M.rows(), M.cols());   // same column count, n+1: now all variable columns
-			Mh.col(0) = M.col(n);                      // constant -> the homogenizing variable, in front
-			Mh.rightCols(n) = M.leftCols(n);           // the original variable columns
-			M = Mh;
-		}
-		num_vars_ += 1;
-		BuildWorking();
-	}
-	/// \brief Homogeneous once Homogenize has run, or when every factor's constant column is zero
-	/// (the form the m-homogeneous start system builds directly).
-	bool IsHomogeneous(VariableGroup const&) const
-	{
-		if (IsHomogenized())
-			return true;
-		const Eigen::Index n = static_cast<Eigen::Index>(num_vars_);
-		for (auto const& M : factors_highest_precision_)
-			for (Eigen::Index r = 0; r < M.rows(); ++r)
-				if (M(r, n).real() != 0 || M(r, n).imag() != 0)
-					return false;
-		return true;
-	}
-	/// \brief Always true: a product of linear forms is a polynomial.
-	bool IsPolynomial(VariableGroup const&) const { return true; }
+    /// \brief Homogenize with respect to an affine variable group: fold each factor's constant
+    /// column onto the homogenizing variable.  The System prepends the homogenizing variable to
+    /// the ordering, so its column is the old constant column moved to the front -- exactly what
+    /// LinearFormsBlock does.  The m-homogeneous start system builds its block already homogeneous
+    /// (zero constant column, homogenizing variables among the columns) and is never asked; an
+    /// affine block built by add_products_of_linears -- a regeneration deformation, say -- used to
+    /// meet a no-op here and then be reported homogeneous, so a homogenized System kept an affine
+    /// block with the wrong variable count and could neither be expanded to nodes nor tracked
+    /// projectively (b2#376).  A second affine group is not yet supported and throws.
+    void Homogenize(VariableGroup const& /*group*/, std::shared_ptr<node::Variable> const& /*hom_var*/)
+    {
+        if (IsHomogenized())
+            throw std::runtime_error("ProductsOfLinearsBlock::Homogenize: block is already homogenized "
+                "(multiple affine variable groups are not yet supported for products-of-linears blocks)");
+        const Eigen::Index n = static_cast<Eigen::Index>(num_vars_);
+        for (auto& M : factors_highest_precision_)
+        {
+            Mat<complex_mp> Mh(M.rows(), M.cols());   // same column count, n+1: now all variable columns
+            Mh.col(0) = M.col(n);                      // constant -> the homogenizing variable, in front
+            Mh.rightCols(n) = M.leftCols(n);           // the original variable columns
+            M = Mh;
+        }
+        num_vars_ += 1;
+        BuildWorking();
+    }
+    /// \brief Homogeneous once Homogenize has run, or when every factor's constant column is zero
+    /// (the form the m-homogeneous start system builds directly).
+    bool IsHomogeneous(VariableGroup const&) const
+    {
+        if (IsHomogenized())
+            return true;
+        const Eigen::Index n = static_cast<Eigen::Index>(num_vars_);
+        for (auto const& M : factors_highest_precision_)
+            for (Eigen::Index r = 0; r < M.rows(); ++r)
+                if (M(r, n).real() != 0 || M(r, n).imag() != 0)
+                    return false;
+        return true;
+    }
+    /// \brief Always true: a product of linear forms is a polynomial.
+    bool IsPolynomial(VariableGroup const&) const { return true; }
 
-	/// Number of variables the block expects in the input vector.
-	size_t NumVariables() const { return num_vars_; }
+    /// Number of variables the block expects in the input vector.
+    size_t NumVariables() const { return num_vars_; }
 
-	/// The master (highest-precision) coefficient matrices, one per function; matrix i is
-	/// (number of factors of f_i) x (num_vars+1), the last column being the constant/augmenting term.  Exposed
-	/// so the function-tree expansion (System::ExpandToFunctionTree) can rebuild f_i = prod_r L_r.
-	std::vector<Mat<complex_mp>> const& Factors() const { return factors_highest_precision_; }
+    /// The master (highest-precision) coefficient matrices, one per function; matrix i is
+    /// (number of factors of f_i) x (num_vars+1), the last column being the constant/augmenting term.  Exposed
+    /// so the function-tree expansion (System::ExpandToFunctionTree) can rebuild f_i = prod_r L_r.
+    std::vector<Mat<complex_mp>> const& Factors() const { return factors_highest_precision_; }
 
-	/// Human-facing description: terse shows `prod of k linear forms`; verbose shows the actual
-	/// product of affine factors `(x - 1) * (x + 1)`.
-	void Describe(std::ostream& out, size_t& row, VariableGroup const& vars, bool verbose) const
-	{
-		for (auto const& M : factors_highest_precision_)
-		{
-			out << "  f_" << row++ << " = ";
-			const Eigen::Index k = M.rows();
-			if (!verbose)
-			{
-				out << "prod of " << k << " linear form" << (k == 1 ? "" : "s");
-			}
-			else if (k == 0)
-			{
-				out << "1";
-			}
-			else
-			{
-				for (Eigen::Index r = 0; r < k; ++r)
-				{
-					out << (r ? " * " : "") << "(";
-					describe_detail::PrintLinearFormVerbose(out, M, r, vars, num_vars_, IsHomogenized());
-					out << ")";
-				}
-			}
-			out << "\n";
-		}
-	}
+    /// Human-facing description: terse shows `prod of k linear forms`; verbose shows the actual
+    /// product of affine factors `(x - 1) * (x + 1)`.
+    void Describe(std::ostream& out, size_t& row, VariableGroup const& vars, bool verbose) const
+    {
+        for (auto const& M : factors_highest_precision_)
+        {
+            out << "  f_" << row++ << " = ";
+            const Eigen::Index k = M.rows();
+            if (!verbose)
+            {
+                out << "prod of " << k << " linear form" << (k == 1 ? "" : "s");
+            }
+            else if (k == 0)
+            {
+                out << "1";
+            }
+            else
+            {
+                for (Eigen::Index r = 0; r < k; ++r)
+                {
+                    out << (r ? " * " : "") << "(";
+                    describe_detail::PrintLinearFormVerbose(out, M, r, vars, num_vars_, IsHomogenized());
+                    out << ")";
+                }
+            }
+            out << "\n";
+        }
+    }
 
-	/// Products of linears do not depend on the path variable.
-	bool DependsOnPathVariable() const { return false; }
+    /// Products of linears do not depend on the path variable.
+    bool DependsOnPathVariable() const { return false; }
 
-	/// The Jacobian is not constant (it depends on x), unlike a slice.
-	bool HasConstantJacobian() const { return false; }
+    /// The Jacobian is not constant (it depends on x), unlike a slice.
+    bool HasConstantJacobian() const { return false; }
 
-	/// Analytic block: nothing symbolic to differentiate.
-	void Differentiate() const {}
+    /// Analytic block: nothing symbolic to differentiate.
+    void Differentiate() const {}
 
-	/// \brief Get the block's current working precision.
-	unsigned Precision() const { return precision_; }
+    /// \brief Get the block's current working precision.
+    unsigned Precision() const { return precision_; }
 
-	/// Set the working precision; recasts the mpfr working coefficients from the master.
-	void Precision(unsigned new_precision) const
-	{
-		// short-circuit when already materialized here.  Each holder of mp values keeps its
-		// own "materialized at" tag; System deliberately keeps none and simply fans out on
-		// every evaluation, which is cheap precisely because of this early return (ADR-0057).
-		if (precision_==new_precision)
-			return;
-		if (new_precision > DoublePrecision())
-		{
-			auto& wm = std::get<std::vector<Mat<complex_mp>>>(factors_working_);
-			for (size_t i = 0; i < wm.size(); ++i)
-				for (Eigen::Index r = 0; r < wm[i].rows(); ++r)
-					for (Eigen::Index c = 0; c < wm[i].cols(); ++c)
-					{
-						wm[i](r, c).precision(new_precision);
-						if (new_precision > precision_)
-							wm[i](r, c) = factors_highest_precision_[i](r, c);
-					}
-		}
-		precision_ = new_precision;
-	}
+    /// Set the working precision; recasts the mpfr working coefficients from the master.
+    void Precision(unsigned new_precision) const
+    {
+        // short-circuit when already materialized here.  Each holder of mp values keeps its
+        // own "materialized at" tag; System deliberately keeps none and simply fans out on
+        // every evaluation, which is cheap precisely because of this early return (ADR-0057).
+        if (precision_==new_precision)
+            return;
+        if (new_precision > DoublePrecision())
+        {
+            auto& wm = std::get<std::vector<Mat<complex_mp>>>(factors_working_);
+            for (size_t i = 0; i < wm.size(); ++i)
+                for (Eigen::Index r = 0; r < wm[i].rows(); ++r)
+                    for (Eigen::Index c = 0; c < wm[i].cols(); ++c)
+                    {
+                        wm[i](r, c).precision(new_precision);
+                        if (new_precision > precision_)
+                            wm[i](r, c) = factors_highest_precision_[i](r, c);
+                    }
+        }
+        precision_ = new_precision;
+    }
 
-	/**
-	\brief Evaluate the block's function values into a caller-provided segment.
+    /**
+    \brief Evaluate the block's function values into a caller-provided segment.
 
-	The path variable is ignored (products of linears are autonomous).
+    The path variable is ignored (products of linears are autonomous).
 
-	\param result Length-NumFunctions() segment to write into.
-	\param vars   Length-NumVariables() current variable values.
-	*/
-	template <typename T>
-	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
-	{
-		SyncPrecision(vars);
-		const auto& W = Working<T>();
-		// aug = [vars ; 1].  The trailing 1 lets each coefficient row carry its constant
-		// term in its last column, so a linear factor is just the dot product (row . aug).
-		const Vec<T> aug = Augment<T>(vars);
+    \param result Length-NumFunctions() segment to write into.
+    \param vars   Length-NumVariables() current variable values.
+    */
+    template <typename T>
+    void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
+    {
+        SyncPrecision(vars);
+        const auto& W = Working<T>();
+        // aug = [vars ; 1].  The trailing 1 lets each coefficient row carry its constant
+        // term in its last column, so a linear factor is just the dot product (row . aug).
+        const Vec<T> aug = Augment<T>(vars);
 
-		// Function i is a product of linear factors.  W[i] is its k x (n+1) coefficient
-		// matrix, one row per factor, so W[i] * aug evaluates all k factors at once and the
-		// function value is their product.
-		for (size_t i = 0; i < W.size(); ++i)
-		{
-			const Vec<T> fvals = W[i] * aug;          // the k factor values L_0 .. L_{k-1}
-			T val(1);
-			for (Eigen::Index r = 0; r < fvals.size(); ++r)
-				val *= fvals(r);                      // f_i = prod_r L_r
-			result(static_cast<Eigen::Index>(i)) = val;
-		}
-	}
+        // Function i is a product of linear factors.  W[i] is its k x (n+1) coefficient
+        // matrix, one row per factor, so W[i] * aug evaluates all k factors at once and the
+        // function value is their product.
+        for (size_t i = 0; i < W.size(); ++i)
+        {
+            const Vec<T> fvals = W[i] * aug;          // the k factor values L_0 .. L_{k-1}
+            T val(1);
+            for (Eigen::Index r = 0; r < fvals.size(); ++r)
+                val *= fvals(r);                      // f_i = prod_r L_r
+            result(static_cast<Eigen::Index>(i)) = val;
+        }
+    }
 
-	/**
-	\brief Evaluate the block's Jacobian (d f_i / d x_j) into a caller-provided block.
+    /**
+    \brief Evaluate the block's Jacobian (d f_i / d x_j) into a caller-provided block.
 
-	The path variable is ignored (products of linears are autonomous).
+    The path variable is ignored (products of linears are autonomous).
 
-	\param J  A NumFunctions() x NumVariables() block to write into.
-	\param vars Length-NumVariables() current variable values.
-	*/
-	template <typename T>
-	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& /*path_value*/) const
-	{
-		SyncPrecision(vars);
-		const auto& W = Working<T>();
-		const Vec<T> aug = Augment<T>(vars);          // [vars ; 1]; see EvalInPlace
+    \param J  A NumFunctions() x NumVariables() block to write into.
+    \param vars Length-NumVariables() current variable values.
+    */
+    template <typename T>
+    void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& /*path_value*/) const
+    {
+        SyncPrecision(vars);
+        const auto& W = Working<T>();
+        const Vec<T> aug = Augment<T>(vars);          // [vars ; 1]; see EvalInPlace
 
-		// Function i is f_i = prod_r L_r, where L_r = (row r of M) . aug is the r-th linear
-		// factor's value.  By the product rule, the partial derivative w.r.t. variable c is
-		//
-		//     d f_i / d x_c = sum_r (d L_r / d x_c) * prod_{s != r} L_s
-		//                   = sum_r      M(r,c)     * weight_r,
-		//
-		// since d L_r / d x_c is just the coefficient M(r,c) of x_c in factor r, and
-		// weight_r := prod_{s != r} L_s is the product of every factor value except r's.
-		for (size_t i = 0; i < W.size(); ++i)
-		{
-			const Mat<T>& M = W[i];                   // k x (n+1): rows are factors, last col is constant
-			const Eigen::Index k = M.rows();
+        // Function i is f_i = prod_r L_r, where L_r = (row r of M) . aug is the r-th linear
+        // factor's value.  By the product rule, the partial derivative w.r.t. variable c is
+        //
+        //     d f_i / d x_c = sum_r (d L_r / d x_c) * prod_{s != r} L_s
+        //                   = sum_r      M(r,c)     * weight_r,
+        //
+        // since d L_r / d x_c is just the coefficient M(r,c) of x_c in factor r, and
+        // weight_r := prod_{s != r} L_s is the product of every factor value except r's.
+        for (size_t i = 0; i < W.size(); ++i)
+        {
+            const Mat<T>& M = W[i];                   // k x (n+1): rows are factors, last col is constant
+            const Eigen::Index k = M.rows();
 
-			if (k == 0)                               // a 0-factor product is the constant 1; derivative 0
-			{
-				J.row(static_cast<Eigen::Index>(i)).setZero();
-				continue;
-			}
+            if (k == 0)                               // a 0-factor product is the constant 1; derivative 0
+            {
+                J.row(static_cast<Eigen::Index>(i)).setZero();
+                continue;
+            }
 
-			const Vec<T> fvals = M * aug;             // the factor values L_0 .. L_{k-1}
+            const Vec<T> fvals = M * aug;             // the factor values L_0 .. L_{k-1}
 
-			// weight_r = prod_{s != r} L_s, computed in O(k) and WITHOUT division -- so it
-			// stays correct even when some factor value L_s is zero (dividing the total
-			// product by L_r would not).  We split the "all but r" product into the factors
-			// before r and the factors after r, each built by a running accumulator:
-			//   forward pass:  weight_r <- prod_{s < r} L_s            (the prefix product)
-			//   backward pass: weight_r <- weight_r * prod_{s > r} L_s (times the suffix product)
-			Vec<T> weight(k);
-			{
-				T acc(1);
-				for (Eigen::Index r = 0; r < k; ++r) { weight(r) = acc; acc *= fvals(r); }      // prefix
-				acc = T(1);
-				for (Eigen::Index r = k - 1; r >= 0; --r) { weight(r) *= acc; acc *= fvals(r); } // suffix
-			}
+            // weight_r = prod_{s != r} L_s, computed in O(k) and WITHOUT division -- so it
+            // stays correct even when some factor value L_s is zero (dividing the total
+            // product by L_r would not).  We split the "all but r" product into the factors
+            // before r and the factors after r, each built by a running accumulator:
+            //   forward pass:  weight_r <- prod_{s < r} L_s            (the prefix product)
+            //   backward pass: weight_r <- weight_r * prod_{s > r} L_s (times the suffix product)
+            Vec<T> weight(k);
+            {
+                T acc(1);
+                for (Eigen::Index r = 0; r < k; ++r) { weight(r) = acc; acc *= fvals(r); }      // prefix
+                acc = T(1);
+                for (Eigen::Index r = k - 1; r >= 0; --r) { weight(r) *= acc; acc *= fvals(r); } // suffix
+            }
 
-			// Row i of the Jacobian is (sum_r M(r,c) * weight_r) over the variable columns
-			// c only; M.leftCols(num_vars_) drops the trailing constant column (not a variable).
-			J.row(static_cast<Eigen::Index>(i)) = weight.transpose() * M.leftCols(static_cast<Eigen::Index>(num_vars_));
-		}
-	}
+            // Row i of the Jacobian is (sum_r M(r,c) * weight_r) over the variable columns
+            // c only; M.leftCols(num_vars_) drops the trailing constant column (not a variable).
+            J.row(static_cast<Eigen::Index>(i)) = weight.transpose() * M.leftCols(static_cast<Eigen::Index>(num_vars_));
+        }
+    }
 
-	/**
-	\brief Time-derivative into a caller-provided segment.  Products of linears are
-	autonomous (no path-variable dependence), so this is identically zero.
-	*/
-	template <typename T>
-	void TimeDerivInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& /*vars*/, T const& /*path_value*/) const
-	{
-		result.setZero();
-	}
+    /**
+    \brief Time-derivative into a caller-provided segment.  Products of linears are
+    autonomous (no path-variable dependence), so this is identically zero.
+    */
+    template <typename T>
+    void TimeDerivInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& /*vars*/, T const& /*path_value*/) const
+    {
+        result.setZero();
+    }
 
 private:
-	/// Materialize the working coefficients at the precision of the point being evaluated.
-	/// Every evaluable type self-aligns this way (blend_block established the pattern), so no
-	/// caller and no owning System has to fan a precision out beforehand -- ADR-0057.
-	/// Precision() short-circuits when already there, so the steady state is one integer
-	/// compare.  No-op for double, which carries no precision.
-	template <typename T>
-	void SyncPrecision(Vec<T> const& vars) const
-	{
-		if constexpr (!std::is_same<T, complex_dbl>::value)
-		{
-			if (vars.size() > 0)
-			{
-				const unsigned p = bertini::Precision(vars(0));
-				if (p != precision_)
-					Precision(p);
-			}
-		}
-	}
+    /// Materialize the working coefficients at the precision of the point being evaluated.
+    /// Every evaluable type self-aligns this way (blend_block established the pattern), so no
+    /// caller and no owning System has to fan a precision out beforehand -- ADR-0057.
+    /// Precision() short-circuits when already there, so the steady state is one integer
+    /// compare.  No-op for double, which carries no precision.
+    template <typename T>
+    void SyncPrecision(Vec<T> const& vars) const
+    {
+        if constexpr (!std::is_same<T, complex_dbl>::value)
+        {
+            if (vars.size() > 0)
+            {
+                const unsigned p = bertini::Precision(vars(0));
+                if (p != precision_)
+                    Precision(p);
+            }
+        }
+    }
 
-	template <typename T>
-	const std::vector<Mat<T>>& Working() const
-	{
-		return std::get<std::vector<Mat<T>>>(factors_working_);
-	}
+    template <typename T>
+    const std::vector<Mat<T>>& Working() const
+    {
+        return std::get<std::vector<Mat<T>>>(factors_working_);
+    }
 
-	template <typename T>
-	Vec<T> Augment(Vec<T> const& vars) const
-	{
-		if (IsHomogenized())
-			return vars;                // every column is a variable column; nothing to append
-		Vec<T> aug(static_cast<Eigen::Index>(num_vars_ + 1));
-		aug.head(static_cast<Eigen::Index>(num_vars_)) = vars;
-		T one(1);
-		if constexpr (!std::is_same<T, complex_dbl>::value)
-			one.precision(precision_);
-		aug(static_cast<Eigen::Index>(num_vars_)) = one;
-		return aug;
-	}
+    template <typename T>
+    Vec<T> Augment(Vec<T> const& vars) const
+    {
+        if (IsHomogenized())
+            return vars;                // every column is a variable column; nothing to append
+        Vec<T> aug(static_cast<Eigen::Index>(num_vars_ + 1));
+        aug.head(static_cast<Eigen::Index>(num_vars_)) = vars;
+        T one(1);
+        if constexpr (!std::is_same<T, complex_dbl>::value)
+            one.precision(precision_);
+        aug(static_cast<Eigen::Index>(num_vars_)) = one;
+        return aug;
+    }
 
-	void BuildWorking() const
-	{
-		auto& wd = std::get<std::vector<Mat<complex_dbl>>>(factors_working_);
-		auto& wm = std::get<std::vector<Mat<complex_mp>>>(factors_working_);
-		const size_t n = factors_highest_precision_.size();
-		wd.resize(n);
-		wm.resize(n);
-		for (size_t i = 0; i < n; ++i)
-		{
-			const auto& M = factors_highest_precision_[i];
-			wd[i].resize(M.rows(), M.cols());
-			wm[i].resize(M.rows(), M.cols());
-			for (Eigen::Index r = 0; r < M.rows(); ++r)
-				for (Eigen::Index c = 0; c < M.cols(); ++c)
-				{
-					wd[i](r, c) = complex_dbl(M(r, c));
-					wm[i](r, c) = M(r, c);
-				}
-		}
-	}
+    void BuildWorking() const
+    {
+        auto& wd = std::get<std::vector<Mat<complex_dbl>>>(factors_working_);
+        auto& wm = std::get<std::vector<Mat<complex_mp>>>(factors_working_);
+        const size_t n = factors_highest_precision_.size();
+        wd.resize(n);
+        wm.resize(n);
+        for (size_t i = 0; i < n; ++i)
+        {
+            const auto& M = factors_highest_precision_[i];
+            wd[i].resize(M.rows(), M.cols());
+            wm[i].resize(M.rows(), M.cols());
+            for (Eigen::Index r = 0; r < M.rows(); ++r)
+                for (Eigen::Index c = 0; c < M.cols(); ++c)
+                {
+                    wd[i](r, c) = complex_dbl(M(r, c));
+                    wm[i](r, c) = M(r, c);
+                }
+        }
+    }
 
-	size_t num_vars_;
-	std::vector<Mat<complex_mp>> factors_highest_precision_; ///< master coefficients, one matrix per function
-	mutable std::tuple<std::vector<Mat<complex_dbl>>, std::vector<Mat<complex_mp>>> factors_working_;
-	mutable unsigned precision_;
+    size_t num_vars_;
+    std::vector<Mat<complex_mp>> factors_highest_precision_; ///< master coefficients, one matrix per function
+    mutable std::tuple<std::vector<Mat<complex_dbl>>, std::vector<Mat<complex_mp>>> factors_working_;
+    mutable unsigned precision_;
 
-	friend class boost::serialization::access;
+    friend class boost::serialization::access;
 
-	template <typename Archive>
-	void serialize(Archive& ar, const unsigned /*version*/)
-	{
-		ar & num_vars_;
-		ar & precision_;
-		ar & factors_highest_precision_;
-		ar & std::get<0>(factors_working_);
-		ar & std::get<1>(factors_working_);
-	}
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        ar & num_vars_;
+        ar & precision_;
+        ar & factors_highest_precision_;
+        ar & std::get<0>(factors_working_);
+        ar & std::get<1>(factors_working_);
+    }
 };
 
 } // namespace blocks

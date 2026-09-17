@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/function_tree.hpp:  Header file for all node types.
@@ -36,51 +36,51 @@
 
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		using namespace bertini::node;
-		using Node = Node;
-		using Nodeptr = std::shared_ptr<Node>;
+        using namespace bertini::node;
+        using Node = Node;
+        using Nodeptr = std::shared_ptr<Node>;
 
 
-		
 
-		void SetupFunctionTree()
-		{
-			// Tell Python that pointers to derived Nodes can be used as Node pointers when passed to methods
-			implicitly_convertible<std::shared_ptr<Complex>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<special_number::Pi>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<special_number::E>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<Integer>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<Rational>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<Variable>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<Differential>, Nodeptr>();
-			
-			implicitly_convertible<std::shared_ptr<SumOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<MultOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<PowerOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<NegateOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<IntegerPowerOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<SqrtOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<ExpOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<LogOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<TrigOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<SinOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<CosOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<TanOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<ArcSinOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<ArcCosOperator>, Nodeptr>();
-			implicitly_convertible<std::shared_ptr<ArcTanOperator>, Nodeptr>();
-			
-			implicitly_convertible<std::shared_ptr<NamedExpression>, Nodeptr>();
-		}
-		
-		
-		
-		
-		
-		
-	}
+
+        void SetupFunctionTree()
+        {
+            // Tell Python that pointers to derived Nodes can be used as Node pointers when passed to methods
+            implicitly_convertible<std::shared_ptr<Complex>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<special_number::Pi>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<special_number::E>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<Integer>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<Rational>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<Variable>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<Differential>, Nodeptr>();
+
+            implicitly_convertible<std::shared_ptr<SumOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<MultOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<PowerOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<NegateOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<IntegerPowerOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<SqrtOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<ExpOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<LogOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<TrigOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<SinOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<CosOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<TanOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<ArcSinOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<ArcCosOperator>, Nodeptr>();
+            implicitly_convertible<std::shared_ptr<ArcTanOperator>, Nodeptr>();
+
+            implicitly_convertible<std::shared_ptr<NamedExpression>, Nodeptr>();
+        }
+
+
+
+
+
+
+    }
 }
 
 

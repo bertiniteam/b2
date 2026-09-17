@@ -15,14 +15,14 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 //
 // silviana amethyst, university of wisconsin-eau claire
 
 /**
-\file bertini2/blackbox/config.hpp 
+\file bertini2/blackbox/config.hpp
 
 \brief Configs for the blackbox whatnot
 */
@@ -30,7 +30,7 @@
 #pragma once
 
 namespace bertini{
-	namespace blackbox{
+    namespace blackbox{
 
 
 namespace type{
@@ -48,5 +48,5 @@ enum class Endgame{ PowerSeries, Cauchy};
 // blackbox always clones (CloneGiven + a start-system factory; see switches_zerodim.hpp),
 // and user homotopies use RefToGiven through the dedicated UserHomotopy path.
 
-	}
+    }
 }

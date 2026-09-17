@@ -34,4 +34,3 @@ The Python bindings for Bertini 2
 * :ref:`genindex`
 * :ref:`modindex`
 * 🔍 :ref:`search`
-

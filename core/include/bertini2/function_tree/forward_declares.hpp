@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -28,92 +28,87 @@
 #pragma once
 
 namespace bertini {
-	namespace node{
-		class Node;
-	}
-	
-	namespace node{ 
-		class Variable;
-		class Integer;
-		class Complex;
-		class Rational;
-		class NamedExpression;
-		class Differential;
-	}
+    namespace node{
+        class Node;
+    }
+
+    namespace node{
+        class Variable;
+        class Integer;
+        class Complex;
+        class Rational;
+        class NamedExpression;
+        class Differential;
+    }
 
 
-	namespace node{ 
-		class Operator;
+    namespace node{
+        class Operator;
 
-		class UnaryOperator;
-		class NaryOperator;
-		
-		class SumOperator;
-		class MultOperator;
-		class IntegerPowerOperator;
-		class PowerOperator;
-		class ExpOperator;
-		class LogOperator;
-		class NegateOperator;
-		class SqrtOperator;
+        class UnaryOperator;
+        class NaryOperator;
 
-	}
+        class SumOperator;
+        class MultOperator;
+        class IntegerPowerOperator;
+        class PowerOperator;
+        class ExpOperator;
+        class LogOperator;
+        class NegateOperator;
+        class SqrtOperator;
 
-	namespace node{
-		class TrigOperator;
+    }
 
-		class SinOperator;
-		class ArcSinOperator;
-		class CosOperator;
-		class ArcCosOperator;
-		class TanOperator;
-		class ArcTanOperator;
-	}
+    namespace node{
+        class TrigOperator;
 
-	namespace node{
-		namespace special_number{
-			class Pi;
-			class E;
-		}
-	}
+        class SinOperator;
+        class ArcSinOperator;
+        class CosOperator;
+        class ArcCosOperator;
+        class TanOperator;
+        class ArcTanOperator;
+    }
+
+    namespace node{
+        namespace special_number{
+            class Pi;
+            class E;
+        }
+    }
 
 
-	namespace node{
-		/// \brief Register all concrete Node types with a Boost.Serialization archive.
-		template <typename Archive>
-		void register_derived_node_types(Archive& ar)
-		{
-			ar.template register_type<bertini::node::Variable>();
-			ar.template register_type<bertini::node::Integer>();
-			ar.template register_type<bertini::node::Complex>();
-			ar.template register_type<bertini::node::Rational>();
-			ar.template register_type<bertini::node::NamedExpression>();
-			ar.template register_type<bertini::node::Differential>();
-			// ar.template register_type<bertini::node::Operator>(); // abstract type
-			// ar.template register_type<bertini::node::UnaryOperator>(); // abstract type
-			// ar.template register_type<bertini::node::NaryOperator>(); // abstract type
-			ar.template register_type<bertini::node::SumOperator>();
-			ar.template register_type<bertini::node::MultOperator>();
-			ar.template register_type<bertini::node::IntegerPowerOperator>();
-			ar.template register_type<bertini::node::PowerOperator>();
-			ar.template register_type<bertini::node::ExpOperator>();
-			ar.template register_type<bertini::node::LogOperator>();
-			ar.template register_type<bertini::node::NegateOperator>();
-			ar.template register_type<bertini::node::SqrtOperator>();
-			// ar.template register_type<bertini::node::TrigOperator>(); // abstract type
-			ar.template register_type<bertini::node::SinOperator>();
-			ar.template register_type<bertini::node::ArcSinOperator>();
-			ar.template register_type<bertini::node::CosOperator>();
-			ar.template register_type<bertini::node::ArcCosOperator>();
-			ar.template register_type<bertini::node::TanOperator>();
-			ar.template register_type<bertini::node::ArcTanOperator>();
-			ar.template register_type<bertini::node::special_number::Pi>();
-			ar.template register_type<bertini::node::special_number::E>();
-		}
-	}
+    namespace node{
+        /// \brief Register all concrete Node types with a Boost.Serialization archive.
+        template <typename Archive>
+        void register_derived_node_types(Archive& ar)
+        {
+            ar.template register_type<bertini::node::Variable>();
+            ar.template register_type<bertini::node::Integer>();
+            ar.template register_type<bertini::node::Complex>();
+            ar.template register_type<bertini::node::Rational>();
+            ar.template register_type<bertini::node::NamedExpression>();
+            ar.template register_type<bertini::node::Differential>();
+            // ar.template register_type<bertini::node::Operator>(); // abstract type
+            // ar.template register_type<bertini::node::UnaryOperator>(); // abstract type
+            // ar.template register_type<bertini::node::NaryOperator>(); // abstract type
+            ar.template register_type<bertini::node::SumOperator>();
+            ar.template register_type<bertini::node::MultOperator>();
+            ar.template register_type<bertini::node::IntegerPowerOperator>();
+            ar.template register_type<bertini::node::PowerOperator>();
+            ar.template register_type<bertini::node::ExpOperator>();
+            ar.template register_type<bertini::node::LogOperator>();
+            ar.template register_type<bertini::node::NegateOperator>();
+            ar.template register_type<bertini::node::SqrtOperator>();
+            // ar.template register_type<bertini::node::TrigOperator>(); // abstract type
+            ar.template register_type<bertini::node::SinOperator>();
+            ar.template register_type<bertini::node::ArcSinOperator>();
+            ar.template register_type<bertini::node::CosOperator>();
+            ar.template register_type<bertini::node::ArcCosOperator>();
+            ar.template register_type<bertini::node::TanOperator>();
+            ar.template register_type<bertini::node::ArcTanOperator>();
+            ar.template register_type<bertini::node::special_number::Pi>();
+            ar.template register_type<bertini::node::special_number::E>();
+        }
+    }
 }// namespace bertini
-
-
-
-
-

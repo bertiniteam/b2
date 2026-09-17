@@ -46,91 +46,91 @@ namespace logging{
 
 
 
-	namespace blog = boost::log;
+    namespace blog = boost::log;
 
-	using severity_level = blog::trivial::severity_level;  ///< The logging severity level type (from Boost.Log).
-	namespace src = blog::sources;
-	namespace sinks = blog::sinks;
-	namespace keywords = blog::keywords;
-
-
-	// the following is adapted from https://stackoverflow.com/questions/11421432/
-	// question answered by user James Adkison, asked by Adi, edited by James McNellis.
-	// the adaptation is the replacement of std::ostream with the blros type.  why the unmodified code still fails
-	// for blros types is a mystery.
-	using blros = blog::record_ostream;  ///< Shorthand for the Boost.Log record output stream type.
-	/// \brief Stream-insertion of an enum into a log record, via its underlying integer type.
-	template<typename T>
-	blros& operator<<(typename std::enable_if<std::is_enum<T>::value, blros>::type& stream, const T& e)
-	{
-		return stream << static_cast<typename std::underlying_type<T>::type>(e);
-	}
+    using severity_level = blog::trivial::severity_level;  ///< The logging severity level type (from Boost.Log).
+    namespace src = blog::sources;
+    namespace sinks = blog::sinks;
+    namespace keywords = blog::keywords;
 
 
-	/**
-	\class Logging
-
-	Provided as an interface to the underlying logging library.
-
-	Highlight functions:
-
-	* Init -- a "call-it-once" kinda function
-	* SetFilter
-	* AddFile
-
-	I have no idea how to remove a file, once you have done AddFile.  If this is something you need, contact silviana amethyst, and ask her to provide such a function.  She practices YAGNI, and she hadn't NI yet.
-
-	There is Init, with all defaults, so you should totally call it to initialize all logging facilities for Bertini2.  Failure to do so produces pure screen output.
-
-	//[%TimeStamp%]:
-	*/
-	struct Logging
-	{
-
-		/// \brief Initialize Bertini2 logging (call once); adds a rotating log file and sets the level.
-		static
-		void Init(std::string const& name_pattern = "bertini_%N.log",
-				std::string const& format = "%Message%",
-				unsigned rotation_size = 10*1024*1024,
-				severity_level const& new_level = severity_level::error)
-		{
-			AddFile(name_pattern, format, rotation_size);
-			SetLevel(new_level);
-
-			BOOST_LOG_TRIVIAL(info) << "initialized logging";
-		}
+    // the following is adapted from https://stackoverflow.com/questions/11421432/
+    // question answered by user James Adkison, asked by Adi, edited by James McNellis.
+    // the adaptation is the replacement of std::ostream with the blros type.  why the unmodified code still fails
+    // for blros types is a mystery.
+    using blros = blog::record_ostream;  ///< Shorthand for the Boost.Log record output stream type.
+    /// \brief Stream-insertion of an enum into a log record, via its underlying integer type.
+    template<typename T>
+    blros& operator<<(typename std::enable_if<std::is_enum<T>::value, blros>::type& stream, const T& e)
+    {
+        return stream << static_cast<typename std::underlying_type<T>::type>(e);
+    }
 
 
-		/// \brief Add a rotating log-file sink with the given name pattern, format, and rotation size.
-		static
-		void AddFile(std::string const& name_pattern, std::string const& format, unsigned rotation_size, bool auto_flush = true)
-		{
-			blog::add_file_log
-			(
-			    keywords::file_name = name_pattern,
-			    keywords::rotation_size = rotation_size,
-			    keywords::format = format,
-			    keywords::auto_flush = auto_flush
-			);
-		}
+    /**
+    \class Logging
+
+    Provided as an interface to the underlying logging library.
+
+    Highlight functions:
+
+    * Init -- a "call-it-once" kinda function
+    * SetFilter
+    * AddFile
+
+    I have no idea how to remove a file, once you have done AddFile.  If this is something you need, contact silviana amethyst, and ask her to provide such a function.  She practices YAGNI, and she hadn't NI yet.
+
+    There is Init, with all defaults, so you should totally call it to initialize all logging facilities for Bertini2.  Failure to do so produces pure screen output.
+
+    //[%TimeStamp%]:
+    */
+    struct Logging
+    {
+
+        /// \brief Initialize Bertini2 logging (call once); adds a rotating log file and sets the level.
+        static
+        void Init(std::string const& name_pattern = "bertini_%N.log",
+                std::string const& format = "%Message%",
+                unsigned rotation_size = 10*1024*1024,
+                severity_level const& new_level = severity_level::error)
+        {
+            AddFile(name_pattern, format, rotation_size);
+            SetLevel(new_level);
+
+            BOOST_LOG_TRIVIAL(info) << "initialized logging";
+        }
 
 
-		/**
-		 trivial logger-provided severity levels are
+        /// \brief Add a rotating log-file sink with the given name pattern, format, and rotation size.
+        static
+        void AddFile(std::string const& name_pattern, std::string const& format, unsigned rotation_size, bool auto_flush = true)
+        {
+            blog::add_file_log
+            (
+                keywords::file_name = name_pattern,
+                keywords::rotation_size = rotation_size,
+                keywords::format = format,
+                keywords::auto_flush = auto_flush
+            );
+        }
 
-		 trace, debug, info, warning, error, fatal
-		*/
-		static
-		void SetLevel(severity_level const& new_level)
-		{
-			blog::core::get()->set_filter
-			(
-			    blog::trivial::severity >= new_level
-			);
-		}
+
+        /**
+         trivial logger-provided severity levels are
+
+         trace, debug, info, warning, error, fatal
+        */
+        static
+        void SetLevel(severity_level const& new_level)
+        {
+            blog::core::get()->set_filter
+            (
+                blog::trivial::severity >= new_level
+            );
+        }
 
 
-	};
+    };
 
 
 

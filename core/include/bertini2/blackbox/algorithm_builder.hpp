@@ -15,13 +15,13 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 //
 
 /**
-\file include/bertini2/blackbox/algorithm_builder.hpp 
+\file include/bertini2/blackbox/algorithm_builder.hpp
 
 \brief A type which determines which algorithms etc, to run, and sets them up.
 */
@@ -48,33 +48,32 @@ class AlgoBuilder
 {
 
 public:
-	AlgoBuilder() = default;
+    AlgoBuilder() = default;
 
-	/**
-	\brief Construct an algorithm from pre-split CONFIG and INPUT strings.
+    /**
+    \brief Construct an algorithm from pre-split CONFIG and INPUT strings.
 
-	Call SplitIntoConfigAndInput before this.  Splitting is done outside
-	so that the caller can broadcast the strings over MPI before invoking
-	ClassicBuild on all ranks.
+    Call SplitIntoConfigAndInput before this.  Splitting is done outside
+    so that the caller can broadcast the strings over MPI before invoking
+    ClassicBuild on all ranks.
 
-	\returns 0 on success, nonzero on failure.
-	*/
-	int ClassicBuild(std::string const& config_str, std::string const& input_str);
+    \returns 0 on success, nonzero on failure.
+    */
+    int ClassicBuild(std::string const& config_str, std::string const& input_str);
 
-	/**
-	\brief Returns a non-owning pointer to the built algorithm (nullptr if not yet built).
-	*/
-	AnyAlgorithm* GetAlg()
-	{
-		return alg_.get();
-	}
+    /**
+    \brief Returns a non-owning pointer to the built algorithm (nullptr if not yet built).
+    */
+    AnyAlgorithm* GetAlg()
+    {
+        return alg_.get();
+    }
 
 private:
-	std::unique_ptr<AnyAlgorithm> alg_;
+    std::unique_ptr<AnyAlgorithm> alg_;
 };
 
 
 
 } // blackbox
 } //namespace bertini
-

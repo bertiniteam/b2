@@ -15,13 +15,13 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 
 /**
-\file bertini2/blackbox/argc_argv.hpp 
+\file bertini2/blackbox/argc_argv.hpp
 
 \brief Provides the methods for parsing the command-line arguments.
 */
@@ -36,7 +36,7 @@ namespace bertini{
 \brief Parsed results of the command-line arguments.
 */
 struct ParsedArgs {
-	boost::filesystem::path input_file{"input"}; ///< Path to the input file (Bertini1 default: "input").
+    boost::filesystem::path input_file{"input"}; ///< Path to the input file (Bertini1 default: "input").
 };
 
 /**

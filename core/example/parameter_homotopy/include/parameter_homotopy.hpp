@@ -15,68 +15,67 @@ using EndgameConfT = bertini::endgame::EndgameConfig;
 
 auto StepOne(bertini::System const& sys)
 {
-	using namespace bertini;
-	using namespace algorithm;
+    using namespace bertini;
+    using namespace algorithm;
 
-	using EndgameT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
-	
+    using EndgameT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 
-	auto zd = bertini::algorithm::ZeroDimSolver<TrackerT, EndgameT, bertini::System, bertini::start_system::TotalDegreeLinearProduct>(sys);
 
-	zd.DefaultSetup();
-	
-	auto tols = zd.Get<Tolerances>();
-	tols.newton_before_endgame = 1e-5;
-	tols.newton_during_endgame = 1e-6;
-	zd.Set(tols);
+    auto zd = bertini::algorithm::ZeroDimSolver<TrackerT, EndgameT, bertini::System, bertini::start_system::TotalDegreeLinearProduct>(sys);
 
-	auto& tr = zd.GetTracker();
+    zd.DefaultSetup();
 
-	tr.SetPredictor(bertini::tracking::Predictor::HeunEuler);
-	tracking::GoryDetailLogger<TrackerT> tr_logger;
-	// tr.AddObserver(&tr_logger);
+    auto tols = zd.Get<Tolerances>();
+    tols.newton_before_endgame = 1e-5;
+    tols.newton_during_endgame = 1e-6;
+    zd.Set(tols);
 
-	endgame::GoryDetailLogger<EndgameT> eg_logger;
-	zd.GetEndgame().AddObserver(&eg_logger);
+    auto& tr = zd.GetTracker();
 
-	auto eg = zd.GetFromEndgame<EndgameConfT>();
-	eg.final_tolerance = 1e-11;
-	zd.SetToEndgame(eg);
+    tr.SetPredictor(bertini::tracking::Predictor::HeunEuler);
+    tracking::GoryDetailLogger<TrackerT> tr_logger;
+    // tr.AddObserver(&tr_logger);
 
-	zd.Solve();
+    endgame::GoryDetailLogger<EndgameT> eg_logger;
+    zd.GetEndgame().AddObserver(&eg_logger);
 
-	return output::NonsingularSolutions::Extract(zd);
+    auto eg = zd.GetFromEndgame<EndgameConfT>();
+    eg.final_tolerance = 1e-11;
+    zd.SetToEndgame(eg);
+
+    zd.Solve();
+
+    return output::NonsingularSolutions::Extract(zd);
 }
-	
+
 template <typename SolnContT>
 auto StepTwo(bertini::System const& target_sys, bertini::System const& start_sys, bertini::System const& homotopy, SolnContT const& solns)
 {
-	using namespace bertini;
-	using namespace tracking;
-	using namespace algorithm;
+    using namespace bertini;
+    using namespace tracking;
+    using namespace algorithm;
 
-	auto userss = bertini::start_system::User(start_sys, solns);
+    auto userss = bertini::start_system::User(start_sys, solns);
 
-	auto zd = bertini::algorithm::HomotopySolver<TrackerT, typename bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System>(target_sys, userss, homotopy);
+    auto zd = bertini::algorithm::HomotopySolver<TrackerT, typename bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System>(target_sys, userss, homotopy);
 
-	zd.DefaultSetup();
-	
-	zd.GetTracker().SetPredictor(bertini::tracking::Predictor::HeunEuler);
+    zd.DefaultSetup();
 
-	auto tols = zd.Get<Tolerances>();
-	tols.newton_before_endgame = 1e-6;
-	tols.newton_during_endgame = 1e-7;
-	zd.Set(tols);
+    zd.GetTracker().SetPredictor(bertini::tracking::Predictor::HeunEuler);
 
-	auto eg = zd.GetFromEndgame<EndgameConfT>();
-	eg.final_tolerance = 1e-12;
-	zd.SetToEndgame(eg);
-	
-	zd.Solve();
+    auto tols = zd.Get<Tolerances>();
+    tols.newton_before_endgame = 1e-6;
+    tols.newton_during_endgame = 1e-7;
+    zd.Set(tols);
 
-	return output::AllSolutions::Extract(zd);
+    auto eg = zd.GetFromEndgame<EndgameConfT>();
+    eg.final_tolerance = 1e-12;
+    zd.SetToEndgame(eg);
+
+    zd.Solve();
+
+    return output::AllSolutions::Extract(zd);
 }
 
 
 } // namespace demo
-

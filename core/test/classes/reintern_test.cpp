@@ -43,24 +43,24 @@ namespace {
 // serialize -> deserialize a tree, yielding a raw (un-interned) clone
 Nd RoundTrip(Nd const& tree)
 {
-	std::stringstream archive_stream;
-	{
-		boost::archive::text_oarchive oa(archive_stream);
-		oa << tree;
-	}
-	Nd loaded;
-	{
-		boost::archive::text_iarchive ia(archive_stream);
-		ia >> loaded;
-	}
-	return loaded;
+    std::stringstream archive_stream;
+    {
+        boost::archive::text_oarchive oa(archive_stream);
+        oa << tree;
+    }
+    Nd loaded;
+    {
+        boost::archive::text_iarchive ia(archive_stream);
+        ia >> loaded;
+    }
+    return loaded;
 }
 
 Nd BuildMixedTree()
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	return pow(x, 3) + Rational::Make(1, 3, 0, 1) * y - sin(x) * Pi() + exp(y) / 2;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    return pow(x, 3) + Rational::Make(1, 3, 0, 1) * y - sin(x) * Pi() + exp(y) / 2;
 }
 
 } // unnamed namespace
@@ -69,85 +69,85 @@ BOOST_AUTO_TEST_SUITE(reintern)
 
 BOOST_AUTO_TEST_CASE(loaded_tree_does_not_share_until_reinterned)
 {
-	auto live = BuildMixedTree();
-	auto loaded = RoundTrip(live);
+    auto live = BuildMixedTree();
+    auto loaded = RoundTrip(live);
 
-	BOOST_CHECK(loaded != live);                    // deserialization bypasses Intern
-	BOOST_CHECK(Reintern(loaded) == live);          // reinterning unifies pointer-wise
+    BOOST_CHECK(loaded != live);                    // deserialization bypasses Intern
+    BOOST_CHECK(Reintern(loaded) == live);          // reinterning unifies pointer-wise
 }
 
 BOOST_AUTO_TEST_CASE(reintern_never_changes_content)
 {
-	auto live = BuildMixedTree();
-	auto loaded = RoundTrip(live);
-	auto reinterned = Reintern(loaded);
-	BOOST_CHECK_EQUAL(CanonicalEncoding(reinterned), CanonicalEncoding(live));
+    auto live = BuildMixedTree();
+    auto loaded = RoundTrip(live);
+    auto reinterned = Reintern(loaded);
+    BOOST_CHECK_EQUAL(CanonicalEncoding(reinterned), CanonicalEncoding(live));
 }
 
 BOOST_AUTO_TEST_CASE(variables_unify_by_name)
 {
-	auto loaded = RoundTrip(Variable::Make("x"));
-	BOOST_CHECK(Reintern(loaded) == Variable::Make("x"));
+    auto loaded = RoundTrip(Variable::Make("x"));
+    BOOST_CHECK(Reintern(loaded) == Variable::Make("x"));
 }
 
 BOOST_AUTO_TEST_CASE(two_archives_unify_with_each_other)
 {
-	auto live = BuildMixedTree();
-	auto first = Reintern(RoundTrip(live));
-	auto second = Reintern(RoundTrip(live));
-	BOOST_CHECK(first == second);                   // both collapse to one interned object
+    auto live = BuildMixedTree();
+    auto first = Reintern(RoundTrip(live));
+    auto second = Reintern(RoundTrip(live));
+    BOOST_CHECK(first == second);                   // both collapse to one interned object
 }
 
 BOOST_AUTO_TEST_CASE(memo_preserves_archive_sharing_across_roots)
 {
-	auto x = Variable::Make("x");
-	auto shared_term = pow(x, 2) + 1;
-	Nd f = shared_term + x;
-	Nd g = shared_term - 5;
+    auto x = Variable::Make("x");
+    auto shared_term = pow(x, 2) + 1;
+    Nd f = shared_term + x;
+    Nd g = shared_term - 5;
 
-	// archive both roots together: boost object tracking preserves their sharing
-	std::stringstream archive_stream;
-	{
-		boost::archive::text_oarchive oa(archive_stream);
-		oa << f << g;
-	}
-	Nd loaded_f, loaded_g;
-	{
-		boost::archive::text_iarchive ia(archive_stream);
-		ia >> loaded_f >> loaded_g;
-	}
+    // archive both roots together: boost object tracking preserves their sharing
+    std::stringstream archive_stream;
+    {
+        boost::archive::text_oarchive oa(archive_stream);
+        oa << f << g;
+    }
+    Nd loaded_f, loaded_g;
+    {
+        boost::archive::text_iarchive ia(archive_stream);
+        ia >> loaded_f >> loaded_g;
+    }
 
-	ReinternMemo memo;
-	auto ref = Reintern(loaded_f, memo);
-	auto reg = Reintern(loaded_g, memo);
+    ReinternMemo memo;
+    auto ref = Reintern(loaded_f, memo);
+    auto reg = Reintern(loaded_g, memo);
 
-	BOOST_CHECK(ref == f);
-	BOOST_CHECK(reg == g);
-	// and the shared subtree is rebuilt exactly once (memo hit): both rebuilt roots hold
-	// the SAME interned shared_term the live trees do -- checked via pointer unification
-	// of the whole roots above.
-	BOOST_CHECK_EQUAL(memo.count(loaded_f.get()), 1u);
-	BOOST_CHECK_EQUAL(memo.count(loaded_g.get()), 1u);
+    BOOST_CHECK(ref == f);
+    BOOST_CHECK(reg == g);
+    // and the shared subtree is rebuilt exactly once (memo hit): both rebuilt roots hold
+    // the SAME interned shared_term the live trees do -- checked via pointer unification
+    // of the whole roots above.
+    BOOST_CHECK_EQUAL(memo.count(loaded_f.get()), 1u);
+    BOOST_CHECK_EQUAL(memo.count(loaded_g.get()), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(every_kind_survives_reintern)
 {
-	auto x = Variable::Make("x");
-	std::vector<Nd> const kinds = {
-		Variable::Make("v"), Integer::Make(-3), Rational::Make(2, 7, 1, 5),
-		Complex::Make("1.25", "-0.5"), Pi(), E(),
-		x + 1, x * 2, -x, pow(x, x), pow(x, 4), sqrt(x), exp(x), log(x),
-		sin(x), asin(x), cos(x), acos(x), tan(x), atan(x),
-		Named(x + 2, "fun")
-	};
-	for (auto const& k : kinds)
-	{
-		auto loaded = RoundTrip(k);
-		auto reinterned = Reintern(loaded);
-		BOOST_CHECK_MESSAGE(reinterned == k,
-			"kind failed to unify: " << CanonicalEncoding(k));
-		BOOST_CHECK_EQUAL(CanonicalEncoding(reinterned), CanonicalEncoding(k));
-	}
+    auto x = Variable::Make("x");
+    std::vector<Nd> const kinds = {
+        Variable::Make("v"), Integer::Make(-3), Rational::Make(2, 7, 1, 5),
+        Complex::Make("1.25", "-0.5"), Pi(), E(),
+        x + 1, x * 2, -x, pow(x, x), pow(x, 4), sqrt(x), exp(x), log(x),
+        sin(x), asin(x), cos(x), acos(x), tan(x), atan(x),
+        Named(x + 2, "fun")
+    };
+    for (auto const& k : kinds)
+    {
+        auto loaded = RoundTrip(k);
+        auto reinterned = Reintern(loaded);
+        BOOST_CHECK_MESSAGE(reinterned == k,
+            "kind failed to unify: " << CanonicalEncoding(k));
+        BOOST_CHECK_EQUAL(CanonicalEncoding(reinterned), CanonicalEncoding(k));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

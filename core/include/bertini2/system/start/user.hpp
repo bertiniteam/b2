@@ -38,7 +38,7 @@ the user provided start system is merely their system, evaluated at the start ti
 
 // forward declare the User start system
 namespace bertini{ namespace start_system{
-	class User;
+    class User;
 }}
 
 // forward declare the function, so we can friend it below.
@@ -48,72 +48,72 @@ template<class Archive>
 inline void save_construct_data(Archive & ar, const bertini::start_system::User * t, const unsigned int file_version);
 /// \endcond
 }}
-// end nonsense for friends.  so lonely, but c++ friends don't solve the irl problem at all.  
+// end nonsense for friends.  so lonely, but c++ friends don't solve the irl problem at all.
 
 namespace bertini
 {
-	namespace start_system{
+    namespace start_system{
 
 
-		/**
-		\brief The user-provided start system for Numerical Algebraic Geometry
+        /**
+        \brief The user-provided start system for Numerical Algebraic Geometry
 
 
-		*/
-		class User : public StartSystem
-		{
-		public:
-			User() = delete; // deleted because requires a reference to a System to construct
-			virtual ~User() = default;
+        */
+        class User : public StartSystem
+        {
+        public:
+            User() = delete; // deleted because requires a reference to a System to construct
+            virtual ~User() = default;
 
-			/**
-			 Constructor for making a user-provided start system from another.
-			*/
-			User(System const& s, SampCont<complex_dbl> const& solns);
-			/// \brief Construct a user-provided start system from a system and its multiprecision solutions.
-			User(System const& s, SampCont<complex_mp> const& solns);
-
-
-
-			/**
-			Get the number of start points for this start system.
-			*/
-			unsigned long long NumStartPoints() const override;
-
-			User& operator*=(Nd const& n) = delete;
-
-			User& operator+=(System const& sys) = delete;
-
-		private:
-
-			/**
-			Get the ith start point, in double precision.
-
-			Called by the base StartSystem's StartPoint(index) method.
-			*/
-			Vec<complex_dbl> GenerateStartPoint(complex_dbl,unsigned long long index) const override;
-
-			/**
-			Get the ith start point, in current default precision.
-
-			Called by the base StartSystem's StartPoint(index) method.
-			*/
-			Vec<complex_mp> GenerateStartPoint(complex_mp,unsigned long long index) const override;
+            /**
+             Constructor for making a user-provided start system from another.
+            */
+            User(System const& s, SampCont<complex_dbl> const& solns);
+            /// \brief Construct a user-provided start system from a system and its multiprecision solutions.
+            User(System const& s, SampCont<complex_mp> const& solns);
 
 
-			friend class boost::serialization::access;
-			template<class Archive> friend void boost::serialization::save_construct_data(Archive & ar, const User * t, const unsigned int file_version);
 
-			template <typename Archive>
-			void serialize(Archive& ar, const unsigned /*version*/) {
-				ar & boost::serialization::base_object<StartSystem>(*this);
-			}
+            /**
+            Get the number of start points for this start system.
+            */
+            unsigned long long NumStartPoints() const override;
 
-			const bertini::System& user_system_;
-			std::tuple<SampCont<complex_dbl>, SampCont<complex_mp>> solns_;
-			bool solns_in_dbl_;
-		};
-	}
+            User& operator*=(Nd const& n) = delete;
+
+            User& operator+=(System const& sys) = delete;
+
+        private:
+
+            /**
+            Get the ith start point, in double precision.
+
+            Called by the base StartSystem's StartPoint(index) method.
+            */
+            Vec<complex_dbl> GenerateStartPoint(complex_dbl,unsigned long long index) const override;
+
+            /**
+            Get the ith start point, in current default precision.
+
+            Called by the base StartSystem's StartPoint(index) method.
+            */
+            Vec<complex_mp> GenerateStartPoint(complex_mp,unsigned long long index) const override;
+
+
+            friend class boost::serialization::access;
+            template<class Archive> friend void boost::serialization::save_construct_data(Archive & ar, const User * t, const unsigned int file_version);
+
+            template <typename Archive>
+            void serialize(Archive& ar, const unsigned /*version*/) {
+                ar & boost::serialization::base_object<StartSystem>(*this);
+            }
+
+            const bertini::System& user_system_;
+            std::tuple<SampCont<complex_dbl>, SampCont<complex_mp>> solns_;
+            bool solns_in_dbl_;
+        };
+    }
 }
 
 namespace boost { namespace serialization {
@@ -127,7 +127,7 @@ inline void save_construct_data(
     ar << t->solns_in_dbl_;
 
     ar << std::get<0>(t->solns_);
-	ar << std::get<1>(t->solns_);
+    ar << std::get<1>(t->solns_);
 
 }
 
@@ -144,16 +144,16 @@ inline void load_construct_data(
 
     if (solns_in_dbl)
     {
-    	bertini::SampCont<bertini::complex_dbl> solns;
-    	ar >> solns;
-    	::new(t)bertini::start_system::User(sys, solns);
+        bertini::SampCont<bertini::complex_dbl> solns;
+        ar >> solns;
+        ::new(t)bertini::start_system::User(sys, solns);
     }
-	else
-	{
-		bertini::SampCont<bertini::complex_mp> solns;
-		ar >> solns;
-		::new(t)bertini::start_system::User(sys, solns);
-	}
+    else
+    {
+        bertini::SampCont<bertini::complex_mp> solns;
+        ar >> solns;
+        ::new(t)bertini::start_system::User(sys, solns);
+    }
 }
 /// \endcond
 }}

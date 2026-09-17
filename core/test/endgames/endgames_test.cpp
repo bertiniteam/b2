@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  endgames_test.cpp:  main source file for the endgames testing executable for Bertini2
@@ -43,5 +43,3 @@ boost::multiprecision::mpfr_float threshold_clearance_mp("1e-28");
 unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS(30);
 
 #include "test/utility/enable_logging.hpp"
-
-

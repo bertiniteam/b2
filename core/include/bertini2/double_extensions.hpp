@@ -15,12 +15,12 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file bertini2/double_extensions.hpp 
+\file bertini2/double_extensions.hpp
 
 \brief Provides bertini extensions to the double and complex<double> types.
 */
@@ -41,85 +41,84 @@ namespace bertini{
 // Avoids pulling mpfr_complex.hpp into the Boost.Multiprecision include chain.
 std::mt19937& ThreadEngine();
 
-	// The two double-precision scalar types, named to parallel real_mp / complex_mp.
-	// real_dbl is an explicit alias for double so a future change lives in one place.
-	using real_dbl = double;  ///< The double-precision real number type.
-	using complex_dbl = std::complex<double>;  ///< The double-precision complex number type.
+    // The two double-precision scalar types, named to parallel real_mp / complex_mp.
+    // real_dbl is an explicit alias for double so a future change lives in one place.
+    using real_dbl = double;  ///< The double-precision real number type.
+    using complex_dbl = std::complex<double>;  ///< The double-precision complex number type.
 
-	/**
-	\brief Overload * for unsigned * complex<double>
-	*/
-	inline
-	std::complex<double> operator*(unsigned i, std::complex<double> z)
-	{
-		z*=i;
-		return z;
-	}
+    /**
+    \brief Overload * for unsigned * complex<double>
+    */
+    inline
+    std::complex<double> operator*(unsigned i, std::complex<double> z)
+    {
+        z*=i;
+        return z;
+    }
 
-	/**
-	an overload of isnan, for std::complex<double>
-	*/
-	inline
-	bool isnan(std::complex<double> const& z)
-	{
-		using std::isnan;
-		return isnan(z.real()) || isnan(z.imag());
-	}
+    /**
+    an overload of isnan, for std::complex<double>
+    */
+    inline
+    bool isnan(std::complex<double> const& z)
+    {
+        using std::isnan;
+        return isnan(z.real()) || isnan(z.imag());
+    }
 
 
-	/**
-	\brief Gets you a random real number between -1 and 1, fwiw
-	*/
-	inline
-	double RandReal()
-	{
-		// pinned draw (b2rand/1, ADR-0044)
-		return records::DrawSymmetricDouble();
-	}
+    /**
+    \brief Gets you a random real number between -1 and 1, fwiw
+    */
+    inline
+    double RandReal()
+    {
+        // pinned draw (b2rand/1, ADR-0044)
+        return records::DrawSymmetricDouble();
+    }
 
-	namespace{
-		using real_dbl = double;
-		using complex_dbl = std::complex<double>;
-	}
+    namespace{
+        using real_dbl = double;
+        using complex_dbl = std::complex<double>;
+    }
 
-	/**
-	 Compute +,- integral powers of a std::complex<double> number.
+    /**
+     Compute +,- integral powers of a std::complex<double> number.
 
-	 This function recursively calls itself if the power is negative, by computing the power on the inverse.
+     This function recursively calls itself if the power is negative, by computing the power on the inverse.
 
-	 \note This overload was removed from C++ in C++11, for some insane reason.  Here it is, back in black.
-	 */
-	inline complex_dbl pow(const complex_dbl & z, int power)
-	{
-		if (power < 0) {
-			return pow(1./z, -power);
-		}
-		else if (power==0)
-			return complex_dbl(1,0);
-		else if(power==1)
-			return z;
-		else if(power==2)
-			return z*z;
-		else if(power==3)
-			return z*z*z;
-		else
-		{
-			unsigned int p(static_cast<unsigned int>(power));
-			complex_dbl result(1,0), z_to_the_current_power_of_two = z;
-			// have copy of p in memory, can freely modify it.
-			do {
-				if ( (p & 1) == 1 ) { // get the lowest bit of the number
-					result *= z_to_the_current_power_of_two;
-				}
-				z_to_the_current_power_of_two *= z_to_the_current_power_of_two; // square z_to_the_current_power_of_two
-			} while (p  >>= 1);
-			
-			return result;
-		}
-	}
-	
+     \note This overload was removed from C++ in C++11, for some insane reason.  Here it is, back in black.
+     */
+    inline complex_dbl pow(const complex_dbl & z, int power)
+    {
+        if (power < 0) {
+            return pow(1./z, -power);
+        }
+        else if (power==0)
+            return complex_dbl(1,0);
+        else if(power==1)
+            return z;
+        else if(power==2)
+            return z*z;
+        else if(power==3)
+            return z*z*z;
+        else
+        {
+            unsigned int p(static_cast<unsigned int>(power));
+            complex_dbl result(1,0), z_to_the_current_power_of_two = z;
+            // have copy of p in memory, can freely modify it.
+            do {
+                if ( (p & 1) == 1 ) { // get the lowest bit of the number
+                    result *= z_to_the_current_power_of_two;
+                }
+                z_to_the_current_power_of_two *= z_to_the_current_power_of_two; // square z_to_the_current_power_of_two
+            } while (p  >>= 1);
+
+            return result;
+        }
+    }
+
 } // namespace bertini
 
 
 #endif // include guard
-

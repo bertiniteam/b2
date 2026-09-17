@@ -28,173 +28,173 @@ BOOST_CLASS_EXPORT(bertini::start_system::TotalDegreeBinomial);
 
 
 namespace bertini {
-	using namespace bertini::node;
+    using namespace bertini::node;
 
-	namespace start_system {
+    namespace start_system {
 
-		// constructor for TotalDegreeBinomial start system, from any other *suitable* system.
-		TotalDegreeBinomial::TotalDegreeBinomial(System const& s)
-		{
-			SanityChecks(s);
-			CopyDegrees(s);
-			CopyVariableStructure(s);
-			SeedRandomValues(static_cast<int>(s.NumNaturalFunctions()));
-			GenerateFunctions();
+        // constructor for TotalDegreeBinomial start system, from any other *suitable* system.
+        TotalDegreeBinomial::TotalDegreeBinomial(System const& s)
+        {
+            SanityChecks(s);
+            CopyDegrees(s);
+            CopyVariableStructure(s);
+            SeedRandomValues(static_cast<int>(s.NumNaturalFunctions()));
+            GenerateFunctions();
 
-			if (s.IsHomogeneous())
-				Homogenize();
+            if (s.IsHomogeneous())
+                Homogenize();
 
-			if (s.IsPatched())
-				CopyPatches(s);
-		}// roots of unity constructor
-
-
-		TotalDegreeBinomial& TotalDegreeBinomial::operator*=(Nd const& n)
-		{
-			System::operator*=(n);
-			return *this;
-		}
+            if (s.IsPatched())
+                CopyPatches(s);
+        }// roots of unity constructor
 
 
-
-		unsigned long long TotalDegreeBinomial::NumStartPoints() const
-		{
-			unsigned long long num_start_points = 1;
-			for (const auto& iter : degrees_)
-				num_start_points*=iter;
-			return num_start_points;
-		}
+        TotalDegreeBinomial& TotalDegreeBinomial::operator*=(Nd const& n)
+        {
+            System::operator*=(n);
+            return *this;
+        }
 
 
 
-		Vec<complex_dbl> TotalDegreeBinomial::GenerateStartPoint(complex_dbl,unsigned long long index) const
-		{
-			Vec<complex_dbl> start_point(NumVariables());
-			auto indices = IndexToSubscript(index, degrees_);
-
-			unsigned offset = 0;
-			if (IsPatched())
-			{
-				start_point(0) = complex_dbl(1);
-				offset = 1;
-			}
-
-			// authoritative pi (see issue #156 / special_number.cpp), not acos(-1)
-			auto two_i_pi = boost::math::constants::pi<double>() * complex_dbl(0,2);
-
-			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(static_cast<Eigen::Index>(ii+offset)) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(RandomValue<complex_dbl>(ii), 1.0 / static_cast<double>(degrees_[ii]));
-
-			if (IsPatched())
-				RescalePointToFitPatchInPlace(start_point);
-
-			return start_point;
-		}
+        unsigned long long TotalDegreeBinomial::NumStartPoints() const
+        {
+            unsigned long long num_start_points = 1;
+            for (const auto& iter : degrees_)
+                num_start_points*=iter;
+            return num_start_points;
+        }
 
 
-		Vec<complex_mp> TotalDegreeBinomial::GenerateStartPoint(complex_mp,unsigned long long index) const
-		{
-			using bertini::ThreadPrecision;
 
-			Vec<complex_mp> start_point(NumVariables()); // make the value we're returning
-			auto indices = IndexToSubscript(index, degrees_); // get the position of it -- used in the angle of the coordinates of the produced point.
+        Vec<complex_dbl> TotalDegreeBinomial::GenerateStartPoint(complex_dbl,unsigned long long index) const
+        {
+            Vec<complex_dbl> start_point(NumVariables());
+            auto indices = IndexToSubscript(index, degrees_);
 
-			unsigned offset = 0;
-			if (IsPatched())
-			{
-				start_point(0) = complex_mp(1,0,ThreadPrecision());
-				offset = 1;
-			}
+            unsigned offset = 0;
+            if (IsPatched())
+            {
+                start_point(0) = complex_dbl(1);
+                offset = 1;
+            }
+
+            // authoritative pi (see issue #156 / special_number.cpp), not acos(-1)
+            auto two_i_pi = boost::math::constants::pi<double>() * complex_dbl(0,2);
+
+            for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
+                start_point(static_cast<Eigen::Index>(ii+offset)) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(RandomValue<complex_dbl>(ii), 1.0 / static_cast<double>(degrees_[ii]));
+
+            if (IsPatched())
+                RescalePointToFitPatchInPlace(start_point);
+
+            return start_point;
+        }
+
+
+        Vec<complex_mp> TotalDegreeBinomial::GenerateStartPoint(complex_mp,unsigned long long index) const
+        {
+            using bertini::ThreadPrecision;
+
+            Vec<complex_mp> start_point(NumVariables()); // make the value we're returning
+            auto indices = IndexToSubscript(index, degrees_); // get the position of it -- used in the angle of the coordinates of the produced point.
+
+            unsigned offset = 0;
+            if (IsPatched())
+            {
+                start_point(0) = complex_mp(1,0,ThreadPrecision());
+                offset = 1;
+            }
 
 // TODO: this code should be cleaned up after issue 308 is solved -- namely, the two precision adjustment calls should be removed.  They're only necessary because prec16 / ulonglog = prec19.
 
-			auto one = real_mp(1);
-			// authoritative pi (see issue #156 / special_number.cpp), not acos(-1)
-			complex_mp two_i_pi = complex_mp(0,2) * boost::math::constants::pi<real_mp>();
-			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-			{
-				complex_mp a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
+            auto one = real_mp(1);
+            // authoritative pi (see issue #156 / special_number.cpp), not acos(-1)
+            complex_mp two_i_pi = complex_mp(0,2) * boost::math::constants::pi<real_mp>();
+            for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
+            {
+                complex_mp a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
 
-				// Round the random value DOWN to working precision BEFORE taking the root.
-				// The Complex node stores its value at its (max) creation precision, and the
-				// variable-precision backend computes pow at the OPERAND's precision -- hundreds
-				// of digits of transcendental arithmetic whose extra digits the Precision call
-				// below then discarded.  Profiled at 93% of start-point generation time (~300x
-				// the working-precision cost); the master value stays exact, so regenerating at
-				// a higher ThreadPrecision still refines toward the same point.
-				complex_mp root_base = RandomValue<complex_mp>(ii);
-				Precision(root_base, ThreadPrecision());
-				complex_mp b = pow(root_base, one / degrees_[ii]);
+                // Round the random value DOWN to working precision BEFORE taking the root.
+                // The Complex node stores its value at its (max) creation precision, and the
+                // variable-precision backend computes pow at the OPERAND's precision -- hundreds
+                // of digits of transcendental arithmetic whose extra digits the Precision call
+                // below then discarded.  Profiled at 93% of start-point generation time (~300x
+                // the working-precision cost); the master value stays exact, so regenerating at
+                // a higher ThreadPrecision still refines toward the same point.
+                complex_mp root_base = RandomValue<complex_mp>(ii);
+                Precision(root_base, ThreadPrecision());
+                complex_mp b = pow(root_base, one / degrees_[ii]);
 
-				Precision(a,ThreadPrecision());
-				Precision(b,ThreadPrecision());
+                Precision(a,ThreadPrecision());
+                Precision(b,ThreadPrecision());
 
-				start_point(static_cast<Eigen::Index>(ii+offset)) = a*b;
-			}
+                start_point(static_cast<Eigen::Index>(ii+offset)) = a*b;
+            }
 
-			if (IsPatched())
-				RescalePointToFitPatchInPlace(start_point);
+            if (IsPatched())
+                RescalePointToFitPatchInPlace(start_point);
 
-			return start_point;
-		}
+            return start_point;
+        }
 
-		inline
-		TotalDegreeBinomial operator*(TotalDegreeBinomial td, std::shared_ptr<node::Node> const& n)
-		{
-			td *= n;
-			return td;
-		}
+        inline
+        TotalDegreeBinomial operator*(TotalDegreeBinomial td, std::shared_ptr<node::Node> const& n)
+        {
+            td *= n;
+            return td;
+        }
 
-		void TotalDegreeBinomial::SanityChecks(System const& s)
-		{
-			if (s.NumHomVariableGroups() > 0)
-				throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
+        void TotalDegreeBinomial::SanityChecks(System const& s)
+        {
+            if (s.NumHomVariableGroups() > 0)
+                throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
 
-			if (s.NumTotalFunctions() != s.NumVariables())
-				throw std::runtime_error("attempting to construct roots-of-unity start system from non-square target system");
+            if (s.NumTotalFunctions() != s.NumVariables())
+                throw std::runtime_error("attempting to construct roots-of-unity start system from non-square target system");
 
-			if (s.HavePathVariable())
-				throw std::runtime_error("attempting to construct roots-of-unity start system, but target system has path varible declared already");
+            if (s.HavePathVariable())
+                throw std::runtime_error("attempting to construct roots-of-unity start system, but target system has path varible declared already");
 
-			if (s.NumVariableGroups() != 1)
-				throw std::runtime_error("more than one affine variable group.  currently unallowed");
+            if (s.NumVariableGroups() != 1)
+                throw std::runtime_error("more than one affine variable group.  currently unallowed");
 
-			if (!s.IsPolynomial())
-				throw std::runtime_error("attempting to construct roots-of-unity start system from non-polynomial target system");
-		}
+            if (!s.IsPolynomial())
+                throw std::runtime_error("attempting to construct roots-of-unity start system from non-polynomial target system");
+        }
 
-		void TotalDegreeBinomial::CopyDegrees(System const& s)
-		{
-			auto deg = s.Degrees();
-			for (const auto& d : deg)
-				degrees_.push_back(static_cast<size_t>(d));
-		}
+        void TotalDegreeBinomial::CopyDegrees(System const& s)
+        {
+            auto deg = s.Degrees();
+            for (const auto& d : deg)
+                degrees_.push_back(static_cast<size_t>(d));
+        }
 
 
-		void TotalDegreeBinomial::SeedRandomValues(int num_functions)
-		{
-			// Draw each r_i the same way the linear-product TotalDegreeLinearProduct draws its coefficients:
-			// a box-uniform complex divided by sqrt(|z|), so the modulus sits near 1 (away from 0
-			// and infinity) -- NOT the heavy-tailed ratio-of-integers (RandomRat) we used before.
-			// Stored as a Complex node (a literal complex_mp, like gamma), not hidden as a rational.
-			// A Complex node caps at its creation precision, so generate at the AMP ceiling.
-			auto const saved_prec = DefaultPrecision();
-			DefaultPrecision(MaxPrecisionAllowed());
+        void TotalDegreeBinomial::SeedRandomValues(int num_functions)
+        {
+            // Draw each r_i the same way the linear-product TotalDegreeLinearProduct draws its coefficients:
+            // a box-uniform complex divided by sqrt(|z|), so the modulus sits near 1 (away from 0
+            // and infinity) -- NOT the heavy-tailed ratio-of-integers (RandomRat) we used before.
+            // Stored as a Complex node (a literal complex_mp, like gamma), not hidden as a rational.
+            // A Complex node caps at its creation precision, so generate at the AMP ceiling.
+            auto const saved_prec = DefaultPrecision();
+            DefaultPrecision(MaxPrecisionAllowed());
 
-			random_values_.resize(static_cast<size_t>(num_functions));
-			for (int ii = 0; ii < num_functions; ++ii)
-				random_values_[static_cast<size_t>(ii)] =
-					node::Complex::Make(multiprecision::RandomComplexBoundedModulus());
+            random_values_.resize(static_cast<size_t>(num_functions));
+            for (int ii = 0; ii < num_functions; ++ii)
+                random_values_[static_cast<size_t>(ii)] =
+                    node::Complex::Make(multiprecision::RandomComplexBoundedModulus());
 
-			DefaultPrecision(saved_prec);
-		}
+            DefaultPrecision(saved_prec);
+        }
 
-		void TotalDegreeBinomial::GenerateFunctions()
-		{
-			// by hypothesis, the system has a single variable group.
-			auto v = this->AffineVariableGroup(0);
-			for (auto iter = v.begin(); iter!=v.end(); iter++)
-				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[static_cast<size_t>(iter-v.begin())]);
-		}
-	} // namespace start_system
+        void TotalDegreeBinomial::GenerateFunctions()
+        {
+            // by hypothesis, the system has a single variable group.
+            auto v = this->AffineVariableGroup(0);
+            for (auto iter = v.begin(); iter!=v.end(); iter++)
+                AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[static_cast<size_t>(iter-v.begin())]);
+        }
+    } // namespace start_system
 } //namespace bertini

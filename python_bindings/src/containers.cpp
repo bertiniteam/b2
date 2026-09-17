@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/src/containers.cpp:  source file for exposing trackers to python.
@@ -27,26 +27,26 @@
 #include <boost/python/iterator.hpp>
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
 template<typename T>
 template<typename PyClass>
 void ListVisitor<T>::visit(PyClass& cl) const
 {
-	cl
+    cl
 
-	.def(vector_indexing_suite< T , true >())
-	// By default indexed elements are returned by proxy. This can be
+    .def(vector_indexing_suite< T , true >())
+    // By default indexed elements are returned by proxy. This can be
     // disabled by supplying *true* in the NoProxy template parameter.
 
-	// vector_indexing_suite only provides the __getitem__/__len__ sequence protocol; add a real
-	// __iter__ so `for s in solver.all_solutions(): ...` (and any other list container) iterates
-	// directly rather than relying on the index-fallback.
-	.def("__iter__", boost::python::iterator<T>())
+    // vector_indexing_suite only provides the __getitem__/__len__ sequence protocol; add a real
+    // __iter__ so `for s in solver.all_solutions(): ...` (and any other list container) iterates
+    // directly rather than relying on the index-fallback.
+    .def("__iter__", boost::python::iterator<T>())
 
-	.def("__str__", &ListVisitor::__str__)
-	.def("__repr__", &ListVisitor::__repr__)
-	;
+    .def("__str__", &ListVisitor::__str__)
+    .def("__repr__", &ListVisitor::__repr__)
+    ;
 }
 
 
@@ -54,121 +54,121 @@ void ListVisitor<T>::visit(PyClass& cl) const
 // A convenience constructor that absorbs the old linalg.variable_vector(name, count).
 std::shared_ptr<bertini::VariableGroup> create_named_variable_group(std::string const& name, int count)
 {
-	auto vg = std::make_shared<bertini::VariableGroup>();
-	for (int i = 0; i < count; ++i)
-		vg->push_back(bertini::node::Variable::Make(name + std::to_string(i)));
-	return vg;
+    auto vg = std::make_shared<bertini::VariableGroup>();
+    for (int i = 0; i < count; ++i)
+        vg->push_back(bertini::node::Variable::Make(name + std::to_string(i)));
+    return vg;
 }
 
 
 void ExportContainers()
 {
-	scope current_scope;
-	std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-	new_submodule_name.append(".container");
-	object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-	current_scope.attr("container") = new_submodule;
+    scope current_scope;
+    std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+    new_submodule_name.append(".container");
+    object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+    current_scope.attr("container") = new_submodule;
 
-	scope new_submodule_scope = new_submodule;
-	new_submodule_scope.attr("__doc__") = "Various container types";
- 
-
-	boost::python::converter::registry::push_back(&pylist_converter<bertini::VariableGroup>::convertible
-	    , &pylist_converter<bertini::VariableGroup>::construct
-	    , boost::python::type_id<bertini::VariableGroup>());
-
-	// allow a Python list of expressions to convert to std::vector<Node ptr>
-	// (used by System([f0,f1,...]) and add_functions)
-	using VecFn = std::vector<std::shared_ptr<bertini::node::Node>>;
-	boost::python::converter::registry::push_back(&pylist_converter<VecFn>::convertible
-	    , &pylist_converter<VecFn>::construct
-	    , boost::python::type_id<VecFn>());
-
-	// allow a Python list of VariableGroups to convert to std::vector<VariableGroup>
-	// (used by System::set_variable_groups)
-	using VecVarGroup = std::vector<bertini::VariableGroup>;
-	boost::python::converter::registry::push_back(&pylist_converter<VecVarGroup>::convertible
-	    , &pylist_converter<VecVarGroup>::construct
-	    , boost::python::type_id<VecVarGroup>());
+    scope new_submodule_scope = new_submodule;
+    new_submodule_scope.attr("__doc__") = "Various container types";
 
 
+    boost::python::converter::registry::push_back(&pylist_converter<bertini::VariableGroup>::convertible
+        , &pylist_converter<bertini::VariableGroup>::construct
+        , boost::python::type_id<bertini::VariableGroup>());
 
-	// std::vector of Rational Node ptrs
-	using T1 = std::vector<std::shared_ptr< bertini::node::Rational > >;
-	class_< T1 >("ListOfRational")
-	.def(ListVisitor<T1>())
-	;
+    // allow a Python list of expressions to convert to std::vector<Node ptr>
+    // (used by System([f0,f1,...]) and add_functions)
+    using VecFn = std::vector<std::shared_ptr<bertini::node::Node>>;
+    boost::python::converter::registry::push_back(&pylist_converter<VecFn>::convertible
+        , &pylist_converter<VecFn>::construct
+        , boost::python::type_id<VecFn>());
 
-	// std::vector of Complex Node ptrs (TotalDegreeBinomial's random values are Complex nodes)
-	using T1c = std::vector<std::shared_ptr< bertini::node::Complex > >;
-	class_< T1c >("ListOfComplex")
-	.def(ListVisitor<T1c>())
-	;
-
-	// The VariableGroup vector container
-	using T2 = bertini::VariableGroup;
-	class_< T2 >("VariableGroup")
-	.def(ListVisitor<T2>())
-	.def("__init__", boost::python::make_constructor(&create_MyClass<T2>))
-	.def("__init__", boost::python::make_constructor(&create_named_variable_group),
-	     "VariableGroup(name, count): the variables name0, name1, ..., name{count-1}")
-	;
-	
-	// std::vector of ints
-	using T3 = std::vector<int>;
-	class_< T3 >("ListOfInt")
-	.def(ListVisitor<T3>())
-	;
-
-
-	// std::vector of VariableGroups
-	using T4 = std::vector<bertini::VariableGroup>;
-	class_< T4 >("ListOfVariableGroup")
-	.def(ListVisitor<T4>())
-	;
-
-
-	// std::vector of Node ptrs
-	using T5 = std::vector<std::shared_ptr< bertini::node::Node > >;
-	class_< T5 >("ListOfNode")
-	.def(ListVisitor<T5>())
-	;
+    // allow a Python list of VariableGroups to convert to std::vector<VariableGroup>
+    // (used by System::set_variable_groups)
+    using VecVarGroup = std::vector<bertini::VariableGroup>;
+    boost::python::converter::registry::push_back(&pylist_converter<VecVarGroup>::convertible
+        , &pylist_converter<VecVarGroup>::construct
+        , boost::python::type_id<VecVarGroup>());
 
 
 
+    // std::vector of Rational Node ptrs
+    using T1 = std::vector<std::shared_ptr< bertini::node::Rational > >;
+    class_< T1 >("ListOfRational")
+    .def(ListVisitor<T1>())
+    ;
 
-	// std::vector of Eigen::matrix
-	using T7 = std::vector<bertini::Vec<complex_dbl>>;
-	class_< T7 >("ListOfVectorComplexDoublePrecision")
-	.def(ListVisitor<T7>())
-	;
+    // std::vector of Complex Node ptrs (TotalDegreeBinomial's random values are Complex nodes)
+    using T1c = std::vector<std::shared_ptr< bertini::node::Complex > >;
+    class_< T1c >("ListOfComplex")
+    .def(ListVisitor<T1c>())
+    ;
 
-	// std::vector of Eigen::matrix
-	using T8 = std::vector<bertini::Vec<complex_mp>>;
-	class_< T8 >("ListOfVectorComplexVariablePrecision")
-	.def(ListVisitor<T8>())
-	;
+    // The VariableGroup vector container
+    using T2 = bertini::VariableGroup;
+    class_< T2 >("VariableGroup")
+    .def(ListVisitor<T2>())
+    .def("__init__", boost::python::make_constructor(&create_MyClass<T2>))
+    .def("__init__", boost::python::make_constructor(&create_named_variable_group),
+         "VariableGroup(name, count): the variables name0, name1, ..., name{count-1}")
+    ;
 
-	using T9 = std::vector<bertini::algorithm::SolutionMetaData<complex_dbl>>;
-	class_< T9 >("ListOfSolutionMetaData_DoublePrec")
-	.def(ListVisitor<T9>())
-	;
+    // std::vector of ints
+    using T3 = std::vector<int>;
+    class_< T3 >("ListOfInt")
+    .def(ListVisitor<T3>())
+    ;
 
-	using T10 = std::vector<bertini::algorithm::SolutionMetaData<complex_mp>>;
-	class_< T10 >("ListOfSolutionMetaData_MultiPrec")
-	.def(ListVisitor<T10>())
-	;
 
-	using T11 = std::vector<bertini::algorithm::EGBoundaryMetaData<complex_dbl>>;
-	class_< T11 >("ListOfEGBoundaryMetaData_DoublePrec")
-	.def(ListVisitor<T11>())
-	;
+    // std::vector of VariableGroups
+    using T4 = std::vector<bertini::VariableGroup>;
+    class_< T4 >("ListOfVariableGroup")
+    .def(ListVisitor<T4>())
+    ;
 
-	using T12 = std::vector<bertini::algorithm::EGBoundaryMetaData<complex_mp>>;
-	class_< T12 >("ListOfEGBoundaryMetaData_MultiPrec")
-	.def(ListVisitor<T12>())
-	;
+
+    // std::vector of Node ptrs
+    using T5 = std::vector<std::shared_ptr< bertini::node::Node > >;
+    class_< T5 >("ListOfNode")
+    .def(ListVisitor<T5>())
+    ;
+
+
+
+
+    // std::vector of Eigen::matrix
+    using T7 = std::vector<bertini::Vec<complex_dbl>>;
+    class_< T7 >("ListOfVectorComplexDoublePrecision")
+    .def(ListVisitor<T7>())
+    ;
+
+    // std::vector of Eigen::matrix
+    using T8 = std::vector<bertini::Vec<complex_mp>>;
+    class_< T8 >("ListOfVectorComplexVariablePrecision")
+    .def(ListVisitor<T8>())
+    ;
+
+    using T9 = std::vector<bertini::algorithm::SolutionMetaData<complex_dbl>>;
+    class_< T9 >("ListOfSolutionMetaData_DoublePrec")
+    .def(ListVisitor<T9>())
+    ;
+
+    using T10 = std::vector<bertini::algorithm::SolutionMetaData<complex_mp>>;
+    class_< T10 >("ListOfSolutionMetaData_MultiPrec")
+    .def(ListVisitor<T10>())
+    ;
+
+    using T11 = std::vector<bertini::algorithm::EGBoundaryMetaData<complex_dbl>>;
+    class_< T11 >("ListOfEGBoundaryMetaData_DoublePrec")
+    .def(ListVisitor<T11>())
+    ;
+
+    using T12 = std::vector<bertini::algorithm::EGBoundaryMetaData<complex_mp>>;
+    class_< T12 >("ListOfEGBoundaryMetaData_MultiPrec")
+    .def(ListVisitor<T12>())
+    ;
 }; // export containers
 
-	}
+    }
 }

@@ -51,18 +51,18 @@ be compared across sessions via its hex rendering.
 */
 struct Digest256
 {
-	/// The raw 32 digest bytes, big-endian word order per FIPS 180-4.
-	std::array<std::uint8_t, 32> bytes{};
+    /// The raw 32 digest bytes, big-endian word order per FIPS 180-4.
+    std::array<std::uint8_t, 32> bytes{};
 
-	/// \brief The digest as 64 lowercase hex characters (the cross-session interchange form).
-	std::string Hex() const;
+    /// \brief The digest as 64 lowercase hex characters (the cross-session interchange form).
+    std::string Hex() const;
 
-	/// \brief Bytewise equality.
-	bool operator==(Digest256 const& other) const { return bytes == other.bytes; }
-	/// \brief Bytewise inequality.
-	bool operator!=(Digest256 const& other) const { return bytes != other.bytes; }
-	/// \brief Lexicographic byte order, so Digest256 can key ordered containers.
-	bool operator<(Digest256 const& other) const { return bytes < other.bytes; }
+    /// \brief Bytewise equality.
+    bool operator==(Digest256 const& other) const { return bytes == other.bytes; }
+    /// \brief Bytewise inequality.
+    bool operator!=(Digest256 const& other) const { return bytes != other.bytes; }
+    /// \brief Lexicographic byte order, so Digest256 can key ordered containers.
+    bool operator<(Digest256 const& other) const { return bytes < other.bytes; }
 };
 
 /**

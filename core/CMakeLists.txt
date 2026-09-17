@@ -56,7 +56,7 @@ else ()
         # wheels anyway, and -g bloats objects ~3-4x, exhausting disk on
         # constrained build hosts.)
         # using O2 or O3 cuts runtime by over half.
-	)
+    )
 endif ()
 
 
@@ -104,16 +104,16 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 
 # This was from a makemodule.am, take the lists and define them in seperate blocks with the variables they already have, then add the variable name to library_headrs
 set(endgames_headers
-	include/bertini2/endgames/amp_endgame.hpp
-	include/bertini2/endgames/base_endgame.hpp
-	include/bertini2/endgames/cauchy.hpp
-	include/bertini2/endgames/config.hpp
-	include/bertini2/endgames/events.hpp
-	include/bertini2/endgames/fixed_prec_endgame.hpp
-	include/bertini2/endgames/interpolation.hpp
-	include/bertini2/endgames/observers.hpp
-	include/bertini2/endgames/powerseries.hpp
-	include/bertini2/endgames/prec_base.hpp
+    include/bertini2/endgames/amp_endgame.hpp
+    include/bertini2/endgames/base_endgame.hpp
+    include/bertini2/endgames/cauchy.hpp
+    include/bertini2/endgames/config.hpp
+    include/bertini2/endgames/events.hpp
+    include/bertini2/endgames/fixed_prec_endgame.hpp
+    include/bertini2/endgames/interpolation.hpp
+    include/bertini2/endgames/observers.hpp
+    include/bertini2/endgames/powerseries.hpp
+    include/bertini2/endgames/prec_base.hpp
 )
 
 set(basics_rootinclude_headers
@@ -173,7 +173,7 @@ set(function_tree_headers
 )
 
 set(function_tree_headers_rootinclude_HEADERS
-	include/bertini2/function_tree.hpp
+    include/bertini2/function_tree.hpp
 )
 
 set(settings_headers
@@ -181,33 +181,33 @@ set(settings_headers
 )
 
 set(functiontreeinclude_HEADERS
-	include/bertini2/function_tree/node.hpp
-	include/bertini2/function_tree/gather.hpp
-	include/bertini2/function_tree/factory.hpp
-	include/bertini2/function_tree/forward_declares.hpp
-	include/bertini2/function_tree/simplify.hpp
-	include/bertini2/function_tree/canonical.hpp
-	include/bertini2/function_tree/canonical_encoding.hpp
-	include/bertini2/function_tree/canonical_decoding.hpp
-	include/bertini2/function_tree/reintern.hpp
+    include/bertini2/function_tree/node.hpp
+    include/bertini2/function_tree/gather.hpp
+    include/bertini2/function_tree/factory.hpp
+    include/bertini2/function_tree/forward_declares.hpp
+    include/bertini2/function_tree/simplify.hpp
+    include/bertini2/function_tree/canonical.hpp
+    include/bertini2/function_tree/canonical_encoding.hpp
+    include/bertini2/function_tree/canonical_decoding.hpp
+    include/bertini2/function_tree/reintern.hpp
 )
 
 set(functiontree_operators_HEADERS
-	include/bertini2/function_tree/operators/operator.hpp
-	include/bertini2/function_tree/operators/arithmetic.hpp
-	include/bertini2/function_tree/operators/trig.hpp
+    include/bertini2/function_tree/operators/operator.hpp
+    include/bertini2/function_tree/operators/arithmetic.hpp
+    include/bertini2/function_tree/operators/trig.hpp
 )
 
 set(functiontree_symbols_HEADERS
-	include/bertini2/function_tree/symbols/symbol.hpp
-	include/bertini2/function_tree/symbols/variable.hpp
-	include/bertini2/function_tree/symbols/differential.hpp
-	include/bertini2/function_tree/symbols/special_number.hpp
-	include/bertini2/function_tree/symbols/number.hpp
+    include/bertini2/function_tree/symbols/symbol.hpp
+    include/bertini2/function_tree/symbols/variable.hpp
+    include/bertini2/function_tree/symbols/differential.hpp
+    include/bertini2/function_tree/symbols/special_number.hpp
+    include/bertini2/function_tree/symbols/number.hpp
 )
 
 set(functiontree_roots_HEADERS
-	include/bertini2/function_tree/roots/named_expression.hpp
+    include/bertini2/function_tree/roots/named_expression.hpp
 )
 
 set(io_headers
@@ -240,13 +240,13 @@ set(io_parsing_settings_headers
 )
 
 set(nag_algorithms_headers
-	include/bertini2/nag_algorithms/midpath_check.hpp
-	include/bertini2/nag_algorithms/newton_refine.hpp
-	include/bertini2/nag_algorithms/numerical_irreducible_decomposition.hpp
-	include/bertini2/nag_algorithms/output.hpp
-	include/bertini2/nag_algorithms/sharpen.hpp
-	include/bertini2/nag_algorithms/trace.hpp
-	include/bertini2/nag_algorithms/zero_dim_solve.hpp
+    include/bertini2/nag_algorithms/midpath_check.hpp
+    include/bertini2/nag_algorithms/newton_refine.hpp
+    include/bertini2/nag_algorithms/numerical_irreducible_decomposition.hpp
+    include/bertini2/nag_algorithms/output.hpp
+    include/bertini2/nag_algorithms/sharpen.hpp
+    include/bertini2/nag_algorithms/trace.hpp
+    include/bertini2/nag_algorithms/zero_dim_solve.hpp
 )
 
 set(nag_algorithms_common_headers
@@ -255,12 +255,12 @@ set(nag_algorithms_common_headers
 )
 
 set(nag_datatypes_headers
-	include/bertini2/nag_datatypes/numerical_irreducible_decomposition.hpp
-	include/bertini2/nag_datatypes/witness_set.hpp
+    include/bertini2/nag_datatypes/numerical_irreducible_decomposition.hpp
+    include/bertini2/nag_datatypes/witness_set.hpp
 )
 
 set(nag_datatypes_common_headers
-	include/bertini2/nag_datatypes/common/policies.hpp
+    include/bertini2/nag_datatypes/common/policies.hpp
 )
 
 set(parallel_headers
@@ -280,45 +280,45 @@ set(pool_headers
 )
 
 set(system_headers
-	include/bertini2/system/patch.hpp
-	include/bertini2/system/precon.hpp
-	include/bertini2/system/slice.hpp
-	include/bertini2/system/start_base.hpp
-	include/bertini2/system/start_systems.hpp
-	include/bertini2/system/straight_line_program.hpp
-	include/bertini2/system/system.hpp
+    include/bertini2/system/patch.hpp
+    include/bertini2/system/precon.hpp
+    include/bertini2/system/slice.hpp
+    include/bertini2/system/start_base.hpp
+    include/bertini2/system/start_systems.hpp
+    include/bertini2/system/straight_line_program.hpp
+    include/bertini2/system/system.hpp
 )
 
 set(system_start_headers
-	include/bertini2/system/start/total_degree_linear_product.hpp
-	include/bertini2/system/start/total_degree_binomial.hpp
-	include/bertini2/system/start/mhom.hpp
-	include/bertini2/system/start/user.hpp
-	include/bertini2/system/start/utility.hpp
+    include/bertini2/system/start/total_degree_linear_product.hpp
+    include/bertini2/system/start/total_degree_binomial.hpp
+    include/bertini2/system/start/mhom.hpp
+    include/bertini2/system/start/user.hpp
+    include/bertini2/system/start/utility.hpp
 )
 
 set(system_rootinclude_HEADERS
-	include/bertini2/system.hpp
+    include/bertini2/system.hpp
 )
 
 set(trackers_HEADERS
-	include/bertini2/trackers/adaptive_precision_utilities.hpp
-	include/bertini2/trackers/amp_criteria.hpp
-	include/bertini2/trackers/amp_tracker.hpp
-	include/bertini2/trackers/base_tracker.hpp
-	include/bertini2/trackers/config.hpp
-	include/bertini2/trackers/events.hpp
-	include/bertini2/trackers/explicit_predictors.hpp
-	include/bertini2/trackers/fixed_precision_tracker.hpp
-	include/bertini2/trackers/fixed_precision_utilities.hpp
-	include/bertini2/trackers/newton_corrector.hpp
-	include/bertini2/trackers/observers.hpp
-	include/bertini2/trackers/ode_predictors.hpp
-	include/bertini2/trackers/tracker.hpp
+    include/bertini2/trackers/adaptive_precision_utilities.hpp
+    include/bertini2/trackers/amp_criteria.hpp
+    include/bertini2/trackers/amp_tracker.hpp
+    include/bertini2/trackers/base_tracker.hpp
+    include/bertini2/trackers/config.hpp
+    include/bertini2/trackers/events.hpp
+    include/bertini2/trackers/explicit_predictors.hpp
+    include/bertini2/trackers/fixed_precision_tracker.hpp
+    include/bertini2/trackers/fixed_precision_utilities.hpp
+    include/bertini2/trackers/newton_corrector.hpp
+    include/bertini2/trackers/observers.hpp
+    include/bertini2/trackers/ode_predictors.hpp
+    include/bertini2/trackers/tracker.hpp
 )
 
 set(tracking_rootinclude_HEADERS
-	include/bertini2/tracking.hpp
+    include/bertini2/tracking.hpp
 )
 
 set(BERTINI2_LIBRARY_HEADERS
@@ -828,174 +828,174 @@ install(
 
 if (ENABLE_UNIT_TESTING)
 
-	set(B2_CLASS_TEST_SOURCES
-		test/classes/sha256_test.cpp
-		test/classes/config_digest_test.cpp
-		test/classes/seeded_randomness_test.cpp
-		test/classes/output_directory_test.cpp
-		test/classes/boost_multiprecision_test.cpp
-		test/classes/fundamentals_test.cpp
-		test/classes/precision_propagation_test.cpp
-		test/classes/eigen_test.cpp
-		test/classes/complex_test.cpp
-		test/classes/function_tree_transform.cpp
-		test/classes/structural_hash_test.cpp
-		test/classes/canonical_encoding_test.cpp
-		test/classes/canonical_decoding_test.cpp
-		test/classes/print_dialect_test.cpp
-		test/classes/reintern_test.cpp
-		test/classes/interning_test.cpp
-		test/classes/system_test.cpp
-		test/classes/system_identity_test.cpp
-		test/classes/slp_test.cpp
-		test/classes/slp_intern_test.cpp
-		test/classes/lu_bench_test.cpp
-		test/classes/eval_expression_test.cpp
-		test/classes/named_expression_test.cpp
-		test/classes/homogenization_test.cpp
-		test/classes/start_system_test.cpp
-		test/classes/start_system_interop_test.cpp
-		test/classes/node_serialization_test.cpp
-		test/classes/patch_test.cpp
-		test/classes/slice_test.cpp
-		test/classes/m_hom_start_system.cpp
-		test/classes/products_of_linears_block_test.cpp
-		test/classes/linear_forms_block_test.cpp
-		test/classes/blend_block_test.cpp
-		test/classes/randomization_block_test.cpp
-		test/classes/moving_homotopy_test.cpp
-		test/classes/system_printing_test.cpp
-		test/classes/system_blocks_test.cpp
-		test/classes/degrees_test.cpp
-		test/classes/class_test.cpp
-	)
+    set(B2_CLASS_TEST_SOURCES
+        test/classes/sha256_test.cpp
+        test/classes/config_digest_test.cpp
+        test/classes/seeded_randomness_test.cpp
+        test/classes/output_directory_test.cpp
+        test/classes/boost_multiprecision_test.cpp
+        test/classes/fundamentals_test.cpp
+        test/classes/precision_propagation_test.cpp
+        test/classes/eigen_test.cpp
+        test/classes/complex_test.cpp
+        test/classes/function_tree_transform.cpp
+        test/classes/structural_hash_test.cpp
+        test/classes/canonical_encoding_test.cpp
+        test/classes/canonical_decoding_test.cpp
+        test/classes/print_dialect_test.cpp
+        test/classes/reintern_test.cpp
+        test/classes/interning_test.cpp
+        test/classes/system_test.cpp
+        test/classes/system_identity_test.cpp
+        test/classes/slp_test.cpp
+        test/classes/slp_intern_test.cpp
+        test/classes/lu_bench_test.cpp
+        test/classes/eval_expression_test.cpp
+        test/classes/named_expression_test.cpp
+        test/classes/homogenization_test.cpp
+        test/classes/start_system_test.cpp
+        test/classes/start_system_interop_test.cpp
+        test/classes/node_serialization_test.cpp
+        test/classes/patch_test.cpp
+        test/classes/slice_test.cpp
+        test/classes/m_hom_start_system.cpp
+        test/classes/products_of_linears_block_test.cpp
+        test/classes/linear_forms_block_test.cpp
+        test/classes/blend_block_test.cpp
+        test/classes/randomization_block_test.cpp
+        test/classes/moving_homotopy_test.cpp
+        test/classes/system_printing_test.cpp
+        test/classes/system_blocks_test.cpp
+        test/classes/degrees_test.cpp
+        test/classes/class_test.cpp
+    )
 
 
-	add_executable(test_classes ${B2_CLASS_TEST_SOURCES})
-	target_include_directories(test_classes PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-	target_link_libraries(test_classes ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_classes COMMAND ${CMAKE_BINARY_DIR}/core/test_classes)
+    add_executable(test_classes ${B2_CLASS_TEST_SOURCES})
+    target_include_directories(test_classes PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_classes ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_classes COMMAND ${CMAKE_BINARY_DIR}/core/test_classes)
 
 
-	set(B2_BLACKBOX_TEST
-		test/blackbox/blackbox.cpp
-		test/blackbox/zerodim.cpp
-		test/blackbox/parsing.cpp
-		test/blackbox/user_homotopy.cpp
-	)
+    set(B2_BLACKBOX_TEST
+        test/blackbox/blackbox.cpp
+        test/blackbox/zerodim.cpp
+        test/blackbox/parsing.cpp
+        test/blackbox/user_homotopy.cpp
+    )
 
-	add_executable(test_blackbox ${B2_BLACKBOX_TEST})
-	target_include_directories(test_blackbox PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-	target_link_libraries(test_blackbox ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_blackbox COMMAND ${CMAKE_BINARY_DIR}/core/test_blackbox)
+    add_executable(test_blackbox ${B2_BLACKBOX_TEST})
+    target_include_directories(test_blackbox PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(test_blackbox ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_blackbox COMMAND ${CMAKE_BINARY_DIR}/core/test_blackbox)
 
 
-	set(B2_CLASSIC_TEST
-		test/classic/classic_parsing_test.cpp
-		test/classic/classic_test.cpp
-	)
+    set(B2_CLASSIC_TEST
+        test/classic/classic_parsing_test.cpp
+        test/classic/classic_test.cpp
+    )
 
-	add_executable(test_classic ${B2_CLASSIC_TEST})
-	target_include_directories(test_classic PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-	target_link_libraries(test_classic ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_classic COMMAND ${CMAKE_BINARY_DIR}/core/test_classic)
+    add_executable(test_classic ${B2_CLASSIC_TEST})
+    target_include_directories(test_classic PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_classic ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_classic COMMAND ${CMAKE_BINARY_DIR}/core/test_classic)
 
-	set(B2_ENDGAMES_TEST
-		test/endgames/endgames_test.cpp
-		test/endgames/generic_interpolation.hpp
-		test/endgames/interpolation.cpp
-		test/endgames/generic_pseg_test.hpp
-		test/endgames/amp_powerseries_test.cpp
-		test/endgames/fixed_double_powerseries_test.cpp
-		test/endgames/fixed_multiple_powerseries_test.cpp
-		test/endgames/generic_cauchy_test.hpp
-		test/endgames/amp_cauchy_test.cpp
-		test/endgames/fixed_double_cauchy_test.cpp
-		test/endgames/fixed_multiple_cauchy_test.cpp
-	)
+    set(B2_ENDGAMES_TEST
+        test/endgames/endgames_test.cpp
+        test/endgames/generic_interpolation.hpp
+        test/endgames/interpolation.cpp
+        test/endgames/generic_pseg_test.hpp
+        test/endgames/amp_powerseries_test.cpp
+        test/endgames/fixed_double_powerseries_test.cpp
+        test/endgames/fixed_multiple_powerseries_test.cpp
+        test/endgames/generic_cauchy_test.hpp
+        test/endgames/amp_cauchy_test.cpp
+        test/endgames/fixed_double_cauchy_test.cpp
+        test/endgames/fixed_multiple_cauchy_test.cpp
+    )
 
-	add_executable(test_endgames ${B2_ENDGAMES_TEST})
-	target_include_directories(test_endgames PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-	target_link_libraries(test_endgames ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_endgames COMMAND ${CMAKE_BINARY_DIR}/core/test_endgames)
+    add_executable(test_endgames ${B2_ENDGAMES_TEST})
+    target_include_directories(test_endgames PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_endgames ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_endgames COMMAND ${CMAKE_BINARY_DIR}/core/test_endgames)
 
-	set(B2_GENERATING_TEST
-		test/generating/mpfr_float.cpp
-		test/generating/mpfr_complex.cpp
-		test/generating/double.cpp
-		test/generating/std_complex.cpp
-		test/generating/generating_test.cpp
-	)
+    set(B2_GENERATING_TEST
+        test/generating/mpfr_float.cpp
+        test/generating/mpfr_complex.cpp
+        test/generating/double.cpp
+        test/generating/std_complex.cpp
+        test/generating/generating_test.cpp
+    )
 
-	add_executable(test_generating ${B2_GENERATING_TEST})
-	target_include_directories(test_generating PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-	target_link_libraries(test_generating ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_generating COMMAND ${CMAKE_BINARY_DIR}/core/test_generating)
+    add_executable(test_generating ${B2_GENERATING_TEST})
+    target_include_directories(test_generating PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_generating ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_generating COMMAND ${CMAKE_BINARY_DIR}/core/test_generating)
 
-	set(B2_NAG_ALGORITHMS_TEST
-		test/nag_algorithms/nag_algorithms_test.cpp
-		test/nag_algorithms/zero_dim.cpp
-		test/nag_algorithms/threaded_solve.cpp
-		test/nag_algorithms/zero_dim_records.cpp
-		test/nag_algorithms/numerical_irreducible_decomposition.cpp
-		test/nag_algorithms/trace.cpp
-		test/nag_algorithms/newton_refine.cpp
-	)
+    set(B2_NAG_ALGORITHMS_TEST
+        test/nag_algorithms/nag_algorithms_test.cpp
+        test/nag_algorithms/zero_dim.cpp
+        test/nag_algorithms/threaded_solve.cpp
+        test/nag_algorithms/zero_dim_records.cpp
+        test/nag_algorithms/numerical_irreducible_decomposition.cpp
+        test/nag_algorithms/trace.cpp
+        test/nag_algorithms/newton_refine.cpp
+    )
 
-	add_executable(test_nag_algorithms ${B2_NAG_ALGORITHMS_TEST})
-	target_include_directories(test_nag_algorithms PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-	target_link_libraries(test_nag_algorithms ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_nag_algorithms COMMAND ${CMAKE_BINARY_DIR}/core/test_nag_algorithms)
+    add_executable(test_nag_algorithms ${B2_NAG_ALGORITHMS_TEST})
+    target_include_directories(test_nag_algorithms PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_nag_algorithms ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_nag_algorithms COMMAND ${CMAKE_BINARY_DIR}/core/test_nag_algorithms)
 
-	set(B2_NAG_DATATYPES_TEST
-		test/nag_datatypes/witness_set.cpp
-		test/nag_datatypes/nag_datatypes_test.cpp
-		test/nag_datatypes/numerical_irreducible_decomposition.cpp
-	)
+    set(B2_NAG_DATATYPES_TEST
+        test/nag_datatypes/witness_set.cpp
+        test/nag_datatypes/nag_datatypes_test.cpp
+        test/nag_datatypes/numerical_irreducible_decomposition.cpp
+    )
 
-	add_executable(test_nag_datatypes ${B2_NAG_DATATYPES_TEST})
-	target_include_directories(test_nag_datatypes PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-	target_link_libraries(test_nag_datatypes ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_nag_datatypes COMMAND ${CMAKE_BINARY_DIR}/core/test_nag_datatypes)
+    add_executable(test_nag_datatypes ${B2_NAG_DATATYPES_TEST})
+    target_include_directories(test_nag_datatypes PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_nag_datatypes ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_nag_datatypes COMMAND ${CMAKE_BINARY_DIR}/core/test_nag_datatypes)
 
-	set(B2_POOLS_TEST
-		test/pools/pool_test.cpp
-	)
+    set(B2_POOLS_TEST
+        test/pools/pool_test.cpp
+    )
 
-	add_executable(test_pool ${B2_POOLS_TEST})
-	target_include_directories(test_pool PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-	target_link_libraries(test_pool ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_pool COMMAND ${CMAKE_BINARY_DIR}/core/test_pool)
+    add_executable(test_pool ${B2_POOLS_TEST})
+    target_include_directories(test_pool PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_pool ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_pool COMMAND ${CMAKE_BINARY_DIR}/core/test_pool)
 
-	set(B2_SETTINGS_TEST
-		test/settings/settings_test.cpp
-	)
+    set(B2_SETTINGS_TEST
+        test/settings/settings_test.cpp
+    )
 
-	add_executable(test_settings ${B2_SETTINGS_TEST})
-	target_include_directories(test_settings PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-	target_link_libraries(test_settings ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_settings COMMAND ${CMAKE_BINARY_DIR}/core/test_settings)
+    add_executable(test_settings ${B2_SETTINGS_TEST})
+    target_include_directories(test_settings PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_settings ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_settings COMMAND ${CMAKE_BINARY_DIR}/core/test_settings)
 
-	set(B2_TRACKING_BASICS_TEST
-		test/tracking_basics/newton_correct_test.cpp
-		test/tracking_basics/euler_test.cpp
-		test/tracking_basics/heun_test.cpp
-		test/tracking_basics/higher_predictor_test.cpp
-		test/tracking_basics/tracking_basics_test.cpp
-		test/tracking_basics/fixed_precision_tracker_test.cpp
-		test/tracking_basics/amp_criteria_test.cpp
-		test/tracking_basics/amp_tracker_test.cpp
-		test/tracking_basics/path_observers.cpp
-		test/tracking_basics/expand_to_function_tree_test.cpp
-		test/tracking_basics/amp_jacobian_estimate_test.cpp
-	)
+    set(B2_TRACKING_BASICS_TEST
+        test/tracking_basics/newton_correct_test.cpp
+        test/tracking_basics/euler_test.cpp
+        test/tracking_basics/heun_test.cpp
+        test/tracking_basics/higher_predictor_test.cpp
+        test/tracking_basics/tracking_basics_test.cpp
+        test/tracking_basics/fixed_precision_tracker_test.cpp
+        test/tracking_basics/amp_criteria_test.cpp
+        test/tracking_basics/amp_tracker_test.cpp
+        test/tracking_basics/path_observers.cpp
+        test/tracking_basics/expand_to_function_tree_test.cpp
+        test/tracking_basics/amp_jacobian_estimate_test.cpp
+    )
 
-	add_executable(test_tracking_basics ${B2_TRACKING_BASICS_TEST})
-	target_include_directories(test_tracking_basics PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-	target_link_libraries(test_tracking_basics ${Boost_LIBRARIES} bertini2)
-	add_test(NAME test_tracking_basics COMMAND ${CMAKE_BINARY_DIR}/core/test_tracking_basics)
+    add_executable(test_tracking_basics ${B2_TRACKING_BASICS_TEST})
+    target_include_directories(test_tracking_basics PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_tracking_basics ${Boost_LIBRARIES} bertini2)
+    add_test(NAME test_tracking_basics COMMAND ${CMAKE_BINARY_DIR}/core/test_tracking_basics)
 
-	enable_testing()
+    enable_testing()
 
 endif (ENABLE_UNIT_TESTING)
 

@@ -55,31 +55,31 @@ BOOST_AUTO_TEST_SUITE(thread_pool)
 // result is order-independent, so summing checks that every task ran exactly once.
 BOOST_AUTO_TEST_CASE(thread_pool_runs_every_task_once)
 {
-	using bertini::parallel::WorkerThreadPool;
+    using bertini::parallel::WorkerThreadPool;
 
-	auto factory = []() { return std::unique_ptr<int>(new int(0)); };
-	auto track   = [](std::unique_ptr<int>& state, int const& task) {
-		++(*state);          // touch the per-thread state so isolation matters
-		return task * task;
-	};
+    auto factory = []() { return std::unique_ptr<int>(new int(0)); };
+    auto track   = [](std::unique_ptr<int>& state, int const& task) {
+        ++(*state);          // touch the per-thread state so isolation matters
+        return task * task;
+    };
 
-	const int N = 200;
-	WorkerThreadPool<int, int, decltype(factory), decltype(track)> pool(4, factory, track);
+    const int N = 200;
+    WorkerThreadPool<int, int, decltype(factory), decltype(track)> pool(4, factory, track);
 
-	for (int i = 0; i < N; ++i)
-		pool.submit(i);
+    for (int i = 0; i < N; ++i)
+        pool.submit(i);
 
-	long long got = 0;
-	for (int k = 0; k < N; ++k)
-		got += pool.collect();
+    long long got = 0;
+    for (int k = 0; k < N; ++k)
+        got += pool.collect();
 
-	pool.shutdown();   // joins all worker threads; must not hang or throw
+    pool.shutdown();   // joins all worker threads; must not hang or throw
 
-	long long expected = 0;
-	for (int i = 0; i < N; ++i)
-		expected += static_cast<long long>(i) * i;
+    long long expected = 0;
+    for (int i = 0; i < N; ++i)
+        expected += static_cast<long long>(i) * i;
 
-	BOOST_CHECK_EQUAL(got, expected);
+    BOOST_CHECK_EQUAL(got, expected);
 }
 
 // Each thread builds its own state via the factory; states must not be shared.  We hand each
@@ -87,50 +87,50 @@ BOOST_AUTO_TEST_CASE(thread_pool_runs_every_task_once)
 // (a shared-state race would lose increments under a data race / give a wrong total).
 BOOST_AUTO_TEST_CASE(thread_pool_state_is_per_thread)
 {
-	using bertini::parallel::WorkerThreadPool;
+    using bertini::parallel::WorkerThreadPool;
 
-	std::atomic<int> factory_calls{0};
+    std::atomic<int> factory_calls{0};
 
-	auto factory = [&factory_calls]() {
-		++factory_calls;
-		return std::unique_ptr<long>(new long(0));
-	};
-	auto track = [](std::unique_ptr<long>& state, int const& task) {
-		++(*state);
-		return static_cast<long>(*state);   // value is meaningful only within one thread
-	};
+    auto factory = [&factory_calls]() {
+        ++factory_calls;
+        return std::unique_ptr<long>(new long(0));
+    };
+    auto track = [](std::unique_ptr<long>& state, int const& task) {
+        ++(*state);
+        return static_cast<long>(*state);   // value is meaningful only within one thread
+    };
 
-	const int N = 500;
-	const int n_threads = 4;
-	WorkerThreadPool<int, long, decltype(factory), decltype(track)> pool(n_threads, factory, track);
+    const int N = 500;
+    const int n_threads = 4;
+    WorkerThreadPool<int, long, decltype(factory), decltype(track)> pool(n_threads, factory, track);
 
-	for (int i = 0; i < N; ++i)
-		pool.submit(i);
+    for (int i = 0; i < N; ++i)
+        pool.submit(i);
 
-	long total = 0;
-	for (int k = 0; k < N; ++k)
-		total += pool.collect();
-	pool.shutdown();
+    long total = 0;
+    for (int k = 0; k < N; ++k)
+        total += pool.collect();
+    pool.shutdown();
 
-	// The factory runs exactly once per thread (per-thread state, not per-task).
-	BOOST_CHECK_EQUAL(factory_calls.load(), n_threads);
-	// Every task incremented some thread's private counter exactly once; the per-thread counters
-	// partition the N tasks, so the returned running-counts sum to 1+2+...+(per-thread totals).
-	// The weakest invariant that always holds regardless of scheduling: at least N (each task
-	// returned >= 1) and the counters together saw exactly N increments.
-	BOOST_CHECK_GE(total, static_cast<long>(N));
+    // The factory runs exactly once per thread (per-thread state, not per-task).
+    BOOST_CHECK_EQUAL(factory_calls.load(), n_threads);
+    // Every task incremented some thread's private counter exactly once; the per-thread counters
+    // partition the N tasks, so the returned running-counts sum to 1+2+...+(per-thread totals).
+    // The weakest invariant that always holds regardless of scheduling: at least N (each task
+    // returned >= 1) and the counters together saw exactly N increments.
+    BOOST_CHECK_GE(total, static_cast<long>(N));
 }
 
 BOOST_AUTO_TEST_CASE(effective_thread_count_is_sane)
 {
-	using bertini::parallel::EffectiveThreadCount;
-	// An explicit positive request is honored (when OMP_NUM_THREADS is unset in the test env).
-	if (std::getenv("OMP_NUM_THREADS") == nullptr)
-	{
-		BOOST_CHECK_EQUAL(EffectiveThreadCount(1), 1u);
-		BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 3u);
-		BOOST_CHECK_GE(EffectiveThreadCount(0), 1u);   // auto -> hardware_concurrency, clamped >= 1
-	}
+    using bertini::parallel::EffectiveThreadCount;
+    // An explicit positive request is honored (when OMP_NUM_THREADS is unset in the test env).
+    if (std::getenv("OMP_NUM_THREADS") == nullptr)
+    {
+        BOOST_CHECK_EQUAL(EffectiveThreadCount(1), 1u);
+        BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 3u);
+        BOOST_CHECK_GE(EffectiveThreadCount(0), 1u);   // auto -> hardware_concurrency, clamped >= 1
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // thread_pool
@@ -150,125 +150,125 @@ using Sols = std::vector<Sol>;
 template<typename ZD>
 Sols SolveWith(ZD& zd, unsigned num_threads)
 {
-	auto cfg = zd.template Get<bertini::algorithm::ZeroDimConfig>();
-	cfg.num_threads = num_threads;
-	zd.Set(cfg);
-	zd.Solve();
+    auto cfg = zd.template Get<bertini::algorithm::ZeroDimConfig>();
+    cfg.num_threads = num_threads;
+    zd.Set(cfg);
+    zd.Solve();
 
-	Sols out;
-	for (auto const& s : zd.FiniteSolutions(/*user_coords=*/true))
-		out.push_back(s);
-	return out;
+    Sols out;
+    for (auto const& s : zd.FiniteSolutions(/*user_coords=*/true))
+        out.push_back(s);
+    return out;
 }
 
 double Distance(Sol const& a, Sol const& b)
 {
-	if (a.size() != b.size())
-		return std::numeric_limits<double>::infinity();
-	double d = 0;
-	for (Eigen::Index i = 0; i < a.size(); ++i)
-		d += std::norm(a(i) - b(i));      // std::norm = squared magnitude
-	return std::sqrt(d);
+    if (a.size() != b.size())
+        return std::numeric_limits<double>::infinity();
+    double d = 0;
+    for (Eigen::Index i = 0; i < a.size(); ++i)
+        d += std::norm(a(i) - b(i));      // std::norm = squared magnitude
+    return std::sqrt(d);
 }
 
 // Greedy one-to-one match within tolerance -- robust to the out-of-order arrival of threaded
 // solutions (no reliance on a fragile sort of near-equal coordinates).
 void CheckSameSolutionSet(Sols const& serial, Sols const& threaded, double tol)
 {
-	BOOST_REQUIRE_EQUAL(serial.size(), threaded.size());
+    BOOST_REQUIRE_EQUAL(serial.size(), threaded.size());
 
-	std::vector<bool> used(threaded.size(), false);
-	for (auto const& s : serial)
-	{
-		bool matched = false;
-		for (std::size_t j = 0; j < threaded.size(); ++j)
-		{
-			if (!used[j] && Distance(s, threaded[j]) < tol)
-			{
-				used[j] = true;
-				matched = true;
-				break;
-			}
-		}
-		BOOST_CHECK_MESSAGE(matched, "a serial solution had no threaded counterpart within tolerance");
-	}
+    std::vector<bool> used(threaded.size(), false);
+    for (auto const& s : serial)
+    {
+        bool matched = false;
+        for (std::size_t j = 0; j < threaded.size(); ++j)
+        {
+            if (!used[j] && Distance(s, threaded[j]) < tol)
+            {
+                used[j] = true;
+                matched = true;
+                break;
+            }
+        }
+        BOOST_CHECK_MESSAGE(matched, "a serial solution had no threaded counterpart within tolerance");
+    }
 }
 
 // {x^2 - 1, y^2 - 1}: four well-separated nonsingular roots (+/-1, +/-1).  Total degree 4 paths.
 bertini::System TwoQuadrics()
 {
-	using namespace bertini;
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	System sys;
-	sys.AddFunction(pow(x, 2) - 1);
-	sys.AddFunction(pow(y, 2) - 1);
-	sys.AddVariableGroup(VariableGroup{x, y});
-	return sys;
+    using namespace bertini;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    System sys;
+    sys.AddFunction(pow(x, 2) - 1);
+    sys.AddFunction(pow(y, 2) - 1);
+    sys.AddVariableGroup(VariableGroup{x, y});
+    return sys;
 }
 
 // A denser system: {x^3 - x, y^3 - y} -> 9 total-degree paths, 9 finite roots -- more paths than
 // cores, so the pool genuinely round-robins work across threads.
 bertini::System TwoCubics()
 {
-	using namespace bertini;
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	System sys;
-	sys.AddFunction(pow(x, 3) - x);
-	sys.AddFunction(pow(y, 3) - y);
-	sys.AddVariableGroup(VariableGroup{x, y});
-	return sys;
+    using namespace bertini;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    System sys;
+    sys.AddFunction(pow(x, 3) - x);
+    sys.AddFunction(pow(y, 3) - y);
+    sys.AddVariableGroup(VariableGroup{x, y});
+    return sys;
 }
 
 template<typename MakeSys>
 void ThreadedMatchesSerial(MakeSys make_sys, std::size_t expected_finite)
 {
-	using namespace bertini;
+    using namespace bertini;
 
-	// Independent solver objects (CloneGiven copies the system), so the two solves share no state.
-	auto sys_serial = make_sys();
-	auto sys_thread = make_sys();
+    // Independent solver objects (CloneGiven copies the system), so the two solves share no state.
+    auto sys_serial = make_sys();
+    auto sys_thread = make_sys();
 
-	using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
-	                              System>;
+    using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+                                  System>;
 
-	ZD zd_serial(sys_serial);  zd_serial.DefaultSetup();
-	ZD zd_thread(sys_thread);  zd_thread.DefaultSetup();
+    ZD zd_serial(sys_serial);  zd_serial.DefaultSetup();
+    ZD zd_thread(sys_thread);  zd_thread.DefaultSetup();
 
-	auto serial = SolveWith(zd_serial, 1);
-	BOOST_REQUIRE_EQUAL(serial.size(), expected_finite);
+    auto serial = SolveWith(zd_serial, 1);
+    BOOST_REQUIRE_EQUAL(serial.size(), expected_finite);
 
-	for (unsigned nt : {2u, 4u})
-	{
-		auto threaded = SolveWith(zd_thread, nt);
-		CheckSameSolutionSet(serial, threaded, 1e-6);
-	}
+    for (unsigned nt : {2u, 4u})
+    {
+        auto threaded = SolveWith(zd_thread, nt);
+        CheckSameSolutionSet(serial, threaded, 1e-6);
+    }
 }
 
 } // namespace
 
 BOOST_AUTO_TEST_CASE(threaded_matches_serial_two_quadrics)
 {
-	ThreadedMatchesSerial([]{ return TwoQuadrics(); }, 4u);
+    ThreadedMatchesSerial([]{ return TwoQuadrics(); }, 4u);
 }
 
 BOOST_AUTO_TEST_CASE(threaded_matches_serial_two_cubics)
 {
-	ThreadedMatchesSerial([]{ return TwoCubics(); }, 9u);
+    ThreadedMatchesSerial([]{ return TwoCubics(); }, 9u);
 }
 
 // num_threads == 1 must be byte-for-byte the pool-free serial path -- a regression guard that the
 // thread-count branch in Solve() does not perturb the default (serial) result.
 BOOST_AUTO_TEST_CASE(num_threads_one_equals_default_solve)
 {
-	using namespace bertini;
-	auto sys = TwoQuadrics();
-	using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
-	                              System>;
-	ZD zd(sys); zd.DefaultSetup();
-	auto one = SolveWith(zd, 1);
-	BOOST_CHECK_EQUAL(one.size(), 4u);
+    using namespace bertini;
+    auto sys = TwoQuadrics();
+    using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+                                  System>;
+    ZD zd(sys); zd.DefaultSetup();
+    auto one = SolveWith(zd, 1);
+    BOOST_CHECK_EQUAL(one.size(), 4u);
 }
 
 
@@ -278,75 +278,75 @@ BOOST_AUTO_TEST_CASE(num_threads_one_equals_default_solve)
 // Observable notify mutex under concurrency.
 struct TrackerCapture : public bertini::Observer<bertini::algorithm::AnyZeroDim>
 {
-	std::set<bertini::Observable const*> trackers_seen;
-	bool                                 saw_null = false;
-	int                                  path_starts = 0;
+    std::set<bertini::Observable const*> trackers_seen;
+    bool                                 saw_null = false;
+    int                                  path_starts = 0;
 
-	bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
-	{
-		using namespace bertini::algorithm;
-		if (auto p = dynamic_cast<PathStarted<AnyZeroDim> const*>(&e))
-		{
-			++path_starts;
-			if (p->Tracker() == nullptr) saw_null = true;
-			else                         trackers_seen.insert(p->Tracker());
-		}
-		return bertini::ObserveResult::KeepObserving;
-	}
+    bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+    {
+        using namespace bertini::algorithm;
+        if (auto p = dynamic_cast<PathStarted<AnyZeroDim> const*>(&e))
+        {
+            ++path_starts;
+            if (p->Tracker() == nullptr) saw_null = true;
+            else                         trackers_seen.insert(p->Tracker());
+        }
+        return bertini::ObserveResult::KeepObserving;
+    }
 };
 
 // Serial: every path's event.Tracker() is the solver's own member tracker.
 BOOST_AUTO_TEST_CASE(event_tracker_is_member_tracker_when_serial)
 {
-	using namespace bertini;
-	auto sys = TwoCubics();
-	using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
-	                              System>;
-	ZD zd(sys); zd.DefaultSetup();
+    using namespace bertini;
+    auto sys = TwoCubics();
+    using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+                                  System>;
+    ZD zd(sys); zd.DefaultSetup();
 
-	TrackerCapture cap;
-	zd.AddObserver(cap);
-	SolveWith(zd, 1);
+    TrackerCapture cap;
+    zd.AddObserver(cap);
+    SolveWith(zd, 1);
 
-	auto const* member = static_cast<Observable const*>(&zd.GetTracker());
-	BOOST_CHECK_EQUAL(cap.path_starts, 9);
-	BOOST_CHECK(!cap.saw_null);
-	BOOST_REQUIRE_EQUAL(cap.trackers_seen.size(), 1u);   // one tracker ran every path
-	BOOST_CHECK(*cap.trackers_seen.begin() == member);
+    auto const* member = static_cast<Observable const*>(&zd.GetTracker());
+    BOOST_CHECK_EQUAL(cap.path_starts, 9);
+    BOOST_CHECK(!cap.saw_null);
+    BOOST_REQUIRE_EQUAL(cap.trackers_seen.size(), 1u);   // one tracker ran every path
+    BOOST_CHECK(*cap.trackers_seen.begin() == member);
 }
 
 // Threaded: every path's event.Tracker() is a thread-local clone, never the member tracker --
 // which is exactly why a meta-observer must attach to event.tracker(), not solver.GetTracker().
 BOOST_AUTO_TEST_CASE(event_tracker_is_a_clone_when_threaded)
 {
-	using namespace bertini;
-	// OMP_NUM_THREADS overrides the requested thread count (parallel::EffectiveThreadCount), so under
-	// OMP_NUM_THREADS=1 a "threaded" solve actually runs serially on the member tracker, and the
-	// clone-per-thread expectation below does not hold.  CI runs the test suite both with and without
-	// OMP_NUM_THREADS=1; the threaded path is exercised in the non-serial leg, so skip here when the
-	// environment forces serial.
-	if (parallel::EffectiveThreadCount(4) <= 1)
-	{
-		BOOST_TEST_MESSAGE("event_tracker_is_a_clone_when_threaded: skipped -- OMP_NUM_THREADS forces "
-		                   "a serial run (threaded clone behavior is covered by the OMP_NUM_THREADS!=1 "
-		                   "CI leg).");
-		return;
-	}
-	auto sys = TwoCubics();
-	using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
-	                              System>;
-	ZD zd(sys); zd.DefaultSetup();
+    using namespace bertini;
+    // OMP_NUM_THREADS overrides the requested thread count (parallel::EffectiveThreadCount), so under
+    // OMP_NUM_THREADS=1 a "threaded" solve actually runs serially on the member tracker, and the
+    // clone-per-thread expectation below does not hold.  CI runs the test suite both with and without
+    // OMP_NUM_THREADS=1; the threaded path is exercised in the non-serial leg, so skip here when the
+    // environment forces serial.
+    if (parallel::EffectiveThreadCount(4) <= 1)
+    {
+        BOOST_TEST_MESSAGE("event_tracker_is_a_clone_when_threaded: skipped -- OMP_NUM_THREADS forces "
+                           "a serial run (threaded clone behavior is covered by the OMP_NUM_THREADS!=1 "
+                           "CI leg).");
+        return;
+    }
+    auto sys = TwoCubics();
+    using ZD = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy,
+                                  System>;
+    ZD zd(sys); zd.DefaultSetup();
 
-	TrackerCapture cap;
-	zd.AddObserver(cap);
-	SolveWith(zd, 4);
+    TrackerCapture cap;
+    zd.AddObserver(cap);
+    SolveWith(zd, 4);
 
-	auto const* member = static_cast<Observable const*>(&zd.GetTracker());
-	BOOST_CHECK_EQUAL(cap.path_starts, 9);
-	BOOST_CHECK(!cap.saw_null);
-	BOOST_CHECK(cap.trackers_seen.count(member) == 0);   // never the member tracker
-	BOOST_CHECK(!cap.trackers_seen.empty());
-	BOOST_CHECK(cap.trackers_seen.size() <= 4u);          // at most one clone per worker thread
+    auto const* member = static_cast<Observable const*>(&zd.GetTracker());
+    BOOST_CHECK_EQUAL(cap.path_starts, 9);
+    BOOST_CHECK(!cap.saw_null);
+    BOOST_CHECK(cap.trackers_seen.count(member) == 0);   // never the member tracker
+    BOOST_CHECK(!cap.trackers_seen.empty());
+    BOOST_CHECK(cap.trackers_seen.size() <= 4u);          // at most one clone per worker thread
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -64,81 +64,81 @@ the historical API unchanged.
 
 typedef struct
 {
-	int num_funcs;
-	int num_hom_var_gp;
-	int num_var_gp;
-	int *type; // 0 - hom_var_gp, 1 - var_gp
-	int *size; // size of the group of the user listed variables (total size = size + type)
+    int num_funcs;
+    int num_hom_var_gp;
+    int num_var_gp;
+    int *type; // 0 - hom_var_gp, 1 - var_gp
+    int *size; // size of the group of the user listed variables (total size = size + type)
 } preproc_data;
 
 
 typedef struct
 {
-	point_d funcVals;
-	point_d parVals;
-	vec_d parDer;
-	mat_d Jv;
-	mat_d Jp;
+    point_d funcVals;
+    point_d parVals;
+    vec_d parDer;
+    mat_d Jv;
+    mat_d Jp;
 } eval_struct_d;
 
 typedef struct
 {
-	point_mp funcVals;
-	point_mp parVals;
-	vec_mp parDer;
-	mat_mp Jv;
-	mat_mp Jp;
+    point_mp funcVals;
+    point_mp parVals;
+    vec_mp parDer;
+    mat_mp Jv;
+    mat_mp Jp;
 } eval_struct_mp;
 
 
 The straight-line program structure.  This is the way that polynomials are stored internally.
 typedef struct {
-	int *prog;     //  The program instructions. (a big integer array)
-	int  size;     //  size of the instruction program.
-	int  memSize;  // Amount of memory it needs in workspace (for temp and final results).
-	num_t *nums;   // The array of real numbers.
-	int precision; // The precision at which evaluation should occur
+    int *prog;     //  The program instructions. (a big integer array)
+    int  size;     //  size of the instruction program.
+    int  memSize;  // Amount of memory it needs in workspace (for temp and final results).
+    num_t *nums;   // The array of real numbers.
+    int precision; // The precision at which evaluation should occur
 
-	// INFO NEEDED FOR M-HOM:
-	int num_var_gps;  // The total number of variable groups (i.e., m from m-hom).
-	int *var_gp_sizes;  // The size of each of the groups.
-	int index_of_first_number_for_proj_trans;  // The address of the first number used in the projective transformation polynomials.
+    // INFO NEEDED FOR M-HOM:
+    int num_var_gps;  // The total number of variable groups (i.e., m from m-hom).
+    int *var_gp_sizes;  // The size of each of the groups.
+    int index_of_first_number_for_proj_trans;  // The address of the first number used in the projective transformation polynomials.
 
-	// STOP LOCATIONS:
-	int  numInstAtEndUpdate; // instruction number at end of update. i.e. i = 0; while (i < numInstAtEndUpdate) ..
-	int  numInstAtEndParams; // instruction number at end of params. i.e. i = numInstAtEndUpdate; while (i < numInstAtEndParams) ..
-	int  numInstAtEndFnEval; // instruction number at end of function eval. i.e. i = numInstAtEndParams; while (i < numInstAtEndFnEval) ..
-	int  numInstAtEndPDeriv; // instruction number at end of param diff. i.e. i = numInstAtEndFnEval; while (i < numInstAtEndPDeriv) ..
-	int  numInstAtEndJvEval; // instruction number at end of Jv eval. i.e. i = numInstAtEndPDeriv; while (i < numInstAtEndJvEval) ..
-													 // for Jp eval: i = numInstAtEndJvEval; while (i < size) ..
+    // STOP LOCATIONS:
+    int  numInstAtEndUpdate; // instruction number at end of update. i.e. i = 0; while (i < numInstAtEndUpdate) ..
+    int  numInstAtEndParams; // instruction number at end of params. i.e. i = numInstAtEndUpdate; while (i < numInstAtEndParams) ..
+    int  numInstAtEndFnEval; // instruction number at end of function eval. i.e. i = numInstAtEndParams; while (i < numInstAtEndFnEval) ..
+    int  numInstAtEndPDeriv; // instruction number at end of param diff. i.e. i = numInstAtEndFnEval; while (i < numInstAtEndPDeriv) ..
+    int  numInstAtEndJvEval; // instruction number at end of Jv eval. i.e. i = numInstAtEndPDeriv; while (i < numInstAtEndJvEval) ..
+                                                     // for Jp eval: i = numInstAtEndJvEval; while (i < size) ..
 
-	// INPUT AMOUNTS:
-	int  numVars;  //  Number of variables in the function being computed.
-	int  numPathVars;  //  Number of path variables.  Ought to be 1 usually.
-	int  numNums;  //  Number of real numbers used in evaluation.
-	int  numConsts;  //  Number of constants.
+    // INPUT AMOUNTS:
+    int  numVars;  //  Number of variables in the function being computed.
+    int  numPathVars;  //  Number of path variables.  Ought to be 1 usually.
+    int  numNums;  //  Number of real numbers used in evaluation.
+    int  numConsts;  //  Number of constants.
 
-	// OUTPUT AMOUNTS:
-	int  numPars;  //  Number of parameters
-	int  numFuncs; //  Number of coordinate functions in the homotopy.
-	int  numSubfuncs;  //  Number of subfunctions.
+    // OUTPUT AMOUNTS:
+    int  numPars;  //  Number of parameters
+    int  numFuncs; //  Number of coordinate functions in the homotopy.
+    int  numSubfuncs;  //  Number of subfunctions.
 
-	// INPUT LOCATIONS:
-	int  inpVars;  //  Where the input variable values are stored.
-	int  inpPathVars;  //  Where the values of the path variables are stored.
-	int  IAddr;  //  Where the constant I is stored.
-	int  numAddr;  //  Where the first num_t is stored.
-	int  constAddr;  //  Where the first constant is stored.
+    // INPUT LOCATIONS:
+    int  inpVars;  //  Where the input variable values are stored.
+    int  inpPathVars;  //  Where the values of the path variables are stored.
+    int  IAddr;  //  Where the constant I is stored.
+    int  numAddr;  //  Where the first num_t is stored.
+    int  constAddr;  //  Where the first constant is stored.
 
-	// OUTPUT LOCATIONS:
-	int  evalPars;  //  Where U(t), for given t, is stored.
-	int  evalDPars;  //  Where the derivatives of the parameters are stored.
-	int  evalFuncs;  //  Where H(x,t) is stored.
-	int  evalJVars;  //  Where the Jacobian w.r.t. vars is stored.
-	int  evalJPars;  //  Where the Jacobian w.r.t. pars is stored.
-	int  evalSubs;  //  Where the subfunctions are stored
-	int  evalJSubsV;  //  Where the derivatives of the subfunctions w.r.t. vars are stored.
-	int  evalJSubsP;  //  Where the derivatives of the subfunctions w.r.t. pars are stored.
+    // OUTPUT LOCATIONS:
+    int  evalPars;  //  Where U(t), for given t, is stored.
+    int  evalDPars;  //  Where the derivatives of the parameters are stored.
+    int  evalFuncs;  //  Where H(x,t) is stored.
+    int  evalJVars;  //  Where the Jacobian w.r.t. vars is stored.
+    int  evalJPars;  //  Where the Jacobian w.r.t. pars is stored.
+    int  evalSubs;  //  Where the subfunctions are stored
+    int  evalJSubsV;  //  Where the derivatives of the subfunctions w.r.t. vars are stored.
+    int  evalJSubsP;  //  Where the derivatives of the subfunctions w.r.t. pars are stored.
 } prog_t;
 */
 
@@ -146,984 +146,984 @@ typedef struct {
 
 namespace bertini {
 
-	class SLPCompiler;
-	class System; // a forward declaration, solving the circular inclusion problem
-	class StraightLineProgram;
-
-
-	/**
-	\brief The numeric type a memory slot holds, orthogonal to working precision (ADR-0034).
-
-	Precision (double vs multiprecision) is the Eval<NumT> template parameter; this is the ℝ/ℂ
-	axis within a precision.  A slot tagged Real lives in the real register bank (real_dbl /
-	real_mp), Complex in the complex bank (complex_dbl / complex_mp).  The compiler infers each
-	slot's NumType from the function tree (a constant whose imaginary part is zero, an Integer, a
-	Rational with zero imaginary part, Pi/E are Real; variables and the path variable are Complex;
-	an operator's result is the join of its operands, escaping to Complex for ops that can leave ℝ).
-	Integer is reserved for a later stage; S1 uses {Real, Complex}.
-	*/
-	enum class NumType : uint8_t { Real = 0, Complex = 1 };  // Integer added in a later stage
-
-
-	/// \brief The opcodes for the operations a straight-line program instruction can perform.
-	enum Operation { // we'll start with the binary ones
-		Add=      1 << 0,
-		Subtract= 1 << 1,
-		Multiply= 1 << 2,
-		Divide=   1 << 3,
-		Power=    1 << 4,
-		Exp=      1 << 5,
-		Log=      1 << 6,
-		Negate=   1 << 7,
-		Sqrt=     1 << 8,
-		Sin=      1 << 9,
-		Cos=      1 << 10,
-		Tan=      1 << 11,
-		Asin=     1 << 12,
-		Acos=     1 << 13,
-		Atan=     1 << 14,
-		Assign=   1 << 15,
-		IntPower= 1 << 16,
-	};
-
-	const int BinaryOperations = Add|Subtract | Multiply|Divide | Power | IntPower;  ///< Bit-mask of the two-operand operations.
-	const int TrigOperations   = Sin|Cos|Tan | Asin|Acos|Atan;  ///< Bit-mask of the trigonometric operations.
-	const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations | Sqrt;  ///< Bit-mask of the one-operand operations.
-
-	/// \brief Query whether an operation takes a single operand.
-	constexpr bool IsUnary(Operation op)
-	{
-		return op & UnaryOperations;
-	}
-
-	/// \brief Query whether an operation takes two operands.
-	constexpr bool IsBinary(Operation op)
-	{
-		return op & BinaryOperations;
-	}
-
-	/// \brief Get a human-readable name for an opcode.
-	std::string OpcodeToString(Operation op);
-
-	/// Whether the SLP compiler value-numbers (instruction-level CSE) while emitting the tape:
-	/// an identical (op, operand-slots) computation reuses the earlier result slot instead of
-	/// recomputing.  Complements node-level hash-consing by sharing intermediates that only
-	/// coincide after lowering (e.g. the x^2 computed inside x^3 shared with a standalone x^2).
-	/// Session-global A/B switch, ON by default; off recovers the pre-VN tape for measurement.
-	bool SLPValueNumbering();
-	/// \brief Set whether the SLP compiler value-numbers while emitting the tape.
-	void SetSLPValueNumbering(bool on);
-
-	// Compile-time bank selectors (ADR-0034).  After NumType inference, each instruction's opcode word
-	// gets these high bits set to record which bank (real or complex) each operand and the result live
-	// in, so the hot eval loop reads the banks inline from the instruction it has already loaded instead
-	// of looking up slot_numtype_[slot] per operand.  The base Operation occupies bits 0..16, so these
-	// sit well clear of it; masking with kOpcodeMask recovers the base op for the switch and for IsUnary.
-	constexpr size_t kOpcodeMask = (static_cast<size_t>(1) << 17) - 1;  ///< Mask recovering the base opcode from an instruction word.
-	constexpr size_t kArg0Real   =  static_cast<size_t>(1) << 20;  ///< High bit: first operand slot is NumType::Real.
-	constexpr size_t kArg1Real   =  static_cast<size_t>(1) << 21;  ///< High bit: second operand slot is Real (binary, not IntPower).
-	constexpr size_t kOutReal    =  static_cast<size_t>(1) << 22;  ///< High bit: result slot is NumType::Real.
-
-
-	/**
-	 \struct SLPOutputLocations
-
-	 A struct encapsulating the starting locations of outputs in the SLP's memory layout.
-	 */
-	struct SLPOutputLocations{
-		size_t Functions{0};  ///< Memory offset of the function-value outputs.
-		size_t Jacobian{0};   ///< Memory offset of the Jacobian outputs.
-		size_t TimeDeriv{0};  ///< Memory offset of the time-derivative outputs.
-
-		friend class boost::serialization::access;
-
-		/// \cond SLP_SERIALIZATION
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & Functions;
-			ar & Jacobian;
-			ar & TimeDeriv;
-		}
-		/// \endcond
-	};
-
-	/**
-	 \struct SLPInputLocations
-
-	 A struct encapsulating the starting locations of inputs in the SLP's memory layout.
-	 */
-	struct SLPInputLocations{
-		size_t Variables{0};  ///< Memory offset of the variable inputs.
-		size_t Time{0};       ///< Memory offset of the path-variable (time) input.
-
-		friend class boost::serialization::access;
-
-		/// \cond SLP_SERIALIZATION
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & Variables;
-			ar & Time;
-		}
-		/// \endcond
-	};
-
-	/**
-	 \struct SLPNumberOf
-
-	 A struct encapsulating the numbers of things appearing in the SLP.
-	 */
-	struct SLPNumberOf{
-		size_t Functions{0};  ///< The number of functions in the system.
-		size_t Variables{0};  ///< The number of variables in the system.
-		size_t Jacobian{0};   ///< The number of Jacobian entries.
-		size_t TimeDeriv{0};  ///< The number of time-derivative entries.
-
-		friend class boost::serialization::access;
-
-		/// \cond SLP_SERIALIZATION
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & Functions;
-			ar & Variables;
-			ar & Jacobian;
-			ar & TimeDeriv;
-		}
-		/// \endcond
-	};
-
-
-
-	/**
-	 \struct ConstantRecipe
-
-	 An exact, node-independent description of a constant baked into the program: enough to
-	 (re)produce the constant's value at any working precision, without evaluating a function-tree
-	 node (ADR-0027; node evaluation is being retired).  Integers and rationals are stored exactly
-	 (so they downsample to any precision without loss --- sidestepping any maximum-precision
-	 setting); Pi/E are recomputed at the working precision; a Complex literal carries its
-	 authored-precision value (its inherent ceiling).
-	 */
-	struct ConstantRecipe{
-		/// \brief Which kind of constant this recipe produces.
-		enum class Kind : int { Integer, Rational, Complex, Pi, E };
-
-		Kind kind = Kind::Integer;          ///< Which kind of constant this is.
-		mpz_int      int_value;             ///< Kind::Integer  (exact)
-		mpq_rational rat_real;              ///< Kind::Rational real part (exact).
-		mpq_rational rat_imag;              ///< Kind::Rational imaginary part (exact).
-		complex_mp float_value;             ///< Kind::Complex (authored-precision literal; also a fixed variable's value)
-		size_t slot = 0;                    ///< where this constant lives in the register file
-
-		/// Produce the constant's value at the ambient working precision (ThreadPrecision), matching
-		/// the corresponding number node's FreshEval exactly.  Definition + instantiations in the cpp.
-		template<typename NumT> NumT Produce() const;
-
-		/// Produce just the REAL value (for a slot inferred NumType::Real).  Only valid when IsReal().
-		template<typename RealT> RealT ProduceReal() const;
-
-		/// Whether this constant is real-valued: Integer/Pi/E always; a Rational/Complex literal iff its
-		/// imaginary part is exactly zero.  Drives NumType::Real inference for constant slots (ADR-0034).
-		bool IsReal() const {
-			switch (kind) {
-				case Kind::Integer: case Kind::Pi: case Kind::E: return true;
-				case Kind::Rational: return rat_imag == 0;
-				case Kind::Complex:  return float_value.imag() == 0;
-			}
-			return false;
-		}
-
-		friend class boost::serialization::access;
-		/// \cond SLP_SERIALIZATION
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			int k = static_cast<int>(kind);
-			ar & k;
-			kind = static_cast<Kind>(k);
-			ar & int_value;
-			ar & rat_real;
-			ar & rat_imag;
-			ar & float_value;
-			ar & slot;
-		}
-		/// \endcond
-	};
-
-
-
-	/**
-	 \class SLPMemory
-
-	 The per-thread mutable working state of a straight-line program evaluation: the register
-	 file (one bank per number type), the working precision, and the freshness / frozen-prologue
-	 flags.  Cheap to allocate; never shared across threads (ADR-0027).
-	 */
-	class SLPMemory{
-	public:
-		/// \brief Get a mutable reference to the register bank for number type NumT.
-		template<typename NumT>
-		std::vector<NumT>& Get() { return std::get<std::vector<NumT>>(registers_); }
-
-		/// \brief Get a const reference to the register bank for number type NumT.
-		template<typename NumT>
-		std::vector<NumT> const& Get() const { return std::get<std::vector<NumT>>(registers_); }
-
-		/// The register file (ADR-0034): one bank per (precision, NumType).  A slot lives in exactly
-		/// one bank, chosen by its NumType; the real banks are the real companions of the complex ones
-		/// (real_dbl for complex_dbl, real_mp for complex_mp).  Get<NumT>() selects a bank by type.
-		mutable std::tuple< std::vector<real_dbl>, std::vector<complex_dbl>,
-		                    std::vector<real_mp>,  std::vector<complex_mp> > registers_;
-
-		mutable unsigned precision_ = 16; ///< The current working number of digits.
-		mutable bool is_evaluated_ = false;  ///< Whether the program has been evaluated against this memory.
-
-		// Whether the frozen prologue's results in memory are valid.  Tracked per number type: the
-		// double constants never change once computed; the mpfr constants are valid only while the
-		// working precision is unchanged.  Transient (recomputed on first eval; not serialized).
-		mutable bool frozen_valid_dbl_ = false;  ///< Whether the frozen prologue's double results in memory are valid.
-		mutable unsigned frozen_valid_mp_precision_ = 0;  ///< Precision at which the frozen prologue's mp results are valid (0 = none).
-
-		friend class boost::serialization::access;
-
-		/// \cond SLP_SERIALIZATION
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & std::get<std::vector<real_dbl>>(registers_);
-			ar & std::get<std::vector<complex_dbl>>(registers_);
-			ar & std::get<std::vector<real_mp>>(registers_);
-			ar & std::get<std::vector<complex_mp>>(registers_);
-			ar & precision_;
-			ar & is_evaluated_;
-			// frozen_valid_* are transient (recomputed on first eval); not serialized.
-		}
-		/// \endcond
-	};
-
-
-
-	/**
-	 \class SLPProgram
-
-	 The immutable compiled straight-line program (ADR-0027): the instruction tape, the constant
-	 recipe (true values of numbers + integer bank), and the memory layout (numbers of / locations
-	 of things).  Built once by the SLPCompiler; thereafter read-only, so it is shareable across
-	 threads.  Evaluation runs the tape against a per-thread SLPMemory.
-	 */
-	class SLPProgram{
-		friend SLPCompiler;
-		friend class StraightLineProgram;
-		friend std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s);
-
-	private:
-		using Nd = std::shared_ptr<const node::Node>;
-
-	public:
-		using IntT = int;  ///< The integer type used for the program's integer bank.
-
-		SLPProgram() = default;
-
-		/// \brief ADR-0034 A/B switch: when false, leave every slot Complex (pre-tier all-complex eval).
-		///        Read at compile time; default true.  For benchmarking only, not production toggling.
-		static bool tiers_enabled_;
-
-		/// \brief Query whether the program has a path variable.
-		bool HavePathVariable() const { return has_path_variable_; }
-		/// \brief Get the number of functions in the program.
-		inline unsigned NumFunctions() const{ return static_cast<unsigned>(number_of_.Functions);}
-		/// \brief Get the number of variables in the program.
-		inline unsigned NumVariables() const{ return static_cast<unsigned>(number_of_.Variables);}
-		/// \brief Get the total number of memory slots (per register bank) the program needs.
-		inline size_t NumSlots() const { return num_slots_; }
-		/// \brief Get the word offset into the tape where the live (post-frozen-prologue) segment begins.
-		inline size_t FirstLiveInstructionOffset() const { return first_live_instruction_; }
-
-		/// In-process structural hash of the full immutable program content: the (specialized)
-		/// instruction tape, the exact constant recipes, the integer bank, and the memory layout.
-		/// Keys the program intern table (ADR-0027 E4).  NOT stable across runs or compilers --
-		/// persistent identity belongs to the owning System's ContentDigest (ADR-0042).
-		std::size_t ContentHash() const;
-
-		/// Exact content equality over every field ContentHash folds; disambiguates hash
-		/// collisions in the program intern table.  SameContent(a,b) implies equal ContentHash.
-		bool SameContent(SLPProgram const& other) const;
-
-		/**
-		\brief loops through the instructions in the tape and evaluates each operation against the
-		given memory.
-
-		\tparam NumT numeric type
-
-		uses a switch to find different operations from memory to make sure its performing the correct evaluations
-
-		todo: implement a compile-time version of this using Boost.Hana
-		 */
-		template<typename NumT>
-		void Eval(SLPMemory& memory) const;  // this definition is in cpp, along with the lines that instantiate the needed versions.
-
-	private:
-		/**
-		 \brief Add an instruction to the tape.  This one's for binary operations
-
-		 \param binary_op The opcode, from the enum.
-		 \param in_loc1 The location of the first operand
-		 \param in_loc2 The locatiion in memory of the second operand
-		 \param out_loc Where in memory to put the result of the operation.
-		 */
-		void AddInstruction(Operation binary_op, size_t in_loc1, size_t in_loc2, size_t out_loc);
-
-		/**
-		 \brief Add an instruction to the tape.  This one's for unary operations
-
-		 \param unary_op The opcode, from the enum.
-		 \param in_loc The location of the one and only operand
-		 \param out_loc Where in memory to put the result of the operation.
-		 */
-		void AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc);
-
-		/**
-		 \brief Register an exact constant recipe and the memory location it downsamples into.
-		 */
-		void AddConstant(ConstantRecipe recipe);
-
-		// Reorder `instructions_` into [frozen | live] and set `first_live_instruction_`.  Called once
-		// at the end of compilation, after `num_slots_` is set.
-		void PartitionInstructions();
-
-		// Fill slot_numtype_ by a forward pass over the (dependency-ordered) tape (ADR-0034): seed
-		// constant slots from ConstantRecipe::IsReal() and input slots as Complex, then propagate the
-		// NumType join through each instruction.  Called at the end of compilation.
-		void ComputeSlotNumTypes();
-
-		// Pack each instruction's operand/result banks (from slot_numtype_) into its opcode word's high
-		// bits (kArg0Real/kArg1Real/kOutReal), so eval dispatches banks without per-slot lookups.  Runs
-		// after ComputeSlotNumTypes and PartitionInstructions (it only sets bits; order vs. partition
-		// doesn't matter as it rewrites instructions in place).
-		void SpecializeInstructions();
-
-
-		bool has_path_variable_ = false; ///< Does this SLP have a path variable?
-
-		SLPNumberOf number_of_;  ///< Quantities of things.
-		SLPOutputLocations output_locations_; ///< Where to find outputs, like functions and derivatives.
-		SLPInputLocations input_locations_; ///< Where to find inputs, like variables and time.
-
-		std::vector<IntT> integers_;  ///< The program's integer bank.
-
-		std::vector<size_t> instructions_; ///< The instructions.  The opcodes are stored as size_t's, as well as the locations of operands and results.
-		std::vector<ConstantRecipe> constant_recipes_; ///< the exact constants, each carrying the slot to downsample into.
-
-		// Freeze-set tape partition (ADR-0027).  After compilation the instructions are stably
-		// reordered so every "frozen" instruction (one whose result depends only on frozen input
-		// slots --- the literal numbers, Pi/E; i.e. the freeze set is currently the constants)
-		// precedes every "live" instruction.  `first_live_instruction_` is the word offset where the
-		// live segment begins.  The frozen prologue depends only on precision, so a point-only change
-		// re-runs from `first_live_instruction_` and reuses the frozen slots already in memory; the
-		// whole tape runs only when the frozen values are not yet valid for the working precision.
-		size_t first_live_instruction_ = 0;  ///< Word offset where the live segment of the tape begins.
-
-		size_t num_slots_ = 0; ///< Total number of memory slots the program needs (per number bank).
-
-		// The NumType of each slot (ADR-0034), indexed by global slot number; sized to num_slots_.
-		// Selects which register bank a slot lives in.  Default Complex (filled by the compiler);
-		// an all-Complex table reproduces the pre-tier behavior exactly.
-		std::vector<NumType> slot_numtype_;  ///< The NumType (register bank) of each slot, indexed by slot number.
-
-
-		friend class boost::serialization::access;
-
-		/// \cond SLP_SERIALIZATION
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & has_path_variable_;
-			ar & number_of_;
-			ar & output_locations_;
-			ar & input_locations_;
-			ar & integers_;
-			ar & instructions_;
-			ar & constant_recipes_;
-			ar & first_live_instruction_;
-			ar & num_slots_;
-			ar & slot_numtype_;
-		}
-		/// \endcond
-	};
-
-
-
-	/**
-	\brief Hash-cons a freshly-compiled program: return an existing content-equal SLPProgram if
-	one is live, otherwise register and return the candidate (ADR-0027 E4, ADR-0042).
-
-	The Program-level analogue of node::Intern: a process-global, weak (self-cleaning),
-	mutex-guarded table keyed by SLPProgram::ContentHash() and disambiguated by SameContent().
-	Facades (StraightLineProgram) sharing one interned Program each keep their own SLPMemory,
-	so the ADR-0027 threading contract is unchanged.  Wired into SLPCompiler::Compile and
-	StraightLineProgram deserialization, so identical compiled tapes -- including ones loaded
-	from archives -- collapse to a single shared immutable object.
-	*/
-	std::shared_ptr<const SLPProgram> InternProgram(std::shared_ptr<const SLPProgram> const& candidate);
-
-
-	/**
-	 \class StraightLineProgram
-
-	 An implementation of straight-line programs, implemented with strong inspiration from Bertini1's implementation.
-
-	 One constructs a SLP from a system, like
-
-	 ```
-	 System my_system();
-	 StraightLineProgram slp(my_system);
-	 ```
-
-	 Maybe you don't need to know this, but in construction the SLP uses a helper class, the SLPCompiler
-
-	 Patches are just functions in this framework.  The variables appear at the front of the memory, then functions, then derivatives.  This should make copying data out easy, because it's all in one place.
-
-	 In contrast to Bertini1 SLP's, we don't put all the numbers at the front -- they just get scattered through the SLP's memory.
-
-	 The class is a thin facade (ADR-0027) over an immutable, shareable SLPProgram and a per-thread
-	 SLPMemory.
-	 */
-	class StraightLineProgram{
-		friend SLPCompiler;
-		friend std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s);
-
-	private:
-		using Nd = std::shared_ptr<const node::Node>;
-
-	public:
-
-		/**
-		The constructor -- how to make a SLP from a System.
-		*/
-		StraightLineProgram(System const & sys);
-
-		StraightLineProgram() : program_(std::make_shared<const SLPProgram>()) {}
-
-		/// \brief Evaluate the program at the given variable values (no path variable).
-		/// \tparam Derived The Eigen expression type of the variable values.
-		/// \param variable_values The values of the variables.
-		template<typename Derived>
-		void Eval(Eigen::MatrixBase<Derived> const& variable_values) const
-		{
-			using NumT = typename Derived::Scalar;
-			SetVariableValues(variable_values);
-			program_->Eval<NumT>(memory_);
-		}
-
-		/**
-		\brief copies the variable values into the Matrix base and the path variables into the complex type time
-
-		\tparam Derived derived type
-
-		\tparam ComplexT complex type
-
-		\param variable_values dervied matrixBase of variable values
-
-		\param  time complex type for time
-
-		 */
-		template<typename Derived, typename ComplexT>
-		void Eval(Eigen::MatrixBase<Derived> const& variable_values, ComplexT const& time) const
-		{
-			using NumT = typename Derived::Scalar;
-			static_assert(std::is_same<NumT, ComplexT>::value, "scalar types must be the same");
-
-			// 1. copy variable values into memory locations they're supposed to go in
-			SetVariableValues(variable_values);
-			SetPathVariable(time);
-			program_->Eval<NumT>(memory_);
-		}
-
-
-
-		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
-		/// \brief Evaluate the program's functions (currently a synonym for the full Eval).
-		template <typename T>
-		void EvalFunctions() const{
-			program_->Eval<T>(memory_);
-		}
-
-
-
-		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
-		/// \brief Evaluate the program's Jacobian (currently a synonym for the full Eval).
-		template <typename T>
-		void EvalJacobian() const{
-			program_->Eval<T>(memory_);
-		}
-
-
-		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
-		/// \brief Evaluate the program's time derivative (currently a synonym for the full Eval).
-		template <typename T>
-		void EvalTimeDeriv() const{
-			program_->Eval<T>(memory_);
-		}
-
-
-		/// The immutable compiled program this facade runs.  Interned (ADR-0027 E4): facades
-		/// compiled from content-identical sources share one Program object (pointer equality is
-		/// meaningful), each with its own SLPMemory.
-		std::shared_ptr<const SLPProgram> Program() const { return program_; }
-
-		/// Number of slots the compiler inferred as NumType::Real (ADR-0034).  >0 means real-valued
-		/// subexpressions are being evaluated in the cheaper real banks; used by tests to confirm the
-		/// tier inference is live (not silently all-Complex).
-		size_t NumRealSlots() const {
-			size_t n = 0;
-			for (auto t : program_->slot_numtype_) if (t == NumType::Real) ++n;
-			return n;
-		}
-
-		// Read a slot's value as NumT (complex), pulling from the real or complex bank per its NumType
-		// (ADR-0034).  Used to copy outputs out, since a function/derivative slot could be Real-typed.
-		/// \brief Read a slot's value as a complex NumT, pulling from its real or complex bank per its NumType.
-		template<typename NumT>
-		NumT ReadSlotAsComplex(size_t slot) const {
-			using RealT = typename NumTraits<NumT>::Real;
-			if (program_->slot_numtype_[slot] == NumType::Real)
-				return NumT(memory_.template Get<RealT>()[slot]);
-			return memory_.template Get<NumT>()[slot];
-		}
-
-		/// \brief Copy the computed function values into the provided vector (does not resize it).
-		/// \tparam NumT The number type.
-		/// \param[out] result The vector to write the function values into.
-		template<typename NumT>
-		void GetFuncValsInPlace(Eigen::Ref<Vec<NumT>> result) const{
-			if (!memory_.is_evaluated_)
-				program_->Eval<NumT>(memory_);
-
-			// copy content (an output slot may be Real-typed; read from the bank its NumType selects)
-			for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-				result(static_cast<Eigen::Index>(ii)) = ReadSlotAsComplex<NumT>(ii + program_->output_locations_.Functions);
-			}
-		}
-
-		/**
-		\brief retrieves the computed values of jacobians
-
-		\tparam NumT numeric type
-
-		\param result The vector you're going to store the values into
-
-		the function will NOT automatically resize your vector for you to be the correct size
-
-		 */
-
-		template<typename NumT>
-		void GetJacobianInPlace(Eigen::Ref<Mat<NumT>> result) const{
-			if (!memory_.is_evaluated_)
-				program_->Eval<NumT>(memory_);
-
-			// copy content (a derivative slot may be Real-typed; read from the bank its NumType selects)
-			for (size_t jj =0; jj < program_->number_of_.Variables; ++jj) {
-				for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-					result(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)) = ReadSlotAsComplex<NumT>(ii+jj*program_->number_of_.Functions + program_->output_locations_.Jacobian);
-				}
-			}
-		}
-
-		/**
-		\brief copies the values of the time derivatives into your given vector
-
-		\tparam NumT numeric type
-
-		\param result The vector you're going to store the values into
-
-		the function will automatically resize your vector for you to be the correct size
-
-		 */
-
-		template<typename NumT>
-		void GetTimeDerivInPlace(Eigen::Ref<Vec<NumT>> result) const{
-			if (!memory_.is_evaluated_)
-				program_->Eval<NumT>(memory_);
-
-			// copy content (a time-derivative slot may be Real-typed; read from the right bank)
-			for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
-				result(static_cast<Eigen::Index>(ii)) = ReadSlotAsComplex<NumT>(ii + program_->output_locations_.TimeDeriv);
-			}
-		}
-
-		/**
-		\brief creates the Vec<NumT> to be used in the overloaded function
-
-		\tparam NumT numeric type
-
-		 */
-		template<typename NumT>
-		Vec<NumT> GetFuncVals() const{
-			Vec<NumT> return_me(this->NumFunctions());
-			GetFuncValsInPlace<NumT>(return_me);
-			return return_me;
-		}
-		/**
-		\brief creates the Vec<NumT> to be used in the overloaded function
-
-		\tparam NumT numeric type
-
-		 */
-		template<typename NumT>
-		Mat<NumT> GetJacobian() const{
-			Mat<NumT> return_me(this->NumFunctions(), this->NumVariables());
-			GetJacobianInPlace<NumT>(return_me);
-			return return_me;
-		}
-		/**
-		\brief creates the Vec<NumT> to be used in the overloaded function
-
-		\tparam NumT numeric type
-
-		 */
-		template<typename NumT>
-		Vec<NumT> GetTimeDeriv() const{
-			Vec<NumT> return_me(this->NumFunctions());
-			GetTimeDerivInPlace<NumT>(return_me);
-			return return_me;
-		}
-
-
-		/// \brief Get the number of functions in the program.
-		inline unsigned NumFunctions() const{ return program_->NumFunctions();}
-
-		/// \brief Get the number of variables in the program.
-		inline unsigned NumVariables() const{ return program_->NumVariables();}
-
-		/// Number of memory slots: one per distinct value the program holds (inputs, constants,
-		/// and one per compiled subexpression).  Shared subexpressions get a single slot, so this
-		/// is a measure of the compiled (CSE'd) size of the program.
-		inline size_t NumMemorySlots() const{ return program_->NumSlots(); }
-
-		/// Word offset into the instruction tape where the live segment begins (== total word length
-		/// of the frozen, constants-only prologue).  Zero means the program has no frozen prologue.
-		/// Exposed for testing the freeze-set tape partition (ADR-0027).
-		inline size_t FirstLiveInstructionOffset() const { return program_->FirstLiveInstructionOffset(); }
-
-
-		/**
-		\brief Get the current precision of the SLP.
-
-		\return The number of digits
-		*/
-		inline
-		unsigned precision() const
-		{
-			return memory_.precision_;
-		}
-
-		/**
-		\brief change the precision of the SLP.
-
-		Downsamples from the true values.
-
-		\param new_precision The new number of digits
-		*/
-		void precision(unsigned new_precision) const;
-
-		/// \brief Materialize this program's memory at the precision of the point being evaluated.
-		///
-		/// Every evaluable type self-aligns under this name -- the blocks, the patch, and here --
-		/// so no caller and no owning System has to fan a precision out beforehand (ADR-0057).
-		/// precision() short-circuits when already there, so the steady state is one integer
-		/// compare.  No-op for double, which carries no precision.
-		///
-		/// \param variable_values The point about to be evaluated at.
-		template<typename Derived>
-		void SyncPrecision(Eigen::MatrixBase<Derived> const& variable_values) const
-		{
-			using NumT = typename Derived::Scalar;
-			if constexpr (!std::is_same<NumT,complex_dbl>::value)
-			{
-				if (variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_)
-					this->precision(Precision(variable_values));
-			}
-		}
-
-		/**
-		 \brief Does this SLP have a path variable?
-
-		 \return Well, does it?
-		 */
-		bool HavePathVariable() const {
-			return program_->has_path_variable_;
-		}
-
-		/**
-		 \brief Overloaded operator for printing to an arbirtary out stream.
-		 */
-		friend std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s);
-
-
-
-
-		/**
-		 \brief Copy the values of the variables from the passed in vector to memory
-
-		 \param variable_values The vector of current variable values.
-		 */
-		template<typename Derived>
-		void SetVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
-			using NumT = typename Derived::Scalar;
-
-			// The Memory's precision is an ARTIFACT OF THE CURRENT EVALUATION, never an
-			// invariant to defend.  The compiled Program is a precision-independent tape of
-			// operations; only the Memory holding values carries digits.  So evaluating at
-			// whatever precision the caller brings is always meaningful, and the right
-			// response to a mismatch is to RE-TAG THE MEMORY, not to refuse.
-			//
-			// Refusing was a genuine trap, not merely unergonomic.  A Memory takes its
-			// precision from the ambient DefaultPrecision() when the program is lazily
-			// compiled, while the owning System keeps whatever it was told, so the two
-			// diverge the moment anything moves the ambient default -- which an AMP tracker
-			// or endgame does as a matter of course.  The System was then WEDGED with no way
-			// out: evaluating at its own reported precision raised here, and
-			// System::precision(n) could not repair it, because both setters short-circuit
-			// when the value they are handed already equals the one they hold.  See #377.
-			//
-			// An empty variable vector (a constant program with no variables) has no
-			// precision to read.  Re-tagging refills the constants from their exact recipes
-			// at the new precision, so accuracy is rebuilt rather than padded with zeros.
-			SyncPrecision(variable_values);
-
-			auto& memory = memory_.Get<NumT>(); // unpack for local reference
-
-			for (size_t ii = 0; ii < program_->number_of_.Variables; ++ii) {
-				//assign  to memory
-				memory[ii + program_->input_locations_.Variables] = variable_values(static_cast<Eigen::Index>(ii));
-			}
-			memory_.is_evaluated_ = false;
-		}
-
-		/**
-		 \brief Copy the current time value to memory
-
-		 \param time The current time
-		 \tparam ComplexT the complex numeric type.
-
-		 If the SLP doesn't have a path variable, then this will throw.
-		 */
-		template<typename ComplexT>
-		void SetPathVariable(ComplexT const& time) const{
-
-			// Same doctrine as SetVariableValues, but this one only ever raises: the
-			// variables have already been written into memory by the time the path variable
-			// arrives, so re-tagging DOWNWARD here would truncate them.  Memory therefore
-			// ends an evaluation at the max of its arguments' precisions.
-			if constexpr (!std::is_same<ComplexT,complex_dbl>::value)
-			{
-				if (Precision(time) > memory_.precision_)
-					this->precision(Precision(time));
-			}
-
-			if (!this->HavePathVariable())
-				throw std::runtime_error("calling Eval with path variable, but this StraightLineProgram doesn't have one.");
-			// then actually copy the path variable into where it goes in memory
-
-			auto& memory = memory_.Get<ComplexT>(); // unpack for local reference
-
-			memory[program_->input_locations_.Time] = time;
-			// assigning an mp value adopts the SOURCE's precision, so a lower-precision time
-			// would otherwise leave one slot out of step with the rest of memory
-			if constexpr (!std::is_same<ComplexT,complex_dbl>::value)
-				Precision(memory[program_->input_locations_.Time], memory_.precision_);
-			memory_.is_evaluated_ = false;
-		}
-
-
-
-
-
-
-		using IntT = int;  ///< The integer type used for the program's integer bank.
-
-		private:
-
-		// Size the register file to the program's slot count and copy the constant values in.  Called
-		// by the compiler once the program is built and memory_.precision_ is set.
-		void SetupMemory();
-
-		/// \brief Downsample the exact constant recipes into the working memory at number type NumT.
-		template<typename NumT>
-		void CopyNumbersIntoMemory() const;
-
-
-		std::shared_ptr<const SLPProgram> program_; ///< The immutable compiled program (shareable).
-		mutable SLPMemory memory_;                  ///< The per-thread mutable working state.
-
-
-
-		friend class boost::serialization::access;
-
-		/// \cond SLP_SERIALIZATION
-
-		// The program is serialized by value through the (owning, this-stage) shared_ptr, sidestepping
-		// boost's shared_ptr<const T> handling.  Clone (system.cpp) recompiles the SLP after a round
-		// trip anyway; node_serialization round-trips it faithfully.
-		template <typename Archive>
-		void save(Archive& ar, const unsigned /*version*/) const {
-			SLPProgram const& prog = *program_;
-			ar & prog;
-			ar & memory_;
-		}
-
-		template <typename Archive>
-		void load(Archive& ar, const unsigned /*version*/) {
-			auto prog = std::make_shared<SLPProgram>();
-			ar & *prog;
-			// Re-intern on load (ADR-0042): a deserialized program unifies with a content-equal
-			// live one instead of forking the intern universe.
-			program_ = InternProgram(std::shared_ptr<const SLPProgram>(std::move(prog)));
-			ar & memory_;
-		}
-
-		BOOST_SERIALIZATION_SPLIT_MEMBER()
-		/// \endcond
-
-	};
-
-
-	/// \brief Compiles a System (or polynomial block) into a StraightLineProgram by visiting its
-	///        function-tree nodes and emitting tape instructions (with common-subexpression sharing).
-	class SLPCompiler : public VisitorBase,
-
-			// IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
-
-
-			// symbols and roots
-			public Visitor<node::Variable>,
-			public Visitor<node::Integer>,
-			public Visitor<node::Complex>,
-			public Visitor<node::Rational>,
-			public Visitor<node::NamedExpression>,
-			public Visitor<node::Differential>,
-
-			// arithmetic
-			public Visitor<node::SumOperator>,
-			public Visitor<node::MultOperator>,
-			public Visitor<node::IntegerPowerOperator>,
-			public Visitor<node::PowerOperator>,
-			public Visitor<node::ExpOperator>,
-			public Visitor<node::LogOperator>,
-			public Visitor<node::NegateOperator>,
-			public Visitor<node::SqrtOperator>,
-
-			// the trig operators
-			public Visitor<node::SinOperator>,
-			public Visitor<node::ArcSinOperator>,
-			public Visitor<node::CosOperator>,
-			public Visitor<node::ArcCosOperator>,
-			public Visitor<node::TanOperator>,
-			public Visitor<node::ArcTanOperator>,
-
-			public Visitor<node::special_number::Pi>,
-			public Visitor<node::special_number::E>
-
-			// also missing -- linears and difflinears.
-
-			// these abstract base types left out,
-
-			// but commented here to explain why
-			//    public Visitor<node::Operator>,// abstract
-			//    public Visitor<node::UnaryOperator>,// abstract
-			//    public Visitor<node::NaryOperator>,// abstract
-			//    public Visitor<node::TrigOperator>,// abstract
-	{
-	private:
-		using Nd = std::shared_ptr<const node::Node>;
-		using SLP = StraightLineProgram;
-
-		public:
-
-			// Compile from any source exposing the variable-ordering / functions / derivatives /
-			// path-variable accessors -- both System and blocks::PolynomialBlock qualify.
-			// Definition + explicit instantiations live in straight_line_program.cpp.
-			/// \brief Compile a source (a System or polynomial block) into a StraightLineProgram.
-			/// \tparam SourceT A type exposing variable-ordering / functions / derivatives / path-variable accessors.
-			/// \param source The system or block to compile.
-			/// \return The compiled straight-line program.
-			template <typename SourceT>
-			SLP Compile(SourceT const& source);
-
-
-			// IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
-
-			/// \cond SLP_COMPILER_VISIT
-			// symbols and roots
-			virtual void Visit(node::Variable const& n);
-			virtual void Visit(node::Integer const& n);
-			virtual void Visit(node::Complex const& n);
-			virtual void Visit(node::Rational const& n);
-			virtual void Visit(node::NamedExpression const& n);
-			virtual void Visit(node::Differential const& n);
-
-			// arithmetic
-			virtual void Visit(node::SumOperator const& n);
-			virtual void Visit(node::MultOperator const& n);
-			virtual void Visit(node::IntegerPowerOperator const& n);
-			virtual void Visit(node::PowerOperator const& n);
-			virtual void Visit(node::ExpOperator const& n);
-			virtual void Visit(node::LogOperator const& n);
-			virtual void Visit(node::NegateOperator const& n);
-			virtual void Visit(node::SqrtOperator const& n);
-
-
-			// the trig operators
-			virtual void Visit(node::SinOperator const& n);
-			virtual void Visit(node::ArcSinOperator const& n);
-			virtual void Visit(node::CosOperator const& n);
-			virtual void Visit(node::ArcCosOperator const& n);
-			virtual void Visit(node::TanOperator const& n);
-			virtual void Visit(node::ArcTanOperator const& n);
-
-			virtual void Visit(node::special_number::Pi const& n);
-			virtual void Visit(node::special_number::E const& n);
-			// missing -- linear and difflinear
-			/// \endcond
-		private:
-
-
-			/**
-			 \brief Bake an exact constant into the program at the next available slot, and register
-			 the node pointer so repeated references (CSE) share that slot.  The recipe is built from
-			 the concrete number node by the Visit methods (see RecipeFor in the cpp), reading the
-			 node's true value directly --- no function-tree evaluation (ADR-0027).
-			 */
-			void RegisterConstant(Nd const& nd, ConstantRecipe recipe);
-
-			/**
-			 \brief Emit a compute instruction, value-numbered.  Allocates a fresh result slot and
-			 emits `op(a,b)` -- but if value-numbering is on and an identical instruction was already
-			 emitted (same op and operand slots; commutative ops match either operand order), returns
-			 that earlier result slot and emits nothing.  Returns the result slot either way.  Used
-			 for every allocating compute emission; the fixed-slot output Assigns bypass this.
-			 */
-			size_t EmitBinary(Operation op, size_t a, size_t b);
-			/// \brief Emit a value-numbered one-operand compute instruction.  \see EmitBinary
-			size_t EmitUnary(Operation op, size_t a);
-
-			/**
-			 \brief Reset the compiler to compile another SLP from another system.
-			 */
-			void Clear();
-
-			size_t next_available_complex_ = 0; ///< Where should the next complex number go in memory?
-			size_t next_available_int_ = 0; ///< Where should the next integer go?
-
-			using IntT = int;  ///< The integer type used for the program's integer bank.
-
-			std::map<Nd, size_t> locations_encountered_nodes_; ///< A registry of pointers-to-nodes and location in memory on where to find *their results*.
-			std::map<IntT, size_t> locations_integers_;  ///< A registry mapping integer values to their memory slots.
-
-			// Value-numbering tables (instruction-level CSE): map an emitted computation to the slot
-			// holding its result, so an identical later computation reuses it.  Keyed by (op, operand
-			// slots); commutative ops canonicalize operand order before keying.  Reset per Compile.
-			std::map<std::tuple<Operation,size_t,size_t>, size_t> vn_binary_;
-			std::map<std::pair<Operation,size_t>, size_t>         vn_unary_;
-
-			SLPProgram program_under_construction_; ///< the under-construction program.  wrapped into an SLP and returned at end of `Compile`.
-	};
+    class SLPCompiler;
+    class System; // a forward declaration, solving the circular inclusion problem
+    class StraightLineProgram;
+
+
+    /**
+    \brief The numeric type a memory slot holds, orthogonal to working precision (ADR-0034).
+
+    Precision (double vs multiprecision) is the Eval<NumT> template parameter; this is the ℝ/ℂ
+    axis within a precision.  A slot tagged Real lives in the real register bank (real_dbl /
+    real_mp), Complex in the complex bank (complex_dbl / complex_mp).  The compiler infers each
+    slot's NumType from the function tree (a constant whose imaginary part is zero, an Integer, a
+    Rational with zero imaginary part, Pi/E are Real; variables and the path variable are Complex;
+    an operator's result is the join of its operands, escaping to Complex for ops that can leave ℝ).
+    Integer is reserved for a later stage; S1 uses {Real, Complex}.
+    */
+    enum class NumType : uint8_t { Real = 0, Complex = 1 };  // Integer added in a later stage
+
+
+    /// \brief The opcodes for the operations a straight-line program instruction can perform.
+    enum Operation { // we'll start with the binary ones
+        Add=      1 << 0,
+        Subtract= 1 << 1,
+        Multiply= 1 << 2,
+        Divide=   1 << 3,
+        Power=    1 << 4,
+        Exp=      1 << 5,
+        Log=      1 << 6,
+        Negate=   1 << 7,
+        Sqrt=     1 << 8,
+        Sin=      1 << 9,
+        Cos=      1 << 10,
+        Tan=      1 << 11,
+        Asin=     1 << 12,
+        Acos=     1 << 13,
+        Atan=     1 << 14,
+        Assign=   1 << 15,
+        IntPower= 1 << 16,
+    };
+
+    const int BinaryOperations = Add|Subtract | Multiply|Divide | Power | IntPower;  ///< Bit-mask of the two-operand operations.
+    const int TrigOperations   = Sin|Cos|Tan | Asin|Acos|Atan;  ///< Bit-mask of the trigonometric operations.
+    const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations | Sqrt;  ///< Bit-mask of the one-operand operations.
+
+    /// \brief Query whether an operation takes a single operand.
+    constexpr bool IsUnary(Operation op)
+    {
+        return op & UnaryOperations;
+    }
+
+    /// \brief Query whether an operation takes two operands.
+    constexpr bool IsBinary(Operation op)
+    {
+        return op & BinaryOperations;
+    }
+
+    /// \brief Get a human-readable name for an opcode.
+    std::string OpcodeToString(Operation op);
+
+    /// Whether the SLP compiler value-numbers (instruction-level CSE) while emitting the tape:
+    /// an identical (op, operand-slots) computation reuses the earlier result slot instead of
+    /// recomputing.  Complements node-level hash-consing by sharing intermediates that only
+    /// coincide after lowering (e.g. the x^2 computed inside x^3 shared with a standalone x^2).
+    /// Session-global A/B switch, ON by default; off recovers the pre-VN tape for measurement.
+    bool SLPValueNumbering();
+    /// \brief Set whether the SLP compiler value-numbers while emitting the tape.
+    void SetSLPValueNumbering(bool on);
+
+    // Compile-time bank selectors (ADR-0034).  After NumType inference, each instruction's opcode word
+    // gets these high bits set to record which bank (real or complex) each operand and the result live
+    // in, so the hot eval loop reads the banks inline from the instruction it has already loaded instead
+    // of looking up slot_numtype_[slot] per operand.  The base Operation occupies bits 0..16, so these
+    // sit well clear of it; masking with kOpcodeMask recovers the base op for the switch and for IsUnary.
+    constexpr size_t kOpcodeMask = (static_cast<size_t>(1) << 17) - 1;  ///< Mask recovering the base opcode from an instruction word.
+    constexpr size_t kArg0Real   =  static_cast<size_t>(1) << 20;  ///< High bit: first operand slot is NumType::Real.
+    constexpr size_t kArg1Real   =  static_cast<size_t>(1) << 21;  ///< High bit: second operand slot is Real (binary, not IntPower).
+    constexpr size_t kOutReal    =  static_cast<size_t>(1) << 22;  ///< High bit: result slot is NumType::Real.
+
+
+    /**
+     \struct SLPOutputLocations
+
+     A struct encapsulating the starting locations of outputs in the SLP's memory layout.
+     */
+    struct SLPOutputLocations{
+        size_t Functions{0};  ///< Memory offset of the function-value outputs.
+        size_t Jacobian{0};   ///< Memory offset of the Jacobian outputs.
+        size_t TimeDeriv{0};  ///< Memory offset of the time-derivative outputs.
+
+        friend class boost::serialization::access;
+
+        /// \cond SLP_SERIALIZATION
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & Functions;
+            ar & Jacobian;
+            ar & TimeDeriv;
+        }
+        /// \endcond
+    };
+
+    /**
+     \struct SLPInputLocations
+
+     A struct encapsulating the starting locations of inputs in the SLP's memory layout.
+     */
+    struct SLPInputLocations{
+        size_t Variables{0};  ///< Memory offset of the variable inputs.
+        size_t Time{0};       ///< Memory offset of the path-variable (time) input.
+
+        friend class boost::serialization::access;
+
+        /// \cond SLP_SERIALIZATION
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & Variables;
+            ar & Time;
+        }
+        /// \endcond
+    };
+
+    /**
+     \struct SLPNumberOf
+
+     A struct encapsulating the numbers of things appearing in the SLP.
+     */
+    struct SLPNumberOf{
+        size_t Functions{0};  ///< The number of functions in the system.
+        size_t Variables{0};  ///< The number of variables in the system.
+        size_t Jacobian{0};   ///< The number of Jacobian entries.
+        size_t TimeDeriv{0};  ///< The number of time-derivative entries.
+
+        friend class boost::serialization::access;
+
+        /// \cond SLP_SERIALIZATION
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & Functions;
+            ar & Variables;
+            ar & Jacobian;
+            ar & TimeDeriv;
+        }
+        /// \endcond
+    };
+
+
+
+    /**
+     \struct ConstantRecipe
+
+     An exact, node-independent description of a constant baked into the program: enough to
+     (re)produce the constant's value at any working precision, without evaluating a function-tree
+     node (ADR-0027; node evaluation is being retired).  Integers and rationals are stored exactly
+     (so they downsample to any precision without loss --- sidestepping any maximum-precision
+     setting); Pi/E are recomputed at the working precision; a Complex literal carries its
+     authored-precision value (its inherent ceiling).
+     */
+    struct ConstantRecipe{
+        /// \brief Which kind of constant this recipe produces.
+        enum class Kind : int { Integer, Rational, Complex, Pi, E };
+
+        Kind kind = Kind::Integer;          ///< Which kind of constant this is.
+        mpz_int      int_value;             ///< Kind::Integer  (exact)
+        mpq_rational rat_real;              ///< Kind::Rational real part (exact).
+        mpq_rational rat_imag;              ///< Kind::Rational imaginary part (exact).
+        complex_mp float_value;             ///< Kind::Complex (authored-precision literal; also a fixed variable's value)
+        size_t slot = 0;                    ///< where this constant lives in the register file
+
+        /// Produce the constant's value at the ambient working precision (ThreadPrecision), matching
+        /// the corresponding number node's FreshEval exactly.  Definition + instantiations in the cpp.
+        template<typename NumT> NumT Produce() const;
+
+        /// Produce just the REAL value (for a slot inferred NumType::Real).  Only valid when IsReal().
+        template<typename RealT> RealT ProduceReal() const;
+
+        /// Whether this constant is real-valued: Integer/Pi/E always; a Rational/Complex literal iff its
+        /// imaginary part is exactly zero.  Drives NumType::Real inference for constant slots (ADR-0034).
+        bool IsReal() const {
+            switch (kind) {
+                case Kind::Integer: case Kind::Pi: case Kind::E: return true;
+                case Kind::Rational: return rat_imag == 0;
+                case Kind::Complex:  return float_value.imag() == 0;
+            }
+            return false;
+        }
+
+        friend class boost::serialization::access;
+        /// \cond SLP_SERIALIZATION
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            int k = static_cast<int>(kind);
+            ar & k;
+            kind = static_cast<Kind>(k);
+            ar & int_value;
+            ar & rat_real;
+            ar & rat_imag;
+            ar & float_value;
+            ar & slot;
+        }
+        /// \endcond
+    };
+
+
+
+    /**
+     \class SLPMemory
+
+     The per-thread mutable working state of a straight-line program evaluation: the register
+     file (one bank per number type), the working precision, and the freshness / frozen-prologue
+     flags.  Cheap to allocate; never shared across threads (ADR-0027).
+     */
+    class SLPMemory{
+    public:
+        /// \brief Get a mutable reference to the register bank for number type NumT.
+        template<typename NumT>
+        std::vector<NumT>& Get() { return std::get<std::vector<NumT>>(registers_); }
+
+        /// \brief Get a const reference to the register bank for number type NumT.
+        template<typename NumT>
+        std::vector<NumT> const& Get() const { return std::get<std::vector<NumT>>(registers_); }
+
+        /// The register file (ADR-0034): one bank per (precision, NumType).  A slot lives in exactly
+        /// one bank, chosen by its NumType; the real banks are the real companions of the complex ones
+        /// (real_dbl for complex_dbl, real_mp for complex_mp).  Get<NumT>() selects a bank by type.
+        mutable std::tuple< std::vector<real_dbl>, std::vector<complex_dbl>,
+                            std::vector<real_mp>,  std::vector<complex_mp> > registers_;
+
+        mutable unsigned precision_ = 16; ///< The current working number of digits.
+        mutable bool is_evaluated_ = false;  ///< Whether the program has been evaluated against this memory.
+
+        // Whether the frozen prologue's results in memory are valid.  Tracked per number type: the
+        // double constants never change once computed; the mpfr constants are valid only while the
+        // working precision is unchanged.  Transient (recomputed on first eval; not serialized).
+        mutable bool frozen_valid_dbl_ = false;  ///< Whether the frozen prologue's double results in memory are valid.
+        mutable unsigned frozen_valid_mp_precision_ = 0;  ///< Precision at which the frozen prologue's mp results are valid (0 = none).
+
+        friend class boost::serialization::access;
+
+        /// \cond SLP_SERIALIZATION
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & std::get<std::vector<real_dbl>>(registers_);
+            ar & std::get<std::vector<complex_dbl>>(registers_);
+            ar & std::get<std::vector<real_mp>>(registers_);
+            ar & std::get<std::vector<complex_mp>>(registers_);
+            ar & precision_;
+            ar & is_evaluated_;
+            // frozen_valid_* are transient (recomputed on first eval); not serialized.
+        }
+        /// \endcond
+    };
+
+
+
+    /**
+     \class SLPProgram
+
+     The immutable compiled straight-line program (ADR-0027): the instruction tape, the constant
+     recipe (true values of numbers + integer bank), and the memory layout (numbers of / locations
+     of things).  Built once by the SLPCompiler; thereafter read-only, so it is shareable across
+     threads.  Evaluation runs the tape against a per-thread SLPMemory.
+     */
+    class SLPProgram{
+        friend SLPCompiler;
+        friend class StraightLineProgram;
+        friend std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s);
+
+    private:
+        using Nd = std::shared_ptr<const node::Node>;
+
+    public:
+        using IntT = int;  ///< The integer type used for the program's integer bank.
+
+        SLPProgram() = default;
+
+        /// \brief ADR-0034 A/B switch: when false, leave every slot Complex (pre-tier all-complex eval).
+        ///        Read at compile time; default true.  For benchmarking only, not production toggling.
+        static bool tiers_enabled_;
+
+        /// \brief Query whether the program has a path variable.
+        bool HavePathVariable() const { return has_path_variable_; }
+        /// \brief Get the number of functions in the program.
+        inline unsigned NumFunctions() const{ return static_cast<unsigned>(number_of_.Functions);}
+        /// \brief Get the number of variables in the program.
+        inline unsigned NumVariables() const{ return static_cast<unsigned>(number_of_.Variables);}
+        /// \brief Get the total number of memory slots (per register bank) the program needs.
+        inline size_t NumSlots() const { return num_slots_; }
+        /// \brief Get the word offset into the tape where the live (post-frozen-prologue) segment begins.
+        inline size_t FirstLiveInstructionOffset() const { return first_live_instruction_; }
+
+        /// In-process structural hash of the full immutable program content: the (specialized)
+        /// instruction tape, the exact constant recipes, the integer bank, and the memory layout.
+        /// Keys the program intern table (ADR-0027 E4).  NOT stable across runs or compilers --
+        /// persistent identity belongs to the owning System's ContentDigest (ADR-0042).
+        std::size_t ContentHash() const;
+
+        /// Exact content equality over every field ContentHash folds; disambiguates hash
+        /// collisions in the program intern table.  SameContent(a,b) implies equal ContentHash.
+        bool SameContent(SLPProgram const& other) const;
+
+        /**
+        \brief loops through the instructions in the tape and evaluates each operation against the
+        given memory.
+
+        \tparam NumT numeric type
+
+        uses a switch to find different operations from memory to make sure its performing the correct evaluations
+
+        todo: implement a compile-time version of this using Boost.Hana
+         */
+        template<typename NumT>
+        void Eval(SLPMemory& memory) const;  // this definition is in cpp, along with the lines that instantiate the needed versions.
+
+    private:
+        /**
+         \brief Add an instruction to the tape.  This one's for binary operations
+
+         \param binary_op The opcode, from the enum.
+         \param in_loc1 The location of the first operand
+         \param in_loc2 The locatiion in memory of the second operand
+         \param out_loc Where in memory to put the result of the operation.
+         */
+        void AddInstruction(Operation binary_op, size_t in_loc1, size_t in_loc2, size_t out_loc);
+
+        /**
+         \brief Add an instruction to the tape.  This one's for unary operations
+
+         \param unary_op The opcode, from the enum.
+         \param in_loc The location of the one and only operand
+         \param out_loc Where in memory to put the result of the operation.
+         */
+        void AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc);
+
+        /**
+         \brief Register an exact constant recipe and the memory location it downsamples into.
+         */
+        void AddConstant(ConstantRecipe recipe);
+
+        // Reorder `instructions_` into [frozen | live] and set `first_live_instruction_`.  Called once
+        // at the end of compilation, after `num_slots_` is set.
+        void PartitionInstructions();
+
+        // Fill slot_numtype_ by a forward pass over the (dependency-ordered) tape (ADR-0034): seed
+        // constant slots from ConstantRecipe::IsReal() and input slots as Complex, then propagate the
+        // NumType join through each instruction.  Called at the end of compilation.
+        void ComputeSlotNumTypes();
+
+        // Pack each instruction's operand/result banks (from slot_numtype_) into its opcode word's high
+        // bits (kArg0Real/kArg1Real/kOutReal), so eval dispatches banks without per-slot lookups.  Runs
+        // after ComputeSlotNumTypes and PartitionInstructions (it only sets bits; order vs. partition
+        // doesn't matter as it rewrites instructions in place).
+        void SpecializeInstructions();
+
+
+        bool has_path_variable_ = false; ///< Does this SLP have a path variable?
+
+        SLPNumberOf number_of_;  ///< Quantities of things.
+        SLPOutputLocations output_locations_; ///< Where to find outputs, like functions and derivatives.
+        SLPInputLocations input_locations_; ///< Where to find inputs, like variables and time.
+
+        std::vector<IntT> integers_;  ///< The program's integer bank.
+
+        std::vector<size_t> instructions_; ///< The instructions.  The opcodes are stored as size_t's, as well as the locations of operands and results.
+        std::vector<ConstantRecipe> constant_recipes_; ///< the exact constants, each carrying the slot to downsample into.
+
+        // Freeze-set tape partition (ADR-0027).  After compilation the instructions are stably
+        // reordered so every "frozen" instruction (one whose result depends only on frozen input
+        // slots --- the literal numbers, Pi/E; i.e. the freeze set is currently the constants)
+        // precedes every "live" instruction.  `first_live_instruction_` is the word offset where the
+        // live segment begins.  The frozen prologue depends only on precision, so a point-only change
+        // re-runs from `first_live_instruction_` and reuses the frozen slots already in memory; the
+        // whole tape runs only when the frozen values are not yet valid for the working precision.
+        size_t first_live_instruction_ = 0;  ///< Word offset where the live segment of the tape begins.
+
+        size_t num_slots_ = 0; ///< Total number of memory slots the program needs (per number bank).
+
+        // The NumType of each slot (ADR-0034), indexed by global slot number; sized to num_slots_.
+        // Selects which register bank a slot lives in.  Default Complex (filled by the compiler);
+        // an all-Complex table reproduces the pre-tier behavior exactly.
+        std::vector<NumType> slot_numtype_;  ///< The NumType (register bank) of each slot, indexed by slot number.
+
+
+        friend class boost::serialization::access;
+
+        /// \cond SLP_SERIALIZATION
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & has_path_variable_;
+            ar & number_of_;
+            ar & output_locations_;
+            ar & input_locations_;
+            ar & integers_;
+            ar & instructions_;
+            ar & constant_recipes_;
+            ar & first_live_instruction_;
+            ar & num_slots_;
+            ar & slot_numtype_;
+        }
+        /// \endcond
+    };
+
+
+
+    /**
+    \brief Hash-cons a freshly-compiled program: return an existing content-equal SLPProgram if
+    one is live, otherwise register and return the candidate (ADR-0027 E4, ADR-0042).
+
+    The Program-level analogue of node::Intern: a process-global, weak (self-cleaning),
+    mutex-guarded table keyed by SLPProgram::ContentHash() and disambiguated by SameContent().
+    Facades (StraightLineProgram) sharing one interned Program each keep their own SLPMemory,
+    so the ADR-0027 threading contract is unchanged.  Wired into SLPCompiler::Compile and
+    StraightLineProgram deserialization, so identical compiled tapes -- including ones loaded
+    from archives -- collapse to a single shared immutable object.
+    */
+    std::shared_ptr<const SLPProgram> InternProgram(std::shared_ptr<const SLPProgram> const& candidate);
+
+
+    /**
+     \class StraightLineProgram
+
+     An implementation of straight-line programs, implemented with strong inspiration from Bertini1's implementation.
+
+     One constructs a SLP from a system, like
+
+     ```
+     System my_system();
+     StraightLineProgram slp(my_system);
+     ```
+
+     Maybe you don't need to know this, but in construction the SLP uses a helper class, the SLPCompiler
+
+     Patches are just functions in this framework.  The variables appear at the front of the memory, then functions, then derivatives.  This should make copying data out easy, because it's all in one place.
+
+     In contrast to Bertini1 SLP's, we don't put all the numbers at the front -- they just get scattered through the SLP's memory.
+
+     The class is a thin facade (ADR-0027) over an immutable, shareable SLPProgram and a per-thread
+     SLPMemory.
+     */
+    class StraightLineProgram{
+        friend SLPCompiler;
+        friend std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s);
+
+    private:
+        using Nd = std::shared_ptr<const node::Node>;
+
+    public:
+
+        /**
+        The constructor -- how to make a SLP from a System.
+        */
+        StraightLineProgram(System const & sys);
+
+        StraightLineProgram() : program_(std::make_shared<const SLPProgram>()) {}
+
+        /// \brief Evaluate the program at the given variable values (no path variable).
+        /// \tparam Derived The Eigen expression type of the variable values.
+        /// \param variable_values The values of the variables.
+        template<typename Derived>
+        void Eval(Eigen::MatrixBase<Derived> const& variable_values) const
+        {
+            using NumT = typename Derived::Scalar;
+            SetVariableValues(variable_values);
+            program_->Eval<NumT>(memory_);
+        }
+
+        /**
+        \brief copies the variable values into the Matrix base and the path variables into the complex type time
+
+        \tparam Derived derived type
+
+        \tparam ComplexT complex type
+
+        \param variable_values dervied matrixBase of variable values
+
+        \param  time complex type for time
+
+         */
+        template<typename Derived, typename ComplexT>
+        void Eval(Eigen::MatrixBase<Derived> const& variable_values, ComplexT const& time) const
+        {
+            using NumT = typename Derived::Scalar;
+            static_assert(std::is_same<NumT, ComplexT>::value, "scalar types must be the same");
+
+            // 1. copy variable values into memory locations they're supposed to go in
+            SetVariableValues(variable_values);
+            SetPathVariable(time);
+            program_->Eval<NumT>(memory_);
+        }
+
+
+
+        // a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
+        /// \brief Evaluate the program's functions (currently a synonym for the full Eval).
+        template <typename T>
+        void EvalFunctions() const{
+            program_->Eval<T>(memory_);
+        }
+
+
+
+        // a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
+        /// \brief Evaluate the program's Jacobian (currently a synonym for the full Eval).
+        template <typename T>
+        void EvalJacobian() const{
+            program_->Eval<T>(memory_);
+        }
+
+
+        // a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
+        /// \brief Evaluate the program's time derivative (currently a synonym for the full Eval).
+        template <typename T>
+        void EvalTimeDeriv() const{
+            program_->Eval<T>(memory_);
+        }
+
+
+        /// The immutable compiled program this facade runs.  Interned (ADR-0027 E4): facades
+        /// compiled from content-identical sources share one Program object (pointer equality is
+        /// meaningful), each with its own SLPMemory.
+        std::shared_ptr<const SLPProgram> Program() const { return program_; }
+
+        /// Number of slots the compiler inferred as NumType::Real (ADR-0034).  >0 means real-valued
+        /// subexpressions are being evaluated in the cheaper real banks; used by tests to confirm the
+        /// tier inference is live (not silently all-Complex).
+        size_t NumRealSlots() const {
+            size_t n = 0;
+            for (auto t : program_->slot_numtype_) if (t == NumType::Real) ++n;
+            return n;
+        }
+
+        // Read a slot's value as NumT (complex), pulling from the real or complex bank per its NumType
+        // (ADR-0034).  Used to copy outputs out, since a function/derivative slot could be Real-typed.
+        /// \brief Read a slot's value as a complex NumT, pulling from its real or complex bank per its NumType.
+        template<typename NumT>
+        NumT ReadSlotAsComplex(size_t slot) const {
+            using RealT = typename NumTraits<NumT>::Real;
+            if (program_->slot_numtype_[slot] == NumType::Real)
+                return NumT(memory_.template Get<RealT>()[slot]);
+            return memory_.template Get<NumT>()[slot];
+        }
+
+        /// \brief Copy the computed function values into the provided vector (does not resize it).
+        /// \tparam NumT The number type.
+        /// \param[out] result The vector to write the function values into.
+        template<typename NumT>
+        void GetFuncValsInPlace(Eigen::Ref<Vec<NumT>> result) const{
+            if (!memory_.is_evaluated_)
+                program_->Eval<NumT>(memory_);
+
+            // copy content (an output slot may be Real-typed; read from the bank its NumType selects)
+            for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
+                result(static_cast<Eigen::Index>(ii)) = ReadSlotAsComplex<NumT>(ii + program_->output_locations_.Functions);
+            }
+        }
+
+        /**
+        \brief retrieves the computed values of jacobians
+
+        \tparam NumT numeric type
+
+        \param result The vector you're going to store the values into
+
+        the function will NOT automatically resize your vector for you to be the correct size
+
+         */
+
+        template<typename NumT>
+        void GetJacobianInPlace(Eigen::Ref<Mat<NumT>> result) const{
+            if (!memory_.is_evaluated_)
+                program_->Eval<NumT>(memory_);
+
+            // copy content (a derivative slot may be Real-typed; read from the bank its NumType selects)
+            for (size_t jj =0; jj < program_->number_of_.Variables; ++jj) {
+                for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
+                    result(static_cast<Eigen::Index>(ii), static_cast<Eigen::Index>(jj)) = ReadSlotAsComplex<NumT>(ii+jj*program_->number_of_.Functions + program_->output_locations_.Jacobian);
+                }
+            }
+        }
+
+        /**
+        \brief copies the values of the time derivatives into your given vector
+
+        \tparam NumT numeric type
+
+        \param result The vector you're going to store the values into
+
+        the function will automatically resize your vector for you to be the correct size
+
+         */
+
+        template<typename NumT>
+        void GetTimeDerivInPlace(Eigen::Ref<Vec<NumT>> result) const{
+            if (!memory_.is_evaluated_)
+                program_->Eval<NumT>(memory_);
+
+            // copy content (a time-derivative slot may be Real-typed; read from the right bank)
+            for (size_t ii = 0; ii < program_->number_of_.Functions; ++ii) {
+                result(static_cast<Eigen::Index>(ii)) = ReadSlotAsComplex<NumT>(ii + program_->output_locations_.TimeDeriv);
+            }
+        }
+
+        /**
+        \brief creates the Vec<NumT> to be used in the overloaded function
+
+        \tparam NumT numeric type
+
+         */
+        template<typename NumT>
+        Vec<NumT> GetFuncVals() const{
+            Vec<NumT> return_me(this->NumFunctions());
+            GetFuncValsInPlace<NumT>(return_me);
+            return return_me;
+        }
+        /**
+        \brief creates the Vec<NumT> to be used in the overloaded function
+
+        \tparam NumT numeric type
+
+         */
+        template<typename NumT>
+        Mat<NumT> GetJacobian() const{
+            Mat<NumT> return_me(this->NumFunctions(), this->NumVariables());
+            GetJacobianInPlace<NumT>(return_me);
+            return return_me;
+        }
+        /**
+        \brief creates the Vec<NumT> to be used in the overloaded function
+
+        \tparam NumT numeric type
+
+         */
+        template<typename NumT>
+        Vec<NumT> GetTimeDeriv() const{
+            Vec<NumT> return_me(this->NumFunctions());
+            GetTimeDerivInPlace<NumT>(return_me);
+            return return_me;
+        }
+
+
+        /// \brief Get the number of functions in the program.
+        inline unsigned NumFunctions() const{ return program_->NumFunctions();}
+
+        /// \brief Get the number of variables in the program.
+        inline unsigned NumVariables() const{ return program_->NumVariables();}
+
+        /// Number of memory slots: one per distinct value the program holds (inputs, constants,
+        /// and one per compiled subexpression).  Shared subexpressions get a single slot, so this
+        /// is a measure of the compiled (CSE'd) size of the program.
+        inline size_t NumMemorySlots() const{ return program_->NumSlots(); }
+
+        /// Word offset into the instruction tape where the live segment begins (== total word length
+        /// of the frozen, constants-only prologue).  Zero means the program has no frozen prologue.
+        /// Exposed for testing the freeze-set tape partition (ADR-0027).
+        inline size_t FirstLiveInstructionOffset() const { return program_->FirstLiveInstructionOffset(); }
+
+
+        /**
+        \brief Get the current precision of the SLP.
+
+        \return The number of digits
+        */
+        inline
+        unsigned precision() const
+        {
+            return memory_.precision_;
+        }
+
+        /**
+        \brief change the precision of the SLP.
+
+        Downsamples from the true values.
+
+        \param new_precision The new number of digits
+        */
+        void precision(unsigned new_precision) const;
+
+        /// \brief Materialize this program's memory at the precision of the point being evaluated.
+        ///
+        /// Every evaluable type self-aligns under this name -- the blocks, the patch, and here --
+        /// so no caller and no owning System has to fan a precision out beforehand (ADR-0057).
+        /// precision() short-circuits when already there, so the steady state is one integer
+        /// compare.  No-op for double, which carries no precision.
+        ///
+        /// \param variable_values The point about to be evaluated at.
+        template<typename Derived>
+        void SyncPrecision(Eigen::MatrixBase<Derived> const& variable_values) const
+        {
+            using NumT = typename Derived::Scalar;
+            if constexpr (!std::is_same<NumT,complex_dbl>::value)
+            {
+                if (variable_values.size() > 0 && Precision(variable_values)!=memory_.precision_)
+                    this->precision(Precision(variable_values));
+            }
+        }
+
+        /**
+         \brief Does this SLP have a path variable?
+
+         \return Well, does it?
+         */
+        bool HavePathVariable() const {
+            return program_->has_path_variable_;
+        }
+
+        /**
+         \brief Overloaded operator for printing to an arbirtary out stream.
+         */
+        friend std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s);
+
+
+
+
+        /**
+         \brief Copy the values of the variables from the passed in vector to memory
+
+         \param variable_values The vector of current variable values.
+         */
+        template<typename Derived>
+        void SetVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
+            using NumT = typename Derived::Scalar;
+
+            // The Memory's precision is an ARTIFACT OF THE CURRENT EVALUATION, never an
+            // invariant to defend.  The compiled Program is a precision-independent tape of
+            // operations; only the Memory holding values carries digits.  So evaluating at
+            // whatever precision the caller brings is always meaningful, and the right
+            // response to a mismatch is to RE-TAG THE MEMORY, not to refuse.
+            //
+            // Refusing was a genuine trap, not merely unergonomic.  A Memory takes its
+            // precision from the ambient DefaultPrecision() when the program is lazily
+            // compiled, while the owning System keeps whatever it was told, so the two
+            // diverge the moment anything moves the ambient default -- which an AMP tracker
+            // or endgame does as a matter of course.  The System was then WEDGED with no way
+            // out: evaluating at its own reported precision raised here, and
+            // System::precision(n) could not repair it, because both setters short-circuit
+            // when the value they are handed already equals the one they hold.  See #377.
+            //
+            // An empty variable vector (a constant program with no variables) has no
+            // precision to read.  Re-tagging refills the constants from their exact recipes
+            // at the new precision, so accuracy is rebuilt rather than padded with zeros.
+            SyncPrecision(variable_values);
+
+            auto& memory = memory_.Get<NumT>(); // unpack for local reference
+
+            for (size_t ii = 0; ii < program_->number_of_.Variables; ++ii) {
+                //assign  to memory
+                memory[ii + program_->input_locations_.Variables] = variable_values(static_cast<Eigen::Index>(ii));
+            }
+            memory_.is_evaluated_ = false;
+        }
+
+        /**
+         \brief Copy the current time value to memory
+
+         \param time The current time
+         \tparam ComplexT the complex numeric type.
+
+         If the SLP doesn't have a path variable, then this will throw.
+         */
+        template<typename ComplexT>
+        void SetPathVariable(ComplexT const& time) const{
+
+            // Same doctrine as SetVariableValues, but this one only ever raises: the
+            // variables have already been written into memory by the time the path variable
+            // arrives, so re-tagging DOWNWARD here would truncate them.  Memory therefore
+            // ends an evaluation at the max of its arguments' precisions.
+            if constexpr (!std::is_same<ComplexT,complex_dbl>::value)
+            {
+                if (Precision(time) > memory_.precision_)
+                    this->precision(Precision(time));
+            }
+
+            if (!this->HavePathVariable())
+                throw std::runtime_error("calling Eval with path variable, but this StraightLineProgram doesn't have one.");
+            // then actually copy the path variable into where it goes in memory
+
+            auto& memory = memory_.Get<ComplexT>(); // unpack for local reference
+
+            memory[program_->input_locations_.Time] = time;
+            // assigning an mp value adopts the SOURCE's precision, so a lower-precision time
+            // would otherwise leave one slot out of step with the rest of memory
+            if constexpr (!std::is_same<ComplexT,complex_dbl>::value)
+                Precision(memory[program_->input_locations_.Time], memory_.precision_);
+            memory_.is_evaluated_ = false;
+        }
+
+
+
+
+
+
+        using IntT = int;  ///< The integer type used for the program's integer bank.
+
+        private:
+
+        // Size the register file to the program's slot count and copy the constant values in.  Called
+        // by the compiler once the program is built and memory_.precision_ is set.
+        void SetupMemory();
+
+        /// \brief Downsample the exact constant recipes into the working memory at number type NumT.
+        template<typename NumT>
+        void CopyNumbersIntoMemory() const;
+
+
+        std::shared_ptr<const SLPProgram> program_; ///< The immutable compiled program (shareable).
+        mutable SLPMemory memory_;                  ///< The per-thread mutable working state.
+
+
+
+        friend class boost::serialization::access;
+
+        /// \cond SLP_SERIALIZATION
+
+        // The program is serialized by value through the (owning, this-stage) shared_ptr, sidestepping
+        // boost's shared_ptr<const T> handling.  Clone (system.cpp) recompiles the SLP after a round
+        // trip anyway; node_serialization round-trips it faithfully.
+        template <typename Archive>
+        void save(Archive& ar, const unsigned /*version*/) const {
+            SLPProgram const& prog = *program_;
+            ar & prog;
+            ar & memory_;
+        }
+
+        template <typename Archive>
+        void load(Archive& ar, const unsigned /*version*/) {
+            auto prog = std::make_shared<SLPProgram>();
+            ar & *prog;
+            // Re-intern on load (ADR-0042): a deserialized program unifies with a content-equal
+            // live one instead of forking the intern universe.
+            program_ = InternProgram(std::shared_ptr<const SLPProgram>(std::move(prog)));
+            ar & memory_;
+        }
+
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
+        /// \endcond
+
+    };
+
+
+    /// \brief Compiles a System (or polynomial block) into a StraightLineProgram by visiting its
+    ///        function-tree nodes and emitting tape instructions (with common-subexpression sharing).
+    class SLPCompiler : public VisitorBase,
+
+            // IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
+
+
+            // symbols and roots
+            public Visitor<node::Variable>,
+            public Visitor<node::Integer>,
+            public Visitor<node::Complex>,
+            public Visitor<node::Rational>,
+            public Visitor<node::NamedExpression>,
+            public Visitor<node::Differential>,
+
+            // arithmetic
+            public Visitor<node::SumOperator>,
+            public Visitor<node::MultOperator>,
+            public Visitor<node::IntegerPowerOperator>,
+            public Visitor<node::PowerOperator>,
+            public Visitor<node::ExpOperator>,
+            public Visitor<node::LogOperator>,
+            public Visitor<node::NegateOperator>,
+            public Visitor<node::SqrtOperator>,
+
+            // the trig operators
+            public Visitor<node::SinOperator>,
+            public Visitor<node::ArcSinOperator>,
+            public Visitor<node::CosOperator>,
+            public Visitor<node::ArcCosOperator>,
+            public Visitor<node::TanOperator>,
+            public Visitor<node::ArcTanOperator>,
+
+            public Visitor<node::special_number::Pi>,
+            public Visitor<node::special_number::E>
+
+            // also missing -- linears and difflinears.
+
+            // these abstract base types left out,
+
+            // but commented here to explain why
+            //    public Visitor<node::Operator>,// abstract
+            //    public Visitor<node::UnaryOperator>,// abstract
+            //    public Visitor<node::NaryOperator>,// abstract
+            //    public Visitor<node::TrigOperator>,// abstract
+    {
+    private:
+        using Nd = std::shared_ptr<const node::Node>;
+        using SLP = StraightLineProgram;
+
+        public:
+
+            // Compile from any source exposing the variable-ordering / functions / derivatives /
+            // path-variable accessors -- both System and blocks::PolynomialBlock qualify.
+            // Definition + explicit instantiations live in straight_line_program.cpp.
+            /// \brief Compile a source (a System or polynomial block) into a StraightLineProgram.
+            /// \tparam SourceT A type exposing variable-ordering / functions / derivatives / path-variable accessors.
+            /// \param source The system or block to compile.
+            /// \return The compiled straight-line program.
+            template <typename SourceT>
+            SLP Compile(SourceT const& source);
+
+
+            // IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
+
+            /// \cond SLP_COMPILER_VISIT
+            // symbols and roots
+            virtual void Visit(node::Variable const& n);
+            virtual void Visit(node::Integer const& n);
+            virtual void Visit(node::Complex const& n);
+            virtual void Visit(node::Rational const& n);
+            virtual void Visit(node::NamedExpression const& n);
+            virtual void Visit(node::Differential const& n);
+
+            // arithmetic
+            virtual void Visit(node::SumOperator const& n);
+            virtual void Visit(node::MultOperator const& n);
+            virtual void Visit(node::IntegerPowerOperator const& n);
+            virtual void Visit(node::PowerOperator const& n);
+            virtual void Visit(node::ExpOperator const& n);
+            virtual void Visit(node::LogOperator const& n);
+            virtual void Visit(node::NegateOperator const& n);
+            virtual void Visit(node::SqrtOperator const& n);
+
+
+            // the trig operators
+            virtual void Visit(node::SinOperator const& n);
+            virtual void Visit(node::ArcSinOperator const& n);
+            virtual void Visit(node::CosOperator const& n);
+            virtual void Visit(node::ArcCosOperator const& n);
+            virtual void Visit(node::TanOperator const& n);
+            virtual void Visit(node::ArcTanOperator const& n);
+
+            virtual void Visit(node::special_number::Pi const& n);
+            virtual void Visit(node::special_number::E const& n);
+            // missing -- linear and difflinear
+            /// \endcond
+        private:
+
+
+            /**
+             \brief Bake an exact constant into the program at the next available slot, and register
+             the node pointer so repeated references (CSE) share that slot.  The recipe is built from
+             the concrete number node by the Visit methods (see RecipeFor in the cpp), reading the
+             node's true value directly --- no function-tree evaluation (ADR-0027).
+             */
+            void RegisterConstant(Nd const& nd, ConstantRecipe recipe);
+
+            /**
+             \brief Emit a compute instruction, value-numbered.  Allocates a fresh result slot and
+             emits `op(a,b)` -- but if value-numbering is on and an identical instruction was already
+             emitted (same op and operand slots; commutative ops match either operand order), returns
+             that earlier result slot and emits nothing.  Returns the result slot either way.  Used
+             for every allocating compute emission; the fixed-slot output Assigns bypass this.
+             */
+            size_t EmitBinary(Operation op, size_t a, size_t b);
+            /// \brief Emit a value-numbered one-operand compute instruction.  \see EmitBinary
+            size_t EmitUnary(Operation op, size_t a);
+
+            /**
+             \brief Reset the compiler to compile another SLP from another system.
+             */
+            void Clear();
+
+            size_t next_available_complex_ = 0; ///< Where should the next complex number go in memory?
+            size_t next_available_int_ = 0; ///< Where should the next integer go?
+
+            using IntT = int;  ///< The integer type used for the program's integer bank.
+
+            std::map<Nd, size_t> locations_encountered_nodes_; ///< A registry of pointers-to-nodes and location in memory on where to find *their results*.
+            std::map<IntT, size_t> locations_integers_;  ///< A registry mapping integer values to their memory slots.
+
+            // Value-numbering tables (instruction-level CSE): map an emitted computation to the slot
+            // holding its result, so an identical later computation reuses it.  Keyed by (op, operand
+            // slots); commutative ops canonicalize operand order before keying.  Reset per Compile.
+            std::map<std::tuple<Operation,size_t,size_t>, size_t> vn_binary_;
+            std::map<std::pair<Operation,size_t>, size_t>         vn_unary_;
+
+            SLPProgram program_under_construction_; ///< the under-construction program.  wrapped into an SLP and returned at end of `Compile`.
+    };
 
 
 

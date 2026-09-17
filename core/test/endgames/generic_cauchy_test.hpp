@@ -15,12 +15,12 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file generic_cauchy_test.hpp Defines tests that all cauchy endgames's, combined with all tracker types,  must pass. 
+\file generic_cauchy_test.hpp Defines tests that all cauchy endgames's, combined with all tracker types,  must pass.
 
 This file in intended for inclusion into another test file, which declares TrackerType and TestedEGType
 */
@@ -74,58 +74,58 @@ using bertini::DefaultPrecision;
 using namespace bertini::endgame;
 
 /**
-	In this test we take a univariate polynomial with one solution and ensure that our CircleTrack function returns to the same position. 
-	This is tested by checking that our cauchy_samples has the front and end with the same value roughly.
+    In this test we take a univariate polynomial with one solution and ensure that our CircleTrack function returns to the same position.
+    This is tested by checking that our cauchy_samples has the front and end with the same value roughly.
 */
 BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 {
-	
-	DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    DefaultPrecision(ambient_precision);
 
-	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	auto origin = BCT(0,0);
-	
+    tracker.PrecisionSetup(precision_config);
 
-	TestedEGType my_endgame(tracker);
-
-	bertini::SampCont<BCT>& cauchy_samples = my_endgame.GetCauchySamples<BCT>();
-	bertini::TimeCont<BCT>& cauchy_times = my_endgame.GetCauchyTimes<BCT>();
+    auto origin = BCT(0,0);
 
 
+    TestedEGType my_endgame(tracker);
 
-	cauchy_times.push_back(ComplexFromString("0.1"));
-	cauchy_samples.push_back(Vec<BCT>(1));
-	cauchy_samples.back() << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
+    bertini::SampCont<BCT>& cauchy_samples = my_endgame.GetCauchySamples<BCT>();
+    bertini::TimeCont<BCT>& cauchy_times = my_endgame.GetCauchyTimes<BCT>();
 
 
-	[[maybe_unused]] auto first_track_success =  my_endgame.CircleTrack(origin);
 
-	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - cauchy_samples.front()).template lpNorm<Eigen::Infinity>() < 1e-5);
+    cauchy_times.push_back(ComplexFromString("0.1"));
+    cauchy_samples.push_back(Vec<BCT>(1));
+    cauchy_samples.back() << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); //
+
+
+    [[maybe_unused]] auto first_track_success =  my_endgame.CircleTrack(origin);
+
+    BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - cauchy_samples.front()).template lpNorm<Eigen::Infinity>() < 1e-5);
 
 }
 
@@ -134,228 +134,228 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 
 
 /**
-	In this test we take a univariate polynomial with one solution of multiplicity 2. We need to ensure that our CircleTrack function 
-	returns to the same position after two calls. The first call should land us on the second path, and the second call should land us back 
-	where we started. This is tested by checking that cauchy_samples has the front and end with the same value roughly.
+    In this test we take a univariate polynomial with one solution of multiplicity 2. We need to ensure that our CircleTrack function
+    returns to the same position after two calls. The first call should land us on the second path, and the second call should land us back
+    where we started. This is tested by checking that cauchy_samples has the front and end with the same value roughly.
 */
 BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 {
-	
-	DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    DefaultPrecision(ambient_precision);
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> cauchy_times; 
-	bertini::SampCont<BCT> cauchy_samples; 
+    tracker.PrecisionSetup(precision_config);
 
-
-
-	Vec<BCT> sample(1);
-	auto origin = BCT(0,0);
+    bertini::TimeCont<BCT> cauchy_times;
+    bertini::SampCont<BCT> cauchy_samples;
 
 
-	BCT time = ComplexFromString("0.1");
-	cauchy_times.push_back(time);
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
-	cauchy_samples.push_back(sample);
 
-	TestedEGType my_endgame(tracker);
+    Vec<BCT> sample(1);
+    auto origin = BCT(0,0);
 
-	my_endgame.SetCauchySamples(cauchy_samples);
-	my_endgame.SetCauchyTimes(cauchy_times);
-	
-	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
 
-	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
+    BCT time = ComplexFromString("0.1");
+    cauchy_times.push_back(time);
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); //
+    cauchy_samples.push_back(sample);
 
-	BOOST_CHECK((first_track_sample - sample).template lpNorm<Eigen::Infinity>() > 1e-5);
+    TestedEGType my_endgame(tracker);
 
-	tracking_success =  my_endgame.CircleTrack(origin);
+    my_endgame.SetCauchySamples(cauchy_samples);
+    my_endgame.SetCauchyTimes(cauchy_times);
 
-	const auto& second_track_sample = my_endgame.GetCauchySamples<BCT>().back();
+    [[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
 
-	BOOST_CHECK((second_track_sample - sample).template lpNorm<Eigen::Infinity>() < 1e-5);
-	
+    const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
+
+    BOOST_CHECK((first_track_sample - sample).template lpNorm<Eigen::Infinity>() > 1e-5);
+
+    tracking_success =  my_endgame.CircleTrack(origin);
+
+    const auto& second_track_sample = my_endgame.GetCauchySamples<BCT>().back();
+
+    BOOST_CHECK((second_track_sample - sample).template lpNorm<Eigen::Infinity>() < 1e-5);
+
 } // end circle_track_mp_cycle_num_greater_than_1
 
 
 /**
-	We are going to track around a nonzero target time. For a random nonzero time value we expect to not encircle any branch points. 
-	Making the cycle number 1.
+    We are going to track around a nonzero target time. For a random nonzero time value we expect to not encircle any branch points.
+    Making the cycle number 1.
 */
 BOOST_AUTO_TEST_CASE(circle_track__nonzero_target_time)
 {
-	
-	DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    DefaultPrecision(ambient_precision);
 
-	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
+
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> cauchy_times; 
-	bertini::SampCont<BCT> cauchy_samples; 
+    tracker.PrecisionSetup(precision_config);
 
-
-
-	BCT time(1);
-	Vec<BCT> sample(1);
-	auto center = ComplexFromString(".19","-.01");
+    bertini::TimeCont<BCT> cauchy_times;
+    bertini::SampCont<BCT> cauchy_samples;
 
 
-	time = ComplexFromString("0.2");
-	cauchy_times.push_back(time);
-	sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); // 
-	cauchy_samples.push_back(sample);
 
-	TestedEGType my_endgame(tracker);
-
-	my_endgame.SetCauchySamples(cauchy_samples);
-	my_endgame.SetCauchyTimes(cauchy_times);
-	
-	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(center);
+    BCT time(1);
+    Vec<BCT> sample(1);
+    auto center = ComplexFromString(".19","-.01");
 
 
-	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
+    time = ComplexFromString("0.2");
+    cauchy_times.push_back(time);
+    sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); //
+    cauchy_samples.push_back(sample);
 
-	BOOST_CHECK((first_track_sample - sample).template lpNorm<Eigen::Infinity>() < 1e-5);
+    TestedEGType my_endgame(tracker);
+
+    my_endgame.SetCauchySamples(cauchy_samples);
+    my_endgame.SetCauchyTimes(cauchy_times);
+
+    [[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(center);
+
+
+    const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
+
+    BOOST_CHECK((first_track_sample - sample).template lpNorm<Eigen::Infinity>() < 1e-5);
 
 } // end circle_track_nonzero_target_time
 
 
 
 /**
-	In this test we take a univariate polynomial with one solution of multiplicity. For our first power series approximation we need to 
-	make sure that we have a stablization of the cycle number. This is achieved by computing an approximation for C over K which is described 
-	on page 53 of the Berini Book, Numerically Solving Polynomials Systems with Bertini \cite bertinibook.
+    In this test we take a univariate polynomial with one solution of multiplicity. For our first power series approximation we need to
+    make sure that we have a stablization of the cycle number. This is achieved by computing an approximation for C over K which is described
+    on page 53 of the Berini Book, Numerically Solving Polynomials Systems with Bertini \cite bertinibook.
 
-	This test case is ensuring no calculations are greatly altered, so our test condition is to check against a computed value that has been already known. 
+    This test case is ensuring no calculations are greatly altered, so our test condition is to check against a computed value that has been already known.
 */
 BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	bertini::System sys;
-	Var x = Variable::Make("x");
-	sys.AddFunction(pow(x-1,3));  //f(x) = (x-1)^3
+    bertini::System sys;
+    Var x = Variable::Make("x");
+    sys.AddFunction(pow(x-1,3));  //f(x) = (x-1)^3
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> pseg_times;
-	bertini::SampCont<BCT> pseg_samples;
-	
+    tracker.PrecisionSetup(precision_config);
 
-	BCT time(1);
-	Vec<BCT> sample(1);
-
-	time = ComplexFromString(".1"); // x = .1
-	pseg_times.push_back(time);
-	sample << ComplexFromString("-0.729"); // f(.1) = -0.729
-	pseg_samples.push_back(sample);
+    bertini::TimeCont<BCT> pseg_times;
+    bertini::SampCont<BCT> pseg_samples;
 
 
-	time = ComplexFromString(".05"); // x = .1/2 = .05
-	pseg_times.push_back(time);
-	sample << ComplexFromString("-0.857375"); //f(.05) = -0.857375
-	pseg_samples.push_back(sample);
+    BCT time(1);
+    Vec<BCT> sample(1);
+
+    time = ComplexFromString(".1"); // x = .1
+    pseg_times.push_back(time);
+    sample << ComplexFromString("-0.729"); // f(.1) = -0.729
+    pseg_samples.push_back(sample);
 
 
-	time = ComplexFromString(".025"); // x = .05/2 = .025
-	pseg_times.push_back(time);
-	sample << ComplexFromString("-0.926859375"); // f(.025) = -0.926859375
-	pseg_samples.push_back(sample);
+    time = ComplexFromString(".05"); // x = .1/2 = .05
+    pseg_times.push_back(time);
+    sample << ComplexFromString("-0.857375"); //f(.05) = -0.857375
+    pseg_samples.push_back(sample);
 
 
-	SecurityConfig security_settings;
+    time = ComplexFromString(".025"); // x = .05/2 = .025
+    pseg_times.push_back(time);
+    sample << ComplexFromString("-0.926859375"); // f(.025) = -0.926859375
+    pseg_samples.push_back(sample);
 
-	TestedEGType my_endgame(tracker,security_settings);
-	my_endgame.SetPSEGTimes(pseg_times);
-	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto first_c_over_k = my_endgame.ComputeCOverK<BCT>();
+    SecurityConfig security_settings;
 
-	using std::abs;
-	BOOST_CHECK( abs(first_c_over_k - RealFromString("1.12917")) < 1e-5 ); 
+    TestedEGType my_endgame(tracker,security_settings);
+    my_endgame.SetPSEGTimes(pseg_times);
+    my_endgame.SetPSEGSamples(pseg_samples);
 
-	//Setting up a new sample for approximation.
-	time = ComplexFromString(".0125"); //.025/2 = .0125
-	pseg_times.push_back(time);
-	sample << ComplexFromString("-0.962966796875"); // f(.0125) = -0.962966796875
-	pseg_samples.push_back(sample);
+    auto first_c_over_k = my_endgame.ComputeCOverK<BCT>();
 
-	//Get rid of earliest sample. 
-	pseg_times.pop_front();
-	pseg_samples.pop_front();
+    using std::abs;
+    BOOST_CHECK( abs(first_c_over_k - RealFromString("1.12917")) < 1e-5 );
 
-	my_endgame.SetPSEGTimes(pseg_times);
-	my_endgame.SetPSEGSamples(pseg_samples);
+    //Setting up a new sample for approximation.
+    time = ComplexFromString(".0125"); //.025/2 = .0125
+    pseg_times.push_back(time);
+    sample << ComplexFromString("-0.962966796875"); // f(.0125) = -0.962966796875
+    pseg_samples.push_back(sample);
 
-	auto second_c_over_k = my_endgame.ComputeCOverK<BCT>();
+    //Get rid of earliest sample.
+    pseg_times.pop_front();
+    pseg_samples.pop_front();
 
-	BOOST_CHECK( abs(second_c_over_k - RealFromString("1.05888")) <  1e-5); 
+    my_endgame.SetPSEGTimes(pseg_times);
+    my_endgame.SetPSEGSamples(pseg_samples);
 
-} // end compute c over k for cauchy class 
+    auto second_c_over_k = my_endgame.ComputeCOverK<BCT>();
+
+    BOOST_CHECK( abs(second_c_over_k - RealFromString("1.05888")) <  1e-5);
+
+} // end compute c over k for cauchy class
 
 
 
@@ -364,239 +364,239 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
 
 
 /**
-	After we have computed C over K approximations we have to make sure that we lie within some agreed terms. This means our agreements need
-	to be with some ratio of each other. (Minimum is usually .75), and we need to agree so many times (usually 3). This test case checks for this. 
-	
-*/	
+    After we have computed C over K approximations we have to make sure that we lie within some agreed terms. This means our agreements need
+    to be with some ratio of each other. (Minimum is usually .75), and we need to agree so many times (usually 3). This test case checks for this.
+
+*/
 BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	bertini::System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t");
-	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
+    bertini::System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
+    sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
+    TrackerType tracker(sys);
 
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
 
-	tracker.Setup(TestedPredictor,
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> pseg_times;
-	bertini::SampCont<BCT> pseg_samples;
-	bertini::TimeCont<BRT> c_over_k_array;
+    tracker.PrecisionSetup(precision_config);
 
-	BCT time;
-	Vec<BCT> sample(1);
+    bertini::TimeCont<BCT> pseg_times;
+    bertini::SampCont<BCT> pseg_samples;
+    bertini::TimeCont<BRT> c_over_k_array;
 
-	time = ComplexFromString(".1"); // x = .1
-	pseg_times.push_back(time);
-	sample << ComplexFromString("1.100000000000000e+00", "6.244997998398396e-01"); // f(.1) = 1.100000000000000e+00 6.244997998398396e-01
-	pseg_samples.push_back(sample);
+    BCT time;
+    Vec<BCT> sample(1);
 
-
-	time = ComplexFromString(".05"); // x = .1/2 = .05
-	pseg_times.push_back(time);
-	sample << ComplexFromString("1.125000000000000e+00", "4.841229182759271e-01"); //f(.05) = 1.125000000000000e+00 4.841229182759271e-01
-	pseg_samples.push_back(sample);
+    time = ComplexFromString(".1"); // x = .1
+    pseg_times.push_back(time);
+    sample << ComplexFromString("1.100000000000000e+00", "6.244997998398396e-01"); // f(.1) = 1.100000000000000e+00 6.244997998398396e-01
+    pseg_samples.push_back(sample);
 
 
-	time = ComplexFromString(".025"); // x = .05/2 = .025
-	pseg_times.push_back(time);
-	sample << ComplexFromString("1.123854702920065e+00", "3.736283818773165e-01"); // f(.025) = 1.123854702920065e+00 3.736283818773165e-01
-	pseg_samples.push_back(sample);
+    time = ComplexFromString(".05"); // x = .1/2 = .05
+    pseg_times.push_back(time);
+    sample << ComplexFromString("1.125000000000000e+00", "4.841229182759271e-01"); //f(.05) = 1.125000000000000e+00 4.841229182759271e-01
+    pseg_samples.push_back(sample);
 
 
-	SecurityConfig security_settings;
-
-	TestedEGType my_endgame(tracker,security_settings);
-	my_endgame.SetPSEGTimes(pseg_times);
-	my_endgame.SetPSEGSamples(pseg_samples);
-
-	auto first_c_over_k = my_endgame.ComputeCOverK<BCT>();
-
-	c_over_k_array.push_back(first_c_over_k);
-
-	//Setting up a new sample for approximation.
-	time = ComplexFromString(".0125"); //.025/2 = .0125
-	pseg_times.push_back(time);
-	sample << ComplexFromString("1.111721780135302e+00", "2.886596646224579e-01"); // f(.0125) = 1.111721780135302e+00 2.886596646224579e-01
-	pseg_samples.push_back(sample);
-
-	//Get rid of earliest sample. 
-	pseg_times.pop_front();
-	pseg_samples.pop_front();
-
-	my_endgame.SetPSEGTimes(pseg_times);
-	my_endgame.SetPSEGSamples(pseg_samples);
-
-	auto second_c_over_k = my_endgame.ComputeCOverK<BCT>();
-
-	c_over_k_array.push_back(second_c_over_k);
+    time = ComplexFromString(".025"); // x = .05/2 = .025
+    pseg_times.push_back(time);
+    sample << ComplexFromString("1.123854702920065e+00", "3.736283818773165e-01"); // f(.025) = 1.123854702920065e+00 3.736283818773165e-01
+    pseg_samples.push_back(sample);
 
 
+    SecurityConfig security_settings;
 
-	//Setting up a new sample for approximation.
-	time = ComplexFromString(".00625"); //.025/2 = .0125
-	pseg_times.push_back(time);
-	sample << ComplexFromString("1.096071609421043e+00", "2.237005761359081e-01"); // f(.00625) = 1.096071609421043e+00 2.237005761359081e-01
-	pseg_samples.push_back(sample);
+    TestedEGType my_endgame(tracker,security_settings);
+    my_endgame.SetPSEGTimes(pseg_times);
+    my_endgame.SetPSEGSamples(pseg_samples);
 
-	//Get rid of earliest sample. 
-	pseg_times.pop_front();
-	pseg_samples.pop_front();
+    auto first_c_over_k = my_endgame.ComputeCOverK<BCT>();
 
-	my_endgame.SetPSEGTimes(pseg_times);
-	my_endgame.SetPSEGSamples(pseg_samples);
+    c_over_k_array.push_back(first_c_over_k);
 
-	auto third_c_over_k = my_endgame.ComputeCOverK<BCT>();
+    //Setting up a new sample for approximation.
+    time = ComplexFromString(".0125"); //.025/2 = .0125
+    pseg_times.push_back(time);
+    sample << ComplexFromString("1.111721780135302e+00", "2.886596646224579e-01"); // f(.0125) = 1.111721780135302e+00 2.886596646224579e-01
+    pseg_samples.push_back(sample);
 
-	c_over_k_array.push_back(third_c_over_k);
+    //Get rid of earliest sample.
+    pseg_times.pop_front();
+    pseg_samples.pop_front();
 
-	BOOST_CHECK(my_endgame.CheckForCOverKStabilization(c_over_k_array) == true);
+    my_endgame.SetPSEGTimes(pseg_times);
+    my_endgame.SetPSEGSamples(pseg_samples);
 
-} // end check agreement function mp for cauchy 
+    auto second_c_over_k = my_endgame.ComputeCOverK<BCT>();
+
+    c_over_k_array.push_back(second_c_over_k);
+
+
+
+    //Setting up a new sample for approximation.
+    time = ComplexFromString(".00625"); //.025/2 = .0125
+    pseg_times.push_back(time);
+    sample << ComplexFromString("1.096071609421043e+00", "2.237005761359081e-01"); // f(.00625) = 1.096071609421043e+00 2.237005761359081e-01
+    pseg_samples.push_back(sample);
+
+    //Get rid of earliest sample.
+    pseg_times.pop_front();
+    pseg_samples.pop_front();
+
+    my_endgame.SetPSEGTimes(pseg_times);
+    my_endgame.SetPSEGSamples(pseg_samples);
+
+    auto third_c_over_k = my_endgame.ComputeCOverK<BCT>();
+
+    c_over_k_array.push_back(third_c_over_k);
+
+    BOOST_CHECK(my_endgame.CheckForCOverKStabilization(c_over_k_array) == true);
+
+} // end check agreement function mp for cauchy
 
 
 
 
 /**
-	In this test case we have a solution we are trying to find with multiplicity 1. If we call CircleTrack we should have a closed loop. 
-	This test case is checking to make sure our CheckClosedLoop function returns that we have actually closed. 
+    In this test case we have a solution we are trying to find with multiplicity 1. If we call CircleTrack we should have a closed loop.
+    This test case is checking to make sure our CheckClosedLoop function returns that we have actually closed.
 */
 BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+    sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> cauchy_times; 
-	bertini::SampCont<BCT> cauchy_samples; 
+    tracker.PrecisionSetup(precision_config);
 
-
-	BCT time(1);
-	Vec<BCT> sample(1);
-	auto origin = BCT(0,0);
+    bertini::TimeCont<BCT> cauchy_times;
+    bertini::SampCont<BCT> cauchy_samples;
 
 
-	time = ComplexFromString(".1");
-	cauchy_times.push_back(time);
-	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
-	cauchy_samples.push_back(sample);
+    BCT time(1);
+    Vec<BCT> sample(1);
+    auto origin = BCT(0,0);
 
 
-	TestedEGType my_endgame(tracker);
+    time = ComplexFromString(".1");
+    cauchy_times.push_back(time);
+    sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); //
+    cauchy_samples.push_back(sample);
 
-	my_endgame.SetCauchySamples(cauchy_samples);
-	my_endgame.SetCauchyTimes(cauchy_times);
+
+    TestedEGType my_endgame(tracker);
+
+    my_endgame.SetCauchySamples(cauchy_samples);
+    my_endgame.SetCauchyTimes(cauchy_times);
 
 
-	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
-	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == true);
+    [[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
+    BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == true);
 
 } // end check closed loop if cycle num is 1 for cauchy class test
 
 
 
 /**
-		In this test case we have a solution we are trying to find with multiplicity 2. If we call CircleTrack we should not have a closed loop. 
-		
-		This test case is checking to make sure our CheckClosedLoop function returns that we have not closed.
-	*/
+        In this test case we have a solution we are trying to find with multiplicity 2. If we call CircleTrack we should not have a closed loop.
+
+        This test case is checking to make sure our CheckClosedLoop function returns that we have not closed.
+    */
 BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
-
-
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
 
-	tracker.Setup(TestedPredictor,
+    auto precision_config = PrecisionConfig(sys);
+
+    TrackerType tracker(sys);
+
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> cauchy_times; 
-	bertini::SampCont<BCT> cauchy_samples; 
-	auto origin = BCT(0,0);
+    tracker.PrecisionSetup(precision_config);
 
-
-
-	auto time = ComplexFromString("0.1");
-	cauchy_times.push_back(time);
-
-	Vec<BCT> sample(1);
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
-	cauchy_samples.push_back(sample);
+    bertini::TimeCont<BCT> cauchy_times;
+    bertini::SampCont<BCT> cauchy_samples;
+    auto origin = BCT(0,0);
 
 
-	TestedEGType my_endgame(tracker);
 
-	my_endgame.SetCauchySamples(cauchy_samples);
-	my_endgame.SetCauchyTimes(cauchy_times);
+    auto time = ComplexFromString("0.1");
+    cauchy_times.push_back(time);
 
-	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
-	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == false);
+    Vec<BCT> sample(1);
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); //
+    cauchy_samples.push_back(sample);
 
-	tracking_success =  my_endgame.CircleTrack(origin);
-	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == true);
-	
+
+    TestedEGType my_endgame(tracker);
+
+    my_endgame.SetCauchySamples(cauchy_samples);
+    my_endgame.SetCauchyTimes(cauchy_times);
+
+    [[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
+    BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == false);
+
+    tracking_success =  my_endgame.CircleTrack(origin);
+    BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == true);
+
 } // end check closed loop if cycle num is greater than 1 for cauchy class test
 
 
@@ -605,62 +605,62 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 
 /**
  After we have stabilized our estimation of c over k, we can start to perform cauchy loops to see if the minimum and maximum norms
-	of sample points are within a tolerance. If so, we can start actually using the Cauchy Integral Formula to extrapolate approximations 
-	at the origin. 
+    of sample points are within a tolerance. If so, we can start actually using the Cauchy Integral Formula to extrapolate approximations
+    at the origin.
 
-	In this example, since the cycle number is 1, we should see that our RatioEGOperatingZoneTest function says that we are good to proceed 
-	in using the Cauchy Integral Formula. 
+    In this example, since the cycle number is 1, we should see that our RatioEGOperatingZoneTest function says that we are good to proceed
+    in using the Cauchy Integral Formula.
 */
 BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+    sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
-
-
-	auto precision_config = PrecisionConfig(sys);
-
-	TrackerType tracker(sys);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    auto precision_config = PrecisionConfig(sys);
 
-	tracker.Setup(TestedPredictor,
+    TrackerType tracker(sys);
+
+
+
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> cauchy_times; 
-	bertini::SampCont<BCT> cauchy_samples; 
+    tracker.PrecisionSetup(precision_config);
+
+    bertini::TimeCont<BCT> cauchy_times;
+    bertini::SampCont<BCT> cauchy_samples;
 
 
-	auto time = ComplexFromString(".1");
-	Vec<BCT> sample(1);
-	auto origin = BCT(0,0);
+    auto time = ComplexFromString(".1");
+    Vec<BCT> sample(1);
+    auto origin = BCT(0,0);
 
-	cauchy_times.push_back(time);
-	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
-	cauchy_samples.push_back(sample);
+    cauchy_times.push_back(time);
+    sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); //
+    cauchy_samples.push_back(sample);
 
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetCauchyTimes(cauchy_times);
-	my_endgame.SetCauchySamples(cauchy_samples);
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetCauchyTimes(cauchy_times);
+    my_endgame.SetCauchySamples(cauchy_samples);
 
-	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
-	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
+    [[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
+    BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
 
 } // end compare cauchy ratios for cauchy class test
 
@@ -668,178 +668,178 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 
 
 /**
-	After we have stabilized our estimation of c over k, we can start to perform cauchy loops to see if the minimum and maximum norms
-	of sample points are within a tolerance. If so, we can start actually using the Cauchy Integral Formula to extrapolate approximations 
-	at the origin. 
+    After we have stabilized our estimation of c over k, we can start to perform cauchy loops to see if the minimum and maximum norms
+    of sample points are within a tolerance. If so, we can start actually using the Cauchy Integral Formula to extrapolate approximations
+    at the origin.
 */
 BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 {
-	
-	DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    DefaultPrecision(ambient_precision);
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> cauchy_times; 
-	bertini::SampCont<BCT> cauchy_samples; 
-	auto origin = BCT(0,0);
+    tracker.PrecisionSetup(precision_config);
+
+    bertini::TimeCont<BCT> cauchy_times;
+    bertini::SampCont<BCT> cauchy_samples;
+    auto origin = BCT(0,0);
 
 
 
-	auto time = ComplexFromString("0.1");
-	Vec<BCT> sample(1);
+    auto time = ComplexFromString("0.1");
+    Vec<BCT> sample(1);
 
-	cauchy_times.push_back(time);
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
-	cauchy_samples.push_back(sample);
+    cauchy_times.push_back(time);
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); //
+    cauchy_samples.push_back(sample);
 
-	TestedEGType my_endgame(tracker);
+    TestedEGType my_endgame(tracker);
 
-	my_endgame.SetCauchyTimes(cauchy_times);
-	my_endgame.SetCauchySamples(cauchy_samples);
-	
-	[[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
-	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
+    my_endgame.SetCauchyTimes(cauchy_times);
+    my_endgame.SetCauchySamples(cauchy_samples);
+
+    [[maybe_unused]] auto tracking_success =  my_endgame.CircleTrack(origin);
+    BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
 
 } // end compare cauchy ratios for cycle num greater than 1 cauchy class test
 
 
 /**
-	In the cauchy endgame we want to compute cauchy loops and make sure that we have that the max and min norms of the samples around the 
-	origin are within some heuristic value. The function InitialCauchyLoops does this while holding onto the cycle number. 
-	This test case is making sure we succeed and get the correct cycle number. 
+    In the cauchy endgame we want to compute cauchy loops and make sure that we have that the max and min norms of the samples around the
+    origin are within some heuristic value. The function InitialCauchyLoops does this while holding onto the cycle number.
+    This test case is making sure we succeed and get the correct cycle number.
 */
 BOOST_AUTO_TEST_CASE(initial_cauchy_loops)
 {
-	
-	DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    DefaultPrecision(ambient_precision);
 
-	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> pseg_times;
-	bertini::SampCont<BCT> pseg_samples;
+    tracker.PrecisionSetup(precision_config);
 
-	auto time = ComplexFromString("0.1");
-	Vec<BCT> sample(1);
-	auto origin = BCT(0,0);
+    bertini::TimeCont<BCT> pseg_times;
+    bertini::SampCont<BCT> pseg_samples;
 
-	pseg_times.push_back(time);
-	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
-	pseg_samples.push_back(sample);
+    auto time = ComplexFromString("0.1");
+    Vec<BCT> sample(1);
+    auto origin = BCT(0,0);
 
-	TestedEGType my_endgame(tracker);
+    pseg_times.push_back(time);
+    sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); //
+    pseg_samples.push_back(sample);
 
-	my_endgame.SetPSEGSamples(pseg_samples);
-	my_endgame.SetPSEGTimes(pseg_times);
+    TestedEGType my_endgame(tracker);
 
-	auto success_of_initial_cauchy_loops =  my_endgame.InitialCauchyLoops<BCT>(origin);
+    my_endgame.SetPSEGSamples(pseg_samples);
+    my_endgame.SetPSEGTimes(pseg_times);
 
-	BOOST_CHECK(success_of_initial_cauchy_loops == SuccessCode::Success);
-	BOOST_CHECK(my_endgame.CycleNumber() == 1);
+    auto success_of_initial_cauchy_loops =  my_endgame.InitialCauchyLoops<BCT>(origin);
+
+    BOOST_CHECK(success_of_initial_cauchy_loops == SuccessCode::Success);
+    BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
 }//end initial_cauchy_loops
 
 /*
-	This test case is to compute pre cauchy loops around a nonzero target time. Need to ensure we will succeed at closing the loops, 
-	and ensure that our ratios around the target time are small enough. 
+    This test case is to compute pre cauchy loops around a nonzero target time. Need to ensure we will succeed at closing the loops,
+    and ensure that our ratios around the target time are small enough.
 */
 BOOST_AUTO_TEST_CASE(initial_cauchy_loops_nonzero_target_time)
 {
-	
-	DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    DefaultPrecision(ambient_precision);
 
-	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> pseg_times;
-	bertini::SampCont<BCT> pseg_samples;
+    tracker.PrecisionSetup(precision_config);
 
-	auto start_time = ComplexFromString("0.2");
-	Vec<BCT> start_sample(1);
-	auto center_for_loops = ComplexFromString(".15","-.01");
+    bertini::TimeCont<BCT> pseg_times;
+    bertini::SampCont<BCT> pseg_samples;
 
-	pseg_times.push_back(start_time);
-	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); // 
-	pseg_samples.push_back(start_sample);
+    auto start_time = ComplexFromString("0.2");
+    Vec<BCT> start_sample(1);
+    auto center_for_loops = ComplexFromString(".15","-.01");
 
-	TestedEGType my_endgame(tracker);
+    pseg_times.push_back(start_time);
+    start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); //
+    pseg_samples.push_back(start_sample);
 
-	my_endgame.SetPSEGSamples(pseg_samples);
-	my_endgame.SetPSEGTimes(pseg_times);
+    TestedEGType my_endgame(tracker);
 
-	auto success_of_initial_cauchy_loops =  my_endgame.InitialCauchyLoops<BCT>(center_for_loops);
+    my_endgame.SetPSEGSamples(pseg_samples);
+    my_endgame.SetPSEGTimes(pseg_times);
 
-	BOOST_CHECK(success_of_initial_cauchy_loops == SuccessCode::Success);
+    auto success_of_initial_cauchy_loops =  my_endgame.InitialCauchyLoops<BCT>(center_for_loops);
+
+    BOOST_CHECK(success_of_initial_cauchy_loops == SuccessCode::Success);
 
 
 }//end inital_cauchy_loops nonzero target time.
@@ -849,260 +849,260 @@ BOOST_AUTO_TEST_CASE(initial_cauchy_loops_nonzero_target_time)
 
 
 /**
-	In the cauchy endgame we want to compute cauchy loops and make sure that we have that the max and min norms of the samples around the 
-	origin are within some heuristic value. The function InitialCauchyLoops does this while holding onto the cycle number. 
-	This test case is making sure we succeed and get the correct cycle number. 
+    In the cauchy endgame we want to compute cauchy loops and make sure that we have that the max and min norms of the samples around the
+    origin are within some heuristic value. The function InitialCauchyLoops does this while holding onto the cycle number.
+    This test case is making sure we succeed and get the correct cycle number.
 */
 BOOST_AUTO_TEST_CASE(initial_cauchy_loops_cycle_num_greater_than_1)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> pseg_times;
-	bertini::SampCont<BCT> pseg_samples;
+    tracker.PrecisionSetup(precision_config);
 
-
-
-	BCT time(1);
-	Vec<BCT> sample(1);
-	auto origin = BCT(0,0);
+    bertini::TimeCont<BCT> pseg_times;
+    bertini::SampCont<BCT> pseg_samples;
 
 
-	time = ComplexFromString("0.1");
-	pseg_times.push_back(time);
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
-	pseg_samples.push_back(sample);
+
+    BCT time(1);
+    Vec<BCT> sample(1);
+    auto origin = BCT(0,0);
 
 
-	TestedEGType my_endgame(tracker);
+    time = ComplexFromString("0.1");
+    pseg_times.push_back(time);
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); //
+    pseg_samples.push_back(sample);
 
-	my_endgame.SetPSEGSamples(pseg_samples);
-	my_endgame.SetPSEGTimes(pseg_times);
 
-	BOOST_CHECK(my_endgame.InitialCauchyLoops<BCT>(origin) == SuccessCode::Success);
-	BOOST_CHECK(my_endgame.CycleNumber() == 2);
-	
+    TestedEGType my_endgame(tracker);
+
+    my_endgame.SetPSEGSamples(pseg_samples);
+    my_endgame.SetPSEGTimes(pseg_times);
+
+    BOOST_CHECK(my_endgame.InitialCauchyLoops<BCT>(origin) == SuccessCode::Success);
+    BOOST_CHECK(my_endgame.CycleNumber() == 2);
+
 }// end initial_cauchy_loops_cycle_num_greater_than_1
 
 
 
 /**
-	The function tested is ComputeFirstApproximation. This function is the culmination of tracking samples until our estimation of 
-	c over k is stabilized and we have our Cauchy loop ratios within a tolerance.  After this we will use the cauchy integral formula to compute all further extrapolants.
+    The function tested is ComputeFirstApproximation. This function is the culmination of tracking samples until our estimation of
+    c over k is stabilized and we have our Cauchy loop ratios within a tolerance.  After this we will use the cauchy integral formula to compute all further extrapolants.
 */
 BOOST_AUTO_TEST_CASE(first_approximation)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
 
-	bertini::System sys;
-	Var x = Variable::Make("x"), t = Variable::Make("t");
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	// Define homotopy system
-	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
+    bertini::System sys;
+    Var x = Variable::Make("x"), t = Variable::Make("t");
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
+    // Define homotopy system
+    sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	auto origin = BCT(0,0);
-	Vec<BCT> x_origin(1);
-	x_origin << BCT(1,0);
+    tracker.PrecisionSetup(precision_config);
 
-	Vec<BCT> first_approx(1);
-	auto time = ComplexFromString("0.1");
-	Vec<BCT> sample(1);
-	sample << ComplexFromString("0.5","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
+    auto origin = BCT(0,0);
+    Vec<BCT> x_origin(1);
+    x_origin << BCT(1,0);
+
+    Vec<BCT> first_approx(1);
+    auto time = ComplexFromString("0.1");
+    Vec<BCT> sample(1);
+    sample << ComplexFromString("0.5","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	TestedEGType my_endgame(tracker);
+    TestedEGType my_endgame(tracker);
 
 
 
-	auto first_approx_success = my_endgame.InitialApproximation(time,sample,origin,first_approx);
-	BOOST_CHECK(first_approx_success == SuccessCode::Success);
-	BOOST_CHECK((first_approx - x_origin).template lpNorm<Eigen::Infinity>() < 1e-2);
-	BOOST_CHECK(my_endgame.CycleNumber() == 3);
+    auto first_approx_success = my_endgame.InitialApproximation(time,sample,origin,first_approx);
+    BOOST_CHECK(first_approx_success == SuccessCode::Success);
+    BOOST_CHECK((first_approx - x_origin).template lpNorm<Eigen::Infinity>() < 1e-2);
+    BOOST_CHECK(my_endgame.CycleNumber() == 3);
 
 }
 
 /**
-	The function tested is ComputeFirstApproximation. This function is the culmination of tracking samples until our estimation of 
-	c over k is stabilized and we have our Cauchy loop ratios within a tolerance. After this we will use the cauchy integral formula to compute all further extrapolants.
+    The function tested is ComputeFirstApproximation. This function is the culmination of tracking samples until our estimation of
+    c over k is stabilized and we have our Cauchy loop ratios within a tolerance. After this we will use the cauchy integral formula to compute all further extrapolants.
 
-	Specifically this test case will be attempting to do this with a target time that is not the origin. 
+    Specifically this test case will be attempting to do this with a target time that is not the origin.
 */
 BOOST_AUTO_TEST_CASE(first_approximation_nonzero_target_time)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+    sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-		
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
-	    1e-5,
-	    1e5,
-	    stepping_preferences,
-	    newton_preferences);
-		
-	tracker.PrecisionSetup(precision_config);
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
 
-	bertini::TimeCont<BCT> pseg_times;
-		bertini::SampCont<BCT> pseg_samples;
+    tracker.Setup(TestedPredictor,
+        1e-5,
+        1e5,
+        stepping_preferences,
+        newton_preferences);
 
-	auto start_time = ComplexFromString("0.2");
-	Vec<BCT> start_sample(1);
-	auto target_time = ComplexFromString(".15","-.01");
-	Vec<BCT> first_approx(1);
-	Vec<BCT> x_to_check_against(1);
-	x_to_check_against << ComplexFromString("0.424892","0.0136983");
+    tracker.PrecisionSetup(precision_config);
 
-	pseg_times.push_back(start_time);
-	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); // 
-	pseg_samples.push_back(start_sample);
+    bertini::TimeCont<BCT> pseg_times;
+        bertini::SampCont<BCT> pseg_samples;
 
-	TestedEGType my_endgame(tracker);
+    auto start_time = ComplexFromString("0.2");
+    Vec<BCT> start_sample(1);
+    auto target_time = ComplexFromString(".15","-.01");
+    Vec<BCT> first_approx(1);
+    Vec<BCT> x_to_check_against(1);
+    x_to_check_against << ComplexFromString("0.424892","0.0136983");
 
-	my_endgame.SetPSEGSamples(pseg_samples);
-	my_endgame.SetPSEGTimes(pseg_times);
+    pseg_times.push_back(start_time);
+    start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); //
+    pseg_samples.push_back(start_sample);
+
+    TestedEGType my_endgame(tracker);
+
+    my_endgame.SetPSEGSamples(pseg_samples);
+    my_endgame.SetPSEGTimes(pseg_times);
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
 
-	[[maybe_unused]] auto first_approx_success = my_endgame.InitialApproximation(start_time,start_sample,target_time,first_approx);
+    [[maybe_unused]] auto first_approx_success = my_endgame.InitialApproximation(start_time,start_sample,target_time,first_approx);
 
-	BOOST_CHECK((first_approx - x_to_check_against).template lpNorm<Eigen::Infinity>() < 1e-2);
-	BOOST_CHECK(my_endgame.CycleNumber() == 1);
+    BOOST_CHECK((first_approx - x_to_check_against).template lpNorm<Eigen::Infinity>() < 1e-2);
+    BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
 }// end first_approximation_using_pseg_nonzero_target_time
 
 
 /**
-	This test case uses all the sample points collected by CircleTrack around a non-singular point to compute an extrapolant using the 
-	trapezoidal rule for integration. 
+    This test case uses all the sample points collected by CircleTrack around a non-singular point to compute an extrapolant using the
+    trapezoidal rule for integration.
 */
 BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+    sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> cauchy_times; 
-	bertini::SampCont<BCT> cauchy_samples; 
+    tracker.PrecisionSetup(precision_config);
+
+    bertini::TimeCont<BCT> cauchy_times;
+    bertini::SampCont<BCT> cauchy_samples;
 
 
-	auto time = ComplexFromString("0.1");
-	Vec<BCT> sample(1);
-	auto origin = BCT(0,0);
-	Vec<BCT> x_origin(1);
+    auto time = ComplexFromString("0.1");
+    Vec<BCT> sample(1);
+    auto origin = BCT(0,0);
+    Vec<BCT> x_origin(1);
 
-	cauchy_times.push_back(time);
-	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
-	cauchy_samples.push_back(sample);
-	x_origin << BCT(1,0);
+    cauchy_times.push_back(time);
+    sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); //
+    cauchy_samples.push_back(sample);
+    x_origin << BCT(1,0);
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	TestedEGType my_endgame(tracker);
+    TestedEGType my_endgame(tracker);
 
-	my_endgame.SetCauchyTimes(cauchy_times);
-	my_endgame.SetCauchySamples(cauchy_samples);
+    my_endgame.SetCauchyTimes(cauchy_times);
+    my_endgame.SetCauchySamples(cauchy_samples);
 
-	[[maybe_unused]] auto first_track_success =  my_endgame.CircleTrack(origin);
+    [[maybe_unused]] auto first_track_success =  my_endgame.CircleTrack(origin);
 
-	my_endgame.CycleNumber(1); // manually set cycle number to 1 for this test
+    my_endgame.CycleNumber(1); // manually set cycle number to 1 for this test
 
-	Vec<BCT> first_cauchy_approx;
-	[[maybe_unused]] auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
+    Vec<BCT> first_cauchy_approx;
+    [[maybe_unused]] auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
 
-	BOOST_CHECK((first_cauchy_approx - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
+    BOOST_CHECK((first_cauchy_approx - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
 
 }// end compute_cauchy_approximation_cycle_num_1
 
@@ -1114,173 +1114,173 @@ security comparisons are blind to a poisoned approximation.
 */
 BOOST_AUTO_TEST_CASE(nan_cauchy_sample_yields_failure_code_not_success)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t");
-	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
+    sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	auto precision_config = PrecisionConfig(sys);
-	TrackerType tracker(sys);
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
-	tracker.PrecisionSetup(precision_config);
+    auto precision_config = PrecisionConfig(sys);
+    TrackerType tracker(sys);
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+    tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> cauchy_times;
-	bertini::SampCont<BCT> cauchy_samples;
-	Vec<BCT> sample(1);
+    bertini::TimeCont<BCT> cauchy_times;
+    bertini::SampCont<BCT> cauchy_samples;
+    Vec<BCT> sample(1);
 
-	// cycle 1 x num_sample_points samples + the closing copy, one poisoned with NaN
-	cauchy_times.push_back(ComplexFromString("0.1"));        sample << ComplexFromString("0.8");  cauchy_samples.push_back(sample);
-	cauchy_times.push_back(ComplexFromString("0", "0.1"));   sample << ComplexFromString("0.81"); cauchy_samples.push_back(sample);
-	cauchy_times.push_back(ComplexFromString("-0.1"));       sample << BCT(std::numeric_limits<BRT>::quiet_NaN()); cauchy_samples.push_back(sample);
-	cauchy_times.push_back(ComplexFromString("0.1"));        sample << ComplexFromString("0.8");  cauchy_samples.push_back(sample);
+    // cycle 1 x num_sample_points samples + the closing copy, one poisoned with NaN
+    cauchy_times.push_back(ComplexFromString("0.1"));        sample << ComplexFromString("0.8");  cauchy_samples.push_back(sample);
+    cauchy_times.push_back(ComplexFromString("0", "0.1"));   sample << ComplexFromString("0.81"); cauchy_samples.push_back(sample);
+    cauchy_times.push_back(ComplexFromString("-0.1"));       sample << BCT(std::numeric_limits<BRT>::quiet_NaN()); cauchy_samples.push_back(sample);
+    cauchy_times.push_back(ComplexFromString("0.1"));        sample << ComplexFromString("0.8");  cauchy_samples.push_back(sample);
 
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetCauchyTimes(cauchy_times);
-	my_endgame.SetCauchySamples(cauchy_samples);
-	my_endgame.CycleNumber(1);
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetCauchyTimes(cauchy_times);
+    my_endgame.SetCauchySamples(cauchy_samples);
+    my_endgame.CycleNumber(1);
 
-	Vec<BCT> approx;
-	auto code = my_endgame.template ComputeCauchyApproximationOfXAtT0<BCT>(approx);
-	BOOST_CHECK(code != SuccessCode::Success);
+    Vec<BCT> approx;
+    auto code = my_endgame.template ComputeCauchyApproximationOfXAtT0<BCT>(approx);
+    BOOST_CHECK(code != SuccessCode::Success);
 }// end nan_cauchy_sample_yields_failure_code_not_success
 
 
 
 /**
-	This test case uses all the sample points collected by CircleTrack around a non-singular point to compute an extrapolant using the 
-	trapezoidal rule for integration. CircleTrack is called twice to close up the loop. 
+    This test case uses all the sample points collected by CircleTrack around a non-singular point to compute an extrapolant using the
+    trapezoidal rule for integration. CircleTrack is called twice to close up the loop.
 */
 BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	bertini::TimeCont<BCT> cauchy_times; 
-	bertini::SampCont<BCT> cauchy_samples; 
+    tracker.PrecisionSetup(precision_config);
+
+    bertini::TimeCont<BCT> cauchy_times;
+    bertini::SampCont<BCT> cauchy_samples;
 
 
 
-	BCT time(1);
-	Vec<BCT> sample(1);
-	auto origin = BCT(0,0);
-	Vec<BCT> x_origin(1);
+    BCT time(1);
+    Vec<BCT> sample(1);
+    auto origin = BCT(0,0);
+    Vec<BCT> x_origin(1);
 
-	time = ComplexFromString("0.1");
-	cauchy_times.push_back(time);
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
-	cauchy_samples.push_back(sample);
-	x_origin << BCT(1,0);
+    time = ComplexFromString("0.1");
+    cauchy_times.push_back(time);
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); //
+    cauchy_samples.push_back(sample);
+    x_origin << BCT(1,0);
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	TestedEGType my_endgame(tracker);
+    TestedEGType my_endgame(tracker);
 
-	my_endgame.SetCauchyTimes(cauchy_times);
-	my_endgame.SetCauchySamples(cauchy_samples);
+    my_endgame.SetCauchyTimes(cauchy_times);
+    my_endgame.SetCauchySamples(cauchy_samples);
 
-	[[maybe_unused]] auto first_track_success =  my_endgame.CircleTrack(origin);
-	[[maybe_unused]] auto second_track_success = my_endgame.CircleTrack(origin);
+    [[maybe_unused]] auto first_track_success =  my_endgame.CircleTrack(origin);
+    [[maybe_unused]] auto second_track_success = my_endgame.CircleTrack(origin);
 
-	my_endgame.CycleNumber(2);
+    my_endgame.CycleNumber(2);
 
-	Vec<BCT> first_cauchy_approx;
-	[[maybe_unused]] auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
+    Vec<BCT> first_cauchy_approx;
+    [[maybe_unused]] auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
 
-	BOOST_CHECK((first_cauchy_approx - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
+    BOOST_CHECK((first_cauchy_approx - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
 }// end compute_cauchy_approximation_cycle_num_greater_than_1
 
 
 /**
-	To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by ComputeCauchySamples. 
+    To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by ComputeCauchySamples.
 */
 BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+    sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
+
+    tracker.PrecisionSetup(precision_config);
 
 
 
-	Vec<BCT> sample(1);
-	auto origin = BCT(0,0);
+    Vec<BCT> sample(1);
+    auto origin = BCT(0,0);
 
 
-	BCT time = ComplexFromString(".1");
+    BCT time = ComplexFromString(".1");
 
-	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
+    sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); //
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	TestedEGType my_endgame(tracker);
-	my_endgame.AddToPSData(time, sample);
+    TestedEGType my_endgame(tracker);
+    my_endgame.AddToPSData(time, sample);
 
-	[[maybe_unused]] auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
+    [[maybe_unused]] auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
 
-	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).template lpNorm<Eigen::Infinity>() < 1e-5);
-	BOOST_CHECK(my_endgame.GetCauchySamples<BCT>().size() == 4);
-	BOOST_CHECK(my_endgame.CycleNumber() == 1);
+    BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).template lpNorm<Eigen::Infinity>() < 1e-5);
+    BOOST_CHECK(my_endgame.GetCauchySamples<BCT>().size() == 4);
+    BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
 }// end find_cauchy_samples_cycle_num_1
 
@@ -1288,58 +1288,58 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 
 
 /**
-	To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by ComputeCauchySamples. 
+    To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by ComputeCauchySamples.
 */
 BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-6,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
+
+    tracker.PrecisionSetup(precision_config);
 
 
-	auto time = ComplexFromString("0.1");
+    auto time = ComplexFromString("0.1");
 
-	Vec<BCT> sample(1);
-	auto origin = BCT(0,0);
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
+    Vec<BCT> sample(1);
+    auto origin = BCT(0,0);
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); //
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	TestedEGType my_endgame(tracker);
+    TestedEGType my_endgame(tracker);
 
-	my_endgame.AddToPSData(time, sample);
-	[[maybe_unused]] auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
+    my_endgame.AddToPSData(time, sample);
+    [[maybe_unused]] auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
 
-	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).template lpNorm<Eigen::Infinity>() < 1e-6);
-	BOOST_CHECK_EQUAL(my_endgame.GetCauchySamples<BCT>().size(), 7);
-	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
+    BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).template lpNorm<Eigen::Infinity>() < 1e-6);
+    BOOST_CHECK_EQUAL(my_endgame.GetCauchySamples<BCT>().size(), 7);
+    BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 
 }// end find_cauchy_samples_cycle_num_greater_than_1
 
@@ -1348,63 +1348,63 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 
 
 /**
-	Full blown test to see if we can actually find the non singular point at the origin. 
+    Full blown test to see if we can actually find the non singular point at the origin.
 */
 BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+    sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
+
+    tracker.PrecisionSetup(precision_config);
 
 
-	
-	
 
 
-	auto time = ComplexFromString(".1");
 
-	Vec<BCT> sample(1);
-	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
-	Vec<BCT> solution(1);
-	solution << BCT(1,0);
+    auto time = ComplexFromString(".1");
 
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetBoundaryTime(time);
+    Vec<BCT> sample(1);
+    sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); //
+
+    Vec<BCT> solution(1);
+    solution << BCT(1,0);
+
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetBoundaryTime(time);
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	[[maybe_unused]] auto cauchy_endgame_success = my_endgame.Run(sample);
+    [[maybe_unused]] auto cauchy_endgame_success = my_endgame.Run(sample);
 
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - solution).template lpNorm<Eigen::Infinity>() < 1e-5);
-	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 1);
+    BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - solution).template lpNorm<Eigen::Infinity>() < 1e-5);
+    BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 1);
 
 }// end full_test_cycle_num_1
 
@@ -1412,62 +1412,62 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 
 
 /**
-	Full blown test to see if we can actually find the singular point at the origin. 
+    Full blown test to see if we can actually find the singular point at the origin.
 */
 BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	newton_preferences.max_num_newton_iterations = 2;
-	newton_preferences.min_num_newton_iterations = 1;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    newton_preferences.max_num_newton_iterations = 2;
+    newton_preferences.min_num_newton_iterations = 1;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	auto time = ComplexFromString("0.1");
+    tracker.PrecisionSetup(precision_config);
 
-	Vec<BCT> sample(1);
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
+    auto time = ComplexFromString("0.1");
 
-	Vec<BCT> x_origin(1); 
-	x_origin << BCT(1,0);
+    Vec<BCT> sample(1);
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
 
-	
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetBoundaryTime(time);
+    Vec<BCT> x_origin(1);
+    x_origin << BCT(1,0);
 
-	auto cauchy_endgame_success = my_endgame.Run(sample);
+
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetBoundaryTime(time);
+
+    auto cauchy_endgame_success = my_endgame.Run(sample);
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
-	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
+    BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
+    BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
+    BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 }// end full_test_cycle_num_greater_than_1
 
 
@@ -1475,261 +1475,261 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 
 
 /*
-	Full blown test to see if we can actually find the singular point at the origin. 
+    Full blown test to see if we can actually find the singular point at the origin.
 */
 BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	newton_preferences.max_num_newton_iterations = 2;
-	newton_preferences.min_num_newton_iterations = 1;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    newton_preferences.max_num_newton_iterations = 2;
+    newton_preferences.min_num_newton_iterations = 1;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	tracker.ReinitializeInitialStepSize(false);
+    tracker.PrecisionSetup(precision_config);
 
-
-	BCT time(1);
-	Vec<BCT> sample(1);
-	Vec<BCT> x_origin(1);
+    tracker.ReinitializeInitialStepSize(false);
 
 
-	time = ComplexFromString("0.1");
+    BCT time(1);
+    Vec<BCT> sample(1);
+    Vec<BCT> x_origin(1);
 
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
-	x_origin << BCT(1,0);
 
-	
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetBoundaryTime(time);
-	auto cauchy_endgame_success = my_endgame.Run(sample);
+    time = ComplexFromString("0.1");
+
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); //
+    x_origin << BCT(1,0);
+
+
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetBoundaryTime(time);
+    auto cauchy_endgame_success = my_endgame.Run(sample);
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
-	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
+    BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
+    BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
+    BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 }// end cauchy_endgame_test_cycle_num_greater_than_1
 
 
 
 
 /**
-	Full blown test to see if we can actually find the non singular point at the origin. This example has multiple variables. 
+    Full blown test to see if we can actually find the non singular point at the origin. This example has multiple variables.
 */
 BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	bertini::System sys;
-	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
-	VariableGroup vars{x,y};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    bertini::System sys;
+    Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
+    VariableGroup vars{x,y};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
-	sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
+    sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
+    sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
+
+    tracker.PrecisionSetup(precision_config);
 
 
-	BCT current_time(1);
-	Vec<BCT> current_space(2);
-	current_time = ComplexFromString(".1");
-	current_space <<  ComplexFromString("5.000000000000001e-01", "9.084258952712920e-17") ,ComplexFromString("9.000000000000001e-01","4.358898943540673e-01");
+    BCT current_time(1);
+    Vec<BCT> current_space(2);
+    current_time = ComplexFromString(".1");
+    current_space <<  ComplexFromString("5.000000000000001e-01", "9.084258952712920e-17") ,ComplexFromString("9.000000000000001e-01","4.358898943540673e-01");
 
-	Vec<BCT> correct(2);
-	correct << BCT(1,0),BCT(1,0);
+    Vec<BCT> correct(2);
+    correct << BCT(1,0),BCT(1,0);
 
-	EndgameConfig endgame_settings;
-	CauchyConfig cauchy_settings;
-	SecurityConfig security_settings;
+    EndgameConfig endgame_settings;
+    CauchyConfig cauchy_settings;
+    SecurityConfig security_settings;
 
-	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
-	my_endgame.SetBoundaryTime(current_time);
+    TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
+    my_endgame.SetBoundaryTime(current_time);
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	auto code = my_endgame.Run(current_space);
-	BOOST_CHECK(code == SuccessCode::Success);
+    auto code = my_endgame.Run(current_space);
+    BOOST_CHECK(code == SuccessCode::Success);
 
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).template lpNorm<Eigen::Infinity>() < 1e-11);
+    BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).template lpNorm<Eigen::Infinity>() < 1e-11);
 
 }// end cauchy_multiple_variables
 
 
 
 /**
-	Test to see if we can compute Cauchy samples around a nonzero target time.
+    Test to see if we can compute Cauchy samples around a nonzero target time.
 */
 BOOST_AUTO_TEST_CASE(compute_cauchy_samples_nonzero_target_time)
 {
 
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+    sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-		
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
-	    1e-5,
-	    1e5,
-	    stepping_preferences,
-	    newton_preferences);
-		
-	tracker.PrecisionSetup(precision_config);
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
 
-	bertini::TimeCont<BCT> pseg_times;
-		bertini::SampCont<BCT> pseg_samples;
+    tracker.Setup(TestedPredictor,
+        1e-5,
+        1e5,
+        stepping_preferences,
+        newton_preferences);
 
-	auto start_time = ComplexFromString("0.2");
-	Vec<BCT> start_sample(1);
-	auto target_time = ComplexFromString(".15","-.01");
-	Vec<BCT> first_approx(1);
+    tracker.PrecisionSetup(precision_config);
 
-	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); // 
+    bertini::TimeCont<BCT> pseg_times;
+        bertini::SampCont<BCT> pseg_samples;
+
+    auto start_time = ComplexFromString("0.2");
+    Vec<BCT> start_sample(1);
+    auto target_time = ComplexFromString(".15","-.01");
+    Vec<BCT> first_approx(1);
+
+    start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); //
 
 
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	EndgameConfig endgame_settings;
-	CauchyConfig cauchy_settings;
-	SecurityConfig security_settings;
-	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
+    EndgameConfig endgame_settings;
+    CauchyConfig cauchy_settings;
+    SecurityConfig security_settings;
+    TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
-	my_endgame.AddToPSData(start_time, start_sample);
+    my_endgame.AddToPSData(start_time, start_sample);
 
-	auto cauchy_samples_success = my_endgame.ComputeCauchySamples(target_time);
+    auto cauchy_samples_success = my_endgame.ComputeCauchySamples(target_time);
 
 
-	BOOST_CHECK(cauchy_samples_success == SuccessCode::Success);
+    BOOST_CHECK(cauchy_samples_success == SuccessCode::Success);
 }// end compute_cauchy_samples_nonzero_target_time
 
 
 /**
-	Full blown test to see if we can actually track using an endgame to a nonzero target time. 
+    Full blown test to see if we can actually track using an endgame to a nonzero target time.
 */
 BOOST_AUTO_TEST_CASE(cauchy_full_run_nonzero_target_time)
 {
 
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+    sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
-
-
-	auto precision_config = PrecisionConfig(sys);
-
-	TrackerType tracker(sys);
-		
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-
-	tracker.Setup(TestedPredictor,
-	    1e-5,
-	    1e5,
-	    stepping_preferences,
-	    newton_preferences);
-		
-	tracker.PrecisionSetup(precision_config);
-
-	bertini::TimeCont<BCT> pseg_times;
-		bertini::SampCont<BCT> pseg_samples;
-
-	auto start_time = ComplexFromString("0.2");
-	Vec<BCT> start_sample(1);
-	auto target_time = ComplexFromString(".15","-.01");
-	Vec<BCT> first_approx(1);
-	Vec<BCT> x_to_check_against(1);
-
-	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); 
-	x_to_check_against << ComplexFromString("4.248924277564006e-01", "1.369835558109531e-02");
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
+    auto precision_config = PrecisionConfig(sys);
+
+    TrackerType tracker(sys);
+
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
+        1e-5,
+        1e5,
+        stepping_preferences,
+        newton_preferences);
+
+    tracker.PrecisionSetup(precision_config);
+
+    bertini::TimeCont<BCT> pseg_times;
+        bertini::SampCont<BCT> pseg_samples;
+
+    auto start_time = ComplexFromString("0.2");
+    Vec<BCT> start_sample(1);
+    auto target_time = ComplexFromString(".15","-.01");
+    Vec<BCT> first_approx(1);
+    Vec<BCT> x_to_check_against(1);
+
+    start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18");
+    x_to_check_against << ComplexFromString("4.248924277564006e-01", "1.369835558109531e-02");
 
 
 
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
 
-	EndgameConfig endgame_settings;
-	CauchyConfig cauchy_settings;
-	SecurityConfig security_settings;
-	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
-	my_endgame.SetBoundaryTime(start_time);
-	my_endgame.SetTargetTime(target_time);
 
-	auto endgame_success = my_endgame.Run(start_sample);
-	BOOST_CHECK(endgame_success == SuccessCode::Success);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_to_check_against).template lpNorm<Eigen::Infinity>() < 1e-10);
+    EndgameConfig endgame_settings;
+    CauchyConfig cauchy_settings;
+    SecurityConfig security_settings;
+    TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
+    my_endgame.SetBoundaryTime(start_time);
+    my_endgame.SetTargetTime(target_time);
+
+    auto endgame_success = my_endgame.Run(start_sample);
+    BOOST_CHECK(endgame_success == SuccessCode::Success);
+
+    BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_to_check_against).template lpNorm<Eigen::Infinity>() < 1e-10);
 
 }// end cauchy_full_run_nonzero_target_time
 
@@ -1738,155 +1738,155 @@ BOOST_AUTO_TEST_CASE(cauchy_full_run_nonzero_target_time)
 
 
 /**
-Griewank Osborne is a classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values 
-at t = 0.1. 
+Griewank Osborne is a classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values
+at t = 0.1.
 
-Three of these paths will converge to origin and three will diverge to infinity triggering a SecurityMaxNorm issue. 
+Three of these paths will converge to origin and three will diverge to infinity triggering a SecurityMaxNorm issue.
 
-This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
-the endgame. 
+This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during
+the endgame.
 */
 BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
-	// Deterministic RNG: the random TotalDegreeLinearProduct start system below (and the
-	// endgame's internal random draws) otherwise seed from std::random_device,
-	// which makes this marginal double-precision case flake run-to-run and
-	// across platforms.  Seed it so the test is reproducible.  See ADR-0003.
-	bertini::SetGlobalSeed(1u);
+    // Deterministic RNG: the random TotalDegreeLinearProduct start system below (and the
+    // endgame's internal random draws) otherwise seed from std::random_device,
+    // which makes this marginal double-precision case flake run-to-run and
+    // across platforms.  Seed it so the test is reproducible.  See ADR-0003.
+    bertini::SetGlobalSeed(1u);
 
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	bertini::System griewank_osborn_sys;
-	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
-	VariableGroup vars{x,y};
-	griewank_osborn_sys.AddVariableGroup(vars); 
+    bertini::System griewank_osborn_sys;
+    Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
+    VariableGroup vars{x,y};
+    griewank_osborn_sys.AddVariableGroup(vars);
 
-	griewank_osborn_sys.AddFunction((mpq_rational(29,16))*pow(x,3)-2*x*y);
-	griewank_osborn_sys.AddFunction((y - pow(x,2)));
-	griewank_osborn_sys.Homogenize();
-	griewank_osborn_sys.AutoPatch();
+    griewank_osborn_sys.AddFunction((mpq_rational(29,16))*pow(x,3)-2*x*y);
+    griewank_osborn_sys.AddFunction((y - pow(x,2)));
+    griewank_osborn_sys.Homogenize();
+    griewank_osborn_sys.AutoPatch();
 
-	BOOST_CHECK(griewank_osborn_sys.IsHomogeneous());
-	BOOST_CHECK(griewank_osborn_sys.IsPatched());	
+    BOOST_CHECK(griewank_osborn_sys.IsHomogeneous());
+    BOOST_CHECK(griewank_osborn_sys.IsPatched());
 
-	auto griewank_TD = bertini::start_system::TotalDegreeBinomial(griewank_osborn_sys);
-	griewank_TD.Homogenize();
-	BOOST_CHECK(griewank_TD.IsHomogeneous());
-	BOOST_CHECK(griewank_TD.IsPatched());
+    auto griewank_TD = bertini::start_system::TotalDegreeBinomial(griewank_osborn_sys);
+    griewank_TD.Homogenize();
+    BOOST_CHECK(griewank_TD.IsHomogeneous());
+    BOOST_CHECK(griewank_TD.IsPatched());
 
-	auto final_griewank_osborn_system = (1-t)*griewank_osborn_sys + t*griewank_TD;
-	final_griewank_osborn_system.AddPathVariable(t);
+    auto final_griewank_osborn_system = (1-t)*griewank_osborn_sys + t*griewank_TD;
+    final_griewank_osborn_system.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(final_griewank_osborn_system);
+    auto precision_config = PrecisionConfig(final_griewank_osborn_system);
 
-	TrackerType tracker(final_griewank_osborn_system);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
+    TrackerType tracker(final_griewank_osborn_system);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+
+    tracker.Setup(TestedPredictor,
                 1e-6,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
+
+    tracker.PrecisionSetup(precision_config);
 
 
-	BCT t_start(1), t_endgame_boundary(0.1);
-	std::vector<Vec<BCT> > griewank_solutions;
-	std::vector<Vec<BCT> > griewank_homogenized_solutions;
-	for (unsigned ii = 0; ii < griewank_TD.NumStartPoints(); ++ii)
-	{
-		DefaultPrecision(ambient_precision);
-		auto start_point = griewank_TD.StartPoint<BCT>(ii);
+    BCT t_start(1), t_endgame_boundary(0.1);
+    std::vector<Vec<BCT> > griewank_solutions;
+    std::vector<Vec<BCT> > griewank_homogenized_solutions;
+    for (unsigned ii = 0; ii < griewank_TD.NumStartPoints(); ++ii)
+    {
+        DefaultPrecision(ambient_precision);
+        auto start_point = griewank_TD.StartPoint<BCT>(ii);
 
-		Vec<BCT> result;
-		SuccessCode tracking_success;
+        Vec<BCT> result;
+        SuccessCode tracking_success;
 
-		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
-		// Tracking from t=1 to the endgame boundary must succeed for every path.
-		// REQUIRE (not CHECK) so that a tracking failure reports cleanly right here
-		// instead of leaving `result` empty and throwing a cryptic
-		// "dehomogenizing point with incorrect number of coordinates" from
-		// DehomogenizePoint below.
-		BOOST_REQUIRE_MESSAGE(tracking_success==SuccessCode::Success,
-			"tracking path " << ii << " to the endgame boundary failed with code "
-			<< static_cast<int>(tracking_success));
-		BOOST_REQUIRE_EQUAL(result.size(),
-			static_cast<Eigen::Index>(final_griewank_osborn_system.NumVariables()));
+        tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
+        // Tracking from t=1 to the endgame boundary must succeed for every path.
+        // REQUIRE (not CHECK) so that a tracking failure reports cleanly right here
+        // instead of leaving `result` empty and throwing a cryptic
+        // "dehomogenizing point with incorrect number of coordinates" from
+        // DehomogenizePoint below.
+        BOOST_REQUIRE_MESSAGE(tracking_success==SuccessCode::Success,
+            "tracking path " << ii << " to the endgame boundary failed with code "
+            << static_cast<int>(tracking_success));
+        BOOST_REQUIRE_EQUAL(result.size(),
+            static_cast<Eigen::Index>(final_griewank_osborn_system.NumVariables()));
 
-		griewank_homogenized_solutions.push_back(result);
-		griewank_solutions.push_back(final_griewank_osborn_system.DehomogenizePoint(result));
-	}
+        griewank_homogenized_solutions.push_back(result);
+        griewank_solutions.push_back(final_griewank_osborn_system.DehomogenizePoint(result));
+    }
 
-	Vec<BCT> correct(2);
-	correct << BCT(0,0),BCT(0,0);
+    Vec<BCT> correct(2);
+    correct << BCT(0,0),BCT(0,0);
 
-	EndgameConfig endgame_settings;
-	CauchyConfig cauchy_settings;
-	SecurityConfig security_settings;
+    EndgameConfig endgame_settings;
+    CauchyConfig cauchy_settings;
+    SecurityConfig security_settings;
 
-	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
+    TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
 #ifdef B2_OBSERVE_TRACKERS
-	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
+    bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 #endif
 
-	unsigned num_paths_diverging = 0;
-	unsigned num_paths_converging = 0;
-	unsigned num_converged_at_origin = 0;
-	for (auto& s : griewank_homogenized_solutions) //current_space_values)
-	{
-		auto init_prec = Precision(s(0));
-		DefaultPrecision(init_prec);
+    unsigned num_paths_diverging = 0;
+    unsigned num_paths_converging = 0;
+    unsigned num_converged_at_origin = 0;
+    for (auto& s : griewank_homogenized_solutions) //current_space_values)
+    {
+        auto init_prec = Precision(s(0));
+        DefaultPrecision(init_prec);
 
-		my_endgame.SetBoundaryTime(t_endgame_boundary);
-		SuccessCode endgame_success = my_endgame.Run(s);
+        my_endgame.SetBoundaryTime(t_endgame_boundary);
+        SuccessCode endgame_success = my_endgame.Run(s);
 
 // i took this check out jan 27, 2018.  the tracker's precision literally cannot be adjusted as currently written.  hence, there's no way to correct a failing test like this.  i do hope there isn't something nasty lurking about causing it to fail, but causing other problems as well.  i guess it would be nice if the tracker came back in the same precision as the endgame result, but ... do i really care?  if i did, i would have to add a ChangePrecision(p) method to all flavors of trackers, but that's not really what they do...  they're a tool, and adjust precision according to the input they receive, just like the endgames, and other things.
-		// BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
+        // BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
 
-		if(endgame_success == SuccessCode::Success)
-		{
-			num_paths_converging++;
+        if(endgame_success == SuccessCode::Success)
+        {
+            num_paths_converging++;
 
-			// Post-solve tolerance check: griewank-osborne has exactly one finite
-			// solution, the origin (multiplicity 3).  Any path the endgame reports
-			// as converged must land on the origin to tolerance (unless it is a
-			// diverging path, caught below by the security max_norm).  This guards
-			// against the endgame returning Success on a point that is not actually
-			// a solution.  Observed distance-to-origin is ~1e-12 across all
-			// instantiations (double, fixed-multiple, AMP); 1e-9 leaves margin
-			// against run-to-run variation while still catching a non-solution.
-			Vec<BCT> dehomogenized_final = griewank_osborn_sys.DehomogenizePoint(my_endgame.FinalApproximation<BCT>());
-			auto final_norm = dehomogenized_final.template lpNorm<Eigen::Infinity>();
-			if (final_norm <= security_settings.max_norm) // a finite (non-diverging) converged solution
-			{
-				auto dist_to_origin = (dehomogenized_final - correct).template lpNorm<Eigen::Infinity>();
-				BOOST_CHECK_MESSAGE(dist_to_origin < 1e-9,
-					"griewank converged finite path did not meet tolerance at the origin; distance = " << dist_to_origin);
-				++num_converged_at_origin;
-			}
-		}
-		else if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
-		{
-			num_paths_diverging++;
-		}
+            // Post-solve tolerance check: griewank-osborne has exactly one finite
+            // solution, the origin (multiplicity 3).  Any path the endgame reports
+            // as converged must land on the origin to tolerance (unless it is a
+            // diverging path, caught below by the security max_norm).  This guards
+            // against the endgame returning Success on a point that is not actually
+            // a solution.  Observed distance-to-origin is ~1e-12 across all
+            // instantiations (double, fixed-multiple, AMP); 1e-9 leaves margin
+            // against run-to-run variation while still catching a non-solution.
+            Vec<BCT> dehomogenized_final = griewank_osborn_sys.DehomogenizePoint(my_endgame.FinalApproximation<BCT>());
+            auto final_norm = dehomogenized_final.template lpNorm<Eigen::Infinity>();
+            if (final_norm <= security_settings.max_norm) // a finite (non-diverging) converged solution
+            {
+                auto dist_to_origin = (dehomogenized_final - correct).template lpNorm<Eigen::Infinity>();
+                BOOST_CHECK_MESSAGE(dist_to_origin < 1e-9,
+                    "griewank converged finite path did not meet tolerance at the origin; distance = " << dist_to_origin);
+                ++num_converged_at_origin;
+            }
+        }
+        else if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
+        {
+            num_paths_diverging++;
+        }
 
-	}
-	BOOST_CHECK(num_paths_converging>=3);
-	BOOST_CHECK(num_paths_diverging<=3);
-	// the three converged paths must actually be the (multiplicity-3) origin, to tolerance
-	BOOST_CHECK(num_converged_at_origin>=3);
+    }
+    BOOST_CHECK(num_paths_converging>=3);
+    BOOST_CHECK(num_paths_diverging<=3);
+    // the three converged paths must actually be the (multiplicity-3) origin, to tolerance
+    BOOST_CHECK(num_converged_at_origin>=3);
 }//end compute griewank osborne
 
 
 /**
 In this example we take a decoupled system, homogenize and patch it. Track to endgame boundary and then run our endgame on the space
-values we have. 
+values we have.
 
 
 has six solutions at t = .1:
@@ -1903,7 +1903,7 @@ has six solutions at t = .1:
 1.11076734170909918741898536609  0.20791482257569138952790765984
 
 3
-0.687592791426887395278555459299 0.0567041721787893780032385748768 
+0.687592791426887395278555459299 0.0567041721787893780032385748768
 0.689232658290901023523389312686 -0.207914822575691576878043065335
 
 4
@@ -1916,122 +1916,122 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
-	// Deterministic RNG: random TotalDegreeLinearProduct start system + endgame draws.  See ADR-0003.
-	bertini::SetGlobalSeed(1u);
+    // Deterministic RNG: random TotalDegreeLinearProduct start system + endgame draws.  See ADR-0003.
+    bertini::SetGlobalSeed(1u);
 
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	System sys;
+    System sys;
 
-	VariableGroup v{x,y};
+    VariableGroup v{x,y};
 
-	sys.AddVariableGroup(v);
+    sys.AddVariableGroup(v);
 
-	sys.AddFunction(pow(x-1,3));
-	sys.AddFunction(pow(y-1,2));
-	sys.Homogenize();
-	sys.AutoPatch();
-
-
-	BOOST_CHECK(sys.IsHomogeneous());
-	BOOST_CHECK(sys.IsPatched());	
-
-	
-
-	auto TD = bertini::start_system::TotalDegreeBinomial(sys);
-	TD.Homogenize();
-	BOOST_CHECK(TD.IsHomogeneous());
-	BOOST_CHECK(TD.IsPatched());
+    sys.AddFunction(pow(x-1,3));
+    sys.AddFunction(pow(y-1,2));
+    sys.Homogenize();
+    sys.AutoPatch();
 
 
-	auto final_system = (1-t)*sys + t*TD;
-	final_system.AddPathVariable(t);
+    BOOST_CHECK(sys.IsHomogeneous());
+    BOOST_CHECK(sys.IsPatched());
 
-	auto precision_config = PrecisionConfig(final_system);
 
-	auto tracker = TrackerType(final_system);
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	tracker.Setup(TestedPredictor,
-	              	1e-5, 1e5,
-					stepping_preferences, newton_preferences);
 
-	tracker.PrecisionSetup(precision_config);
-	
-	auto num_paths_to_track{TD.NumStartPoints()};
-	BCT t_start(1);
-	std::vector<Vec<BCT> > solutions;
-	std::vector<Vec<BCT> > homogenized_solutions;
-	for (unsigned ii = 0; ii < num_paths_to_track; ++ii)
-	{
-		DefaultPrecision(ambient_precision);
-		BCT t_endgame_boundary{0.1};
-		auto start_point = TD.StartPoint<BCT>(ii);
+    auto TD = bertini::start_system::TotalDegreeBinomial(sys);
+    TD.Homogenize();
+    BOOST_CHECK(TD.IsHomogeneous());
+    BOOST_CHECK(TD.IsPatched());
 
-		Vec<BCT> result;
-		SuccessCode tracking_success;
 
-		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
-		// REQUIRE success and a full-size result before dehomogenizing, so a tracking
-		// failure reports cleanly here instead of throwing a cryptic
-		// "dehomogenizing point with incorrect number of coordinates" on an empty result.
-		BOOST_REQUIRE_MESSAGE(tracking_success==SuccessCode::Success,
-			"tracking path " << ii << " to the endgame boundary failed with code "
-			<< static_cast<int>(tracking_success));
-		BOOST_REQUIRE_EQUAL(result.size(),
-			static_cast<Eigen::Index>(final_system.NumVariables()));
+    auto final_system = (1-t)*sys + t*TD;
+    final_system.AddPathVariable(t);
 
-		homogenized_solutions.push_back(result);
-		solutions.push_back(final_system.DehomogenizePoint(result));
+    auto precision_config = PrecisionConfig(final_system);
 
-		BOOST_CHECK_EQUAL(Precision(result), tracker.CurrentPrecision());
-	}
+    auto tracker = TrackerType(final_system);
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    tracker.Setup(TestedPredictor,
+                    1e-5, 1e5,
+                    stepping_preferences, newton_preferences);
 
-	Vec<BCT> correct(2);
-	correct << BCT(1,0),BCT(1,0);
+    tracker.PrecisionSetup(precision_config);
 
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetBoundaryTime(BCT{0.1});
+    auto num_paths_to_track{TD.NumStartPoints()};
+    BCT t_start(1);
+    std::vector<Vec<BCT> > solutions;
+    std::vector<Vec<BCT> > homogenized_solutions;
+    for (unsigned ii = 0; ii < num_paths_to_track; ++ii)
+    {
+        DefaultPrecision(ambient_precision);
+        BCT t_endgame_boundary{0.1};
+        auto start_point = TD.StartPoint<BCT>(ii);
 
-	tracker.Setup(TestedPredictor,
-	              	1e-6, 1e5,
-					stepping_preferences, newton_preferences);
+        Vec<BCT> result;
+        SuccessCode tracking_success;
+
+        tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
+        // REQUIRE success and a full-size result before dehomogenizing, so a tracking
+        // failure reports cleanly here instead of throwing a cryptic
+        // "dehomogenizing point with incorrect number of coordinates" on an empty result.
+        BOOST_REQUIRE_MESSAGE(tracking_success==SuccessCode::Success,
+            "tracking path " << ii << " to the endgame boundary failed with code "
+            << static_cast<int>(tracking_success));
+        BOOST_REQUIRE_EQUAL(result.size(),
+            static_cast<Eigen::Index>(final_system.NumVariables()));
+
+        homogenized_solutions.push_back(result);
+        solutions.push_back(final_system.DehomogenizePoint(result));
+
+        BOOST_CHECK_EQUAL(Precision(result), tracker.CurrentPrecision());
+    }
+
+    Vec<BCT> correct(2);
+    correct << BCT(1,0),BCT(1,0);
+
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetBoundaryTime(BCT{0.1});
+
+    tracker.Setup(TestedPredictor,
+                    1e-6, 1e5,
+                    stepping_preferences, newton_preferences);
 
 #ifdef B2_OBSERVE_TRACKERS
-			bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-			tracker.AddObserver(tons_of_detail);
+            bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+            tracker.AddObserver(tons_of_detail);
 #endif
 
-	std::vector<Vec<BCT> > endgame_solutions;
+    std::vector<Vec<BCT> > endgame_solutions;
 
-	unsigned num_successful_occurences = 0;
-	unsigned num_fails = 0;
-	unsigned num_correct = 0;
-	for (const auto& s : homogenized_solutions)
-	{
-		auto eg_prec = Precision(s);
-		DefaultPrecision(eg_prec);
-		SuccessCode endgame_success = my_endgame.Run(s);
-		if(endgame_success == SuccessCode::Success)
-		{
-			++num_successful_occurences;
+    unsigned num_successful_occurences = 0;
+    unsigned num_fails = 0;
+    unsigned num_correct = 0;
+    for (const auto& s : homogenized_solutions)
+    {
+        auto eg_prec = Precision(s);
+        DefaultPrecision(eg_prec);
+        SuccessCode endgame_success = my_endgame.Run(s);
+        if(endgame_success == SuccessCode::Success)
+        {
+            ++num_successful_occurences;
 
-			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
-			if((tracker.GetSystem().DehomogenizePoint(my_endgame.FinalApproximation<BCT>())-correct).template lpNorm<Eigen::Infinity>() < 1e-11)
-			{
-				++num_correct;
-			}
-		}
-		else
-			++num_fails;
-	}
- 	BOOST_CHECK_EQUAL(num_successful_occurences,num_paths_to_track);
- 	BOOST_CHECK_EQUAL(num_fails,0);
- 	BOOST_CHECK_EQUAL(num_correct,num_paths_to_track);
+            BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
+            if((tracker.GetSystem().DehomogenizePoint(my_endgame.FinalApproximation<BCT>())-correct).template lpNorm<Eigen::Infinity>() < 1e-11)
+            {
+                ++num_correct;
+            }
+        }
+        else
+            ++num_fails;
+    }
+    BOOST_CHECK_EQUAL(num_successful_occurences,num_paths_to_track);
+    BOOST_CHECK_EQUAL(num_fails,0);
+    BOOST_CHECK_EQUAL(num_correct,num_paths_to_track);
 }
 
 
@@ -2043,138 +2043,138 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 
 /**
-	Checks that we can do logging of an endgame while running.
+    Checks that we can do logging of an endgame while running.
 */
 BOOST_AUTO_TEST_CASE(gory_detail_logging)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t"); 
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	newton_preferences.max_num_newton_iterations = 2;
-	newton_preferences.min_num_newton_iterations = 1;
+    TrackerType tracker(sys);
 
-	tracker.Setup(TestedPredictor,
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    newton_preferences.max_num_newton_iterations = 2;
+    newton_preferences.min_num_newton_iterations = 1;
+
+    tracker.Setup(TestedPredictor,
                 1e-5,
                 1e5,
                 stepping_preferences,
                 newton_preferences);
-	
-	tracker.PrecisionSetup(precision_config);
 
-	tracker.ReinitializeInitialStepSize(false);
+    tracker.PrecisionSetup(precision_config);
 
-
-	BCT time(1);
-	Vec<BCT> sample(1);
-	Vec<BCT> x_origin(1);
+    tracker.ReinitializeInitialStepSize(false);
 
 
-	time = ComplexFromString("0.1");
-
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
-	x_origin << BCT(1,0);
-
-	
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetBoundaryTime(time);
-
-	bertini::endgame::GoryDetailLogger<TestedEGType> eg_logger;
-	my_endgame.AddObserver(eg_logger);
-
-	auto cauchy_endgame_success = my_endgame.Run(sample);
+    BCT time(1);
+    Vec<BCT> sample(1);
+    Vec<BCT> x_origin(1);
 
 
-	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
-	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
+    time = ComplexFromString("0.1");
+
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); //
+    x_origin << BCT(1,0);
+
+
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetBoundaryTime(time);
+
+    bertini::endgame::GoryDetailLogger<TestedEGType> eg_logger;
+    my_endgame.AddObserver(eg_logger);
+
+    auto cauchy_endgame_success = my_endgame.Run(sample);
+
+
+    BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
+    BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
+    BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 }// end cauchy_endgame_test_cycle_num_greater_than_1
 
 
 /**
-	Checks that endgame events are actually delivered to an observer, with readable payloads.
+    Checks that endgame events are actually delivered to an observer, with readable payloads.
 
-	For the adaptive-numeric-type (AMP) endgame this exercises the complex_dbl fast lane WHILE observed:
-	the event-payload numeric-type conversion and the slot-aware state accessors (LatestTime, etc.) --
-	which previously read an empty mpfr slot and crashed the moment an observer was attached.  It runs
-	for fixed-double, fixed-multiple, and AMP, so all three precision policies are covered.
+    For the adaptive-numeric-type (AMP) endgame this exercises the complex_dbl fast lane WHILE observed:
+    the event-payload numeric-type conversion and the slot-aware state accessors (LatestTime, etc.) --
+    which previously read an empty mpfr slot and crashed the moment an observer was attached.  It runs
+    for fixed-double, fixed-multiple, and AMP, so all three precision policies are covered.
 */
 BOOST_AUTO_TEST_CASE(observer_event_delivery)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t");
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
+    TrackerType tracker(sys);
 
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	newton_preferences.max_num_newton_iterations = 2;
-	newton_preferences.min_num_newton_iterations = 1;
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    newton_preferences.max_num_newton_iterations = 2;
+    newton_preferences.min_num_newton_iterations = 1;
 
-	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
-	tracker.PrecisionSetup(precision_config);
-	tracker.ReinitializeInitialStepSize(false);
+    tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+    tracker.PrecisionSetup(precision_config);
+    tracker.ReinitializeInitialStepSize(false);
 
-	BCT time(1);
-	Vec<BCT> sample(1);
-	Vec<BCT> x_origin(1);
+    BCT time(1);
+    Vec<BCT> sample(1);
+    Vec<BCT> x_origin(1);
 
-	time = ComplexFromString("0.1");
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
-	x_origin << BCT(1,0);
+    time = ComplexFromString("0.1");
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
+    x_origin << BCT(1,0);
 
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetBoundaryTime(time);
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetBoundaryTime(time);
 
-	bertini::endgame::EventRecorder<TestedEGType> recorder;
-	my_endgame.AddObserver(recorder);
+    bertini::endgame::EventRecorder<TestedEGType> recorder;
+    my_endgame.AddObserver(recorder);
 
-	auto cauchy_endgame_success = my_endgame.Run(sample);
+    auto cauchy_endgame_success = my_endgame.Run(sample);
 
-	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
+    BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 
-	// Events were actually delivered to the observer (no observer attached previously meant the
-	// complex_dbl event-emission path was never exercised).
-	BOOST_CHECK_GT(recorder.num_events, 0u);
-	// Cauchy loops were tracked and their circle-advances observed.
-	BOOST_CHECK_GT(recorder.num_circle_advanced, 0u);
-	// It reached the endgame operating zone and converged exactly once.
-	BOOST_CHECK_GE(recorder.num_in_eg_zone, 1u);
-	BOOST_CHECK_EQUAL(recorder.num_converged, 1u);
-	BOOST_CHECK_GT(recorder.num_approximated_root, 0u);
+    // Events were actually delivered to the observer (no observer attached previously meant the
+    // complex_dbl event-emission path was never exercised).
+    BOOST_CHECK_GT(recorder.num_events, 0u);
+    // Cauchy loops were tracked and their circle-advances observed.
+    BOOST_CHECK_GT(recorder.num_circle_advanced, 0u);
+    // It reached the endgame operating zone and converged exactly once.
+    BOOST_CHECK_GE(recorder.num_in_eg_zone, 1u);
+    BOOST_CHECK_EQUAL(recorder.num_converged, 1u);
+    BOOST_CHECK_GT(recorder.num_approximated_root, 0u);
 
-	// The payload captured THROUGH the observer (read at BaseComplexT, converted from the fast lane if
-	// needed) matches the endgame's own final result, and is the correct root.
-	BOOST_CHECK(recorder.converged_point.size()==1);
-	BOOST_CHECK((recorder.converged_point - my_endgame.FinalApproximation<BCT>()).template lpNorm<Eigen::Infinity>() < 1e-10);
-	BOOST_CHECK((recorder.converged_point - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
-	BOOST_CHECK(recorder.last_circle_point.size()==1);
+    // The payload captured THROUGH the observer (read at BaseComplexT, converted from the fast lane if
+    // needed) matches the endgame's own final result, and is the correct root.
+    BOOST_CHECK(recorder.converged_point.size()==1);
+    BOOST_CHECK((recorder.converged_point - my_endgame.FinalApproximation<BCT>()).template lpNorm<Eigen::Infinity>() < 1e-10);
+    BOOST_CHECK((recorder.converged_point - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
+    BOOST_CHECK(recorder.last_circle_point.size()==1);
 }// end observer_event_delivery
 
 
@@ -2191,94 +2191,94 @@ the sequence would destroy exactly the signal the sequence exists to carry.
 */
 BOOST_AUTO_TEST_CASE(sample_sequence_collector_separates_path_from_circle)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t");
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	auto precision_config = PrecisionConfig(sys);
-	TrackerType tracker(sys);
+    auto precision_config = PrecisionConfig(sys);
+    TrackerType tracker(sys);
 
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	newton_preferences.max_num_newton_iterations = 2;
-	newton_preferences.min_num_newton_iterations = 1;
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    newton_preferences.max_num_newton_iterations = 2;
+    newton_preferences.min_num_newton_iterations = 1;
 
-	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
-	tracker.PrecisionSetup(precision_config);
-	tracker.ReinitializeInitialStepSize(false);
+    tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+    tracker.PrecisionSetup(precision_config);
+    tracker.ReinitializeInitialStepSize(false);
 
-	BCT time(1);
-	Vec<BCT> sample(1);
-	time = ComplexFromString("0.1");
-	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
+    BCT time(1);
+    Vec<BCT> sample(1);
+    time = ComplexFromString("0.1");
+    sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
 
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetBoundaryTime(time);
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetBoundaryTime(time);
 
-	bertini::endgame::SampleSequenceCollector<TestedEGType> sequence;
-	my_endgame.AddObserver(sequence);
+    bertini::endgame::SampleSequenceCollector<TestedEGType> sequence;
+    my_endgame.AddObserver(sequence);
 
-	BOOST_CHECK(my_endgame.Run(sample)==SuccessCode::Success);
+    BOOST_CHECK(my_endgame.Run(sample)==SuccessCode::Success);
 
-	// -- the sequence was collected, and each bucket is internally consistent
-	BOOST_CHECK_GT(sequence.NumSamples(), 0u);
-	BOOST_CHECK_EQUAL(sequence.path_samples.size(), sequence.path_times.size());
-	BOOST_CHECK_EQUAL(sequence.circle_samples.size(), sequence.circle_times.size());
-	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.approximation_times.size());
-	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.approximation_errors.size());
-	BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.cycle_numbers.size());
+    // -- the sequence was collected, and each bucket is internally consistent
+    BOOST_CHECK_GT(sequence.NumSamples(), 0u);
+    BOOST_CHECK_EQUAL(sequence.path_samples.size(), sequence.path_times.size());
+    BOOST_CHECK_EQUAL(sequence.circle_samples.size(), sequence.circle_times.size());
+    BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.approximation_times.size());
+    BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.approximation_errors.size());
+    BOOST_CHECK_EQUAL(sequence.approximations.size(), sequence.cycle_numbers.size());
 
-	// -- Cauchy tracks circles, so that bucket is populated too, and SEPARATELY
-	BOOST_CHECK_GT(sequence.circle_samples.size(), 0u);
-	BOOST_CHECK_GT(sequence.approximations.size(), 0u);
+    // -- Cauchy tracks circles, so that bucket is populated too, and SEPARATELY
+    BOOST_CHECK_GT(sequence.circle_samples.size(), 0u);
+    BOOST_CHECK_GT(sequence.approximations.size(), 0u);
 
-	// -- THE SEQUENCE PROPERTY: path times march monotonically toward the target time.
-	//    This is what makes them a sequence toward the root; it is what the circle bucket does NOT do.
-	for (size_t i = 1; i < sequence.path_times.size(); ++i)
-		BOOST_CHECK_LT(abs(sequence.path_times[i]), abs(sequence.path_times[i-1]));
+    // -- THE SEQUENCE PROPERTY: path times march monotonically toward the target time.
+    //    This is what makes them a sequence toward the root; it is what the circle bucket does NOT do.
+    for (size_t i = 1; i < sequence.path_times.size(); ++i)
+        BOOST_CHECK_LT(abs(sequence.path_times[i]), abs(sequence.path_times[i-1]));
 
-	// -- and the approach is real: the last sample is nearer the root than the first
-	if (sequence.path_samples.size() >= 2)
-	{
-		auto const& root = my_endgame.FinalApproximation<BCT>();
-		auto first = (sequence.path_samples.front() - root).template lpNorm<Eigen::Infinity>();
-		auto last  = (sequence.path_samples.back()  - root).template lpNorm<Eigen::Infinity>();
-		BOOST_CHECK_LT(last, first);
-	}
+    // -- and the approach is real: the last sample is nearer the root than the first
+    if (sequence.path_samples.size() >= 2)
+    {
+        auto const& root = my_endgame.FinalApproximation<BCT>();
+        auto first = (sequence.path_samples.front() - root).template lpNorm<Eigen::Infinity>();
+        auto last  = (sequence.path_samples.back()  - root).template lpNorm<Eigen::Infinity>();
+        BOOST_CHECK_LT(last, first);
+    }
 
-	// -- the circle points do NOT march inward: they sit at (near) constant modulus, which
-	//    is precisely why they are not part of the sequence.  Compare the spread of the circle times to
-	//    the spread of the path times.
-	if (sequence.circle_times.size() >= 2)
-	{
-		auto cmin = abs(sequence.circle_times.front()), cmax = cmin;
-		for (auto const& c : sequence.circle_times)
-		{
-			if (abs(c) < cmin) cmin = abs(c);
-			if (abs(c) > cmax) cmax = abs(c);
-		}
-		BOOST_CHECK_GT(cmin, static_cast<decltype(cmin)>(0));
-	}
+    // -- the circle points do NOT march inward: they sit at (near) constant modulus, which
+    //    is precisely why they are not part of the sequence.  Compare the spread of the circle times to
+    //    the spread of the path times.
+    if (sequence.circle_times.size() >= 2)
+    {
+        auto cmin = abs(sequence.circle_times.front()), cmax = cmin;
+        for (auto const& c : sequence.circle_times)
+        {
+            if (abs(c) < cmin) cmin = abs(c);
+            if (abs(c) > cmax) cmax = abs(c);
+        }
+        BOOST_CHECK_GT(cmin, static_cast<decltype(cmin)>(0));
+    }
 
-	// -- exactly one endgame run was observed, and its samples start at the beginning
-	BOOST_CHECK_EQUAL(sequence.NumRuns(), 1u);
-	BOOST_CHECK_EQUAL(sequence.run_path_starts.front(), 0u);
+    // -- exactly one endgame run was observed, and its samples start at the beginning
+    BOOST_CHECK_EQUAL(sequence.NumRuns(), 1u);
+    BOOST_CHECK_EQUAL(sequence.run_path_starts.front(), 0u);
 
-	// -- reusable across paths
-	sequence.Clear();
-	BOOST_CHECK_EQUAL(sequence.NumSamples(), 0u);
-	BOOST_CHECK_EQUAL(sequence.circle_samples.size(), 0u);
-	BOOST_CHECK_EQUAL(sequence.approximations.size(), 0u);
-	BOOST_CHECK_EQUAL(sequence.advance_times.size(), 0u);
-	BOOST_CHECK_EQUAL(sequence.NumRuns(), 0u);
+    // -- reusable across paths
+    sequence.Clear();
+    BOOST_CHECK_EQUAL(sequence.NumSamples(), 0u);
+    BOOST_CHECK_EQUAL(sequence.circle_samples.size(), 0u);
+    BOOST_CHECK_EQUAL(sequence.approximations.size(), 0u);
+    BOOST_CHECK_EQUAL(sequence.advance_times.size(), 0u);
+    BOOST_CHECK_EQUAL(sequence.NumRuns(), 0u);
 }// end sample_sequence_collector_separates_path_from_circle
 
 
@@ -2303,66 +2303,66 @@ converge to (1, 1/2).
 */
 BOOST_AUTO_TEST_CASE(deficient_affine_user_homotopy_never_junk_success)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    System sys;
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	auto gamma = bertini::node::Rational::Make(bertini::mpq_rational(4,5), bertini::mpq_rational(3,10));
+    auto gamma = bertini::node::Rational::Make(bertini::mpq_rational(4,5), bertini::mpq_rational(3,10));
 
-	// H = (1-t) * {x^2-1, y*(x+1)-1}  +  gamma * t * {x^2-1, x*y-1}
-	sys.AddFunction((1-t)*(pow(x,2)-1) + gamma*t*(pow(x,2)-1));
-	sys.AddFunction((1-t)*(y*(x+1)-1) + gamma*t*(x*y-1));
+    // H = (1-t) * {x^2-1, y*(x+1)-1}  +  gamma * t * {x^2-1, x*y-1}
+    sys.AddFunction((1-t)*(pow(x,2)-1) + gamma*t*(pow(x,2)-1));
+    sys.AddFunction((1-t)*(y*(x+1)-1) + gamma*t*(x*y-1));
 
-	VariableGroup vars{x, y};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+    VariableGroup vars{x, y};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	auto precision_config = PrecisionConfig(sys);
-	TrackerType tracker(sys);
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
-	tracker.PrecisionSetup(precision_config);
+    auto precision_config = PrecisionConfig(sys);
+    TrackerType tracker(sys);
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+    tracker.PrecisionSetup(precision_config);
 
-	auto t_start = ComplexFromString("1");
-	auto t_boundary = ComplexFromString("0.1");
-	auto t_target = ComplexFromString("0");
+    auto t_start = ComplexFromString("1");
+    auto t_boundary = ComplexFromString("0.1");
+    auto t_target = ComplexFromString("0");
 
-	// ---- the deficient branch: starts at (-1,-1); no finite root awaits it ----
-	{
-		Vec<BCT> start(2), boundary(2);
-		start << ComplexFromString("-1"), ComplexFromString("-1");
-		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
-		if (track_code == SuccessCode::Success)   // the pre-endgame may already give up; also fine
-		{
-			TestedEGType my_endgame(tracker);
-			my_endgame.SetBoundaryTime(t_boundary);
-			my_endgame.SetTargetTime(t_target);
-			auto eg_code = my_endgame.Run(boundary);
-			BOOST_CHECK(eg_code != SuccessCode::Success);   // NEVER junk Success at a non-root
-		}
-	}
+    // ---- the deficient branch: starts at (-1,-1); no finite root awaits it ----
+    {
+        Vec<BCT> start(2), boundary(2);
+        start << ComplexFromString("-1"), ComplexFromString("-1");
+        auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+        if (track_code == SuccessCode::Success)   // the pre-endgame may already give up; also fine
+        {
+            TestedEGType my_endgame(tracker);
+            my_endgame.SetBoundaryTime(t_boundary);
+            my_endgame.SetTargetTime(t_target);
+            auto eg_code = my_endgame.Run(boundary);
+            BOOST_CHECK(eg_code != SuccessCode::Success);   // NEVER junk Success at a non-root
+        }
+    }
 
-	// ---- the healthy branch: starts at (1,1); must still converge to (1, 1/2) ----
-	{
-		Vec<BCT> start(2), boundary(2);
-		start << ComplexFromString("1"), ComplexFromString("1");
-		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
-		BOOST_REQUIRE(track_code == SuccessCode::Success);
+    // ---- the healthy branch: starts at (1,1); must still converge to (1, 1/2) ----
+    {
+        Vec<BCT> start(2), boundary(2);
+        start << ComplexFromString("1"), ComplexFromString("1");
+        auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+        BOOST_REQUIRE(track_code == SuccessCode::Success);
 
-		TestedEGType my_endgame(tracker);
-		my_endgame.SetBoundaryTime(t_boundary);
-		my_endgame.SetTargetTime(t_target);
-		auto eg_code = my_endgame.Run(boundary);
-		BOOST_CHECK(eg_code == SuccessCode::Success);
+        TestedEGType my_endgame(tracker);
+        my_endgame.SetBoundaryTime(t_boundary);
+        my_endgame.SetTargetTime(t_target);
+        auto eg_code = my_endgame.Run(boundary);
+        BOOST_CHECK(eg_code == SuccessCode::Success);
 
-		Vec<BCT> expected(2);
-		expected << ComplexFromString("1"), ComplexFromString("0.5");
-		BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - expected).template lpNorm<Eigen::Infinity>() < 1e-6);
-	}
+        Vec<BCT> expected(2);
+        expected << ComplexFromString("1"), ComplexFromString("0.5");
+        BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - expected).template lpNorm<Eigen::Infinity>() < 1e-6);
+    }
 }// end deficient_affine_user_homotopy_never_junk_success
 
 
@@ -2382,55 +2382,55 @@ acceptance there.  The honest property pinned here: Success implies AT the root.
 */
 BOOST_AUTO_TEST_CASE(singular_affine_user_homotopy_success_implies_at_the_root)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    System sys;
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	auto gamma = bertini::node::Rational::Make(bertini::mpq_rational(4,5), bertini::mpq_rational(3,10));
+    auto gamma = bertini::node::Rational::Make(bertini::mpq_rational(4,5), bertini::mpq_rational(3,10));
 
-	sys.AddFunction((1-t)*(pow(x-1,2)+pow(y-1,2)) + gamma*t*(pow(x,2)-4));
-	sys.AddFunction((1-t)*(x-y) + gamma*t*(x*y-1));
+    sys.AddFunction((1-t)*(pow(x-1,2)+pow(y-1,2)) + gamma*t*(pow(x,2)-4));
+    sys.AddFunction((1-t)*(x-y) + gamma*t*(x*y-1));
 
-	VariableGroup vars{x, y};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+    VariableGroup vars{x, y};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	auto precision_config = PrecisionConfig(sys);
-	TrackerType tracker(sys);
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
-	tracker.PrecisionSetup(precision_config);
+    auto precision_config = PrecisionConfig(sys);
+    TrackerType tracker(sys);
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+    tracker.PrecisionSetup(precision_config);
 
-	auto t_start = ComplexFromString("1");
-	auto t_boundary = ComplexFromString("0.1");
-	auto t_target = ComplexFromString("0");
+    auto t_start = ComplexFromString("1");
+    auto t_boundary = ComplexFromString("0.1");
+    auto t_target = ComplexFromString("0");
 
-	Vec<BCT> expected(2);
-	expected << ComplexFromString("1"), ComplexFromString("1");
+    Vec<BCT> expected(2);
+    expected << ComplexFromString("1"), ComplexFromString("1");
 
-	for (auto const& start_pair : {std::make_pair("2", "0.5"), std::make_pair("-2", "-0.5")})
-	{
-		Vec<BCT> start(2), boundary(2);
-		start << ComplexFromString(start_pair.first), ComplexFromString(start_pair.second);
-		auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
-		if (track_code != SuccessCode::Success)
-			continue;   // honest tracking failure near the singular target: acceptable
+    for (auto const& start_pair : {std::make_pair("2", "0.5"), std::make_pair("-2", "-0.5")})
+    {
+        Vec<BCT> start(2), boundary(2);
+        start << ComplexFromString(start_pair.first), ComplexFromString(start_pair.second);
+        auto track_code = tracker.TrackPath(boundary, t_start, t_boundary, start);
+        if (track_code != SuccessCode::Success)
+            continue;   // honest tracking failure near the singular target: acceptable
 
-		TestedEGType my_endgame(tracker);
-		my_endgame.SetBoundaryTime(t_boundary);
-		my_endgame.SetTargetTime(t_target);
-		auto eg_code = my_endgame.Run(boundary);
-		if (eg_code == SuccessCode::Success)
-		{
-			// Success is only acceptable AT the double root
-			BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - expected).template lpNorm<Eigen::Infinity>() < 1e-4);
-		}
-		// any non-Success code is an honest failure: also acceptable
-	}
+        TestedEGType my_endgame(tracker);
+        my_endgame.SetBoundaryTime(t_boundary);
+        my_endgame.SetTargetTime(t_target);
+        auto eg_code = my_endgame.Run(boundary);
+        if (eg_code == SuccessCode::Success)
+        {
+            // Success is only acceptable AT the double root
+            BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - expected).template lpNorm<Eigen::Infinity>() < 1e-4);
+        }
+        // any non-Success code is an honest failure: also acceptable
+    }
 }// end singular_affine_user_homotopy_success_implies_at_the_root
 
 
@@ -2452,73 +2452,73 @@ state.  Asserted here for both, at every tracker precision.
 */
 BOOST_AUTO_TEST_CASE(approximation_accessors_are_a_coherent_triple)
 {
-	DefaultPrecision(ambient_precision);
+    DefaultPrecision(ambient_precision);
 
-	System sys;
-	Var x = Variable::Make("x");
-	Var t = Variable::Make("t");
+    System sys;
+    Var x = Variable::Make("x");
+    Var t = Variable::Make("t");
 
-	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
+    sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	auto precision_config = PrecisionConfig(sys);
-	TrackerType tracker(sys);
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
-	tracker.PrecisionSetup(precision_config);
+    auto precision_config = PrecisionConfig(sys);
+    TrackerType tracker(sys);
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    tracker.Setup(TestedPredictor, 1e-5, 1e5, stepping_preferences, newton_preferences);
+    tracker.PrecisionSetup(precision_config);
 
-	auto time = ComplexFromString(".1");
-	Vec<BCT> sample(1);
-	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19");
+    auto time = ComplexFromString(".1");
+    Vec<BCT> sample(1);
+    sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19");
 
-	TestedEGType my_endgame(tracker);
-	my_endgame.SetBoundaryTime(time);
+    TestedEGType my_endgame(tracker);
+    my_endgame.SetBoundaryTime(time);
 
-	// BEFORE any run there is no estimate.  Infinity, not an indeterminate value and not
-	// NaN: every convergence gate compares this against the final tolerance, and the
-	// power series loop's gate has the shape `error > tolerance` -- a NaN would make that
-	// false and skip the loop entirely, reporting instant success.
-	BOOST_CHECK_EQUAL(my_endgame.ApproximateError(),
-	                  std::numeric_limits<bertini::NumErrorT>::infinity());
+    // BEFORE any run there is no estimate.  Infinity, not an indeterminate value and not
+    // NaN: every convergence gate compares this against the final tolerance, and the
+    // power series loop's gate has the shape `error > tolerance` -- a NaN would make that
+    // false and skip the loop entirely, reporting instant success.
+    BOOST_CHECK_EQUAL(my_endgame.ApproximateError(),
+                      std::numeric_limits<bertini::NumErrorT>::infinity());
 
-	auto code = my_endgame.Run(sample);
-	BOOST_REQUIRE(code == SuccessCode::Success);
+    auto code = my_endgame.Run(sample);
+    BOOST_REQUIRE(code == SuccessCode::Success);
 
-	auto const& fin  = my_endgame.template FinalApproximation<BCT>();
-	auto const& prev = my_endgame.template PreviousApproximation<BCT>();
+    auto const& fin  = my_endgame.template FinalApproximation<BCT>();
+    auto const& prev = my_endgame.template PreviousApproximation<BCT>();
 
-	BOOST_REQUIRE_EQUAL(fin.size(), sample.size());
-	BOOST_REQUIRE_EQUAL(prev.size(), sample.size());
+    BOOST_REQUIRE_EQUAL(fin.size(), sample.size());
+    BOOST_REQUIRE_EQUAL(prev.size(), sample.size());
 
-	// having converged, the reported error is what the endgame's own gate accepted
-	auto const err = my_endgame.ApproximateError();
-	BOOST_CHECK(err <= my_endgame.FinalTolerance());
+    // having converged, the reported error is what the endgame's own gate accepted
+    auto const err = my_endgame.ApproximateError();
+    BOOST_CHECK(err <= my_endgame.FinalTolerance());
 
-	// ... and it must DESCRIBE the pair the caller can actually see.  This is the check
-	// that catches a `previous` overwritten with a copy of `final`: the gap collapses to
-	// zero while the reported error keeps the last real value.
-	//
-	// Deliberately NOT asserting err > 0.  An endgame may legitimately converge with the
-	// error exactly zero when two successive approximations agree bitwise -- measured on
-	// fixed_multiple_cauchy at precision 16 against this very system, whose root is exactly
-	// 1.  Coherence is the invariant; a nonzero gap is not.
-	//
-	// Compared RELATIVE to the error itself, deliberately.  The converged error is smaller
-	// than any absolute tolerance one would think to write, so an ANCHORED comparison
-	// silently passes against the bug: the gap collapses to 0 while err stays ~1e-12, and
-	// `diff <= 1e-10 * max(1, err)` reduces to `1e-12 <= 1e-10`.  Measured -- an anchored
-	// form of this check passed against the unfixed endgame.  Relative, the bug is a ratio
-	// of exactly 1 and cannot hide.
-	auto const gap = static_cast<bertini::NumErrorT>(
-		(fin - prev).template lpNorm<Eigen::Infinity>());
-	auto const diff = gap > err ? gap - err : err - gap;
-	if (err == static_cast<bertini::NumErrorT>(0))
-		BOOST_CHECK_EQUAL(gap, static_cast<bertini::NumErrorT>(0));
-	else
-		BOOST_CHECK(diff <= static_cast<bertini::NumErrorT>(1e-6) * err);
+    // ... and it must DESCRIBE the pair the caller can actually see.  This is the check
+    // that catches a `previous` overwritten with a copy of `final`: the gap collapses to
+    // zero while the reported error keeps the last real value.
+    //
+    // Deliberately NOT asserting err > 0.  An endgame may legitimately converge with the
+    // error exactly zero when two successive approximations agree bitwise -- measured on
+    // fixed_multiple_cauchy at precision 16 against this very system, whose root is exactly
+    // 1.  Coherence is the invariant; a nonzero gap is not.
+    //
+    // Compared RELATIVE to the error itself, deliberately.  The converged error is smaller
+    // than any absolute tolerance one would think to write, so an ANCHORED comparison
+    // silently passes against the bug: the gap collapses to 0 while err stays ~1e-12, and
+    // `diff <= 1e-10 * max(1, err)` reduces to `1e-12 <= 1e-10`.  Measured -- an anchored
+    // form of this check passed against the unfixed endgame.  Relative, the bug is a ratio
+    // of exactly 1 and cannot hide.
+    auto const gap = static_cast<bertini::NumErrorT>(
+        (fin - prev).template lpNorm<Eigen::Infinity>());
+    auto const diff = gap > err ? gap - err : err - gap;
+    if (err == static_cast<bertini::NumErrorT>(0))
+        BOOST_CHECK_EQUAL(gap, static_cast<bertini::NumErrorT>(0));
+    else
+        BOOST_CHECK(diff <= static_cast<bertini::NumErrorT>(1e-6) * err);
 
 }// end approximation_accessors_are_a_coherent_triple

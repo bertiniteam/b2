@@ -44,111 +44,111 @@ its canonical encoding (`b2sysenc`, ADR-0042); this view is derived and regenera
 #include <variant>
 
 namespace bertini{
-	namespace io{
+    namespace io{
 
-		/**
-		\brief A System's structure as a JSON object with fields for its parts.
+        /**
+        \brief A System's structure as a JSON object with fields for its parts.
 
-		Fields: `variable_groups` / `hom_variable_groups` (arrays of arrays of names,
-		declaration order), `homogenizing_variables` (names; present in homogenized
-		systems), `path_variable` (name, or null), `named_subexpressions`
-		(`{name: expression}`, discovered inside the function trees), `functions`
-		(the polynomial functions as expression strings), `blocks` (one
-		`{"kind", "num_functions"}` per evaluation block, in order -- so randomized,
-		sliced, and blended systems say so), and `is_patched` (with `num_patches`
-		when patched).  Exact block coefficients live in the canonical encoding, not
-		here.
+        Fields: `variable_groups` / `hom_variable_groups` (arrays of arrays of names,
+        declaration order), `homogenizing_variables` (names; present in homogenized
+        systems), `path_variable` (name, or null), `named_subexpressions`
+        (`{name: expression}`, discovered inside the function trees), `functions`
+        (the polynomial functions as expression strings), `blocks` (one
+        `{"kind", "num_functions"}` per evaluation block, in order -- so randomized,
+        sliced, and blended systems say so), and `is_patched` (with `num_patches`
+        when patched).  Exact block coefficients live in the canonical encoding, not
+        here.
 
-		\param sys The system to render.
-		\return The parts as a boost::json object (presentation only, never identity).
-		*/
-		inline boost::json::object SystemPartsJson(System const& sys)
-		{
-			namespace json = boost::json;
-			json::object parts;
+        \param sys The system to render.
+        \return The parts as a boost::json object (presentation only, never identity).
+        */
+        inline boost::json::object SystemPartsJson(System const& sys)
+        {
+            namespace json = boost::json;
+            json::object parts;
 
-			auto groups_as_json = [](auto const& groups) {
-				json::array out;
-				for (auto const& grp : groups)
-				{
-					json::array names;
-					for (auto const& v : grp)
-						names.push_back(json::value(v->name()));
-					out.push_back(names);
-				}
-				return out;
-			};
-			parts["variable_groups"] = groups_as_json(sys.VariableGroups());
-			parts["hom_variable_groups"] = groups_as_json(sys.HomVariableGroups());
+            auto groups_as_json = [](auto const& groups) {
+                json::array out;
+                for (auto const& grp : groups)
+                {
+                    json::array names;
+                    for (auto const& v : grp)
+                        names.push_back(json::value(v->name()));
+                    out.push_back(names);
+                }
+                return out;
+            };
+            parts["variable_groups"] = groups_as_json(sys.VariableGroups());
+            parts["hom_variable_groups"] = groups_as_json(sys.HomVariableGroups());
 
-			{
-				json::array homogenizers;
-				for (auto const& v : sys.HomogenizingVariables())
-					homogenizers.push_back(json::value(v->name()));
-				parts["homogenizing_variables"] = homogenizers;
-			}
+            {
+                json::array homogenizers;
+                for (auto const& v : sys.HomogenizingVariables())
+                    homogenizers.push_back(json::value(v->name()));
+                parts["homogenizing_variables"] = homogenizers;
+            }
 
-			if (sys.HavePathVariable())
-				parts["path_variable"] = sys.GetPathVariable()->name();
-			else
-				parts["path_variable"] = nullptr;
+            if (sys.HavePathVariable())
+                parts["path_variable"] = sys.GetPathVariable()->name();
+            else
+                parts["path_variable"] = nullptr;
 
-			auto const functions = sys.NaturalFunctionsAsNodes();
-			{
-				// named subexpressions are discovered inside the trees (nested included)
-				json::object named;
-				std::vector<std::shared_ptr<const node::Node>> roots(functions.begin(),
-				                                                     functions.end());
-				for (auto const& ne : node::Find<node::NamedExpression>(roots))
-				{
-					std::ostringstream expr;
-					expr << *(ne->EntryNode());
-					named[ne->name()] = expr.str();
-				}
-				if (!named.empty())
-					parts["named_subexpressions"] = named;
-			}
-			{
-				json::array function_texts;
-				for (auto const& f : functions)
-				{
-					std::ostringstream expr;
-					expr << *f;
-					function_texts.push_back(json::value(expr.str()));
-				}
-				parts["functions"] = function_texts;
-			}
+            auto const functions = sys.NaturalFunctionsAsNodes();
+            {
+                // named subexpressions are discovered inside the trees (nested included)
+                json::object named;
+                std::vector<std::shared_ptr<const node::Node>> roots(functions.begin(),
+                                                                     functions.end());
+                for (auto const& ne : node::Find<node::NamedExpression>(roots))
+                {
+                    std::ostringstream expr;
+                    expr << *(ne->EntryNode());
+                    named[ne->name()] = expr.str();
+                }
+                if (!named.empty())
+                    parts["named_subexpressions"] = named;
+            }
+            {
+                json::array function_texts;
+                for (auto const& f : functions)
+                {
+                    std::ostringstream expr;
+                    expr << *f;
+                    function_texts.push_back(json::value(expr.str()));
+                }
+                parts["functions"] = function_texts;
+            }
 
-			{
-				// one summary object per evaluation block, in evaluation order --
-				// a randomized, sliced, or blended system says so here (the exact
-				// coefficients live in the canonical encoding)
-				struct BlockKindName
-				{
-					std::string operator()(blocks::PolynomialBlock const&) const { return "polynomial"; }
-					std::string operator()(blocks::LinearFormsBlock const&) const { return "linear_forms"; }
-					std::string operator()(blocks::ProductsOfLinearsBlock const&) const { return "products_of_linears"; }
-					std::string operator()(blocks::BlendBlock<System> const&) const { return "blend"; }
-					std::string operator()(blocks::RandomizationBlock<System> const&) const { return "randomization"; }
-				};
-				json::array block_summaries;
-				for (auto const& b : sys.Blocks())
-				{
-					json::object summary;
-					summary["kind"] = std::visit(BlockKindName{}, b);
-					summary["num_functions"] = static_cast<std::int64_t>(
-						std::visit([](auto const& blk) { return blk.NumFunctions(); }, b));
-					block_summaries.push_back(summary);
-				}
-				parts["blocks"] = block_summaries;
-			}
+            {
+                // one summary object per evaluation block, in evaluation order --
+                // a randomized, sliced, or blended system says so here (the exact
+                // coefficients live in the canonical encoding)
+                struct BlockKindName
+                {
+                    std::string operator()(blocks::PolynomialBlock const&) const { return "polynomial"; }
+                    std::string operator()(blocks::LinearFormsBlock const&) const { return "linear_forms"; }
+                    std::string operator()(blocks::ProductsOfLinearsBlock const&) const { return "products_of_linears"; }
+                    std::string operator()(blocks::BlendBlock<System> const&) const { return "blend"; }
+                    std::string operator()(blocks::RandomizationBlock<System> const&) const { return "randomization"; }
+                };
+                json::array block_summaries;
+                for (auto const& b : sys.Blocks())
+                {
+                    json::object summary;
+                    summary["kind"] = std::visit(BlockKindName{}, b);
+                    summary["num_functions"] = static_cast<std::int64_t>(
+                        std::visit([](auto const& blk) { return blk.NumFunctions(); }, b));
+                    block_summaries.push_back(summary);
+                }
+                parts["blocks"] = block_summaries;
+            }
 
-			parts["is_patched"] = sys.IsPatched();
-			if (sys.IsPatched())
-				parts["num_patches"] = static_cast<std::int64_t>(sys.NumPatches());
+            parts["is_patched"] = sys.IsPatched();
+            if (sys.IsPatched())
+                parts["num_patches"] = static_cast<std::int64_t>(sys.NumPatches());
 
-			return parts;
-		}
+            return parts;
+        }
 
-	} // namespace io
+    } // namespace io
 } // namespace bertini

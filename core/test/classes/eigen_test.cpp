@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include <boost/test/unit_test.hpp>
@@ -45,31 +45,31 @@ using real_mp = bertini::real_mp;
 // this test assures that the Eigen::NumTraits defined in eigen_extensions.hpp is correctly found during template instantiation, and that the Real type it defines is actually real_mp.  If it were not, then we would be unable to make an expression of ::Real type in variable q, because it would be an expression, not a populatable number of type real_mp.
 BOOST_AUTO_TEST_CASE(expressions_of_mpfr_floats)
 {
-	using NumT = bertini::real_mp;
+    using NumT = bertini::real_mp;
 
-	NumT a {1}, b{2}, c{3};
+    NumT a {1}, b{2}, c{3};
 
-	Eigen::NumTraits<decltype(a*a + b*b/ c)>::Real q{0};
+    Eigen::NumTraits<decltype(a*a + b*b/ c)>::Real q{0};
 
 }
 
 BOOST_AUTO_TEST_CASE(size_object_sensible_vec)
 {
-	bertini::Vec<bertini::complex_dbl> v(3);
-	BOOST_CHECK_EQUAL(v.rows(),3);
-	BOOST_CHECK_EQUAL(v.cols(),1);
+    bertini::Vec<bertini::complex_dbl> v(3);
+    BOOST_CHECK_EQUAL(v.rows(),3);
+    BOOST_CHECK_EQUAL(v.cols(),1);
 
-	BOOST_CHECK(!bertini::IsEmpty(v));
+    BOOST_CHECK(!bertini::IsEmpty(v));
 }
 
 
 BOOST_AUTO_TEST_CASE(size_object_sensible_mat)
 {
-	bertini::Mat<bertini::complex_dbl> v(3,4);
-	BOOST_CHECK_EQUAL(v.rows(),3);
-	BOOST_CHECK_EQUAL(v.cols(),4);
+    bertini::Mat<bertini::complex_dbl> v(3,4);
+    BOOST_CHECK_EQUAL(v.rows(),3);
+    BOOST_CHECK_EQUAL(v.cols(),4);
 
-	BOOST_CHECK(!bertini::IsEmpty(v));
+    BOOST_CHECK(!bertini::IsEmpty(v));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -80,508 +80,508 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 using real_mp = bertini::real_mp;
 using bertini::KahanMatrix;
 
-	BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_double) {
-		unsigned int size = 10;
-		srand(2);  rand();
-		
-		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A = KahanMatrix(size, 0.285), B(size,size), C;
-		
-		for (unsigned int ii=0; ii<size; ii++)
-			for (unsigned int jj=0; jj<size; jj++)
-				jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) /  RAND_MAX : B(ii,jj) = 0;
-		
-		C = A.lu().solve(B);
-		//add statement on the value of C to actually test
-
-	}
-
-
-
-	BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_mpfr_float_16)
-	{
-		
-		unsigned int size = 10;
-		bertini::DefaultPrecision(16);
-		
-		srand(2);  rand();
-		
-		Eigen::Matrix<bertini::real_mp, Eigen::Dynamic, Eigen::Dynamic> A =
-			KahanMatrix(size, bertini::real_mp(0.285)), B(size,size), C;
-		
-		
-		for (unsigned int ii=0; ii<size; ii++)
-			for (unsigned int jj=0; jj<size; jj++)
-				jj!=ii? B(ii,jj) = -bertini::real_mp(1)/(ii+1) + bertini::real_mp(rand()) /  bertini::real_mp(RAND_MAX) : B(ii,jj) = 0;
-
-		C = A.lu().solve(B);
-	}
-
-
-
-
-	BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_mpfr_float_100)
-	{
-		unsigned int size = 10;
-		srand(2);  rand();
-		
-		using mpfr = bertini::real_mp;
-		using mpfr_matrix = Eigen::Matrix<mpfr, Eigen::Dynamic, Eigen::Dynamic>;
-
-		bertini::DefaultPrecision(100);
-		
-		mpfr_matrix A = KahanMatrix(size, mpfr(0.285)), B(size,size), C;
-		
-		for (unsigned int ii=0; ii<size; ii++){
-			for (unsigned int jj=0; jj<size; jj++){
-				(jj!=ii) ? B(ii,jj) = -mpfr(1)/(ii+1) + mpfr(rand()) /  mpfr(RAND_MAX) : B(ii,jj) = mpfr(0.0);
-			}
-		}
-		C = A.lu().solve(B);
-
-	}
-
-
-	
-	
-
-	
-	BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_standardcomplex)
-	{
-		unsigned int size = 10;
-		srand(2);  rand();
-		
-		Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> A =
-		KahanMatrix(size, std::complex<double>(0.285)), B(size,size), C;
-		
-		for (unsigned int ii=0; ii<size; ii++)
-			for (unsigned int jj=0; jj<size; jj++)
-				jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) / double(RAND_MAX) : B(ii,jj) = 0;
-		
-		
-		C = A.lu().solve(B);
-	}
-	
-	
-	BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_bertinicomplex_100)
-	{
-		
-		unsigned int size = 10;
-		bertini::DefaultPrecision(100);
-		
-		srand(2);  rand();
-		
-		Eigen::Matrix<bertini::complex_mp, Eigen::Dynamic, Eigen::Dynamic> A =
-		KahanMatrix(size, bertini::complex_mp("0.285","0.0")), B(size,size), C;
-		
-		for (unsigned int ii=0; ii<size; ii++)
-			for (unsigned int jj=0; jj<size; jj++)
-				jj!=ii? B(ii,jj) = bertini::complex_mp( bertini::complex_mp(-1)/bertini::complex_mp(ii+1) + bertini::complex_mp(rand()) / bertini::complex_mp(RAND_MAX)) : B(ii,jj) = bertini::complex_mp(0);
-		
-		C = A.lu().solve(B);
-	}
-
-		
-		
-		
-		
-//		BOOST_AUTO_TEST_CASE(mpfr_float_num_traits){
-//			
-//			std::cout << Eigen::NumTraits<bertini::real_mp>::highest() << std::endl;
-//			std::cout << Eigen::NumTraits<bertini::real_mp>::lowest() << std::endl;
-//			std::cout << Eigen::NumTraits<bertini::real_mp>::dummy_precision() << std::endl;
-//			std::cout << Eigen::NumTraits<bertini::real_mp>::epsilon() << std::endl;
-//			
-//		}
-	
+    BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_double) {
+        unsigned int size = 10;
+        srand(2);  rand();
 
-	BOOST_AUTO_TEST_CASE(eigen_partial_pivot_solve_singular_matrix)
-	{
+        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A = KahanMatrix(size, 0.285), B(size,size), C;
 
-		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(2,2), B(2,1);
+        for (unsigned int ii=0; ii<size; ii++)
+            for (unsigned int jj=0; jj<size; jj++)
+                jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) /  RAND_MAX : B(ii,jj) = 0;
 
-		A << 1, 1, 0, 0;
+        C = A.lu().solve(B);
+        //add statement on the value of C to actually test
 
-		B << 0.5, 1;
+    }
 
-		auto LU = A.lu();
 
 
-		[[maybe_unused]] auto C = LU.solve(B);
+    BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_mpfr_float_16)
+    {
 
-	}
+        unsigned int size = 10;
+        bertini::DefaultPrecision(16);
 
+        srand(2);  rand();
 
-	BOOST_AUTO_TEST_CASE(eigen_partial_pivot_solve_near_singular_matrix_double)
-	{
+        Eigen::Matrix<bertini::real_mp, Eigen::Dynamic, Eigen::Dynamic> A =
+            KahanMatrix(size, bertini::real_mp(0.285)), B(size,size), C;
 
-		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(2,2), B(2,1);
 
-		A << 1, 1, 1e-20, 0;
+        for (unsigned int ii=0; ii<size; ii++)
+            for (unsigned int jj=0; jj<size; jj++)
+                jj!=ii? B(ii,jj) = -bertini::real_mp(1)/(ii+1) + bertini::real_mp(rand()) /  bertini::real_mp(RAND_MAX) : B(ii,jj) = 0;
 
-		B << 0.5, 1;
+        C = A.lu().solve(B);
+    }
 
-		auto LU = A.lu();
-		[[maybe_unused]] auto C = LU.solve(B);
 
-		BOOST_CHECK(bertini::LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=bertini::MatrixSuccessCode::Success);
 
-	}
 
-	BOOST_AUTO_TEST_CASE(small_value_double)
-	{
-		BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(1e-15,0)));
-		BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(1e-14,0)));
+    BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_mpfr_float_100)
+    {
+        unsigned int size = 10;
+        srand(2);  rand();
 
-		BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(-1e-15,0)));
-		BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(-1e-14,0)));
+        using mpfr = bertini::real_mp;
+        using mpfr_matrix = Eigen::Matrix<mpfr, Eigen::Dynamic, Eigen::Dynamic>;
 
-		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(1e-10,0)));
-		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(1e2,0)));
+        bertini::DefaultPrecision(100);
 
-		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(-1e-10,0)));
-		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(-1e2,0)));
-	}
+        mpfr_matrix A = KahanMatrix(size, mpfr(0.285)), B(size,size), C;
 
-	BOOST_AUTO_TEST_CASE(large_change_double)
-	{
-		BOOST_CHECK(bertini::IsLargeChange(1.0,1e-12));
-		BOOST_CHECK(bertini::IsLargeChange(1e5,1e-7));
-		BOOST_CHECK(!bertini::IsLargeChange(1e3,1e-4));
-		BOOST_CHECK(!bertini::IsLargeChange(1e-15,1e-18));
-	}
+        for (unsigned int ii=0; ii<size; ii++){
+            for (unsigned int jj=0; jj<size; jj++){
+                (jj!=ii) ? B(ii,jj) = -mpfr(1)/(ii+1) + mpfr(rand()) /  mpfr(RAND_MAX) : B(ii,jj) = mpfr(0.0);
+            }
+        }
+        C = A.lu().solve(B);
 
+    }
 
-	BOOST_AUTO_TEST_CASE(small_value_multiprecision)
-	{
 
-		bertini::DefaultPrecision(30);
 
-		bertini::real_mp p = pow(real_mp(10),-real_mp(30));
 
-		BOOST_CHECK( bertini::IsSmallValue(bertini::complex_mp(p,real_mp(0))));
-		BOOST_CHECK( bertini::IsSmallValue(bertini::complex_mp(-p,real_mp(0))));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(1e-15,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(1e-14,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(1e-10,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(1e2,0.0)));
 
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(-1e-15,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(-1e-14,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(-1e-10,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(-1e2,0.0)));
-	}
 
-	BOOST_AUTO_TEST_CASE(large_change_multiprecision)
-	{
-		bertini::DefaultPrecision(30);
+    BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_standardcomplex)
+    {
+        unsigned int size = 10;
+        srand(2);  rand();
 
-		bertini::real_mp p = pow(real_mp(10),-real_mp(30));
+        Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> A =
+        KahanMatrix(size, std::complex<double>(0.285)), B(size,size), C;
 
-		BOOST_CHECK( bertini::IsLargeChange(real_mp(1.0),p));
+        for (unsigned int ii=0; ii<size; ii++)
+            for (unsigned int jj=0; jj<size; jj++)
+                jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) / double(RAND_MAX) : B(ii,jj) = 0;
 
-		BOOST_CHECK( bertini::IsLargeChange(real_mp(1e16),real_mp(p*real_mp(1e16))));
 
-		BOOST_CHECK( bertini::IsLargeChange(real_mp(-1e16),real_mp(p*real_mp(1e16))));
-		BOOST_CHECK( bertini::IsLargeChange(real_mp(1e16),real_mp(-p*real_mp(1e16))));
+        C = A.lu().solve(B);
+    }
 
-		BOOST_CHECK(!bertini::IsLargeChange(real_mp(1.0),real_mp(1e-12)));
-		BOOST_CHECK(!bertini::IsLargeChange(real_mp(-1.0),real_mp(1e-12)));
-		BOOST_CHECK(!bertini::IsLargeChange(real_mp(1e5),real_mp(1e-7)));
-		BOOST_CHECK(!bertini::IsLargeChange(real_mp(1e3),real_mp(1e-4)));
-		BOOST_CHECK(!bertini::IsLargeChange(real_mp(1e-15),real_mp(1e-18)));
-	}
 
-	BOOST_AUTO_TEST_CASE(eigen_LU_partial_pivot_3x3)
-	{
-		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(3,3);
+    BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_bertinicomplex_100)
+    {
 
-		A << 0.000000010000000, 1.000000000000000,   1.000000000000000,
-			 0 ,                1.000000000000000 ,  1.000000000000000,
-			 1.000000000000000 ,1.000000000000000 ,  0;
+        unsigned int size = 10;
+        bertini::DefaultPrecision(100);
 
-		auto LU = A.lu();
+        srand(2);  rand();
 
-		BOOST_CHECK(bertini::LUPartialPivotDecompositionSuccessful(LU.matrixLU())==bertini::MatrixSuccessCode::Success);
-	}
+        Eigen::Matrix<bertini::complex_mp, Eigen::Dynamic, Eigen::Dynamic> A =
+        KahanMatrix(size, bertini::complex_mp("0.285","0.0")), B(size,size), C;
 
+        for (unsigned int ii=0; ii<size; ii++)
+            for (unsigned int jj=0; jj<size; jj++)
+                jj!=ii? B(ii,jj) = bertini::complex_mp( bertini::complex_mp(-1)/bertini::complex_mp(ii+1) + bertini::complex_mp(rand()) / bertini::complex_mp(RAND_MAX)) : B(ii,jj) = bertini::complex_mp(0);
 
-	BOOST_AUTO_TEST_CASE(eigen_norm_of_vector)
-	{
-		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(1,3);
-		A << 1, 2, 3;
-		[[maybe_unused]] double n = A.norm();
-	}
+        C = A.lu().solve(B);
+    }
 
-	BOOST_AUTO_TEST_CASE(dot_product_with_mpfr_type)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::complex_mp;
-		
-		Eigen::Matrix<data_type, 3, 1> v(data_type(2),data_type(4),data_type(3));
-		Eigen::Matrix<data_type, 3, 1> w(data_type(1),data_type(2),data_type(-1));
 
-		data_type result = v.dot(w);
-		data_type exact(7);
-		
-		BOOST_CHECK_EQUAL(result, exact);
-		
-	}
 
 
-	BOOST_AUTO_TEST_CASE(svd_with_mpfr_type)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+//      BOOST_AUTO_TEST_CASE(mpfr_float_num_traits){
+//
+//          std::cout << Eigen::NumTraits<bertini::real_mp>::highest() << std::endl;
+//          std::cout << Eigen::NumTraits<bertini::real_mp>::lowest() << std::endl;
+//          std::cout << Eigen::NumTraits<bertini::real_mp>::dummy_precision() << std::endl;
+//          std::cout << Eigen::NumTraits<bertini::real_mp>::epsilon() << std::endl;
+//
+//      }
 
-		using data_type = bertini::complex_mp;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		// this breaks with boost multiprecision et_on with eigen 3.2.7.
-		Eigen::JacobiSVD<Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic>> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
-		
-		
-	}
 
+    BOOST_AUTO_TEST_CASE(eigen_partial_pivot_solve_singular_matrix)
+    {
 
-	// scalar multiplication with various types
+        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(2,2), B(2,1);
 
-	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_mpfr)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        A << 1, 1, 0, 0;
 
-		using data_type = bertini::complex_mp;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		data_type a(1);
-		// this breaks with boost multiprecision et_on with eigen 3.2.7.
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
-		B = A*a;
-	}
+        B << 0.5, 1;
 
+        auto LU = A.lu();
 
-	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_int)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::complex_mp;
-		
-		data_type q(1);
-		int a(1);
+        [[maybe_unused]] auto C = LU.solve(B);
 
-		[[maybe_unused]] auto b = a*q;
+    }
 
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		
 
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
-		B = A*a;
-	}
+    BOOST_AUTO_TEST_CASE(eigen_partial_pivot_solve_near_singular_matrix_double)
+    {
 
+        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(2,2), B(2,1);
 
-	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_long)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        A << 1, 1, 1e-20, 0;
 
-		using data_type = bertini::complex_mp;
-		
-		data_type q(1);
-		long a(1);
+        B << 0.5, 1;
 
-		[[maybe_unused]] auto b = a*q;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		
+        auto LU = A.lu();
+        [[maybe_unused]] auto C = LU.solve(B);
 
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
-		B = A*a;
-	}
+        BOOST_CHECK(bertini::LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=bertini::MatrixSuccessCode::Success);
 
-	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_mpz_int)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+    }
 
-		using data_type = bertini::complex_mp;
-		
-		data_type q(1);
-		bertini::mpz_int a(1);
+    BOOST_AUTO_TEST_CASE(small_value_double)
+    {
+        BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(1e-15,0)));
+        BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(1e-14,0)));
 
-		[[maybe_unused]] auto b = a*q;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		
+        BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(-1e-15,0)));
+        BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(-1e-14,0)));
 
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
-		B = A*a;
-	}
+        BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(1e-10,0)));
+        BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(1e2,0)));
 
+        BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(-1e-10,0)));
+        BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(-1e2,0)));
+    }
 
+    BOOST_AUTO_TEST_CASE(large_change_double)
+    {
+        BOOST_CHECK(bertini::IsLargeChange(1.0,1e-12));
+        BOOST_CHECK(bertini::IsLargeChange(1e5,1e-7));
+        BOOST_CHECK(!bertini::IsLargeChange(1e3,1e-4));
+        BOOST_CHECK(!bertini::IsLargeChange(1e-15,1e-18));
+    }
 
-	// self multiplication
 
+    BOOST_AUTO_TEST_CASE(small_value_multiprecision)
+    {
 
-	BOOST_AUTO_TEST_CASE(self_multiplication_dbl_int)
-	{
-		
-		using data_type = bertini::complex_dbl;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		int a(1);
+        bertini::DefaultPrecision(30);
 
-		A*=a;
-	}
+        bertini::real_mp p = pow(real_mp(10),-real_mp(30));
 
+        BOOST_CHECK( bertini::IsSmallValue(bertini::complex_mp(p,real_mp(0))));
+        BOOST_CHECK( bertini::IsSmallValue(bertini::complex_mp(-p,real_mp(0))));
+        BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(1e-15,0.0)));
+        BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(1e-14,0.0)));
+        BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(1e-10,0.0)));
+        BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(1e2,0.0)));
 
-	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_mpfr)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(-1e-15,0.0)));
+        BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(-1e-14,0.0)));
+        BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(-1e-10,0.0)));
+        BOOST_CHECK(!bertini::IsSmallValue(bertini::complex_mp(-1e2,0.0)));
+    }
 
-		using data_type = bertini::complex_mp;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		data_type a(1);
+    BOOST_AUTO_TEST_CASE(large_change_multiprecision)
+    {
+        bertini::DefaultPrecision(30);
 
-		A*=a;
-	}
+        bertini::real_mp p = pow(real_mp(10),-real_mp(30));
 
+        BOOST_CHECK( bertini::IsLargeChange(real_mp(1.0),p));
 
-	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_int)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        BOOST_CHECK( bertini::IsLargeChange(real_mp(1e16),real_mp(p*real_mp(1e16))));
 
-		using data_type = bertini::complex_mp;
-		
-		data_type q(1);
-		int a(1);
+        BOOST_CHECK( bertini::IsLargeChange(real_mp(-1e16),real_mp(p*real_mp(1e16))));
+        BOOST_CHECK( bertini::IsLargeChange(real_mp(1e16),real_mp(-p*real_mp(1e16))));
 
-		[[maybe_unused]] auto b = a*q;
+        BOOST_CHECK(!bertini::IsLargeChange(real_mp(1.0),real_mp(1e-12)));
+        BOOST_CHECK(!bertini::IsLargeChange(real_mp(-1.0),real_mp(1e-12)));
+        BOOST_CHECK(!bertini::IsLargeChange(real_mp(1e5),real_mp(1e-7)));
+        BOOST_CHECK(!bertini::IsLargeChange(real_mp(1e3),real_mp(1e-4)));
+        BOOST_CHECK(!bertini::IsLargeChange(real_mp(1e-15),real_mp(1e-18)));
+    }
 
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		A*=a;
-	}
+    BOOST_AUTO_TEST_CASE(eigen_LU_partial_pivot_3x3)
+    {
+        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(3,3);
 
+        A << 0.000000010000000, 1.000000000000000,   1.000000000000000,
+             0 ,                1.000000000000000 ,  1.000000000000000,
+             1.000000000000000 ,1.000000000000000 ,  0;
 
-	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_long)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        auto LU = A.lu();
 
-		using data_type = bertini::complex_mp;
-		
-		data_type q(1);
-		long a(1);
+        BOOST_CHECK(bertini::LUPartialPivotDecompositionSuccessful(LU.matrixLU())==bertini::MatrixSuccessCode::Success);
+    }
 
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		A*=a;
-	}
 
-	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_mpz_int)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+    BOOST_AUTO_TEST_CASE(eigen_norm_of_vector)
+    {
+        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(1,3);
+        A << 1, 2, 3;
+        [[maybe_unused]] double n = A.norm();
+    }
 
-		using data_type = bertini::complex_mp;
-		
-		data_type q(1);
-		bertini::mpz_int a(1);
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		
-		A*=a;
-	}
+    BOOST_AUTO_TEST_CASE(dot_product_with_mpfr_type)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	BOOST_AUTO_TEST_CASE(change_precision_mpfr_float)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        using data_type = bertini::complex_mp;
 
-		using bertini::Precision;
-		using data_type = bertini::real_mp;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
+        Eigen::Matrix<data_type, 3, 1> v(data_type(2),data_type(4),data_type(3));
+        Eigen::Matrix<data_type, 3, 1> w(data_type(1),data_type(2),data_type(-1));
 
-		Precision(A,100);
-		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
-	}
+        data_type result = v.dot(w);
+        data_type exact(7);
 
-	BOOST_AUTO_TEST_CASE(change_precision_mpfr_complex)
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        BOOST_CHECK_EQUAL(result, exact);
 
-		using bertini::Precision;
-		using data_type = bertini::complex_mp;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
+    }
 
-		Precision(A,100);
-		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
-	}
 
+    BOOST_AUTO_TEST_CASE(svd_with_mpfr_type)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
+        using data_type = bertini::complex_mp;
 
-	BOOST_AUTO_TEST_CASE(change_precision_mpfr_complex2)
-	{
-		bertini::DefaultPrecision(50);
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
 
-		using bertini::Precision;
-		using data_type = bertini::complex_mp;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
+        // this breaks with boost multiprecision et_on with eigen 3.2.7.
+        Eigen::JacobiSVD<Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic>> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-		Precision(A,100);
-		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
 
-		auto new_prec = 50-10;
+    }
 
-		bertini::DefaultPrecision(static_cast<unsigned int>(new_prec));
-		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B(2,2);
-		
-		B = A; // assignment preserves precision of source
-		BOOST_CHECK((A-B).norm() < 1e-38);
-		BOOST_CHECK_EQUAL(Precision(B),100);
 
-	} 
+    // scalar multiplication with various types
 
-	BOOST_AUTO_TEST_CASE(copy_matrix)
-	{
-		bertini::DefaultPrecision(50);
+    BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_mpfr)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using bertini::Precision;
-		using data_type = bertini::complex_mp;
-		
-		Eigen::Matrix<data_type, Eigen::Dynamic, 1> A(4);
-		A << data_type(2), data_type(1), data_type(1), data_type(2);
-		Precision(A,100);
-		BOOST_CHECK_EQUAL(A(0).precision(),100);
+        using data_type = bertini::complex_mp;
 
-		auto new_prec = 50-10;
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
 
-		bertini::DefaultPrecision(static_cast<unsigned int>(new_prec));
-		Eigen::Matrix<data_type, Eigen::Dynamic, 1> B(4);
+        data_type a(1);
+        // this breaks with boost multiprecision et_on with eigen 3.2.7.
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
+        B = A*a;
+    }
 
-		B = A;
-		BOOST_CHECK((A-B).norm() < 1e-38);
-		BOOST_CHECK_EQUAL(Precision(B),100);
 
-	}
+    BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_int)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+        using data_type = bertini::complex_mp;
+
+        data_type q(1);
+        int a(1);
+
+        [[maybe_unused]] auto b = a*q;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
+        B = A*a;
+    }
+
+
+    BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_long)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+        using data_type = bertini::complex_mp;
+
+        data_type q(1);
+        long a(1);
+
+        [[maybe_unused]] auto b = a*q;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
+        B = A*a;
+    }
+
+    BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_mpz_int)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+        using data_type = bertini::complex_mp;
+
+        data_type q(1);
+        bertini::mpz_int a(1);
+
+        [[maybe_unused]] auto b = a*q;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
+        B = A*a;
+    }
+
+
+
+    // self multiplication
+
+
+    BOOST_AUTO_TEST_CASE(self_multiplication_dbl_int)
+    {
+
+        using data_type = bertini::complex_dbl;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+        int a(1);
+
+        A*=a;
+    }
+
+
+    BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_mpfr)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+        using data_type = bertini::complex_mp;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+        data_type a(1);
+
+        A*=a;
+    }
+
+
+    BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_int)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+        using data_type = bertini::complex_mp;
+
+        data_type q(1);
+        int a(1);
+
+        [[maybe_unused]] auto b = a*q;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+        A*=a;
+    }
+
+
+    BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_long)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+        using data_type = bertini::complex_mp;
+
+        data_type q(1);
+        long a(1);
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+        A*=a;
+    }
+
+    BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_mpz_int)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+        using data_type = bertini::complex_mp;
+
+        data_type q(1);
+        bertini::mpz_int a(1);
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+        A*=a;
+    }
+
+    BOOST_AUTO_TEST_CASE(change_precision_mpfr_float)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+        using bertini::Precision;
+        using data_type = bertini::real_mp;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+        Precision(A,100);
+        BOOST_CHECK_EQUAL(A(0,0).precision(),100);
+    }
+
+    BOOST_AUTO_TEST_CASE(change_precision_mpfr_complex)
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+        using bertini::Precision;
+        using data_type = bertini::complex_mp;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+        Precision(A,100);
+        BOOST_CHECK_EQUAL(A(0,0).precision(),100);
+    }
+
+
+
+    BOOST_AUTO_TEST_CASE(change_precision_mpfr_complex2)
+    {
+        bertini::DefaultPrecision(50);
+
+        using bertini::Precision;
+        using data_type = bertini::complex_mp;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+        Precision(A,100);
+        BOOST_CHECK_EQUAL(A(0,0).precision(),100);
+
+        auto new_prec = 50-10;
+
+        bertini::DefaultPrecision(static_cast<unsigned int>(new_prec));
+        Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B(2,2);
+
+        B = A; // assignment preserves precision of source
+        BOOST_CHECK((A-B).norm() < 1e-38);
+        BOOST_CHECK_EQUAL(Precision(B),100);
+
+    }
+
+    BOOST_AUTO_TEST_CASE(copy_matrix)
+    {
+        bertini::DefaultPrecision(50);
+
+        using bertini::Precision;
+        using data_type = bertini::complex_mp;
+
+        Eigen::Matrix<data_type, Eigen::Dynamic, 1> A(4);
+        A << data_type(2), data_type(1), data_type(1), data_type(2);
+        Precision(A,100);
+        BOOST_CHECK_EQUAL(A(0).precision(),100);
+
+        auto new_prec = 50-10;
+
+        bertini::DefaultPrecision(static_cast<unsigned int>(new_prec));
+        Eigen::Matrix<data_type, Eigen::Dynamic, 1> B(4);
+
+        B = A;
+        BOOST_CHECK((A-B).norm() < 1e-38);
+        BOOST_CHECK_EQUAL(Precision(B),100);
+
+    }
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -591,28 +591,28 @@ BOOST_AUTO_TEST_SUITE(point_distinctness)
 
 BOOST_AUTO_TEST_CASE(is_distinct_infinity_norm)
 {
-	using namespace bertini;
+    using namespace bertini;
 
-	Vec<complex_mp> a(2), b(2), c(2);
-	a << complex_mp(1), complex_mp(2);
-	b << complex_mp(1), complex_mp(2) + complex_mp("1e-9");   // 1e-9 away in one coordinate
-	c << complex_mp(1), complex_mp(3);                        // 1 away
+    Vec<complex_mp> a(2), b(2), c(2);
+    a << complex_mp(1), complex_mp(2);
+    b << complex_mp(1), complex_mp(2) + complex_mp("1e-9");   // 1e-9 away in one coordinate
+    c << complex_mp(1), complex_mp(3);                        // 1 away
 
-	BOOST_CHECK(!IsDistinct(a, b, 1e-6));    // within tol -> same point
-	BOOST_CHECK( IsSamePoint(a, b, 1e-6));
-	BOOST_CHECK( IsDistinct(a, c, 1e-6));    // far apart -> distinct
-	BOOST_CHECK( IsDistinct(a, b, 1e-12));   // tighter tol -> distinct
+    BOOST_CHECK(!IsDistinct(a, b, 1e-6));    // within tol -> same point
+    BOOST_CHECK( IsSamePoint(a, b, 1e-6));
+    BOOST_CHECK( IsDistinct(a, c, 1e-6));    // far apart -> distinct
+    BOOST_CHECK( IsDistinct(a, b, 1e-12));   // tighter tol -> distinct
 
-	Vec<complex_mp> shorter(1);
-	shorter << complex_mp(1);
-	BOOST_CHECK(IsDistinct(a, shorter, 1e-6));   // different length -> distinct, never same
+    Vec<complex_mp> shorter(1);
+    shorter << complex_mp(1);
+    BOOST_CHECK(IsDistinct(a, shorter, 1e-6));   // different length -> distinct, never same
 
-	// the same predicate works on plain doubles (so callers need not think about the number type)
-	Vec<double> da(2), db(2);
-	da << 1.0, 2.0;
-	db << 1.0, 2.0 + 1e-9;
-	BOOST_CHECK(!IsDistinct(da, db, 1e-6));
-	BOOST_CHECK( IsDistinct(da, db, 1e-12));
+    // the same predicate works on plain doubles (so callers need not think about the number type)
+    Vec<double> da(2), db(2);
+    da << 1.0, 2.0;
+    db << 1.0, 2.0 + 1e-9;
+    BOOST_CHECK(!IsDistinct(da, db, 1e-6));
+    BOOST_CHECK( IsDistinct(da, db, 1e-12));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -625,57 +625,50 @@ BOOST_AUTO_TEST_SUITE(random_conjugate_orthonormal)
 
 BOOST_AUTO_TEST_CASE(shape_and_orthonormality_both_ways)
 {
-	using namespace bertini;
-	DefaultPrecision(30);
+    using namespace bertini;
+    DefaultPrecision(30);
 
-	auto check = [](unsigned rows, unsigned cols)
-	{
-		Mat<complex_mp> M = RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);
-		BOOST_REQUIRE_EQUAL(M.rows(), static_cast<Eigen::Index>(rows));
-		BOOST_REQUIRE_EQUAL(M.cols(), static_cast<Eigen::Index>(cols));
-		auto const k = static_cast<Eigen::Index>(std::min(rows, cols));
-		Mat<complex_mp> const I = Mat<complex_mp>::Identity(k, k);
-		// wide: orthonormal rows (M M^H = I); tall or square: orthonormal columns (M^H M = I)
-		Mat<complex_mp> const G = (rows <= cols) ? Mat<complex_mp>(M * M.adjoint())
-		                                         : Mat<complex_mp>(M.adjoint() * M);
-		BOOST_CHECK_SMALL((G - I).norm(), real_mp("1e-25"));
-	};
-	check(3, 7);
-	check(7, 3);
-	check(5, 5);
-	check(1, 6);
-	check(6, 1);
+    auto check = [](unsigned rows, unsigned cols)
+    {
+        Mat<complex_mp> M = RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);
+        BOOST_REQUIRE_EQUAL(M.rows(), static_cast<Eigen::Index>(rows));
+        BOOST_REQUIRE_EQUAL(M.cols(), static_cast<Eigen::Index>(cols));
+        auto const k = static_cast<Eigen::Index>(std::min(rows, cols));
+        Mat<complex_mp> const I = Mat<complex_mp>::Identity(k, k);
+        // wide: orthonormal rows (M M^H = I); tall or square: orthonormal columns (M^H M = I)
+        Mat<complex_mp> const G = (rows <= cols) ? Mat<complex_mp>(M * M.adjoint())
+                                                 : Mat<complex_mp>(M.adjoint() * M);
+        BOOST_CHECK_SMALL((G - I).norm(), real_mp("1e-25"));
+    };
+    check(3, 7);
+    check(7, 3);
+    check(5, 5);
+    check(1, 6);
+    check(6, 1);
 
-	Mat<complex_dbl> Md = RandomConjugateOrthonormalMatrix<complex_dbl>(2, 9);
-	BOOST_CHECK_SMALL((Md * Md.adjoint() - Mat<complex_dbl>::Identity(2, 2)).norm(), 1e-13);
+    Mat<complex_dbl> Md = RandomConjugateOrthonormalMatrix<complex_dbl>(2, 9);
+    BOOST_CHECK_SMALL((Md * Md.adjoint() - Mat<complex_dbl>::Identity(2, 2)).norm(), 1e-13);
 }
 
 BOOST_AUTO_TEST_CASE(cost_scales_with_the_shape_requested)
 {
-	// 4 x 1000 against 4 x 2000 at multiprecision: a factorization sized to the request is linear
-	// in the long side (ratio ~2); the old square-then-truncate recipe was cubic in it (ratio ~8,
-	// and the 2000 x 2000 factorization alone runs for minutes).  The cut leaves room on both sides.
-	using namespace bertini;
-	DefaultPrecision(30);
+    // 4 x 1000 against 4 x 2000 at multiprecision: a factorization sized to the request is linear
+    // in the long side (ratio ~2); the old square-then-truncate recipe was cubic in it (ratio ~8,
+    // and the 2000 x 2000 factorization alone runs for minutes).  The cut leaves room on both sides.
+    using namespace bertini;
+    DefaultPrecision(30);
 
-	auto time_one = [](unsigned rows, unsigned cols)
-	{
-		RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);   // warm-up
-		auto start = std::chrono::steady_clock::now();
-		RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);
-		return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-	};
-	double const t1000 = time_one(4, 1000);
-	double const t2000 = time_one(4, 2000);
-	BOOST_TEST_MESSAGE("4x1000: " << t1000 << " s, 4x2000: " << t2000 << " s, ratio " << t2000 / t1000);
-	BOOST_CHECK_LT(t2000 / t1000, 4.0);
+    auto time_one = [](unsigned rows, unsigned cols)
+    {
+        RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);   // warm-up
+        auto start = std::chrono::steady_clock::now();
+        RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);
+        return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    };
+    double const t1000 = time_one(4, 1000);
+    double const t2000 = time_one(4, 2000);
+    BOOST_TEST_MESSAGE("4x1000: " << t1000 << " s, 4x2000: " << t2000 << " s, ratio " << t2000 / t1000);
+    BOOST_CHECK_LT(t2000 / t1000, 4.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-	
-	
-	
-	
-
-

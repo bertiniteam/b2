@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #pragma once
@@ -40,62 +40,59 @@ class EndgamePrecPolicyBase : public virtual Observable
 {
 public:
 
-	using TrackerType = TrackerT;  ///< The path-tracker type.
+    using TrackerType = TrackerT;  ///< The path-tracker type.
 
-	/// \brief Construct the precision policy holding a reference to the given tracker.
-	explicit
-	EndgamePrecPolicyBase(TrackerT const& new_tracker) : tracker_(std::ref(new_tracker))
-	{}
+    /// \brief Construct the precision policy holding a reference to the given tracker.
+    explicit
+    EndgamePrecPolicyBase(TrackerT const& new_tracker) : tracker_(std::ref(new_tracker))
+    {}
 
-	virtual ~EndgamePrecPolicyBase() = default;
-	
-	/**
-	Tell the endgame to use the given tracker.  Takes a reference.  
+    virtual ~EndgamePrecPolicyBase() = default;
 
-	\note Ensure the tracker you are using doesn not go out of scope!
-	*/
-	inline
-	void SetTracker(TrackerT const& new_tracker)
-	{
-		tracker_ = std::ref(new_tracker); // rebind the reference
-	}
+    /**
+    Tell the endgame to use the given tracker.  Takes a reference.
+
+    \note Ensure the tracker you are using doesn not go out of scope!
+    */
+    inline
+    void SetTracker(TrackerT const& new_tracker)
+    {
+        tracker_ = std::ref(new_tracker); // rebind the reference
+    }
 
 
-	/**
-	\brief Getter for the tracker used inside an instance of the endgame. 
-	*/
-	inline
-	const TrackerT& GetTracker() const
-	{
-		return tracker_.get();
-	}
+    /**
+    \brief Getter for the tracker used inside an instance of the endgame.
+    */
+    inline
+    const TrackerT& GetTracker() const
+    {
+        return tracker_.get();
+    }
 
-	/**
-	\brief Get the system being tracked on, which is referred to by the tracker.
-	*/
-	inline
-	const System& GetSystem() const 
-	{ return GetTracker().GetSystem();}
+    /**
+    \brief Get the system being tracked on, which is referred to by the tracker.
+    */
+    inline
+    const System& GetSystem() const
+    { return GetTracker().GetSystem();}
 
-	/// \brief Change the working precision of the underlying tracker.
-	void ChangePrecision(unsigned p)
-	{
-		// .get(): tracker_ is a reference_wrapper (never instantiated pre-ETI)
-		tracker_.get().ChangePrecision(p);
-	}
-	
+    /// \brief Change the working precision of the underlying tracker.
+    void ChangePrecision(unsigned p)
+    {
+        // .get(): tracker_ is a reference_wrapper (never instantiated pre-ETI)
+        tracker_.get().ChangePrecision(p);
+    }
+
 private:
 
-	/**
-	\brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
-	*/
-	std::reference_wrapper<const TrackerT> tracker_;
+    /**
+    \brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame.
+    */
+    std::reference_wrapper<const TrackerT> tracker_;
 
 }; //EndgamePrecPolicyBase
 
 
 
-} } // end namespaces 
-				
-
-
+} } // end namespaces

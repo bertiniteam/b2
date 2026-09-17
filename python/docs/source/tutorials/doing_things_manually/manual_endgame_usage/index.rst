@@ -1,4 +1,4 @@
-🎮 Using an endgame to compute singular endpoints 
+🎮 Using an endgame to compute singular endpoints
 *********************************************************
 
 
@@ -9,7 +9,7 @@
 Background
 ==============
 
-Polynomial systems often have singular solutions.  In numerical algebraic geometry, we want to compute all solutions, even the challenging singular ones.  The normal method of homotopy continuation with straight-line tracking fails to compute such roots, because tracking to a place where the Jacobian is non-invertible using methods that require inverting the Jacobian is doomed to fail [#]_.  
+Polynomial systems often have singular solutions.  In numerical algebraic geometry, we want to compute all solutions, even the challenging singular ones.  The normal method of homotopy continuation with straight-line tracking fails to compute such roots, because tracking to a place where the Jacobian is non-invertible using methods that require inverting the Jacobian is doomed to fail [#]_.
 
 So, if we can't track to a singular solution, but we still want to track to compute them, what are we to do?  We track around them, or near them, but not actually to them.  These methods are collectively called *endgames*, a term coined to evoke a sense of chess :cite:`morgan1990computing` :cite:`morgan1992computing` :cite:`morgan1992power`.  Thanks, Andrew Sommese, Charles Wampler, and Alexander Morgan, for everything you have given our community.
 
@@ -56,7 +56,7 @@ The Griewank-Osborne system has one multiplicity-three singular solution at the 
     gw.add_function(y - x**2)
 
 
-Form a start system and homotopy 
+Form a start system and homotopy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Next, we make the total degree start system for `gw`, and couple it using the gamma trick :cite:`morgan1987homotopy` and a path variable.
@@ -158,7 +158,7 @@ Using a singular endgame, we can compute singular endpoints of homotopy paths.  
 The following three papers (cited above) laid the foundation for endgames and computation of singular endpoints:
 
 * Computing singular solutions to nonlinear analytic systems :cite:`morgan1990computing`
-* Computing singular solutions to polynomial systems :cite:`morgan1992computing` 
+* Computing singular solutions to polynomial systems :cite:`morgan1992computing`
 * A power series method for computing singular solutions to nonlinear analytic systems :cite:`morgan1992power`.
 
 👣 Footnotes

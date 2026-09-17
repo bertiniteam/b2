@@ -22,7 +22,7 @@
 
 /**
  \file bertini2/io/parsing/system_parsers.hpp
- 
+
  \brief Provides the parsers for systems in bertini2.
  */
 
@@ -36,84 +36,82 @@
 
 
 namespace bertini {
-	namespace parsing {
-		
-		namespace classic {
-		
-		
-		
-			/// \brief Parse a polynomial system from the iterator range into a System.
-			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, System& sys)
-			{
-				using boost::spirit::qi::double_;
-				using boost::spirit::qi::_1;
-				using boost::spirit::qi::phrase_parse;
-				using boost::spirit::ascii::space;
-				using boost::phoenix::ref;
-				
-				SystemParser<Iterator> S;
+    namespace parsing {
 
-				System s{};
-				bool r = phrase_parse(first, last,
-									  S,
-									  space,
-									  s);
-				
-				if (!r || first != last) // fail if we did not get a full match
-					return false;
+        namespace classic {
 
-				// every definition has now filled its function box: emit the bare entries.
-				S.EmitDeclaredFunctions(s);
-				sys = s;
-				return r;
-			}
-		
-		} // re: namespace classic
-		
-	}// re: namespace parsing
 
-	inline
-	System::System(std::string const& input)
-	{
-		System sys;
 
-		parsing::classic::SystemParser<std::string::const_iterator> S;
+            /// \brief Parse a polynomial system from the iterator range into a System.
+            template <typename Iterator>
+            static bool parse(Iterator first, Iterator last, System& sys)
+            {
+                using boost::spirit::qi::double_;
+                using boost::spirit::qi::_1;
+                using boost::spirit::qi::phrase_parse;
+                using boost::spirit::ascii::space;
+                using boost::phoenix::ref;
 
-		// Treat the input as UTF-8; drop a leading BOM so it is not seen as a
-		// stray leading character by the grammar.
-		std::string cleaned = input;
-		parsing::classic::StripUTF8BOM(cleaned);
-		// comments first (a commented-out INPUT or END; must not fool the unwrapping), then
-		// accept a full Bertini 1 classic file (CONFIG/INPUT wrappers), not just the bare
-		// INPUT-section body that the grammar reads -- see #407 and #396
-		parsing::classic::StripClassicComments(cleaned);
-		parsing::classic::StripClassicFileWrappers(cleaned);
+                SystemParser<Iterator> S;
 
-		std::string::const_iterator iter = cleaned.begin();
-		std::string::const_iterator end = cleaned.end();
-		
-		bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-		
-		if (!s || iter!=end)
-		{
-			std::string remaining(iter, end);
-			if (remaining.size() > 60)
-				remaining = remaining.substr(0, 60) + "...";
-			if (remaining.empty())
-				remaining = "<end of input>";
-			throw std::runtime_error(
-				"[SystemParser] parser did not consume entire input; "
-				"unparsed remainder: \"" + remaining + "\"");
-		}
-		
-		// every definition has now filled its function box: emit the bare entries.
-		S.EmitDeclaredFunctions(sys);
+                System s{};
+                bool r = phrase_parse(first, last,
+                                      S,
+                                      space,
+                                      s);
 
-		using std::swap;
-		swap(sys,*this);
-	}
-	
+                if (!r || first != last) // fail if we did not get a full match
+                    return false;
+
+                // every definition has now filled its function box: emit the bare entries.
+                S.EmitDeclaredFunctions(s);
+                sys = s;
+                return r;
+            }
+
+        } // re: namespace classic
+
+    }// re: namespace parsing
+
+    inline
+    System::System(std::string const& input)
+    {
+        System sys;
+
+        parsing::classic::SystemParser<std::string::const_iterator> S;
+
+        // Treat the input as UTF-8; drop a leading BOM so it is not seen as a
+        // stray leading character by the grammar.
+        std::string cleaned = input;
+        parsing::classic::StripUTF8BOM(cleaned);
+        // comments first (a commented-out INPUT or END; must not fool the unwrapping), then
+        // accept a full Bertini 1 classic file (CONFIG/INPUT wrappers), not just the bare
+        // INPUT-section body that the grammar reads -- see #407 and #396
+        parsing::classic::StripClassicComments(cleaned);
+        parsing::classic::StripClassicFileWrappers(cleaned);
+
+        std::string::const_iterator iter = cleaned.begin();
+        std::string::const_iterator end = cleaned.end();
+
+        bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
+
+        if (!s || iter!=end)
+        {
+            std::string remaining(iter, end);
+            if (remaining.size() > 60)
+                remaining = remaining.substr(0, 60) + "...";
+            if (remaining.empty())
+                remaining = "<end of input>";
+            throw std::runtime_error(
+                "[SystemParser] parser did not consume entire input; "
+                "unparsed remainder: \"" + remaining + "\"");
+        }
+
+        // every definition has now filled its function box: emit the bare entries.
+        S.EmitDeclaredFunctions(sys);
+
+        using std::swap;
+        swap(sys,*this);
+    }
+
 }// re: namespace bertini
-
-

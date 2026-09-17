@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/generic_observable.hpp:  source file for exposing trackers to python.
@@ -26,47 +26,47 @@
 #include <bertini2/detail/observable.hpp>
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
 template <typename ObsT>
 class ObservableVisitor : public def_visitor<ObservableVisitor<ObsT>>
 {
-	friend class ::boost::python::def_visitor_access;
+    friend class ::boost::python::def_visitor_access;
 
-	static void AddObserver(object& obj, object& obs)
-	{
-		ObsT& self=extract<ObsT&>(obj)();
-		// Prefer the owning (shared_ptr) overload so the observable co-owns the
-		// python observer: a user can attach one and drop their reference without
-		// the observable dangling -- the expired observer is pruned on the next
-		// dispatch.  Fall back to the non-owning overload for the rare observer
-		// that isn't held by a shared_ptr.
-		extract<std::shared_ptr<AnyObserver>> as_shared(obs);
-		if (as_shared.check())
-			self.AddObserver(as_shared());
-		else
-		{
-			AnyObserver& observer=extract<AnyObserver&>(obs)();
-			self.AddObserver(observer);
-		}
-	};
+    static void AddObserver(object& obj, object& obs)
+    {
+        ObsT& self=extract<ObsT&>(obj)();
+        // Prefer the owning (shared_ptr) overload so the observable co-owns the
+        // python observer: a user can attach one and drop their reference without
+        // the observable dangling -- the expired observer is pruned on the next
+        // dispatch.  Fall back to the non-owning overload for the rare observer
+        // that isn't held by a shared_ptr.
+        extract<std::shared_ptr<AnyObserver>> as_shared(obs);
+        if (as_shared.check())
+            self.AddObserver(as_shared());
+        else
+        {
+            AnyObserver& observer=extract<AnyObserver&>(obs)();
+            self.AddObserver(observer);
+        }
+    };
 
-	static void RemoveObserver(object& obj, object& obs)
-	{
-		ObsT& self=extract<ObsT&>(obj)();
-		AnyObserver& observer=extract<AnyObserver&>(obs)();
-		self.RemoveObserver(observer);
-	};
+    static void RemoveObserver(object& obj, object& obs)
+    {
+        ObsT& self=extract<ObsT&>(obj)();
+        AnyObserver& observer=extract<AnyObserver&>(obs)();
+        self.RemoveObserver(observer);
+    };
 
 public:
 
-	template<class PyClass>
-	void visit(PyClass& cl) const{
-		cl
-		.def("add_observer", 	&ObservableVisitor::AddObserver, (arg("self"),arg("observer")) , "Attach an observer to this observable object")
-		.def("remove_observer", &ObservableVisitor::RemoveObserver, (arg("self"),arg("observer")) , "Remove an observer to this observable object")
-		;
-	}
+    template<class PyClass>
+    void visit(PyClass& cl) const{
+        cl
+        .def("add_observer",    &ObservableVisitor::AddObserver, (arg("self"),arg("observer")) , "Attach an observer to this observable object")
+        .def("remove_observer", &ObservableVisitor::RemoveObserver, (arg("self"),arg("observer")) , "Remove an observer to this observable object")
+        ;
+    }
 };
 
 

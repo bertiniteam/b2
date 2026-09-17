@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -39,219 +39,218 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 
 
 
-	BOOST_AUTO_TEST_SUITE(default_storage_policy)
+    BOOST_AUTO_TEST_SUITE(default_storage_policy)
 
-		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex_mp>;
+        using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex_mp>;
 
-		BOOST_AUTO_TEST_CASE(make_a_witness_set)
-		{
-			WitnessSet w;
-		}
+        BOOST_AUTO_TEST_CASE(make_a_witness_set)
+        {
+            WitnessSet w;
+        }
 
 
 
-		BOOST_AUTO_TEST_CASE(add_slice_to_witness_set)
-		{
-			WitnessSet w;
+        BOOST_AUTO_TEST_CASE(add_slice_to_witness_set)
+        {
+            WitnessSet w;
 
-			bertini::Slice ell;
+            bertini::Slice ell;
 
-			w.SetSlice(ell);
+            w.SetSlice(ell);
 
-			BOOST_CHECK_EQUAL(w.Dimension(),0);
-			BOOST_CHECK_EQUAL(w.Degree(),0);
-		}
+            BOOST_CHECK_EQUAL(w.Dimension(),0);
+            BOOST_CHECK_EQUAL(w.Degree(),0);
+        }
 
 
-		BOOST_AUTO_TEST_CASE(add_point_to_witness_set)
-		{
-			WitnessSet w;
+        BOOST_AUTO_TEST_CASE(add_point_to_witness_set)
+        {
+            WitnessSet w;
 
-			bertini::Vec<bertini::complex_mp> p;
+            bertini::Vec<bertini::complex_mp> p;
 
-			w.AddPoint(p);
+            w.AddPoint(p);
 
-			BOOST_CHECK_EQUAL(w.Degree(), 1);
-		}
+            BOOST_CHECK_EQUAL(w.Degree(), 1);
+        }
 
 
-		// check whether can construct a witness set from a set of points, a slice, and a system
-		BOOST_AUTO_TEST_CASE(construct_from_points_slice_system)
-		{
-			auto sys = bertini::system::Precon::GriewankOsborn();
+        // check whether can construct a witness set from a set of points, a slice, and a system
+        BOOST_AUTO_TEST_CASE(construct_from_points_slice_system)
+        {
+            auto sys = bertini::system::Precon::GriewankOsborn();
 
-			bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
-			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex_mp>> points;
-			for (unsigned ii = 0; ii < 3; ++ii)
-				points.push_back(p);
+            bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
+            bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex_mp>> points;
+            for (unsigned ii = 0; ii < 3; ++ii)
+                points.push_back(p);
 
 
-			const auto vars = sys.VariableGroups()[0];
+            const auto vars = sys.VariableGroups()[0];
 
-			auto slice = bertini::Slice::RandomComplex(vars, 1);
+            auto slice = bertini::Slice::RandomComplex(vars, 1);
 
 
-			WitnessSet w{points, slice, sys};
+            WitnessSet w{points, slice, sys};
 
 
-			BOOST_CHECK_EQUAL(w.Degree(), 3);
-			BOOST_CHECK_EQUAL(w.Dimension(), 1);
+            BOOST_CHECK_EQUAL(w.Degree(), 3);
+            BOOST_CHECK_EQUAL(w.Dimension(), 1);
 
-			BOOST_CHECK(!w.IsConsistent());
-			// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
+            BOOST_CHECK(!w.IsConsistent());
+            // this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
 
-			// the stored slice round-trips: same dimension, same variable count.
-			BOOST_CHECK_EQUAL(w.GetSlice().Dimension(), 1);
-			BOOST_CHECK_EQUAL(w.GetSlice().NumVariables(), slice.NumVariables());
-		}
+            // the stored slice round-trips: same dimension, same variable count.
+            BOOST_CHECK_EQUAL(w.GetSlice().Dimension(), 1);
+            BOOST_CHECK_EQUAL(w.GetSlice().NumVariables(), slice.NumVariables());
+        }
 
 
 
-		BOOST_AUTO_TEST_CASE(sphere_sys_consistent_when_sliced_w_dim2_slice)
-		{
-			auto sys = bertini::system::Precon::Sphere();
+        BOOST_AUTO_TEST_CASE(sphere_sys_consistent_when_sliced_w_dim2_slice)
+        {
+            auto sys = bertini::system::Precon::Sphere();
 
-			bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
-			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex_mp>> points;
-			for (unsigned ii = 0; ii < 2; ++ii)
-				points.push_back(p);
+            bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
+            bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex_mp>> points;
+            for (unsigned ii = 0; ii < 2; ++ii)
+                points.push_back(p);
 
 
-			const auto vars = sys.Variables();
+            const auto vars = sys.Variables();
 
-			auto slice = bertini::Slice::RandomComplex(vars, 2);
+            auto slice = bertini::Slice::RandomComplex(vars, 2);
 
 
-			WitnessSet w{points, slice, sys};
+            WitnessSet w{points, slice, sys};
 
 
-			BOOST_CHECK_EQUAL(w.Degree(), 2);
-			BOOST_CHECK_EQUAL(w.Dimension(), 2);
+            BOOST_CHECK_EQUAL(w.Degree(), 2);
+            BOOST_CHECK_EQUAL(w.Dimension(), 2);
 
-			BOOST_CHECK(w.IsConsistent());
-		}
+            BOOST_CHECK(w.IsConsistent());
+        }
 
 
-		// A witness set round-trips through a boost archive (the C++ path MPI/threading use), and the
-		// deserialized system is immediately usable -- load() re-differentiated it.
-		BOOST_AUTO_TEST_CASE(serialization_roundtrip)
-		{
-			auto sys = bertini::system::Precon::Sphere();
+        // A witness set round-trips through a boost archive (the C++ path MPI/threading use), and the
+        // deserialized system is immediately usable -- load() re-differentiated it.
+        BOOST_AUTO_TEST_CASE(serialization_roundtrip)
+        {
+            auto sys = bertini::system::Precon::Sphere();
 
-			bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
-			for (unsigned ii = 0; ii < sys.NumVariables(); ++ii)
-				p(ii) = bertini::complex_mp(1);
+            bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
+            for (unsigned ii = 0; ii < sys.NumVariables(); ++ii)
+                p(ii) = bertini::complex_mp(1);
 
-			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex_mp>> points;
-			points.push_back(p);
-			points.push_back(p);
+            bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex_mp>> points;
+            points.push_back(p);
+            points.push_back(p);
 
-			const auto vars = sys.Variables();
-			auto slice = bertini::Slice::RandomComplex(vars, 2);
+            const auto vars = sys.Variables();
+            auto slice = bertini::Slice::RandomComplex(vars, 2);
 
-			WitnessSet w{points, slice, sys};
+            WitnessSet w{points, slice, sys};
 
-			std::stringstream ss;
-			{ boost::archive::text_oarchive oa(ss); oa << w; }
+            std::stringstream ss;
+            { boost::archive::text_oarchive oa(ss); oa << w; }
 
-			WitnessSet w2;
-			{ boost::archive::text_iarchive ia(ss); ia >> w2; }
+            WitnessSet w2;
+            { boost::archive::text_iarchive ia(ss); ia >> w2; }
 
-			BOOST_CHECK_EQUAL(w2.Degree(), 2);
-			BOOST_CHECK_EQUAL(w2.Dimension(), 2);
-			BOOST_CHECK(w2.IsConsistent());
-			BOOST_CHECK_EQUAL(w2.GetSlice().NumVariables(), slice.NumVariables());
+            BOOST_CHECK_EQUAL(w2.Degree(), 2);
+            BOOST_CHECK_EQUAL(w2.Dimension(), 2);
+            BOOST_CHECK(w2.IsConsistent());
+            BOOST_CHECK_EQUAL(w2.GetSlice().NumVariables(), slice.NumVariables());
 
-			// the deserialized system evaluates and differentiates without throwing.
-			BOOST_CHECK_NO_THROW(w2.GetSystem().Eval(p));
-			BOOST_CHECK_NO_THROW(w2.GetSystem().Jacobian(p));
-		}
+            // the deserialized system evaluates and differentiates without throwing.
+            BOOST_CHECK_NO_THROW(w2.GetSystem().Eval(p));
+            BOOST_CHECK_NO_THROW(w2.GetSystem().Jacobian(p));
+        }
 
 
-	BOOST_AUTO_TEST_SUITE_END() // default storage policy
+    BOOST_AUTO_TEST_SUITE_END() // default storage policy
 
 
 
 
-	BOOST_AUTO_TEST_SUITE(policy_by_reference)
+    BOOST_AUTO_TEST_SUITE(policy_by_reference)
 
-		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex_mp, bertini::System, bertini::nag_datatype::policy::Reference>;
+        using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex_mp, bertini::System, bertini::nag_datatype::policy::Reference>;
 
 
-		// check whether can construct a witness set from a set of points, a slice, and a system
-		BOOST_AUTO_TEST_CASE(construct_from_points_slice_system)
-		{
-			auto sys = bertini::system::Precon::GriewankOsborn();
+        // check whether can construct a witness set from a set of points, a slice, and a system
+        BOOST_AUTO_TEST_CASE(construct_from_points_slice_system)
+        {
+            auto sys = bertini::system::Precon::GriewankOsborn();
 
-			bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
-			bertini::nag_datatype::PointCont<std::reference_wrapper<bertini::Vec<bertini::complex_mp>>> points;
-			for (unsigned ii = 0; ii < 3; ++ii)
-				points.push_back(p);
+            bertini::Vec<bertini::complex_mp> p(sys.NumVariables());
+            bertini::nag_datatype::PointCont<std::reference_wrapper<bertini::Vec<bertini::complex_mp>>> points;
+            for (unsigned ii = 0; ii < 3; ++ii)
+                points.push_back(p);
 
 
-			const auto vars = sys.VariableGroups()[0];
+            const auto vars = sys.VariableGroups()[0];
 
-			auto slice = bertini::Slice::RandomComplex(vars, 1);
+            auto slice = bertini::Slice::RandomComplex(vars, 1);
 
 
-			WitnessSet w{points, slice, sys};
+            WitnessSet w{points, slice, sys};
 
 
-			BOOST_CHECK_EQUAL(w.Degree(), 3);
-			BOOST_CHECK_EQUAL(w.Dimension(), 1);
+            BOOST_CHECK_EQUAL(w.Degree(), 3);
+            BOOST_CHECK_EQUAL(w.Dimension(), 1);
 
-			BOOST_CHECK(!w.IsConsistent());
-			// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
-		}
+            BOOST_CHECK(!w.IsConsistent());
+            // this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
+        }
 
-	BOOST_AUTO_TEST_SUITE_END() // by_reference
+    BOOST_AUTO_TEST_SUITE_END() // by_reference
 
 
-	BOOST_AUTO_TEST_SUITE(policy_by_shared_pointer)
+    BOOST_AUTO_TEST_SUITE(policy_by_shared_pointer)
 
-		template <typename T>
-		using sp = std::shared_ptr<T>;
+        template <typename T>
+        using sp = std::shared_ptr<T>;
 
-		using WitnessSet = bertini::nag_datatype::WitnessSet<
-			bertini::complex_mp, 
-			bertini::System, 
-			bertini::nag_datatype::policy::SharedPtr>;
+        using WitnessSet = bertini::nag_datatype::WitnessSet<
+            bertini::complex_mp,
+            bertini::System,
+            bertini::nag_datatype::policy::SharedPtr>;
 
-		// check whether can construct a witness set from a set of points, a slice, and a system
-		BOOST_AUTO_TEST_CASE(construct_from_points_slice_system1)
-		{	
-			using namespace bertini;
+        // check whether can construct a witness set from a set of points, a slice, and a system
+        BOOST_AUTO_TEST_CASE(construct_from_points_slice_system1)
+        {
+            using namespace bertini;
 
-			auto sys = std::make_shared<System>(system::Precon::GriewankOsborn());
-			
-			auto n_vars = sys->NumVariables();
-			const auto vars = sys->VariableGroups()[0];
+            auto sys = std::make_shared<System>(system::Precon::GriewankOsborn());
 
-			nag_datatype::PointCont< sp<Vec<complex_mp>> > points;
-			for (unsigned ii = 0; ii < 3; ++ii)
-				points.push_back(std::make_shared<Vec<complex_mp>>(n_vars));
+            auto n_vars = sys->NumVariables();
+            const auto vars = sys->VariableGroups()[0];
 
+            nag_datatype::PointCont< sp<Vec<complex_mp>> > points;
+            for (unsigned ii = 0; ii < 3; ++ii)
+                points.push_back(std::make_shared<Vec<complex_mp>>(n_vars));
 
-			auto slice = std::make_shared<Slice>(Slice::RandomComplex(vars, 1));
 
+            auto slice = std::make_shared<Slice>(Slice::RandomComplex(vars, 1));
 
-			WitnessSet w{points, slice, sys};
 
+            WitnessSet w{points, slice, sys};
 
-			BOOST_CHECK_EQUAL(w.Degree(), 3);
-			BOOST_CHECK_EQUAL(w.Dimension(), 1);
 
-			BOOST_CHECK(!w.IsConsistent());
-			// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
+            BOOST_CHECK_EQUAL(w.Degree(), 3);
+            BOOST_CHECK_EQUAL(w.Dimension(), 1);
 
-			// check that addresses are correct, so that the stored objects are the same.
-			BOOST_CHECK_EQUAL(&(w.GetSlice()), &(*(slice)));
-			BOOST_CHECK_EQUAL(&(w.GetSystem()), &(*(sys)));
-			BOOST_CHECK_EQUAL(&(w.GetPoint(0)), &(*(points[0])));
-		}
+            BOOST_CHECK(!w.IsConsistent());
+            // this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
 
-	BOOST_AUTO_TEST_SUITE_END() // by_shared_pointer
+            // check that addresses are correct, so that the stored objects are the same.
+            BOOST_CHECK_EQUAL(&(w.GetSlice()), &(*(slice)));
+            BOOST_CHECK_EQUAL(&(w.GetSystem()), &(*(sys)));
+            BOOST_CHECK_EQUAL(&(w.GetPoint(0)), &(*(points[0])));
+        }
+
+    BOOST_AUTO_TEST_SUITE_END() // by_shared_pointer
 
 
 BOOST_AUTO_TEST_SUITE_END() // witness_set
-

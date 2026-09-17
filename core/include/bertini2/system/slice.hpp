@@ -51,470 +51,470 @@ needs.
 
 namespace bertini {
 
-	// Slice::AddTo hands the slice's linear-forms block to a System; we only need System's
-	// name here (the definition lives in slice.cpp, which includes system.hpp).
-	class System;
-
-	/**
-	\brief A linear slice of affine or projective space: a stack of linear forms, M [x ; 1].
-
-	The slice is held as an augmented coefficient matrix (one row per linear form, the
-	trailing column being that form's constant term) inside a LinearFormsBlock.  A
-	homogeneous slice simply has a zero constant column.  Slices compose: Head / Tail / Rows
-	return a new Slice over the same variables built from a subset of the linear forms.
-	*/
-	class Slice
-	{
-		blocks::LinearFormsBlock block_;  ///< the linear forms M [x ; 1] -- eval / precision / coefficients
-		VariableGroup sliced_vars_;       ///< the variables this slice is a function of
-		bool is_homogeneous_ = false;     ///< whether the forms were authored without constant terms
-
-	public:
-
-		/// An empty slice (zero forms, zero variables).
-		Slice() = default;
-
-		/**
-		\brief Build a slice directly from an augmented coefficient matrix.
-
-		\param v The variables the slice is a function of.
-		\param augmented_coefficients One row per linear form, (number-of-forms) x (v.size()+1);
-		       the trailing column is each form's constant term (zero, for a homogeneous slice).
-		\param homogeneous Whether the slice was authored without constant terms.
-		*/
-		static Slice FromCoefficients(VariableGroup const& v, Mat<complex_mp> const& augmented_coefficients, bool homogeneous = false)
-		{
-			assert(static_cast<size_t>(augmented_coefficients.cols()) == v.size() + 1 &&
-			       "a slice coefficient matrix must have (num_variables + 1) columns");
-			Slice s;
-			s.sliced_vars_ = v;
-			s.is_homogeneous_ = homogeneous;
-			s.block_ = blocks::LinearFormsBlock(v.size(), augmented_coefficients);
-			return s;
-		}
-
-		/**
-		\brief Build an affine slice whose every linear form vanishes at a given point.
-
-		Given a bare (non-augmented) coefficient block A and a point p, this assembles the augmented
-		matrix [ A | -A*p ], so each form A_i*x - A_i*p = 0 passes through p.  The result is affine
-		(non-homogeneous): a homogeneous form cannot pass through an arbitrary point via a constant
-		term (it would need its rows orthogonal to p -- see the random factories' homogeneous
-		through-point path).
-
-		\param v The variables the slice is a function of.
-		\param coefficients The bare coefficient block, (number-of-forms) x v.size() (NOT augmented).
-		\param point The point the slice must pass through, length v.size().
-		*/
-		static Slice ThroughPoint(VariableGroup const& v, Mat<complex_mp> const& coefficients, Vec<complex_mp> const& point)
-		{
-			if (static_cast<size_t>(coefficients.cols()) != v.size())
-				throw std::runtime_error("Slice::ThroughPoint coefficient block must have num_variables columns (it is not augmented)");
-			if (static_cast<size_t>(point.size()) != v.size())
-				throw std::runtime_error("Slice::ThroughPoint point must have num_variables entries");
-
-			return FromCoefficients(v, AugmentAffineThroughPoint(coefficients, point), /*homogeneous=*/false);
-		}
-
-		/**
-		\brief Produce a random real slice on a variable group, slicing a given number of dimensions.
-
-		\param v The variable group the slice is over.
-		\param dim The number of linear forms (the slice's dimension).
-		\param homogeneous Whether the slice is homogeneous (zero constant column).
-		\param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
-		\param through_point If non-null, a point the slice must pass through (length v.size(); affine, or homogeneous when homogeneous=true).
-		*/
-		static Slice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true, Vec<complex_mp> const* through_point = nullptr)
-		{
-			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
-			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems;
-			// kept REAL so a real slice stays real.  The orthogonal path is real too (real=true below):
-			// it QR-factors a matrix of REAL units, yielding a real orthogonal coefficient block (issue
-			// #294 -- previously the orthogonal path hardcoded the complex orthonormal matrix, so a
-			// "real" slice came out complex).
-			funtype gen = bertini::multiprecision::RandomRealBoundedModulusAssign;
-			return Make(v, dim, homogeneous, orthogonal, /*real=*/true, gen, through_point);
-		}
-
-		/**
-		\brief Generate a random complex slice.
-
-		\param v The variable group the slice is over.
-		\param dim The number of linear forms (the slice's dimension).
-		\param homogeneous Whether the slice is homogeneous (zero constant column).
-		\param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
-		\param through_point If non-null, a point the slice must pass through (length v.size(); affine, or homogeneous when homogeneous=true).
-		*/
-		static Slice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true, Vec<complex_mp> const* through_point = nullptr)
-		{
-			typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
-			// bounded-modulus draw (away from 0 and infinity), matching patches and the start systems.
-			funtype gen = bertini::multiprecision::RandomComplexBoundedModulusAssign;
-			return Make(v, dim, homogeneous, orthogonal, /*real=*/false, gen, through_point);
-		}
-
-		/**
-		\brief Factory for generating slices.  Generates the variable-coefficient block (optionally
-		orthonormalized by a QR factorization) and the constant column, then assembles the augmented
-		matrix the LinearFormsBlock holds.
-
-		\param v The variable group the slice is over.
-		\param dim The number of linear forms (the slice's dimension).
-		\param homogeneous Whether the slice is homogeneous (zero constant column).
-		\param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
-		\param real Whether the coefficients are real (a real orthonormal block on the orthogonal path,
-		            matching the real \p gen used on the non-orthogonal path and for the constant column).
-		\param gen The scalar generator used for the non-orthogonal coefficients and the constant column.
-		\param through_point If non-null, a point the slice must pass through (length v.size(); affine, or homogeneous when the slice is homogeneous);
-		                     overrides the random constant column.
-		*/
-		static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, bool real, std::function<void(complex_mp&, unsigned)> gen, Vec<complex_mp> const* through_point = nullptr)
-		{
-			const unsigned num_vars = static_cast<unsigned>(v.size());
-
-			// more forms than variables cannot be independent: the orthonormalization below would
-			// hand back dependent rows without a word, and the slice would cut nothing new (b2#380)
-			if (dim > num_vars)
-				throw std::invalid_argument("Slice: " + std::to_string(dim) + " linear forms on "
-					+ std::to_string(num_vars) + " variables; a slice cannot have more forms than variables");
-			if (homogeneous && through_point && dim + 1 > num_vars)
-				throw std::invalid_argument("Slice: " + std::to_string(dim) + " homogeneous linear forms through a point on "
-					+ std::to_string(num_vars) + " variables; the forms live in the point's orthogonal complement, which has "
-					+ std::to_string(num_vars - 1) + " dimensions");
-
-			if (through_point && static_cast<unsigned>(through_point->size()) != num_vars)
-				throw std::runtime_error("Slice: through_point must have num_variables entries");
-
-			Mat<complex_mp> coeffs(dim, num_vars); // the variable coefficients (one row per form)
-
-			if (orthogonal)
-			{
-				// conjugate-orthonormal coefficient matrix (orthonormal linear forms), drawn the b1 way
-				// via RandomConjugateOrthonormalMatrix (ADR-0041) -- it generates square and truncates,
-				// so the old transpose dance is gone.  Built at max precision, like the rest of the slice.
-				// A real slice QR-factors a matrix of REAL units (a real orthogonal block); a complex
-				// slice uses complex units.  (Issue #294: the real path must stay real.)
-				auto prev_precision = DefaultPrecision();
-				DefaultPrecision(MaxPrecisionAllowed());
-				if (real)
-					coeffs = bertini::RandomConjugateOrthonormalMatrix<real_mp>(dim, num_vars)
-					             .unaryExpr([](real_mp const& r){ return complex_mp(r); });
-				else
-					coeffs = bertini::RandomConjugateOrthonormalMatrix<complex_mp>(dim, num_vars);
-				DefaultPrecision(prev_precision);
-			}
-			else
-			{
-				for (unsigned ii(0); ii < dim; ++ii)
-					for (unsigned jj(0); jj < num_vars; ++jj)
-						gen(coeffs(ii, jj), MaxPrecisionAllowed());
-			}
-
-			assert(static_cast<unsigned>(coeffs.rows()) == dim);
-			assert(static_cast<unsigned>(coeffs.cols()) == num_vars);
-
-			// Through a point.  Homogeneous: project the rows into p's orthogonal complement (a.p = 0),
-			// zero constant column.  Affine: the constant column is -A*p, so every form vanishes at p.
-			if (through_point && homogeneous)
-				return FromCoefficients(v, AugmentHomogeneousThroughPoint(coeffs, *through_point, orthogonal), /*homogeneous=*/true);
-			if (through_point)
-				return FromCoefficients(v, AugmentAffineThroughPoint(coeffs, *through_point), /*homogeneous=*/false);
-
-			// Assemble the augmented matrix: [ coeffs | constants ].  A homogeneous slice's constant
-			// column is zero; otherwise it is freshly generated.
-			Mat<complex_mp> augmented(dim, num_vars + 1);
-			augmented.leftCols(num_vars) = coeffs;
-			if (homogeneous)
-				augmented.col(num_vars).setZero();
-			else
-				for (unsigned ii(0); ii < dim; ++ii)
-					gen(augmented(ii, num_vars), MaxPrecisionAllowed());
-
-			return FromCoefficients(v, augmented, homogeneous);
-		}
-
-
-		/**
-		\brief Evaluate the slice's linear-form values, in-place.
-		*/
-		template<typename NumT>
-		void Eval(Vec<NumT> & result, Vec<NumT> const& x) const
-		{
-			result.resize(Dimension());
-			NumT path_value(0); // ignored: linear forms are autonomous
-			block_.EvalInPlace<NumT>(result, x, path_value);
-		}
-
-		/**
-		\brief Evaluate the slice's linear-form values.
-		*/
-		template<typename NumT>
-		Vec<NumT> Eval(Vec<NumT> const& x) const
-		{
-			Vec<NumT> result(Dimension());
-			Eval(result, x);
-			return result;
-		}
-
-		/**
-		\brief The slice's Jacobian (its constant variable-coefficient matrix), in-place.
-		*/
-		template<typename NumT>
-		void Jacobian(Mat<NumT> & result, Vec<NumT> const& x) const
-		{
-			result.resize(Dimension(), NumVariables());
-			NumT path_value(0);
-			block_.JacobianInPlace<NumT>(result, x, path_value);
-		}
-
-		/**
-		\brief The slice's Jacobian (its constant variable-coefficient matrix).
-		*/
-		template<typename NumT>
-		Mat<NumT> Jacobian(Vec<NumT> const& x) const
-		{
-			Mat<NumT> result(Dimension(), NumVariables());
-			Jacobian(result, x);
-			return result;
-		}
-
-
-		/**
-		\brief The augmented coefficient matrix: one row per linear form, (Dimension) x (NumVariables+1),
-		the trailing column carrying each form's constant term.
-
-		These rows are also factor rows for a ProductsOfLinearsBlock, so a slice composes directly into
-		the product-of-linears form regeneration uses.
-		*/
-		Mat<complex_mp> const& Coefficients() const
-		{
-			return block_.Coefficients();
-		}
-
-		/// The underlying linear-forms block (eval / Jacobian / precision engine).
-		blocks::LinearFormsBlock const& AsLinearFormsBlock() const
-		{
-			return block_;
-		}
-
-		/// Add this slice's linear forms to a System as a LinearFormsBlock.  (Defined in slice.cpp.)
-		void AddTo(System & s) const;
-
-		/// A standalone System whose functions are exactly this slice's linear forms (over the slice's
-		/// variable group).  Lets a slice be carried around and evaluated / tracked on its own.
-		/// (Defined in slice.cpp.)
-		System AsSystem() const;
-
-		/**
-		\brief A new slice stacking this slice's linear forms on top of \p other's.
-
-		Both slices must be on the same number of variables.  The result is homogeneous only if both
-		operands are.  This is how you build a higher-codimension slice from pieces (and the Python
-		`+` operator).
-		*/
-		Slice Concatenate(Slice const& other) const
-		{
-			if (NumVariables() != other.NumVariables())
-				throw std::runtime_error("Slice::Concatenate requires both slices to be on the same number of variables");
-
-			Mat<complex_mp> const& A = Coefficients();
-			Mat<complex_mp> const& B = other.Coefficients();
-			Mat<complex_mp> stacked(A.rows() + B.rows(), A.cols());
-			stacked.topRows(A.rows()) = A;
-			stacked.bottomRows(B.rows()) = B;
-
-			return FromCoefficients(sliced_vars_, stacked, is_homogeneous_ && other.is_homogeneous_);
-		}
-
-
-		/**
-		\brief A new slice over the same variables built from the first \p m linear forms.
-		*/
-		Slice Head(unsigned m) const
-		{
-			if (m > Dimension())
-				throw std::runtime_error("Slice::Head asked for more forms than the slice has");
-			return FromCoefficients(sliced_vars_, Coefficients().topRows(m), is_homogeneous_);
-		}
-
-		/**
-		\brief A new slice over the same variables built from the last \p m linear forms.
-		*/
-		Slice Tail(unsigned m) const
-		{
-			if (m > Dimension())
-				throw std::runtime_error("Slice::Tail asked for more forms than the slice has");
-			return FromCoefficients(sliced_vars_, Coefficients().bottomRows(m), is_homogeneous_);
-		}
-
-		/**
-		\brief A new slice over the same variables built from the chosen linear forms.
-		*/
-		Slice Rows(std::vector<unsigned> const& indices) const
-		{
-			Mat<complex_mp> const& C = Coefficients();
-			Mat<complex_mp> sub(static_cast<Eigen::Index>(indices.size()), C.cols());
-			for (size_t ii = 0; ii < indices.size(); ++ii)
-			{
-				if (indices[ii] >= Dimension())
-					throw std::runtime_error("Slice::Rows asked for a form index outside the slice");
-				sub.row(static_cast<Eigen::Index>(ii)) = C.row(indices[ii]);
-			}
-			return FromCoefficients(sliced_vars_, sub, is_homogeneous_);
-		}
-
-
-		/**
-		\brief The dimension of the slice -- the number of linear forms.
-		*/
-		unsigned Dimension() const
-		{
-			return static_cast<unsigned>(block_.NumFunctions());
-		}
-
-		/**
-		\brief The number of variables sliced.
-		*/
-		unsigned NumVariables() const
-		{
-			return static_cast<unsigned>(sliced_vars_.size());
-		}
-
-		/**
-		\brief The variables the slice is a function of.
-		*/
-		VariableGroup const& Variables() const
-		{
-			return sliced_vars_;
-		}
-
-		/**
-		\brief Whether the slice was authored without constant terms (passes through the origin).
-		*/
-		bool IsHomogeneous() const
-		{
-			return is_homogeneous_;
-		}
-
-
-		/**
-		\brief Get the current working precision of the slice, in digits.
-		*/
-		unsigned Precision() const
-		{
-			return block_.Precision();
-		}
-
-		/**
-		\brief Set the working precision of the slice, in digits.
-		*/
-		void Precision(unsigned new_precision) const
-		{
-			block_.Precision(new_precision);
-		}
-
-	private:
-
-		/**
-		\brief Assemble the augmented matrix [ A | -A*p ] for an affine slice through a point.
-
-		The whole computation runs at MaxPrecisionAllowed() (the point and coefficient block are
-		re-materialized to that precision first, matching how Make builds the coefficient block), so
-		the stored constant column carries full precision and there is no mixed-precision -A*p.
-
-		\param coeffs The bare coefficient block A, (number-of-forms) x num_variables.
-		\param point The point p the slice must pass through, length num_variables.
-		*/
-		static Mat<complex_mp> AugmentAffineThroughPoint(Mat<complex_mp> const& coeffs, Vec<complex_mp> const& point)
-		{
-			const auto num_vars = coeffs.cols();
-
-			auto prev_precision = DefaultPrecision();
-			DefaultPrecision(MaxPrecisionAllowed());
-
-			Mat<complex_mp> A = coeffs;   // copies, re-materialized at max precision below
-			Vec<complex_mp> p = point;
-			bertini::Precision(A, MaxPrecisionAllowed());   // qualify: class has member Precision overloads
-			bertini::Precision(p, MaxPrecisionAllowed());
-
-			Mat<complex_mp> augmented(coeffs.rows(), num_vars + 1);
-			augmented.leftCols(num_vars) = A;
-			augmented.col(num_vars) = -(A * p);   // b = -A*p, so A*p + b = 0
-
-			DefaultPrecision(prev_precision);
-			return augmented;
-		}
-
-		/**
-		\brief Assemble the augmented matrix for a homogeneous slice through a projective point.
-
-		A homogeneous form a.x = 0 contains the projective point p iff a.p = 0, so there is no constant
-		column to set -- instead each row is projected into p's orthogonal complement:
-		a' = a - (a.p / (pbar.p)) pbar, giving a'.p = 0 exactly (pbar.p = ||p||^2 > 0, so no
-		isotropic-vector blow-up).  Every linear combination of the projected rows is likewise
-		orthogonal to p, so when \p orthogonal is set the projected rows are re-orthonormalized (QR)
-		without leaving p's complement.  Runs entirely at MaxPrecisionAllowed(), like the affine helper.
-
-		\param coeffs The bare coefficient block A, (number-of-forms) x num_variables.
-		\param point The projective point p the slice must pass through, length num_variables.
-		\param orthogonal Whether to re-orthonormalize the projected rows.
-		*/
-		static Mat<complex_mp> AugmentHomogeneousThroughPoint(Mat<complex_mp> const& coeffs, Vec<complex_mp> const& point, bool orthogonal)
-		{
-			const auto dim = coeffs.rows();
-			const auto num_vars = coeffs.cols();
-
-			auto prev_precision = DefaultPrecision();
-			DefaultPrecision(MaxPrecisionAllowed());
-
-			Mat<complex_mp> A = coeffs;
-			Vec<complex_mp> p = point;
-			bertini::Precision(A, MaxPrecisionAllowed());   // qualify: class has member Precision overloads
-			bertini::Precision(p, MaxPrecisionAllowed());
-
-			real_mp p_norm_sq = p.squaredNorm();            // pbar.p = ||p||^2, real-positive for p != 0
-			if (p_norm_sq == real_mp(0))
-				throw std::runtime_error("Slice: a homogeneous slice through a point needs a nonzero point");
-
-			// project every row into p's orthogonal complement (bilinear a.p = 0): subtract the
-			// rank-one correction (A*p) pbar^T / ||p||^2.
-			Vec<complex_mp> Ap = A * p;                      // bilinear a_i . p, one per row
-			A = A - (Ap / complex_mp(p_norm_sq)) * p.conjugate().transpose();
-
-			if (orthogonal)
-			{
-				// orthonormalize the projected rows via a QR of A^T: the columns of Q span the row
-				// space of A (which lies in p's complement), so Q^T's rows stay orthogonal to p.
-				Eigen::HouseholderQR<Mat<complex_mp>> qr(A.transpose());
-				Mat<complex_mp> Q = qr.householderQ() * Mat<complex_mp>::Identity(num_vars, num_vars);
-				A = Q.leftCols(dim).transpose();
-			}
-
-			Mat<complex_mp> augmented(dim, num_vars + 1);
-			augmented.leftCols(num_vars) = A;
-			augmented.col(num_vars).setZero();              // homogeneous: no constant term
-
-			DefaultPrecision(prev_precision);
-			return augmented;
-		}
-
-		friend class boost::serialization::access;
-
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & block_;
-			ar & sliced_vars_;
-			ar & is_homogeneous_;
-		}
-
-		friend std::ostream& operator<<(std::ostream&, Slice const&);
-	};
-
-	/**
-	\brief Provides output streaming for Slice
-	*/
-	std::ostream& operator<<(std::ostream& out, Slice const& s);
+    // Slice::AddTo hands the slice's linear-forms block to a System; we only need System's
+    // name here (the definition lives in slice.cpp, which includes system.hpp).
+    class System;
+
+    /**
+    \brief A linear slice of affine or projective space: a stack of linear forms, M [x ; 1].
+
+    The slice is held as an augmented coefficient matrix (one row per linear form, the
+    trailing column being that form's constant term) inside a LinearFormsBlock.  A
+    homogeneous slice simply has a zero constant column.  Slices compose: Head / Tail / Rows
+    return a new Slice over the same variables built from a subset of the linear forms.
+    */
+    class Slice
+    {
+        blocks::LinearFormsBlock block_;  ///< the linear forms M [x ; 1] -- eval / precision / coefficients
+        VariableGroup sliced_vars_;       ///< the variables this slice is a function of
+        bool is_homogeneous_ = false;     ///< whether the forms were authored without constant terms
+
+    public:
+
+        /// An empty slice (zero forms, zero variables).
+        Slice() = default;
+
+        /**
+        \brief Build a slice directly from an augmented coefficient matrix.
+
+        \param v The variables the slice is a function of.
+        \param augmented_coefficients One row per linear form, (number-of-forms) x (v.size()+1);
+               the trailing column is each form's constant term (zero, for a homogeneous slice).
+        \param homogeneous Whether the slice was authored without constant terms.
+        */
+        static Slice FromCoefficients(VariableGroup const& v, Mat<complex_mp> const& augmented_coefficients, bool homogeneous = false)
+        {
+            assert(static_cast<size_t>(augmented_coefficients.cols()) == v.size() + 1 &&
+                   "a slice coefficient matrix must have (num_variables + 1) columns");
+            Slice s;
+            s.sliced_vars_ = v;
+            s.is_homogeneous_ = homogeneous;
+            s.block_ = blocks::LinearFormsBlock(v.size(), augmented_coefficients);
+            return s;
+        }
+
+        /**
+        \brief Build an affine slice whose every linear form vanishes at a given point.
+
+        Given a bare (non-augmented) coefficient block A and a point p, this assembles the augmented
+        matrix [ A | -A*p ], so each form A_i*x - A_i*p = 0 passes through p.  The result is affine
+        (non-homogeneous): a homogeneous form cannot pass through an arbitrary point via a constant
+        term (it would need its rows orthogonal to p -- see the random factories' homogeneous
+        through-point path).
+
+        \param v The variables the slice is a function of.
+        \param coefficients The bare coefficient block, (number-of-forms) x v.size() (NOT augmented).
+        \param point The point the slice must pass through, length v.size().
+        */
+        static Slice ThroughPoint(VariableGroup const& v, Mat<complex_mp> const& coefficients, Vec<complex_mp> const& point)
+        {
+            if (static_cast<size_t>(coefficients.cols()) != v.size())
+                throw std::runtime_error("Slice::ThroughPoint coefficient block must have num_variables columns (it is not augmented)");
+            if (static_cast<size_t>(point.size()) != v.size())
+                throw std::runtime_error("Slice::ThroughPoint point must have num_variables entries");
+
+            return FromCoefficients(v, AugmentAffineThroughPoint(coefficients, point), /*homogeneous=*/false);
+        }
+
+        /**
+        \brief Produce a random real slice on a variable group, slicing a given number of dimensions.
+
+        \param v The variable group the slice is over.
+        \param dim The number of linear forms (the slice's dimension).
+        \param homogeneous Whether the slice is homogeneous (zero constant column).
+        \param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
+        \param through_point If non-null, a point the slice must pass through (length v.size(); affine, or homogeneous when homogeneous=true).
+        */
+        static Slice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true, Vec<complex_mp> const* through_point = nullptr)
+        {
+            typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
+            // bounded-modulus draw (away from 0 and infinity), matching patches and the start systems;
+            // kept REAL so a real slice stays real.  The orthogonal path is real too (real=true below):
+            // it QR-factors a matrix of REAL units, yielding a real orthogonal coefficient block (issue
+            // #294 -- previously the orthogonal path hardcoded the complex orthonormal matrix, so a
+            // "real" slice came out complex).
+            funtype gen = bertini::multiprecision::RandomRealBoundedModulusAssign;
+            return Make(v, dim, homogeneous, orthogonal, /*real=*/true, gen, through_point);
+        }
+
+        /**
+        \brief Generate a random complex slice.
+
+        \param v The variable group the slice is over.
+        \param dim The number of linear forms (the slice's dimension).
+        \param homogeneous Whether the slice is homogeneous (zero constant column).
+        \param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
+        \param through_point If non-null, a point the slice must pass through (length v.size(); affine, or homogeneous when homogeneous=true).
+        */
+        static Slice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true, Vec<complex_mp> const* through_point = nullptr)
+        {
+            typedef void (*funtype) (complex_mp&, unsigned); // the type for number generation
+            // bounded-modulus draw (away from 0 and infinity), matching patches and the start systems.
+            funtype gen = bertini::multiprecision::RandomComplexBoundedModulusAssign;
+            return Make(v, dim, homogeneous, orthogonal, /*real=*/false, gen, through_point);
+        }
+
+        /**
+        \brief Factory for generating slices.  Generates the variable-coefficient block (optionally
+        orthonormalized by a QR factorization) and the constant column, then assembles the augmented
+        matrix the LinearFormsBlock holds.
+
+        \param v The variable group the slice is over.
+        \param dim The number of linear forms (the slice's dimension).
+        \param homogeneous Whether the slice is homogeneous (zero constant column).
+        \param orthogonal Whether to orthonormalize the coefficient block via a QR factorization.
+        \param real Whether the coefficients are real (a real orthonormal block on the orthogonal path,
+                    matching the real \p gen used on the non-orthogonal path and for the constant column).
+        \param gen The scalar generator used for the non-orthogonal coefficients and the constant column.
+        \param through_point If non-null, a point the slice must pass through (length v.size(); affine, or homogeneous when the slice is homogeneous);
+                             overrides the random constant column.
+        */
+        static Slice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, bool real, std::function<void(complex_mp&, unsigned)> gen, Vec<complex_mp> const* through_point = nullptr)
+        {
+            const unsigned num_vars = static_cast<unsigned>(v.size());
+
+            // more forms than variables cannot be independent: the orthonormalization below would
+            // hand back dependent rows without a word, and the slice would cut nothing new (b2#380)
+            if (dim > num_vars)
+                throw std::invalid_argument("Slice: " + std::to_string(dim) + " linear forms on "
+                    + std::to_string(num_vars) + " variables; a slice cannot have more forms than variables");
+            if (homogeneous && through_point && dim + 1 > num_vars)
+                throw std::invalid_argument("Slice: " + std::to_string(dim) + " homogeneous linear forms through a point on "
+                    + std::to_string(num_vars) + " variables; the forms live in the point's orthogonal complement, which has "
+                    + std::to_string(num_vars - 1) + " dimensions");
+
+            if (through_point && static_cast<unsigned>(through_point->size()) != num_vars)
+                throw std::runtime_error("Slice: through_point must have num_variables entries");
+
+            Mat<complex_mp> coeffs(dim, num_vars); // the variable coefficients (one row per form)
+
+            if (orthogonal)
+            {
+                // conjugate-orthonormal coefficient matrix (orthonormal linear forms), drawn the b1 way
+                // via RandomConjugateOrthonormalMatrix (ADR-0041) -- it generates square and truncates,
+                // so the old transpose dance is gone.  Built at max precision, like the rest of the slice.
+                // A real slice QR-factors a matrix of REAL units (a real orthogonal block); a complex
+                // slice uses complex units.  (Issue #294: the real path must stay real.)
+                auto prev_precision = DefaultPrecision();
+                DefaultPrecision(MaxPrecisionAllowed());
+                if (real)
+                    coeffs = bertini::RandomConjugateOrthonormalMatrix<real_mp>(dim, num_vars)
+                                 .unaryExpr([](real_mp const& r){ return complex_mp(r); });
+                else
+                    coeffs = bertini::RandomConjugateOrthonormalMatrix<complex_mp>(dim, num_vars);
+                DefaultPrecision(prev_precision);
+            }
+            else
+            {
+                for (unsigned ii(0); ii < dim; ++ii)
+                    for (unsigned jj(0); jj < num_vars; ++jj)
+                        gen(coeffs(ii, jj), MaxPrecisionAllowed());
+            }
+
+            assert(static_cast<unsigned>(coeffs.rows()) == dim);
+            assert(static_cast<unsigned>(coeffs.cols()) == num_vars);
+
+            // Through a point.  Homogeneous: project the rows into p's orthogonal complement (a.p = 0),
+            // zero constant column.  Affine: the constant column is -A*p, so every form vanishes at p.
+            if (through_point && homogeneous)
+                return FromCoefficients(v, AugmentHomogeneousThroughPoint(coeffs, *through_point, orthogonal), /*homogeneous=*/true);
+            if (through_point)
+                return FromCoefficients(v, AugmentAffineThroughPoint(coeffs, *through_point), /*homogeneous=*/false);
+
+            // Assemble the augmented matrix: [ coeffs | constants ].  A homogeneous slice's constant
+            // column is zero; otherwise it is freshly generated.
+            Mat<complex_mp> augmented(dim, num_vars + 1);
+            augmented.leftCols(num_vars) = coeffs;
+            if (homogeneous)
+                augmented.col(num_vars).setZero();
+            else
+                for (unsigned ii(0); ii < dim; ++ii)
+                    gen(augmented(ii, num_vars), MaxPrecisionAllowed());
+
+            return FromCoefficients(v, augmented, homogeneous);
+        }
+
+
+        /**
+        \brief Evaluate the slice's linear-form values, in-place.
+        */
+        template<typename NumT>
+        void Eval(Vec<NumT> & result, Vec<NumT> const& x) const
+        {
+            result.resize(Dimension());
+            NumT path_value(0); // ignored: linear forms are autonomous
+            block_.EvalInPlace<NumT>(result, x, path_value);
+        }
+
+        /**
+        \brief Evaluate the slice's linear-form values.
+        */
+        template<typename NumT>
+        Vec<NumT> Eval(Vec<NumT> const& x) const
+        {
+            Vec<NumT> result(Dimension());
+            Eval(result, x);
+            return result;
+        }
+
+        /**
+        \brief The slice's Jacobian (its constant variable-coefficient matrix), in-place.
+        */
+        template<typename NumT>
+        void Jacobian(Mat<NumT> & result, Vec<NumT> const& x) const
+        {
+            result.resize(Dimension(), NumVariables());
+            NumT path_value(0);
+            block_.JacobianInPlace<NumT>(result, x, path_value);
+        }
+
+        /**
+        \brief The slice's Jacobian (its constant variable-coefficient matrix).
+        */
+        template<typename NumT>
+        Mat<NumT> Jacobian(Vec<NumT> const& x) const
+        {
+            Mat<NumT> result(Dimension(), NumVariables());
+            Jacobian(result, x);
+            return result;
+        }
+
+
+        /**
+        \brief The augmented coefficient matrix: one row per linear form, (Dimension) x (NumVariables+1),
+        the trailing column carrying each form's constant term.
+
+        These rows are also factor rows for a ProductsOfLinearsBlock, so a slice composes directly into
+        the product-of-linears form regeneration uses.
+        */
+        Mat<complex_mp> const& Coefficients() const
+        {
+            return block_.Coefficients();
+        }
+
+        /// The underlying linear-forms block (eval / Jacobian / precision engine).
+        blocks::LinearFormsBlock const& AsLinearFormsBlock() const
+        {
+            return block_;
+        }
+
+        /// Add this slice's linear forms to a System as a LinearFormsBlock.  (Defined in slice.cpp.)
+        void AddTo(System & s) const;
+
+        /// A standalone System whose functions are exactly this slice's linear forms (over the slice's
+        /// variable group).  Lets a slice be carried around and evaluated / tracked on its own.
+        /// (Defined in slice.cpp.)
+        System AsSystem() const;
+
+        /**
+        \brief A new slice stacking this slice's linear forms on top of \p other's.
+
+        Both slices must be on the same number of variables.  The result is homogeneous only if both
+        operands are.  This is how you build a higher-codimension slice from pieces (and the Python
+        `+` operator).
+        */
+        Slice Concatenate(Slice const& other) const
+        {
+            if (NumVariables() != other.NumVariables())
+                throw std::runtime_error("Slice::Concatenate requires both slices to be on the same number of variables");
+
+            Mat<complex_mp> const& A = Coefficients();
+            Mat<complex_mp> const& B = other.Coefficients();
+            Mat<complex_mp> stacked(A.rows() + B.rows(), A.cols());
+            stacked.topRows(A.rows()) = A;
+            stacked.bottomRows(B.rows()) = B;
+
+            return FromCoefficients(sliced_vars_, stacked, is_homogeneous_ && other.is_homogeneous_);
+        }
+
+
+        /**
+        \brief A new slice over the same variables built from the first \p m linear forms.
+        */
+        Slice Head(unsigned m) const
+        {
+            if (m > Dimension())
+                throw std::runtime_error("Slice::Head asked for more forms than the slice has");
+            return FromCoefficients(sliced_vars_, Coefficients().topRows(m), is_homogeneous_);
+        }
+
+        /**
+        \brief A new slice over the same variables built from the last \p m linear forms.
+        */
+        Slice Tail(unsigned m) const
+        {
+            if (m > Dimension())
+                throw std::runtime_error("Slice::Tail asked for more forms than the slice has");
+            return FromCoefficients(sliced_vars_, Coefficients().bottomRows(m), is_homogeneous_);
+        }
+
+        /**
+        \brief A new slice over the same variables built from the chosen linear forms.
+        */
+        Slice Rows(std::vector<unsigned> const& indices) const
+        {
+            Mat<complex_mp> const& C = Coefficients();
+            Mat<complex_mp> sub(static_cast<Eigen::Index>(indices.size()), C.cols());
+            for (size_t ii = 0; ii < indices.size(); ++ii)
+            {
+                if (indices[ii] >= Dimension())
+                    throw std::runtime_error("Slice::Rows asked for a form index outside the slice");
+                sub.row(static_cast<Eigen::Index>(ii)) = C.row(indices[ii]);
+            }
+            return FromCoefficients(sliced_vars_, sub, is_homogeneous_);
+        }
+
+
+        /**
+        \brief The dimension of the slice -- the number of linear forms.
+        */
+        unsigned Dimension() const
+        {
+            return static_cast<unsigned>(block_.NumFunctions());
+        }
+
+        /**
+        \brief The number of variables sliced.
+        */
+        unsigned NumVariables() const
+        {
+            return static_cast<unsigned>(sliced_vars_.size());
+        }
+
+        /**
+        \brief The variables the slice is a function of.
+        */
+        VariableGroup const& Variables() const
+        {
+            return sliced_vars_;
+        }
+
+        /**
+        \brief Whether the slice was authored without constant terms (passes through the origin).
+        */
+        bool IsHomogeneous() const
+        {
+            return is_homogeneous_;
+        }
+
+
+        /**
+        \brief Get the current working precision of the slice, in digits.
+        */
+        unsigned Precision() const
+        {
+            return block_.Precision();
+        }
+
+        /**
+        \brief Set the working precision of the slice, in digits.
+        */
+        void Precision(unsigned new_precision) const
+        {
+            block_.Precision(new_precision);
+        }
+
+    private:
+
+        /**
+        \brief Assemble the augmented matrix [ A | -A*p ] for an affine slice through a point.
+
+        The whole computation runs at MaxPrecisionAllowed() (the point and coefficient block are
+        re-materialized to that precision first, matching how Make builds the coefficient block), so
+        the stored constant column carries full precision and there is no mixed-precision -A*p.
+
+        \param coeffs The bare coefficient block A, (number-of-forms) x num_variables.
+        \param point The point p the slice must pass through, length num_variables.
+        */
+        static Mat<complex_mp> AugmentAffineThroughPoint(Mat<complex_mp> const& coeffs, Vec<complex_mp> const& point)
+        {
+            const auto num_vars = coeffs.cols();
+
+            auto prev_precision = DefaultPrecision();
+            DefaultPrecision(MaxPrecisionAllowed());
+
+            Mat<complex_mp> A = coeffs;   // copies, re-materialized at max precision below
+            Vec<complex_mp> p = point;
+            bertini::Precision(A, MaxPrecisionAllowed());   // qualify: class has member Precision overloads
+            bertini::Precision(p, MaxPrecisionAllowed());
+
+            Mat<complex_mp> augmented(coeffs.rows(), num_vars + 1);
+            augmented.leftCols(num_vars) = A;
+            augmented.col(num_vars) = -(A * p);   // b = -A*p, so A*p + b = 0
+
+            DefaultPrecision(prev_precision);
+            return augmented;
+        }
+
+        /**
+        \brief Assemble the augmented matrix for a homogeneous slice through a projective point.
+
+        A homogeneous form a.x = 0 contains the projective point p iff a.p = 0, so there is no constant
+        column to set -- instead each row is projected into p's orthogonal complement:
+        a' = a - (a.p / (pbar.p)) pbar, giving a'.p = 0 exactly (pbar.p = ||p||^2 > 0, so no
+        isotropic-vector blow-up).  Every linear combination of the projected rows is likewise
+        orthogonal to p, so when \p orthogonal is set the projected rows are re-orthonormalized (QR)
+        without leaving p's complement.  Runs entirely at MaxPrecisionAllowed(), like the affine helper.
+
+        \param coeffs The bare coefficient block A, (number-of-forms) x num_variables.
+        \param point The projective point p the slice must pass through, length num_variables.
+        \param orthogonal Whether to re-orthonormalize the projected rows.
+        */
+        static Mat<complex_mp> AugmentHomogeneousThroughPoint(Mat<complex_mp> const& coeffs, Vec<complex_mp> const& point, bool orthogonal)
+        {
+            const auto dim = coeffs.rows();
+            const auto num_vars = coeffs.cols();
+
+            auto prev_precision = DefaultPrecision();
+            DefaultPrecision(MaxPrecisionAllowed());
+
+            Mat<complex_mp> A = coeffs;
+            Vec<complex_mp> p = point;
+            bertini::Precision(A, MaxPrecisionAllowed());   // qualify: class has member Precision overloads
+            bertini::Precision(p, MaxPrecisionAllowed());
+
+            real_mp p_norm_sq = p.squaredNorm();            // pbar.p = ||p||^2, real-positive for p != 0
+            if (p_norm_sq == real_mp(0))
+                throw std::runtime_error("Slice: a homogeneous slice through a point needs a nonzero point");
+
+            // project every row into p's orthogonal complement (bilinear a.p = 0): subtract the
+            // rank-one correction (A*p) pbar^T / ||p||^2.
+            Vec<complex_mp> Ap = A * p;                      // bilinear a_i . p, one per row
+            A = A - (Ap / complex_mp(p_norm_sq)) * p.conjugate().transpose();
+
+            if (orthogonal)
+            {
+                // orthonormalize the projected rows via a QR of A^T: the columns of Q span the row
+                // space of A (which lies in p's complement), so Q^T's rows stay orthogonal to p.
+                Eigen::HouseholderQR<Mat<complex_mp>> qr(A.transpose());
+                Mat<complex_mp> Q = qr.householderQ() * Mat<complex_mp>::Identity(num_vars, num_vars);
+                A = Q.leftCols(dim).transpose();
+            }
+
+            Mat<complex_mp> augmented(dim, num_vars + 1);
+            augmented.leftCols(num_vars) = A;
+            augmented.col(num_vars).setZero();              // homogeneous: no constant term
+
+            DefaultPrecision(prev_precision);
+            return augmented;
+        }
+
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & block_;
+            ar & sliced_vars_;
+            ar & is_homogeneous_;
+        }
+
+        friend std::ostream& operator<<(std::ostream&, Slice const&);
+    };
+
+    /**
+    \brief Provides output streaming for Slice
+    */
+    std::ostream& operator<<(std::ostream& out, Slice const& s);
 } // re: namespace bertini
 
 #endif

@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/function_tree/symbols/variable.hpp"
@@ -27,8 +27,8 @@
 
 
 namespace bertini{
-	namespace node{
-		using ::pow;
+    namespace node{
+        using ::pow;
 
 // The single funnel for a named Variable (Make("...") reaches here): reject a name
 // that is not a well-formed identifier, so an expression/operator/whitespace/leading-
@@ -36,7 +36,7 @@ namespace bertini{
 // serialization (which restores the name directly) do not pass through here.
 Variable::Variable(std::string new_name) : NamedSymbol(new_name)
 {
-	ThrowIfInvalidVariableName(new_name);
+    ThrowIfInvalidVariableName(new_name);
 }
 
 Variable::Variable() : NamedSymbol("unnamed_variable_be_scared")
@@ -44,61 +44,61 @@ Variable::Variable() : NamedSymbol("unnamed_variable_be_scared")
 
 std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	if (v==nullptr)
-		return Differential::Make(std::static_pointer_cast<Variable const>(shared_from_this()), name());
-	else
-		return v.get() == this ? Integer::Make(1) : Integer::Make(0);
+    if (v==nullptr)
+        return Differential::Make(std::static_pointer_cast<Variable const>(shared_from_this()), name());
+    else
+        return v.get() == this ? Integer::Make(1) : Integer::Make(0);
 }
 
 std::shared_ptr<Node> Variable::Subs(SubstitutionMap const& substitutions) const
 {
-	auto it = substitutions.find(name());
-	if (it != substitutions.end())
-		return it->second;
-	return std::const_pointer_cast<Node>(shared_from_this());
+    auto it = substitutions.find(name());
+    if (it != substitutions.end())
+        return it->second;
+    return std::const_pointer_cast<Node>(shared_from_this());
 }
 
 int Variable::Degree(std::shared_ptr<Variable> const& v) const
 {
-	if (v)
-	{
-		if (this == v.get())
-			return 1;
-		else
-			return 0;
-	}
-	else
-		return 1;
-	
+    if (v)
+    {
+        if (this == v.get())
+            return 1;
+        else
+            return 0;
+    }
+    else
+        return 1;
+
 }
 
 
 int Variable::Degree(VariableGroup const& vars) const
 {
-	for (const auto& iter : vars)
-		if (this==iter.get())
-			return 1;
-		
-	return 0;
+    for (const auto& iter : vars)
+        if (this==iter.get())
+            return 1;
+
+    return 0;
 }
 
 
 std::vector<int> Variable::MultiDegreeImpl(VariableGroup const& vars) const
 {
-	std::vector<int> deg;
-	for (auto iter=vars.begin(); iter!=vars.end(); iter++)
-		if (this==(*iter).get())
-			deg.push_back(1);
-		else
-			deg.push_back(0);
-	return deg;
+    std::vector<int> deg;
+    for (auto iter=vars.begin(); iter!=vars.end(); iter++)
+        if (this==(*iter).get())
+            deg.push_back(1);
+        else
+            deg.push_back(0);
+    return deg;
 }
 
 
 
 bool Variable::IsHomogeneous(std::shared_ptr<Variable> const& /*v*/) const
 {
-	return true;
+    return true;
 }
 
 /**
@@ -106,9 +106,9 @@ Check for homogeneity, with respect to a variable group.
 */
 bool Variable::IsHomogeneous(VariableGroup const& /*vars*/) const
 {
-	return true;
+    return true;
 }
 
 
-	} // re: namespace node
+    } // re: namespace node
 } // re: namespace bertini

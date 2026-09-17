@@ -15,14 +15,14 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 //
 // silviana amethyst, university of wisconsin-eau claire
 
 /**
-\file bertini2/blackbox/main_mode_switch.hpp 
+\file bertini2/blackbox/main_mode_switch.hpp
 
 \brief Provides the main mode switch for the Bertini2 executable program.
 */
@@ -34,12 +34,11 @@
 
 namespace bertini{
 
-	/**
-	Route to the appropriate algorithm based on parsed arguments and the
-	tracktype found in the input file's CONFIG section.
+    /**
+    Route to the appropriate algorithm based on parsed arguments and the
+    tracktype found in the input file's CONFIG section.
 
-	\returns 0 on success, nonzero on failure or unimplemented tracktype.
-	*/
-	int MainModeSwitch(ParsedArgs const& args);
+    \returns 0 on success, nonzero on failure or unimplemented tracktype.
+    */
+    int MainModeSwitch(ParsedArgs const& args);
 }
-

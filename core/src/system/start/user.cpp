@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/system/start/user.hpp"
@@ -27,62 +27,62 @@ BOOST_CLASS_EXPORT(bertini::start_system::User);
 
 namespace bertini {
 
-	namespace start_system {
+    namespace start_system {
 
-		// constructor for User start system, from any other *suitable* system.
-		User::User(System const& s, SampCont<complex_dbl> const& solns) : user_system_(s), solns_in_dbl_(true)
-		{
-			std::get<SampCont<complex_dbl>>(solns_) = solns;
-		}
+        // constructor for User start system, from any other *suitable* system.
+        User::User(System const& s, SampCont<complex_dbl> const& solns) : user_system_(s), solns_in_dbl_(true)
+        {
+            std::get<SampCont<complex_dbl>>(solns_) = solns;
+        }
 
-		User::User(System const& s, SampCont<complex_mp> const& solns) : user_system_(s), solns_in_dbl_(false)
-		{
-			std::get<SampCont<complex_mp>>(solns_) = solns;
-		}
-				
-		
-		unsigned long long User::NumStartPoints() const
-		{
-			if (solns_in_dbl_)
-				return std::get<SampCont<complex_dbl>>(solns_).size();
-			else
-				return std::get<SampCont<complex_mp>>(solns_).size();
-		}
+        User::User(System const& s, SampCont<complex_mp> const& solns) : user_system_(s), solns_in_dbl_(false)
+        {
+            std::get<SampCont<complex_mp>>(solns_) = solns;
+        }
 
 
-		
-		Vec<complex_dbl> User::GenerateStartPoint(complex_dbl,unsigned long long index) const
-		{
-			if (solns_in_dbl_)
-				return std::get<SampCont<complex_dbl>>(solns_)[index];
-			else
-			{
-				const auto& r = std::get<SampCont<complex_mp>>(solns_)[index];
-				Vec<complex_dbl> pt(r.size());
-				for (unsigned ii=0; ii<r.size(); ++ii)
-					pt(ii) = complex_dbl(r(ii));
-
-				return pt;
-			}
-		}
+        unsigned long long User::NumStartPoints() const
+        {
+            if (solns_in_dbl_)
+                return std::get<SampCont<complex_dbl>>(solns_).size();
+            else
+                return std::get<SampCont<complex_mp>>(solns_).size();
+        }
 
 
-		Vec<complex_mp> User::GenerateStartPoint(complex_mp,unsigned long long index) const
-		{
-			if (solns_in_dbl_)
-			{
-				const auto& r = std::get<SampCont<complex_dbl>>(solns_)[index];
-				Vec<complex_mp> pt(r.size());
-				for (unsigned ii=0; ii<r.size(); ++ii)
-					pt(ii) = static_cast<complex_mp>(r(ii));
 
-				return pt;
-			}
-			else
-			{
-				return std::get<SampCont<complex_mp>>(solns_)[index];
-			}
-		}
+        Vec<complex_dbl> User::GenerateStartPoint(complex_dbl,unsigned long long index) const
+        {
+            if (solns_in_dbl_)
+                return std::get<SampCont<complex_dbl>>(solns_)[index];
+            else
+            {
+                const auto& r = std::get<SampCont<complex_mp>>(solns_)[index];
+                Vec<complex_dbl> pt(r.size());
+                for (unsigned ii=0; ii<r.size(); ++ii)
+                    pt(ii) = complex_dbl(r(ii));
 
-	} // namespace start_system
+                return pt;
+            }
+        }
+
+
+        Vec<complex_mp> User::GenerateStartPoint(complex_mp,unsigned long long index) const
+        {
+            if (solns_in_dbl_)
+            {
+                const auto& r = std::get<SampCont<complex_dbl>>(solns_)[index];
+                Vec<complex_mp> pt(r.size());
+                for (unsigned ii=0; ii<r.size(); ++ii)
+                    pt(ii) = static_cast<complex_mp>(r(ii));
+
+                return pt;
+            }
+            else
+            {
+                return std::get<SampCont<complex_mp>>(solns_)[index];
+            }
+        }
+
+    } // namespace start_system
 } //namespace bertini

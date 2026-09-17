@@ -89,18 +89,18 @@ can report 0 on exotic platforms; we clamp that to 1.
 */
 inline unsigned EffectiveThreadCount(unsigned configured = 0)
 {
-	if (const char* env = std::getenv("OMP_NUM_THREADS"))
-	{
-		int n = std::atoi(env);
-		if (n >= 1)
-			return static_cast<unsigned>(n);
-	}
+    if (const char* env = std::getenv("OMP_NUM_THREADS"))
+    {
+        int n = std::atoi(env);
+        if (n >= 1)
+            return static_cast<unsigned>(n);
+    }
 
-	if (configured >= 1)
-		return configured;
+    if (configured >= 1)
+        return configured;
 
-	unsigned hw = std::thread::hardware_concurrency();
-	return hw >= 1 ? hw : 1u;
+    unsigned hw = std::thread::hardware_concurrency();
+    return hw >= 1 ? hw : 1u;
 }
 
 
@@ -108,41 +108,41 @@ inline unsigned EffectiveThreadCount(unsigned configured = 0)
 template<typename T>
 class ThreadSafeQueue
 {
-	std::deque<T>           queue_;
-	std::mutex              mutex_;
-	std::condition_variable cv_;
+    std::deque<T>           queue_;
+    std::mutex              mutex_;
+    std::condition_variable cv_;
 
 public:
-	/// \brief Push an item onto the queue and wake one waiter.
-	void push(T item)
-	{
-		{
-			std::lock_guard<std::mutex> lock(mutex_);
-			queue_.push_back(std::move(item));
-		}
-		cv_.notify_one();
-	}
+    /// \brief Push an item onto the queue and wake one waiter.
+    void push(T item)
+    {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            queue_.push_back(std::move(item));
+        }
+        cv_.notify_one();
+    }
 
-	/// \brief Block until an item is available, then pop and return it.
-	T pop()
-	{
-		std::unique_lock<std::mutex> lock(mutex_);
-		cv_.wait(lock, [this]{ return !queue_.empty(); });
-		T item = std::move(queue_.front());
-		queue_.pop_front();
-		return item;
-	}
+    /// \brief Block until an item is available, then pop and return it.
+    T pop()
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        cv_.wait(lock, [this]{ return !queue_.empty(); });
+        T item = std::move(queue_.front());
+        queue_.pop_front();
+        return item;
+    }
 
-	/// \brief Pop and return an item if one is ready, otherwise std::nullopt (non-blocking).
-	std::optional<T> try_pop()
-	{
-		std::lock_guard<std::mutex> lock(mutex_);
-		if (queue_.empty())
-			return std::nullopt;
-		T item = std::move(queue_.front());
-		queue_.pop_front();
-		return item;
-	}
+    /// \brief Pop and return an item if one is ready, otherwise std::nullopt (non-blocking).
+    std::optional<T> try_pop()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (queue_.empty())
+            return std::nullopt;
+        T item = std::move(queue_.front());
+        queue_.pop_front();
+        return item;
+    }
 };
 
 
@@ -165,72 +165,72 @@ issue: each thread owns its state struct, so System and Tracker lifetimes are co
 template<typename TaskT, typename ResultT, typename StateFactory, typename TrackFn>
 class WorkerThreadPool
 {
-	using StateT   = std::invoke_result_t<StateFactory>;
-	using WorkItem = std::variant<TaskT, PoolShutdownSentinel>;
+    using StateT   = std::invoke_result_t<StateFactory>;
+    using WorkItem = std::variant<TaskT, PoolShutdownSentinel>;
 
-	ThreadSafeQueue<WorkItem>  task_queue_;
-	ThreadSafeQueue<ResultT>   result_queue_;
-	std::vector<std::thread>   threads_;
-	int                        n_threads_;
+    ThreadSafeQueue<WorkItem>  task_queue_;
+    ThreadSafeQueue<ResultT>   result_queue_;
+    std::vector<std::thread>   threads_;
+    int                        n_threads_;
 
 public:
-	/// \brief Construct the pool and start n_threads worker threads, each with its own state.
-	/// \param n_threads The number of worker threads to start.
-	/// \param state_factory Callable building each thread's per-thread state.
-	/// \param track_fn Callable tracking one path using the thread-local state.
-	WorkerThreadPool(int n_threads, StateFactory state_factory, TrackFn track_fn)
-		: n_threads_(n_threads)
-	{
-		threads_.reserve(static_cast<size_t>(n_threads));
-		for (int i = 0; i < n_threads; ++i)
-		{
-			threads_.emplace_back([this, state_factory, track_fn]() mutable
-			{
-				// Build thread-local state once (System copy + Tracker copy).
-				StateT state = state_factory();
+    /// \brief Construct the pool and start n_threads worker threads, each with its own state.
+    /// \param n_threads The number of worker threads to start.
+    /// \param state_factory Callable building each thread's per-thread state.
+    /// \param track_fn Callable tracking one path using the thread-local state.
+    WorkerThreadPool(int n_threads, StateFactory state_factory, TrackFn track_fn)
+        : n_threads_(n_threads)
+    {
+        threads_.reserve(static_cast<size_t>(n_threads));
+        for (int i = 0; i < n_threads; ++i)
+        {
+            threads_.emplace_back([this, state_factory, track_fn]() mutable
+            {
+                // Build thread-local state once (System copy + Tracker copy).
+                StateT state = state_factory();
 
-				while (true)
-				{
-					WorkItem item = task_queue_.pop();
+                while (true)
+                {
+                    WorkItem item = task_queue_.pop();
 
-					if (std::holds_alternative<PoolShutdownSentinel>(item))
-						break;
+                    if (std::holds_alternative<PoolShutdownSentinel>(item))
+                        break;
 
-					TaskT const& task = std::get<TaskT>(item);
-					ResultT result = track_fn(state, task);
-					result_queue_.push(std::move(result));
-				}
-			});
-		}
-	}
+                    TaskT const& task = std::get<TaskT>(item);
+                    ResultT result = track_fn(state, task);
+                    result_queue_.push(std::move(result));
+                }
+            });
+        }
+    }
 
-	/// \brief Submit a task to be tracked by a worker thread.
-	void submit(TaskT task)
-	{
-		task_queue_.push(WorkItem{std::move(task)});
-	}
+    /// \brief Submit a task to be tracked by a worker thread.
+    void submit(TaskT task)
+    {
+        task_queue_.push(WorkItem{std::move(task)});
+    }
 
-	/// \brief Block until one result is available, then return it.
-	ResultT collect()
-	{
-		return result_queue_.pop();
-	}
+    /// \brief Block until one result is available, then return it.
+    ResultT collect()
+    {
+        return result_queue_.pop();
+    }
 
-	/// \brief Return a result if one is ready, otherwise std::nullopt (non-blocking).
-	std::optional<ResultT> try_collect()
-	{
-		return result_queue_.try_pop();
-	}
+    /// \brief Return a result if one is ready, otherwise std::nullopt (non-blocking).
+    std::optional<ResultT> try_collect()
+    {
+        return result_queue_.try_pop();
+    }
 
-	/// \brief Signal all threads to exit and join (call only after all results are collected).
-	void shutdown()
-	{
-		for (int i = 0; i < n_threads_; ++i)
-			task_queue_.push(WorkItem{PoolShutdownSentinel{}});
-		for (auto& t : threads_)
-			t.join();
-		threads_.clear();
-	}
+    /// \brief Signal all threads to exit and join (call only after all results are collected).
+    void shutdown()
+    {
+        for (int i = 0; i < n_threads_; ++i)
+            task_queue_.push(WorkItem{PoolShutdownSentinel{}});
+        for (auto& t : threads_)
+            t.join();
+        threads_.clear();
+    }
 };
 
 

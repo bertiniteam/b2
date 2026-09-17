@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 
@@ -29,45 +29,44 @@
 namespace bertini
 {
 
-	// aliases for the types used to contain space and time samples, and random vectors for the endgames.
-	template<typename T> using SampCont = std::deque<Vec<T> >;
-	template<typename T> using TimeCont = std::deque<T>;
-	
-	enum class ContStart{
-		Front,
-		Back
-	};
+    // aliases for the types used to contain space and time samples, and random vectors for the endgames.
+    template<typename T> using SampCont = std::deque<Vec<T> >;
+    template<typename T> using TimeCont = std::deque<T>;
 
-	enum class SuccessCode
-	{
-		NeverStarted = -1,
-		Success = 0,
-		HigherPrecisionNecessary,
-		ReduceStepSize,
-		GoingToInfinity,
-		FailedToConverge,
-		MatrixSolveFailure,
-		MatrixSolveFailureFirstPartOfPrediction,
-		MaxNumStepsTaken,
-		MaxPrecisionReached,
-		MinStepSizeReached,
-		Failure,
-		SingularStartPoint,
-		ExternallyTerminated,
-		MinTrackTimeReached,
-		SecurityMaxNormReached,
-		CycleNumTooHigh,
-		FailedToSelectPrecisionAndStepsize,
+    enum class ContStart{
+        Front,
+        Back
+    };
 
-	};
+    enum class SuccessCode
+    {
+        NeverStarted = -1,
+        Success = 0,
+        HigherPrecisionNecessary,
+        ReduceStepSize,
+        GoingToInfinity,
+        FailedToConverge,
+        MatrixSolveFailure,
+        MatrixSolveFailureFirstPartOfPrediction,
+        MaxNumStepsTaken,
+        MaxPrecisionReached,
+        MinStepSizeReached,
+        Failure,
+        SingularStartPoint,
+        ExternallyTerminated,
+        MinTrackTimeReached,
+        SecurityMaxNormReached,
+        CycleNumTooHigh,
+        FailedToSelectPrecisionAndStepsize,
 
-	// NumErrorT (the error/tolerance numeric type) now lives in num_traits.hpp -- the foundational
-	// header included nearly everywhere -- so tolerance-typed parameters can name it without any
-	// header adding a new include.  It is NOT redefined here to keep a single source of truth.
+    };
+
+    // NumErrorT (the error/tolerance numeric type) now lives in num_traits.hpp -- the foundational
+    // header included nearly everywhere -- so tolerance-typed parameters can name it without any
+    // header adding a new include.  It is NOT redefined here to keep a single source of truth.
 } // namespace bertini
 
 #include "bertini2/common/stream_enum.hpp"
 
 
 #endif // include guard
-

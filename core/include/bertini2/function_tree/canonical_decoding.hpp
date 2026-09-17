@@ -62,48 +62,48 @@ the first wrong byte instead of producing a wrong object.
 class DecodingCursor
 {
 public:
-	/// \brief Start reading `text` from its first byte.
-	explicit DecodingCursor(std::string const& text) : text_(text), pos_(0) {}
+    /// \brief Start reading `text` from its first byte.
+    explicit DecodingCursor(std::string const& text) : text_(text), pos_(0) {}
 
-	/// \brief Whether every byte has been consumed.
-	bool AtEnd() const { return pos_ >= text_.size(); }
+    /// \brief Whether every byte has been consumed.
+    bool AtEnd() const { return pos_ >= text_.size(); }
 
-	/// \brief The byte offset of the next unread character.
-	std::size_t Offset() const { return pos_; }
+    /// \brief The byte offset of the next unread character.
+    std::size_t Offset() const { return pos_; }
 
-	/// \brief The next unread character (throws at end of text).
-	char Peek() const;
+    /// \brief The next unread character (throws at end of text).
+    char Peek() const;
 
-	/// \brief Consume exactly the character `c`, or throw.
-	void Expect(char c);
+    /// \brief Consume exactly the character `c`, or throw.
+    void Expect(char c);
 
-	/// \brief Consume exactly the literal `lit`, or throw.
-	void Expect(std::string_view lit);
+    /// \brief Consume exactly the literal `lit`, or throw.
+    void Expect(std::string_view lit);
 
-	/// \brief Consume `c` if it is next; report whether it was.
-	bool TryConsume(char c);
+    /// \brief Consume `c` if it is next; report whether it was.
+    bool TryConsume(char c);
 
-	/// \brief Skip any run of spaces and newlines.
-	void SkipWhitespace();
+    /// \brief Skip any run of spaces and newlines.
+    void SkipWhitespace();
 
-	/// \brief Read a maximal run of characters that are not whitespace or a parenthesis.
-	std::string ReadWord();
+    /// \brief Read a maximal run of characters that are not whitespace or a parenthesis.
+    std::string ReadWord();
 
-	/// \brief Read a netstring name: `<byte-length>:<bytes>`.
-	std::string ReadNetstring();
+    /// \brief Read a netstring name: `<byte-length>:<bytes>`.
+    std::string ReadNetstring();
 
-	/// \brief Read a non-negative decimal integer.
-	unsigned long long ReadUnsigned();
+    /// \brief Read a non-negative decimal integer.
+    unsigned long long ReadUnsigned();
 
-	/// \brief Read a decimal integer with an optional sign.
-	long long ReadInt();
+    /// \brief Read a decimal integer with an optional sign.
+    long long ReadInt();
 
-	/// \brief Throw std::runtime_error describing `what` at the current position.
-	[[noreturn]] void Fail(std::string const& what) const;
+    /// \brief Throw std::runtime_error describing `what` at the current position.
+    [[noreturn]] void Fail(std::string const& what) const;
 
 private:
-	std::string const& text_;   ///< The encoding being read (not owned).
-	std::size_t pos_;           ///< Offset of the next unread byte.
+    std::string const& text_;   ///< The encoding being read (not owned).
+    std::size_t pos_;           ///< Offset of the next unread byte.
 };
 
 /**
@@ -116,8 +116,8 @@ shared across those same roots.
 */
 struct DecodingContext
 {
-	/// The node numbered by each index, in encounter order.
-	std::vector<std::shared_ptr<Node>> by_index;
+    /// The node numbered by each index, in encounter order.
+    std::vector<std::shared_ptr<Node>> by_index;
 };
 
 /**

@@ -18,9 +18,9 @@ find_path(GMP_INCLUDES
 )
 
 if(WIN32)
-	find_library(GMP_LIBRARIES libgmp.dll.a PATHS $ENV{GMP_LIB} ${LIB_INSTALL_DIR})
+    find_library(GMP_LIBRARIES libgmp.dll.a PATHS $ENV{GMP_LIB} ${LIB_INSTALL_DIR})
 else()
-	find_library(GMP_LIBRARIES gmp PATHS $ENV{GMP_LIB} ${LIB_INSTALL_DIR})
+    find_library(GMP_LIBRARIES gmp PATHS $ENV{GMP_LIB} ${LIB_INSTALL_DIR})
 endif()
 
 include(FindPackageHandleStandardArgs)

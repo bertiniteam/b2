@@ -22,7 +22,7 @@
 
 /**
  \file bertini2/io/parsing/settings_parsers/base.hpp
- 
+
  \brief Provides the base type for config settings parsers
  */
 
@@ -35,25 +35,25 @@
 #include "bertini2/io/parsing/number_rules.hpp"
 
 namespace bertini {
-	namespace parsing {
-		namespace classic {
+    namespace parsing {
+        namespace classic {
 
-			namespace qi = ::boost::spirit::qi;
-			namespace ascii = ::boost::spirit::ascii;
-			
-			
-			/**
-			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
-			 
-			 This is a base case template, which we specialize elsewhere
-			 */
-			template<typename Iterator, typename Structure, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigSettingParser : qi::grammar<Iterator, Structure(), Skipper>
-			{ 
-			};
-			
+            namespace qi = ::boost::spirit::qi;
+            namespace ascii = ::boost::spirit::ascii;
 
-		} // re: namespace classic
-		
-	}// re: namespace parsing
+
+            /**
+             Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
+
+             This is a base case template, which we specialize elsewhere
+             */
+            template<typename Iterator, typename Structure, typename Skipper = ascii::space_type> //boost::spirit::unused_type
+            struct ConfigSettingParser : qi::grammar<Iterator, Structure(), Skipper>
+            {
+            };
+
+
+        } // re: namespace classic
+
+    }// re: namespace parsing
 }// re: namespace bertini

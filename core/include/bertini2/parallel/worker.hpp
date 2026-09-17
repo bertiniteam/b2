@@ -62,27 +62,27 @@ namespace parallel {
 */
 template<typename TaskT, typename ResultT>
 void RunWorkerLoop(
-	MPI_Comm comm,
-	std::function<void(TaskT const&)> track_fn,
-	std::function<ResultT(TaskT const&)> pack_fn)
+    MPI_Comm comm,
+    std::function<void(TaskT const&)> track_fn,
+    std::function<ResultT(TaskT const&)> pack_fn)
 {
-	// Announce capacity: a serial worker can have exactly one task in flight.
-	int capacity = 1;
-	MPI_Send(&capacity, 1, MPI_INT, 0, TAG_CAPACITY, comm);
+    // Announce capacity: a serial worker can have exactly one task in flight.
+    int capacity = 1;
+    MPI_Send(&capacity, 1, MPI_INT, 0, TAG_CAPACITY, comm);
 
-	while (true)
-	{
-		TaskT task;
-		mpi_recv_serialized(comm, 0, TAG_WORK_ITEM, task);
+    while (true)
+    {
+        TaskT task;
+        mpi_recv_serialized(comm, 0, TAG_WORK_ITEM, task);
 
-		if (detail::is_sentinel(task))
-			break;
+        if (detail::is_sentinel(task))
+            break;
 
-		track_fn(task);
+        track_fn(task);
 
-		ResultT result = pack_fn(task);
-		mpi_send_serialized(comm, 0, TAG_RESULT, result);
-	}
+        ResultT result = pack_fn(task);
+        mpi_send_serialized(comm, 0, TAG_RESULT, result);
+    }
 }
 
 
@@ -115,60 +115,60 @@ All MPI calls occur on this (main) thread — compatible with MPI_THREAD_FUNNELE
 */
 template<typename TaskT, typename ResultT, typename StateFactory, typename TrackFn>
 void RunWorkerLoopThreaded(
-	MPI_Comm comm,
-	StateFactory state_factory,
-	TrackFn track_fn,
-	int n_threads)
+    MPI_Comm comm,
+    StateFactory state_factory,
+    TrackFn track_fn,
+    int n_threads)
 {
-	int capacity = n_threads;
-	MPI_Send(&capacity, 1, MPI_INT, 0, TAG_CAPACITY, comm);
+    int capacity = n_threads;
+    MPI_Send(&capacity, 1, MPI_INT, 0, TAG_CAPACITY, comm);
 
-	WorkerThreadPool<TaskT, ResultT, StateFactory, TrackFn> pool(n_threads, state_factory, track_fn);
+    WorkerThreadPool<TaskT, ResultT, StateFactory, TrackFn> pool(n_threads, state_factory, track_fn);
 
-	int  in_flight    = 0;      // tasks submitted to the pool but not yet collected
-	bool got_sentinel = false;
+    int  in_flight    = 0;      // tasks submitted to the pool but not yet collected
+    bool got_sentinel = false;
 
-	while (!got_sentinel || in_flight > 0)
-	{
-		bool did_work = false;
+    while (!got_sentinel || in_flight > 0)
+    {
+        bool did_work = false;
 
-		// Forward all completed results to the manager.
-		while (auto opt = pool.try_collect())
-		{
-			mpi_send_serialized(comm, 0, TAG_RESULT, *opt);
-			--in_flight;
-			did_work = true;
-		}
+        // Forward all completed results to the manager.
+        while (auto opt = pool.try_collect())
+        {
+            mpi_send_serialized(comm, 0, TAG_RESULT, *opt);
+            --in_flight;
+            did_work = true;
+        }
 
-		// Non-blocking check for an incoming task (or the sentinel).
-		if (!got_sentinel)
-		{
-			int flag = 0;
-			MPI_Status status;
-			MPI_Iprobe(0, TAG_WORK_ITEM, comm, &flag, &status);
-			if (flag)
-			{
-				TaskT task;
-				mpi_recv_serialized(comm, 0, TAG_WORK_ITEM, task);
+        // Non-blocking check for an incoming task (or the sentinel).
+        if (!got_sentinel)
+        {
+            int flag = 0;
+            MPI_Status status;
+            MPI_Iprobe(0, TAG_WORK_ITEM, comm, &flag, &status);
+            if (flag)
+            {
+                TaskT task;
+                mpi_recv_serialized(comm, 0, TAG_WORK_ITEM, task);
 
-				if (detail::is_sentinel(task))
-					got_sentinel = true;
-				else
-				{
-					pool.submit(std::move(task));
-					++in_flight;
-				}
-				did_work = true;
-			}
-		}
+                if (detail::is_sentinel(task))
+                    got_sentinel = true;
+                else
+                {
+                    pool.submit(std::move(task));
+                    ++in_flight;
+                }
+                did_work = true;
+            }
+        }
 
-		// Idle: nothing arrived and nothing finished.  Tracking a path takes
-		// milliseconds to seconds, so a short sleep costs nothing measurable.
-		if (!did_work)
-			std::this_thread::sleep_for(std::chrono::microseconds(200));
-	}
+        // Idle: nothing arrived and nothing finished.  Tracking a path takes
+        // milliseconds to seconds, so a short sleep costs nothing measurable.
+        if (!did_work)
+            std::this_thread::sleep_for(std::chrono::microseconds(200));
+    }
 
-	pool.shutdown();
+    pool.shutdown();
 }
 
 
@@ -180,14 +180,14 @@ HPC schedulers (SLURM) set OMP_NUM_THREADS automatically from --cpus-per-task.
 */
 inline int WorkerThreadCount()
 {
-	const char* env = std::getenv("OMP_NUM_THREADS");
-	if (env)
-	{
-		int n = std::atoi(env);
-		if (n >= 1)
-			return n;
-	}
-	return 1;
+    const char* env = std::getenv("OMP_NUM_THREADS");
+    if (env)
+    {
+        int n = std::atoi(env);
+        if (n >= 1)
+            return n;
+    }
+    return 1;
 }
 
 

@@ -41,84 +41,84 @@ static bool Has(std::string const& hay, std::string const& needle) { return hay.
 // none of the old debugging leftovers should appear.
 static void NoNoise(std::string const& t)
 {
-	BOOST_CHECK(!Has(t, "current variable values"));
-	BOOST_CHECK(!Has(t, "differentiated"));
-	BOOST_CHECK(!Has(t, "unnamed_function"));
+    BOOST_CHECK(!Has(t, "current variable values"));
+    BOOST_CHECK(!Has(t, "differentiated"));
+    BOOST_CHECK(!Has(t, "unnamed_function"));
 }
 
 
 BOOST_AUTO_TEST_CASE(plain_polynomial)
 {
-	DefaultPrecision(30);
-	auto x = Variable::Make("x"), y = Variable::Make("y");
-	System s; s.AddVariableGroup(VariableGroup{x, y});
-	s.AddFunction(x*x + y*y - node::Integer::Make(1));
-	s.AddFunction(x - y);
+    DefaultPrecision(30);
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    System s; s.AddVariableGroup(VariableGroup{x, y});
+    s.AddFunction(x*x + y*y - node::Integer::Make(1));
+    s.AddFunction(x - y);
 
-	std::string t = Terse(s);
-	BOOST_CHECK(Has(t, "f_0 = "));
-	BOOST_CHECK(Has(t, "f_1 = "));
-	NoNoise(t);
+    std::string t = Terse(s);
+    BOOST_CHECK(Has(t, "f_0 = "));
+    BOOST_CHECK(Has(t, "f_1 = "));
+    NoNoise(t);
 }
 
 BOOST_AUTO_TEST_CASE(randomization_placeholder_and_underlying)
 {
-	DefaultPrecision(30);
-	auto x = Variable::Make("x"), y = Variable::Make("y");
-	System o; o.AddVariableGroup(VariableGroup{x, y});
-	o.AddFunction(x*x + y*y - node::Integer::Make(1));
-	o.AddFunction(x*y);
-	o.AddFunction(x*x + y*y - x - y);
-	System r = o.Randomize();
+    DefaultPrecision(30);
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    System o; o.AddVariableGroup(VariableGroup{x, y});
+    o.AddFunction(x*x + y*y - node::Integer::Make(1));
+    o.AddFunction(x*y);
+    o.AddFunction(x*x + y*y - x - y);
+    System r = o.Randomize();
 
-	std::string t = Terse(r);
-	BOOST_CHECK(Has(t, "R . g"));
-	BOOST_CHECK(Has(t, "(R: 2x3 randomization matrix)"));
-	BOOST_CHECK(Has(t, "g_0 = "));
-	BOOST_CHECK(Has(t, "g_2 = "));
-	BOOST_CHECK(Has(t, "R ="));                  // the matrix is shown by default now
-	NoNoise(t);
+    std::string t = Terse(r);
+    BOOST_CHECK(Has(t, "R . g"));
+    BOOST_CHECK(Has(t, "(R: 2x3 randomization matrix)"));
+    BOOST_CHECK(Has(t, "g_0 = "));
+    BOOST_CHECK(Has(t, "g_2 = "));
+    BOOST_CHECK(Has(t, "R ="));                  // the matrix is shown by default now
+    NoNoise(t);
 
-	std::string v = Verbose(r);
-	BOOST_CHECK(Has(v, "R ="));                  // ... and in verbose too (full precision)
+    std::string v = Verbose(r);
+    BOOST_CHECK(Has(v, "R ="));                  // ... and in verbose too (full precision)
 }
 
 BOOST_AUTO_TEST_CASE(linear_forms_placeholder_vs_actual)
 {
-	DefaultPrecision(30);
-	auto x = Variable::Make("x"), y = Variable::Make("y");
-	System m; m.AddVariableGroup(VariableGroup{x, y});
-	m.AddFunction(x*x + y*y - node::Integer::Make(1));        // row 0: polynomial
-	Mat<complex_mp> M(1, 3); M << complex_mp(2), complex_mp(1), complex_mp(-1);
-	m.AddBlock(blocks::LinearFormsBlock(2, M));               // row 1: 2x + y - 1
+    DefaultPrecision(30);
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    System m; m.AddVariableGroup(VariableGroup{x, y});
+    m.AddFunction(x*x + y*y - node::Integer::Make(1));        // row 0: polynomial
+    Mat<complex_mp> M(1, 3); M << complex_mp(2), complex_mp(1), complex_mp(-1);
+    m.AddBlock(blocks::LinearFormsBlock(2, M));               // row 1: 2x + y - 1
 
-	std::string t = Terse(m);
-	BOOST_CHECK(Has(t, "f_0 = "));
-	BOOST_CHECK(Has(t, "f_1 = c.[x, y, 1]"));    // both rows visible; structured row keeps its placeholder
-	BOOST_CHECK(Has(t, "c ="));                  // ... with the coefficient legend below it
-	BOOST_CHECK(Has(t, "2") && Has(t, "-1"));    // the actual coefficient values (exact integers here)
+    std::string t = Terse(m);
+    BOOST_CHECK(Has(t, "f_0 = "));
+    BOOST_CHECK(Has(t, "f_1 = c.[x, y, 1]"));    // both rows visible; structured row keeps its placeholder
+    BOOST_CHECK(Has(t, "c ="));                  // ... with the coefficient legend below it
+    BOOST_CHECK(Has(t, "2") && Has(t, "-1"));    // the actual coefficient values (exact integers here)
 
-	std::string v = Verbose(m);
-	BOOST_CHECK(Has(v, "c.[x, y, 1]") && Has(v, "c ="));   // same layout, full precision
+    std::string v = Verbose(m);
+    BOOST_CHECK(Has(v, "c.[x, y, 1]") && Has(v, "c ="));   // same layout, full precision
 }
 
 BOOST_AUTO_TEST_CASE(moving_homotopy_blend)
 {
-	DefaultPrecision(30);
-	auto x = Variable::Make("x"), y = Variable::Make("y");
-	System fixed; fixed.AddVariableGroup(VariableGroup{x, y}); fixed.AddFunction(x*x + y*y - node::Integer::Make(1));
-	System sm; sm.AddVariableGroup(VariableGroup{x, y}); sm.AddFunction(y);
-	System em; em.AddVariableGroup(VariableGroup{x, y}); em.AddFunction(y - x);
-	System H = MakeMovingHomotopy(fixed, sm, em, "t", node::Complex::Make(complex_mp("0.6", "0.8")));
+    DefaultPrecision(30);
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    System fixed; fixed.AddVariableGroup(VariableGroup{x, y}); fixed.AddFunction(x*x + y*y - node::Integer::Make(1));
+    System sm; sm.AddVariableGroup(VariableGroup{x, y}); sm.AddFunction(y);
+    System em; em.AddVariableGroup(VariableGroup{x, y}); em.AddFunction(y - x);
+    System H = MakeMovingHomotopy(fixed, sm, em, "t", node::Complex::Make(complex_mp("0.6", "0.8")));
 
-	std::string t = Terse(H);
-	BOOST_CHECK(Has(t, "f_0 = "));               // the fixed polynomial row
-	BOOST_CHECK(Has(t, "blend of 2 systems"));
-	BOOST_CHECK(Has(t, "path variable: t"));
-	BOOST_CHECK(!Has(t, "f_1..f_1"));            // single moving row reads f_1
+    std::string t = Terse(H);
+    BOOST_CHECK(Has(t, "f_0 = "));               // the fixed polynomial row
+    BOOST_CHECK(Has(t, "blend of 2 systems"));
+    BOOST_CHECK(Has(t, "path variable: t"));
+    BOOST_CHECK(!Has(t, "f_1..f_1"));            // single moving row reads f_1
 
-	std::string v = Verbose(H);
-	BOOST_CHECK(Has(v, "A_0 = ") && Has(v, "B_0 = "));   // operand functions listed
+    std::string v = Verbose(H);
+    BOOST_CHECK(Has(v, "A_0 = ") && Has(v, "B_0 = "));   // operand functions listed
 }
 
 BOOST_AUTO_TEST_SUITE_END()

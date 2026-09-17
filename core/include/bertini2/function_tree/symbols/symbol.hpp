@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // symbol.hpp:  Declares the class Symbol.
@@ -38,129 +38,129 @@
 
 namespace  bertini {
 namespace node {
-	/**
-	 \brief Abstract symbol class.
+    /**
+     \brief Abstract symbol class.
 
-	This class is an interface for all non-operators.
-	*/
-	class Symbol : public Node
-	{
-		
-	public:
-		
-		virtual ~Symbol() = default;
+    This class is an interface for all non-operators.
+    */
+    class Symbol : public Node
+    {
 
-	private:
-		friend class boost::serialization::access;
+    public:
 
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<Node>(*this);
-		}
-	};
-	
-	
-	
-	
-	
-	
-	
-	
-	/**
-	\brief Capability class for things which have a name.
+        virtual ~Symbol() = default;
 
-	Deliberately NOT a Node: classes that need a name alongside a different
-	primary base (e.g. special_number::Pi, which is a Number) inherit this
-	without creating a diamond in the Node hierarchy.
-	*/
-	/// \brief Mixin holding a name, shared by named nodes without forming a diamond in the hierarchy.
-	class NameHolder
-	{
-	public:
-		/// \return The name.
-		const std::string& name() const
-		{
-			return name_;
-		}
+    private:
+        friend class boost::serialization::access;
 
-		/// \brief Set the name.
-		void name(const std::string& new_name)
-		{
-			name_ = new_name;
-		}
-
-	protected:
-		~NameHolder() = default;  // not polymorphic; never delete through NameHolder*
-
-		NameHolder() = default;
-
-		/// \brief Construct holding the given name.
-		explicit NameHolder(std::string new_name) : name_(std::move(new_name))
-		{}
-
-		std::string name_;  ///< The stored name.
-
-	private:
-		friend class boost::serialization::access;
-
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & name_;
-		}
-	};
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<Node>(*this);
+        }
+    };
 
 
 
 
-	/**
-	\brief Symbols which have names are named symbols.
 
-	Symbols which have names are named symbols.
-	*/
-	class NamedSymbol : public Symbol
-	{
 
-	public:
-		
-		/**
-		Get the name of the named symbol
-		*/
-		const std::string & name() const;
-		
-		/**
-		Get the name of the named symbol
-		*/
-		void name(const std::string & new_name);
-		
-		
-		/**
-		Parameterized constructor, sets the name of the symbol
-		*/
-		NamedSymbol(const std::string & new_name);
-		
-		
-		void print(std::ostream& target) const override;
-		
-		virtual ~NamedSymbol() = default;
-		
-	protected:
-		NamedSymbol() = default;
 
-		std::string name_;  ///< The stored name.
 
-	private:
+    /**
+    \brief Capability class for things which have a name.
 
-		friend class boost::serialization::access;
+    Deliberately NOT a Node: classes that need a name alongside a different
+    primary base (e.g. special_number::Pi, which is a Number) inherit this
+    without creating a diamond in the Node hierarchy.
+    */
+    /// \brief Mixin holding a name, shared by named nodes without forming a diamond in the hierarchy.
+    class NameHolder
+    {
+    public:
+        /// \return The name.
+        const std::string& name() const
+        {
+            return name_;
+        }
 
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<Symbol>(*this);
-			ar & name_;
-		}
-		
-	};
-	
-} // re: namespace node	
+        /// \brief Set the name.
+        void name(const std::string& new_name)
+        {
+            name_ = new_name;
+        }
+
+    protected:
+        ~NameHolder() = default;  // not polymorphic; never delete through NameHolder*
+
+        NameHolder() = default;
+
+        /// \brief Construct holding the given name.
+        explicit NameHolder(std::string new_name) : name_(std::move(new_name))
+        {}
+
+        std::string name_;  ///< The stored name.
+
+    private:
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & name_;
+        }
+    };
+
+
+
+
+    /**
+    \brief Symbols which have names are named symbols.
+
+    Symbols which have names are named symbols.
+    */
+    class NamedSymbol : public Symbol
+    {
+
+    public:
+
+        /**
+        Get the name of the named symbol
+        */
+        const std::string & name() const;
+
+        /**
+        Get the name of the named symbol
+        */
+        void name(const std::string & new_name);
+
+
+        /**
+        Parameterized constructor, sets the name of the symbol
+        */
+        NamedSymbol(const std::string & new_name);
+
+
+        void print(std::ostream& target) const override;
+
+        virtual ~NamedSymbol() = default;
+
+    protected:
+        NamedSymbol() = default;
+
+        std::string name_;  ///< The stored name.
+
+    private:
+
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<Symbol>(*this);
+            ar & name_;
+        }
+
+    };
+
+} // re: namespace node
 } // re: namespace bertini
 
 #endif

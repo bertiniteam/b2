@@ -45,13 +45,13 @@ to keep this traversal out of every translation unit.
 namespace bertini {
 namespace node {
 
-	/// All distinct nodes of kind T in the subtree rooted at n, sorted by name.
-	template<typename T>
-	std::vector<std::shared_ptr<T>> Find(std::shared_ptr<const Node> const& n);
+    /// All distinct nodes of kind T in the subtree rooted at n, sorted by name.
+    template<typename T>
+    std::vector<std::shared_ptr<T>> Find(std::shared_ptr<const Node> const& n);
 
-	/// The union of Find<T> across several roots (one shared traversal), sorted by name.
-	template<typename T>
-	std::vector<std::shared_ptr<T>> Find(std::vector<std::shared_ptr<const Node>> const& roots);
+    /// The union of Find<T> across several roots (one shared traversal), sorted by name.
+    template<typename T>
+    std::vector<std::shared_ptr<T>> Find(std::vector<std::shared_ptr<const Node>> const& roots);
 
 } // namespace node
 } // namespace bertini

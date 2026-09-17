@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/generic_observable.cpp:  source file for exposing trackers to python.
@@ -25,14 +25,14 @@
 #include "generic_observable.hpp"
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
 
 // template <typename T>
 // template <class PyClass>
 // void ObservableVisitor<T>::visit(PyClass& cl) const
 // {
-	
+
 // }
 
 }} // namespaces

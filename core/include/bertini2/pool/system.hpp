@@ -15,15 +15,15 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // include/bertini2/pool/system.hpp:  provides the bertini::SystemPool class.
 
 
 /**
-\file include/bertini2/pool/system.hpp 
+\file include/bertini2/pool/system.hpp
 */
 
 
@@ -36,16 +36,16 @@
 
 namespace bertini {
 
-	class SystemPool : public detail::Pool<System>
-	{
+    class SystemPool : public detail::Pool<System>
+    {
 
-	};
+    };
 
-	template<typename NumT>
-	class PointPool : public detail::Pool<Vec<NumT> >
-	{
+    template<typename NumT>
+    class PointPool : public detail::Pool<Vec<NumT> >
+    {
 
-	};
+    };
 
 
 } // re: namespace bertini

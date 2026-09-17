@@ -26,88 +26,88 @@
 #include "zero_dim_export.hpp"
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		// Forward declarations — defined in zero_dim_{configs,double,mp,amp}_export.cpp.
-		void ExportZDConfigs();
-		void ExportZDDouble();
-		void ExportZDMP();
-		void ExportZDAMP();
+        // Forward declarations — defined in zero_dim_{configs,double,mp,amp}_export.cpp.
+        void ExportZDConfigs();
+        void ExportZDDouble();
+        void ExportZDMP();
+        void ExportZDAMP();
 
-		// Registers AnyZeroDim (the lifecycle-event emitter base + RTTI/bases anchor) and the
-		// nag observers submodule: a single CustomObserver + event set serving every ZeroDim
-		// variant.  Must run before the ZeroDim classes, which declare bases<AnyZeroDim>.
-		void ExportNagObservers(){
-			using namespace bertini::algorithm;
-			using AZ = AnyZeroDim;
+        // Registers AnyZeroDim (the lifecycle-event emitter base + RTTI/bases anchor) and the
+        // nag observers submodule: a single CustomObserver + event set serving every ZeroDim
+        // variant.  Must run before the ZeroDim classes, which declare bases<AnyZeroDim>.
+        void ExportNagObservers(){
+            using namespace bertini::algorithm;
+            using AZ = AnyZeroDim;
 
-			// the abstract emitter base, in the nag_algorithms scope
-			class_<AZ, boost::noncopyable>("AnyZeroDim", no_init);
+            // the abstract emitter base, in the nag_algorithms scope
+            class_<AZ, boost::noncopyable>("AnyZeroDim", no_init);
 
-			// observers submodule
-			scope current_scope;
-			std::string obs_name(extract<const char*>(current_scope.attr("__name__")));
-			obs_name.append(".observers");
-			object obs_module(borrowed(PyImport_AddModule(obs_name.c_str())));
-			current_scope.attr("observers") = obs_module;
-			scope obs_scope = obs_module;
-			obs_scope.attr("__doc__") = "Observers for the zero-dim solve.  Subclass CustomObserver "
-				"(or use it directly), then attach with the solver's add_observer.";
+            // observers submodule
+            scope current_scope;
+            std::string obs_name(extract<const char*>(current_scope.attr("__name__")));
+            obs_name.append(".observers");
+            object obs_module(borrowed(PyImport_AddModule(obs_name.c_str())));
+            current_scope.attr("observers") = obs_module;
+            scope obs_scope = obs_module;
+            obs_scope.attr("__doc__") = "Observers for the zero-dim solve.  Subclass CustomObserver "
+                "(or use it directly), then attach with the solver's add_observer.";
 
-			// the subclassable observer base; shared_ptr holder so an attached observer is
-			// co-owned (it can outlive the python reference without dangling)
-			class_<ObserverWrapper<Observer<AZ>>, std::shared_ptr<ObserverWrapper<Observer<AZ>>>,
-			       bases<AnyObserver>, boost::noncopyable>("CustomObserver", init< >())
-				;
+            // the subclassable observer base; shared_ptr holder so an attached observer is
+            // co-owned (it can outlive the python reference without dangling)
+            class_<ObserverWrapper<Observer<AZ>>, std::shared_ptr<ObserverWrapper<Observer<AZ>>>,
+                   bases<AnyObserver>, boost::noncopyable>("CustomObserver", init< >())
+                ;
 
-			// .solver() returns the emitting solver; RTTI resolves it to the concrete ZeroDim
-			// (registered with bases<AnyZeroDim>), so python sees the full solver API.
-			auto solver_getter = +[](const AlgorithmEvent<AZ>& e) -> const AZ& { return e.Get(); };
-			class_<AlgorithmEvent<AZ>, bases<AnyEvent>, boost::noncopyable>("AlgorithmEvent", no_init)
-				.def("solver", solver_getter, return_value_policy<reference_existing_object>());
+            // .solver() returns the emitting solver; RTTI resolves it to the concrete ZeroDim
+            // (registered with bases<AnyZeroDim>), so python sees the full solver API.
+            auto solver_getter = +[](const AlgorithmEvent<AZ>& e) -> const AZ& { return e.Get(); };
+            class_<AlgorithmEvent<AZ>, bases<AnyEvent>, boost::noncopyable>("AlgorithmEvent", no_init)
+                .def("solver", solver_getter, return_value_policy<reference_existing_object>());
 
-			class_<AlgorithmStarted<AZ>,  bases<AlgorithmEvent<AZ>>, boost::noncopyable>("AlgorithmStarted",  no_init);
-			class_<AlgorithmComplete<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("AlgorithmComplete", no_init);
+            class_<AlgorithmStarted<AZ>,  bases<AlgorithmEvent<AZ>>, boost::noncopyable>("AlgorithmStarted",  no_init);
+            class_<AlgorithmComplete<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("AlgorithmComplete", no_init);
 
-			// .tracker() returns the tracker that actually executed this path; RTTI resolves the
-			// Observable base pointer to the concrete tracker (registered with bases<Observable>),
-			// so python gets the full tracker API (.add_observer, .observers, ...).  In a serial
-			// solve this is the solver's member tracker; in a threaded solve it is the thread-local
-			// clone -- so a meta-observer MUST attach its per-path sub-observer here, not to
-			// solver.get_tracker() (which runs nothing under threading).
-			auto started_tracker = +[](const PathStarted<AZ>& e) -> bertini::Observable* {
-				return const_cast<bertini::Observable*>(e.Tracker()); };
-			auto complete_tracker = +[](const PathComplete<AZ>& e) -> bertini::Observable* {
-				return const_cast<bertini::Observable*>(e.Tracker()); };
+            // .tracker() returns the tracker that actually executed this path; RTTI resolves the
+            // Observable base pointer to the concrete tracker (registered with bases<Observable>),
+            // so python gets the full tracker API (.add_observer, .observers, ...).  In a serial
+            // solve this is the solver's member tracker; in a threaded solve it is the thread-local
+            // clone -- so a meta-observer MUST attach its per-path sub-observer here, not to
+            // solver.get_tracker() (which runs nothing under threading).
+            auto started_tracker = +[](const PathStarted<AZ>& e) -> bertini::Observable* {
+                return const_cast<bertini::Observable*>(e.Tracker()); };
+            auto complete_tracker = +[](const PathComplete<AZ>& e) -> bertini::Observable* {
+                return const_cast<bertini::Observable*>(e.Tracker()); };
 
-			class_<PathStarted<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathStarted", no_init)
-				.def("path_index", &PathStarted<AZ>::PathIndex, "index of the solution path that is starting")
-				.def("tracker", started_tracker, return_value_policy<reference_existing_object>(),
-				     "the tracker that runs this path -- attach a per-path observer here (a thread-local "
-				     "clone when threaded, the member tracker when serial)");
-			class_<PathComplete<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathComplete", no_init)
-				.def("path_index", &PathComplete<AZ>::PathIndex, "index of the solution path that finished")
-				.def("tracker", complete_tracker, return_value_policy<reference_existing_object>(),
-				     "the tracker that ran this path -- detach the per-path observer from it here");
-		}
+            class_<PathStarted<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathStarted", no_init)
+                .def("path_index", &PathStarted<AZ>::PathIndex, "index of the solution path that is starting")
+                .def("tracker", started_tracker, return_value_policy<reference_existing_object>(),
+                     "the tracker that runs this path -- attach a per-path observer here (a thread-local "
+                     "clone when threaded, the member tracker when serial)");
+            class_<PathComplete<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathComplete", no_init)
+                .def("path_index", &PathComplete<AZ>::PathIndex, "index of the solution path that finished")
+                .def("tracker", complete_tracker, return_value_policy<reference_existing_object>(),
+                     "the tracker that ran this path -- detach the per-path observer from it here");
+        }
 
-		void ExportZeroDim(){
-			scope current_scope;
-			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-			new_submodule_name.append(".nag_algorithms");
-			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-			current_scope.attr("nag_algorithms") = new_submodule;
+        void ExportZeroDim(){
+            scope current_scope;
+            std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+            new_submodule_name.append(".nag_algorithms");
+            object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+            current_scope.attr("nag_algorithms") = new_submodule;
 
-			scope new_submodule_scope = new_submodule;
-			new_submodule_scope.attr("__doc__") = "Algorithms for computing things, like point solutions to square systems (zerodim algorithm).";
+            scope new_submodule_scope = new_submodule;
+            new_submodule_scope.attr("__doc__") = "Algorithms for computing things, like point solutions to square systems (zerodim algorithm).";
 
-			ExportNagObservers();    // registers AnyZeroDim before the ZeroDim classes below
+            ExportNagObservers();    // registers AnyZeroDim before the ZeroDim classes below
 
-			ExportZDConfigs();
-			ExportZDDouble();
-			ExportZDMP();
-			ExportZDAMP();
-		}
+            ExportZDConfigs();
+            ExportZDDouble();
+            ExportZDMP();
+            ExportZDAMP();
+        }
 
-	}
+    }
 }

@@ -15,13 +15,13 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 
 /**
-\file bertini2/detail/singleton.hpp 
+\file bertini2/detail/singleton.hpp
 
 \brief Provides types and utilities for dealing with global defaults for the detail routines
 */
@@ -43,20 +43,14 @@ This class is virtual, so make sure you mark destructors as virtual.
 struct Singleton {
 
 
-	virtual ~Singleton() = default;
+    virtual ~Singleton() = default;
 private:
-	// mark both the default and copy constructor as private
-	Singleton(){}
-	Singleton(Singleton const&){}
+    // mark both the default and copy constructor as private
+    Singleton(){}
+    Singleton(Singleton const&){}
 
 };
 
 
 } // namespace detail
 } // namespace bertini
-
-
-
-
-
-

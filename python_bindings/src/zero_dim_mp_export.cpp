@@ -3,15 +3,15 @@
 #include "zero_dim_export.hpp"
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		void ExportZDMP(){
-			using TrackerT = bertini::tracking::MultiplePrecisionTracker;
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimSolverPowerSeriesFixedMultiplePrecision");
-			ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimSolverCauchyFixedMultiplePrecision");
+        void ExportZDMP(){
+            using TrackerT = bertini::tracking::MultiplePrecisionTracker;
+            ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("ZeroDimSolverPowerSeriesFixedMultiplePrecision");
+            ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("ZeroDimSolverCauchyFixedMultiplePrecision");
 
-			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("HomotopySolverPowerSeriesFixedMultiplePrecision");
-			ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("HomotopySolverCauchyFixedMultiplePrecision");
-		}
+            ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("HomotopySolverPowerSeriesFixedMultiplePrecision");
+            ExportZeroDimUserHomotopy<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("HomotopySolverCauchyFixedMultiplePrecision");
+        }
 
 }} // namespaces

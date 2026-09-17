@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/tracker_observers.cpp:  source file for exposing trackers to python.
@@ -26,7 +26,7 @@
 #include "generic_observer.hpp"
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
 
 
@@ -34,85 +34,85 @@ namespace bertini{
 template<typename TrackerT>
 void ExportTrackingEvents()
 {
-	using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
-	using TEv = TrackingEvent<EmitterT>;
+    using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+    using TEv = TrackingEvent<EmitterT>;
 
-	// tracker() downcasts from EmitterT to TrackerT.
-	// Safe: TrackerT IS-A EmitterT (direct single inheritance) and the emitting
-	// object is always the concrete TrackerT (*this in NotifyObservers calls).
-	auto tracker_getter = +[](const TEv& e) -> const TrackerT& {
-		return static_cast<const TrackerT&>(e.Get());
-	};
+    // tracker() downcasts from EmitterT to TrackerT.
+    // Safe: TrackerT IS-A EmitterT (direct single inheritance) and the emitting
+    // object is always the concrete TrackerT (*this in NotifyObservers calls).
+    auto tracker_getter = +[](const TEv& e) -> const TrackerT& {
+        return static_cast<const TrackerT&>(e.Get());
+    };
 
-	class_<TEv, bases<AnyEvent>, boost::noncopyable>("TrackingEvent", no_init)
-		.def("tracker", tracker_getter, return_value_policy<reference_existing_object>());
+    class_<TEv, bases<AnyEvent>, boost::noncopyable>("TrackingEvent", no_init)
+        .def("tracker", tracker_getter, return_value_policy<reference_existing_object>());
 
-	class_<TrackingStarted<EmitterT>,        bases<TEv>, boost::noncopyable>("TrackingStarted",        no_init);
-	class_<TrackingEnded<EmitterT>,          bases<TEv>, boost::noncopyable>("TrackingEnded",          no_init);
-	class_<SuccessfulStep<EmitterT>,         bases<TEv>, boost::noncopyable>("SuccessfulStep",         no_init);
-	class_<FailedStep<EmitterT>,             bases<TEv>, boost::noncopyable>("FailedStep",             no_init);
-	class_<StepsizeDecreased<EmitterT>,      bases<TEv>, boost::noncopyable>("StepsizeDecreased",      no_init);
-	class_<StepsizeIncreased<EmitterT>,      bases<TEv>, boost::noncopyable>("StepsizeIncreased",      no_init);
-	class_<InfinitePathTruncation<EmitterT>, bases<TEv>, boost::noncopyable>("InfinitePathTruncation", no_init);
+    class_<TrackingStarted<EmitterT>,        bases<TEv>, boost::noncopyable>("TrackingStarted",        no_init);
+    class_<TrackingEnded<EmitterT>,          bases<TEv>, boost::noncopyable>("TrackingEnded",          no_init);
+    class_<SuccessfulStep<EmitterT>,         bases<TEv>, boost::noncopyable>("SuccessfulStep",         no_init);
+    class_<FailedStep<EmitterT>,             bases<TEv>, boost::noncopyable>("FailedStep",             no_init);
+    class_<StepsizeDecreased<EmitterT>,      bases<TEv>, boost::noncopyable>("StepsizeDecreased",      no_init);
+    class_<StepsizeIncreased<EmitterT>,      bases<TEv>, boost::noncopyable>("StepsizeIncreased",      no_init);
+    class_<InfinitePathTruncation<EmitterT>, bases<TEv>, boost::noncopyable>("InfinitePathTruncation", no_init);
 
-	class_<PrecisionChanged<EmitterT>, bases<TEv>, boost::noncopyable>("PrecisionChanged", no_init)
-		.def("previous", &PrecisionChanged<EmitterT>::Previous)
-		.def("next",     &PrecisionChanged<EmitterT>::Next);
+    class_<PrecisionChanged<EmitterT>, bases<TEv>, boost::noncopyable>("PrecisionChanged", no_init)
+        .def("previous", &PrecisionChanged<EmitterT>::Previous)
+        .def("next",     &PrecisionChanged<EmitterT>::Next);
 
-	class_<PrecisionIncreased<EmitterT>, bases<PrecisionChanged<EmitterT>>, boost::noncopyable>("PrecisionIncreased", no_init);
-	class_<PrecisionDecreased<EmitterT>, bases<PrecisionChanged<EmitterT>>, boost::noncopyable>("PrecisionDecreased", no_init);
+    class_<PrecisionIncreased<EmitterT>, bases<PrecisionChanged<EmitterT>>, boost::noncopyable>("PrecisionIncreased", no_init);
+    class_<PrecisionDecreased<EmitterT>, bases<PrecisionChanged<EmitterT>>, boost::noncopyable>("PrecisionDecreased", no_init);
 }
 
 
 template <typename TrackerT>
 void ExportSpecificObservers(std::string scope_name)
 {
-	scope scope_C;
-	std::string submodule_name_C(extract<const char*>(scope_C.attr("__name__")));
-	submodule_name_C.append("." + scope_name);
-	object submodule_C(borrowed(PyImport_AddModule(submodule_name_C.c_str())));
-	scope_C.attr(scope_name.c_str()) = submodule_C;
-	scope new_submodule_scope_C = submodule_C;
+    scope scope_C;
+    std::string submodule_name_C(extract<const char*>(scope_C.attr("__name__")));
+    submodule_name_C.append("." + scope_name);
+    object submodule_C(borrowed(PyImport_AddModule(submodule_name_C.c_str())));
+    scope_C.attr(scope_name.c_str()) = submodule_C;
+    scope new_submodule_scope_C = submodule_C;
 
-	class_<ObserverWrapper<Observer<TrackerT>>, std::shared_ptr<ObserverWrapper<Observer<TrackerT>>>, bases<AnyObserver>, boost::noncopyable>("CustomObserver", init< >())
-	;
+    class_<ObserverWrapper<Observer<TrackerT>>, std::shared_ptr<ObserverWrapper<Observer<TrackerT>>>, bases<AnyObserver>, boost::noncopyable>("CustomObserver", init< >())
+    ;
 
-	class_< FirstPrecisionRecorder<TrackerT>, bases<Observer<TrackerT>> >("FirstPrecisionRecorder", init< >())
-	.def(TrackingObserverVisitor<FirstPrecisionRecorder<TrackerT>>())
-	;
+    class_< FirstPrecisionRecorder<TrackerT>, bases<Observer<TrackerT>> >("FirstPrecisionRecorder", init< >())
+    .def(TrackingObserverVisitor<FirstPrecisionRecorder<TrackerT>>())
+    ;
 
-	class_<GoryDetailLogger<TrackerT>, bases<Observer<TrackerT>> >("GoryDetailLogger", init< >())
-	.def(TrackingObserverVisitor<GoryDetailLogger<TrackerT>>())
-	;
+    class_<GoryDetailLogger<TrackerT>, bases<Observer<TrackerT>> >("GoryDetailLogger", init< >())
+    .def(TrackingObserverVisitor<GoryDetailLogger<TrackerT>>())
+    ;
 
-	ExportTrackingEvents<TrackerT>();
+    ExportTrackingEvents<TrackerT>();
 }
 
 void ExportTrackerObservers()
 {
 
-	scope current_scope;
-	std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-	new_submodule_name.append(".tracking");
-	object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-	current_scope.attr("tracking") = new_submodule;
+    scope current_scope;
+    std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+    new_submodule_name.append(".tracking");
+    object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+    current_scope.attr("tracking") = new_submodule;
 
-	scope new_submodule_scope = new_submodule;
-	new_submodule_scope.attr("__doc__") = "Observers for trackers.";
+    scope new_submodule_scope = new_submodule;
+    new_submodule_scope.attr("__doc__") = "Observers for trackers.";
 
-	{
-	// this should be called in the tracking module namespace
-		scope scope_B;
-		std::string submodule_name_B(extract<const char*>(scope_B.attr("__name__")));
-		submodule_name_B.append(".observers");
-		object submodule_B(borrowed(PyImport_AddModule(submodule_name_B.c_str())));
-		scope_B.attr("observers") = submodule_B;
-		scope new_submodule_scope_B = submodule_B;
+    {
+    // this should be called in the tracking module namespace
+        scope scope_B;
+        std::string submodule_name_B(extract<const char*>(scope_B.attr("__name__")));
+        submodule_name_B.append(".observers");
+        object submodule_B(borrowed(PyImport_AddModule(submodule_name_B.c_str())));
+        scope_B.attr("observers") = submodule_B;
+        scope new_submodule_scope_B = submodule_B;
 
-		ExportSpecificObservers<AMPTracker>("amp");
-		ExportSpecificObservers<DoublePrecisionTracker>("double");
-		ExportSpecificObservers<MultiplePrecisionTracker>("multiple");
-	}
+        ExportSpecificObservers<AMPTracker>("amp");
+        ExportSpecificObservers<DoublePrecisionTracker>("double");
+        ExportSpecificObservers<MultiplePrecisionTracker>("multiple");
+    }
 }
 
 }} // namespaces

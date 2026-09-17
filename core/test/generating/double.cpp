@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -31,12 +31,12 @@
 BOOST_AUTO_TEST_SUITE(double_generation)
 
 BOOST_AUTO_TEST_CASE(zero)
-{	
-	bertini::DefaultPrecision(30);
-	double z(0);
+{
+    bertini::DefaultPrecision(30);
+    double z(0);
 
 
-	std::string result;
+    std::string result;
     std::back_insert_iterator<std::string> sink(result);
 
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(zero)
 
 
 BOOST_AUTO_TEST_CASE(one)
-{   
+{
     bertini::DefaultPrecision(30);
     double z(1);
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(one)
 
 
 BOOST_AUTO_TEST_CASE(sqrt_2)
-{   
+{
     bertini::DefaultPrecision(30);
     double z = sqrt(2);
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(sqrt_2)
 }
 
 BOOST_AUTO_TEST_CASE(check_135_477005)
-{   
+{
     bertini::DefaultPrecision(30);
     double z = 135.477005;
 

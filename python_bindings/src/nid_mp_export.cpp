@@ -3,12 +3,12 @@
 #include "numerical_irreducible_decomposition_export.hpp"
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		void ExportNIDMP(){
-			using TrackerT = bertini::tracking::MultiplePrecisionTracker;
-			ExportNIDSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("NIDPowerSeriesFixedMultiplePrecision");
-			ExportNIDSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("NIDCauchyFixedMultiplePrecision");
-		}
+        void ExportNIDMP(){
+            using TrackerT = bertini::tracking::MultiplePrecisionTracker;
+            ExportNIDSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG>("NIDPowerSeriesFixedMultiplePrecision");
+            ExportNIDSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy>("NIDCauchyFixedMultiplePrecision");
+        }
 
 }} // namespaces

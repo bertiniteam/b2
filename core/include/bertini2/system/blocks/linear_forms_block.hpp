@@ -67,294 +67,294 @@ provided segment, so the block is self-contained and unit-testable without a Sys
 class LinearFormsBlock
 {
 public:
-	LinearFormsBlock() : num_vars_(0), precision_(DefaultPrecision()) {}
+    LinearFormsBlock() : num_vars_(0), precision_(DefaultPrecision()) {}
 
-	/**
-	\param num_vars The number of variables (n).  The coefficient matrix has n+1 columns
-	(the trailing column multiplies the augmenting 1 -- the constant term of each form).
-	\param coefficients The augmented coefficient matrix: one row per function, shape
-	(number-of-functions) x (num_vars + 1).
-	*/
-	LinearFormsBlock(size_t num_vars, Mat<complex_mp> coefficients)
-		: num_vars_(num_vars), coefficients_highest_precision_(std::move(coefficients)),
-		  precision_(DefaultPrecision())
-	{
-		assert(static_cast<size_t>(coefficients_highest_precision_.cols()) == num_vars_ + 1 &&
-		       "a linear-forms coefficient matrix must have num_vars+1 columns");
-		BuildWorking();
-	}
+    /**
+    \param num_vars The number of variables (n).  The coefficient matrix has n+1 columns
+    (the trailing column multiplies the augmenting 1 -- the constant term of each form).
+    \param coefficients The augmented coefficient matrix: one row per function, shape
+    (number-of-functions) x (num_vars + 1).
+    */
+    LinearFormsBlock(size_t num_vars, Mat<complex_mp> coefficients)
+        : num_vars_(num_vars), coefficients_highest_precision_(std::move(coefficients)),
+          precision_(DefaultPrecision())
+    {
+        assert(static_cast<size_t>(coefficients_highest_precision_.cols()) == num_vars_ + 1 &&
+               "a linear-forms coefficient matrix must have num_vars+1 columns");
+        BuildWorking();
+    }
 
-	/**
-	\brief Construct a block in a stated homogenization state -- for a loader restoring an
-	archived block as it was, without re-running Homogenize.
+    /**
+    \brief Construct a block in a stated homogenization state -- for a loader restoring an
+    archived block as it was, without re-running Homogenize.
 
-	\param num_vars The number of variables the block reads (the homogenizing variable
-	       included when `homogenized`).
-	\param coefficients The coefficient matrix exactly as the block held it: `num_vars + 1`
-	       columns (the last the constant term) when affine, `num_vars` columns when homogenized.
-	\param homogenized Whether the constant column has already been folded onto a
-	       homogenizing variable.
-	*/
-	LinearFormsBlock(size_t num_vars, Mat<complex_mp> coefficients, bool homogenized)
-		: num_vars_(num_vars), coefficients_highest_precision_(std::move(coefficients)),
-		  precision_(DefaultPrecision())
-	{
-		homogeneous_ = homogenized;
-		if (static_cast<size_t>(coefficients_highest_precision_.cols()) != num_vars_ + (homogenized ? 0 : 1))
-			throw std::invalid_argument("LinearFormsBlock: the coefficient matrix has "
-				+ std::to_string(coefficients_highest_precision_.cols()) + " columns, but a block on "
-				+ std::to_string(num_vars_) + " variables that " + (homogenized ? "is" : "is not")
-				+ " homogenized needs " + std::to_string(num_vars_ + (homogenized ? 0 : 1)));
-		BuildWorking();
-	}
+    \param num_vars The number of variables the block reads (the homogenizing variable
+           included when `homogenized`).
+    \param coefficients The coefficient matrix exactly as the block held it: `num_vars + 1`
+           columns (the last the constant term) when affine, `num_vars` columns when homogenized.
+    \param homogenized Whether the constant column has already been folded onto a
+           homogenizing variable.
+    */
+    LinearFormsBlock(size_t num_vars, Mat<complex_mp> coefficients, bool homogenized)
+        : num_vars_(num_vars), coefficients_highest_precision_(std::move(coefficients)),
+          precision_(DefaultPrecision())
+    {
+        homogeneous_ = homogenized;
+        if (static_cast<size_t>(coefficients_highest_precision_.cols()) != num_vars_ + (homogenized ? 0 : 1))
+            throw std::invalid_argument("LinearFormsBlock: the coefficient matrix has "
+                + std::to_string(coefficients_highest_precision_.cols()) + " columns, but a block on "
+                + std::to_string(num_vars_) + " variables that " + (homogenized ? "is" : "is not")
+                + " homogenized needs " + std::to_string(num_vars_ + (homogenized ? 0 : 1)));
+        BuildWorking();
+    }
 
-	/// Number of functions (rows the block contributes to the system).
-	size_t NumFunctions() const { return static_cast<size_t>(coefficients_highest_precision_.rows()); }
+    /// Number of functions (rows the block contributes to the system).
+    size_t NumFunctions() const { return static_cast<size_t>(coefficients_highest_precision_.rows()); }
 
-	/// Linear forms are degree 1.
-	std::vector<int> Degrees() const { return std::vector<int>(NumFunctions(), 1); }
-	/// \brief Per-function degrees with respect to a given variable group (all 1).
-	std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
+    /// Linear forms are degree 1.
+    std::vector<int> Degrees() const { return std::vector<int>(NumFunctions(), 1); }
+    /// \brief Per-function degrees with respect to a given variable group (all 1).
+    std::vector<int> Degrees(VariableGroup const&) const { return Degrees(); }
 
-	/// Linear forms are polynomial.
-	bool IsPolynomial(VariableGroup const&) const { return true; }
-	/// An affine form a.x + b is inhomogeneous (it carries a constant); once homogenized the
-	/// constant has become a homogenizing-variable coefficient, so it is degree-1 homogeneous.
-	bool IsHomogeneous(VariableGroup const&) const { return homogeneous_; }
+    /// Linear forms are polynomial.
+    bool IsPolynomial(VariableGroup const&) const { return true; }
+    /// An affine form a.x + b is inhomogeneous (it carries a constant); once homogenized the
+    /// constant has become a homogenizing-variable coefficient, so it is degree-1 homogeneous.
+    bool IsHomogeneous(VariableGroup const&) const { return homogeneous_; }
 
-	/// Homogenize: fold the constant column onto the homogenizing variable.  An augmented form
-	/// a.x + b (last column = constant) becomes the homogeneous a.x + b*h, where the
-	/// homogenizing variable h is prepended to the variable ordering -- so its column is the
-	/// old constant column.  The block then evaluates M*[vars] directly (no augmenting 1).
-	/// Currently supports a single affine variable group (the dominant bertini.linalg case);
-	/// a second call (a second affine group) throws.
-	void Homogenize(VariableGroup const& /*group*/, std::shared_ptr<node::Variable> const& /*hom_var*/)
-	{
-		if (homogeneous_)
-			throw std::runtime_error("LinearFormsBlock::Homogenize: block is already homogenized "
-				"(multiple affine variable groups are not yet supported for linear-forms blocks)");
-		const auto& M = coefficients_highest_precision_;
-		Mat<complex_mp> Mh(M.rows(), M.cols());                                   // same #cols: n+1
-		Mh.col(0) = M.col(static_cast<Eigen::Index>(num_vars_));                    // constant -> h column (front)
-		Mh.rightCols(static_cast<Eigen::Index>(num_vars_)) =
-			M.leftCols(static_cast<Eigen::Index>(num_vars_));                       // original variable columns
-		coefficients_highest_precision_ = Mh;
-		num_vars_ += 1;          // h is now a real variable; all n+1 columns are variable columns
-		homogeneous_ = true;
-		BuildWorking();
-	}
+    /// Homogenize: fold the constant column onto the homogenizing variable.  An augmented form
+    /// a.x + b (last column = constant) becomes the homogeneous a.x + b*h, where the
+    /// homogenizing variable h is prepended to the variable ordering -- so its column is the
+    /// old constant column.  The block then evaluates M*[vars] directly (no augmenting 1).
+    /// Currently supports a single affine variable group (the dominant bertini.linalg case);
+    /// a second call (a second affine group) throws.
+    void Homogenize(VariableGroup const& /*group*/, std::shared_ptr<node::Variable> const& /*hom_var*/)
+    {
+        if (homogeneous_)
+            throw std::runtime_error("LinearFormsBlock::Homogenize: block is already homogenized "
+                "(multiple affine variable groups are not yet supported for linear-forms blocks)");
+        const auto& M = coefficients_highest_precision_;
+        Mat<complex_mp> Mh(M.rows(), M.cols());                                   // same #cols: n+1
+        Mh.col(0) = M.col(static_cast<Eigen::Index>(num_vars_));                    // constant -> h column (front)
+        Mh.rightCols(static_cast<Eigen::Index>(num_vars_)) =
+            M.leftCols(static_cast<Eigen::Index>(num_vars_));                       // original variable columns
+        coefficients_highest_precision_ = Mh;
+        num_vars_ += 1;          // h is now a real variable; all n+1 columns are variable columns
+        homogeneous_ = true;
+        BuildWorking();
+    }
 
-	/// Number of variables the block expects in the input vector.
-	size_t NumVariables() const { return num_vars_; }
+    /// Number of variables the block expects in the input vector.
+    size_t NumVariables() const { return num_vars_; }
 
-	/// The master coefficient matrix (one row per form).  Affine: num_vars+1 columns, the last being
-	/// the constant term.  Homogeneous (post-Homogenize): num_vars columns, all variable columns.
-	/// Exposed for the function-tree expansion (System::NaturalFunctionsAsNodes).
-	Mat<complex_mp> const& Coefficients() const { return coefficients_highest_precision_; }
-	/// Whether Homogenize has folded the constant column onto a homogenizing variable.
-	bool IsHomogenized() const { return homogeneous_; }
+    /// The master coefficient matrix (one row per form).  Affine: num_vars+1 columns, the last being
+    /// the constant term.  Homogeneous (post-Homogenize): num_vars columns, all variable columns.
+    /// Exposed for the function-tree expansion (System::NaturalFunctionsAsNodes).
+    Mat<complex_mp> const& Coefficients() const { return coefficients_highest_precision_; }
+    /// Whether Homogenize has folded the constant column onto a homogenizing variable.
+    bool IsHomogenized() const { return homogeneous_; }
 
-	/// Human-facing description: each form prints as the placeholder 'f_k = c.[x, y, 1]' (structure
-	/// stays legible) followed by its actual coefficient row in a 'c =' legend below -- short (4
-	/// significant figures) in terse, full precision in verbose.  Terse truncates after kTerseRowCap
-	/// forms so a large slice does not flood the terminal.
-	void Describe(std::ostream& out, size_t& row, VariableGroup const& vars, bool verbose) const
-	{
-		auto const& M = coefficients_highest_precision_;
-		const Eigen::Index n = M.rows();
-		if (n == 0)
-			return;
-		const Eigen::Index cap   = static_cast<Eigen::Index>(describe_detail::kTerseRowCap);
-		const Eigen::Index shown = (verbose || n <= cap) ? n : cap;
+    /// Human-facing description: each form prints as the placeholder 'f_k = c.[x, y, 1]' (structure
+    /// stays legible) followed by its actual coefficient row in a 'c =' legend below -- short (4
+    /// significant figures) in terse, full precision in verbose.  Terse truncates after kTerseRowCap
+    /// forms so a large slice does not flood the terminal.
+    void Describe(std::ostream& out, size_t& row, VariableGroup const& vars, bool verbose) const
+    {
+        auto const& M = coefficients_highest_precision_;
+        const Eigen::Index n = M.rows();
+        if (n == 0)
+            return;
+        const Eigen::Index cap   = static_cast<Eigen::Index>(describe_detail::kTerseRowCap);
+        const Eigen::Index shown = (verbose || n <= cap) ? n : cap;
 
-		// placeholder line per form: f_k = c.[x, y, 1]
-		for (Eigen::Index r = 0; r < shown; ++r)
-		{
-			out << "  f_" << row++ << " = c.";
-			describe_detail::PrintAugmentedVars(out, vars, num_vars_, homogeneous_);
-			out << "\n";
-		}
+        // placeholder line per form: f_k = c.[x, y, 1]
+        for (Eigen::Index r = 0; r < shown; ++r)
+        {
+            out << "  f_" << row++ << " = c.";
+            describe_detail::PrintAugmentedVars(out, vars, num_vars_, homogeneous_);
+            out << "\n";
+        }
 
-		// the actual coefficients below, as a named-expression-style legend (row r <-> f_k above)
-		const int sig = describe_detail::CoeffSig(verbose);
-		out << "    c =\n";
-		for (Eigen::Index r = 0; r < shown; ++r)
-		{
-			out << "      [ ";
-			for (Eigen::Index c = 0; c < M.cols(); ++c)
-			{
-				if (c) out << ", ";
-				describe_detail::PrintCoeff(out, M(r, c), sig);
-			}
-			out << " ]\n";
-		}
+        // the actual coefficients below, as a named-expression-style legend (row r <-> f_k above)
+        const int sig = describe_detail::CoeffSig(verbose);
+        out << "    c =\n";
+        for (Eigen::Index r = 0; r < shown; ++r)
+        {
+            out << "      [ ";
+            for (Eigen::Index c = 0; c < M.cols(); ++c)
+            {
+                if (c) out << ", ";
+                describe_detail::PrintCoeff(out, M(r, c), sig);
+            }
+            out << " ]\n";
+        }
 
-		if (shown < n)
-		{
-			row += static_cast<size_t>(n - shown);     // keep the global row index correct
-			out << "    ... (" << (n - shown) << " more form" << (n - shown == 1 ? "" : "s")
-			    << "; describe(verbose=True) for all)\n";
-		}
-	}
+        if (shown < n)
+        {
+            row += static_cast<size_t>(n - shown);     // keep the global row index correct
+            out << "    ... (" << (n - shown) << " more form" << (n - shown == 1 ? "" : "s")
+                << "; describe(verbose=True) for all)\n";
+        }
+    }
 
-	/// Linear forms do not depend on the path variable.
-	bool DependsOnPathVariable() const { return false; }
+    /// Linear forms do not depend on the path variable.
+    bool DependsOnPathVariable() const { return false; }
 
-	/// The Jacobian is the (constant) coefficient matrix, independent of x and t.
-	bool HasConstantJacobian() const { return true; }
+    /// The Jacobian is the (constant) coefficient matrix, independent of x and t.
+    bool HasConstantJacobian() const { return true; }
 
-	/// Analytic block: nothing symbolic to differentiate.
-	void Differentiate() const {}
+    /// Analytic block: nothing symbolic to differentiate.
+    void Differentiate() const {}
 
-	/// \brief Get the block's current working precision.
-	unsigned Precision() const { return precision_; }
+    /// \brief Get the block's current working precision.
+    unsigned Precision() const { return precision_; }
 
-	/// Set the working precision; recasts the mpfr working coefficients from the master.
-	void Precision(unsigned new_precision) const
-	{
-		// short-circuit when already materialized here.  Each holder of mp values keeps its
-		// own "materialized at" tag; System deliberately keeps none and simply fans out on
-		// every evaluation, which is cheap precisely because of this early return (ADR-0057).
-		if (precision_==new_precision)
-			return;
-		if (new_precision > DoublePrecision())
-		{
-			auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
-			for (Eigen::Index r = 0; r < wm.rows(); ++r)
-				for (Eigen::Index c = 0; c < wm.cols(); ++c)
-				{
-					wm(r, c).precision(new_precision);
-					if (new_precision > precision_)
-						wm(r, c) = coefficients_highest_precision_(r, c);
-				}
-		}
-		precision_ = new_precision;
-	}
+    /// Set the working precision; recasts the mpfr working coefficients from the master.
+    void Precision(unsigned new_precision) const
+    {
+        // short-circuit when already materialized here.  Each holder of mp values keeps its
+        // own "materialized at" tag; System deliberately keeps none and simply fans out on
+        // every evaluation, which is cheap precisely because of this early return (ADR-0057).
+        if (precision_==new_precision)
+            return;
+        if (new_precision > DoublePrecision())
+        {
+            auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
+            for (Eigen::Index r = 0; r < wm.rows(); ++r)
+                for (Eigen::Index c = 0; c < wm.cols(); ++c)
+                {
+                    wm(r, c).precision(new_precision);
+                    if (new_precision > precision_)
+                        wm(r, c) = coefficients_highest_precision_(r, c);
+                }
+        }
+        precision_ = new_precision;
+    }
 
-	/**
-	\brief Evaluate the block's function values into a caller-provided segment.
+    /**
+    \brief Evaluate the block's function values into a caller-provided segment.
 
-	The path variable is ignored (linear forms are autonomous).
+    The path variable is ignored (linear forms are autonomous).
 
-	\param result Length-NumFunctions() segment to write into.
-	\param vars   Length-NumVariables() current variable values.
-	*/
-	template <typename T>
-	void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
-	{
-		SyncPrecision(vars);
-		// affine: f(x) = W * [x ; 1] (the trailing 1 carries each row's constant in the last
-		// column).  homogeneous (post-Homogenize): every column is a variable column, so it is
-		// just W * vars (the old constant is now the homogenizing variable's coefficient).
-		if (homogeneous_)
-			result.noalias() = Working<T>() * vars;
-		else
-			result.noalias() = Working<T>() * Augment<T>(vars);
-	}
+    \param result Length-NumFunctions() segment to write into.
+    \param vars   Length-NumVariables() current variable values.
+    */
+    template <typename T>
+    void EvalInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& vars, T const& /*path_value*/) const
+    {
+        SyncPrecision(vars);
+        // affine: f(x) = W * [x ; 1] (the trailing 1 carries each row's constant in the last
+        // column).  homogeneous (post-Homogenize): every column is a variable column, so it is
+        // just W * vars (the old constant is now the homogenizing variable's coefficient).
+        if (homogeneous_)
+            result.noalias() = Working<T>() * vars;
+        else
+            result.noalias() = Working<T>() * Augment<T>(vars);
+    }
 
-	/**
-	\brief Evaluate the block's Jacobian (d f_i / d x_j) into a caller-provided block.
+    /**
+    \brief Evaluate the block's Jacobian (d f_i / d x_j) into a caller-provided block.
 
-	The Jacobian of f(x) = M x + b is simply M (its variable columns) -- constant in x.
-	The path variable is unused (autonomous).
+    The Jacobian of f(x) = M x + b is simply M (its variable columns) -- constant in x.
+    The path variable is unused (autonomous).
 
-	\param J  A NumFunctions() x NumVariables() block to write into.
-	\param vars Length-NumVariables() current variable values.  The Jacobian does not depend
-	            on them, but they carry the PRECISION to evaluate at: the block materializes
-	            its working coefficients to match before writing them out (ADR-0057).
-	*/
-	template <typename T>
-	void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& /*path_value*/) const
-	{
-		SyncPrecision(vars);
-		// homogeneous: every column is d f / d x.  affine: drop the trailing constant column.
-		if (homogeneous_)
-			J = Working<T>();
-		else
-			J = Working<T>().leftCols(static_cast<Eigen::Index>(num_vars_));
-	}
+    \param J  A NumFunctions() x NumVariables() block to write into.
+    \param vars Length-NumVariables() current variable values.  The Jacobian does not depend
+                on them, but they carry the PRECISION to evaluate at: the block materializes
+                its working coefficients to match before writing them out (ADR-0057).
+    */
+    template <typename T>
+    void JacobianInPlace(Eigen::Ref<Mat<T>> J, Vec<T> const& vars, T const& /*path_value*/) const
+    {
+        SyncPrecision(vars);
+        // homogeneous: every column is d f / d x.  affine: drop the trailing constant column.
+        if (homogeneous_)
+            J = Working<T>();
+        else
+            J = Working<T>().leftCols(static_cast<Eigen::Index>(num_vars_));
+    }
 
-	/**
-	\brief Time-derivative into a caller-provided segment.  Linear forms are autonomous
-	(no path-variable dependence), so this is identically zero.
-	*/
-	template <typename T>
-	void TimeDerivInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& /*vars*/, T const& /*path_value*/) const
-	{
-		result.setZero();
-	}
+    /**
+    \brief Time-derivative into a caller-provided segment.  Linear forms are autonomous
+    (no path-variable dependence), so this is identically zero.
+    */
+    template <typename T>
+    void TimeDerivInPlace(Eigen::Ref<Vec<T>> result, Vec<T> const& /*vars*/, T const& /*path_value*/) const
+    {
+        result.setZero();
+    }
 
 private:
-	/// Materialize the working coefficients at the precision of the point being evaluated.
-	/// Every evaluable type self-aligns this way (blend_block established the pattern), so no
-	/// caller and no owning System has to fan a precision out beforehand -- ADR-0057.
-	/// Precision() short-circuits when already there, so the steady state is one integer
-	/// compare.  No-op for double, which carries no precision.
-	template <typename T>
-	void SyncPrecision(Vec<T> const& vars) const
-	{
-		if constexpr (!std::is_same<T, complex_dbl>::value)
-		{
-			if (vars.size() > 0)
-			{
-				const unsigned p = bertini::Precision(vars(0));
-				if (p != precision_)
-					Precision(p);
-			}
-		}
-	}
+    /// Materialize the working coefficients at the precision of the point being evaluated.
+    /// Every evaluable type self-aligns this way (blend_block established the pattern), so no
+    /// caller and no owning System has to fan a precision out beforehand -- ADR-0057.
+    /// Precision() short-circuits when already there, so the steady state is one integer
+    /// compare.  No-op for double, which carries no precision.
+    template <typename T>
+    void SyncPrecision(Vec<T> const& vars) const
+    {
+        if constexpr (!std::is_same<T, complex_dbl>::value)
+        {
+            if (vars.size() > 0)
+            {
+                const unsigned p = bertini::Precision(vars(0));
+                if (p != precision_)
+                    Precision(p);
+            }
+        }
+    }
 
-	template <typename T>
-	const Mat<T>& Working() const
-	{
-		return std::get<Mat<T>>(coefficients_working_);
-	}
+    template <typename T>
+    const Mat<T>& Working() const
+    {
+        return std::get<Mat<T>>(coefficients_working_);
+    }
 
-	template <typename T>
-	Vec<T> Augment(Vec<T> const& vars) const
-	{
-		Vec<T> aug(static_cast<Eigen::Index>(num_vars_ + 1));
-		aug.head(static_cast<Eigen::Index>(num_vars_)) = vars;
-		T one(1);
-		if constexpr (!std::is_same<T, complex_dbl>::value)
-			one.precision(precision_);
-		aug(static_cast<Eigen::Index>(num_vars_)) = one;
-		return aug;
-	}
+    template <typename T>
+    Vec<T> Augment(Vec<T> const& vars) const
+    {
+        Vec<T> aug(static_cast<Eigen::Index>(num_vars_ + 1));
+        aug.head(static_cast<Eigen::Index>(num_vars_)) = vars;
+        T one(1);
+        if constexpr (!std::is_same<T, complex_dbl>::value)
+            one.precision(precision_);
+        aug(static_cast<Eigen::Index>(num_vars_)) = one;
+        return aug;
+    }
 
-	void BuildWorking() const
-	{
-		const auto& M = coefficients_highest_precision_;
-		auto& wd = std::get<Mat<complex_dbl>>(coefficients_working_);
-		auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
-		wd.resize(M.rows(), M.cols());
-		wm.resize(M.rows(), M.cols());
-		for (Eigen::Index r = 0; r < M.rows(); ++r)
-			for (Eigen::Index c = 0; c < M.cols(); ++c)
-			{
-				wd(r, c) = complex_dbl(M(r, c));
-				wm(r, c) = M(r, c);
-			}
-	}
+    void BuildWorking() const
+    {
+        const auto& M = coefficients_highest_precision_;
+        auto& wd = std::get<Mat<complex_dbl>>(coefficients_working_);
+        auto& wm = std::get<Mat<complex_mp>>(coefficients_working_);
+        wd.resize(M.rows(), M.cols());
+        wm.resize(M.rows(), M.cols());
+        for (Eigen::Index r = 0; r < M.rows(); ++r)
+            for (Eigen::Index c = 0; c < M.cols(); ++c)
+            {
+                wd(r, c) = complex_dbl(M(r, c));
+                wm(r, c) = M(r, c);
+            }
+    }
 
-	size_t num_vars_;
-	bool homogeneous_ = false; ///< false: augmented affine (M*[x;1]); true: post-Homogenize (M*x)
-	Mat<complex_mp> coefficients_highest_precision_; ///< master: rows = functions, cols = num_vars (homogeneous) or num_vars+1 (affine)
-	mutable std::tuple<Mat<complex_dbl>, Mat<complex_mp>> coefficients_working_;
-	mutable unsigned precision_;
+    size_t num_vars_;
+    bool homogeneous_ = false; ///< false: augmented affine (M*[x;1]); true: post-Homogenize (M*x)
+    Mat<complex_mp> coefficients_highest_precision_; ///< master: rows = functions, cols = num_vars (homogeneous) or num_vars+1 (affine)
+    mutable std::tuple<Mat<complex_dbl>, Mat<complex_mp>> coefficients_working_;
+    mutable unsigned precision_;
 
-	friend class boost::serialization::access;
+    friend class boost::serialization::access;
 
-	template <typename Archive>
-	void serialize(Archive& ar, const unsigned /*version*/)
-	{
-		ar & num_vars_;
-		ar & homogeneous_;
-		ar & precision_;
-		ar & coefficients_highest_precision_;
-		ar & std::get<0>(coefficients_working_);
-		ar & std::get<1>(coefficients_working_);
-	}
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        ar & num_vars_;
+        ar & homogeneous_;
+        ar & precision_;
+        ar & coefficients_highest_precision_;
+        ar & std::get<0>(coefficients_working_);
+        ar & std::get<1>(coefficients_working_);
+    }
 };
 
 } // namespace blocks

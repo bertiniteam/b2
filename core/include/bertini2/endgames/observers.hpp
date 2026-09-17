@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -37,7 +37,7 @@
 
 namespace bertini {
 
-	namespace endgame{
+    namespace endgame{
 
 
 /**
@@ -56,54 +56,54 @@ virtual ~GoryDetailLogger() = default;
 
 virtual ObserveResult Observe(AnyEvent const& e) override
 {
-	if(auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "time advanced " << p->Get().LatestTime();
-	}
-	
-	else if (auto p = dynamic_cast<const SampleRefined<EmitterT>*>(&e))
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "refined a sample, huzzah";
-	}
+    if(auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "time advanced " << p->Get().LatestTime();
+    }
 
-	else if (auto p = dynamic_cast<const CircleAdvanced<EmitterT>*>(&e))
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "advanced around the circle, to " << p->NewSample()<< " at time " << p->NewTime();
-	}
+    else if (auto p = dynamic_cast<const SampleRefined<EmitterT>*>(&e))
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "refined a sample, huzzah";
+    }
 
-	else if (auto p = dynamic_cast<const ClosedLoop<EmitterT>*>(&e))
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "closed a loop, cycle number " << p->Get().CycleNumber();
-	}
-	else if (auto p = dynamic_cast<const ApproximatedRoot<EmitterT>*>(&e))
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "approximated the target root.  approximation " << p->Get().template FinalApproximation<BCT>() << " with error " << p->Get().ApproximateError();
-	}
+    else if (auto p = dynamic_cast<const CircleAdvanced<EmitterT>*>(&e))
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "advanced around the circle, to " << p->NewSample()<< " at time " << p->NewTime();
+    }
 
-	else if (auto p = dynamic_cast<const PrecisionChanged<AMPEndgame>*>(&e))
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "precision changed from  " << p->Previous() << " to " << p->Next();
-	}
+    else if (auto p = dynamic_cast<const ClosedLoop<EmitterT>*>(&e))
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "closed a loop, cycle number " << p->Get().CycleNumber();
+    }
+    else if (auto p = dynamic_cast<const ApproximatedRoot<EmitterT>*>(&e))
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "approximated the target root.  approximation " << p->Get().template FinalApproximation<BCT>() << " with error " << p->Get().ApproximateError();
+    }
 
-	else if (auto p = dynamic_cast<const InEGOperatingZone<EmitterT>*>(&e))
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "made it to the endgame operating zone at time " << p->Get().LatestTime();
-	}
+    else if (auto p = dynamic_cast<const PrecisionChanged<AMPEndgame>*>(&e))
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "precision changed from  " << p->Previous() << " to " << p->Next();
+    }
 
-	else if(auto p = dynamic_cast<const Converged<EmitterT>*>(&e))
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "converged at time " << p->Get().LatestTime() << " with result " << p->Get().template FinalApproximation<BCT>() << " and residual " << p->Get().ApproximateError();
-	}
-	else if (auto p = dynamic_cast<const Initializing<EmitterT>*>(&e))
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "starting running " << boost::typeindex::type_id<EmitterT>().pretty_name();
-	}
-	else
-	{
-		BOOST_LOG_TRIVIAL(severity_level::debug) << "unprogrammed response for event of type " << boost::typeindex::type_id_runtime(e).pretty_name();
-	}
+    else if (auto p = dynamic_cast<const InEGOperatingZone<EmitterT>*>(&e))
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "made it to the endgame operating zone at time " << p->Get().LatestTime();
+    }
 
-	return ObserveResult::KeepObserving;
+    else if(auto p = dynamic_cast<const Converged<EmitterT>*>(&e))
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "converged at time " << p->Get().LatestTime() << " with result " << p->Get().template FinalApproximation<BCT>() << " and residual " << p->Get().ApproximateError();
+    }
+    else if (auto p = dynamic_cast<const Initializing<EmitterT>*>(&e))
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "starting running " << boost::typeindex::type_id<EmitterT>().pretty_name();
+    }
+    else
+    {
+        BOOST_LOG_TRIVIAL(severity_level::debug) << "unprogrammed response for event of type " << boost::typeindex::type_id_runtime(e).pretty_name();
+    }
+
+    return ObserveResult::KeepObserving;
 }
 
 }; // gory detail
@@ -144,32 +144,32 @@ Vec<BCT> converged_point;                      ///< The converged root point cap
 
 virtual ObserveResult Observe(AnyEvent const& e) override
 {
-	++num_events;
-	if (auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
-	{ ++num_time_advanced; (void)p->Get().LatestTime(); }
+    ++num_events;
+    if (auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
+    { ++num_time_advanced; (void)p->Get().LatestTime(); }
 
-	else if (dynamic_cast<const SampleRefined<EmitterT>*>(&e))
-	{ ++num_sample_refined; }
+    else if (dynamic_cast<const SampleRefined<EmitterT>*>(&e))
+    { ++num_sample_refined; }
 
-	else if (auto p = dynamic_cast<const CircleAdvanced<EmitterT>*>(&e))
-	{ ++num_circle_advanced; last_circle_point = p->NewSample(); last_circle_time = p->NewTime(); }
+    else if (auto p = dynamic_cast<const CircleAdvanced<EmitterT>*>(&e))
+    { ++num_circle_advanced; last_circle_point = p->NewSample(); last_circle_time = p->NewTime(); }
 
-	else if (dynamic_cast<const ClosedLoop<EmitterT>*>(&e))
-	{ ++num_closed_loop; }
+    else if (dynamic_cast<const ClosedLoop<EmitterT>*>(&e))
+    { ++num_closed_loop; }
 
-	else if (auto p = dynamic_cast<const ApproximatedRoot<EmitterT>*>(&e))
-	{ ++num_approximated_root; (void)p->Get().template FinalApproximation<BCT>(); (void)p->Get().ApproximateError(); }
+    else if (auto p = dynamic_cast<const ApproximatedRoot<EmitterT>*>(&e))
+    { ++num_approximated_root; (void)p->Get().template FinalApproximation<BCT>(); (void)p->Get().ApproximateError(); }
 
-	else if (dynamic_cast<const InEGOperatingZone<EmitterT>*>(&e))
-	{ ++num_in_eg_zone; }
+    else if (dynamic_cast<const InEGOperatingZone<EmitterT>*>(&e))
+    { ++num_in_eg_zone; }
 
-	else if (auto p = dynamic_cast<const Converged<EmitterT>*>(&e))
-	{ ++num_converged; converged_point = p->Get().template FinalApproximation<BCT>(); (void)p->Get().LatestTime(); }
+    else if (auto p = dynamic_cast<const Converged<EmitterT>*>(&e))
+    { ++num_converged; converged_point = p->Get().template FinalApproximation<BCT>(); (void)p->Get().LatestTime(); }
 
-	else if (dynamic_cast<const PrecisionChanged<AMPEndgame>*>(&e))
-	{ ++num_precision_changed; }
+    else if (dynamic_cast<const PrecisionChanged<AMPEndgame>*>(&e))
+    { ++num_precision_changed; }
 
-	return ObserveResult::KeepObserving;
+    return ObserveResult::KeepObserving;
 }
 
 }; // EventRecorder
@@ -240,14 +240,14 @@ size_t num_precision_increases = 0;   ///< How many times the endgame raised its
 /// \brief Forget everything collected so far, so one collector can be reused across paths.
 void Clear()
 {
-	path_samples.clear();          path_times.clear();
-	circle_samples.clear();        circle_times.clear();
-	approximations.clear();        approximation_times.clear();
-	approximation_errors.clear();  cycle_numbers.clear();
-	advance_times.clear();
-	run_path_starts.clear();       run_circle_starts.clear();
-	run_approx_starts.clear();
-	num_precision_increases = 0;
+    path_samples.clear();          path_times.clear();
+    circle_samples.clear();        circle_times.clear();
+    approximations.clear();        approximation_times.clear();
+    approximation_errors.clear();  cycle_numbers.clear();
+    advance_times.clear();
+    run_path_starts.clear();       run_circle_starts.clear();
+    run_approx_starts.clear();
+    num_precision_increases = 0;
 }
 
 /// \return The number of endgame runs observed -- the number of paths, when attached to a solver.
@@ -258,67 +258,67 @@ size_t NumSamples() const { return path_samples.size(); }
 
 virtual ObserveResult Observe(AnyEvent const& e) override
 {
-	if (auto p = dynamic_cast<const ComputedSamplePoint<EmitterT>*>(&e))
-	{
-		path_samples.push_back(p->NewSample());
-		path_times.push_back(p->NewTime());
-	}
+    if (auto p = dynamic_cast<const ComputedSamplePoint<EmitterT>*>(&e))
+    {
+        path_samples.push_back(p->NewSample());
+        path_times.push_back(p->NewTime());
+    }
 
-	else if (auto p = dynamic_cast<const CircleAdvanced<EmitterT>*>(&e))
-	{
-		circle_samples.push_back(p->NewSample());
-		circle_times.push_back(p->NewTime());
-	}
+    else if (auto p = dynamic_cast<const CircleAdvanced<EmitterT>*>(&e))
+    {
+        circle_samples.push_back(p->NewSample());
+        circle_times.push_back(p->NewTime());
+    }
 
-	else if (auto p = dynamic_cast<const ApproximatedRoot<EmitterT>*>(&e))
-	{
-		approximations.push_back(p->Get().template FinalApproximation<BCT>());
-		approximation_times.push_back(p->Get().LatestTime());
-		approximation_errors.push_back(p->Get().ApproximateError());
-		cycle_numbers.push_back(p->Get().CycleNumber());
-	}
+    else if (auto p = dynamic_cast<const ApproximatedRoot<EmitterT>*>(&e))
+    {
+        approximations.push_back(p->Get().template FinalApproximation<BCT>());
+        approximation_times.push_back(p->Get().LatestTime());
+        approximation_errors.push_back(p->Get().ApproximateError());
+        cycle_numbers.push_back(p->Get().CycleNumber());
+    }
 
-	else if (auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
-	{
-		advance_times.push_back(p->Get().LatestTime());
-	}
+    else if (auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))
+    {
+        advance_times.push_back(p->Get().LatestTime());
+    }
 
-	else if (dynamic_cast<const Initializing<EmitterT>*>(&e))
-	{
-		run_path_starts.push_back(path_samples.size());
-		run_circle_starts.push_back(circle_samples.size());
-		run_approx_starts.push_back(approximations.size());
-	}
+    else if (dynamic_cast<const Initializing<EmitterT>*>(&e))
+    {
+        run_path_starts.push_back(path_samples.size());
+        run_circle_starts.push_back(circle_samples.size());
+        run_approx_starts.push_back(approximations.size());
+    }
 
-	else if (dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
-	{
-		++num_precision_increases;
-	}
+    else if (dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
+    {
+        ++num_precision_increases;
+    }
 
-	else if (dynamic_cast<const SamplesRecomputedAtHigherPrecision<EmitterT>*>(&e))
-	{
-		// The endgame needed a higher precision before it had its first approximation, and
-		// tracks its sample window again at the new precision.  The samples it announced at
-		// the lower precision are superseded: drop them as the endgame does, so the sequence
-		// holds one approach at one precision and its times keep marching toward the target.
-		if (!run_path_starts.empty())
-		{
-			path_samples.resize(run_path_starts.back());
-			path_times.resize(run_path_starts.back());
-			circle_samples.resize(run_circle_starts.back());
-			circle_times.resize(run_circle_starts.back());
-			approximations.resize(run_approx_starts.back());
-			approximation_times.resize(run_approx_starts.back());
-			approximation_errors.resize(run_approx_starts.back());
-			cycle_numbers.resize(run_approx_starts.back());
-		}
-	}
+    else if (dynamic_cast<const SamplesRecomputedAtHigherPrecision<EmitterT>*>(&e))
+    {
+        // The endgame needed a higher precision before it had its first approximation, and
+        // tracks its sample window again at the new precision.  The samples it announced at
+        // the lower precision are superseded: drop them as the endgame does, so the sequence
+        // holds one approach at one precision and its times keep marching toward the target.
+        if (!run_path_starts.empty())
+        {
+            path_samples.resize(run_path_starts.back());
+            path_times.resize(run_path_starts.back());
+            circle_samples.resize(run_circle_starts.back());
+            circle_times.resize(run_circle_starts.back());
+            approximations.resize(run_approx_starts.back());
+            approximation_times.resize(run_approx_starts.back());
+            approximation_errors.resize(run_approx_starts.back());
+            cycle_numbers.resize(run_approx_starts.back());
+        }
+    }
 
-	return ObserveResult::KeepObserving;
+    return ObserveResult::KeepObserving;
 }
 
 }; // SampleSequenceCollector
 
 
-	} //re: namespace endgames
+    } //re: namespace endgames
 }// re: namespace bertini

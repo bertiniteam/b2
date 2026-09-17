@@ -26,19 +26,19 @@
 namespace bertini {
 namespace node {
 
-	// GatherVariables is the variable-specific case of the general Find (sympy's find): the
-	// one traversal lives in find.cpp, and these delegate to Find<Variable>.
+    // GatherVariables is the variable-specific case of the general Find (sympy's find): the
+    // one traversal lives in find.cpp, and these delegate to Find<Variable>.
 
-	VariableGroup GatherVariables(std::shared_ptr<const Node> const& n)
-	{
-		return Find<Variable>(n);
-	}
+    VariableGroup GatherVariables(std::shared_ptr<const Node> const& n)
+    {
+        return Find<Variable>(n);
+    }
 
-	VariableGroup GatherVariables(std::vector<std::shared_ptr<Node>> const& functions)
-	{
-		std::vector<std::shared_ptr<const Node>> roots(functions.begin(), functions.end());
-		return Find<Variable>(roots);
-	}
+    VariableGroup GatherVariables(std::vector<std::shared_ptr<Node>> const& functions)
+    {
+        std::vector<std::shared_ptr<const Node>> roots(functions.begin(), functions.end());
+        return Find<Variable>(roots);
+    }
 
 } // namespace node
 } // namespace bertini

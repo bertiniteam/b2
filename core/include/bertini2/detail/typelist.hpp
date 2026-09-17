@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -40,22 +40,22 @@ To construct one, feed the types you want into the template arguments of the Typ
 */
 template <typename... Ts>
 struct TypeList {
-	using ToTuple = std::tuple<Ts...>;  ///< A std::tuple of the listed types.
-	using ToTupleOfVec = std::tuple<Vec<Ts>...>;  ///< A std::tuple of Vec<T> for each listed type.
-	using ToTupleOfReal = std::tuple<typename Eigen::NumTraits<Ts>::Real...>;  ///< A std::tuple of the real companion of each listed type.
+    using ToTuple = std::tuple<Ts...>;  ///< A std::tuple of the listed types.
+    using ToTupleOfVec = std::tuple<Vec<Ts>...>;  ///< A std::tuple of Vec<T> for each listed type.
+    using ToTupleOfReal = std::tuple<typename Eigen::NumTraits<Ts>::Real...>;  ///< A std::tuple of the real companion of each listed type.
 
-	/// \brief A std::tuple of ContT<T> for each listed type.
-	template <template<typename> class ContT>
-	using ToTupleOfCont = std::tuple<ContT<Ts>...>;
+    /// \brief A std::tuple of ContT<T> for each listed type.
+    template <template<typename> class ContT>
+    using ToTupleOfCont = std::tuple<ContT<Ts>...>;
 
 
-	/// \brief Reorder the given arguments into a tuple of the listed types' order.
-	template<typename ...Rs>
-	static
-	std::tuple<Ts...> Unpermute(const Rs& ...rs)
-	{
-		return bertini::Unpermute<Ts...>(rs...);
-	}
+    /// \brief Reorder the given arguments into a tuple of the listed types' order.
+    template<typename ...Rs>
+    static
+    std::tuple<Ts...> Unpermute(const Rs& ...rs)
+    {
+        return bertini::Unpermute<Ts...>(rs...);
+    }
 };
 
 
@@ -74,7 +74,7 @@ struct ListCat {};
 template <typename ...Ts, typename ... Rs>
 struct ListCat <TypeList<Ts...>, TypeList<Rs...>>
 {
-	using type = TypeList<Ts..., Rs...>;  ///< The concatenated TypeList.
+    using type = TypeList<Ts..., Rs...>;  ///< The concatenated TypeList.
 };
 
 /**
@@ -85,12 +85,7 @@ struct ListCat <TypeList<Ts...>, TypeList<Rs...>>
 template <typename ...Ps, typename ... Qs, typename ... Rs>
 struct ListCat <TypeList<Ps...>, TypeList<Qs...>, TypeList<Rs...>>
 {
-	using type = TypeList<Ps..., Qs..., Rs...>;  ///< The concatenated TypeList.
+    using type = TypeList<Ps..., Qs..., Rs...>;  ///< The concatenated TypeList.
 };
 
 }} // close namespaces
-
-
-
-
-

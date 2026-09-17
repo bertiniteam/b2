@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include <iostream>
@@ -74,6 +74,3 @@ unsigned ambient_precision = 50;
 #include "test/endgames/generic_pseg_test.hpp"
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-

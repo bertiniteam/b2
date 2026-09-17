@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // include/bertini2/function_tree/symbols/variable.hpp:  Declares the class Variable.
@@ -37,106 +37,106 @@
 
 namespace  bertini {
 namespace node{
-	/**
-	\brief Represents variable leaves in the function tree.
+    /**
+    \brief Represents variable leaves in the function tree.
 
-	This class represents variable leaves in the function tree.
+    This class represents variable leaves in the function tree.
 
-	When differentiated, produces a differential referring to it.
-	*/
-	class Variable : public NamedSymbol
-	{
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-		
-
-		/// \brief Construct (and intern) a Variable node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<Variable> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<Variable>(Intern(std::shared_ptr<Node>( new Variable(ts...) )));
-		}
-
-	private:
-		Variable(std::string new_name);
-		
-	public:
-		
-		
-		virtual ~Variable() = default;
-
-		// variables are canonical BY NAME -- Make("x") interns to a single shared x,
-		// so system1's x IS system2's x.  (Value/eval-state lives on that shared node until C2
-		// moves it into a per-thread eval context.)
-		std::size_t HashImpl() const override
-		{
-			std::size_t h = typeid(Variable).hash_code();
-			HashCombine(h, std::hash<std::string>{}(name()));
-			return h;
-		}
-		bool IsSame(Node const& other) const override
-		{
-			auto o = dynamic_cast<Variable const*>(&other);
-			return o && name() == o->name();
-		}
+    When differentiated, produces a differential referring to it.
+    */
+    class Variable : public NamedSymbol
+    {
+    public:
+        BERTINI_DEFAULT_VISITABLE()
 
 
-		/// \brief Convert to the variable's name string.
-		explicit operator std::string(){return name();}
-		
-		
-		
-		/**
-		 Differentiates a variable.
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        /// \brief Construct (and intern) a Variable node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<Variable> Make(Ts&& ...ts){
+            return std::static_pointer_cast<Variable>(Intern(std::shared_ptr<Node>( new Variable(ts...) )));
+        }
 
-		/**
-		 Substitutes this variable: if its name is a key in `substitutions`, returns the associated
-		 replacement node; otherwise returns this variable unchanged.  This is the match site of the
-		 tree-wide Node::Subs.
+    private:
+        Variable(std::string new_name);
 
-		 \param substitutions A map from variable name to the node to put in that variable's place.
-		 \return The replacement node if this variable is named in the map, else this variable.
-		 */
-		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
-
-		/**
-		Compute the degree with respect to a single variable.
-
-		If this is the variable, then the degree is 1.  Otherwise, 0.
-		*/
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+    public:
 
 
-		int Degree(VariableGroup const& vars) const override;
+        virtual ~Variable() = default;
 
-		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
+        // variables are canonical BY NAME -- Make("x") interns to a single shared x,
+        // so system1's x IS system2's x.  (Value/eval-state lives on that shared node until C2
+        // moves it into a per-thread eval context.)
+        std::size_t HashImpl() const override
+        {
+            std::size_t h = typeid(Variable).hash_code();
+            HashCombine(h, std::hash<std::string>{}(name()));
+            return h;
+        }
+        bool IsSame(Node const& other) const override
+        {
+            auto o = dynamic_cast<Variable const*>(&other);
+            return o && name() == o->name();
+        }
 
 
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
+        /// \brief Convert to the variable's name string.
+        explicit operator std::string(){return name();}
 
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override;
 
-	protected:
 
-		Variable();
-	private:
+        /**
+         Differentiates a variable.
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 
-		friend class boost::serialization::access;
+        /**
+         Substitutes this variable: if its name is a key in `substitutions`, returns the associated
+         replacement node; otherwise returns this variable unchanged.  This is the match site of the
+         tree-wide Node::Subs.
 
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<NamedSymbol>(*this);
-		}
+         \param substitutions A map from variable name to the node to put in that variable's place.
+         \return The replacement node if this variable is named in the map, else this variable.
+         */
+        std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
 
-	};
-	
+        /**
+        Compute the degree with respect to a single variable.
 
-	
+        If this is the variable, then the degree is 1.  Otherwise, 0.
+        */
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+
+        int Degree(VariableGroup const& vars) const override;
+
+        std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
+
+
+        bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /**
+        Check for homogeneity, with respect to a variable group.
+        */
+        bool IsHomogeneous(VariableGroup const& vars) const override;
+
+    protected:
+
+        Variable();
+    private:
+
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<NamedSymbol>(*this);
+        }
+
+    };
+
+
+
 
 } // re: namespace node
 } // re: namespace bertini

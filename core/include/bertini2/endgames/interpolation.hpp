@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -28,24 +28,24 @@
 #include "bertini2/common/config.hpp"
 
 namespace bertini{
-	namespace endgame{
+    namespace endgame{
 
 /**
 
 \brief Estimates the root to interpolating polynomial.
 
-Input: 
-		target_time is the time value that we wish to interpolate at.
-		samples are space values that correspond to the time values in times. 
-	 	derivatives are the dx_dt or dx_ds values at the (time,sample) values.
+Input:
+        target_time is the time value that we wish to interpolate at.
+        samples are space values that correspond to the time values in times.
+        derivatives are the dx_dt or dx_ds values at the (time,sample) values.
 
-Output: 
-		Since we have a target_time the function returns the corrsponding space value at that time. 
+Output:
+        Since we have a target_time the function returns the corrsponding space value at that time.
 
-Details: 
-		We compare our approximations to the tracked value to come up with the cycle number. 
-		Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we 
-		say we have converged. 
+Details:
+        We compare our approximations to the tracked value to come up with the cycle number.
+        Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we
+        say we have converged.
 
 \param target_time The time value that we wish to interpolate at.
 \param num_sample_points The number of (time, sample) points used in the interpolation.
@@ -55,72 +55,72 @@ Details:
 \param shift_from Which end of the sample containers to interpolate from.
 
 \tparam ComplexT The complex number type.
-*/			
-template<typename ComplexT>		
-	Vec<ComplexT> HermiteInterpolateAndSolve(ComplexT const& target_time, const unsigned int num_sample_points, const TimeCont<ComplexT> & times, const SampCont<ComplexT> & samples, const SampCont<ComplexT> & derivatives, ContStart shift_from = ContStart::Back)
+*/
+template<typename ComplexT>
+    Vec<ComplexT> HermiteInterpolateAndSolve(ComplexT const& target_time, const unsigned int num_sample_points, const TimeCont<ComplexT> & times, const SampCont<ComplexT> & samples, const SampCont<ComplexT> & derivatives, ContStart shift_from = ContStart::Back)
 {
-	assert((times.size() >= num_sample_points) && "must have sufficient number of sample times");
-	assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
-	assert((derivatives.size() >= num_sample_points) && "must have sufficient number of derivatives");
-
-	
-	unsigned num_t, num_s, num_d;
-	if (shift_from == ContStart::Back)
-	{
-		num_t = static_cast<unsigned>(times.size()-1);
-		num_s = static_cast<unsigned>(samples.size()-1);
-		num_d = static_cast<unsigned>(derivatives.size()-1);
-	}
-	else
-	{
-		num_t = num_s = num_d = num_sample_points-1;
-	}
-
-	Mat< Vec<ComplexT> > space_differences(2*num_sample_points,2*num_sample_points);
-	Vec<ComplexT> time_differences(2*num_sample_points);
+    assert((times.size() >= num_sample_points) && "must have sufficient number of sample times");
+    assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
+    assert((derivatives.size() >= num_sample_points) && "must have sufficient number of derivatives");
 
 
-	for(unsigned int ii=0; ii<num_sample_points; ++ii)
-	{ 
-		space_differences(2*ii,0)   = samples[    num_s-ii];		/*  F[2*i][0]    = samples[i];    */
-		space_differences(2*ii+1,0) = samples[    num_s-ii]; 	/*  F[2*i+1][0]  = samples[i];    */
-		space_differences(2*ii+1,1) = derivatives[num_d-ii];		/*  F[2*i+1][1]  = derivatives[i]; */
-		time_differences(2*ii)      = times[      num_t-ii];		/*  z[2*i]       = times[i];       */
-		time_differences(2*ii+1)    = times[      num_t-ii];		/*  z[2*i+1]     = times[i];       */
-	}
+    unsigned num_t, num_s, num_d;
+    if (shift_from == ContStart::Back)
+    {
+        num_t = static_cast<unsigned>(times.size()-1);
+        num_s = static_cast<unsigned>(samples.size()-1);
+        num_d = static_cast<unsigned>(derivatives.size()-1);
+    }
+    else
+    {
+        num_t = num_s = num_d = num_sample_points-1;
+    }
 
-	//Add first round of finite differences to fill out rest of matrix. 
-	for(unsigned int ii=1; ii< num_sample_points; ++ii)
-	{
-		space_differences(2*ii,1) = (space_differences(2*ii,0) - space_differences(2*ii-1,0)) / (time_differences(2*ii) - time_differences(2*ii-1));
-	
-	}
+    Mat< Vec<ComplexT> > space_differences(2*num_sample_points,2*num_sample_points);
+    Vec<ComplexT> time_differences(2*num_sample_points);
 
-	//Filling out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
-	for(unsigned int ii=2; ii < 2*num_sample_points; ++ii)
-	{
-		for(unsigned int jj=2; jj <=ii; ++jj)
-		{
-			space_differences(ii,jj) = 
-				(space_differences(ii,jj-1) - space_differences(ii-1,jj-1)) 
-					/ 
-				(time_differences(ii) - time_differences(ii-jj));						
-		}
-	}
 
-	//The interpolant in Newton form is  P(x) = sum_k a_k prod_{j<k}(x - z_j),  with a_k the
-	//divided-difference diagonal and z the DOUBLED node list (each time appears twice).
-	//Horner from the top: multiply by (x - z_k) before adding a_k, for k = 2n-2 down to 0.
-	//
-	//This loop previously indexed the doubled node list at half speed (z_ii paired with
-	//a_{2*ii}), evaluating a polynomial that is NOT the Hermite interpolant: it failed to
-	//reproduce even a cubic exactly.  The limit as the sample window slides to the target was
-	//unaffected, so the endgame still converged -- but at a degraded order, costing extra
-	//iterations and delivering poorer approximations than the samples support.
-	Vec<ComplexT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1);
-	for (int k = 2*static_cast<int>(num_sample_points) - 2; k >= 0; --k)
-		Result = (Result*(target_time - time_differences(k)) + space_differences(k,k)).eval();
-	return Result;
+    for(unsigned int ii=0; ii<num_sample_points; ++ii)
+    {
+        space_differences(2*ii,0)   = samples[    num_s-ii];        /*  F[2*i][0]    = samples[i];    */
+        space_differences(2*ii+1,0) = samples[    num_s-ii];    /*  F[2*i+1][0]  = samples[i];    */
+        space_differences(2*ii+1,1) = derivatives[num_d-ii];        /*  F[2*i+1][1]  = derivatives[i]; */
+        time_differences(2*ii)      = times[      num_t-ii];        /*  z[2*i]       = times[i];       */
+        time_differences(2*ii+1)    = times[      num_t-ii];        /*  z[2*i+1]     = times[i];       */
+    }
+
+    //Add first round of finite differences to fill out rest of matrix.
+    for(unsigned int ii=1; ii< num_sample_points; ++ii)
+    {
+        space_differences(2*ii,1) = (space_differences(2*ii,0) - space_differences(2*ii-1,0)) / (time_differences(2*ii) - time_differences(2*ii-1));
+
+    }
+
+    //Filling out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
+    for(unsigned int ii=2; ii < 2*num_sample_points; ++ii)
+    {
+        for(unsigned int jj=2; jj <=ii; ++jj)
+        {
+            space_differences(ii,jj) =
+                (space_differences(ii,jj-1) - space_differences(ii-1,jj-1))
+                    /
+                (time_differences(ii) - time_differences(ii-jj));
+        }
+    }
+
+    //The interpolant in Newton form is  P(x) = sum_k a_k prod_{j<k}(x - z_j),  with a_k the
+    //divided-difference diagonal and z the DOUBLED node list (each time appears twice).
+    //Horner from the top: multiply by (x - z_k) before adding a_k, for k = 2n-2 down to 0.
+    //
+    //This loop previously indexed the doubled node list at half speed (z_ii paired with
+    //a_{2*ii}), evaluating a polynomial that is NOT the Hermite interpolant: it failed to
+    //reproduce even a cubic exactly.  The limit as the sample window slides to the target was
+    //unaffected, so the endgame still converged -- but at a degraded order, costing extra
+    //iterations and delivering poorer approximations than the samples support.
+    Vec<ComplexT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1);
+    for (int k = 2*static_cast<int>(num_sample_points) - 2; k >= 0; --k)
+        Result = (Result*(target_time - time_differences(k)) + space_differences(k,k)).eval();
+    return Result;
 } //re: HermiteInterpolateAndSolve
 
 }}  // re: namespaces

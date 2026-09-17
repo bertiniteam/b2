@@ -32,8 +32,3 @@
 
 #define BERTINI_TEST_MODULE "blackbox"
 #include "test/utility/enable_logging.hpp"
-
-
-
-
-

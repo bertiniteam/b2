@@ -40,143 +40,143 @@ BOOST_AUTO_TEST_SUITE(structural_hash)
 
 BOOST_AUTO_TEST_CASE(equal_integers_are_same_and_hash_equal)
 {
-	auto a = Integer::Make(7);
-	auto b = Integer::Make(7);
-	BOOST_CHECK(a->IsSame(*b));
-	BOOST_CHECK(b->IsSame(*a));
-	BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
+    auto a = Integer::Make(7);
+    auto b = Integer::Make(7);
+    BOOST_CHECK(a->IsSame(*b));
+    BOOST_CHECK(b->IsSame(*a));
+    BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
 }
 
 BOOST_AUTO_TEST_CASE(distinct_integers_are_not_same)
 {
-	auto a = Integer::Make(7);
-	auto b = Integer::Make(8);
-	BOOST_CHECK(!a->IsSame(*b));
-	// hashes are allowed to collide in principle, but for these they should differ
-	BOOST_CHECK(a->Hash() != b->Hash());
+    auto a = Integer::Make(7);
+    auto b = Integer::Make(8);
+    BOOST_CHECK(!a->IsSame(*b));
+    // hashes are allowed to collide in principle, but for these they should differ
+    BOOST_CHECK(a->Hash() != b->Hash());
 }
 
 BOOST_AUTO_TEST_CASE(integer_and_rational_of_same_value_are_not_same)
 {
-	auto i = Integer::Make(2);
-	auto r = Rational::Make("2", "0");
-	BOOST_CHECK(!i->IsSame(*r));   // different dynamic type
+    auto i = Integer::Make(2);
+    auto r = Rational::Make("2", "0");
+    BOOST_CHECK(!i->IsSame(*r));   // different dynamic type
 }
 
 BOOST_AUTO_TEST_CASE(equal_rationals_are_same)
 {
-	auto a = Rational::Make("3/4", "0");
-	auto b = Rational::Make("3/4", "0");
-	BOOST_CHECK(a->IsSame(*b));
-	BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
+    auto a = Rational::Make("3/4", "0");
+    auto b = Rational::Make("3/4", "0");
+    BOOST_CHECK(a->IsSame(*b));
+    BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
 }
 
 // ---- variables are identity (until interned by name) ----
 
 BOOST_AUTO_TEST_CASE(same_name_variables_are_the_same)
 {
-	// variables are canonical by name -- two Make("x") are the SAME node.
-	auto x1 = Variable::Make("x");
-	auto x2 = Variable::Make("x");
-	BOOST_CHECK(x1->IsSame(*x2));
-	BOOST_CHECK_EQUAL(x1.get(), x2.get());
-	BOOST_CHECK_EQUAL(x1->Hash(), x2->Hash());
-	// different names remain distinct
-	BOOST_CHECK(!x1->IsSame(*Variable::Make("y")));
+    // variables are canonical by name -- two Make("x") are the SAME node.
+    auto x1 = Variable::Make("x");
+    auto x2 = Variable::Make("x");
+    BOOST_CHECK(x1->IsSame(*x2));
+    BOOST_CHECK_EQUAL(x1.get(), x2.get());
+    BOOST_CHECK_EQUAL(x1->Hash(), x2->Hash());
+    // different names remain distinct
+    BOOST_CHECK(!x1->IsSame(*Variable::Make("y")));
 }
 
 // ---- operators: same structure over shared children -> same ----
 
 BOOST_AUTO_TEST_CASE(sums_over_shared_children_are_same)
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	Nd a = x + y;
-	Nd b = x + y;       // same x, y objects
-	BOOST_CHECK(a->IsSame(*b));
-	BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd a = x + y;
+    Nd b = x + y;       // same x, y objects
+    BOOST_CHECK(a->IsSame(*b));
+    BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
 }
 
 BOOST_AUTO_TEST_CASE(commutative_sum_canonicalizes_to_same)
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	Nd a = x + y;
-	Nd b = y + x;       // canonical operand ordering (on by default) -> same node
-	BOOST_CHECK(a->IsSame(*b));
-	BOOST_CHECK_EQUAL(a.get(), b.get());
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd a = x + y;
+    Nd b = y + x;       // canonical operand ordering (on by default) -> same node
+    BOOST_CHECK(a->IsSame(*b));
+    BOOST_CHECK_EQUAL(a.get(), b.get());
 }
 
 BOOST_AUTO_TEST_CASE(sum_vs_difference_differ_by_signs)
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	Nd a = x + y;
-	Nd b = x - y;       // same operands, different signs
-	BOOST_CHECK(!a->IsSame(*b));
-	BOOST_CHECK(a->Hash() != b->Hash());
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd a = x + y;
+    Nd b = x - y;       // same operands, different signs
+    BOOST_CHECK(!a->IsSame(*b));
+    BOOST_CHECK(a->Hash() != b->Hash());
 }
 
 BOOST_AUTO_TEST_CASE(mult_vs_divide_differ)
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	Nd a = x * y;
-	Nd b = x / y;
-	BOOST_CHECK(!a->IsSame(*b));
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd a = x * y;
+    Nd b = x / y;
+    BOOST_CHECK(!a->IsSame(*b));
 }
 
 BOOST_AUTO_TEST_CASE(interning_collapses_equal_subtrees)
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	auto z = Variable::Make("z");
-	// With hash-consing, the inner (x+y) is itself interned, so building (x+y)*z
-	// twice returns the SAME interned object -- you can no longer make distinct-but-equal
-	// subtrees.  (That is the whole point of hash-consing.)
-	Nd a = (x + y) * z;
-	Nd b = (x + y) * z;
-	BOOST_CHECK(a->IsSame(*b));
-	BOOST_CHECK_EQUAL(a.get(), b.get());   // literally the same node
-	BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    auto z = Variable::Make("z");
+    // With hash-consing, the inner (x+y) is itself interned, so building (x+y)*z
+    // twice returns the SAME interned object -- you can no longer make distinct-but-equal
+    // subtrees.  (That is the whole point of hash-consing.)
+    Nd a = (x + y) * z;
+    Nd b = (x + y) * z;
+    BOOST_CHECK(a->IsSame(*b));
+    BOOST_CHECK_EQUAL(a.get(), b.get());   // literally the same node
+    BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
 }
 
 BOOST_AUTO_TEST_CASE(transcendentals_distinguished_by_type)
 {
-	auto x = Variable::Make("x");
-	Nd s = sin(x);
-	Nd c = cos(x);
-	Nd s2 = sin(x);
-	BOOST_CHECK(s->IsSame(*s2));
-	BOOST_CHECK_EQUAL(s->Hash(), s2->Hash());
-	BOOST_CHECK(!s->IsSame(*c));        // sin vs cos: different concrete unary type
-	BOOST_CHECK(s->Hash() != c->Hash());
+    auto x = Variable::Make("x");
+    Nd s = sin(x);
+    Nd c = cos(x);
+    Nd s2 = sin(x);
+    BOOST_CHECK(s->IsSame(*s2));
+    BOOST_CHECK_EQUAL(s->Hash(), s2->Hash());
+    BOOST_CHECK(!s->IsSame(*c));        // sin vs cos: different concrete unary type
+    BOOST_CHECK(s->Hash() != c->Hash());
 }
 
 BOOST_AUTO_TEST_CASE(integer_power_folds_exponent)
 {
-	auto x = Variable::Make("x");
-	Nd a = pow(x, 2);
-	Nd b = pow(x, 2);
-	Nd c = pow(x, 3);
-	BOOST_CHECK(a->IsSame(*b));
-	BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
-	BOOST_CHECK(!a->IsSame(*c));        // different integer exponent
+    auto x = Variable::Make("x");
+    Nd a = pow(x, 2);
+    Nd b = pow(x, 2);
+    Nd c = pow(x, 3);
+    BOOST_CHECK(a->IsSame(*b));
+    BOOST_CHECK_EQUAL(a->Hash(), b->Hash());
+    BOOST_CHECK(!a->IsSame(*c));        // different integer exponent
 }
 
 // ---- interning unifies whole trees; hash is stable across precision ----
 
 BOOST_AUTO_TEST_CASE(interning_unifies_whole_trees_and_hash_ignores_precision)
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	// two identical builds -> the same interned node (constants Integer(3) and the operators
-	// all hash-cons), so there is no longer any distinct-but-equal pair to compare.
-	Nd f1 = (x + y) * x + Integer::Make(3) * y;
-	Nd f2 = (x + y) * x + Integer::Make(3) * y;
-	BOOST_CHECK(f1->IsSame(*f2));
-	BOOST_CHECK_EQUAL(f1.get(), f2.get());
-	BOOST_CHECK_EQUAL(f1->Hash(), f2->Hash());
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    // two identical builds -> the same interned node (constants Integer(3) and the operators
+    // all hash-cons), so there is no longer any distinct-but-equal pair to compare.
+    Nd f1 = (x + y) * x + Integer::Make(3) * y;
+    Nd f2 = (x + y) * x + Integer::Make(3) * y;
+    BOOST_CHECK(f1->IsSame(*f2));
+    BOOST_CHECK_EQUAL(f1.get(), f2.get());
+    BOOST_CHECK_EQUAL(f1->Hash(), f2->Hash());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // structural_hash

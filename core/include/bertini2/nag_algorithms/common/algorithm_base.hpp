@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -31,16 +31,15 @@ namespace bertini{
 
 namespace algorithm {
 
-	/// \brief Type-erased base for all nag algorithms, exposing a single Run() entry point.
-	struct AnyAlgorithm
-	{
+    /// \brief Type-erased base for all nag algorithms, exposing a single Run() entry point.
+    struct AnyAlgorithm
+    {
 
-		/// \brief Run the algorithm.
-		virtual
-		void Run() = 0;
+        /// \brief Run the algorithm.
+        virtual
+        void Run() = 0;
 
-		virtual ~AnyAlgorithm() = default;
-	};
+        virtual ~AnyAlgorithm() = default;
+    };
 }
 }
-

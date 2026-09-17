@@ -53,13 +53,13 @@ namespace parallel {
 template<typename T>
 void mpi_send_serialized(MPI_Comm comm, int dest, int tag, T const& obj)
 {
-	std::ostringstream oss;
-	{
-		boost::archive::binary_oarchive oa(oss);
-		oa << obj;
-	}
-	std::string const buf = oss.str();
-	MPI_Send(buf.data(), static_cast<int>(buf.size()), MPI_BYTE, dest, tag, comm);
+    std::ostringstream oss;
+    {
+        boost::archive::binary_oarchive oa(oss);
+        oa << obj;
+    }
+    std::string const buf = oss.str();
+    MPI_Send(buf.data(), static_cast<int>(buf.size()), MPI_BYTE, dest, tag, comm);
 }
 
 
@@ -74,22 +74,22 @@ this is safe to call with MPI_ANY_SOURCE even when the message is a single send.
 template<typename T>
 int mpi_recv_serialized_any(MPI_Comm comm, int tag, T& obj)
 {
-	MPI_Status probe_status;
-	MPI_Probe(MPI_ANY_SOURCE, tag, comm, &probe_status);
+    MPI_Status probe_status;
+    MPI_Probe(MPI_ANY_SOURCE, tag, comm, &probe_status);
 
-	int source = probe_status.MPI_SOURCE;
-	int count  = 0;
-	MPI_Get_count(&probe_status, MPI_BYTE, &count);
+    int source = probe_status.MPI_SOURCE;
+    int count  = 0;
+    MPI_Get_count(&probe_status, MPI_BYTE, &count);
 
-	std::string buf(static_cast<std::size_t>(count), '\0');
-	MPI_Status recv_status;
-	MPI_Recv(buf.data(), count, MPI_BYTE, source, tag, comm, &recv_status);
+    std::string buf(static_cast<std::size_t>(count), '\0');
+    MPI_Status recv_status;
+    MPI_Recv(buf.data(), count, MPI_BYTE, source, tag, comm, &recv_status);
 
-	std::istringstream iss(buf);
-	boost::archive::binary_iarchive ia(iss);
-	ia >> obj;
+    std::istringstream iss(buf);
+    boost::archive::binary_iarchive ia(iss);
+    ia >> obj;
 
-	return source;
+    return source;
 }
 
 
@@ -99,19 +99,19 @@ int mpi_recv_serialized_any(MPI_Comm comm, int tag, T& obj)
 template<typename T>
 void mpi_recv_serialized(MPI_Comm comm, int source, int tag, T& obj)
 {
-	MPI_Status probe_status;
-	MPI_Probe(source, tag, comm, &probe_status);
+    MPI_Status probe_status;
+    MPI_Probe(source, tag, comm, &probe_status);
 
-	int count = 0;
-	MPI_Get_count(&probe_status, MPI_BYTE, &count);
+    int count = 0;
+    MPI_Get_count(&probe_status, MPI_BYTE, &count);
 
-	std::string buf(static_cast<std::size_t>(count), '\0');
-	MPI_Status recv_status;
-	MPI_Recv(buf.data(), count, MPI_BYTE, source, tag, comm, &recv_status);
+    std::string buf(static_cast<std::size_t>(count), '\0');
+    MPI_Status recv_status;
+    MPI_Recv(buf.data(), count, MPI_BYTE, source, tag, comm, &recv_status);
 
-	std::istringstream iss(buf);
-	boost::archive::binary_iarchive ia(iss);
-	ia >> obj;
+    std::istringstream iss(buf);
+    boost::archive::binary_iarchive ia(iss);
+    ia >> obj;
 }
 
 
@@ -123,10 +123,10 @@ On non-root ranks, \p s is overwritten with the broadcast value.
 */
 inline void mpi_broadcast_string(MPI_Comm comm, std::string& s, int root)
 {
-	int len = static_cast<int>(s.size());
-	MPI_Bcast(&len, 1, MPI_INT, root, comm);
-	s.resize(static_cast<std::size_t>(len));
-	MPI_Bcast(s.data(), len, MPI_CHAR, root, comm);
+    int len = static_cast<int>(s.size());
+    MPI_Bcast(&len, 1, MPI_INT, root, comm);
+    s.resize(static_cast<std::size_t>(len));
+    MPI_Bcast(s.data(), len, MPI_CHAR, root, comm);
 }
 
 
@@ -140,26 +140,26 @@ homotopy / start system) rather than having each rank re-derive its own copy.
 template<typename T>
 void mpi_broadcast_serialized(MPI_Comm comm, T& obj, int root)
 {
-	int rank = 0;
-	MPI_Comm_rank(comm, &rank);
+    int rank = 0;
+    MPI_Comm_rank(comm, &rank);
 
-	std::string s;
-	if (rank == root)
-	{
-		std::ostringstream oss;
-		boost::archive::binary_oarchive oa(oss);
-		oa << obj;
-		s = oss.str();
-	}
+    std::string s;
+    if (rank == root)
+    {
+        std::ostringstream oss;
+        boost::archive::binary_oarchive oa(oss);
+        oa << obj;
+        s = oss.str();
+    }
 
-	mpi_broadcast_string(comm, s, root);
+    mpi_broadcast_string(comm, s, root);
 
-	if (rank != root)
-	{
-		std::istringstream iss(s);
-		boost::archive::binary_iarchive ia(iss);
-		ia >> obj;
-	}
+    if (rank != root)
+    {
+        std::istringstream iss(s);
+        boost::archive::binary_iarchive ia(iss);
+        ia >> obj;
+    }
 }
 
 

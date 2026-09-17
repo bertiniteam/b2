@@ -88,24 +88,24 @@ struct is_block : std::false_type {};
 
 template <typename B>
 struct is_block<B, std::void_t<
-	decltype(std::declval<const B&>().NumFunctions()),
-	decltype(std::declval<const B&>().DependsOnPathVariable()),
-	decltype(std::declval<const B&>().Precision()),
-	decltype(std::declval<const B&>().Precision(0u)),                 // the precision setter
-	decltype(std::declval<const B&>().Degrees()),
-	decltype(std::declval<const B&>().Degrees(std::declval<VariableGroup const&>())),
-	decltype(std::declval<const B&>().IsHomogeneous(std::declval<VariableGroup const&>())),
-	decltype(std::declval<const B&>().IsPolynomial(std::declval<VariableGroup const&>())),
-	// Homogenize mutates (e.g. LinearFormsBlock folds its constant column onto the hom var), so
-	// it is detected on a non-const B&.
-	decltype(std::declval<B&>().Homogenize(
-		std::declval<VariableGroup const&>(), std::declval<std::shared_ptr<node::Variable> const&>())),
-	decltype(std::declval<const B&>().template EvalInPlace<complex_dbl>(
-		std::declval<Eigen::Ref<Vec<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>())),
-	decltype(std::declval<const B&>().template JacobianInPlace<complex_dbl>(
-		std::declval<Eigen::Ref<Mat<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>())),
-	decltype(std::declval<const B&>().template TimeDerivInPlace<complex_dbl>(
-		std::declval<Eigen::Ref<Vec<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>()))
+    decltype(std::declval<const B&>().NumFunctions()),
+    decltype(std::declval<const B&>().DependsOnPathVariable()),
+    decltype(std::declval<const B&>().Precision()),
+    decltype(std::declval<const B&>().Precision(0u)),                 // the precision setter
+    decltype(std::declval<const B&>().Degrees()),
+    decltype(std::declval<const B&>().Degrees(std::declval<VariableGroup const&>())),
+    decltype(std::declval<const B&>().IsHomogeneous(std::declval<VariableGroup const&>())),
+    decltype(std::declval<const B&>().IsPolynomial(std::declval<VariableGroup const&>())),
+    // Homogenize mutates (e.g. LinearFormsBlock folds its constant column onto the hom var), so
+    // it is detected on a non-const B&.
+    decltype(std::declval<B&>().Homogenize(
+        std::declval<VariableGroup const&>(), std::declval<std::shared_ptr<node::Variable> const&>())),
+    decltype(std::declval<const B&>().template EvalInPlace<complex_dbl>(
+        std::declval<Eigen::Ref<Vec<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>())),
+    decltype(std::declval<const B&>().template JacobianInPlace<complex_dbl>(
+        std::declval<Eigen::Ref<Mat<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>())),
+    decltype(std::declval<const B&>().template TimeDerivInPlace<complex_dbl>(
+        std::declval<Eigen::Ref<Vec<complex_dbl>>>(), std::declval<Vec<complex_dbl> const&>(), std::declval<complex_dbl const&>()))
 >> : std::true_type {};
 
 /// \brief Convenience variable template: true iff B satisfies the polynomial-block evaluation interface.

@@ -46,156 +46,156 @@ yields an equivalent system.
 #include <vector>
 
 namespace bertini{
-	namespace classic{
+    namespace classic{
 
-		/**
-		\brief Emit the INPUT-section body of a system in classic syntax: the variable groups, any
-		named subexpressions (as `name = expr;` subfunctions, defined before the functions that use
-		them), and the functions (`function f0,f1,...;` then `f0 = ...;`).
+        /**
+        \brief Emit the INPUT-section body of a system in classic syntax: the variable groups, any
+        named subexpressions (as `name = expr;` subfunctions, defined before the functions that use
+        them), and the functions (`function f0,f1,...;` then `f0 = ...;`).
 
-		No `INPUT`/`END;` wrapper -- WriteClassicInput adds that.  Functions are named `f0, f1, ...`
-		positionally (Bertini 2 functions carry no user name after parsing).
-		*/
-		inline void EmitSystem(std::ostream& out, System const& sys)
-		{
-			auto emit_groups = [&out](char const* keyword, auto const& groups){
-				for (auto const& grp : groups)
-				{
-					out << keyword << " ";
-					for (size_t i = 0; i < grp.size(); ++i)
-						out << (i ? ", " : "") << *grp[i];
-					out << ";\n";
-				}
-			};
-			emit_groups("variable_group", sys.VariableGroups());
-			emit_groups("hom_variable_group", sys.HomVariableGroups());
+        No `INPUT`/`END;` wrapper -- WriteClassicInput adds that.  Functions are named `f0, f1, ...`
+        positionally (Bertini 2 functions carry no user name after parsing).
+        */
+        inline void EmitSystem(std::ostream& out, System const& sys)
+        {
+            auto emit_groups = [&out](char const* keyword, auto const& groups){
+                for (auto const& grp : groups)
+                {
+                    out << keyword << " ";
+                    for (size_t i = 0; i < grp.size(); ++i)
+                        out << (i ? ", " : "") << *grp[i];
+                    out << ";\n";
+                }
+            };
+            emit_groups("variable_group", sys.VariableGroups());
+            emit_groups("hom_variable_group", sys.HomVariableGroups());
 
-			// a homotopy is a system too: its path variable must be declared, or the functions that
-			// use it do not parse back and the file does not round-trip (b2#366)
-			if (sys.HavePathVariable())
-				out << "pathvariable " << *sys.GetPathVariable() << ";\n";
+            // a homotopy is a system too: its path variable must be declared, or the functions that
+            // use it do not parse back and the file does not round-trip (b2#366)
+            if (sys.HavePathVariable())
+                out << "pathvariable " << *sys.GetPathVariable() << ";\n";
 
-			auto functions = sys.NaturalFunctionsAsNodes();
+            auto functions = sys.NaturalFunctionsAsNodes();
 
-			// Named subexpressions are not stored separately; they are discovered inside the function
-			// trees (nested ones included).  Emit each as `name = expr;` before the functions, the way
-			// the classic parser expects a subfunction to be defined ahead of its use.
-			{
-				std::vector<std::shared_ptr<const node::Node>> roots(functions.begin(), functions.end());
-				for (auto const& ne : node::Find<node::NamedExpression>(roots))
-					out << ne->name() << " = " << ne->EntryNode() << ";\n";
-			}
+            // Named subexpressions are not stored separately; they are discovered inside the function
+            // trees (nested ones included).  Emit each as `name = expr;` before the functions, the way
+            // the classic parser expects a subfunction to be defined ahead of its use.
+            {
+                std::vector<std::shared_ptr<const node::Node>> roots(functions.begin(), functions.end());
+                for (auto const& ne : node::Find<node::NamedExpression>(roots))
+                    out << ne->name() << " = " << ne->EntryNode() << ";\n";
+            }
 
-			out << "function ";
-			for (size_t i = 0; i < functions.size(); ++i)
-				out << (i ? ", " : "") << "f" << i;
-			out << ";\n";
-			for (size_t i = 0; i < functions.size(); ++i)
-				out << "f" << i << " = " << functions[i] << ";\n";
-		}
+            out << "function ";
+            for (size_t i = 0; i < functions.size(); ++i)
+                out << (i ? ", " : "") << "f" << i;
+            out << ";\n";
+            for (size_t i = 0; i < functions.size(); ++i)
+                out << "f" << i << " = " << functions[i] << ";\n";
+        }
 
-		/// \brief The INPUT-section body as a string.  \see EmitSystem.
-		inline std::string SystemToClassic(System const& sys)
-		{
-			std::ostringstream ss;
-			EmitSystem(ss, sys);
-			return ss.str();
-		}
+        /// \brief The INPUT-section body as a string.  \see EmitSystem.
+        inline std::string SystemToClassic(System const& sys)
+        {
+            std::ostringstream ss;
+            EmitSystem(ss, sys);
+            return ss.str();
+        }
 
 
-		/**
-		\brief Tracking / precision settings to emit in the CONFIG section, in Bertini 1 terms.
+        /**
+        \brief Tracking / precision settings to emit in the CONFIG section, in Bertini 1 terms.
 
-		Defaults mirror Bertini 2's defaults for an adaptive zero-dim solve, so the emitted file runs
-		the *same* problem with the *same* knobs in Bertini 1 (the random start system aside).
-		*/
-		struct ClassicWriteOptions
-		{
-			int           tracktype              = 0;      ///< 0 = zero-dimensional solve
-			int           mptype                 = 2;      ///< 0 double, 1 fixed-multiple, 2 adaptive
-			int           odepredictor           = 5;      ///< 5 = RKF45 (the Bertini 2 default)
-			double        tracktolbeforeeg        = 1e-5;  ///< Newton tolerance before the endgame
-			double        tracktolduringeg        = 1e-6;  ///< Newton tolerance during the endgame
-			double        finaltol                = 1e-11; ///< final tracking tolerance
-			// step-size cadence -- governs how aggressively a path may take a big step (i.e. jump),
-			// so it must be controlled for a fair crossing-rate comparison against Bertini 1.
-			double        maxstepsize             = 0.1;   ///< MaxStepSize (B2 SteppingConfig default 1/10)
-			double        stepsuccessfactor       = 2.0;   ///< StepSuccessFactor (B2 default 2)
-			double        stepfailfactor          = 0.5;   ///< StepFailFactor (B2 default 1/2)
-			unsigned      stepsforincrease         = 5;     ///< StepsForIncrease (B2 default 5)
-			unsigned long maxnumbersteps          = 100000;///< MaxNumberSteps (B2 default 1e5)
-			unsigned      maxnewtonits             = 2;     ///< MaxNewtonIts (B2 default 2)
-			unsigned      maxcrossedpathresolves   = 2;     ///< endgame-boundary crossed-path re-track attempts
-		};
+        Defaults mirror Bertini 2's defaults for an adaptive zero-dim solve, so the emitted file runs
+        the *same* problem with the *same* knobs in Bertini 1 (the random start system aside).
+        */
+        struct ClassicWriteOptions
+        {
+            int           tracktype              = 0;      ///< 0 = zero-dimensional solve
+            int           mptype                 = 2;      ///< 0 double, 1 fixed-multiple, 2 adaptive
+            int           odepredictor           = 5;      ///< 5 = RKF45 (the Bertini 2 default)
+            double        tracktolbeforeeg        = 1e-5;  ///< Newton tolerance before the endgame
+            double        tracktolduringeg        = 1e-6;  ///< Newton tolerance during the endgame
+            double        finaltol                = 1e-11; ///< final tracking tolerance
+            // step-size cadence -- governs how aggressively a path may take a big step (i.e. jump),
+            // so it must be controlled for a fair crossing-rate comparison against Bertini 1.
+            double        maxstepsize             = 0.1;   ///< MaxStepSize (B2 SteppingConfig default 1/10)
+            double        stepsuccessfactor       = 2.0;   ///< StepSuccessFactor (B2 default 2)
+            double        stepfailfactor          = 0.5;   ///< StepFailFactor (B2 default 1/2)
+            unsigned      stepsforincrease         = 5;     ///< StepsForIncrease (B2 default 5)
+            unsigned long maxnumbersteps          = 100000;///< MaxNumberSteps (B2 default 1e5)
+            unsigned      maxnewtonits             = 2;     ///< MaxNewtonIts (B2 default 2)
+            unsigned      maxcrossedpathresolves   = 2;     ///< endgame-boundary crossed-path re-track attempts
+        };
 
-		/**
-		\brief Map a Bertini 2 `Predictor` to its Bertini 1 classic `odepredictor` integer.
+        /**
+        \brief Map a Bertini 2 `Predictor` to its Bertini 1 classic `odepredictor` integer.
 
-		The inverse of the classic settings parser's predictor table (`settings_parsers/tracking.hpp`).
-		`HeunEuler` has no classic number; it is emitted as `1` (Heun), its nearest classic relative.
-		*/
-		inline int PredictorToClassic(tracking::Predictor p)
-		{
-			using P = tracking::Predictor;
-			switch (p)
-			{
-				case P::Constant:          return -1;
-				case P::Euler:             return 0;
-				case P::Heun:              return 1;
-				case P::RK4:               return 2;
-				case P::HeunEuler:         return 1;
-				case P::RKNorsett34:       return 4;
-				case P::RKF45:             return 5;
-				case P::RKCashKarp45:      return 6;
-				case P::RKDormandPrince56: return 7;
-				case P::RKVerner67:        return 8;
-			}
-			return 5; // RKF45 -- the Bertini 2 default, a safe fallback
-		}
+        The inverse of the classic settings parser's predictor table (`settings_parsers/tracking.hpp`).
+        `HeunEuler` has no classic number; it is emitted as `1` (Heun), its nearest classic relative.
+        */
+        inline int PredictorToClassic(tracking::Predictor p)
+        {
+            using P = tracking::Predictor;
+            switch (p)
+            {
+                case P::Constant:          return -1;
+                case P::Euler:             return 0;
+                case P::Heun:              return 1;
+                case P::RK4:               return 2;
+                case P::HeunEuler:         return 1;
+                case P::RKNorsett34:       return 4;
+                case P::RKF45:             return 5;
+                case P::RKCashKarp45:      return 6;
+                case P::RKDormandPrince56: return 7;
+                case P::RKVerner67:        return 8;
+            }
+            return 5; // RKF45 -- the Bertini 2 default, a safe fallback
+        }
 
-		/**
-		\brief Emit the CONFIG-section body (no CONFIG/END wrapper).  The AMP coefficient/degree
-		bounds are derived from the system; the rest come from `opt`.
-		*/
-		inline void EmitConfig(std::ostream& out, System const& sys, ClassicWriteOptions const& opt)
-		{
-			auto num = [](double v){ std::ostringstream s; s << std::setprecision(15) << v; return s.str(); };
-			out << "tracktype: "              << opt.tracktype              << ";\n";
-			out << "mptype: "                 << opt.mptype                 << ";\n";
-			out << "odepredictor: "           << opt.odepredictor           << ";\n";
-			out << "tracktolbeforeeg: "       << num(opt.tracktolbeforeeg)  << ";\n";
-			out << "tracktolduringeg: "       << num(opt.tracktolduringeg)  << ";\n";
-			out << "finaltol: "               << num(opt.finaltol)          << ";\n";
-			out << "maxstepsize: "            << num(opt.maxstepsize)       << ";\n";
-			out << "stepsuccessfactor: "      << num(opt.stepsuccessfactor) << ";\n";
-			out << "stepfailfactor: "         << num(opt.stepfailfactor)    << ";\n";
-			out << "stepsforincrease: "       << opt.stepsforincrease       << ";\n";
-			out << "maxnumbersteps: "         << opt.maxnumbersteps         << ";\n";
-			out << "maxnewtonits: "           << opt.maxnewtonits           << ";\n";
-			out << "maxcrossedpathresolves: " << opt.maxcrossedpathresolves << ";\n";
-			out << "coefficientbound: "       << num(static_cast<double>(sys.CoefficientBound<complex_dbl>())) << ";\n";
-			out << "degreebound: "            << sys.DegreeBound()          << ";\n";
-		}
+        /**
+        \brief Emit the CONFIG-section body (no CONFIG/END wrapper).  The AMP coefficient/degree
+        bounds are derived from the system; the rest come from `opt`.
+        */
+        inline void EmitConfig(std::ostream& out, System const& sys, ClassicWriteOptions const& opt)
+        {
+            auto num = [](double v){ std::ostringstream s; s << std::setprecision(15) << v; return s.str(); };
+            out << "tracktype: "              << opt.tracktype              << ";\n";
+            out << "mptype: "                 << opt.mptype                 << ";\n";
+            out << "odepredictor: "           << opt.odepredictor           << ";\n";
+            out << "tracktolbeforeeg: "       << num(opt.tracktolbeforeeg)  << ";\n";
+            out << "tracktolduringeg: "       << num(opt.tracktolduringeg)  << ";\n";
+            out << "finaltol: "               << num(opt.finaltol)          << ";\n";
+            out << "maxstepsize: "            << num(opt.maxstepsize)       << ";\n";
+            out << "stepsuccessfactor: "      << num(opt.stepsuccessfactor) << ";\n";
+            out << "stepfailfactor: "         << num(opt.stepfailfactor)    << ";\n";
+            out << "stepsforincrease: "       << opt.stepsforincrease       << ";\n";
+            out << "maxnumbersteps: "         << opt.maxnumbersteps         << ";\n";
+            out << "maxnewtonits: "           << opt.maxnewtonits           << ";\n";
+            out << "maxcrossedpathresolves: " << opt.maxcrossedpathresolves << ";\n";
+            out << "coefficientbound: "       << num(static_cast<double>(sys.CoefficientBound<complex_dbl>())) << ";\n";
+            out << "degreebound: "            << sys.DegreeBound()          << ";\n";
+        }
 
-		/// \brief Write a complete Bertini 1 classic input file: `CONFIG ... END;\nINPUT ... END;`.
-		inline void WriteClassicInput(std::ostream& out, System const& sys,
-		                              ClassicWriteOptions const& opt = ClassicWriteOptions{})
-		{
-			out << "CONFIG\n";
-			EmitConfig(out, sys, opt);
-			out << "END;\n\nINPUT\n";
-			EmitSystem(out, sys);
-			out << "END;\n";
-		}
+        /// \brief Write a complete Bertini 1 classic input file: `CONFIG ... END;\nINPUT ... END;`.
+        inline void WriteClassicInput(std::ostream& out, System const& sys,
+                                      ClassicWriteOptions const& opt = ClassicWriteOptions{})
+        {
+            out << "CONFIG\n";
+            EmitConfig(out, sys, opt);
+            out << "END;\n\nINPUT\n";
+            EmitSystem(out, sys);
+            out << "END;\n";
+        }
 
-		/// \brief The complete classic input file as a string.  \see WriteClassicInput.
-		inline std::string SystemToClassicFile(System const& sys,
-		                                       ClassicWriteOptions const& opt = ClassicWriteOptions{})
-		{
-			std::ostringstream ss;
-			WriteClassicInput(ss, sys, opt);
-			return ss.str();
-		}
+        /// \brief The complete classic input file as a string.  \see WriteClassicInput.
+        inline std::string SystemToClassicFile(System const& sys,
+                                               ClassicWriteOptions const& opt = ClassicWriteOptions{})
+        {
+            std::ostringstream ss;
+            WriteClassicInput(ss, sys, opt);
+            return ss.str();
+        }
 
-	} // namespace classic
+    } // namespace classic
 } // namespace bertini

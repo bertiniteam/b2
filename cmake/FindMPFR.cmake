@@ -76,9 +76,9 @@ endif(MPFR_INCLUDES)
 # Set MPFR_LIBRARIES
 
 if(WIN32)
-	find_library(MPFR_LIBRARIES libmpfr.dll.a PATHS $ENV{GMPDIR} ${LIB_INSTALL_DIR})
+    find_library(MPFR_LIBRARIES libmpfr.dll.a PATHS $ENV{GMPDIR} ${LIB_INSTALL_DIR})
 else()
-	find_library(MPFR_LIBRARIES mpfr PATHS $ENV{GMPDIR} ${LIB_INSTALL_DIR})
+    find_library(MPFR_LIBRARIES mpfr PATHS $ENV{GMPDIR} ${LIB_INSTALL_DIR})
 endif()
 
 # Epilogue

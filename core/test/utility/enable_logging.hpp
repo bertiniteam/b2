@@ -15,12 +15,12 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file test/utility/enable_logging.hpp 
+\file test/utility/enable_logging.hpp
 
 \brief Logging in Bertini using Boost.Log
 */
@@ -32,10 +32,10 @@
 
 struct LogInitter
 {
-	LogInitter()
-	{
-		bertini::logging::Logging::Init("bertini2_tests_" + std::string(BERTINI_TEST_MODULE) + "_%N.log","%Message%",10*1024*1024, bertini::logging::severity_level::trace);
-	}
+    LogInitter()
+    {
+        bertini::logging::Logging::Init("bertini2_tests_" + std::string(BERTINI_TEST_MODULE) + "_%N.log","%Message%",10*1024*1024, bertini::logging::severity_level::trace);
+    }
 };
 
 

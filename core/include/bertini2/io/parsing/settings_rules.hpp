@@ -22,11 +22,9 @@
 
 /**
  \file bertini2/io/parsing/settings_parsers.hpp
- 
+
  \brief Useful Qi rules for parsing settings
  */
 
 
 #pragma once
-
-

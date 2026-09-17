@@ -15,14 +15,14 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file bertini2/nag_algorithms/sharpen.hpp 
+\file bertini2/nag_algorithms/sharpen.hpp
 
-\brief Provides the algorithms for sharpening points.  
+\brief Provides the algorithms for sharpening points.
 */
 
 
@@ -38,24 +38,21 @@
 
 namespace bertini {
 
-	namespace algorithm {
+    namespace algorithm {
 
-		namespace output {
-			struct Sharpen
-			{
-				
-			};
-		} //re: namespace output
+        namespace output {
+            struct Sharpen
+            {
 
-		template<class SystemType>
-		struct Sharpen
-		{
+            };
+        } //re: namespace output
 
-		};
-		
-	} // algo
+        template<class SystemType>
+        struct Sharpen
+        {
+
+        };
+
+    } // algo
 
 } // bertini
-
-
-

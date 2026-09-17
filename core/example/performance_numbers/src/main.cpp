@@ -10,33 +10,33 @@ int main()
     int num_precisions = 20  ;  ///> number of different precisions to use
     int max_precision = 308; ///> maximum precision used for testing
     int matrix_N = 500; ///> size of matrix for matrix multiplication
-    
+
     std::vector<int> precisions(num_precisions-1);
     for(int P = 0; P < num_precisions-1; ++P)
     {
         precisions[P] = std::floor(16 + ((max_precision)-16.0)/num_precisions*(P));
     }
     precisions.push_back(max_precision);
-    
-    
+
+
     // Compute the time using CPU clock time, not wall clock time.
     auto start = std::clock();
     auto end = std::clock();
 
     auto sys1 = demo::ConstructSystem1();
 
-    
-    
-    
-    
+
+
+
+
     auto v_d = demo::GenerateSystemInput<complex_dbl>(sys1);
     auto b_d = demo::GenerateRHS<complex_dbl>(sys1);
     auto A_d = demo::GenerateMatrix<complex_dbl>(matrix_N);
     auto v_mp = demo::GenerateSystemInput<mpfr>(sys1);
     auto b_mp = demo::GenerateRHS<mpfr>(sys1);
     auto A_mp = demo::GenerateMatrix<mpfr>(matrix_N);
-    
-    
+
+
     //Get base number for double precision
     std::cout << "\n\n\nTesting Jacobian evaluation, matrix multiplication, and LU decomposition in double precision:\n\n";
     double time_delta_d = 0;
@@ -50,11 +50,11 @@ int main()
     }
     time_delta_d = time_delta_d/num_test_runs;
 
-    
+
     std::cout << "Average time taken:\n";
     std::cout << time_delta_d << std::endl << std::endl;
 
-    
+
     // Now work with various precisions for mpfr
     std::cout << "Testing Jacobian evaluation, matrix multiplication, and LU decomposition in multiple precision:\n\n";
     Vec<double> time_delta_mp(num_precisions);
@@ -75,18 +75,18 @@ int main()
         }
         time_delta_mp(PP) = time_delta_mp(PP)/num_test_runs;
     }
-    
-    
-    
+
+
+
 //    std::cout << time_delta_mp << std::endl;
-    
+
     auto time_factors = time_delta_mp/time_delta_d;
-    
-    
+
+
     // Compute coefficient for linear fit
     Mat<double> M(2,2);
     Vec<double> b(2);
-    
+
     M(0,0) = num_precisions;
     M(0,1) = 0;
     M(1,1) = 0;
@@ -99,12 +99,12 @@ int main()
         b(1) += precisions[ii]*time_factors(ii);
     }
     M(1,0) = M(0,1);
-    
+
     Vec<double> x = M.lu().solve(b);
-    
+
 //    std::cout << x(0) << std::endl;
     std::cout << "y(P) = "<< x(1)<<"*P + "<< x(0) << std::endl;
-    
-    
-	return 0;
+
+
+    return 0;
 }

@@ -60,31 +60,31 @@ identical across serial and distributed runs).
 template<typename ComplexT>
 struct StartPointTask
 {
-	using SolnIndT = std::size_t;  ///< The path-index type.
+    using SolnIndT = std::size_t;  ///< The path-index type.
 
-	SolnIndT      path_index = std::numeric_limits<SolnIndT>::max();  ///< The path index (max value marks a sentinel).
-	Vec<ComplexT> start_point;  ///< The authoritative start point for this path.
+    SolnIndT      path_index = std::numeric_limits<SolnIndT>::max();  ///< The path index (max value marks a sentinel).
+    Vec<ComplexT> start_point;  ///< The authoritative start point for this path.
 
-	/// \brief Query whether this is the sentinel "no more work" task.
-	bool is_sentinel() const
-	{
-		return path_index == std::numeric_limits<SolnIndT>::max();
-	}
+    /// \brief Query whether this is the sentinel "no more work" task.
+    bool is_sentinel() const
+    {
+        return path_index == std::numeric_limits<SolnIndT>::max();
+    }
 
-	/// \brief Make the sentinel "no more work" task.
-	static StartPointTask sentinel()
-	{
-		return StartPointTask{};  // default path_index == max
-	}
+    /// \brief Make the sentinel "no more work" task.
+    static StartPointTask sentinel()
+    {
+        return StartPointTask{};  // default path_index == max
+    }
 
-	/// \cond PATH_RESULT_SERIALIZATION
-	template<class Archive>
-	void serialize(Archive& ar, unsigned const)
-	{
-		ar & path_index;
-		ar & start_point;
-	}
-	/// \endcond
+    /// \cond PATH_RESULT_SERIALIZATION
+    template<class Archive>
+    void serialize(Archive& ar, unsigned const)
+    {
+        ar & path_index;
+        ar & start_point;
+    }
+    /// \endcond
 };
 
 
@@ -99,66 +99,66 @@ that produces it is a StartPointTask (path index + rank 0's start point).
 template<typename ComplexT>
 struct FullPathResult
 {
-	using SolnIndT = std::size_t;  ///< The path-index type.
-	using RealT    = typename NumTraits<ComplexT>::Real;  ///< The real companion of the complex type.
+    using SolnIndT = std::size_t;  ///< The path-index type.
+    using RealT    = typename NumTraits<ComplexT>::Real;  ///< The real companion of the complex type.
 
-	SolnIndT      path_index             = 0;  ///< The index of the path this result is for.
+    SolnIndT      path_index             = 0;  ///< The index of the path this result is for.
 
-	// boundary (pre-endgame) data
-	SuccessCode   pre_endgame_success_code    = SuccessCode::NeverStarted;  ///< Outcome of pre-endgame tracking to the boundary.
-	Vec<ComplexT> boundary_point;  ///< The space point at the endgame boundary.
-	RealT         boundary_stepsize      = RealT(0);  ///< The step size at the endgame boundary.
-	unsigned      boundary_precision     = DoublePrecision();  ///< The precision at the endgame boundary.
+    // boundary (pre-endgame) data
+    SuccessCode   pre_endgame_success_code    = SuccessCode::NeverStarted;  ///< Outcome of pre-endgame tracking to the boundary.
+    Vec<ComplexT> boundary_point;  ///< The space point at the endgame boundary.
+    RealT         boundary_stepsize      = RealT(0);  ///< The step size at the endgame boundary.
+    unsigned      boundary_precision     = DoublePrecision();  ///< The precision at the endgame boundary.
 
-	// endgame data
-	SuccessCode   endgame_success_code        = SuccessCode::NeverStarted;  ///< Outcome of the endgame.
-	Vec<ComplexT> solution;  ///< The solution point (final endpoint of the path).
-	double        function_residual              = 0;  ///< Residual of the system at the final solution.
-	double        condition_number               = 0;  ///< Condition-number estimate at the final solution.
-	Vec<double>   singular_values;  ///< Singular values of the target Jacobian at the final solution, largest first (the spectrum behind condition_number).
-	double        newton_residual                = 0;  ///< Final Newton residual.
-	ComplexT      final_time_used;  ///< The time value the endgame finished at.
-	double        accuracy_estimate              = 0;  ///< Estimated accuracy of the final solution.
-	double        accuracy_estimate_user_coords  = 0;  ///< Estimated accuracy in the user's coordinates.
-	unsigned      cycle_num                      = 0;  ///< The estimated cycle number at the endpoint.
-	unsigned      precision_digits             = 0;   ///< Digits the endgame finished in (= solution point's precision).
-	unsigned      accuracy_digits              = 0;   ///< Trustworthy digit count, from the convergence agreement.
+    // endgame data
+    SuccessCode   endgame_success_code        = SuccessCode::NeverStarted;  ///< Outcome of the endgame.
+    Vec<ComplexT> solution;  ///< The solution point (final endpoint of the path).
+    double        function_residual              = 0;  ///< Residual of the system at the final solution.
+    double        condition_number               = 0;  ///< Condition-number estimate at the final solution.
+    Vec<double>   singular_values;  ///< Singular values of the target Jacobian at the final solution, largest first (the spectrum behind condition_number).
+    double        newton_residual                = 0;  ///< Final Newton residual.
+    ComplexT      final_time_used;  ///< The time value the endgame finished at.
+    double        accuracy_estimate              = 0;  ///< Estimated accuracy of the final solution.
+    double        accuracy_estimate_user_coords  = 0;  ///< Estimated accuracy in the user's coordinates.
+    unsigned      cycle_num                      = 0;  ///< The estimated cycle number at the endpoint.
+    unsigned      precision_digits             = 0;   ///< Digits the endgame finished in (= solution point's precision).
+    unsigned      accuracy_digits              = 0;   ///< Trustworthy digit count, from the convergence agreement.
 
-	// precision metadata (spans the whole path)
-	bool          precision_changed              = false;  ///< Whether precision changed during the path.
-	ComplexT      time_of_first_prec_increase;  ///< The time of the first precision increase (if any).
-	unsigned      max_precision_used             = 0;  ///< The highest precision used over the whole path.
+    // precision metadata (spans the whole path)
+    bool          precision_changed              = false;  ///< Whether precision changed during the path.
+    ComplexT      time_of_first_prec_increase;  ///< The time of the first precision increase (if any).
+    unsigned      max_precision_used             = 0;  ///< The highest precision used over the whole path.
 
-	// wall-clock time to execute the whole path (pre-endgame + endgame), in seconds
-	double        path_time_seconds              = 0;  ///< Wall-clock seconds to execute the whole path.
+    // wall-clock time to execute the whole path (pre-endgame + endgame), in seconds
+    double        path_time_seconds              = 0;  ///< Wall-clock seconds to execute the whole path.
 
-	/// \cond PATH_RESULT_SERIALIZATION
-	template<class Archive>
-	void serialize(Archive& ar, unsigned const)
-	{
-		ar & path_index;
-		ar & pre_endgame_success_code;
-		ar & boundary_point;
-		ar & boundary_stepsize;
-		ar & boundary_precision;
-		ar & endgame_success_code;
-		ar & solution;
-		ar & function_residual;
-		ar & condition_number;
-		ar & singular_values;
-		ar & newton_residual;
-		ar & final_time_used;
-		ar & accuracy_estimate;
-		ar & accuracy_estimate_user_coords;
-		ar & cycle_num;
-		ar & precision_digits;
-		ar & accuracy_digits;
-		ar & precision_changed;
-		ar & time_of_first_prec_increase;
-		ar & max_precision_used;
-		ar & path_time_seconds;
-	}
-	/// \endcond
+    /// \cond PATH_RESULT_SERIALIZATION
+    template<class Archive>
+    void serialize(Archive& ar, unsigned const)
+    {
+        ar & path_index;
+        ar & pre_endgame_success_code;
+        ar & boundary_point;
+        ar & boundary_stepsize;
+        ar & boundary_precision;
+        ar & endgame_success_code;
+        ar & solution;
+        ar & function_residual;
+        ar & condition_number;
+        ar & singular_values;
+        ar & newton_residual;
+        ar & final_time_used;
+        ar & accuracy_estimate;
+        ar & accuracy_estimate_user_coords;
+        ar & cycle_num;
+        ar & precision_digits;
+        ar & accuracy_digits;
+        ar & precision_changed;
+        ar & time_of_first_prec_increase;
+        ar & max_precision_used;
+        ar & path_time_seconds;
+    }
+    /// \endcond
 };
 
 namespace detail {
@@ -169,27 +169,27 @@ namespace detail {
 /// \brief Query whether a plain index value is the sentinel.
 inline bool is_sentinel(std::size_t v)
 {
-	return v == std::numeric_limits<std::size_t>::max();
+    return v == std::numeric_limits<std::size_t>::max();
 }
 
 /// \brief Make the sentinel index value.
 inline std::size_t make_sentinel(std::size_t)
 {
-	return std::numeric_limits<std::size_t>::max();
+    return std::numeric_limits<std::size_t>::max();
 }
 
 /// \brief Query whether a work-item task is the sentinel.
 template<typename ComplexT>
 bool is_sentinel(StartPointTask<ComplexT> const& t)
 {
-	return t.is_sentinel();
+    return t.is_sentinel();
 }
 
 /// \brief Make the sentinel work-item task.
 template<typename ComplexT>
 StartPointTask<ComplexT> make_sentinel(StartPointTask<ComplexT> const&)
 {
-	return StartPointTask<ComplexT>::sentinel();
+    return StartPointTask<ComplexT>::sentinel();
 }
 
 } // namespace detail

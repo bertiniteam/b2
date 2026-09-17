@@ -52,106 +52,106 @@ BOOST_AUTO_TEST_SUITE(interning)
 
 BOOST_AUTO_TEST_CASE(simplify_does_not_corrupt_a_shared_single_operand_sum)
 {
-	// This is the minimal form of a bug interning exposed: a single-operand Sum is reused,
-	// and SimplifiedSum used to do Make(first) (which now returns the *interned* shared sum)
-	// then AddOperand(rest) -- mutating that shared node and corrupting every other holder.
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
+    // This is the minimal form of a bug interning exposed: a single-operand Sum is reused,
+    // and SimplifiedSum used to do Make(first) (which now returns the *interned* shared sum)
+    // then AddOperand(rest) -- mutating that shared node and corrupting every other holder.
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
 
-	Nd m = SumOperator::Make(x, true);   // a one-term sum (+x); the node that got corrupted
-	Nd n = SumOperator::Make(y, true);   // (+y)
+    Nd m = SumOperator::Make(x, true);   // a one-term sum (+x); the node that got corrupted
+    Nd n = SumOperator::Make(y, true);   // (+y)
 
-	// build two expressions that reuse m and n, with cancelling y-terms
-	Nd p = m + n;          // x + y
-	Nd q = m - n;          // x - y
-	Nd r = p + q + 0*x;    // 2x   (the +0 forces simplification work)
+    // build two expressions that reuse m and n, with cancelling y-terms
+    Nd p = m + n;          // x + y
+    Nd q = m - n;          // x - y
+    Nd r = p + q + 0*x;    // 2x   (the +0 forces simplification work)
 
-	complex_dbl xv(2.0, -3.0), yv(5.0, 1.0);
-	std::map<std::string,complex_dbl> pt{ {"x", xv}, {"y", yv} };
+    complex_dbl xv(2.0, -3.0), yv(5.0, 1.0);
+    std::map<std::string,complex_dbl> pt{ {"x", xv}, {"y", yv} };
 
-	Nd rs = bertini::Simplify(r);
-	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(rs, pt), xv + xv);   // == 2x, with the y's cancelled
+    Nd rs = bertini::Simplify(r);
+    BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(rs, pt), xv + xv);   // == 2x, with the y's cancelled
 
-	// and the reused sub-objects must be intact (not mutated by the simplification above)
-	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(m, pt), xv);
-	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(n, pt), yv);
+    // and the reused sub-objects must be intact (not mutated by the simplification above)
+    BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(m, pt), xv);
+    BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(n, pt), yv);
 }
 
 // ---- basic dedup: structurally equal builds return the same object ----
 
 BOOST_AUTO_TEST_CASE(equal_constants_are_one_object)
 {
-	BOOST_CHECK_EQUAL(Integer::Make(5).get(), Integer::Make(5).get());
-	BOOST_CHECK(Integer::Make(5).get() != Integer::Make(6).get());
+    BOOST_CHECK_EQUAL(Integer::Make(5).get(), Integer::Make(5).get());
+    BOOST_CHECK(Integer::Make(5).get() != Integer::Make(6).get());
 }
 
 BOOST_AUTO_TEST_CASE(equal_operator_trees_are_one_object)
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	BOOST_CHECK_EQUAL((x*y + y).get(), (x*y + y).get());            // whole tree shares
-	BOOST_CHECK_EQUAL((x*y).get(), (x*y).get());                   // inner subexpr shares
-	BOOST_CHECK_EQUAL((x + y).get(), (y + x).get());               // canonicalized: same node
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    BOOST_CHECK_EQUAL((x*y + y).get(), (x*y + y).get());            // whole tree shares
+    BOOST_CHECK_EQUAL((x*y).get(), (x*y).get());                   // inner subexpr shares
+    BOOST_CHECK_EQUAL((x + y).get(), (y + x).get());               // canonicalized: same node
 }
 
 BOOST_AUTO_TEST_CASE(variables_are_canonical_by_name)
 {
-	// Make("x") interns to a single canonical x -- "system1's x IS system2's x".
-	auto x1 = Variable::Make("x");
-	auto x2 = Variable::Make("x");
-	BOOST_CHECK_EQUAL(x1.get(), x2.get());   // one object: identity is the canonicalization
-	BOOST_CHECK(Variable::Make("x").get() != Variable::Make("z").get());
+    // Make("x") interns to a single canonical x -- "system1's x IS system2's x".
+    auto x1 = Variable::Make("x");
+    auto x2 = Variable::Make("x");
+    BOOST_CHECK_EQUAL(x1.get(), x2.get());   // one object: identity is the canonicalization
+    BOOST_CHECK(Variable::Make("x").get() != Variable::Make("z").get());
 
-	// and two independently-built expressions over "x" share their structure
-	BOOST_CHECK_EQUAL((Variable::Make("x") * Variable::Make("x")).get(),
-	                  (Variable::Make("x") * Variable::Make("x")).get());
+    // and two independently-built expressions over "x" share their structure
+    BOOST_CHECK_EQUAL((Variable::Make("x") * Variable::Make("x")).get(),
+                      (Variable::Make("x") * Variable::Make("x")).get());
 }
 
 // ---- the headline win: a shared subexpression's derivative is one interned node ----
 
 BOOST_AUTO_TEST_CASE(differentiation_results_are_interned)
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	Nd a = x*x + y*y;          // a single shared subexpression object
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd a = x*x + y*y;          // a single shared subexpression object
 
-	// differentiating the SAME expression twice yields the SAME derivative node
-	BOOST_CHECK_EQUAL(a->Differentiate(x).get(), a->Differentiate(x).get());
+    // differentiating the SAME expression twice yields the SAME derivative node
+    BOOST_CHECK_EQUAL(a->Differentiate(x).get(), a->Differentiate(x).get());
 
-	// and when 'a' is reused in two functions, the d(a)/dx inside each derivative is the
-	// same interned node -- the payoff of hash-consing derivatives.  Checked the direct way:
-	Nd da = a->Differentiate(x);
-	Nd f = a * y;
-	Nd g = a + x;
-	// d(a)/dx built independently equals the one embedded via reuse of 'a'
-	BOOST_CHECK_EQUAL(a->Differentiate(x).get(), da.get());
-	(void)f; (void)g;
+    // and when 'a' is reused in two functions, the d(a)/dx inside each derivative is the
+    // same interned node -- the payoff of hash-consing derivatives.  Checked the direct way:
+    Nd da = a->Differentiate(x);
+    Nd f = a * y;
+    Nd g = a + x;
+    // d(a)/dx built independently equals the one embedded via reuse of 'a'
+    BOOST_CHECK_EQUAL(a->Differentiate(x).get(), da.get());
+    (void)f; (void)g;
 }
 
 // ---- eval correctness on a heavily shared DAG ----
 
 BOOST_AUTO_TEST_CASE(eval_correct_with_shared_subexpression)
 {
-	auto x = Variable::Make("x");
-	Nd a = x*x;                 // shared
-	Nd f = a + a + a;           // 3 * x^2, all the same interned 'a'
-	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(f, {{"x", complex_dbl(2.0, 0.0)}}), complex_dbl(12.0, 0.0));   // 3 * 4
+    auto x = Variable::Make("x");
+    Nd a = x*x;                 // shared
+    Nd f = a + a + a;           // 3 * x^2, all the same interned 'a'
+    BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(f, {{"x", complex_dbl(2.0, 0.0)}}), complex_dbl(12.0, 0.0));   // 3 * 4
 }
 
 // ---- immutability under interning: simplifying never changes a held input ----
 
 BOOST_AUTO_TEST_CASE(simplify_leaves_a_held_shared_node_untouched)
 {
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	Nd held = (x + y) * x;      // hold a shared node
-	std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(3.0, 0.0)}, {"y", complex_dbl(4.0, 0.0)} };
-	auto before = EvalAt<complex_dbl>(held, pt);
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd held = (x + y) * x;      // hold a shared node
+    std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(3.0, 0.0)}, {"y", complex_dbl(4.0, 0.0)} };
+    auto before = EvalAt<complex_dbl>(held, pt);
 
-	Nd s = bertini::Simplify(held + 0*y);   // simplify an expression that contains 'held'
-	(void)s;
+    Nd s = bertini::Simplify(held + 0*y);   // simplify an expression that contains 'held'
+    (void)s;
 
-	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(held, pt), before);   // held is unchanged by simplifying around it
+    BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(held, pt), before);   // held is unchanged by simplifying around it
 }
 
 BOOST_AUTO_TEST_SUITE_END() // interning
@@ -165,101 +165,101 @@ BOOST_AUTO_TEST_SUITE(canonicalization)
 // restore the global state -- the setting is session-global, so it must not leak.
 struct CanonGuard
 {
-	bool prev_on;
-	bertini::node::MonomialOrder prev_order;
-	explicit CanonGuard(bertini::node::MonomialOrder o = bertini::node::MonomialOrder::GrevLex)
-		: prev_on(bertini::node::CanonicalizeByDefault()),
-		  prev_order(bertini::node::CurrentMonomialOrder())
-	{
-		bertini::node::SetMonomialOrder(o);
-		bertini::node::SetCanonicalizeByDefault(true);
-	}
-	~CanonGuard()
-	{
-		bertini::node::SetCanonicalizeByDefault(prev_on);
-		bertini::node::SetMonomialOrder(prev_order);
-	}
+    bool prev_on;
+    bertini::node::MonomialOrder prev_order;
+    explicit CanonGuard(bertini::node::MonomialOrder o = bertini::node::MonomialOrder::GrevLex)
+        : prev_on(bertini::node::CanonicalizeByDefault()),
+          prev_order(bertini::node::CurrentMonomialOrder())
+    {
+        bertini::node::SetMonomialOrder(o);
+        bertini::node::SetCanonicalizeByDefault(true);
+    }
+    ~CanonGuard()
+    {
+        bertini::node::SetCanonicalizeByDefault(prev_on);
+        bertini::node::SetMonomialOrder(prev_order);
+    }
 };
 
 BOOST_AUTO_TEST_CASE(disabling_canonicalization_preserves_authored_order)
 {
-	// canonicalization is ON by default; turn it off and the authored operand order is kept,
-	// so x+y and y+x become distinct interned nodes again.
-	bool prev = bertini::node::CanonicalizeByDefault();
-	bertini::node::SetCanonicalizeByDefault(false);
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	Nd a = x + y, b = y + x;
-	BOOST_CHECK(a.get() != b.get());
-	bertini::node::SetCanonicalizeByDefault(prev);
+    // canonicalization is ON by default; turn it off and the authored operand order is kept,
+    // so x+y and y+x become distinct interned nodes again.
+    bool prev = bertini::node::CanonicalizeByDefault();
+    bertini::node::SetCanonicalizeByDefault(false);
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd a = x + y, b = y + x;
+    BOOST_CHECK(a.get() != b.get());
+    bertini::node::SetCanonicalizeByDefault(prev);
 }
 
 BOOST_AUTO_TEST_CASE(commutative_sum_dedups_when_enabled)
 {
-	CanonGuard g;
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	Nd a = x + y;
-	Nd b = y + x;
-	BOOST_CHECK_EQUAL(a.get(), b.get());          // canonicalized to one node
-	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(a, {{"x", complex_dbl(2.0, 0.0)}, {"y", complex_dbl(5.0, 0.0)}}), complex_dbl(7.0, 0.0));
+    CanonGuard g;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd a = x + y;
+    Nd b = y + x;
+    BOOST_CHECK_EQUAL(a.get(), b.get());          // canonicalized to one node
+    BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(a, {{"x", complex_dbl(2.0, 0.0)}, {"y", complex_dbl(5.0, 0.0)}}), complex_dbl(7.0, 0.0));
 }
 
 BOOST_AUTO_TEST_CASE(commutative_product_dedups_when_enabled)
 {
-	CanonGuard g;
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	BOOST_CHECK_EQUAL((x*y).get(), (y*x).get());
+    CanonGuard g;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    BOOST_CHECK_EQUAL((x*y).get(), (y*x).get());
 }
 
 BOOST_AUTO_TEST_CASE(division_stays_correct_under_canonicalization)
 {
-	CanonGuard g;
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	Nd q = y / x;                                 // a divisor must not become the leading factor
-	BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(q, {{"x", complex_dbl(2.0, 0.0)}, {"y", complex_dbl(6.0, 0.0)}}), complex_dbl(3.0, 0.0));  // 6/2
-	BOOST_CHECK((x/y).get() != (y/x).get());            // x/y and y/x stay distinct
+    CanonGuard g;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd q = y / x;                                 // a divisor must not become the leading factor
+    BOOST_CHECK_EQUAL(EvalAt<complex_dbl>(q, {{"x", complex_dbl(2.0, 0.0)}, {"y", complex_dbl(6.0, 0.0)}}), complex_dbl(3.0, 0.0));  // 6/2
+    BOOST_CHECK((x/y).get() != (y/x).get());            // x/y and y/x stay distinct
 }
 
 BOOST_AUTO_TEST_CASE(all_three_orders_are_selectable_and_dedup)
 {
-	for (auto ord : { bertini::node::MonomialOrder::Lex,
-	                  bertini::node::MonomialOrder::RevLex,
-	                  bertini::node::MonomialOrder::GrevLex })
-	{
-		CanonGuard g(ord);
-		auto x = Variable::Make("x");
-		auto y = Variable::Make("y");
-		BOOST_CHECK_EQUAL((x + y).get(), (y + x).get());
-	}
+    for (auto ord : { bertini::node::MonomialOrder::Lex,
+                      bertini::node::MonomialOrder::RevLex,
+                      bertini::node::MonomialOrder::GrevLex })
+    {
+        CanonGuard g(ord);
+        auto x = Variable::Make("x");
+        auto y = Variable::Make("y");
+        BOOST_CHECK_EQUAL((x + y).get(), (y + x).get());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(canonicalization_shows_up_in_printing)
 {
-	auto str = [](Nd const& n){ std::ostringstream o; n->print(o); return o.str(); };
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	{
-		CanonGuard g;
-		BOOST_CHECK_EQUAL(str(x + y), str(y + x));   // canonical: same printed form
-		BOOST_CHECK_EQUAL(str(x * y), str(y * x));
-		BOOST_CHECK_EQUAL(str(Integer::Make(3) * pow(x, 2)), "3*x^2");   // coefficient prints first
-	}
-	// turning it off preserves the authored operand order in the print
-	bool prev = bertini::node::CanonicalizeByDefault();
-	bertini::node::SetCanonicalizeByDefault(false);
-	BOOST_CHECK_EQUAL(str(y + x), "y+x");
-	bertini::node::SetCanonicalizeByDefault(prev);
+    auto str = [](Nd const& n){ std::ostringstream o; n->print(o); return o.str(); };
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    {
+        CanonGuard g;
+        BOOST_CHECK_EQUAL(str(x + y), str(y + x));   // canonical: same printed form
+        BOOST_CHECK_EQUAL(str(x * y), str(y * x));
+        BOOST_CHECK_EQUAL(str(Integer::Make(3) * pow(x, 2)), "3*x^2");   // coefficient prints first
+    }
+    // turning it off preserves the authored operand order in the print
+    bool prev = bertini::node::CanonicalizeByDefault();
+    bertini::node::SetCanonicalizeByDefault(false);
+    BOOST_CHECK_EQUAL(str(y + x), "y+x");
+    bertini::node::SetCanonicalizeByDefault(prev);
 }
 
 BOOST_AUTO_TEST_CASE(guard_restores_global_canonicalization_state)
 {
-	// the canonicalization setting is session-global; confirm the preceding tests' guards
-	// left it back at the default (on, GrevLex) so they cannot leak into other suites.
-	BOOST_CHECK(bertini::node::CanonicalizeByDefault());
-	BOOST_CHECK(bertini::node::CurrentMonomialOrder() == bertini::node::MonomialOrder::GrevLex);
+    // the canonicalization setting is session-global; confirm the preceding tests' guards
+    // left it back at the default (on, GrevLex) so they cannot leak into other suites.
+    BOOST_CHECK(bertini::node::CanonicalizeByDefault());
+    BOOST_CHECK(bertini::node::CurrentMonomialOrder() == bertini::node::MonomialOrder::GrevLex);
 }
 
 
@@ -280,53 +280,53 @@ BOOST_AUTO_TEST_CASE(guard_restores_global_canonicalization_state)
 // a build-time ratio could not tell the memo apart from its absence.
 BOOST_AUTO_TEST_CASE(multidegree_cost_follows_the_dag_not_the_expansion)
 {
-	using namespace bertini::node;
+    using namespace bertini::node;
 
-	// two independent copies of the same shape, on distinct variable names, so the hash-consed
-	// graphs share nothing and neither timing benefits from the other's interned nodes
-	auto build = [](std::string const& tag, int levels)
-	{
-		auto x = Variable::Make("x" + tag);
-		auto y = Variable::Make("y" + tag);
-		auto z = Variable::Make("z" + tag);
-		std::shared_ptr<Node> e = x + y;
-		for (int level = 0; level < levels; ++level)
-			e = (e + z) * (e + x);
-		return std::make_pair(e, bertini::VariableGroup{x, y, z});
-	};
-	auto const [e12, vars12] = build("a", 12);
-	auto const [e18, vars18] = build("b", 18);
+    // two independent copies of the same shape, on distinct variable names, so the hash-consed
+    // graphs share nothing and neither timing benefits from the other's interned nodes
+    auto build = [](std::string const& tag, int levels)
+    {
+        auto x = Variable::Make("x" + tag);
+        auto y = Variable::Make("y" + tag);
+        auto z = Variable::Make("z" + tag);
+        std::shared_ptr<Node> e = x + y;
+        for (int level = 0; level < levels; ++level)
+            e = (e + z) * (e + x);
+        return std::make_pair(e, bertini::VariableGroup{x, y, z});
+    };
+    auto const [e12, vars12] = build("a", 12);
+    auto const [e18, vars18] = build("b", 18);
 
-	// repeated calls so the timer sees well above its resolution; each call is one traversal
-	auto time_multidegree = [](std::shared_ptr<Node> const& e, bertini::VariableGroup const& vars)
-	{
-		e->MultiDegree(vars);   // warm-up
-		auto start = std::chrono::steady_clock::now();
-		for (int rep = 0; rep < 50; ++rep)
-			e->MultiDegree(vars);
-		return std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
-	};
-	// The intrinsic cost is the MINIMUM over several trials: a shared CI runner can stall one
-	// trial for milliseconds (a single stall once read as a ratio of 11.5 on macOS), and only
-	// the minimum is immune to that.  The trials are interleaved so a slow stretch of the
-	// machine cannot land on all of one size's trials.
-	double us12 = std::numeric_limits<double>::infinity(), us18 = us12;
-	for (int trial = 0; trial < 7; ++trial)
-	{
-		us12 = std::min(us12, time_multidegree(e12, vars12));
-		us18 = std::min(us18, time_multidegree(e18, vars18));
-	}
-	double const ratio = us18 / us12;
+    // repeated calls so the timer sees well above its resolution; each call is one traversal
+    auto time_multidegree = [](std::shared_ptr<Node> const& e, bertini::VariableGroup const& vars)
+    {
+        e->MultiDegree(vars);   // warm-up
+        auto start = std::chrono::steady_clock::now();
+        for (int rep = 0; rep < 50; ++rep)
+            e->MultiDegree(vars);
+        return std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
+    };
+    // The intrinsic cost is the MINIMUM over several trials: a shared CI runner can stall one
+    // trial for milliseconds (a single stall once read as a ratio of 11.5 on macOS), and only
+    // the minimum is immune to that.  The trials are interleaved so a slow stretch of the
+    // machine cannot land on all of one size's trials.
+    double us12 = std::numeric_limits<double>::infinity(), us18 = us12;
+    for (int trial = 0; trial < 7; ++trial)
+    {
+        us12 = std::min(us12, time_multidegree(e12, vars12));
+        us18 = std::min(us18, time_multidegree(e18, vars18));
+    }
+    double const ratio = us18 / us12;
 
-	BOOST_TEST_MESSAGE("MultiDegree x50: 12 levels " << us12 << " us, 18 levels " << us18
-	                   << " us, ratio " << ratio << " (O(DAG) ~1.5, O(expansion) ~64)");
-	BOOST_CHECK_LT(ratio, 8.0);
+    BOOST_TEST_MESSAGE("MultiDegree x50: 12 levels " << us12 << " us, 18 levels " << us18
+                       << " us, ratio " << ratio << " (O(DAG) ~1.5, O(expansion) ~64)");
+    BOOST_CHECK_LT(ratio, 8.0);
 
-	// the memo must not change the answer
-	auto degs = e18->MultiDegree(vars18);
-	BOOST_CHECK_EQUAL(degs.size(), 3u);
-	for (auto d : degs)
-		BOOST_CHECK_GT(d, 0);
+    // the memo must not change the answer
+    auto degs = e18->MultiDegree(vars18);
+    BOOST_CHECK_EQUAL(degs.size(), 3u);
+    for (auto d : degs)
+        BOOST_CHECK_GT(d, 0);
 }
 
 
@@ -338,38 +338,38 @@ BOOST_AUTO_TEST_CASE(multidegree_cost_follows_the_dag_not_the_expansion)
 // time, on an operand whose expansion doubles per level while its DAG grows by a constant.
 BOOST_AUTO_TEST_CASE(canonicalization_cost_follows_the_dag_not_the_expansion)
 {
-	using namespace bertini::node;
+    using namespace bertini::node;
 
-	auto build = [](std::string const& tag, int levels)
-	{
-		auto x = Variable::Make("x" + tag);
-		auto y = Variable::Make("y" + tag);
-		std::shared_ptr<Node> e = x + y;
-		for (int level = 0; level < levels; ++level)
-			e = e * (x + y + 1) + e * (x + y + 2);
-		return e;
-	};
-	auto time_build = [&](std::string const& tag, int levels)
-	{
-		auto start = std::chrono::steady_clock::now();
-		auto e = build(tag, levels);
-		auto const us = std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
-		BOOST_REQUIRE(e);
-		return us;
-	};
+    auto build = [](std::string const& tag, int levels)
+    {
+        auto x = Variable::Make("x" + tag);
+        auto y = Variable::Make("y" + tag);
+        std::shared_ptr<Node> e = x + y;
+        for (int level = 0; level < levels; ++level)
+            e = e * (x + y + 1) + e * (x + y + 2);
+        return e;
+    };
+    auto time_build = [&](std::string const& tag, int levels)
+    {
+        auto start = std::chrono::steady_clock::now();
+        auto e = build(tag, levels);
+        auto const us = std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
+        BOOST_REQUIRE(e);
+        return us;
+    };
 
-	// the minimum over interleaved trials, for the same reason as the MultiDegree test above;
-	// distinct variable names per trial so no trial benefits from another's interned nodes
-	double us12 = std::numeric_limits<double>::infinity(), us18 = us12;
-	for (int trial = 0; trial < 5; ++trial)
-	{
-		us12 = std::min(us12, time_build("a" + std::to_string(trial), 12));
-		us18 = std::min(us18, time_build("b" + std::to_string(trial), 18));
-	}
-	double const ratio = us18 / us12;
-	BOOST_TEST_MESSAGE("build: 12 levels " << us12 << " us, 18 levels " << us18
-	                   << " us, ratio " << ratio << " (O(DAG) small, O(expansion) ~64)");
-	BOOST_CHECK_LT(ratio, 8.0);
+    // the minimum over interleaved trials, for the same reason as the MultiDegree test above;
+    // distinct variable names per trial so no trial benefits from another's interned nodes
+    double us12 = std::numeric_limits<double>::infinity(), us18 = us12;
+    for (int trial = 0; trial < 5; ++trial)
+    {
+        us12 = std::min(us12, time_build("a" + std::to_string(trial), 12));
+        us18 = std::min(us18, time_build("b" + std::to_string(trial), 18));
+    }
+    double const ratio = us18 / us12;
+    BOOST_TEST_MESSAGE("build: 12 levels " << us12 << " us, 18 levels " << us18
+                       << " us, ratio " << ratio << " (O(DAG) small, O(expansion) ~64)");
+    BOOST_CHECK_LT(ratio, 8.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // canonicalization

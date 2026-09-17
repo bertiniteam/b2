@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -58,13 +58,13 @@ namespace {
     {
         template <typename... A> struct result
         { typedef std::string type; };
-        
+
         template <typename A>
         std::string operator()(A a) const {
             return boost::algorithm::to_lower_copy(a);
         }
     };
-    
+
     using lazy_to_lower_ = boost::phoenix::function<to_lower_f >;
 }
 
@@ -80,32 +80,32 @@ namespace bertini
         {
             /**
              Qi Parser object for converting Bertini configuration settings into ini format so they can be read by Boost.ProgramOptions.
-             
+
              To use this parser, construct an object of its type, then use it to parse.
-             
+
              \code
              System sys;
              std::string str = "TrackType: 1\n MPType: 2";
-             
+
              std::string::const_iterator iter = str.begin();
              std::string::const_iterator end = str.end();
-             
-             
+
+
              bertini::SystemParser<std::string::const_iterator> S;
-             
-             
+
+
              bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-             
+
              \endcode
-             
+
              \brief Qi Parser object converting settings to ini format.
              */
-            
+
             template<typename Iterator, typename Skipper = ascii::space_type> //boost::spirit::unused_type
             struct ConfigToIni : qi::grammar<Iterator, std::string(), Skipper>
             {
-                
-                
+
+
                 ConfigToIni() : ConfigToIni::base_type(root_rule_, "ConfigToIni")
                 {
                     namespace phx = boost::phoenix;
@@ -122,38 +122,38 @@ namespace bertini
                     using qi::omit;
                     using boost::spirit::lexeme;
                     using boost::spirit::as_string;
-                    
+
                     root_rule_.name("ConfigToIni_root_rule");
-                    
+
                     root_rule_ = eps[_val = ""] >> *line_[_val = _val + _1+"\n"] >> -last_line_[_val = _val + _1];
-                    
-                    
+
+
                     line_.name("line_of_settings_input");
                     line_ = (eps >> colon_ >> yes_eol_)[_val = lazy_to_lower_()(_1) + "=" + _2];
-                    
+
                     last_line_.name("line_of_settings_input_with_no_eol");
                     last_line_ = (eps >> colon_ >> no_eol_)[_val = lazy_to_lower_()(_1) + "=" + _2];
-                    
+
                     colon_.name("Set of characters with no : or eol");
                     colon_ = lexeme[*(char_ -  ":") >> omit[":"] ];
-                    
+
                     yes_eol_.name("Set of characters with eol");
                     yes_eol_ = lexeme[*(char_ - eol - ";") >> omit[-(char_(';') >> *(char_ - eol) )] >> eol];
 
                     no_eol_.name("Set of characters with no eol");
                     no_eol_ = lexeme[*(char_  - ";") >> omit[-(char_(';') >> *(char_ ) )]];
-                    
+
 //                                         debug(root_rule_);
 //                                         debug(line_);
 //                    debug(last_line_);
 //                    debug(yes_eol_);
 //                    debug(no_eol_);
-//                    
+//
 //                                         BOOST_SPIRIT_DEBUG_NODES((root_rule_)
 //                                                                  (line_)(last_line_)(yes_eol_)(no_eol_) )
-                    
-                    
-                    
+
+
+
                     using phx::val;
                     using phx::construct;
                     using namespace qi::labels;
@@ -167,13 +167,13 @@ namespace bertini
                      std::endl
                      );
                 }
-                
+
             private:
                 qi::rule<Iterator, std::string(), ascii::space_type > root_rule_;
                 qi::rule<Iterator, ascii::space_type, std::string()> line_, last_line_, colon_, yes_eol_, no_eol_;
-                
+
             }; //end struct ConfigToIni
-            
+
         } // end parsing namespace
     }// end settings namespace
 }// end bertini namespace

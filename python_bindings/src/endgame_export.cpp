@@ -24,38 +24,38 @@
 //  No heavy endgame/tracker headers needed here: only void functions are called by name.
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		// Forward declarations — defined in endgame_{config,double,mp,amp}_export.cpp.
-		void ExportEndgameSettings();
-		void ExportAMPPSEG();
-		void ExportFDPSEG();
-		void ExportFMPSEG();
-		void ExportAMPCauchyEG();
-		void ExportFDCauchyEG();
-		void ExportFMCauchyEG();
+        // Forward declarations — defined in endgame_{config,double,mp,amp}_export.cpp.
+        void ExportEndgameSettings();
+        void ExportAMPPSEG();
+        void ExportFDPSEG();
+        void ExportFMPSEG();
+        void ExportAMPCauchyEG();
+        void ExportFDCauchyEG();
+        void ExportFMCauchyEG();
 
-		void ExportEndgames()
-		{
-			scope current_scope;
-			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-			new_submodule_name.append(".endgame");
-			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-			current_scope.attr("endgame") = new_submodule;
+        void ExportEndgames()
+        {
+            scope current_scope;
+            std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+            new_submodule_name.append(".endgame");
+            object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+            current_scope.attr("endgame") = new_submodule;
 
-			scope new_submodule_scope = new_submodule;
-			new_submodule_scope.attr("__doc__") = "Endgames and associated types and functions.  For tracking around singularities.";
+            scope new_submodule_scope = new_submodule;
+            new_submodule_scope.attr("__doc__") = "Endgames and associated types and functions.  For tracking around singularities.";
 
-			ExportEndgameSettings();
+            ExportEndgameSettings();
 
-			ExportAMPPSEG();
-			ExportFDPSEG();
-			ExportFMPSEG();
+            ExportAMPPSEG();
+            ExportFDPSEG();
+            ExportFMPSEG();
 
-			ExportAMPCauchyEG();
-			ExportFDCauchyEG();
-			ExportFMCauchyEG();
-		}
+            ExportAMPCauchyEG();
+            ExportFDCauchyEG();
+            ExportFMCauchyEG();
+        }
 
-	}
+    }
 }

@@ -123,7 +123,7 @@ encoding.
 template <typename ConfigT>
 detail::Digest256 ConfigDigest(ConfigT const& config)
 {
-	return detail::Sha256(std::string(ConfigEncodingVersion) + "\n" + CanonicalEncoding(config));
+    return detail::Sha256(std::string(ConfigEncodingVersion) + "\n" + CanonicalEncoding(config));
 }
 
 /**
@@ -140,9 +140,9 @@ its settings digest in one fixed order (document it at the call site).
 template <typename... ConfigTs>
 detail::Digest256 SettingsDigest(ConfigTs const&... configs)
 {
-	std::string combined(ConfigEncodingVersion);
-	((combined += "\n" + CanonicalEncoding(configs)), ...);
-	return detail::Sha256(combined);
+    std::string combined(ConfigEncodingVersion);
+    ((combined += "\n" + CanonicalEncoding(configs)), ...);
+    return detail::Sha256(combined);
 }
 
 /**

@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/root_export.cpp:  Source file for exposing root nodes to python.
@@ -29,31 +29,30 @@
 
 
 namespace bertini{
-	namespace python{
-		
-		
-
-		void ExportRoots()
-		{
-			scope current_scope;
-			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-			new_submodule_name.append(".root");
-			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-			current_scope.attr("root") = new_submodule;
-
-			scope new_submodule_scope = new_submodule;
+    namespace python{
 
 
-			// NamedExpression: Named(expr, "a") -- a user-named subexpression that prints as its
-			// name and evaluates to its expression.  This is the sole surviving handle node
-			// (Function and Handle were deleted; it inherits NamedSymbol directly).
-			class_<NamedExpression, bases<NamedSymbol>, std::shared_ptr<NamedExpression> >("NamedExpression", no_init)
-			.def("__init__",make_constructor(&NamedExpression::template Make<const std::shared_ptr<Node>&, std::string const&>))
-			.def("root", +[](NamedExpression const& h) { return h.EntryNode(); }, (arg("self")), "the defining expression this name stands for")
-			;
 
-		}
+        void ExportRoots()
+        {
+            scope current_scope;
+            std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+            new_submodule_name.append(".root");
+            object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+            current_scope.attr("root") = new_submodule;
 
-	}
+            scope new_submodule_scope = new_submodule;
+
+
+            // NamedExpression: Named(expr, "a") -- a user-named subexpression that prints as its
+            // name and evaluates to its expression.  This is the sole surviving handle node
+            // (Function and Handle were deleted; it inherits NamedSymbol directly).
+            class_<NamedExpression, bases<NamedSymbol>, std::shared_ptr<NamedExpression> >("NamedExpression", no_init)
+            .def("__init__",make_constructor(&NamedExpression::template Make<const std::shared_ptr<Node>&, std::string const&>))
+            .def("root", +[](NamedExpression const& h) { return h.EntryNode(); }, (arg("self")), "the defining expression this name stands for")
+            ;
+
+        }
+
+    }
 }
-

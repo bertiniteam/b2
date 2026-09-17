@@ -15,12 +15,12 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file bertini2/system/start/utility.hpp 
+\file bertini2/system/start/utility.hpp
 
 \brief utilities for start system code.
 
@@ -34,50 +34,50 @@
 namespace bertini{
 
 
-	/**
-	\brief Convert a zero-based index to a zero-based subscript vector.  
+    /**
+    \brief Convert a zero-based index to a zero-based subscript vector.
 
-	Throws `std::out_of_range` if the index is out-of-range based on the dimensions.
+    Throws `std::out_of_range` if the index is out-of-range based on the dimensions.
 
-	This goes from front to back, top to bottom.  So 
+    This goes from front to back, top to bottom.  So
 
-	[0 2 4      [(0,0) (0,1) (0,2)
-	 1 3 5]      (1,0) (1,1) (1,2)]
+    [0 2 4      [(0,0) (0,1) (0,2)
+     1 3 5]      (1,0) (1,1) (1,2)]
 
-	 etc for higher-dimensional arrays.  The functionality here is identical to that of Matlab's analagous call.
-	
-	\param index The index you want to convert.
-	\param dimensions The dimensions of the object you are subscripting or indexing into.
-	\return A vector containing the subscripts for the input index.
-	\throws std::out_of_range, if the index is impossible to convert.
-	*/
-	template <typename T>
-	std::vector<T> IndexToSubscript(T index, std::vector<T> const& dimensions)
-	{
+     etc for higher-dimensional arrays.  The functionality here is identical to that of Matlab's analagous call.
 
-		std::vector< T > subscripts(dimensions.size());//for forming a subscript from an index
+    \param index The index you want to convert.
+    \param dimensions The dimensions of the object you are subscripting or indexing into.
+    \return A vector containing the subscripts for the input index.
+    \throws std::out_of_range, if the index is impossible to convert.
+    */
+    template <typename T>
+    std::vector<T> IndexToSubscript(T index, std::vector<T> const& dimensions)
+    {
 
-		std::vector<T> k(dimensions.size(),1);
-		for (size_t ii = 0; ii+1 < dimensions.size(); ++ii)
-		  k[ii+1] = k[ii]*dimensions[ii];
+        std::vector< T > subscripts(dimensions.size());//for forming a subscript from an index
 
-
-		if (index >= k.back()*dimensions.back())
-		  throw std::out_of_range("in IndexToSubscript, index exceeds max based on dimension sizes");
+        std::vector<T> k(dimensions.size(),1);
+        for (size_t ii = 0; ii+1 < dimensions.size(); ++ii)
+          k[ii+1] = k[ii]*dimensions[ii];
 
 
-		for (int ii = static_cast<int>(dimensions.size())-1; ii >= 0; --ii)
-		{
-		  T I = index%k[static_cast<size_t>(ii)];
-		  T J = (index - I) / k[static_cast<size_t>(ii)];
-		  subscripts[static_cast<size_t>(ii)] = J;
-		  index = I;
-		}
+        if (index >= k.back()*dimensions.back())
+          throw std::out_of_range("in IndexToSubscript, index exceeds max based on dimension sizes");
 
-		return subscripts;
-	  }
 
-	  
+        for (int ii = static_cast<int>(dimensions.size())-1; ii >= 0; --ii)
+        {
+          T I = index%k[static_cast<size_t>(ii)];
+          T J = (index - I) / k[static_cast<size_t>(ii)];
+          subscripts[static_cast<size_t>(ii)] = J;
+          index = I;
+        }
+
+        return subscripts;
+      }
+
+
 
 } // re: namespace bertini
 
@@ -85,7 +85,3 @@ namespace bertini{
 
 
 #endif
-
-
-
-

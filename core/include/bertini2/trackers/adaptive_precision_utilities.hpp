@@ -15,12 +15,12 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file include/bertini2/trackers/adaptive_precision_utilities.hpp 
+\file include/bertini2/trackers/adaptive_precision_utilities.hpp
 
 \brief Functions for dealing with precisions of objects, particularly in the context of adaptive precision.
 
@@ -43,9 +43,9 @@ namespace bertini{ namespace tracking { namespace adaptive{
 inline
 void SetPrecision(SampCont<complex_mp> & samples, unsigned prec)
 {
-	for (auto& s : samples)
-		for (unsigned ii=0; ii<s.size(); ii++)
-			s(ii).precision(prec);
+    for (auto& s : samples)
+        for (unsigned ii=0; ii<s.size(); ii++)
+            s(ii).precision(prec);
 }
 
 /**
@@ -57,12 +57,12 @@ void SetPrecision(SampCont<complex_mp> & samples, unsigned prec)
 inline
 void SetPrecision(TimeCont<complex_mp> & times, unsigned prec)
 {
-	for (auto& t : times)
-		t.precision(prec);
+    for (auto& t : times)
+        t.precision(prec);
 }
 
 /**
-\brief Get the maximum precision among an input set of space samples.  
+\brief Get the maximum precision among an input set of space samples.
 
 This is computed based on the first coordinate.  Length-zero samples will cause either an assert or a throw (from Eigen, not Bertini2).
 
@@ -72,11 +72,11 @@ This is computed based on the first coordinate.  Length-zero samples will cause 
 inline
 unsigned MaxPrecision(SampCont<complex_mp> const& samples)
 {
-	unsigned max_precision = 0;
-	for (const auto& s : samples)
-		if(Precision(s(0)) > max_precision)
-			max_precision = Precision(s(0));
-	return max_precision;
+    unsigned max_precision = 0;
+    for (const auto& s : samples)
+        if(Precision(s(0)) > max_precision)
+            max_precision = Precision(s(0));
+    return max_precision;
 }
 
 /**
@@ -88,11 +88,11 @@ unsigned MaxPrecision(SampCont<complex_mp> const& samples)
 inline
 unsigned MaxPrecision(TimeCont<complex_mp> const& times)
 {
-	unsigned max_precision = 0;
-	for (const auto& t : times)
-		if(Precision(t) > max_precision)
-			max_precision = Precision(t);
-	return max_precision;
+    unsigned max_precision = 0;
+    for (const auto& t : times)
+        if(Precision(t) > max_precision)
+            max_precision = Precision(t);
+    return max_precision;
 }
 
 
@@ -106,7 +106,7 @@ Cannot change precision of fixed precision hardware doubles.  This function is p
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<complex_dbl> & /*times*/, SampCont<complex_dbl> & /*samples*/)
 {
-	return DoublePrecision();
+    return DoublePrecision();
 }
 
 
@@ -121,20 +121,20 @@ unsigned EnsureAtUniformPrecision(TimeCont<complex_dbl> & /*times*/, SampCont<co
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<complex_mp> & times, SampCont<complex_mp> & samples)
 {
-	auto def_prec = ThreadPrecision();
-	if (std::any_of(begin(times),end(times),[=](auto const& p){return Precision(p)!=def_prec;}) 
-		||
-		std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;}))
-	{
-		auto max_precision = max(MaxPrecision(samples), MaxPrecision(times));
+    auto def_prec = ThreadPrecision();
+    if (std::any_of(begin(times),end(times),[=](auto const& p){return Precision(p)!=def_prec;})
+        ||
+        std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;}))
+    {
+        auto max_precision = max(MaxPrecision(samples), MaxPrecision(times));
 
-		SetThreadPrecision(max_precision);
-		SetPrecision(times, max_precision);
-		SetPrecision(samples, max_precision);
-		return max_precision;
-	}
-	return def_prec;
-	
+        SetThreadPrecision(max_precision);
+        SetPrecision(times, max_precision);
+        SetPrecision(samples, max_precision);
+        return max_precision;
+    }
+    return def_prec;
+
 }
 
 
@@ -152,21 +152,21 @@ This function does NOT do any refinement, it merely changes the precision of def
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<complex_mp> & times, SampCont<complex_mp> & samples, SampCont<complex_mp> & derivatives)
 {
-	auto def_prec = ThreadPrecision();
-	if (std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;}) 
-	    || 
-	    std::any_of(begin(derivatives),end(derivatives),[=](auto const& p){return Precision(p)!=def_prec;}))
-	{
-		auto max_precision = max(MaxPrecision(samples),MaxPrecision(times),MaxPrecision(derivatives));
+    auto def_prec = ThreadPrecision();
+    if (std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;})
+        ||
+        std::any_of(begin(derivatives),end(derivatives),[=](auto const& p){return Precision(p)!=def_prec;}))
+    {
+        auto max_precision = max(MaxPrecision(samples),MaxPrecision(times),MaxPrecision(derivatives));
 
-		SetThreadPrecision(max_precision);
-		
-		SetPrecision(times, max_precision);
-		SetPrecision(samples, max_precision);
-		SetPrecision(derivatives, max_precision);
-		return max_precision;
-	}
-	return def_prec;
+        SetThreadPrecision(max_precision);
+
+        SetPrecision(times, max_precision);
+        SetPrecision(samples, max_precision);
+        SetPrecision(derivatives, max_precision);
+        return max_precision;
+    }
+    return def_prec;
 }
 
 

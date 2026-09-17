@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/containers_export.hpp:  Exports all needed containers from Bertini 2.0 to python.
@@ -40,36 +40,36 @@ namespace bertini{ namespace python{
 template< typename T>
 inline std::ostream& operator<<(std::ostream & out, const std::vector<T> & t)
 {
-	out << "[";
-	for (size_t ii = 0; ii < t.size(); ++ii)
-	{
-		out << t[ii];
-		if (ii!=t.size()-1)
-		{
-			out << ", ";
-		}
-	}
-	out << "]";
+    out << "[";
+    for (size_t ii = 0; ii < t.size(); ++ii)
+    {
+        out << t[ii];
+        if (ii!=t.size()-1)
+        {
+            out << ", ";
+        }
+    }
+    out << "]";
 
-	return out;
+    return out;
 }
 
 
 template< typename T>
 inline std::ostream& operator<<(std::ostream & out, const std::deque<T> & t)
 {
-	out << "[";
-	for (size_t ii = 0; ii < t.size(); ++ii)
-	{
-		out << t[ii];
-		if (ii!=t.size()-1)
-		{
-			out << ", ";
-		}
-	}
-	out << "]";
+    out << "[";
+    for (size_t ii = 0; ii < t.size(); ++ii)
+    {
+        out << t[ii];
+        if (ii!=t.size()-1)
+        {
+            out << ", ";
+        }
+    }
+    out << "]";
 
-	return out;
+    return out;
 }
 
 
@@ -79,42 +79,42 @@ Adds functionality to iterable types
 template<typename ContT>
 class ListVisitor: public def_visitor<ListVisitor<ContT> >
 {
-	friend class ::boost::python::def_visitor_access;
-	
+    friend class ::boost::python::def_visitor_access;
+
 public:
-	template<class PyClass>
-	void visit(PyClass& cl) const;
-	
+    template<class PyClass>
+    void visit(PyClass& cl) const;
+
 private:
 
 
-	static std::string __str__(const object& obj)
-	{
-		std::ostringstream oss;
-		ContT self=extract<ContT>(obj)();
-		std::stringstream ss;
-		ss << "[";
-		for (size_t ii = 0; ii < self.size(); ++ii)
-		{
-			ss << self[ii];
-			if (ii!=self.size()-1)
-			{
-				ss << ", ";
-			}
-		}
-		ss << "]";
-		return ss.str();
-	};
+    static std::string __str__(const object& obj)
+    {
+        std::ostringstream oss;
+        ContT self=extract<ContT>(obj)();
+        std::stringstream ss;
+        ss << "[";
+        for (size_t ii = 0; ii < self.size(); ++ii)
+        {
+            ss << self[ii];
+            if (ii!=self.size()-1)
+            {
+                ss << ", ";
+            }
+        }
+        ss << "]";
+        return ss.str();
+    };
 
-	static std::string __repr__(const object& obj)
-	{
-		return __str__(obj);
-		// std::ostringstream oss;
-		// const ContT& self=extract<ContT>(obj)();
-		// std::stringstream ss;
-		// ss << self.str(0,std::ios::scientific);
-		// return ss.str();
-	};	
+    static std::string __repr__(const object& obj)
+    {
+        return __str__(obj);
+        // std::ostringstream oss;
+        // const ContT& self=extract<ContT>(obj)();
+        // std::stringstream ss;
+        // ss << self.str(0,std::ios::scientific);
+        // return ss.str();
+    };
 
 };// ListVisitor class
 
@@ -124,7 +124,7 @@ private:
 
 
 // This block of code lets us construct a container in C++ from a list of things in Python.
-// i found this problem difficult.  
+// i found this problem difficult.
 //
 // fortunately, there were a number of questions and answers of varying quality about it, and the below
 // worked readily.
@@ -134,7 +134,7 @@ private:
 template<typename ContT>
 std::shared_ptr<ContT> create_MyClass(boost::python::object const& iterable)
 {
-	using ContainedT = typename ContT::value_type;
+    using ContainedT = typename ContT::value_type;
 
     // Accept ANY Python iterable, not just a list -- so e.g. VariableGroup(linalg.variable_vector('x', 3))
     // works directly on the numpy object array, with no list() wrapping.
@@ -160,8 +160,8 @@ struct std_list_to_python
 
 template<typename ContT>
 struct pylist_converter
-{	
-	using ContainedT = typename ContT::value_type;
+{
+    using ContainedT = typename ContT::value_type;
 
     static void* convertible(PyObject* object)
     {

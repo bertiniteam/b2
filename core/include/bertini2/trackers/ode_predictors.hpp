@@ -20,7 +20,7 @@
 //  silviana amethyst
 
 /**
-\file ode_predictors.hpp 
+\file ode_predictors.hpp
 
 \brief Includes for the suite of ODE predictors.
 */

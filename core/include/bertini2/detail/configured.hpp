@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -31,101 +31,101 @@
 
 namespace bertini {
 
-	namespace detail{
+    namespace detail{
 
 
-		/**
-		This templated struct allows one to provide a variable typelist of config structs (or anything else for that matter), and provides a way to get and set these configs by looking up the structs by type.
+        /**
+        This templated struct allows one to provide a variable typelist of config structs (or anything else for that matter), and provides a way to get and set these configs by looking up the structs by type.
 
-		I will add lookup by index if it is needed.  If you need to look up by index, try type first.  If your types are non-unique, consider making a struct to hold the things you are storing.
-	
-
-		## On nested configs.  If two or more things in your inheritance tree require Configured, 
-		consider the following code, which can help determine whether to Get or Set from here, or to pass 
-		down the tree to a base class.
-	
-	\code
-		template <typename T>
-		const 
-		typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, T>::type
-		& Get() const
-		{
-			return Config::template Get<T>();
-		}
-
-		template <typename T>
-		const 
-		typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, T>::type
-		& Get() const
-		{
-			return EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Get<T>();
-		}
+        I will add lookup by index if it is needed.  If you need to look up by index, try type first.  If your types are non-unique, consider making a struct to hold the things you are storing.
 
 
-		template <typename T>
-		typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, void>::type
-		Set(T const& t)
-		{
-			Config::template Set(t);
-		}
+        ## On nested configs.  If two or more things in your inheritance tree require Configured,
+        consider the following code, which can help determine whether to Get or Set from here, or to pass
+        down the tree to a base class.
 
-		template <typename T>
-		typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, void>::type
-		Set(T const& t)
-		{
-			EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Set(t);
-		}
-	\endcode
+    \code
+        template <typename T>
+        const
+        typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, T>::type
+        & Get() const
+        {
+            return Config::template Get<T>();
+        }
 
-		*/
-		template<typename ...Ts>
-		struct Configured
-		{
-			std::tuple<Ts...> configuration_;  ///< The held configuration objects, one per config type.
-
-			/// \brief Construct, forwarding the given values into the held configuration tuple.
-			template<typename ... T>
-			Configured(T const& ...t) : configuration_(t...)
-			{}
+        template <typename T>
+        const
+        typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, T>::type
+        & Get() const
+        {
+            return EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Get<T>();
+        }
 
 
-			/// \brief Get the held configuration object of type T.
-			template<typename T, typename = typename std::enable_if<IsTemplateParameter<T,Ts...>::value>::type>
-			const T& Get() const
-			{
-				return std::get<T>(configuration_);
-			}
+        template <typename T>
+        typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, void>::type
+        Set(T const& t)
+        {
+            Config::template Set(t);
+        }
 
-			/// \brief Set the held configuration object of type T.
-			template<typename T, typename = typename std::enable_if<IsTemplateParameter<T,Ts...>::value>::type>
-			void Set(T const& t)
-			{
-				std::get<T>(configuration_) = t;
-			}
+        template <typename T>
+        typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, void>::type
+        Set(T const& t)
+        {
+            EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Set(t);
+        }
+    \endcode
 
-			using UsedConfigs = TypeList<Ts...>;  ///< The list of configuration types this object holds.
+        */
+        template<typename ...Ts>
+        struct Configured
+        {
+            std::tuple<Ts...> configuration_;  ///< The held configuration objects, one per config type.
 
-		}; // Configured
+            /// \brief Construct, forwarding the given values into the held configuration tuple.
+            template<typename ... T>
+            Configured(T const& ...t) : configuration_(t...)
+            {}
 
-		/// \brief Configured specialization accepting the config types packaged in a TypeList.
-		template<typename ...Ts>
-		struct Configured<TypeList<Ts...>> : public Configured<Ts...>
-		{
-			/// \brief Construct, forwarding the given values to the base Configured.
-			template<typename ... T>
-			Configured(T const& ...t) : Configured<Ts...>(t...)
-			{}
 
-			/// \brief Default-construct the held configuration objects.
-			Configured() : Configured<Ts...>() {}
+            /// \brief Get the held configuration object of type T.
+            template<typename T, typename = typename std::enable_if<IsTemplateParameter<T,Ts...>::value>::type>
+            const T& Get() const
+            {
+                return std::get<T>(configuration_);
+            }
 
-		};
+            /// \brief Set the held configuration object of type T.
+            template<typename T, typename = typename std::enable_if<IsTemplateParameter<T,Ts...>::value>::type>
+            void Set(T const& t)
+            {
+                std::get<T>(configuration_) = t;
+            }
 
-		/// \brief Macro injecting a Get<T>() that forwards to the class's Config base (for Configured users).
-		#define FORWARD_GET_CONFIGURED \
-		template <typename T> \
-		const T& Get() const \
-		{ return Config::template Get<T>();}
+            using UsedConfigs = TypeList<Ts...>;  ///< The list of configuration types this object holds.
 
-	} // namespace detail
+        }; // Configured
+
+        /// \brief Configured specialization accepting the config types packaged in a TypeList.
+        template<typename ...Ts>
+        struct Configured<TypeList<Ts...>> : public Configured<Ts...>
+        {
+            /// \brief Construct, forwarding the given values to the base Configured.
+            template<typename ... T>
+            Configured(T const& ...t) : Configured<Ts...>(t...)
+            {}
+
+            /// \brief Default-construct the held configuration objects.
+            Configured() : Configured<Ts...>() {}
+
+        };
+
+        /// \brief Macro injecting a Get<T>() that forwards to the class's Config base (for Configured users).
+        #define FORWARD_GET_CONFIGURED \
+        template <typename T> \
+        const T& Get() const \
+        { return Config::template Get<T>();}
+
+    } // namespace detail
 }

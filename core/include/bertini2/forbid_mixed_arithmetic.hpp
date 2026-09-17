@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #ifndef BERTINI_FORBID_MIXED_ARITHMETIC_HPP
@@ -25,14 +25,14 @@
 #pragma once
 
 namespace boost{
-	namespace multiprecision
-	{
+    namespace multiprecision
+    {
 template <class Backend>
 struct is_compatible_arithmetic_type<double, number<Backend> > : public mpl::false_ {};
 
 template <class Backend>
 struct is_compatible_arithmetic_type<mpq_rational, number<Backend> > : public mpl::false_ {};
-	}
+    }
 }
 
 

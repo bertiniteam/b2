@@ -85,25 +85,25 @@ mpfr pnum_mpfr;
 This quick struct acts only to initialize the mpfr's to the correct precision, with correct values.  Brent discovered on his machine that these variables were in the incorrect precision, and it caused many tests to fail.  Hence, this fixture.
 */
 struct ClassTestInit{
-	ClassTestInit()
-	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-		xnum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-		ynum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-		znum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-		anum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-		bnum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-		threshold_clearance_mp.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+    ClassTestInit()
+    {
+        bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        xnum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        ynum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        znum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        anum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        bnum_mpfr.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+        threshold_clearance_mp.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		xnum_mpfr = mpfr(xstr_real, xstr_imag);
-		ynum_mpfr = mpfr(ystr_real, ystr_imag);
-		znum_mpfr = mpfr(zstr_real, zstr_imag);
-		anum_mpfr = mpfr(astr_real, astr_imag);
-		bnum_mpfr = mpfr(bstr_real, bstr_imag);
-		pnum_mpfr = mpfr(pstr_real, pstr_imag);
+        xnum_mpfr = mpfr(xstr_real, xstr_imag);
+        ynum_mpfr = mpfr(ystr_real, ystr_imag);
+        znum_mpfr = mpfr(zstr_real, zstr_imag);
+        anum_mpfr = mpfr(astr_real, astr_imag);
+        bnum_mpfr = mpfr(bstr_real, bstr_imag);
+        pnum_mpfr = mpfr(pstr_real, pstr_imag);
 
-		threshold_clearance_mp = bertini::real_mp("1e-27");
-	}
+        threshold_clearance_mp = bertini::real_mp("1e-27");
+    }
 };
 
 

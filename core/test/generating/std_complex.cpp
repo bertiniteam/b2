@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -33,24 +33,24 @@
 BOOST_AUTO_TEST_SUITE(complex_double_generation)
 
 BOOST_AUTO_TEST_CASE(zero)
-{	
-	bertini::DefaultPrecision(30);
-	std::complex<double> z(0,0);
+{
+    bertini::DefaultPrecision(30);
+    std::complex<double> z(0,0);
 
 
-	std::string result;
+    std::string result;
     std::back_insert_iterator<std::string> sink(result);
 
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
     std::complex<double> rt;
-	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
+    BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 
 
 BOOST_AUTO_TEST_CASE(one)
-{   
+{
     bertini::DefaultPrecision(30);
     std::complex<double> z(1,1);
 
@@ -61,13 +61,13 @@ BOOST_AUTO_TEST_CASE(one)
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
     std::complex<double> rt;
-	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
+    BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 
 
 BOOST_AUTO_TEST_CASE(sqrt_2)
-{   
+{
     bertini::DefaultPrecision(30);
     std::complex<double> z(sqrt(2),sqrt(3));
 
@@ -78,12 +78,12 @@ BOOST_AUTO_TEST_CASE(sqrt_2)
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
     std::complex<double> rt;
-	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
+    BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 
 BOOST_AUTO_TEST_CASE(check_135_477005)
-{   
+{
     bertini::DefaultPrecision(30);
     std::complex<double> z(135.477005,135.477005234989817410289);
 
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(check_135_477005)
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
     std::complex<double> rt;
-	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
+    BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 

@@ -24,31 +24,31 @@
 #include "parallel_export.hpp"
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		void ExportParallel()
-		{
-			scope current_scope;
-			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-			new_submodule_name.append(".parallel");
-			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-			current_scope.attr("parallel") = new_submodule;
+        void ExportParallel()
+        {
+            scope current_scope;
+            std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+            new_submodule_name.append(".parallel");
+            object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+            current_scope.attr("parallel") = new_submodule;
 
-			scope new_submodule_scope = new_submodule;
-			new_submodule_scope.attr("__doc__") = "MPI parallelism support (requires MPI_Comm passed from mpi4py)";
+            scope new_submodule_scope = new_submodule;
+            new_submodule_scope.attr("__doc__") = "MPI parallelism support (requires MPI_Comm passed from mpi4py)";
 
-			def("rank", &bertini::parallel::Rank,
-				"Return the rank of this process. Returns 0 in serial (non-MPI) builds.");
-			def("size", &bertini::parallel::Size,
-				"Return the total number of processes. Returns 1 in serial (non-MPI) builds.");
-			def("is_manager", &bertini::parallel::IsManager,
-				"Return True if this process is the manager (rank 0). Always True in serial builds.");
-			def("is_worker", &bertini::parallel::IsWorker,
-				"Return True if this process is a worker (rank > 0). Always False in serial builds.");
-			def("initialize", &bertini::parallel::Initialize,
-				"Initialize MPI (or no-op if already initialized). Safe to call with mpi4py pre-init.");
-			def("finalize", &bertini::parallel::Finalize,
-				"Finalize MPI (or no-op if already finalized).");
-		}
-	}
+            def("rank", &bertini::parallel::Rank,
+                "Return the rank of this process. Returns 0 in serial (non-MPI) builds.");
+            def("size", &bertini::parallel::Size,
+                "Return the total number of processes. Returns 1 in serial (non-MPI) builds.");
+            def("is_manager", &bertini::parallel::IsManager,
+                "Return True if this process is the manager (rank 0). Always True in serial builds.");
+            def("is_worker", &bertini::parallel::IsWorker,
+                "Return True if this process is a worker (rank > 0). Always False in serial builds.");
+            def("initialize", &bertini::parallel::Initialize,
+                "Initialize MPI (or no-op if already initialized). Safe to call with mpi4py pre-init.");
+            def("finalize", &bertini::parallel::Finalize,
+                "Finalize MPI (or no-op if already finalized).");
+        }
+    }
 }

@@ -27,8 +27,8 @@
 #include <bertini2/parallel.hpp>
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		void ExportParallel();
+        void ExportParallel();
 
-	}} // namespaces
+    }} // namespaces

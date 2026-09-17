@@ -22,7 +22,7 @@
 
 /**
  \file bertini2/io/parsing/function_parsers.hpp
- 
+
  \brief Provides the parsers for functions in bertini2.
  */
 
@@ -36,36 +36,36 @@
 
 
 namespace bertini {
-	namespace parsing {
-		namespace classic {
-		
-			
-			
-			/// \brief Parse a function expression from the iterator range into a node tree.
-			template <typename Iterator>
-			bool parse(Iterator first, Iterator last, std::shared_ptr<bertini::node::Node>& func)
-			{
-				using boost::spirit::qi::double_;
-				using boost::spirit::qi::_1;
-				using boost::spirit::qi::phrase_parse;
-				using boost::spirit::ascii::space;
-				using boost::phoenix::ref;
-				
-				FunctionParser<Iterator> S;
-				
-				std::shared_ptr<bertini::node::Node>  f{};
-				bool r = phrase_parse(first, last,
-									  S,
-									  space,
-									  f);
-				
-				if (!r || first != last) // fail if we did not get a full match
-					return false;
-				
-				func = f;
-				return r;
-			}
-		} // re: namespace classic
-			
-	}// re: namespace parsing
+    namespace parsing {
+        namespace classic {
+
+
+
+            /// \brief Parse a function expression from the iterator range into a node tree.
+            template <typename Iterator>
+            bool parse(Iterator first, Iterator last, std::shared_ptr<bertini::node::Node>& func)
+            {
+                using boost::spirit::qi::double_;
+                using boost::spirit::qi::_1;
+                using boost::spirit::qi::phrase_parse;
+                using boost::spirit::ascii::space;
+                using boost::phoenix::ref;
+
+                FunctionParser<Iterator> S;
+
+                std::shared_ptr<bertini::node::Node>  f{};
+                bool r = phrase_parse(first, last,
+                                      S,
+                                      space,
+                                      f);
+
+                if (!r || first != last) // fail if we did not get a full match
+                    return false;
+
+                func = f;
+                return r;
+            }
+        } // re: namespace classic
+
+    }// re: namespace parsing
 }// re: namespace bertini

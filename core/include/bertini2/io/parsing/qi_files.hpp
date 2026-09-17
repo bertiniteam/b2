@@ -22,7 +22,7 @@
 
 /**
  \file bertini2/io/parsing/qi_files.hpp
- 
+
  \brief Provides all the include files needed to develop a parsing file that uses boost qi.
  */
 
@@ -73,13 +73,13 @@ namespace classic {
 ///        read boundary or it would appear as a stray leading "character".
 inline void StripUTF8BOM(std::string& s)
 {
-	if (s.size() >= 3 &&
-	    static_cast<unsigned char>(s[0]) == 0xEF &&
-	    static_cast<unsigned char>(s[1]) == 0xBB &&
-	    static_cast<unsigned char>(s[2]) == 0xBF)
-	{
-		s.erase(0, 3);
-	}
+    if (s.size() >= 3 &&
+        static_cast<unsigned char>(s[0]) == 0xEF &&
+        static_cast<unsigned char>(s[1]) == 0xBB &&
+        static_cast<unsigned char>(s[2]) == 0xBF)
+    {
+        s.erase(0, 3);
+    }
 }
 
 /// \brief Remove Bertini 1 comments from \p s in place: everything from a `%` to the end of
@@ -90,24 +90,24 @@ inline void StripUTF8BOM(std::string& s)
 ///        error positions still name the right line.  See #407.
 inline void StripClassicComments(std::string& s)
 {
-	std::string out;
-	out.reserve(s.size());
-	bool in_comment = false;
-	for (char c : s)
-	{
-		if (c == '\n')
-		{
-			in_comment = false;
-			out.push_back(c);
-		}
-		else if (in_comment)
-			continue;
-		else if (c == '%')
-			in_comment = true;
-		else
-			out.push_back(c);
-	}
-	s.swap(out);
+    std::string out;
+    out.reserve(s.size());
+    bool in_comment = false;
+    for (char c : s)
+    {
+        if (c == '\n')
+        {
+            in_comment = false;
+            out.push_back(c);
+        }
+        else if (in_comment)
+            continue;
+        else if (c == '%')
+            in_comment = true;
+        else
+            out.push_back(c);
+    }
+    s.swap(out);
 }
 
 /// \brief Unwrap a Bertini 1 classic input FILE down to the declarations the grammar reads.
@@ -124,48 +124,48 @@ inline void StripClassicComments(std::string& s)
 /// caller that was working before.
 inline void StripClassicFileWrappers(std::string& s)
 {
-	auto skip_ws = [](std::string const& t, size_t i) {
-		while (i < t.size() && std::isspace(static_cast<unsigned char>(t[i]))) ++i;
-		return i;
-	};
-	// case-insensitive check for `word` at position i, followed by a non-identifier char
-	auto keyword_at = [](std::string const& t, size_t i, char const* word) {
-		size_t n = std::strlen(word);
-		if (i + n > t.size()) return false;
-		for (size_t k = 0; k < n; ++k)
-			if (std::toupper(static_cast<unsigned char>(t[i+k])) != word[k]) return false;
-		if (i + n < t.size())
-		{
-			unsigned char c = static_cast<unsigned char>(t[i+n]);
-			if (std::isalnum(c) || c=='_') return false;
-		}
-		return true;
-	};
+    auto skip_ws = [](std::string const& t, size_t i) {
+        while (i < t.size() && std::isspace(static_cast<unsigned char>(t[i]))) ++i;
+        return i;
+    };
+    // case-insensitive check for `word` at position i, followed by a non-identifier char
+    auto keyword_at = [](std::string const& t, size_t i, char const* word) {
+        size_t n = std::strlen(word);
+        if (i + n > t.size()) return false;
+        for (size_t k = 0; k < n; ++k)
+            if (std::toupper(static_cast<unsigned char>(t[i+k])) != word[k]) return false;
+        if (i + n < t.size())
+        {
+            unsigned char c = static_cast<unsigned char>(t[i+n]);
+            if (std::isalnum(c) || c=='_') return false;
+        }
+        return true;
+    };
 
-	size_t i = skip_ws(s, 0);
+    size_t i = skip_ws(s, 0);
 
-	// a leading CONFIG section, if present, runs to its first END;
-	if (keyword_at(s, i, "CONFIG"))
-	{
-		size_t e = s.find("END;", i);
-		if (e == std::string::npos)
-			return;                       // malformed; let the grammar report it
-		i = skip_ws(s, e + 4);
-	}
+    // a leading CONFIG section, if present, runs to its first END;
+    if (keyword_at(s, i, "CONFIG"))
+    {
+        size_t e = s.find("END;", i);
+        if (e == std::string::npos)
+            return;                       // malformed; let the grammar report it
+        i = skip_ws(s, e + 4);
+    }
 
-	// an INPUT section wrapper, if present: drop the keyword and the matching trailing END;
-	if (keyword_at(s, i, "INPUT"))
-	{
-		size_t body = skip_ws(s, i + 5);
-		size_t e = s.rfind("END;");
-		if (e == std::string::npos || e < body)
-			return;                       // malformed; let the grammar report it
-		s = s.substr(body, e - body);
-		return;
-	}
+    // an INPUT section wrapper, if present: drop the keyword and the matching trailing END;
+    if (keyword_at(s, i, "INPUT"))
+    {
+        size_t body = skip_ws(s, i + 5);
+        size_t e = s.rfind("END;");
+        if (e == std::string::npos || e < body)
+            return;                       // malformed; let the grammar report it
+        s = s.substr(body, e - body);
+        return;
+    }
 
-	if (i != 0)
-		s = s.substr(i);
+    if (i != 0)
+        s = s.substr(i);
 }
 
 /// \brief Format a human-readable parse-error message (line, column, expected, and found text).

@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -48,18 +48,17 @@
 // always wins over the ambient resolution.
 struct RecordsOffByDefaultInTests
 {
-	/// Export the explicit records-off sentinel for the whole test module.
-	RecordsOffByDefaultInTests()
-	{
+    /// Export the explicit records-off sentinel for the whole test module.
+    RecordsOffByDefaultInTests()
+    {
 #ifdef _WIN32
-		_putenv_s("BERTINI_RECORDS_DIR", "none");
+        _putenv_s("BERTINI_RECORDS_DIR", "none");
 #else
-		setenv("BERTINI_RECORDS_DIR", "none", 1);
+        setenv("BERTINI_RECORDS_DIR", "none", 1);
 #endif
-	}
+    }
 };
 
 BOOST_GLOBAL_FIXTURE( RecordsOffByDefaultInTests );
 
 // deliberately left blank.  link other files with this one.
-

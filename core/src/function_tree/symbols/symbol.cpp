@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/function_tree/symbols/symbol.hpp"
@@ -25,12 +25,12 @@
 
 
 namespace bertini{
-	namespace node{
+    namespace node{
 
 
 const std::string& NamedSymbol::name() const
 {
-	return name_;
+    return name_;
 };
 
 void NamedSymbol::name(const std::string & new_name)
@@ -43,8 +43,8 @@ NamedSymbol::NamedSymbol(const std::string & new_name) : name_(new_name)
 
 void NamedSymbol::print(std::ostream& target) const
 {
-	target << name();
+    target << name();
 }
 
-	} // re: namespace node
+    } // re: namespace node
 } // re: namespace bertini

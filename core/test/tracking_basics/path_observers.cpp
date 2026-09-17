@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include <boost/test/unit_test.hpp>
@@ -60,55 +60,55 @@ using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 {
-	DefaultPrecision(16);
-	using namespace bertini::tracking;
+    DefaultPrecision(16);
+    using namespace bertini::tracking;
 
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	System sys;
+    System sys;
 
-	VariableGroup v{x,y};
+    VariableGroup v{x,y};
 
-	sys.AddFunction(x-t);
-	sys.AddFunction(pow(y,2)-x);
-	sys.AddPathVariable(t);
-	sys.AddVariableGroup(v);
+    sys.AddFunction(x-t);
+    sys.AddFunction(pow(y,2)-x);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
-
-
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+    bertini::tracking::AMPTracker tracker(sys);
 
 
-	tracker.Setup(Predictor::Euler,
-	              	1e-5,
-					1e5,
-					stepping_preferences,
-					newton_preferences);
-
-	tracker.PrecisionSetup(AMP);
-
-	mpfr t_start(1);
-	mpfr t_end(0);
-	
-	Vec<mpfr> start_point(2);
-	Vec<mpfr> end_point;
+    SteppingConfig stepping_preferences;
+    NewtonConfig newton_preferences;
 
 
-	AMPPathAccumulator<AMPTracker> path_accumulator;
-	PrecisionAccumulator<AMPTracker> precision_accumulator;
+    tracker.Setup(Predictor::Euler,
+                    1e-5,
+                    1e5,
+                    stepping_preferences,
+                    newton_preferences);
 
-	tracker.AddObserver(path_accumulator);
-	tracker.AddObserver(precision_accumulator);
+    tracker.PrecisionSetup(AMP);
 
-	start_point << mpfr(1), mpfr(1);
-	[[maybe_unused]] bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
-	                  t_start, t_end, start_point);	
+    mpfr t_start(1);
+    mpfr t_end(0);
+
+    Vec<mpfr> start_point(2);
+    Vec<mpfr> end_point;
+
+
+    AMPPathAccumulator<AMPTracker> path_accumulator;
+    PrecisionAccumulator<AMPTracker> precision_accumulator;
+
+    tracker.AddObserver(path_accumulator);
+    tracker.AddObserver(precision_accumulator);
+
+    start_point << mpfr(1), mpfr(1);
+    [[maybe_unused]] bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
+                      t_start, t_end, start_point);
 }
 
 
@@ -116,54 +116,54 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 
 BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 {
-	DefaultPrecision(16);
-	using namespace bertini::tracking;
+    DefaultPrecision(16);
+    using namespace bertini::tracking;
 
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	System sys;
+    System sys;
 
-	VariableGroup v{x,y};
+    VariableGroup v{x,y};
 
-	sys.AddFunction(x-t);
-	sys.AddFunction(pow(y,2)-x);
-	sys.AddPathVariable(t);
-	sys.AddVariableGroup(v);
+    sys.AddFunction(x-t);
+    sys.AddFunction(pow(y,2)-x);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
-
-
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+    bertini::tracking::AMPTracker tracker(sys);
 
 
-	tracker.Setup(Predictor::Euler,
-	              	1e-5,
-					1e5,
-					stepping_preferences,
-					newton_preferences);
+    SteppingConfig stepping_preferences;
+    NewtonConfig newton_preferences;
 
-	tracker.PrecisionSetup(AMP);
 
-	mpfr t_start(1);
-	mpfr t_end(0);
-	
-	Vec<mpfr> start_point(2);
-	Vec<mpfr> end_point;
+    tracker.Setup(Predictor::Euler,
+                    1e-5,
+                    1e5,
+                    stepping_preferences,
+                    newton_preferences);
 
-	[[maybe_unused]] bertini::SuccessCode tracking_success;
+    tracker.PrecisionSetup(AMP);
 
-	GoryDetailLogger<AMPTracker> tons_of_detail;
+    mpfr t_start(1);
+    mpfr t_end(0);
 
-	tracker.AddObserver(tons_of_detail);
+    Vec<mpfr> start_point(2);
+    Vec<mpfr> end_point;
 
-	start_point << mpfr(1), mpfr(1);
-	tracking_success = tracker.TrackPath(end_point,
-	                  t_start, t_end, start_point);
+    [[maybe_unused]] bertini::SuccessCode tracking_success;
+
+    GoryDetailLogger<AMPTracker> tons_of_detail;
+
+    tracker.AddObserver(tons_of_detail);
+
+    start_point << mpfr(1), mpfr(1);
+    tracking_success = tracker.TrackPath(end_point,
+                      t_start, t_end, start_point);
 
 }
 
@@ -171,53 +171,53 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 
 BOOST_AUTO_TEST_CASE(union_of_observers)
 {
-	DefaultPrecision(16);
-	using namespace bertini::tracking;
+    DefaultPrecision(16);
+    using namespace bertini::tracking;
 
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	System sys;
+    System sys;
 
-	VariableGroup v{x,y};
+    VariableGroup v{x,y};
 
-	sys.AddFunction(x-t);
-	sys.AddFunction(pow(y,2)-x);
-	sys.AddPathVariable(t);
-	sys.AddVariableGroup(v);
+    sys.AddFunction(x-t);
+    sys.AddFunction(pow(y,2)-x);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
-
-
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+    bertini::tracking::AMPTracker tracker(sys);
 
 
-	tracker.Setup(Predictor::Euler,
-	              	1e-5,
-					1e5,
-					stepping_preferences,
-					newton_preferences);
+    SteppingConfig stepping_preferences;
+    NewtonConfig newton_preferences;
 
-	tracker.PrecisionSetup(AMP);
 
-	mpfr t_start(1);
-	mpfr t_end(0);
-	
-	Vec<mpfr> start_point(2);
-	start_point << mpfr(1), mpfr(1);
+    tracker.Setup(Predictor::Euler,
+                    1e-5,
+                    1e5,
+                    stepping_preferences,
+                    newton_preferences);
 
-	Vec<mpfr> end_point;
+    tracker.PrecisionSetup(AMP);
 
-	bertini::MultiObserver<AMPTracker, GoryDetailLogger> agglomeration;
-	tracker.AddObserver(agglomeration);
+    mpfr t_start(1);
+    mpfr t_end(0);
 
-	
-	[[maybe_unused]] bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
-	                  t_start, t_end, start_point);
+    Vec<mpfr> start_point(2);
+    start_point << mpfr(1), mpfr(1);
+
+    Vec<mpfr> end_point;
+
+    bertini::MultiObserver<AMPTracker, GoryDetailLogger> agglomeration;
+    tracker.AddObserver(agglomeration);
+
+
+    [[maybe_unused]] bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
+                      t_start, t_end, start_point);
 
 }
 
@@ -240,24 +240,24 @@ using EmitterT = bertini::tracking::TrackerTraits<AMPTracker>::EventEmitterType;
 template<class TrackerT>
 struct CountingObserver : public bertini::Observer<TrackerT>
 {
-	int count = 0;
-	ObserveResult Observe(AnyEvent const&) override
-	{
-		++count;
-		return ObserveResult::KeepObserving;
-	}
+    int count = 0;
+    ObserveResult Observe(AnyEvent const&) override
+    {
+        ++count;
+        return ObserveResult::KeepObserving;
+    }
 };
 
 // Counts events, but asks to be unsubscribed after the very first one.
 template<class TrackerT>
 struct OneShotObserver : public bertini::Observer<TrackerT>
 {
-	int count = 0;
-	ObserveResult Observe(AnyEvent const&) override
-	{
-		++count;
-		return ObserveResult::Unsubscribe;
-	}
+    int count = 0;
+    ObserveResult Observe(AnyEvent const&) override
+    {
+        ++count;
+        return ObserveResult::Unsubscribe;
+    }
 };
 
 // On TrackingStarted, attaches `child` to the emitting tracker; on TrackingEnded,
@@ -265,91 +265,91 @@ struct OneShotObserver : public bertini::Observer<TrackerT>
 template<class TrackerT>
 struct MetaObserver : public bertini::Observer<TrackerT>
 {
-	CountingObserver<TrackerT> child;
-	bool saw_started = false;
-	bool saw_ended   = false;
+    CountingObserver<TrackerT> child;
+    bool saw_started = false;
+    bool saw_ended   = false;
 
-	ObserveResult Observe(AnyEvent const& e) override
-	{
-		if (auto p = dynamic_cast<const bertini::tracking::TrackingStarted<EmitterT>*>(&e))
-		{
-			saw_started = true;
-			p->Get().AddObserver(child);   // deferred: child won't see THIS event
-		}
-		else if (auto p = dynamic_cast<const bertini::tracking::TrackingEnded<EmitterT>*>(&e))
-		{
-			saw_ended = true;
-			p->Get().RemoveObserver(child);
-		}
-		return ObserveResult::KeepObserving;
-	}
+    ObserveResult Observe(AnyEvent const& e) override
+    {
+        if (auto p = dynamic_cast<const bertini::tracking::TrackingStarted<EmitterT>*>(&e))
+        {
+            saw_started = true;
+            p->Get().AddObserver(child);   // deferred: child won't see THIS event
+        }
+        else if (auto p = dynamic_cast<const bertini::tracking::TrackingEnded<EmitterT>*>(&e))
+        {
+            saw_ended = true;
+            p->Get().RemoveObserver(child);
+        }
+        return ObserveResult::KeepObserving;
+    }
 };
 
 
 // builds the square-root system into `sys`, ready for a tracker.
 static void BuildSquareRootSystem(System& sys)
 {
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	VariableGroup v{x,y};
-	sys.AddFunction(x-t);
-	sys.AddFunction(pow(y,2)-x);
-	sys.AddPathVariable(t);
-	sys.AddVariableGroup(v);
+    VariableGroup v{x,y};
+    sys.AddFunction(x-t);
+    sys.AddFunction(pow(y,2)-x);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
 }
 
 
 BOOST_AUTO_TEST_CASE(self_unsubscribe_via_return_value)
 {
-	DefaultPrecision(16);
-	using namespace bertini::tracking;
+    DefaultPrecision(16);
+    using namespace bertini::tracking;
 
-	System sys;
-	BuildSquareRootSystem(sys);
-	AMPTracker tracker(sys);
-	tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
-	tracker.PrecisionSetup(AMPConfigFrom(sys));
+    System sys;
+    BuildSquareRootSystem(sys);
+    AMPTracker tracker(sys);
+    tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+    tracker.PrecisionSetup(AMPConfigFrom(sys));
 
-	OneShotObserver<AMPTracker> one_shot;
-	tracker.AddObserver(one_shot);
+    OneShotObserver<AMPTracker> one_shot;
+    tracker.AddObserver(one_shot);
 
-	Vec<mpfr> start_point(2);
-	start_point << mpfr(1), mpfr(1);
-	Vec<mpfr> end_point;
-	[[maybe_unused]] auto code = tracker.TrackPath(end_point, mpfr(1), mpfr(0), start_point);
+    Vec<mpfr> start_point(2);
+    start_point << mpfr(1), mpfr(1);
+    Vec<mpfr> end_point;
+    [[maybe_unused]] auto code = tracker.TrackPath(end_point, mpfr(1), mpfr(0), start_point);
 
-	// it returned Unsubscribe on the first event, so it must have been dropped
-	// before the second event was ever emitted.
-	BOOST_CHECK_EQUAL(one_shot.count, 1);
+    // it returned Unsubscribe on the first event, so it must have been dropped
+    // before the second event was ever emitted.
+    BOOST_CHECK_EQUAL(one_shot.count, 1);
 }
 
 
 BOOST_AUTO_TEST_CASE(meta_observer_attaches_child_mid_dispatch)
 {
-	DefaultPrecision(16);
-	using namespace bertini::tracking;
+    DefaultPrecision(16);
+    using namespace bertini::tracking;
 
-	System sys;
-	BuildSquareRootSystem(sys);
-	AMPTracker tracker(sys);
-	tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
-	tracker.PrecisionSetup(AMPConfigFrom(sys));
+    System sys;
+    BuildSquareRootSystem(sys);
+    AMPTracker tracker(sys);
+    tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+    tracker.PrecisionSetup(AMPConfigFrom(sys));
 
-	MetaObserver<AMPTracker> meta;
-	tracker.AddObserver(meta);
+    MetaObserver<AMPTracker> meta;
+    tracker.AddObserver(meta);
 
-	Vec<mpfr> start_point(2);
-	start_point << mpfr(1), mpfr(1);
-	Vec<mpfr> end_point;
-	[[maybe_unused]] auto code = tracker.TrackPath(end_point, mpfr(1), mpfr(0), start_point);
+    Vec<mpfr> start_point(2);
+    start_point << mpfr(1), mpfr(1);
+    Vec<mpfr> end_point;
+    [[maybe_unused]] auto code = tracker.TrackPath(end_point, mpfr(1), mpfr(0), start_point);
 
-	BOOST_CHECK(meta.saw_started);
-	BOOST_CHECK(meta.saw_ended);
-	// the child was attached during TrackingStarted and saw the events that
-	// followed (steps, precision changes, ...) up to and including TrackingEnded.
-	BOOST_CHECK_GT(meta.child.count, 0);
+    BOOST_CHECK(meta.saw_started);
+    BOOST_CHECK(meta.saw_ended);
+    // the child was attached during TrackingStarted and saw the events that
+    // followed (steps, precision changes, ...) up to and including TrackingEnded.
+    BOOST_CHECK_GT(meta.child.count, 0);
 }
 
 
@@ -359,57 +359,54 @@ struct ForeignThing {};
 
 BOOST_AUTO_TEST_CASE(incompatible_observer_is_rejected)
 {
-	DefaultPrecision(16);
-	using namespace bertini::tracking;
+    DefaultPrecision(16);
+    using namespace bertini::tracking;
 
-	System sys;
-	BuildSquareRootSystem(sys);
-	AMPTracker tracker(sys);
+    System sys;
+    BuildSquareRootSystem(sys);
+    AMPTracker tracker(sys);
 
-	// an observer whose ObservedKind() is not the tracker (nor the wildcard)
-	CountingObserver<ForeignThing> wrong;
-	BOOST_CHECK_THROW(tracker.AddObserver(wrong), bertini::IncompatibleObserver);
+    // an observer whose ObservedKind() is not the tracker (nor the wildcard)
+    CountingObserver<ForeignThing> wrong;
+    BOOST_CHECK_THROW(tracker.AddObserver(wrong), bertini::IncompatibleObserver);
 
-	// the right kind attaches fine
-	CountingObserver<AMPTracker> right;
-	BOOST_CHECK_NO_THROW(tracker.AddObserver(right));
+    // the right kind attaches fine
+    CountingObserver<AMPTracker> right;
+    BOOST_CHECK_NO_THROW(tracker.AddObserver(right));
 }
 
 
 BOOST_AUTO_TEST_CASE(owning_observer_outlives_caller_reference)
 {
-	DefaultPrecision(16);
-	using namespace bertini::tracking;
+    DefaultPrecision(16);
+    using namespace bertini::tracking;
 
-	System sys;
-	BuildSquareRootSystem(sys);
-	AMPTracker tracker(sys);
-	tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
-	tracker.PrecisionSetup(AMPConfigFrom(sys));
+    System sys;
+    BuildSquareRootSystem(sys);
+    AMPTracker tracker(sys);
+    tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+    tracker.PrecisionSetup(AMPConfigFrom(sys));
 
-	auto obs = std::make_shared<CountingObserver<AMPTracker>>();
-	std::weak_ptr<CountingObserver<AMPTracker>> weak = obs;
+    auto obs = std::make_shared<CountingObserver<AMPTracker>>();
+    std::weak_ptr<CountingObserver<AMPTracker>> weak = obs;
 
-	tracker.AddObserver(std::static_pointer_cast<bertini::AnyObserver>(obs));
+    tracker.AddObserver(std::static_pointer_cast<bertini::AnyObserver>(obs));
 
-	// caller forgets its reference: the tracker co-owns the observer, so it must
-	// stay alive and keep observing -- "attach it and forget it", no dangling.
-	obs.reset();
-	BOOST_CHECK(!weak.expired());
+    // caller forgets its reference: the tracker co-owns the observer, so it must
+    // stay alive and keep observing -- "attach it and forget it", no dangling.
+    obs.reset();
+    BOOST_CHECK(!weak.expired());
 
-	Vec<mpfr> start_point(2);
-	start_point << mpfr(1), mpfr(1);
-	Vec<mpfr> end_point;
-	BOOST_CHECK_NO_THROW(tracker.TrackPath(end_point, mpfr(1), mpfr(0), start_point));
-	BOOST_CHECK_GT(weak.lock()->count, 0);
+    Vec<mpfr> start_point(2);
+    start_point << mpfr(1), mpfr(1);
+    Vec<mpfr> end_point;
+    BOOST_CHECK_NO_THROW(tracker.TrackPath(end_point, mpfr(1), mpfr(0), start_point));
+    BOOST_CHECK_GT(weak.lock()->count, 0);
 
-	// detaching releases the tracker's ownership -> the observer is destroyed
-	tracker.RemoveObserver(*weak.lock());
-	BOOST_CHECK(weak.expired());
+    // detaching releases the tracker's ownership -> the observer is destroyed
+    tracker.RemoveObserver(*weak.lock());
+    BOOST_CHECK(weak.expired());
 }
 
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-

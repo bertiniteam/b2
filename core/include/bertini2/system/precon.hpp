@@ -15,13 +15,13 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 
 /**
-\file bertini2/system/precon.hpp 
+\file bertini2/system/precon.hpp
 
 \brief Provides preconstructed systems for use around the home and office.
 */
@@ -35,10 +35,10 @@
 
 
 namespace bertini{
-	namespace system{
+    namespace system{
 
-		/// \brief A collection of preconstructed example systems, for tests and demonstrations.
-		struct Precon{
+        /// \brief A collection of preconstructed example systems, for tests and demonstrations.
+        struct Precon{
 
 /**
 Creates the Griewank-Osborn system.
@@ -47,11 +47,11 @@ From the returned system, you can unpack the variables, etc.
 */
 static
 System GriewankOsborn();
-			
-			
+
+
 /**
  Creates system with crossed paths at t = 1/3 and t = 2/3.
- 
+
  From the returned system, you can unpack the variables, etc.
  */
 static
@@ -65,11 +65,10 @@ System CrossedPaths();
 System has one affine variable group: x, y, z;
 One function: x^2 + y^2 + z^2 - 1;
 */
-static 
+static
 System Sphere();
 
 
 };
-		
-}} // namespaces
 
+}} // namespaces

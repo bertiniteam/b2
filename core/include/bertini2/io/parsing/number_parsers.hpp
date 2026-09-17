@@ -22,7 +22,7 @@
 
 /**
  \file bertini2/io/parsing/number_parsers.hpp
- 
+
  \brief Provides parsers for numbers in bertini.
  */
 
@@ -33,253 +33,253 @@
 
 
 namespace bertini{
-	namespace parsing{
+    namespace parsing{
 
-		namespace classic{
-			/// \brief A Qi grammar parsing a real multiprecision number, at a precision matching the input's digits.
-			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct MpfrFloatParser : qi::grammar<Iterator, real_mp(), boost::spirit::ascii::space_type>
-			{
-				/// \brief Construct the real-multiprecision parser.
-				MpfrFloatParser() : MpfrFloatParser::base_type(root_rule_,"MpfrFloatParser")
-				{
-					using std::max;
-					namespace phx = boost::phoenix;
-					using qi::_1;
-					using qi::_2;
-					using qi::_3;
-					using qi::_4;
-					using qi::_val;
+        namespace classic{
+            /// \brief A Qi grammar parsing a real multiprecision number, at a precision matching the input's digits.
+            template<typename Iterator, typename Skipper = ascii::space_type>
+            struct MpfrFloatParser : qi::grammar<Iterator, real_mp(), boost::spirit::ascii::space_type>
+            {
+                /// \brief Construct the real-multiprecision parser.
+                MpfrFloatParser() : MpfrFloatParser::base_type(root_rule_,"MpfrFloatParser")
+                {
+                    using std::max;
+                    namespace phx = boost::phoenix;
+                    using qi::_1;
+                    using qi::_2;
+                    using qi::_3;
+                    using qi::_4;
+                    using qi::_val;
 
-					root_rule_.name("real_mp");
-					root_rule_ = mpfr_rules_.number_string_
-									[ phx::bind( 
-											[]
-											(real_mp & B, std::string const& P)
-											{
-												using std::max;
-												auto prev_prec = DefaultPrecision();
-												auto asdf = max(prev_prec,LowestMultiplePrecision());
-												auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
+                    root_rule_.name("real_mp");
+                    root_rule_ = mpfr_rules_.number_string_
+                                    [ phx::bind(
+                                            []
+                                            (real_mp & B, std::string const& P)
+                                            {
+                                                using std::max;
+                                                auto prev_prec = DefaultPrecision();
+                                                auto asdf = max(prev_prec,LowestMultiplePrecision());
+                                                auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
 
-												B.precision(static_cast<unsigned>(digits));
-												B = real_mp(P,static_cast<unsigned>(digits));
-											},
-											_val,_1
-										)
-									];
+                                                B.precision(static_cast<unsigned>(digits));
+                                                B = real_mp(P,static_cast<unsigned>(digits));
+                                            },
+                                            _val,_1
+                                        )
+                                    ];
 
-										qi::on_error<qi::fail>(
-						root_rule_,
-						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("MpfrFloatParser"))
-					);
-				}
+                                        qi::on_error<qi::fail>(
+                        root_rule_,
+                        phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("MpfrFloatParser"))
+                    );
+                }
 
-				qi::rule<Iterator, real_mp(), Skipper > root_rule_;  ///< The grammar's root rule.
-				rules::LongNum<Iterator> mpfr_rules_;  ///< Sub-rules matching arbitrary-length number strings.
-			};
+                qi::rule<Iterator, real_mp(), Skipper > root_rule_;  ///< The grammar's root rule.
+                rules::LongNum<Iterator> mpfr_rules_;  ///< Sub-rules matching arbitrary-length number strings.
+            };
 
 
-			/// \brief A Qi grammar parsing a complex multiprecision number (real then imaginary part).
-			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct MpfrComplexParser : qi::grammar<Iterator, complex_mp(), boost::spirit::ascii::space_type>
-			{
-				/// \brief Construct the complex-multiprecision parser.
-				MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
-				{
-					using std::max;
-					namespace phx = boost::phoenix;
-					using qi::_1;
-					using qi::_2;
-					using qi::_val;
-					
-					root_rule_ =
-					(mpfr_float_ >> mpfr_float_)
-					[ phx::bind(
-								[]
-								(complex_mp & B, real_mp const& P, real_mp const& Q)
-								{
-									auto digits = max(P.precision(),Q.precision());
-									
-									B.precision(digits);
+            /// \brief A Qi grammar parsing a complex multiprecision number (real then imaginary part).
+            template<typename Iterator, typename Skipper = ascii::space_type>
+            struct MpfrComplexParser : qi::grammar<Iterator, complex_mp(), boost::spirit::ascii::space_type>
+            {
+                /// \brief Construct the complex-multiprecision parser.
+                MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
+                {
+                    using std::max;
+                    namespace phx = boost::phoenix;
+                    using qi::_1;
+                    using qi::_2;
+                    using qi::_val;
 
-									B.real(P);
-									B.imag(Q);
-								},
-								_val,_1,_2
-								)
-					 ];
-				}
-				
-				qi::rule<Iterator, complex_mp(), Skipper > root_rule_;  ///< The grammar's root rule.
-				MpfrFloatParser<Iterator> mpfr_float_;  ///< The real-part parser, used for both components.
-			};
+                    root_rule_ =
+                    (mpfr_float_ >> mpfr_float_)
+                    [ phx::bind(
+                                []
+                                (complex_mp & B, real_mp const& P, real_mp const& Q)
+                                {
+                                    auto digits = max(P.precision(),Q.precision());
 
-			/// \brief Parse a double from the iterator range.
-			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, double& c)
-			{
-				using boost::spirit::qi::double_;
-				using boost::spirit::qi::_1;
-				using boost::spirit::qi::phrase_parse;
-				using boost::spirit::ascii::space;
-				using boost::phoenix::ref;
-				
-				double rN = 0.0;
-				bool r = phrase_parse(first, last,
-									  (
-									   double_[ref(rN) = _1]
-									   ),
-									  space);
-				
-				if (!r || first != last) // fail if we did not get a full match
-					return false;
-				
-				c = rN;
-				return r;
-			}
-			
-			/// \brief Parse a double-precision complex number from the iterator range.
-			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, std::complex<double>& c)
-			{
-				using boost::spirit::qi::double_;
-				using boost::spirit::qi::_1;
-				using boost::spirit::qi::phrase_parse;
-				using boost::spirit::ascii::space;
-				using boost::phoenix::ref;
-				
-				double rN = 0.0;
-				double iN = 0.0;
-				bool r = phrase_parse(first, last,
-									  (
-									   double_[ref(rN) = _1]
-									   >> -(double_[ref(iN) = _1])
-									   |   double_[ref(rN) = _1]
-									   ),
-									  space);
-				
-				if (!r || first != last) // fail if we did not get a full match
-					return false;
-				c = std::complex<double>(rN, iN);
-				return r;
-			}
-			
-			
-			
-			
-			
-			/// \brief Parse a multiprecision real from the iterator range.
-			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, real_mp& c)
-			{
-				using boost::spirit::qi::double_;
-				using boost::spirit::qi::_1;
-				using boost::spirit::qi::phrase_parse;
-				using boost::spirit::ascii::space;
-				using boost::phoenix::ref;
-				
-				MpfrFloatParser<Iterator> S;
-				
-				real_mp rN {0};
-				bool r = phrase_parse(first, last,
-									  S,
-									  space,
-									  rN
-									  );
-				
-				if (!r || first != last) // fail if we did not get a full match
-					return false;
-				c.precision(rN.precision());
-				c = rN;
-				return r;
-			}
-			
-			
-			
-			
-			
-			/// \brief Parse a multiprecision complex number from the iterator range.
-			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, complex_mp& c)
-			{
-				using boost::spirit::qi::double_;
-				using boost::spirit::qi::_1;
-				using boost::spirit::qi::phrase_parse;
-				using boost::spirit::ascii::space;
-				using boost::phoenix::ref;
-				
-				MpfrComplexParser<Iterator> S;
-				
-				complex_mp rN {};
-				bool r = phrase_parse(first, last,
-									  S,
-									  space,
-									  rN);
-				
-				if (!r || first != last) // fail if we did not get a full match
-					return false;
-				c.precision(rN.precision());
-				c = rN;
-				return r;
-			}
-			
-		} // re: namespace classic
+                                    B.precision(digits);
+
+                                    B.real(P);
+                                    B.imag(Q);
+                                },
+                                _val,_1,_2
+                                )
+                     ];
+                }
+
+                qi::rule<Iterator, complex_mp(), Skipper > root_rule_;  ///< The grammar's root rule.
+                MpfrFloatParser<Iterator> mpfr_float_;  ///< The real-part parser, used for both components.
+            };
+
+            /// \brief Parse a double from the iterator range.
+            template <typename Iterator>
+            static bool parse(Iterator first, Iterator last, double& c)
+            {
+                using boost::spirit::qi::double_;
+                using boost::spirit::qi::_1;
+                using boost::spirit::qi::phrase_parse;
+                using boost::spirit::ascii::space;
+                using boost::phoenix::ref;
+
+                double rN = 0.0;
+                bool r = phrase_parse(first, last,
+                                      (
+                                       double_[ref(rN) = _1]
+                                       ),
+                                      space);
+
+                if (!r || first != last) // fail if we did not get a full match
+                    return false;
+
+                c = rN;
+                return r;
+            }
+
+            /// \brief Parse a double-precision complex number from the iterator range.
+            template <typename Iterator>
+            static bool parse(Iterator first, Iterator last, std::complex<double>& c)
+            {
+                using boost::spirit::qi::double_;
+                using boost::spirit::qi::_1;
+                using boost::spirit::qi::phrase_parse;
+                using boost::spirit::ascii::space;
+                using boost::phoenix::ref;
+
+                double rN = 0.0;
+                double iN = 0.0;
+                bool r = phrase_parse(first, last,
+                                      (
+                                       double_[ref(rN) = _1]
+                                       >> -(double_[ref(iN) = _1])
+                                       |   double_[ref(rN) = _1]
+                                       ),
+                                      space);
+
+                if (!r || first != last) // fail if we did not get a full match
+                    return false;
+                c = std::complex<double>(rN, iN);
+                return r;
+            }
 
 
 
-		namespace cplusplus{
-			
-			/// \brief Parse a double from the iterator range.
-			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, double& c)
-			{
-				using boost::spirit::qi::double_;
-				using boost::spirit::qi::_1;
-				using boost::spirit::qi::phrase_parse;
-				using boost::spirit::ascii::space;
-				using boost::phoenix::ref;
-				
-				double rN = 0.0;
-				bool r = phrase_parse(first, last,
-									  (
-									   double_[ref(rN) = _1]
-									   ),
-									  space);
-				
-				if (!r || first != last) // fail if we did not get a full match
-					return false;
-				
-				c = rN;
-				return r;
-			}
-			
-			
-			/// \brief Parse a double-precision complex number from the iterator range.
-			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, std::complex<double>& c)
-			{
-				using boost::spirit::qi::double_;
-				using boost::spirit::qi::_1;
-				using boost::spirit::qi::phrase_parse;
-				using boost::spirit::ascii::space;
-				using boost::phoenix::ref;
-				
-				double rN = 0.0;
-				double iN = 0.0;
-				bool r = phrase_parse(first, last,
-									  (
-									   '(' >> double_[ref(rN) = _1]
-									   >> -(',' >> double_[ref(iN) = _1]) >> ')'
-									   |   double_[ref(rN) = _1]
-									   ),
-									  space);
-				
-				if (!r || first != last) // fail if we did not get a full match
-					return false;
-				c = std::complex<double>(rN, iN);
-				return r;
-			}
-		} // re: namespace cplusplus
-	} //re: namespace parsing
+
+
+            /// \brief Parse a multiprecision real from the iterator range.
+            template <typename Iterator>
+            static bool parse(Iterator first, Iterator last, real_mp& c)
+            {
+                using boost::spirit::qi::double_;
+                using boost::spirit::qi::_1;
+                using boost::spirit::qi::phrase_parse;
+                using boost::spirit::ascii::space;
+                using boost::phoenix::ref;
+
+                MpfrFloatParser<Iterator> S;
+
+                real_mp rN {0};
+                bool r = phrase_parse(first, last,
+                                      S,
+                                      space,
+                                      rN
+                                      );
+
+                if (!r || first != last) // fail if we did not get a full match
+                    return false;
+                c.precision(rN.precision());
+                c = rN;
+                return r;
+            }
+
+
+
+
+
+            /// \brief Parse a multiprecision complex number from the iterator range.
+            template <typename Iterator>
+            static bool parse(Iterator first, Iterator last, complex_mp& c)
+            {
+                using boost::spirit::qi::double_;
+                using boost::spirit::qi::_1;
+                using boost::spirit::qi::phrase_parse;
+                using boost::spirit::ascii::space;
+                using boost::phoenix::ref;
+
+                MpfrComplexParser<Iterator> S;
+
+                complex_mp rN {};
+                bool r = phrase_parse(first, last,
+                                      S,
+                                      space,
+                                      rN);
+
+                if (!r || first != last) // fail if we did not get a full match
+                    return false;
+                c.precision(rN.precision());
+                c = rN;
+                return r;
+            }
+
+        } // re: namespace classic
+
+
+
+        namespace cplusplus{
+
+            /// \brief Parse a double from the iterator range.
+            template <typename Iterator>
+            static bool parse(Iterator first, Iterator last, double& c)
+            {
+                using boost::spirit::qi::double_;
+                using boost::spirit::qi::_1;
+                using boost::spirit::qi::phrase_parse;
+                using boost::spirit::ascii::space;
+                using boost::phoenix::ref;
+
+                double rN = 0.0;
+                bool r = phrase_parse(first, last,
+                                      (
+                                       double_[ref(rN) = _1]
+                                       ),
+                                      space);
+
+                if (!r || first != last) // fail if we did not get a full match
+                    return false;
+
+                c = rN;
+                return r;
+            }
+
+
+            /// \brief Parse a double-precision complex number from the iterator range.
+            template <typename Iterator>
+            static bool parse(Iterator first, Iterator last, std::complex<double>& c)
+            {
+                using boost::spirit::qi::double_;
+                using boost::spirit::qi::_1;
+                using boost::spirit::qi::phrase_parse;
+                using boost::spirit::ascii::space;
+                using boost::phoenix::ref;
+
+                double rN = 0.0;
+                double iN = 0.0;
+                bool r = phrase_parse(first, last,
+                                      (
+                                       '(' >> double_[ref(rN) = _1]
+                                       >> -(',' >> double_[ref(iN) = _1]) >> ')'
+                                       |   double_[ref(rN) = _1]
+                                       ),
+                                      space);
+
+                if (!r || first != last) // fail if we did not get a full match
+                    return false;
+                c = std::complex<double>(rN, iN);
+                return r;
+            }
+        } // re: namespace cplusplus
+    } //re: namespace parsing
 } //re: namespace bertini

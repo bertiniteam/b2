@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 
@@ -28,24 +28,24 @@
 
 namespace bertini
 {
-	
-	/**
-	\brief Method for printing class enums to streams.
 
-	This was adapted from https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
-	asked by user Adi, answered by James Adkison.  This code was provided CC-BY-SA 3.
+    /**
+    \brief Method for printing class enums to streams.
 
-	This code does NOT work for streaming enum classes to Boost.Log streams.
+    This was adapted from https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
+    asked by user Adi, answered by James Adkison.  This code was provided CC-BY-SA 3.
 
-	\param stream The stream to print to.
-	\param e The enum value to print
-	\return The stream you are writing to.
-	*/
-	template<typename T>
-	std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
-	{
-	    return stream << static_cast<typename std::underlying_type<T>::type>(e);
-	}
+    This code does NOT work for streaming enum classes to Boost.Log streams.
+
+    \param stream The stream to print to.
+    \param e The enum value to print
+    \return The stream you are writing to.
+    */
+    template<typename T>
+    std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+    {
+        return stream << static_cast<typename std::underlying_type<T>::type>(e);
+    }
 
 } // namespace bertini
 
@@ -53,4 +53,3 @@ namespace bertini
 
 
 #endif // include guard
-

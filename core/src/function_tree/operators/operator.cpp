@@ -15,27 +15,27 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/function_tree/operators/operator.hpp"
 
 
 namespace bertini {
-namespace node{	
+namespace node{
 
 
 void UnaryOperator::SetOperand(std::shared_ptr<Node> n)
 {
-	operand_ = n;
+    operand_ = n;
 }
 
 
 //Return the only child for the unary operator
 std::shared_ptr<Node> UnaryOperator::Operand() const
 {
-	return operand_;
+    return operand_;
 }
 
 
@@ -50,50 +50,50 @@ std::shared_ptr<Node> UnaryOperator::Operand() const
 // #397 found in PowerOperator.)
 int UnaryOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
-	return operand_->Degree(v) == 0 ? 0 : -1;
+    return operand_->Degree(v) == 0 ? 0 : -1;
 }
 
 int UnaryOperator::Degree(VariableGroup const& vars) const
 {
-	return operand_->Degree(vars) == 0 ? 0 : -1;
+    return operand_->Degree(vars) == 0 ? 0 : -1;
 }
 
 std::vector<int> UnaryOperator::MultiDegreeImpl(VariableGroup const& vars) const
 {
-	
-	std::vector<int> deg(vars.size());
-	for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
-	{
-		*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
-	}
-	return deg;
+
+    std::vector<int> deg(vars.size());
+    for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
+    {
+        *(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+    }
+    return deg;
 }
 
 
 std::size_t UnaryOperator::HashImpl() const
 {
-	std::size_t h = typeid(*this).hash_code();   // distinguishes Sin/Cos/Tan/Exp/Log/Sqrt/Negate/...
-	HashCombine(h, operand_->Hash());
-	return h;
+    std::size_t h = typeid(*this).hash_code();   // distinguishes Sin/Cos/Tan/Exp/Log/Sqrt/Negate/...
+    HashCombine(h, operand_->Hash());
+    return h;
 }
 
 bool UnaryOperator::IsSame(Node const& other) const
 {
-	if (typeid(*this) != typeid(other))
-		return false;
-	// same concrete unary type -> safe to view as UnaryOperator and compare operand identity
-	return operand_.get() == static_cast<UnaryOperator const&>(other).operand_.get();
+    if (typeid(*this) != typeid(other))
+        return false;
+    // same concrete unary type -> safe to view as UnaryOperator and compare operand identity
+    return operand_.get() == static_cast<UnaryOperator const&>(other).operand_.get();
 }
 
 
 bool UnaryOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 {
-	if (Degree(v)==0)
-	{
-		return true;
-	}
-	else
-		return false;
+    if (Degree(v)==0)
+    {
+        return true;
+    }
+    else
+        return false;
 }
 
 
@@ -102,19 +102,19 @@ Check for homogeneity, with respect to a variable group.
 */
 bool UnaryOperator::IsHomogeneous(VariableGroup const& vars) const
 {
-	if (Degree(vars)==0)
-	{
-		return true;
-	}
-	else
-		return false;
+    if (Degree(vars)==0)
+    {
+        return true;
+    }
+    else
+        return false;
 }
 
 
 
 /**
  Change the precision of this variable-precision tree node.
- 
+
  \param prec the number of digits to change precision to.
  */
 
@@ -122,7 +122,7 @@ bool UnaryOperator::IsHomogeneous(VariableGroup const& vars) const
 
 ////////////
 //
-//  Nary 
+//  Nary
 //
 ////////////
 
@@ -130,7 +130,7 @@ bool UnaryOperator::IsHomogeneous(VariableGroup const& vars) const
 // Add an operand onto the container for this operator
 void NaryOperator::AddOperand(std::shared_ptr<Node> n)
 {
-	operands_.push_back(std::move(n));
+    operands_.push_back(std::move(n));
 }
 
 
@@ -140,12 +140,12 @@ void NaryOperator::AddOperand(std::shared_ptr<Node> n)
 
 size_t NaryOperator::NumOperands() const
 {
-	return operands_.size();
+    return operands_.size();
 }
 
 std::shared_ptr<Node> NaryOperator::FirstOperand() const
 {
-	return operands_[0];
+    return operands_[0];
 }
 
 
@@ -153,7 +153,7 @@ std::shared_ptr<Node> NaryOperator::FirstOperand() const
 
  /**
  Change the precision of this variable-precision tree node.
- 
+
  \param prec the number of digits to change precision to.
  */
 
@@ -162,5 +162,5 @@ void NaryOperator::PrecisionChangeSpecific(unsigned /*prec*/) const
 {}
 
 
-} // re: namespace node	
+} // re: namespace node
 } // re: bertini namespace

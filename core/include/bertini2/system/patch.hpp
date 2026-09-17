@@ -15,12 +15,12 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file bertini2/system/patch.hpp 
+\file bertini2/system/patch.hpp
 
 \brief Provides the bertini::Patch class.
 */
@@ -50,605 +50,603 @@ namespace bertini {
 
 
 
-	/**
-	\class Patch
+    /**
+    \class Patch
 
-	\brief An affine chart on a product of projective spaces.
+    \brief An affine chart on a product of projective spaces.
 
-	This class provides an adjustable-precision patch on a working space for solving a polynomial system using homotopy continuation.
+    This class provides an adjustable-precision patch on a working space for solving a polynomial system using homotopy continuation.
 
-	The constant values for the patch are unity.
+    The constant values for the patch are unity.
 
-	## Example code, not using a bertini::System to generate the patch. 
-	\code
+    ## Example code, not using a bertini::System to generate the patch.
+    \code
 
-	std::vector<unsigned> s{2,3};
+    std::vector<unsigned> s{2,3};
 
-	Patch p(s);
+    Patch p(s);
 
-	Vec<complex_mp> v(5);
-	v << complex_mp(1),  complex_mp(1),  complex_mp(1),  complex_mp(1),  complex_mp(1);
+    Vec<complex_mp> v(5);
+    v << complex_mp(1),  complex_mp(1),  complex_mp(1),  complex_mp(1),  complex_mp(1);
 
-	auto v_rescaled = p.RescalePoint(v);
+    auto v_rescaled = p.RescalePoint(v);
 
-	auto f = p.Eval(v_rescaled);
-	
-	\endcode
-	
-	At the end of the above example, the patch evaluates to 0 in the container \f$f\f$.
+    auto f = p.Eval(v_rescaled);
 
-	## Other ways of patching
+    \endcode
 
-	Patches can also be applied to a system, which should first be homogenized.
-	*/
-	class Patch
-	{
+    At the end of the above example, the patch evaluates to 0 in the container \f$f\f$.
 
-	public:
+    ## Other ways of patching
 
-		/**
-		\brief Default constructor.
+    Patches can also be applied to a system, which should first be homogenized.
+    */
+    class Patch
+    {
 
-		Makes an empty patch.
-		*/
-		Patch() : precision_(DefaultPrecision())
-		{}
+    public:
 
+        /**
+        \brief Default constructor.
 
-		/**
-		Custom copy constructor, ensuring the max-precision coefficients are copied in highest precision
-		*/
-		Patch(Patch const& other)
-		{	
-			variable_group_sizes_ = other.variable_group_sizes_;
-			precision_ = DefaultPrecision();
+        Makes an empty patch.
+        */
+        Patch() : precision_(DefaultPrecision())
+        {}
 
-			// a little shorthand unpacking the tuple
-			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(this->coefficients_working_);
-			std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(this->coefficients_working_);
-
-			coefficients_highest_precision_.resize(other.NumVariableGroups());
-			coefficients_mpfr.resize(variable_group_sizes_.size());
-			coefficients_dbl.resize(variable_group_sizes_.size());
-
-			for (unsigned ii(0); ii<other.NumVariableGroups(); ++ii)
-			{
-				auto curr_size = variable_group_sizes_[ii];
-
-				coefficients_highest_precision_[ii].resize(curr_size);
-				coefficients_dbl[ii].resize(curr_size);
-				coefficients_mpfr[ii].resize(curr_size);
-
-				for (unsigned jj(0); jj<curr_size; jj++)
-				{
-					coefficients_highest_precision_[ii](jj).precision(other.coefficients_highest_precision_[ii](jj).precision());
-
-					coefficients_highest_precision_[ii](jj) = other.coefficients_highest_precision_[ii](jj);
-
-					coefficients_dbl[ii](jj) = complex_dbl(coefficients_highest_precision_[ii](jj));
-					coefficients_mpfr[ii](jj) = complex_mp(coefficients_highest_precision_[ii](jj));
-
-					assert(coefficients_highest_precision_[ii](jj) == other.coefficients_highest_precision_[ii](jj));
-				}
-			}
-		}
-
-		/**
-		Copy assignment.  Explicitly defaulted (memberwise), matching the previously-implicit behavior.
-		Note this differs from the custom copy constructor, which re-downsamples at current default precision.
-		*/
-		Patch& operator=(Patch const& other) = default;
-
-
-		/**
-		\brief Constructor making a random complex patch on a space whose structure is described by the input argument.
-
-		The sizes input give the number of total variables, including homogenizing variables, for the product of spaces forming the total space to be patched.  The patch has no idea whether the underlying space is projective or affine -- that is handled somewhere else, likely in a bertini::System.
-		
-		The initial precision of the patch is set to current default precision, and the precision of the highest precision coefficients are set to the current default as well.
-
-		\param sizes The sizes of the variable groups, including homogenizing variables if present.
-		*/
-		Patch(std::vector<unsigned> const& sizes) : coefficients_highest_precision_(sizes.size()), variable_group_sizes_(sizes), precision_(DefaultPrecision())
-		{
-			using bertini::Precision;
-			using bertini::multiprecision::RandomComplex;
-
-			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(coefficients_working_);
-			std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(coefficients_working_);
-
-			coefficients_highest_precision_.resize(sizes.size());
-			coefficients_dbl.resize(sizes.size());
-			coefficients_mpfr.resize(sizes.size());
-
-			for (size_t ii=0; ii<sizes.size(); ++ii)
-			{
-				// this produces coefficients at maximum precision.
-				coefficients_highest_precision_[ii].resize(sizes[ii]);
-				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-				{
-					// bounded-modulus draw (away from 0 and infinity), matching the linear-product /
-					// mhom / binomial start-system coefficients -- a heavy-tailed coefficient here scales
-					// the patch equation badly and feeds the same near-t=0 conditioning trouble.
-					multiprecision::RandomComplexBoundedModulusAssign(coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
-				}
-
-				coefficients_dbl[ii].resize(sizes[ii]);
-				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-				{
-					coefficients_dbl[ii](jj) = complex_dbl(coefficients_highest_precision_[ii](jj));
-				}
-
-				// assignment preserves precision of source.  
-				// https://github.com/boostorg/multiprecision/issues/75
-				coefficients_mpfr[ii].resize(sizes[ii]);
-				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-				{
-					coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
-					coefficients_mpfr[ii](jj).precision(precision_);
-				}
-
-				assert(Precision(coefficients_mpfr[ii](0))==precision_);
-			}
-		}
-
-
-		/**
-		\brief Construct a patch from given coefficients -- for a loader restoring an archived
-		patch exactly (the canonical-encoding reader), never for making a fresh one (use Random).
-
-		\param sizes The sizes of the variable groups, including homogenizing variables.
-		\param coefficients One coefficient vector per group, each of that group's size; every
-		       entry is kept at its own precision.
-		*/
-		Patch(std::vector<unsigned> const& sizes, std::vector<Vec<complex_mp>> const& coefficients)
-			: variable_group_sizes_(sizes), precision_(DefaultPrecision())
-		{
-			if (coefficients.size() != sizes.size())
-				throw std::invalid_argument("Patch: " + std::to_string(coefficients.size())
-					+ " coefficient vectors for " + std::to_string(sizes.size()) + " variable groups");
-
-			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(coefficients_working_);
-			std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(coefficients_working_);
-
-			coefficients_highest_precision_.resize(sizes.size());
-			coefficients_dbl.resize(sizes.size());
-			coefficients_mpfr.resize(sizes.size());
-
-			for (size_t ii=0; ii<sizes.size(); ++ii)
-			{
-				if (static_cast<size_t>(coefficients[ii].size()) != sizes[ii])
-					throw std::invalid_argument("Patch: group " + std::to_string(ii) + " has "
-						+ std::to_string(coefficients[ii].size()) + " coefficients for "
-						+ std::to_string(sizes[ii]) + " variables");
-
-				coefficients_highest_precision_[ii].resize(sizes[ii]);
-				coefficients_dbl[ii].resize(sizes[ii]);
-				coefficients_mpfr[ii].resize(sizes[ii]);
-				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-				{
-					// set the precision first so the copy is exact at the source's precision
-					coefficients_highest_precision_[ii](jj).precision(coefficients[ii](jj).precision());
-					coefficients_highest_precision_[ii](jj) = coefficients[ii](jj);
-					coefficients_dbl[ii](jj) = complex_dbl(coefficients_highest_precision_[ii](jj));
-					coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
-					coefficients_mpfr[ii](jj).precision(precision_);
-				}
-			}
-		}
-
-
-		/**
-		\brief Construct a random complex patch on a space
-		*/
-		static Patch Random(std::vector<unsigned> const& sizes)
-		{
-			return Patch(sizes);
-		}
-
-
-		/**
-		\brief Construct random REAL patch on a space.
-		*/
-		static Patch RandomReal(std::vector<unsigned> const& sizes)
-		{	
-			using bertini::multiprecision::RandomReal;
-			using bertini::Precision;
-
-			Patch p;
-
-			p.variable_group_sizes_ = sizes;
-
-			
-
-			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(p.coefficients_working_);
-			std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(p.coefficients_working_);
-
-			p.coefficients_highest_precision_.resize(sizes.size());
-			coefficients_mpfr.resize(sizes.size());
-			coefficients_dbl.resize(sizes.size());
-			
-			for (size_t ii=0; ii<sizes.size(); ++ii)
-			{
-				p.coefficients_highest_precision_[ii].resize(sizes[ii]);
-				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-					// real bounded-modulus draw: away from 0 and infinity (same recipe as the complex
-					// patch / start systems) but kept REAL, so a real patch keeps a real path real.
-					multiprecision::RandomRealBoundedModulusAssign(p.coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
-
-				coefficients_mpfr[ii] = p.coefficients_highest_precision_[ii]; 
-				Precision(coefficients_mpfr[ii],DefaultPrecision());
-				assert(Precision(coefficients_mpfr[ii](0))==DefaultPrecision());
-
-				coefficients_dbl[ii].resize(sizes[ii]);
-				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-					coefficients_dbl[ii](jj) = complex_dbl(p.coefficients_highest_precision_[ii](jj));
-			}
-
-			return p;
-		}
-
-
-		/**
-		\brief Get the current precision of the patch.
-
-		\return The current precision, in digits.
-		*/
-		unsigned Precision() const
-		{
-			return precision_;
-		}
-
-		/// Materialize the working coefficients at the precision of the point being evaluated.
-		/// Every evaluable type self-aligns this way, so no caller and no owning System has to
-		/// fan a precision out beforehand -- ADR-0057.  Precision() short-circuits when already
-		/// there, so the steady state is one integer compare.  No-op for double.
-		template <typename T>
-		void SyncPrecision(Vec<T> const& x) const
-		{
-			if constexpr (!std::is_same<T, complex_dbl>::value)
-			{
-				if (x.size() > 0)
-				{
-					const unsigned p = bertini::Precision(x(0));
-					if (p != precision_)
-						Precision(p);
-				}
-			}
-		}
-
-		/**
-		\brief Set the precision of the patch.
-	
-		Copies the patch coefficients into correct precision for subsequent precision.
-
-		\param new_precision The precision to change to.
-		*/
-		void Precision(unsigned new_precision) const
-		{
-			if (precision_==new_precision)
-				return;
-
-			using bertini::Precision;
-			std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(coefficients_working_);
-
-			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
-			{
-				for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
-				{
-					if (new_precision>precision_)
-					{
-						coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
-						coefficients_mpfr[ii](jj).precision(new_precision);
-					}
-					else
-						coefficients_mpfr[ii](jj).precision(new_precision);
-
-					assert(Precision(coefficients_mpfr[ii](jj))==new_precision);
-				}
-			}
-			
-			precision_ = new_precision;
-		}
-
-
-		
-
-		
-
-		/**
-		\brief Evaluate the patch at a point, in place.
-
-		\param function_values The vector to populate.  Must be at least as long as the number of variable groups.
-		\param x The current space point at which to evaluate.
-
-		\todo Rewrite this code to use Eigen sub-vectors, if possible.  If not, take this off the todo list.  See 
-		http://eigen.tuxfamily.org/dox/group__TutorialBlockOperations.html
-
-		*/
-		template<typename Derived, typename T>
-		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values, Vec<T> const& x) const
-		{
-			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
-
-			SyncPrecision(x);
-
-			#ifndef BERTINI_DISABLE_ASSERTS
-			if (! (function_values.size()>=NumVariableGroups()) )
-			{
-				std::stringstream ss;
-				ss << "container for function values must be of length at least as long as the number of variable groups.  the input vector into which to write is of length " << function_values.size();
-				throw std::runtime_error(ss.str());
-			}
-			// Formerly an assert that the input's precision MATCHED the patch's -- disabled long
-			// ago because it could not be honoured.  A patch is an evaluable type, so it now
-			// self-aligns instead of demanding to be aligned for: ADR-0057.
-//			 	  );
-			#endif
-
-			// unpack from the tuple of working coefficients
-			const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
-
-			unsigned offset(static_cast<unsigned>(function_values.size() - NumVariableGroups())); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
-			unsigned counter(0);
-			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
-			{
-				T& value = function_values(ii+offset);
-				value = T(-1);
-				for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
-				{	
-					value += x(counter)*coefficients[ii](jj);
-					counter++;
-				}
-			}
-		}
-
-		/**
-		\brief Evaluate the patch at a point.
-
-		\return The values of the patch at the point.
-		\param x The current space point at which to evaluate.
-		*/
-		template<typename T>
-		Vec<T> Eval(Vec<T> const& x) const
-		{
-			Vec<T> function_values = Vec<T>::Zero(NumVariableGroups());
-			EvalInPlace(function_values, x);
-			return function_values;
-		}
-
-		/**
-		\brief Evaluate the Jacobian matrix, in place.
-
-		\param jacobian Matrix to populate with the Jacobian.  Must be large enough (NumVariableGroups x NumVariables).
-		\param x Point at which to evaluate.  Not technically needed, because the Jacobian is simply the matrix of coefficients.
-
-		\todo Rewrite this code to use Eigen sub-vectors, if possible.  If not, take this off the todo list.  See 
-		http://eigen.tuxfamily.org/dox/group__TutorialBlockOperations.html
-
-		*/
-		template<typename Derived, typename T>
-		void JacobianInPlace(Eigen::MatrixBase<Derived> & jacobian, Vec<T> const& x) const
-		{
-			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
-
-			SyncPrecision(x);   // the jacobian is constant in x, but it is written FROM the
-			                    // working coefficients, so they must be at x's precision
-
-
-			#ifndef BERTINI_DISABLE_ASSERTS
-			assert(jacobian.rows()>=NumVariableGroups() && "input jacobian must have at least as many rows as variable groups");
-			assert(jacobian.cols()==NumVariables() && "input jacobian must have as many columns as the patch has variables");
-			assert(
-			       (bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())  
-			       	    && "precision of input vector must match current working precision of patch during evaluation"
-			       );
-			#endif
-			
-			const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
-
-			unsigned offset(static_cast<unsigned>(jacobian.rows() - NumVariableGroups())); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
-
-			// A patch row is sparse -- one block of coefficients per variable group, zero elsewhere.
-			// Zero the rows the patch owns before writing those coefficients, so the patch FULLY
-			// defines its own rows and the caller need not pre-zero the matrix.  The block-composed
-			// Jacobian path allocates J uninitialized and assigns only the block (function) rows;
-			// without this the patch rows' off-coefficient entries are read uninitialized -- benign
-			// (zeroed pages) on Linux/macOS, but garbage on Windows, where a degree-2 homotopy's
-			// Jacobian "evaluated" to ~1e252 and wrecked the AMP condition-number estimate.
-			jacobian.block(offset, 0, NumVariableGroups(), jacobian.cols()).setZero();
-
-			unsigned counter(0);
-			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
-				for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
-					jacobian(ii+offset,counter++) = coefficients[ii](jj);
-		}
-
-		/**
-		\brief Evaluate the Jacobian matrix, in place.
-
-		\param x Point at which to evaluate.  Not technically needed, because the Jacobian is simply the matrix of coefficients.
-		\return Jacobian matrix, of size (NumVariableGroups x NumVariables).
-		*/
-		template<typename T>
-		Mat<T> Jacobian(Vec<T> const& x) const
-		{
-			Mat<T> jacobian = Mat<T>::Zero(NumVariableGroups(), NumVariables());
-			JacobianInPlace(jacobian, x);
-			return jacobian;
-		}
-
-		
-		/**
-		\brief Rescale a point so that it satisfies the patch equations herein contained.
-
-		The point must be as long as there are total variables.
-		
-		This function modifies the vector in place, so ensure you have a copy stored somewhere else if you feel it necessary to still have the pre-rescaled vector around.
-
-		\param x The point to rescale
-		\tparam T The number type.
-		*/
-		template<typename T>
-		void RescalePointToFitInPlace(Vec<T> & x) const
-		{
-			#ifndef BERTINI_DISABLE_ASSERTS
-				assert(x.size() == NumVariables() && "input point for rescaling to fit a patch must have same length as total number of variables being patched, in all variable groups.");
-				assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
-						&& "precision of input vector must match current working precision of patch during rescaling"
-					   );
-			#endif
-
-			const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
-
-			unsigned starting_index_counter(0);
-			for (unsigned ii=0; ii<NumVariableGroups(); ii++)
-			{
-				auto subvec = x.segment(starting_index_counter,variable_group_sizes_[ii]);
-				subvec /= subvec.transpose() * coefficients[ii];
-				starting_index_counter += variable_group_sizes_[ii];
-			}
-		}
-
-		/**
-		\brief Rescale a point so that it satisfies the patch equations herein contained.
-
-		\return Point \f$x\f$ rescaled to fit the patch.  \f$x\f$ cannot be the zero vector -- zero is a degenerate point in projective space.
-		\param x The point to rescale.
-		\tparam T The number type.
-		*/
-		template <typename T>
-		Vec<T> RescalePoint(Vec<T> const& x) const
-		{
-			Vec<T> x_rescaled = x;
-			RescalePointToFitInPlace(x_rescaled);
-			return x_rescaled;
-		}
-
-		/**
-		\brief Get the number of variable groups
-
-		\return The number of variable groups in the problem.
-		*/
-		unsigned NumVariableGroups() const
-		{
-			return static_cast<unsigned>(variable_group_sizes_.size());
-		}
-
-
-		/**
-		\brief Get the number of variables in the patch.  
-		*/
-		unsigned NumVariables() const
-		{
-			unsigned num_vars(0);
-			for (auto v : variable_group_sizes_)
-				num_vars += v;
-			return num_vars;
-		}
-
-		/**
-		\brief The patch's highest-precision coefficients, one vector per variable group.
-
-		Coefficient `Coefficients()[ii](jj)` multiplies the jj-th variable of group ii (in the
-		system's variable ordering).  The patch function for group ii is
-		`sum_jj Coefficients()[ii](jj) * x_jj - 1`, so these are exactly the constant entries of
-		the patch's (symbolic) Jacobian rows.
-		*/
-		std::vector< Vec< complex_mp > > const& Coefficients() const
-		{
-			return coefficients_highest_precision_;
-		}
-
-		/// \brief The number of variables in each variable group (homogenizing variable included).
-		std::vector<unsigned> const& VariableGroupSizes() const
-		{
-			return variable_group_sizes_;
-		}
-
-
-		/// \brief Stream-insertion for a Patch, summarizing its variable groups and coefficients.
-		friend std::ostream& operator<<(std::ostream & out, Patch const& p)
-		{
-			out << p.NumVariableGroups() << " variable groups being patched\n";
-			unsigned counter(0);
-			for (auto& c : p.coefficients_highest_precision_)
-			{
-				out << "patch " << counter++ << " has " << c.size() << " coefficients:\n";
-				out << c << "\n";
-			}
-			out << "current patch precision: " << p.Precision() << "\n";
-			return out;
-		}
-
-		/**
-		\brief Check whether two patches are the same. 
-
-		\return true If have the same variable structure and coefficients.  Otherwise, false.
-		*/
-		bool operator==(Patch const& rhs) const
-		{
-			if (NumVariableGroups()!=rhs.NumVariableGroups())
-				return false;
-			if (NumVariables()!=rhs.NumVariables())
-				return false;
-			for (unsigned ii=0; ii<NumVariableGroups(); ii++)
-				if (variable_group_sizes_[ii]!=rhs.variable_group_sizes_[ii])
-					return false;
-			for (unsigned ii=0; ii<NumVariableGroups(); ii++)
-				if (coefficients_highest_precision_[ii]!=rhs.coefficients_highest_precision_[ii])
-					return false;
-
-
-			return true;
-		}
-
-		/**
-		\brief Check whether two patches are different.
-		*/
-		bool operator!=(Patch const& rhs) const
-		{
-			return !(*this==rhs);
-		}
-
-	private:
-
-		/////////////////
-		//
-		//    Data members
-		//
-		//////////////////
-
-		std::vector< Vec< complex_mp > > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
-
-		mutable std::tuple< std::vector< Vec< complex_mp > >, std::vector< Vec< complex_dbl > > > coefficients_working_; ///< the current working coefficients of the patch.  changing precision affects these, particularly the complex_mp coefficients, which are down-sampled from the highest_precision coefficients.  the doubles are only down-sampled at time of creation or modification.
-
-		std::vector<unsigned> variable_group_sizes_; ///< the sizes of the groups.  In principle, these must be at least 2.
-
-		mutable unsigned precision_; ///< the current working precision of the patch.
-
-		// add serialization support through boost.
-
-		friend class boost::serialization::access;
-
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & precision_;
-
-			ar & coefficients_highest_precision_;
-
-			ar & std::get<0>(coefficients_working_);
-			ar & std::get<1>(coefficients_working_);
-			ar & variable_group_sizes_;
-			
-		}
-
-	};
+
+        /**
+        Custom copy constructor, ensuring the max-precision coefficients are copied in highest precision
+        */
+        Patch(Patch const& other)
+        {
+            variable_group_sizes_ = other.variable_group_sizes_;
+            precision_ = DefaultPrecision();
+
+            // a little shorthand unpacking the tuple
+            std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(this->coefficients_working_);
+            std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(this->coefficients_working_);
+
+            coefficients_highest_precision_.resize(other.NumVariableGroups());
+            coefficients_mpfr.resize(variable_group_sizes_.size());
+            coefficients_dbl.resize(variable_group_sizes_.size());
+
+            for (unsigned ii(0); ii<other.NumVariableGroups(); ++ii)
+            {
+                auto curr_size = variable_group_sizes_[ii];
+
+                coefficients_highest_precision_[ii].resize(curr_size);
+                coefficients_dbl[ii].resize(curr_size);
+                coefficients_mpfr[ii].resize(curr_size);
+
+                for (unsigned jj(0); jj<curr_size; jj++)
+                {
+                    coefficients_highest_precision_[ii](jj).precision(other.coefficients_highest_precision_[ii](jj).precision());
+
+                    coefficients_highest_precision_[ii](jj) = other.coefficients_highest_precision_[ii](jj);
+
+                    coefficients_dbl[ii](jj) = complex_dbl(coefficients_highest_precision_[ii](jj));
+                    coefficients_mpfr[ii](jj) = complex_mp(coefficients_highest_precision_[ii](jj));
+
+                    assert(coefficients_highest_precision_[ii](jj) == other.coefficients_highest_precision_[ii](jj));
+                }
+            }
+        }
+
+        /**
+        Copy assignment.  Explicitly defaulted (memberwise), matching the previously-implicit behavior.
+        Note this differs from the custom copy constructor, which re-downsamples at current default precision.
+        */
+        Patch& operator=(Patch const& other) = default;
+
+
+        /**
+        \brief Constructor making a random complex patch on a space whose structure is described by the input argument.
+
+        The sizes input give the number of total variables, including homogenizing variables, for the product of spaces forming the total space to be patched.  The patch has no idea whether the underlying space is projective or affine -- that is handled somewhere else, likely in a bertini::System.
+
+        The initial precision of the patch is set to current default precision, and the precision of the highest precision coefficients are set to the current default as well.
+
+        \param sizes The sizes of the variable groups, including homogenizing variables if present.
+        */
+        Patch(std::vector<unsigned> const& sizes) : coefficients_highest_precision_(sizes.size()), variable_group_sizes_(sizes), precision_(DefaultPrecision())
+        {
+            using bertini::Precision;
+            using bertini::multiprecision::RandomComplex;
+
+            std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(coefficients_working_);
+            std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(coefficients_working_);
+
+            coefficients_highest_precision_.resize(sizes.size());
+            coefficients_dbl.resize(sizes.size());
+            coefficients_mpfr.resize(sizes.size());
+
+            for (size_t ii=0; ii<sizes.size(); ++ii)
+            {
+                // this produces coefficients at maximum precision.
+                coefficients_highest_precision_[ii].resize(sizes[ii]);
+                for (unsigned jj=0; jj<sizes[ii]; ++jj)
+                {
+                    // bounded-modulus draw (away from 0 and infinity), matching the linear-product /
+                    // mhom / binomial start-system coefficients -- a heavy-tailed coefficient here scales
+                    // the patch equation badly and feeds the same near-t=0 conditioning trouble.
+                    multiprecision::RandomComplexBoundedModulusAssign(coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
+                }
+
+                coefficients_dbl[ii].resize(sizes[ii]);
+                for (unsigned jj=0; jj<sizes[ii]; ++jj)
+                {
+                    coefficients_dbl[ii](jj) = complex_dbl(coefficients_highest_precision_[ii](jj));
+                }
+
+                // assignment preserves precision of source.
+                // https://github.com/boostorg/multiprecision/issues/75
+                coefficients_mpfr[ii].resize(sizes[ii]);
+                for (unsigned jj=0; jj<sizes[ii]; ++jj)
+                {
+                    coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
+                    coefficients_mpfr[ii](jj).precision(precision_);
+                }
+
+                assert(Precision(coefficients_mpfr[ii](0))==precision_);
+            }
+        }
+
+
+        /**
+        \brief Construct a patch from given coefficients -- for a loader restoring an archived
+        patch exactly (the canonical-encoding reader), never for making a fresh one (use Random).
+
+        \param sizes The sizes of the variable groups, including homogenizing variables.
+        \param coefficients One coefficient vector per group, each of that group's size; every
+               entry is kept at its own precision.
+        */
+        Patch(std::vector<unsigned> const& sizes, std::vector<Vec<complex_mp>> const& coefficients)
+            : variable_group_sizes_(sizes), precision_(DefaultPrecision())
+        {
+            if (coefficients.size() != sizes.size())
+                throw std::invalid_argument("Patch: " + std::to_string(coefficients.size())
+                    + " coefficient vectors for " + std::to_string(sizes.size()) + " variable groups");
+
+            std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(coefficients_working_);
+            std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(coefficients_working_);
+
+            coefficients_highest_precision_.resize(sizes.size());
+            coefficients_dbl.resize(sizes.size());
+            coefficients_mpfr.resize(sizes.size());
+
+            for (size_t ii=0; ii<sizes.size(); ++ii)
+            {
+                if (static_cast<size_t>(coefficients[ii].size()) != sizes[ii])
+                    throw std::invalid_argument("Patch: group " + std::to_string(ii) + " has "
+                        + std::to_string(coefficients[ii].size()) + " coefficients for "
+                        + std::to_string(sizes[ii]) + " variables");
+
+                coefficients_highest_precision_[ii].resize(sizes[ii]);
+                coefficients_dbl[ii].resize(sizes[ii]);
+                coefficients_mpfr[ii].resize(sizes[ii]);
+                for (unsigned jj=0; jj<sizes[ii]; ++jj)
+                {
+                    // set the precision first so the copy is exact at the source's precision
+                    coefficients_highest_precision_[ii](jj).precision(coefficients[ii](jj).precision());
+                    coefficients_highest_precision_[ii](jj) = coefficients[ii](jj);
+                    coefficients_dbl[ii](jj) = complex_dbl(coefficients_highest_precision_[ii](jj));
+                    coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
+                    coefficients_mpfr[ii](jj).precision(precision_);
+                }
+            }
+        }
+
+
+        /**
+        \brief Construct a random complex patch on a space
+        */
+        static Patch Random(std::vector<unsigned> const& sizes)
+        {
+            return Patch(sizes);
+        }
+
+
+        /**
+        \brief Construct random REAL patch on a space.
+        */
+        static Patch RandomReal(std::vector<unsigned> const& sizes)
+        {
+            using bertini::multiprecision::RandomReal;
+            using bertini::Precision;
+
+            Patch p;
+
+            p.variable_group_sizes_ = sizes;
+
+
+
+            std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(p.coefficients_working_);
+            std::vector<Vec<complex_dbl> >& coefficients_dbl = std::get<std::vector<Vec<complex_dbl> > >(p.coefficients_working_);
+
+            p.coefficients_highest_precision_.resize(sizes.size());
+            coefficients_mpfr.resize(sizes.size());
+            coefficients_dbl.resize(sizes.size());
+
+            for (size_t ii=0; ii<sizes.size(); ++ii)
+            {
+                p.coefficients_highest_precision_[ii].resize(sizes[ii]);
+                for (unsigned jj=0; jj<sizes[ii]; ++jj)
+                    // real bounded-modulus draw: away from 0 and infinity (same recipe as the complex
+                    // patch / start systems) but kept REAL, so a real patch keeps a real path real.
+                    multiprecision::RandomRealBoundedModulusAssign(p.coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
+
+                coefficients_mpfr[ii] = p.coefficients_highest_precision_[ii];
+                Precision(coefficients_mpfr[ii],DefaultPrecision());
+                assert(Precision(coefficients_mpfr[ii](0))==DefaultPrecision());
+
+                coefficients_dbl[ii].resize(sizes[ii]);
+                for (unsigned jj=0; jj<sizes[ii]; ++jj)
+                    coefficients_dbl[ii](jj) = complex_dbl(p.coefficients_highest_precision_[ii](jj));
+            }
+
+            return p;
+        }
+
+
+        /**
+        \brief Get the current precision of the patch.
+
+        \return The current precision, in digits.
+        */
+        unsigned Precision() const
+        {
+            return precision_;
+        }
+
+        /// Materialize the working coefficients at the precision of the point being evaluated.
+        /// Every evaluable type self-aligns this way, so no caller and no owning System has to
+        /// fan a precision out beforehand -- ADR-0057.  Precision() short-circuits when already
+        /// there, so the steady state is one integer compare.  No-op for double.
+        template <typename T>
+        void SyncPrecision(Vec<T> const& x) const
+        {
+            if constexpr (!std::is_same<T, complex_dbl>::value)
+            {
+                if (x.size() > 0)
+                {
+                    const unsigned p = bertini::Precision(x(0));
+                    if (p != precision_)
+                        Precision(p);
+                }
+            }
+        }
+
+        /**
+        \brief Set the precision of the patch.
+
+        Copies the patch coefficients into correct precision for subsequent precision.
+
+        \param new_precision The precision to change to.
+        */
+        void Precision(unsigned new_precision) const
+        {
+            if (precision_==new_precision)
+                return;
+
+            using bertini::Precision;
+            std::vector<Vec<complex_mp> >& coefficients_mpfr = std::get<std::vector<Vec<complex_mp> > >(coefficients_working_);
+
+            for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
+            {
+                for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
+                {
+                    if (new_precision>precision_)
+                    {
+                        coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
+                        coefficients_mpfr[ii](jj).precision(new_precision);
+                    }
+                    else
+                        coefficients_mpfr[ii](jj).precision(new_precision);
+
+                    assert(Precision(coefficients_mpfr[ii](jj))==new_precision);
+                }
+            }
+
+            precision_ = new_precision;
+        }
+
+
+
+
+
+
+        /**
+        \brief Evaluate the patch at a point, in place.
+
+        \param function_values The vector to populate.  Must be at least as long as the number of variable groups.
+        \param x The current space point at which to evaluate.
+
+        \todo Rewrite this code to use Eigen sub-vectors, if possible.  If not, take this off the todo list.  See
+        http://eigen.tuxfamily.org/dox/group__TutorialBlockOperations.html
+
+        */
+        template<typename Derived, typename T>
+        void EvalInPlace(Eigen::MatrixBase<Derived> & function_values, Vec<T> const& x) const
+        {
+            static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
+
+            SyncPrecision(x);
+
+            #ifndef BERTINI_DISABLE_ASSERTS
+            if (! (function_values.size()>=NumVariableGroups()) )
+            {
+                std::stringstream ss;
+                ss << "container for function values must be of length at least as long as the number of variable groups.  the input vector into which to write is of length " << function_values.size();
+                throw std::runtime_error(ss.str());
+            }
+            // Formerly an assert that the input's precision MATCHED the patch's -- disabled long
+            // ago because it could not be honoured.  A patch is an evaluable type, so it now
+            // self-aligns instead of demanding to be aligned for: ADR-0057.
+//                );
+            #endif
+
+            // unpack from the tuple of working coefficients
+            const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
+
+            unsigned offset(static_cast<unsigned>(function_values.size() - NumVariableGroups())); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
+            unsigned counter(0);
+            for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
+            {
+                T& value = function_values(ii+offset);
+                value = T(-1);
+                for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
+                {
+                    value += x(counter)*coefficients[ii](jj);
+                    counter++;
+                }
+            }
+        }
+
+        /**
+        \brief Evaluate the patch at a point.
+
+        \return The values of the patch at the point.
+        \param x The current space point at which to evaluate.
+        */
+        template<typename T>
+        Vec<T> Eval(Vec<T> const& x) const
+        {
+            Vec<T> function_values = Vec<T>::Zero(NumVariableGroups());
+            EvalInPlace(function_values, x);
+            return function_values;
+        }
+
+        /**
+        \brief Evaluate the Jacobian matrix, in place.
+
+        \param jacobian Matrix to populate with the Jacobian.  Must be large enough (NumVariableGroups x NumVariables).
+        \param x Point at which to evaluate.  Not technically needed, because the Jacobian is simply the matrix of coefficients.
+
+        \todo Rewrite this code to use Eigen sub-vectors, if possible.  If not, take this off the todo list.  See
+        http://eigen.tuxfamily.org/dox/group__TutorialBlockOperations.html
+
+        */
+        template<typename Derived, typename T>
+        void JacobianInPlace(Eigen::MatrixBase<Derived> & jacobian, Vec<T> const& x) const
+        {
+            static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
+
+            SyncPrecision(x);   // the jacobian is constant in x, but it is written FROM the
+                                // working coefficients, so they must be at x's precision
+
+
+            #ifndef BERTINI_DISABLE_ASSERTS
+            assert(jacobian.rows()>=NumVariableGroups() && "input jacobian must have at least as many rows as variable groups");
+            assert(jacobian.cols()==NumVariables() && "input jacobian must have as many columns as the patch has variables");
+            assert(
+                   (bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
+                        && "precision of input vector must match current working precision of patch during evaluation"
+                   );
+            #endif
+
+            const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
+
+            unsigned offset(static_cast<unsigned>(jacobian.rows() - NumVariableGroups())); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
+
+            // A patch row is sparse -- one block of coefficients per variable group, zero elsewhere.
+            // Zero the rows the patch owns before writing those coefficients, so the patch FULLY
+            // defines its own rows and the caller need not pre-zero the matrix.  The block-composed
+            // Jacobian path allocates J uninitialized and assigns only the block (function) rows;
+            // without this the patch rows' off-coefficient entries are read uninitialized -- benign
+            // (zeroed pages) on Linux/macOS, but garbage on Windows, where a degree-2 homotopy's
+            // Jacobian "evaluated" to ~1e252 and wrecked the AMP condition-number estimate.
+            jacobian.block(offset, 0, NumVariableGroups(), jacobian.cols()).setZero();
+
+            unsigned counter(0);
+            for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
+                for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
+                    jacobian(ii+offset,counter++) = coefficients[ii](jj);
+        }
+
+        /**
+        \brief Evaluate the Jacobian matrix, in place.
+
+        \param x Point at which to evaluate.  Not technically needed, because the Jacobian is simply the matrix of coefficients.
+        \return Jacobian matrix, of size (NumVariableGroups x NumVariables).
+        */
+        template<typename T>
+        Mat<T> Jacobian(Vec<T> const& x) const
+        {
+            Mat<T> jacobian = Mat<T>::Zero(NumVariableGroups(), NumVariables());
+            JacobianInPlace(jacobian, x);
+            return jacobian;
+        }
+
+
+        /**
+        \brief Rescale a point so that it satisfies the patch equations herein contained.
+
+        The point must be as long as there are total variables.
+
+        This function modifies the vector in place, so ensure you have a copy stored somewhere else if you feel it necessary to still have the pre-rescaled vector around.
+
+        \param x The point to rescale
+        \tparam T The number type.
+        */
+        template<typename T>
+        void RescalePointToFitInPlace(Vec<T> & x) const
+        {
+            #ifndef BERTINI_DISABLE_ASSERTS
+                assert(x.size() == NumVariables() && "input point for rescaling to fit a patch must have same length as total number of variables being patched, in all variable groups.");
+                assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
+                        && "precision of input vector must match current working precision of patch during rescaling"
+                       );
+            #endif
+
+            const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
+
+            unsigned starting_index_counter(0);
+            for (unsigned ii=0; ii<NumVariableGroups(); ii++)
+            {
+                auto subvec = x.segment(starting_index_counter,variable_group_sizes_[ii]);
+                subvec /= subvec.transpose() * coefficients[ii];
+                starting_index_counter += variable_group_sizes_[ii];
+            }
+        }
+
+        /**
+        \brief Rescale a point so that it satisfies the patch equations herein contained.
+
+        \return Point \f$x\f$ rescaled to fit the patch.  \f$x\f$ cannot be the zero vector -- zero is a degenerate point in projective space.
+        \param x The point to rescale.
+        \tparam T The number type.
+        */
+        template <typename T>
+        Vec<T> RescalePoint(Vec<T> const& x) const
+        {
+            Vec<T> x_rescaled = x;
+            RescalePointToFitInPlace(x_rescaled);
+            return x_rescaled;
+        }
+
+        /**
+        \brief Get the number of variable groups
+
+        \return The number of variable groups in the problem.
+        */
+        unsigned NumVariableGroups() const
+        {
+            return static_cast<unsigned>(variable_group_sizes_.size());
+        }
+
+
+        /**
+        \brief Get the number of variables in the patch.
+        */
+        unsigned NumVariables() const
+        {
+            unsigned num_vars(0);
+            for (auto v : variable_group_sizes_)
+                num_vars += v;
+            return num_vars;
+        }
+
+        /**
+        \brief The patch's highest-precision coefficients, one vector per variable group.
+
+        Coefficient `Coefficients()[ii](jj)` multiplies the jj-th variable of group ii (in the
+        system's variable ordering).  The patch function for group ii is
+        `sum_jj Coefficients()[ii](jj) * x_jj - 1`, so these are exactly the constant entries of
+        the patch's (symbolic) Jacobian rows.
+        */
+        std::vector< Vec< complex_mp > > const& Coefficients() const
+        {
+            return coefficients_highest_precision_;
+        }
+
+        /// \brief The number of variables in each variable group (homogenizing variable included).
+        std::vector<unsigned> const& VariableGroupSizes() const
+        {
+            return variable_group_sizes_;
+        }
+
+
+        /// \brief Stream-insertion for a Patch, summarizing its variable groups and coefficients.
+        friend std::ostream& operator<<(std::ostream & out, Patch const& p)
+        {
+            out << p.NumVariableGroups() << " variable groups being patched\n";
+            unsigned counter(0);
+            for (auto& c : p.coefficients_highest_precision_)
+            {
+                out << "patch " << counter++ << " has " << c.size() << " coefficients:\n";
+                out << c << "\n";
+            }
+            out << "current patch precision: " << p.Precision() << "\n";
+            return out;
+        }
+
+        /**
+        \brief Check whether two patches are the same.
+
+        \return true If have the same variable structure and coefficients.  Otherwise, false.
+        */
+        bool operator==(Patch const& rhs) const
+        {
+            if (NumVariableGroups()!=rhs.NumVariableGroups())
+                return false;
+            if (NumVariables()!=rhs.NumVariables())
+                return false;
+            for (unsigned ii=0; ii<NumVariableGroups(); ii++)
+                if (variable_group_sizes_[ii]!=rhs.variable_group_sizes_[ii])
+                    return false;
+            for (unsigned ii=0; ii<NumVariableGroups(); ii++)
+                if (coefficients_highest_precision_[ii]!=rhs.coefficients_highest_precision_[ii])
+                    return false;
+
+
+            return true;
+        }
+
+        /**
+        \brief Check whether two patches are different.
+        */
+        bool operator!=(Patch const& rhs) const
+        {
+            return !(*this==rhs);
+        }
+
+    private:
+
+        /////////////////
+        //
+        //    Data members
+        //
+        //////////////////
+
+        std::vector< Vec< complex_mp > > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
+
+        mutable std::tuple< std::vector< Vec< complex_mp > >, std::vector< Vec< complex_dbl > > > coefficients_working_; ///< the current working coefficients of the patch.  changing precision affects these, particularly the complex_mp coefficients, which are down-sampled from the highest_precision coefficients.  the doubles are only down-sampled at time of creation or modification.
+
+        std::vector<unsigned> variable_group_sizes_; ///< the sizes of the groups.  In principle, these must be at least 2.
+
+        mutable unsigned precision_; ///< the current working precision of the patch.
+
+        // add serialization support through boost.
+
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & precision_;
+
+            ar & coefficients_highest_precision_;
+
+            ar & std::get<0>(coefficients_working_);
+            ar & std::get<1>(coefficients_working_);
+            ar & variable_group_sizes_;
+
+        }
+
+    };
 
 
 }
 
 
 #endif  // re: include guards
-
-
