@@ -1995,4 +1995,100 @@ BOOST_AUTO_TEST_CASE(coordinates_of_group_projection)
 }
 
 
+/**
+\class bertini::System
+\test \b is_polynomial_sees_ungrouped_variables A function transcendental in an UNGROUPED
+variable used to be invisible, because a variable outside every group has degree 0 with respect
+to every group.  IsPolynomial iterated only the groups, so it reported such a system polynomial.
+*/
+BOOST_AUTO_TEST_CASE(is_polynomial_sees_ungrouped_variables)
+{
+    Var x = Variable::Make("x"), t = Variable::Make("t");
+
+    bertini::System s;
+    s.AddVariableGroup(VariableGroup{x});
+    s.AddUngroupedVariable(t);
+    s.AddFunction(sin(t)*pow(x,2) - 1);
+
+    // The masking that used to hide it: with respect to the declared group the sine is a
+    // constant, so the function honestly has degree 2 there.
+    BOOST_CHECK_EQUAL(s.Degrees(VariableGroup{x})[0], 2);
+    // ... but the system as a whole is not a polynomial one, and now says so.
+    BOOST_CHECK(!s.IsPolynomial());
+}
+
+/**
+\class bertini::System
+\test \b is_polynomial_is_not_vacuous_without_variable_groups With no variable groups at all both
+loops ran zero times and every system was polynomial, however transcendental.
+*/
+BOOST_AUTO_TEST_CASE(is_polynomial_is_not_vacuous_without_variable_groups)
+{
+    Var t = Variable::Make("t");
+
+    bertini::System s;
+    s.AddUngroupedVariable(t);
+    s.AddFunction(exp(t) - 2);
+
+    BOOST_CHECK_EQUAL(s.NumVariableGroups(), 0u);
+    BOOST_CHECK(!s.IsPolynomial());
+
+    // A grouped, genuinely polynomial system is unaffected.
+    bertini::System p;
+    p.AddUngroupedVariable(t);
+    p.AddFunction(pow(t,3) - 2);
+    BOOST_CHECK(p.IsPolynomial());
+    BOOST_CHECK_EQUAL(p.DegreeBound(), 3);
+}
+
+/**
+\class bertini::System
+\test \b degree_bound_refuses_a_system_that_has_none A degree bound exists to be multiplied, and a
+non-polynomial function's -1 is a sentinel, not a number: it is hidden by a maximum whenever
+another function has positive degree, and poisons the arithmetic wherever it survives.
+*/
+BOOST_AUTO_TEST_CASE(degree_bound_refuses_a_system_that_has_none)
+{
+    Var x = Variable::Make("x"), y = Variable::Make("y");
+
+    bertini::System all_transcendental;
+    all_transcendental.AddVariableGroup(VariableGroup{x});
+    all_transcendental.AddFunction(sin(x) - 1);
+    BOOST_CHECK_THROW(all_transcendental.DegreeBound(), std::runtime_error);
+
+    // The mixed case is the one that looked fine: the maximum reported 2 and said nothing.
+    bertini::System mixed;
+    mixed.AddVariableGroup(VariableGroup{x, y});
+    mixed.AddFunction(pow(x,2) + pow(y,2) - 1);
+    mixed.AddFunction(sin(x) - y);
+    BOOST_CHECK_THROW(mixed.DegreeBound(), std::runtime_error);
+
+    // An ordinary system still answers, and a system with no functions still answers 0.
+    bertini::System poly;
+    poly.AddVariableGroup(VariableGroup{x, y});
+    poly.AddFunction(pow(x,3) + y);
+    BOOST_CHECK_EQUAL(poly.DegreeBound(), 3);
+    BOOST_CHECK_EQUAL(bertini::System().DegreeBound(), 0);
+}
+
+/**
+\class bertini::System
+\test \b randomize_refuses_a_non_polynomial_system Squaring up compensates degree differences with
+powers of a homogenizing variable.  A function with no degree has nothing to compensate; the
+target degree used to clamp its -1 to 0 and hand it exactly one such power for no reason.
+*/
+BOOST_AUTO_TEST_CASE(randomize_refuses_a_non_polynomial_system)
+{
+    Var x = Variable::Make("x"), y = Variable::Make("y");
+
+    bertini::System s;
+    s.AddVariableGroup(VariableGroup{x, y});
+    s.AddFunction(pow(x,2) + pow(y,2) - 1);
+    s.AddFunction(x - y);
+    s.AddFunction(sin(x) + y);
+
+    BOOST_CHECK_THROW(s.Randomize(), std::runtime_error);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

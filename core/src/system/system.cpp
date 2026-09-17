@@ -522,6 +522,18 @@ namespace bertini
         for (const auto& vars : hom_variable_groups_)
             if (!all_blocks_polynomial(vars))
                 return false;
+
+        // Ungrouped variables are variables.  Asking only about the declared groups reports a
+        // system polynomial when it is not: a variable outside every group has degree 0 with
+        // respect to every group (UnaryOperator::Degree returns 0 when its operand does), so
+        // sin(t)*x^2 with t ungrouped reported degree 2 in {x} and claimed to be polynomial,
+        // and a system with NO variable groups at all was vacuously polynomial whatever it
+        // contained.  IsHomogeneous already checks the ungrouped variables; this did not.
+        // Every guard built on this check inherited the hole, including the zero-dim solver's
+        // refusal of non-polynomial systems and the adaptive-precision refusal below it.
+        if (!ungrouped_variables_.empty() && !all_blocks_polynomial(ungrouped_variables_))
+            return false;
+
         return true;
     }
 
@@ -961,6 +973,20 @@ namespace bertini
         auto degs = Degrees(Variables());
         if (degs.empty())
             return 0;   // a system with no functions has no degree bound
+
+        // A function that is not a polynomial reports degree -1.  That is an honest answer to
+        // "what is your degree" and a catastrophic operand.  Taking a maximum hides it behind
+        // any function of positive degree, and where it survives it poisons the arithmetic
+        // downstream: the adaptive-precision bounds Phi = D(D-1)B and Psi = D*B come out
+        // plausible-looking and negative respectively, so tracking fails obscurely instead of
+        // refusing clearly.  A degree bound exists in order to be multiplied, so a system that
+        // has none must not be handed a number.  See issue #439.
+        if (std::any_of(degs.begin(), degs.end(), [](int d){ return d < 0; }))
+            throw std::runtime_error("DegreeBound: this system has at least one function that is "
+                "not a polynomial, so it has no degree bound.  Adaptive precision is the usual "
+                "caller; track at fixed precision instead, or set the AMP bounds Phi and Psi "
+                "yourself.");
+
         return *std::max_element(degs.begin(), degs.end());
     }
 
@@ -1237,6 +1263,20 @@ namespace bertini
 
         if (static_cast<size_t>(coefficients.cols()) != N)
             throw std::runtime_error("Randomize: coefficient matrix column count must equal the number of natural functions.");
+
+        // Squaring up compensates degree differences by multiplying each combined function by a
+        // power of the homogenizing variable, and that power is a difference of degrees.  A
+        // function that is not a polynomial reports degree -1, and the target below, starting at
+        // zero, used to launder it into a claim that the row has degree zero -- after which the
+        // deficit came out as exactly one, so a transcendental function was quietly multiplied by
+        // one power of a homogenizing variable for no reason.  Whether randomization means
+        // anything at all for an analytic system is an open question (issue #440); until it is
+        // answered, refuse rather than compute something indefensible.
+        if (!operand->IsPolynomial())
+            throw std::runtime_error("Randomize: this system has at least one function that is not "
+                "a polynomial.  Squaring up combines functions and compensates their differing "
+                "degrees, and a function without a degree has nothing to compensate, so the result "
+                "would not mean what randomization is supposed to mean.");
 
         auto operand_md = OperandMultidegrees(*operand);
 

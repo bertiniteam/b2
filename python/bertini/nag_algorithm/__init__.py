@@ -822,6 +822,20 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
             "a SQUARE system.  Square it first -- randomize it down to the variable count "
             "(System.randomize) or cut it with a slice -- instead of tracking the overdetermined "
             "system.".format(n_fun, n_vars))
+    # Adaptive precision derives its error bounds from the system's degree, and a homotopy that
+    # is not polynomial does not have one.  The C++ side refuses too, but it would refuse while
+    # the adaptive tracker is being constructed, and the text a user would see is about degree
+    # bounds rather than about the choice they actually made.  Tracking analytic homotopies at
+    # fixed precision works; only the adaptive criteria are unavailable.  See issue #439.
+    if mptype == 'adaptive' and not homotopy.is_polynomial():
+        raise ValueError(
+            "HomotopySolver: this homotopy is not polynomial, and adaptive precision needs a "
+            "degree bound it therefore cannot have.  Tracking still works -- pass "
+            "mptype='double' or mptype='multiple' to use a fixed-precision tracker.  If you "
+            "want adaptive precision anyway, build the config yourself "
+            "(bertini.tracking.amp_config_from), set its phi and psi to values you can defend "
+            "for this system, and hand it to solver.get_tracker().precision_setup().")
+
     user_start = _pybnalag.UserStartSystem(target, points)
     solver = solver_cls(target, user_start, homotopy)
     return _HomotopySolverHolder(solver, homotopy, target, user_start)

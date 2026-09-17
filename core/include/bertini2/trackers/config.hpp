@@ -227,6 +227,19 @@ namespace tracking{
         {
             using std::pow;
 
+            // Refuse before DegreeBound() does, so the message is about what the caller was
+            // trying to do rather than about degrees.  Phi and Psi are bounds on the error of
+            // evaluating the Jacobian and the functions; the degree and coefficient bounds are
+            // merely the recipe for them that holds for polynomials.  There is no accepted
+            // recipe for an analytic system -- see issue #439 -- so we do not invent one.
+            if (!sys.IsPolynomial())
+                throw std::runtime_error("adaptive precision derives its error bounds from the "
+                    "degree of the system, and this system is not a polynomial one, so it has no "
+                    "degree.  Two ways on: track with a fixed-precision tracker, at double or at "
+                    "multiple precision, which needs no such bound; or set this config's Phi and "
+                    "Psi yourself (or its degree_bound, followed by SetPhiPsiFromBounds) and hand "
+                    "it to the tracker, choosing values you can defend for your system.");
+
             epsilon = pow(NumErrorT(sys.NumVariables()),2);
             degree_bound = sys.DegreeBound();
             coefficient_bound = sys.CoefficientBound<complex_dbl>();

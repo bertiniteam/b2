@@ -149,4 +149,36 @@ BOOST_AUTO_TEST_CASE(repeated_evaluation_reuses_coefficients_consistently)
     BOOST_CHECK_CLOSE(result(0).real(), 1.0, 1e-11);
 }
 
+
+BOOST_AUTO_TEST_CASE(blend_degrees_propagate_the_not_a_polynomial_sentinel)
+{
+    // A blend is a polynomial only when every operand is.  Degrees() took a maximum starting at
+    // zero, so a -1 from a transcendental operand was laundered into a claim of degree zero --
+    // a homotopy onto a sine reported itself as a constant, and everything downstream that
+    // multiplies by a degree believed it.
+    auto x = node::Variable::Make("x");
+    auto t = node::Variable::Make("t");
+
+    auto poly = std::make_shared<System>();
+    poly->AddVariableGroup(VariableGroup{x});
+    poly->AddFunction(x * x - 1);
+
+    auto transcendental = std::make_shared<System>();
+    transcendental->AddVariableGroup(VariableGroup{x});
+    transcendental->AddFunction(sin(x));
+
+    std::vector<std::shared_ptr<node::Node>> coeffs{node::Integer::Make(1) - t, t};
+    Blend blend(t, coeffs, std::vector<std::shared_ptr<const System>>{poly, transcendental});
+
+    BOOST_CHECK_EQUAL(blend.Degrees()[0], -1);
+    BOOST_CHECK_EQUAL(blend.Degrees(VariableGroup{x})[0], -1);
+
+    // Two polynomial operands are unaffected: the maximum still wins.
+    auto other_poly = std::make_shared<System>();
+    other_poly->AddVariableGroup(VariableGroup{x});
+    other_poly->AddFunction(x * x * x);
+    Blend ordinary(t, coeffs, std::vector<std::shared_ptr<const System>>{poly, other_poly});
+    BOOST_CHECK_EQUAL(ordinary.Degrees()[0], 3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
