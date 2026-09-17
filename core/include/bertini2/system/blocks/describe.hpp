@@ -47,7 +47,7 @@ inline constexpr size_t kTerseRowCap = 10;
 template <typename R>
 inline std::string FmtReal(R const& r, int sig)
 {
-	return (sig > 0) ? r.str(sig) : r.str();
+    return (sig > 0) ? r.str(sig) : r.str();
 }
 
 /// Print one (complex_mp) coefficient compactly: a real prints as its real part, a pure imaginary
@@ -55,10 +55,10 @@ inline std::string FmtReal(R const& r, int sig)
 /// 0 keeps full precision for any caller that does not opt into the short form.
 inline void PrintCoeff(std::ostream& out, complex_mp const& c, int sig = 0)
 {
-	const bool re0 = (c.real() == 0), im0 = (c.imag() == 0);
-	if (im0)            out << FmtReal(c.real(), sig);
-	else if (re0)       out << FmtReal(c.imag(), sig) << "*i";
-	else                out << "(" << FmtReal(c.real(), sig) << "+" << FmtReal(c.imag(), sig) << "*i)";
+    const bool re0 = (c.real() == 0), im0 = (c.imag() == 0);
+    if (im0)            out << FmtReal(c.real(), sig);
+    else if (re0)       out << FmtReal(c.imag(), sig) << "*i";
+    else                out << "(" << FmtReal(c.real(), sig) << "+" << FmtReal(c.imag(), sig) << "*i)";
 }
 
 /// The significant-digit count for coefficient printing: 4 for terse (short and legible), the
@@ -70,20 +70,20 @@ inline int CoeffSig(bool verbose) { return verbose ? static_cast<int>(DefaultPre
 /// `f_k` for a single row, or `f_a..f_b` for a contiguous range of `n` rows starting at `row`.
 inline void PrintRowLabel(std::ostream& out, size_t row, size_t n)
 {
-	out << "f_" << row;
-	if (n > 1)
-		out << "..f_" << (row + n - 1);
+    out << "f_" << row;
+    if (n > 1)
+        out << "..f_" << (row + n - 1);
 }
 
 /// The augmenting variable list `[x, y, 1]` (affine) or `[h, x, y]` (homogeneous: no trailing 1).
 inline void PrintAugmentedVars(std::ostream& out, VariableGroup const& vars, size_t num_vars, bool homogeneous)
 {
-	out << "[";
-	for (size_t c = 0; c < num_vars && c < vars.size(); ++c)
-		out << (c ? ", " : "") << *vars[c];
-	if (!homogeneous)
-		out << ", 1";
-	out << "]";
+    out << "[";
+    for (size_t c = 0; c < num_vars && c < vars.size(); ++c)
+        out << (c ? ", " : "") << *vars[c];
+    if (!homogeneous)
+        out << ", 1";
+    out << "]";
 }
 
 /// One affine linear form, row r of an augmented coefficient matrix M (num_vars+1 cols affine, or
@@ -92,23 +92,23 @@ inline void PrintAugmentedVars(std::ostream& out, VariableGroup const& vars, siz
 inline void PrintLinearFormVerbose(std::ostream& out, Mat<complex_mp> const& M, Eigen::Index r,
                                    VariableGroup const& vars, size_t num_vars, bool homogeneous)
 {
-	bool first = true;
-	const size_t ncol = homogeneous ? num_vars : num_vars + 1;
-	for (size_t c = 0; c < ncol; ++c)
-	{
-		complex_mp const& coeff = M(r, static_cast<Eigen::Index>(c));
-		if (coeff.real() == 0 && coeff.imag() == 0)
-			continue;
-		if (!first) out << " + ";
-		first = false;
-		out << "(";
-		PrintCoeff(out, coeff);
-		out << ")";
-		if (c < num_vars && c < vars.size())     // a variable column (the last affine column is the constant)
-			out << "*" << *vars[c];
-	}
-	if (first)
-		out << "0";
+    bool first = true;
+    const size_t ncol = homogeneous ? num_vars : num_vars + 1;
+    for (size_t c = 0; c < ncol; ++c)
+    {
+        complex_mp const& coeff = M(r, static_cast<Eigen::Index>(c));
+        if (coeff.real() == 0 && coeff.imag() == 0)
+            continue;
+        if (!first) out << " + ";
+        first = false;
+        out << "(";
+        PrintCoeff(out, coeff);
+        out << ")";
+        if (c < num_vars && c < vars.size())     // a variable column (the last affine column is the constant)
+            out << "*" << *vars[c];
+    }
+    if (first)
+        out << "0";
 }
 
 } // namespace describe_detail

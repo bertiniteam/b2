@@ -21,7 +21,7 @@
 
 /**
  \file bertini2/io/parsing.hpp
- 
+
  \brief A collective include file for parsing utilities
  */
 
@@ -32,4 +32,3 @@
 #include "bertini2/io/parsing/number_parsers.hpp"
 #include "bertini2/io/parsing/settings_parsers.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
-

@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/function_tree.hpp"
@@ -61,164 +61,162 @@ BOOST_CLASS_EXPORT_IMPLEMENT(bertini::node::LogOperator)
 namespace bertini{
 namespace node{
 
-	// Default: nothing to simplify -- return this node unchanged (sharing preserved).
-	// Operators override to recurse + reassemble through the Simplified* factories.
-	std::shared_ptr<Node> Node::Simplified() const
-	{
-		return std::const_pointer_cast<Node>(shared_from_this());
-	}
+    // Default: nothing to simplify -- return this node unchanged (sharing preserved).
+    // Operators override to recurse + reassemble through the Simplified* factories.
+    std::shared_ptr<Node> Node::Simplified() const
+    {
+        return std::const_pointer_cast<Node>(shared_from_this());
+    }
 
-	// Default: nothing to substitute (leaves other than Variable, and Differentials) -- return
-	// this node unchanged.  Variable overrides to match; operators/NamedExpression override to
-	// recurse + reassemble through the Simplified* factories.
-	std::shared_ptr<Node> Node::Subs(SubstitutionMap const& /*substitutions*/) const
-	{
-		return std::const_pointer_cast<Node>(shared_from_this());
-	}
+    // Default: nothing to substitute (leaves other than Variable, and Differentials) -- return
+    // this node unchanged.  Variable overrides to match; operators/NamedExpression override to
+    // recurse + reassemble through the Simplified* factories.
+    std::shared_ptr<Node> Node::Subs(SubstitutionMap const& /*substitutions*/) const
+    {
+        return std::const_pointer_cast<Node>(shared_from_this());
+    }
 
-	// Default: nothing to homogenize (leaves) -- return this node unchanged.  Operators that
-	// can carry degree-deficient summands (and their ancestors) override to rebuild functionally.
-	std::shared_ptr<Node> Node::Homogenized(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) const
-	{
-		return std::const_pointer_cast<Node>(shared_from_this());
-	}
+    // Default: nothing to homogenize (leaves) -- return this node unchanged.  Operators that
+    // can carry degree-deficient summands (and their ancestors) override to rebuild functionally.
+    std::shared_ptr<Node> Node::Homogenized(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) const
+    {
+        return std::const_pointer_cast<Node>(shared_from_this());
+    }
 
-	// ---- structural hash / equality (predicate layer for hash-consing) ----
+    // ---- structural hash / equality (predicate layer for hash-consing) ----
 
-	std::size_t Node::Hash() const
-	{
-		if (!structural_hash_)
-			structural_hash_ = HashImpl();
-		return *structural_hash_;
-	}
+    std::size_t Node::Hash() const
+    {
+        if (!structural_hash_)
+            structural_hash_ = HashImpl();
+        return *structural_hash_;
+    }
 
-	// Default: identity hash (the object address).  Distinct objects hash distinctly; value
-	// and operator nodes override HashImpl to be structural.
-	std::size_t Node::HashImpl() const
-	{
-		return std::hash<const void*>{}(this);
-	}
+    // Default: identity hash (the object address).  Distinct objects hash distinctly; value
+    // and operator nodes override HashImpl to be structural.
+    std::size_t Node::HashImpl() const
+    {
+        return std::hash<const void*>{}(this);
+    }
 
-	// Default: identity equality.  Value/operator nodes override.
-	bool Node::IsSame(Node const& other) const
-	{
-		return this == &other;
-	}
+    // Default: identity equality.  Value/operator nodes override.
+    bool Node::IsSame(Node const& other) const
+    {
+        return this == &other;
+    }
 
 
-	bool Node::IsPolynomial(std::shared_ptr<Variable> const&v) const
-	{
-		return Degree(v)>=0;
-	}
+    bool Node::IsPolynomial(std::shared_ptr<Variable> const&v) const
+    {
+        return Degree(v)>=0;
+    }
 
-	bool Node::IsPolynomial(VariableGroup const&v) const
-	{
-		return Degree(v)>=0;
-	}
+    bool Node::IsPolynomial(VariableGroup const&v) const
+    {
+        return Degree(v)>=0;
+    }
 
-	// Convenience: repeated single-variable differentiation.  Folds the virtual one-variable
-	// Differentiate `count` times; count==0 is the identity (the node itself).
-	std::shared_ptr<Node> Node::Differentiate(std::shared_ptr<Variable> const& v, unsigned count) const
-	{
-		if (count==0)
-			return std::const_pointer_cast<Node>(shared_from_this());
-		auto result = Differentiate(v);
-		for (unsigned i = 1; i < count; ++i)
-			result = result->Differentiate(v);
-		return result;
-	}
+    // Convenience: repeated single-variable differentiation.  Folds the virtual one-variable
+    // Differentiate `count` times; count==0 is the identity (the node itself).
+    std::shared_ptr<Node> Node::Differentiate(std::shared_ptr<Variable> const& v, unsigned count) const
+    {
+        if (count==0)
+            return std::const_pointer_cast<Node>(shared_from_this());
+        auto result = Differentiate(v);
+        for (unsigned i = 1; i < count; ++i)
+            result = result->Differentiate(v);
+        return result;
+    }
 
-	// Convenience: sequential differentiation wrt each variable in the group (mixed partials).
-	// Folds the virtual one-variable Differentiate over `vars` in order; empty is the identity.
-	std::shared_ptr<Node> Node::Differentiate(VariableGroup const& vars) const
-	{
-		if (vars.empty())
-			return std::const_pointer_cast<Node>(shared_from_this());
-		auto result = Differentiate(vars.front());
-		for (size_t i = 1; i < vars.size(); ++i)
-			result = result->Differentiate(vars[i]);
-		return result;
-	}
+    // Convenience: sequential differentiation wrt each variable in the group (mixed partials).
+    // Folds the virtual one-variable Differentiate over `vars` in order; empty is the identity.
+    std::shared_ptr<Node> Node::Differentiate(VariableGroup const& vars) const
+    {
+        if (vars.empty())
+            return std::const_pointer_cast<Node>(shared_from_this());
+        auto result = Differentiate(vars.front());
+        for (size_t i = 1; i < vars.size(); ++i)
+            result = result->Differentiate(vars[i]);
+        return result;
+    }
 
-	Node::Node()
-	{ }
+    Node::Node()
+    { }
 
-	// ---- hash-consing intern table ----
-	namespace {
-		// Process-global table: structural hash -> live nodes, held weakly so it self-cleans
-		// (a node dies when its last external shared_ptr drops; its weak_ptr is pruned on the
-		// next touch of that bucket).  Lazy-init function-local statics avoid SIOF.
-		std::unordered_map<std::size_t, std::vector<std::weak_ptr<Node>>>& InternBuckets()
-		{
-			static std::unordered_map<std::size_t, std::vector<std::weak_ptr<Node>>> buckets;
-			return buckets;
-		}
-		std::mutex& InternMutex()
-		{
-			static std::mutex m;
-			return m;
-		}
-	}
+    // ---- hash-consing intern table ----
+    namespace {
+        // Process-global table: structural hash -> live nodes, held weakly so it self-cleans
+        // (a node dies when its last external shared_ptr drops; its weak_ptr is pruned on the
+        // next touch of that bucket).  Lazy-init function-local statics avoid SIOF.
+        std::unordered_map<std::size_t, std::vector<std::weak_ptr<Node>>>& InternBuckets()
+        {
+            static std::unordered_map<std::size_t, std::vector<std::weak_ptr<Node>>> buckets;
+            return buckets;
+        }
+        std::mutex& InternMutex()
+        {
+            static std::mutex m;
+            return m;
+        }
+    }
 
-	std::shared_ptr<Node> Intern(std::shared_ptr<Node> const& candidate)
-	{
-		std::lock_guard<std::mutex> lock(InternMutex());
-		auto& bucket = InternBuckets()[candidate->Hash()];
+    std::shared_ptr<Node> Intern(std::shared_ptr<Node> const& candidate)
+    {
+        std::lock_guard<std::mutex> lock(InternMutex());
+        auto& bucket = InternBuckets()[candidate->Hash()];
 
-		std::shared_ptr<Node> found;
-		// scan for a live, structurally-equal node; prune any expired weak_ptrs as we go
-		bucket.erase(
-			std::remove_if(bucket.begin(), bucket.end(),
-				[&](std::weak_ptr<Node> const& wp) {
-					auto sp = wp.lock();
-					if (!sp) return true;                          // dead -> prune
-					if (!found && sp->IsSame(*candidate)) found = sp;
-					return false;
-				}),
-			bucket.end());
+        std::shared_ptr<Node> found;
+        // scan for a live, structurally-equal node; prune any expired weak_ptrs as we go
+        bucket.erase(
+            std::remove_if(bucket.begin(), bucket.end(),
+                [&](std::weak_ptr<Node> const& wp) {
+                    auto sp = wp.lock();
+                    if (!sp) return true;                          // dead -> prune
+                    if (!found && sp->IsSame(*candidate)) found = sp;
+                    return false;
+                }),
+            bucket.end());
 
-		if (found)
-			return found;                                          // hit: discard the candidate
-		bucket.push_back(candidate);                               // miss: register and keep
-		return candidate;
-	}
+        if (found)
+            return found;                                          // hit: discard the candidate
+        bucket.push_back(candidate);                               // miss: register and keep
+        return candidate;
+    }
 
-	namespace {
-		/// Memo for one top-level MultiDegree call: node identity -> its degrees.  Thread-local
-		/// because node graphs are shared across threads but a traversal is not.  Null when no
-		/// traversal is in flight, which is how the outermost call knows to own the memo.
-		thread_local std::unordered_map<Node const*, std::vector<int>>* multidegree_memo = nullptr;
-		/// The variable group the in-flight memo was built for.  A multidegree is only
-		/// meaningful relative to a variable group, so a nested call asking about a DIFFERENT
-		/// group must not read this memo -- it computes unmemoized instead.  Within one
-		/// traversal the same `vars` reference is handed down, so identity is the right test.
-		thread_local VariableGroup const* multidegree_memo_vars = nullptr;
-	}
+    namespace {
+        /// Memo for one top-level MultiDegree call: node identity -> its degrees.  Thread-local
+        /// because node graphs are shared across threads but a traversal is not.  Null when no
+        /// traversal is in flight, which is how the outermost call knows to own the memo.
+        thread_local std::unordered_map<Node const*, std::vector<int>>* multidegree_memo = nullptr;
+        /// The variable group the in-flight memo was built for.  A multidegree is only
+        /// meaningful relative to a variable group, so a nested call asking about a DIFFERENT
+        /// group must not read this memo -- it computes unmemoized instead.  Within one
+        /// traversal the same `vars` reference is handed down, so identity is the right test.
+        thread_local VariableGroup const* multidegree_memo_vars = nullptr;
+    }
 
-	std::vector<int> Node::MultiDegree(VariableGroup const& vars) const
-	{
-		if (multidegree_memo && multidegree_memo_vars != &vars)
-			return this->MultiDegreeImpl(vars);      // different variable group: do not memoize
+    std::vector<int> Node::MultiDegree(VariableGroup const& vars) const
+    {
+        if (multidegree_memo && multidegree_memo_vars != &vars)
+            return this->MultiDegreeImpl(vars);      // different variable group: do not memoize
 
-		if (multidegree_memo)                       // inside a traversal: consult the memo
-		{
-			auto found = multidegree_memo->find(this);
-			if (found != multidegree_memo->end())
-				return found->second;
-			auto computed = this->MultiDegreeImpl(vars);
-			(*multidegree_memo)[this] = computed;
-			return computed;
-		}
+        if (multidegree_memo)                       // inside a traversal: consult the memo
+        {
+            auto found = multidegree_memo->find(this);
+            if (found != multidegree_memo->end())
+                return found->second;
+            auto computed = this->MultiDegreeImpl(vars);
+            (*multidegree_memo)[this] = computed;
+            return computed;
+        }
 
-		// outermost call: own the memo, and clear it however we leave
-		std::unordered_map<Node const*, std::vector<int>> memo;
-		multidegree_memo      = &memo;
-		multidegree_memo_vars = &vars;
-		struct Guard { ~Guard() { multidegree_memo = nullptr; multidegree_memo_vars = nullptr; } } guard;
-		return this->MultiDegreeImpl(vars);
-	}
+        // outermost call: own the memo, and clear it however we leave
+        std::unordered_map<Node const*, std::vector<int>> memo;
+        multidegree_memo      = &memo;
+        multidegree_memo_vars = &vars;
+        struct Guard { ~Guard() { multidegree_memo = nullptr; multidegree_memo_vars = nullptr; } } guard;
+        return this->MultiDegreeImpl(vars);
+    }
 
 } // namespace node
 } // namespace bertini
-
-

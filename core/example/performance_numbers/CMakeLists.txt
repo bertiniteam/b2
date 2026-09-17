@@ -20,32 +20,32 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -g")
 include_directories (include)
 
 set(MY_HEADERS
-	include/construct_system.hpp
-	)
+    include/construct_system.hpp
+    )
 
 set(MY_SOURCES
-	src/main.cpp
-	)
+    src/main.cpp
+    )
 
 include(GenerateExportHeader)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
-find_library(B2_LIBRARIES 
-	NAMES "bertini2"
+find_library(B2_LIBRARIES
+    NAMES "bertini2"
 )
 
-find_library(GMP_LIBRARIES 
-	NAMES "gmp"
+find_library(GMP_LIBRARIES
+    NAMES "gmp"
 )
 
-find_library(MPFR_LIBRARIES 
-	NAMES "mpfr"
+find_library(MPFR_LIBRARIES
+    NAMES "mpfr"
 )
 
 #Prep for compiling against boost
 find_package(Boost REQUIRED
-			COMPONENTS system log)
+            COMPONENTS system log)
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})

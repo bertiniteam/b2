@@ -1,22 +1,22 @@
 # This file is part of Bertini 2.
-# 
+#
 # python/bertini/__init__.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # python/bertini/__init__.py is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with python/bertini/__init__.py.  If not, see <http://www.gnu.org/licenses/>.
-# 
+#
 #  Copyright(C) Bertini2 Development Team
-# 
-#  See <http://www.gnu.org/licenses/> for a copy of the license, 
-#  as well as COPYING.  Bertini2 is provided with permitted 
+#
+#  See <http://www.gnu.org/licenses/> for a copy of the license,
+#  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
 """
@@ -24,7 +24,7 @@ bertini -- Python bindings for Bertini 2
 ========================================
 
 This code is licensed under the GNU Public License, Version 3, with
-additional clauses under section 7 as permitted, to protect the 
+additional clauses under section 7 as permitted, to protect the
 Bertini name.  See b2/licenses/ for a complete copy of the license,
 and the licenses of software upon which Bertini depends.
 
@@ -32,7 +32,7 @@ See the source at https://github.com/bertiniteam/b2
 """
 
 
-### this __init__.py is strongly inspired by that for GalSim 
+### this __init__.py is strongly inspired by that for GalSim
 ### https://github.com/GalSim-developers/GalSim
 
 from importlib.metadata import version
@@ -190,7 +190,3 @@ __all__ = ['solve','save','load','annotate','solutions_of','provenance','recordi
            'sin','cos','tan','asin','acos','atan','exp','log','sqrt',
            'sinh','cosh','tanh','asinh','acosh','atanh',
            'canonicalize','monomial_order']
-
-
-
-

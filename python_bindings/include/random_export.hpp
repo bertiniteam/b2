@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/random_export.hpp:  Header file for exposing root nodes to python.
@@ -29,12 +29,12 @@
 
 
 namespace bertini{
-	namespace python{
-		
-		using namespace boost::python;
-		
-		
-		void ExportRandom();
+    namespace python{
+
+        using namespace boost::python;
+
+
+        void ExportRandom();
 
 }} // namespaces
 

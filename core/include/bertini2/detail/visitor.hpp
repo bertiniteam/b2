@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -31,39 +31,39 @@
 
 namespace bertini{
 
-	/**
-	\brief A strawman class for implementing the visitor pattern.  
+    /**
+    \brief A strawman class for implementing the visitor pattern.
 
-	Deliberately empty, the non-base visitors must derive from it.
+    Deliberately empty, the non-base visitors must derive from it.
 
-	\see Visitor, Observer, AnyObserver, MultiObserver
-	*/
-	class VisitorBase
-	{ BOOST_TYPE_INDEX_REGISTER_CLASS
-	public:
-		virtual ~VisitorBase() = default;
-	};
+    \see Visitor, Observer, AnyObserver, MultiObserver
+    */
+    class VisitorBase
+    { BOOST_TYPE_INDEX_REGISTER_CLASS
+    public:
+        virtual ~VisitorBase() = default;
+    };
 
 
-	/**
-	\brief The first non-trivial visitor class.  
+    /**
+    \brief The first non-trivial visitor class.
 
-	Derive from this when creating new visitor types.
+    Derive from this when creating new visitor types.
 
-	\tparam VisitedT The type of object the visitor visits.
-	\tparam RetT The type of object to be returned when visiting.  Default is `void`.
-	*/
-	template<class VisitedT, typename RetT = void>
-	class Visitor
-	{ BOOST_TYPE_INDEX_REGISTER_CLASS
-	public:
-		typedef RetT ReturnType;  ///< The type returned when visiting.
-		/// \brief Visit an object of the visited type.
-		virtual ReturnType Visit(VisitedT const &) = 0;
-		virtual ~Visitor() = default;
-	};
+    \tparam VisitedT The type of object the visitor visits.
+    \tparam RetT The type of object to be returned when visiting.  Default is `void`.
+    */
+    template<class VisitedT, typename RetT = void>
+    class Visitor
+    { BOOST_TYPE_INDEX_REGISTER_CLASS
+    public:
+        typedef RetT ReturnType;  ///< The type returned when visiting.
+        /// \brief Visit an object of the visited type.
+        virtual ReturnType Visit(VisitedT const &) = 0;
+        virtual ~Visitor() = default;
+    };
 
-	
+
 
 }
 

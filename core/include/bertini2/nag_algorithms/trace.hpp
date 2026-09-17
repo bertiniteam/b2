@@ -15,14 +15,14 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file bertini2/nag_algorithms/trace.hpp 
+\file bertini2/nag_algorithms/trace.hpp
 
-\brief Provides methods for computing traces.  
+\brief Provides methods for computing traces.
 
 */
 
@@ -34,23 +34,23 @@
 
 namespace bertini {
 
-	namespace algorithms {
+    namespace algorithms {
 
 
-		/**
-		\brief Compute the trace of a witness set (placeholder: not yet implemented, returns 0).
+        /**
+        \brief Compute the trace of a witness set (placeholder: not yet implemented, returns 0).
 
-		The witness set argument is currently ignored.
+        The witness set argument is currently ignored.
 
-		\tparam ComplexT The complex number type.
-		\return The trace value (currently always zero).
-		*/
-		template <typename ComplexT>
-		ComplexT Trace(nag_datatype::WitnessSet<ComplexT> const& /*w*/)
-		{
-			return ComplexT(0);
-		}
+        \tparam ComplexT The complex number type.
+        \return The trace value (currently always zero).
+        */
+        template <typename ComplexT>
+        ComplexT Trace(nag_datatype::WitnessSet<ComplexT> const& /*w*/)
+        {
+            return ComplexT(0);
+        }
 
-	} // algorithm
+    } // algorithm
 
 } // bertini

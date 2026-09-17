@@ -35,30 +35,30 @@
 namespace bertini {
 namespace node {
 
-	/**
-	\brief Collect the distinct Variables appearing in a function-tree subtree.
+    /**
+    \brief Collect the distinct Variables appearing in a function-tree subtree.
 
-	Traverses the tree non-intrusively, via the public child accessors of the
-	operator and root node types.  The returned group is de-duplicated (by node
-	identity) and ordered alphabetically by Variable name.
+    Traverses the tree non-intrusively, via the public child accessors of the
+    operator and root node types.  The returned group is de-duplicated (by node
+    identity) and ordered alphabetically by Variable name.
 
-	\param n The root of the subtree to scan.  May be null, in which case an empty
-	         group is returned.
-	\return A VariableGroup of the distinct variables found, sorted by name.
-	*/
-	VariableGroup GatherVariables(std::shared_ptr<const Node> const& n);
+    \param n The root of the subtree to scan.  May be null, in which case an empty
+             group is returned.
+    \return A VariableGroup of the distinct variables found, sorted by name.
+    */
+    VariableGroup GatherVariables(std::shared_ptr<const Node> const& n);
 
-	/**
-	\brief Collect the distinct Variables appearing across a collection of expressions.
+    /**
+    \brief Collect the distinct Variables appearing across a collection of expressions.
 
-	The union of the variables of each expression, de-duplicated (by node identity)
-	and ordered alphabetically by Variable name.  This is what the
-	function-list System constructor uses to auto-build a single variable group.
+    The union of the variables of each expression, de-duplicated (by node identity)
+    and ordered alphabetically by Variable name.  This is what the
+    function-list System constructor uses to auto-build a single variable group.
 
-	\param functions The expressions to scan.
-	\return A VariableGroup of the distinct variables found, sorted by name.
-	*/
-	VariableGroup GatherVariables(std::vector<std::shared_ptr<Node>> const& functions);
+    \param functions The expressions to scan.
+    \return A VariableGroup of the distinct variables found, sorted by name.
+    */
+    VariableGroup GatherVariables(std::vector<std::shared_ptr<Node>> const& functions);
 
 } // namespace node
 } // namespace bertini

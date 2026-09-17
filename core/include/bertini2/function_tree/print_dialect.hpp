@@ -54,34 +54,34 @@ namespace node {
 /// \brief Who a printed expression is for; selects the operator and constant spellings.
 enum class PrintDialect
 {
-	Classic = 0,          ///< Bertini 1 input: `^`, `(re+im*I)`, all digits.
-	PythonReadable = 1,   ///< Python `str`: `**`, the same constant shapes, readable first.
-	PythonExact = 2       ///< Python `repr`: `**`, exact constant spellings that `eval` rebuilds at full precision.
+    Classic = 0,          ///< Bertini 1 input: `^`, `(re+im*I)`, all digits.
+    PythonReadable = 1,   ///< Python `str`: `**`, the same constant shapes, readable first.
+    PythonExact = 2       ///< Python `repr`: `**`, exact constant spellings that `eval` rebuilds at full precision.
 };
 
 /// \brief The stream-state slot the dialect is kept in (allocated once per process).
 inline int PrintDialectSlot()
 {
-	static int const slot = std::ios_base::xalloc();
-	return slot;
+    static int const slot = std::ios_base::xalloc();
+    return slot;
 }
 
 /// \brief The dialect a stream prints in; Classic unless SetDialect was called on it.
 inline PrintDialect DialectOf(std::ios_base& stream)
 {
-	return static_cast<PrintDialect>(stream.iword(PrintDialectSlot()));
+    return static_cast<PrintDialect>(stream.iword(PrintDialectSlot()));
 }
 
 /// \brief Choose the dialect everything subsequently printed to `stream` is written in.
 inline void SetDialect(std::ios_base& stream, PrintDialect dialect)
 {
-	stream.iword(PrintDialectSlot()) = static_cast<long>(dialect);
+    stream.iword(PrintDialectSlot()) = static_cast<long>(dialect);
 }
 
 /// \brief The power operator in a dialect: `^` for Bertini 1, `**` for Python.
 inline char const* PowerSymbol(PrintDialect dialect)
 {
-	return dialect == PrintDialect::Classic ? "^" : "**";
+    return dialect == PrintDialect::Classic ? "^" : "**";
 }
 
 } // namespace node

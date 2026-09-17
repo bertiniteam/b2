@@ -45,7 +45,7 @@ else ()
         $<$<CONFIG:Release>:-O3>
         $<$<CONFIG:Release>:-g>
         # using O2 or O3 cuts runtime by over half.
-	)
+    )
 endif ()
 
 #sometimes you need to see a lot, and this lets you see ... so much
@@ -311,4 +311,3 @@ else()
     message(STATUS "Will install python bindings to: ${Python_SITELIB}/bertini")
     install(TARGETS _pybertini LIBRARY DESTINATION ${Python_SITELIB}/bertini)
 endif()
-

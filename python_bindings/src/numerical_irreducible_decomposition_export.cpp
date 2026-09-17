@@ -24,30 +24,30 @@
 //  No heavy endgame/NID headers needed here: only void functions are called by name.
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		// Forward declarations — defined in nid_{datatypes,double,mp,amp}_export.cpp.
-		void ExportNIDDataTypes();
-		void ExportNIDDouble();
-		void ExportNIDMP();
-		void ExportNIDAMP();
+        // Forward declarations — defined in nid_{datatypes,double,mp,amp}_export.cpp.
+        void ExportNIDDataTypes();
+        void ExportNIDDouble();
+        void ExportNIDMP();
+        void ExportNIDAMP();
 
-		void ExportNID(){
-			scope current_scope;
-			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-			new_submodule_name.append(".nag_algorithms");
-			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-			current_scope.attr("nag_algorithms") = new_submodule;
+        void ExportNID(){
+            scope current_scope;
+            std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+            new_submodule_name.append(".nag_algorithms");
+            object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+            current_scope.attr("nag_algorithms") = new_submodule;
 
-			scope new_submodule_scope = new_submodule;
+            scope new_submodule_scope = new_submodule;
 
-			// config structs (Tolerances, Regeneration, Sharpening, PostProcessing)
-			// are registered by ExportZeroDim which runs before this.
-			ExportNIDDataTypes();
-			ExportNIDDouble();
-			ExportNIDMP();
-			ExportNIDAMP();
-		}
+            // config structs (Tolerances, Regeneration, Sharpening, PostProcessing)
+            // are registered by ExportZeroDim which runs before this.
+            ExportNIDDataTypes();
+            ExportNIDDouble();
+            ExportNIDMP();
+            ExportNIDAMP();
+        }
 
-	}
+    }
 }

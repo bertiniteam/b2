@@ -15,69 +15,69 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/system/precon.hpp"
 
 
 namespace bertini{
-	namespace system {
+    namespace system {
 
 using namespace bertini::node;
 // has multiplicity 3 root at origin, and 3 infinite roots
 System Precon::GriewankOsborn()
 {
-	using Var = std::shared_ptr<node::Variable>;
+    using Var = std::shared_ptr<node::Variable>;
 
-	bertini::System griewank_osborn_sys;
-	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
-	VariableGroup vars{x,y};
-	griewank_osborn_sys.AddVariableGroup(vars); 
+    bertini::System griewank_osborn_sys;
+    Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
+    VariableGroup vars{x,y};
+    griewank_osborn_sys.AddVariableGroup(vars);
 
-	griewank_osborn_sys.AddFunction((mpq_rational(29,16))*pow(x,3)-2*x*y);
-	griewank_osborn_sys.AddFunction((y - pow(x,2)));
+    griewank_osborn_sys.AddFunction((mpq_rational(29,16))*pow(x,3)-2*x*y);
+    griewank_osborn_sys.AddFunction((y - pow(x,2)));
 
-	return griewank_osborn_sys;
+    return griewank_osborn_sys;
 }
 
 
 
 System Precon::CrossedPaths()
 {
-	using Var = std::shared_ptr<node::Variable>;
-	
-	bertini::System crossed_paths_sys;
-	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
-	auto two = Integer::Make(2);
-	auto half = Rational::Make("1/2");
-	VariableGroup vars{x,y};
-	crossed_paths_sys.AddVariableGroup(vars);
-	
-	crossed_paths_sys.AddFunction(pow(x,3)+ two);
-	crossed_paths_sys.AddFunction(pow(y,2) + half);
-	
-	return crossed_paths_sys;
+    using Var = std::shared_ptr<node::Variable>;
+
+    bertini::System crossed_paths_sys;
+    Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
+    auto two = Integer::Make(2);
+    auto half = Rational::Make("1/2");
+    VariableGroup vars{x,y};
+    crossed_paths_sys.AddVariableGroup(vars);
+
+    crossed_paths_sys.AddFunction(pow(x,3)+ two);
+    crossed_paths_sys.AddFunction(pow(y,2) + half);
+
+    return crossed_paths_sys;
 }
 
- 
+
 System Precon::Sphere()
 {
-	using Var = std::shared_ptr<node::Variable>;
-	
-	bertini::System sphere_sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
-	auto one = Integer::Make(1);
+    using Var = std::shared_ptr<node::Variable>;
 
-	VariableGroup vars{x,y,z};
-	sphere_sys.AddVariableGroup(vars);
-	
-	sphere_sys.AddFunction(pow(x,2) + pow(y,2) + pow(z,2) - one);
+    bertini::System sphere_sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+    auto one = Integer::Make(1);
 
-	return sphere_sys;
+    VariableGroup vars{x,y,z};
+    sphere_sys.AddVariableGroup(vars);
+
+    sphere_sys.AddFunction(pow(x,2) + pow(y,2) + pow(z,2) - one);
+
+    return sphere_sys;
 }
 
 
-	} // namespace system
+    } // namespace system
 }//bertini

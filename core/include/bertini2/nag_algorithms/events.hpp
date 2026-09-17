@@ -40,102 +40,102 @@ type.
 
 namespace bertini {
 
-	namespace algorithm {
+    namespace algorithm {
 
-		/**
-		\brief Generic event for a numerical algebraic geometry algorithm.
-		*/
-		ADD_BERTINI_EVENT_TYPE(AlgorithmEvent, ConstEvent);
+        /**
+        \brief Generic event for a numerical algebraic geometry algorithm.
+        */
+        ADD_BERTINI_EVENT_TYPE(AlgorithmEvent, ConstEvent);
 
-		/**
-		\brief The algorithm has begun (e.g. the whole zero-dim solve is starting).
-		*/
-		ADD_BERTINI_EVENT_TYPE(AlgorithmStarted, AlgorithmEvent);
+        /**
+        \brief The algorithm has begun (e.g. the whole zero-dim solve is starting).
+        */
+        ADD_BERTINI_EVENT_TYPE(AlgorithmStarted, AlgorithmEvent);
 
-		/**
-		\brief The algorithm has finished.
-		*/
-		ADD_BERTINI_EVENT_TYPE(AlgorithmComplete, AlgorithmEvent);
+        /**
+        \brief The algorithm has finished.
+        */
+        ADD_BERTINI_EVENT_TYPE(AlgorithmComplete, AlgorithmEvent);
 
 
-		/**
-		\brief The algorithm is beginning work on one solution path, carrying its index.
+        /**
+        \brief The algorithm is beginning work on one solution path, carrying its index.
 
-		Between this and the matching PathComplete, the algorithm runs everything for
-		that path -- the main homotopy track and any endgame sub-tracks -- so an
-		observer can group them together as one complete solution path.
-		*/
-		template<class ObservedT>
-		class PathStarted : public AlgorithmEvent<ObservedT>
-		{ BOOST_TYPE_INDEX_REGISTER_CLASS
-		public:
-			/// The held-observer type the event carries.
-			using HeldT = typename AlgorithmEvent<ObservedT>::HeldT;
-			/**
-			\brief Construct the event for the path at the given index.
-			\param obs The observed object emitting the event.
-			\param path_index The index of the solution path being started.
-			\param tracker The tracker that will execute this path (see Tracker()); may be null.
-			*/
-			PathStarted(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr)
-				: AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker)
-			{}
+        Between this and the matching PathComplete, the algorithm runs everything for
+        that path -- the main homotopy track and any endgame sub-tracks -- so an
+        observer can group them together as one complete solution path.
+        */
+        template<class ObservedT>
+        class PathStarted : public AlgorithmEvent<ObservedT>
+        { BOOST_TYPE_INDEX_REGISTER_CLASS
+        public:
+            /// The held-observer type the event carries.
+            using HeldT = typename AlgorithmEvent<ObservedT>::HeldT;
+            /**
+            \brief Construct the event for the path at the given index.
+            \param obs The observed object emitting the event.
+            \param path_index The index of the solution path being started.
+            \param tracker The tracker that will execute this path (see Tracker()); may be null.
+            */
+            PathStarted(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr)
+                : AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker)
+            {}
 
-			/// \return The index of the solution path this event concerns.
-			std::size_t PathIndex() const { return path_index_; }
+            /// \return The index of the solution path this event concerns.
+            std::size_t PathIndex() const { return path_index_; }
 
-			/**
-			\brief The tracker that actually executes this path.
+            /**
+            \brief The tracker that actually executes this path.
 
-			In a serial solve this is the solver's member tracker; in a threaded solve it is the
-			thread-local tracker clone that owns the path (Observable copies inherit no observers,
-			so the member tracker would see nothing).  A meta-observer that wants per-path tracking
-			data must attach its sub-observer here, NOT to solver.GetTracker().  AddObserver is a
-			const method, so observers can still be attached through this const handle.  May be null
-			if the emitter supplied no tracker.
-			*/
-			Observable const* Tracker() const { return tracker_; }
+            In a serial solve this is the solver's member tracker; in a threaded solve it is the
+            thread-local tracker clone that owns the path (Observable copies inherit no observers,
+            so the member tracker would see nothing).  A meta-observer that wants per-path tracking
+            data must attach its sub-observer here, NOT to solver.GetTracker().  AddObserver is a
+            const method, so observers can still be attached through this const handle.  May be null
+            if the emitter supplied no tracker.
+            */
+            Observable const* Tracker() const { return tracker_; }
 
-			virtual ~PathStarted() = default;
-			PathStarted() = delete;
-		private:
-			std::size_t path_index_;
-			Observable const* tracker_ = nullptr;
-		};
+            virtual ~PathStarted() = default;
+            PathStarted() = delete;
+        private:
+            std::size_t path_index_;
+            Observable const* tracker_ = nullptr;
+        };
 
-		/**
-		\brief The algorithm has finished work on one solution path, carrying its index.
-		*/
-		template<class ObservedT>
-		class PathComplete : public AlgorithmEvent<ObservedT>
-		{ BOOST_TYPE_INDEX_REGISTER_CLASS
-		public:
-			/// The held-observer type the event carries.
-			using HeldT = typename AlgorithmEvent<ObservedT>::HeldT;
-			/**
-			\brief Construct the event for the path at the given index.
-			\param obs The observed object emitting the event.
-			\param path_index The index of the solution path that has completed.
-			\param tracker The tracker that executed this path (see Tracker()); may be null.
-			*/
-			PathComplete(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr)
-				: AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker)
-			{}
+        /**
+        \brief The algorithm has finished work on one solution path, carrying its index.
+        */
+        template<class ObservedT>
+        class PathComplete : public AlgorithmEvent<ObservedT>
+        { BOOST_TYPE_INDEX_REGISTER_CLASS
+        public:
+            /// The held-observer type the event carries.
+            using HeldT = typename AlgorithmEvent<ObservedT>::HeldT;
+            /**
+            \brief Construct the event for the path at the given index.
+            \param obs The observed object emitting the event.
+            \param path_index The index of the solution path that has completed.
+            \param tracker The tracker that executed this path (see Tracker()); may be null.
+            */
+            PathComplete(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr)
+                : AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker)
+            {}
 
-			/// \return The index of the solution path this event concerns.
-			std::size_t PathIndex() const { return path_index_; }
+            /// \return The index of the solution path this event concerns.
+            std::size_t PathIndex() const { return path_index_; }
 
-			/// The tracker that executed this path -- see PathStarted::Tracker().  A meta-observer
-			/// detaches its per-path sub-observer from this same tracker on PathComplete.
-			Observable const* Tracker() const { return tracker_; }
+            /// The tracker that executed this path -- see PathStarted::Tracker().  A meta-observer
+            /// detaches its per-path sub-observer from this same tracker on PathComplete.
+            Observable const* Tracker() const { return tracker_; }
 
-			virtual ~PathComplete() = default;
-			PathComplete() = delete;
-		private:
-			std::size_t path_index_;
-			Observable const* tracker_ = nullptr;
-		};
+            virtual ~PathComplete() = default;
+            PathComplete() = delete;
+        private:
+            std::size_t path_index_;
+            Observable const* tracker_ = nullptr;
+        };
 
-	} // namespace algorithm
+    } // namespace algorithm
 
 } // namespace bertini

@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // special_number.hpp:  Declares the class SpecialNumber.
@@ -40,173 +40,168 @@
 
 namespace bertini {
 namespace node{
-	using ::acos;
-	using ::exp;
-
-	
-	namespace special_number{
-
-		/**
-		\brief The number \f$\pi\f$.
-
-		The number \f$\pi\f$.  Gets its own class because it is such an important number.
-		*/
-		class Pi : public Number, public NameHolder
-		{
-		public:
-			BERTINI_DEFAULT_VISITABLE()
-
-			virtual ~Pi() = default;
-
-			/// \brief Construct (and intern) a Pi node.
-			template<typename... Ts>
-			static
-			std::shared_ptr<Pi> Make(Ts&& ...ts){
-				return std::static_pointer_cast<Pi>(Intern(std::shared_ptr<Node>( new Pi(ts...) )));
-			}
-
-			void print(std::ostream & target) const override
-			{
-				target << name();
-			}
-
-			// All Pi nodes are the same number: type-based structural identity, so the
-			// intern table collapses every Pi() onto one shared node (and deserialized
-			// Pi's re-intern onto it, ADR-0042).
-			std::size_t HashImpl() const override
-			{
-				return typeid(Pi).hash_code();
-			}
-			bool IsSame(Node const& other) const override
-			{
-				return dynamic_cast<Pi const*>(&other) != nullptr;
-			}
+    using ::acos;
+    using ::exp;
 
 
-		private:
+    namespace special_number{
 
-			Pi() : NameHolder("pi")
-			{}
+        /**
+        \brief The number \f$\pi\f$.
 
-			// Return value of constant
-			
+        The number \f$\pi\f$.  Gets its own class because it is such an important number.
+        */
+        class Pi : public Number, public NameHolder
+        {
+        public:
+            BERTINI_DEFAULT_VISITABLE()
+
+            virtual ~Pi() = default;
+
+            /// \brief Construct (and intern) a Pi node.
+            template<typename... Ts>
+            static
+            std::shared_ptr<Pi> Make(Ts&& ...ts){
+                return std::static_pointer_cast<Pi>(Intern(std::shared_ptr<Node>( new Pi(ts...) )));
+            }
+
+            void print(std::ostream & target) const override
+            {
+                target << name();
+            }
+
+            // All Pi nodes are the same number: type-based structural identity, so the
+            // intern table collapses every Pi() onto one shared node (and deserialized
+            // Pi's re-intern onto it, ADR-0042).
+            std::size_t HashImpl() const override
+            {
+                return typeid(Pi).hash_code();
+            }
+            bool IsSame(Node const& other) const override
+            {
+                return dynamic_cast<Pi const*>(&other) != nullptr;
+            }
 
 
-			
+        private:
 
+            Pi() : NameHolder("pi")
+            {}
 
-			friend class boost::serialization::access;
-
-			template <typename Archive>
-			void serialize(Archive& ar, const unsigned /*version*/) {
-				ar & boost::serialization::base_object<Number>(*this);
-				ar & boost::serialization::base_object<NameHolder>(*this);
-			}
-		};
+            // Return value of constant
 
 
 
-		/**
-		\brief The number \f$e\f$.
-
-		The number \f$e\f$.  Gets its own class because it is such an important number.
-		*/
-		class E : public Number, public NameHolder
-		{
-		public:
-			BERTINI_DEFAULT_VISITABLE()
 
 
 
-			virtual ~E() = default;
+            friend class boost::serialization::access;
+
+            template <typename Archive>
+            void serialize(Archive& ar, const unsigned /*version*/) {
+                ar & boost::serialization::base_object<Number>(*this);
+                ar & boost::serialization::base_object<NameHolder>(*this);
+            }
+        };
 
 
-			/// \brief Construct (and intern) a E node.
-			template<typename... Ts>
-			static
-			std::shared_ptr<E> Make(Ts&& ...ts){
-				return std::static_pointer_cast<E>(Intern(std::shared_ptr<Node>( new E(ts...) )));
-			}
 
-			void print(std::ostream & target) const override
-			{
-				target << name();
-			}
+        /**
+        \brief The number \f$e\f$.
 
-			// All E nodes are the same number: type-based structural identity (see Pi).
-			std::size_t HashImpl() const override
-			{
-				return typeid(E).hash_code();
-			}
-			bool IsSame(Node const& other) const override
-			{
-				return dynamic_cast<E const*>(&other) != nullptr;
-			}
+        The number \f$e\f$.  Gets its own class because it is such an important number.
+        */
+        class E : public Number, public NameHolder
+        {
+        public:
+            BERTINI_DEFAULT_VISITABLE()
 
 
-		private:
 
-			E() : NameHolder("e")
-			{}
-
-			
-			// Return value of constant
-			
+            virtual ~E() = default;
 
 
-			
+            /// \brief Construct (and intern) a E node.
+            template<typename... Ts>
+            static
+            std::shared_ptr<E> Make(Ts&& ...ts){
+                return std::static_pointer_cast<E>(Intern(std::shared_ptr<Node>( new E(ts...) )));
+            }
+
+            void print(std::ostream & target) const override
+            {
+                target << name();
+            }
+
+            // All E nodes are the same number: type-based structural identity (see Pi).
+            std::size_t HashImpl() const override
+            {
+                return typeid(E).hash_code();
+            }
+            bool IsSame(Node const& other) const override
+            {
+                return dynamic_cast<E const*>(&other) != nullptr;
+            }
 
 
-			friend class boost::serialization::access;
+        private:
 
-			template <typename Archive>
-			void serialize(Archive& ar, const unsigned /*version*/) {
-				ar & boost::serialization::base_object<Number>(*this);
-				ar & boost::serialization::base_object<NameHolder>(*this);
-			}
-
-		};
-
-	} // re: special_number namespace
+            E() : NameHolder("e")
+            {}
 
 
-	/**
-	Construct a shared pointer to \f$\pi\f$.
-	*/
-	std::shared_ptr<Node> Pi();
+            // Return value of constant
 
-	/**
-	Construct a shared pointer to \f$e\f$.
-	*/
-	std::shared_ptr<Node> E();
 
-	/**
-	Construct a shared pointer to \f$i\f$.
-	*/
-	std::shared_ptr<Node> I();
 
-	/**
-	Construct a shared pointer to \f$2\f$.
-	*/
-	std::shared_ptr<Node> Two();
 
-	/**
-	Construct a shared pointer to \f$1\f$.
-	*/
-	std::shared_ptr<Node> One();
 
-	/**
-	Construct a shared pointer to \f$0\f$.
-	*/
-	std::shared_ptr<Node> Zero();
+
+            friend class boost::serialization::access;
+
+            template <typename Archive>
+            void serialize(Archive& ar, const unsigned /*version*/) {
+                ar & boost::serialization::base_object<Number>(*this);
+                ar & boost::serialization::base_object<NameHolder>(*this);
+            }
+
+        };
+
+    } // re: special_number namespace
+
+
+    /**
+    Construct a shared pointer to \f$\pi\f$.
+    */
+    std::shared_ptr<Node> Pi();
+
+    /**
+    Construct a shared pointer to \f$e\f$.
+    */
+    std::shared_ptr<Node> E();
+
+    /**
+    Construct a shared pointer to \f$i\f$.
+    */
+    std::shared_ptr<Node> I();
+
+    /**
+    Construct a shared pointer to \f$2\f$.
+    */
+    std::shared_ptr<Node> Two();
+
+    /**
+    Construct a shared pointer to \f$1\f$.
+    */
+    std::shared_ptr<Node> One();
+
+    /**
+    Construct a shared pointer to \f$0\f$.
+    */
+    std::shared_ptr<Node> Zero();
 
 
 } // re: namespace node
 } // re: namespace bertini
-	
+
 #endif
-
-
-
-
-

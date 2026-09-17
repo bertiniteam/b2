@@ -1,4 +1,4 @@
-🛷 Move a slice, hold the system fixed 
+🛷 Move a slice, hold the system fixed
 ****************************************
 
 .. testsetup:: *

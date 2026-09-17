@@ -63,20 +63,20 @@ namespace detail {
 ///        start with it (🎉, 👍, ❤, ⭐, a regional-indicator letter, ...).
 inline bool IsEmojiBase(char32_t cp)
 {
-	return (cp >= 0x1F000 && cp <= 0x1FAFF)   // emoticons, pictographs, transport, supplemental & extended-A (incl. skin tones, regional indicators)
-	    || (cp >= 0x2600  && cp <= 0x27BF)    // miscellaneous symbols + dingbats (☀ ❤ ✨ ✅ ...)
-	    || (cp >= 0x2B00  && cp <= 0x2BFF);   // miscellaneous symbols and arrows (⭐ ⬅ ...)
+    return (cp >= 0x1F000 && cp <= 0x1FAFF)   // emoticons, pictographs, transport, supplemental & extended-A (incl. skin tones, regional indicators)
+        || (cp >= 0x2600  && cp <= 0x27BF)    // miscellaneous symbols + dingbats (☀ ❤ ✨ ✅ ...)
+        || (cp >= 0x2B00  && cp <= 0x2BFF);   // miscellaneous symbols and arrows (⭐ ⬅ ...)
 }
 
 /// \brief True if \p cp only *extends* an emoji cluster -- valid mid-name to glue a
 ///        multi-code-point emoji, but not meaningful as a name's first character.
 inline bool IsEmojiGlue(char32_t cp)
 {
-	return cp == 0x200D              // ZERO WIDTH JOINER (👩‍👩‍👧)
-	    || cp == 0xFE0E || cp == 0xFE0F  // variation selectors 15 / 16 (❤️)
-	    || cp == 0x20E3;            // combining enclosing keycap
-	// skin-tone modifiers (U+1F3FB..FF) and regional indicators (U+1F1E6..FF) are
-	// already covered by IsEmojiBase, so they continue a name via that predicate.
+    return cp == 0x200D              // ZERO WIDTH JOINER (👩‍👩‍👧)
+        || cp == 0xFE0E || cp == 0xFE0F  // variation selectors 15 / 16 (❤️)
+        || cp == 0x20E3;            // combining enclosing keycap
+    // skin-tone modifiers (U+1F3FB..FF) and regional indicators (U+1F1E6..FF) are
+    // already covered by IsEmojiBase, so they continue a name via that predicate.
 }
 
 } // namespace detail
@@ -85,8 +85,8 @@ inline bool IsEmojiGlue(char32_t cp)
 ///        (ASCII `A-Z a-z`, plus Ω, α, CJK, ...) or an emoji base code point.
 inline bool IsIdentStart(char32_t cp)
 {
-	return boost::spirit::char_encoding::unicode::isalpha(cp)
-	    || detail::IsEmojiBase(cp);
+    return boost::spirit::char_encoding::unicode::isalpha(cp)
+        || detail::IsEmojiBase(cp);
 }
 
 /// \brief True if code point \p cp may CONTINUE an identifier: any Unicode
@@ -94,9 +94,9 @@ inline bool IsIdentStart(char32_t cp)
 ///        emoji base / sequence-glue code point (so a whole emoji reads as one name).
 inline bool IsIdentCont(char32_t cp)
 {
-	return boost::spirit::char_encoding::unicode::isalnum(cp)
-	    || cp == U'[' || cp == U']' || cp == U'_'
-	    || detail::IsEmojiBase(cp) || detail::IsEmojiGlue(cp);
+    return boost::spirit::char_encoding::unicode::isalnum(cp)
+        || cp == U'[' || cp == U']' || cp == U'_'
+        || detail::IsEmojiBase(cp) || detail::IsEmojiGlue(cp);
 }
 
 /// \brief True if \p s is a well-formed identifier: nonempty, a valid UTF-8
@@ -105,35 +105,35 @@ inline bool IsIdentCont(char32_t cp)
 ///        whitespace, and malformed UTF-8.
 inline bool IsValidVariableName(std::string const& s)
 {
-	if (s.empty())
-		return false;
-	try
-	{
-		boost::u8_to_u32_iterator<std::string::const_iterator> it(s.begin(), s.begin(), s.end());
-		boost::u8_to_u32_iterator<std::string::const_iterator> end(s.end(), s.begin(), s.end());
-		if (it == end || !IsIdentStart(*it))
-			return false;
-		for (++it; it != end; ++it)
-			if (!IsIdentCont(*it))
-				return false;
-		return true;
-	}
-	catch (...)
-	{
-		return false; // malformed UTF-8
-	}
+    if (s.empty())
+        return false;
+    try
+    {
+        boost::u8_to_u32_iterator<std::string::const_iterator> it(s.begin(), s.begin(), s.end());
+        boost::u8_to_u32_iterator<std::string::const_iterator> end(s.end(), s.begin(), s.end());
+        if (it == end || !IsIdentStart(*it))
+            return false;
+        for (++it; it != end; ++it)
+            if (!IsIdentCont(*it))
+                return false;
+        return true;
+    }
+    catch (...)
+    {
+        return false; // malformed UTF-8
+    }
 }
 
 /// \brief Throw std::runtime_error if \p s is not a valid variable name (\see
 ///        IsValidVariableName).  A no-op for a valid name.
 inline void ThrowIfInvalidVariableName(std::string const& s)
 {
-	if (!IsValidVariableName(s))
-		throw std::runtime_error(
-			"invalid variable name \"" + s + "\": a name must be a nonempty identifier -- "
-			"it starts with a letter (ASCII or Unicode, e.g. x or \xCE\xA9) and continues with "
-			"letters, digits, or [ ] _ .  Expressions, operators, whitespace, and leading "
-			"digits are not allowed.");
+    if (!IsValidVariableName(s))
+        throw std::runtime_error(
+            "invalid variable name \"" + s + "\": a name must be a nonempty identifier -- "
+            "it starts with a letter (ASCII or Unicode, e.g. x or \xCE\xA9) and continues with "
+            "letters, digits, or [ ] _ .  Expressions, operators, whitespace, and leading "
+            "digits are not allowed.");
 }
 
 } // namespace bertini

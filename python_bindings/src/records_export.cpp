@@ -33,110 +33,110 @@ namespace bertini { namespace python {
 
 namespace {
 
-	std::shared_ptr<records::OutputDirectory> MakeDirectory(std::string const& path)
-	{
-		// the process-shared instance: one session history file per directory per
-		// process, however many OutputDirectory objects Python constructs
-		return records::OutputDirectory::Shared(path);
-	}
+    std::shared_ptr<records::OutputDirectory> MakeDirectory(std::string const& path)
+    {
+        // the process-shared instance: one session history file per directory per
+        // process, however many OutputDirectory objects Python constructs
+        return records::OutputDirectory::Shared(path);
+    }
 
-	void AppendJson(records::OutputDirectory& self, std::string const& record_json)
-	{
-		self.Append(boost::json::parse(record_json).as_object());
-	}
+    void AppendJson(records::OutputDirectory& self, std::string const& record_json)
+    {
+        self.Append(boost::json::parse(record_json).as_object());
+    }
 
-	std::string PutDefinitionWrapper(records::OutputDirectory& self,
-	                                 std::string const& content, std::string const& kind,
-	                                 std::string const& external_id, std::string const& label)
-	{
-		return self.PutDefinition(content, kind,
-		                          external_id.empty() ? std::nullopt
-		                                              : std::optional<std::string>(external_id),
-		                          label);
-	}
+    std::string PutDefinitionWrapper(records::OutputDirectory& self,
+                                     std::string const& content, std::string const& kind,
+                                     std::string const& external_id, std::string const& label)
+    {
+        return self.PutDefinition(content, kind,
+                                  external_id.empty() ? std::nullopt
+                                                      : std::optional<std::string>(external_id),
+                                  label);
+    }
 
-	void AnnotateJson(records::OutputDirectory& self, std::string const& run_id,
-	                  long long index, std::string const& key, std::string const& value_json)
-	{
-		self.Annotate(run_id, static_cast<std::int64_t>(index), key,
-		              boost::json::parse(value_json));
-	}
+    void AnnotateJson(records::OutputDirectory& self, std::string const& run_id,
+                      long long index, std::string const& key, std::string const& value_json)
+    {
+        self.Annotate(run_id, static_cast<std::int64_t>(index), key,
+                      boost::json::parse(value_json));
+    }
 
-	std::string RootString(records::OutputDirectory const& self)
-	{
-		return self.Root().string();
-	}
+    std::string RootString(records::OutputDirectory const& self)
+    {
+        return self.Root().string();
+    }
 
 } // unnamed namespace
 
 void ExportRecords()
 {
-	using namespace boost::python;
+    using namespace boost::python;
 
-	scope current_scope;
-	std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-	new_submodule_name.append(".records");
-	object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-	current_scope.attr("records") = new_submodule;
+    scope current_scope;
+    std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+    new_submodule_name.append(".records");
+    object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+    current_scope.attr("records") = new_submodule;
 
-	scope new_submodule_scope = new_submodule;
-	new_submodule_scope.attr("__doc__") =
-		"The structured output directory (record schema b2rec/1): durable, plain-text "
-		"records of computations.  READ it with json/pandas -- no bertini required; these "
-		"bindings are for WRITING through the single C++ implementation.";
+    scope new_submodule_scope = new_submodule;
+    new_submodule_scope.attr("__doc__") =
+        "The structured output directory (record schema b2rec/1): durable, plain-text "
+        "records of computations.  READ it with json/pandas -- no bertini required; these "
+        "bindings are for WRITING through the single C++ implementation.";
 
-	class_<records::OutputDirectory, std::shared_ptr<records::OutputDirectory>, boost::noncopyable>
-		("OutputDirectory", no_init)
-		.def("__init__", make_constructor(&MakeDirectory),
-			"Open (creating if needed) the structured output directory at the given path, "
-			"writing its self-documenting README.txt on first creation.")
-		.def("root", &RootString, (arg("self")), "The directory's root path.")
-		.def("append", &AppendJson, (arg("self"), arg("record_json")),
-			"Append one record (a JSON object as a string) to this session's history file.  "
-			"One writer per file; flushed per record.")
-		.def("put_definition", &PutDefinitionWrapper,
-			(arg("self"), arg("content"), arg("kind"), arg("external_id") = "", arg("label") = ""),
-			"Store a definition under the given kind folder ('systems'/'configs'/'givens'); "
-			"returns the id (SHA-256 of the bytes unless external_id names it).  An optional "
-			"label weaves a role into the filename (e.g. 'start_points') -- presentation only.")
-		.def("annotate", &AnnotateJson,
-			(arg("self"), arg("run"), arg("index"), arg("key"), arg("value_json")),
-			"Attach metadata to a recorded point: appends an annotation record for "
-			"({run, index}) with the given key and JSON-encoded value.  Newest wins "
-			"per (point, key); readers merge annotations beside the point they describe.")
-		.def("results_of",
-			+[](records::OutputDirectory const& self, std::string const& run_id) {
-				boost::python::list out;
-				for (auto const& rec : self.ResultsOf(run_id))
-					out.append(boost::json::serialize(rec));
-				return out;
-			},
-			(arg("self"), arg("run_id")),
-			"Every record in the run's results file (header line included), each as a "
-			"JSON string.  Empty when nothing is recorded for that run.")
-		.def("refresh_index", &records::OutputDirectory::RefreshIndex, (arg("self")),
-			"(Re)write INDEX.txt: one line per run.")
-		.def("describe", &records::OutputDirectory::Describe, (arg("self")),
-			"One human line: how much is here.")
-		.def("get_definition", &records::OutputDirectory::GetDefinition, (arg("self"), arg("id")),
-			"The stored definition document with the given id (the content of the file under "
-			"definitions/), as a string.  Raises RuntimeError if there is no such definition.")
-		.def("has_definition", &records::OutputDirectory::HasDefinition, (arg("self"), arg("id")),
-			"Whether a definition with the given id is stored.")
-		;
+    class_<records::OutputDirectory, std::shared_ptr<records::OutputDirectory>, boost::noncopyable>
+        ("OutputDirectory", no_init)
+        .def("__init__", make_constructor(&MakeDirectory),
+            "Open (creating if needed) the structured output directory at the given path, "
+            "writing its self-documenting README.txt on first creation.")
+        .def("root", &RootString, (arg("self")), "The directory's root path.")
+        .def("append", &AppendJson, (arg("self"), arg("record_json")),
+            "Append one record (a JSON object as a string) to this session's history file.  "
+            "One writer per file; flushed per record.")
+        .def("put_definition", &PutDefinitionWrapper,
+            (arg("self"), arg("content"), arg("kind"), arg("external_id") = "", arg("label") = ""),
+            "Store a definition under the given kind folder ('systems'/'configs'/'givens'); "
+            "returns the id (SHA-256 of the bytes unless external_id names it).  An optional "
+            "label weaves a role into the filename (e.g. 'start_points') -- presentation only.")
+        .def("annotate", &AnnotateJson,
+            (arg("self"), arg("run"), arg("index"), arg("key"), arg("value_json")),
+            "Attach metadata to a recorded point: appends an annotation record for "
+            "({run, index}) with the given key and JSON-encoded value.  Newest wins "
+            "per (point, key); readers merge annotations beside the point they describe.")
+        .def("results_of",
+            +[](records::OutputDirectory const& self, std::string const& run_id) {
+                boost::python::list out;
+                for (auto const& rec : self.ResultsOf(run_id))
+                    out.append(boost::json::serialize(rec));
+                return out;
+            },
+            (arg("self"), arg("run_id")),
+            "Every record in the run's results file (header line included), each as a "
+            "JSON string.  Empty when nothing is recorded for that run.")
+        .def("refresh_index", &records::OutputDirectory::RefreshIndex, (arg("self")),
+            "(Re)write INDEX.txt: one line per run.")
+        .def("describe", &records::OutputDirectory::Describe, (arg("self")),
+            "One human line: how much is here.")
+        .def("get_definition", &records::OutputDirectory::GetDefinition, (arg("self"), arg("id")),
+            "The stored definition document with the given id (the content of the file under "
+            "definitions/), as a string.  Raises RuntimeError if there is no such definition.")
+        .def("has_definition", &records::OutputDirectory::HasDefinition, (arg("self"), arg("id")),
+            "Whether a definition with the given id is stored.")
+        ;
 
-	def("load_system",
-		+[](records::OutputDirectory const& directory, std::string const& digest_hex) {
-			// the representative is sealed; a non-const handle is safe in the same sense the
-			// C++ const is (structural mutators raise) -- see intern_system
-			return std::const_pointer_cast<System>(records::LoadSystem(directory, digest_hex));
-		},
-		(arg("directory"), arg("digest")),
-		"Load the system archived under the given content digest in the records directory: "
-		"decode its canonical encoding, verify the rebuilt system's content_digest() equals the "
-		"digest it was filed under, and intern it (an equal system already alive in this process "
-		"comes back as that object).  Raises RuntimeError when there is no such definition, when "
-		"the encoding cannot be read by this build, or when the digests differ.");
+    def("load_system",
+        +[](records::OutputDirectory const& directory, std::string const& digest_hex) {
+            // the representative is sealed; a non-const handle is safe in the same sense the
+            // C++ const is (structural mutators raise) -- see intern_system
+            return std::const_pointer_cast<System>(records::LoadSystem(directory, digest_hex));
+        },
+        (arg("directory"), arg("digest")),
+        "Load the system archived under the given content digest in the records directory: "
+        "decode its canonical encoding, verify the rebuilt system's content_digest() equals the "
+        "digest it was filed under, and intern it (an equal system already alive in this process "
+        "comes back as that object).  Raises RuntimeError when there is no such definition, when "
+        "the encoding cannot be read by this build, or when the digests differ.");
 }
 
 }} // namespaces

@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include <boost/test/unit_test.hpp>
@@ -52,102 +52,102 @@ template<typename NumT> using Mat = bertini::Mat<NumT>;
 using bertini::DefaultPrecision;
 BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 {
-	using bertini::operator<<;
-	DefaultPrecision(100);
-	using namespace bertini::tracking;
+    using bertini::operator<<;
+    DefaultPrecision(100);
+    using namespace bertini::tracking;
 
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	System sys;
+    System sys;
 
-	VariableGroup v{y};
+    VariableGroup v{y};
 
-	sys.AddFunction(y-t);
-	sys.AddPathVariable(t);
-	sys.AddVariableGroup(v);
-
-
-	bertini::tracking::DoublePrecisionTracker tracker(sys);
+    sys.AddFunction(y-t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
 
 
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+    bertini::tracking::DoublePrecisionTracker tracker(sys);
 
 
-	tracker.Setup(Predictor::Euler,
-	              double(1e-5),
-					double(1e5),
-					stepping_preferences,
-					newton_preferences);
+    SteppingConfig stepping_preferences;
+    NewtonConfig newton_preferences;
 
-	
-	complex_dbl t_start(1);
-	complex_dbl t_end(0);
-	
-	Vec<complex_dbl> y_start(1);
-	y_start << complex_dbl(1);
 
-	Vec<complex_dbl> y_end;
+    tracker.Setup(Predictor::Euler,
+                  double(1e-5),
+                    double(1e5),
+                    stepping_preferences,
+                    newton_preferences);
 
-	auto obs = GoryDetailLogger<DoublePrecisionTracker>();
-		tracker.AddObserver(obs);
 
-	auto code = tracker.TrackPath(y_end, t_start, t_end, y_start);
-	BOOST_CHECK(code==bertini::SuccessCode::Success);
+    complex_dbl t_start(1);
+    complex_dbl t_end(0);
 
-	BOOST_CHECK_EQUAL(y_end.size(),1);
-	BOOST_CHECK(abs(y_end(0)-complex_dbl(0)) < 1e-5);
+    Vec<complex_dbl> y_start(1);
+    y_start << complex_dbl(1);
+
+    Vec<complex_dbl> y_end;
+
+    auto obs = GoryDetailLogger<DoublePrecisionTracker>();
+        tracker.AddObserver(obs);
+
+    auto code = tracker.TrackPath(y_end, t_start, t_end, y_start);
+    BOOST_CHECK(code==bertini::SuccessCode::Success);
+
+    BOOST_CHECK_EQUAL(y_end.size(),1);
+    BOOST_CHECK(abs(y_end(0)-complex_dbl(0)) < 1e-5);
 
 }
-	
+
 BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 {
-	DefaultPrecision(100);
-	using namespace bertini::tracking;
+    DefaultPrecision(100);
+    using namespace bertini::tracking;
 
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	System sys;
+    System sys;
 
-	VariableGroup v{y};
+    VariableGroup v{y};
 
-	sys.AddFunction(y-t);
-	sys.AddPathVariable(t);
-	sys.AddVariableGroup(v);
-
-
-	bertini::tracking::MultiplePrecisionTracker tracker(sys);
+    sys.AddFunction(y-t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
 
 
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+    bertini::tracking::MultiplePrecisionTracker tracker(sys);
 
 
-	tracker.Setup(Predictor::Euler,
-	              1e-5,
-					1e5,
-					stepping_preferences,
-					newton_preferences);
+    SteppingConfig stepping_preferences;
+    NewtonConfig newton_preferences;
 
-	GoryDetailLogger<MultiplePrecisionTracker> tons_of_detail;
-	tracker.AddObserver(tons_of_detail);
 
-	
-	mpfr t_start(1);
-	mpfr t_end(0);
-	
-	Vec<mpfr> y_start(1);
-	y_start << mpfr(1);
+    tracker.Setup(Predictor::Euler,
+                  1e-5,
+                    1e5,
+                    stepping_preferences,
+                    newton_preferences);
 
-	Vec<mpfr> y_end;
+    GoryDetailLogger<MultiplePrecisionTracker> tons_of_detail;
+    tracker.AddObserver(tons_of_detail);
 
-	tracker.TrackPath(y_end,
-	                  t_start, t_end, y_start);
 
-	BOOST_CHECK_EQUAL(y_end.size(),1);
-	BOOST_CHECK(abs(y_end(0)-mpfr(0)) < 1e-5);
+    mpfr t_start(1);
+    mpfr t_end(0);
+
+    Vec<mpfr> y_start(1);
+    y_start << mpfr(1);
+
+    Vec<mpfr> y_end;
+
+    tracker.TrackPath(y_end,
+                      t_start, t_end, y_start);
+
+    BOOST_CHECK_EQUAL(y_end.size(),1);
+    BOOST_CHECK(abs(y_end(0)-mpfr(0)) < 1e-5);
 
 }
 
@@ -162,72 +162,72 @@ BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 namespace {
 struct CondNumberRecorder : public bertini::Observer<bertini::tracking::DoublePrecisionTracker>
 {
-	using Emitter = bertini::tracking::TrackerTraits<bertini::tracking::DoublePrecisionTracker>::EventEmitterType;
+    using Emitter = bertini::tracking::TrackerTraits<bertini::tracking::DoublePrecisionTracker>::EventEmitterType;
 
-	std::vector<double> conds; ///< LatestConditionNumber after each successful step.
+    std::vector<double> conds; ///< LatestConditionNumber after each successful step.
 
-	bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
-	{
-		if (auto p = dynamic_cast<const bertini::tracking::SuccessfulStep<Emitter>*>(&e))
-			conds.push_back(static_cast<double>(p->Get().LatestConditionNumber()));
-		return bertini::ObserveResult::KeepObserving;
-	}
+    bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+    {
+        if (auto p = dynamic_cast<const bertini::tracking::SuccessfulStep<Emitter>*>(&e))
+            conds.push_back(static_cast<double>(p->Get().LatestConditionNumber()));
+        return bertini::ObserveResult::KeepObserving;
+    }
 };
 }
 
 BOOST_AUTO_TEST_CASE(condition_number_refresh_honors_frequency)
 {
-	DefaultPrecision(100);
-	using namespace bertini::tracking;
+    DefaultPrecision(100);
+    using namespace bertini::tracking;
 
-	Var x = Variable::Make("x");
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	// TWO variables, deliberately: for a univariate system the estimate is constant BY
-	// ALGEBRA -- ||J||*||J^{-1} r|| = |J|*|r|/|J| = |r|, the fixed probe's norm -- so a
-	// 1-var version of this test can only "pass" through floating-point jitter (and on
-	// macOS it doesn't).  Here J = [[2x, 2y], [1, -1]] genuinely varies along the path.
-	System sys;
-	VariableGroup v{x, y};
-	sys.AddFunction(x*x + y*y - t - 1);
-	sys.AddFunction(x - y - t/2);
-	sys.AddPathVariable(t);
-	sys.AddVariableGroup(v);
+    // TWO variables, deliberately: for a univariate system the estimate is constant BY
+    // ALGEBRA -- ||J||*||J^{-1} r|| = |J|*|r|/|J| = |r|, the fixed probe's norm -- so a
+    // 1-var version of this test can only "pass" through floating-point jitter (and on
+    // macOS it doesn't).  Here J = [[2x, 2y], [1, -1]] genuinely varies along the path.
+    System sys;
+    VariableGroup v{x, y};
+    sys.AddFunction(x*x + y*y - t - 1);
+    sys.AddFunction(x - y - t/2);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
 
-	DoublePrecisionTracker tracker(sys);
+    DoublePrecisionTracker tracker(sys);
 
-	SteppingConfig stepping_preferences;
-	stepping_preferences.frequency_of_CN_estimation = 3;
-	stepping_preferences.max_step_size = 0.01;    // plenty of steps to observe the cadence
-	NewtonConfig newton_preferences;
-	tracker.Setup(Predictor::Euler,
-	              double(1e-5),
-	              double(1e5),
-	              stepping_preferences,
-	              newton_preferences);
+    SteppingConfig stepping_preferences;
+    stepping_preferences.frequency_of_CN_estimation = 3;
+    stepping_preferences.max_step_size = 0.01;    // plenty of steps to observe the cadence
+    NewtonConfig newton_preferences;
+    tracker.Setup(Predictor::Euler,
+                  double(1e-5),
+                  double(1e5),
+                  stepping_preferences,
+                  newton_preferences);
 
-	CondNumberRecorder recorder;
-	tracker.AddObserver(recorder);
+    CondNumberRecorder recorder;
+    tracker.AddObserver(recorder);
 
-	// a real solution at t = 1:  x = y + 1/2,  2y^2 + y + 1/4 = 2
-	const double y0 = (-1.0 + sqrt(15.0)) / 4.0;
-	Vec<complex_dbl> start(2);
-	start << complex_dbl(y0 + 0.5), complex_dbl(y0);
-	Vec<complex_dbl> end_point;
-	auto code = tracker.TrackPath(end_point, complex_dbl(1), complex_dbl(0), start);
-	tracker.RemoveObserver(recorder);
-	BOOST_CHECK(code==bertini::SuccessCode::Success);
+    // a real solution at t = 1:  x = y + 1/2,  2y^2 + y + 1/4 = 2
+    const double y0 = (-1.0 + sqrt(15.0)) / 4.0;
+    Vec<complex_dbl> start(2);
+    start << complex_dbl(y0 + 0.5), complex_dbl(y0);
+    Vec<complex_dbl> end_point;
+    auto code = tracker.TrackPath(end_point, complex_dbl(1), complex_dbl(0), start);
+    tracker.RemoveObserver(recorder);
+    BOOST_CHECK(code==bertini::SuccessCode::Success);
 
-	BOOST_REQUIRE_GE(recorder.conds.size(), 9u);
-	unsigned changes = 0;
-	for (size_t ii = 1; ii < recorder.conds.size(); ++ii)
-		if (recorder.conds[ii] != recorder.conds[ii-1])
-			++changes;
+    BOOST_REQUIRE_GE(recorder.conds.size(), 9u);
+    unsigned changes = 0;
+    for (size_t ii = 1; ii < recorder.conds.size(); ++ii)
+        if (recorder.conds[ii] != recorder.conds[ii-1])
+            ++changes;
 
-	BOOST_CHECK_GE(changes, 1u);                         // it does refresh...
-	BOOST_CHECK_LT(2*changes, recorder.conds.size());    // ...but at most every 3rd step,
-	                                                     // not every step (the by-value bug)
+    BOOST_CHECK_GE(changes, 1u);                         // it does refresh...
+    BOOST_CHECK_LT(2*changes, recorder.conds.size());    // ...but at most every 3rd step,
+                                                         // not every step (the by-value bug)
 }
 
 
@@ -239,49 +239,49 @@ BOOST_AUTO_TEST_CASE(condition_number_refresh_honors_frequency)
 // sqrt(n) carried the norm over it.
 BOOST_AUTO_TEST_CASE(truncation_threshold_applies_to_the_largest_coordinate)
 {
-	using namespace bertini::tracking;
-	using bertini::node::Integer;
+    using namespace bertini::tracking;
+    using bertini::node::Integer;
 
-	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
-	Var t = Variable::Make("t");
-	auto one = Integer::Make(1);
+    Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+    Var t = Variable::Make("t");
+    auto one = Integer::Make(1);
 
-	// a straight path from the origin at t=1 to (a, a, a) at t=0, with a just under the threshold:
-	// largest coordinate 8e4 < 1e5, but the 2-norm 8e4*sqrt(3) = 1.39e5 exceeds it
-	auto a = Integer::Make(80000);
-	System sys;
-	sys.AddVariableGroup(VariableGroup{x, y, z});
-	sys.AddPathVariable(t);
-	sys.AddFunction(x - a * (one - t));
-	sys.AddFunction(y - a * (one - t));
-	sys.AddFunction(z - a * (one - t));
+    // a straight path from the origin at t=1 to (a, a, a) at t=0, with a just under the threshold:
+    // largest coordinate 8e4 < 1e5, but the 2-norm 8e4*sqrt(3) = 1.39e5 exceeds it
+    auto a = Integer::Make(80000);
+    System sys;
+    sys.AddVariableGroup(VariableGroup{x, y, z});
+    sys.AddPathVariable(t);
+    sys.AddFunction(x - a * (one - t));
+    sys.AddFunction(y - a * (one - t));
+    sys.AddFunction(z - a * (one - t));
 
-	DoublePrecisionTracker tracker(sys);
-	tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+    DoublePrecisionTracker tracker(sys);
+    tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
 
-	Vec<complex_dbl> start(3);
-	start << complex_dbl(0), complex_dbl(0), complex_dbl(0);
-	Vec<complex_dbl> end;
+    Vec<complex_dbl> start(3);
+    start << complex_dbl(0), complex_dbl(0), complex_dbl(0);
+    Vec<complex_dbl> end;
 
-	auto code = tracker.TrackPath(end, complex_dbl(1), complex_dbl(0), start);
-	BOOST_CHECK(code == bertini::SuccessCode::Success);
-	BOOST_REQUIRE_EQUAL(end.size(), 3);
-	for (int ii = 0; ii < 3; ++ii)
-		BOOST_CHECK_SMALL(abs(end(ii) - complex_dbl(80000)), 1e-2);
+    auto code = tracker.TrackPath(end, complex_dbl(1), complex_dbl(0), start);
+    BOOST_CHECK(code == bertini::SuccessCode::Success);
+    BOOST_REQUIRE_EQUAL(end.size(), 3);
+    for (int ii = 0; ii < 3; ++ii)
+        BOOST_CHECK_SMALL(abs(end(ii) - complex_dbl(80000)), 1e-2);
 
-	// a coordinate that genuinely exceeds the threshold is still truncated
-	auto b = Integer::Make(120000);
-	System far;
-	far.AddVariableGroup(VariableGroup{x, y, z});
-	far.AddPathVariable(t);
-	far.AddFunction(x - b * (one - t));
-	far.AddFunction(y - (one - t));
-	far.AddFunction(z - (one - t));
+    // a coordinate that genuinely exceeds the threshold is still truncated
+    auto b = Integer::Make(120000);
+    System far;
+    far.AddVariableGroup(VariableGroup{x, y, z});
+    far.AddPathVariable(t);
+    far.AddFunction(x - b * (one - t));
+    far.AddFunction(y - (one - t));
+    far.AddFunction(z - (one - t));
 
-	DoublePrecisionTracker tracker_far(far);
-	tracker_far.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
-	code = tracker_far.TrackPath(end, complex_dbl(1), complex_dbl(0), start);
-	BOOST_CHECK(code == bertini::SuccessCode::GoingToInfinity);
+    DoublePrecisionTracker tracker_far(far);
+    tracker_far.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+    code = tracker_far.TrackPath(end, complex_dbl(1), complex_dbl(0), start);
+    BOOST_CHECK(code == bertini::SuccessCode::GoingToInfinity);
 }
 
 
@@ -303,47 +303,43 @@ BOOST_AUTO_TEST_CASE(truncation_threshold_applies_to_the_largest_coordinate)
 // MaxNumStepsTaken after 10.  So the asserted code distinguishes the fix from its absence.
 BOOST_AUTO_TEST_CASE(step_budget_counts_failed_steps_not_only_successes)
 {
-	DefaultPrecision(30);
-	using namespace bertini::tracking;
+    DefaultPrecision(30);
+    using namespace bertini::tracking;
 
-	Var y = Variable::Make("y");
-	Var t = Variable::Make("t");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
 
-	System sys;
-	VariableGroup v{y};
-	sys.AddFunction(y*y - t);          // sqrt path: a genuine tracking problem
-	sys.AddPathVariable(t);
-	sys.AddVariableGroup(v);
+    System sys;
+    VariableGroup v{y};
+    sys.AddFunction(y*y - t);          // sqrt path: a genuine tracking problem
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
 
-	bertini::tracking::DoublePrecisionTracker tracker(sys);
+    bertini::tracking::DoublePrecisionTracker tracker(sys);
 
-	SteppingConfig stepping_preferences;
-	stepping_preferences.max_num_steps = 10;      // the budget under test
-	NewtonConfig newton_preferences;
+    SteppingConfig stepping_preferences;
+    stepping_preferences.max_num_steps = 10;      // the budget under test
+    NewtonConfig newton_preferences;
 
-	tracker.Setup(Predictor::Euler,
-	              double(1e-30),                  // UNREACHABLE at double precision
-	              double(1e5),
-	              stepping_preferences,
-	              newton_preferences);
+    tracker.Setup(Predictor::Euler,
+                  double(1e-30),                  // UNREACHABLE at double precision
+                  double(1e5),
+                  stepping_preferences,
+                  newton_preferences);
 
-	complex_dbl t_start(1);
-	complex_dbl t_end(0);
-	Vec<complex_dbl> start_point(1);
-	start_point << complex_dbl(1);
+    complex_dbl t_start(1);
+    complex_dbl t_end(0);
+    Vec<complex_dbl> start_point(1);
+    start_point << complex_dbl(1);
 
-	Vec<complex_dbl> end_point;
-	auto code = tracker.TrackPath(end_point, t_start, t_end, start_point);
+    Vec<complex_dbl> end_point;
+    auto code = tracker.TrackPath(end_point, t_start, t_end, start_point);
 
-	BOOST_CHECK(code != bertini::SuccessCode::Success);
-	BOOST_CHECK(code == bertini::SuccessCode::MaxNumStepsTaken);
-	// and the budget is what stopped it: total steps did not exceed the allowance
-	BOOST_CHECK_LE(tracker.NumTotalStepsTaken(), 11u);
+    BOOST_CHECK(code != bertini::SuccessCode::Success);
+    BOOST_CHECK(code == bertini::SuccessCode::MaxNumStepsTaken);
+    // and the budget is what stopped it: total steps did not exceed the allowance
+    BOOST_CHECK_LE(tracker.NumTotalStepsTaken(), 11u);
 }
 
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-
-

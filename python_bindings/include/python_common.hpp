@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/python_common.hpp:  A common header file for all python exposure files
@@ -64,11 +64,11 @@ Equivalent to Py_BEGIN_ALLOW_THREADS / Py_END_ALLOW_THREADS.
 */
 struct ScopedGILRelease
 {
-	PyThreadState* state_;
-	ScopedGILRelease()  : state_(PyEval_SaveThread()) {}
-	~ScopedGILRelease() { PyEval_RestoreThread(state_); }
-	ScopedGILRelease(ScopedGILRelease const&) = delete;
-	ScopedGILRelease& operator=(ScopedGILRelease const&) = delete;
+    PyThreadState* state_;
+    ScopedGILRelease()  : state_(PyEval_SaveThread()) {}
+    ~ScopedGILRelease() { PyEval_RestoreThread(state_); }
+    ScopedGILRelease(ScopedGILRelease const&) = delete;
+    ScopedGILRelease& operator=(ScopedGILRelease const&) = delete;
 };
 
 /**
@@ -79,11 +79,11 @@ observer's Observe().
 */
 struct ScopedGILAcquire
 {
-	PyGILState_STATE state_;
-	ScopedGILAcquire()  : state_(PyGILState_Ensure()) {}
-	~ScopedGILAcquire() { PyGILState_Release(state_); }
-	ScopedGILAcquire(ScopedGILAcquire const&) = delete;
-	ScopedGILAcquire& operator=(ScopedGILAcquire const&) = delete;
+    PyGILState_STATE state_;
+    ScopedGILAcquire()  : state_(PyGILState_Ensure()) {}
+    ~ScopedGILAcquire() { PyGILState_Release(state_); }
+    ScopedGILAcquire(ScopedGILAcquire const&) = delete;
+    ScopedGILAcquire& operator=(ScopedGILAcquire const&) = delete;
 };
 
 }} // namespace bertini::python

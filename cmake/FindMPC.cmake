@@ -15,9 +15,9 @@ find_path(MPC_INCLUDES
 )
 
 if(WIN32)
-	find_library(MPC_LIBRARIES libmpc.dll.a PATHS $ENV{MPC_LIB} ${LIB_INSTALL_DIR})
+    find_library(MPC_LIBRARIES libmpc.dll.a PATHS $ENV{MPC_LIB} ${LIB_INSTALL_DIR})
 else()
-	find_library(MPC_LIBRARIES mpc PATHS $ENV{MPC_LIB} ${LIB_INSTALL_DIR})
+    find_library(MPC_LIBRARIES mpc PATHS $ENV{MPC_LIB} ${LIB_INSTALL_DIR})
 endif()
 
 include(FindPackageHandleStandardArgs)

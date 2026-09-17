@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  detail/is_template_parameter.hpp
@@ -33,37 +33,37 @@
 
 namespace bertini {
 
-	namespace detail{
+    namespace detail{
 
-	/**
-	Base template, which says 'no', it's not in the pack.
-	*/
-	template <typename...>
-	struct IsTemplateParameter {
-	    static constexpr bool value = false;  ///< Whether the queried type appears in the pack (base case: no).
-	};
+    /**
+    Base template, which says 'no', it's not in the pack.
+    */
+    template <typename...>
+    struct IsTemplateParameter {
+        static constexpr bool value = false;  ///< Whether the queried type appears in the pack (base case: no).
+    };
 
-	/**
-	Specialized template, which says 'yes', if it is in the pack, by recursively expanding the pack.
-	*/
-	template <typename F, typename S, typename... T>
-	struct IsTemplateParameter<F, S, T...> {
-	    static constexpr bool value =
-	        std::is_same<F, S>::value || IsTemplateParameter<F, T...>::value;  ///< Whether F appears in the pack.
-	        // either it is the same as the first one in the pack, or we need to expand to the right in the pack.
-	};
-
-
-	/// \brief IsTemplateParameter specialization accepting the candidate types packaged in a TypeList.
-	template < typename T, typename ...Ts>
-	struct IsTemplateParameter<T, TypeList<Ts...>>
-	{
-		static constexpr bool value = IsTemplateParameter<T, Ts...>::value;  ///< Whether T appears in the TypeList.
-	};
+    /**
+    Specialized template, which says 'yes', if it is in the pack, by recursively expanding the pack.
+    */
+    template <typename F, typename S, typename... T>
+    struct IsTemplateParameter<F, S, T...> {
+        static constexpr bool value =
+            std::is_same<F, S>::value || IsTemplateParameter<F, T...>::value;  ///< Whether F appears in the pack.
+            // either it is the same as the first one in the pack, or we need to expand to the right in the pack.
+    };
 
 
+    /// \brief IsTemplateParameter specialization accepting the candidate types packaged in a TypeList.
+    template < typename T, typename ...Ts>
+    struct IsTemplateParameter<T, TypeList<Ts...>>
+    {
+        static constexpr bool value = IsTemplateParameter<T, Ts...>::value;  ///< Whether T appears in the TypeList.
+    };
 
-	} // namespace detail
+
+
+    } // namespace detail
 
 
 }

@@ -77,44 +77,44 @@ worker domain separation is preserved.
 class DrawStream
 {
 public:
-	/// \brief Construct unseeded; the first draw self-seeds from entropy (unseeded runs
-	/// stay random).  Seeded runs call Reseed before any draw.
-	DrawStream() = default;
+    /// \brief Construct unseeded; the first draw self-seeds from entropy (unseeded runs
+    /// stay random).  Seeded runs call Reseed before any draw.
+    DrawStream() = default;
 
-	/// \brief Rekey the stream from (master seed, domain tag, stream index) under
-	/// `b2rand/1` and restart its counter.
-	void Reseed(std::uint64_t master, std::uint64_t domain, std::uint64_t index);
+    /// \brief Rekey the stream from (master seed, domain tag, stream index) under
+    /// `b2rand/1` and restart its counter.
+    void Reseed(std::uint64_t master, std::uint64_t domain, std::uint64_t index);
 
-	/// \brief The next 8 stream bytes as a big-endian unsigned 64-bit integer.
-	std::uint64_t Uint64();
+    /// \brief The next 8 stream bytes as a big-endian unsigned 64-bit integer.
+    std::uint64_t Uint64();
 
-	/// \brief Uniform on [0,1), exactly 53 bits: (Uint64 >> 11) * 2^-53.
-	double UnitDouble();
+    /// \brief Uniform on [0,1), exactly 53 bits: (Uint64 >> 11) * 2^-53.
+    double UnitDouble();
 
-	/// \brief Uniform on [-1,1]: 2*UnitDouble() - 1 (both operations exact).
-	double SymmetricDouble();
+    /// \brief Uniform on [-1,1]: 2*UnitDouble() - 1 (both operations exact).
+    double SymmetricDouble();
 
-	/// \brief The next n bits as a nonnegative integer (big-endian bytes, masked).
-	mpz_int Bits(unsigned num_bits);
+    /// \brief The next n bits as a nonnegative integer (big-endian bytes, masked).
+    mpz_int Bits(unsigned num_bits);
 
-	/// \brief Uniform integer on [-bound, bound], by rejection over Bits(bitlen(2*bound)).
-	mpz_int IntSymmetric(mpz_int const& bound);
+    /// \brief Uniform integer on [-bound, bound], by rejection over Bits(bitlen(2*bound)).
+    mpz_int IntSymmetric(mpz_int const& bound);
 
-	/// \brief Uniform on [0,1) at `digits` decimal digits: ldexp(Bits(k), -k) with
-	/// k = ceil(digits*log2(10)) + 1, materialized at `digits` digits of precision.
-	real_mp UnitRealMp(unsigned digits);
+    /// \brief Uniform on [0,1) at `digits` decimal digits: ldexp(Bits(k), -k) with
+    /// k = ceil(digits*log2(10)) + 1, materialized at `digits` digits of precision.
+    real_mp UnitRealMp(unsigned digits);
 
 private:
-	// Refill block_ with SHA-256(key || counter) and advance the counter.
-	void NextBlock();
-	// The next unconsumed stream byte (self-seeding from entropy if never seeded).
-	unsigned char NextByte();
+    // Refill block_ with SHA-256(key || counter) and advance the counter.
+    void NextBlock();
+    // The next unconsumed stream byte (self-seeding from entropy if never seeded).
+    unsigned char NextByte();
 
-	detail::Digest256 key_;      ///< The stream key (hash of version, master, domain, index).
-	std::uint64_t counter_ = 0;  ///< The block counter.
-	unsigned char block_[32];    ///< The current block of stream bytes.
-	unsigned offset_ = 32;       ///< Consumption offset into block_ (32 = exhausted).
-	bool seeded_ = false;        ///< Whether Reseed (or entropy self-seeding) has run.
+    detail::Digest256 key_;      ///< The stream key (hash of version, master, domain, index).
+    std::uint64_t counter_ = 0;  ///< The block counter.
+    unsigned char block_[32];    ///< The current block of stream bytes.
+    unsigned offset_ = 32;       ///< Consumption offset into block_ (32 = exhausted).
+    bool seeded_ = false;        ///< Whether Reseed (or entropy self-seeding) has run.
 };
 
 /**

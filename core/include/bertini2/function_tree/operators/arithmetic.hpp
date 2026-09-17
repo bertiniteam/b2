@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // arithmetic.hpp:  Declares the arithmetic nodes for bertini2.
@@ -59,1437 +59,1437 @@
 
 namespace bertini {
 
-namespace node{	
-	/**
-	\brief Represents summation and difference Operator.
-
-	This class represents summation and difference operators.  All children are terms and are stored
-	in a single vector, and a vector of bools is used to determine the sign of each term.
-	*/
-	class SumOperator : public NaryOperator
-	{
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-
-		virtual ~SumOperator() = default;
-		
-		std::shared_ptr<Node> Simplified() const override;
-
-		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
-
-		/// \brief Construct (and intern) a SumOperator node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<SumOperator> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<SumOperator>(Intern(std::shared_ptr<Node>( new SumOperator(ts...) )));
-		}
-
-	private:
-		SumOperator(const std::shared_ptr<Node> & s, bool add_or_sub)
-		{
-			AddOperand(s, add_or_sub);
-		}
-		
-		SumOperator(const std::shared_ptr<Node> & left, const std::shared_ptr<Node> & right)
-		{
-			AddOperand(left);
-			AddOperand(right);
-			CanonicalizeNaryOperands(operands_, signs_, false);
-		}
-
-
-		SumOperator(const std::shared_ptr<Node> & left, bool add_or_sub_left, const std::shared_ptr<Node> & right, bool add_or_sub_right)
-		{
-			AddOperand(left, add_or_sub_left);
-			AddOperand(right, add_or_sub_right);
-			CanonicalizeNaryOperands(operands_, signs_, false);
-		}
-
-		// Build a complete sum from a full (term, sign) list.  The node is fully constructed
-		// before Make() interns it -- so callers never AddOperand AFTER Make (which, with interning,
-		// could mutate a shared interned node).
-		explicit SumOperator(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms)
-		{
-			for (auto const& t : terms)
-				AddOperand(t.first, t.second);
-			CanonicalizeNaryOperands(operands_, signs_, false);
-		}
-		
-	public:
-		
-		/// \brief Add a term in place (operand added with positive sign).
-		SumOperator& operator+=(const std::shared_ptr<Node> & rhs)
-		{
-			this->AddOperand(rhs);
-			return *this;
-		}
-
-		/// \brief Subtract a term in place (operand added with negative sign).
-		SumOperator& operator-=(const std::shared_ptr<Node> & rhs)
-		{
-			this->AddOperand(rhs,false);
-			return *this;
-		}
-		
-		
-		
-		
-		
-		/**
-		\note: Special Behaviour: by default all terms added are positive
-		*/
-		void AddOperand(std::shared_ptr<Node> child) override
-		{
-			NaryOperator::AddOperand(std::move(child));
-			signs_.push_back(true);
-		}
-		
-		
-		/**
-		\note Special Behaviour: Pass bool to set sign of term: true = add, false = subtract
-		*/
-		void AddOperand(std::shared_ptr<Node> child, bool sign) // not an override
-		{
-			NaryOperator::AddOperand(std::move(child));
-			signs_.push_back(sign);
-		}
-		
-		
-		/**
-		 Method for printing to output stream
-		 */
-		void print(std::ostream & target) const override;
-
-		unsigned Precedence() const override
-		{
-			return PrecSum;
-		}
-		
-		
-		
-		
-		/**
-		 Return SumOperator whose children are derivatives of the children, omitted as possible
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-
-		/**
-		 Compute the degree of a node.  For sum functions, the degree is the max among summands.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-
-		int Degree(VariableGroup const& vars) const override;
-
-		/**
-		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-		*/
-		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
-		
-		/// \return The per-term signs (true = added, false = subtracted), parallel to the operands.
-		inline
-		const auto& GetSigns() const{ return this-> signs_;}
-
-
-
-		/**
-		 Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
-		 */
-		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
-		std::size_t HashImpl() const override;
-		bool IsSame(Node const& other) const override;
-		
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override;
-		
-
-	 
-
-
-
-	protected:
-
-
-		
-
-
-	private:
-		// Stores the sign of the particular term.  There is a one-one
-		// correspondence between elements of signs_ and operand_.  This
-		// is enforced by the AddOperand method below, redefined in SumOperator.
-		
-		// TODO(JBC): If we add method to delete child, must also delete signs_ entry.
-		std::vector<bool> signs_;
-		
-	private:
-
-		SumOperator() = default;
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<NaryOperator>(*this);
-			ar & signs_;
-		}
-
-
-		void PrecisionChangeSpecific(unsigned prec) const override
-		{
-			temp_mp_.precision(prec);
-		}
-
-		mutable complex_mp temp_mp_;
-		mutable complex_dbl temp_d_;
-
-		friend MultOperator;
-	};
-	
-	
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
-
-	
-	/**
-	\brief The negation Operator.
-
-	 This class represents the negation Operator.
-	 */
-	class NegateOperator : public UnaryOperator
-	{
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-
-		/// \brief Construct (and intern) a NegateOperator node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<NegateOperator> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<NegateOperator>(Intern(std::shared_ptr<Node>( new NegateOperator(ts...) )));
-		}
-
-	private:
-
-		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-		{};
-		
-	public:
-		
-		std::shared_ptr<Node> Simplified() const override;
-
-		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
-		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
-
-		/**
-		 Print to an arbitrary ostream.
-		 */
-		void print(std::ostream & target) const override;
-
-		unsigned Precedence() const override
-		{
-			return PrecNegate;
-		}
-		
-		
-		/**
-		 Returns negative of derivative of child.
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-
-		/// \brief Degree in one variable: negation preserves its operand's degree.
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return operand_->Degree(v);
-		}
-
-		/// \brief Degree in a variable group: negation preserves its operand's degree.  (The
-		/// UnaryOperator default is the non-polynomial rule, which is wrong for negation.)
-		int Degree(VariableGroup const& vars) const override
-		{
-			return operand_->Degree(vars);
-		}
-
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return operand_->IsHomogeneous(v);
-		}
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
-		{
-			return operand_->IsHomogeneous(vars);
-		}
-
-		virtual ~NegateOperator() = default;
-		
-	protected:
-		
-		
-
-
-	private:
-
-		NegateOperator() = default;
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<UnaryOperator>(*this);
-		}
-	};
-	
-	
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(const std::shared_ptr<Node> & rhs)
-	{
-		return NegateOperator::Make(rhs);
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	/**
-	\brief Multiplication and division Operator.
-
-	This class represents the Operator for multiplication and division.  All children are factors and are stored
-	in a vector.
-	*/
-	class MultOperator : public NaryOperator
-	{
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-
-		std::shared_ptr<Node> Simplified() const override;
-
-		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
-
-
-		/// \brief Construct (and intern) a MultOperator node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<MultOperator> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<MultOperator>(Intern(std::shared_ptr<Node>( new MultOperator(ts...) )));
-		}
-
-	private:
-		/**
-		 single-node instantiation.  
-		
-		 if evaluated, would return simply the value of s.
-		 */
-		MultOperator(std::shared_ptr<Node> const& s)
-		{
-			AddOperand(s);
-		}
-		
-		MultOperator(std::shared_ptr<Node> const& left, std::shared_ptr<Node> const& right)
-		{
-			AddOperand(left);
-			AddOperand(right);
-			CanonicalizeNaryOperands(operands_, mult_or_div_, true);
-		}
-
-
-		MultOperator(const std::shared_ptr<Node> & left, bool mult_or_div_left, const std::shared_ptr<Node> & right, bool mult_or_div_right)
-		{
-			AddOperand(left, mult_or_div_left);
-			AddOperand(right, mult_or_div_right);
-			CanonicalizeNaryOperands(operands_, mult_or_div_, true);
-		}
-
-		// Build a complete product from a full (factor, mult-or-div) list -- fully constructed
-		// before Make() interns it, so no post-Make AddOperand on a shared interned node.
-		explicit MultOperator(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& factors)
-		{
-			for (auto const& f : factors)
-				AddOperand(f.first, f.second);
-			CanonicalizeNaryOperands(operands_, mult_or_div_, true);
-		}
-
-	public:
-		
-		virtual ~MultOperator() = default;
-		
-		
-		
-		
-		//Special Behaviour: by default all factors are in numerator
-		void AddOperand(std::shared_ptr<Node> child) override
-		{
-			NaryOperator::AddOperand(std::move(child));
-			mult_or_div_.push_back(true);
-		}
-		
-		
-		
-		/// \brief Add a factor; pass the bool to choose multiply (true) or divide (false).
-		//Special Behaviour: Pass bool to set sign of term: true = mult, false = divide
-		void AddOperand(std::shared_ptr<Node> child, bool mult) // not an override
-		{
-			NaryOperator::AddOperand(std::move(child));
-			mult_or_div_.push_back(mult);
-		}
-		
-		
-		/**
-		 overridden method for printing to an output stream
-		 */
-		void print(std::ostream & target) const override;
-
-		unsigned Precedence() const override
-		{
-			return PrecMult;
-		}
-		
-		/**
-		 Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-		/**
-		 Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-
-		int Degree(VariableGroup const& vars) const override;
-
-		/**
-		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-		*/
-		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
-		
-
-		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
-		std::size_t HashImpl() const override;
-		bool IsSame(Node const& other) const override;
-		
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override;
-
-		/**
-		 Get the indicator for which operation is being performed.  Remember this is an NaryOperator, so can hold arbitrary things.
-
-		 True is multiply, false is divide.
-		 * */
-		inline
-		const auto& GetMultOrDiv() const{ return this->mult_or_div_;}
-
-	protected:
-		
-		//  If child_mult_ = true, then multiply, else divide
-
-
-		
-		
-		
-		
-		
-	private:
-		
-		MultOperator() = default;
-
-		// Stores the mult/div of a factor.  There is a one-one
-		// correspondence between elements of signs_ and operand_.  This
-		// is enforced by the AddOperand method, redefined in MultOperator.
-		
-		// TODO(JBC): If we add method to delete child, must also delete children_mult_ entry.
-		std::vector<bool> mult_or_div_;
-		
-
-	private:
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<NaryOperator>(*this);
-			ar & mult_or_div_;
-		}
-
-		void PrecisionChangeSpecific(unsigned prec) const override
-		{
-			temp_mp_.precision(prec);
-		}
-
-		mutable complex_mp temp_mp_;
-		mutable complex_dbl temp_d_;
-
-		friend SumOperator;
-	};
-	
-	
-	
-	
-	
-	/**
-	\brief Operator for power functions with arbitrary expressions in the exponent and base.
-
-	Operator for power functions with arbitrary expressions in the exponent and base.
-	 
-	 
-	 \see IntegerPowerOperator
-	 */
-	class PowerOperator : public Operator
-	{
-		
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-
-		std::shared_ptr<Node> Simplified() const override;
-
-		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
-
-		/// \brief Construct (and intern) a PowerOperator node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<PowerOperator> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<PowerOperator>(Intern(std::shared_ptr<Node>( new PowerOperator(ts...) )));
-		}
-
-
-	private:
-		PowerOperator(const std::shared_ptr<Node> & new_base, const std::shared_ptr<Node> & new_exponent) : base_(new_base), exponent_(new_exponent)
-		{
-		}
-
-	public:
-		
-		
-		
-		/// \brief Set the base of the power.
-		void SetBase(std::shared_ptr<Node> new_base)
-		{
-			base_ = new_base;
-		}
-
-		/// \brief Set the exponent of the power.
-		void SetExponent(std::shared_ptr<Node> new_exponent)
-		{
-			exponent_ = new_exponent;
-		}
-
-		/// \return The base of the power.
-		std::shared_ptr<Node> GetBase() const
-		{
-			return base_;
-		}
-
-		/// \return The exponent of the power.
-		std::shared_ptr<Node> GetExponent() const
-		{
-			return exponent_;
-		}
-		
-
-
-
-		void print(std::ostream & target) const override;
-
-		unsigned Precedence() const override
-		{
-			return PrecPower;
-		}
-
-
-
-		/**
-		 Differentiates with the power rule.
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-		/**
-		 Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-		int Degree(VariableGroup const& vars) const override;
-
-		/**
-		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-		*/
-		std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
-		
-
-
-		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
-		std::size_t HashImpl() const override;
-		bool IsSame(Node const& other) const override;
-		
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override;
-
-		virtual ~PowerOperator() = default;
-		
-		/**
-		 Change the precision of this variable-precision tree node.
-		 
-		 \param prec the number of digits to change precision to.
-		 */
-
-
-
-	protected:
-		
-
-
-	private:
-				
-		PowerOperator() = default;
-		
-		std::shared_ptr<Node> base_;
-		std::shared_ptr<Node> exponent_;
-		
-
-
-	private:
-
-		friend class boost::serialization::access;
-		
-
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<Operator>(*this);
-			ar & base_;
-			ar & exponent_;
-		}
-	};
-	// end of the class PowerOperator
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	/**
-	\brief This class represents the exponentiation Operator.
-
-
-	 This class represents the exponentiation operator.  The base is stored in
-	 operand_, and an extra variable(exponent_) stores the exponent.
-	 */
-	class IntegerPowerOperator : public UnaryOperator
-	{
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-		
-		std::shared_ptr<Node> Simplified() const override;
-
-		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
-		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
-		std::size_t HashImpl() const override;
-		bool IsSame(Node const& other) const override;
-		
-		/**
-		 polymorphic method for printing to an arbitrary stream.
-		 */
-		void print(std::ostream & target) const override;
-
-		unsigned Precedence() const override
-		{
-			return PrecPower;
-		}
-		
-		
-		/**
-		 Set the integer exponent of an integer power operator
-		 */
-		void set_exponent(int exp)
-		{
-			exponent_ = exp;
-		}
-		
-		
-		/**
-		 Get the exponent
-		 */
-		int exponent() const
-		{
-			return exponent_;
-		}
-		
-		
-		/**
-		 \brief Differentiate
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-		/**
-		 Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-
-		int Degree(VariableGroup const& vars) const override;
-
-
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return operand_->IsHomogeneous(v);
-		}
-		
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
-		{
-			return operand_->IsHomogeneous(vars);
-		}
-
-
-		virtual ~IntegerPowerOperator() = default;
-		
-		
-		/// \brief Construct (and intern) a IntegerPowerOperator node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<IntegerPowerOperator> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<IntegerPowerOperator>(Intern(std::shared_ptr<Node>( new IntegerPowerOperator(ts...) )));
-		}
-
-	private:
-		/**
-		 Constructor, passing in the Node you want as the base, and the integer you want for the power.
-		 */
-		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p) : UnaryOperator(N), exponent_(p)
-		{}
-
-		
-		
-		
-	protected:
-		
-		
-
-
-		
-
-
-	private:
-		
-		IntegerPowerOperator() = default;
-
-
-		int exponent_; ///< Exponent for the exponenetial operator
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<UnaryOperator>(*this);
-			ar & exponent_;
-		}
-	}; // re: class IntegerPowerOperator
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	/**
-	\brief Represents the square root Operator
-
-
-	 This class represents the square root function.
-	 */
-	class SqrtOperator : public UnaryOperator
-	{
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-
-		/// \brief Construct (and intern) a SqrtOperator node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<SqrtOperator> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<SqrtOperator>(Intern(std::shared_ptr<Node>( new SqrtOperator(ts...) )));
-		}
-
-	private:
-		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-		{};
-
-	public:
-		
-		std::shared_ptr<Node> Simplified() const override;
-
-		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
-		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
-		
-		void print(std::ostream & target) const override;
-		
-		
-		/**
-		 Differentiates the square root function.
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-
-		virtual ~SqrtOperator() = default;
-		
-	protected:
-		
-
-
-
-	private:
-
-		SqrtOperator() = default;
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<UnaryOperator>(*this);
-		}
-	};
-	
-	
-	
-	/// \brief Build a square-root expression-tree node.
-	inline std::shared_ptr<Node> sqrt(const std::shared_ptr<Node> & N)
-	{
-		return SqrtOperator::Make(N);
-	}
-	
-	
-	
-	
-	/**
-	\brief represents the exponential function
-
-	This class represents the exponential function.
-	*/
-	class ExpOperator : public UnaryOperator
-	{
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-
-		std::shared_ptr<Node> Simplified() const override;
-
-		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
-		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
-
-		/// \brief Construct (and intern) a ExpOperator node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<ExpOperator> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<ExpOperator>(Intern(std::shared_ptr<Node>( new ExpOperator(ts...) )));
-		}
-
-	private:
-		ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-		{};
-
-	public:
-	 
-		
-		
-		
-		void print(std::ostream & target) const override;
-		
-		
-		/**
-		 Differentiates the exponential function.
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-
-		virtual ~ExpOperator() = default;
-		
-	protected:
-		
-
-
-	private:
-		ExpOperator() = default;
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<UnaryOperator>(*this);
-		}
-	};
-	
-	
-	/**
-	\brief represents the natural logarithm function
-
-	This class represents the natural logarithm function.
-	*/
-	class LogOperator : public UnaryOperator
-	{
-	public:
-		BERTINI_DEFAULT_VISITABLE()
-		
-		std::shared_ptr<Node> Simplified() const override;
-
-		std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
-		std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
-
-		/// \brief Construct (and intern) a LogOperator node.
-		template<typename... Ts> 
-		static 
-		std::shared_ptr<LogOperator> Make(Ts&& ...ts){ 
-			return std::static_pointer_cast<LogOperator>(Intern(std::shared_ptr<Node>( new LogOperator(ts...) )));
-		}
-
-	private:
-		LogOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-		{};
-
-	public:
-	 
-		
-		
-		
-		void print(std::ostream & target) const override;
-		
-		
-		/**
-		 Differentiates the exponential function.
-		 */
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-
-		virtual ~LogOperator() = default;
-		
-	protected:
-		
-		
-		
-	private:
-		LogOperator() = default;
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned /*version*/) {
-			ar & boost::serialization::base_object<UnaryOperator>(*this);
-		}
-	};
-
-	
-
-
-	// begin the overload of operators
-
-	/// \brief Build an exponential (e raised to the node) expression-tree node.
-	inline std::shared_ptr<Node> exp(const std::shared_ptr<Node> & N)
-	{
-		return ExpOperator::Make(N);
-	}
-	
-	/// \brief Build a natural-logarithm expression-tree node.
-	inline std::shared_ptr<Node> log(const std::shared_ptr<Node> & N)
-	{
-		return LogOperator::Make(N);
-	}
-	
-	/// \brief Build a power expression-tree node.
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, const std::shared_ptr<Node> & p)
-	{
-		return PowerOperator::Make(N,p);
-	}
-
-	/// \brief Build a power expression-tree node.
-	inline std::shared_ptr<Node> pow(std::shared_ptr<Node> const& base, int power)
-	{
-		return IntegerPowerOperator::Make(base,power);
-	}
-
-	/// \brief Build a power expression-tree node.
-	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p) = delete;
-	
-	/// \brief Build a power expression-tree node.
-	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, complex_dbl p) = delete;
-
-	/// \brief Build a power expression-tree node.
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, real_mp p)
-	{
-		return PowerOperator::Make(N,Complex::Make(p));
-	}
-
-	/// \brief Build a power expression-tree node.
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, complex_mp p)
-	{
-		return PowerOperator::Make(N,Complex::Make(p));
-	}
-
-	/// \brief Build a power expression-tree node.
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpq_rational const& p)
-	{
-		return PowerOperator::Make(N,Rational::Make(p,0));
-	}
-
-
-
-
-
-
-	///////////////////
-	//
-	//     SIMPLIFIED-CONSTRUCTION FACTORIES
-	//
-	/////////////////////
-
-	/**
-	\brief Negation that never builds junk: -0 stays 0.
-
-	Builds a fresh node; never modifies the input.
-	*/
-	std::shared_ptr<Node> SimplifiedNegate(std::shared_ptr<Node> const& n);
-
-	/**
-	\brief Build a sum from (term, add_or_sub) pairs, omitting literal zeros.
-
-	Empty after pruning -> Integer 0; a single added term is returned unwrapped;
-	a single subtracted term is negated.  Builds fresh nodes; the term nodes are
-	shared, never modified.  Used by differentiation so derivative trees come out
-	already simplified.
-	*/
-	std::shared_ptr<Node> SimplifiedSum(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms);
-
-	/**
-	\brief Build a product from (factor, mult_or_div) pairs, simplified.
-
-	A multiplied literal zero collapses the whole product to 0; literal ones are
-	dropped; literal Integer/Rational constants (real-valued) are folded together
-	exactly (no Complex folding -- precision semantics stay untouched).  A literal
-	zero DIVISOR is left in place, keeping the division by zero visible.  A single
-	surviving multiplied factor is returned unwrapped.  Builds fresh nodes; the
-	factor nodes are shared, never modified.
-	*/
-	std::shared_ptr<Node> SimplifiedMult(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& factors);
-
-
-
-	///////////////////
-	//
-	//     SUM AND DIFFERENCE ARITHMETIC OPERATORS
-	//
-	/////////////////////
-	
-	
-	
-
-	///////////////
-	//
-	//  addition operators
-	//
-	///////////////
-
-
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node>& operator+=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
-	{
-		std::shared_ptr<Node> temp = SumOperator::Make(lhs,rhs);		
-		lhs.swap(temp);
-		return lhs;
-	}
-		
-	
-	
-	
-	
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
-	{
-		return SumOperator::Make(lhs,rhs);
-	}
-	
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, real_mp const& rhs)
-	{
-		return SumOperator::Make(lhs,Complex::Make(rhs));
-	}
-
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, complex_mp const& rhs)
-	{
-		return SumOperator::Make(lhs,Complex::Make(rhs));
-	}
-	
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(real_mp const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Complex::Make(lhs), rhs);
-	}
-
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Complex::Make(lhs), rhs);
-	}
-
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, int rhs)
-	{
-		return SumOperator::Make(lhs,Integer::Make(rhs));
-	}
-	
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(int lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Integer::Make(lhs), rhs);
-	}
-
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpz_int const& rhs)
-	{
-		return SumOperator::Make(lhs,Integer::Make(rhs));
-	}
-	
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Integer::Make(lhs), rhs);
-	}
-
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
-	{
-		return SumOperator::Make(lhs,Rational::Make(rhs,0));
-	}
-	
-	/// \brief Build a sum expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator+(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Rational::Make(lhs,0), rhs);
-	}
-	
-	
-	
-	///////////////
-	//
-	//  subtraction operators
-	//
-	///////////////
-	
-	
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node>& operator-=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
-	{
-		std::shared_ptr<Node> temp = SumOperator::Make(lhs,true,rhs,false);
-		lhs.swap(temp);
-		return lhs;
-	}
-		
-	
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
-	{
-		return SumOperator::Make(lhs,true,rhs,false);
-	}
-	
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, real_mp const& rhs)
-	{
-		return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
-	}
-
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(real_mp const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
-	}
-
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, complex_mp const& rhs)
-	{
-		return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
-	}
-
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
-	}
-
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, int rhs)
-	{
-		return SumOperator::Make(lhs, true, Integer::Make(rhs), false);
-	}
-	
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(int lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Integer::Make(lhs), true, rhs, false);
-	}
-
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpz_int const& rhs)
-	{
-		return SumOperator::Make(lhs, true, Integer::Make(rhs), false);
-	}
-	
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Integer::Make(lhs), true, rhs, false);
-	}
-
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
-	{
-		return SumOperator::Make(lhs, true, Rational::Make(rhs,0), false);
-	}
-	
-	/// \brief Build a difference expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator-(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return SumOperator::Make(Rational::Make(lhs,0), true, rhs, false);
-	}
-
-
-	
-	/*
-	 multiplication operators
-	 */
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*=(std::shared_ptr<MultOperator> & lhs, const std::shared_ptr<Node> & rhs)
-	{
-		lhs->AddOperand(rhs);
-		return lhs;
-	}
-	
-	
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, real_mp const& rhs)
-	{
-		return MultOperator::Make(lhs,Complex::Make(rhs));
-	}
-
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, complex_mp const& rhs)
-	{
-		return MultOperator::Make(lhs,Complex::Make(rhs));
-	}
-	
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(real_mp const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Complex::Make(lhs), rhs);
-	}
-
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Complex::Make(lhs), rhs);
-	}
-
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, int rhs)
-	{
-		return MultOperator::Make(lhs,Integer::Make(rhs));
-	}
-	
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(int lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Integer::Make(lhs), rhs);
-	}
-	
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpz_int const& rhs)
-	{
-		return MultOperator::Make(lhs,Integer::Make(rhs));
-	}
-	
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Integer::Make(lhs), rhs);
-	}
-	
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
-	{
-		return MultOperator::Make(lhs,Rational::Make(rhs,0));
-	}
-	
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Rational::Make(lhs,0), rhs);
-	}
-
-
-	/// \brief Build a product expression-tree node from its operands.
-	///
-	/// Like-factor power-folding (x*x -> x^2, x^a*x^b -> x^(a+b)) and nested-product flattening
-	/// live centrally in CanonicalizeNaryOperands (called by the MultOperator constructor), so
-	/// every product-building route -- not just this adjacent binary one -- gets normalized.
-	inline std::shared_ptr<Node>& operator*=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
-	{
-		std::shared_ptr<Node> temp = MultOperator::Make(lhs,rhs);
-		lhs.swap(temp);
-		return lhs;
-	}
-	
-	/// \brief Build a product expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
-	{
-		return lhs*=rhs;
-	}
-	
-	
-	
-	
-	
-	
-	/*
-	 division operators
-	 */
-	
-	
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node>& operator/=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
-	{
-
-		// if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
-		// {
-
-		// 	auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs);
-		// 	auto rhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
-		// 	if (lhs_as_intpow->first_child()==rhs_as_intpow->first_child())
-		// 	{
-		// 		std::shared_ptr<Node> temp = pow(lhs_as_intpow->first_child(),lhs_as_intpow->exponent() - rhs_as_intpow->exponent());
-		// 		lhs.swap(temp);
-		// 		return lhs;
-		// 	}
-		// }
-
-
-		std::shared_ptr<Node> temp = MultOperator::Make(lhs,true,rhs,false);
-		lhs.swap(temp);
-		return lhs;
-	}
-	
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/=(std::shared_ptr<MultOperator> & lhs, const std::shared_ptr<Node> & rhs)
-	{
-		lhs->AddOperand(rhs,false);
-		return lhs;
-	}
-	
-	
-	
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
-	{
-		return lhs/=rhs;
-	}
-	
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, real_mp rhs)
-	{
-		return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
-	}
-
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, complex_mp rhs)
-	{
-		return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
-	}
-	
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(real_mp lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
-	}
-
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(complex_mp lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
-	}
-
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, int rhs)
-	{
-		return MultOperator::Make(lhs, true, Integer::Make(rhs), false);
-	}
-	
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(int lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Integer::Make(lhs), true, rhs, false);
-	}
-
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpz_int const& rhs)
-	{
-		return MultOperator::Make(lhs, true, Integer::Make(rhs), false);
-	}
-	
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Integer::Make(lhs), true, rhs, false);
-	}
-
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
-	{
-		return MultOperator::Make(lhs, true, Rational::Make(rhs,0), false);
-	}
-	
-	/// \brief Build a quotient expression-tree node from its operands.
-	inline std::shared_ptr<Node> operator/(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
-	{
-		return MultOperator::Make(Rational::Make(lhs,0), true, rhs, false);
-	}
+namespace node{
+    /**
+    \brief Represents summation and difference Operator.
+
+    This class represents summation and difference operators.  All children are terms and are stored
+    in a single vector, and a vector of bools is used to determine the sign of each term.
+    */
+    class SumOperator : public NaryOperator
+    {
+    public:
+        BERTINI_DEFAULT_VISITABLE()
+
+        virtual ~SumOperator() = default;
+
+        std::shared_ptr<Node> Simplified() const override;
+
+        std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+
+        /// \brief Construct (and intern) a SumOperator node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<SumOperator> Make(Ts&& ...ts){
+            return std::static_pointer_cast<SumOperator>(Intern(std::shared_ptr<Node>( new SumOperator(ts...) )));
+        }
+
+    private:
+        SumOperator(const std::shared_ptr<Node> & s, bool add_or_sub)
+        {
+            AddOperand(s, add_or_sub);
+        }
+
+        SumOperator(const std::shared_ptr<Node> & left, const std::shared_ptr<Node> & right)
+        {
+            AddOperand(left);
+            AddOperand(right);
+            CanonicalizeNaryOperands(operands_, signs_, false);
+        }
+
+
+        SumOperator(const std::shared_ptr<Node> & left, bool add_or_sub_left, const std::shared_ptr<Node> & right, bool add_or_sub_right)
+        {
+            AddOperand(left, add_or_sub_left);
+            AddOperand(right, add_or_sub_right);
+            CanonicalizeNaryOperands(operands_, signs_, false);
+        }
+
+        // Build a complete sum from a full (term, sign) list.  The node is fully constructed
+        // before Make() interns it -- so callers never AddOperand AFTER Make (which, with interning,
+        // could mutate a shared interned node).
+        explicit SumOperator(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms)
+        {
+            for (auto const& t : terms)
+                AddOperand(t.first, t.second);
+            CanonicalizeNaryOperands(operands_, signs_, false);
+        }
+
+    public:
+
+        /// \brief Add a term in place (operand added with positive sign).
+        SumOperator& operator+=(const std::shared_ptr<Node> & rhs)
+        {
+            this->AddOperand(rhs);
+            return *this;
+        }
+
+        /// \brief Subtract a term in place (operand added with negative sign).
+        SumOperator& operator-=(const std::shared_ptr<Node> & rhs)
+        {
+            this->AddOperand(rhs,false);
+            return *this;
+        }
+
+
+
+
+
+        /**
+        \note: Special Behaviour: by default all terms added are positive
+        */
+        void AddOperand(std::shared_ptr<Node> child) override
+        {
+            NaryOperator::AddOperand(std::move(child));
+            signs_.push_back(true);
+        }
+
+
+        /**
+        \note Special Behaviour: Pass bool to set sign of term: true = add, false = subtract
+        */
+        void AddOperand(std::shared_ptr<Node> child, bool sign) // not an override
+        {
+            NaryOperator::AddOperand(std::move(child));
+            signs_.push_back(sign);
+        }
+
+
+        /**
+         Method for printing to output stream
+         */
+        void print(std::ostream & target) const override;
+
+        unsigned Precedence() const override
+        {
+            return PrecSum;
+        }
+
+
+
+
+        /**
+         Return SumOperator whose children are derivatives of the children, omitted as possible
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /**
+         Compute the degree of a node.  For sum functions, the degree is the max among summands.
+         */
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+
+        int Degree(VariableGroup const& vars) const override;
+
+        /**
+         Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.
+        */
+        std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
+
+        /// \return The per-term signs (true = added, false = subtracted), parallel to the operands.
+        inline
+        const auto& GetSigns() const{ return this-> signs_;}
+
+
+
+        /**
+         Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
+         */
+        std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+        std::size_t HashImpl() const override;
+        bool IsSame(Node const& other) const override;
+
+        bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /**
+        Check for homogeneity, with respect to a variable group.
+        */
+        bool IsHomogeneous(VariableGroup const& vars) const override;
+
+
+
+
+
+
+    protected:
+
+
+
+
+
+    private:
+        // Stores the sign of the particular term.  There is a one-one
+        // correspondence between elements of signs_ and operand_.  This
+        // is enforced by the AddOperand method below, redefined in SumOperator.
+
+        // TODO(JBC): If we add method to delete child, must also delete signs_ entry.
+        std::vector<bool> signs_;
+
+    private:
+
+        SumOperator() = default;
+
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<NaryOperator>(*this);
+            ar & signs_;
+        }
+
+
+        void PrecisionChangeSpecific(unsigned prec) const override
+        {
+            temp_mp_.precision(prec);
+        }
+
+        mutable complex_mp temp_mp_;
+        mutable complex_dbl temp_d_;
+
+        friend MultOperator;
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+    \brief The negation Operator.
+
+     This class represents the negation Operator.
+     */
+    class NegateOperator : public UnaryOperator
+    {
+    public:
+        BERTINI_DEFAULT_VISITABLE()
+
+        /// \brief Construct (and intern) a NegateOperator node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<NegateOperator> Make(Ts&& ...ts){
+            return std::static_pointer_cast<NegateOperator>(Intern(std::shared_ptr<Node>( new NegateOperator(ts...) )));
+        }
+
+    private:
+
+        NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+        {};
+
+    public:
+
+        std::shared_ptr<Node> Simplified() const override;
+
+        std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+        std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+
+        /**
+         Print to an arbitrary ostream.
+         */
+        void print(std::ostream & target) const override;
+
+        unsigned Precedence() const override
+        {
+            return PrecNegate;
+        }
+
+
+        /**
+         Returns negative of derivative of child.
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /// \brief Degree in one variable: negation preserves its operand's degree.
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        {
+            return operand_->Degree(v);
+        }
+
+        /// \brief Degree in a variable group: negation preserves its operand's degree.  (The
+        /// UnaryOperator default is the non-polynomial rule, which is wrong for negation.)
+        int Degree(VariableGroup const& vars) const override
+        {
+            return operand_->Degree(vars);
+        }
+
+        bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+        {
+            return operand_->IsHomogeneous(v);
+        }
+
+        /**
+        Check for homogeneity, with respect to a variable group.
+        */
+        bool IsHomogeneous(VariableGroup const& vars) const override
+        {
+            return operand_->IsHomogeneous(vars);
+        }
+
+        virtual ~NegateOperator() = default;
+
+    protected:
+
+
+
+
+    private:
+
+        NegateOperator() = default;
+
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<UnaryOperator>(*this);
+        }
+    };
+
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(const std::shared_ptr<Node> & rhs)
+    {
+        return NegateOperator::Make(rhs);
+    }
+
+
+
+
+
+
+
+
+
+
+
+    /**
+    \brief Multiplication and division Operator.
+
+    This class represents the Operator for multiplication and division.  All children are factors and are stored
+    in a vector.
+    */
+    class MultOperator : public NaryOperator
+    {
+    public:
+        BERTINI_DEFAULT_VISITABLE()
+
+        std::shared_ptr<Node> Simplified() const override;
+
+        std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+
+
+        /// \brief Construct (and intern) a MultOperator node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<MultOperator> Make(Ts&& ...ts){
+            return std::static_pointer_cast<MultOperator>(Intern(std::shared_ptr<Node>( new MultOperator(ts...) )));
+        }
+
+    private:
+        /**
+         single-node instantiation.
+
+         if evaluated, would return simply the value of s.
+         */
+        MultOperator(std::shared_ptr<Node> const& s)
+        {
+            AddOperand(s);
+        }
+
+        MultOperator(std::shared_ptr<Node> const& left, std::shared_ptr<Node> const& right)
+        {
+            AddOperand(left);
+            AddOperand(right);
+            CanonicalizeNaryOperands(operands_, mult_or_div_, true);
+        }
+
+
+        MultOperator(const std::shared_ptr<Node> & left, bool mult_or_div_left, const std::shared_ptr<Node> & right, bool mult_or_div_right)
+        {
+            AddOperand(left, mult_or_div_left);
+            AddOperand(right, mult_or_div_right);
+            CanonicalizeNaryOperands(operands_, mult_or_div_, true);
+        }
+
+        // Build a complete product from a full (factor, mult-or-div) list -- fully constructed
+        // before Make() interns it, so no post-Make AddOperand on a shared interned node.
+        explicit MultOperator(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& factors)
+        {
+            for (auto const& f : factors)
+                AddOperand(f.first, f.second);
+            CanonicalizeNaryOperands(operands_, mult_or_div_, true);
+        }
+
+    public:
+
+        virtual ~MultOperator() = default;
+
+
+
+
+        //Special Behaviour: by default all factors are in numerator
+        void AddOperand(std::shared_ptr<Node> child) override
+        {
+            NaryOperator::AddOperand(std::move(child));
+            mult_or_div_.push_back(true);
+        }
+
+
+
+        /// \brief Add a factor; pass the bool to choose multiply (true) or divide (false).
+        //Special Behaviour: Pass bool to set sign of term: true = mult, false = divide
+        void AddOperand(std::shared_ptr<Node> child, bool mult) // not an override
+        {
+            NaryOperator::AddOperand(std::move(child));
+            mult_or_div_.push_back(mult);
+        }
+
+
+        /**
+         overridden method for printing to an output stream
+         */
+        void print(std::ostream & target) const override;
+
+        unsigned Precedence() const override
+        {
+            return PrecMult;
+        }
+
+        /**
+         Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /**
+         Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
+         */
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+
+        int Degree(VariableGroup const& vars) const override;
+
+        /**
+         Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.
+        */
+        std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
+
+
+        std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+        std::size_t HashImpl() const override;
+        bool IsSame(Node const& other) const override;
+
+        bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /**
+        Check for homogeneity, with respect to a variable group.
+        */
+        bool IsHomogeneous(VariableGroup const& vars) const override;
+
+        /**
+         Get the indicator for which operation is being performed.  Remember this is an NaryOperator, so can hold arbitrary things.
+
+         True is multiply, false is divide.
+         * */
+        inline
+        const auto& GetMultOrDiv() const{ return this->mult_or_div_;}
+
+    protected:
+
+        //  If child_mult_ = true, then multiply, else divide
+
+
+
+
+
+
+
+    private:
+
+        MultOperator() = default;
+
+        // Stores the mult/div of a factor.  There is a one-one
+        // correspondence between elements of signs_ and operand_.  This
+        // is enforced by the AddOperand method, redefined in MultOperator.
+
+        // TODO(JBC): If we add method to delete child, must also delete children_mult_ entry.
+        std::vector<bool> mult_or_div_;
+
+
+    private:
+
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<NaryOperator>(*this);
+            ar & mult_or_div_;
+        }
+
+        void PrecisionChangeSpecific(unsigned prec) const override
+        {
+            temp_mp_.precision(prec);
+        }
+
+        mutable complex_mp temp_mp_;
+        mutable complex_dbl temp_d_;
+
+        friend SumOperator;
+    };
+
+
+
+
+
+    /**
+    \brief Operator for power functions with arbitrary expressions in the exponent and base.
+
+    Operator for power functions with arbitrary expressions in the exponent and base.
+
+
+     \see IntegerPowerOperator
+     */
+    class PowerOperator : public Operator
+    {
+
+    public:
+        BERTINI_DEFAULT_VISITABLE()
+
+        std::shared_ptr<Node> Simplified() const override;
+
+        std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+
+        /// \brief Construct (and intern) a PowerOperator node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<PowerOperator> Make(Ts&& ...ts){
+            return std::static_pointer_cast<PowerOperator>(Intern(std::shared_ptr<Node>( new PowerOperator(ts...) )));
+        }
+
+
+    private:
+        PowerOperator(const std::shared_ptr<Node> & new_base, const std::shared_ptr<Node> & new_exponent) : base_(new_base), exponent_(new_exponent)
+        {
+        }
+
+    public:
+
+
+
+        /// \brief Set the base of the power.
+        void SetBase(std::shared_ptr<Node> new_base)
+        {
+            base_ = new_base;
+        }
+
+        /// \brief Set the exponent of the power.
+        void SetExponent(std::shared_ptr<Node> new_exponent)
+        {
+            exponent_ = new_exponent;
+        }
+
+        /// \return The base of the power.
+        std::shared_ptr<Node> GetBase() const
+        {
+            return base_;
+        }
+
+        /// \return The exponent of the power.
+        std::shared_ptr<Node> GetExponent() const
+        {
+            return exponent_;
+        }
+
+
+
+
+        void print(std::ostream & target) const override;
+
+        unsigned Precedence() const override
+        {
+            return PrecPower;
+        }
+
+
+
+        /**
+         Differentiates with the power rule.
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /**
+         Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
+         */
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        int Degree(VariableGroup const& vars) const override;
+
+        /**
+         Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.
+        */
+        std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;
+
+
+
+        std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+        std::size_t HashImpl() const override;
+        bool IsSame(Node const& other) const override;
+
+        bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /**
+        Check for homogeneity, with respect to a variable group.
+        */
+        bool IsHomogeneous(VariableGroup const& vars) const override;
+
+        virtual ~PowerOperator() = default;
+
+        /**
+         Change the precision of this variable-precision tree node.
+
+         \param prec the number of digits to change precision to.
+         */
+
+
+
+    protected:
+
+
+
+    private:
+
+        PowerOperator() = default;
+
+        std::shared_ptr<Node> base_;
+        std::shared_ptr<Node> exponent_;
+
+
+
+    private:
+
+        friend class boost::serialization::access;
+
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<Operator>(*this);
+            ar & base_;
+            ar & exponent_;
+        }
+    };
+    // end of the class PowerOperator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+    \brief This class represents the exponentiation Operator.
+
+
+     This class represents the exponentiation operator.  The base is stored in
+     operand_, and an extra variable(exponent_) stores the exponent.
+     */
+    class IntegerPowerOperator : public UnaryOperator
+    {
+    public:
+        BERTINI_DEFAULT_VISITABLE()
+
+        std::shared_ptr<Node> Simplified() const override;
+
+        std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+        std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+        std::size_t HashImpl() const override;
+        bool IsSame(Node const& other) const override;
+
+        /**
+         polymorphic method for printing to an arbitrary stream.
+         */
+        void print(std::ostream & target) const override;
+
+        unsigned Precedence() const override
+        {
+            return PrecPower;
+        }
+
+
+        /**
+         Set the integer exponent of an integer power operator
+         */
+        void set_exponent(int exp)
+        {
+            exponent_ = exp;
+        }
+
+
+        /**
+         Get the exponent
+         */
+        int exponent() const
+        {
+            return exponent_;
+        }
+
+
+        /**
+         \brief Differentiate
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        /**
+         Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
+         */
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+        int Degree(VariableGroup const& vars) const override;
+
+
+        bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+        {
+            return operand_->IsHomogeneous(v);
+        }
+
+
+        /**
+        Check for homogeneity, with respect to a variable group.
+        */
+        bool IsHomogeneous(VariableGroup const& vars) const override
+        {
+            return operand_->IsHomogeneous(vars);
+        }
+
+
+        virtual ~IntegerPowerOperator() = default;
+
+
+        /// \brief Construct (and intern) a IntegerPowerOperator node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<IntegerPowerOperator> Make(Ts&& ...ts){
+            return std::static_pointer_cast<IntegerPowerOperator>(Intern(std::shared_ptr<Node>( new IntegerPowerOperator(ts...) )));
+        }
+
+    private:
+        /**
+         Constructor, passing in the Node you want as the base, and the integer you want for the power.
+         */
+        IntegerPowerOperator(const std::shared_ptr<Node> & N, int p) : UnaryOperator(N), exponent_(p)
+        {}
+
+
+
+
+    protected:
+
+
+
+
+
+
+
+    private:
+
+        IntegerPowerOperator() = default;
+
+
+        int exponent_; ///< Exponent for the exponenetial operator
+
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<UnaryOperator>(*this);
+            ar & exponent_;
+        }
+    }; // re: class IntegerPowerOperator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+    \brief Represents the square root Operator
+
+
+     This class represents the square root function.
+     */
+    class SqrtOperator : public UnaryOperator
+    {
+    public:
+        BERTINI_DEFAULT_VISITABLE()
+
+        /// \brief Construct (and intern) a SqrtOperator node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<SqrtOperator> Make(Ts&& ...ts){
+            return std::static_pointer_cast<SqrtOperator>(Intern(std::shared_ptr<Node>( new SqrtOperator(ts...) )));
+        }
+
+    private:
+        SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+        {};
+
+    public:
+
+        std::shared_ptr<Node> Simplified() const override;
+
+        std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+        std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+
+        void print(std::ostream & target) const override;
+
+
+        /**
+         Differentiates the square root function.
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+
+        virtual ~SqrtOperator() = default;
+
+    protected:
+
+
+
+
+    private:
+
+        SqrtOperator() = default;
+
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<UnaryOperator>(*this);
+        }
+    };
+
+
+
+    /// \brief Build a square-root expression-tree node.
+    inline std::shared_ptr<Node> sqrt(const std::shared_ptr<Node> & N)
+    {
+        return SqrtOperator::Make(N);
+    }
+
+
+
+
+    /**
+    \brief represents the exponential function
+
+    This class represents the exponential function.
+    */
+    class ExpOperator : public UnaryOperator
+    {
+    public:
+        BERTINI_DEFAULT_VISITABLE()
+
+        std::shared_ptr<Node> Simplified() const override;
+
+        std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+        std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+
+        /// \brief Construct (and intern) a ExpOperator node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<ExpOperator> Make(Ts&& ...ts){
+            return std::static_pointer_cast<ExpOperator>(Intern(std::shared_ptr<Node>( new ExpOperator(ts...) )));
+        }
+
+    private:
+        ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+        {};
+
+    public:
+
+
+
+
+        void print(std::ostream & target) const override;
+
+
+        /**
+         Differentiates the exponential function.
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+
+        virtual ~ExpOperator() = default;
+
+    protected:
+
+
+
+    private:
+        ExpOperator() = default;
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<UnaryOperator>(*this);
+        }
+    };
+
+
+    /**
+    \brief represents the natural logarithm function
+
+    This class represents the natural logarithm function.
+    */
+    class LogOperator : public UnaryOperator
+    {
+    public:
+        BERTINI_DEFAULT_VISITABLE()
+
+        std::shared_ptr<Node> Simplified() const override;
+
+        std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const override;
+        std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const override;
+
+        /// \brief Construct (and intern) a LogOperator node.
+        template<typename... Ts>
+        static
+        std::shared_ptr<LogOperator> Make(Ts&& ...ts){
+            return std::static_pointer_cast<LogOperator>(Intern(std::shared_ptr<Node>( new LogOperator(ts...) )));
+        }
+
+    private:
+        LogOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+        {};
+
+    public:
+
+
+
+
+        void print(std::ostream & target) const override;
+
+
+        /**
+         Differentiates the exponential function.
+         */
+        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+
+        virtual ~LogOperator() = default;
+
+    protected:
+
+
+
+    private:
+        LogOperator() = default;
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned /*version*/) {
+            ar & boost::serialization::base_object<UnaryOperator>(*this);
+        }
+    };
+
+
+
+
+    // begin the overload of operators
+
+    /// \brief Build an exponential (e raised to the node) expression-tree node.
+    inline std::shared_ptr<Node> exp(const std::shared_ptr<Node> & N)
+    {
+        return ExpOperator::Make(N);
+    }
+
+    /// \brief Build a natural-logarithm expression-tree node.
+    inline std::shared_ptr<Node> log(const std::shared_ptr<Node> & N)
+    {
+        return LogOperator::Make(N);
+    }
+
+    /// \brief Build a power expression-tree node.
+    inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, const std::shared_ptr<Node> & p)
+    {
+        return PowerOperator::Make(N,p);
+    }
+
+    /// \brief Build a power expression-tree node.
+    inline std::shared_ptr<Node> pow(std::shared_ptr<Node> const& base, int power)
+    {
+        return IntegerPowerOperator::Make(base,power);
+    }
+
+    /// \brief Build a power expression-tree node.
+    std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p) = delete;
+
+    /// \brief Build a power expression-tree node.
+    std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, complex_dbl p) = delete;
+
+    /// \brief Build a power expression-tree node.
+    inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, real_mp p)
+    {
+        return PowerOperator::Make(N,Complex::Make(p));
+    }
+
+    /// \brief Build a power expression-tree node.
+    inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, complex_mp p)
+    {
+        return PowerOperator::Make(N,Complex::Make(p));
+    }
+
+    /// \brief Build a power expression-tree node.
+    inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpq_rational const& p)
+    {
+        return PowerOperator::Make(N,Rational::Make(p,0));
+    }
+
+
+
+
+
+
+    ///////////////////
+    //
+    //     SIMPLIFIED-CONSTRUCTION FACTORIES
+    //
+    /////////////////////
+
+    /**
+    \brief Negation that never builds junk: -0 stays 0.
+
+    Builds a fresh node; never modifies the input.
+    */
+    std::shared_ptr<Node> SimplifiedNegate(std::shared_ptr<Node> const& n);
+
+    /**
+    \brief Build a sum from (term, add_or_sub) pairs, omitting literal zeros.
+
+    Empty after pruning -> Integer 0; a single added term is returned unwrapped;
+    a single subtracted term is negated.  Builds fresh nodes; the term nodes are
+    shared, never modified.  Used by differentiation so derivative trees come out
+    already simplified.
+    */
+    std::shared_ptr<Node> SimplifiedSum(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& terms);
+
+    /**
+    \brief Build a product from (factor, mult_or_div) pairs, simplified.
+
+    A multiplied literal zero collapses the whole product to 0; literal ones are
+    dropped; literal Integer/Rational constants (real-valued) are folded together
+    exactly (no Complex folding -- precision semantics stay untouched).  A literal
+    zero DIVISOR is left in place, keeping the division by zero visible.  A single
+    surviving multiplied factor is returned unwrapped.  Builds fresh nodes; the
+    factor nodes are shared, never modified.
+    */
+    std::shared_ptr<Node> SimplifiedMult(std::vector<std::pair<std::shared_ptr<Node>, bool>> const& factors);
+
+
+
+    ///////////////////
+    //
+    //     SUM AND DIFFERENCE ARITHMETIC OPERATORS
+    //
+    /////////////////////
+
+
+
+
+    ///////////////
+    //
+    //  addition operators
+    //
+    ///////////////
+
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node>& operator+=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
+    {
+        std::shared_ptr<Node> temp = SumOperator::Make(lhs,rhs);
+        lhs.swap(temp);
+        return lhs;
+    }
+
+
+
+
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
+    {
+        return SumOperator::Make(lhs,rhs);
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, real_mp const& rhs)
+    {
+        return SumOperator::Make(lhs,Complex::Make(rhs));
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, complex_mp const& rhs)
+    {
+        return SumOperator::Make(lhs,Complex::Make(rhs));
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(real_mp const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Complex::Make(lhs), rhs);
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Complex::Make(lhs), rhs);
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, int rhs)
+    {
+        return SumOperator::Make(lhs,Integer::Make(rhs));
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(int lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Integer::Make(lhs), rhs);
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpz_int const& rhs)
+    {
+        return SumOperator::Make(lhs,Integer::Make(rhs));
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Integer::Make(lhs), rhs);
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
+    {
+        return SumOperator::Make(lhs,Rational::Make(rhs,0));
+    }
+
+    /// \brief Build a sum expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator+(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Rational::Make(lhs,0), rhs);
+    }
+
+
+
+    ///////////////
+    //
+    //  subtraction operators
+    //
+    ///////////////
+
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node>& operator-=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
+    {
+        std::shared_ptr<Node> temp = SumOperator::Make(lhs,true,rhs,false);
+        lhs.swap(temp);
+        return lhs;
+    }
+
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
+    {
+        return SumOperator::Make(lhs,true,rhs,false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, real_mp const& rhs)
+    {
+        return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(real_mp const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, complex_mp const& rhs)
+    {
+        return SumOperator::Make(lhs, true, Complex::Make(rhs), false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Complex::Make(lhs), true, rhs, false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, int rhs)
+    {
+        return SumOperator::Make(lhs, true, Integer::Make(rhs), false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(int lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Integer::Make(lhs), true, rhs, false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpz_int const& rhs)
+    {
+        return SumOperator::Make(lhs, true, Integer::Make(rhs), false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Integer::Make(lhs), true, rhs, false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
+    {
+        return SumOperator::Make(lhs, true, Rational::Make(rhs,0), false);
+    }
+
+    /// \brief Build a difference expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator-(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return SumOperator::Make(Rational::Make(lhs,0), true, rhs, false);
+    }
+
+
+
+    /*
+     multiplication operators
+     */
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*=(std::shared_ptr<MultOperator> & lhs, const std::shared_ptr<Node> & rhs)
+    {
+        lhs->AddOperand(rhs);
+        return lhs;
+    }
+
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, real_mp const& rhs)
+    {
+        return MultOperator::Make(lhs,Complex::Make(rhs));
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, complex_mp const& rhs)
+    {
+        return MultOperator::Make(lhs,Complex::Make(rhs));
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(real_mp const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Complex::Make(lhs), rhs);
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(complex_mp const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Complex::Make(lhs), rhs);
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, int rhs)
+    {
+        return MultOperator::Make(lhs,Integer::Make(rhs));
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(int lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Integer::Make(lhs), rhs);
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpz_int const& rhs)
+    {
+        return MultOperator::Make(lhs,Integer::Make(rhs));
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Integer::Make(lhs), rhs);
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
+    {
+        return MultOperator::Make(lhs,Rational::Make(rhs,0));
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Rational::Make(lhs,0), rhs);
+    }
+
+
+    /// \brief Build a product expression-tree node from its operands.
+    ///
+    /// Like-factor power-folding (x*x -> x^2, x^a*x^b -> x^(a+b)) and nested-product flattening
+    /// live centrally in CanonicalizeNaryOperands (called by the MultOperator constructor), so
+    /// every product-building route -- not just this adjacent binary one -- gets normalized.
+    inline std::shared_ptr<Node>& operator*=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
+    {
+        std::shared_ptr<Node> temp = MultOperator::Make(lhs,rhs);
+        lhs.swap(temp);
+        return lhs;
+    }
+
+    /// \brief Build a product expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
+    {
+        return lhs*=rhs;
+    }
+
+
+
+
+
+
+    /*
+     division operators
+     */
+
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node>& operator/=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
+    {
+
+        // if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
+        // {
+
+        //  auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs);
+        //  auto rhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
+        //  if (lhs_as_intpow->first_child()==rhs_as_intpow->first_child())
+        //  {
+        //      std::shared_ptr<Node> temp = pow(lhs_as_intpow->first_child(),lhs_as_intpow->exponent() - rhs_as_intpow->exponent());
+        //      lhs.swap(temp);
+        //      return lhs;
+        //  }
+        // }
+
+
+        std::shared_ptr<Node> temp = MultOperator::Make(lhs,true,rhs,false);
+        lhs.swap(temp);
+        return lhs;
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/=(std::shared_ptr<MultOperator> & lhs, const std::shared_ptr<Node> & rhs)
+    {
+        lhs->AddOperand(rhs,false);
+        return lhs;
+    }
+
+
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
+    {
+        return lhs/=rhs;
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, real_mp rhs)
+    {
+        return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, complex_mp rhs)
+    {
+        return MultOperator::Make(lhs, true, Complex::Make(rhs), false);
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(real_mp lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(complex_mp lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Complex::Make(lhs), true, rhs, false);
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, int rhs)
+    {
+        return MultOperator::Make(lhs, true, Integer::Make(rhs), false);
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(int lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Integer::Make(lhs), true, rhs, false);
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpz_int const& rhs)
+    {
+        return MultOperator::Make(lhs, true, Integer::Make(rhs), false);
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Integer::Make(lhs), true, rhs, false);
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
+    {
+        return MultOperator::Make(lhs, true, Rational::Make(rhs,0), false);
+    }
+
+    /// \brief Build a quotient expression-tree node from its operands.
+    inline std::shared_ptr<Node> operator/(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
+    {
+        return MultOperator::Make(Rational::Make(lhs,0), true, rhs, false);
+    }
 
 
 

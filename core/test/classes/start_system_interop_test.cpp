@@ -64,78 +64,78 @@ BOOST_AUTO_TEST_SUITE(start_system_interop)
 // x_i^{d_i} + (a generic-ish lower-order tail) so it is genuinely degree d_i (not sparse), 1 group.
 static System SquareSingleGroup(std::vector<unsigned> const& degs)
 {
-	System sys;
-	std::vector<Var> x;
-	for (size_t i = 0; i < degs.size(); ++i)
-		x.push_back(Variable::Make("x" + std::to_string(i)));
-	VariableGroup g(x.begin(), x.end());
-	sys.AddVariableGroup(g);
-	for (size_t i = 0; i < degs.size(); ++i)
-	{
-		std::shared_ptr<bertini::node::Node> f = pow(x[i], static_cast<int>(degs[i]));
-		// a cross term one degree lower, to keep the function dense but still degree d_i
-		if (degs.size() > 1 && degs[i] >= 1)
-			f = f + x[(i + 1) % degs.size()] * pow(x[i], static_cast<int>(degs[i]) - 1);
-		f = f - 2;
-		sys.AddFunction(f);
-	}
-	return sys;
+    System sys;
+    std::vector<Var> x;
+    for (size_t i = 0; i < degs.size(); ++i)
+        x.push_back(Variable::Make("x" + std::to_string(i)));
+    VariableGroup g(x.begin(), x.end());
+    sys.AddVariableGroup(g);
+    for (size_t i = 0; i < degs.size(); ++i)
+    {
+        std::shared_ptr<bertini::node::Node> f = pow(x[i], static_cast<int>(degs[i]));
+        // a cross term one degree lower, to keep the function dense but still degree d_i
+        if (degs.size() > 1 && degs[i] >= 1)
+            f = f + x[(i + 1) % degs.size()] * pow(x[i], static_cast<int>(degs[i]) - 1);
+        f = f - 2;
+        sys.AddFunction(f);
+    }
+    return sys;
 }
 
 // largest |Eval| over EVERY start point of the (already homogenized/patched) start system, in T.
 template<typename StartT, typename T>
 static double WorstStartPointResidual(StartT const& s)
 {
-	double worst = 0;
-	for (auto ii = decltype(s.NumStartPoints())(0); ii < s.NumStartPoints(); ++ii)
-	{
-		auto sp = s.template StartPoint<T>(ii);
-		auto v = s.Eval(sp);
-		for (Eigen::Index j = 0; j < v.size(); ++j)
-			worst = std::max(worst, static_cast<double>(abs(v(j))));
-	}
-	return worst;
+    double worst = 0;
+    for (auto ii = decltype(s.NumStartPoints())(0); ii < s.NumStartPoints(); ++ii)
+    {
+        auto sp = s.template StartPoint<T>(ii);
+        auto v = s.Eval(sp);
+        for (Eigen::Index j = 0; j < v.size(); ++j)
+            worst = std::max(worst, static_cast<double>(abs(v(j))));
+    }
+    return worst;
 }
 
 // ---- TotalDegreeLinearProduct: every start point is a root, on the patch -----------------------------------
 
 BOOST_AUTO_TEST_CASE(total_degree_all_start_points_on_patch_double)
 {
-	bertini::SetGlobalSeed(1u);
-	DefaultPrecision(30);
+    bertini::SetGlobalSeed(1u);
+    DefaultPrecision(30);
 
-	auto sys = SquareSingleGroup({2, 3, 4});   // Bezout 24
-	sys.Homogenize();
-	sys.AutoPatch();
+    auto sys = SquareSingleGroup({2, 3, 4});   // Bezout 24
+    sys.Homogenize();
+    sys.AutoPatch();
 
-	ss::TotalDegreeLinearProduct td(sys);
-	BOOST_CHECK(td.IsHomogeneous());
-	BOOST_CHECK(td.IsPatched());
-	BOOST_CHECK_EQUAL(td.NumStartPoints(), 24ull);   // 2*3*4
+    ss::TotalDegreeLinearProduct td(sys);
+    BOOST_CHECK(td.IsHomogeneous());
+    BOOST_CHECK(td.IsPatched());
+    BOOST_CHECK_EQUAL(td.NumStartPoints(), 24ull);   // 2*3*4
 
-	// EVERY start point a root (incl. patch + homogenization rows), in double.
-	BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegreeLinearProduct, complex_dbl>(td)), 1e-9);
+    // EVERY start point a root (incl. patch + homogenization rows), in double.
+    BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegreeLinearProduct, complex_dbl>(td)), 1e-9);
 }
 
 // The patch-fit must survive at HIGH precision: rescale-then-truncate would leave a residual at
 // the working-precision floor, so a tight bound at 100 digits guards the start-point precision path.
 BOOST_AUTO_TEST_CASE(total_degree_all_start_points_on_patch_high_precision)
 {
-	bertini::SetGlobalSeed(1u);
-	DefaultPrecision(100);
+    bertini::SetGlobalSeed(1u);
+    DefaultPrecision(100);
 
-	auto sys = SquareSingleGroup({2, 3, 4});
-	sys.Homogenize();
-	sys.AutoPatch();
+    auto sys = SquareSingleGroup({2, 3, 4});
+    sys.Homogenize();
+    sys.AutoPatch();
 
-	ss::TotalDegreeLinearProduct td(sys);
+    ss::TotalDegreeLinearProduct td(sys);
 
-	// every MP start point is at the requested precision...
-	for (auto ii = decltype(td.NumStartPoints())(0); ii < td.NumStartPoints(); ++ii)
-		BOOST_CHECK_EQUAL(Precision(td.StartPoint<mpfr>(ii)), 100u);
+    // every MP start point is at the requested precision...
+    for (auto ii = decltype(td.NumStartPoints())(0); ii < td.NumStartPoints(); ++ii)
+        BOOST_CHECK_EQUAL(Precision(td.StartPoint<mpfr>(ii)), 100u);
 
-	// ...and is a root on the patch to (nearly) full working precision.
-	BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegreeLinearProduct, mpfr>(td)), 1e-90);
+    // ...and is a root on the patch to (nearly) full working precision.
+    BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegreeLinearProduct, mpfr>(td)), 1e-90);
 }
 
 // ---- MHomogeneous is a generalization of TotalDegreeLinearProduct -----------------------------------------
@@ -144,41 +144,41 @@ BOOST_AUTO_TEST_CASE(total_degree_all_start_points_on_patch_high_precision)
 // Bezout count == product of the function degrees.  MHom and TotalDegreeLinearProduct must agree.
 BOOST_AUTO_TEST_CASE(mhom_single_affine_group_matches_total_degree_count)
 {
-	bertini::SetGlobalSeed(1u);
-	DefaultPrecision(30);
+    bertini::SetGlobalSeed(1u);
+    DefaultPrecision(30);
 
-	for (std::vector<unsigned> degs : std::vector<std::vector<unsigned>>{ {1,1}, {2,3}, {2,3,4}, {5} })
-	{
-		auto sys = SquareSingleGroup(degs);
-		// pre-homogenization construction is where MHom builds its degree matrix
-		ss::MHomogeneous mhom(sys);
-		ss::TotalDegreeLinearProduct   td(sys);
+    for (std::vector<unsigned> degs : std::vector<std::vector<unsigned>>{ {1,1}, {2,3}, {2,3,4}, {5} })
+    {
+        auto sys = SquareSingleGroup(degs);
+        // pre-homogenization construction is where MHom builds its degree matrix
+        ss::MHomogeneous mhom(sys);
+        ss::TotalDegreeLinearProduct   td(sys);
 
-		unsigned long long prod = 1;
-		for (auto d : degs) prod *= d;
+        unsigned long long prod = 1;
+        for (auto d : degs) prod *= d;
 
-		BOOST_CHECK_EQUAL(td.NumStartPoints(), prod);
-		BOOST_CHECK_EQUAL(mhom.NumStartPoints(), prod);   // MHom collapses to total degree on one group
-	}
+        BOOST_CHECK_EQUAL(td.NumStartPoints(), prod);
+        BOOST_CHECK_EQUAL(mhom.NumStartPoints(), prod);   // MHom collapses to total degree on one group
+    }
 }
 
 // MHom start points are roots on the patch too (double + MP), same as TotalDegreeLinearProduct.
 BOOST_AUTO_TEST_CASE(mhom_all_start_points_on_patch)
 {
-	bertini::SetGlobalSeed(1u);
-	DefaultPrecision(50);
+    bertini::SetGlobalSeed(1u);
+    DefaultPrecision(50);
 
-	auto sys = SquareSingleGroup({2, 3, 4});
-	sys.Homogenize();
-	sys.AutoPatch();
+    auto sys = SquareSingleGroup({2, 3, 4});
+    sys.Homogenize();
+    sys.AutoPatch();
 
-	ss::MHomogeneous mhom(sys);
-	BOOST_CHECK_EQUAL(mhom.NumStartPoints(), 24ull);
-	BOOST_CHECK(mhom.IsHomogeneous());
-	BOOST_CHECK(mhom.IsPatched());
+    ss::MHomogeneous mhom(sys);
+    BOOST_CHECK_EQUAL(mhom.NumStartPoints(), 24ull);
+    BOOST_CHECK(mhom.IsHomogeneous());
+    BOOST_CHECK(mhom.IsPatched());
 
-	BOOST_CHECK_LT((WorstStartPointResidual<ss::MHomogeneous, complex_dbl>(mhom)), 1e-9);
-	BOOST_CHECK_LT((WorstStartPointResidual<ss::MHomogeneous, mpfr>(mhom)), 1e-40);
+    BOOST_CHECK_LT((WorstStartPointResidual<ss::MHomogeneous, complex_dbl>(mhom)), 1e-9);
+    BOOST_CHECK_LT((WorstStartPointResidual<ss::MHomogeneous, mpfr>(mhom)), 1e-40);
 }
 
 // ---- homotopy interoperability: H(start, t=1) == 0 -------------------------------------------
@@ -188,40 +188,40 @@ BOOST_AUTO_TEST_CASE(mhom_all_start_points_on_patch)
 template<typename StartT>
 static void CheckHomotopyZeroAtStartPoints(System const& target_hp, StartT const& start)
 {
-	auto t = Variable::Make("t");
-	auto gamma = bertini::node::Rational::Make(bertini::node::Rational::Rand());
-	System H = target_hp;        // copy the target's variable structure + patch
-	H.ClearFunctions();          // the blend supplies the rows
-	H.AddPathVariable(t);
-	std::vector<std::shared_ptr<bertini::node::Node>> coeffs{ 1 - t, gamma * t };
-	std::vector<std::shared_ptr<const System>> operands{
-		std::make_shared<System>(target_hp),
-		std::make_shared<System>(start) };
-	H.AddBlock(bertini::blocks::BlendBlock<System>(t, coeffs, operands));
+    auto t = Variable::Make("t");
+    auto gamma = bertini::node::Rational::Make(bertini::node::Rational::Rand());
+    System H = target_hp;        // copy the target's variable structure + patch
+    H.ClearFunctions();          // the blend supplies the rows
+    H.AddPathVariable(t);
+    std::vector<std::shared_ptr<bertini::node::Node>> coeffs{ 1 - t, gamma * t };
+    std::vector<std::shared_ptr<const System>> operands{
+        std::make_shared<System>(target_hp),
+        std::make_shared<System>(start) };
+    H.AddBlock(bertini::blocks::BlendBlock<System>(t, coeffs, operands));
 
-	for (auto ii = decltype(start.NumStartPoints())(0); ii < start.NumStartPoints(); ++ii)
-	{
-		auto Hval = H.Eval(start.template StartPoint<complex_dbl>(ii), complex_dbl(1));
-		double worst = 0;
-		for (Eigen::Index j = 0; j < Hval.size(); ++j)
-			worst = std::max(worst, std::abs(Hval(j)));
-		BOOST_CHECK_LT(worst, 1e-8);
-	}
+    for (auto ii = decltype(start.NumStartPoints())(0); ii < start.NumStartPoints(); ++ii)
+    {
+        auto Hval = H.Eval(start.template StartPoint<complex_dbl>(ii), complex_dbl(1));
+        double worst = 0;
+        for (Eigen::Index j = 0; j < Hval.size(); ++j)
+            worst = std::max(worst, std::abs(Hval(j)));
+        BOOST_CHECK_LT(worst, 1e-8);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(total_degree_and_mhom_homotopies_vanish_at_start_points)
 {
-	bertini::SetGlobalSeed(1u);
-	DefaultPrecision(30);
+    bertini::SetGlobalSeed(1u);
+    DefaultPrecision(30);
 
-	auto sys = SquareSingleGroup({2, 3});   // small Bezout 6
-	sys.Homogenize();
-	sys.AutoPatch();
+    auto sys = SquareSingleGroup({2, 3});   // small Bezout 6
+    sys.Homogenize();
+    sys.AutoPatch();
 
-	ss::TotalDegreeLinearProduct  td(sys);
-	ss::MHomogeneous mhom(sys);
-	CheckHomotopyZeroAtStartPoints(sys, td);
-	CheckHomotopyZeroAtStartPoints(sys, mhom);
+    ss::TotalDegreeLinearProduct  td(sys);
+    ss::MHomogeneous mhom(sys);
+    CheckHomotopyZeroAtStartPoints(sys, td);
+    CheckHomotopyZeroAtStartPoints(sys, mhom);
 }
 
 // ---- corners ----------------------------------------------------------------------------------
@@ -229,64 +229,64 @@ BOOST_AUTO_TEST_CASE(total_degree_and_mhom_homotopies_vanish_at_start_points)
 // One variable, one function of degree d: exactly d start points, each a root.
 BOOST_AUTO_TEST_CASE(total_degree_single_variable_degree_d)
 {
-	bertini::SetGlobalSeed(1u);
-	DefaultPrecision(30);
+    bertini::SetGlobalSeed(1u);
+    DefaultPrecision(30);
 
-	System sys;
-	auto x = Variable::Make("x");
-	sys.AddVariableGroup(VariableGroup{x});
-	sys.AddFunction(pow(x, 5) - 2);
-	sys.Homogenize();
-	sys.AutoPatch();
+    System sys;
+    auto x = Variable::Make("x");
+    sys.AddVariableGroup(VariableGroup{x});
+    sys.AddFunction(pow(x, 5) - 2);
+    sys.Homogenize();
+    sys.AutoPatch();
 
-	ss::TotalDegreeLinearProduct td(sys);
-	BOOST_CHECK_EQUAL(td.NumStartPoints(), 5ull);
-	// degree-5 root via a double linear solve: residual is conditioning-limited (~1e-10), so use a
-	// scale-tolerant double threshold rather than a machine-epsilon one.
-	BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegreeLinearProduct, complex_dbl>(td)), 1e-8);
+    ss::TotalDegreeLinearProduct td(sys);
+    BOOST_CHECK_EQUAL(td.NumStartPoints(), 5ull);
+    // degree-5 root via a double linear solve: residual is conditioning-limited (~1e-10), so use a
+    // scale-tolerant double threshold rather than a machine-epsilon one.
+    BOOST_CHECK_LT((WorstStartPointResidual<ss::TotalDegreeLinearProduct, complex_dbl>(td)), 1e-8);
 }
 
 // HomogenizePoint/DehomogenizePoint roundtrip on a TotalDegreeLinearProduct start point: dehomogenizing then
 // re-homogenizing returns the same (patch-fit) point.
 BOOST_AUTO_TEST_CASE(total_degree_dehomogenize_homogenize_roundtrip)
 {
-	bertini::SetGlobalSeed(1u);
-	DefaultPrecision(40);
+    bertini::SetGlobalSeed(1u);
+    DefaultPrecision(40);
 
-	auto sys = SquareSingleGroup({2, 3});
-	sys.Homogenize();
-	sys.AutoPatch();
-	ss::TotalDegreeLinearProduct td(sys);
+    auto sys = SquareSingleGroup({2, 3});
+    sys.Homogenize();
+    sys.AutoPatch();
+    ss::TotalDegreeLinearProduct td(sys);
 
-	for (auto ii = decltype(td.NumStartPoints())(0); ii < td.NumStartPoints(); ++ii)
-	{
-		auto sp = td.StartPoint<mpfr>(ii);
-		auto round = td.HomogenizePoint(td.DehomogenizePoint(sp));
-		BOOST_CHECK_LT((sp - round).template lpNorm<Eigen::Infinity>().convert_to<double>(), 1e-30);
-	}
+    for (auto ii = decltype(td.NumStartPoints())(0); ii < td.NumStartPoints(); ++ii)
+    {
+        auto sp = td.StartPoint<mpfr>(ii);
+        auto round = td.HomogenizePoint(td.DehomogenizePoint(sp));
+        BOOST_CHECK_LT((sp - round).template lpNorm<Eigen::Infinity>().convert_to<double>(), 1e-30);
+    }
 }
 
 // Non-square single-group target must be rejected by TotalDegreeLinearProduct (same guard family as MHom).
 BOOST_AUTO_TEST_CASE(total_degree_non_square_throws)
 {
-	System sys;
-	auto x = Variable::Make("x");
-	sys.AddVariableGroup(VariableGroup{x});
-	sys.AddFunction(pow(x, 2));
-	sys.AddFunction(pow(x, 2) - 1);   // 2 functions, 1 variable
-	BOOST_CHECK_THROW(ss::TotalDegreeLinearProduct{sys}, std::runtime_error);
+    System sys;
+    auto x = Variable::Make("x");
+    sys.AddVariableGroup(VariableGroup{x});
+    sys.AddFunction(pow(x, 2));
+    sys.AddFunction(pow(x, 2) - 1);   // 2 functions, 1 variable
+    BOOST_CHECK_THROW(ss::TotalDegreeLinearProduct{sys}, std::runtime_error);
 }
 
 // A homogeneous variable group is not single-affine-group total degree: TotalDegreeLinearProduct must reject it
 // (it is MHom's domain).
 BOOST_AUTO_TEST_CASE(total_degree_rejects_homogeneous_group)
 {
-	System sys;
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	sys.AddHomVariableGroup(VariableGroup{x, y});
-	sys.AddFunction(pow(x, 2) + pow(y, 2));
-	BOOST_CHECK_THROW(ss::TotalDegreeLinearProduct{sys}, std::runtime_error);
+    System sys;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    sys.AddHomVariableGroup(VariableGroup{x, y});
+    sys.AddFunction(pow(x, 2) + pow(y, 2));
+    BOOST_CHECK_THROW(ss::TotalDegreeLinearProduct{sys}, std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

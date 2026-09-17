@@ -52,38 +52,38 @@ BOOST_AUTO_TEST_SUITE(standalone_newton_refine)
 // a nonsingular root: full quadratic convergence, achieved accuracy at the ask
 BOOST_AUTO_TEST_CASE(nonsingular_root_refines_quadratically)
 {
-	DefaultPrecision(60);
-	auto x = Variable::Make("x");
-	System S;
-	S.AddUngroupedVariable(x);
-	S.AddFunction(pow(x,2) - 2);
+    DefaultPrecision(60);
+    auto x = Variable::Make("x");
+    System S;
+    S.AddUngroupedVariable(x);
+    S.AddFunction(pow(x,2) - 2);
 
-	Vec<complex_mp> start(1);
-	start << complex_mp("1.4142");           // ~1.4e-5 from sqrt(2)
+    Vec<complex_mp> start(1);
+    start << complex_mp("1.4142");           // ~1.4e-5 from sqrt(2)
 
-	auto r = NewtonRefine(S, start, 1e-40, 50);
-	BOOST_CHECK(r.code == SuccessCode::Success);
-	BOOST_CHECK(r.achieved <= 1e-40);
-	BOOST_CHECK(r.iterations <= 10);         // quadratic: ~3 doublings needed
-	using mpfr_float = bertini::real_mp;
-	mpfr_float residual = abs(pow(r.point(0),2) - complex_mp(2));
-	BOOST_CHECK(residual < mpfr_float("1e-38"));
+    auto r = NewtonRefine(S, start, 1e-40, 50);
+    BOOST_CHECK(r.code == SuccessCode::Success);
+    BOOST_CHECK(r.achieved <= 1e-40);
+    BOOST_CHECK(r.iterations <= 10);         // quadratic: ~3 doublings needed
+    using mpfr_float = bertini::real_mp;
+    mpfr_float residual = abs(pow(r.point(0),2) - complex_mp(2));
+    BOOST_CHECK(residual < mpfr_float("1e-38"));
 }
 
 
 // overdetermined systems are refused with instructions, not mangled
 BOOST_AUTO_TEST_CASE(overdetermined_system_is_refused)
 {
-	DefaultPrecision(30);
-	auto x = Variable::Make("x");
-	System S;
-	S.AddUngroupedVariable(x);
-	S.AddFunction(pow(x,2));
-	S.AddFunction(x - 1);
+    DefaultPrecision(30);
+    auto x = Variable::Make("x");
+    System S;
+    S.AddUngroupedVariable(x);
+    S.AddFunction(pow(x,2));
+    S.AddFunction(x - 1);
 
-	Vec<complex_mp> start(1);
-	start << complex_mp("0.5");
-	BOOST_CHECK_THROW(NewtonRefine(S, start, 1e-20, 10), std::runtime_error);
+    Vec<complex_mp> start(1);
+    start << complex_mp("0.5");
+    BOOST_CHECK_THROW(NewtonRefine(S, start, 1e-20, 10), std::runtime_error);
 }
 
 
@@ -91,17 +91,17 @@ BOOST_AUTO_TEST_CASE(overdetermined_system_is_refused)
 // linearly (steps halve), so a tight tolerance is out of reach in few iterations
 BOOST_AUTO_TEST_CASE(plain_newton_stalls_at_a_double_root)
 {
-	DefaultPrecision(60);
-	auto x = Variable::Make("x");
-	System S;
-	S.AddUngroupedVariable(x);
-	S.AddFunction(pow(x,2));
+    DefaultPrecision(60);
+    auto x = Variable::Make("x");
+    System S;
+    S.AddUngroupedVariable(x);
+    S.AddFunction(pow(x,2));
 
-	Vec<complex_mp> start(1);
-	start << complex_mp("1e-6");
-	auto r = NewtonRefine(S, start, 1e-40, 25);
-	BOOST_CHECK(r.code == SuccessCode::FailedToConverge);
-	BOOST_CHECK(r.achieved > 1e-40);         // ~1e-6/2^25 ~ 3e-14: nowhere near
+    Vec<complex_mp> start(1);
+    start << complex_mp("1e-6");
+    auto r = NewtonRefine(S, start, 1e-40, 25);
+    BOOST_CHECK(r.code == SuccessCode::FailedToConverge);
+    BOOST_CHECK(r.achieved > 1e-40);         // ~1e-6/2^25 ~ 3e-14: nowhere near
 }
 
 
@@ -116,31 +116,31 @@ BOOST_AUTO_TEST_CASE(plain_newton_stalls_at_a_double_root)
 // det(base) = -70 != 0: the deflated randomized system is REGULAR at the origin.
 BOOST_AUTO_TEST_CASE(double_cone_singularity_refines_on_deflated_system)
 {
-	DefaultPrecision(60);
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	auto z = Variable::Make("z");
-	auto f  = pow(x,2) + pow(y,2) - pow(z,2);
-	auto fx = 2*x;
-	auto fy = 2*y;
-	auto fz = -2*z;
+    DefaultPrecision(60);
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    auto z = Variable::Make("z");
+    auto f  = pow(x,2) + pow(y,2) - pow(z,2);
+    auto fx = 2*x;
+    auto fy = 2*y;
+    auto fz = -2*z;
 
-	System S;
-	bertini::VariableGroup vg{x, y, z};
-	S.AddVariableGroup(vg);
-	S.AddFunction( 1*f +  2*fx +  3*fy +  5*fz);
-	S.AddFunction( 7*f + 11*fx + 13*fy + 17*fz);
-	S.AddFunction(19*f + 23*fx + 29*fy + 31*fz);
+    System S;
+    bertini::VariableGroup vg{x, y, z};
+    S.AddVariableGroup(vg);
+    S.AddFunction( 1*f +  2*fx +  3*fy +  5*fz);
+    S.AddFunction( 7*f + 11*fx + 13*fy + 17*fz);
+    S.AddFunction(19*f + 23*fx + 29*fy + 31*fz);
 
-	Vec<complex_mp> start(3);
-	start << complex_mp("1e-6"), complex_mp("-2e-6"), complex_mp("5e-7");
+    Vec<complex_mp> start(3);
+    start << complex_mp("1e-6"), complex_mp("-2e-6"), complex_mp("5e-7");
 
-	auto r = NewtonRefine(S, start, 1e-45, 50);
-	BOOST_CHECK(r.code == SuccessCode::Success);
-	BOOST_CHECK(r.achieved <= 1e-45);
-	using mpfr_float = bertini::real_mp;
-	mpfr_float dist = max(abs(r.point(0)), max(abs(r.point(1)), abs(r.point(2))));
-	BOOST_CHECK(dist < mpfr_float("1e-40"));  // landed ON the singularity
+    auto r = NewtonRefine(S, start, 1e-45, 50);
+    BOOST_CHECK(r.code == SuccessCode::Success);
+    BOOST_CHECK(r.achieved <= 1e-45);
+    using mpfr_float = bertini::real_mp;
+    mpfr_float dist = max(abs(r.point(0)), max(abs(r.point(1)), abs(r.point(2))));
+    BOOST_CHECK(dist < mpfr_float("1e-40"));  // landed ON the singularity
 }
 
 
@@ -155,33 +155,33 @@ BOOST_AUTO_TEST_CASE(double_cone_singularity_refines_on_deflated_system)
 // J(R.F) has rows (2,-4,5),(14,-22,17),(38,-46,31) with det = 312 != 0: REGULAR.
 BOOST_AUTO_TEST_CASE(whitney_handle_point_refines_on_deflated_system)
 {
-	DefaultPrecision(60);
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	auto z = Variable::Make("z");
-	auto g1 = 2*x;              // f_x
-	auto g2 = -2*y*z;           // f_y
-	auto g3 = -pow(y,2);        // f_z
-	auto g4 = z - 1;            // the pinning slice through the target point
+    DefaultPrecision(60);
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    auto z = Variable::Make("z");
+    auto g1 = 2*x;              // f_x
+    auto g2 = -2*y*z;           // f_y
+    auto g3 = -pow(y,2);        // f_z
+    auto g4 = z - 1;            // the pinning slice through the target point
 
-	System S;
-	bertini::VariableGroup vg{x, y, z};
-	S.AddVariableGroup(vg);
-	S.AddFunction( 1*g1 +  2*g2 +  3*g3 +  5*g4);
-	S.AddFunction( 7*g1 + 11*g2 + 13*g3 + 17*g4);
-	S.AddFunction(19*g1 + 23*g2 + 29*g3 + 31*g4);
+    System S;
+    bertini::VariableGroup vg{x, y, z};
+    S.AddVariableGroup(vg);
+    S.AddFunction( 1*g1 +  2*g2 +  3*g3 +  5*g4);
+    S.AddFunction( 7*g1 + 11*g2 + 13*g3 + 17*g4);
+    S.AddFunction(19*g1 + 23*g2 + 29*g3 + 31*g4);
 
-	Vec<complex_mp> start(3);
-	start << complex_mp("1e-7"), complex_mp("-1e-7"),
-	         complex_mp(1) + complex_mp("1e-7");
+    Vec<complex_mp> start(3);
+    start << complex_mp("1e-7"), complex_mp("-1e-7"),
+             complex_mp(1) + complex_mp("1e-7");
 
-	auto r = NewtonRefine(S, start, 1e-45, 50);
-	BOOST_CHECK(r.code == SuccessCode::Success);
-	BOOST_CHECK(r.achieved <= 1e-45);
-	using mpfr_float = bertini::real_mp;
-	mpfr_float dist = max(abs(r.point(0)),
-	                      max(abs(r.point(1)), abs(r.point(2) - complex_mp(1))));
-	BOOST_CHECK(dist < mpfr_float("1e-40"));  // landed ON the handle point
+    auto r = NewtonRefine(S, start, 1e-45, 50);
+    BOOST_CHECK(r.code == SuccessCode::Success);
+    BOOST_CHECK(r.achieved <= 1e-45);
+    using mpfr_float = bertini::real_mp;
+    mpfr_float dist = max(abs(r.point(0)),
+                          max(abs(r.point(1)), abs(r.point(2) - complex_mp(1))));
+    BOOST_CHECK(dist < mpfr_float("1e-40"));  // landed ON the handle point
 }
 
 
@@ -198,48 +198,48 @@ BOOST_AUTO_TEST_CASE(whitney_handle_point_refines_on_deflated_system)
 // column 1, det(base) = -2304 != 0: the SECOND-stage system is REGULAR.
 BOOST_AUTO_TEST_CASE(whitney_pinch_point_needs_and_gets_second_deflation)
 {
-	DefaultPrecision(60);
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	auto z = Variable::Make("z");
-	auto g1 = 2*x;
-	auto g2 = -2*y*z;
-	auto g3 = -pow(y,2);
-	auto m1 = -4*z;             // second-stage minor
-	auto m2 = -4*y;             // second-stage minor
+    DefaultPrecision(60);
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    auto z = Variable::Make("z");
+    auto g1 = 2*x;
+    auto g2 = -2*y*z;
+    auto g3 = -pow(y,2);
+    auto m1 = -4*z;             // second-stage minor
+    auto m2 = -4*y;             // second-stage minor
 
-	// control: the FIRST-stage deflation alone, square as-is, is still singular at
-	// the pinch point -- Newton limps and cannot reach a tight tolerance
-	{
-		System S1;
-		bertini::VariableGroup vg{x, y, z};
-		S1.AddVariableGroup(vg);
-		S1.AddFunction(g1);
-		S1.AddFunction(g2);
-		S1.AddFunction(g3);
-		Vec<complex_mp> start(3);
-		start << complex_mp("1e-7"), complex_mp("1e-7"), complex_mp("1e-7");
-		auto r1 = NewtonRefine(S1, start, 1e-45, 25);
-		BOOST_CHECK(r1.code != SuccessCode::Success);
-	}
+    // control: the FIRST-stage deflation alone, square as-is, is still singular at
+    // the pinch point -- Newton limps and cannot reach a tight tolerance
+    {
+        System S1;
+        bertini::VariableGroup vg{x, y, z};
+        S1.AddVariableGroup(vg);
+        S1.AddFunction(g1);
+        S1.AddFunction(g2);
+        S1.AddFunction(g3);
+        Vec<complex_mp> start(3);
+        start << complex_mp("1e-7"), complex_mp("1e-7"), complex_mp("1e-7");
+        auto r1 = NewtonRefine(S1, start, 1e-45, 25);
+        BOOST_CHECK(r1.code != SuccessCode::Success);
+    }
 
-	// the second-stage deflated randomized system nails it
-	System S2;
-	bertini::VariableGroup vg{x, y, z};
-	S2.AddVariableGroup(vg);
-	S2.AddFunction( 1*g1 +  2*g2 +  3*g3 +  5*m1 +  7*m2);
-	S2.AddFunction(11*g1 + 13*g2 + 17*g3 + 19*m1 + 23*m2);
-	S2.AddFunction(29*g1 + 31*g2 + 37*g3 + 41*m1 + 43*m2);
+    // the second-stage deflated randomized system nails it
+    System S2;
+    bertini::VariableGroup vg{x, y, z};
+    S2.AddVariableGroup(vg);
+    S2.AddFunction( 1*g1 +  2*g2 +  3*g3 +  5*m1 +  7*m2);
+    S2.AddFunction(11*g1 + 13*g2 + 17*g3 + 19*m1 + 23*m2);
+    S2.AddFunction(29*g1 + 31*g2 + 37*g3 + 41*m1 + 43*m2);
 
-	Vec<complex_mp> start(3);
-	start << complex_mp("1e-7"), complex_mp("1e-7"), complex_mp("1e-7");
+    Vec<complex_mp> start(3);
+    start << complex_mp("1e-7"), complex_mp("1e-7"), complex_mp("1e-7");
 
-	auto r = NewtonRefine(S2, start, 1e-45, 50);
-	BOOST_CHECK(r.code == SuccessCode::Success);
-	BOOST_CHECK(r.achieved <= 1e-45);
-	using mpfr_float = bertini::real_mp;
-	mpfr_float dist = max(abs(r.point(0)), max(abs(r.point(1)), abs(r.point(2))));
-	BOOST_CHECK(dist < mpfr_float("1e-40"));  // landed ON the pinch point
+    auto r = NewtonRefine(S2, start, 1e-45, 50);
+    BOOST_CHECK(r.code == SuccessCode::Success);
+    BOOST_CHECK(r.achieved <= 1e-45);
+    using mpfr_float = bertini::real_mp;
+    mpfr_float dist = max(abs(r.point(0)), max(abs(r.point(1)), abs(r.point(2))));
+    BOOST_CHECK(dist < mpfr_float("1e-40"));  // landed ON the pinch point
 }
 
 

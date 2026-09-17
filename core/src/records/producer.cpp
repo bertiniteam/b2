@@ -38,20 +38,20 @@ namespace records {
 std::string ProducerVersion()
 {
 #ifdef BERTINI2_VERSION_FULL
-	return BERTINI2_VERSION_FULL;
+    return BERTINI2_VERSION_FULL;
 #else
-	return "unknown";
+    return "unknown";
 #endif
 }
 
 std::string ProducerCommit()
 {
-	return BERTINI2_GIT_COMMIT;
+    return BERTINI2_GIT_COMMIT;
 }
 
 boost::json::object ProducerInfo()
 {
-	return {{"name", "bertini2"}, {"version", ProducerVersion()}, {"commit", ProducerCommit()}};
+    return {{"name", "bertini2"}, {"version", ProducerVersion()}, {"commit", ProducerCommit()}};
 }
 
 } // namespace records

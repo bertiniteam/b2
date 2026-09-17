@@ -74,10 +74,10 @@ shared ACROSS functions back-reference deterministically within that unit.
 */
 struct EncodingContext
 {
-	/// First-encounter index of each node visited so far, keyed by object identity.
-	std::map<Node const*, unsigned> seen;
-	/// The index the next first-encountered node will receive (traversal order).
-	unsigned next_index = 0;
+    /// First-encounter index of each node visited so far, keyed by object identity.
+    std::map<Node const*, unsigned> seen;
+    /// The index the next first-encountered node will receive (traversal order).
+    unsigned next_index = 0;
 };
 
 /**

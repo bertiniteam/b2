@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -40,12 +40,12 @@ BOOST_AUTO_TEST_SUITE(round_trip)
 
 
 BOOST_AUTO_TEST_CASE(zero)
-{	
-	bertini::DefaultPrecision(30);
-	mpfr z(0,0);
+{
+    bertini::DefaultPrecision(30);
+    mpfr z(0,0);
 
 
-	std::string result;
+    std::string result;
     std::back_insert_iterator<std::string> sink(result);
 
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
@@ -56,23 +56,23 @@ BOOST_AUTO_TEST_CASE(zero)
 }
 
 BOOST_AUTO_TEST_CASE(one)
-{	
-	bertini::DefaultPrecision(30);
-	mpfr z(1,-1);
+{
+    bertini::DefaultPrecision(30);
+    mpfr z(1,-1);
 
 
-	std::string result;
+    std::string result;
     std::back_insert_iterator<std::string> sink(result);
 
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
     mpfr rt;
-	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
+    BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 
 BOOST_AUTO_TEST_CASE(two_comma_three)
-{   
+{
     bertini::DefaultPrecision(30);
     mpfr z = sqrt(mpfr(2,3));
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(two_comma_three)
 
     bertini::DefaultPrecision(20);
     mpfr rt;
-	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
+    BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
 
     bertini::DefaultPrecision(30);
 

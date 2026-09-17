@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include <boost/test/unit_test.hpp>
@@ -58,299 +58,299 @@ template<typename NumT> using Mat = bertini::Mat<NumT>;
 
 BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 {
-	/*
-	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
-	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
-	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
-	*/
-	//Setting upt current space and time values for evaluation
-	Vec<complex_dbl> current_space(2);
-	current_space << complex_dbl(256185069753.4088,-387520022558.0519),
-					 complex_dbl(-0.021,-0.177);
+    /*
+    Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
+    to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence.
+    Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition.
+    */
+    //Setting upt current space and time values for evaluation
+    Vec<complex_dbl> current_space(2);
+    current_space << complex_dbl(256185069753.4088,-387520022558.0519),
+                     complex_dbl(-0.021,-0.177);
 
-	complex_dbl current_time(0,0);
-	complex_dbl delta_t(.1,0);
-	current_time += delta_t;
+    complex_dbl current_time(0,0);
+    complex_dbl delta_t(.1,0);
+    current_time += delta_t;
 
-	//Defining the system and variables. 
-	bertini::System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	VariableGroup vars{x,y};
+    //Defining the system and variables.
+    bertini::System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+    VariableGroup vars{x,y};
 
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
-	sys.AddFunction(y - pow(x,2));
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
+    sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
+    sys.AddFunction(y - pow(x,2));
 
-	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
-	Mat<complex_dbl> dh_dx = sys.Jacobian(current_space, current_time); 
-	Eigen::PartialPivLU<Mat<complex_dbl>> LU = dh_dx.lu();
+    //For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
+    Mat<complex_dbl> dh_dx = sys.Jacobian(current_space, current_time);
+    Eigen::PartialPivLU<Mat<complex_dbl>> LU = dh_dx.lu();
 
-	Vec<complex_dbl> randy = Vec<complex_dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
-	Vec<complex_dbl> temp_soln = LU.solve(randy);
-					
-	auto norm_J = double(dh_dx.norm());
-	auto norm_J_inverse = double(temp_soln.norm());
+    Vec<complex_dbl> randy = Vec<complex_dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
+    Vec<complex_dbl> temp_soln = LU.solve(randy);
 
-
-	//Setting up saftety digits to trigger AMP Criterion A failure.
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
-	AMP.safety_digits_1 = 32000;
-
-	auto CritA = bertini::tracking::amp::CriterionA<complex_dbl>(norm_J,norm_J_inverse,AMP);
+    auto norm_J = double(dh_dx.norm());
+    auto norm_J_inverse = double(temp_soln.norm());
 
 
-	//Check to make sure we failed.
-	BOOST_CHECK_EQUAL(CritA,false);
+    //Setting up saftety digits to trigger AMP Criterion A failure.
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
+    AMP.safety_digits_1 = 32000;
+
+    auto CritA = bertini::tracking::amp::CriterionA<complex_dbl>(norm_J,norm_J_inverse,AMP);
+
+
+    //Check to make sure we failed.
+    BOOST_CHECK_EQUAL(CritA,false);
 }
-	
+
 BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
 {
-		/*
-	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
-	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
-	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
-	*/
-	//Setting upt current space and time values for evaluation
-	Vec<mpfr> current_space(2);
-	current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
-					 mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
+        /*
+    Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
+    to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence.
+    Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition.
+    */
+    //Setting upt current space and time values for evaluation
+    Vec<mpfr> current_space(2);
+    current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
+                     mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
 
-	mpfr current_time("0");
-	mpfr delta_t(".1");
-	current_time += delta_t;
+    mpfr current_time("0");
+    mpfr delta_t(".1");
+    current_time += delta_t;
 
-	//Defining the system and variables. 
-	bertini::System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	VariableGroup vars{x,y};
+    //Defining the system and variables.
+    bertini::System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+    VariableGroup vars{x,y};
 
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
-	sys.AddFunction(y - pow(x,2));
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
+    sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
+    sys.AddFunction(y - pow(x,2));
 
-	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
-	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
-	Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
+    //For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
+    Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time);
+    Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
 
-	Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
-	Vec<mpfr> temp_soln = LU.solve(randy);
-					
-	auto norm_J = double(dh_dx.norm());
-	auto norm_J_inverse = double(temp_soln.norm());
+    Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
+    Vec<mpfr> temp_soln = LU.solve(randy);
 
-
-	//Setting up saftety digits to trigger AMP Criterion A failure.
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
-	AMP.safety_digits_1 = 32000;
-
-	auto CritA = bertini::tracking::amp::CriterionA<mpfr>(norm_J,norm_J_inverse,AMP);
+    auto norm_J = double(dh_dx.norm());
+    auto norm_J_inverse = double(temp_soln.norm());
 
 
-	//Check to make sure we failed.
-	BOOST_CHECK_EQUAL(CritA,false);
+    //Setting up saftety digits to trigger AMP Criterion A failure.
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
+    AMP.safety_digits_1 = 32000;
+
+    auto CritA = bertini::tracking::amp::CriterionA<mpfr>(norm_J,norm_J_inverse,AMP);
+
+
+    //Check to make sure we failed.
+    BOOST_CHECK_EQUAL(CritA,false);
 
 }
 
 
 BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 {
-		/*
-	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
-	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
-	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
-	*/
-	//Setting upt current space and time values for evaluation
-	Vec<complex_dbl> current_space(2);
-	current_space << complex_dbl(256185069753.4088,-387520022558.0519),
-					 complex_dbl(-0.021,-0.177);
+        /*
+    Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
+    to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence.
+    Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition.
+    */
+    //Setting upt current space and time values for evaluation
+    Vec<complex_dbl> current_space(2);
+    current_space << complex_dbl(256185069753.4088,-387520022558.0519),
+                     complex_dbl(-0.021,-0.177);
 
-	complex_dbl current_time(0,0);
-	complex_dbl delta_t(.1,0);
-	current_time += delta_t;
+    complex_dbl current_time(0,0);
+    complex_dbl delta_t(.1,0);
+    current_time += delta_t;
 
-	//Defining the system and variables. 
-	bertini::System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	VariableGroup vars{x,y};
+    //Defining the system and variables.
+    bertini::System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+    VariableGroup vars{x,y};
 
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
-	sys.AddFunction(y - pow(x,2));
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
+    sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
+    sys.AddFunction(y - pow(x,2));
 
-	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
-	auto f = sys.Eval(current_space, current_time);
-	Mat<complex_dbl> dh_dx = sys.Jacobian(current_space, current_time); 
-	Eigen::PartialPivLU<Mat<complex_dbl>> LU = dh_dx.lu();
-	Vec<complex_dbl> delta_z = LU.solve(-f);
+    //For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
+    auto f = sys.Eval(current_space, current_time);
+    Mat<complex_dbl> dh_dx = sys.Jacobian(current_space, current_time);
+    Eigen::PartialPivLU<Mat<complex_dbl>> LU = dh_dx.lu();
+    Vec<complex_dbl> delta_z = LU.solve(-f);
 
-	Vec<complex_dbl> randy = Vec<complex_dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
-	Vec<complex_dbl> temp_soln = LU.solve(randy);
-					
-	auto norm_J = double(dh_dx.norm());
-	auto norm_J_inverse = double(temp_soln.norm());
+    Vec<complex_dbl> randy = Vec<complex_dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
+    Vec<complex_dbl> temp_soln = LU.solve(randy);
 
-
-	//Setting up saftety digits to trigger AMP Criterion B failure.
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
-	AMP.safety_digits_1 = 32000;
-
-	unsigned int num_newton_iterations_remaining = 1;
-	auto TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
-
-	auto CritB = bertini::tracking::amp::CriterionB<complex_dbl>(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,delta_z.norm(),AMP);
+    auto norm_J = double(dh_dx.norm());
+    auto norm_J_inverse = double(temp_soln.norm());
 
 
-	//Check to make sure we failed.
-	BOOST_CHECK_EQUAL(CritB,false);
+    //Setting up saftety digits to trigger AMP Criterion B failure.
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
+    AMP.safety_digits_1 = 32000;
+
+    unsigned int num_newton_iterations_remaining = 1;
+    auto TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
+
+    auto CritB = bertini::tracking::amp::CriterionB<complex_dbl>(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,delta_z.norm(),AMP);
+
+
+    //Check to make sure we failed.
+    BOOST_CHECK_EQUAL(CritB,false);
 }
-	
+
 BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
 {
-	/*
-	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
-	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
-	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
-	*/
-	//Setting upt current space and time values for evaluation
-	Vec<mpfr> current_space(2);
-	current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
-					 mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
+    /*
+    Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
+    to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence.
+    Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition.
+    */
+    //Setting upt current space and time values for evaluation
+    Vec<mpfr> current_space(2);
+    current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
+                     mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
 
-	mpfr current_time("0");
-	mpfr delta_t(".1");
-	current_time += delta_t;
+    mpfr current_time("0");
+    mpfr delta_t(".1");
+    current_time += delta_t;
 
-	//Defining the system and variables. 
-	bertini::System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	VariableGroup vars{x,y};
+    //Defining the system and variables.
+    bertini::System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+    VariableGroup vars{x,y};
 
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
-	sys.AddFunction(y - pow(x,2));
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
+    sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
+    sys.AddFunction(y - pow(x,2));
 
-	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
-	auto f = sys.Eval(current_space, current_time);
-	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
-	Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
-	Vec<mpfr> delta_z = LU.solve(-f);
+    //For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
+    auto f = sys.Eval(current_space, current_time);
+    Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time);
+    Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
+    Vec<mpfr> delta_z = LU.solve(-f);
 
-	Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
-	Vec<mpfr> temp_soln = LU.solve(randy);
-					
-	auto norm_J = double(dh_dx.norm());
-	auto norm_J_inverse = double(temp_soln.norm());
+    Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
+    Vec<mpfr> temp_soln = LU.solve(randy);
 
-
-	//Setting up saftety digits to trigger AMP Criterion B failure.
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
-	AMP.safety_digits_1 = 32000;
-	unsigned int num_newton_iterations_remaining = 1;
-	double TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
-
-	auto CritB = bertini::tracking::amp::CriterionB<mpfr>(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,double(delta_z.norm()),AMP);
+    auto norm_J = double(dh_dx.norm());
+    auto norm_J_inverse = double(temp_soln.norm());
 
 
-	//Check to make sure we failed.
-	BOOST_CHECK_EQUAL(CritB,false);
+    //Setting up saftety digits to trigger AMP Criterion B failure.
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
+    AMP.safety_digits_1 = 32000;
+    unsigned int num_newton_iterations_remaining = 1;
+    double TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
+
+    auto CritB = bertini::tracking::amp::CriterionB<mpfr>(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,double(delta_z.norm()),AMP);
+
+
+    //Check to make sure we failed.
+    BOOST_CHECK_EQUAL(CritB,false);
 }
 
 BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 {
-	/*
-	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
-	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
-	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
-	*/
-	//Setting upt current space and time values for evaluation
-	Vec<complex_dbl> current_space(2);
-	current_space << complex_dbl(256185069753.4088,-387520022558.0519),
-					 complex_dbl(-0.021,-0.177);
+    /*
+    Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
+    to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence.
+    Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition.
+    */
+    //Setting upt current space and time values for evaluation
+    Vec<complex_dbl> current_space(2);
+    current_space << complex_dbl(256185069753.4088,-387520022558.0519),
+                     complex_dbl(-0.021,-0.177);
 
-	complex_dbl current_time(0,0);
-	complex_dbl delta_t(.1,0);
-	current_time += delta_t;
+    complex_dbl current_time(0,0);
+    complex_dbl delta_t(.1,0);
+    current_time += delta_t;
 
-	//Defining the system and variables. 
-	bertini::System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	VariableGroup vars{x,y};
+    //Defining the system and variables.
+    bertini::System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+    VariableGroup vars{x,y};
 
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
-	sys.AddFunction(y - pow(x,2));
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
+    sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
+    sys.AddFunction(y - pow(x,2));
 
-	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
-	Mat<complex_dbl> dh_dx = sys.Jacobian(current_space, current_time); 
-	Eigen::PartialPivLU<Mat<complex_dbl>> LU = dh_dx.lu();
+    //For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
+    Mat<complex_dbl> dh_dx = sys.Jacobian(current_space, current_time);
+    Eigen::PartialPivLU<Mat<complex_dbl>> LU = dh_dx.lu();
 
-	Vec<complex_dbl> randy = Vec<complex_dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
-	Vec<complex_dbl> temp_soln = LU.solve(randy);
-	auto norm_J_inverse = double(temp_soln.norm());
-
-
-	//Setting up saftety digits to trigger AMP Criterion C failure.
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
-	AMP.safety_digits_2 = 32000;
-	auto TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
-
-	auto CritC = bertini::tracking::amp::CriterionC<complex_dbl>(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
+    Vec<complex_dbl> randy = Vec<complex_dbl>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
+    Vec<complex_dbl> temp_soln = LU.solve(randy);
+    auto norm_J_inverse = double(temp_soln.norm());
 
 
-	//Check to make sure we failed.
-	BOOST_CHECK_EQUAL(CritC,false);
+    //Setting up saftety digits to trigger AMP Criterion C failure.
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
+    AMP.safety_digits_2 = 32000;
+    auto TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
+
+    auto CritC = bertini::tracking::amp::CriterionC<complex_dbl>(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
+
+
+    //Check to make sure we failed.
+    BOOST_CHECK_EQUAL(CritC,false);
 }
-	
+
 BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
 {
-		/*
-	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
-	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
-	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
-	*/
-	//Setting upt current space and time values for evaluation
-	Vec<mpfr> current_space(2);
-	current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
-					 mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
+        /*
+    Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
+    to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence.
+    Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition.
+    */
+    //Setting upt current space and time values for evaluation
+    Vec<mpfr> current_space(2);
+    current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
+                     mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
 
-	mpfr current_time("0");
-	mpfr delta_t(".1");
-	current_time += delta_t;
+    mpfr current_time("0");
+    mpfr delta_t(".1");
+    current_time += delta_t;
 
-	//Defining the system and variables. 
-	bertini::System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	VariableGroup vars{x,y};
+    //Defining the system and variables.
+    bertini::System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+    VariableGroup vars{x,y};
 
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
-	sys.AddFunction(y - pow(x,2));
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
+    sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
+    sys.AddFunction(y - pow(x,2));
 
-	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
-	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
-	Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
+    //For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
+    Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time);
+    Eigen::PartialPivLU<Mat<mpfr>> LU = dh_dx.lu();
 
-	Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
-	Vec<mpfr> temp_soln = LU.solve(randy);
-	auto norm_J_inverse = double(temp_soln.norm());
-
-
-	//Setting up saftety digits to trigger AMP Criterion B failure.
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
-	AMP.safety_digits_2 = 32000;
-	double TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
-
-	auto CritC = bertini::tracking::amp::CriterionC<mpfr>(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
+    Vec<mpfr> randy = Vec<mpfr>::Random(static_cast<Eigen::Index>(sys.NumVariables()));
+    Vec<mpfr> temp_soln = LU.solve(randy);
+    auto norm_J_inverse = double(temp_soln.norm());
 
 
-	//Check to make sure we failed.
-	BOOST_CHECK_EQUAL(CritC,false);
+    //Setting up saftety digits to trigger AMP Criterion B failure.
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
+    AMP.safety_digits_2 = 32000;
+    double TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
+
+    auto CritC = bertini::tracking::amp::CriterionC<mpfr>(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
+
+
+    //Check to make sure we failed.
+    BOOST_CHECK_EQUAL(CritC,false);
 }
 
 
@@ -358,4 +358,3 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
 
 
 BOOST_AUTO_TEST_SUITE_END()
-

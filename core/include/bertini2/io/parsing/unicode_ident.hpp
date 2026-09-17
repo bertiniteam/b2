@@ -69,51 +69,51 @@ namespace classic {
 struct utf8_identifier_parser
     : boost::spirit::qi::primitive_parser<utf8_identifier_parser>
 {
-	template <typename Context, typename Iterator>
-	struct attribute { typedef std::string type; };
+    template <typename Context, typename Iterator>
+    struct attribute { typedef std::string type; };
 
-	template <typename Iterator, typename Context, typename Skipper, typename Attribute>
-	bool parse(Iterator& first, Iterator const& last,
-	           Context&, Skipper const& skipper, Attribute& attr) const
-	{
-		boost::spirit::qi::skip_over(first, last, skipper);
-		Iterator const begin = first;
-		Iterator it = first;
-		try
-		{
-			if (it == last)
-				return false;
-			{
-				boost::u8_to_u32_iterator<Iterator> u(it, it, last);
-				if (!IsIdentStart(*u))
-					return false;
-				++u;
-				it = u.base();
-			}
-			while (it != last)
-			{
-				boost::u8_to_u32_iterator<Iterator> u(it, it, last);
-				if (!IsIdentCont(*u))
-					break;
-				++u;
-				it = u.base();
-			}
-		}
-		catch (...)
-		{
-			return false; // malformed UTF-8 -> clean parse failure
-		}
-		std::string matched(begin, it);
-		boost::spirit::traits::assign_to(matched, attr);
-		first = it;
-		return true;
-	}
+    template <typename Iterator, typename Context, typename Skipper, typename Attribute>
+    bool parse(Iterator& first, Iterator const& last,
+               Context&, Skipper const& skipper, Attribute& attr) const
+    {
+        boost::spirit::qi::skip_over(first, last, skipper);
+        Iterator const begin = first;
+        Iterator it = first;
+        try
+        {
+            if (it == last)
+                return false;
+            {
+                boost::u8_to_u32_iterator<Iterator> u(it, it, last);
+                if (!IsIdentStart(*u))
+                    return false;
+                ++u;
+                it = u.base();
+            }
+            while (it != last)
+            {
+                boost::u8_to_u32_iterator<Iterator> u(it, it, last);
+                if (!IsIdentCont(*u))
+                    break;
+                ++u;
+                it = u.base();
+            }
+        }
+        catch (...)
+        {
+            return false; // malformed UTF-8 -> clean parse failure
+        }
+        std::string matched(begin, it);
+        boost::spirit::traits::assign_to(matched, attr);
+        first = it;
+        return true;
+    }
 
-	template <typename Context>
-	boost::spirit::info what(Context&) const
-	{
-		return boost::spirit::info("utf8_identifier");
-	}
+    template <typename Context>
+    boost::spirit::info what(Context&) const
+    {
+        return boost::spirit::info("utf8_identifier");
+    }
 };
 
 // Zero-width negative lookahead: succeeds (consuming nothing beyond the skipper)
@@ -123,32 +123,32 @@ struct utf8_identifier_parser
 struct utf8_ident_boundary_parser
     : boost::spirit::qi::primitive_parser<utf8_ident_boundary_parser>
 {
-	template <typename Context, typename Iterator>
-	struct attribute { typedef boost::spirit::unused_type type; };
+    template <typename Context, typename Iterator>
+    struct attribute { typedef boost::spirit::unused_type type; };
 
-	template <typename Iterator, typename Context, typename Skipper, typename Attribute>
-	bool parse(Iterator& first, Iterator const& last,
-	           Context&, Skipper const& skipper, Attribute&) const
-	{
-		boost::spirit::qi::skip_over(first, last, skipper);
-		if (first == last)
-			return true; // nothing follows -> boundary holds
-		try
-		{
-			boost::u8_to_u32_iterator<Iterator> u(first, first, last);
-			return !IsIdentCont(*u); // followed by an ident char -> boundary fails
-		}
-		catch (...)
-		{
-			return true; // malformed following bytes -> treat as a boundary
-		}
-	}
+    template <typename Iterator, typename Context, typename Skipper, typename Attribute>
+    bool parse(Iterator& first, Iterator const& last,
+               Context&, Skipper const& skipper, Attribute&) const
+    {
+        boost::spirit::qi::skip_over(first, last, skipper);
+        if (first == last)
+            return true; // nothing follows -> boundary holds
+        try
+        {
+            boost::u8_to_u32_iterator<Iterator> u(first, first, last);
+            return !IsIdentCont(*u); // followed by an ident char -> boundary fails
+        }
+        catch (...)
+        {
+            return true; // malformed following bytes -> treat as a boundary
+        }
+    }
 
-	template <typename Context>
-	boost::spirit::info what(Context&) const
-	{
-		return boost::spirit::info("utf8_ident_boundary");
-	}
+    template <typename Context>
+    boost::spirit::info what(Context&) const
+    {
+        return boost::spirit::info("utf8_ident_boundary");
+    }
 };
 
 /// \endcond

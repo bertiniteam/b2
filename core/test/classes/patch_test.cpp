@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  patch_test.cpp
@@ -58,64 +58,64 @@ using real_mp = bertini::real_mp;
 
 BOOST_AUTO_TEST_CASE(patch_create)
 {
-	Patch p;
+    Patch p;
 }
 
 
 BOOST_AUTO_TEST_CASE(patch_create_one_variable_group)
 {
-	std::vector<unsigned> s{2};
+    std::vector<unsigned> s{2};
 
-	Patch p(s);
+    Patch p(s);
 }
 
 
 BOOST_AUTO_TEST_CASE(patch_create_two_variable_groups)
 {
-	std::vector<unsigned> s{2,3};
+    std::vector<unsigned> s{2,3};
 
-	Patch p(s);
+    Patch p(s);
 }
 
 
 BOOST_AUTO_TEST_CASE(patch_eval_two_variable_groups_prec16)
 {
-	std::vector<unsigned> s{2,3};
+    std::vector<unsigned> s{2,3};
 
-	Patch p(s);
+    Patch p(s);
 
-	Vec<complex_dbl> v(5);
-	v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
+    Vec<complex_dbl> v(5);
+    v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
 
-	p.Precision(16);
-	
-	auto f = p.Eval(v);
+    p.Precision(16);
 
-	BOOST_CHECK_EQUAL(f.size(),2);
+    auto f = p.Eval(v);
+
+    BOOST_CHECK_EQUAL(f.size(),2);
 }
 
 
 BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec16)
 {
-	std::vector<unsigned> s{2,3};
+    std::vector<unsigned> s{2,3};
 
-	Patch p(s);
+    Patch p(s);
 
-	Vec<complex_dbl> v(5);
-	v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
+    Vec<complex_dbl> v(5);
+    v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
 
-	p.Precision(16);
+    p.Precision(16);
 
-	auto J = p.Jacobian(v);
-	BOOST_CHECK_EQUAL(J.rows(),2);
-	BOOST_CHECK_EQUAL(J.cols(),5);
+    auto J = p.Jacobian(v);
+    BOOST_CHECK_EQUAL(J.rows(),2);
+    BOOST_CHECK_EQUAL(J.cols(),5);
 
-	BOOST_CHECK_EQUAL(J(0,2),complex_dbl(0));
-	BOOST_CHECK_EQUAL(J(0,3),complex_dbl(0));
-	BOOST_CHECK_EQUAL(J(0,4),complex_dbl(0));
+    BOOST_CHECK_EQUAL(J(0,2),complex_dbl(0));
+    BOOST_CHECK_EQUAL(J(0,3),complex_dbl(0));
+    BOOST_CHECK_EQUAL(J(0,4),complex_dbl(0));
 
-	BOOST_CHECK_EQUAL(J(1,0),complex_dbl(0));
-	BOOST_CHECK_EQUAL(J(1,1),complex_dbl(0));
+    BOOST_CHECK_EQUAL(J(1,0),complex_dbl(0));
+    BOOST_CHECK_EQUAL(J(1,1),complex_dbl(0));
 }
 
 
@@ -129,71 +129,71 @@ BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec16)
 // buffer and require every owned entry to be correct.
 BOOST_AUTO_TEST_CASE(patch_jacobian_fully_defines_its_rows_into_a_dirty_buffer)
 {
-	std::vector<unsigned> s{2,3};
+    std::vector<unsigned> s{2,3};
 
-	Patch p(s);
-	p.Precision(16);
+    Patch p(s);
+    p.Precision(16);
 
-	Vec<complex_dbl> v(5);
-	v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
+    Vec<complex_dbl> v(5);
+    v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
 
-	Mat<complex_dbl> J = Mat<complex_dbl>::Constant(2, 5, complex_dbl(1e300)); // poison every entry
+    Mat<complex_dbl> J = Mat<complex_dbl>::Constant(2, 5, complex_dbl(1e300)); // poison every entry
 
-	p.JacobianInPlace(J, v);
+    p.JacobianInPlace(J, v);
 
-	// off-coefficient entries of each patch row must be overwritten with zero, not left poisoned
-	BOOST_CHECK_EQUAL(J(0,2), complex_dbl(0));
-	BOOST_CHECK_EQUAL(J(0,3), complex_dbl(0));
-	BOOST_CHECK_EQUAL(J(0,4), complex_dbl(0));
-	BOOST_CHECK_EQUAL(J(1,0), complex_dbl(0));
-	BOOST_CHECK_EQUAL(J(1,1), complex_dbl(0));
+    // off-coefficient entries of each patch row must be overwritten with zero, not left poisoned
+    BOOST_CHECK_EQUAL(J(0,2), complex_dbl(0));
+    BOOST_CHECK_EQUAL(J(0,3), complex_dbl(0));
+    BOOST_CHECK_EQUAL(J(0,4), complex_dbl(0));
+    BOOST_CHECK_EQUAL(J(1,0), complex_dbl(0));
+    BOOST_CHECK_EQUAL(J(1,1), complex_dbl(0));
 
-	// the coefficient entries are still written (no longer the poison value)
-	BOOST_CHECK_NE(J(0,0), complex_dbl(1e300));
-	BOOST_CHECK_NE(J(1,2), complex_dbl(1e300));
+    // the coefficient entries are still written (no longer the poison value)
+    BOOST_CHECK_NE(J(0,0), complex_dbl(1e300));
+    BOOST_CHECK_NE(J(1,2), complex_dbl(1e300));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(patch_eval_two_variable_groups_prec30)
 {
-	DefaultPrecision(30);
-	std::vector<unsigned> s{2,3};
+    DefaultPrecision(30);
+    std::vector<unsigned> s{2,3};
 
-	Patch p(s);
+    Patch p(s);
 
-	Vec<mpfr> v(5);
-	v << mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1);
+    Vec<mpfr> v(5);
+    v << mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1);
 
-	p.Precision(30);
-	auto f = p.Eval(v);
+    p.Precision(30);
+    auto f = p.Eval(v);
 }
 
 
 BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec30)
 {
-	DefaultPrecision(30);
+    DefaultPrecision(30);
 
-	std::vector<unsigned> s{2,3};
+    std::vector<unsigned> s{2,3};
 
-	Patch p(s);
+    Patch p(s);
 
-	Vec<mpfr> v(5);
-	v << mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1);
+    Vec<mpfr> v(5);
+    v << mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1);
 
-	p.Precision(30);
+    p.Precision(30);
 
-	auto J = p.Jacobian(v);
+    auto J = p.Jacobian(v);
 
-	BOOST_CHECK_EQUAL(J.rows(),2);
-	BOOST_CHECK_EQUAL(J.cols(),5);
+    BOOST_CHECK_EQUAL(J.rows(),2);
+    BOOST_CHECK_EQUAL(J.cols(),5);
 
-	BOOST_CHECK_EQUAL(J(0,2),mpfr(0));
-	BOOST_CHECK_EQUAL(J(0,3),mpfr(0));
-	BOOST_CHECK_EQUAL(J(0,4),mpfr(0));
+    BOOST_CHECK_EQUAL(J(0,2),mpfr(0));
+    BOOST_CHECK_EQUAL(J(0,3),mpfr(0));
+    BOOST_CHECK_EQUAL(J(0,4),mpfr(0));
 
-	BOOST_CHECK_EQUAL(J(1,0),mpfr(0));
-	BOOST_CHECK_EQUAL(J(1,1),mpfr(0));
+    BOOST_CHECK_EQUAL(J(1,0),mpfr(0));
+    BOOST_CHECK_EQUAL(J(1,1),mpfr(0));
 }
 
 
@@ -202,24 +202,24 @@ BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec30)
 
 BOOST_AUTO_TEST_CASE(patch_rescale_and_evaluate_prec16)
 {
-	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+    DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	std::vector<unsigned> s{2,3};
+    std::vector<unsigned> s{2,3};
 
-	Patch p(s);
-	p.Precision(16);
+    Patch p(s);
+    p.Precision(16);
 
-	Vec<complex_dbl> v(5);
-	v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
+    Vec<complex_dbl> v(5);
+    v << complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1),  complex_dbl(1);
 
-	auto v_rescaled = p.RescalePoint(v);
+    auto v_rescaled = p.RescalePoint(v);
 
-	auto f = p.Eval(v_rescaled);
+    auto f = p.Eval(v_rescaled);
 
-	BOOST_CHECK_EQUAL(f.size(),2);
-	for (int ii = 0; ii < 2; ++ii)
-		BOOST_CHECK(abs(f(ii)) < threshold_clearance_d);
-	
+    BOOST_CHECK_EQUAL(f.size(),2);
+    for (int ii = 0; ii < 2; ++ii)
+        BOOST_CHECK(abs(f(ii)) < threshold_clearance_d);
+
 }
 
 
@@ -227,49 +227,48 @@ BOOST_AUTO_TEST_CASE(patch_rescale_and_evaluate_prec16)
 
 BOOST_AUTO_TEST_CASE(patch_rescale_and_evaluate_prec_default_mpfr)
 {
-	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+    DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	std::vector<unsigned> s{2,3};
+    std::vector<unsigned> s{2,3};
 
-	Patch p(s);
+    Patch p(s);
 
-	Vec<mpfr> v(5);
-	v << mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1);
+    Vec<mpfr> v(5);
+    v << mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1);
 
-	auto v_rescaled = p.RescalePoint(v);
+    auto v_rescaled = p.RescalePoint(v);
 
-	auto f = p.Eval(v_rescaled);
+    auto f = p.Eval(v_rescaled);
 
-	BOOST_CHECK_EQUAL(f.size(),2);
-	for (int ii = 0; ii < 2; ++ii)
-		BOOST_CHECK(abs(f(ii)) < threshold_clearance_mp);
-	
+    BOOST_CHECK_EQUAL(f.size(),2);
+    for (int ii = 0; ii < 2; ++ii)
+        BOOST_CHECK(abs(f(ii)) < threshold_clearance_mp);
+
 }
 
 
 BOOST_AUTO_TEST_CASE(patch_equality_checks)
 {
-	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+    DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	std::vector<unsigned> s1{2,3};
-	std::vector<unsigned> s2{3,4};
+    std::vector<unsigned> s1{2,3};
+    std::vector<unsigned> s2{3,4};
 
-	Patch p(s1), q(s1), r(s2);
+    Patch p(s1), q(s1), r(s2);
 
-	BOOST_CHECK_EQUAL(p,p);
-	BOOST_CHECK_EQUAL(q,q);
-	BOOST_CHECK_EQUAL(r,r);
+    BOOST_CHECK_EQUAL(p,p);
+    BOOST_CHECK_EQUAL(q,q);
+    BOOST_CHECK_EQUAL(r,r);
 
-	BOOST_CHECK(p!=q);
-	BOOST_CHECK(p!=r);
-	BOOST_CHECK(q!=r);
+    BOOST_CHECK(p!=q);
+    BOOST_CHECK(p!=r);
+    BOOST_CHECK(q!=r);
 
-	BOOST_CHECK(q!=p);
-	BOOST_CHECK(r!=p);
-	BOOST_CHECK(r!=q);
+    BOOST_CHECK(q!=p);
+    BOOST_CHECK(r!=p);
+    BOOST_CHECK(r!=q);
 }
 
 
 
 BOOST_AUTO_TEST_SUITE_END() // end the patch_class test suite
-

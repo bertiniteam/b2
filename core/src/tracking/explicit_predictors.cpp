@@ -30,58 +30,53 @@
 #include "bertini2/trackers/explicit_predictors.hpp"
 
 namespace bertini{
-	namespace tracking{
-		namespace predict{
+    namespace tracking{
+        namespace predict{
 
-		// Explicit instantiation definitions for the two concrete numeric types.
-		// These pair with the extern template declarations in explicit_predictors.hpp
-		// and prevent each including TU from emitting its own copy.
+        // Explicit instantiation definitions for the two concrete numeric types.
+        // These pair with the extern template declarations in explicit_predictors.hpp
+        // and prevent each including TU from emitting its own copy.
 
-		template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
-		    Vec<complex_dbl>&, StepMetadata&, System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
-		    unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
-		template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
-		    Vec<complex_mp>&, StepMetadata&, System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
-		    unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
+        template SuccessCode ExplicitRKPredictor::Predict<complex_dbl>(
+            Vec<complex_dbl>&, StepMetadata&, System const&, Vec<complex_dbl> const&, complex_dbl, complex_dbl const&,
+            unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
+        template SuccessCode ExplicitRKPredictor::Predict<complex_mp>(
+            Vec<complex_mp>&, StepMetadata&, System const&, Vec<complex_mp> const&, complex_mp, complex_mp const&,
+            unsigned&, unsigned, NumErrorT const&, AdaptiveMultiplePrecisionConfig const*);
 
-		template SuccessCode ExplicitRKPredictor::FullStep<complex_dbl>(
-		    Vec<complex_dbl>&, System const&, Vec<complex_dbl> const&, complex_dbl const&, complex_dbl const&);
-		template SuccessCode ExplicitRKPredictor::FullStep<complex_mp>(
-		    Vec<complex_mp>&, System const&, Vec<complex_mp> const&, complex_mp const&, complex_mp const&);
+        template SuccessCode ExplicitRKPredictor::FullStep<complex_dbl>(
+            Vec<complex_dbl>&, System const&, Vec<complex_dbl> const&, complex_dbl const&, complex_dbl const&);
+        template SuccessCode ExplicitRKPredictor::FullStep<complex_mp>(
+            Vec<complex_mp>&, System const&, Vec<complex_mp> const&, complex_mp const&, complex_mp const&);
 
-		template void ExplicitRKPredictor::SetNormsCond<complex_dbl>(
-		    double&, double&, double&, unsigned&, unsigned);
-		template void ExplicitRKPredictor::SetNormsCond<complex_mp>(
-		    double&, double&, double&, unsigned&, unsigned);
+        template void ExplicitRKPredictor::SetNormsCond<complex_dbl>(
+            double&, double&, double&, unsigned&, unsigned);
+        template void ExplicitRKPredictor::SetNormsCond<complex_mp>(
+            double&, double&, double&, unsigned&, unsigned);
 
-		template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_dbl>(double&, complex_dbl const&);
-		template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_mp>(double&, complex_mp const&);
+        template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_dbl>(double&, complex_dbl const&);
+        template SuccessCode ExplicitRKPredictor::SetErrorEstimate<complex_mp>(double&, complex_mp const&);
 
-		template SuccessCode ExplicitRKPredictor::SetSizeProportion<complex_dbl>(double&, complex_dbl const&);
-		template SuccessCode ExplicitRKPredictor::SetSizeProportion<complex_mp>(double&, complex_mp const&);
+        template SuccessCode ExplicitRKPredictor::SetSizeProportion<complex_dbl>(double&, complex_dbl const&);
+        template SuccessCode ExplicitRKPredictor::SetSizeProportion<complex_mp>(double&, complex_mp const&);
 
-		template SuccessCode ExplicitRKPredictor::EvalRHS<complex_dbl>(
-		    System const&, Vec<complex_dbl> const&, complex_dbl const&, Mat<complex_dbl>&, unsigned);
-		template SuccessCode ExplicitRKPredictor::EvalRHS<complex_mp>(
-		    System const&, Vec<complex_mp> const&, complex_mp const&, Mat<complex_mp>&, unsigned);
+        template SuccessCode ExplicitRKPredictor::EvalRHS<complex_dbl>(
+            System const&, Vec<complex_dbl> const&, complex_dbl const&, Mat<complex_dbl>&, unsigned);
+        template SuccessCode ExplicitRKPredictor::EvalRHS<complex_mp>(
+            System const&, Vec<complex_mp> const&, complex_mp const&, Mat<complex_mp>&, unsigned);
 
-		template void ExplicitRKPredictor::FillButcherTable<double>(
-		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
-		    Mat<mpq_rational> const&, Mat<mpq_rational> const&);
-		template void ExplicitRKPredictor::FillButcherTable<real_mp>(
-		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
-		    Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+        template void ExplicitRKPredictor::FillButcherTable<double>(
+            int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
+            Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+        template void ExplicitRKPredictor::FillButcherTable<real_mp>(
+            int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
+            Mat<mpq_rational> const&, Mat<mpq_rational> const&);
 
-		template void ExplicitRKPredictor::FillButcherTable<double>(
-		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
-		template void ExplicitRKPredictor::FillButcherTable<real_mp>(
-		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+        template void ExplicitRKPredictor::FillButcherTable<double>(
+            int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+        template void ExplicitRKPredictor::FillButcherTable<real_mp>(
+            int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
 
-		} // re: predict
-	}// re: tracking
+        } // re: predict
+    }// re: tracking
 }// re: bertini
-
-
-
-
-

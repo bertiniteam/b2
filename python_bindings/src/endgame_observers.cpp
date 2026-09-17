@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/endgame_observers.cpp:  source file for exposing endgames to python.
@@ -26,7 +26,7 @@
 #include "generic_observer.hpp"
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
 
 
@@ -34,65 +34,65 @@ namespace bertini{
 template <typename EndgameT>
 void ExportSpecificObservers(std::string scope_name)
 {
-	scope scope_C;
-	std::string submodule_name_C(extract<const char*>(scope_C.attr("__name__")));
-	submodule_name_C.append("." + scope_name);
-	object submodule_C(borrowed(PyImport_AddModule(submodule_name_C.c_str())));
-	scope_C.attr(scope_name.c_str()) = submodule_C;
-	scope new_submodule_scope_C = submodule_C;
+    scope scope_C;
+    std::string submodule_name_C(extract<const char*>(scope_C.attr("__name__")));
+    submodule_name_C.append("." + scope_name);
+    object submodule_C(borrowed(PyImport_AddModule(submodule_name_C.c_str())));
+    scope_C.attr(scope_name.c_str()) = submodule_C;
+    scope new_submodule_scope_C = submodule_C;
 
-	class_<ObserverWrapper<Observer<EndgameT>>, std::shared_ptr<ObserverWrapper<Observer<EndgameT>>>, bases<AnyObserver>, boost::noncopyable>("CustomObserver", init< >())
-	;
+    class_<ObserverWrapper<Observer<EndgameT>>, std::shared_ptr<ObserverWrapper<Observer<EndgameT>>>, bases<AnyObserver>, boost::noncopyable>("CustomObserver", init< >())
+    ;
 
-	class_<GoryDetailLogger<EndgameT>, bases<Observer<EndgameT>> >("GoryDetailLogger", init< >())
-	.def(EndgameObserverVisitor<GoryDetailLogger<EndgameT>>())
-	;
+    class_<GoryDetailLogger<EndgameT>, bases<Observer<EndgameT>> >("GoryDetailLogger", init< >())
+    .def(EndgameObserverVisitor<GoryDetailLogger<EndgameT>>())
+    ;
 
-	class_<SampleSequenceCollector<EndgameT>, bases<Observer<EndgameT>> >("SampleSequenceCollector",
-		"Collects an endgame's approach to the root as a time-indexed sequence.\n\n"
-		"Attach one per path (endgame.add_observer), run, then read the buckets.  A single spectrum "
-		"cannot separate a genuinely tiny singular value from a perturbation artifact; the trend across "
-		"the approach can, because a truly-zero value tracks the distance to the root down while a "
-		"genuinely nonzero one plateaus.\n\n"
-		"Three buckets, deliberately kept apart: path_samples (the sequence), circle_samples (Cauchy loop "
-		"points, at constant |t|, not part of the sequence), and approximations (estimates of the root).",
-		init< >())
-	.def(SampleSequenceVisitor<SampleSequenceCollector<EndgameT>>())
-	;
+    class_<SampleSequenceCollector<EndgameT>, bases<Observer<EndgameT>> >("SampleSequenceCollector",
+        "Collects an endgame's approach to the root as a time-indexed sequence.\n\n"
+        "Attach one per path (endgame.add_observer), run, then read the buckets.  A single spectrum "
+        "cannot separate a genuinely tiny singular value from a perturbation artifact; the trend across "
+        "the approach can, because a truly-zero value tracks the distance to the root down while a "
+        "genuinely nonzero one plateaus.\n\n"
+        "Three buckets, deliberately kept apart: path_samples (the sequence), circle_samples (Cauchy loop "
+        "points, at constant |t|, not part of the sequence), and approximations (estimates of the root).",
+        init< >())
+    .def(SampleSequenceVisitor<SampleSequenceCollector<EndgameT>>())
+    ;
 }
 
 void ExportEndgameObservers()
 {
 
-	scope current_scope;
-	std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-	new_submodule_name.append(".endgame");
-	object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-	current_scope.attr("endgame") = new_submodule;
+    scope current_scope;
+    std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+    new_submodule_name.append(".endgame");
+    object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+    current_scope.attr("endgame") = new_submodule;
 
-	scope new_submodule_scope = new_submodule;
-	
-
-	{
-		scope scope_B;
-		std::string submodule_name_B(extract<const char*>(scope_B.attr("__name__")));
-		submodule_name_B.append(".observers");
-		object submodule_B(borrowed(PyImport_AddModule(submodule_name_B.c_str())));
-		scope_B.attr("observers") = submodule_B;
-		scope new_submodule_scope_B = submodule_B;
-		new_submodule_scope_B.attr("__doc__") = "Endgame observers.  Make one, and then attach it to an endgame to observe it.  See endgame functions `add_observer` and `remove_observer`";
-
-		ExportSpecificObservers<endgame::EndgameSelector<AMPTracker>::Cauchy>("amp_cauchy");
-		ExportSpecificObservers<endgame::EndgameSelector<AMPTracker>::PSEG>("amp_pseg");
-
-		ExportSpecificObservers<endgame::EndgameSelector<DoublePrecisionTracker>::Cauchy>("double_cauchy");
-		ExportSpecificObservers<endgame::EndgameSelector<DoublePrecisionTracker>::PSEG>("double_pseg");
-
-		ExportSpecificObservers<endgame::EndgameSelector<MultiplePrecisionTracker>::Cauchy>("multiple_cauchy");
-		ExportSpecificObservers<endgame::EndgameSelector<MultiplePrecisionTracker>::PSEG>("multiple_pseg");
+    scope new_submodule_scope = new_submodule;
 
 
-	}
+    {
+        scope scope_B;
+        std::string submodule_name_B(extract<const char*>(scope_B.attr("__name__")));
+        submodule_name_B.append(".observers");
+        object submodule_B(borrowed(PyImport_AddModule(submodule_name_B.c_str())));
+        scope_B.attr("observers") = submodule_B;
+        scope new_submodule_scope_B = submodule_B;
+        new_submodule_scope_B.attr("__doc__") = "Endgame observers.  Make one, and then attach it to an endgame to observe it.  See endgame functions `add_observer` and `remove_observer`";
+
+        ExportSpecificObservers<endgame::EndgameSelector<AMPTracker>::Cauchy>("amp_cauchy");
+        ExportSpecificObservers<endgame::EndgameSelector<AMPTracker>::PSEG>("amp_pseg");
+
+        ExportSpecificObservers<endgame::EndgameSelector<DoublePrecisionTracker>::Cauchy>("double_cauchy");
+        ExportSpecificObservers<endgame::EndgameSelector<DoublePrecisionTracker>::PSEG>("double_pseg");
+
+        ExportSpecificObservers<endgame::EndgameSelector<MultiplePrecisionTracker>::Cauchy>("multiple_cauchy");
+        ExportSpecificObservers<endgame::EndgameSelector<MultiplePrecisionTracker>::PSEG>("multiple_pseg");
+
+
+    }
 }
 
 }} // namespaces

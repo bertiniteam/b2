@@ -106,7 +106,7 @@ bertini.records_dir(_tempfile.mkdtemp(prefix="bertini_docs_records_"))
 bibtex_bibfiles = ['../../../doc_resources/bertini2.bib']
 
 #    'sphinx.ext.autosectionlabel_prefix_document',
-#autodoc_default_flags = ['members', 'undoc-members','show-inheritance'] 
+#autodoc_default_flags = ['members', 'undoc-members','show-inheritance']
 #, 'special-members'
 #, , 'inherited-members'
 
@@ -298,4 +298,3 @@ texinfo_documents = [
 
 
 html_logo = "images/bpy_icon_.svg"
-

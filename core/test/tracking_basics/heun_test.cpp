@@ -65,604 +65,578 @@ template<typename NumT> using Mat = bertini::Mat<NumT>;
 
 BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 {
-	
-	// Starting point in spacetime step
-	Vec<complex_dbl> current_space(2);
-	current_space << complex_dbl(2.3,0.2), complex_dbl(1.1, 1.87);
-	
-	// Starting time
-	complex_dbl current_time(0.9);
-	// Time step
-	complex_dbl delta_t(-0.1);
-	
-	
-	
-	
-	bertini::System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-	
-	VariableGroup vars{x,y};
-	
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	
-	// Define homotopy system
-	sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
-	
-	
-	auto AMP = bertini::tracking::AMPConfigFrom(sys);
-	
-	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
-	AMP.coefficient_bound = 5;
-	
-	bertini::tracking::StepMetadata meta;
-	
-	Vec<complex_dbl> predicted(2);
-	predicted << complex_dbl(2.38948874619536140814029774733947,0.208678935223681033727262214382917),
-	complex_dbl(0.524558056401030798191044945035673, 1.43029356995029310361616395235936);
-	double predicted_error = .197349645229023708608160063982175;
-	
-	Vec<complex_dbl> heun_prediction_result;
 
-	double tracking_tolerance(1e-5);
-	unsigned num_steps_since_last_condition_number_computation = 1;
-	unsigned frequency_of_CN_estimation = 1;
-	
-	std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-	
-	auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
-	
-	BOOST_CHECK(success_code==bertini::SuccessCode::Success);
-	BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
-	for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
-	{
-		BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_d);
-	}
-	BOOST_CHECK(fabs(meta.error_estimate / predicted_error - 1) < threshold_clearance_d);
-	
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	BOOST_AUTO_TEST_CASE(circle_line_heun_mp)
-	{
-		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
-		
-		// Starting point in spacetime step
-		Vec<mpfr> current_space(2);
-		current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
-		
-		// Starting time
-		mpfr current_time("0.9");
-		// Time step
-		mpfr delta_t("-0.1");
-		
-		
-		
-		
-		bertini::System sys;
-		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		
-		VariableGroup vars{x,y};
-		
-		sys.AddVariableGroup(vars);
-		sys.AddPathVariable(t);
-		
-		// Define homotopy system
-		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
-		
-		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
-		AMP.coefficient_bound = 5;
-		
-		bertini::tracking::StepMetadata meta;
-		
-		Vec<mpfr> predicted(2);
-		predicted << mpfr("2.38948874619536140814029774733947","0.208678935223681033727262214382917"),
-		mpfr("0.524558056401030798191044945035673", "1.43029356995029310361616395235936");
-		double predicted_error = double(.197349645229023708608160063982175);
-		
-		Vec<mpfr> heun_prediction_result;
-		mpfr next_time;
-		
-		double tracking_tolerance = 1e-5;
-		unsigned num_steps_since_last_condition_number_computation = 1;
-		unsigned frequency_of_CN_estimation = 1;
-		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-		
-		auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
-		
-		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
-		BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
-		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
-			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
-		
-		using std::abs;
-		BOOST_CHECK(abs(meta.error_estimate - predicted_error) < std::numeric_limits<double>::epsilon());	
-	}
-	
-	
-	
-	
-	
-	
-	
-	BOOST_AUTO_TEST_CASE(monodromy_heun_d)
-	{
-		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
-		
-		// Starting point in spacetime step
-		Vec<complex_dbl> current_space(2);
-		current_space << complex_dbl(0.464158883361277585510862309093), complex_dbl(0.74161984870956629487113974408);
-		
-		// Starting time
-		complex_dbl current_time(0.7);
-		// Time step
-		complex_dbl delta_t(-0.01);
-		
-		
-		
-		
-		bertini::System sys;
-		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		std::shared_ptr<Complex> half = Complex::Make("0.5");
-		
-		VariableGroup vars{x,y};
-		
-		sys.AddVariableGroup(vars);
-		sys.AddPathVariable(t);
-		
-		// Define homotopy system
-		sys.AddFunction( t*(pow(x,3)-1) + (1-t)*(pow(x,3) + 2) );
-		sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + half) );
-		
-		
-		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		bertini::tracking::StepMetadata meta;
-		
-		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
-		AMP.coefficient_bound = 2;
-		
-		
-		Vec<complex_dbl> predicted(2);
-		predicted << complex_dbl(0.412299156269677938503694812160886),
-		complex_dbl(0.731436945256924470273568899877140);
-		double predicted_error = 0.00544428757292458409463632380167773;
-		
-		Vec<complex_dbl> heun_prediction_result;
-		[[maybe_unused]] double next_time;
-		
-		double tracking_tolerance(1e-5);
-		unsigned num_steps_since_last_condition_number_computation = 1;
-		unsigned frequency_of_CN_estimation = 1;
-		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-		
-		auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
-		
-		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
-		BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
-		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
-		{
-			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_d);
-		}
-		
-		BOOST_CHECK(fabs(meta.error_estimate / predicted_error - 1) < threshold_clearance_d);
-		
-	}
-	
-	
-	
-	BOOST_AUTO_TEST_CASE(monodromy_heun_mp)
-	{
-		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
-		
-		// Starting point in spacetime step
-		Vec<mpfr> current_space(2);
-		current_space << mpfr("0.464158883361277585510862309093"), mpfr("0.74161984870956629487113974408");
-		
-		// Starting time
-		mpfr current_time("0.7");
-		// Time step
-		mpfr delta_t("-0.01");
-		
-		
-		
-		
-		bertini::System sys;
-		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		std::shared_ptr<Complex> half = Complex::Make("0.5");
-		
-		VariableGroup vars{x,y};
-		
-		sys.AddVariableGroup(vars);
-		sys.AddPathVariable(t);
-		
-		// Define homotopy system
-		sys.AddFunction( t*(pow(x,3)-1) + (1-t)*(pow(x,3) + 2) );
-		sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + half) );
-		
-		
-		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
-		AMP.coefficient_bound = 2;
-		
-		bertini::tracking::StepMetadata meta;
-		
-		
-		Vec<mpfr> predicted(2);
-		predicted << mpfr("0.412299156269677938503694812160886"),
-		mpfr("0.731436945256924470273568899877140");
-		double predicted_error = double(0.00544428757292458409463632380167773);
-		
-		Vec<mpfr> heun_prediction_result;
-		mpfr next_time;
-		
-		double tracking_tolerance = 1e-5;
-		unsigned num_steps_since_last_condition_number_computation = 1;
-		unsigned frequency_of_CN_estimation = 1;
-		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-		
-		auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
-		
-		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
-		BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
-		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
-		{
-			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
-		}
-		
-		using std::abs;
-		BOOST_CHECK(abs(meta.error_estimate / predicted_error - 1) < std::numeric_limits<double>::epsilon());
-	}
-	
-	
-	BOOST_AUTO_TEST_CASE(heun_predict_linear_algebra_fails_d)
-	{
-		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
-		
-		// Starting point in spacetime step
-		Vec<complex_dbl> current_space(2);
-		current_space << complex_dbl(1.0), complex_dbl(-4.0);
-		
-		// Starting time
-		complex_dbl current_time(.75);
-		// Time step
-		complex_dbl delta_t(-0.1);
-		
-		
-		
-		
-		bertini::System sys;
-		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		
-		VariableGroup vars{x,y};
-		
-		sys.AddVariableGroup(vars);
-		sys.AddPathVariable(t);
-		
-		// Define homotopy system
-		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
-		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		bertini::tracking::StepMetadata meta;
-		
-		AMP.coefficient_bound = 5;
-		
-		double tracking_tolerance(1e-5);
-		
-		unsigned num_steps_since_last_condition_number_computation = 1;
-		unsigned frequency_of_CN_estimation = 1;
-		
-		Vec<complex_dbl> heun_prediction_result;
-		
-		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-		
-		auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
-		
-		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
-		
-	}
-	
-	
-	
-	BOOST_AUTO_TEST_CASE(heun_predict_linear_algebra_fails_mp)
-	{
-		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
-		
-		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
-		
-		// Starting point in spacetime step
-		Vec<mpfr> current_space(2);
-		current_space << mpfr("1.0"), mpfr("-4.0");
-		
-		// Starting time
-		mpfr current_time(".7500000000000000000000000001");
-		// Time step
-		mpfr delta_t("-0.1");
-		
-		
-		
-		bertini::System sys;
-		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		
-		VariableGroup vars{x,y};
-		
-		sys.AddVariableGroup(vars);
-		sys.AddPathVariable(t);
-		
-		// Define homotopy system
-		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
-		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		bertini::tracking::StepMetadata meta;
-		
-		AMP.coefficient_bound = 5;
-		
-		double tracking_tolerance = 1e-5;
-		
-		unsigned num_steps_since_last_cond_num_est = 1;
-		unsigned freq_of_CN_estimation = 1;
-		
-		Vec<mpfr> heun_prediction_result;
-		
-		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-		
-		auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_cond_num_est, freq_of_CN_estimation, tracking_tolerance, &AMP);
-		
-		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
-	}
-	
-	
-	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_a_is_false_d)
-	{
-		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
-		
-		// Starting point in spacetime step
-		Vec<complex_dbl> current_space(2);
-		current_space << complex_dbl(1.0), complex_dbl(-4.0);
-		
-		// Starting time
-		complex_dbl current_time(.8);
-		// Time step
-		complex_dbl delta_t(-0.1);
-		
-		
-		
-		
-		bertini::System sys;
-		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		
-		VariableGroup vars{x,y};
-		
-		sys.AddVariableGroup(vars);
-		sys.AddPathVariable(t);
-		
-		// Define homotopy system
-		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
-		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		bertini::tracking::StepMetadata meta;
-		
-		AMP.coefficient_bound = 5;
-		AMP.safety_digits_1 = 100;
-		
-		double tracking_tolerance(1e-5);
-		
-		unsigned num_steps_since_last_condition_number_computation = 1;
-		unsigned frequency_of_CN_estimation = 1;
-		
-		Vec<complex_dbl> heun_prediction_result;
-		
-		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-		
-		auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
-		
-		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
-	}
-	
-	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_a_is_false_mp)
-	{
-		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
-		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
-		
-		// Starting point in spacetime step
-		Vec<mpfr> current_space(2);
-		current_space << mpfr("1.0"), mpfr("-4.0");
-		
-		// Starting time
-		mpfr current_time(".8");
-		// Time step
-		mpfr delta_t("-0.1");
-		
-		
-		
-		bertini::System sys;
-		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		
-		VariableGroup vars{x,y};
-		
-		sys.AddVariableGroup(vars);
-		sys.AddPathVariable(t);
-		
-		// Define homotopy system
-		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
-		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		bertini::tracking::StepMetadata meta;
-		
-		AMP.coefficient_bound = 5;
-		AMP.safety_digits_1 = 100;
-		
-		double tracking_tolerance = 1e-5;
-		
-		unsigned num_steps_since_last_condition_number_computation = 1;
-		unsigned frequency_of_CN_estimation = 1;
-		
-		Vec<mpfr> heun_prediction_result;
-		
-		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-		
-		auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
-		
-		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
-	}
-	
-	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_c_is_false_d)
-	{
-		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
-		
-		// Starting point in spacetime step
-		Vec<complex_dbl> current_space(2);
-		current_space << complex_dbl(1.0), complex_dbl(-4.0);
-		
-		// Starting time
-		complex_dbl current_time(.8);
-		// Time step
-		complex_dbl delta_t(-0.1);
-		
-		
-		
-		
-		bertini::System sys;
-		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		
-		VariableGroup vars{x,y};
-		
-		sys.AddVariableGroup(vars);
-		sys.AddPathVariable(t);
-		
-		// Define homotopy system
-		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
-		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		bertini::tracking::StepMetadata meta;
-		
-		AMP.coefficient_bound = 5;
-		AMP.safety_digits_2 = 100;
-		
-		AMP.SetPhiPsiFromBounds();
-		
-		double tracking_tolerance(1e-5);
-		
-		unsigned num_steps_since_last_condition_number_computation = 1;
-		unsigned frequency_of_CN_estimation = 1;
-		
-		Vec<complex_dbl> heun_prediction_result;
-		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-		
-		auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
-		
-		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
-	}
-	
-	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_c_is_false_mp)
-	{
-		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
-		
-		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
-		// Starting point in spacetime step
-		Vec<mpfr> current_space(2);
-		current_space << mpfr("1.0"), mpfr("-4.0");
-		
-		// Starting time
-		mpfr current_time(".8");
-		// Time step
-		mpfr delta_t("-0.1");
-		
-		
-		
-		bertini::System sys;
-		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
-		
-		VariableGroup vars{x,y};
-		
-		sys.AddVariableGroup(vars);
-		sys.AddPathVariable(t);
-		
-		// Define homotopy system
-		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
-		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		bertini::tracking::StepMetadata meta;
-		
-		AMP.coefficient_bound = 5;
-		AMP.safety_digits_2 = 100;
-		
-		double tracking_tolerance = 1e-5;
-		
-		unsigned num_steps_since_last_condition_number_computation = 1;
-		unsigned frequency_of_CN_estimation = 1;
-		
-		Vec<mpfr> heun_prediction_result;
-		
-		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
-		
-		auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
-		
-		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
-	}
-	
-	
+    // Starting point in spacetime step
+    Vec<complex_dbl> current_space(2);
+    current_space << complex_dbl(2.3,0.2), complex_dbl(1.1, 1.87);
+
+    // Starting time
+    complex_dbl current_time(0.9);
+    // Time step
+    complex_dbl delta_t(-0.1);
+
+
+
+
+    bertini::System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+
+    VariableGroup vars{x,y};
+
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
+
+    // Define homotopy system
+    sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+    sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
+
+
+    auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+    BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+    AMP.coefficient_bound = 5;
+
+    bertini::tracking::StepMetadata meta;
+
+    Vec<complex_dbl> predicted(2);
+    predicted << complex_dbl(2.38948874619536140814029774733947,0.208678935223681033727262214382917),
+    complex_dbl(0.524558056401030798191044945035673, 1.43029356995029310361616395235936);
+    double predicted_error = .197349645229023708608160063982175;
+
+    Vec<complex_dbl> heun_prediction_result;
+
+    double tracking_tolerance(1e-5);
+    unsigned num_steps_since_last_condition_number_computation = 1;
+    unsigned frequency_of_CN_estimation = 1;
+
+    std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+    auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
+
+    BOOST_CHECK(success_code==bertini::SuccessCode::Success);
+    BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
+    for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
+    {
+        BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_d);
+    }
+    BOOST_CHECK(fabs(meta.error_estimate / predicted_error - 1) < threshold_clearance_d);
+
+    }
+
+
+
+
+
+
+
+
+
+
+    BOOST_AUTO_TEST_CASE(circle_line_heun_mp)
+    {
+        bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+
+        // Starting point in spacetime step
+        Vec<mpfr> current_space(2);
+        current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
+
+        // Starting time
+        mpfr current_time("0.9");
+        // Time step
+        mpfr delta_t("-0.1");
+
+
+
+
+        bertini::System sys;
+        Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+
+        VariableGroup vars{x,y};
+
+        sys.AddVariableGroup(vars);
+        sys.AddPathVariable(t);
+
+        // Define homotopy system
+        sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+        sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
+
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+        AMP.coefficient_bound = 5;
+
+        bertini::tracking::StepMetadata meta;
+
+        Vec<mpfr> predicted(2);
+        predicted << mpfr("2.38948874619536140814029774733947","0.208678935223681033727262214382917"),
+        mpfr("0.524558056401030798191044945035673", "1.43029356995029310361616395235936");
+        double predicted_error = double(.197349645229023708608160063982175);
+
+        Vec<mpfr> heun_prediction_result;
+        mpfr next_time;
+
+        double tracking_tolerance = 1e-5;
+        unsigned num_steps_since_last_condition_number_computation = 1;
+        unsigned frequency_of_CN_estimation = 1;
+
+        std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+        auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
+
+        BOOST_CHECK(success_code==bertini::SuccessCode::Success);
+        BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
+        for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
+            BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
+
+        using std::abs;
+        BOOST_CHECK(abs(meta.error_estimate - predicted_error) < std::numeric_limits<double>::epsilon());
+    }
+
+
+
+
+
+
+
+    BOOST_AUTO_TEST_CASE(monodromy_heun_d)
+    {
+        bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+
+        // Starting point in spacetime step
+        Vec<complex_dbl> current_space(2);
+        current_space << complex_dbl(0.464158883361277585510862309093), complex_dbl(0.74161984870956629487113974408);
+
+        // Starting time
+        complex_dbl current_time(0.7);
+        // Time step
+        complex_dbl delta_t(-0.01);
+
+
+
+
+        bertini::System sys;
+        Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+        std::shared_ptr<Complex> half = Complex::Make("0.5");
+
+        VariableGroup vars{x,y};
+
+        sys.AddVariableGroup(vars);
+        sys.AddPathVariable(t);
+
+        // Define homotopy system
+        sys.AddFunction( t*(pow(x,3)-1) + (1-t)*(pow(x,3) + 2) );
+        sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + half) );
+
+
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        bertini::tracking::StepMetadata meta;
+
+        BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+        AMP.coefficient_bound = 2;
+
+
+        Vec<complex_dbl> predicted(2);
+        predicted << complex_dbl(0.412299156269677938503694812160886),
+        complex_dbl(0.731436945256924470273568899877140);
+        double predicted_error = 0.00544428757292458409463632380167773;
+
+        Vec<complex_dbl> heun_prediction_result;
+        [[maybe_unused]] double next_time;
+
+        double tracking_tolerance(1e-5);
+        unsigned num_steps_since_last_condition_number_computation = 1;
+        unsigned frequency_of_CN_estimation = 1;
+
+        std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+        auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
+
+        BOOST_CHECK(success_code==bertini::SuccessCode::Success);
+        BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
+        for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
+        {
+            BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_d);
+        }
+
+        BOOST_CHECK(fabs(meta.error_estimate / predicted_error - 1) < threshold_clearance_d);
+
+    }
+
+
+
+    BOOST_AUTO_TEST_CASE(monodromy_heun_mp)
+    {
+        bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+
+        // Starting point in spacetime step
+        Vec<mpfr> current_space(2);
+        current_space << mpfr("0.464158883361277585510862309093"), mpfr("0.74161984870956629487113974408");
+
+        // Starting time
+        mpfr current_time("0.7");
+        // Time step
+        mpfr delta_t("-0.01");
+
+
+
+
+        bertini::System sys;
+        Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+        std::shared_ptr<Complex> half = Complex::Make("0.5");
+
+        VariableGroup vars{x,y};
+
+        sys.AddVariableGroup(vars);
+        sys.AddPathVariable(t);
+
+        // Define homotopy system
+        sys.AddFunction( t*(pow(x,3)-1) + (1-t)*(pow(x,3) + 2) );
+        sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + half) );
+
+
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+        AMP.coefficient_bound = 2;
+
+        bertini::tracking::StepMetadata meta;
+
+
+        Vec<mpfr> predicted(2);
+        predicted << mpfr("0.412299156269677938503694812160886"),
+        mpfr("0.731436945256924470273568899877140");
+        double predicted_error = double(0.00544428757292458409463632380167773);
+
+        Vec<mpfr> heun_prediction_result;
+        mpfr next_time;
+
+        double tracking_tolerance = 1e-5;
+        unsigned num_steps_since_last_condition_number_computation = 1;
+        unsigned frequency_of_CN_estimation = 1;
+
+        std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+        auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
+
+        BOOST_CHECK(success_code==bertini::SuccessCode::Success);
+        BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
+        for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
+        {
+            BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
+        }
+
+        using std::abs;
+        BOOST_CHECK(abs(meta.error_estimate / predicted_error - 1) < std::numeric_limits<double>::epsilon());
+    }
+
+
+    BOOST_AUTO_TEST_CASE(heun_predict_linear_algebra_fails_d)
+    {
+        // Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
+
+        // Starting point in spacetime step
+        Vec<complex_dbl> current_space(2);
+        current_space << complex_dbl(1.0), complex_dbl(-4.0);
+
+        // Starting time
+        complex_dbl current_time(.75);
+        // Time step
+        complex_dbl delta_t(-0.1);
+
+
+
+
+        bertini::System sys;
+        Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+
+        VariableGroup vars{x,y};
+
+        sys.AddVariableGroup(vars);
+        sys.AddPathVariable(t);
+
+        // Define homotopy system
+        sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+        sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        bertini::tracking::StepMetadata meta;
+
+        AMP.coefficient_bound = 5;
+
+        double tracking_tolerance(1e-5);
+
+        unsigned num_steps_since_last_condition_number_computation = 1;
+        unsigned frequency_of_CN_estimation = 1;
+
+        Vec<complex_dbl> heun_prediction_result;
+
+
+        std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+        auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
+
+        BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
+
+    }
+
+
+
+    BOOST_AUTO_TEST_CASE(heun_predict_linear_algebra_fails_mp)
+    {
+        // Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
+
+        bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+
+        // Starting point in spacetime step
+        Vec<mpfr> current_space(2);
+        current_space << mpfr("1.0"), mpfr("-4.0");
+
+        // Starting time
+        mpfr current_time(".7500000000000000000000000001");
+        // Time step
+        mpfr delta_t("-0.1");
+
+
+
+        bertini::System sys;
+        Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+
+        VariableGroup vars{x,y};
+
+        sys.AddVariableGroup(vars);
+        sys.AddPathVariable(t);
+
+        // Define homotopy system
+        sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+        sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        bertini::tracking::StepMetadata meta;
+
+        AMP.coefficient_bound = 5;
+
+        double tracking_tolerance = 1e-5;
+
+        unsigned num_steps_since_last_cond_num_est = 1;
+        unsigned freq_of_CN_estimation = 1;
+
+        Vec<mpfr> heun_prediction_result;
+
+
+        std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+        auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_cond_num_est, freq_of_CN_estimation, tracking_tolerance, &AMP);
+
+        BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
+    }
+
+
+    BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_a_is_false_d)
+    {
+        // Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
+
+        // Starting point in spacetime step
+        Vec<complex_dbl> current_space(2);
+        current_space << complex_dbl(1.0), complex_dbl(-4.0);
+
+        // Starting time
+        complex_dbl current_time(.8);
+        // Time step
+        complex_dbl delta_t(-0.1);
+
+
+
+
+        bertini::System sys;
+        Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+
+        VariableGroup vars{x,y};
+
+        sys.AddVariableGroup(vars);
+        sys.AddPathVariable(t);
+
+        // Define homotopy system
+        sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+        sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        bertini::tracking::StepMetadata meta;
+
+        AMP.coefficient_bound = 5;
+        AMP.safety_digits_1 = 100;
+
+        double tracking_tolerance(1e-5);
+
+        unsigned num_steps_since_last_condition_number_computation = 1;
+        unsigned frequency_of_CN_estimation = 1;
+
+        Vec<complex_dbl> heun_prediction_result;
+
+
+        std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+        auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
+
+        BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
+    }
+
+    BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_a_is_false_mp)
+    {
+        // Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
+        bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+
+        // Starting point in spacetime step
+        Vec<mpfr> current_space(2);
+        current_space << mpfr("1.0"), mpfr("-4.0");
+
+        // Starting time
+        mpfr current_time(".8");
+        // Time step
+        mpfr delta_t("-0.1");
+
+
+
+        bertini::System sys;
+        Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+
+        VariableGroup vars{x,y};
+
+        sys.AddVariableGroup(vars);
+        sys.AddPathVariable(t);
+
+        // Define homotopy system
+        sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+        sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        bertini::tracking::StepMetadata meta;
+
+        AMP.coefficient_bound = 5;
+        AMP.safety_digits_1 = 100;
+
+        double tracking_tolerance = 1e-5;
+
+        unsigned num_steps_since_last_condition_number_computation = 1;
+        unsigned frequency_of_CN_estimation = 1;
+
+        Vec<mpfr> heun_prediction_result;
+
+
+        std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+        auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
+
+        BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
+    }
+
+    BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_c_is_false_d)
+    {
+        // Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
+
+        // Starting point in spacetime step
+        Vec<complex_dbl> current_space(2);
+        current_space << complex_dbl(1.0), complex_dbl(-4.0);
+
+        // Starting time
+        complex_dbl current_time(.8);
+        // Time step
+        complex_dbl delta_t(-0.1);
+
+
+
+
+        bertini::System sys;
+        Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+
+        VariableGroup vars{x,y};
+
+        sys.AddVariableGroup(vars);
+        sys.AddPathVariable(t);
+
+        // Define homotopy system
+        sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+        sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        bertini::tracking::StepMetadata meta;
+
+        AMP.coefficient_bound = 5;
+        AMP.safety_digits_2 = 100;
+
+        AMP.SetPhiPsiFromBounds();
+
+        double tracking_tolerance(1e-5);
+
+        unsigned num_steps_since_last_condition_number_computation = 1;
+        unsigned frequency_of_CN_estimation = 1;
+
+        Vec<complex_dbl> heun_prediction_result;
+
+        std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+        auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
+
+        BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
+    }
+
+    BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_c_is_false_mp)
+    {
+        // Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
+
+        bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+        // Starting point in spacetime step
+        Vec<mpfr> current_space(2);
+        current_space << mpfr("1.0"), mpfr("-4.0");
+
+        // Starting time
+        mpfr current_time(".8");
+        // Time step
+        mpfr delta_t("-0.1");
+
+
+
+        bertini::System sys;
+        Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+
+        VariableGroup vars{x,y};
+
+        sys.AddVariableGroup(vars);
+        sys.AddPathVariable(t);
+
+        // Define homotopy system
+        sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+        sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        bertini::tracking::StepMetadata meta;
+
+        AMP.coefficient_bound = 5;
+        AMP.safety_digits_2 = 100;
+
+        double tracking_tolerance = 1e-5;
+
+        unsigned num_steps_since_last_condition_number_computation = 1;
+        unsigned frequency_of_CN_estimation = 1;
+
+        Vec<mpfr> heun_prediction_result;
+
+
+        std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
+
+        auto success_code = predictor->Predict(heun_prediction_result, meta, sys, current_space, current_time, delta_t, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation, tracking_tolerance, &AMP);
+
+        BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
+    }
+
+
 BOOST_AUTO_TEST_SUITE_END()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

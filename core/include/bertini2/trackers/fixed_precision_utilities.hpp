@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #pragma once
@@ -30,36 +30,36 @@ namespace fixed{
 inline
 void SetPrecision(SampCont<complex_mp> & samples, unsigned prec)
 {
-	for (auto& s : samples)
-		for (unsigned ii=0; ii<s.size(); ii++)
-			s(ii).precision(prec);
+    for (auto& s : samples)
+        for (unsigned ii=0; ii<s.size(); ii++)
+            s(ii).precision(prec);
 }
 
 inline
 void SetPrecision(TimeCont<complex_mp> & times, unsigned prec)
 {
-	for (auto& t : times)
-		t.precision(prec);
+    for (auto& t : times)
+        t.precision(prec);
 }
 
 inline
 unsigned MaxPrecision(SampCont<complex_mp> const& samples)
 {
-	unsigned max_precision = 0;
-	for (auto& s : samples)
-		if(Precision(s(0)) > max_precision)
-			max_precision = Precision(s(0));
-	return max_precision;
+    unsigned max_precision = 0;
+    for (auto& s : samples)
+        if(Precision(s(0)) > max_precision)
+            max_precision = Precision(s(0));
+    return max_precision;
 }
 
 inline
 unsigned MaxPrecision(TimeCont<complex_mp> const& times)
 {
-	unsigned max_precision = 0;
-	for (auto& t : times)
-		if(Precision(t) > max_precision)
-			max_precision = Precision(t);
-	return max_precision;
+    unsigned max_precision = 0;
+    for (auto& t : times)
+        if(Precision(t) > max_precision)
+            max_precision = Precision(t);
+    return max_precision;
 }
 
 
@@ -67,13 +67,13 @@ unsigned MaxPrecision(TimeCont<complex_mp> const& times)
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<complex_dbl> const & /*times*/, SampCont<complex_dbl> const & /*derivatives*/)
 {
-	return DoublePrecision();
+    return DoublePrecision();
 }
 
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<complex_dbl> const & /*times*/, SampCont<complex_dbl> const & /*samples*/, SampCont<complex_dbl> const & /*derivatives*/)
 {
-	return DoublePrecision(); 
+    return DoublePrecision();
 }
 
 
@@ -81,7 +81,7 @@ unsigned EnsureAtUniformPrecision(TimeCont<complex_dbl> const & /*times*/, SampC
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<complex_mp> const & /*times*/, SampCont<complex_mp> const & samples)
 {
-	return MaxPrecision(samples);
+    return MaxPrecision(samples);
 }
 
 
@@ -89,11 +89,9 @@ unsigned EnsureAtUniformPrecision(TimeCont<complex_mp> const & /*times*/, SampCo
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<complex_mp> const & /*times*/, SampCont<complex_mp> const & samples, SampCont<complex_mp> const & derivatives)
 {
-	return max(MaxPrecision(samples),
-	           MaxPrecision(derivatives)); 
+    return max(MaxPrecision(samples),
+               MaxPrecision(derivatives));
 }
 
 
 }}} // re: namespaces
-
-

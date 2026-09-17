@@ -37,9 +37,9 @@
 
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		using namespace bertini;
+        using namespace bertini;
 
 
 
@@ -56,25 +56,25 @@ void ExportNIDAMP();
 template<typename AlgoT>
 class NIDVisitor: public def_visitor<NIDVisitor<AlgoT> >
 {
-	friend class ::boost::python::def_visitor_access;
+    friend class ::boost::python::def_visitor_access;
 
-	public:
-		template<class PyClass>
-		void visit(PyClass& cl) const;
+    public:
+        template<class PyClass>
+        void visit(PyClass& cl) const;
 
-	private:
+    private:
 
-		using MutableTrackerGetter = typename AlgoT::TrackerT& (AlgoT::*)();
-		static MutableTrackerGetter GetTrackerMutable()
-		{
-			return &AlgoT::GetTracker;
-		};
+        using MutableTrackerGetter = typename AlgoT::TrackerT& (AlgoT::*)();
+        static MutableTrackerGetter GetTrackerMutable()
+        {
+            return &AlgoT::GetTracker;
+        };
 
-		using MutableEndgameGetter = typename AlgoT::EndgameT& (AlgoT::*)();
-		static MutableEndgameGetter GetEndgameMutable()
-		{
-			return &AlgoT::GetEndgame;
-		};
+        using MutableEndgameGetter = typename AlgoT::EndgameT& (AlgoT::*)();
+        static MutableEndgameGetter GetEndgameMutable()
+        {
+            return &AlgoT::GetEndgame;
+        };
 };
 
 
@@ -83,23 +83,23 @@ template<typename AlgoT>
 template<class PyClass>
 void NIDVisitor<AlgoT>::visit(PyClass& cl) const
 {
-	cl
-	.def(ConfiguredVisitor<AlgoT>())
-	.def("solve", &AlgoT::Solve, "run the numerical irreducible decomposition with the currently stored settings (not yet implemented)")
-	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
-	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
-	.def("decomposition", &AlgoT::GetDecomposition, return_internal_reference<>(), "get the most recently computed numerical irreducible decomposition")
-	;
+    cl
+    .def(ConfiguredVisitor<AlgoT>())
+    .def("solve", &AlgoT::Solve, "run the numerical irreducible decomposition with the currently stored settings (not yet implemented)")
+    .def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
+    .def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
+    .def("decomposition", &AlgoT::GetDecomposition, return_internal_reference<>(), "get the most recently computed numerical irreducible decomposition")
+    ;
 }
 
 
 // Helper template — defined here so all split TUs can use it.
 template<typename TrackerT, typename EndgameT>
 void ExportNIDSpecific(std::string const& class_name){
-	using NIDT = algorithm::NumericalIrreducibleDecomposition<TrackerT, EndgameT, bertini::System>;
-	class_<NIDT, std::shared_ptr<NIDT> >(class_name.c_str(), init<bertini::System>())
-	.def(NIDVisitor<NIDT>())
-	;
+    using NIDT = algorithm::NumericalIrreducibleDecomposition<TrackerT, EndgameT, bertini::System>;
+    class_<NIDT, std::shared_ptr<NIDT> >(class_name.c_str(), init<bertini::System>())
+    .def(NIDVisitor<NIDT>())
+    ;
 }
 
 

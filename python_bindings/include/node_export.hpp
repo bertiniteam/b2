@@ -32,17 +32,14 @@
 #include "python_common.hpp"
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
 
-		using namespace bertini::node;
+        using namespace bertini::node;
 
-		using Nodeptr = std::shared_ptr<Node>;
+        using Nodeptr = std::shared_ptr<Node>;
 
-		void ExportNode();
-
-
-
+        void ExportNode();
 
 
 
@@ -50,183 +47,186 @@ namespace bertini{
 
 
 
-		template<typename NodeBaseT>
-		class NodeVisitor: public def_visitor<NodeVisitor<NodeBaseT> >
-		{
-			friend class ::boost::python::def_visitor_access;
-
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-
-		private:
-			static Nodeptr Diff0(NodeBaseT& self) { return self.Differentiate();}
-			Nodeptr (NodeBaseT::*Diff1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Differentiate;
-			Nodeptr (NodeBaseT::*DiffN)(std::shared_ptr<Variable> const&, unsigned) const= &NodeBaseT::Differentiate;
-			Nodeptr (NodeBaseT::*DiffList)(VariableGroup const&) const= &NodeBaseT::Differentiate;
-
-			static int Deg0(NodeBaseT& self) { return self.Degree();}
-			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
-			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
-
-			static bool IsHom0(NodeBaseT& self) { return self.IsHomogeneous();}
-			bool (NodeBaseT::*IsHom1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsHomogeneous;
-			bool (NodeBaseT::*IsHom2)(VariableGroup const& vars) const= &NodeBaseT::IsHomogeneous;
-
-			static bool IsPoly0(NodeBaseT& self) { return self.IsPolynomial();}
-			bool (NodeBaseT::*IsPoly1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsPolynomial;
-			bool (NodeBaseT::*IsPoly2)(VariableGroup const& vars) const= &NodeBaseT::IsPolynomial;
-
-			// Addition operators
-			Nodeptr(*addNodeNode)(Nodeptr, const Nodeptr&) = &(operator+);
-			Nodeptr(*addNodeMpfr)(Nodeptr, const complex_mp&) = &(operator+);
-			
-			static Nodeptr raddNodeMpfr(Nodeptr  y, const complex_mp & x)
-			{
-				return x+y;
-			}
-
-
-			Nodeptr(*addNodeRat)(Nodeptr, const bertini::mpq_rational&) = &(operator+);
-			static Nodeptr raddNodeRat(Nodeptr  y, const bertini::mpq_rational& x)
-			{ return x+y; }
-
-
-			static Nodeptr raddNodeInt(Nodeptr  y, const int & x)
-			{
-				return x+y;
-			}
-
-			Nodeptr(*addNodeInt)(Nodeptr, int) = &(operator+);
-			static Nodeptr iaddNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
-			{
-				return lhs += rhs;
-			}
-			// static Nodeptr iaddNodeDouble(Nodeptr  lhs, double rhs)
-			// {
-			// 	return lhs += rhs;
-			// }
-			static SumOperator iaddSumNode(SumOperator  lhs, const Nodeptr & rhs)
-			{
-				return lhs += rhs;
-			}
-
-			// Subtraction operators
-			Nodeptr(*subNodeNode)(Nodeptr, const Nodeptr&) = &(operator-);
-			Nodeptr(*subNodeMpfr)(Nodeptr, const complex_mp&) = &(operator-);
-			Nodeptr(*subNodeInt)(Nodeptr, int) = &(operator-);
-			static Nodeptr isubNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
-			{
-				return lhs -= rhs;
-			}
-
-			static SumOperator isubSumNode(SumOperator  lhs, const Nodeptr & rhs)
-			{
-				return lhs -= rhs;
-			}
-
-
-			static Nodeptr rsubNodeMpfr(Nodeptr  y, const complex_mp & x)
-			{
-				return x-y;
-			}
-
-			Nodeptr(*subNodeRat)(Nodeptr, const bertini::mpq_rational&) = &(operator-);
-			static Nodeptr rsubNodeRat(Nodeptr  y, const bertini::mpq_rational& x)
-			{ return x-y; }
-
-			static Nodeptr rsubNodeInt(Nodeptr  y, const int & x)
-			{
-				return x-y;
-			}
-
-			// Negate operator
-			Nodeptr(*negNode)(const Nodeptr &) = &(operator-);
 
 
 
+        template<typename NodeBaseT>
+        class NodeVisitor: public def_visitor<NodeVisitor<NodeBaseT> >
+        {
+            friend class ::boost::python::def_visitor_access;
 
-			// Multiplication operators
-			Nodeptr(*multNodeNode)(Nodeptr, const Nodeptr&) = &(operator*);
-			Nodeptr(*multNodeMpfr)(Nodeptr, const complex_mp&) = &(operator*);
-			Nodeptr(*multNodeRat)(Nodeptr, const mpq_rational&) = &(operator*);
-			Nodeptr(*multNodeInt)(Nodeptr, int) = &(operator*);
-			static Nodeptr imultNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
-			{
-				return lhs *= rhs;
-			}
+        public:
+            template<class PyClass>
+            void visit(PyClass& cl) const;
 
-			Nodeptr(*imultMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &(operator*=);
+        private:
+            static Nodeptr Diff0(NodeBaseT& self) { return self.Differentiate();}
+            Nodeptr (NodeBaseT::*Diff1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Differentiate;
+            Nodeptr (NodeBaseT::*DiffN)(std::shared_ptr<Variable> const&, unsigned) const= &NodeBaseT::Differentiate;
+            Nodeptr (NodeBaseT::*DiffList)(VariableGroup const&) const= &NodeBaseT::Differentiate;
+
+            static int Deg0(NodeBaseT& self) { return self.Degree();}
+            int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
+            int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
+
+            static bool IsHom0(NodeBaseT& self) { return self.IsHomogeneous();}
+            bool (NodeBaseT::*IsHom1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsHomogeneous;
+            bool (NodeBaseT::*IsHom2)(VariableGroup const& vars) const= &NodeBaseT::IsHomogeneous;
+
+            static bool IsPoly0(NodeBaseT& self) { return self.IsPolynomial();}
+            bool (NodeBaseT::*IsPoly1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsPolynomial;
+            bool (NodeBaseT::*IsPoly2)(VariableGroup const& vars) const= &NodeBaseT::IsPolynomial;
+
+            // Addition operators
+            Nodeptr(*addNodeNode)(Nodeptr, const Nodeptr&) = &(operator+);
+            Nodeptr(*addNodeMpfr)(Nodeptr, const complex_mp&) = &(operator+);
+
+            static Nodeptr raddNodeMpfr(Nodeptr  y, const complex_mp & x)
+            {
+                return x+y;
+            }
 
 
-			static Nodeptr rmultNodeMpfr(Nodeptr  y, const complex_mp & x)
-			{
-				return x*y;
-			}
+            Nodeptr(*addNodeRat)(Nodeptr, const bertini::mpq_rational&) = &(operator+);
+            static Nodeptr raddNodeRat(Nodeptr  y, const bertini::mpq_rational& x)
+            { return x+y; }
 
-			static Nodeptr rmultNodeRat(Nodeptr  y, const mpq_rational & x)
-			{
-				return x*y;
-			}
 
-			static Nodeptr rmultNodeInt(Nodeptr  y, const int & x)
-			{
-				return x*y;
-			}
+            static Nodeptr raddNodeInt(Nodeptr  y, const int & x)
+            {
+                return x+y;
+            }
+
+            Nodeptr(*addNodeInt)(Nodeptr, int) = &(operator+);
+            static Nodeptr iaddNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
+            {
+                return lhs += rhs;
+            }
+            // static Nodeptr iaddNodeDouble(Nodeptr  lhs, double rhs)
+            // {
+            //  return lhs += rhs;
+            // }
+            static SumOperator iaddSumNode(SumOperator  lhs, const Nodeptr & rhs)
+            {
+                return lhs += rhs;
+            }
+
+            // Subtraction operators
+            Nodeptr(*subNodeNode)(Nodeptr, const Nodeptr&) = &(operator-);
+            Nodeptr(*subNodeMpfr)(Nodeptr, const complex_mp&) = &(operator-);
+            Nodeptr(*subNodeInt)(Nodeptr, int) = &(operator-);
+            static Nodeptr isubNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
+            {
+                return lhs -= rhs;
+            }
+
+            static SumOperator isubSumNode(SumOperator  lhs, const Nodeptr & rhs)
+            {
+                return lhs -= rhs;
+            }
+
+
+            static Nodeptr rsubNodeMpfr(Nodeptr  y, const complex_mp & x)
+            {
+                return x-y;
+            }
+
+            Nodeptr(*subNodeRat)(Nodeptr, const bertini::mpq_rational&) = &(operator-);
+            static Nodeptr rsubNodeRat(Nodeptr  y, const bertini::mpq_rational& x)
+            { return x-y; }
+
+            static Nodeptr rsubNodeInt(Nodeptr  y, const int & x)
+            {
+                return x-y;
+            }
+
+            // Negate operator
+            Nodeptr(*negNode)(const Nodeptr &) = &(operator-);
 
 
 
 
-			// Division operators
-			Nodeptr(*divNodeNode)(Nodeptr, const Nodeptr&) = &(operator/);
-			Nodeptr(*divNodeRat)(Nodeptr, const mpq_rational&) = &(operator/);
-			Nodeptr(*divNodeMpfr)(Nodeptr, complex_mp) = &(operator/);
-			Nodeptr(*divNodeInt)(Nodeptr, int) = &(operator/);
-			static Nodeptr idivNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
-			{
-				return lhs /= rhs;
-			}
+            // Multiplication operators
+            Nodeptr(*multNodeNode)(Nodeptr, const Nodeptr&) = &(operator*);
+            Nodeptr(*multNodeMpfr)(Nodeptr, const complex_mp&) = &(operator*);
+            Nodeptr(*multNodeRat)(Nodeptr, const mpq_rational&) = &(operator*);
+            Nodeptr(*multNodeInt)(Nodeptr, int) = &(operator*);
+            static Nodeptr imultNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
+            {
+                return lhs *= rhs;
+            }
 
-			Nodeptr(*idivMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &(operator/=);
-
-
-			static Nodeptr rdivNodeMpfr(Nodeptr  y, const complex_mp & x)
-			{
-				return x/y;
-			}
-
-			static Nodeptr rdivNodeRat(Nodeptr  y, const mpq_rational & x)
-			{
-				return x/y;
-			}
-
-			static Nodeptr rdivNodeInt(Nodeptr  y, const int & x)
-			{
-				return x/y;
-			}
+            Nodeptr(*imultMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &(operator*=);
 
 
+            static Nodeptr rmultNodeMpfr(Nodeptr  y, const complex_mp & x)
+            {
+                return x*y;
+            }
 
-			// Power operators
-			Nodeptr(*powNodeNode)(const Nodeptr &, const Nodeptr&) = &pow;
-			Nodeptr(*powNodeMpfr)(const Nodeptr&, complex_mp) = &pow;
-			Nodeptr(*powNodeRat)(const Nodeptr&, const mpq_rational&) = &pow;
-			Nodeptr(*powNodeInt)( Nodeptr const&, int) = &pow;
+            static Nodeptr rmultNodeRat(Nodeptr  y, const mpq_rational & x)
+            {
+                return x*y;
+            }
 
-			// Transcendental operators
-			Nodeptr(*expNodeNode)(const Nodeptr &) = &exp;
-			Nodeptr(*logNodeNode)(const Nodeptr &) = &log;
-			Nodeptr(*sinNodeNode)(const Nodeptr &) = &sin;
-			Nodeptr(*asinNodeNode)(const Nodeptr &) = &asin;
-			Nodeptr(*cosNodeNode)(const Nodeptr &) = &cos;
-			Nodeptr(*acosNodeNode)(const Nodeptr &) = &acos;
-			Nodeptr(*tanNodeNode)(const Nodeptr &) = &tan;
-			Nodeptr(*atanNodeNode)(const Nodeptr &) = &atan;
+            static Nodeptr rmultNodeInt(Nodeptr  y, const int & x)
+            {
+                return x*y;
+            }
 
 
-		};
 
-	}
+
+            // Division operators
+            Nodeptr(*divNodeNode)(Nodeptr, const Nodeptr&) = &(operator/);
+            Nodeptr(*divNodeRat)(Nodeptr, const mpq_rational&) = &(operator/);
+            Nodeptr(*divNodeMpfr)(Nodeptr, complex_mp) = &(operator/);
+            Nodeptr(*divNodeInt)(Nodeptr, int) = &(operator/);
+            static Nodeptr idivNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
+            {
+                return lhs /= rhs;
+            }
+
+            Nodeptr(*idivMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &(operator/=);
+
+
+            static Nodeptr rdivNodeMpfr(Nodeptr  y, const complex_mp & x)
+            {
+                return x/y;
+            }
+
+            static Nodeptr rdivNodeRat(Nodeptr  y, const mpq_rational & x)
+            {
+                return x/y;
+            }
+
+            static Nodeptr rdivNodeInt(Nodeptr  y, const int & x)
+            {
+                return x/y;
+            }
+
+
+
+            // Power operators
+            Nodeptr(*powNodeNode)(const Nodeptr &, const Nodeptr&) = &pow;
+            Nodeptr(*powNodeMpfr)(const Nodeptr&, complex_mp) = &pow;
+            Nodeptr(*powNodeRat)(const Nodeptr&, const mpq_rational&) = &pow;
+            Nodeptr(*powNodeInt)( Nodeptr const&, int) = &pow;
+
+            // Transcendental operators
+            Nodeptr(*expNodeNode)(const Nodeptr &) = &exp;
+            Nodeptr(*logNodeNode)(const Nodeptr &) = &log;
+            Nodeptr(*sinNodeNode)(const Nodeptr &) = &sin;
+            Nodeptr(*asinNodeNode)(const Nodeptr &) = &asin;
+            Nodeptr(*cosNodeNode)(const Nodeptr &) = &cos;
+            Nodeptr(*acosNodeNode)(const Nodeptr &) = &acos;
+            Nodeptr(*tanNodeNode)(const Nodeptr &) = &tan;
+            Nodeptr(*atanNodeNode)(const Nodeptr &) = &atan;
+
+
+        };
+
+    }
 }
 
 

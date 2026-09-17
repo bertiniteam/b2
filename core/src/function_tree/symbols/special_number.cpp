@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/function_tree/symbols/special_number.hpp"
@@ -27,8 +27,8 @@
 
 
 namespace bertini{
-	namespace node{
-		namespace special_number{
+    namespace node{
+        namespace special_number{
 using ::pow;
 
 // Return value of constant.
@@ -51,38 +51,38 @@ using ::pow;
 
 
 
-			}// special number namespace
+            }// special number namespace
 
 
 std::shared_ptr<Node> Pi()
 {
-	return special_number::Pi::Make();
+    return special_number::Pi::Make();
 }
 
 std::shared_ptr<Node> E()
 {
-	return special_number::E::Make();
+    return special_number::E::Make();
 }
 
 std::shared_ptr<Node> I()
 {
-	return Complex::Make(0,1);
+    return Complex::Make(0,1);
 }
 
 
 std::shared_ptr<Node> Two()
 {
-	return Integer::Make(2);
+    return Integer::Make(2);
 }
 
 std::shared_ptr<Node> One()
 {
-	return Integer::Make(1);
+    return Integer::Make(1);
 }
 
 std::shared_ptr<Node> Zero()
 {
-	return Integer::Make(0);
+    return Integer::Make(0);
 }
-	} // re: namespace node
+    } // re: namespace node
 } // re: namespace bertini

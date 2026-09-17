@@ -33,10 +33,10 @@ namespace test {
 template <typename T>
 T EvalAt(std::shared_ptr<node::Node> const& n, std::map<std::string, T> const& known = {})
 {
-	std::map<std::string, T> point;
-	for (auto const& v : node::GatherVariables(n))
-		point[v->name()] = known.at(v->name());
-	return EvalExpression<T>(n, point);
+    std::map<std::string, T> point;
+    for (auto const& v : node::GatherVariables(n))
+        point[v->name()] = known.at(v->name());
+    return EvalExpression<T>(n, point);
 }
 
 } // namespace test

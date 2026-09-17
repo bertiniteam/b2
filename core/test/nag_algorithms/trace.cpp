@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -32,10 +32,10 @@
 BOOST_AUTO_TEST_SUITE(trace)
 
 
-	BOOST_AUTO_TEST_CASE(basics1)
-	{
-		
-	}
+    BOOST_AUTO_TEST_CASE(basics1)
+    {
+
+    }
 
 
 BOOST_AUTO_TEST_SUITE_END()

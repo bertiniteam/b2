@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/operator_export.cpp:  Source file for exposing operator nodes to python.
@@ -29,224 +29,221 @@
 
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
-		struct UnaryOpWrap : UnaryOperator, wrapper<UnaryOperator>
-		{
-			void SetOperand(std::shared_ptr<Node> new_child)
-			{
-				if (override SetOperand = this->get_override("SetOperand"))
-					SetOperand(new_child); // *note*
-				
-				UnaryOperator::SetOperand(new_child);
-			}
-			void default_SetChild(std::shared_ptr<Node> new_child){ return this->UnaryOperator::SetOperand(new_child);}
-		}; // re: NodeWrap
+        struct UnaryOpWrap : UnaryOperator, wrapper<UnaryOperator>
+        {
+            void SetOperand(std::shared_ptr<Node> new_child)
+            {
+                if (override SetOperand = this->get_override("SetOperand"))
+                    SetOperand(new_child); // *note*
 
-		
-		struct NaryOpWrap : NaryOperator, wrapper<NaryOperator>
-		{
-			void AddOperand(std::shared_ptr<Node> child)
-			{
-				if (override AddOperand = this->get_override("AddOperand"))
-					AddOperand(child); // *note*
-				
-				NaryOperator::AddOperand(child);
-			}
-			void default_AddOperand(std::shared_ptr<Node> child){ return this->NaryOperator::AddOperand(child);}
-		}; // re: NodeWrap
-
-		
-		
-		
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void UnaryOpVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			cl
-			.def("set_operand", &NodeBaseT::SetOperand )
-			.def("operand", &NodeBaseT::Operand )
-			;
-		}
-		
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void NaryOpVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			cl
-			.def("add_operand", &NodeBaseT::AddOperand )
-			.def("first_operand", &NodeBaseT::FirstOperand )
-			.def("num_operands", &NodeBaseT::NumOperands )
-			.def("operand", +[](NodeBaseT const& n, std::size_t index) -> std::shared_ptr<Node> {
-					if (index >= n.NumOperands())
-					{
-						PyErr_SetString(PyExc_IndexError, "operand index out of range");
-						throw_error_already_set();
-					}
-					return n.Operands()[index];
-				}, (arg("self"), arg("index")), "get the operand at the given index; see num_operands")
-			;
-		}
-
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void SumMultOpVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			
-			cl
-			.def("add_operand", AddOperand2)
-			;
-		}
+                UnaryOperator::SetOperand(new_child);
+            }
+            void default_SetChild(std::shared_ptr<Node> new_child){ return this->UnaryOperator::SetOperand(new_child);}
+        }; // re: NodeWrap
 
 
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void PowerOpVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			cl
-			.def("set_exponent", &NodeBaseT::SetExponent)
-			.def("set_base", &NodeBaseT::SetBase)
-			.def("get_exponent", &NodeBaseT::GetExponent, (arg("self")), "get the exponent node")
-			.def("get_base", &NodeBaseT::GetBase, (arg("self")), "get the base node")
-			;
-		}
+        struct NaryOpWrap : NaryOperator, wrapper<NaryOperator>
+        {
+            void AddOperand(std::shared_ptr<Node> child)
+            {
+                if (override AddOperand = this->get_override("AddOperand"))
+                    AddOperand(child); // *note*
 
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void IntPowOpVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			cl
-			.add_property("exponent", getexp, setexp)
-			;
-		}
+                NaryOperator::AddOperand(child);
+            }
+            void default_AddOperand(std::shared_ptr<Node> child){ return this->NaryOperator::AddOperand(child);}
+        }; // re: NodeWrap
 
 
 
-		void ExportOperators()
-		{
-			scope current_scope;
-			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-			new_submodule_name.append(".operator");
-			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-			current_scope.attr("operator") = new_submodule;
 
-			scope new_submodule_scope = new_submodule;
+        template<typename NodeBaseT>
+        template<class PyClass>
+        void UnaryOpVisitor<NodeBaseT>::visit(PyClass& cl) const
+        {
+            cl
+            .def("set_operand", &NodeBaseT::SetOperand )
+            .def("operand", &NodeBaseT::Operand )
+            ;
+        }
 
-			// Operator class
-			class_<Operator, boost::noncopyable, bases<Node>, std::shared_ptr<Operator> >("AbstractOp", no_init)
-			;
+        template<typename NodeBaseT>
+        template<class PyClass>
+        void NaryOpVisitor<NodeBaseT>::visit(PyClass& cl) const
+        {
+            cl
+            .def("add_operand", &NodeBaseT::AddOperand )
+            .def("first_operand", &NodeBaseT::FirstOperand )
+            .def("num_operands", &NodeBaseT::NumOperands )
+            .def("operand", +[](NodeBaseT const& n, std::size_t index) -> std::shared_ptr<Node> {
+                    if (index >= n.NumOperands())
+                    {
+                        PyErr_SetString(PyExc_IndexError, "operand index out of range");
+                        throw_error_already_set();
+                    }
+                    return n.Operands()[index];
+                }, (arg("self"), arg("index")), "get the operand at the given index; see num_operands")
+            ;
+        }
 
-			// UnaryOperator class
-			class_<UnaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<UnaryOperator> >("Unary", no_init)
-			.def(UnaryOpVisitor<UnaryOperator>())
-			;
+        template<typename NodeBaseT>
+        template<class PyClass>
+        void SumMultOpVisitor<NodeBaseT>::visit(PyClass& cl) const
+        {
 
-			// NaryOperator class
-			class_<NaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<NaryOperator> >("Nary", no_init)
-			.def(NaryOpVisitor<NaryOperator>())
-			;
-
-			// SumOperator class
-			class_<SumOperator, bases<NaryOperator>, std::shared_ptr<SumOperator> >("Sum", no_init)
-			.def("__init__", make_constructor(&SumOperator::template Make<const Nodeptr&, const Nodeptr &> ))
-			.def("__init__", make_constructor(&SumOperator::template Make<const Nodeptr&, bool const&, const Nodeptr&, bool const&> ))
-			.def(SumMultOpVisitor<SumOperator>())
-			.def("sign", +[](SumOperator const& n, std::size_t index) -> bool {
-					if (index >= n.GetSigns().size())
-					{
-						PyErr_SetString(PyExc_IndexError, "operand index out of range");
-						throw_error_already_set();
-					}
-					return n.GetSigns()[index];
-				}, (arg("self"), arg("index")), "the sign of the operand at the given index: True if added, False if subtracted")
-			;
-
-
-			// NegateOperator class
-			class_<NegateOperator, bases<UnaryOperator>, std::shared_ptr<NegateOperator> >("Negate", no_init )
-			.def("__init__", make_constructor(&NegateOperator::template Make<const Nodeptr&>))
-			;
-
-			// MultOperator class
-			class_<MultOperator, bases<NaryOperator>, std::shared_ptr<MultOperator> >("Mult", no_init )
-			.def("__init__", make_constructor(&MultOperator::template Make<const Nodeptr&, const Nodeptr &>))
-			.def("__init__", make_constructor(&MultOperator::template Make<const Nodeptr&, bool const&, const Nodeptr&, bool const&>))
-			.def(SumMultOpVisitor<MultOperator>())
-			.def("mult_or_div", +[](MultOperator const& n, std::size_t index) -> bool {
-					if (index >= n.GetMultOrDiv().size())
-					{
-						PyErr_SetString(PyExc_IndexError, "operand index out of range");
-						throw_error_already_set();
-					}
-					return n.GetMultOrDiv()[index];
-				}, (arg("self"), arg("index")), "the operation for the operand at the given index: True if multiplied, False if divided")
-			;
-			
-			// PowerOperator class
-			class_<PowerOperator, bases<Operator>, std::shared_ptr<PowerOperator> >("Power", no_init )
-			.def("__init__", make_constructor(&PowerOperator::template Make<const Nodeptr&, const Nodeptr &>))
-			.def(PowerOpVisitor<PowerOperator>())
-			;
-			
-			// IntegerPowerOperator class
-			class_<IntegerPowerOperator, bases<UnaryOperator>, std::shared_ptr<IntegerPowerOperator> >("IntegerPower", no_init )
-			.def("__init__", make_constructor(&IntegerPowerOperator::template Make<const Nodeptr&, int const&>))
-			.def(IntPowOpVisitor<IntegerPowerOperator>())
-			;
-
-			// SqrtOperator class
-			class_<SqrtOperator, bases<UnaryOperator>, std::shared_ptr<SqrtOperator> >("Sqrt", no_init)
-			.def("__init__", make_constructor(&SqrtOperator::template Make<const Nodeptr&>))
-			;
-
-			// ExpOperator class
-			class_<ExpOperator, bases<UnaryOperator>, std::shared_ptr<ExpOperator> >("Exp", no_init)
-			.def("__init__", make_constructor(&ExpOperator::template Make<const Nodeptr&> ))
-			;
-
-			// LogOperator class
-			class_<LogOperator, bases<UnaryOperator>, std::shared_ptr<LogOperator> >("Log", no_init)
-			.def("__init__", make_constructor(&LogOperator::template Make<const Nodeptr&> ))
-			;
-			
-			
-
-			// TrigOperator class
-			class_<TrigOperator, boost::noncopyable, bases<Node>, std::shared_ptr<TrigOperator> >("Trig", no_init)
-			;
-
-			// SinOperator class
-			class_<SinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<SinOperator> >("Sin", no_init)
-			.def("__init__", make_constructor(&SinOperator::template Make<const Nodeptr&>))
-			;
-			// CosOperator class
-			class_<CosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<CosOperator> >("Cos", no_init)
-			.def("__init__", make_constructor(&CosOperator::template Make<const Nodeptr&>))
-			;
-			// TanOperator class
-			class_<TanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<TanOperator> >("Tan", no_init)
-			.def("__init__", make_constructor(&TanOperator::template Make<const Nodeptr&>))
-			;
-
-			// ArcSinOperator class
-			class_<ArcSinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcSinOperator> >("ArcSin", no_init)
-			.def("__init__", make_constructor(&ArcSinOperator::template Make<const Nodeptr&>))
-			;
-			// ArcCosOperator class
-			class_<ArcCosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcCosOperator> >("ArcCos", no_init)
-			.def("__init__", make_constructor(&ArcCosOperator::template Make<const Nodeptr&>))
-			;
-			// ArcTanOperator class
-			class_<ArcTanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcTanOperator> >("ArcTan", no_init)
-			.def("__init__", make_constructor(&ArcTanOperator::template Make<const Nodeptr&>))
-			;
+            cl
+            .def("add_operand", AddOperand2)
+            ;
+        }
 
 
-			
-			
-		}
-	} //namespace python
+        template<typename NodeBaseT>
+        template<class PyClass>
+        void PowerOpVisitor<NodeBaseT>::visit(PyClass& cl) const
+        {
+            cl
+            .def("set_exponent", &NodeBaseT::SetExponent)
+            .def("set_base", &NodeBaseT::SetBase)
+            .def("get_exponent", &NodeBaseT::GetExponent, (arg("self")), "get the exponent node")
+            .def("get_base", &NodeBaseT::GetBase, (arg("self")), "get the base node")
+            ;
+        }
+
+        template<typename NodeBaseT>
+        template<class PyClass>
+        void IntPowOpVisitor<NodeBaseT>::visit(PyClass& cl) const
+        {
+            cl
+            .add_property("exponent", getexp, setexp)
+            ;
+        }
+
+
+
+        void ExportOperators()
+        {
+            scope current_scope;
+            std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+            new_submodule_name.append(".operator");
+            object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+            current_scope.attr("operator") = new_submodule;
+
+            scope new_submodule_scope = new_submodule;
+
+            // Operator class
+            class_<Operator, boost::noncopyable, bases<Node>, std::shared_ptr<Operator> >("AbstractOp", no_init)
+            ;
+
+            // UnaryOperator class
+            class_<UnaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<UnaryOperator> >("Unary", no_init)
+            .def(UnaryOpVisitor<UnaryOperator>())
+            ;
+
+            // NaryOperator class
+            class_<NaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<NaryOperator> >("Nary", no_init)
+            .def(NaryOpVisitor<NaryOperator>())
+            ;
+
+            // SumOperator class
+            class_<SumOperator, bases<NaryOperator>, std::shared_ptr<SumOperator> >("Sum", no_init)
+            .def("__init__", make_constructor(&SumOperator::template Make<const Nodeptr&, const Nodeptr &> ))
+            .def("__init__", make_constructor(&SumOperator::template Make<const Nodeptr&, bool const&, const Nodeptr&, bool const&> ))
+            .def(SumMultOpVisitor<SumOperator>())
+            .def("sign", +[](SumOperator const& n, std::size_t index) -> bool {
+                    if (index >= n.GetSigns().size())
+                    {
+                        PyErr_SetString(PyExc_IndexError, "operand index out of range");
+                        throw_error_already_set();
+                    }
+                    return n.GetSigns()[index];
+                }, (arg("self"), arg("index")), "the sign of the operand at the given index: True if added, False if subtracted")
+            ;
+
+
+            // NegateOperator class
+            class_<NegateOperator, bases<UnaryOperator>, std::shared_ptr<NegateOperator> >("Negate", no_init )
+            .def("__init__", make_constructor(&NegateOperator::template Make<const Nodeptr&>))
+            ;
+
+            // MultOperator class
+            class_<MultOperator, bases<NaryOperator>, std::shared_ptr<MultOperator> >("Mult", no_init )
+            .def("__init__", make_constructor(&MultOperator::template Make<const Nodeptr&, const Nodeptr &>))
+            .def("__init__", make_constructor(&MultOperator::template Make<const Nodeptr&, bool const&, const Nodeptr&, bool const&>))
+            .def(SumMultOpVisitor<MultOperator>())
+            .def("mult_or_div", +[](MultOperator const& n, std::size_t index) -> bool {
+                    if (index >= n.GetMultOrDiv().size())
+                    {
+                        PyErr_SetString(PyExc_IndexError, "operand index out of range");
+                        throw_error_already_set();
+                    }
+                    return n.GetMultOrDiv()[index];
+                }, (arg("self"), arg("index")), "the operation for the operand at the given index: True if multiplied, False if divided")
+            ;
+
+            // PowerOperator class
+            class_<PowerOperator, bases<Operator>, std::shared_ptr<PowerOperator> >("Power", no_init )
+            .def("__init__", make_constructor(&PowerOperator::template Make<const Nodeptr&, const Nodeptr &>))
+            .def(PowerOpVisitor<PowerOperator>())
+            ;
+
+            // IntegerPowerOperator class
+            class_<IntegerPowerOperator, bases<UnaryOperator>, std::shared_ptr<IntegerPowerOperator> >("IntegerPower", no_init )
+            .def("__init__", make_constructor(&IntegerPowerOperator::template Make<const Nodeptr&, int const&>))
+            .def(IntPowOpVisitor<IntegerPowerOperator>())
+            ;
+
+            // SqrtOperator class
+            class_<SqrtOperator, bases<UnaryOperator>, std::shared_ptr<SqrtOperator> >("Sqrt", no_init)
+            .def("__init__", make_constructor(&SqrtOperator::template Make<const Nodeptr&>))
+            ;
+
+            // ExpOperator class
+            class_<ExpOperator, bases<UnaryOperator>, std::shared_ptr<ExpOperator> >("Exp", no_init)
+            .def("__init__", make_constructor(&ExpOperator::template Make<const Nodeptr&> ))
+            ;
+
+            // LogOperator class
+            class_<LogOperator, bases<UnaryOperator>, std::shared_ptr<LogOperator> >("Log", no_init)
+            .def("__init__", make_constructor(&LogOperator::template Make<const Nodeptr&> ))
+            ;
+
+
+
+            // TrigOperator class
+            class_<TrigOperator, boost::noncopyable, bases<Node>, std::shared_ptr<TrigOperator> >("Trig", no_init)
+            ;
+
+            // SinOperator class
+            class_<SinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<SinOperator> >("Sin", no_init)
+            .def("__init__", make_constructor(&SinOperator::template Make<const Nodeptr&>))
+            ;
+            // CosOperator class
+            class_<CosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<CosOperator> >("Cos", no_init)
+            .def("__init__", make_constructor(&CosOperator::template Make<const Nodeptr&>))
+            ;
+            // TanOperator class
+            class_<TanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<TanOperator> >("Tan", no_init)
+            .def("__init__", make_constructor(&TanOperator::template Make<const Nodeptr&>))
+            ;
+
+            // ArcSinOperator class
+            class_<ArcSinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcSinOperator> >("ArcSin", no_init)
+            .def("__init__", make_constructor(&ArcSinOperator::template Make<const Nodeptr&>))
+            ;
+            // ArcCosOperator class
+            class_<ArcCosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcCosOperator> >("ArcCos", no_init)
+            .def("__init__", make_constructor(&ArcCosOperator::template Make<const Nodeptr&>))
+            ;
+            // ArcTanOperator class
+            class_<ArcTanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcTanOperator> >("ArcTan", no_init)
+            .def("__init__", make_constructor(&ArcTanOperator::template Make<const Nodeptr&>))
+            ;
+
+
+
+
+        }
+    } //namespace python
 } // namespace bertini
-
-
-

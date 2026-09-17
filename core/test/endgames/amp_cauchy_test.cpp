@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include <iostream>
@@ -101,44 +101,44 @@ using PrecisionConfig = bertini::tracking::TrackerTraits<TrackerType>::Precision
 
 BOOST_AUTO_TEST_CASE(tight_tolerance_forces_double_to_mpfr_migration)
 {
-	DefaultPrecision(DoublePrecision());
+    DefaultPrecision(DoublePrecision());
 
-	System sys;
-	auto x = node::Variable::Make("x");
-	auto t = node::Variable::Make("t");
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+    System sys;
+    auto x = node::Variable::Make("x");
+    auto t = node::Variable::Make("t");
+    sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t );
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	newton_preferences.max_num_newton_iterations = 2;
-	newton_preferences.min_num_newton_iterations = 1;
-	tracker.Setup(bertini::tracking::Predictor::HeunEuler, 1e-5, 1e5, stepping_preferences, newton_preferences);
-	tracker.PrecisionSetup(precision_config);
-	tracker.ReinitializeInitialStepSize(false);
+    TrackerType tracker(sys);
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    newton_preferences.max_num_newton_iterations = 2;
+    newton_preferences.min_num_newton_iterations = 1;
+    tracker.Setup(bertini::tracking::Predictor::HeunEuler, 1e-5, 1e5, stepping_preferences, newton_preferences);
+    tracker.PrecisionSetup(precision_config);
+    tracker.ReinitializeInitialStepSize(false);
 
-	complex_mp time(real_mp("0.1"), real_mp("0.0"));
-	Vec<complex_mp> sample(1);
-	sample << complex_mp(real_mp("0.9000000000000001"), real_mp("0.4358898943540673"));
-	Vec<complex_mp> x_origin(1);
-	x_origin << complex_mp(1,0);
+    complex_mp time(real_mp("0.1"), real_mp("0.0"));
+    Vec<complex_mp> sample(1);
+    sample << complex_mp(real_mp("0.9000000000000001"), real_mp("0.4358898943540673"));
+    Vec<complex_mp> x_origin(1);
+    x_origin << complex_mp(1,0);
 
-	TestedEGType eg(tracker);
-	eg.SetBoundaryTime(time);
-	eg.SetFinalTolerance(1e-25);   // double (~16 digits) cannot reach this -> the endgame must migrate to mpfr
+    TestedEGType eg(tracker);
+    eg.SetBoundaryTime(time);
+    eg.SetFinalTolerance(1e-25);   // double (~16 digits) cannot reach this -> the endgame must migrate to mpfr
 
-	auto code = eg.Run(sample);
+    auto code = eg.Run(sample);
 
-	BOOST_CHECK(code == SuccessCode::Success);
-	// Converged to a tolerance only mpfr can deliver, so the endgame must have crossed above double.
-	BOOST_CHECK_GT(Precision(eg.FinalApproximation<complex_mp>()), DoublePrecision());
-	// ...and to the correct root.
-	BOOST_CHECK((eg.FinalApproximation<complex_mp>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-22);
+    BOOST_CHECK(code == SuccessCode::Success);
+    // Converged to a tolerance only mpfr can deliver, so the endgame must have crossed above double.
+    BOOST_CHECK_GT(Precision(eg.FinalApproximation<complex_mp>()), DoublePrecision());
+    // ...and to the correct root.
+    BOOST_CHECK((eg.FinalApproximation<complex_mp>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-22);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // re: adaptive_numeric_type_migration
@@ -161,45 +161,44 @@ using PrecisionConfig = bertini::tracking::TrackerTraits<TrackerType>::Precision
 
 BOOST_AUTO_TEST_CASE(slow_diverger_hits_security_max_norm_below_cycle_cutoff)
 {
-	DefaultPrecision(DoublePrecision());
+    DefaultPrecision(DoublePrecision());
 
-	System sys;
-	auto x = node::Variable::Make("x");
-	auto t = node::Variable::Make("t");
-	sys.AddFunction( pow(x,2)*t - 1 );        // x(t) = t^(-1/2): an honest slow diverger
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+    System sys;
+    auto x = node::Variable::Make("x");
+    auto t = node::Variable::Make("t");
+    sys.AddFunction( pow(x,2)*t - 1 );        // x(t) = t^(-1/2): an honest slow diverger
+    VariableGroup vars{x};
+    sys.AddVariableGroup(vars);
+    sys.AddPathVariable(t);
 
-	auto precision_config = PrecisionConfig(sys);
+    auto precision_config = PrecisionConfig(sys);
 
-	TrackerType tracker(sys);
-	bertini::tracking::SteppingConfig stepping_preferences;
-	bertini::tracking::NewtonConfig newton_preferences;
-	tracker.Setup(bertini::tracking::Predictor::HeunEuler, 1e-5, 1e5, stepping_preferences, newton_preferences);
-	tracker.PrecisionSetup(precision_config);
+    TrackerType tracker(sys);
+    bertini::tracking::SteppingConfig stepping_preferences;
+    bertini::tracking::NewtonConfig newton_preferences;
+    tracker.Setup(bertini::tracking::Predictor::HeunEuler, 1e-5, 1e5, stepping_preferences, newton_preferences);
+    tracker.PrecisionSetup(precision_config);
 
-	complex_mp time(real_mp("0.1"), real_mp("0.0"));
-	Vec<complex_mp> sample(1);
-	sample << complex_mp(real_mp("3.162277660168379331998893544432719"), real_mp("0.0"));  // 0.1^(-1/2)
+    complex_mp time(real_mp("0.1"), real_mp("0.0"));
+    Vec<complex_mp> sample(1);
+    sample << complex_mp(real_mp("3.162277660168379331998893544432719"), real_mp("0.0"));  // 0.1^(-1/2)
 
-	TestedEGType eg(tracker);
-	eg.SetBoundaryTime(time);
+    TestedEGType eg(tracker);
+    eg.SetBoundaryTime(time);
 
-	auto code = eg.Run(sample);
-	BOOST_TEST_MESSAGE("diverger endgame code: " << int(code) << "  |t| " << double(abs(eg.LatestTime())));
+    auto code = eg.Run(sample);
+    BOOST_TEST_MESSAGE("diverger endgame code: " << int(code) << "  |t| " << double(abs(eg.LatestTime())));
 
-	// truncated by the valve, not ground down to the tracker's threshold or min track time
-	BOOST_CHECK(code == SuccessCode::SecurityMaxNormReached);
-	// ...and truncated EARLY: at/below the cycle cutoff (1e-8) the valve arms; the norm
-	// crosses max_norm (1e4) at |t| ~ 1e-8, so death should come around that scale --
-	// not after descending to ~1e-14 (ratio cutoff / old-crawl territory)
-	using std::abs;
-	BOOST_CHECK_GT(static_cast<double>(abs(eg.LatestTime())), 1e-11);
+    // truncated by the valve, not ground down to the tracker's threshold or min track time
+    BOOST_CHECK(code == SuccessCode::SecurityMaxNormReached);
+    // ...and truncated EARLY: at/below the cycle cutoff (1e-8) the valve arms; the norm
+    // crosses max_norm (1e4) at |t| ~ 1e-8, so death should come around that scale --
+    // not after descending to ~1e-14 (ratio cutoff / old-crawl territory)
+    using std::abs;
+    BOOST_CHECK_GT(static_cast<double>(abs(eg.LatestTime())), 1e-11);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // re: divergent_path_truncation
 
 
 BOOST_AUTO_TEST_SUITE_END() // re:
-

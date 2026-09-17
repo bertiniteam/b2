@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -33,21 +33,20 @@ BOOST_AUTO_TEST_SUITE(nid)
 
 
 
-	BOOST_AUTO_TEST_SUITE(policy_by_shared_pointer)
+    BOOST_AUTO_TEST_SUITE(policy_by_shared_pointer)
 
-		template <typename T>
-		using sp = std::shared_ptr<T>;
+        template <typename T>
+        using sp = std::shared_ptr<T>;
 
-		using NID = bertini::nag_datatype::NumericalIrreducibleDecomposition<
-			bertini::complex_mp>;
+        using NID = bertini::nag_datatype::NumericalIrreducibleDecomposition<
+            bertini::complex_mp>;
 
-		BOOST_AUTO_TEST_CASE(something)
-		{	
+        BOOST_AUTO_TEST_CASE(something)
+        {
 
-		}
+        }
 
-	BOOST_AUTO_TEST_SUITE_END() // by_shared_pointer
+    BOOST_AUTO_TEST_SUITE_END() // by_shared_pointer
 
 
 BOOST_AUTO_TEST_SUITE_END() // witness_set
-

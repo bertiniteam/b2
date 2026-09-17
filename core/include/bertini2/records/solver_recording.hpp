@@ -52,15 +52,15 @@ namespace records {
 /// \brief A double as full-round-trip decimal text (%.17g: bit-exact per IEEE-754).
 inline std::string ExactDoubleText(double v)
 {
-	char buffer[32];
-	std::snprintf(buffer, sizeof(buffer), "%.17g", v);
-	return buffer;
+    char buffer[32];
+    std::snprintf(buffer, sizeof(buffer), "%.17g", v);
+    return buffer;
 }
 
 /// \brief Parse a double written by ExactDoubleText (bit-exact round trip).
 inline double DoubleFromText(std::string const& s)
 {
-	return std::strtod(s.c_str(), nullptr);
+    return std::strtod(s.c_str(), nullptr);
 }
 
 /// \brief Encode one real scalar as text: doubles via %.17g; real_mp at full stored precision.
@@ -71,14 +71,14 @@ inline std::string EncodeRealScalar(real_mp const& v) { return v.str(0, std::ios
 /// \brief Encode one complex value as ["re", "im", precision] (precision in digits).
 inline boost::json::array EncodeComplexScalar(complex_dbl const& z)
 {
-	return {ExactDoubleText(z.real()), ExactDoubleText(z.imag()),
-	        static_cast<std::int64_t>(DoublePrecision())};
+    return {ExactDoubleText(z.real()), ExactDoubleText(z.imag()),
+            static_cast<std::int64_t>(DoublePrecision())};
 }
 /// \brief Encode one multiprecision complex value as ["re", "im", precision].
 inline boost::json::array EncodeComplexScalar(complex_mp const& z)
 {
-	return {z.real().str(0, std::ios::scientific), z.imag().str(0, std::ios::scientific),
-	        static_cast<std::int64_t>(z.precision())};
+    return {z.real().str(0, std::ios::scientific), z.imag().str(0, std::ios::scientific),
+            static_cast<std::int64_t>(z.precision())};
 }
 
 /// \brief Decode a complex value written by EncodeComplexScalar, at its recorded precision.
@@ -89,39 +89,39 @@ ComplexT DecodeComplexScalar(boost::json::array const& triple);
 template <>
 inline complex_dbl DecodeComplexScalar<complex_dbl>(boost::json::array const& triple)
 {
-	return complex_dbl(DoubleFromText(std::string(triple.at(0).as_string())),
-	                   DoubleFromText(std::string(triple.at(1).as_string())));
+    return complex_dbl(DoubleFromText(std::string(triple.at(0).as_string())),
+                       DoubleFromText(std::string(triple.at(1).as_string())));
 }
 
 /// \brief Decode a multiprecision complex value at its recorded precision.
 template <>
 inline complex_mp DecodeComplexScalar<complex_mp>(boost::json::array const& triple)
 {
-	auto const digits = static_cast<unsigned>(triple.at(2).as_int64());
-	complex_mp z(real_mp(std::string(triple.at(0).as_string()), digits),
-	             real_mp(std::string(triple.at(1).as_string()), digits));
-	z.precision(digits);
-	return z;
+    auto const digits = static_cast<unsigned>(triple.at(2).as_int64());
+    complex_mp z(real_mp(std::string(triple.at(0).as_string()), digits),
+                 real_mp(std::string(triple.at(1).as_string()), digits));
+    z.precision(digits);
+    return z;
 }
 
 /// \brief Encode a point (vector of complex coordinates) as an array of scalar triples.
 template <typename ComplexT>
 boost::json::array EncodePoint(Vec<ComplexT> const& point)
 {
-	boost::json::array out;
-	for (Eigen::Index ii = 0; ii < point.size(); ++ii)
-		out.push_back(EncodeComplexScalar(point(ii)));
-	return out;
+    boost::json::array out;
+    for (Eigen::Index ii = 0; ii < point.size(); ++ii)
+        out.push_back(EncodeComplexScalar(point(ii)));
+    return out;
 }
 
 /// \brief Decode a point written by EncodePoint.
 template <typename ComplexT>
 Vec<ComplexT> DecodePoint(boost::json::array const& coords)
 {
-	Vec<ComplexT> out(static_cast<Eigen::Index>(coords.size()));
-	for (std::size_t ii = 0; ii < coords.size(); ++ii)
-		out(static_cast<Eigen::Index>(ii)) = DecodeComplexScalar<ComplexT>(coords[ii].as_array());
-	return out;
+    Vec<ComplexT> out(static_cast<Eigen::Index>(coords.size()));
+    for (std::size_t ii = 0; ii < coords.size(); ++ii)
+        out(static_cast<Eigen::Index>(ii)) = DecodeComplexScalar<ComplexT>(coords[ii].as_array());
+    return out;
 }
 
 /**
@@ -135,28 +135,28 @@ read-without-bertini rendering, recorded beside the integer in every track recor
 */
 inline std::string CanonicalName(SuccessCode code)
 {
-	switch (code)
-	{
-		case SuccessCode::NeverStarted: return "NeverStarted";
-		case SuccessCode::Success: return "Success";
-		case SuccessCode::HigherPrecisionNecessary: return "HigherPrecisionNecessary";
-		case SuccessCode::ReduceStepSize: return "ReduceStepSize";
-		case SuccessCode::GoingToInfinity: return "GoingToInfinity";
-		case SuccessCode::FailedToConverge: return "FailedToConverge";
-		case SuccessCode::MatrixSolveFailure: return "MatrixSolveFailure";
-		case SuccessCode::MatrixSolveFailureFirstPartOfPrediction: return "MatrixSolveFailureFirstPartOfPrediction";
-		case SuccessCode::MaxNumStepsTaken: return "MaxNumStepsTaken";
-		case SuccessCode::MaxPrecisionReached: return "MaxPrecisionReached";
-		case SuccessCode::MinStepSizeReached: return "MinStepSizeReached";
-		case SuccessCode::Failure: return "Failure";
-		case SuccessCode::SingularStartPoint: return "SingularStartPoint";
-		case SuccessCode::ExternallyTerminated: return "ExternallyTerminated";
-		case SuccessCode::MinTrackTimeReached: return "MinTrackTimeReached";
-		case SuccessCode::SecurityMaxNormReached: return "SecurityMaxNormReached";
-		case SuccessCode::CycleNumTooHigh: return "CycleNumTooHigh";
-		case SuccessCode::FailedToSelectPrecisionAndStepsize: return "FailedToSelectPrecisionAndStepsize";
-	}
-	return "UnknownSuccessCode";
+    switch (code)
+    {
+        case SuccessCode::NeverStarted: return "NeverStarted";
+        case SuccessCode::Success: return "Success";
+        case SuccessCode::HigherPrecisionNecessary: return "HigherPrecisionNecessary";
+        case SuccessCode::ReduceStepSize: return "ReduceStepSize";
+        case SuccessCode::GoingToInfinity: return "GoingToInfinity";
+        case SuccessCode::FailedToConverge: return "FailedToConverge";
+        case SuccessCode::MatrixSolveFailure: return "MatrixSolveFailure";
+        case SuccessCode::MatrixSolveFailureFirstPartOfPrediction: return "MatrixSolveFailureFirstPartOfPrediction";
+        case SuccessCode::MaxNumStepsTaken: return "MaxNumStepsTaken";
+        case SuccessCode::MaxPrecisionReached: return "MaxPrecisionReached";
+        case SuccessCode::MinStepSizeReached: return "MinStepSizeReached";
+        case SuccessCode::Failure: return "Failure";
+        case SuccessCode::SingularStartPoint: return "SingularStartPoint";
+        case SuccessCode::ExternallyTerminated: return "ExternallyTerminated";
+        case SuccessCode::MinTrackTimeReached: return "MinTrackTimeReached";
+        case SuccessCode::SecurityMaxNormReached: return "SecurityMaxNormReached";
+        case SuccessCode::CycleNumTooHigh: return "CycleNumTooHigh";
+        case SuccessCode::FailedToSelectPrecisionAndStepsize: return "FailedToSelectPrecisionAndStepsize";
+    }
+    return "UnknownSuccessCode";
 }
 
 /**
@@ -173,11 +173,11 @@ Audits of a run should see success / diverged / failed as three distinct populat
 */
 inline std::string CoarsePathStatus(SuccessCode code)
 {
-	if (code == SuccessCode::Success)
-		return "success";
-	if (code == SuccessCode::GoingToInfinity || code == SuccessCode::SecurityMaxNormReached)
-		return "diverged";
-	return "failed";
+    if (code == SuccessCode::Success)
+        return "success";
+    if (code == SuccessCode::GoingToInfinity || code == SuccessCode::SecurityMaxNormReached)
+        return "diverged";
+    return "failed";
 }
 
 /**
@@ -190,35 +190,35 @@ read-without-bertini rendering).  The caller adds "kind"/"run"/"index"/"status"/
 template <typename ComplexT>
 boost::json::object EncodeFullPathResult(parallel::FullPathResult<ComplexT> const& r)
 {
-	boost::json::object out;
-	out["pre_endgame_success_code"] = static_cast<std::int64_t>(r.pre_endgame_success_code);
-	out["pre_endgame_success_code_name"] = CanonicalName(r.pre_endgame_success_code);
-	out["boundary_point"] = EncodePoint(r.boundary_point);
-	out["boundary_stepsize"] = EncodeRealScalar(r.boundary_stepsize);
-	out["boundary_precision"] = static_cast<std::int64_t>(r.boundary_precision);
-	out["endgame_success_code"] = static_cast<std::int64_t>(r.endgame_success_code);
-	out["endgame_success_code_name"] = CanonicalName(r.endgame_success_code);
-	out["endpoint"] = EncodePoint(r.solution);
-	out["function_residual"] = ExactDoubleText(r.function_residual);
-	out["condition_number"] = ExactDoubleText(r.condition_number);
-	{
-		boost::json::array sv;
-		for (Eigen::Index i = 0; i < r.singular_values.size(); ++i)
-			sv.push_back(boost::json::value(ExactDoubleText(r.singular_values(i))));
-		out["singular_values"] = std::move(sv);
-	}
-	out["newton_residual"] = ExactDoubleText(r.newton_residual);
-	out["final_time_used"] = EncodeComplexScalar(r.final_time_used);
-	out["accuracy_estimate"] = ExactDoubleText(r.accuracy_estimate);
-	out["accuracy_estimate_user_coords"] = ExactDoubleText(r.accuracy_estimate_user_coords);
-	out["cycle_num"] = static_cast<std::int64_t>(r.cycle_num);
-	out["precision_digits"] = static_cast<std::int64_t>(r.precision_digits);
-	out["accuracy_digits"] = static_cast<std::int64_t>(r.accuracy_digits);
-	out["precision_changed"] = r.precision_changed;
-	out["time_of_first_prec_increase"] = EncodeComplexScalar(r.time_of_first_prec_increase);
-	out["max_precision_used"] = static_cast<std::int64_t>(r.max_precision_used);
-	out["path_time_seconds"] = ExactDoubleText(r.path_time_seconds);
-	return out;
+    boost::json::object out;
+    out["pre_endgame_success_code"] = static_cast<std::int64_t>(r.pre_endgame_success_code);
+    out["pre_endgame_success_code_name"] = CanonicalName(r.pre_endgame_success_code);
+    out["boundary_point"] = EncodePoint(r.boundary_point);
+    out["boundary_stepsize"] = EncodeRealScalar(r.boundary_stepsize);
+    out["boundary_precision"] = static_cast<std::int64_t>(r.boundary_precision);
+    out["endgame_success_code"] = static_cast<std::int64_t>(r.endgame_success_code);
+    out["endgame_success_code_name"] = CanonicalName(r.endgame_success_code);
+    out["endpoint"] = EncodePoint(r.solution);
+    out["function_residual"] = ExactDoubleText(r.function_residual);
+    out["condition_number"] = ExactDoubleText(r.condition_number);
+    {
+        boost::json::array sv;
+        for (Eigen::Index i = 0; i < r.singular_values.size(); ++i)
+            sv.push_back(boost::json::value(ExactDoubleText(r.singular_values(i))));
+        out["singular_values"] = std::move(sv);
+    }
+    out["newton_residual"] = ExactDoubleText(r.newton_residual);
+    out["final_time_used"] = EncodeComplexScalar(r.final_time_used);
+    out["accuracy_estimate"] = ExactDoubleText(r.accuracy_estimate);
+    out["accuracy_estimate_user_coords"] = ExactDoubleText(r.accuracy_estimate_user_coords);
+    out["cycle_num"] = static_cast<std::int64_t>(r.cycle_num);
+    out["precision_digits"] = static_cast<std::int64_t>(r.precision_digits);
+    out["accuracy_digits"] = static_cast<std::int64_t>(r.accuracy_digits);
+    out["precision_changed"] = r.precision_changed;
+    out["time_of_first_prec_increase"] = EncodeComplexScalar(r.time_of_first_prec_increase);
+    out["max_precision_used"] = static_cast<std::int64_t>(r.max_precision_used);
+    out["path_time_seconds"] = ExactDoubleText(r.path_time_seconds);
+    return out;
 }
 
 /// \brief Reconstruct a whole-path result from a track record (the recall half).
@@ -226,43 +226,43 @@ template <typename ComplexT>
 parallel::FullPathResult<ComplexT> DecodeFullPathResult(boost::json::object const& rec,
                                                         std::size_t path_index)
 {
-	using RealT = typename parallel::FullPathResult<ComplexT>::RealT;
-	parallel::FullPathResult<ComplexT> r;
-	r.path_index = path_index;
-	r.pre_endgame_success_code =
-		static_cast<SuccessCode>(rec.at("pre_endgame_success_code").as_int64());
-	r.boundary_point = DecodePoint<ComplexT>(rec.at("boundary_point").as_array());
-	if constexpr (std::is_same<RealT, double>::value)
-		r.boundary_stepsize = DoubleFromText(std::string(rec.at("boundary_stepsize").as_string()));
-	else
-		r.boundary_stepsize = RealT(std::string(rec.at("boundary_stepsize").as_string()));
-	r.boundary_precision = static_cast<unsigned>(rec.at("boundary_precision").as_int64());
-	r.endgame_success_code = static_cast<SuccessCode>(rec.at("endgame_success_code").as_int64());
-	r.solution = DecodePoint<ComplexT>(rec.at("endpoint").as_array());
-	r.function_residual = DoubleFromText(std::string(rec.at("function_residual").as_string()));
-	r.condition_number = DoubleFromText(std::string(rec.at("condition_number").as_string()));
-	// records written before the spectrum was archived simply lack it
-	if (auto const* sv = rec.if_contains("singular_values"))
-	{
-		auto const& arr = sv->as_array();
-		r.singular_values.resize(static_cast<Eigen::Index>(arr.size()));
-		for (std::size_t i = 0; i < arr.size(); ++i)
-			r.singular_values(static_cast<Eigen::Index>(i)) = DoubleFromText(std::string(arr[i].as_string()));
-	}
-	r.newton_residual = DoubleFromText(std::string(rec.at("newton_residual").as_string()));
-	r.final_time_used = DecodeComplexScalar<ComplexT>(rec.at("final_time_used").as_array());
-	r.accuracy_estimate = DoubleFromText(std::string(rec.at("accuracy_estimate").as_string()));
-	r.accuracy_estimate_user_coords =
-		DoubleFromText(std::string(rec.at("accuracy_estimate_user_coords").as_string()));
-	r.cycle_num = static_cast<unsigned>(rec.at("cycle_num").as_int64());
-	r.precision_digits = static_cast<unsigned>(rec.at("precision_digits").as_int64());
-	r.accuracy_digits = static_cast<unsigned>(rec.at("accuracy_digits").as_int64());
-	r.precision_changed = rec.at("precision_changed").as_bool();
-	r.time_of_first_prec_increase =
-		DecodeComplexScalar<ComplexT>(rec.at("time_of_first_prec_increase").as_array());
-	r.max_precision_used = static_cast<unsigned>(rec.at("max_precision_used").as_int64());
-	r.path_time_seconds = DoubleFromText(std::string(rec.at("path_time_seconds").as_string()));
-	return r;
+    using RealT = typename parallel::FullPathResult<ComplexT>::RealT;
+    parallel::FullPathResult<ComplexT> r;
+    r.path_index = path_index;
+    r.pre_endgame_success_code =
+        static_cast<SuccessCode>(rec.at("pre_endgame_success_code").as_int64());
+    r.boundary_point = DecodePoint<ComplexT>(rec.at("boundary_point").as_array());
+    if constexpr (std::is_same<RealT, double>::value)
+        r.boundary_stepsize = DoubleFromText(std::string(rec.at("boundary_stepsize").as_string()));
+    else
+        r.boundary_stepsize = RealT(std::string(rec.at("boundary_stepsize").as_string()));
+    r.boundary_precision = static_cast<unsigned>(rec.at("boundary_precision").as_int64());
+    r.endgame_success_code = static_cast<SuccessCode>(rec.at("endgame_success_code").as_int64());
+    r.solution = DecodePoint<ComplexT>(rec.at("endpoint").as_array());
+    r.function_residual = DoubleFromText(std::string(rec.at("function_residual").as_string()));
+    r.condition_number = DoubleFromText(std::string(rec.at("condition_number").as_string()));
+    // records written before the spectrum was archived simply lack it
+    if (auto const* sv = rec.if_contains("singular_values"))
+    {
+        auto const& arr = sv->as_array();
+        r.singular_values.resize(static_cast<Eigen::Index>(arr.size()));
+        for (std::size_t i = 0; i < arr.size(); ++i)
+            r.singular_values(static_cast<Eigen::Index>(i)) = DoubleFromText(std::string(arr[i].as_string()));
+    }
+    r.newton_residual = DoubleFromText(std::string(rec.at("newton_residual").as_string()));
+    r.final_time_used = DecodeComplexScalar<ComplexT>(rec.at("final_time_used").as_array());
+    r.accuracy_estimate = DoubleFromText(std::string(rec.at("accuracy_estimate").as_string()));
+    r.accuracy_estimate_user_coords =
+        DoubleFromText(std::string(rec.at("accuracy_estimate_user_coords").as_string()));
+    r.cycle_num = static_cast<unsigned>(rec.at("cycle_num").as_int64());
+    r.precision_digits = static_cast<unsigned>(rec.at("precision_digits").as_int64());
+    r.accuracy_digits = static_cast<unsigned>(rec.at("accuracy_digits").as_int64());
+    r.precision_changed = rec.at("precision_changed").as_bool();
+    r.time_of_first_prec_increase =
+        DecodeComplexScalar<ComplexT>(rec.at("time_of_first_prec_increase").as_array());
+    r.max_precision_used = static_cast<unsigned>(rec.at("max_precision_used").as_int64());
+    r.path_time_seconds = DoubleFromText(std::string(rec.at("path_time_seconds").as_string()));
+    return r;
 }
 
 } // namespace records

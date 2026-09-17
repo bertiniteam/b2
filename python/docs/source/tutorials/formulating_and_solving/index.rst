@@ -10,13 +10,13 @@ Formulating and solving systems
    zerodim_solver/index
    real_points/index
    critical_points/index
-   
+
    eigenvalues_by_homotopy/index
    parameter_homotopy/index
-   
+
    concatenate_systems/index
    randomize/index
-   
+
    user_product_of_linears/index
    canonical_ordering/index
 

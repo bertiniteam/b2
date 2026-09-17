@@ -15,20 +15,18 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 
 /**
-\file src/parallel/parallel.cpp 
+\file src/parallel/parallel.cpp
 
-\brief Provides the main parallel methods for Bertini 2. 
+\brief Provides the main parallel methods for Bertini 2.
 
 This file is almost empty!
 */
 
 
 #include "bertini2/parallel.hpp"
-
-

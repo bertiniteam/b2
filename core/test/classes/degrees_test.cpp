@@ -61,12 +61,12 @@ namespace {
 // augmented coefficient matrix (rows x (num_vars+1)), last column the constant term.
 Mat<complex_mp> AugMat(std::vector<std::vector<int>> const& rows)
 {
-	Mat<complex_mp> M(static_cast<Eigen::Index>(rows.size()),
-	                    static_cast<Eigen::Index>(rows.front().size()));
-	for (Eigen::Index i = 0; i < M.rows(); ++i)
-		for (Eigen::Index j = 0; j < M.cols(); ++j)
-			M(i, j) = complex_mp(rows[static_cast<size_t>(i)][static_cast<size_t>(j)]);
-	return M;
+    Mat<complex_mp> M(static_cast<Eigen::Index>(rows.size()),
+                        static_cast<Eigen::Index>(rows.front().size()));
+    for (Eigen::Index i = 0; i < M.rows(); ++i)
+        for (Eigen::Index j = 0; j < M.cols(); ++j)
+            M(i, j) = complex_mp(rows[static_cast<size_t>(i)][static_cast<size_t>(j)]);
+    return M;
 }
 
 } // namespace
@@ -78,30 +78,30 @@ Mat<complex_mp> AugMat(std::vector<std::vector<int>> const& rows)
 
 BOOST_AUTO_TEST_CASE(linear_forms_block_is_degree_one)
 {
-	DefaultPrecision(30);
-	// three linear forms in two variables (A @ x + b shape): 3 x (2+1) augmented matrix.
-	LinearFormsBlock block(2, AugMat({{2, 3, 1}, {1, -1, 4}, {0, 5, -2}}));
+    DefaultPrecision(30);
+    // three linear forms in two variables (A @ x + b shape): 3 x (2+1) augmented matrix.
+    LinearFormsBlock block(2, AugMat({{2, 3, 1}, {1, -1, 4}, {0, 5, -2}}));
 
-	std::vector<int> expected{1, 1, 1};
-	BOOST_CHECK(block.Degrees() == expected);
+    std::vector<int> expected{1, 1, 1};
+    BOOST_CHECK(block.Degrees() == expected);
 
-	// the structured-block contract: Degrees(group) forwards to the total Degrees().
-	VariableGroup grp{Variable::Make("x"), Variable::Make("y")};
-	BOOST_CHECK(block.Degrees(grp) == block.Degrees());
+    // the structured-block contract: Degrees(group) forwards to the total Degrees().
+    VariableGroup grp{Variable::Make("x"), Variable::Make("y")};
+    BOOST_CHECK(block.Degrees(grp) == block.Degrees());
 }
 
 BOOST_AUTO_TEST_CASE(system_of_only_linear_forms_has_degree_bound_one)
 {
-	DefaultPrecision(30);
-	System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y");
-	sys.AddVariableGroup(VariableGroup{x, y});
-	sys.AddBlock(LinearFormsBlock(2, AugMat({{2, 3, 1}, {1, -1, 4}})));
+    DefaultPrecision(30);
+    System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y");
+    sys.AddVariableGroup(VariableGroup{x, y});
+    sys.AddBlock(LinearFormsBlock(2, AugMat({{2, 3, 1}, {1, -1, 4}})));
 
-	std::vector<int> expected{1, 1};
-	BOOST_CHECK(sys.Degrees() == expected);
-	BOOST_CHECK(sys.Degrees(sys.Variables()) == expected);
-	BOOST_CHECK_EQUAL(sys.DegreeBound(), 1);
+    std::vector<int> expected{1, 1};
+    BOOST_CHECK(sys.Degrees() == expected);
+    BOOST_CHECK(sys.Degrees(sys.Variables()) == expected);
+    BOOST_CHECK_EQUAL(sys.DegreeBound(), 1);
 }
 
 
@@ -111,33 +111,33 @@ BOOST_AUTO_TEST_CASE(system_of_only_linear_forms_has_degree_bound_one)
 
 BOOST_AUTO_TEST_CASE(polynomial_block_degrees_from_trees)
 {
-	DefaultPrecision(30);
-	System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y");
-	sys.AddVariableGroup(VariableGroup{x, y});
-	sys.AddFunction(x * y - Integer::Make(1));     // degree 2
-	sys.AddFunction(x + y);                         // degree 1
-	sys.AddFunction(Integer::Make(7));              // degree 0 (constant)
+    DefaultPrecision(30);
+    System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y");
+    sys.AddVariableGroup(VariableGroup{x, y});
+    sys.AddFunction(x * y - Integer::Make(1));     // degree 2
+    sys.AddFunction(x + y);                         // degree 1
+    sys.AddFunction(Integer::Make(7));              // degree 0 (constant)
 
-	std::vector<int> expected{2, 1, 0};
-	BOOST_CHECK(sys.Degrees() == expected);
-	BOOST_CHECK_EQUAL(sys.DegreeBound(), 2);
+    std::vector<int> expected{2, 1, 0};
+    BOOST_CHECK(sys.Degrees() == expected);
+    BOOST_CHECK_EQUAL(sys.DegreeBound(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_degrees_match_hand_derived)
 {
-	// behavior-preservation guard: folding functions into the PolynomialBlock did not change
-	// degree reporting -- it is still the function tree's Degree().
-	DefaultPrecision(30);
-	System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y");
-	sys.AddVariableGroup(VariableGroup{x, y});
-	sys.AddFunction(x * x * y * y * y);             // x^2 y^3, total degree 5
-	sys.AddFunction(x + y + Integer::Make(1));      // degree 1
+    // behavior-preservation guard: folding functions into the PolynomialBlock did not change
+    // degree reporting -- it is still the function tree's Degree().
+    DefaultPrecision(30);
+    System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y");
+    sys.AddVariableGroup(VariableGroup{x, y});
+    sys.AddFunction(x * x * y * y * y);             // x^2 y^3, total degree 5
+    sys.AddFunction(x + y + Integer::Make(1));      // degree 1
 
-	std::vector<int> expected{5, 1};
-	BOOST_CHECK(sys.Degrees(sys.Variables()) == expected);
-	BOOST_CHECK_EQUAL(sys.DegreeBound(), 5);
+    std::vector<int> expected{5, 1};
+    BOOST_CHECK(sys.Degrees(sys.Variables()) == expected);
+    BOOST_CHECK_EQUAL(sys.DegreeBound(), 5);
 }
 
 
@@ -149,32 +149,32 @@ BOOST_AUTO_TEST_CASE(polynomial_degrees_match_hand_derived)
 
 BOOST_AUTO_TEST_CASE(bilinear_eigenvalue_row_is_degree_two)
 {
-	DefaultPrecision(30);
-	Var x0 = Variable::Make("x0"), x1 = Variable::Make("x1"), lam = Variable::Make("lam");
-	// row of (A - lam I) x : a*x0 + b*x1 - lam*x0   (the lam*x0 term is degree 2)
-	auto row = Integer::Make(2) * x0 + Integer::Make(3) * x1 - lam * x0;
-	BOOST_CHECK_EQUAL(row->Degree(), 2);
+    DefaultPrecision(30);
+    Var x0 = Variable::Make("x0"), x1 = Variable::Make("x1"), lam = Variable::Make("lam");
+    // row of (A - lam I) x : a*x0 + b*x1 - lam*x0   (the lam*x0 term is degree 2)
+    auto row = Integer::Make(2) * x0 + Integer::Make(3) * x1 - lam * x0;
+    BOOST_CHECK_EQUAL(row->Degree(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(eigenproblem_degrees_bilinear_rows_plus_linear_normalization)
 {
-	DefaultPrecision(30);
-	System sys;
-	Var x0 = Variable::Make("x0"), x1 = Variable::Make("x1"), lam = Variable::Make("lam");
-	sys.AddVariableGroup(VariableGroup{x0, x1, lam});
+    DefaultPrecision(30);
+    System sys;
+    Var x0 = Variable::Make("x0"), x1 = Variable::Make("x1"), lam = Variable::Make("lam");
+    sys.AddVariableGroup(VariableGroup{x0, x1, lam});
 
-	// the two (A - lam I) x rows -- degree 2 each (eigenvalue * eigenvector entry).
-	sys.AddFunction(Integer::Make(4) * x0 + Integer::Make(1) * x1 - lam * x0);
-	sys.AddFunction(Integer::Make(1) * x0 + Integer::Make(3) * x1 - lam * x1);
-	// generic normalization c.x - 1 as a linear-forms block -- degree 1.
-	// (LinearFormsBlock spans all 3 columns; the lam coefficient is 0.)
-	sys.AddBlock(LinearFormsBlock(3, AugMat({{2, 5, 0, -1}})));
+    // the two (A - lam I) x rows -- degree 2 each (eigenvalue * eigenvector entry).
+    sys.AddFunction(Integer::Make(4) * x0 + Integer::Make(1) * x1 - lam * x0);
+    sys.AddFunction(Integer::Make(1) * x0 + Integer::Make(3) * x1 - lam * x1);
+    // generic normalization c.x - 1 as a linear-forms block -- degree 1.
+    // (LinearFormsBlock spans all 3 columns; the lam coefficient is 0.)
+    sys.AddBlock(LinearFormsBlock(3, AugMat({{2, 5, 0, -1}})));
 
-	// poly block (added first by AddFunction) then the linear-forms block.
-	std::vector<int> expected{2, 2, 1};
-	BOOST_CHECK(sys.Degrees() == expected);
-	BOOST_CHECK(sys.Degrees(sys.Variables()) == expected);
-	BOOST_CHECK_EQUAL(sys.DegreeBound(), 2);
+    // poly block (added first by AddFunction) then the linear-forms block.
+    std::vector<int> expected{2, 2, 1};
+    BOOST_CHECK(sys.Degrees() == expected);
+    BOOST_CHECK(sys.Degrees(sys.Variables()) == expected);
+    BOOST_CHECK_EQUAL(sys.DegreeBound(), 2);
 }
 
 
@@ -184,24 +184,24 @@ BOOST_AUTO_TEST_CASE(eigenproblem_degrees_bilinear_rows_plus_linear_normalizatio
 
 BOOST_AUTO_TEST_CASE(products_of_linears_degree_is_factor_count)
 {
-	DefaultPrecision(30);
-	// f0 = product of 2 linear factors (degree 2); f1 = product of 3 (degree 3).
-	Mat<complex_mp> f0 = AugMat({{2, 3, 1}, {1, -1, 4}});
-	Mat<complex_mp> f1 = AugMat({{1, 0, 1}, {0, 1, -2}, {1, 1, 0}});
-	ProductsOfLinearsBlock block(2, std::vector<Mat<complex_mp>>{f0, f1});
+    DefaultPrecision(30);
+    // f0 = product of 2 linear factors (degree 2); f1 = product of 3 (degree 3).
+    Mat<complex_mp> f0 = AugMat({{2, 3, 1}, {1, -1, 4}});
+    Mat<complex_mp> f1 = AugMat({{1, 0, 1}, {0, 1, -2}, {1, 1, 0}});
+    ProductsOfLinearsBlock block(2, std::vector<Mat<complex_mp>>{f0, f1});
 
-	std::vector<int> expected{2, 3};
-	BOOST_CHECK(block.Degrees() == expected);
-	// structured-block contract: Degrees(group) forwards to total Degrees().
-	VariableGroup grp{Variable::Make("x"), Variable::Make("y")};
-	BOOST_CHECK(block.Degrees(grp) == block.Degrees());
+    std::vector<int> expected{2, 3};
+    BOOST_CHECK(block.Degrees() == expected);
+    // structured-block contract: Degrees(group) forwards to total Degrees().
+    VariableGroup grp{Variable::Make("x"), Variable::Make("y")};
+    BOOST_CHECK(block.Degrees(grp) == block.Degrees());
 
-	System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y");
-	sys.AddVariableGroup(VariableGroup{x, y});
-	sys.AddBlock(ProductsOfLinearsBlock(2, std::vector<Mat<complex_mp>>{f0, f1}));
-	BOOST_CHECK(sys.Degrees() == expected);
-	BOOST_CHECK_EQUAL(sys.DegreeBound(), 3);
+    System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y");
+    sys.AddVariableGroup(VariableGroup{x, y});
+    sys.AddBlock(ProductsOfLinearsBlock(2, std::vector<Mat<complex_mp>>{f0, f1}));
+    BOOST_CHECK(sys.Degrees() == expected);
+    BOOST_CHECK_EQUAL(sys.DegreeBound(), 3);
 }
 
 
@@ -211,56 +211,56 @@ BOOST_AUTO_TEST_CASE(products_of_linears_degree_is_factor_count)
 
 BOOST_AUTO_TEST_CASE(blend_degree_is_elementwise_max_of_operands)
 {
-	DefaultPrecision(30);
-	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+    DefaultPrecision(30);
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 
-	auto target = std::make_shared<System>();
-	target->AddVariableGroup(VariableGroup{x, y});
-	target->AddFunction(x * y);                    // degree 2
-	target->AddFunction(x * x * x);                // degree 3
+    auto target = std::make_shared<System>();
+    target->AddVariableGroup(VariableGroup{x, y});
+    target->AddFunction(x * y);                    // degree 2
+    target->AddFunction(x * x * x);                // degree 3
 
-	auto start = std::make_shared<System>();
-	start->AddVariableGroup(VariableGroup{x, y});
-	start->AddFunction(x);                          // degree 1
-	start->AddFunction(y);                          // degree 1
+    auto start = std::make_shared<System>();
+    start->AddVariableGroup(VariableGroup{x, y});
+    start->AddFunction(x);                          // degree 1
+    start->AddFunction(y);                          // degree 1
 
-	std::vector<std::shared_ptr<node::Node>> coeffs{ Integer::Make(1) - t, t };
-	std::vector<std::shared_ptr<const System>> operands{ target, start };
-	BlendBlock<System> blend(t, std::move(coeffs), operands);
+    std::vector<std::shared_ptr<node::Node>> coeffs{ Integer::Make(1) - t, t };
+    std::vector<std::shared_ptr<const System>> operands{ target, start };
+    BlendBlock<System> blend(t, std::move(coeffs), operands);
 
-	std::vector<int> expected{2, 3};               // max({2,3},{1,1})
-	BOOST_CHECK(blend.Degrees() == expected);
+    std::vector<int> expected{2, 3};               // max({2,3},{1,1})
+    BOOST_CHECK(blend.Degrees() == expected);
 }
 
 BOOST_AUTO_TEST_CASE(system_with_blend_block_has_nonempty_degree_bound)
 {
-	// regression: the MHom-style blend homotopy carries no polynomial block, yet its degrees
-	// (and DegreeBound, needed by the AMP config) must come from the blend's operands rather
-	// than being empty (which previously dereferenced an empty range in DegreeBound()).
-	DefaultPrecision(30);
-	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+    // regression: the MHom-style blend homotopy carries no polynomial block, yet its degrees
+    // (and DegreeBound, needed by the AMP config) must come from the blend's operands rather
+    // than being empty (which previously dereferenced an empty range in DegreeBound()).
+    DefaultPrecision(30);
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 
-	auto target = std::make_shared<System>();
-	target->AddVariableGroup(VariableGroup{x, y});
-	target->AddFunction(x * y);                    // degree 2
-	target->AddFunction(x * x * x);                // degree 3
+    auto target = std::make_shared<System>();
+    target->AddVariableGroup(VariableGroup{x, y});
+    target->AddFunction(x * y);                    // degree 2
+    target->AddFunction(x * x * x);                // degree 3
 
-	auto start = std::make_shared<System>();
-	start->AddVariableGroup(VariableGroup{x, y});
-	start->AddFunction(x);
-	start->AddFunction(y);
+    auto start = std::make_shared<System>();
+    start->AddVariableGroup(VariableGroup{x, y});
+    start->AddFunction(x);
+    start->AddFunction(y);
 
-	System H;
-	H.AddVariableGroup(VariableGroup{x, y});
-	H.AddPathVariable(t);
-	std::vector<std::shared_ptr<node::Node>> coeffs{ Integer::Make(1) - t, t };
-	std::vector<std::shared_ptr<const System>> operands{ target, start };
-	H.AddBlock(BlendBlock<System>(t, std::move(coeffs), operands));
+    System H;
+    H.AddVariableGroup(VariableGroup{x, y});
+    H.AddPathVariable(t);
+    std::vector<std::shared_ptr<node::Node>> coeffs{ Integer::Make(1) - t, t };
+    std::vector<std::shared_ptr<const System>> operands{ target, start };
+    H.AddBlock(BlendBlock<System>(t, std::move(coeffs), operands));
 
-	BOOST_REQUIRE(H.HasStructuredBlocks());             // it does have a structured block
-	std::vector<int> expected{2, 3};
-	BOOST_CHECK(H.Degrees() == expected);
-	BOOST_CHECK_EQUAL(H.DegreeBound(), 3);
+    BOOST_REQUIRE(H.HasStructuredBlocks());             // it does have a structured block
+    std::vector<int> expected{2, 3};
+    BOOST_CHECK(H.Degrees() == expected);
+    BOOST_CHECK_EQUAL(H.DegreeBound(), 3);
 }
 
 
@@ -270,29 +270,29 @@ BOOST_AUTO_TEST_CASE(system_with_blend_block_has_nonempty_degree_bound)
 
 BOOST_AUTO_TEST_CASE(mixed_poly_and_linear_forms_concatenate_in_block_order)
 {
-	DefaultPrecision(30);
-	System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y");
-	sys.AddVariableGroup(VariableGroup{x, y});
-	sys.AddFunction(x * x);                         // poly block, degree 2
-	sys.AddFunction(x * x * x);                     // poly block, degree 3
-	sys.AddBlock(LinearFormsBlock(2, AugMat({{2, 3, 1}, {1, -1, 4}})));  // degree 1, 1
+    DefaultPrecision(30);
+    System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y");
+    sys.AddVariableGroup(VariableGroup{x, y});
+    sys.AddFunction(x * x);                         // poly block, degree 2
+    sys.AddFunction(x * x * x);                     // poly block, degree 3
+    sys.AddBlock(LinearFormsBlock(2, AugMat({{2, 3, 1}, {1, -1, 4}})));  // degree 1, 1
 
-	// AddFunction creates the polynomial block first, then the linear-forms block is appended.
-	std::vector<int> expected{2, 3, 1, 1};
-	BOOST_CHECK(sys.Degrees() == expected);
-	BOOST_CHECK_EQUAL(sys.DegreeBound(), 3);
+    // AddFunction creates the polynomial block first, then the linear-forms block is appended.
+    std::vector<int> expected{2, 3, 1, 1};
+    BOOST_CHECK(sys.Degrees() == expected);
+    BOOST_CHECK_EQUAL(sys.DegreeBound(), 3);
 }
 
 BOOST_AUTO_TEST_CASE(system_with_no_functions_has_no_degrees)
 {
-	// A System with variables but no functions/blocks reports no degrees.  (DegreeBound() has
-	// a non-empty precondition -- it max-reduces the degree list -- so it is not called here.)
-	DefaultPrecision(30);
-	System sys;
-	sys.AddVariableGroup(VariableGroup{Variable::Make("x"), Variable::Make("y")});
-	BOOST_CHECK(sys.Degrees().empty());
-	BOOST_CHECK(sys.Degrees(sys.Variables()).empty());
+    // A System with variables but no functions/blocks reports no degrees.  (DegreeBound() has
+    // a non-empty precondition -- it max-reduces the degree list -- so it is not called here.)
+    DefaultPrecision(30);
+    System sys;
+    sys.AddVariableGroup(VariableGroup{Variable::Make("x"), Variable::Make("y")});
+    BOOST_CHECK(sys.Degrees().empty());
+    BOOST_CHECK(sys.Degrees(sys.Variables()).empty());
 }
 
 
@@ -303,26 +303,26 @@ BOOST_AUTO_TEST_CASE(system_with_no_functions_has_no_degrees)
 
 BOOST_AUTO_TEST_CASE(mhom_start_system_has_factor_count_degrees)
 {
-	DefaultPrecision(30);
-	using namespace bertini::start_system;
+    DefaultPrecision(30);
+    using namespace bertini::start_system;
 
-	System sys;
-	Var x = Variable::Make("x"), y = Variable::Make("y");
-	sys.AddVariableGroup(VariableGroup{x});
-	sys.AddVariableGroup(VariableGroup{y});
-	sys.AddFunction(x * y - Integer::Make(1));
-	sys.AddFunction(x + y);
-	sys.Homogenize();
-	sys.AutoPatch();
+    System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y");
+    sys.AddVariableGroup(VariableGroup{x});
+    sys.AddVariableGroup(VariableGroup{y});
+    sys.AddFunction(x * y - Integer::Make(1));
+    sys.AddFunction(x + y);
+    sys.Homogenize();
+    sys.AutoPatch();
 
-	auto mhom = MHomogeneous(sys);
+    auto mhom = MHomogeneous(sys);
 
-	auto degs = mhom.Degrees();
-	BOOST_REQUIRE(!degs.empty());                                  // was empty -> crashed DegreeBound
-	BOOST_CHECK_EQUAL(degs.size(), mhom.NumNaturalFunctions());
-	for (int d : degs)
-		BOOST_CHECK_GE(d, 1);                                      // each start function is a product of >=1 linear
-	BOOST_CHECK_GE(mhom.DegreeBound(), 1);                         // finite, no empty-range deref
+    auto degs = mhom.Degrees();
+    BOOST_REQUIRE(!degs.empty());                                  // was empty -> crashed DegreeBound
+    BOOST_CHECK_EQUAL(degs.size(), mhom.NumNaturalFunctions());
+    for (int d : degs)
+        BOOST_CHECK_GE(d, 1);                                      // each start function is a product of >=1 linear
+    BOOST_CHECK_GE(mhom.DegreeBound(), 1);                         // finite, no empty-range deref
 }
 
 
@@ -334,88 +334,88 @@ looked inhomogeneous and blocked homogenization / auto-patch.
 */
 BOOST_AUTO_TEST_CASE(integer_power_of_a_sum_group_degree)
 {
-	DefaultPrecision(30);
-	Var y = Variable::Make("y"), z = Variable::Make("z"), h = Variable::Make("h");
-	VariableGroup vars{y, z, h};
+    DefaultPrecision(30);
+    Var y = Variable::Make("y"), z = Variable::Make("z"), h = Variable::Make("h");
+    VariableGroup vars{y, z, h};
 
-	BOOST_CHECK_EQUAL(pow(y + z, 2)->Degree(vars), 2);   // was 4 before the fix
-	BOOST_CHECK_EQUAL(pow(y + z, 3)->Degree(vars), 3);   // was 6
-	BOOST_CHECK_EQUAL(pow(y, 2)->Degree(vars), 2);       // monomial base -- always was correct
-	BOOST_CHECK_EQUAL(pow(y * z, 2)->Degree(vars), 4);   // (y z)^2 = y^2 z^2 -- genuinely degree 4
+    BOOST_CHECK_EQUAL(pow(y + z, 2)->Degree(vars), 2);   // was 4 before the fix
+    BOOST_CHECK_EQUAL(pow(y + z, 3)->Degree(vars), 3);   // was 6
+    BOOST_CHECK_EQUAL(pow(y, 2)->Degree(vars), 2);       // monomial base -- always was correct
+    BOOST_CHECK_EQUAL(pow(y * z, 2)->Degree(vars), 4);   // (y z)^2 = y^2 z^2 -- genuinely degree 4
 
-	// consequence: a homogenized power-of-binomial term is recognized as homogeneous
-	auto expr = pow(y - h, 2) + pow(z, 2) - pow(h, 2);   // (y-h)^2 + z^2 - h^2, homogeneous degree 2
-	BOOST_CHECK_EQUAL(expr->Degree(vars), 2);
-	BOOST_CHECK(expr->IsHomogeneous(vars));
+    // consequence: a homogenized power-of-binomial term is recognized as homogeneous
+    auto expr = pow(y - h, 2) + pow(z, 2) - pow(h, 2);   // (y-h)^2 + z^2 - h^2, homogeneous degree 2
+    BOOST_CHECK_EQUAL(expr->Degree(vars), 2);
+    BOOST_CHECK(expr->IsHomogeneous(vars));
 }
 
 
 BOOST_AUTO_TEST_CASE(negation_of_a_sum_has_the_sum_degree)
 {
-	// the twin of the integer-power case above: NegateOperator inherited UnaryOperator's group
-	// degree, which summed the per-variable degrees -- right for a monomial only -- so a negated
-	// sum reported an inflated degree, and System::DegreeBound() (which sizes adaptive precision)
-	// followed it.  Negation preserves its operand's degree and multidegree.
-	DefaultPrecision(30);
-	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
-	VariableGroup vars{x, y, z};
+    // the twin of the integer-power case above: NegateOperator inherited UnaryOperator's group
+    // degree, which summed the per-variable degrees -- right for a monomial only -- so a negated
+    // sum reported an inflated degree, and System::DegreeBound() (which sizes adaptive precision)
+    // followed it.  Negation preserves its operand's degree and multidegree.
+    DefaultPrecision(30);
+    Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+    VariableGroup vars{x, y, z};
 
-	BOOST_CHECK_EQUAL((-(pow(x, 2) + pow(y, 2)))->Degree(vars), 2);   // was 4
-	BOOST_CHECK_EQUAL((-(pow(x, 3) + x * y))->Degree(vars), 3);        // was 4
-	BOOST_CHECK_EQUAL((-(x * y))->Degree(vars), 2);                    // a monomial: always was right
-	BOOST_CHECK_EQUAL((-(pow(x, 2) + pow(y, 2)))->Degree(x), 2);
-	BOOST_CHECK_EQUAL((-(pow(x, 2) + pow(y, 2)))->Degree(), 2);
+    BOOST_CHECK_EQUAL((-(pow(x, 2) + pow(y, 2)))->Degree(vars), 2);   // was 4
+    BOOST_CHECK_EQUAL((-(pow(x, 3) + x * y))->Degree(vars), 3);        // was 4
+    BOOST_CHECK_EQUAL((-(x * y))->Degree(vars), 2);                    // a monomial: always was right
+    BOOST_CHECK_EQUAL((-(pow(x, 2) + pow(y, 2)))->Degree(x), 2);
+    BOOST_CHECK_EQUAL((-(pow(x, 2) + pow(y, 2)))->Degree(), 2);
 
-	auto md = (-(pow(x, 3) + x * y))->MultiDegree(vars);
-	BOOST_REQUIRE_EQUAL(md.size(), 3u);
-	BOOST_CHECK_EQUAL(md[0], 3);
-	BOOST_CHECK_EQUAL(md[1], 1);
-	BOOST_CHECK_EQUAL(md[2], 0);
+    auto md = (-(pow(x, 3) + x * y))->MultiDegree(vars);
+    BOOST_REQUIRE_EQUAL(md.size(), 3u);
+    BOOST_CHECK_EQUAL(md[0], 3);
+    BOOST_CHECK_EQUAL(md[1], 1);
+    BOOST_CHECK_EQUAL(md[2], 0);
 
-	// a negated sum inside a homogeneous function is still recognized as such
-	auto expr = -(pow(x, 2) + pow(y, 2)) + pow(z, 2);
-	BOOST_CHECK_EQUAL(expr->Degree(vars), 2);
-	BOOST_CHECK(expr->IsHomogeneous(vars));
+    // a negated sum inside a homogeneous function is still recognized as such
+    auto expr = -(pow(x, 2) + pow(y, 2)) + pow(z, 2);
+    BOOST_CHECK_EQUAL(expr->Degree(vars), 2);
+    BOOST_CHECK(expr->IsHomogeneous(vars));
 
-	// and the system's degree bound is the true degree
-	System sys;
-	sys.AddVariableGroup(vars);
-	sys.AddFunction(-(pow(x, 2) + pow(y, 2)) + z);
-	BOOST_CHECK_EQUAL(sys.DegreeBound(), 2);   // was 4
+    // and the system's degree bound is the true degree
+    System sys;
+    sys.AddVariableGroup(vars);
+    sys.AddFunction(-(pow(x, 2) + pow(y, 2)) + z);
+    BOOST_CHECK_EQUAL(sys.DegreeBound(), 2);   // was 4
 }
 
 
 BOOST_AUTO_TEST_CASE(non_polynomial_unary_operators_share_one_degree_rule)
 {
-	// sqrt, exp, log and the trigonometric functions: applied to something free of the variables
-	// asked about they are constants (degree 0); applied to anything else they are not
-	// polynomials (degree -1).  The rule is UnaryOperator's; the subclasses carry no copies.
-	Var x = Variable::Make("x"), y = Variable::Make("y");
-	VariableGroup xy{x, y}, only_y{y};
+    // sqrt, exp, log and the trigonometric functions: applied to something free of the variables
+    // asked about they are constants (degree 0); applied to anything else they are not
+    // polynomials (degree -1).  The rule is UnaryOperator's; the subclasses carry no copies.
+    Var x = Variable::Make("x"), y = Variable::Make("y");
+    VariableGroup xy{x, y}, only_y{y};
 
-	for (auto const& n : {sqrt(x + y), exp(x + y), log(x + y), sin(x + y), cos(x * y), tan(x)})
-	{
-		BOOST_CHECK_EQUAL(n->Degree(xy), -1);
-		BOOST_CHECK_EQUAL(n->Degree(x), -1);
-		BOOST_CHECK(!n->IsPolynomial(xy));
-		BOOST_CHECK(!n->IsHomogeneous(xy));
-	}
-	// x does not involve y: with respect to {y} these are constants
-	for (auto const& n : {sqrt(x), exp(x), log(x), sin(x), cos(x), tan(x)})
-	{
-		BOOST_CHECK_EQUAL(n->Degree(only_y), 0);
-		BOOST_CHECK_EQUAL(n->Degree(y), 0);
-		BOOST_CHECK(n->IsHomogeneous(only_y));
-	}
-	// and of a genuine constant they are constants in every sense
-	auto two = Integer::Make(2);
-	for (auto const& n : {sqrt(two), exp(two), log(two), sin(two)})
-	{
-		BOOST_CHECK_EQUAL(n->Degree(), 0);
-		BOOST_CHECK_EQUAL(n->Degree(xy), 0);
-		BOOST_CHECK(n->IsPolynomial(xy));
-		BOOST_CHECK(n->IsHomogeneous(xy));
-	}
+    for (auto const& n : {sqrt(x + y), exp(x + y), log(x + y), sin(x + y), cos(x * y), tan(x)})
+    {
+        BOOST_CHECK_EQUAL(n->Degree(xy), -1);
+        BOOST_CHECK_EQUAL(n->Degree(x), -1);
+        BOOST_CHECK(!n->IsPolynomial(xy));
+        BOOST_CHECK(!n->IsHomogeneous(xy));
+    }
+    // x does not involve y: with respect to {y} these are constants
+    for (auto const& n : {sqrt(x), exp(x), log(x), sin(x), cos(x), tan(x)})
+    {
+        BOOST_CHECK_EQUAL(n->Degree(only_y), 0);
+        BOOST_CHECK_EQUAL(n->Degree(y), 0);
+        BOOST_CHECK(n->IsHomogeneous(only_y));
+    }
+    // and of a genuine constant they are constants in every sense
+    auto two = Integer::Make(2);
+    for (auto const& n : {sqrt(two), exp(two), log(two), sin(two)})
+    {
+        BOOST_CHECK_EQUAL(n->Degree(), 0);
+        BOOST_CHECK_EQUAL(n->Degree(xy), 0);
+        BOOST_CHECK(n->IsPolynomial(xy));
+        BOOST_CHECK(n->IsHomogeneous(xy));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/root_export.hpp:  Header file for exposing root nodes to python.
@@ -31,21 +31,21 @@
 #include "python_common.hpp"
 
 namespace bertini{
-	namespace python{
-		
-		using namespace boost::python;
-		using namespace bertini::node;
-		
-		using Node = Node;
-		using Nodeptr = std::shared_ptr<Node>;
-		
-		void ExportRoots();
-		
-		// (HandleVisitor / FunctionVisitor removed: the Function and Handle node types are gone)
+    namespace python{
 
-		
-		
-	}
+        using namespace boost::python;
+        using namespace bertini::node;
+
+        using Node = Node;
+        using Nodeptr = std::shared_ptr<Node>;
+
+        void ExportRoots();
+
+        // (HandleVisitor / FunctionVisitor removed: the Function and Handle node types are gone)
+
+
+
+    }
 }
 
 #endif

@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
@@ -61,9 +61,9 @@
 
 namespace bertini {
 
-	namespace node{
-		class Variable;
-	}
+    namespace node{
+        class Variable;
+    }
 
 /// An ordered group of variables (the unit of homogenization / variable grouping).
 using VariableGroup = std::vector< std::shared_ptr<node::Variable> >;
@@ -76,9 +76,9 @@ using SubstitutionMap = std::map< std::string, std::shared_ptr<node::Node> >;
 /// \brief How a variable group participates in homogenization.
 enum class VariableGroupType
 {
-	Homogeneous,  ///< A projective (homogeneous) variable group.
-	Affine,       ///< An affine variable group (to be homogenized).
-	Ungrouped     ///< Variables not assigned to any group.
+    Homogeneous,  ///< A projective (homogeneous) variable group.
+    Affine,       ///< An affine variable group (to be homogenized).
+    Ungrouped     ///< Variables not assigned to any group.
 };
 
 
@@ -94,11 +94,11 @@ atoms and never wrapped.  Negative literal constants report PrecNegate so
 they parenthesize exactly where a Negate node would.
 */
 enum PrintPrecedence : unsigned {
-	PrecSum = 10,
-	PrecNegate = 15,
-	PrecMult = 20,
-	PrecPower = 30,
-	PrecAtom = 100
+    PrecSum = 10,
+    PrecNegate = 15,
+    PrecMult = 20,
+    PrecPower = 30,
+    PrecAtom = 100
 };
 
 /**
@@ -106,378 +106,372 @@ An interface for all nodes in a function tree, and for a function object as well
  methods that will be called on a node must be declared in this class.  The main evaluation method is
  defined in this class.
 
- Bertini function trees are created using std::shared_ptr's to Node base class, generally. 
+ Bertini function trees are created using std::shared_ptr's to Node base class, generally.
 
- \brief Abstract base class for the Bertini hybrid-precision (double-multiple) expression tree. 
+ \brief Abstract base class for the Bertini hybrid-precision (double-multiple) expression tree.
  */
 class Node : public VisitableBase<>, public std::enable_shared_from_this<Node>
 {
 public:
 
-	virtual ~Node() = default;
+    virtual ~Node() = default;
 
-	///////// PUBLIC PURE METHODS /////////////////
-
-
-
-	/**
-	\brief Functionally simplify this tree, returning a NEW simplified tree.
-
-	Non-mutating successor to the in-place EliminateZeros / EliminateOnes / ReduceDepth
-	machinery (ADR-0011, issue 251).  The input tree is never modified; a fresh simplified
-	tree is returned, built through the SimplifiedSum / SimplifiedMult / SimplifiedNegate
-	factories so that literal zeros/ones vanish and exact constants fold.  The default
-	(leaves, and any node with nothing to simplify) returns the node unchanged -- structural
-	sharing preserved.
-
-	\return A simplified tree (possibly the same node, if nothing simplified).
-	*/
-	virtual std::shared_ptr<Node> Simplified() const;
-
-	/**
-	\brief Symbolically substitute variables, returning a NEW tree.
-
-	Replaces each Variable leaf named in `substitutions` with its associated node, functionally
-	(the input tree is never modified).  Substitution is simultaneous and single-pass: a leaf is
-	replaced at most once and the replacement is not itself descended into, so `{x:y, y:z}` maps
-	`x+y` to `y+z` (no cascade) and the order of the map is irrelevant.  A variable absent from
-	the map is left unchanged.  The result is rebuilt through the simplifying factories (like
-	differentiation), so constants fold.  The default (leaves with nothing to replace) returns the
-	node unchanged -- structural sharing preserved.
-
-	Only Variable leaves are matched (variable -> node substitution); substituting into a Jacobian
-	tree containing Differentials is not supported.
-
-	\param substitutions A map from variable name to the node to put in that variable's place.
-	\return The substituted tree (possibly the same node, if nothing matched).
-	*/
-	virtual std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const;
-
-	/**
-	Virtual method for printing Nodes to arbitrary output streams.
-	*/
-	virtual void print(std::ostream& target) const = 0;
-
-	/**
-	\brief The printing precedence of this node, deciding parenthesization.
-
-	Defaults to PrecAtom: leaves and self-delimiting nodes are never wrapped.
-	Operator nodes override this; printing parents wrap a child only when its
-	precedence is too low for the position it occupies.
-	*/
-	virtual unsigned Precedence() const
-	{
-		return PrecAtom;
-	}
-
-	/**
-	\brief Is this node the literal constant 0?
-
-	Exact check on stored literal values (Integer/Complex/Rational override);
-	false for everything else, including non-literal expressions that happen
-	to evaluate to zero.  Used by differentiation to build already-simplified
-	trees without evaluating anything.
-	*/
-	virtual bool IsLiteralZero() const
-	{
-		return false;
-	}
-
-	/**
-	\brief Is this node the literal constant 1?
-
-	\see IsLiteralZero
-	*/
-	virtual bool IsLiteralOne() const
-	{
-		return false;
-	}
-
-	/**
-	\brief Memoized structural hash of this node.
-
-	Order-sensitive: equal structures hash equal, where children are folded in by their own
-	Hash() and operand order / signs / exponents participate.  The default (leaves and any
-	node not overriding HashImpl) is node identity (the object's address), so distinct objects
-	hash distinctly; value nodes (Integer/Rational/Complex) and operators override to be
-	structural.  Memoized -- valid because nodes are immutable post-construction -- and
-	deliberately independent of the mutable working precision (stable across precision()).
-
-	This is the predicate layer for the hash-consing intern table; nothing wires it into
-	construction yet.
-	*/
-	std::size_t Hash() const;
-
-	/**
-	\brief Opaque, lazily-populated cache of a compiled evaluator for this expression.
-
-	The system layer (EvalExpression / f.eval) compiles a StraightLineProgram for ([this],
-	canonical-by-name variable order) on first use and stashes it here, so repeated evaluations
-	of the same (hash-consed, immutable) expression reuse it --- like the memoized Hash().  The
-	type is erased because the SLP lives in the system layer, above function_tree; the compiled
-	program holds no node pointers (its constants are value recipes, ADR-0027), so
-	there is no reference cycle.  Transient: not serialized; a clone recompiles on demand.
-	*/
-	std::shared_ptr<const void> EvalProgram() const { return eval_program_; }
-	/// \brief Stash a compiled evaluator for this expression (type-erased; see EvalProgram()).
-	void SetEvalProgram(std::shared_ptr<const void> p) const { eval_program_ = p; }
-
-	/**
-	\brief Order-sensitive structural equality, shallow given interned children.
-
-	Two nodes are the same iff they have the same dynamic type, the same operator payload
-	(signs / mult-or-div flags / integer exponent / literal value), and the same operands
-	**by pointer** (operands are not recursed -- in the hash-consed world children are already
-	canonical, so pointer-equality is structural equality).  The default is node identity;
-	value/operator nodes override.  Consistent with Hash(): IsSame(a,b) implies a.Hash()==b.Hash().
-	*/
-	virtual bool IsSame(Node const& other) const;
-
-
-	/**
-	\brief Compute the derivative with respect to a single variable.
-
-	Virtual method for differentiating the node.  If no variable is passed, produces a Jacobian tree when all is said and done, which is used for evaluating the Jacobian.
-
-	\return The result of differentiation.  Jacobian or regular Node depending on what you passed in.
-	*/
-	virtual std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const = 0;
-
-	/**
-	\brief Differentiate repeatedly with respect to a single variable.
-
-	Applies the single-variable derivative `count` times, e.g. `Differentiate(x, 2)` is the
-	second partial derivative with respect to `x`.  A `count` of zero returns the node itself.
-
-	\param v The variable to differentiate with respect to.
-	\param count How many times to differentiate.
-	\return The `count`-th partial derivative with respect to `v` (a regular Node).
-	*/
-	std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v, unsigned count) const;
-
-	/**
-	\brief Differentiate with respect to each variable in a group, in sequence.
-
-	Applies the single-variable derivative once for each variable in `vars`, in order, e.g.
-	`Differentiate({x, x, y})` is `∂³/∂y∂x²`.  Repeated entries are allowed.  An empty group
-	returns the node itself.  (For polynomials mixed partials commute, so the order is immaterial.)
-
-	\param vars The variables to differentiate with respect to, in application order.
-	\return The mixed partial derivative (a regular Node).
-	*/
-	std::shared_ptr<Node> Differentiate(VariableGroup const& vars) const;
-
-	/**
-	Compute the degree, optionally with respect to a single variable.
-
-	\param v Shared pointer to variable with respect to which you want to compute the degree of the Node.
-	\return The degree.  Will be negative if the Node is non-polynomial.
-	*/
-	virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+    ///////// PUBLIC PURE METHODS /////////////////
 
 
 
-	/**
-	 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+    /**
+    \brief Functionally simplify this tree, returning a NEW simplified tree.
 
-	 \return A vector containing the degrees.  Negative entries indicate non-polynomiality.
-	*/
-	/**
-	 Compute the multidegree with respect to a variable group.
+    Non-mutating successor to the in-place EliminateZeros / EliminateOnes / ReduceDepth
+    machinery (ADR-0011, issue 251).  The input tree is never modified; a fresh simplified
+    tree is returned, built through the SimplifiedSum / SimplifiedMult / SimplifiedNegate
+    factories so that literal zeros/ones vanish and exact constants fold.  The default
+    (leaves, and any node with nothing to simplify) returns the node unchanged -- structural
+    sharing preserved.
 
-	 DAG-AWARE: this is a non-virtual wrapper that memoizes by node identity FOR THE DURATION
-	 OF ONE TOP-LEVEL CALL, so a shared subtree is visited once however many times it is
-	 reached.  The per-type work lives in MultiDegreeImpl.
+    \return A simplified tree (possibly the same node, if nothing simplified).
+    */
+    virtual std::shared_ptr<Node> Simplified() const;
 
-	 Why it exists (b2#417): the node graph is hash-consed, so a small DAG can stand for an
-	 enormous expansion -- measured, a 46-node expression whose printed form is 196 KB.  A
-	 plain recursive walk visits the TREE, so it costs O(expansion) where the structure is
-	 O(DAG).  `CanonicalizeNaryOperands` calls this for every operand of every n-ary
-	 construction, which is how a 46-node expression came to cost 13 ms to multiply by a
-	 variable, and how a cofactor expansion inside a deflation stage came to run for hours
-	 with a DAG that never exceeded 1102 nodes.
+    /**
+    \brief Symbolically substitute variables, returning a NEW tree.
 
-	 Caching the RESULT between calls does not fix this and was measured 29% SLOWER -- filling
-	 such a cache costs the same walk it is trying to avoid, so it only pays from a node's
-	 second mention.  The memo has to be inside the traversal, which is what this is.
-	*/
-	std::vector<int> MultiDegree(VariableGroup const& vars) const;
+    Replaces each Variable leaf named in `substitutions` with its associated node, functionally
+    (the input tree is never modified).  Substitution is simultaneous and single-pass: a leaf is
+    replaced at most once and the replacement is not itself descended into, so `{x:y, y:z}` maps
+    `x+y` to `y+z` (no cascade) and the order of the map is irrelevant.  A variable absent from
+    the map is left unchanged.  The result is rebuilt through the simplifying factories (like
+    differentiation), so constants fold.  The default (leaves with nothing to replace) returns the
+    node unchanged -- structural sharing preserved.
 
-	/// \brief Per-node-type multidegree.  Recurses through MultiDegree(), so children are
-	/// memoized; never call this directly unless you want the unmemoized walk.
-	virtual std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const = 0;
+    Only Variable leaves are matched (variable -> node substitution); substituting into a Jacobian
+    tree containing Differentials is not supported.
 
-	/**
-	 Compute the overall degree with respect to a variable group.
-	
-	\param vars A group of variables.
-	 \return The degree.  Will be negative if the Node is non-polynomial.
-	*/
-	virtual int Degree(VariableGroup const& vars) const = 0;
+    \param substitutions A map from variable name to the node to put in that variable's place.
+    \return The substituted tree (possibly the same node, if nothing matched).
+    */
+    virtual std::shared_ptr<Node> Subs(SubstitutionMap const& substitutions) const;
 
-	/**
-	Homogenize a tree, returning a NEW homogenized tree (functional / non-mutating).  Input a
-	variable group holding the non-homogeneous variables, and the new homogenizing variable.
-	The homvar may be an element of the variable group, that's perfectly ok.
+    /**
+    Virtual method for printing Nodes to arbitrary output streams.
+    */
+    virtual void print(std::ostream& target) const = 0;
 
-	The input tree is never modified; degree-deficient summands are padded with powers of homvar
-	in a freshly-built tree (so a throw on a non-polynomial term can't leave a half-homogenized
-	tree behind).  The default (leaves, and anything with nothing to homogenize) returns the node
-	unchanged.
+    /**
+    \brief The printing precedence of this node, deciding parenthesization.
 
-	\param homvar The homogenizing variable, which is multiplied against terms with degree deficiency with repect to other terms.
-	\param vars A group of variables, with respect to which you wish to homogenize.
-	\return A homogenized tree (possibly the same node, if nothing changed).
-	*/
-	virtual std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const;
+    Defaults to PrecAtom: leaves and self-delimiting nodes are never wrapped.
+    Operator nodes override this; printing parents wrap a child only when its
+    precedence is too low for the position it occupies.
+    */
+    virtual unsigned Precedence() const
+    {
+        return PrecAtom;
+    }
 
-	/**
-	Check for homogeneity, absolutely with respect to all variables, including path variables and all other variable types, or with respect to a single varaible, if passed. 
-	
-	\return True if it is homogeneous, false if not.
-	*/
-	virtual bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+    /**
+    \brief Is this node the literal constant 0?
 
-	/**
-	Check for homogeneity, with respect to a variable group.
+    Exact check on stored literal values (Integer/Complex/Rational override);
+    false for everything else, including non-literal expressions that happen
+    to evaluate to zero.  Used by differentiation to build already-simplified
+    trees without evaluating anything.
+    */
+    virtual bool IsLiteralZero() const
+    {
+        return false;
+    }
 
-	\return True if it is homogeneous, false if not.
-	*/
-	virtual bool IsHomogeneous(VariableGroup const& vars) const = 0;
+    /**
+    \brief Is this node the literal constant 1?
 
-	///////// PUBLIC PURE METHODS /////////////////
+    \see IsLiteralZero
+    */
+    virtual bool IsLiteralOne() const
+    {
+        return false;
+    }
 
-	/**
-	Check if a Node is polynomial -- it has degree at least 0.  Negative degrees indicate non-polynomial.
+    /**
+    \brief Memoized structural hash of this node.
 
-	\return True if it is polynomial, false if not.
-	*/
-	bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const;
-	
+    Order-sensitive: equal structures hash equal, where children are folded in by their own
+    Hash() and operand order / signs / exponents participate.  The default (leaves and any
+    node not overriding HashImpl) is node identity (the object's address), so distinct objects
+    hash distinctly; value nodes (Integer/Rational/Complex) and operators override to be
+    structural.  Memoized -- valid because nodes are immutable post-construction -- and
+    deliberately independent of the mutable working precision (stable across precision()).
 
-	/**
-	Check if a Node is polynomial -- it has degree at least 0.  Negative degrees indicate non-polynomial.
+    This is the predicate layer for the hash-consing intern table; nothing wires it into
+    construction yet.
+    */
+    std::size_t Hash() const;
 
-	\return True if it is polynomial, false if not.
-	*/
-	bool IsPolynomial(VariableGroup const&v) const;
+    /**
+    \brief Opaque, lazily-populated cache of a compiled evaluator for this expression.
+
+    The system layer (EvalExpression / f.eval) compiles a StraightLineProgram for ([this],
+    canonical-by-name variable order) on first use and stashes it here, so repeated evaluations
+    of the same (hash-consed, immutable) expression reuse it --- like the memoized Hash().  The
+    type is erased because the SLP lives in the system layer, above function_tree; the compiled
+    program holds no node pointers (its constants are value recipes, ADR-0027), so
+    there is no reference cycle.  Transient: not serialized; a clone recompiles on demand.
+    */
+    std::shared_ptr<const void> EvalProgram() const { return eval_program_; }
+    /// \brief Stash a compiled evaluator for this expression (type-erased; see EvalProgram()).
+    void SetEvalProgram(std::shared_ptr<const void> p) const { eval_program_ = p; }
+
+    /**
+    \brief Order-sensitive structural equality, shallow given interned children.
+
+    Two nodes are the same iff they have the same dynamic type, the same operator payload
+    (signs / mult-or-div flags / integer exponent / literal value), and the same operands
+    **by pointer** (operands are not recursed -- in the hash-consed world children are already
+    canonical, so pointer-equality is structural equality).  The default is node identity;
+    value/operator nodes override.  Consistent with Hash(): IsSame(a,b) implies a.Hash()==b.Hash().
+    */
+    virtual bool IsSame(Node const& other) const;
 
 
-	
-	
-	
+    /**
+    \brief Compute the derivative with respect to a single variable.
+
+    Virtual method for differentiating the node.  If no variable is passed, produces a Jacobian tree when all is said and done, which is used for evaluating the Jacobian.
+
+    \return The result of differentiation.  Jacobian or regular Node depending on what you passed in.
+    */
+    virtual std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+
+    /**
+    \brief Differentiate repeatedly with respect to a single variable.
+
+    Applies the single-variable derivative `count` times, e.g. `Differentiate(x, 2)` is the
+    second partial derivative with respect to `x`.  A `count` of zero returns the node itself.
+
+    \param v The variable to differentiate with respect to.
+    \param count How many times to differentiate.
+    \return The `count`-th partial derivative with respect to `v` (a regular Node).
+    */
+    std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v, unsigned count) const;
+
+    /**
+    \brief Differentiate with respect to each variable in a group, in sequence.
+
+    Applies the single-variable derivative once for each variable in `vars`, in order, e.g.
+    `Differentiate({x, x, y})` is `∂³/∂y∂x²`.  Repeated entries are allowed.  An empty group
+    returns the node itself.  (For polynomials mixed partials commute, so the order is immaterial.)
+
+    \param vars The variables to differentiate with respect to, in application order.
+    \return The mixed partial derivative (a regular Node).
+    */
+    std::shared_ptr<Node> Differentiate(VariableGroup const& vars) const;
+
+    /**
+    Compute the degree, optionally with respect to a single variable.
+
+    \param v Shared pointer to variable with respect to which you want to compute the degree of the Node.
+    \return The degree.  Will be negative if the Node is non-polynomial.
+    */
+    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+
+
+
+    /**
+     Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.
+
+     \return A vector containing the degrees.  Negative entries indicate non-polynomiality.
+    */
+    /**
+     Compute the multidegree with respect to a variable group.
+
+     DAG-AWARE: this is a non-virtual wrapper that memoizes by node identity FOR THE DURATION
+     OF ONE TOP-LEVEL CALL, so a shared subtree is visited once however many times it is
+     reached.  The per-type work lives in MultiDegreeImpl.
+
+     Why it exists (b2#417): the node graph is hash-consed, so a small DAG can stand for an
+     enormous expansion -- measured, a 46-node expression whose printed form is 196 KB.  A
+     plain recursive walk visits the TREE, so it costs O(expansion) where the structure is
+     O(DAG).  `CanonicalizeNaryOperands` calls this for every operand of every n-ary
+     construction, which is how a 46-node expression came to cost 13 ms to multiply by a
+     variable, and how a cofactor expansion inside a deflation stage came to run for hours
+     with a DAG that never exceeded 1102 nodes.
+
+     Caching the RESULT between calls does not fix this and was measured 29% SLOWER -- filling
+     such a cache costs the same walk it is trying to avoid, so it only pays from a node's
+     second mention.  The memo has to be inside the traversal, which is what this is.
+    */
+    std::vector<int> MultiDegree(VariableGroup const& vars) const;
+
+    /// \brief Per-node-type multidegree.  Recurses through MultiDegree(), so children are
+    /// memoized; never call this directly unless you want the unmemoized walk.
+    virtual std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const = 0;
+
+    /**
+     Compute the overall degree with respect to a variable group.
+
+    \param vars A group of variables.
+     \return The degree.  Will be negative if the Node is non-polynomial.
+    */
+    virtual int Degree(VariableGroup const& vars) const = 0;
+
+    /**
+    Homogenize a tree, returning a NEW homogenized tree (functional / non-mutating).  Input a
+    variable group holding the non-homogeneous variables, and the new homogenizing variable.
+    The homvar may be an element of the variable group, that's perfectly ok.
+
+    The input tree is never modified; degree-deficient summands are padded with powers of homvar
+    in a freshly-built tree (so a throw on a non-polynomial term can't leave a half-homogenized
+    tree behind).  The default (leaves, and anything with nothing to homogenize) returns the node
+    unchanged.
+
+    \param homvar The homogenizing variable, which is multiplied against terms with degree deficiency with repect to other terms.
+    \param vars A group of variables, with respect to which you wish to homogenize.
+    \return A homogenized tree (possibly the same node, if nothing changed).
+    */
+    virtual std::shared_ptr<Node> Homogenized(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) const;
+
+    /**
+    Check for homogeneity, absolutely with respect to all variables, including path variables and all other variable types, or with respect to a single varaible, if passed.
+
+    \return True if it is homogeneous, false if not.
+    */
+    virtual bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+
+    /**
+    Check for homogeneity, with respect to a variable group.
+
+    \return True if it is homogeneous, false if not.
+    */
+    virtual bool IsHomogeneous(VariableGroup const& vars) const = 0;
+
+    ///////// PUBLIC PURE METHODS /////////////////
+
+    /**
+    Check if a Node is polynomial -- it has degree at least 0.  Negative degrees indicate non-polynomial.
+
+    \return True if it is polynomial, false if not.
+    */
+    bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const;
+
+
+    /**
+    Check if a Node is polynomial -- it has degree at least 0.  Negative degrees indicate non-polynomial.
+
+    \return True if it is polynomial, false if not.
+    */
+    bool IsPolynomial(VariableGroup const&v) const;
+
+
+
+
+
 
 protected:
-	/// Memoized structural hash (computed on first Hash() call; nodes are immutable so it
-	/// never needs invalidating).  Not serialized -- a clone recomputes it on demand.
-	mutable std::optional<std::size_t> structural_hash_;
+    /// Memoized structural hash (computed on first Hash() call; nodes are immutable so it
+    /// never needs invalidating).  Not serialized -- a clone recomputes it on demand.
+    mutable std::optional<std::size_t> structural_hash_;
 
-	/// Opaque compiled-evaluator cache (a system-layer StraightLineProgram for [this]); see
-	/// EvalProgram().  Lazily populated by EvalExpression; transient, not serialized.
-	mutable std::shared_ptr<const void> eval_program_;
+    /// Opaque compiled-evaluator cache (a system-layer StraightLineProgram for [this]); see
+    /// EvalProgram().  Lazily populated by EvalExpression; transient, not serialized.
+    mutable std::shared_ptr<const void> eval_program_;
 
-	/// Compute this node's structural hash.  Default: identity (the object address), so
-	/// distinct nodes hash distinctly.  Value/operator nodes override to be structural.
-	virtual std::size_t HashImpl() const;
+    /// Compute this node's structural hash.  Default: identity (the object address), so
+    /// distinct nodes hash distinctly.  Value/operator nodes override to be structural.
+    virtual std::size_t HashImpl() const;
 
-	/// Combine an extra value into a running hash (boost::hash_combine recipe).
-	static void HashCombine(std::size_t& seed, std::size_t value)
-	{
-		seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
-	}
+    /// Combine an extra value into a running hash (boost::hash_combine recipe).
+    static void HashCombine(std::size_t& seed, std::size_t value)
+    {
+        seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+    }
 
 
 
-	Node();
+    Node();
 
 private:
-	friend std::ostream& operator<<(std::ostream & out, const Node& N);
+    friend std::ostream& operator<<(std::ostream & out, const Node& N);
 
-	friend class boost::serialization::access;
+    friend class boost::serialization::access;
 
-	template <typename Archive>
-	void serialize(Archive& ar, const unsigned /*version*/) {
-		register_derived_node_types(ar);
-	}
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned /*version*/) {
+        register_derived_node_types(ar);
+    }
 
 }; // re: class node
-	
-	/**
-	 a single layer of indirection, though which to call the overridden virtual print() method which must be defined for each non-abstract Node type.
-	 */
-	inline std::ostream& operator<<(std::ostream & out, const Node& N)
-	{
-		N.print(out);
-		return out;
-	}
-	
-	/// \brief Stream insertion for a Node pointer: dispatches to the node's virtual print().
-	inline std::ostream& operator<<(std::ostream & out, const std::shared_ptr<Node>& N)
-	{
-		N->print(out);
-		return out;
-	}
 
-	/**
-	\brief Print a tree in one dialect (see print_dialect.hpp).
+    /**
+     a single layer of indirection, though which to call the overridden virtual print() method which must be defined for each non-abstract Node type.
+     */
+    inline std::ostream& operator<<(std::ostream & out, const Node& N)
+    {
+        N.print(out);
+        return out;
+    }
 
-	\param N The tree to print.
-	\param dialect Who the text is for.
-	\return The printed expression.
-	*/
-	inline std::string PrintIn(Node const& N, PrintDialect dialect)
-	{
-		std::ostringstream out;
-		SetDialect(out, dialect);
-		N.print(out);
-		return out.str();
-	}
+    /// \brief Stream insertion for a Node pointer: dispatches to the node's virtual print().
+    inline std::ostream& operator<<(std::ostream & out, const std::shared_ptr<Node>& N)
+    {
+        N->print(out);
+        return out;
+    }
 
-	/// \brief The Bertini 1 spelling of a tree: `^` for powers, `(re+im*I)` for complex
-	///        constants, every constant with all its digits.  What the classic parser reads back.
-	inline std::string PrintClassic(Node const& N) { return PrintIn(N, PrintDialect::Classic); }
+    /**
+    \brief Print a tree in one dialect (see print_dialect.hpp).
 
-	/**
-	\brief The Python spelling of a tree: `**` for powers.
+    \param N The tree to print.
+    \param dialect Who the text is for.
+    \return The printed expression.
+    */
+    inline std::string PrintIn(Node const& N, PrintDialect dialect)
+    {
+        std::ostringstream out;
+        SetDialect(out, dialect);
+        N.print(out);
+        return out.str();
+    }
 
-	\param N The tree to print.
-	\param exact False for `str` (readable; the same constant shapes as Classic), true for
-	       `repr` (constant spellings `eval` rebuilds at full precision in the `bertini` namespace).
-	\return The printed expression.
-	*/
-	inline std::string PrintPython(Node const& N, bool exact)
-	{
-		return PrintIn(N, exact ? PrintDialect::PythonExact : PrintDialect::PythonReadable);
-	}
+    /// \brief The Bertini 1 spelling of a tree: `^` for powers, `(re+im*I)` for complex
+    ///        constants, every constant with all its digits.  What the classic parser reads back.
+    inline std::string PrintClassic(Node const& N) { return PrintIn(N, PrintDialect::Classic); }
 
+    /**
+    \brief The Python spelling of a tree: `**` for powers.
 
-	/**
-	\brief Hash-cons a freshly-built node: return an existing structurally-equal node if one is
-	live, otherwise register and return this one.
-
-	The intern table is a process-global, weak (self-cleaning) map keyed by Node::Hash() and
-	disambiguated by Node::IsSame().  Every Make() routes its just-constructed node through here,
-	so structurally-equal subtrees collapse to a single shared object (hash-consing).  On a hit
-	the just-built candidate is discarded.  Nodes whose IsSame() is identity (e.g. Variable,
-	Function, Pi, E) never match, so they pass through unchanged -- no special-casing.
-
-	Thread note: guarded by a mutex, contended only during single-threaded authoring;
-	deserialization (Clone) constructs nodes WITHOUT going through Make/Intern, so per-thread
-	tracking clones stay private and un-interned.
-	*/
-	std::shared_ptr<Node> Intern(std::shared_ptr<Node> const& candidate);
+    \param N The tree to print.
+    \param exact False for `str` (readable; the same constant shapes as Classic), true for
+           `repr` (constant spellings `eval` rebuilds at full precision in the `bertini` namespace).
+    \return The printed expression.
+    */
+    inline std::string PrintPython(Node const& N, bool exact)
+    {
+        return PrintIn(N, exact ? PrintDialect::PythonExact : PrintDialect::PythonReadable);
+    }
 
 
-	} // re: namespace node
+    /**
+    \brief Hash-cons a freshly-built node: return an existing structurally-equal node if one is
+    live, otherwise register and return this one.
+
+    The intern table is a process-global, weak (self-cleaning) map keyed by Node::Hash() and
+    disambiguated by Node::IsSame().  Every Make() routes its just-constructed node through here,
+    so structurally-equal subtrees collapse to a single shared object (hash-consing).  On a hit
+    the just-built candidate is discarded.  Nodes whose IsSame() is identity (e.g. Variable,
+    Function, Pi, E) never match, so they pass through unchanged -- no special-casing.
+
+    Thread note: guarded by a mutex, contended only during single-threaded authoring;
+    deserialization (Clone) constructs nodes WITHOUT going through Make/Intern, so per-thread
+    tracking clones stay private and un-interned.
+    */
+    std::shared_ptr<Node> Intern(std::shared_ptr<Node> const& candidate);
+
+
+    } // re: namespace node
 } // re: namespace bertini
 
 
 
-#endif 
+#endif
 /* defined(BERTINI_NODE_BASE_HPP) */
-
-
-
-
-
-

@@ -8,7 +8,7 @@ int main()
     bertini::LoggingInit();
 
 
-    
+
 
     auto step1_params = demo::MakeStep1Parameters();
     auto target_sys_step1 = demo::ConstructSystem(step1_params);
@@ -34,7 +34,7 @@ int main()
     auto homotopy_sys_step2 = demo::ConstructSystem(std::get<0>(step2_stuff));
     homotopy_sys_step2.AddPathVariable(t);
     auto target_sys_step2 = demo::ConstructSystem(std::get<1>(step2_stuff));
-    
+
     int num_to_step2s = 100;
     auto start_allstep2 = std::chrono::high_resolution_clock::now();
     for (int ii=0; ii<num_to_step2s; ii++)
@@ -42,7 +42,7 @@ int main()
         auto start_iteration = std::chrono::high_resolution_clock::now();
 
         bertini::DefaultPrecision(30);
-        // iterate over the parameter values.  set the 
+        // iterate over the parameter values.  set the
         for (auto& p : std::get<1>(step2_stuff))
         {
             bertini::mpfr v;
@@ -59,7 +59,7 @@ int main()
         //     std::cout << "solving for parameter values " << *p <<  " " << p->Eval<bertini::complex_dbl>() << '\n';
 
         auto steptwo_solutions = demo::StepTwo(target_sys_step2, target_sys_step1, homotopy_sys_step2, stepone_solutions);
-        
+
         // std::cout << "done computing the " << steptwo_solutions.size() << " step2 solutions, and here they are: \n";
         // for (auto& iter : steptwo_solutions)
         //     std::cout << iter << '\n' << '\n';
@@ -68,5 +68,5 @@ int main()
     }
     std::cout << "solving " << num_to_step2s << " " << (std::chrono::high_resolution_clock::now() - start_allstep2).count() << '\n';
 
-	return 0;
+    return 0;
 }

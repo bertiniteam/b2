@@ -15,24 +15,24 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-//  python/eigenpy_interaction.cpp:  source file for exposing things to python via EigenPy.  
+//  python/eigenpy_interaction.cpp:  source file for exposing things to python via EigenPy.
 
 #include "eigenpy_interaction.hpp"
 
 
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
 
 
 
 void EnableEigenPy(){
-	eigenpy::enableEigenPy();
+    eigenpy::enableEigenPy();
 }
 
 

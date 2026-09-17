@@ -34,10 +34,10 @@ boost::python::tuple NewtonRefineAtTime(bertini::System const& sys,
                                         unsigned max_iterations,
                                         complex_mp time)
 {
-	auto result = bertini::algorithm::NewtonRefine(sys, start, tolerance,
-	                                               max_iterations, time);
-	return boost::python::make_tuple(result.point, result.code,
-	                                 result.achieved, result.iterations);
+    auto result = bertini::algorithm::NewtonRefine(sys, start, tolerance,
+                                                   max_iterations, time);
+    return boost::python::make_tuple(result.point, result.code,
+                                     result.achieved, result.iterations);
 }
 
 boost::python::tuple NewtonRefineAutonomous(bertini::System const& sys,
@@ -45,8 +45,8 @@ boost::python::tuple NewtonRefineAutonomous(bertini::System const& sys,
                                             double tolerance,
                                             unsigned max_iterations)
 {
-	return NewtonRefineAtTime(sys, start, tolerance, max_iterations,
-	                          complex_mp(0));
+    return NewtonRefineAtTime(sys, start, tolerance, max_iterations,
+                              complex_mp(0));
 }
 
 } // namespace
@@ -54,21 +54,21 @@ boost::python::tuple NewtonRefineAutonomous(bertini::System const& sys,
 
 void ExportNewtonRefine()
 {
-	boost::python::def(
-		"newton_refine", &NewtonRefineAutonomous,
-		"newton_refine(system, start, tolerance, max_iterations) -> (point, code, achieved, iterations)\n\n"
-		"Standalone Newton refinement of a point against a SQUARE system -- no tracker.\n"
-		"Iterates full Newton steps until consecutive approximations agree to `tolerance`\n"
-		"in the infinity norm, at the precision of the supplied system and point.\n\n"
-		"The intended customers are DEFLATED systems at singular points: deflation\n"
-		"restores quadratic convergence exactly where the plain system cannot converge.\n"
-		"Overdetermined systems raise with instructions to square by randomization.\n\n"
-		"Returns (refined point, SuccessCode, achieved step norm, iterations taken).");
+    boost::python::def(
+        "newton_refine", &NewtonRefineAutonomous,
+        "newton_refine(system, start, tolerance, max_iterations) -> (point, code, achieved, iterations)\n\n"
+        "Standalone Newton refinement of a point against a SQUARE system -- no tracker.\n"
+        "Iterates full Newton steps until consecutive approximations agree to `tolerance`\n"
+        "in the infinity norm, at the precision of the supplied system and point.\n\n"
+        "The intended customers are DEFLATED systems at singular points: deflation\n"
+        "restores quadratic convergence exactly where the plain system cannot converge.\n"
+        "Overdetermined systems raise with instructions to square by randomization.\n\n"
+        "Returns (refined point, SuccessCode, achieved step norm, iterations taken).");
 
-	boost::python::def(
-		"newton_refine", &NewtonRefineAtTime,
-		"newton_refine(system, start, tolerance, max_iterations, time) -> (point, code, achieved, iterations)\n\n"
-		"As newton_refine/4, for a system with a path variable, evaluated at `time`.");
+    boost::python::def(
+        "newton_refine", &NewtonRefineAtTime,
+        "newton_refine(system, start, tolerance, max_iterations, time) -> (point, code, achieved, iterations)\n\n"
+        "As newton_refine/4, for a system with a path variable, evaluated at `time`.");
 }
 
 } // namespace python

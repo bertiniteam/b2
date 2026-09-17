@@ -37,33 +37,33 @@ namespace records {
 
 std::string EncodingOfSystemDefinition(std::string const& definition_json)
 {
-	boost::json::value doc;
-	try
-	{
-		doc = boost::json::parse(definition_json);
-	}
-	catch (std::exception const& e)
-	{
-		throw std::runtime_error(std::string("system definition: not JSON (") + e.what() + ")");
-	}
-	if (!doc.is_object())
-		throw std::runtime_error("system definition: not a JSON object");
-	auto const* encoding = doc.get_object().if_contains("encoding");
-	if (!encoding || !encoding->is_string())
-		throw std::runtime_error("system definition: no \"encoding\" string in the document");
-	return std::string(encoding->get_string());
+    boost::json::value doc;
+    try
+    {
+        doc = boost::json::parse(definition_json);
+    }
+    catch (std::exception const& e)
+    {
+        throw std::runtime_error(std::string("system definition: not JSON (") + e.what() + ")");
+    }
+    if (!doc.is_object())
+        throw std::runtime_error("system definition: not a JSON object");
+    auto const* encoding = doc.get_object().if_contains("encoding");
+    if (!encoding || !encoding->is_string())
+        throw std::runtime_error("system definition: no \"encoding\" string in the document");
+    return std::string(encoding->get_string());
 }
 
 std::shared_ptr<const System> LoadSystem(OutputDirectory const& directory, std::string const& digest_hex)
 {
-	auto const document = directory.GetDefinition(digest_hex);
-	auto rebuilt = std::make_shared<System>(System::FromCanonicalEncoding(EncodingOfSystemDefinition(document)));
-	auto const actual = rebuilt->ContentDigest().Hex();
-	if (actual != digest_hex)
-		throw std::runtime_error("system definition " + digest_hex
-			+ ": the rebuilt system's content digest is " + actual
-			+ "; the document was altered, or its encoding no longer means what it meant when written");
-	return InternSystem(rebuilt);
+    auto const document = directory.GetDefinition(digest_hex);
+    auto rebuilt = std::make_shared<System>(System::FromCanonicalEncoding(EncodingOfSystemDefinition(document)));
+    auto const actual = rebuilt->ContentDigest().Hex();
+    if (actual != digest_hex)
+        throw std::runtime_error("system definition " + digest_hex
+            + ": the rebuilt system's content digest is " + actual
+            + "; the document was altered, or its encoding no longer means what it meant when written");
+    return InternSystem(rebuilt);
 }
 
 } // namespace records

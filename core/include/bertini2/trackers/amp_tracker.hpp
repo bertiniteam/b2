@@ -15,14 +15,14 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
 \file amp_tracker.hpp
 
-\brief 
+\brief
 
 \brief Contains the AMPTracker type, and necessary functions.
 */
@@ -40,1707 +40,1704 @@
 
 namespace bertini{
 
-	namespace tracking{
-
-		
-		using std::max;
-		using std::min;
-		using std::pow;
-
-		using bertini::max;
-
-		/**
-		The minimum time that can be represented effectively using a given precision
-
-		\param precision The number of digits you want to use
-		\param time_to_go The duration of remaining time to track
-		\param safety_digits A buffer of extra digits to use
-
-		\return The smallest permissible stepsize
-
-		\todo This function has a hardcoded value which should be replaced
-		*/
-		inline
-		real_mp MinTimeForCurrentPrecision(unsigned precision, real_mp const& time_to_go, int safety_digits = 3)
-		{
-			real_mp t = pow( real_mp(10), safety_digits-long(precision)) * time_to_go;
-			if (precision==DoublePrecision() && t<1e-150)
-				return real_mp("1e-150");
-			else
-				return t;
-		}
-
-		/**
-		\brief Just another name for MinTimeForCurrentPrecision
-
-		\param precision The number of digits you want to use
-		\param time_to_go The duration of remaining time to track
-		\param safety_digits A buffer of extra digits to use
-
-		\return The smallest permissible stepsize
-		*/
-		inline
-		real_mp MinStepSizeForPrecision(unsigned precision, real_mp const& time_to_go, int safety_digits = 3)
-		{
-			return MinTimeForCurrentPrecision(precision, time_to_go, safety_digits);
-		}
-
-
-		/**
-		 \brief Compute the cost function for arithmetic versus precision.
-
-		 From \cite AMP2, \f$C(P)\f$.  As currently implemented, this is
-		 \f$ 101.47 + 1.59 P \f$, where P is the precision in decimal digits.
-
-		 This function tells you the relative cost of arithmetic at a given precision,
-		 relative to \c std::complex<double> (the double-precision tracker's scalar type).
-
-		 Calibrated by benchmarking three operations representative of path tracking
-		 (dot product / SLP evaluation, dense matvec, LU factorization+solve) using
-		 GNU MPC (\c complex_mp) vs \c std::complex<double> on modern hardware.
-		 See \c tuning/arithmetic_cost.cpp for the methodology and compile instructions.
-
-		 The paper \cite AMP2 reports \f$C(P) = 10.35 + 0.04 P_\mathrm{bits}\f$ (measured on
-		 a 2009 Opteron 250).  Converting to decimal digits gives \f$10.35 + 0.13 P\f$, which
-		 was the previous value here.  The ~12x increase in the intercept on modern hardware
-		 reflects AVX2 vectorization of double-precision arithmetic that MPC cannot exploit.
-
-		 \param precision An integral number of decimal digits
-		 \return A double indicating how expensive arithmetic at a given precision is.  1 is the base-line for double-precision.
-		*/
-		inline
-		double ArithmeticCost(unsigned precision)
-		{
-			if (precision==DoublePrecision())
-				return 1;
-			else
-				return 101.47 + 1.59 * precision;
-		}
-
-
-
-
-		/**
-		 \brief Compute a stepsize satisfying AMP Criterion B with a given precision
-
-		 \param precision The current working precision
-		 \param digits_B The number of digits from Criterion B
-		 \param num_newton_iterations The number of remaining newton iterations allowed in the correction
-		 \param predictor_order The order of the predictor
-
-		 \return The stepsize
-
-		 \todo Remove the default value of the predictor order, as that seems weird to have
-		*/
-		template<typename RealT>
-		inline RealT StepsizeSatisfyingCriterionB(unsigned precision,
-										unsigned digits_B,
-										unsigned num_newton_iterations,
-										unsigned predictor_order = 0)
-		{
-			return pow(RealT(10), -(static_cast<int>(digits_B) - static_cast<int>(precision))
-			                       * static_cast<int>(num_newton_iterations) / (predictor_order+1.0));
-		}
-		
-
-		/**
-		\brief The minimum number of digits based on a log10 of a stepsize.
-
-		\param log_of_stepsize log10 of a stepsize
-		\param time_to_go How much time you have left to track.
-		\param safety_digits A buffer of extra digits to use, over the computed min.  Yes, this is added in, in this function.
-
-		\return An integral number of necessary digits to use
-		*/
-		inline
-		unsigned MinDigitsForLogOfStepsize(real_mp const& log_of_stepsize, real_mp const& time_to_go, unsigned safety_digits = 3)
-		{
-			return (ceil(log_of_stepsize) + ceil(log10(abs(time_to_go))) + safety_digits).convert_to<unsigned>();
-		}
-
-		/**
-		 \brief For a given range of stepsizes under consideration, gives the minimum number of digits
-
-		 \param min_stepsize The smallest stepsize under consideration
-		 \param max_stepsize The largest stepsize under consideration
-		 \param time_to_go How much time is left to track.
-		 \return The min number of digits. 
-
-		This function assumes you are going to time=0, or that you have taken care of that difference.  That is, time_to_go should be a duration, not the current time, unless you are tracking to t=0, in which case current time is the duration left to go.  Dig it?
-		*/
-		inline
-		unsigned MinDigitsForStepsizeInterval(real_mp const& min_stepsize, real_mp const& max_stepsize, real_mp const& time_to_go)
-		{
-			return max(MinDigitsForLogOfStepsize(-log10(min_stepsize),time_to_go),
-				       MinDigitsForLogOfStepsize(-log10(max_stepsize),time_to_go));
-		}
-
-		/**
-		 \brief Bertini 1's precision-decrease hysteresis margin (from B1's \c AMP2_update).
-
-		 The number of EXTRA digits a criterion must clear below the current precision before it is
-		 allowed to actually lower the working precision.  This prevents precision thrashing and
-		 replaces a consecutive-successful-steps counter with a stateless, precision-derived margin.
-
-		 B1 uses <tt>(currPrec_bits/32)*2</tt> ~ 2 digits per 32-bit precision packet (~20% slack).  In
-		 b2 precision is carried in decimal digits with packet size \c PrecisionIncrement(), so the
-		 faithful analog is <tt>(digits/PrecisionIncrement())*2</tt>.  Double precision gets no margin.
-		*/
-		inline
-		unsigned ExtraDigitsBeforePrecisionDecrease(unsigned current_precision)
-		{
-			if (current_precision <= DoublePrecision())
-				return 0;
-			return (current_precision / PrecisionIncrement()) * 2;
-		}
-
-		/**
-		 \brief Apply B1's precision-decrease hysteresis to one digits requirement (B1 \c AMP2_update).
-
-		 If \p digits_required would permit precision to drop below the current precision, demand \p extra
-		 additional digits before allowing the drop, and never raise the requirement above \p current_digits
-		 (a requirement that suggests a decrease must not be turned into a request for an increase).
-		*/
-		inline
-		void ApplyPrecisionDecreaseMargin(int & digits_required, unsigned current_digits, unsigned extra)
-		{
-			if (digits_required < static_cast<int>(current_digits))
-			{
-				digits_required += static_cast<int>(extra);
-				if (digits_required > static_cast<int>(current_digits))
-					digits_required = static_cast<int>(current_digits);
-			}
-		}
-
-
-		/**
-		 \brief Compute precision and stepsize minimizing the ArithmeticCost() of tracking.
-		 
-		 For a given range of precisions, an old stepsize, and a maximum stepsize, the Cost of tracking is computed, and a minimizer found.  
-		
-		 This function is used in the AMPTracker tracking loop, both in case of successful steps and in Criterion errors.
-
-
-		 \param[out] new_precision The minimizing precision.
-		 \param[out] new_stepsize The minimizing stepsize.
-		 \param[in] min_precision The minimum considered precision.
-		 \param[in] min_stepsize The minimum permitted stepsize.
-		 \param[in] max_precision The maximum considered precision.
-		 \param[in] max_stepsize The maximum permitted stepsize.  
-		 \param[in] digits_B The number of digits required, according to CriterionB from \cite AMP1, \cite AMP2
-		 \param[in] num_newton_iterations The number of allowed Newton corrector iterations.
-		 \param[in] predictor_order The order of the predictor being used.  This is the order itself, not the order of the error estimate.
-	
-		 \see ArithmeticCost
-		*/
-		template<typename RealT>
-		void MinimizeTrackingCost(unsigned & new_precision, RealT & new_stepsize, 
-						  unsigned min_precision, RealT const& min_stepsize,
-						  unsigned max_precision, RealT const& max_stepsize,
-						  unsigned digits_B,
-						  unsigned num_newton_iterations,
-						  unsigned predictor_order = 0)
-		{
-			double min_cost = Eigen::NumTraits<double>::highest();
-
-			unsigned minimizing_precision = 0; // initialize to an impossible value.
-
-			// a few casts so that we can work in double precision, because doing this in multiprec sucks
-			double min_stepsize_lowprec = static_cast<double>(min_stepsize);
-			double max_stepsize_lowprec = static_cast<double>(max_stepsize);
-
-			auto minimizer_routine =
-				[&min_cost, &minimizing_precision, digits_B, num_newton_iterations, predictor_order, min_stepsize_lowprec, max_stepsize_lowprec](unsigned p)
-				{
-					double criterion_b_stepsize = StepsizeSatisfyingCriterionB<double>(p, digits_B, num_newton_iterations, predictor_order);
-					if (criterion_b_stepsize < min_stepsize_lowprec)
-						return; // precision too low to satisfy min_stepsize constraint
-					double candidate_stepsize = min(criterion_b_stepsize, max_stepsize_lowprec);
-					using std::abs;
-					double current_cost = ArithmeticCost(p) / abs(candidate_stepsize);
-
-					if (current_cost < min_cost)
-					{
-						min_cost = current_cost;
-						minimizing_precision = p;
-					}
-				};
-
-			unsigned lowest_mp_precision_to_test = min_precision;
-
-			if (min_precision<=DoublePrecision())
-				minimizer_routine(DoublePrecision());			
-
-
-			if (lowest_mp_precision_to_test < LowestMultiplePrecision())
-				lowest_mp_precision_to_test = LowestMultiplePrecision();
-			else
-				lowest_mp_precision_to_test = (lowest_mp_precision_to_test/PrecisionIncrement()) * PrecisionIncrement(); // use integer arithmetic to round.
-
-
-			if (max_precision < LowestMultiplePrecision())
-				max_precision = LowestMultiplePrecision();
-			else
-				max_precision = (max_precision/PrecisionIncrement()) * PrecisionIncrement(); // use integer arithmetic to round.
-
-			for (unsigned p = lowest_mp_precision_to_test; p <= max_precision; p+=PrecisionIncrement())
-				minimizer_routine(p);
-
-			if (minimizing_precision==0){
-				throw std::runtime_error("MinimizeTrackingCost failed to find a suitable stepsize and precision");
-			}
-
-			new_precision = minimizing_precision; // copy the computed value
-			// next, because the above computed the new stepsize in double precision, which may be lowprec, we compute in full precision
-			new_stepsize = max(
-				               min(
-				               		StepsizeSatisfyingCriterionB<RealT>(new_precision, digits_B, num_newton_iterations, predictor_order),
-					           		max_stepsize
-					           	),
-					           min_stepsize
-					           );
-		}
-
-
-
-
-
-
-
-
-		/** 
-		\class AMPTracker
-
-		\brief Functor-like class for tracking paths on a system
-		
-		
-		## Explanation
-		
-		The bertini::AMPTracker class enables tracking using Adaptive Multiple Precision on an arbitrary square homotopy.  
-
-		The intended usage is to:
-
-		1. Create a system, and instantiate some settings.
-		2. Create an AMPTracker, associating it to the system you are going to solve or track on.
-		3. Run AMPTracker::Setup and AMPTracker::PrecisionSetup, getting the settings in line for tracking.
-		4. Repeatedly, or as needed, call the AMPTracker::TrackPath function, feeding it a start point, and start and end times.  The initial precision is that of the start point.  
-
-		Working precision and stepsize are adjusted automatically to get around nearby singularities to the path.  If the endpoint is singular, this may very well fail, as prediction and correction get more and more difficult with proximity to singularities.  
-
-		The TrackPath method is intended to allow the user to track to nonsingular endpoints, or to an endgame boundary, from which an appropriate endgame will be called.
-		
-		## Some notes
-
-		The AMPTracker has internal state.  That is, it stores the current state of the path being tracked as data members.  After tracking has concluded, these statistics may be extracted.  If you need additional accessors for these data, contact the software authors.
-
-		The class additionally uses the Boost.Log library for logging.  At time of this writing, the trivial logger is being used.  As development continues we will move toward using a more sophisticated logging model.  Suggestions are welcome.
-		
-		This class, like the other Tracker classes, uses mutable members to store the current state of the tracker.  The tracking tolerances, settings, etc, remain constant throughout a track, but the internal state such as the current time or space values, will change.  You can also expect the precision of the tracker to differ after a certain calls, too.
-		
-		## Example Usage
-		
-		Below we demonstrate a basic usage of the AMPTracker class to track a single path.  
-
-		The pattern is as described above: create an instance of the class, feeding it the system to be tracked, and some configuration.  Then, use the tracker to track paths of the system.
-
-		\code{.cpp}
-		DefaultPrecision(30); // set initial precision.  This is not strictly necessary.
-
-		using namespace bertini::tracking;
-
-		// 1. Create the system
-		Var x = Variable::Make("x");
-		Var y = Variable::Make("y");
-		Var t = Variable::Make("t");
-
-		System sys;
-
-		VariableGroup v{x,y};
-
-		sys.AddFunction(pow(x,2) + (1-t)*x - 1);
-		sys.AddFunction(pow(y,2) + (1-t)*x*y - 2);
-		sys.AddPathVariable(t);
-		sys.AddVariableGroup(v);
-
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
-		
-		//  2. Create the Tracker object, associating the system to it.
-		bertini::tracking::AMPTracker tracker(sys);
-
-		SteppingConfig stepping_preferences;
-		NewtonConfig newton_preferences;
-
-		// 3. Get the settings into the tracker 
-		tracker.Setup(Predictor::Euler,
-		              	real_mp("1e-5"),
-						real_mp("1e5"),
-						stepping_preferences,
-						newton_preferences);
-
-		tracker.PrecisionSetup(AMP);
-	
-		//  4. Create a start and end time.  These are complex numbers.
-		complex_mp t_start("1.0");
-		complex_mp t_end("0");
-		
-		//  5. Create a start point, and container for the end point.
-		Vec<complex_mp> start_point(2);
-		start_point << complex_mp("1"), complex_mp("1.414");  // set the value of the start point.  This is Eigen syntax.
-
-		Vec<complex_mp> end_point;
-
-		// 6. actually do the tracking
-		SuccessCode tracking_success = tracker.TrackPath(end_point,
-		                  t_start, t_end, start_point);
-		
-		// 7. and then onto whatever processing you are doing to the computed point.
-		\endcode
-		
-		If this documentation is insufficient, please contact the authors with suggestions, or get involved!  Pull requests welcomed.
-		
-		## Testing
-
-		* Test suite driving this class: AMP_tracker_basics.
-		* File: test/tracking_basics/tracker_test.cpp
-		* Functionality tested: Can use an AMPTracker to track in various situations, including tracking on nonsingular paths.  Also track to a singularity on the square root function.  Furthermore test that tracking fails to start from a singular start point, and tracking fails if a singularity is directly on the path being tracked.
-
-		*/
-		class AMPTracker : public Tracker<AMPTracker>
-		{
-			friend class Tracker<AMPTracker>;
-		public:
-			
-			typedef Tracker<AMPTracker> Base;  ///< The base tracker type.
-			typedef typename TrackerTraits<AMPTracker>::EventEmitterType EmitterType;  ///< The event-emitter type.
-
-			/// \brief Whether to refine after upsampling precision.
-			enum UpsampleRefinementOption
-			{
-			   upsample_refine_off  = 0,  ///< Do not refine after upsampling.
-			   upsample_refine_on   = 1   ///< Refine after upsampling.
-			};
-		
-
-			/**
-			\brief Construct an Adaptive Precision tracker, associating to it a System.
-			*/
-			AMPTracker(class System const& sys) : Tracker(sys), current_precision_(DefaultPrecision())
-			{	
-				Set<PrecConf>(AMPConfigFrom(sys));
-			}
-			
-
-			/**
-			\brief Special additional setup call for the AMPTracker, selecting the config for adaptive precision.
-			*/
-			void PrecisionSetup(AdaptiveMultiplePrecisionConfig const& AMP_config)
-			{
-				Set<PrecConf>(AMP_config);
-			}
-
-
-			/// \brief Get the current working precision of the adaptive tracker.
-			unsigned GetCurrentPrecision() const
-			{
-				return current_precision_;
-			}
-
-			
-			/**
-			\brief Switch preservation of precision after tracking on / off
-
-			By default, precision is preserved after tracking, so the precision of the ambient workspace is returned to its previous state once Adaptive Precision tracking is done.
-			*/
-			void PrecisionPreservation(bool should_preseve_precision)
-			{
-				preserve_precision_ = should_preseve_precision;
-			}
-
-			/**
-			\brief Override the precision at which tracking starts.
-
-			Pass a value to start tracking at that precision regardless of the start point's precision.
-			Pass std::nullopt (or call with no argument) to use the start point's precision (default).
-			*/
-			void SetStartPrecision(std::optional<unsigned> p = std::nullopt)
-			{
-				override_start_precision_ = p;
-			}
-
-
-			virtual ~AMPTracker() = default;
-
-
-			/// \brief Get the current space point, returned in multiprecision regardless of the working type.
-			Vec<complex_mp> CurrentPoint() const override
-			{
-				if (this->CurrentPrecision()==DoublePrecision())
-				{
-					const auto& curr_vector = std::get<Vec<complex_dbl>>(this->current_space_);
-					Vec<complex_mp> returnme(NumVariables());
-					for (unsigned ii = 0; ii < NumVariables(); ++ii)
-					{
-						returnme(ii) = complex_mp(curr_vector(ii));
-					}
-					return returnme;
-				}
-				else
-					return std::get<Vec<complex_mp>>(this->current_space_);
-			}
-
-			
-
-		private:
-
-			/**
-			\brief Set up the internals of the tracker for a fresh start.  
-
-			Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
-
-			\param start_time The time at which to start tracking.
-			\param end_time The time to which to track.
-			\param start_point The space values from which to start tracking.
-			*/
-			SuccessCode TrackerLoopInitialization(complex_mp const& start_time,
-			                               complex_mp const& end_time,
-										   Vec<complex_mp> const& start_point) const override
-			{
-				initial_precision_ = override_start_precision_.value_or(Precision(start_point(0)));
-
-				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(
-				        (!preserve_precision_
-				         ||
-				         -log10(tracking_tolerance_) <= initial_precision_)
-				         && "when tracking a path, either preservation of precision must be turned off (so precision can be higher at the end of tracking), or the initial precision must be high enough to support the resulting points to the desired tolerance"
-				         );
-				#endif
-
-				NotifyObservers(Initializing<AMPTracker,complex_mp>(*this,start_time, end_time, start_point));
-				SetThreadPrecision(initial_precision_);
-				// set up the master current time and the current step size
-				
-				current_time_ = start_time;
-				current_time_.precision(initial_precision_);
-
-				
-				endtime_highest_precision_ = end_time;
-				endtime_highest_precision_.precision(initial_precision_);
-
-				endtime_ = end_time;
-				endtime_.precision(initial_precision_);
-
-				current_stepsize_.precision(initial_precision_);
-				if (reinitialize_stepsize_)
-				{
-					real_mp segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
-					SetStepSize(min(real_mp(Get<Stepping>().initial_step_size, current_precision_),segment_length));
-				}
-
-				// populate the current space value with the start point, in appropriate precision
-				if (initial_precision_==DoublePrecision())
-					MultipleToDouble(start_point);
-				else
-					MultipleToMultiple(initial_precision_, start_point);
-				
-				ChangePrecision<upsample_refine_off>(initial_precision_);
-
-				ResetCounters();
-
-				auto initial_refinement_code = InitialRefinement();
-
-				#ifndef BERTINI_DISABLE_ASSERTS
-				if (initial_precision_==DoublePrecision()){
-					PrecisionSanityCheck<complex_dbl>();
-				}
-				else{
-					PrecisionSanityCheck<complex_mp>();
-				}
-				#endif
-
-				return initial_refinement_code;
-			}
-
-
-
-
-
-			void ResetCounters() const override
-			{
-				Tracker::ResetCountersBase();
-				num_precision_decreases_ = 0;
-				num_successful_steps_since_stepsize_increase_ = 0;
-				num_successful_steps_since_precision_decrease_ = 0;
-				// initialize to the frequency so guaranteed to compute it the first try
-				num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
-			}
-
-			/** 
-			\brief Run an initial refinement of the start point, to ensure in high enough precision to start.
-
-			\return Whether initial refinement was successful.  
-			*/
-			SuccessCode InitialRefinement() const
-			{
-				SuccessCode initial_refinement_code = RefineStoredPoint();
-				if (initial_refinement_code!=SuccessCode::Success)
-				{
-					do {
-						if (current_precision_ > Get<PrecConf>().maximum_precision)
-						{
-							NotifyObservers(SingularStartPoint<EmitterType>(*this));
-							return SuccessCode::SingularStartPoint;
-						}
-
-						if (current_precision_==DoublePrecision())
-							initial_refinement_code = ChangePrecision<upsample_refine_on>(LowestMultiplePrecision());
-						else
-							initial_refinement_code = ChangePrecision<upsample_refine_on>(current_precision_+PrecisionIncrement());
-					}
-					while (initial_refinement_code!=SuccessCode::Success);
-				}
-				return SuccessCode::Success;
-			}		
-
-
-
-
-			/**
-			\brief Ensure that number of steps, stepsize, and precision still ok.
-
-			\return Success if ok to keep going, and a different code otherwise. 
-			*/
-			SuccessCode PreIterationCheck() const override
-			{
-				// The budget counts EVERY step, not only the successful ones -- see the
-				// same check in FixedPrecisionTracker and issue #410.  This is the guard
-				// that bounds a path whose steps fail without ever advancing.
-				if (NumTotalStepsTaken() >= Get<Stepping>().max_num_steps)
-					return SuccessCode::MaxNumStepsTaken;
-				if (current_stepsize_ < Get<Stepping>().min_step_size)
-					return SuccessCode::MinStepSizeReached;
-				if (current_precision_ > Get<PrecConf>().maximum_precision)
-					return SuccessCode::MaxPrecisionReached;
-
-				return SuccessCode::Success;
-			}
-
-
-
-			
-			
-
-
-			void PostTrackCleanup() const override
-			{
-				if (preserve_precision_)
-					ChangePrecision(initial_precision_);
-				NotifyObservers(TrackingEnded<EmitterType>(*this));
-			}
-
-			/**
-			\brief Copy from the internally stored current solution into a final solution.
-			
-			If preservation of precision is on, this function first returns to the initial precision.
-
-			\param[out] solution_at_endtime The solution at the end time
-			*/
-			void CopySolution(Vec<complex_mp> & solution_at_endtime) const override
-			{
-
-				// the current precision is the precision of the output solution point.
-				if (current_precision_==DoublePrecision())
-				{
-					unsigned num_vars = static_cast<unsigned>(GetSystem().NumVariables());
-					solution_at_endtime.resize(num_vars);
-					for (unsigned ii=0; ii<num_vars; ii++)
-						solution_at_endtime(ii) = complex_mp(std::get<Vec<complex_dbl> >(current_space_)(ii));
-				}
-				else
-				{
-					unsigned num_vars = static_cast<unsigned>(GetSystem().NumVariables());
-					solution_at_endtime.resize(num_vars);
-					for (unsigned ii=0; ii<num_vars; ii++)
-					{
-						solution_at_endtime(ii) = std::get<Vec<complex_mp> >(current_space_)(ii);
-						solution_at_endtime(ii).precision(current_precision_);
-					}
-				}
-			}
-
-
-
-
-			/**
-			\brief Run an iteration of the tracker loop.
-
-			Predict and correct, adjusting precision and stepsize as necessary.
-
-			\return Success if the step was successful, and a non-success code if something went wrong, such as a linear algebra failure or AMP Criterion violation.
-			*/
-			SuccessCode TrackerIteration() const override
-			{
-				if (current_precision_==DoublePrecision())
-					return TrackerIteration<complex_dbl>();
-				else
-					return TrackerIteration<complex_mp>();
-			}
-
-
-			/**
-			\brief Run an iteration of AMP tracking.
-
-			\return SuccessCode indicating whether the iteration was successful.
-			\tparam ComplexT The complex number type.
-			\tparam RealT The real number type.
-			*/
-			template <typename ComplexT>
-			SuccessCode TrackerIteration() const // not an override, because it is templated
-			{	
-
-				using RealT = typename Eigen::NumTraits<ComplexT>::Real;
-
-				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(PrecisionSanityCheck<ComplexT>() && "precision sanity check failed.  some internal variable is not in correct precision");
-				#endif
-
-				NotifyObservers(NewStep<EmitterType>(*this));
-
-				Vec<ComplexT>& predicted_space = std::get<Vec<ComplexT> >(temporary_space_); // this will be populated in the Predict step
-				Vec<ComplexT>& current_space = std::get<Vec<ComplexT> >(current_space_); // the thing we ultimately wish to update
-				ComplexT current_time = ComplexT(current_time_);
-				ComplexT delta_t = ComplexT(delta_t_);
-
-				#ifndef BERTINI_DISABLE_ASSERTS
-				PrecisionSanityCheck<ComplexT>();
-				#endif
-
-				SuccessCode predictor_code = Predict<ComplexT, RealT>(predicted_space, current_space, current_time, delta_t);
-				if (predictor_code==SuccessCode::MatrixSolveFailureFirstPartOfPrediction)
-				{
-					NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType>(*this));
-					InitialMatrixSolveError();
-					return predictor_code;
-				}
-				else if (predictor_code==SuccessCode::MatrixSolveFailure)
-				{
-					NotifyObservers(PredictorMatrixSolveFailure<EmitterType>(*this));
-					NewtonConvergenceError();// decrease stepsize, and adjust precision as necessary
-					return predictor_code;
-				}	
-				else if (predictor_code==SuccessCode::HigherPrecisionNecessary)
-				{
-					NotifyObservers(PredictorHigherPrecisionNecessary<EmitterType>(*this));
-					auto adj_code = AMPCriterionError<ComplexT>();
-					if (adj_code != SuccessCode::Success)
-						return adj_code;
-					return predictor_code;
-				}
-
-
-				NotifyObservers(SuccessfulPredict<AMPTracker, ComplexT>(*this, predicted_space));
-
-				Vec<ComplexT>& tentative_next_space = std::get<Vec<ComplexT> >(tentative_space_); // this will be populated in the Correct step
-
-				ComplexT tentative_next_time = current_time + delta_t;
-
-				SuccessCode corrector_code = Correct<ComplexT, RealT>(tentative_next_space,
-													 predicted_space,
-													 tentative_next_time);
-
-				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(PrecisionSanityCheck<ComplexT>() && "precision sanity check failed.  some internal variable is not in correct precision");
-				#endif
-
-				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
-				{
-					NotifyObservers(CorrectorMatrixSolveFailure<EmitterType>(*this));
-					NewtonConvergenceError();
-					return corrector_code;
-				}
-				else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
-				{
-					NotifyObservers(CorrectorHigherPrecisionNecessary<EmitterType>(*this));
-					auto adj_code = AMPCriterionError<ComplexT>();
-					if (adj_code != SuccessCode::Success)
-						return adj_code;
-					return corrector_code;
-				}
-				else if (corrector_code == SuccessCode::GoingToInfinity)
-				{
-					// there is no corrective action possible...
-					return corrector_code;
-				}
-
-				NotifyObservers(SuccessfulCorrect<AMPTracker, ComplexT>(*this, tentative_next_space));
-
-				// copy the tentative vector into the current space vector;
-				current_space = tentative_next_space;
-				return AdjustAMPStepSuccess<ComplexT>();
-			}
-
-
-			/**
-			Check whether the path is going to infinity.
-			*/
-			SuccessCode CheckGoingToInfinity() const override
-			{
-				if (current_precision_ == DoublePrecision())
-					return Base::CheckGoingToInfinity<complex_dbl>();
-				else
-					return Base::CheckGoingToInfinity<complex_mp>();
-			}
-
-			/**
-			\brief Commit the next precision and stepsize, and adjust internals.
-
-			\tparam refine_if_necessary Flag indicating whether to refine if precision if increasing.
-
-			\see UpsampleRefinementOption
-			*/
-			template <UpsampleRefinementOption refine_if_necessary = upsample_refine_off>
-			SuccessCode UpdatePrecisionAndStepsize() const
-			{
-				SetStepSize(next_stepsize_);
-				return ChangePrecision<refine_if_necessary>(next_precision_);
-			}
-
-
-
-
-
-
-
-			/**
-			\brief Increase stepsize or decrease precision, because of consecutive successful steps.
-
-			\tparam ComplexT The complex number type.
-			\tparam RealT The real number type.
-
-			If the most recent step was successful, maybe adjust down precision and up stepsize.
-
-			The number of consecutive successful steps is recorded as state in this class, and if this number exceeds a user-determined threshold, the precision or stepsize are allowed to favorably change.  If not, then precision can only go up or remain the same.  Stepsize can only decrease.  These changes depend on the AMP criteria and current tracking tolerance.
-
-			\par Implementation note on the precision scan window
-
-			The upper bound passed to MinimizeTrackingCost is \c maximum_precision (from
-			AdaptiveMultiplePrecisionConfig), not \c current_precision_.  This is intentional
-			and faithful to the paper (Bates, Hauenstein, Sommese, Wampler 2009, p. 8).
-
-			MinimizeTrackingCost is a cost minimiser: it always returns the cheapest valid
-			\f$(p, h)\f$ pair.  For well-conditioned paths it still selects double precision
-			with a large stepsize, so widening the ceiling has no effect on the common case.
-
-			The ceiling matters only when the path enters a harder region immediately after a
-			successful step — for example, a condition-number spike at the new point pushes
-			\c digits_B above \c current_precision_.  In that situation the minimum required
-			precision for the <em>next</em> step genuinely exceeds the precision that was
-			sufficient for the <em>last</em> step, and a ceiling of \c current_precision_
-			would collapse the scan to a single candidate that fails criterion B, causing
-			MinimizeTrackingCost to throw even though valid pairs exist at higher precision.
-
-			The throw inside MinimizeTrackingCost remains semantically correct: it fires only
-			when no valid pair exists anywhere in \f$[p_{\min}, p_{\max}]\f$, indicating that
-			the path has entered a region that cannot be tracked at any supported precision.
-			That is a genuine path failure, and is reported via
-			SuccessCode::FailedToSelectPrecisionAndStepsize.
-			*/
-			template <typename ComplexT>
-			SuccessCode AdjustAMPStepSuccess() const
-			{
-				// This mirrors Bertini 1's AMP2_update: pick the cost-minimizing (precision, stepsize)
-				// after a successful step.  Faithful-to-B1 points, two of which were previously wrong:
-				//  (1) The rule-B precision requirement CREDITS THE STEP.  digits_B is the right-hand side
-				//      of  P + (p+1)*xi/N > digits_B  (xi = -log10(stepsize)); the floor is therefore
-				//      digits_B - (p+1)*(-log10(min_stepsize))/N, crediting the smallest allowed step, NOT
-				//      the raw digits_B.  Without this credit a tiny step (large size_proportion in the
-				//      roundoff regime) spuriously forced precision up.  B1: digits_B2 = ceil(P0 - eta_minSS/N).
-				//  (2) Precision decrease (and stepsize increase) is gated by BOTH B1's StepsForIncrease
-				//      consecutive-successful-steps counter AND the digits-margin hysteresis
-				//      (ExtraDigitsBeforePrecisionDecrease).  The single StepsForIncrease setting
-				//      (SteppingConfig::consecutive_successful_steps_before_stepsize_increase) governs both
-				//      gates -- the old, duplicate AMP-config precision-decrease setting was removed.
-				real_mp min_stepsize = current_stepsize_ * real_mp(Get<Stepping>().step_size_fail_factor, current_precision_);
-				real_mp max_stepsize = min( current_stepsize_ * real_mp(Get<Stepping>().step_size_success_factor, current_precision_),  real_mp(Get<Stepping>().max_step_size, current_precision_));
-
-				const unsigned steps_for_increase = Get<Stepping>().consecutive_successful_steps_before_stepsize_increase; // B1 StepsForIncrease
-
-				if (num_successful_steps_since_stepsize_increase_ < steps_for_increase)
-					max_stepsize = current_stepsize_; // not enough successes in a row: disallow stepsize increase
-
-				const unsigned N = Get<NewtonConfig>().max_num_newton_iterations;
-				const unsigned curr_digits = current_precision_;
-				const unsigned extra = ExtraDigitsBeforePrecisionDecrease(curr_digits);
-
-				// rule B, step-credited (credit the smallest allowed step = the most credit)
-				int digits_B = static_cast<int>(ceil( double(B_RHS<ComplexT>())
-				                   - (predictor_order_ + 1.0) * double(-log10(min_stepsize)) / N ));
-				int digits_C = static_cast<int>(DigitsC<ComplexT>());
-				int digits_stepsize = static_cast<int>(MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)));
-
-				// each requirement may only lower precision if it clears the hysteresis margin
-				ApplyPrecisionDecreaseMargin(digits_B, curr_digits, extra);
-				ApplyPrecisionDecreaseMargin(digits_C, curr_digits, extra);
-				ApplyPrecisionDecreaseMargin(digits_stepsize, curr_digits, extra);
-
-				int min_digits = std::max({ static_cast<int>(digits_tracking_tolerance_),
-				                            static_cast<int>(digits_final_),
-				                            digits_B, digits_C, digits_stepsize,
-				                            static_cast<int>(DoublePrecision()) });
-				unsigned min_precision = static_cast<unsigned>(min_digits); // >= DoublePrecision(), so non-negative
-
-				// StepsForIncrease gate + safety cap: precision may only be lowered after enough successful
-				// steps in a row and while under the decrease budget; otherwise hold the current precision.
-				const bool decrease_allowed =
-				    (num_successful_steps_since_precision_decrease_ >= steps_for_increase)
-				    &&
-				    (num_precision_decreases_ < Get<PrecConf>().max_num_precision_decreases);
-				if (!decrease_allowed)
-					min_precision = max(min_precision, current_precision_);
-
-				unsigned max_precision = Get<PrecConf>().maximum_precision;
-
-				try {
-					MinimizeTrackingCost(next_precision_, next_stepsize_,
-								min_precision, min_stepsize,
-								max_precision, max_stepsize,
-								DigitsB<ComplexT>(), // RAW digits_B (=P0) for the stepsize relation, per B1 minimize_cost
-								N,
-								predictor_order_);
-				} catch (std::runtime_error const&) {
-					return SuccessCode::FailedToSelectPrecisionAndStepsize;
-				}
-
-				if ( (next_stepsize_ > current_stepsize_) || (next_precision_ < current_precision_) )
-					num_successful_steps_since_stepsize_increase_ = 0;
-				else
-					++num_successful_steps_since_stepsize_increase_;
-
-				if (next_precision_ < current_precision_)
-				{
-					++num_precision_decreases_;
-					num_successful_steps_since_precision_decrease_ = 0;
-				}
-				else
-					++num_successful_steps_since_precision_decrease_;
-
-				return UpdatePrecisionAndStepsize();
-			}
-
-
-
-			void InitialMatrixSolveError() const
-			{
-				next_stepsize_ = current_stepsize_;
-
-				if (current_precision_==DoublePrecision())
-					next_precision_ = LowestMultiplePrecision();
-				else
-					next_precision_ = current_precision_+(1+num_consecutive_failed_steps_) * PrecisionIncrement();
-
-				UpdatePrecisionAndStepsize();
-			}
-
-			/**
-			\brief The convergence_error function from \cite AMP2.  
-	
-			Adjust precision and stepsize due to Newton's method failure to converge in the maximum number of steps.
-
-			Decrease stepsize, then increase precision until the new stepsize is greater than a precision-dependent minimum stepsize.  
-			
-			This function is used in the AMPTracker loop, when Newton's method fails to converge.
-
-			\see MinStepSizeForPrecision
-			*/
-			void NewtonConvergenceError() const
-			{
-				next_precision_ = current_precision_;
-
-				next_stepsize_ = real_mp(Get<Stepping>().step_size_fail_factor, CurrentPrecision())*current_stepsize_;
-				while (next_stepsize_ < MinStepSizeForPrecision(next_precision_, abs(current_time_ - endtime_)))
-				{
-					if (next_precision_==DoublePrecision())
-						next_precision_=LowestMultiplePrecision();
-					else
-						next_precision_+=PrecisionIncrement();
-				}
-
-				UpdatePrecisionAndStepsize();
-			}
-
-
-
-
-
-
-
-			/**
-			\brief Adjust step size and precision due to AMP Criterion violation
-			
-			This function adjusts internals to the tracker object.
-			
-			Precision is REQUIRED to increase at least one increment.  Stepsize is REQUIRED to decrease.
-
-			\tparam ComplexT The complex number type.
-			*/
-			template<typename ComplexT>
-			SuccessCode AMPCriterionError() const
-			{
-
-				unsigned min_next_precision; // sure, i could use a trigraph here, but it'd be terrible
-				if (current_precision_==DoublePrecision())
-					min_next_precision = LowestMultiplePrecision(); // precision increases
-				else
-					min_next_precision = current_precision_ + (1+num_consecutive_failed_steps_)*PrecisionIncrement(); // precision increases
-
-
-				real_mp min_stepsize = MinStepSizeForPrecision(current_precision_, abs(current_time_ - endtime_));
-				real_mp max_stepsize = current_stepsize_ * real_mp(Get<Stepping>().step_size_fail_factor, current_precision_);  // Stepsize decreases.
-
-				if (min_stepsize > max_stepsize)
-				{
-					// stepsizes are incompatible, must increase precision
-					next_precision_ = min_next_precision;
-					// decrease stepsize somewhat less than the fail factor
-					next_stepsize_ = max(current_stepsize_ * (1+real_mp(Get<Stepping>().step_size_fail_factor, current_precision_))/2, min_stepsize);
-				}
-				else
-				{
-					unsigned digits_B = DigitsB<ComplexT>(); // RAW digits_B (=P0); the stepsize relation in MinimizeTrackingCost needs it raw
-
-					// rule-B precision floor CREDITS THE STEP (B1 AMP2_update: digits_B2 = ceil(P0 - eta_minSS/N)):
-					// floor = digits_B - (p+1)*(-log10(min_stepsize))/N, crediting the smallest allowed step.
-					// This keeps a small step (large size_proportion in the roundoff regime) from forcing
-					// precision up by itself; genuine ill-conditioning still escalates via D / rules A,C.
-					const unsigned N = Get<NewtonConfig>().max_num_newton_iterations;
-					int digits_B_credited = static_cast<int>(ceil( double(digits_B)
-					                            - (predictor_order_ + 1.0) * double(-log10(min_stepsize)) / N ));
-					if (digits_B_credited < 0)
-						digits_B_credited = 0;
-
-					unsigned min_precision = max(min_next_precision,
-					                             static_cast<unsigned>(digits_B_credited),
-					                             DigitsC<ComplexT>(),
-					                             MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)),
-					                             digits_final_
-					                             );
-
-					try {
-						MinimizeTrackingCost(next_precision_, next_stepsize_,
-								min_precision, min_stepsize,
-								Get<PrecConf>().maximum_precision, max_stepsize,
-								digits_B,
-								N,
-								predictor_order_);
-					} catch (std::runtime_error const&) {
-						return SuccessCode::FailedToSelectPrecisionAndStepsize;
-					}
-
-				}
-
-				UpdatePrecisionAndStepsize();
-				return SuccessCode::Success;
-			}
-
-
-
-
-
-			/**
-			\brief Get the raw right-hand side of Criterion B based on current state.
-			*/
-			template<typename ComplexT>
-			NumErrorT B_RHS() const
-			{
-				return max(amp::CriterionBRHS(this->last_step_.norm_J,
-				           					  this->last_step_.norm_J_inverse,
-				           					  Get<NewtonConfig>().max_num_newton_iterations,
-				           					  tracking_tolerance_,
-				           					  this->last_step_.norm_delta_z,
-				           					  Get<PrecConf>()), NumErrorT(0));
-			}
-
-
-
-
-			/**
-			\brief Get the right hand side of Criterion B based on current state.
-			
-			Returns the larger of the right hand side of B, or 1.
-
-			Uses:
-
-			* the most recent estimate on the norm of \f$J\f$,
-			* the most recent estimate of the norm of \f$J^{-1}\f$,
-			* the number of allowed newton iterations,
-			* the tracking tolerance,
-			* the norm of the latest Newton residual (norm_delta_z),
-			* the AMP configuration.
-
-			*/
-			template<typename ComplexT>
-			unsigned DigitsB() const
-			{
-				unsigned d = unsigned(B_RHS<ComplexT>());
-				return d;
-			}
-
-
-
-			
-
-			/**
-			\brief Get the raw right-hand side of Criterion B based on current state.
-			*/
-			template<typename ComplexT>
-			NumErrorT C_RHS() const
-			{	
-				return max(amp::CriterionCRHS(this->last_step_.norm_J_inverse,
-				                              NumErrorT(std::get<Vec<ComplexT> > (current_space_).norm()),
-				                              tracking_tolerance_, 
-				                              Get<PrecConf>()), NumErrorT(0));
-			}
-
-
-
-			/**
-			\brief Get the right hand side of Criterion C based on current state.
-			
-			Returns the larger of the right hand side of C, or 1.
-
-			Uses:
-
-			* the most recent estimate of the norm of \f$J^{-1}\f$,
-			* the most recent current space point,
-			* the current tracking tolerance,
-			* the AMP configuration.
-
-			*/
-			template<typename ComplexT>
-			unsigned DigitsC() const
-			{	
-				return unsigned(C_RHS<ComplexT>());
-			}
-
-
-
-
-
-			// (MinRequiredPrecision_BCTol was removed: it returned the UNCREDITED rule-B floor
-			//  max(DigitsB, DigitsC, tol, double), which is what spuriously escalated precision on
-			//  small steps.  AdjustAMPStepSuccess now computes the step-credited, margin-gated floor
-			//  directly, faithful to Bertini 1's AMP2_update.)
-
-
-
-
-
-			///////////
-			//
-			//  overrides for counter adjustment after a TrackerIteration()
-			//
-			////////////////
-
-			/**
-			\brief Increment and reset counters after a successful TrackerIteration()
-			*/
-			void OnStepSuccess() const override
-			{
-				Tracker::IncrementBaseCountersSuccess();
-				NotifyObservers(SuccessfulStep<EmitterType>(*this));
-			}
-
-			/**
-			\brief Increment and reset counters after a failed TrackerIteration()
-			*/
-			void OnStepFail() const override
-			{
-				Tracker::IncrementBaseCountersFail();
-				num_successful_steps_since_stepsize_increase_ = 0;
-				num_successful_steps_since_precision_decrease_ = 0;
-				NotifyObservers(FailedStep<EmitterType>(*this));
-			}
-
-
-
-			void OnInfiniteTruncation() const override
-			{
-				NotifyObservers(InfinitePathTruncation<EmitterType>(*this));
-			}
-
-
-			////////////////
-			//
-			//       Predict and Correct functions
-			//
-			/////////////////
-
-
-			
+    namespace tracking{
+
+
+        using std::max;
+        using std::min;
+        using std::pow;
+
+        using bertini::max;
+
+        /**
+        The minimum time that can be represented effectively using a given precision
+
+        \param precision The number of digits you want to use
+        \param time_to_go The duration of remaining time to track
+        \param safety_digits A buffer of extra digits to use
+
+        \return The smallest permissible stepsize
+
+        \todo This function has a hardcoded value which should be replaced
+        */
+        inline
+        real_mp MinTimeForCurrentPrecision(unsigned precision, real_mp const& time_to_go, int safety_digits = 3)
+        {
+            real_mp t = pow( real_mp(10), safety_digits-long(precision)) * time_to_go;
+            if (precision==DoublePrecision() && t<1e-150)
+                return real_mp("1e-150");
+            else
+                return t;
+        }
+
+        /**
+        \brief Just another name for MinTimeForCurrentPrecision
+
+        \param precision The number of digits you want to use
+        \param time_to_go The duration of remaining time to track
+        \param safety_digits A buffer of extra digits to use
+
+        \return The smallest permissible stepsize
+        */
+        inline
+        real_mp MinStepSizeForPrecision(unsigned precision, real_mp const& time_to_go, int safety_digits = 3)
+        {
+            return MinTimeForCurrentPrecision(precision, time_to_go, safety_digits);
+        }
+
+
+        /**
+         \brief Compute the cost function for arithmetic versus precision.
+
+         From \cite AMP2, \f$C(P)\f$.  As currently implemented, this is
+         \f$ 101.47 + 1.59 P \f$, where P is the precision in decimal digits.
+
+         This function tells you the relative cost of arithmetic at a given precision,
+         relative to \c std::complex<double> (the double-precision tracker's scalar type).
+
+         Calibrated by benchmarking three operations representative of path tracking
+         (dot product / SLP evaluation, dense matvec, LU factorization+solve) using
+         GNU MPC (\c complex_mp) vs \c std::complex<double> on modern hardware.
+         See \c tuning/arithmetic_cost.cpp for the methodology and compile instructions.
+
+         The paper \cite AMP2 reports \f$C(P) = 10.35 + 0.04 P_\mathrm{bits}\f$ (measured on
+         a 2009 Opteron 250).  Converting to decimal digits gives \f$10.35 + 0.13 P\f$, which
+         was the previous value here.  The ~12x increase in the intercept on modern hardware
+         reflects AVX2 vectorization of double-precision arithmetic that MPC cannot exploit.
+
+         \param precision An integral number of decimal digits
+         \return A double indicating how expensive arithmetic at a given precision is.  1 is the base-line for double-precision.
+        */
+        inline
+        double ArithmeticCost(unsigned precision)
+        {
+            if (precision==DoublePrecision())
+                return 1;
+            else
+                return 101.47 + 1.59 * precision;
+        }
+
+
+
+
+        /**
+         \brief Compute a stepsize satisfying AMP Criterion B with a given precision
+
+         \param precision The current working precision
+         \param digits_B The number of digits from Criterion B
+         \param num_newton_iterations The number of remaining newton iterations allowed in the correction
+         \param predictor_order The order of the predictor
+
+         \return The stepsize
+
+         \todo Remove the default value of the predictor order, as that seems weird to have
+        */
+        template<typename RealT>
+        inline RealT StepsizeSatisfyingCriterionB(unsigned precision,
+                                        unsigned digits_B,
+                                        unsigned num_newton_iterations,
+                                        unsigned predictor_order = 0)
+        {
+            return pow(RealT(10), -(static_cast<int>(digits_B) - static_cast<int>(precision))
+                                   * static_cast<int>(num_newton_iterations) / (predictor_order+1.0));
+        }
+
+
+        /**
+        \brief The minimum number of digits based on a log10 of a stepsize.
+
+        \param log_of_stepsize log10 of a stepsize
+        \param time_to_go How much time you have left to track.
+        \param safety_digits A buffer of extra digits to use, over the computed min.  Yes, this is added in, in this function.
+
+        \return An integral number of necessary digits to use
+        */
+        inline
+        unsigned MinDigitsForLogOfStepsize(real_mp const& log_of_stepsize, real_mp const& time_to_go, unsigned safety_digits = 3)
+        {
+            return (ceil(log_of_stepsize) + ceil(log10(abs(time_to_go))) + safety_digits).convert_to<unsigned>();
+        }
+
+        /**
+         \brief For a given range of stepsizes under consideration, gives the minimum number of digits
+
+         \param min_stepsize The smallest stepsize under consideration
+         \param max_stepsize The largest stepsize under consideration
+         \param time_to_go How much time is left to track.
+         \return The min number of digits.
+
+        This function assumes you are going to time=0, or that you have taken care of that difference.  That is, time_to_go should be a duration, not the current time, unless you are tracking to t=0, in which case current time is the duration left to go.  Dig it?
+        */
+        inline
+        unsigned MinDigitsForStepsizeInterval(real_mp const& min_stepsize, real_mp const& max_stepsize, real_mp const& time_to_go)
+        {
+            return max(MinDigitsForLogOfStepsize(-log10(min_stepsize),time_to_go),
+                       MinDigitsForLogOfStepsize(-log10(max_stepsize),time_to_go));
+        }
+
+        /**
+         \brief Bertini 1's precision-decrease hysteresis margin (from B1's \c AMP2_update).
+
+         The number of EXTRA digits a criterion must clear below the current precision before it is
+         allowed to actually lower the working precision.  This prevents precision thrashing and
+         replaces a consecutive-successful-steps counter with a stateless, precision-derived margin.
+
+         B1 uses <tt>(currPrec_bits/32)*2</tt> ~ 2 digits per 32-bit precision packet (~20% slack).  In
+         b2 precision is carried in decimal digits with packet size \c PrecisionIncrement(), so the
+         faithful analog is <tt>(digits/PrecisionIncrement())*2</tt>.  Double precision gets no margin.
+        */
+        inline
+        unsigned ExtraDigitsBeforePrecisionDecrease(unsigned current_precision)
+        {
+            if (current_precision <= DoublePrecision())
+                return 0;
+            return (current_precision / PrecisionIncrement()) * 2;
+        }
+
+        /**
+         \brief Apply B1's precision-decrease hysteresis to one digits requirement (B1 \c AMP2_update).
+
+         If \p digits_required would permit precision to drop below the current precision, demand \p extra
+         additional digits before allowing the drop, and never raise the requirement above \p current_digits
+         (a requirement that suggests a decrease must not be turned into a request for an increase).
+        */
+        inline
+        void ApplyPrecisionDecreaseMargin(int & digits_required, unsigned current_digits, unsigned extra)
+        {
+            if (digits_required < static_cast<int>(current_digits))
+            {
+                digits_required += static_cast<int>(extra);
+                if (digits_required > static_cast<int>(current_digits))
+                    digits_required = static_cast<int>(current_digits);
+            }
+        }
+
+
+        /**
+         \brief Compute precision and stepsize minimizing the ArithmeticCost() of tracking.
+
+         For a given range of precisions, an old stepsize, and a maximum stepsize, the Cost of tracking is computed, and a minimizer found.
+
+         This function is used in the AMPTracker tracking loop, both in case of successful steps and in Criterion errors.
+
+
+         \param[out] new_precision The minimizing precision.
+         \param[out] new_stepsize The minimizing stepsize.
+         \param[in] min_precision The minimum considered precision.
+         \param[in] min_stepsize The minimum permitted stepsize.
+         \param[in] max_precision The maximum considered precision.
+         \param[in] max_stepsize The maximum permitted stepsize.
+         \param[in] digits_B The number of digits required, according to CriterionB from \cite AMP1, \cite AMP2
+         \param[in] num_newton_iterations The number of allowed Newton corrector iterations.
+         \param[in] predictor_order The order of the predictor being used.  This is the order itself, not the order of the error estimate.
+
+         \see ArithmeticCost
+        */
+        template<typename RealT>
+        void MinimizeTrackingCost(unsigned & new_precision, RealT & new_stepsize,
+                          unsigned min_precision, RealT const& min_stepsize,
+                          unsigned max_precision, RealT const& max_stepsize,
+                          unsigned digits_B,
+                          unsigned num_newton_iterations,
+                          unsigned predictor_order = 0)
+        {
+            double min_cost = Eigen::NumTraits<double>::highest();
+
+            unsigned minimizing_precision = 0; // initialize to an impossible value.
+
+            // a few casts so that we can work in double precision, because doing this in multiprec sucks
+            double min_stepsize_lowprec = static_cast<double>(min_stepsize);
+            double max_stepsize_lowprec = static_cast<double>(max_stepsize);
+
+            auto minimizer_routine =
+                [&min_cost, &minimizing_precision, digits_B, num_newton_iterations, predictor_order, min_stepsize_lowprec, max_stepsize_lowprec](unsigned p)
+                {
+                    double criterion_b_stepsize = StepsizeSatisfyingCriterionB<double>(p, digits_B, num_newton_iterations, predictor_order);
+                    if (criterion_b_stepsize < min_stepsize_lowprec)
+                        return; // precision too low to satisfy min_stepsize constraint
+                    double candidate_stepsize = min(criterion_b_stepsize, max_stepsize_lowprec);
+                    using std::abs;
+                    double current_cost = ArithmeticCost(p) / abs(candidate_stepsize);
+
+                    if (current_cost < min_cost)
+                    {
+                        min_cost = current_cost;
+                        minimizing_precision = p;
+                    }
+                };
+
+            unsigned lowest_mp_precision_to_test = min_precision;
+
+            if (min_precision<=DoublePrecision())
+                minimizer_routine(DoublePrecision());
+
+
+            if (lowest_mp_precision_to_test < LowestMultiplePrecision())
+                lowest_mp_precision_to_test = LowestMultiplePrecision();
+            else
+                lowest_mp_precision_to_test = (lowest_mp_precision_to_test/PrecisionIncrement()) * PrecisionIncrement(); // use integer arithmetic to round.
+
+
+            if (max_precision < LowestMultiplePrecision())
+                max_precision = LowestMultiplePrecision();
+            else
+                max_precision = (max_precision/PrecisionIncrement()) * PrecisionIncrement(); // use integer arithmetic to round.
+
+            for (unsigned p = lowest_mp_precision_to_test; p <= max_precision; p+=PrecisionIncrement())
+                minimizer_routine(p);
+
+            if (minimizing_precision==0){
+                throw std::runtime_error("MinimizeTrackingCost failed to find a suitable stepsize and precision");
+            }
+
+            new_precision = minimizing_precision; // copy the computed value
+            // next, because the above computed the new stepsize in double precision, which may be lowprec, we compute in full precision
+            new_stepsize = max(
+                               min(
+                                    StepsizeSatisfyingCriterionB<RealT>(new_precision, digits_B, num_newton_iterations, predictor_order),
+                                    max_stepsize
+                                ),
+                               min_stepsize
+                               );
+        }
+
+
+
+
+
+
+
+
+        /**
+        \class AMPTracker
+
+        \brief Functor-like class for tracking paths on a system
+
+
+        ## Explanation
+
+        The bertini::AMPTracker class enables tracking using Adaptive Multiple Precision on an arbitrary square homotopy.
+
+        The intended usage is to:
+
+        1. Create a system, and instantiate some settings.
+        2. Create an AMPTracker, associating it to the system you are going to solve or track on.
+        3. Run AMPTracker::Setup and AMPTracker::PrecisionSetup, getting the settings in line for tracking.
+        4. Repeatedly, or as needed, call the AMPTracker::TrackPath function, feeding it a start point, and start and end times.  The initial precision is that of the start point.
+
+        Working precision and stepsize are adjusted automatically to get around nearby singularities to the path.  If the endpoint is singular, this may very well fail, as prediction and correction get more and more difficult with proximity to singularities.
+
+        The TrackPath method is intended to allow the user to track to nonsingular endpoints, or to an endgame boundary, from which an appropriate endgame will be called.
+
+        ## Some notes
+
+        The AMPTracker has internal state.  That is, it stores the current state of the path being tracked as data members.  After tracking has concluded, these statistics may be extracted.  If you need additional accessors for these data, contact the software authors.
+
+        The class additionally uses the Boost.Log library for logging.  At time of this writing, the trivial logger is being used.  As development continues we will move toward using a more sophisticated logging model.  Suggestions are welcome.
+
+        This class, like the other Tracker classes, uses mutable members to store the current state of the tracker.  The tracking tolerances, settings, etc, remain constant throughout a track, but the internal state such as the current time or space values, will change.  You can also expect the precision of the tracker to differ after a certain calls, too.
+
+        ## Example Usage
+
+        Below we demonstrate a basic usage of the AMPTracker class to track a single path.
+
+        The pattern is as described above: create an instance of the class, feeding it the system to be tracked, and some configuration.  Then, use the tracker to track paths of the system.
+
+        \code{.cpp}
+        DefaultPrecision(30); // set initial precision.  This is not strictly necessary.
+
+        using namespace bertini::tracking;
+
+        // 1. Create the system
+        Var x = Variable::Make("x");
+        Var y = Variable::Make("y");
+        Var t = Variable::Make("t");
+
+        System sys;
+
+        VariableGroup v{x,y};
+
+        sys.AddFunction(pow(x,2) + (1-t)*x - 1);
+        sys.AddFunction(pow(y,2) + (1-t)*x*y - 2);
+        sys.AddPathVariable(t);
+        sys.AddVariableGroup(v);
+
+        auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+        //  2. Create the Tracker object, associating the system to it.
+        bertini::tracking::AMPTracker tracker(sys);
+
+        SteppingConfig stepping_preferences;
+        NewtonConfig newton_preferences;
+
+        // 3. Get the settings into the tracker
+        tracker.Setup(Predictor::Euler,
+                        real_mp("1e-5"),
+                        real_mp("1e5"),
+                        stepping_preferences,
+                        newton_preferences);
+
+        tracker.PrecisionSetup(AMP);
+
+        //  4. Create a start and end time.  These are complex numbers.
+        complex_mp t_start("1.0");
+        complex_mp t_end("0");
+
+        //  5. Create a start point, and container for the end point.
+        Vec<complex_mp> start_point(2);
+        start_point << complex_mp("1"), complex_mp("1.414");  // set the value of the start point.  This is Eigen syntax.
+
+        Vec<complex_mp> end_point;
+
+        // 6. actually do the tracking
+        SuccessCode tracking_success = tracker.TrackPath(end_point,
+                          t_start, t_end, start_point);
+
+        // 7. and then onto whatever processing you are doing to the computed point.
+        \endcode
+
+        If this documentation is insufficient, please contact the authors with suggestions, or get involved!  Pull requests welcomed.
+
+        ## Testing
+
+        * Test suite driving this class: AMP_tracker_basics.
+        * File: test/tracking_basics/tracker_test.cpp
+        * Functionality tested: Can use an AMPTracker to track in various situations, including tracking on nonsingular paths.  Also track to a singularity on the square root function.  Furthermore test that tracking fails to start from a singular start point, and tracking fails if a singularity is directly on the path being tracked.
+
+        */
+        class AMPTracker : public Tracker<AMPTracker>
+        {
+            friend class Tracker<AMPTracker>;
+        public:
+
+            typedef Tracker<AMPTracker> Base;  ///< The base tracker type.
+            typedef typename TrackerTraits<AMPTracker>::EventEmitterType EmitterType;  ///< The event-emitter type.
+
+            /// \brief Whether to refine after upsampling precision.
+            enum UpsampleRefinementOption
+            {
+               upsample_refine_off  = 0,  ///< Do not refine after upsampling.
+               upsample_refine_on   = 1   ///< Refine after upsampling.
+            };
+
+
+            /**
+            \brief Construct an Adaptive Precision tracker, associating to it a System.
+            */
+            AMPTracker(class System const& sys) : Tracker(sys), current_precision_(DefaultPrecision())
+            {
+                Set<PrecConf>(AMPConfigFrom(sys));
+            }
+
+
+            /**
+            \brief Special additional setup call for the AMPTracker, selecting the config for adaptive precision.
+            */
+            void PrecisionSetup(AdaptiveMultiplePrecisionConfig const& AMP_config)
+            {
+                Set<PrecConf>(AMP_config);
+            }
+
+
+            /// \brief Get the current working precision of the adaptive tracker.
+            unsigned GetCurrentPrecision() const
+            {
+                return current_precision_;
+            }
+
+
+            /**
+            \brief Switch preservation of precision after tracking on / off
+
+            By default, precision is preserved after tracking, so the precision of the ambient workspace is returned to its previous state once Adaptive Precision tracking is done.
+            */
+            void PrecisionPreservation(bool should_preseve_precision)
+            {
+                preserve_precision_ = should_preseve_precision;
+            }
+
+            /**
+            \brief Override the precision at which tracking starts.
+
+            Pass a value to start tracking at that precision regardless of the start point's precision.
+            Pass std::nullopt (or call with no argument) to use the start point's precision (default).
+            */
+            void SetStartPrecision(std::optional<unsigned> p = std::nullopt)
+            {
+                override_start_precision_ = p;
+            }
+
+
+            virtual ~AMPTracker() = default;
+
+
+            /// \brief Get the current space point, returned in multiprecision regardless of the working type.
+            Vec<complex_mp> CurrentPoint() const override
+            {
+                if (this->CurrentPrecision()==DoublePrecision())
+                {
+                    const auto& curr_vector = std::get<Vec<complex_dbl>>(this->current_space_);
+                    Vec<complex_mp> returnme(NumVariables());
+                    for (unsigned ii = 0; ii < NumVariables(); ++ii)
+                    {
+                        returnme(ii) = complex_mp(curr_vector(ii));
+                    }
+                    return returnme;
+                }
+                else
+                    return std::get<Vec<complex_mp>>(this->current_space_);
+            }
+
+
+
+        private:
+
+            /**
+            \brief Set up the internals of the tracker for a fresh start.
+
+            Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
+
+            \param start_time The time at which to start tracking.
+            \param end_time The time to which to track.
+            \param start_point The space values from which to start tracking.
+            */
+            SuccessCode TrackerLoopInitialization(complex_mp const& start_time,
+                                           complex_mp const& end_time,
+                                           Vec<complex_mp> const& start_point) const override
+            {
+                initial_precision_ = override_start_precision_.value_or(Precision(start_point(0)));
+
+                #ifndef BERTINI_DISABLE_ASSERTS
+                assert(
+                        (!preserve_precision_
+                         ||
+                         -log10(tracking_tolerance_) <= initial_precision_)
+                         && "when tracking a path, either preservation of precision must be turned off (so precision can be higher at the end of tracking), or the initial precision must be high enough to support the resulting points to the desired tolerance"
+                         );
+                #endif
+
+                NotifyObservers(Initializing<AMPTracker,complex_mp>(*this,start_time, end_time, start_point));
+                SetThreadPrecision(initial_precision_);
+                // set up the master current time and the current step size
+
+                current_time_ = start_time;
+                current_time_.precision(initial_precision_);
+
+
+                endtime_highest_precision_ = end_time;
+                endtime_highest_precision_.precision(initial_precision_);
+
+                endtime_ = end_time;
+                endtime_.precision(initial_precision_);
+
+                current_stepsize_.precision(initial_precision_);
+                if (reinitialize_stepsize_)
+                {
+                    real_mp segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
+                    SetStepSize(min(real_mp(Get<Stepping>().initial_step_size, current_precision_),segment_length));
+                }
+
+                // populate the current space value with the start point, in appropriate precision
+                if (initial_precision_==DoublePrecision())
+                    MultipleToDouble(start_point);
+                else
+                    MultipleToMultiple(initial_precision_, start_point);
+
+                ChangePrecision<upsample_refine_off>(initial_precision_);
+
+                ResetCounters();
+
+                auto initial_refinement_code = InitialRefinement();
+
+                #ifndef BERTINI_DISABLE_ASSERTS
+                if (initial_precision_==DoublePrecision()){
+                    PrecisionSanityCheck<complex_dbl>();
+                }
+                else{
+                    PrecisionSanityCheck<complex_mp>();
+                }
+                #endif
+
+                return initial_refinement_code;
+            }
+
+
+
+
+
+            void ResetCounters() const override
+            {
+                Tracker::ResetCountersBase();
+                num_precision_decreases_ = 0;
+                num_successful_steps_since_stepsize_increase_ = 0;
+                num_successful_steps_since_precision_decrease_ = 0;
+                // initialize to the frequency so guaranteed to compute it the first try
+                num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
+            }
+
+            /**
+            \brief Run an initial refinement of the start point, to ensure in high enough precision to start.
+
+            \return Whether initial refinement was successful.
+            */
+            SuccessCode InitialRefinement() const
+            {
+                SuccessCode initial_refinement_code = RefineStoredPoint();
+                if (initial_refinement_code!=SuccessCode::Success)
+                {
+                    do {
+                        if (current_precision_ > Get<PrecConf>().maximum_precision)
+                        {
+                            NotifyObservers(SingularStartPoint<EmitterType>(*this));
+                            return SuccessCode::SingularStartPoint;
+                        }
+
+                        if (current_precision_==DoublePrecision())
+                            initial_refinement_code = ChangePrecision<upsample_refine_on>(LowestMultiplePrecision());
+                        else
+                            initial_refinement_code = ChangePrecision<upsample_refine_on>(current_precision_+PrecisionIncrement());
+                    }
+                    while (initial_refinement_code!=SuccessCode::Success);
+                }
+                return SuccessCode::Success;
+            }
+
+
+
+
+            /**
+            \brief Ensure that number of steps, stepsize, and precision still ok.
+
+            \return Success if ok to keep going, and a different code otherwise.
+            */
+            SuccessCode PreIterationCheck() const override
+            {
+                // The budget counts EVERY step, not only the successful ones -- see the
+                // same check in FixedPrecisionTracker and issue #410.  This is the guard
+                // that bounds a path whose steps fail without ever advancing.
+                if (NumTotalStepsTaken() >= Get<Stepping>().max_num_steps)
+                    return SuccessCode::MaxNumStepsTaken;
+                if (current_stepsize_ < Get<Stepping>().min_step_size)
+                    return SuccessCode::MinStepSizeReached;
+                if (current_precision_ > Get<PrecConf>().maximum_precision)
+                    return SuccessCode::MaxPrecisionReached;
+
+                return SuccessCode::Success;
+            }
+
+
+
+
+
+
+
+            void PostTrackCleanup() const override
+            {
+                if (preserve_precision_)
+                    ChangePrecision(initial_precision_);
+                NotifyObservers(TrackingEnded<EmitterType>(*this));
+            }
+
+            /**
+            \brief Copy from the internally stored current solution into a final solution.
+
+            If preservation of precision is on, this function first returns to the initial precision.
+
+            \param[out] solution_at_endtime The solution at the end time
+            */
+            void CopySolution(Vec<complex_mp> & solution_at_endtime) const override
+            {
+
+                // the current precision is the precision of the output solution point.
+                if (current_precision_==DoublePrecision())
+                {
+                    unsigned num_vars = static_cast<unsigned>(GetSystem().NumVariables());
+                    solution_at_endtime.resize(num_vars);
+                    for (unsigned ii=0; ii<num_vars; ii++)
+                        solution_at_endtime(ii) = complex_mp(std::get<Vec<complex_dbl> >(current_space_)(ii));
+                }
+                else
+                {
+                    unsigned num_vars = static_cast<unsigned>(GetSystem().NumVariables());
+                    solution_at_endtime.resize(num_vars);
+                    for (unsigned ii=0; ii<num_vars; ii++)
+                    {
+                        solution_at_endtime(ii) = std::get<Vec<complex_mp> >(current_space_)(ii);
+                        solution_at_endtime(ii).precision(current_precision_);
+                    }
+                }
+            }
+
+
+
+
+            /**
+            \brief Run an iteration of the tracker loop.
+
+            Predict and correct, adjusting precision and stepsize as necessary.
+
+            \return Success if the step was successful, and a non-success code if something went wrong, such as a linear algebra failure or AMP Criterion violation.
+            */
+            SuccessCode TrackerIteration() const override
+            {
+                if (current_precision_==DoublePrecision())
+                    return TrackerIteration<complex_dbl>();
+                else
+                    return TrackerIteration<complex_mp>();
+            }
+
+
+            /**
+            \brief Run an iteration of AMP tracking.
+
+            \return SuccessCode indicating whether the iteration was successful.
+            \tparam ComplexT The complex number type.
+            \tparam RealT The real number type.
+            */
+            template <typename ComplexT>
+            SuccessCode TrackerIteration() const // not an override, because it is templated
+            {
+
+                using RealT = typename Eigen::NumTraits<ComplexT>::Real;
+
+                #ifndef BERTINI_DISABLE_ASSERTS
+                assert(PrecisionSanityCheck<ComplexT>() && "precision sanity check failed.  some internal variable is not in correct precision");
+                #endif
+
+                NotifyObservers(NewStep<EmitterType>(*this));
+
+                Vec<ComplexT>& predicted_space = std::get<Vec<ComplexT> >(temporary_space_); // this will be populated in the Predict step
+                Vec<ComplexT>& current_space = std::get<Vec<ComplexT> >(current_space_); // the thing we ultimately wish to update
+                ComplexT current_time = ComplexT(current_time_);
+                ComplexT delta_t = ComplexT(delta_t_);
+
+                #ifndef BERTINI_DISABLE_ASSERTS
+                PrecisionSanityCheck<ComplexT>();
+                #endif
+
+                SuccessCode predictor_code = Predict<ComplexT, RealT>(predicted_space, current_space, current_time, delta_t);
+                if (predictor_code==SuccessCode::MatrixSolveFailureFirstPartOfPrediction)
+                {
+                    NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType>(*this));
+                    InitialMatrixSolveError();
+                    return predictor_code;
+                }
+                else if (predictor_code==SuccessCode::MatrixSolveFailure)
+                {
+                    NotifyObservers(PredictorMatrixSolveFailure<EmitterType>(*this));
+                    NewtonConvergenceError();// decrease stepsize, and adjust precision as necessary
+                    return predictor_code;
+                }
+                else if (predictor_code==SuccessCode::HigherPrecisionNecessary)
+                {
+                    NotifyObservers(PredictorHigherPrecisionNecessary<EmitterType>(*this));
+                    auto adj_code = AMPCriterionError<ComplexT>();
+                    if (adj_code != SuccessCode::Success)
+                        return adj_code;
+                    return predictor_code;
+                }
+
+
+                NotifyObservers(SuccessfulPredict<AMPTracker, ComplexT>(*this, predicted_space));
+
+                Vec<ComplexT>& tentative_next_space = std::get<Vec<ComplexT> >(tentative_space_); // this will be populated in the Correct step
+
+                ComplexT tentative_next_time = current_time + delta_t;
+
+                SuccessCode corrector_code = Correct<ComplexT, RealT>(tentative_next_space,
+                                                     predicted_space,
+                                                     tentative_next_time);
+
+                #ifndef BERTINI_DISABLE_ASSERTS
+                assert(PrecisionSanityCheck<ComplexT>() && "precision sanity check failed.  some internal variable is not in correct precision");
+                #endif
+
+                if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
+                {
+                    NotifyObservers(CorrectorMatrixSolveFailure<EmitterType>(*this));
+                    NewtonConvergenceError();
+                    return corrector_code;
+                }
+                else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
+                {
+                    NotifyObservers(CorrectorHigherPrecisionNecessary<EmitterType>(*this));
+                    auto adj_code = AMPCriterionError<ComplexT>();
+                    if (adj_code != SuccessCode::Success)
+                        return adj_code;
+                    return corrector_code;
+                }
+                else if (corrector_code == SuccessCode::GoingToInfinity)
+                {
+                    // there is no corrective action possible...
+                    return corrector_code;
+                }
+
+                NotifyObservers(SuccessfulCorrect<AMPTracker, ComplexT>(*this, tentative_next_space));
+
+                // copy the tentative vector into the current space vector;
+                current_space = tentative_next_space;
+                return AdjustAMPStepSuccess<ComplexT>();
+            }
+
+
+            /**
+            Check whether the path is going to infinity.
+            */
+            SuccessCode CheckGoingToInfinity() const override
+            {
+                if (current_precision_ == DoublePrecision())
+                    return Base::CheckGoingToInfinity<complex_dbl>();
+                else
+                    return Base::CheckGoingToInfinity<complex_mp>();
+            }
+
+            /**
+            \brief Commit the next precision and stepsize, and adjust internals.
+
+            \tparam refine_if_necessary Flag indicating whether to refine if precision if increasing.
+
+            \see UpsampleRefinementOption
+            */
+            template <UpsampleRefinementOption refine_if_necessary = upsample_refine_off>
+            SuccessCode UpdatePrecisionAndStepsize() const
+            {
+                SetStepSize(next_stepsize_);
+                return ChangePrecision<refine_if_necessary>(next_precision_);
+            }
+
+
+
+
+
+
+
+            /**
+            \brief Increase stepsize or decrease precision, because of consecutive successful steps.
+
+            \tparam ComplexT The complex number type.
+            \tparam RealT The real number type.
+
+            If the most recent step was successful, maybe adjust down precision and up stepsize.
+
+            The number of consecutive successful steps is recorded as state in this class, and if this number exceeds a user-determined threshold, the precision or stepsize are allowed to favorably change.  If not, then precision can only go up or remain the same.  Stepsize can only decrease.  These changes depend on the AMP criteria and current tracking tolerance.
+
+            \par Implementation note on the precision scan window
+
+            The upper bound passed to MinimizeTrackingCost is \c maximum_precision (from
+            AdaptiveMultiplePrecisionConfig), not \c current_precision_.  This is intentional
+            and faithful to the paper (Bates, Hauenstein, Sommese, Wampler 2009, p. 8).
+
+            MinimizeTrackingCost is a cost minimiser: it always returns the cheapest valid
+            \f$(p, h)\f$ pair.  For well-conditioned paths it still selects double precision
+            with a large stepsize, so widening the ceiling has no effect on the common case.
+
+            The ceiling matters only when the path enters a harder region immediately after a
+            successful step — for example, a condition-number spike at the new point pushes
+            \c digits_B above \c current_precision_.  In that situation the minimum required
+            precision for the <em>next</em> step genuinely exceeds the precision that was
+            sufficient for the <em>last</em> step, and a ceiling of \c current_precision_
+            would collapse the scan to a single candidate that fails criterion B, causing
+            MinimizeTrackingCost to throw even though valid pairs exist at higher precision.
+
+            The throw inside MinimizeTrackingCost remains semantically correct: it fires only
+            when no valid pair exists anywhere in \f$[p_{\min}, p_{\max}]\f$, indicating that
+            the path has entered a region that cannot be tracked at any supported precision.
+            That is a genuine path failure, and is reported via
+            SuccessCode::FailedToSelectPrecisionAndStepsize.
+            */
+            template <typename ComplexT>
+            SuccessCode AdjustAMPStepSuccess() const
+            {
+                // This mirrors Bertini 1's AMP2_update: pick the cost-minimizing (precision, stepsize)
+                // after a successful step.  Faithful-to-B1 points, two of which were previously wrong:
+                //  (1) The rule-B precision requirement CREDITS THE STEP.  digits_B is the right-hand side
+                //      of  P + (p+1)*xi/N > digits_B  (xi = -log10(stepsize)); the floor is therefore
+                //      digits_B - (p+1)*(-log10(min_stepsize))/N, crediting the smallest allowed step, NOT
+                //      the raw digits_B.  Without this credit a tiny step (large size_proportion in the
+                //      roundoff regime) spuriously forced precision up.  B1: digits_B2 = ceil(P0 - eta_minSS/N).
+                //  (2) Precision decrease (and stepsize increase) is gated by BOTH B1's StepsForIncrease
+                //      consecutive-successful-steps counter AND the digits-margin hysteresis
+                //      (ExtraDigitsBeforePrecisionDecrease).  The single StepsForIncrease setting
+                //      (SteppingConfig::consecutive_successful_steps_before_stepsize_increase) governs both
+                //      gates -- the old, duplicate AMP-config precision-decrease setting was removed.
+                real_mp min_stepsize = current_stepsize_ * real_mp(Get<Stepping>().step_size_fail_factor, current_precision_);
+                real_mp max_stepsize = min( current_stepsize_ * real_mp(Get<Stepping>().step_size_success_factor, current_precision_),  real_mp(Get<Stepping>().max_step_size, current_precision_));
+
+                const unsigned steps_for_increase = Get<Stepping>().consecutive_successful_steps_before_stepsize_increase; // B1 StepsForIncrease
+
+                if (num_successful_steps_since_stepsize_increase_ < steps_for_increase)
+                    max_stepsize = current_stepsize_; // not enough successes in a row: disallow stepsize increase
+
+                const unsigned N = Get<NewtonConfig>().max_num_newton_iterations;
+                const unsigned curr_digits = current_precision_;
+                const unsigned extra = ExtraDigitsBeforePrecisionDecrease(curr_digits);
+
+                // rule B, step-credited (credit the smallest allowed step = the most credit)
+                int digits_B = static_cast<int>(ceil( double(B_RHS<ComplexT>())
+                                   - (predictor_order_ + 1.0) * double(-log10(min_stepsize)) / N ));
+                int digits_C = static_cast<int>(DigitsC<ComplexT>());
+                int digits_stepsize = static_cast<int>(MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)));
+
+                // each requirement may only lower precision if it clears the hysteresis margin
+                ApplyPrecisionDecreaseMargin(digits_B, curr_digits, extra);
+                ApplyPrecisionDecreaseMargin(digits_C, curr_digits, extra);
+                ApplyPrecisionDecreaseMargin(digits_stepsize, curr_digits, extra);
+
+                int min_digits = std::max({ static_cast<int>(digits_tracking_tolerance_),
+                                            static_cast<int>(digits_final_),
+                                            digits_B, digits_C, digits_stepsize,
+                                            static_cast<int>(DoublePrecision()) });
+                unsigned min_precision = static_cast<unsigned>(min_digits); // >= DoublePrecision(), so non-negative
+
+                // StepsForIncrease gate + safety cap: precision may only be lowered after enough successful
+                // steps in a row and while under the decrease budget; otherwise hold the current precision.
+                const bool decrease_allowed =
+                    (num_successful_steps_since_precision_decrease_ >= steps_for_increase)
+                    &&
+                    (num_precision_decreases_ < Get<PrecConf>().max_num_precision_decreases);
+                if (!decrease_allowed)
+                    min_precision = max(min_precision, current_precision_);
+
+                unsigned max_precision = Get<PrecConf>().maximum_precision;
+
+                try {
+                    MinimizeTrackingCost(next_precision_, next_stepsize_,
+                                min_precision, min_stepsize,
+                                max_precision, max_stepsize,
+                                DigitsB<ComplexT>(), // RAW digits_B (=P0) for the stepsize relation, per B1 minimize_cost
+                                N,
+                                predictor_order_);
+                } catch (std::runtime_error const&) {
+                    return SuccessCode::FailedToSelectPrecisionAndStepsize;
+                }
+
+                if ( (next_stepsize_ > current_stepsize_) || (next_precision_ < current_precision_) )
+                    num_successful_steps_since_stepsize_increase_ = 0;
+                else
+                    ++num_successful_steps_since_stepsize_increase_;
+
+                if (next_precision_ < current_precision_)
+                {
+                    ++num_precision_decreases_;
+                    num_successful_steps_since_precision_decrease_ = 0;
+                }
+                else
+                    ++num_successful_steps_since_precision_decrease_;
+
+                return UpdatePrecisionAndStepsize();
+            }
+
+
+
+            void InitialMatrixSolveError() const
+            {
+                next_stepsize_ = current_stepsize_;
+
+                if (current_precision_==DoublePrecision())
+                    next_precision_ = LowestMultiplePrecision();
+                else
+                    next_precision_ = current_precision_+(1+num_consecutive_failed_steps_) * PrecisionIncrement();
+
+                UpdatePrecisionAndStepsize();
+            }
+
+            /**
+            \brief The convergence_error function from \cite AMP2.
+
+            Adjust precision and stepsize due to Newton's method failure to converge in the maximum number of steps.
+
+            Decrease stepsize, then increase precision until the new stepsize is greater than a precision-dependent minimum stepsize.
+
+            This function is used in the AMPTracker loop, when Newton's method fails to converge.
+
+            \see MinStepSizeForPrecision
+            */
+            void NewtonConvergenceError() const
+            {
+                next_precision_ = current_precision_;
+
+                next_stepsize_ = real_mp(Get<Stepping>().step_size_fail_factor, CurrentPrecision())*current_stepsize_;
+                while (next_stepsize_ < MinStepSizeForPrecision(next_precision_, abs(current_time_ - endtime_)))
+                {
+                    if (next_precision_==DoublePrecision())
+                        next_precision_=LowestMultiplePrecision();
+                    else
+                        next_precision_+=PrecisionIncrement();
+                }
+
+                UpdatePrecisionAndStepsize();
+            }
+
+
+
+
+
+
+
+            /**
+            \brief Adjust step size and precision due to AMP Criterion violation
+
+            This function adjusts internals to the tracker object.
+
+            Precision is REQUIRED to increase at least one increment.  Stepsize is REQUIRED to decrease.
+
+            \tparam ComplexT The complex number type.
+            */
+            template<typename ComplexT>
+            SuccessCode AMPCriterionError() const
+            {
+
+                unsigned min_next_precision; // sure, i could use a trigraph here, but it'd be terrible
+                if (current_precision_==DoublePrecision())
+                    min_next_precision = LowestMultiplePrecision(); // precision increases
+                else
+                    min_next_precision = current_precision_ + (1+num_consecutive_failed_steps_)*PrecisionIncrement(); // precision increases
+
+
+                real_mp min_stepsize = MinStepSizeForPrecision(current_precision_, abs(current_time_ - endtime_));
+                real_mp max_stepsize = current_stepsize_ * real_mp(Get<Stepping>().step_size_fail_factor, current_precision_);  // Stepsize decreases.
+
+                if (min_stepsize > max_stepsize)
+                {
+                    // stepsizes are incompatible, must increase precision
+                    next_precision_ = min_next_precision;
+                    // decrease stepsize somewhat less than the fail factor
+                    next_stepsize_ = max(current_stepsize_ * (1+real_mp(Get<Stepping>().step_size_fail_factor, current_precision_))/2, min_stepsize);
+                }
+                else
+                {
+                    unsigned digits_B = DigitsB<ComplexT>(); // RAW digits_B (=P0); the stepsize relation in MinimizeTrackingCost needs it raw
+
+                    // rule-B precision floor CREDITS THE STEP (B1 AMP2_update: digits_B2 = ceil(P0 - eta_minSS/N)):
+                    // floor = digits_B - (p+1)*(-log10(min_stepsize))/N, crediting the smallest allowed step.
+                    // This keeps a small step (large size_proportion in the roundoff regime) from forcing
+                    // precision up by itself; genuine ill-conditioning still escalates via D / rules A,C.
+                    const unsigned N = Get<NewtonConfig>().max_num_newton_iterations;
+                    int digits_B_credited = static_cast<int>(ceil( double(digits_B)
+                                                - (predictor_order_ + 1.0) * double(-log10(min_stepsize)) / N ));
+                    if (digits_B_credited < 0)
+                        digits_B_credited = 0;
+
+                    unsigned min_precision = max(min_next_precision,
+                                                 static_cast<unsigned>(digits_B_credited),
+                                                 DigitsC<ComplexT>(),
+                                                 MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)),
+                                                 digits_final_
+                                                 );
+
+                    try {
+                        MinimizeTrackingCost(next_precision_, next_stepsize_,
+                                min_precision, min_stepsize,
+                                Get<PrecConf>().maximum_precision, max_stepsize,
+                                digits_B,
+                                N,
+                                predictor_order_);
+                    } catch (std::runtime_error const&) {
+                        return SuccessCode::FailedToSelectPrecisionAndStepsize;
+                    }
+
+                }
+
+                UpdatePrecisionAndStepsize();
+                return SuccessCode::Success;
+            }
+
+
+
+
+
+            /**
+            \brief Get the raw right-hand side of Criterion B based on current state.
+            */
+            template<typename ComplexT>
+            NumErrorT B_RHS() const
+            {
+                return max(amp::CriterionBRHS(this->last_step_.norm_J,
+                                              this->last_step_.norm_J_inverse,
+                                              Get<NewtonConfig>().max_num_newton_iterations,
+                                              tracking_tolerance_,
+                                              this->last_step_.norm_delta_z,
+                                              Get<PrecConf>()), NumErrorT(0));
+            }
+
+
+
+
+            /**
+            \brief Get the right hand side of Criterion B based on current state.
+
+            Returns the larger of the right hand side of B, or 1.
+
+            Uses:
+
+            * the most recent estimate on the norm of \f$J\f$,
+            * the most recent estimate of the norm of \f$J^{-1}\f$,
+            * the number of allowed newton iterations,
+            * the tracking tolerance,
+            * the norm of the latest Newton residual (norm_delta_z),
+            * the AMP configuration.
+
+            */
+            template<typename ComplexT>
+            unsigned DigitsB() const
+            {
+                unsigned d = unsigned(B_RHS<ComplexT>());
+                return d;
+            }
+
+
+
+
+
+            /**
+            \brief Get the raw right-hand side of Criterion B based on current state.
+            */
+            template<typename ComplexT>
+            NumErrorT C_RHS() const
+            {
+                return max(amp::CriterionCRHS(this->last_step_.norm_J_inverse,
+                                              NumErrorT(std::get<Vec<ComplexT> > (current_space_).norm()),
+                                              tracking_tolerance_,
+                                              Get<PrecConf>()), NumErrorT(0));
+            }
+
+
+
+            /**
+            \brief Get the right hand side of Criterion C based on current state.
+
+            Returns the larger of the right hand side of C, or 1.
+
+            Uses:
+
+            * the most recent estimate of the norm of \f$J^{-1}\f$,
+            * the most recent current space point,
+            * the current tracking tolerance,
+            * the AMP configuration.
+
+            */
+            template<typename ComplexT>
+            unsigned DigitsC() const
+            {
+                return unsigned(C_RHS<ComplexT>());
+            }
+
+
+
+
+
+            // (MinRequiredPrecision_BCTol was removed: it returned the UNCREDITED rule-B floor
+            //  max(DigitsB, DigitsC, tol, double), which is what spuriously escalated precision on
+            //  small steps.  AdjustAMPStepSuccess now computes the step-credited, margin-gated floor
+            //  directly, faithful to Bertini 1's AMP2_update.)
+
+
+
+
+
+            ///////////
+            //
+            //  overrides for counter adjustment after a TrackerIteration()
+            //
+            ////////////////
+
+            /**
+            \brief Increment and reset counters after a successful TrackerIteration()
+            */
+            void OnStepSuccess() const override
+            {
+                Tracker::IncrementBaseCountersSuccess();
+                NotifyObservers(SuccessfulStep<EmitterType>(*this));
+            }
+
+            /**
+            \brief Increment and reset counters after a failed TrackerIteration()
+            */
+            void OnStepFail() const override
+            {
+                Tracker::IncrementBaseCountersFail();
+                num_successful_steps_since_stepsize_increase_ = 0;
+                num_successful_steps_since_precision_decrease_ = 0;
+                NotifyObservers(FailedStep<EmitterType>(*this));
+            }
+
+
+
+            void OnInfiniteTruncation() const override
+            {
+                NotifyObservers(InfinitePathTruncation<EmitterType>(*this));
+            }
+
+
+            ////////////////
+            //
+            //       Predict and Correct functions
+            //
+            /////////////////
+
+
+
 
 
 /**
-			\brief Wrapper function for calling the correct predictor.
-			
-			This function computes the next predicted space value, and sets some internals based on the prediction, such as the norm of the Jacobian.
-
-			The real type and complex type must be commensurate.
-
-			\param[out] predicted_space The result of the prediction
-			\param current_space The current space point.
-			\param current_time The current time value.
-			\param delta_t The time differential for this step.  Allowed to be complex.
-
-			\tparam ComplexT The complex number type.
-			\tparam RealT The real number type.
-			*/
-			template<typename ComplexT, typename RealT>
-			SuccessCode Predict(Vec<ComplexT> & predicted_space, 
-								const Vec<ComplexT>& current_space,
-								ComplexT const& current_time, ComplexT const& delta_t) const
-			{
-				
-								
-				
-				
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealT>::Real, 
-			              				typename Eigen::NumTraits<ComplexT>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
-
-
-				return predictor_.Predict(predicted_space,
-								this->last_step_,
-								tracked_system_,
-								current_space, current_time,
-								delta_t,
-								num_steps_since_last_condition_number_computation_,
-								Get<Stepping>().frequency_of_CN_estimation,
-								tracking_tolerance_,
-								&Get<PrecConf>());
-			}
-
-
-
-			/**
-			\brief Run Newton's method.
-
-			Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
-
-			\tparam ComplexT The complex number type.
-			\tparam RealT The real number type.
-
-			\param corrected_space[out] The spatial result of the correction loop.
-			\param current_space The start point in space for running the corrector loop.
-			\param current_time The current time value.
-
-			\return A SuccessCode indicating whether the loop was successful in converging in the max number of allowable newton steps, to the current path tolerance.
-			*/
-			template<typename ComplexT, typename RealT>
-			SuccessCode Correct(Vec<ComplexT> & corrected_space, 
-								Vec<ComplexT> const& current_space, 
-								ComplexT const& current_time) const
-			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealT>::Real, 
-			              				typename Eigen::NumTraits<ComplexT>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
+            \brief Wrapper function for calling the correct predictor.
 
+            This function computes the next predicted space value, and sets some internals based on the prediction, such as the norm of the Jacobian.
 
-
-
-				return corrector_.Correct(corrected_space,
-									this->last_step_,
-									tracked_system_,
-									current_space,
-									current_time,
-									tracking_tolerance_,
-									Get<NewtonConfig>().min_num_newton_iterations,
-									Get<NewtonConfig>().max_num_newton_iterations,
-									&Get<PrecConf>());
-			}
-
-
-
-			/**
-			\brief Run Newton's method from the currently stored time and space value, in current precision.
-
-			This overwrites the value of the current space, if successful, with the refined value.
-
-			\return Whether the refinement was successful.
-			*/
-			SuccessCode RefineStoredPoint() const
-			{
-				SuccessCode code;
-				if (current_precision_==DoublePrecision())
-				{
-					code = RefineImpl<complex_dbl>(std::get<Vec<complex_dbl> >(temporary_space_),std::get<Vec<complex_dbl> >(current_space_), complex_dbl(current_time_));
-					if (code == SuccessCode::Success)
-						std::get<Vec<complex_dbl> >(current_space_) = std::get<Vec<complex_dbl> >(temporary_space_);
-				}
-				else
-				{
-					code = RefineImpl<complex_mp>(std::get<Vec<complex_mp> >(temporary_space_),std::get<Vec<complex_mp> >(current_space_), current_time_);
-					if (code == SuccessCode::Success)
-						std::get<Vec<complex_mp> >(current_space_) = std::get<Vec<complex_mp> >(temporary_space_);
-				}
-				return code;
-			}
+            The real type and complex type must be commensurate.
 
+            \param[out] predicted_space The result of the prediction
+            \param current_space The current space point.
+            \param current_time The current time value.
+            \param delta_t The time differential for this step.  Allowed to be complex.
 
+            \tparam ComplexT The complex number type.
+            \tparam RealT The real number type.
+            */
+            template<typename ComplexT, typename RealT>
+            SuccessCode Predict(Vec<ComplexT> & predicted_space,
+                                const Vec<ComplexT>& current_space,
+                                ComplexT const& current_time, ComplexT const& delta_t) const
+            {
 
-			/**
-			\brief Run Newton's method from a start point with a current time.  
 
-			Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
 
-			\tparam ComplexT The complex number type.
-			\tparam RealT The real number type.
 
-			\param[out] new_space The result of running the refinement.
-			\param start_point The base point for running Newton's method.
-			\param current_time The current time value.
+                static_assert(std::is_same< typename Eigen::NumTraits<RealT>::Real,
+                                        typename Eigen::NumTraits<ComplexT>::Real>::value,
+                                        "underlying complex type and the type for comparisons must match");
 
-			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
-			*/
-			template <typename ComplexT>
-			SuccessCode RefineImpl(Vec<ComplexT> & new_space,
-								Vec<ComplexT> const& start_point, ComplexT const& current_time) const
-			{
-				using RealT = typename Eigen::NumTraits<ComplexT>::Real;
-				
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealT>::Real, 
-			              				typename Eigen::NumTraits<ComplexT>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
 
-				auto target_precision = Precision(current_time);
-				assert(Precision(start_point)==target_precision);
-				ChangePrecision(target_precision);
-				Precision(new_space,target_precision);
-				
+                return predictor_.Predict(predicted_space,
+                                this->last_step_,
+                                tracked_system_,
+                                current_space, current_time,
+                                delta_t,
+                                num_steps_since_last_condition_number_computation_,
+                                Get<Stepping>().frequency_of_CN_estimation,
+                                tracking_tolerance_,
+                                &Get<PrecConf>());
+            }
 
 
 
-				return corrector_.Correct(new_space,
-										   this->last_step_,
-										   tracked_system_,
-										   start_point,
-										   current_time,
-										   tracking_tolerance_,
-										   Get<NewtonConfig>().min_num_newton_iterations,
-										   Get<NewtonConfig>().max_num_newton_iterations,
-										   &Get<PrecConf>());
-			}
+            /**
+            \brief Run Newton's method.
 
+            Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
 
+            \tparam ComplexT The complex number type.
+            \tparam RealT The real number type.
 
+            \param corrected_space[out] The spatial result of the correction loop.
+            \param current_space The start point in space for running the corrector loop.
+            \param current_time The current time value.
 
+            \return A SuccessCode indicating whether the loop was successful in converging in the max number of allowable newton steps, to the current path tolerance.
+            */
+            template<typename ComplexT, typename RealT>
+            SuccessCode Correct(Vec<ComplexT> & corrected_space,
+                                Vec<ComplexT> const& current_space,
+                                ComplexT const& current_time) const
+            {
+                static_assert(std::is_same< typename Eigen::NumTraits<RealT>::Real,
+                                        typename Eigen::NumTraits<ComplexT>::Real>::value,
+                                        "underlying complex type and the type for comparisons must match");
 
 
-			/**
-			\brief Run Newton's method from a start point with a current time.  
 
-			Returns new space point by reference, as new_space.  Operates at current precision.
 
-			\tparam ComplexT The complex number type.
-			\tparam RealT The real number type.
+                return corrector_.Correct(corrected_space,
+                                    this->last_step_,
+                                    tracked_system_,
+                                    current_space,
+                                    current_time,
+                                    tracking_tolerance_,
+                                    Get<NewtonConfig>().min_num_newton_iterations,
+                                    Get<NewtonConfig>().max_num_newton_iterations,
+                                    &Get<PrecConf>());
+            }
 
-			\param[out] new_space The result of running the refinement.
-			\param start_point The base point for running Newton's method.
-			\param current_time The current time value.
-			\param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
-			\param max_iterations The maximum allowable number of iterations to perform.
-			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
-			*/
-			template <typename ComplexT>
-			SuccessCode RefineImpl(Vec<ComplexT> & new_space,
-								Vec<ComplexT> const& start_point, ComplexT const& current_time,
-								NumErrorT const& tolerance, unsigned max_iterations) const
-			{
-				auto target_precision = Precision(current_time);
-				assert(Precision(start_point)==target_precision);
-				ChangePrecision(target_precision);
-				Precision(new_space,target_precision);
 
-				return corrector_.Correct(new_space,
-										this->last_step_,
-										tracked_system_,
-										start_point,
-										current_time,
-										tolerance,
-										1,
-										max_iterations,
-										&Get<PrecConf>());
-			}
 
+            /**
+            \brief Run Newton's method from the currently stored time and space value, in current precision.
 
+            This overwrites the value of the current space, if successful, with the refined value.
 
+            \return Whether the refinement was successful.
+            */
+            SuccessCode RefineStoredPoint() const
+            {
+                SuccessCode code;
+                if (current_precision_==DoublePrecision())
+                {
+                    code = RefineImpl<complex_dbl>(std::get<Vec<complex_dbl> >(temporary_space_),std::get<Vec<complex_dbl> >(current_space_), complex_dbl(current_time_));
+                    if (code == SuccessCode::Success)
+                        std::get<Vec<complex_dbl> >(current_space_) = std::get<Vec<complex_dbl> >(temporary_space_);
+                }
+                else
+                {
+                    code = RefineImpl<complex_mp>(std::get<Vec<complex_mp> >(temporary_space_),std::get<Vec<complex_mp> >(current_space_), current_time_);
+                    if (code == SuccessCode::Success)
+                        std::get<Vec<complex_mp> >(current_space_) = std::get<Vec<complex_mp> >(temporary_space_);
+                }
+                return code;
+            }
 
 
 
+            /**
+            \brief Run Newton's method from a start point with a current time.
 
+            Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
 
+            \tparam ComplexT The complex number type.
+            \tparam RealT The real number type.
 
+            \param[out] new_space The result of running the refinement.
+            \param start_point The base point for running Newton's method.
+            \param current_time The current time value.
 
+            \return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
+            */
+            template <typename ComplexT>
+            SuccessCode RefineImpl(Vec<ComplexT> & new_space,
+                                Vec<ComplexT> const& start_point, ComplexT const& current_time) const
+            {
+                using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
+                static_assert(std::is_same< typename Eigen::NumTraits<RealT>::Real,
+                                        typename Eigen::NumTraits<ComplexT>::Real>::value,
+                                        "underlying complex type and the type for comparisons must match");
 
+                auto target_precision = Precision(current_time);
+                assert(Precision(start_point)==target_precision);
+                ChangePrecision(target_precision);
+                Precision(new_space,target_precision);
 
 
-			/////////////////
-			//
-			//  Functions for converting between precision types
-			//
-			///////////////////////
 
-		public:
-			/**
-			Change precision of tracker to next_precision.  Converts the internal temporaries, and adjusts precision of system. Then refines if necessary.
 
-			If the new precision is higher than current precision, a refine step will be called, which runs Newton's method.  This may fail, leaving the tracker in a state with higher precision internals, but garbage digits after the previously known digits.
+                return corrector_.Correct(new_space,
+                                           this->last_step_,
+                                           tracked_system_,
+                                           start_point,
+                                           current_time,
+                                           tracking_tolerance_,
+                                           Get<NewtonConfig>().min_num_newton_iterations,
+                                           Get<NewtonConfig>().max_num_newton_iterations,
+                                           &Get<PrecConf>());
+            }
 
-			\param new_precision The precision to change to.
-			\return SuccessCode indicating whether the change was successful.  If the precision increases, and the refinement loop fails, this could be not Success.  Changing down is guaranteed to succeed.
-			*/
-			template <UpsampleRefinementOption refine_if_necessary = upsample_refine_off>
-			SuccessCode ChangePrecision(unsigned new_precision) const
-			{
-				if (new_precision==current_precision_) // no op
-					return SuccessCode::Success;
 
 
-				NotifyObservers(PrecisionChanged<EmitterType>(*this,current_precision_,new_precision));
-				
 
-				bool upsampling_needed = new_precision > current_precision_;
-				// reset the counter for estimating the condition number.  
-				num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
 
-				if (new_precision==DoublePrecision() && current_precision_>DoublePrecision())
-				{
-					// convert from multiple precision to double precision
-					MultipleToDouble();
-				}
-				else if(new_precision > DoublePrecision() && current_precision_ == DoublePrecision())
-				{
-					// convert from double to multiple precision
-					DoubleToMultiple(new_precision);
-					#ifndef BERTINI_DISABLE_ASSERTS
-					assert(PrecisionSanityCheck<complex_mp>() && "precision sanity check failed.  some internal variable is not in correct precision");
-					#endif
-				}
-				else
-				{
-					MultipleToMultiple(new_precision);
-					#ifndef BERTINI_DISABLE_ASSERTS
-					assert(PrecisionSanityCheck<complex_mp>() && "precision sanity check failed.  some internal variable is not in correct precision");
-					#endif
-				}
 
-				if (refine_if_necessary && upsampling_needed)
-					return RefineStoredPoint();
-				else
-					return SuccessCode::Success;
-			}
+            /**
+            \brief Run Newton's method from a start point with a current time.
 
+            Returns new space point by reference, as new_space.  Operates at current precision.
 
+            \tparam ComplexT The complex number type.
+            \tparam RealT The real number type.
 
+            \param[out] new_space The result of running the refinement.
+            \param start_point The base point for running Newton's method.
+            \param current_time The current time value.
+            \param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
+            \param max_iterations The maximum allowable number of iterations to perform.
+            \return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
+            */
+            template <typename ComplexT>
+            SuccessCode RefineImpl(Vec<ComplexT> & new_space,
+                                Vec<ComplexT> const& start_point, ComplexT const& current_time,
+                                NumErrorT const& tolerance, unsigned max_iterations) const
+            {
+                auto target_precision = Precision(current_time);
+                assert(Precision(start_point)==target_precision);
+                ChangePrecision(target_precision);
+                Precision(new_space,target_precision);
 
+                return corrector_.Correct(new_space,
+                                        this->last_step_,
+                                        tracked_system_,
+                                        start_point,
+                                        current_time,
+                                        tolerance,
+                                        1,
+                                        max_iterations,
+                                        &Get<PrecConf>());
+            }
 
-			private:
-			
-			/**
-			\brief Converts from double to double
 
-			Copies a multiple-precision into the double storage vector, and changes precision of the time and delta_t.
 
-			\param source_point The point into which to copy to the internally stored current space point.
-			*/
-			void DoubleToDouble(Vec<complex_dbl> const& source_point) const
-			{	
-				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
-				#endif
 
-				current_precision_ = DoublePrecision();
-				SetThreadPrecision(DoublePrecision());
 
 
-				std::get<Vec<complex_dbl> >(current_space_) = source_point;
-			}
 
-			/**
-			\brief Converts from multiple to double
 
-			Changes the precision of the internal temporaries to double precision
-			*/
-			void DoubleToDouble() const
-			{
-				DoubleToDouble(std::get<Vec<complex_dbl> >(current_space_));
-			}
-			
 
 
-			/**
-			\brief Converts from multiple to double
 
-			Copies a multiple-precision into the double storage vector, and changes precision of the time and delta_t.
 
-			\param source_point The point into which to copy to the internally stored current space point.
-			*/
-			void MultipleToDouble(Vec<complex_mp> const& source_point) const
-			{	
-				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
-				#endif
 
-				AdjustCurrentPrecision(DoublePrecision());
 
+            /////////////////
+            //
+            //  Functions for converting between precision types
+            //
+            ///////////////////////
 
-				// copy the current space in.
-				if (std::get<Vec<complex_dbl> >(current_space_).size()!=source_point.size())
-					std::get<Vec<complex_dbl> >(current_space_).resize(source_point.size());
+        public:
+            /**
+            Change precision of tracker to next_precision.  Converts the internal temporaries, and adjusts precision of system. Then refines if necessary.
 
-				for (unsigned ii=0; ii<source_point.size(); ii++)
-					std::get<Vec<complex_dbl> >(current_space_)(ii) = complex_dbl(source_point(ii));
+            If the new precision is higher than current precision, a refine step will be called, which runs Newton's method.  This may fail, leaving the tracker in a state with higher precision internals, but garbage digits after the previously known digits.
 
-				endtime_.precision(DoublePrecision()); // i question this one  2021-04-12
-			}
+            \param new_precision The precision to change to.
+            \return SuccessCode indicating whether the change was successful.  If the precision increases, and the refinement loop fails, this could be not Success.  Changing down is guaranteed to succeed.
+            */
+            template <UpsampleRefinementOption refine_if_necessary = upsample_refine_off>
+            SuccessCode ChangePrecision(unsigned new_precision) const
+            {
+                if (new_precision==current_precision_) // no op
+                    return SuccessCode::Success;
 
-			/**
-			\brief Converts from multiple to double
 
-			Changes the precision of the internal temporaries to double precision
-			*/
-			void MultipleToDouble() const
-			{
-				MultipleToDouble(std::get<Vec<complex_mp> >(current_space_));
-			}
+                NotifyObservers(PrecisionChanged<EmitterType>(*this,current_precision_,new_precision));
 
 
+                bool upsampling_needed = new_precision > current_precision_;
+                // reset the counter for estimating the condition number.
+                num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
 
-			/**
-			\brief Converts from double to multiple
+                if (new_precision==DoublePrecision() && current_precision_>DoublePrecision())
+                {
+                    // convert from multiple precision to double precision
+                    MultipleToDouble();
+                }
+                else if(new_precision > DoublePrecision() && current_precision_ == DoublePrecision())
+                {
+                    // convert from double to multiple precision
+                    DoubleToMultiple(new_precision);
+                    #ifndef BERTINI_DISABLE_ASSERTS
+                    assert(PrecisionSanityCheck<complex_mp>() && "precision sanity check failed.  some internal variable is not in correct precision");
+                    #endif
+                }
+                else
+                {
+                    MultipleToMultiple(new_precision);
+                    #ifndef BERTINI_DISABLE_ASSERTS
+                    assert(PrecisionSanityCheck<complex_mp>() && "precision sanity check failed.  some internal variable is not in correct precision");
+                    #endif
+                }
 
-			Copies a double-precision into the multiple-precision storage vector.  
+                if (refine_if_necessary && upsampling_needed)
+                    return RefineStoredPoint();
+                else
+                    return SuccessCode::Success;
+            }
 
-			You should call Refine after this to populate the new digits with non-garbage data.
-	
-			\param new_precision The new precision.
-			\param source_point The point into which to copy to the internally stored current space point.
-			*/
-			void DoubleToMultiple(unsigned new_precision, Vec<complex_dbl> const& source_point) const
-			{	
-				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
-				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
-				#endif
-				
-				AdjustCurrentPrecision(new_precision);
-				CopyToCurrentSpace(source_point);
-				AdjustInternalsPrecision(new_precision);
-				AdjustTemporariesPrecision(new_precision);
 
-				#ifndef BERTINI_DISABLE_ASSERTS
-				PrecisionSanityCheck<complex_mp>();
-				#endif
-			}
 
 
 
-			/**
-			\brief Converts from double to multiple
+            private:
 
-			Copies the double-precision temporaries into the multiple-precision temporaries.  You should call Newton after this to populate the new digits with non-garbage data.
+            /**
+            \brief Converts from double to double
 
-			\param new_precision The new precision.
-			*/
-			void DoubleToMultiple(unsigned new_precision) const
-			{
-				DoubleToMultiple( new_precision, std::get<Vec<complex_dbl> >(current_space_));
-			}
+            Copies a multiple-precision into the double storage vector, and changes precision of the time and delta_t.
 
+            \param source_point The point into which to copy to the internally stored current space point.
+            */
+            void DoubleToDouble(Vec<complex_dbl> const& source_point) const
+            {
+                #ifndef BERTINI_DISABLE_ASSERTS
+                assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+                #endif
 
+                current_precision_ = DoublePrecision();
+                SetThreadPrecision(DoublePrecision());
 
 
+                std::get<Vec<complex_dbl> >(current_space_) = source_point;
+            }
 
-			/**
-			\brief Converts from multiple to different precision multiple precision
+            /**
+            \brief Converts from multiple to double
 
-			Copies a multiple-precision into the multiple-precision storage vector, and changes precision of the time and delta_t.
-			Also resets counter so have to re-compute the condition number on next step attempt.
+            Changes the precision of the internal temporaries to double precision
+            */
+            void DoubleToDouble() const
+            {
+                DoubleToDouble(std::get<Vec<complex_dbl> >(current_space_));
+            }
 
-			\param new_precision The new precision.
-			\param source_point The point into which to copy to the internally stored current space point.
-			*/
-			void MultipleToMultiple(unsigned new_precision, Vec<complex_mp> const& source_point) const
-			{	
-				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
-				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
-				#endif
 
-				AdjustCurrentPrecision(new_precision);
-				CopyToCurrentSpace(source_point);
-				AdjustInternalsPrecision(new_precision);
-				AdjustTemporariesPrecision(new_precision);
 
-				#ifndef BERTINI_DISABLE_ASSERTS
-				PrecisionSanityCheck<complex_mp>();
-				#endif
-			}
+            /**
+            \brief Converts from multiple to double
 
+            Copies a multiple-precision into the double storage vector, and changes precision of the time and delta_t.
 
-			/**
-			\brief Converts from multiple to different precision multiple precision
+            \param source_point The point into which to copy to the internally stored current space point.
+            */
+            void MultipleToDouble(Vec<complex_mp> const& source_point) const
+            {
+                #ifndef BERTINI_DISABLE_ASSERTS
+                assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+                #endif
 
-			Changes the precision of the internal temporaries to desired precision
+                AdjustCurrentPrecision(DoublePrecision());
 
-			\param new_precision The new precision.
-			*/
-			void MultipleToMultiple(unsigned new_precision) const
-			{
-				MultipleToMultiple( new_precision, std::get<Vec<complex_mp> >(current_space_));
-			}
 
+                // copy the current space in.
+                if (std::get<Vec<complex_dbl> >(current_space_).size()!=source_point.size())
+                    std::get<Vec<complex_dbl> >(current_space_).resize(source_point.size());
 
+                for (unsigned ii=0; ii<source_point.size(); ii++)
+                    std::get<Vec<complex_dbl> >(current_space_)(ii) = complex_dbl(source_point(ii));
 
+                endtime_.precision(DoublePrecision()); // i question this one  2021-04-12
+            }
 
+            /**
+            \brief Converts from multiple to double
 
-			void AdjustCurrentPrecision(unsigned new_precision) const
-			{
-				previous_precision_ = current_precision_;
-				current_precision_ = new_precision;
-				SetThreadPrecision(new_precision);
-			}
+            Changes the precision of the internal temporaries to double precision
+            */
+            void MultipleToDouble() const
+            {
+                MultipleToDouble(std::get<Vec<complex_mp> >(current_space_));
+            }
 
-			
-			void CopyToCurrentSpace(Vec<complex_dbl> const& source_point) const
-			{
-				auto& space = std::get<Vec<complex_mp> >(current_space_);
-				if (space.size()!=source_point.size())
-					space.resize(source_point.size());
-				for (unsigned ii=0; ii<source_point.size(); ii++)
-					space(ii) = complex_mp(source_point(ii));
-			}
 
-			void CopyToCurrentSpace(Vec<complex_mp> const& source_point) const
-			{
-				auto& space = std::get<Vec<complex_mp> >(current_space_);
-				if (space.size()!=source_point.size())
-					space.resize(source_point.size());
-				space = source_point;
-			}
 
-			void AdjustInternalsPrecision(unsigned new_precision) const
-			{
-				predictor_.ChangePrecision(new_precision);
-				corrector_.ChangePrecision(new_precision);
+            /**
+            \brief Converts from double to multiple
 
-				endtime_ = endtime_highest_precision_;
+            Copies a double-precision into the multiple-precision storage vector.
 
-				endtime_.precision(new_precision);
-				current_stepsize_.precision(new_precision);
-				delta_t_.precision(new_precision);
-				current_time_.precision(new_precision);
+            You should call Refine after this to populate the new digits with non-garbage data.
 
-				Precision(std::get<Vec<complex_mp> >(current_space_),new_precision);
-			}
+            \param new_precision The new precision.
+            \param source_point The point into which to copy to the internally stored current space point.
+            */
+            void DoubleToMultiple(unsigned new_precision, Vec<complex_dbl> const& source_point) const
+            {
+                #ifndef BERTINI_DISABLE_ASSERTS
+                assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+                assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
+                #endif
 
-			/**
-			\brief Change precision of all temporary internal state variables.
+                AdjustCurrentPrecision(new_precision);
+                CopyToCurrentSpace(source_point);
+                AdjustInternalsPrecision(new_precision);
+                AdjustTemporariesPrecision(new_precision);
 
-			This excludes those which cannot be re-written without copying -- the current space point most notably.
+                #ifndef BERTINI_DISABLE_ASSERTS
+                PrecisionSanityCheck<complex_mp>();
+                #endif
+            }
 
-			\brief new_precision The new precision to adjust to.
-			*/
-			void AdjustTemporariesPrecision(unsigned new_precision) const
-			{
-				const auto num_vars = GetSystem().NumVariables();
 
-				//  the current_space value is adjusted in the appropriate ChangePrecision function
-				std::get<Vec<complex_mp> >(tentative_space_).resize(static_cast<Eigen::Index>(num_vars));
-				Precision(std::get<Vec<complex_mp> >(tentative_space_), new_precision);
 
-				std::get<Vec<complex_mp> >(temporary_space_).resize(static_cast<Eigen::Index>(num_vars));
-				Precision(std::get<Vec<complex_mp> >(temporary_space_), new_precision);
-			}
+            /**
+            \brief Converts from double to multiple
 
+            Copies the double-precision temporaries into the multiple-precision temporaries.  You should call Newton after this to populate the new digits with non-garbage data.
 
+            \param new_precision The new precision.
+            */
+            void DoubleToMultiple(unsigned new_precision) const
+            {
+                DoubleToMultiple( new_precision, std::get<Vec<complex_dbl> >(current_space_));
+            }
 
-			
-			/**
-			\brief Ensure that all internal state is in uniform precision.
 
-			\return True if all internal state variables are in the same precision as current_precision_, will fail on assertion otherwise.
-			*/
-			template<typename ComplexT>
-			bool PrecisionSanityCheck() const
-			{	
 
-				if constexpr (std::is_same<ComplexT, complex_dbl>::value){
-					return true;
-				}
 
-				if constexpr (std::is_same<ComplexT, complex_mp>::value){
-					assert(ThreadPrecision()==current_precision_ && "current precision differs from the thread-local default precision");
-					assert(GetSystem().precision() == current_precision_ && "tracked system is out of precision");
-					
-					assert(std::get<Vec<complex_mp> >(current_space_)(0).precision() == current_precision_ && "current space out of precision");
-					assert(std::get<Vec<complex_mp> >(tentative_space_)(0).precision() == current_precision_ && "tentative space out of precision");
-					assert(std::get<Vec<complex_mp> >(temporary_space_)(0).precision() == current_precision_ && "temporary space out of precision");
-					assert(Precision(current_stepsize_) == current_precision_ && "current_stepsize_ out of precision");
-					assert(Precision(delta_t_) == current_precision_ && "delta_t_ out of precision");
-					assert(Precision(endtime_) == current_precision_ && "endtime_ out of precision");
-					assert(Precision(current_time_) == current_precision_ && "current_time_ out of precision");
-					assert(current_precision_ <= MaxPrecisionAllowed() && "current_precision_ exceeds max precision");
-					assert(predictor_.precision() == current_precision_ && "predictor_ out of precision");
-					return  true;
-				}
 
-			}
+            /**
+            \brief Converts from multiple to different precision multiple precision
 
+            Copies a multiple-precision into the multiple-precision storage vector, and changes precision of the time and delta_t.
+            Also resets counter so have to re-compute the condition number on next step attempt.
 
+            \param new_precision The new precision.
+            \param source_point The point into which to copy to the internally stored current space point.
+            */
+            void MultipleToMultiple(unsigned new_precision, Vec<complex_mp> const& source_point) const
+            {
+                #ifndef BERTINI_DISABLE_ASSERTS
+                assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+                assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
+                #endif
 
+                AdjustCurrentPrecision(new_precision);
+                CopyToCurrentSpace(source_point);
+                AdjustInternalsPrecision(new_precision);
+                AdjustTemporariesPrecision(new_precision);
 
-			/////////////////////////////////////////////
-			//////////////////////////////////////
-			/////////////////////////////
-			////////////////////  data members stored in this class
-			////////////
-			//////
-			//
+                #ifndef BERTINI_DISABLE_ASSERTS
+                PrecisionSanityCheck<complex_mp>();
+                #endif
+            }
 
 
+            /**
+            \brief Converts from multiple to different precision multiple precision
 
+            Changes the precision of the internal temporaries to desired precision
 
+            \param new_precision The new precision.
+            */
+            void MultipleToMultiple(unsigned new_precision) const
+            {
+                MultipleToMultiple( new_precision, std::get<Vec<complex_mp> >(current_space_));
+            }
 
-			////////////
-			// state variables
-			/////////////
-			bool preserve_precision_ = false; ///< Whether the tracker should change back to the initial precision after tracking paths.
-			std::optional<unsigned> override_start_precision_; ///< If set, tracking starts at this precision instead of the start point's precision.
 
-			mutable unsigned previous_precision_; ///< The previous precision of the tracker.
-			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
-			mutable unsigned next_precision_; ///< The next precision
-			mutable unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
-			mutable unsigned initial_precision_; ///< The precision at the start of tracking.
-			mutable unsigned num_successful_steps_since_precision_decrease_; ///< Consecutive successful steps since precision last decreased; gated by B1's StepsForIncrease.
 
-			mutable complex_mp endtime_highest_precision_;  ///< The target time, held at the highest precision used.
 
-		public:
 
-			/// \brief Get the current working precision of the tracker.
-			unsigned CurrentPrecision() const override
-			{
-				return current_precision_;
-			}
-		}; // re: class Tracker
+            void AdjustCurrentPrecision(unsigned new_precision) const
+            {
+                previous_precision_ = current_precision_;
+                current_precision_ = new_precision;
+                SetThreadPrecision(new_precision);
+            }
 
-	} // namespace tracking
+
+            void CopyToCurrentSpace(Vec<complex_dbl> const& source_point) const
+            {
+                auto& space = std::get<Vec<complex_mp> >(current_space_);
+                if (space.size()!=source_point.size())
+                    space.resize(source_point.size());
+                for (unsigned ii=0; ii<source_point.size(); ii++)
+                    space(ii) = complex_mp(source_point(ii));
+            }
+
+            void CopyToCurrentSpace(Vec<complex_mp> const& source_point) const
+            {
+                auto& space = std::get<Vec<complex_mp> >(current_space_);
+                if (space.size()!=source_point.size())
+                    space.resize(source_point.size());
+                space = source_point;
+            }
+
+            void AdjustInternalsPrecision(unsigned new_precision) const
+            {
+                predictor_.ChangePrecision(new_precision);
+                corrector_.ChangePrecision(new_precision);
+
+                endtime_ = endtime_highest_precision_;
+
+                endtime_.precision(new_precision);
+                current_stepsize_.precision(new_precision);
+                delta_t_.precision(new_precision);
+                current_time_.precision(new_precision);
+
+                Precision(std::get<Vec<complex_mp> >(current_space_),new_precision);
+            }
+
+            /**
+            \brief Change precision of all temporary internal state variables.
+
+            This excludes those which cannot be re-written without copying -- the current space point most notably.
+
+            \brief new_precision The new precision to adjust to.
+            */
+            void AdjustTemporariesPrecision(unsigned new_precision) const
+            {
+                const auto num_vars = GetSystem().NumVariables();
+
+                //  the current_space value is adjusted in the appropriate ChangePrecision function
+                std::get<Vec<complex_mp> >(tentative_space_).resize(static_cast<Eigen::Index>(num_vars));
+                Precision(std::get<Vec<complex_mp> >(tentative_space_), new_precision);
+
+                std::get<Vec<complex_mp> >(temporary_space_).resize(static_cast<Eigen::Index>(num_vars));
+                Precision(std::get<Vec<complex_mp> >(temporary_space_), new_precision);
+            }
+
+
+
+
+            /**
+            \brief Ensure that all internal state is in uniform precision.
+
+            \return True if all internal state variables are in the same precision as current_precision_, will fail on assertion otherwise.
+            */
+            template<typename ComplexT>
+            bool PrecisionSanityCheck() const
+            {
+
+                if constexpr (std::is_same<ComplexT, complex_dbl>::value){
+                    return true;
+                }
+
+                if constexpr (std::is_same<ComplexT, complex_mp>::value){
+                    assert(ThreadPrecision()==current_precision_ && "current precision differs from the thread-local default precision");
+                    assert(GetSystem().precision() == current_precision_ && "tracked system is out of precision");
+
+                    assert(std::get<Vec<complex_mp> >(current_space_)(0).precision() == current_precision_ && "current space out of precision");
+                    assert(std::get<Vec<complex_mp> >(tentative_space_)(0).precision() == current_precision_ && "tentative space out of precision");
+                    assert(std::get<Vec<complex_mp> >(temporary_space_)(0).precision() == current_precision_ && "temporary space out of precision");
+                    assert(Precision(current_stepsize_) == current_precision_ && "current_stepsize_ out of precision");
+                    assert(Precision(delta_t_) == current_precision_ && "delta_t_ out of precision");
+                    assert(Precision(endtime_) == current_precision_ && "endtime_ out of precision");
+                    assert(Precision(current_time_) == current_precision_ && "current_time_ out of precision");
+                    assert(current_precision_ <= MaxPrecisionAllowed() && "current_precision_ exceeds max precision");
+                    assert(predictor_.precision() == current_precision_ && "predictor_ out of precision");
+                    return  true;
+                }
+
+            }
+
+
+
+
+            /////////////////////////////////////////////
+            //////////////////////////////////////
+            /////////////////////////////
+            ////////////////////  data members stored in this class
+            ////////////
+            //////
+            //
+
+
+
+
+
+            ////////////
+            // state variables
+            /////////////
+            bool preserve_precision_ = false; ///< Whether the tracker should change back to the initial precision after tracking paths.
+            std::optional<unsigned> override_start_precision_; ///< If set, tracking starts at this precision instead of the start point's precision.
+
+            mutable unsigned previous_precision_; ///< The previous precision of the tracker.
+            mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
+            mutable unsigned next_precision_; ///< The next precision
+            mutable unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
+            mutable unsigned initial_precision_; ///< The precision at the start of tracking.
+            mutable unsigned num_successful_steps_since_precision_decrease_; ///< Consecutive successful steps since precision last decreased; gated by B1's StepsForIncrease.
+
+            mutable complex_mp endtime_highest_precision_;  ///< The target time, held at the highest precision used.
+
+        public:
+
+            /// \brief Get the current working precision of the tracker.
+            unsigned CurrentPrecision() const override
+            {
+                return current_precision_;
+            }
+        }; // re: class Tracker
+
+    } // namespace tracking
 } // namespace bertini
 
 
 #endif
-
-
-

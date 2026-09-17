@@ -40,28 +40,28 @@ namespace {
 
 void* fast_alloc(std::size_t n)
 {
-	return mi_malloc(n);
+    return mi_malloc(n);
 }
 
 void* fast_realloc(void* p, std::size_t old_size, std::size_t new_size)
 {
-	if (mi_is_in_heap_region(p))
-		return mi_realloc(p, new_size);
+    if (mi_is_in_heap_region(p))
+        return mi_realloc(p, new_size);
 
-	// Foreign pointer (allocated before the hook, or by another library): migrate into mimalloc.
-	void* q = mi_malloc(new_size);
-	if (q && p)
-		std::memcpy(q, p, old_size < new_size ? old_size : new_size);
-	std::free(p);   // p came from the system allocator
-	return q;
+    // Foreign pointer (allocated before the hook, or by another library): migrate into mimalloc.
+    void* q = mi_malloc(new_size);
+    if (q && p)
+        std::memcpy(q, p, old_size < new_size ? old_size : new_size);
+    std::free(p);   // p came from the system allocator
+    return q;
 }
 
 void fast_free(void* p, std::size_t /*size*/)
 {
-	if (mi_is_in_heap_region(p))
-		mi_free(p);
-	else
-		std::free(p);   // foreign pointer; free where it was allocated
+    if (mi_is_in_heap_region(p))
+        mi_free(p);
+    else
+        std::free(p);   // foreign pointer; free where it was allocated
 }
 
 } // anonymous namespace
@@ -70,12 +70,12 @@ namespace bertini {
 
 void InstallFastAllocator()
 {
-	static std::once_flag once;
-	std::call_once(once, []{
-		if (std::getenv("BERTINI2_NO_FAST_ALLOC"))
-			return;
-		mp_set_memory_functions(&fast_alloc, &fast_realloc, &fast_free);
-	});
+    static std::once_flag once;
+    std::call_once(once, []{
+        if (std::getenv("BERTINI2_NO_FAST_ALLOC"))
+            return;
+        mp_set_memory_functions(&fast_alloc, &fast_realloc, &fast_free);
+    });
 }
 
 } // namespace bertini

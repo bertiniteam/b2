@@ -16,17 +16,8 @@
    parallelism/index
 
    observing_metadata_more/index
-   
+
    performance_benchmarking/index
    record_keeping/index
-   
+
    doing_things_manually/index
-   
-   
-
-
-
-
-
-
-

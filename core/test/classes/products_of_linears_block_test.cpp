@@ -36,84 +36,84 @@ static_assert(bertini::blocks::is_block_v<ProductsOfLinearsBlock>,
 //   df1/dx = 1,               df1/dy = 0
 static ProductsOfLinearsBlock MakeTestBlock()
 {
-	bertini::Mat<complex_mp> f0(2, 3);
-	f0 << complex_mp(2), complex_mp(3),  complex_mp(1),
-	      complex_mp(1), complex_mp(-1), complex_mp(4);
+    bertini::Mat<complex_mp> f0(2, 3);
+    f0 << complex_mp(2), complex_mp(3),  complex_mp(1),
+          complex_mp(1), complex_mp(-1), complex_mp(4);
 
-	bertini::Mat<complex_mp> f1(1, 3);
-	f1 << complex_mp(1), complex_mp(0), complex_mp(1);
+    bertini::Mat<complex_mp> f1(1, 3);
+    f1 << complex_mp(1), complex_mp(0), complex_mp(1);
 
-	std::vector<bertini::Mat<complex_mp>> factors{f0, f1};
-	return ProductsOfLinearsBlock(2, std::move(factors));
+    std::vector<bertini::Mat<complex_mp>> factors{f0, f1};
+    return ProductsOfLinearsBlock(2, std::move(factors));
 }
 
 BOOST_AUTO_TEST_CASE(shape)
 {
-	DefaultPrecision(30);
-	auto block = MakeTestBlock();
-	BOOST_CHECK_EQUAL(block.NumFunctions(), 2u);
-	BOOST_CHECK_EQUAL(block.NumVariables(), 2u);
-	BOOST_CHECK(!block.DependsOnPathVariable());
+    DefaultPrecision(30);
+    auto block = MakeTestBlock();
+    BOOST_CHECK_EQUAL(block.NumFunctions(), 2u);
+    BOOST_CHECK_EQUAL(block.NumVariables(), 2u);
+    BOOST_CHECK(!block.DependsOnPathVariable());
 }
 
 BOOST_AUTO_TEST_CASE(eval_double)
 {
-	DefaultPrecision(30);
-	auto block = MakeTestBlock();
+    DefaultPrecision(30);
+    auto block = MakeTestBlock();
 
-	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
-	bertini::Vec<complex_dbl> result(2);
-	block.EvalInPlace<complex_dbl>(result, x, complex_dbl(0));
+    bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
+    bertini::Vec<complex_dbl> result(2);
+    block.EvalInPlace<complex_dbl>(result, x, complex_dbl(0));
 
-	BOOST_CHECK_CLOSE(result(0).real(), 24.0, 1e-11);
-	BOOST_CHECK_CLOSE(result(1).real(), 2.0, 1e-11);
-	BOOST_CHECK_SMALL(result(0).imag(), 1e-11);
-	BOOST_CHECK_SMALL(result(1).imag(), 1e-11);
+    BOOST_CHECK_CLOSE(result(0).real(), 24.0, 1e-11);
+    BOOST_CHECK_CLOSE(result(1).real(), 2.0, 1e-11);
+    BOOST_CHECK_SMALL(result(0).imag(), 1e-11);
+    BOOST_CHECK_SMALL(result(1).imag(), 1e-11);
 }
 
 BOOST_AUTO_TEST_CASE(jacobian_double)
 {
-	DefaultPrecision(30);
-	auto block = MakeTestBlock();
+    DefaultPrecision(30);
+    auto block = MakeTestBlock();
 
-	bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
-	bertini::Mat<complex_dbl> J(2, 2);
-	block.JacobianInPlace<complex_dbl>(J, x, complex_dbl(0));
+    bertini::Vec<complex_dbl> x(2); x << complex_dbl(1), complex_dbl(1);
+    bertini::Mat<complex_dbl> J(2, 2);
+    block.JacobianInPlace<complex_dbl>(J, x, complex_dbl(0));
 
-	BOOST_CHECK_CLOSE(J(0, 0).real(), 14.0, 1e-11);
-	BOOST_CHECK_CLOSE(J(0, 1).real(),  6.0, 1e-11);
-	BOOST_CHECK_CLOSE(J(1, 0).real(),  1.0, 1e-11);
-	BOOST_CHECK_SMALL(J(1, 1).real(), 1e-11);
+    BOOST_CHECK_CLOSE(J(0, 0).real(), 14.0, 1e-11);
+    BOOST_CHECK_CLOSE(J(0, 1).real(),  6.0, 1e-11);
+    BOOST_CHECK_CLOSE(J(1, 0).real(),  1.0, 1e-11);
+    BOOST_CHECK_SMALL(J(1, 1).real(), 1e-11);
 }
 
 BOOST_AUTO_TEST_CASE(eval_mpfr)
 {
-	DefaultPrecision(30);
-	auto block = MakeTestBlock();
-	block.Precision(30);
+    DefaultPrecision(30);
+    auto block = MakeTestBlock();
+    block.Precision(30);
 
-	bertini::Vec<complex_mp> x(2); x << complex_mp(1), complex_mp(1);
-	bertini::Vec<complex_mp> result(2);
-	block.EvalInPlace<complex_mp>(result, x, complex_mp(0));
+    bertini::Vec<complex_mp> x(2); x << complex_mp(1), complex_mp(1);
+    bertini::Vec<complex_mp> result(2);
+    block.EvalInPlace<complex_mp>(result, x, complex_mp(0));
 
-	BOOST_CHECK(abs(result(0) - complex_mp(24)) < real_mp("1e-25"));
-	BOOST_CHECK(abs(result(1) - complex_mp(2))  < real_mp("1e-25"));
+    BOOST_CHECK(abs(result(0) - complex_mp(24)) < real_mp("1e-25"));
+    BOOST_CHECK(abs(result(1) - complex_mp(2))  < real_mp("1e-25"));
 }
 
 BOOST_AUTO_TEST_CASE(jacobian_mpfr)
 {
-	DefaultPrecision(30);
-	auto block = MakeTestBlock();
-	block.Precision(30);
+    DefaultPrecision(30);
+    auto block = MakeTestBlock();
+    block.Precision(30);
 
-	bertini::Vec<complex_mp> x(2); x << complex_mp(1), complex_mp(1);
-	bertini::Mat<complex_mp> J(2, 2);
-	block.JacobianInPlace<complex_mp>(J, x, complex_mp(0));
+    bertini::Vec<complex_mp> x(2); x << complex_mp(1), complex_mp(1);
+    bertini::Mat<complex_mp> J(2, 2);
+    block.JacobianInPlace<complex_mp>(J, x, complex_mp(0));
 
-	BOOST_CHECK(abs(J(0, 0) - complex_mp(14)) < real_mp("1e-25"));
-	BOOST_CHECK(abs(J(0, 1) - complex_mp(6))  < real_mp("1e-25"));
-	BOOST_CHECK(abs(J(1, 0) - complex_mp(1))  < real_mp("1e-25"));
-	BOOST_CHECK(abs(J(1, 1))                    < real_mp("1e-25"));
+    BOOST_CHECK(abs(J(0, 0) - complex_mp(14)) < real_mp("1e-25"));
+    BOOST_CHECK(abs(J(0, 1) - complex_mp(6))  < real_mp("1e-25"));
+    BOOST_CHECK(abs(J(1, 0) - complex_mp(1))  < real_mp("1e-25"));
+    BOOST_CHECK(abs(J(1, 1))                    < real_mp("1e-25"));
 }
 
 
@@ -123,58 +123,58 @@ BOOST_AUTO_TEST_CASE(jacobian_mpfr)
 // homogenized System kept an affine block with the wrong variable count.
 BOOST_AUTO_TEST_CASE(homogenize_folds_the_constant_onto_the_homogenizing_variable)
 {
-	DefaultPrecision(30);
-	// f0 = (x - 1)(x + 1) in the variables (x, y): rows [1, 0 | -1] and [1, 0 | 1]
-	bertini::Mat<complex_mp> f0(2, 3);
-	f0 << complex_mp(1), complex_mp(0), complex_mp(-1),
-	      complex_mp(1), complex_mp(0), complex_mp(1);
-	ProductsOfLinearsBlock block(2, std::vector<bertini::Mat<complex_mp>>{f0});
+    DefaultPrecision(30);
+    // f0 = (x - 1)(x + 1) in the variables (x, y): rows [1, 0 | -1] and [1, 0 | 1]
+    bertini::Mat<complex_mp> f0(2, 3);
+    f0 << complex_mp(1), complex_mp(0), complex_mp(-1),
+          complex_mp(1), complex_mp(0), complex_mp(1);
+    ProductsOfLinearsBlock block(2, std::vector<bertini::Mat<complex_mp>>{f0});
 
-	BOOST_CHECK(!block.IsHomogenized());
-	BOOST_CHECK(!block.IsHomogeneous(VariableGroup{}));
+    BOOST_CHECK(!block.IsHomogenized());
+    BOOST_CHECK(!block.IsHomogeneous(VariableGroup{}));
 
-	auto h = bertini::node::Variable::Make("h");
-	block.Homogenize(VariableGroup{}, h);
+    auto h = bertini::node::Variable::Make("h");
+    block.Homogenize(VariableGroup{}, h);
 
-	BOOST_CHECK(block.IsHomogenized());
-	BOOST_CHECK(block.IsHomogeneous(VariableGroup{}));
-	BOOST_CHECK_EQUAL(block.NumVariables(), 3u);
-	BOOST_CHECK_EQUAL(block.Degrees()[0], 2);
+    BOOST_CHECK(block.IsHomogenized());
+    BOOST_CHECK(block.IsHomogeneous(VariableGroup{}));
+    BOOST_CHECK_EQUAL(block.NumVariables(), 3u);
+    BOOST_CHECK_EQUAL(block.Degrees()[0], 2);
 
-	// (x - h)(x + h) at (h, x, y) = (2, 3, 5): (3-2)(3+2) = 5;  d/dh = -2h = -4, d/dx = 2x = 6, d/dy = 0
-	bertini::Vec<complex_dbl> p(3); p << complex_dbl(2), complex_dbl(3), complex_dbl(5);
-	bertini::Vec<complex_dbl> val(1);
-	block.EvalInPlace<complex_dbl>(val, p, complex_dbl(0));
-	BOOST_CHECK_CLOSE(val(0).real(), 5.0, 1e-11);
-	BOOST_CHECK_SMALL(val(0).imag(), 1e-11);
+    // (x - h)(x + h) at (h, x, y) = (2, 3, 5): (3-2)(3+2) = 5;  d/dh = -2h = -4, d/dx = 2x = 6, d/dy = 0
+    bertini::Vec<complex_dbl> p(3); p << complex_dbl(2), complex_dbl(3), complex_dbl(5);
+    bertini::Vec<complex_dbl> val(1);
+    block.EvalInPlace<complex_dbl>(val, p, complex_dbl(0));
+    BOOST_CHECK_CLOSE(val(0).real(), 5.0, 1e-11);
+    BOOST_CHECK_SMALL(val(0).imag(), 1e-11);
 
-	bertini::Mat<complex_dbl> J(1, 3);
-	block.JacobianInPlace<complex_dbl>(J, p, complex_dbl(0));
-	BOOST_CHECK_CLOSE(J(0, 0).real(), -4.0, 1e-11);
-	BOOST_CHECK_CLOSE(J(0, 1).real(),  6.0, 1e-11);
-	BOOST_CHECK_SMALL(J(0, 2).real(), 1e-11);
+    bertini::Mat<complex_dbl> J(1, 3);
+    block.JacobianInPlace<complex_dbl>(J, p, complex_dbl(0));
+    BOOST_CHECK_CLOSE(J(0, 0).real(), -4.0, 1e-11);
+    BOOST_CHECK_CLOSE(J(0, 1).real(),  6.0, 1e-11);
+    BOOST_CHECK_SMALL(J(0, 2).real(), 1e-11);
 
-	// the same at multiprecision
-	block.Precision(30);
-	bertini::Vec<complex_mp> pm(3); pm << complex_mp(2), complex_mp(3), complex_mp(5);
-	bertini::Vec<complex_mp> vm(1);
-	block.EvalInPlace<complex_mp>(vm, pm, complex_mp(0));
-	BOOST_CHECK(abs(vm(0) - complex_mp(5)) < real_mp("1e-25"));
+    // the same at multiprecision
+    block.Precision(30);
+    bertini::Vec<complex_mp> pm(3); pm << complex_mp(2), complex_mp(3), complex_mp(5);
+    bertini::Vec<complex_mp> vm(1);
+    block.EvalInPlace<complex_mp>(vm, pm, complex_mp(0));
+    BOOST_CHECK(abs(vm(0) - complex_mp(5)) < real_mp("1e-25"));
 
-	// a second affine group is not supported yet, and says so instead of corrupting the block
-	BOOST_CHECK_THROW(block.Homogenize(VariableGroup{}, h), std::runtime_error);
+    // a second affine group is not supported yet, and says so instead of corrupting the block
+    BOOST_CHECK_THROW(block.Homogenize(VariableGroup{}, h), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(a_block_built_with_zero_constants_is_already_homogeneous)
 {
-	// the m-homogeneous start system's form: homogenizing variables among the columns, constants 0
-	DefaultPrecision(30);
-	bertini::Mat<complex_mp> f0(2, 4);   // variables (h, x, y): rows [-1, 1, 0 | 0] and [1, 1, 0 | 0]
-	f0 << complex_mp(-1), complex_mp(1), complex_mp(0), complex_mp(0),
-	      complex_mp(1),  complex_mp(1), complex_mp(0), complex_mp(0);
-	ProductsOfLinearsBlock block(3, std::vector<bertini::Mat<complex_mp>>{f0});
-	BOOST_CHECK(!block.IsHomogenized());
-	BOOST_CHECK(block.IsHomogeneous(VariableGroup{}));
+    // the m-homogeneous start system's form: homogenizing variables among the columns, constants 0
+    DefaultPrecision(30);
+    bertini::Mat<complex_mp> f0(2, 4);   // variables (h, x, y): rows [-1, 1, 0 | 0] and [1, 1, 0 | 0]
+    f0 << complex_mp(-1), complex_mp(1), complex_mp(0), complex_mp(0),
+          complex_mp(1),  complex_mp(1), complex_mp(0), complex_mp(0);
+    ProductsOfLinearsBlock block(3, std::vector<bertini::Mat<complex_mp>>{f0});
+    BOOST_CHECK(!block.IsHomogenized());
+    BOOST_CHECK(block.IsHomogeneous(VariableGroup{}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

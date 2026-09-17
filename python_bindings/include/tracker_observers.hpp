@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/tracker_observers.hpp:  source file for exposing trackers to python.
@@ -29,7 +29,7 @@
 #include <bertini2/trackers/fixed_precision_tracker.hpp>
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
 
 void ExportTrackerObservers();
@@ -41,13 +41,13 @@ using namespace bertini::tracking;
 template<typename ObsT>
 struct TrackingObserverVisitor: public def_visitor<TrackingObserverVisitor<ObsT> >
 {
-	friend class ::boost::python::def_visitor_access;
+    friend class ::boost::python::def_visitor_access;
 
 public:
 
-	template<class PyClass>
-	void visit(PyClass& /*cl*/) const{
-	}
+    template<class PyClass>
+    void visit(PyClass& /*cl*/) const{
+    }
 };
 
 

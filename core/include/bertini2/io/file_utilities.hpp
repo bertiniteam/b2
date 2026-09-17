@@ -15,12 +15,12 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file bertini2/io/file_utilities.hpp 
+\file bertini2/io/file_utilities.hpp
 
 \brief Provides the file_utilities screens for bertini2.
 */
@@ -33,79 +33,78 @@
 
 namespace bertini{
 
-	namespace fs = boost::filesystem;
+    namespace fs = boost::filesystem;
 
-	using Path = fs::path;  ///< Shorthand for a filesystem path.
+    using Path = fs::path;  ///< Shorthand for a filesystem path.
 
-	using ifstream = std::ifstream;  ///< Shorthand for an input file stream.
-	/**
-	\brief Try to open a file, and throw if it doesn't exist, or is a directory.
-	*/
-	inline
-	void OpenInFileThrowIfFail(ifstream & in, 
-	                           Path const& input_path)
-	{
-		using namespace fs;
-		try{
-			if (exists(input_path))
-			{
-				if (is_directory(input_path))
-				{
-					std::stringstream err_msg;
-					err_msg << "attempting to open file but is a directory, of name '" << input_path.string() << "'";
-					throw std::runtime_error(err_msg.str());
-				}
-				else
-				{
-					in.open(input_path.c_str());
-					if (!in.is_open())
-					{
-						std::stringstream err_msg;
-						err_msg << "file '" << input_path.string() << "' hypothetically exists, but failed to open correctly";
-						throw std::runtime_error(err_msg.str());
-					}
-				}
-			} 
-			else
-			{
-				std::stringstream err_msg;
-				err_msg << "attempting to open file which doesn't exist, of name '" << input_path.string() << "'";
-				throw std::runtime_error(err_msg.str());
-			}
-		}
-		catch (const filesystem_error& ex)
-		{
-			std::stringstream err_msg;
-			err_msg << "boost::filesystem throw while attempting to open file '" << input_path.string() << "': '" << ex.what() << "'";
-			throw std::runtime_error(err_msg.str());
-		}
-	}
+    using ifstream = std::ifstream;  ///< Shorthand for an input file stream.
+    /**
+    \brief Try to open a file, and throw if it doesn't exist, or is a directory.
+    */
+    inline
+    void OpenInFileThrowIfFail(ifstream & in,
+                               Path const& input_path)
+    {
+        using namespace fs;
+        try{
+            if (exists(input_path))
+            {
+                if (is_directory(input_path))
+                {
+                    std::stringstream err_msg;
+                    err_msg << "attempting to open file but is a directory, of name '" << input_path.string() << "'";
+                    throw std::runtime_error(err_msg.str());
+                }
+                else
+                {
+                    in.open(input_path.c_str());
+                    if (!in.is_open())
+                    {
+                        std::stringstream err_msg;
+                        err_msg << "file '" << input_path.string() << "' hypothetically exists, but failed to open correctly";
+                        throw std::runtime_error(err_msg.str());
+                    }
+                }
+            }
+            else
+            {
+                std::stringstream err_msg;
+                err_msg << "attempting to open file which doesn't exist, of name '" << input_path.string() << "'";
+                throw std::runtime_error(err_msg.str());
+            }
+        }
+        catch (const filesystem_error& ex)
+        {
+            std::stringstream err_msg;
+            err_msg << "boost::filesystem throw while attempting to open file '" << input_path.string() << "': '" << ex.what() << "'";
+            throw std::runtime_error(err_msg.str());
+        }
+    }
 
-	/**
-	\brief Read an entire file into a string.
+    /**
+    \brief Read an entire file into a string.
 
-	\return The string, now contaning the file.
-	\param input_path The path to the file.
-	*/
-	inline
-	std::string FileToString(Path const& input_path)
-	{
-		ifstream infile;
-		OpenInFileThrowIfFail(infile, input_path);
-		std::istreambuf_iterator<char> file_begin(infile), file_end;
-		std::string contents(file_begin, file_end);
+    \return The string, now contaning the file.
+    \param input_path The path to the file.
+    */
+    inline
+    std::string FileToString(Path const& input_path)
+    {
+        ifstream infile;
+        OpenInFileThrowIfFail(infile, input_path);
+        std::istreambuf_iterator<char> file_begin(infile), file_end;
+        std::string contents(file_begin, file_end);
 
-		// Treat file contents as UTF-8; drop a leading byte-order mark (EF BB BF)
-		// so it is not parsed as a stray leading character.
-		if (contents.size() >= 3 &&
-		    static_cast<unsigned char>(contents[0]) == 0xEF &&
-		    static_cast<unsigned char>(contents[1]) == 0xBB &&
-		    static_cast<unsigned char>(contents[2]) == 0xBF)
-		{
-			contents.erase(0, 3);
-		}
+        // Treat file contents as UTF-8; drop a leading byte-order mark (EF BB BF)
+        // so it is not parsed as a stray leading character.
+        if (contents.size() >= 3 &&
+            static_cast<unsigned char>(contents[0]) == 0xEF &&
+            static_cast<unsigned char>(contents[1]) == 0xBB &&
+            static_cast<unsigned char>(contents[2]) == 0xBF)
+        {
+            contents.erase(0, 3);
+        }
 
-		return contents;
-	}
+        return contents;
+    }
 }
-

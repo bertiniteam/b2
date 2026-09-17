@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/generic_observers.cpp:  source file for exposing trackers to python.
@@ -27,28 +27,28 @@
 #include <boost/python/exception_translator.hpp>
 
 namespace bertini{
-	namespace python{
+    namespace python{
 
 
 void ExportObserver()
 {
-	// Attaching an observer to an observable it cannot observe raises TypeError.
-	register_exception_translator<bertini::IncompatibleObserver>(
-		[](bertini::IncompatibleObserver const& e){ PyErr_SetString(PyExc_TypeError, e.what()); });
+    // Attaching an observer to an observable it cannot observe raises TypeError.
+    register_exception_translator<bertini::IncompatibleObserver>(
+        [](bertini::IncompatibleObserver const& e){ PyErr_SetString(PyExc_TypeError, e.what()); });
 
-	class_<AnyEvent, boost::noncopyable>("AnyEvent", no_init);
+    class_<AnyEvent, boost::noncopyable>("AnyEvent", no_init);
 
-	enum_<ObserveResult>("ObserveResult",
-		"What an observer may return from Observe(): KeepObserving (the default if "
-		"you return None) or Unsubscribe to ask the observable to drop this observer.")
-		.value("KeepObserving", ObserveResult::KeepObserving)
-		.value("Unsubscribe",   ObserveResult::Unsubscribe)
-	;
+    enum_<ObserveResult>("ObserveResult",
+        "What an observer may return from Observe(): KeepObserving (the default if "
+        "you return None) or Unsubscribe to ask the observable to drop this observer.")
+        .value("KeepObserving", ObserveResult::KeepObserving)
+        .value("Unsubscribe",   ObserveResult::Unsubscribe)
+    ;
 
-	// shared_ptr holder: when a python observer is attached, the observable can
-	// co-own it (weak_ptr), so dropping the python reference doesn't dangle.
-	class_<ObserverWrapper<AnyObserver>, std::shared_ptr<ObserverWrapper<AnyObserver>>, boost::noncopyable>("AnyAbstractObserver",  init< >())
-	;
+    // shared_ptr holder: when a python observer is attached, the observable can
+    // co-own it (weak_ptr), so dropping the python reference doesn't dangle.
+    class_<ObserverWrapper<AnyObserver>, std::shared_ptr<ObserverWrapper<AnyObserver>>, boost::noncopyable>("AnyAbstractObserver",  init< >())
+    ;
 }
 
 }} // namespaces

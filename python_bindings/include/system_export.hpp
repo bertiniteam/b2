@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //  python/system_export.hpp:  Header file for exposing systems to python, including start systems.
@@ -37,160 +37,160 @@
 
 
 namespace bertini{
-	namespace python{
-		
-		using namespace bertini;
-		
-		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-		
-		using complex_dbl = std::complex<double>;
-		using mpfr = bertini::complex_mp;
-		
-		
-		
-		
-		
-		void ExportAllSystems();
+    namespace python{
 
-		// some useful subfunctions used in ExportAllSystems
-		void ExportSystem();
-		void ExportStartSystems();
-		void ExportStartSystemBase();
-		void ExportTotalDegree();
-		void ExportRootsOfUnity();
-		
-		
-		
-		/**
-		 System class 
-		 */
-		template<typename SystemBaseT>
-		class SystemVisitor: public def_visitor<SystemVisitor<SystemBaseT> >
-		{
-			friend class ::boost::python::def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-			
-		private:
+        using namespace bertini;
 
-			// precision functions
-			// Neither a setter nor a getter: a System carries no precision at all.  Evaluation
-			// happens at the precision of the point it is handed (ADR-0057).
+        template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+        template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
+        using complex_dbl = std::complex<double>;
+        using mpfr = bertini::complex_mp;
 
 
 
-			static void AddJustFn(bertini::System& self, std::shared_ptr<node::Node> const& f) { return self.AddFunction(f);}
-			
-
-//			Vec<complex_dbl> (System::*sysEval1)(const Vec<complex_dbl> &) = &System::template Eval<complex_dbl>;
-//			Vec<complex_dbl> (System::*sysEval1)(const Vec<complex_dbl> &) = &System::template Eval<complex_dbl>;
-			
-			std::vector<int> (bertini::System::*sysDeg1)() const = &bertini::System::Degrees;
-			std::vector<int> (bertini::System::*sysDeg2)(VariableGroup const&) const = &bertini::System::Degrees;
-			
-			// Eval functions
-			template <typename T>
-			using Eval0_ptr = Vec<T> (SystemBaseT::*)() const;
-			template <typename T>
-			static Eval0_ptr<T> return_Eval0_ptr()
-			{
-				return &SystemBaseT::template Eval<T>;
-			};
 
 
-			// evaluate at arguments passed in, return a vector
-			// in case you wondered how it's done, this is how you enable wrapping of in-place using a Ref.  
-			// this ended up being unnecessary, lol.   but i kept it because it might be useful 
-			// for future reference.
-			template<typename T>
-			static
-			Vec<T> eval_wrap_1(SystemBaseT const& self,  Eigen::Ref<  Vec<T>> x){
-				return self.template Eval<T>(x);
-			}
+        void ExportAllSystems();
 
-			template <typename T>
-			using Eval1_ptr = Vec<T> (SystemBaseT::*)(const Vec<T>&) const;
-			template <typename T>
-			static Eval1_ptr<T> return_Eval1_ptr()
-			{
-				return &SystemBaseT::template Eval<T>;
-			};
-			
-			template <typename T>
-			using Eval2_ptr = Vec<T> (SystemBaseT::*)(const Vec<T>&, const T &) const;
-			template <typename T>
-			static Eval2_ptr<T> return_Eval2_ptr()
-			{
-				return &SystemBaseT::template Eval<T>;
-			};
-			
-			
-			// Jacobian Eval functions
-			template <typename T>
-			using Jac0_ptr = Mat<T> (SystemBaseT::*)() const;
-			template <typename T>
-			static Jac0_ptr<T> return_Jac0_ptr()
-			{
-				return &SystemBaseT::template Jacobian<T>;
-			};
+        // some useful subfunctions used in ExportAllSystems
+        void ExportSystem();
+        void ExportStartSystems();
+        void ExportStartSystemBase();
+        void ExportTotalDegree();
+        void ExportRootsOfUnity();
 
-			template <typename T>
-			using Jac1_ptr = Mat<T> (SystemBaseT::*)(const Vec<T>&) const;
-			template <typename T>
-			static Jac1_ptr<T> return_Jac1_ptr()
-			{
-				return &SystemBaseT::template Jacobian<T>;
-			};
-			
-			template <typename T>
-			using Jac2_ptr = Mat<T> (SystemBaseT::*)(const Vec<T>&, const T &) const;
-			template <typename T>
-			static Jac2_ptr<T> return_Jac2_ptr()
-			{
-				return &SystemBaseT::template Jacobian<T>;
-			};
 
-			static
-			void rescale_wrap_inplace_mpfr(SystemBaseT const& self, Eigen::Ref<Vec<mpfr>> x){
-				Vec<mpfr> result(x);
-				self.RescalePointToFitPatchInPlace(result);
-				x = result;}
 
-		};
-		
-		
-		
-		
-		
-		
-		
-		/**
-		 StartSystem class 
-		 */
-		template<typename SystemBaseT>
-		class StartSystemVisitor: public def_visitor<StartSystemVisitor<SystemBaseT> >
-		{
-			friend class ::boost::python::def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
-			
-			
-		private:
-			template <typename T>
-			using GenStart_ptr = Vec<T> (SystemBaseT::*)(unsigned long long) const;
-			template <typename T>
-			static GenStart_ptr<T> return_GenStart_ptr()
-			{
-				return &SystemBaseT::template StartPoint<T>;
-			};
-		};
-		
-	}
+        /**
+         System class
+         */
+        template<typename SystemBaseT>
+        class SystemVisitor: public def_visitor<SystemVisitor<SystemBaseT> >
+        {
+            friend class ::boost::python::def_visitor_access;
+
+        public:
+            template<class PyClass>
+            void visit(PyClass& cl) const;
+
+        private:
+
+            // precision functions
+            // Neither a setter nor a getter: a System carries no precision at all.  Evaluation
+            // happens at the precision of the point it is handed (ADR-0057).
+
+
+
+            static void AddJustFn(bertini::System& self, std::shared_ptr<node::Node> const& f) { return self.AddFunction(f);}
+
+
+//          Vec<complex_dbl> (System::*sysEval1)(const Vec<complex_dbl> &) = &System::template Eval<complex_dbl>;
+//          Vec<complex_dbl> (System::*sysEval1)(const Vec<complex_dbl> &) = &System::template Eval<complex_dbl>;
+
+            std::vector<int> (bertini::System::*sysDeg1)() const = &bertini::System::Degrees;
+            std::vector<int> (bertini::System::*sysDeg2)(VariableGroup const&) const = &bertini::System::Degrees;
+
+            // Eval functions
+            template <typename T>
+            using Eval0_ptr = Vec<T> (SystemBaseT::*)() const;
+            template <typename T>
+            static Eval0_ptr<T> return_Eval0_ptr()
+            {
+                return &SystemBaseT::template Eval<T>;
+            };
+
+
+            // evaluate at arguments passed in, return a vector
+            // in case you wondered how it's done, this is how you enable wrapping of in-place using a Ref.
+            // this ended up being unnecessary, lol.   but i kept it because it might be useful
+            // for future reference.
+            template<typename T>
+            static
+            Vec<T> eval_wrap_1(SystemBaseT const& self,  Eigen::Ref<  Vec<T>> x){
+                return self.template Eval<T>(x);
+            }
+
+            template <typename T>
+            using Eval1_ptr = Vec<T> (SystemBaseT::*)(const Vec<T>&) const;
+            template <typename T>
+            static Eval1_ptr<T> return_Eval1_ptr()
+            {
+                return &SystemBaseT::template Eval<T>;
+            };
+
+            template <typename T>
+            using Eval2_ptr = Vec<T> (SystemBaseT::*)(const Vec<T>&, const T &) const;
+            template <typename T>
+            static Eval2_ptr<T> return_Eval2_ptr()
+            {
+                return &SystemBaseT::template Eval<T>;
+            };
+
+
+            // Jacobian Eval functions
+            template <typename T>
+            using Jac0_ptr = Mat<T> (SystemBaseT::*)() const;
+            template <typename T>
+            static Jac0_ptr<T> return_Jac0_ptr()
+            {
+                return &SystemBaseT::template Jacobian<T>;
+            };
+
+            template <typename T>
+            using Jac1_ptr = Mat<T> (SystemBaseT::*)(const Vec<T>&) const;
+            template <typename T>
+            static Jac1_ptr<T> return_Jac1_ptr()
+            {
+                return &SystemBaseT::template Jacobian<T>;
+            };
+
+            template <typename T>
+            using Jac2_ptr = Mat<T> (SystemBaseT::*)(const Vec<T>&, const T &) const;
+            template <typename T>
+            static Jac2_ptr<T> return_Jac2_ptr()
+            {
+                return &SystemBaseT::template Jacobian<T>;
+            };
+
+            static
+            void rescale_wrap_inplace_mpfr(SystemBaseT const& self, Eigen::Ref<Vec<mpfr>> x){
+                Vec<mpfr> result(x);
+                self.RescalePointToFitPatchInPlace(result);
+                x = result;}
+
+        };
+
+
+
+
+
+
+
+        /**
+         StartSystem class
+         */
+        template<typename SystemBaseT>
+        class StartSystemVisitor: public def_visitor<StartSystemVisitor<SystemBaseT> >
+        {
+            friend class ::boost::python::def_visitor_access;
+
+        public:
+            template<class PyClass>
+            void visit(PyClass& cl) const;
+
+
+        private:
+            template <typename T>
+            using GenStart_ptr = Vec<T> (SystemBaseT::*)(unsigned long long) const;
+            template <typename T>
+            static GenStart_ptr<T> return_GenStart_ptr()
+            {
+                return &SystemBaseT::template StartPoint<T>;
+            };
+        };
+
+    }
 }
 
 

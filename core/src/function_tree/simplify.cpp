@@ -15,8 +15,8 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/function_tree/simplify.hpp"
@@ -25,8 +25,7 @@ namespace bertini {
 
 std::shared_ptr<bertini::node::Node> Simplify(std::shared_ptr<bertini::node::Node> const& n)
 {
-	return n->Simplified();
+    return n->Simplified();
 }
 
 } // namespace bertini
-

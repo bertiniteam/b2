@@ -15,12 +15,12 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file bertini2/system/start_systems.hpp 
+\file bertini2/system/start_systems.hpp
 
 \brief Aggregate include for the various start systems in Bertini2.
 */
@@ -31,5 +31,3 @@
 #include "bertini2/system/start/total_degree_binomial.hpp"
 #include "bertini2/system/start/mhom.hpp"
 #include "bertini2/system/start/user.hpp"
-
-

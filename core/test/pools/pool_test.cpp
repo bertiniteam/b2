@@ -15,15 +15,15 @@
 //
 // Copyright(C) Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 //pool_test.cpp
 //
 
 
- 
+
 #define BOOST_TEST_DYN_LINK 1
 
 //this #define MUST appear before #include <boost/test/unit_test.hpp>
@@ -45,64 +45,64 @@ using namespace bertini;
 
 BOOST_AUTO_TEST_CASE(make_system_pool)
 {
-	[[maybe_unused]] SystemPool sp;
+    [[maybe_unused]] SystemPool sp;
 }
 
 
 
 BOOST_AUTO_TEST_CASE(make_nonpointer_system_and_add_to_pool)
 {
-	SystemPool sp;
+    SystemPool sp;
 
-	System sys;
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	auto z = Variable::Make("z");
-	
-	sys.AddVariableGroup(VariableGroup({x,y,z}));  
-	sys.AddFunction(x);
-	sys.AddFunction(y);
-	sys.AddFunction(z);
+    System sys;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    auto z = Variable::Make("z");
 
-	auto result = sp.NonPtrAdd(sys);
+    sys.AddVariableGroup(VariableGroup({x,y,z}));
+    sys.AddFunction(x);
+    sys.AddFunction(y);
+    sys.AddFunction(z);
 
-	BOOST_CHECK(result.get() != &sys);
+    auto result = sp.NonPtrAdd(sys);
+
+    BOOST_CHECK(result.get() != &sys);
 }
 
 
 BOOST_AUTO_TEST_CASE(make_new_sys_from_pool)
 {
-	SystemPool sp;
-	std::shared_ptr<System> sys = sp.Make();
+    SystemPool sp;
+    std::shared_ptr<System> sys = sp.Make();
 
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	auto z = Variable::Make("z");
-	
-	sys->AddVariableGroup(VariableGroup({x,y,z}));  
-	sys->AddFunction(x);
-	sys->AddFunction(y);
-	sys->AddFunction(z);
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    auto z = Variable::Make("z");
+
+    sys->AddVariableGroup(VariableGroup({x,y,z}));
+    sys->AddFunction(x);
+    sys->AddFunction(y);
+    sys->AddFunction(z);
 }
 
 
 BOOST_AUTO_TEST_CASE(add_ptr_sys_to_pool)
 {
-	SystemPool sp;
-	std::shared_ptr<System> sys = std::make_shared<System>();
+    SystemPool sp;
+    std::shared_ptr<System> sys = std::make_shared<System>();
 
-	auto x = Variable::Make("x");
-	auto y = Variable::Make("y");
-	auto z = Variable::Make("z");
-	
-	sys->AddVariableGroup(VariableGroup({x,y,z}));  
-	sys->AddFunction(x);
-	sys->AddFunction(y);
-	sys->AddFunction(z);
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    auto z = Variable::Make("z");
 
-	auto result = sp.PtrAdd(sys);
+    sys->AddVariableGroup(VariableGroup({x,y,z}));
+    sys->AddFunction(x);
+    sys->AddFunction(y);
+    sys->AddFunction(z);
 
-	BOOST_CHECK(result.get() == sys.get());
+    auto result = sp.PtrAdd(sys);
+
+    BOOST_CHECK(result.get() == sys.get());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -119,10 +119,6 @@ using namespace bertini;
 
 BOOST_AUTO_TEST_CASE(make_double_point_point)
 {
-	[[maybe_unused]] PointPool<complex_dbl> pool;
+    [[maybe_unused]] PointPool<complex_dbl> pool;
 }
 BOOST_AUTO_TEST_SUITE_END()
-
-
-
-
