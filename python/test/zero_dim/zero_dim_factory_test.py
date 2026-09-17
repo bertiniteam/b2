@@ -1,6 +1,6 @@
 """The friendly ZeroDimSolver(...) factory selects the right bound solver class by string.
 
-Instead of typing ZeroDimSolverCauchyAdaptivePrecision, you say ZeroDimSolver(system) (the defaults) or
+Instead of typing ZeroDimSolverPowerSeriesAdaptivePrecision, you say ZeroDimSolver(system) (the defaults) or
 ZeroDimSolver(system, endgame=..., mptype=..., startsystem=...).
 
 Note: after ZeroDimSolver was de-templated off the start-system type, the bound solver class encodes only
@@ -26,24 +26,25 @@ def _system():
     return sys
 
 
-def test_defaults_are_cauchy_adaptive():
-    # default endgame + precision; start system (total degree) is not in the type name anymore.
+def test_defaults_are_powerseries_adaptive():
+    # default endgame (power series, Bertini 1's default; ADR-0058) + precision; the start
+    # system (total degree) is not in the type name anymore.
     solver = ZeroDimSolver(_system())
-    assert isinstance(solver, _n.ZeroDimSolverCauchyAdaptivePrecision)
+    assert isinstance(solver, _n.ZeroDimSolverPowerSeriesAdaptivePrecision)
 
 
 @pytest.mark.parametrize("kwargs, expected", [
-    (dict(),                                                   'ZeroDimSolverCauchyAdaptivePrecision'),
-    (dict(mptype='double'),                                   'ZeroDimSolverCauchyDoublePrecision'),
-    (dict(mptype='dbl'),                                      'ZeroDimSolverCauchyDoublePrecision'),
-    (dict(mptype='multiple'),                                 'ZeroDimSolverCauchyFixedMultiplePrecision'),
-    (dict(mptype='amp'),                                      'ZeroDimSolverCauchyAdaptivePrecision'),
-    (dict(mptype='adaptive'),                                 'ZeroDimSolverCauchyAdaptivePrecision'),
+    (dict(),                                                   'ZeroDimSolverPowerSeriesAdaptivePrecision'),
+    (dict(mptype='double'),                                   'ZeroDimSolverPowerSeriesDoublePrecision'),
+    (dict(mptype='dbl'),                                      'ZeroDimSolverPowerSeriesDoublePrecision'),
+    (dict(mptype='multiple'),                                 'ZeroDimSolverPowerSeriesFixedMultiplePrecision'),
+    (dict(mptype='amp'),                                      'ZeroDimSolverPowerSeriesAdaptivePrecision'),
+    (dict(mptype='adaptive'),                                 'ZeroDimSolverPowerSeriesAdaptivePrecision'),
     (dict(endgame='powerseries'),                             'ZeroDimSolverPowerSeriesAdaptivePrecision'),
     (dict(endgame='power_series'),                            'ZeroDimSolverPowerSeriesAdaptivePrecision'),
     # the start system no longer changes the type -- only endgame + precision do:
-    (dict(startsystem='mhom'),                                'ZeroDimSolverCauchyAdaptivePrecision'),
-    (dict(startsystem='binomial'),                            'ZeroDimSolverCauchyAdaptivePrecision'),
+    (dict(startsystem='mhom'),                                'ZeroDimSolverPowerSeriesAdaptivePrecision'),
+    (dict(startsystem='binomial'),                            'ZeroDimSolverPowerSeriesAdaptivePrecision'),
     (dict(endgame='cauchy', mptype='amp', startsystem='mhom'),'ZeroDimSolverCauchyAdaptivePrecision'),
     (dict(endgame='power_series', mptype='dbl', startsystem='linearproduct'),
                                                               'ZeroDimSolverPowerSeriesDoublePrecision'),
@@ -78,7 +79,7 @@ def test_precision_is_an_integer_number_of_digits():
     b.default_precision(16)
     solver = ZeroDimSolver(_system(), mptype='multiple', precision=80)
     assert b.default_precision() == 80                     # the digit count took effect
-    assert isinstance(solver, _n.ZeroDimSolverCauchyFixedMultiplePrecision)   # mptype picked the class
+    assert isinstance(solver, _n.ZeroDimSolverPowerSeriesFixedMultiplePrecision)   # mptype picked the class
 
 
 def test_precision_as_a_string_is_the_deprecated_model_alias():
@@ -87,7 +88,7 @@ def test_precision_as_a_string_is_the_deprecated_model_alias():
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         solver = ZeroDimSolver(_system(), precision='amp')
-    assert isinstance(solver, _n.ZeroDimSolverCauchyAdaptivePrecision)
+    assert isinstance(solver, _n.ZeroDimSolverPowerSeriesAdaptivePrecision)
     assert any(issubclass(x.category, DeprecationWarning) for x in w)
 
 

@@ -911,6 +911,33 @@ BOOST_AUTO_TEST_CASE(a_bare_input_section_body_still_parses)
 	BOOST_CHECK_EQUAL(s.NumVariables(), 3);
 }
 
+BOOST_AUTO_TEST_CASE(a_commented_classic_file_parses_like_the_uncommented_one)
+{
+	// #407: comments anywhere in a classic input -- whole lines, the tail of a declaration,
+	// and (the trap) a comment that mentions INPUT or END; -- must not reach the grammar
+	// or fool the file unwrapping.  Both entry points: a bare body and a full file.
+	std::string const clean =
+		"variable_group x, y;\nfunction f, g;\nf = x^2 + y^2 - 1;\ng = x - y;\n";
+	std::string const commented =
+		"% a title line for the whole file\n"
+		"variable_group x, y;   % the unknowns\n"
+		"% function END; INPUT -- keywords inside a comment mean nothing\n"
+		"function f, g;\n"
+		"f = x^2 + y^2 - 1; % the circle\n"
+		"%g = x + y;\n"
+		"g = x - y;   % the line, no newline after this comment";
+	bertini::System expected(clean), from_body, from_file;
+	BOOST_REQUIRE_NO_THROW(from_body = bertini::System(commented));
+	BOOST_CHECK(from_body.IsSame(expected));
+	BOOST_CHECK_EQUAL(from_body.NumTotalFunctions(), 2);
+
+	std::string const file =
+		"CONFIG % settings\n tracktype: 0; % zero-dimensional\n END; % of CONFIG\n\n"
+		"INPUT % the system\n" + commented + "\nEND;\n";
+	BOOST_REQUIRE_NO_THROW(from_file = bertini::System(file));
+	BOOST_CHECK(from_file.IsSame(expected));
+}
+
 BOOST_AUTO_TEST_CASE(power_of_a_sum_reports_its_total_degree_not_the_sum_of_per_variable_degrees)
 {
 	// REGRESSION (#397): PowerOperator::Degree(VariableGroup) summed the per-variable

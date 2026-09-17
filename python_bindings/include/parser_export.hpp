@@ -63,8 +63,9 @@ namespace bertini{
 		{
 			// Treat input as UTF-8; drop a leading BOM so it is not parsed as a stray character.
 			bertini::parsing::classic::StripUTF8BOM(str);
-			// accept a full Bertini 1 classic file, which is exactly what
-			// System.to_classic_input() emits -- see #396
+			// comments first (see #407), then accept a full Bertini 1 classic file, which is
+			// exactly what System.to_classic_input() emits -- see #396
+			bertini::parsing::classic::StripClassicComments(str);
 			bertini::parsing::classic::StripClassicFileWrappers(str);
 			ResultT res;
 			// The return value is NOT optional to check.  parse() answers false when the

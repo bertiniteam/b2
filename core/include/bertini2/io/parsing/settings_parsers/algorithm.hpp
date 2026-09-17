@@ -904,7 +904,7 @@ namespace bertini {
 					using qi::char_;
 					using boost::spirit::ascii::no_case;
 
-					// Bertini1: endgamenum: 1=PSEG, 2=Cauchy (default)
+					// Bertini1: endgamenum: 1=PSEG (the DEFAULT, per the Bertini 1 manual; ADR-0058), 2=Cauchy
 					endgamechoice_.add("1", algorithm::classic::EndgameChoice::PowerSeries);
 					endgamechoice_.add("2", algorithm::classic::EndgameChoice::Cauchy);
 
@@ -921,7 +921,7 @@ namespace bertini {
 					                                       cfg.endgame = c;
 					                                  }, _val, _1)]
 					           >> -no_setting_
-					           | no_setting_; // no endgamenum → default (Cauchy)
+					           | no_setting_; // no endgamenum → default (PowerSeries, matching Bertini 1)
 
 					no_setting_.name("no_setting_");
 					no_setting_ = *(char_ - no_case[setting_name]);

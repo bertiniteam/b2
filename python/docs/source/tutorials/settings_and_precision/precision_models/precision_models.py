@@ -23,9 +23,9 @@ def solver_types(system):
     """mptype selects the solver class (endgame + precision model)."""
     names = {mptype: type(bertini.ZeroDimSolver(system, mptype=mptype)).__name__
              for mptype in ('double', 'multiple', 'adaptive')}
-    assert names['double']   == 'ZeroDimSolverCauchyDoublePrecision'
-    assert names['multiple'] == 'ZeroDimSolverCauchyFixedMultiplePrecision'
-    assert names['adaptive'] == 'ZeroDimSolverCauchyAdaptivePrecision'
+    assert names['double']   == 'ZeroDimSolverPowerSeriesDoublePrecision'
+    assert names['multiple'] == 'ZeroDimSolverPowerSeriesFixedMultiplePrecision'
+    assert names['adaptive'] == 'ZeroDimSolverPowerSeriesAdaptivePrecision'
 
 
 def reading_solutions(system):
