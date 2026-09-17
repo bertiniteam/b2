@@ -33,13 +33,15 @@ def the_system():
     """Two quadrics in two variables, every constant kind the emitter spells: 4 solutions."""
     pb.default_precision(30)
     x, y = Variable('x'), Variable('y')
+    # Multiprecision floats print with every digit of the binary value they hold, so 0.3
+    # comes out as 0.29999999999999999999999999999996: exact, and not 0.3.  A coefficient that
+    # MUST be exact (1/3 here) is a Rational, which prints as 1/3 and stays exact everywhere.
     c1 = pb.coefficient(complex_mp('0.3', '-0.5'))                       # complex, multiprecision
     c2 = pb.coefficient(complex_mp('1.2', '0.7'))
-    third = pb.coefficient(complex_mp('0.333333333333333333333333333333', '0'))   # real, many digits
     s = System()
     s.add_variable_group([x, y])
     s.add_function(c1 * x**2 + y - Rational('6/5'))                     # a rational constant
-    s.add_function(x + third * y**2 - c2 * x * y + 2)                   # an integer constant
+    s.add_function(x + Rational('1/3') * y**2 - c2 * x * y + 2)         # exact third; an integer constant
     return s
 
 
