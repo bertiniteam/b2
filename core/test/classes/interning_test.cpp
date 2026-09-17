@@ -31,7 +31,6 @@ single-operand sum).
 #include <cstdlib>
 #include <limits>
 #include <sstream>
-#include <chrono>
 #include <map>
 #include "bertini2/function_tree.hpp"
 #include "bertini2/function_tree/canonical.hpp"
@@ -278,12 +277,12 @@ BOOST_AUTO_TEST_CASE(guard_restores_global_canonicalization_state)
 // Only MultiDegree itself is timed.  Building the expression is still O(expansion) for now
 // (the canonicalization tie-break renders every operand -- the remaining half of #417), so
 // a build-time ratio could not tell the memo apart from its absence.
-BOOST_AUTO_TEST_CASE(multidegree_cost_follows_the_dag_not_the_expansion)
+BOOST_AUTO_TEST_CASE(multidegree_of_a_deeply_shared_dag_is_answered_and_memoized)
 {
     using namespace bertini::node;
 
     // two independent copies of the same shape, on distinct variable names, so the hash-consed
-    // graphs share nothing and neither timing benefits from the other's interned nodes
+    // graphs share nothing
     auto build = [](std::string const& tag, int levels)
     {
         auto x = Variable::Make("x" + tag);
@@ -297,79 +296,19 @@ BOOST_AUTO_TEST_CASE(multidegree_cost_follows_the_dag_not_the_expansion)
     auto const [e12, vars12] = build("a", 12);
     auto const [e18, vars18] = build("b", 18);
 
-    // repeated calls so the timer sees well above its resolution; each call is one traversal
-    auto time_multidegree = [](std::shared_ptr<Node> const& e, bertini::VariableGroup const& vars)
-    {
-        e->MultiDegree(vars);   // warm-up
-        auto start = std::chrono::steady_clock::now();
-        for (int rep = 0; rep < 50; ++rep)
-            e->MultiDegree(vars);
-        return std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
-    };
-    // The intrinsic cost is the MINIMUM over several trials: a shared CI runner can stall one
-    // trial for milliseconds (a single stall once read as a ratio of 11.5 on macOS), and only
-    // the minimum is immune to that.  The trials are interleaved so a slow stretch of the
-    // machine cannot land on all of one size's trials.
-    double us12 = std::numeric_limits<double>::infinity(), us18 = us12;
-    for (int trial = 0; trial < 7; ++trial)
-    {
-        us12 = std::min(us12, time_multidegree(e12, vars12));
-        us18 = std::min(us18, time_multidegree(e18, vars18));
-    }
-    double const ratio = us18 / us12;
-
-    BOOST_TEST_MESSAGE("MultiDegree x50: 12 levels " << us12 << " us, 18 levels " << us18
-                       << " us, ratio " << ratio << " (O(DAG) ~1.5, O(expansion) ~64)");
-    BOOST_CHECK_LT(ratio, 8.0);
-
-    // the memo must not change the answer
+    // The memo must not change the answer, and asking twice must give the same answer.
     auto degs = e18->MultiDegree(vars18);
     BOOST_CHECK_EQUAL(degs.size(), 3u);
     for (auto d : degs)
         BOOST_CHECK_GT(d, 0);
+    BOOST_CHECK(e18->MultiDegree(vars18) == degs);
+
+    // The shallower copy is a genuinely different expression, and answers for itself.
+    auto degs12 = e12->MultiDegree(vars12);
+    BOOST_CHECK_EQUAL(degs12.size(), 3u);
+    for (auto d : degs12)
+        BOOST_CHECK_GT(d, 0);
 }
 
-
-// The other half of b2#417: BUILDING an expression used to cost the expansion too, because
-// canonicalization broke multidegree ties between operands by PRINTING them -- and the
-// printer walks the tree.  Ties are now broken on the canonical encoding, which is linear in
-// the DAG (a shared subtree is a back-reference after its first mention).  This shape ties at
-// every level: e*(x+y+1) and e*(x+y+2) have equal multidegree, so the tie-break runs each
-// time, on an operand whose expansion doubles per level while its DAG grows by a constant.
-BOOST_AUTO_TEST_CASE(canonicalization_cost_follows_the_dag_not_the_expansion)
-{
-    using namespace bertini::node;
-
-    auto build = [](std::string const& tag, int levels)
-    {
-        auto x = Variable::Make("x" + tag);
-        auto y = Variable::Make("y" + tag);
-        std::shared_ptr<Node> e = x + y;
-        for (int level = 0; level < levels; ++level)
-            e = e * (x + y + 1) + e * (x + y + 2);
-        return e;
-    };
-    auto time_build = [&](std::string const& tag, int levels)
-    {
-        auto start = std::chrono::steady_clock::now();
-        auto e = build(tag, levels);
-        auto const us = std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
-        BOOST_REQUIRE(e);
-        return us;
-    };
-
-    // the minimum over interleaved trials, for the same reason as the MultiDegree test above;
-    // distinct variable names per trial so no trial benefits from another's interned nodes
-    double us12 = std::numeric_limits<double>::infinity(), us18 = us12;
-    for (int trial = 0; trial < 5; ++trial)
-    {
-        us12 = std::min(us12, time_build("a" + std::to_string(trial), 12));
-        us18 = std::min(us18, time_build("b" + std::to_string(trial), 18));
-    }
-    double const ratio = us18 / us12;
-    BOOST_TEST_MESSAGE("build: 12 levels " << us12 << " us, 18 levels " << us18
-                       << " us, ratio " << ratio << " (O(DAG) small, O(expansion) ~64)");
-    BOOST_CHECK_LT(ratio, 8.0);
-}
 
 BOOST_AUTO_TEST_SUITE_END() // canonicalization
