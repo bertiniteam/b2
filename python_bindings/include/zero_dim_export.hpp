@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Wisconsin-Eau Claire
-//  2023
-//
-//
 //  python/zero_dim_export.hpp:  Header file for exposing the zero dim solve algorithm to Python
 
 

@@ -19,11 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// silviana amethyst, university of wisconsin eau claire
-// Tim Hodges, Colorado State University
-//
-//
 //  endgames_test.cpp:  main source file for the endgames testing executable for Bertini2
 
 

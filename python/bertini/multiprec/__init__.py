@@ -19,17 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted 
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-# 
-#  silviana amethyst
-#  UWEC
-#  Spring 2018, summer 2023, winter/spring 2025
-# 
-
-
-
-
-
 """
 Multiprecision types, and functions that operate on them.
 

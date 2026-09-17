@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Notre Dame
-//  Summer 2016, Summer 2023, Fall 2024
-//
-//
 //  python/endgame_export.hpp:  Header file for exposing endgames to python.
 
 #pragma once

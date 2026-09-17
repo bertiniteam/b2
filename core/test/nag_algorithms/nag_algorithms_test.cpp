@@ -19,10 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// silviana amethyst
-//
-
 /**
 \file test/nag_algorithms/nag_algorithms_test.cpp:  main source file for the algorithm testing executable for Bertini2
 */

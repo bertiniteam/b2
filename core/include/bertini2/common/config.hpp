@@ -20,10 +20,6 @@
 // additional terms in the b2/licenses/ directory.
 
 
-// individual authors of this file include:
-// silviana amethyst, university of notre dame, university of wisconsin eau claire
-// Tim Hodges, Colorado State University
-
 #ifndef BERTINI2_COMMON_CONFIG
 #define BERTINI2_COMMON_CONFIG
 

@@ -19,13 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-#
-#  silviana amethyst
-#  University of Wisconsin - Eau Claire
-#  Spring 2026
-#
-
 """Tests for walking/reconstructing function trees from Python.
 
 These accessors exist so exporters (e.g. a future sympy bridge) can traverse a

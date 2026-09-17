@@ -19,16 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  James Collins
-//  West Texas A&M University
-//  Spring 2016
-//
-//  silviana amethyst
-//  University of Wisconsin - Eau Claire
-//  Spring 2018
-//
 //  python/include/parser_export.hpp:  Header file for exposing a method for parsing an input file to a system to python.
 
 

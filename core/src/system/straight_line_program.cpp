@@ -19,10 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// silviana amethyst, university of wisconsin eau claire
-// michael mumm, university of wisconsin eau claire
-
 #include "bertini2/system/straight_line_program.hpp"
 #include "bertini2/system/system.hpp"
 #include "bertini2/system/blocks/polynomial_block.hpp"

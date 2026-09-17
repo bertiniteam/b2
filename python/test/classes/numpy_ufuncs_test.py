@@ -19,11 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-#
-#   silviana amethyst
-#   summer 2026
-
 """
 Tests for the numpy ufunc coverage of the multiprecision dtypes.
 

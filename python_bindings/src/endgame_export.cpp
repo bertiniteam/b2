@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Notre Dame, University of Wisconsin Eau Claire
-//  Summer 2016, Fall 2017
-//
-//
 //  python/endgame_export.cpp:  Coordinator — sets up the endgame submodule and
 //  calls the per-tracker-family registration functions (defined in split files).
 //  No heavy endgame/tracker headers needed here: only void functions are called by name.

@@ -19,18 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Wisconsin - Eau Claire
-//  Fall 2017, Spring 2018, Spring 2026
-//
-//  James Collins
-//  West Texas A&M University
-//  Spring 2016
-//
-//
-//
 //  python/mpfr_export.cpp:  Source file for exposing all multiprecision data types, those from boost and bertini::complex.
 
 

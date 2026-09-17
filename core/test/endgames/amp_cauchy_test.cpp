@@ -19,18 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//  silviana amethyst, university of wisconsin eau claire
-//
-//  Tim Hodges
-//  Colorado State University
-//  Department of Mathematics
-//  Fall 2015, Spring 2016
-
-
-
-
-
 #include <iostream>
 #include <boost/test/unit_test.hpp>
 

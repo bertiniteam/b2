@@ -19,10 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// silviana amethyst, university of wisconsin eau claire
-// Tim Hodges, Colorado State University
-
 /**
 \file generic_cauchy_test.hpp Defines tests that all cauchy endgames's, combined with all tracker types,  must pass. 
 

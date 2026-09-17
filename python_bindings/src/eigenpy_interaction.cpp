@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Wisconsin Eau Claire
-//  2023
-//
-//
 //  python/eigenpy_interaction.cpp:  source file for exposing things to python via EigenPy.  
 
 #include "eigenpy_interaction.hpp"

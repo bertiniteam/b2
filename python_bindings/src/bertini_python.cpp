@@ -19,17 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  James Collins
-//  West Texas A&M University
-//  Spring 2016
-//
-//  silviana amethyst
-//  UWEC
-//  Spring 2018, Summer 2023
-//
-//
 //  python/bertini_python.cpp:  the main source file for the python interface for bertini.
 
 // Only the types/functions directly used in this TU are included.

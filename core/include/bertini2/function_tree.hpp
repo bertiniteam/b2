@@ -19,10 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// silviana amethyst, University of Wisconsin Eau Claire
-// jeb collins, west texas a&m
-
 /**
 \file function_tree.hpp 
 

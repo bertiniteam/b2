@@ -23,9 +23,6 @@
 \file test/nag_algorithms/trace.cpp  Tests the trace-test algorithm.
 */
 
-// individual authors of this file include:
-// silviana amethyst
-
 #include "bertini2/system/precon.hpp"
 #include "bertini2/nag_algorithms/trace.hpp"
 #include "bertini2/endgames.hpp"

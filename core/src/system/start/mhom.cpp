@@ -19,11 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// karleigh cameron, colorado state university
-// Tim Hodges, Colorado State University
-// silviana amethyst, university of wisconsin eau claire
-
 #include "bertini2/system/start/mhom.hpp"
 
 #include "bertini2/system/blocks/block.hpp"

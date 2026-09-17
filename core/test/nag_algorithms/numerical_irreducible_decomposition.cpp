@@ -23,9 +23,6 @@
 \file test/nag_algorithms/numerical_irreducible_decomposition.cpp  Tests the NID algorithm.
 */
 
-// individual authors of this file include:
-// silviana amethyst, university of notre dame
-
 #include "bertini2/system/precon.hpp"
 #include "bertini2/nag_algorithms/numerical_irreducible_decomposition.hpp"
 #include "bertini2/endgames.hpp"
