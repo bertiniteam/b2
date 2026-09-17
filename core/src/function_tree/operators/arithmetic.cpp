@@ -974,7 +974,7 @@ void PowerOperator::print(std::ostream & target) const
 	// '^' is right-associative and binds tightest, so wrap anything that is
 	// not an atom -- including other powers, to keep x^y^z unambiguous
 	PrintOperand(target, base_, base_->Precedence() <= PrecPower);
-	target << "^";
+	target << PowerSymbol(DialectOf(target));
 	PrintOperand(target, exponent_, exponent_->Precedence() <= PrecPower);
 }
 
@@ -1285,10 +1285,11 @@ bool PowerOperator::IsHomogeneous(VariableGroup const& v) const
 void IntegerPowerOperator::print(std::ostream & target) const
 {
 	PrintOperand(target, operand_, operand_->Precedence() <= PrecPower);
+	target << PowerSymbol(DialectOf(target));
 	if (exponent() < 0)
-		target << "^(" << exponent() << ")";
+		target << "(" << exponent() << ")";
 	else
-		target << "^" << exponent();
+		target << exponent();
 }
 
 

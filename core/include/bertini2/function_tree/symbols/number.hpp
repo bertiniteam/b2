@@ -344,6 +344,26 @@ namespace node{
 		Complex(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
 		{}
 
+		/**
+		\brief The literal at a chosen precision, whatever the current default is.
+
+		This is the spelling `repr()` emits for a complex constant (ADR-0059), so that
+		`eval(repr(c))` rebuilds the very same leaf: the digits are read at `precision`
+		decimal digits, never rounded through the session default first.
+
+		\param rval The real part, as digits.
+		\param ival The imaginary part, as digits.
+		\param precision The precision (decimal digits) both parts are read and stored at.
+		*/
+		Complex(std::string const& rval, std::string const& ival, unsigned precision)
+		{
+			real_mp const re(rval, precision);
+			real_mp const im(ival, precision);
+			highest_precision_value_.precision(precision);
+			highest_precision_value_.real(re);
+			highest_precision_value_.imag(im);
+		}
+
 
 
 		complex_mp highest_precision_value_;

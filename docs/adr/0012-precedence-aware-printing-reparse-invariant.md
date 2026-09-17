@@ -1,6 +1,7 @@
 # ADR-0012: Precedence-aware printing; printed trees must re-parse to the same values
 
-**Status:** Accepted
+**Status:** Accepted; amended 2026-09-17 by ADR-0059 (printing is a family of dialects, the
+complex form is `(re+im*I)`, and the reparse invariant is per dialect)
 **Date:** 2026-06-11 (PR #7)
 
 ## Context
@@ -23,8 +24,9 @@ parser (round-trip tests, user-written input files derived from printed systems)
   type.** Negative literals report `PrecNegate` (they print a leading `-`).
   Real-valued Rationals print bare as `p/q` — textually a division — so they report
   `PrecMult`: `x/(1/3)`, never `x/1/3`, which would re-parse as `x/9`. Real-valued
-  Floats print bare; genuinely complex constants keep the self-delimiting `(re,im)`
-  pair form.
+  Floats print bare; genuinely complex constants print as the self-delimiting
+  `(re+im*I)` / `(re-im*I)` -- the one spelling Bertini 1 reads (amended by ADR-0059; the
+  original `(re,im)` pair form is gone from every dialect).
 
 ## Consequences
 
@@ -37,3 +39,6 @@ parser (round-trip tests, user-written input files derived from printed systems)
   needs the same care.
 - The exact printed forms are now a documented surface (tests assert them); cosmetic
   printer changes are API-visible.
+- (ADR-0059) The invariant holds *per dialect*: Classic text (`to_classic()`,
+  `to_classic_input()`) reparses through the classic parser; the exact Python text (`repr`)
+  rebuilds through `eval`.  Printed text is never part of the content digest.

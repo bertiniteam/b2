@@ -117,13 +117,19 @@ The project has three layers, built in order:
 
 3. **`python/bertini/`** -- Pure Python package that wraps `_pybertini` into a user-friendly API. Submodules mirror the C++ structure: `function_tree`, `system`, `tracking`, `endgame`, `parse`, `nag_algorithm`, `multiprec`, etc.
 
-## Persistent Digests -- the forever contract
+## Persistent Digests -- stable within a release line
 
 Systems and configurations have **stable cross-session identities**: SHA-256 digests over
 versioned canonical text encodings (`b2sysenc/<n>` for Systems, ADR-0042; `b2cfgenc/<n>`
 for configs, ADR-0043; seeds are rooted per `b2rand/1`, ADR-0044).  Records reference
-objects by digest, so equal objects must digest equally *forever* -- across machines,
-compilers, and versions.  Rules that follow:
+objects by digest, so equal objects must digest equally across machines and compilers, and
+across every build that writes the same encoding version.  The cross-version promise
+("records read forever") is **withdrawn** until a record's ask carries the identity of the
+algorithm that answered it (#420): an encoding version bump (3.5.0 moved Systems to
+`b2sysenc/2`, ADR-0059) makes earlier records new asks rather than recalls, and that is the
+honest outcome, because a newer algorithm may not compute what the old one did.  The
+discipline below stays exactly as strict; what it guarantees is stability *within* a version.
+Rules that follow:
 
 - **The canonical texts are digest preimages, never presentation.**  Exact values only
   (doubles as IEEE-754 bit patterns `d64:<16 hex>`, rationals via exact `.str()`, enums by

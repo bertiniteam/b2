@@ -343,8 +343,8 @@ BOOST_AUTO_TEST_CASE(a_foreign_version_is_refused)
 {
 	PinnedCanonicalization const pin;
 	auto text = Parse(kCircleLine).CanonicalEncodingText();
-	BOOST_REQUIRE_EQUAL(text.rfind("b2sysenc/1", 0), 0u);
-	text.replace(0, std::string("b2sysenc/1").size(), "b2sysenc/2");
+	BOOST_REQUIRE_EQUAL(text.rfind(SystemEncodingVersion, 0), 0u);
+	text.replace(0, std::string(SystemEncodingVersion).size(), "b2sysenc/999");
 	BOOST_CHECK_THROW(System::FromCanonicalEncoding(text), std::runtime_error);
 }
 

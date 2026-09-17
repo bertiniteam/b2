@@ -69,6 +69,13 @@ def coefficient(value):
     A Python ``float`` is refused: ``bertini.coefficient(0.1)`` raises ``TypeError``.  An exact
     *complex* coefficient is a ``multiprec.complex_mp`` with real and imaginary parts:
     ``bertini.coefficient(multiprec.complex_mp('0.6', '0.8'))``.
+
+    Prefer the rational spellings whenever the value is rational.  A decimal string or a
+    multiprecision value becomes a binary float at the working precision, which holds
+    ``'2.5'`` exactly but not ``'0.1'`` or ``'0.333333333333333333333333333333'``; printed,
+    such a value shows every digit of what is actually stored (``0.2999...96``).  A
+    ``Rational`` (``'1/10'``, ``'1/3'``, a ``Fraction``) is exact in every arithmetic and prints
+    as itself -- and when a coefficient decides a singularity structure, exact is the point.
     """
     if isinstance(value, _AbstractNode):
         return value

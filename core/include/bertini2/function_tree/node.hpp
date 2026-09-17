@@ -56,6 +56,7 @@
 #include "bertini2/num_traits.hpp"
 #include "bertini2/detail/visitable.hpp"
 #include "bertini2/function_tree/forward_declares.hpp"
+#include "bertini2/function_tree/print_dialect.hpp"
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -427,6 +428,38 @@ private:
 	{
 		N->print(out);
 		return out;
+	}
+
+	/**
+	\brief Print a tree in one dialect (see print_dialect.hpp).
+
+	\param N The tree to print.
+	\param dialect Who the text is for.
+	\return The printed expression.
+	*/
+	inline std::string PrintIn(Node const& N, PrintDialect dialect)
+	{
+		std::ostringstream out;
+		SetDialect(out, dialect);
+		N.print(out);
+		return out.str();
+	}
+
+	/// \brief The Bertini 1 spelling of a tree: `^` for powers, `(re+im*I)` for complex
+	///        constants, every constant with all its digits.  What the classic parser reads back.
+	inline std::string PrintClassic(Node const& N) { return PrintIn(N, PrintDialect::Classic); }
+
+	/**
+	\brief The Python spelling of a tree: `**` for powers.
+
+	\param N The tree to print.
+	\param exact False for `str` (readable; the same constant shapes as Classic), true for
+	       `repr` (constant spellings `eval` rebuilds at full precision in the `bertini` namespace).
+	\return The printed expression.
+	*/
+	inline std::string PrintPython(Node const& N, bool exact)
+	{
+		return PrintIn(N, exact ? PrintDialect::PythonExact : PrintDialect::PythonReadable);
 	}
 
 

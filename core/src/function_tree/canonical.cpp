@@ -21,6 +21,7 @@
 
 #include "bertini2/function_tree.hpp"
 #include "bertini2/function_tree/canonical.hpp"
+#include "bertini2/function_tree/canonical_encoding.hpp"
 #include "bertini2/function_tree/gather.hpp"
 
 #include <set>
@@ -89,11 +90,15 @@ namespace {
 		return false;
 	}
 
-	std::string PrintOf(std::shared_ptr<Node> const& n)
+	// The content key of a subtree: its canonical encoding (ADR-0042), the same text the
+	// persistent digests are built on.  It is exact, deterministic, and -- because a shared
+	// subtree is a back-reference after its first mention -- linear in the size of the DAG,
+	// not of the expansion.  It used to be the PRINTED form, which walks the tree (a 46-node
+	// DAG printed as 196 KB; b2#417) and made every cosmetic printer change a digest event
+	// (ADR-0059).  Printing is for people; identity is the encoding.
+	std::string ContentKeyOf(std::shared_ptr<Node> const& n)
 	{
-		std::ostringstream oss;
-		n->print(oss);
-		return oss.str();
+		return CanonicalEncoding(n);
 	}
 
 	// A product operand decomposed into (base, integer exponent): x -> (x,1), x^k -> (x,k).
@@ -174,7 +179,7 @@ namespace {
 			if (IsFoldableBase(be.first))
 			{
 				const int signed_exp = flags[i] ? be.second : -be.second;
-				std::string k = PrintOf(be.first);
+				std::string k = ContentKeyOf(be.first);
 				bool merged = false;
 				for (auto& g : groups)
 					if (g.foldable && g.key == k) { g.exp += signed_exp; merged = true; break; }
@@ -255,12 +260,23 @@ void CanonicalizeNaryOperands(std::vector<std::shared_ptr<Node>>& operands,
 
 	const std::size_t N = operands.size();
 	std::vector<std::vector<int>> keys(N);
-	std::vector<std::string>      prints(N);
 	for (std::size_t i = 0; i < N; ++i)
+		keys[i] = operands[i]->MultiDegree(vars);
+
+	// The content key is only the TIE-BREAK, consulted when two operands have equal
+	// multidegree.  Most comparisons are decided by the multidegree and never ask, so it is
+	// computed on demand and memoized for the sort -- one encoding per operand at most.
+	std::vector<std::string> content_keys(N);
+	std::vector<bool>        have_key(N, false);
+	auto key_of = [&](std::size_t i) -> std::string const&
 	{
-		keys[i]   = operands[i]->MultiDegree(vars);
-		prints[i] = PrintOf(operands[i]);
-	}
+		if (!have_key[i])
+		{
+			content_keys[i] = ContentKeyOf(operands[i]);
+			have_key[i]     = true;
+		}
+		return content_keys[i];
+	};
 
 	const MonomialOrder order = CurrentMonomialOrder();
 	std::vector<std::size_t> perm(N);
@@ -283,7 +299,7 @@ void CanonicalizeNaryOperands(std::vector<std::shared_ptr<Node>>& operands,
 			}
 			if (MonomialGreater(keys[i], keys[j], order)) return true;
 			if (MonomialGreater(keys[j], keys[i], order)) return false;
-			return prints[i] < prints[j];   // deterministic, content-based tie-break
+			return key_of(i) < key_of(j);   // deterministic, content-based tie-break (the canonical encoding)
 		});
 
 	std::vector<std::shared_ptr<Node>> new_operands(N);

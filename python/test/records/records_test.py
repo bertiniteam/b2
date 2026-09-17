@@ -684,4 +684,4 @@ def test_archived_system_reloads_by_digest(tmp_path):
     with pytest.raises(RuntimeError):
         pb.records.load_system('0' * 64, d)                  # nothing filed there
     with pytest.raises(RuntimeError):
-        System.from_canonical(text.replace('b2sysenc/1', 'b2sysenc/9', 1))   # a version this build does not read
+        System.from_canonical(text.replace(text.split()[0], 'b2sysenc/999', 1))   # a version this build does not read

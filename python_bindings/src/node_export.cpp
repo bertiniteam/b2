@@ -77,23 +77,12 @@ namespace bertini{
 		
 		
 		
-		// Python's power operator is ** (^ is bitwise-xor), but the function tree prints powers with
-		// ^.  __repr__ should be copy-pasteable Python, so translate ^ -> ** (^ only ever denotes a
-		// power in the tree's printed form).  __str__ keeps the classic ^ (which the input parser reads).
-		static std::string NodeRepr(std::shared_ptr<Node> const& self)
-		{
-			std::ostringstream oss;
-			oss << *self;
-			std::string const s = oss.str();
-			std::string out;
-			out.reserve(s.size() + 8);
-			for (char c : s)
-			{
-				if (c == '^') out += "**";
-				else          out += c;
-			}
-			return out;
-		}
+		// Printing is a family, one member per audience (print_dialect.hpp, ADR-0059): str is
+		// the readable Python spelling (** for powers), repr the exact one (eval in the bertini
+		// namespace rebuilds an equal node at full precision), and to_classic() is Bertini 1's.
+		static std::string NodeStr(std::shared_ptr<Node> const& self)  { return PrintPython(*self, false); }
+		static std::string NodeRepr(std::shared_ptr<Node> const& self) { return PrintPython(*self, true); }
+		static std::string NodeClassic(std::shared_ptr<Node> const& self) { return PrintClassic(*self); }
 
 		template<typename NodeBaseT>
 		template<class PyClass>
@@ -116,8 +105,12 @@ namespace bertini{
 			.def("is_polynomial", IsPoly1,(arg("self"),arg("var")), "test if this Node is polynomial with respect to Variable `var`.")
 			.def("is_polynomial", IsPoly2,(arg("self"),arg("vars")), "test if this Node is polynomial with respect to Variables `vars`.")
 
-			.def(self_ns::str(self_ns::self))
-			.def("__repr__", &NodeRepr)
+			.def("__str__", &NodeStr, (arg("self")),
+				"The readable Python spelling: powers as **, a complex constant as (re+im*I), every constant with all its digits.")
+			.def("__repr__", &NodeRepr, (arg("self")),
+				"The exact Python spelling: eval of it in the bertini namespace (with the variables bound) rebuilds an equal node at full precision -- real_mp('digits', precision) for a multiprecision real, Complex('re', 'im', precision) for a multiprecision complex constant, Rational('p/q') for a non-integer rational; integers and values a Python literal holds exactly stay bare.")
+			.def("to_classic", &NodeClassic, (arg("self")),
+				"The Bertini 1 spelling: powers as ^, a complex constant as (re+im*I), every constant with all its digits.  What the classic parser reads back, and what System.to_classic_input() writes for each function.")
 			
 			.def("__add__",addNodeNode)
 			.def("__add__",addNodeMpfr)

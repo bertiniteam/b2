@@ -148,12 +148,12 @@ def test_derivative_trees_are_simplified():
     y = Variable('y')
     assert str((x * y).differentiate(x)) == 'y'
     assert str((x + y).differentiate(x)) == '1'
-    assert str((x**3).differentiate(x)) == '3*x^2'
+    assert str((x**3).differentiate(x)) == '3*x**2'
     assert str(sin(x).differentiate(x)) == 'cos(x)'
     assert str(cos(x).differentiate(x)) == '-sin(x)'
     assert str(log(x).differentiate(x)) == '1/x'
     assert str((x**3 * y).differentiate(x).differentiate(x)) == '6*x*y'
-    assert str((x / y).differentiate(y)) == '-x/y^2'
+    assert str((x / y).differentiate(y)) == '-x/y**2'
 
 
 # --- repeated / sequence differentiation overloads ---

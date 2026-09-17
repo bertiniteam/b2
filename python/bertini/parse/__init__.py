@@ -34,35 +34,14 @@
 Parsing functions, taking strings and producing various other things
 """
 
-import re as _re
-
 from bertini._pybertini import parse as _pybparse
 from bertini._pybertini.parse import *
 
 # The native parser accepts a full Bertini 1 classic file -- comments, a leading CONFIG
-# section and the INPUT/END; wrappers are all handled in C++ (#407, #396) -- so the only
-# thing left for Python to do is the complex-literal spelling below.
-
-_native_system = _pybparse.system
-
-# to_classic_input() writes complex coefficients as ``(re,im)``, but the FunctionParser
-# only accepts ``(re+im*I)`` -- so a complex-coefficient system's own text does not parse
-# back.  Rewrite ``(re,im)`` -> ``(re+im*I)`` (two numeric tokens in parens) so it does.
-_NUM = r'[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?'
-_COMPLEX_LITERAL = _re.compile(r'\((' + _NUM + r'),(' + _NUM + r')\)')
-
-
-def _fix_complex_literals(text):
-    return _COMPLEX_LITERAL.sub(r'(\1+\2*I)', text)
-
-
-def system(text):
-    """Parse a classic Bertini system from ``text``: a bare INPUT body or a whole Bertini 1
-    file (comments, a CONFIG section and the INPUT/END; wrappers are all accepted), plus
-    ``(re,im)`` complex-coefficient literals -- so ``parse.system(sys.to_classic_input())``
-    round-trips for any system, real or complex.
-    """
-    return _native_system(_fix_complex_literals(text))
+# section and the INPUT/END; wrappers are all handled in C++ (#407, #396) -- and the classic
+# writer spells complex constants the one way Bertini 1 and this parser read, (re+im*I), so
+# parse.system(sys.to_classic_input()) round-trips with nothing left for Python to patch.
+system = _pybparse.system
 
 
 __all__ = dir(_pybparse)

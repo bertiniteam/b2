@@ -213,7 +213,8 @@ BOOST_AUTO_TEST_CASE(seed_42_homotopy_digest_is_pinned_cross_platform)
 	auto const hex = homotopy.ContentDigest().Hex();
 	std::cout << "[stage] homotopy:    " << hex << "\n";
 
-	char const* const pinned = "4b2970766e8b58fb50f03fe9d7ce5bec58c07d5897b8637e55838248fc4fd2ac";
+	// re-pinned for b2sysenc/2 (ADR-0059: the version token is part of every encoding)
+	char const* const pinned = "a914009f2ee0d5ec77663dc38eeeba9300ba68c0186daf3b1bb742c012943ff1";
 	if (hex != pinned)
 	{
 		std::cout << "[diagnostic] canonical encoding of the mismatching homotopy follows\n"
