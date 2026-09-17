@@ -1,13 +1,14 @@
-# Commits listed here are skipped by `git blame` so that large, purely mechanical
-# changes (whitespace, indentation, reformatting) do not obscure the real authorship
-# of each line.  GitHub honours this file automatically.  Locally, run once:
+# Commits that touched nearly every line without changing what the code does.
+# git blame skips them once you run, once per clone:
 #
 #     git config blame.ignoreRevsFile .git-blame-ignore-revs
 #
-# RULES:
-#   * Only add commits that are PURELY formatting -- no behavioural or semantic
-#     change, no documentation-content change.  Keep such passes in their own
-#     isolated commit so the whole commit can be safely ignored.
-#   * Add the full 40-character commit SHA, with a comment naming what it did.
-#
-# (No revisions yet -- add the whitespace/indentation pass SHA here when it lands.)
+# GitHub's blame view reads this file on its own.  Add a line here whenever a
+# mechanical sweep lands (a reformat, a header rewrite); never list a commit
+# that changed behavior.
+
+# chore: drop the per-file author lists from every source header (#437)
+458599902c3c7a1c7a3be7338d8c8bf51cfeb99c
+
+# chore: normalize whitespace in every source file (tabs -> 4 spaces, no trailing whitespace)
+5aa88f2ce6795aacbf04896fdc7a9a7391d55f1d
