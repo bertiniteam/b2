@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Wisconsin-Eau Claire
-//  2026
-//
-//
 //  python/numerical_irreducible_decomposition_export.cpp:  Coordinator — sets up the
 //  nag_algorithms submodule and calls per-tracker-family registration functions.
 //  No heavy endgame/NID headers needed here: only void functions are called by name.

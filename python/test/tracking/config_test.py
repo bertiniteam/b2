@@ -19,12 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-#
-#  silviana amethyst
-#  UWEC
-#
-
 """Tests for the Pythonic config ergonomics (bertini.config) on trackers and
 nag_algorithms: update()/repr/to_dict/from_dict/eq on configs, and
 config_types()/get_config()/set_config()/configure() on owners."""

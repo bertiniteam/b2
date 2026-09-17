@@ -18,9 +18,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-# individual authors of this file include:
-#   silviana amethyst
-
 """Tests for DoublePrecisionTracker and MultiplePrecisionTracker.
 
 Mirrors C++ tests in core/test/tracking_basics/fixed_precision_tracker_test.cpp:

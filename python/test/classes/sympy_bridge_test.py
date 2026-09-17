@@ -19,13 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-#
-#  silviana amethyst
-#  University of Wisconsin - Eau Claire
-#  Spring 2026
-#
-
 """Tests for the sympy bridge: exact two-way conversion and the solve round trip.
 
 The whole suite skips cleanly when sympy is not installed -- it is an optional

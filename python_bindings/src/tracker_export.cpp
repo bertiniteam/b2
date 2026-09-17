@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Notre Dame
-//  Summer 2016, Spring 2018
-//
-//
 //  python/tracker_export.cpp:  Tracker class registrations.
 //  Visitor method bodies live in tracker_export.hpp (template definitions).
 //  Config/enum registration lives in tracker_config_export.cpp.

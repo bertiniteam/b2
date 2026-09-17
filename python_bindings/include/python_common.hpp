@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  James Collins
-//  West Texas A&M University
-//  Spring 2016
-//
-//
 //  python/python_common.hpp:  A common header file for all python exposure files
 
 #pragma once

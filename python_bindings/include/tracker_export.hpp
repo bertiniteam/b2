@@ -19,18 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Notre Dame
-//  Summer 2016, Spring 2018
-//
-//  James Collins
-//  West Texas A&M University
-//  Summer 2016
-//
-//
-//
 //  python/tracker.hpp:  Header file for exposing trackers to python.
 
 #pragma once

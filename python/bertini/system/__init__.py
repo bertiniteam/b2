@@ -21,17 +21,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted 
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-# 
-#  silviana amethyst
-#  UWEC
-#  Spring 2018
-# 
-
-
-
-
-
 """
 Provides utilities for working with systems of functions -- polynomials are intended, although you can work with functions involving things like trig functions, arbitrary powers, etc.
 

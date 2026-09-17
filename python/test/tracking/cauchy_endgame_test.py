@@ -18,9 +18,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-# individual authors of this file include:
-#   silviana amethyst
-
 """Cauchy endgame tests across tracker types.
 
 Mirrors C++ tests in:

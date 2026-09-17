@@ -19,11 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-#
-#   silviana amethyst
-#   spring 2025
-
 """Shared pytest fixtures for the Bertini Python test suite.
 
 The multiprecision default precision is *global mutable state*

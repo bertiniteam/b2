@@ -19,15 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//  James Collins
-//  West Texas A&M University
-//  Spring, Summer 2015
-//
-// silviana amethyst, university of wisconsin-eau claire
-//
-//
-//
 // trig.hpp:  Declares the trigonometric operator classes.
 
 /**

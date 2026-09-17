@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// silviana amethyst, university of wisconsin eau claire
-// additionally, this file contains code
-// based on and refined from SO post 
-// https://stackoverflow.com/questions/19329297/constructor-permutations-for-passing-parameters-in-arbitrary-order
-// by user Daniel Frey.
-
 /**
 \file enable_permuted_arguments.hpp
 

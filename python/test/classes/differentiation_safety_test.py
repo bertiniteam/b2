@@ -19,13 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-#
-#  silviana amethyst
-#  University of Wisconsin - Eau Claire
-#  Spring 2026
-#
-
 """The user-visible contract of differentiation: no surprises.
 
 If you hold a function f (or any subexpression of it), differentiating -- in any flavor:

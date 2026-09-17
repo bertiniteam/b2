@@ -19,12 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-#
-#  silviana amethyst
-#  UWEC
-#
-
 """Tests for the NumericalIrreducibleDecomposition framework/skeleton: that the
 algorithm class is exported, constructs, is wired to its configs via the reusable
 ConfiguredVisitor interface (no NID-specific Python code), exposes a tracker/endgame

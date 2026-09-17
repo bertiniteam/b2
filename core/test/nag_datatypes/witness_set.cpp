@@ -23,9 +23,6 @@
 \file test/nag_datatypes/witness_set.cpp  Tests the zero dim algorithm.
 */
 
-// individual authors of this file include:
-// silviana amethyst, university of notre dame
-
 #include <sstream>
 
 #include <boost/test/unit_test.hpp>

@@ -19,12 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-#
-#   silviana amethyst
-#   Max Planck Institute of Molecular Cell Biology and Genetics
-#   Fall 2024, Spring 2025
-
 # the purpose of this test suite is to make ensure numpy functionality with the custom types defined by Bertini (via EigenPy).
 
 import warnings

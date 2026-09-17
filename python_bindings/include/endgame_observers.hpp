@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  UWEC
-//  Fall 2017, Spring 2018
-//
-//
 //  python/endgame_observers.hpp:  source file for exposing endgame observers to python.
 
 #pragma once

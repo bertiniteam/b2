@@ -19,13 +19,6 @@
 #  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
-#  individual authors of this file include:
-#
-#  silviana amethyst
-#  University of Wisconsin - Eau Claire
-#  Spring 2026
-#
-
 """Exact two-way conversion between sympy expressions and bertini function trees.
 
 sympy is an optional dependency of bertini; this module raises a helpful

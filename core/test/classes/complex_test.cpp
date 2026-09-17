@@ -19,11 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// silviana amethyst, university of wisconsin eau claire
-
-
-
 #include "bertini2/num_traits.hpp"
 #include <boost/test/unit_test.hpp>
 #include <fstream>

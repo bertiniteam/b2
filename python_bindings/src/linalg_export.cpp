@@ -19,13 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Wisconsin - Eau Claire
-//  Summer 2026
-//
-//
 //  python/linalg_export.cpp:  Dense linear algebra for the multiprecision types.
 //
 //  The trick here is that eigenpy's matrix decompositions (LU, QR, ...) are exposed by

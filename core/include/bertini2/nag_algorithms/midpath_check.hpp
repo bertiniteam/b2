@@ -19,11 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// James Collins, West Texas A&M University
-// silviana amethyst, university of wisconsin-eau claire
-
-
 /**
 \file include/bertini2/nag_algorithms/midpath_check.hpp 
 

@@ -19,12 +19,6 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-//
-//  silviana amethyst
-//  University of Wisconsin-Eau Claire
-//
-//
 //  python/configured_visitor.hpp:  A reusable boost.python def_visitor that, for
 //  any object deriving from bertini::detail::Configured<...> (every tracker and
 //  nag_algorithm), exposes a uniform Python interface for getting and setting its
