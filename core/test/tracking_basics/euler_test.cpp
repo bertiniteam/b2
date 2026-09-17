@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
         AMP.coefficient_bound = 5;
         AMP.safety_digits_2 = 100;
 
-        AMP.SetPhiPsiFromBounds();
+        AMP.SetErrorBoundsFromDegreeAndCoefficient();
 
         double tracking_tolerance(1e-5);
 

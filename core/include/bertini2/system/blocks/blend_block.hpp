@@ -186,15 +186,28 @@ public:
             }
     }
 
+    /// \brief Combine two per-function degrees, propagating the not-a-polynomial sentinel.
+    ///
+    /// A blend of functions is a polynomial only when every operand is, so a -1 from any operand
+    /// must survive.  A plain maximum starting at zero silently turned it into a claim of degree
+    /// zero, which is how a transcendental homotopy came to report itself as a constant.
+    static int CombineDegrees(int a, int b)
+    {
+        if (a < 0 || b < 0)
+            return -1;
+        return std::max(a, b);
+    }
+
     /// The blend c_0(t)f_0 + c_1(t)f_1 + ... has, per function, the max degree of its operands
-    /// in the space variables (the t-coefficients are constant in space).
+    /// in the space variables (the t-coefficients are constant in space).  A function that is
+    /// not a polynomial reports -1, and that answer propagates through the blend.
     std::vector<int> Degrees() const
     {
         std::vector<int> d(NumFunctions(), 0);
         for (auto const& op : operands_)
         {
             auto od = op->Degrees();
-            for (size_t i = 0; i < d.size() && i < od.size(); ++i) d[i] = std::max(d[i], od[i]);
+            for (size_t i = 0; i < d.size() && i < od.size(); ++i) d[i] = CombineDegrees(d[i], od[i]);
         }
         return d;
     }
@@ -205,7 +218,7 @@ public:
         for (auto const& op : operands_)
         {
             auto od = op->Degrees(vars);
-            for (size_t i = 0; i < d.size() && i < od.size(); ++i) d[i] = std::max(d[i], od[i]);
+            for (size_t i = 0; i < d.size() && i < od.size(); ++i) d[i] = CombineDegrees(d[i], od[i]);
         }
         return d;
     }

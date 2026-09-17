@@ -68,13 +68,23 @@ namespace bertini{
             class_<AdaptiveMultiplePrecisionConfig, std::shared_ptr<AdaptiveMultiplePrecisionConfig> >("AMPConfig", init<>())
                 .def(init<System const&>())
                 .def("set_amp_config_from", &AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom)
-                .def("set_phi_psi_from_bounds", &AdaptiveMultiplePrecisionConfig::SetPhiPsiFromBounds)
-                .def("set_bounds_and_epsilon_from", &AdaptiveMultiplePrecisionConfig::SetBoundsAndEpsilonFrom)
+                .def("set_error_bounds_from_degree_and_coefficient",
+                     &AdaptiveMultiplePrecisionConfig::SetErrorBoundsFromDegreeAndCoefficient,
+                     "Set jacobian_eval_error_bound and function_eval_error_bound from degree_bound "
+                     "and coefficient_bound, by the polynomial recipe D*(D-1)*B and D*B.  Only a "
+                     "polynomial system has a degree bound; for anything else, set the two error "
+                     "bounds directly.")
+                .def("set_bounds_from", &AdaptiveMultiplePrecisionConfig::SetBoundsFrom,
+                     "Set the degree, coefficient and linear-solve bounds from a system.  Refuses "
+                     "a system that is not polynomial, which has no degree bound.")
                 .def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
                 .def_readwrite("degree_bound", &AdaptiveMultiplePrecisionConfig::degree_bound)
-                .def_readwrite("epsilon", &AdaptiveMultiplePrecisionConfig::epsilon)
-                .def_readwrite("phi", &AdaptiveMultiplePrecisionConfig::Phi)
-                .def_readwrite("psi", &AdaptiveMultiplePrecisionConfig::Psi)
+                .def_readwrite("linear_solve_error_bound",
+                               &AdaptiveMultiplePrecisionConfig::linear_solve_error_bound)
+                .def_readwrite("jacobian_eval_error_bound",
+                               &AdaptiveMultiplePrecisionConfig::jacobian_eval_error_bound)
+                .def_readwrite("function_eval_error_bound",
+                               &AdaptiveMultiplePrecisionConfig::function_eval_error_bound)
                 .def_readwrite("safety_digits_1", &AdaptiveMultiplePrecisionConfig::safety_digits_1)
                 .def_readwrite("safety_digits_2", &AdaptiveMultiplePrecisionConfig::safety_digits_2)
                 .def_readwrite("maximum_precision", &AdaptiveMultiplePrecisionConfig::maximum_precision)

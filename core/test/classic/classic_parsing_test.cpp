@@ -967,4 +967,34 @@ BOOST_AUTO_TEST_CASE(degree_bound_agrees_between_a_built_and_a_parsed_system)
     BOOST_CHECK_EQUAL(parsed.DegreeBound(), built.DegreeBound());
 }
 
+
+BOOST_AUTO_TEST_CASE(classic_file_of_a_non_polynomial_system_says_why_the_degree_bound_is_absent)
+{
+    // Bertini 1 will not go past parsing a non-polynomial input, so this file is for looking at
+    // rather than for feeding to it -- "here is what Bertini 1 would eat, if it could".  Writing
+    // it must therefore keep working, even though the system has no degree bound and asking for
+    // one now throws.  The setting becomes a comment naming the reason.
+    using namespace bertini;
+    using bertini::node::Variable;
+
+    auto x = Variable::Make("x");
+    System s;
+    s.AddVariableGroup(VariableGroup{x});
+    s.AddFunction(sin(x) - 1);
+
+    BOOST_CHECK(!s.IsPolynomial());
+    BOOST_CHECK_THROW(s.DegreeBound(), std::runtime_error);
+
+    std::string text;
+    BOOST_REQUIRE_NO_THROW(text = classic::SystemToClassicFile(s));
+    BOOST_CHECK(text.find("% degreebound:") != std::string::npos);
+    BOOST_CHECK(text.find("\ndegreebound:") == std::string::npos);
+
+    // And it still reads back into b2, because our parser strips comments.
+    System reparsed;
+    BOOST_REQUIRE_NO_THROW(reparsed = System(text));
+    BOOST_CHECK_EQUAL(reparsed.NumTotalFunctions(), 1u);
+    BOOST_CHECK(!reparsed.IsPolynomial());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

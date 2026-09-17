@@ -531,15 +531,15 @@ namespace bertini {
                                                              }, _val, _1 )]
                                    ^ lin_solve_error_bnd_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, T num)
                                                              {
-                                                                 S.epsilon = num;
+                                                                 S.linear_solve_error_bound = num;
                                                              }, _val, _1 )]
                                    ^ jac_eval_err_bnd_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, T num)
                                                              {
-                                                                 S.Phi = num;
+                                                                 S.jacobian_eval_error_bound = num;
                                                              }, _val, _1 )]
                                    ^ func_eval_err_bnd_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, T num)
                                                              {
-                                                                 S.Psi = num;
+                                                                 S.function_eval_error_bound = num;
                                                              }, _val, _1 )]
                                    ^ safety_one_[phx::bind( [](AdaptiveMultiplePrecisionConfig & S, int num)
                                                              {

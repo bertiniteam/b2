@@ -620,5 +620,43 @@ BOOST_AUTO_TEST_CASE(all_config_settings)
 }
 
 
+BOOST_AUTO_TEST_CASE(amp_config_refuses_a_system_with_no_degree)
+{
+    // Phi and Psi are bounds on the error of evaluating the Jacobian and the functions.  Degree
+    // and coefficient bound are the recipe for them that holds for polynomials, and there is no
+    // accepted recipe for an analytic system.  Deriving one anyway used to produce a Jacobian
+    // bound of 2B, from (-1)(-2)B, and a NEGATIVE function bound of -B, after which tracking
+    // failed obscurely, at 290 bits of precision, with FailedToSelectPrecisionAndStepsize.
+    using bertini::node::Variable;
+    using bertini::VariableGroup;
+    using bertini::tracking::AdaptiveMultiplePrecisionConfig;
+
+    auto x = Variable::Make("x");
+
+    bertini::System transcendental;
+    transcendental.AddVariableGroup(VariableGroup{x});
+    transcendental.AddFunction(sin(x) - 1);
+
+    AdaptiveMultiplePrecisionConfig c;
+    BOOST_CHECK_THROW(c.SetAMPConfigFrom(transcendental), std::runtime_error);
+    BOOST_CHECK_THROW(bertini::tracking::AMPConfigFrom(transcendental), std::runtime_error);
+
+    // Hand-set bounds remain the escape hatch: nothing about the config itself is refused.
+    c.degree_bound = 2;
+    c.coefficient_bound = 4;
+    BOOST_CHECK_NO_THROW(c.SetErrorBoundsFromDegreeAndCoefficient());
+    BOOST_CHECK_GT(c.function_eval_error_bound, 0);
+    BOOST_CHECK_GT(c.jacobian_eval_error_bound, 0);
+
+    // An ordinary polynomial system derives exactly as before.
+    bertini::System poly;
+    poly.AddVariableGroup(VariableGroup{x});
+    poly.AddFunction(x * x - 1);
+    AdaptiveMultiplePrecisionConfig p;
+    BOOST_CHECK_NO_THROW(p.SetAMPConfigFrom(poly));
+    BOOST_CHECK_EQUAL(p.degree_bound, 2);
+    BOOST_CHECK_GT(p.function_eval_error_bound, 0);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -45,7 +45,7 @@ namespace bertini{
             inline
             double CriterionARHS(double const& norm_J, double const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
             {
-                return AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.epsilon * (norm_J + AMP_config.Phi ));
+                return AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.linear_solve_error_bound * (norm_J + AMP_config.jacobian_eval_error_bound ));
             }
 
             /**
@@ -83,7 +83,7 @@ namespace bertini{
             inline
             double D(double const& norm_J, double const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
             {
-                return log10(norm_J_inverse*( (2+AMP_config.epsilon)*norm_J+AMP_config.epsilon*AMP_config.Phi)+1);
+                return log10(norm_J_inverse*( (2+AMP_config.linear_solve_error_bound)*norm_J+AMP_config.linear_solve_error_bound*AMP_config.jacobian_eval_error_bound)+1);
             }
 
             /**
@@ -157,7 +157,7 @@ namespace bertini{
                                  NumErrorT const& tracking_tolerance,
                                  AdaptiveMultiplePrecisionConfig const& AMP_config)
             {
-                return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + norm_z);
+                return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.function_eval_error_bound + norm_z);
             }
 
 

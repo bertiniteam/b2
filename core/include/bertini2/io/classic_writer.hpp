@@ -174,7 +174,15 @@ namespace bertini{
             out << "maxnewtonits: "           << opt.maxnewtonits           << ";\n";
             out << "maxcrossedpathresolves: " << opt.maxcrossedpathresolves << ";\n";
             out << "coefficientbound: "       << num(static_cast<double>(sys.CoefficientBound<complex_dbl>())) << ";\n";
-            out << "degreebound: "            << sys.DegreeBound()          << ";\n";
+            // A system that is not a polynomial one has no degree bound, and asking for one now
+            // throws.  Write the file anyway -- "this is what Bertini 1 would eat, if it could
+            // eat it" is a useful thing to look at -- but say why the setting is absent instead
+            // of inventing a number.  `%` is a comment in this format, and our own parser strips
+            // comments, so the file still reads back into b2.
+            if (sys.IsPolynomial())
+                out << "degreebound: "        << sys.DegreeBound()          << ";\n";
+            else
+                out << "% degreebound: omitted -- this system is not polynomial, so it has none\n";
         }
 
         /// \brief Write a complete Bertini 1 classic input file: `CONFIG ... END;\nINPUT ... END;`.

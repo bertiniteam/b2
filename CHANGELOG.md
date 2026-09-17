@@ -139,6 +139,25 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Changed
 
+- **The adaptive-precision error bounds are named after what they bound.**  On
+  `AMPConfig`, `Phi` is now `jacobian_eval_error_bound`, `Psi` is now
+  `function_eval_error_bound`, and `epsilon` is now `linear_solve_error_bound` -- in C++ and
+  in Python (`phi`, `psi` and `epsilon` as attribute names are gone).  `SetPhiPsiFromBounds`
+  is `SetErrorBoundsFromDegreeAndCoefficient` (`set_error_bounds_from_degree_and_coefficient`
+  in Python) and `SetBoundsAndEpsilonFrom` is `SetBoundsFrom` (`set_bounds_from`).  A Greek
+  letter told a caller nothing, which matters more now that a refusal invites them to set
+  these values by hand.  **No digest moved**: the canonical encoding keeps the old spellings,
+  because that text is a preimage rather than presentation, so `b2cfgenc` is untouched and
+  every existing record still recalls.
+- **Adaptive precision refuses a system that is not polynomial, instead of miscalibrating.**
+  Its error bounds are derived from the system's degree, which such a system does not have,
+  and the derivation used to produce a plausible-looking Jacobian bound and a **negative**
+  function bound; every path then died before the endgame with
+  `FailedToSelectPrecisionAndStepsize`, after precision had climbed to 290 bits.  Tracking
+  an analytic homotopy at fixed precision was, and remains, fine -- the refusal names that
+  way out, and the other one: supply the two evaluation error bounds yourself, which
+  `bertini.HomotopySolver` now accepts as `amp_config=`.  The open question of what those
+  bounds should be for an analytic system is issue #439.
 - **Printing is a family of dialects, one per audience** (ADR-0059).  `str(node)` and
   `str(system)` are the Python spelling: powers as `**`.  `repr(node)` is the exact Python
   spelling: `eval` of it in the `bertini` namespace rebuilds an equal node at full precision
@@ -165,6 +184,24 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Fixed
 
+- **A degree that does not exist is refused rather than laundered into a number.**  A function
+  that is not a polynomial reports degree -1, which is the right answer and a catastrophic
+  operand, and four places treated it as one.  `System::DegreeBound()` took a maximum, so the
+  sentinel vanished behind any function of positive degree -- a system of one polynomial and
+  one sine reported a degree bound of 2 and said nothing; it now refuses.  `System::Randomize`
+  compensates differing degrees with powers of a homogenizing variable, and its target degree,
+  starting at zero, clamped the sentinel to a definite claim of degree zero, after which a
+  transcendental function was quietly multiplied by one such power; it now refuses, and
+  whether squaring up means anything for an analytic system is issue #440.  `BlendBlock` did
+  the same clamping, so a homotopy onto a sine reported itself as a constant; it now
+  propagates the sentinel.
+- **`System::IsPolynomial()` looked only at the declared variable groups**, never at the
+  ungrouped variables, and a variable outside every group has degree 0 with respect to every
+  group.  So `sin(t)*x^2` with `t` ungrouped reported degree 2 and claimed to be polynomial,
+  and a system with no variable groups at all was vacuously polynomial whatever it contained.
+  Every guard built on the check inherited the hole, including the zero-dimensional solver's
+  refusal of non-polynomial systems.  Removing the ungrouped-variable concept entirely is
+  issue #442, targeted at 3.6.
 - A power with a non-integer exponent and no variable in it -- `5^(1/2)`, which is how Bertini 1
   input spells a square root -- answered "not homogeneous" while reporting degree 0.  A system
   with such a constant among its coefficients (the Barth sextic with the golden ratio written

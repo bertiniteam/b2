@@ -745,7 +745,7 @@ def _coerce_start_points(start_points):
     return pts
 
 
-def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='powerseries'):
+def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='powerseries', amp_config=None):
     """Track a homotopy you constructed, from a list of start points you already have (e.g. the
     solutions of an earlier solve) -- the continuation primitive (parameter-homotopy workflow).
 
@@ -769,7 +769,14 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
         The system the solutions satisfy at t=0 -- used for dehomogenize / residual and for the
         solver's consistency check.  It must NOT have a path variable.
     mptype : {'adaptive', 'double', 'multiple'}
-        The precision MODEL; 'adaptive' (default) is the robust path.
+        The precision MODEL; 'adaptive' (default) is the robust path.  Adaptive precision needs a
+        degree bound, so it is refused for a homotopy that is not polynomial unless you supply
+        ``amp_config``; such a homotopy tracks at fixed precision without any of this.
+    amp_config : AMPConfig, optional
+        An adaptive-precision configuration to install on the tracker instead of the one derived
+        from the system.  This is how an analytic homotopy gets adaptive precision: the derivation
+        needs a degree the system does not have, so you choose ``jacobian_eval_error_bound`` and
+        ``function_eval_error_bound`` yourself.  Ignored unless ``mptype`` is 'adaptive'.
     precision : int, optional
         The number of DIGITS, applied via ``bertini.default_precision`` at construction.  A string
         here is the deprecated old spelling of ``mptype`` and warns.
@@ -822,9 +829,28 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
             "a SQUARE system.  Square it first -- randomize it down to the variable count "
             "(System.randomize) or cut it with a slice -- instead of tracking the overdetermined "
             "system.".format(n_fun, n_vars))
+    # Adaptive precision derives its error bounds from the system's degree, and a homotopy that
+    # is not polynomial does not have one.  The C++ side refuses too, but it would refuse while
+    # the adaptive tracker is being constructed, and the text a user would see is about degree
+    # bounds rather than about the choice they actually made.  Tracking analytic homotopies at
+    # fixed precision works; only the adaptive criteria are unavailable.  See issue #439.
+    if mptype == 'adaptive' and amp_config is None and not homotopy.is_polynomial():
+        raise ValueError(
+            "HomotopySolver: this homotopy is not polynomial, and adaptive precision needs a "
+            "degree bound it therefore cannot have.  Tracking still works -- pass "
+            "mptype='double' or mptype='multiple' to use a fixed-precision tracker.  If you want "
+            "adaptive precision anyway, build a bertini.tracking.AMPConfig, set its "
+            "jacobian_eval_error_bound and function_eval_error_bound to values you can defend for "
+            "this system, and pass it as amp_config=.")
+
     user_start = _pybnalag.UserStartSystem(target, points)
     solver = solver_cls(target, user_start, homotopy)
-    return _HomotopySolverHolder(solver, homotopy, target, user_start)
+    holder = _HomotopySolverHolder(solver, homotopy, target, user_start)
+
+    if amp_config is not None and mptype == 'adaptive':
+        holder.get_tracker().precision_setup(amp_config)
+
+    return holder
 
 
 def user_homotopy(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='powerseries'):

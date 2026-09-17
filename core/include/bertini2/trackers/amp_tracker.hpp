@@ -426,7 +426,14 @@ namespace bertini{
             */
             AMPTracker(class System const& sys) : Tracker(sys), current_precision_(DefaultPrecision())
             {
-                Set<PrecConf>(AMPConfigFrom(sys));
+                // Deriving the criteria from the system needs a degree bound, and a system that is
+                // not polynomial has none.  Rather than refuse to exist, keep the default config
+                // -- which is internally consistent, if meaningless for such a system -- so the
+                // caller can still reach PrecisionSetup and install bounds they can defend.  That
+                // is the escape hatch the refusal in SetAMPConfigFrom names; without this guard it
+                // would be unreachable, because the refusal would fire here first.
+                if (sys.IsPolynomial())
+                    Set<PrecConf>(AMPConfigFrom(sys));
             }
 
 

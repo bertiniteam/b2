@@ -33,8 +33,11 @@ import sys
 TAB_WIDTH = 4
 EXTENSIONS = {'.hpp', '.cpp', '.h', '.c', '.py', '.pyx', '.cmake', '.rst', '.yml', '.yaml', '.toml', '.sh'}
 NAMED_FILES = {'CMakeLists.txt'}
+# Generated output and run artifacts, none of which is checked in.  `_autosummary` is written by
+# a Sphinx docs build into the source tree, so anyone who has built the docs locally would
+# otherwise fail this lint on files git does not even track.
 SKIP_DIRS = {'build', 'bld', '_deps', '.git', 'drafts', '__pycache__', 'node_modules',
-             'bertini_output', 'solve_records', 'cellular_records', 'site'}
+             '_autosummary', 'bertini_output', 'solve_records', 'cellular_records', 'site'}
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 
