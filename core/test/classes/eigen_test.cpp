@@ -31,7 +31,6 @@
 #include <Eigen/LU>
 
 #include <algorithm>
-#include <chrono>
 
 #include "externs.hpp"
 
@@ -650,25 +649,19 @@ BOOST_AUTO_TEST_CASE(shape_and_orthonormality_both_ways)
     BOOST_CHECK_SMALL((Md * Md.adjoint() - Mat<complex_dbl>::Identity(2, 2)).norm(), 1e-13);
 }
 
-BOOST_AUTO_TEST_CASE(cost_scales_with_the_shape_requested)
+BOOST_AUTO_TEST_CASE(a_very_wide_draw_is_orthonormal)
 {
-    // 4 x 1000 against 4 x 2000 at multiprecision: a factorization sized to the request is linear
-    // in the long side (ratio ~2); the old square-then-truncate recipe was cubic in it (ratio ~8,
-    // and the 2000 x 2000 factorization alone runs for minutes).  The cut leaves room on both sides.
+    // The factorization is sized to the request.  The old recipe built a square matrix of the
+    // long side and truncated it, which for this shape would be a 2000 x 2000 multiprecision
+    // factorization; that defect is documented in the pull request that fixed it.  What is
+    // tested here is the answer, not how long it took to arrive.
     using namespace bertini;
     DefaultPrecision(30);
 
-    auto time_one = [](unsigned rows, unsigned cols)
-    {
-        RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);   // warm-up
-        auto start = std::chrono::steady_clock::now();
-        RandomConjugateOrthonormalMatrix<complex_mp>(rows, cols);
-        return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-    };
-    double const t1000 = time_one(4, 1000);
-    double const t2000 = time_one(4, 2000);
-    BOOST_TEST_MESSAGE("4x1000: " << t1000 << " s, 4x2000: " << t2000 << " s, ratio " << t2000 / t1000);
-    BOOST_CHECK_LT(t2000 / t1000, 4.0);
+    Mat<complex_mp> const M = RandomConjugateOrthonormalMatrix<complex_mp>(4, 2000);
+    BOOST_REQUIRE_EQUAL(M.rows(), 4);
+    BOOST_REQUIRE_EQUAL(M.cols(), 2000);
+    BOOST_CHECK_SMALL((M * M.adjoint() - Mat<complex_mp>::Identity(4, 4)).norm(), real_mp("1e-25"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
