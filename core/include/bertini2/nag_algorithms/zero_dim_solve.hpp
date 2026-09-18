@@ -189,7 +189,7 @@ struct SolutionMetaData
     double path_time_seconds = 0.0;          ///< Wall-clock time for the whole path (pre-endgame + endgame), seconds.  Not an identity field (excluded from operator==).
     unsigned num_successful_steps = 0;       ///< Predictor-corrector steps that succeeded on this path, pre-endgame and endgame together.
     unsigned num_failed_steps = 0;           ///< Predictor-corrector steps that failed and were retried smaller on this path, pre-endgame and endgame together.
-    double wall_clock_limit_seconds = 0;     ///< The per-path wall-clock budget in force when this path ran (ZeroDimConfig::max_wall_clock_duration), seconds; 0 = none.  Recorded with the path so a later run can tell whether it is asking more patience of an abandoned path than the run that abandoned it.
+    double wall_clock_limit_seconds = 0;     ///< The per-path wall-clock budget in force when this path ran (ZeroDimConfig::max_path_wall_clock_duration), seconds; 0 = none.  Recorded with the path so a later run can tell whether it is asking more patience of an abandoned path than the run that abandoned it.
     /// Where the tracker was when it gave up: the last point reached, in the tracker's internal
     /// coordinates, on a path that did NOT succeed -- whether it failed, was stopped, or ran out
     /// of budget, in either stage.  Read with final_time_used, which holds the matching time.
@@ -1164,6 +1164,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
                 PreSolveSetup();
 
+                // the whole-solve wall-clock budget, counted from here; none unless asked for
+                solve_deadline_.reset();
+                if (auto const limit = this->template Get<ZeroDimConf>().max_solve_wall_clock_duration; limit > 0)
+                    solve_deadline_ = std::chrono::steady_clock::now()
+                        + std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(limit));
+
                 this->NotifyObservers(AlgorithmStarted<AnyZeroDim>(*this));
 
                 // Speculative-full-path model: carry every path all the way through (pre-endgame +
@@ -1204,7 +1210,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 {
                     for (auto idx : indices_to_run)
                     {
-                        if (StopRequested())
+                        if (StopRequested() || SolveDeadlinePassed())
                             break;          // ExecuteOnePath would no-op; this just stops asking
                         ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
                         // the serial path installs results directly (no StoreFullPathResult),
@@ -1685,12 +1691,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 // The wall-clock budget, likewise per path and spanning both stages: armed here as
                 // a deadline (so the endgame's many sub-tracks share it), cleared when the path is
                 // over.  Recorded with the path whether or not it bites.
-                auto const wall_clock_limit = this->template Get<ZeroDimConf>().max_wall_clock_duration;
+                auto const wall_clock_limit = this->template Get<ZeroDimConf>().max_path_wall_clock_duration;
                 smd.wall_clock_limit_seconds = wall_clock_limit;
+                ctx.tracker.ClearMaxWallClockTime();
                 if (wall_clock_limit > 0)
                     ctx.tracker.SetMaxWallClockDuration(std::chrono::duration<double>(wall_clock_limit));
-                else
-                    ctx.tracker.ClearMaxWallClockTime();
+                // the whole-solve deadline, when there is one and it comes first, is the one that binds
+                if (solve_deadline_ && (!ctx.tracker.MaxWallClockTime() || *solve_deadline_ < *ctx.tracker.MaxWallClockTime()))
+                    ctx.tracker.SetMaxWallClockTime(*solve_deadline_);
 
                 auto initial_prec = this->template Get<ZeroDimConf>().initial_ambient_precision;
                 // SetThreadPrecision: writes thread-local only, safe from concurrent threads.
@@ -1946,7 +1954,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 // is already distinguishable from a path we started and abandoned.  Checked
                 // here rather than only in the dispatch loops so the threaded pool, which has
                 // every task submitted up front, drains without doing work.
-                if (StopRequested())
+                if (StopRequested() || SolveDeadlinePassed())
                     return;
 
                 // wall-clock the whole path (pre-endgame + endgame).  steady_clock: monotonic, safe on
@@ -1962,6 +1970,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
                 ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind, start_point);
 
+                ReadSolveTimeoutAsAnInterrupt(solution_final_metadata_[soln_ind].pre_endgame_success_code, path_start_clock);
                 if (solution_final_metadata_[soln_ind].pre_endgame_success_code != SuccessCode::Success)
                 {
                     ctx.tracker.ClearMaxWallClockTime();
@@ -1973,6 +1982,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 ctx.tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
                 ExecuteDuringEG(ctx, soln_ind);
 
+                ReadSolveTimeoutAsAnInterrupt(solution_final_metadata_[soln_ind].endgame_success_code, path_start_clock);
                 ctx.tracker.ClearMaxWallClockTime();   // the budget was this path's; do not carry it to the next
                 stamp_path_time();
                 this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
@@ -2825,7 +2835,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 }
 
                 auto const policy = this->template Get<RecordsConfig>().recall;
-                auto const current_limit = this->template Get<ZeroDimConf>().max_wall_clock_duration;
+                auto const current_limit = this->template Get<ZeroDimConf>().max_path_wall_clock_duration;
 
                 num_recalled_ = 0;
                 recalling_ = true;
@@ -2970,6 +2980,42 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             unsigned long long num_recalled_ = 0;  ///< Paths recalled from records in the last Solve().
 
             bool stopped_early_ = false;          ///< True when the last Solve() was asked to stop partway.
+            std::optional<std::chrono::steady_clock::time_point> solve_deadline_;  ///< The whole-solve wall-clock deadline of the current Solve(), when one was asked for.
+
+            /// \brief Whether the whole-solve wall-clock budget has run out.
+            bool SolveDeadlinePassed() const
+            {
+                return solve_deadline_ && std::chrono::steady_clock::now() >= *solve_deadline_;
+            }
+
+            /**
+            \brief A path the WHOLE-SOLVE budget cut off reads as interrupted, not as over its own budget.
+
+            The tracker cannot tell which deadline it hit; both arrive as WallClockLimitReached.  But
+            they mean different things.  A per-path budget is a statement about that path, recorded
+            with it and compared on recall.  The solve budget is a statement about the call, like a
+            keyboard interrupt: the path was abandoned for a reason that has nothing to do with it,
+            so it is ExternallyTerminated -- always re-tracked on recall, and counted by
+            WasStoppedEarly().  The solve deadline was the one that bound if it had passed and the
+            path's own budget, if any, had not yet.
+
+            \param code The stage's outcome, rewritten in place when the solve budget was what bound.
+            \param path_start When this path began, to work out whether its own budget had run out.
+            */
+            void ReadSolveTimeoutAsAnInterrupt(SuccessCode& code, std::chrono::steady_clock::time_point path_start) const
+            {
+                if (code != SuccessCode::WallClockLimitReached || !SolveDeadlinePassed())
+                    return;
+                auto const path_limit = this->template Get<ZeroDimConf>().max_path_wall_clock_duration;
+                if (path_limit > 0)
+                {
+                    auto const path_deadline = path_start
+                        + std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(path_limit));
+                    if (path_deadline <= *solve_deadline_)
+                        return;     // the path's own budget ran out first: that is what stopped it
+                }
+                code = SuccessCode::ExternallyTerminated;
+            }
             unsigned long long num_never_started_ = 0;  ///< Paths the last Solve() never began, because it stopped.
 
             unsigned long long num_start_points_;  ///< Number of start points the start system produces.

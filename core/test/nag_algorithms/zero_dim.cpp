@@ -1078,7 +1078,7 @@ BOOST_AUTO_TEST_CASE(a_per_path_wall_clock_budget_abandons_paths_that_exceed_it)
     zd.DefaultSetup();
 
     auto cfg = zd.Get<algorithm::ZeroDimConfig>();
-    cfg.max_wall_clock_duration = 1e-9;        // a nanosecond: gone before the first step
+    cfg.max_path_wall_clock_duration = 1e-9;   // a nanosecond: gone before the first step
     zd.Set(cfg);
     zd.Solve();
 
@@ -1093,7 +1093,7 @@ BOOST_AUTO_TEST_CASE(a_per_path_wall_clock_budget_abandons_paths_that_exceed_it)
     BOOST_CHECK(!zd.WasStoppedEarly());
     BOOST_CHECK(!zd.GetTracker().MaxWallClockTime().has_value());
 
-    cfg.max_wall_clock_duration = 3600;
+    cfg.max_path_wall_clock_duration = 3600;
     zd.Set(cfg);
     zd.Solve();
     for (auto const& md : zd.SolutionMetadata())
@@ -1101,6 +1101,48 @@ BOOST_AUTO_TEST_CASE(a_per_path_wall_clock_budget_abandons_paths_that_exceed_it)
         BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::Success);
         BOOST_CHECK_EQUAL(md.wall_clock_limit_seconds, 3600);
     }
+    BOOST_CHECK(!zd.GetTracker().MaxWallClockTime().has_value());
+}
+
+/**
+A budget on the WHOLE solve reads exactly as an interrupt does.  A budget that is gone before
+the first path begins leaves every path NeverStarted and the solver reporting that it was cut
+short; the paths carry no per-path budget, since none was set.  A generous one changes nothing.
+The in-flight case -- a path abandoned mid-track because the solve budget ran out, read back as
+ExternallyTerminated rather than as over its own budget -- cannot be pinned to a step count on
+every machine, so it is covered by the interrupt tests, whose code path it shares from the
+abandonment on.
+*/
+BOOST_AUTO_TEST_CASE(a_whole_solve_wall_clock_budget_reads_as_an_interrupt)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    auto cfg = zd.Get<algorithm::ZeroDimConfig>();
+    cfg.max_solve_wall_clock_duration = 1e-9;
+    zd.Set(cfg);
+    zd.Solve();
+
+    BOOST_CHECK(zd.WasStoppedEarly());
+    BOOST_CHECK_EQUAL(zd.NumPathsNeverStarted(), zd.SolutionMetadata().size());
+    for (auto const& md : zd.SolutionMetadata())
+    {
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::NeverStarted);
+        BOOST_CHECK_EQUAL(md.wall_clock_limit_seconds, 0);
+    }
+
+    cfg.max_solve_wall_clock_duration = 3600;
+    zd.Set(cfg);
+    zd.Solve();
+    BOOST_CHECK(!zd.WasStoppedEarly());
+    BOOST_CHECK_EQUAL(zd.NumPathsNeverStarted(), 0u);
+    for (auto const& md : zd.SolutionMetadata())
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::Success);
     BOOST_CHECK(!zd.GetTracker().MaxWallClockTime().has_value());
 }
 

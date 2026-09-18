@@ -228,7 +228,16 @@ struct ZeroDimConfig
     /// under one budget is treated by a later run is RecallPolicy's business.  Wall-clock time is
     /// machine-dependent, so the same limit is the same amount of patience only on the same machine
     /// -- the recorded stamp (steps, precision, time reached) is the machine-independent account.
-    double max_wall_clock_duration = 0;
+    double max_path_wall_clock_duration = 0;
+
+    /// Wall-clock budget for the whole solve, in seconds; 0 (the default) means none.  Counted from
+    /// the start of Solve().  Once it runs out, no further path is started (those stay NeverStarted)
+    /// and any path in flight is abandoned between steps -- and the solve reads exactly as if it had
+    /// been interrupted: WasStoppedEarly(), abandoned paths ExternallyTerminated, always re-tracked on
+    /// recall.  The per-path budget above is the finer tool (it guarantees progress path by path);
+    /// this one is for a caller who thinks in terms of the whole call.  Not part of the identity, for
+    /// the same reason.  Not applied to the MPI solve.
+    double max_solve_wall_clock_duration = 0;
 
     mpq_rational start_time{1};          ///< Homotopy start time (t=1).
     mpq_rational endgame_boundary{1, 10}; ///< Time at which tracking hands off to the endgame (t=1/10).

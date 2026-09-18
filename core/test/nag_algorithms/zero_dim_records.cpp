@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(recall_policy_decides_whether_an_abandonment_stands_in_for_
         auto zd = std::make_unique<ZD>(sys);
         zd->DefaultSetup();
         auto cfg = zd->Get<algorithm::ZeroDimConfig>();
-        cfg.max_wall_clock_duration = limit;
+        cfg.max_path_wall_clock_duration = limit;
         zd->Set(cfg);
         auto rc = zd->Get<algorithm::RecordsConfig>();
         rc.recall = policy;

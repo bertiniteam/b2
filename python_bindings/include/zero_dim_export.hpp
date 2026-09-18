@@ -99,7 +99,7 @@ void ExposeSolutionMetaData(std::string const& class_name){
         "pre-endgame tracking and endgame together.  Many failed steps means the path was hard.")
     .def_readwrite("wall_clock_limit_seconds",&MDT::wall_clock_limit_seconds,
         "The per-path wall-clock budget (seconds) in force when this path ran, from the solver's "
-        "max_wall_clock_duration; 0 means there was none.  Recorded with the path, so a later run "
+        "max_path_wall_clock_duration; 0 means there was none.  Recorded with the path, so a later run "
         "can tell whether it is asking more patience of an abandoned path than the run that "
         "abandoned it.")
     // by value, for the same reason as singular_values

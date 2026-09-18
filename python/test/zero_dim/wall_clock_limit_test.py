@@ -41,7 +41,7 @@ def _two_quadrics():
 
 def test_a_budget_no_path_can_meet_abandons_every_path_with_its_stamp():
     solver = ZeroDimSolver(_two_quadrics())
-    solver.update(max_wall_clock_duration=1e-9)
+    solver.update(max_path_wall_clock_duration=1e-9)
     solver.solve()
 
     metas = solver.solution_metadata()
@@ -56,12 +56,27 @@ def test_a_budget_no_path_can_meet_abandons_every_path_with_its_stamp():
 
 def test_a_generous_budget_changes_nothing():
     solver = ZeroDimSolver(_two_quadrics())
-    solver.update(max_wall_clock_duration=3600)
+    solver.update(max_path_wall_clock_duration=3600)
     solver.solve()
     for m in solver.solution_metadata():
         assert m.endgame_success_code == pb.SuccessCode.Success
         assert m.wall_clock_limit_seconds == 3600
-    assert solver.get_config(ZeroDimConfig).max_wall_clock_duration == 3600
+    assert solver.get_config(ZeroDimConfig).max_path_wall_clock_duration == 3600
+
+
+def test_a_whole_solve_budget_reads_as_an_interrupt():
+    solver = ZeroDimSolver(_two_quadrics())
+    solver.update(max_solve_wall_clock_duration=1e-9)
+    solver.solve()                                  # returns: a budget is not an error
+    assert solver.was_stopped_early()
+    assert solver.num_paths_never_started() == 4
+    assert all(m.pre_endgame_success_code == pb.SuccessCode.NeverStarted
+               for m in solver.solution_metadata())
+
+    solver.update(max_solve_wall_clock_duration=3600)
+    solver.solve()
+    assert not solver.was_stopped_early()
+    assert all(m.endgame_success_code == pb.SuccessCode.Success for m in solver.solution_metadata())
 
 
 def test_a_bare_tracker_carries_a_deadline():
@@ -80,7 +95,7 @@ def test_recall_policy_reads_an_abandonment_under_a_budget(tmp_path):
         pb.random.set_random_seed(42)
         solver = ZeroDimSolver(_two_quadrics())
         solver.record_to(rec)
-        solver.update(max_wall_clock_duration=limit, recall=policy)
+        solver.update(max_path_wall_clock_duration=limit, recall=policy)
         solver.solve()
         return solver
 

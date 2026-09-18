@@ -117,10 +117,14 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   `StopRequested()`, `ClearStopRequest()` and the RAII `ScopedStopRequest`; a bare tracker
   honours the request too, since it is the tracker that checks.  Not applied to the MPI
   solve.
-- **A wall-clock budget per path.**  `max_wall_clock_duration` on the solver (seconds, 0 =
-  none) gives every path a budget; a path that has not finished when it runs out is abandoned
+- **Wall-clock budgets.**  `max_path_wall_clock_duration` on the solver (seconds, 0 = none)
+  gives every path a budget; a path that has not finished when it runs out is abandoned
   between steps with `SuccessCode.WallClockLimitReached`, stamped with where it got to, and
-  recorded with the budget that stopped it.  The overrun is at most one step.  A bare tracker
+  recorded with the budget that stopped it.  `max_solve_wall_clock_duration` budgets the whole
+  `solve()` call instead: once it runs out no further path starts and any in flight is
+  abandoned, and the solve reads exactly as if Ctrl-C had been pressed (`was_stopped_early()`,
+  `ExternallyTerminated` / `NeverStarted`, re-tracked on recall).  The overrun is at most one
+  step.  Both are plain numbers of seconds and both are off by default.  A bare tracker
   can be limited on its own: `set_max_wall_clock_duration(seconds)` /
   `clear_max_wall_clock_time()` in Python, `SetMaxWallClockTime(time_point)` /
   `SetMaxWallClockDuration(duration)` / `ClearMaxWallClockTime()` in C++.  The primitive is a

@@ -123,7 +123,7 @@ namespace bertini{
                 "(all available cores), 1 = serial (no thread pool), N = N threads. The "
                 "OMP_NUM_THREADS environment variable overrides this. Threading needs no MPI and "
                 "no free-threaded Python: the heavy tracking runs in C++ with the GIL released.")
-            .def_readwrite("max_wall_clock_duration", &ZeroDimConfig::max_wall_clock_duration,
+            .def_readwrite("max_path_wall_clock_duration", &ZeroDimConfig::max_path_wall_clock_duration,
                 "Wall-clock budget for EACH path, in seconds; 0 (the default) means none.  A path that "
                 "has not finished when its budget runs out is abandoned between steps with "
                 "SuccessCode.WallClockLimitReached, stamped with where it got to (last_point, "
@@ -132,6 +132,14 @@ namespace bertini{
                 "is.  How a later run treats a path abandoned under a budget is RecallPolicy's "
                 "business.  Wall-clock time is machine-dependent; the recorded stamp is the "
                 "machine-independent account.")
+            .def_readwrite("max_solve_wall_clock_duration", &ZeroDimConfig::max_solve_wall_clock_duration,
+                "Wall-clock budget for the WHOLE solve() call, in seconds; 0 (the default) means none.  "
+                "Once it runs out no further path is started and any path in flight is abandoned "
+                "between steps, and the solve reads exactly as if you had pressed Ctrl-C: "
+                "was_stopped_early() is True, abandoned paths read ExternallyTerminated, unstarted "
+                "ones NeverStarted, and a later solve of the same ask re-tracks them.  The per-path "
+                "budget is the finer tool (it guarantees progress path by path); this one is for "
+                "thinking in terms of the whole call.  Not applied to the MPI solve.")
             ;
 
             class_<RecordsConfig>("RecordsConfig",
