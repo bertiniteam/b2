@@ -227,28 +227,38 @@ def test_solution_path_collector_one_series_per_solution_path():
 def test_solution_path_collector_captures_more_than_the_main_track():
     """A SolutionPathCollector series (whole path incl. endgame) has at least as many
     steps as the bare main homotopy track alone -- it picks up the endgame sub-tracks
-    that the tracker-level start-time filter discards."""
+    that the tracker-level start-time filter discards.
+
+    Both collectors watch ONE solve.  They used to watch two separate solves and compare the
+    totals, which made the assertion a coincidence rather than a property: nothing seeds these
+    solves, so each draws its own gamma and start system, and the step counts are unrelated
+    measurements.  Sampled locally, the whole-path total ranged 32 to 92 and the main-only
+    total 19 to 40 across repeats; CI eventually drew a low first and a high second in the
+    same run and failed with `assert 32 >= 66`.  Watched on one solve the difference is the
+    endgame sub-tracks, which is structural: the margin sat between +13 and +16 over twelve
+    repeats while the totals themselves moved by a factor of two.
+    """
     from bertini import SolutionPathCollector
 
     sys = _circle_meets_line()
 
-    # Pin serial: this test attaches a collector directly to the solver's MEMBER tracker
-    # (solver2 below), which only runs the paths in serial mode.  The default solve is threaded,
-    # where paths run on thread-local clones -- see threaded_solve_test.py for the threaded path,
-    # which collects via event.tracker().
+    # Pin serial: this attaches a collector directly to the solver's MEMBER tracker, which only
+    # runs the paths in serial mode.  The default solve is threaded, where paths run on
+    # thread-local clones -- see threaded_solve_test.py for the threaded path, which collects
+    # via event.tracker().
     solver = ZeroDimSolver(sys, mptype='amp')
     _force_serial(solver)
+
     a = SolutionPathCollector()
     solver.add_observer(a)
-    solver.solve()
-    whole_path_steps = sum(len(p) for p in a.series)
 
-    # tracker-level collector keeps only the main tracks (|t| start > 0.5)
-    solver2 = ZeroDimSolver(sys, mptype='amp')
-    _force_serial(solver2)
+    # tracker-level collector, on the same solver: it keeps only the main tracks (|t| start > 0.5)
     b = tk.observers.amp.PathCollectionObserver()
-    solver2.get_tracker().add_observer(b)
-    solver2.solve()
+    solver.get_tracker().add_observer(b)
+
+    solver.solve()
+
+    whole_path_steps = sum(len(p) for p in a.series)
     main_only_steps = sum(len(s) for s in b.series if abs(s.start_time) > 0.5)
 
     assert whole_path_steps >= main_only_steps > 0
