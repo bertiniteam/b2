@@ -87,9 +87,25 @@ void ExposeSolutionMetaData(std::string const& class_name){
     .def_readwrite("time_of_first_prec_increase",&MDT::time_of_first_prec_increase,
         "The time value at which precision first increased on this path (adaptive precision only).")
     .def_readwrite("max_precision_used",&MDT::max_precision_used,
-        "The highest precision (in digits) used while tracking this path (adaptive precision only).")
+        "The highest precision (in digits) used anywhere while tracking this path.  For a "
+        "fixed-precision solve this is simply that precision.")
     .def_readwrite("path_time_seconds",&MDT::path_time_seconds,
         "Wall-clock time (seconds) to execute this whole path: pre-endgame tracking plus endgame.")
+    .def_readwrite("num_successful_steps",&MDT::num_successful_steps,
+        "Predictor-corrector steps that succeeded on this path, pre-endgame tracking and endgame "
+        "together.")
+    .def_readwrite("num_failed_steps",&MDT::num_failed_steps,
+        "Predictor-corrector steps that failed and were retried with a smaller step on this path, "
+        "pre-endgame tracking and endgame together.  Many failed steps means the path was hard.")
+    // by value, for the same reason as singular_values
+    .add_property("last_point",
+        +[](MDT const& m){ return bertini::Vec<NumT>(m.last_point); },
+        "Where the tracker was when it gave up: the last point reached on a path that did NOT "
+        "succeed -- whether it failed, was stopped, or ran out of budget, in either stage -- in the "
+        "solver's internal coordinates.  Read with final_time_used, which holds the matching time.  "
+        "Empty for a successful path (its endpoint is the solution itself) and for a path never "
+        "started.  On a Cauchy endgame the point may lie on a sample circle rather than on the real "
+        "segment to the target.")
     .def_readwrite("pre_endgame_success_code",&MDT::pre_endgame_success_code,
         "The SuccessCode from tracking this path up to the endgame boundary. 0 means Success.")
     .def_readwrite("condition_number",&MDT::condition_number,
@@ -106,7 +122,9 @@ void ExposeSolutionMetaData(std::string const& class_name){
     .def_readwrite("newton_residual",&MDT::newton_residual,
         "The latest Newton step norm near the endpoint.")
     .def_readwrite("final_time_used",&MDT::final_time_used,
-        "The final time value tracked to.")
+        "The last time value this path reached.  For a successful path, the endgame's latest time "
+        "(at or near the target).  For a path that did not succeed, in either stage, the time the "
+        "tracker was at when it stopped -- read with last_point, the point it was at.")
     .def_readwrite("accuracy_estimate",&MDT::accuracy_estimate,
         "Accuracy estimate from the endgame, the difference between successive extrapolations.")
     .def_readwrite("accuracy_estimate_user_coords",&MDT::accuracy_estimate_user_coords,

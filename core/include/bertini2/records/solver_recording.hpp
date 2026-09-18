@@ -218,6 +218,12 @@ boost::json::object EncodeFullPathResult(parallel::FullPathResult<ComplexT> cons
     out["time_of_first_prec_increase"] = EncodeComplexScalar(r.time_of_first_prec_increase);
     out["max_precision_used"] = static_cast<std::int64_t>(r.max_precision_used);
     out["path_time_seconds"] = ExactDoubleText(r.path_time_seconds);
+    // where the path got to: the step tally always, the point only when the path did not
+    // succeed (a successful path's point is `endpoint`)
+    out["num_successful_steps"] = static_cast<std::int64_t>(r.num_successful_steps);
+    out["num_failed_steps"] = static_cast<std::int64_t>(r.num_failed_steps);
+    if (r.last_point.size() > 0)
+        out["last_point"] = EncodePoint(r.last_point);
     return out;
 }
 
@@ -262,6 +268,13 @@ parallel::FullPathResult<ComplexT> DecodeFullPathResult(boost::json::object cons
         DecodeComplexScalar<ComplexT>(rec.at("time_of_first_prec_increase").as_array());
     r.max_precision_used = static_cast<unsigned>(rec.at("max_precision_used").as_int64());
     r.path_time_seconds = DoubleFromText(std::string(rec.at("path_time_seconds").as_string()));
+    // records written before paths were stamped with where they got to simply lack these
+    if (auto const* v = rec.if_contains("num_successful_steps"))
+        r.num_successful_steps = static_cast<unsigned>(v->as_int64());
+    if (auto const* v = rec.if_contains("num_failed_steps"))
+        r.num_failed_steps = static_cast<unsigned>(v->as_int64());
+    if (auto const* v = rec.if_contains("last_point"))
+        r.last_point = DecodePoint<ComplexT>(v->as_array());
     return r;
 }
 

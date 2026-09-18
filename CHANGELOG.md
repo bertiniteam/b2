@@ -117,6 +117,20 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   `StopRequested()`, `ClearStopRequest()` and the RAII `ScopedStopRequest`; a bare tracker
   honours the request too, since it is the tracker that checks.  Not applied to the MPI
   solve.
+- **A path that did not succeed says where it got to.**  Its metadata now carries
+  `last_point`, the point the tracker was at when it gave up (in the solver's internal
+  coordinates), with `final_time_used` holding the matching time -- previously a failed path
+  reported a time of zero and no point.  Every path also carries `num_successful_steps` and
+  `num_failed_steps`, the predictor-corrector steps over the whole path, pre-endgame and
+  endgame together, so the cost of a path is visible without timing it; and
+  `max_precision_used` is honest for fixed-precision solves too, where it read zero.  The
+  stamp is recorded with the path and comes back on recall.  Two corrections came with it: a
+  path whose endgame failed used to be handed the previous path's approximation as its
+  "solution" (the accessor was stale); its solution slot is now empty, and the stamp is where
+  its point lives.  In C++ the tracker exposes the tally that made this possible:
+  `ResetCumulativeStepCounts()`, `CumulativeSuccessfulSteps()`, `CumulativeFailedSteps()`,
+  counting across `TrackPath` calls (an endgame issues hundreds per path) until told to start
+  over.
 - **A tutorial on tracking an analytic homotopy** ("Tracking an analytic homotopy", under
   "Doing things manually").  Sine has no degree, so no start system exists and no count bounds
   its roots -- but a homotopy needs neither, only start points you choose.  The page tracks

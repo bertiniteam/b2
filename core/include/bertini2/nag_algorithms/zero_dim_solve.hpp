@@ -184,8 +184,17 @@ struct SolutionMetaData
     ///// things computed across all of the solve
     bool precision_changed = false;          ///< Whether the working precision changed during the path.
     ComplexT time_of_first_prec_increase;    ///< Time value of the first increase in precision.
-    decltype(DefaultPrecision()) max_precision_used = 0;  ///< Highest precision used on the path.
+    decltype(DefaultPrecision()) max_precision_used = 0;  ///< Highest precision (digits) used anywhere on the path, for every kind of tracker; a fixed-precision tracker reports its one precision.
     double path_time_seconds = 0.0;          ///< Wall-clock time for the whole path (pre-endgame + endgame), seconds.  Not an identity field (excluded from operator==).
+    unsigned num_successful_steps = 0;       ///< Predictor-corrector steps that succeeded on this path, pre-endgame and endgame together.
+    unsigned num_failed_steps = 0;           ///< Predictor-corrector steps that failed and were retried smaller on this path, pre-endgame and endgame together.
+    /// Where the tracker was when it gave up: the last point reached, in the tracker's internal
+    /// coordinates, on a path that did NOT succeed -- whether it failed, was stopped, or ran out
+    /// of budget, in either stage.  Read with final_time_used, which holds the matching time.
+    /// Empty for a successful path (its endpoint is the solution itself) and for a path never
+    /// started.  On a Cauchy endgame the point may lie on a sample circle rather than on the
+    /// real segment to the target.
+    Vec<ComplexT> last_point;
 
     ///// things computed in pre-endgame only
     SuccessCode pre_endgame_success_code = SuccessCode::NeverStarted;     ///< Success code of the pre-endgame track.
@@ -200,7 +209,7 @@ struct SolutionMetaData
     /// would misjudge someone's regular root (b2#409).  Empty when the endgame did not succeed.
     Vec<NumErrorT> singular_values;
     NumErrorT newton_residual;              ///< The latest Newton residual.
-    ComplexT final_time_used;               ///< The final value of time tracked to.
+    ComplexT final_time_used;               ///< The last time value the path reached: the endgame's latest time for a successful path, the tracker's time when it stopped for one that did not succeed in either stage.
     NumErrorT accuracy_estimate;            ///< Accuracy estimate between extrapolations.
     NumErrorT accuracy_estimate_user_coords;    ///< Accuracy estimate between extrapolations, in natural coordinates.
     unsigned cycle_num;                         ///< Cycle number used in extrapolations.
@@ -262,9 +271,14 @@ struct SolutionMetaData
              && this->is_singular == other.is_singular
              && this->is_nonsolution == other.is_nonsolution
              && this->crossing_unresolved == other.crossing_unresolved
+             && this->num_successful_steps == other.num_successful_steps
+             && this->num_failed_steps == other.num_failed_steps
              && this->singular_values.size() == other.singular_values.size()
              && (this->singular_values.size() == 0
                  || (this->singular_values.array() == other.singular_values.array()).all())
+             && this->last_point.size() == other.last_point.size()
+             && (this->last_point.size() == 0
+                 || (this->last_point.array() == other.last_point.array()).all())
         ;
 
         return result; }
@@ -281,6 +295,9 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
     out << "time_of_first_prec_increase = " << meta.time_of_first_prec_increase << std::endl;
     out << "max_precision_used = " << meta.max_precision_used << std::endl;
     out << "path_time_seconds = " << meta.path_time_seconds << std::endl;
+    out << "num_successful_steps = " << meta.num_successful_steps << std::endl;
+    out << "num_failed_steps = " << meta.num_failed_steps << std::endl;
+    out << "last_point = " << meta.last_point.transpose() << std::endl;
 
     out << "pre_endgame_success_code = " << meta.pre_endgame_success_code << std::endl;
 
@@ -1660,6 +1677,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 smd.path_index    = soln_ind;
                 smd.solution_index = soln_ind;
 
+                // The step tally spans the whole path -- this track and every sub-track the
+                // endgame will issue -- so it starts here and is read after each stage.
+                ctx.tracker.ResetCumulativeStepCounts();
+
                 auto initial_prec = this->template Get<ZeroDimConf>().initial_ambient_precision;
                 // SetThreadPrecision: writes thread-local only, safe from concurrent threads.
                 SetThreadPrecision(initial_prec);
@@ -1728,6 +1749,39 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                     smd.max_precision_used =
                         max(smd.max_precision_used, ctx.min_max_prec.MaxPrecision());
                 }
+
+                StampWhereThePathGotTo(smd, ctx.tracker, tracking_success, ctx.tracker.CurrentTime());
+            }
+
+            /**
+            \brief Record where a path got to, after either stage.
+
+            The tracker still holds its position when TrackPath returns: the time it reached,
+            the point there, its working precision, and (cumulatively, see
+            ResetCumulativeStepCounts) every step it took on this path.  All of it goes into the
+            metadata for every path, so a path that did not succeed says where it was
+            abandoned instead of reading a time of zero and no point.  The point is kept only for
+            a path that did not succeed -- a successful path's endpoint is its solution -- and
+            cleared otherwise, since metadata slots are reused when a path is re-tracked.
+
+            \param smd The path's metadata slot.
+            \param tracker The tracker that just ran this path (or this stage of it).
+            \param code The stage's outcome.
+            \param time_reached The time to stamp: the tracker's own time, or the endgame's latest time on a successful endgame.
+            */
+            void StampWhereThePathGotTo(SolutionMetaData<BaseComplexT>& smd, TrackerType const& tracker,
+                                        SuccessCode code, BaseComplexT const& time_reached) const
+            {
+                using std::max;
+                smd.final_time_used      = time_reached;
+                smd.num_successful_steps = tracker.CumulativeSuccessfulSteps();
+                smd.num_failed_steps     = tracker.CumulativeFailedSteps();
+                smd.max_precision_used   = max(smd.max_precision_used,
+                                               static_cast<decltype(smd.max_precision_used)>(tracker.CurrentPrecision()));
+                if (code == SuccessCode::Success)
+                    smd.last_point.resize(0);
+                else
+                    smd.last_point = tracker.CurrentPoint();
             }
 
             /**
@@ -2013,9 +2067,19 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
                 auto eg_success = ctx.endgame.Run(bdry_point);
 
-                solutions_post_endgame_[soln_ind] = ctx.endgame.template FinalApproximation<BaseComplexT>();
+                // The endgame writes its approximation only when it converges, so on a failure
+                // the accessor still holds whatever the PREVIOUS path on this endgame left there.
+                // A failed path's solution slot is therefore emptied, never copied: its stamp
+                // (last_point, final_time_used) says where it got to.
+                if (eg_success == SuccessCode::Success)
+                    solutions_post_endgame_[soln_ind] = ctx.endgame.template FinalApproximation<BaseComplexT>();
+                else
+                    solutions_post_endgame_[soln_ind].resize(0);
 
                 smd.endgame_success_code = eg_success;
+                StampWhereThePathGotTo(smd, ctx.tracker, eg_success,
+                                       eg_success == SuccessCode::Success ? ctx.endgame.LatestTime()
+                                                                          : ctx.tracker.CurrentTime());
 
                 // Harvest the AMP observers REGARDLESS of the endgame outcome: the precision a
                 // path used is a fact about the tracking that happened, and it is exactly the
@@ -2052,7 +2116,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                     // from the point it is handed (#377)
                 }
                 smd.function_residual = static_cast<NumErrorT>(ctx.target_sys.Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>());
-                smd.final_time_used = ctx.endgame.LatestTime();
                 smd.singular_values  = EndpointSingularValues(ctx.target_sys, solutions_post_endgame_[soln_ind]);
                 smd.condition_number = SpectralConditionNumberOf(smd.singular_values);
                 smd.newton_residual = ctx.tracker.LatestNormOfStep();
@@ -2329,6 +2392,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 r.time_of_first_prec_increase = smd.time_of_first_prec_increase;
                 r.max_precision_used = smd.max_precision_used;
                 r.path_time_seconds = smd.path_time_seconds;
+                r.num_successful_steps = smd.num_successful_steps;
+                r.num_failed_steps     = smd.num_failed_steps;
+                r.last_point           = smd.last_point;
                 return r;
             }
 
@@ -2362,6 +2428,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
                 smd.max_precision_used  = r.max_precision_used;
                 smd.path_time_seconds   = r.path_time_seconds;
+                smd.num_successful_steps = r.num_successful_steps;
+                smd.num_failed_steps     = r.num_failed_steps;
+                smd.last_point           = r.last_point;
 
                 // the records seam (ADR-0046): every topology installs completed paths here on
                 // the main/manager thread, so emission is single-writer by construction

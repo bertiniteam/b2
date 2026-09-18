@@ -43,6 +43,33 @@ def test_finite_real_nonsingular():
                if int(m.endgame_success_code) == OK)
 
 
+def test_an_abandoned_path_says_where_it_got_to():
+    """A path that did not succeed carries the stamp: the last point, the matching time, the
+    step tally, the precision.  Every path here is made to run out of steps partway."""
+    solver = _one_var_solver(lambda x: x * x - 1)
+    solver.get_tracker().get_stepping().update(max_num_steps=3)
+    solver.solve()
+
+    metas = solver.solution_metadata()
+    assert len(metas) == 2
+    for m in metas:
+        assert m.pre_endgame_success_code == pb.SuccessCode.MaxNumStepsTaken
+        assert m.num_successful_steps + m.num_failed_steps == 3
+        assert len(m.last_point) > 0                    # a point, in the solver's internal coordinates
+        assert 0.1 < abs(m.final_time_used) <= 1.0      # short of the boundary, off the start
+        assert m.max_precision_used == 16               # a double solve: its one precision, not 0
+
+
+def test_a_successful_path_has_no_last_point_but_a_step_tally():
+    solver = _one_var_solver(lambda x: x * x - 1)
+    solver.solve()
+    for m in solver.solution_metadata():
+        assert int(m.endgame_success_code) == OK
+        assert len(m.last_point) == 0                   # its endpoint is the solution itself
+        assert m.num_successful_steps > 0
+        assert abs(m.final_time_used) < 0.1             # the endgame's latest time, near the target
+
+
 def test_finite_complex_not_real():
     solver = _one_var_solver(lambda x: x * x + 1)        # roots +/- i
     solver.solve()

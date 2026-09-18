@@ -453,6 +453,33 @@ namespace bertini{
             }
 
             /**
+            \brief Zero the cumulative step counts.
+
+            The per-call counters (NumTotalStepsTaken and friends) start over at every call to
+            TrackPath.  The cumulative counts start over only here, so a caller that issues many
+            TrackPath calls for one logical path -- an endgame issues hundreds for its sample
+            circles -- can read the total work of the whole path afterwards.  The solver zeroes
+            them at the start of each path and stamps them into that path's metadata.
+            */
+            void ResetCumulativeStepCounts() const
+            {
+                num_successful_steps_cumulative_ = 0;
+                num_failed_steps_cumulative_ = 0;
+            }
+
+            /// \brief Successful steps since the last ResetCumulativeStepCounts, across every TrackPath call in between.
+            unsigned CumulativeSuccessfulSteps() const
+            {
+                return num_successful_steps_cumulative_;
+            }
+
+            /// \brief Failed steps since the last ResetCumulativeStepCounts, across every TrackPath call in between.
+            unsigned CumulativeFailedSteps() const
+            {
+                return num_failed_steps_cumulative_;
+            }
+
+            /**
             \brief Set how large the stepsize should be.
 
             \param new_stepsize The new value.
@@ -596,6 +623,7 @@ namespace bertini{
             void IncrementBaseCountersSuccess() const
             {
                 num_successful_steps_taken_++;
+                num_successful_steps_cumulative_++;
                 num_consecutive_successful_steps_++;
                 current_time_ += delta_t_;
                 num_consecutive_failed_steps_ = 0;
@@ -615,6 +643,7 @@ namespace bertini{
             {
                 num_consecutive_successful_steps_=0;
                 num_failed_steps_taken_++;
+                num_failed_steps_cumulative_++;
                 num_consecutive_failed_steps_++;
             }
 
@@ -646,6 +675,8 @@ namespace bertini{
             mutable unsigned num_consecutive_successful_steps_; ///< The number of CONSECUTIVE successful steps taken in a row.
             mutable unsigned num_consecutive_failed_steps_; ///< The number of CONSECUTIVE failed steps taken in a row.
             mutable unsigned num_failed_steps_taken_; ///< The total number of failed steps taken.
+            mutable unsigned num_successful_steps_cumulative_ = 0; ///< Successful steps since ResetCumulativeStepCounts, across TrackPath calls.
+            mutable unsigned num_failed_steps_cumulative_ = 0; ///< Failed steps since ResetCumulativeStepCounts, across TrackPath calls.
 
 
             // configuration for tracking
