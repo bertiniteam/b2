@@ -100,6 +100,17 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **A tutorial on tracking an analytic homotopy** ("Tracking an analytic homotopy", under
+  "Doing things manually").  Sine has no degree, so no start system exists and no count bounds
+  its roots -- but a homotopy needs neither, only start points you choose.  The page tracks
+  `sin(x) = 1/2` from five zeros of sine and checks the endpoints against `arcsin`, shows why
+  the precision model has to be chosen rather than defaulted, and walks into a branch point at
+  `sin(x) = 1` where the power series endgame reports cycle number 2 -- correct, and explained
+  by Weierstrass preparation, which says an analytic family branches like an algebraic one near
+  a finite endpoint.  Doctested, with a figure of the paths in the complex plane drawn from real
+  tracked data, and plain about what this does not give you: no solution count, no completeness,
+  and no theory for paths that run to infinity.  The neighbouring tutorial has promised this
+  since it was written, and then changed the subject.
 - The endgames announce every sample point they compute along a path (`ComputedSamplePoint`,
   carrying the point and its time), from both the power series and the Cauchy endgame, and a
   `SampleSequenceCollector` observer (C++ and Python, `bertini.endgame.*.SampleSequenceCollector`)
