@@ -914,6 +914,66 @@ BOOST_AUTO_TEST_CASE(max_precision_used_is_recorded_on_failed_endgames)
     BOOST_CHECK_GE(failed_after_escalating, 1u);   // the scenario must actually occur
 }
 
+/**
+A stop request asked before a solve begins means no path is tracked, and the solver says it
+was cut short rather than presenting an empty answer as a complete one.
+
+This is the coarse half of the contract.  Stopping a solve MID-flight is what the Python
+bindings do with a signal handler, and there is no portable way to raise a signal partway
+through a C++ test; what is testable here is that the request is honoured, that the taxonomy
+of outcomes is right, and that the solver reports being cut short.
+*/
+BOOST_AUTO_TEST_CASE(a_stop_request_stops_a_solve_and_the_solver_says_so)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    bertini::ScopedStopRequest guard;    // clears any stale request, and again on the way out
+    bertini::RequestStop();
+
+    zd.Solve();
+
+    BOOST_CHECK(zd.WasStoppedEarly());
+    BOOST_CHECK_GT(zd.NumPathsNeverStarted(), 0u);
+
+    // every path was left untouched, which is a different statement from "failed"
+    for (auto const& md : zd.SolutionMetadata())
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::NeverStarted);
+}
+
+/**
+Withdrawing the request leaves the solver in its ordinary state: the same solve that was
+stopped a moment ago runs to completion and reports that it was not cut short.  A stop is a
+request, not a mode, and having been stopped once is not sticky.
+*/
+BOOST_AUTO_TEST_CASE(withdrawing_a_stop_request_leaves_the_solver_normal)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    {
+        bertini::ScopedStopRequest guard;
+        bertini::RequestStop();
+        zd.Solve();
+        BOOST_REQUIRE(zd.WasStoppedEarly());
+    }   // the guard withdraws the request
+
+    zd.Solve();
+
+    BOOST_CHECK(!zd.WasStoppedEarly());
+    BOOST_CHECK_EQUAL(zd.NumPathsNeverStarted(), 0u);
+}
+
 template <class TrackerT>
 
 

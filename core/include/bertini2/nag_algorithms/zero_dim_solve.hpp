@@ -51,6 +51,8 @@
 #include "bertini2/io/json_writer.hpp"
 #include <algorithm>
 #include <chrono>
+
+#include "bertini2/common/stop_request.hpp"
 #include <cstdlib>
 #include <limits>
 #include <mutex>
@@ -1184,6 +1186,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 {
                     for (auto idx : indices_to_run)
                     {
+                        if (StopRequested())
+                            break;          // ExecuteOnePath would no-op; this just stops asking
                         ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
                         // the serial path installs results directly (no StoreFullPathResult),
                         // so emit its record here
@@ -1195,13 +1199,21 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                     RunPathsThreaded(indices_to_run, start_points, n_threads);
                 }
 
+                TallyStoppedSolve(indices_to_run);
+
                 // Crossed-path re-tracks run on the main thread against the (escalated) member
                 // tracker.  They are typically rare (often none); running them in parallel too is a
                 // deferred optimization.
-                RunMidpathResolution([this, &start_points](SolnIndT idx){
-                    ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
-                    RecordCompletedPath(PackFullPathResult(idx));   // a re-track appends a fresh record (last wins)
-                });
+                //
+                // Skipped entirely when the solve was stopped: the midpath check compares paths
+                // against each other at the endgame boundary, and a set where an arbitrary
+                // number of paths never ran has nothing meaningful to compare.  Re-tracking
+                // under a standing stop request would also just abandon each path again.
+                if (!stopped_early_)
+                    RunMidpathResolution([this, &start_points](SolnIndT idx){
+                        ExecuteOnePath(MemberDuringEGContext(), idx, start_points[idx]);
+                        RecordCompletedPath(PackFullPathResult(idx));   // a re-track appends a fresh record (last wins)
+                    });
 
                 PostEGAction();
 
@@ -1864,6 +1876,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 // attaches its per-path sub-observer to the tracker that actually runs this path.
                 Observable const* exec_tracker = &ctx.tracker;
 
+                // Somebody asked us to stop before this path began, so do not begin it.  Its
+                // metadata keeps the default NeverStarted, which is the honest description and
+                // is already distinguishable from a path we started and abandoned.  Checked
+                // here rather than only in the dispatch loops so the threaded pool, which has
+                // every task submitted up front, drains without doing work.
+                if (StopRequested())
+                    return;
+
                 // wall-clock the whole path (pre-endgame + endgame).  steady_clock: monotonic, safe on
                 // the worker thread; written to this path's own metadata slot, so no cross-path race.
                 auto const path_start_clock = std::chrono::steady_clock::now();
@@ -2437,6 +2457,21 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             /// \brief How many paths the last Solve() recalled from records instead of computing.
             unsigned long long NumPathsRecalled() const { return num_recalled_; }
 
+            /**
+            \brief Was the last Solve() stopped before it finished?
+
+            True when somebody asked the process to stop (see bertini2/common/stop_request.hpp)
+            while this solve was running.  The results are then a PARTIAL set: paths in flight
+            were abandoned and carry `SuccessCode::ExternallyTerminated`, paths not yet begun
+            are still `NeverStarted`, and every count derived from them -- how many solutions,
+            how many at infinity -- describes only what was tracked.  Anything reporting on a
+            solve must say so rather than present a partial count as a total.
+            */
+            bool WasStoppedEarly() const { return stopped_early_; }
+
+            /// \brief How many paths the last Solve() never began, because it was stopped.
+            unsigned long long NumPathsNeverStarted() const { return num_never_started_; }
+
             /// \brief This solve's run id in the records (empty when not recording).
             std::string const& RecordsRunId() const { return records_run_id_; }
 
@@ -2719,9 +2754,48 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             The record carries the endpoint AND its per-path metadata together -- the
             data and its facts are one thing (history holds only what was asked, when).
             */
+            /**
+            \brief After dispatching paths, work out whether this solve was cut short, and say so.
+
+            A solve is stopped early if a stop was requested while it ran, which shows up two
+            ways among the paths it was asked to run: one that was in flight came back
+            `ExternallyTerminated`, and one not yet reached is still `NeverStarted`.  Either is
+            enough; both are counted, because "we abandoned four and never reached nine hundred"
+            is a more useful thing to be told than "we stopped".
+            */
+            void TallyStoppedSolve(std::vector<SolnIndT> const& dispatched)
+            {
+                num_never_started_ = 0;
+                bool abandoned_any = false;
+
+                for (auto idx : dispatched)
+                {
+                    auto const code = solution_final_metadata_[idx].pre_endgame_success_code;
+                    if (code == SuccessCode::NeverStarted)
+                        ++num_never_started_;
+                    else if (code == SuccessCode::ExternallyTerminated)
+                        abandoned_any = true;
+
+                    if (solution_final_metadata_[idx].endgame_success_code
+                            == SuccessCode::ExternallyTerminated)
+                        abandoned_any = true;
+                }
+
+                stopped_early_ = abandoned_any || num_never_started_ > 0;
+            }
+
             void RecordCompletedPath(parallel::FullPathResult<BaseComplexT> const& r)
             {
                 if (!records_ || recalling_ || records_run_id_.empty())
+                    return;
+
+                // A path we never began has nothing to report.  This happens when a solve is
+                // stopped partway: every path after the stop is left NeverStarted.  Their
+                // absence is explained once, at the run level, by the record that says the
+                // solve was cut short -- which is better than thousands of identical rows
+                // saying we did not get to it.  A path we DID begin and then abandoned is a
+                // different thing entirely and is recorded, with how far it got.
+                if (r.pre_endgame_success_code == SuccessCode::NeverStarted)
                     return;
                 auto record = records::EncodeFullPathResult(r);
                 record["kind"] = "path";
@@ -2760,6 +2834,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             bool recalling_ = false;          ///< True while replaying recorded paths (suppresses re-emission).
             bool records_run_resumed_ = false; ///< True when this ask's run header pre-existed (a re-ask: emit a recall event).
             unsigned long long num_recalled_ = 0;  ///< Paths recalled from records in the last Solve().
+
+            bool stopped_early_ = false;          ///< True when the last Solve() was asked to stop partway.
+            unsigned long long num_never_started_ = 0;  ///< Paths the last Solve() never began, because it stopped.
 
             unsigned long long num_start_points_;  ///< Number of start points the start system produces.
             NumErrorT midpath_retrack_tolerance_;  ///< Tolerance used when re-tracking paths flagged by the midpath check.

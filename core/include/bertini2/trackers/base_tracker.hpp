@@ -41,6 +41,7 @@
 
 #include "bertini2/detail/is_template_parameter.hpp"
 #include "bertini2/detail/configured.hpp"
+#include "bertini2/common/stop_request.hpp"
 
 namespace bertini{
 
@@ -294,6 +295,18 @@ namespace bertini{
                 // as precondition to this while loop, the correct container, either complex_dbl or mpfr, must have the correct data.
                 while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<ComplexT>::epsilon()))
                 {
+                    // Has somebody outside asked us to stop?  Checked FIRST, before the
+                    // tracker's own budgets, because it is the only one whose answer is not
+                    // about this path: a keyboard interrupt is a statement about the process.
+                    // Between steps is the only place we can honour it without threads, so a
+                    // stop overruns by at most the step in flight -- which at high precision
+                    // is not free, and is the price of not preempting mid-step.
+                    if (StopRequested())
+                    {
+                        PostTrackCleanup();
+                        return SuccessCode::ExternallyTerminated;
+                    }
+
                     SuccessCode pre_iteration_code = PreIterationCheck();
                     if (pre_iteration_code!=SuccessCode::Success)
                     {

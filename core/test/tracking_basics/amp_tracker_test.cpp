@@ -1187,4 +1187,51 @@ BOOST_AUTO_TEST_CASE(set_start_precision_clear_restores_default_behavior)
 }
 
 
+/**
+A bare tracker honours a stop request, with no solver anywhere in sight.
+
+The request is a fact about the process rather than about any one object, and tracking is
+where it gets noticed -- between steps, which is the only place it can be noticed without
+preempting mid-step.  A user driving a tracker directly is assumed to know what they are
+doing; they get the same behaviour a solver gets, because it is the same check.
+*/
+BOOST_AUTO_TEST_CASE(a_stop_request_stops_a_bare_tracker)
+{
+    using namespace bertini::tracking;
+    using Var = std::shared_ptr<bertini::node::Variable>;
+    using Variable = bertini::node::Variable;
+    using bertini::System;
+    using bertini::VariableGroup;
+
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+
+    System sys;
+    sys.AddFunction(y - t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(VariableGroup{y});
+
+    AMPTracker tracker(sys);
+    tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+    tracker.PrecisionSetup(bertini::tracking::AMPConfigFrom(sys));
+
+    bertini::Vec<bertini::complex_mp> start(1), result;
+    start << bertini::complex_mp(1);
+
+    bertini::ScopedStopRequest guard;
+    bertini::RequestStop();
+
+    auto const code = tracker.TrackPath(result, bertini::complex_mp(1),
+                                        bertini::complex_mp("0.1"), start);
+
+    BOOST_CHECK(code == bertini::SuccessCode::ExternallyTerminated);
+
+    // and with the request withdrawn, the identical track succeeds
+    bertini::ClearStopRequest();
+    auto const after = tracker.TrackPath(result, bertini::complex_mp(1),
+                                         bertini::complex_mp("0.1"), start);
+    BOOST_CHECK(after == bertini::SuccessCode::Success);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
