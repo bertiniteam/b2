@@ -132,6 +132,11 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   and a per-call budget would restart with each.  The budget is deliberately not part of the
   run's identity: a 60 s and a 61 s run are the same ask.  Wall-clock time is machine
   dependent; the recorded stamp is the machine-independent account.
+- **A tutorial on stopping a solve and budgeting paths** ("Stopping a solve, and giving paths a
+  budget", under "Solver settings & multiprecision"): Ctrl-C and `request_stop`, the stamp an
+  abandoned path leaves, the per-path and whole-solve budgets, and how the recall policy reads
+  an abandonment.  Doctested with budgets of a nanosecond and an hour, so it is the same on
+  every machine.
 - **A recall policy, in its own config.**  What already-recorded work counts as done is now
   `RecordsConfig.recall`, a `RecallPolicy`: `Nothing` tracks every path fresh (the old
   `recall = False`), `Completed` (the default) reuses completed paths and re-tracks abandoned
