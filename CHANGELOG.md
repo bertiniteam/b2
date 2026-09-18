@@ -117,6 +117,25 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   `StopRequested()`, `ClearStopRequest()` and the RAII `ScopedStopRequest`; a bare tracker
   honours the request too, since it is the tracker that checks.  Not applied to the MPI
   solve.
+- **A wall-clock budget per path.**  `max_wall_clock_duration` on the solver (seconds, 0 =
+  none) gives every path a budget; a path that has not finished when it runs out is abandoned
+  between steps with `SuccessCode.WallClockLimitReached`, stamped with where it got to, and
+  recorded with the budget that stopped it.  The overrun is at most one step.  A bare tracker
+  can be limited on its own: `set_max_wall_clock_duration(seconds)` /
+  `clear_max_wall_clock_time()` in Python, `SetMaxWallClockTime(time_point)` /
+  `SetMaxWallClockDuration(duration)` / `ClearMaxWallClockTime()` in C++.  The primitive is a
+  deadline, not a duration, because an endgame issues hundreds of tracking calls for one path
+  and a per-call budget would restart with each.  The budget is deliberately not part of the
+  run's identity: a 60 s and a 61 s run are the same ask.  Wall-clock time is machine
+  dependent; the recorded stamp is the machine-independent account.
+- **A recall policy, in its own config.**  What already-recorded work counts as done is now
+  `RecordsConfig.recall`, a `RecallPolicy`: `Nothing` tracks every path fresh (the old
+  `recall = False`), `Completed` (the default) reuses completed paths and re-tracks abandoned
+  ones -- except a path a wall-clock budget cut off, which is reused while the current budget
+  asks no more patience than the one that abandoned it, and re-tracked once the budget goes up
+  -- and `Everything` reuses every recorded outcome as recorded.  An interrupted path is always
+  re-tracked.  A bool is still accepted (`True` is the default policy).  It moved out of
+  `ZeroDimConfig` because the question is the same for every algorithm that records paths.
 - **A path that did not succeed says where it got to.**  Its metadata now carries
   `last_point`, the point the tracker was at when it gave up (in the solver's internal
   coordinates), with `final_time_used` holding the matching time -- previously a failed path

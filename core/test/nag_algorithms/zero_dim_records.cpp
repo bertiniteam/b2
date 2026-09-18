@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE(recall_false_forces_a_fresh_retrack)
     auto sys_c = TwoQuadrics();
     ZD c(sys_c);
     c.DefaultSetup();
-    auto cfg = c.Get<algorithm::ZeroDimConfig>();
-    cfg.recall = false;
+    auto cfg = c.Get<algorithm::RecordsConfig>();
+    cfg.recall = algorithm::RecallPolicy::Nothing;
     c.Set(cfg);
     c.RecordTo(std::make_shared<records::OutputDirectory>(dir));
     c.Solve();
@@ -472,6 +472,77 @@ BOOST_AUTO_TEST_CASE(an_abandoned_path_is_recorded_with_where_it_got_to_and_reca
         BOOST_CHECK_SMALL((first[ii].last_point - again[ii].last_point).norm(), 1e-15);
         BOOST_CHECK_SMALL(abs(first[ii].final_time_used - again[ii].final_time_used), 1e-15);
     }
+}
+
+// The recall policy, walked through: a run under a wall-clock budget no path can meet records
+// four abandonments carrying that budget.  The same budget again reuses them (asking no more
+// patience than before).  Everything reuses them even under a larger budget.  The default,
+// under a larger budget, re-tracks them -- paying again is the point -- and they complete.
+// Nothing tracks fresh whatever is on record.
+BOOST_AUTO_TEST_CASE(recall_policy_decides_whether_an_abandonment_stands_in_for_tracking)
+{
+    auto const dir = FreshDir("recall_policy");
+
+    auto solve = [&](double limit, algorithm::RecallPolicy policy) {
+        SetGlobalSeed(42);
+        auto sys = TwoQuadrics();
+        auto zd = std::make_unique<ZD>(sys);
+        zd->DefaultSetup();
+        auto cfg = zd->Get<algorithm::ZeroDimConfig>();
+        cfg.max_wall_clock_duration = limit;
+        zd->Set(cfg);
+        auto rc = zd->Get<algorithm::RecordsConfig>();
+        rc.recall = policy;
+        zd->Set(rc);
+        zd->RecordTo(std::make_shared<records::OutputDirectory>(dir));
+        zd->Solve();
+        return zd;
+    };
+    auto abandoned = [](ZD const& zd) {
+        unsigned n = 0;
+        for (auto const& m : zd.SolutionMetadata())
+            if (m.pre_endgame_success_code == SuccessCode::WallClockLimitReached) ++n;
+        return n;
+    };
+
+    auto a = solve(1e-9, algorithm::RecallPolicy::Completed);
+    BOOST_CHECK_EQUAL(a->NumPathsRecalled(), 0u);
+    BOOST_CHECK_EQUAL(abandoned(*a), 4u);
+    for (auto const& rec : a->Records()->ResultsOf(a->RecordsRunId()))
+        if (std::string(rec.at("kind").as_string()) == "path")
+        {
+            BOOST_CHECK_EQUAL(std::string(rec.at("pre_endgame_success_code_name").as_string()), "WallClockLimitReached");
+            BOOST_REQUIRE(rec.contains("wall_clock_limit_seconds"));
+            BOOST_CHECK(rec.contains("last_point"));
+        }
+
+    auto b = solve(1e-9, algorithm::RecallPolicy::Completed);   // same patience: reused
+    BOOST_CHECK_EQUAL(b->NumPathsRecalled(), 4u);
+    BOOST_CHECK_EQUAL(abandoned(*b), 4u);
+
+    auto c = solve(3600, algorithm::RecallPolicy::Everything);  // more patience, but told to reuse anyway
+    BOOST_CHECK_EQUAL(c->NumPathsRecalled(), 4u);
+    BOOST_CHECK_EQUAL(abandoned(*c), 4u);
+
+    auto d = solve(3600, algorithm::RecallPolicy::Completed);   // more patience: re-tracked, and they finish
+    BOOST_CHECK_EQUAL(d->NumPathsRecalled(), 0u);
+    BOOST_CHECK_EQUAL(abandoned(*d), 0u);
+    BOOST_CHECK_EQUAL(d->Report().num_finite_solutions, 4u);
+
+    auto e = solve(3600, algorithm::RecallPolicy::Completed);   // now they are completed paths: reused
+    BOOST_CHECK_EQUAL(e->NumPathsRecalled(), 4u);
+
+    auto f = solve(3600, algorithm::RecallPolicy::Nothing);
+    BOOST_CHECK_EQUAL(f->NumPathsRecalled(), 0u);
+    BOOST_CHECK_EQUAL(f->Report().num_finite_solutions, 4u);
+
+    // and with no budget at all, an abandonment under a budget is not reusable either: the
+    // ceiling moved to infinity
+    auto g = solve(1e-9, algorithm::RecallPolicy::Nothing);     // put four abandonments back on top
+    BOOST_CHECK_EQUAL(abandoned(*g), 4u);
+    auto h = solve(0, algorithm::RecallPolicy::Completed);
+    BOOST_CHECK_EQUAL(h->NumPathsRecalled(), 0u);
+    BOOST_CHECK_EQUAL(h->Report().num_finite_solutions, 4u);
 }
 
 BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)

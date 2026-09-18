@@ -107,7 +107,8 @@ struct AlgoTraits <HomotopySolver<TrackerType, EndgameType, SystemType>>
                                 TolerancesConfig,
                                 PostProcessingConfig,
                                 ZeroDimConfig,
-                                AutoRetrackConfig
+                                AutoRetrackConfig,
+                                RecordsConfig
                                 >;
 };
 
@@ -188,6 +189,7 @@ struct SolutionMetaData
     double path_time_seconds = 0.0;          ///< Wall-clock time for the whole path (pre-endgame + endgame), seconds.  Not an identity field (excluded from operator==).
     unsigned num_successful_steps = 0;       ///< Predictor-corrector steps that succeeded on this path, pre-endgame and endgame together.
     unsigned num_failed_steps = 0;           ///< Predictor-corrector steps that failed and were retried smaller on this path, pre-endgame and endgame together.
+    double wall_clock_limit_seconds = 0;     ///< The per-path wall-clock budget in force when this path ran (ZeroDimConfig::max_wall_clock_duration), seconds; 0 = none.  Recorded with the path so a later run can tell whether it is asking more patience of an abandoned path than the run that abandoned it.
     /// Where the tracker was when it gave up: the last point reached, in the tracker's internal
     /// coordinates, on a path that did NOT succeed -- whether it failed, was stopped, or ran out
     /// of budget, in either stage.  Read with final_time_used, which holds the matching time.
@@ -273,6 +275,7 @@ struct SolutionMetaData
              && this->crossing_unresolved == other.crossing_unresolved
              && this->num_successful_steps == other.num_successful_steps
              && this->num_failed_steps == other.num_failed_steps
+             && this->wall_clock_limit_seconds == other.wall_clock_limit_seconds
              && this->singular_values.size() == other.singular_values.size()
              && (this->singular_values.size() == 0
                  || (this->singular_values.array() == other.singular_values.array()).all())
@@ -297,6 +300,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
     out << "path_time_seconds = " << meta.path_time_seconds << std::endl;
     out << "num_successful_steps = " << meta.num_successful_steps << std::endl;
     out << "num_failed_steps = " << meta.num_failed_steps << std::endl;
+    out << "wall_clock_limit_seconds = " << meta.wall_clock_limit_seconds << std::endl;
     out << "last_point = " << meta.last_point.transpose() << std::endl;
 
     out << "pre_endgame_success_code = " << meta.pre_endgame_success_code << std::endl;
@@ -1187,11 +1191,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 if (records_)
                 {
                     EnsureRunRecorded();
-                    // recall==false forces a fresh track of every path even when identical results are
-                    // already recorded (e.g. to run path observers or benchmark); the fresh run is still
-                    // recorded.  See ZeroDimConfig::recall.
-                    if (this->template Get<ZeroDimConf>().recall)
-                        indices_to_run = RecallRecordedPaths(all_indices);
+                    // which recorded outcomes are reused is RecallPolicy's business, applied inside
+                    indices_to_run = RecallRecordedPaths(all_indices);
                 }
 
                 // num_threads: 0 = auto (hardware_concurrency), 1 = serial, N = N threads;
@@ -1681,6 +1682,16 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 // endgame will issue -- so it starts here and is read after each stage.
                 ctx.tracker.ResetCumulativeStepCounts();
 
+                // The wall-clock budget, likewise per path and spanning both stages: armed here as
+                // a deadline (so the endgame's many sub-tracks share it), cleared when the path is
+                // over.  Recorded with the path whether or not it bites.
+                auto const wall_clock_limit = this->template Get<ZeroDimConf>().max_wall_clock_duration;
+                smd.wall_clock_limit_seconds = wall_clock_limit;
+                if (wall_clock_limit > 0)
+                    ctx.tracker.SetMaxWallClockDuration(std::chrono::duration<double>(wall_clock_limit));
+                else
+                    ctx.tracker.ClearMaxWallClockTime();
+
                 auto initial_prec = this->template Get<ZeroDimConf>().initial_ambient_precision;
                 // SetThreadPrecision: writes thread-local only, safe from concurrent threads.
                 SetThreadPrecision(initial_prec);
@@ -1953,6 +1964,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
                 if (solution_final_metadata_[soln_ind].pre_endgame_success_code != SuccessCode::Success)
                 {
+                    ctx.tracker.ClearMaxWallClockTime();
                     stamp_path_time();
                     this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
                     return;
@@ -1961,6 +1973,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 ctx.tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
                 ExecuteDuringEG(ctx, soln_ind);
 
+                ctx.tracker.ClearMaxWallClockTime();   // the budget was this path's; do not carry it to the next
                 stamp_path_time();
                 this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
             }
@@ -2395,6 +2408,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 r.num_successful_steps = smd.num_successful_steps;
                 r.num_failed_steps     = smd.num_failed_steps;
                 r.last_point           = smd.last_point;
+                r.wall_clock_limit_seconds = smd.wall_clock_limit_seconds;
                 return r;
             }
 
@@ -2431,6 +2445,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 smd.num_successful_steps = r.num_successful_steps;
                 smd.num_failed_steps     = r.num_failed_steps;
                 smd.last_point           = r.last_point;
+                smd.wall_clock_limit_seconds = r.wall_clock_limit_seconds;
 
                 // the records seam (ADR-0046): every topology installs completed paths here on
                 // the main/manager thread, so emission is single-writer by construction
@@ -2765,6 +2780,31 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             }
 
             /**
+            \brief Under RecallPolicy::Completed, may this recorded path stand in for tracking it?
+
+            A completed path always may.  An interrupted path never may.  A path a wall-clock
+            limit cut off may only while the current per-path limit is set and asks no more
+            patience than the recorded one -- the same amount of waiting, or less, on the same
+            machine; across machines the comparison is a heuristic, which is why the stamp
+            (steps, precision, time reached) travels with the record too.
+
+            \param r The decoded record.
+            \param current_limit This run's per-path wall-clock limit in seconds (0 = none).
+            \return Whether the record is reusable.
+            */
+            static bool AbandonmentIsReusable(parallel::FullPathResult<BaseComplexT> const& r, double current_limit)
+            {
+                auto const is = [&](SuccessCode c){
+                    return r.pre_endgame_success_code == c || r.endgame_success_code == c; };
+                if (is(SuccessCode::ExternallyTerminated))
+                    return false;
+                if (is(SuccessCode::WallClockLimitReached))
+                    return current_limit > 0 && r.wall_clock_limit_seconds > 0
+                           && current_limit <= r.wall_clock_limit_seconds;
+                return true;
+            }
+
+            /**
             \brief Recall recorded paths into the solver's state and return the indices
             still to compute.
 
@@ -2784,13 +2824,16 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                         recorded[static_cast<std::size_t>(idx->as_int64())] = rec;
                 }
 
+                auto const policy = this->template Get<RecordsConfig>().recall;
+                auto const current_limit = this->template Get<ZeroDimConf>().max_wall_clock_duration;
+
                 num_recalled_ = 0;
                 recalling_ = true;
                 std::vector<SolnIndT> missing;
                 for (auto const idx : all_indices)
                 {
                     auto const found = recorded.find(static_cast<std::size_t>(idx));
-                    if (found == recorded.end())
+                    if (found == recorded.end() || policy == RecallPolicy::Nothing)
                     {
                         missing.push_back(idx);
                         continue;
@@ -2800,16 +2843,19 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
                     // The rule for reusing a record: a path record is reusable when the run
                     // that would reuse it asks no more of that path than the run that produced
-                    // it.  A determination -- success, divergence, a failure under settings
+                    // it.  A completed path -- success, divergence, a failure under settings
                     // that are part of the ask -- always qualifies, since nothing more is being
-                    // asked.  A path somebody STOPPED does not: it was abandoned for a reason
-                    // that is deliberately not in the ask (a keyboard interrupt, a wall clock),
-                    // so the record says "we gave up here", which is true and is not an answer.
-                    // Recalling it would hand back yesterday's patience as today's result.  Such
-                    // a path is re-tracked.  Its record stays, so the store still says what
-                    // happened; it simply is not mistaken for a conclusion.
-                    if (decoded.pre_endgame_success_code == SuccessCode::ExternallyTerminated
-                        || decoded.endgame_success_code == SuccessCode::ExternallyTerminated)
+                    // asked.  An ABANDONED path was ended for a reason deliberately kept out of
+                    // the ask, so the record says "we gave up here", which is true and is not
+                    // an answer; whether to reuse it is the user's call (RecallPolicy).  Under
+                    // the default: a path somebody stopped is always re-tracked, since an
+                    // interrupt has no budget to compare; one a wall-clock limit cut off is
+                    // reused only while the current budget asks no more patience than the one
+                    // that abandoned it, and re-tracked once the budget goes up -- which is
+                    // exactly when paying again is the point.  Either way its record stays, so
+                    // the store still says what happened; it is simply not mistaken for a
+                    // conclusion.
+                    if (policy == RecallPolicy::Completed && !AbandonmentIsReusable(decoded, current_limit))
                     {
                         missing.push_back(idx);
                         continue;

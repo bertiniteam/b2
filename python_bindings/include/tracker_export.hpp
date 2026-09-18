@@ -29,6 +29,7 @@
 
 #include <bertini2/trackers/tracker.hpp>
 
+#include <chrono>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -300,6 +301,22 @@ namespace bertini{
 
             .def("infinite_truncation", &TrackerT::SetInfiniteTruncation, (arg("self"), arg("val")), "Decide whether the tracker should truncate infinite paths.  See also infinite_truncation_tolerance")
             .def("infinite_truncation", &TrackerT::InfiniteTruncation, (arg("self")), "Get the bool for whether the tracker should truncate infinite paths.  See also infinite_truncation_tolerance")
+            .def("set_max_wall_clock_duration",
+                +[](TrackerT const& t, double seconds){ t.SetMaxWallClockDuration(std::chrono::duration<double>(seconds)); },
+                (arg("self"), arg("seconds")),
+                "Give the tracker a wall-clock budget counted from now, in seconds.  Any track in progress once it runs out "
+                "is abandoned between steps with SuccessCode.WallClockLimitReached; the tracker's current_time(), "
+                "current_point() and precision then say where it got to.  The budget is a deadline, so it holds across "
+                "track_path calls until cleared or replaced -- an endgame issues hundreds per path.  Clock time, not the "
+                "path variable t.  See clear_max_wall_clock_time.")
+            .def("clear_max_wall_clock_time",
+                +[](TrackerT const& t){ t.ClearMaxWallClockTime(); },
+                (arg("self")),
+                "Remove the wall-clock deadline; tracking is unlimited again.")
+            .def("has_max_wall_clock_time",
+                +[](TrackerT const& t){ return t.MaxWallClockTime().has_value(); },
+                (arg("self")),
+                "Whether a wall-clock deadline is in force.")
 
             .def("get_stepping",&TrackerT::template Get<tracking::SteppingConfig>,return_internal_reference<>(), (arg("self")), "Get the tracker's internal configuration for things that control stepping behaviour")
             .def("get_newton",&TrackerT::template Get<tracking::NewtonConfig>,return_internal_reference<>(), (arg("self")), "Get the tracker's internal configuration for Newton correction")

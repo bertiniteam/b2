@@ -136,6 +136,7 @@ struct FullPathResult
     unsigned      num_successful_steps           = 0;  ///< Successful predictor-corrector steps over the whole path.
     unsigned      num_failed_steps               = 0;  ///< Failed predictor-corrector steps over the whole path.
     Vec<ComplexT> last_point;  ///< The last point the tracker reached on a path that did not succeed; empty otherwise.
+    double        wall_clock_limit_seconds       = 0;  ///< The per-path wall-clock budget in force when the path ran, seconds; 0 = none.
 
     /// \cond PATH_RESULT_SERIALIZATION
     template<class Archive>
@@ -165,6 +166,7 @@ struct FullPathResult
         ar & num_successful_steps;
         ar & num_failed_steps;
         ar & last_point;
+        ar & wall_clock_limit_seconds;
     }
     /// \endcond
 };

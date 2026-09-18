@@ -166,6 +166,37 @@ inline unsigned DefaultInitialAmbientPrecision()
         return DefaultPrecision();
 }
 
+/**
+\brief Which recorded outcomes count as already answered when an identical ask is solved again.
+
+The question recall answers is: a path for this same ask is on record -- may its record be used
+in place of tracking it?  A path record is reusable when the run that would reuse it asks no more
+of that path than the run that produced it.  A completed path (success, divergence, a failure under
+settings that are part of the ask) always qualifies.  An abandonment -- a path somebody stopped, or
+a wall-clock limit cut off -- was ended for a reason deliberately kept out of the ask, so whether to
+reuse it is the user's call, and this is where they make it.  Transient, like num_threads: it says
+how to use the records, not what was computed, so it is not part of the configuration's identity.
+*/
+enum class RecallPolicy
+{
+    Nothing,          ///< Track every path fresh, even when recorded (observers, benchmarking, re-verification).  The fresh run is still recorded.
+    Completed,        ///< The default.  Reuse completed paths; re-track abandoned ones -- except one cut off by a wall-clock limit no smaller than the current per-path limit, which is reused since the run asks no more of it.  An interrupted path is always re-tracked.
+    Everything,       ///< Reuse every recorded outcome as recorded, abandonments included; nothing is re-tracked.
+};
+
+/**
+\brief How a recording algorithm uses the records it finds: not what to compute, but what
+already-recorded work counts as done.
+
+Its own struct, rather than a field of one algorithm's config, because the question is the same
+for every algorithm that records paths.  Transient, like a thread count: nothing here is part of
+any configuration's identity or digest.
+*/
+struct RecordsConfig
+{
+    RecallPolicy recall = RecallPolicy::Completed;  ///< Which recorded outcomes of an identical ask are reused in place of tracking (see RecallPolicy).  No effect when nothing is recorded.
+};
+
 // Not templated on the complex type: the three times are stored as exact, precision-free
 // mpq_rational (real) and converted to the tracking complex type at the current working precision at
 // use -- the same pattern SteppingConfig uses for its step sizes.  This keeps the config precision-
@@ -189,12 +220,15 @@ struct ZeroDimConfig
     /// Under MPI the per-rank thread count comes from OMP_NUM_THREADS, not this field.
     unsigned num_threads = 0;
 
-    /// Whether an identical ask already present in the records directory may be RECALLED instead of
-    /// re-tracked (default true).  Set false to force a fresh track even when the paths are recorded --
-    /// e.g. to run path observers, benchmark the solve, or re-verify reproducibility.  Like num_threads
-    /// this is transient (it changes only WHETHER the work runs, not WHAT is computed), so it is
-    /// deliberately excluded from the configuration's identity/digest.  No effect when nothing is recorded.
-    bool recall = true;
+    /// Wall-clock budget for each path, in seconds; 0 (the default) means none.  A path that has not
+    /// finished when its budget runs out is abandoned between steps with
+    /// SuccessCode::WallClockLimitReached, stamped with where it got to, and recorded with this limit.
+    /// Deliberately NOT part of the configuration's identity: a budget says how long to wait for an
+    /// answer, not what the answer is, so a 60 s and a 61 s run are the same ask; how an abandonment
+    /// under one budget is treated by a later run is RecallPolicy's business.  Wall-clock time is
+    /// machine-dependent, so the same limit is the same amount of patience only on the same machine
+    /// -- the recorded stamp (steps, precision, time reached) is the machine-independent account.
+    double max_wall_clock_duration = 0;
 
     mpq_rational start_time{1};          ///< Homotopy start time (t=1).
     mpq_rational endgame_boundary{1, 10}; ///< Time at which tracking hands off to the endgame (t=1/10).

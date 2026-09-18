@@ -97,6 +97,11 @@ void ExposeSolutionMetaData(std::string const& class_name){
     .def_readwrite("num_failed_steps",&MDT::num_failed_steps,
         "Predictor-corrector steps that failed and were retried with a smaller step on this path, "
         "pre-endgame tracking and endgame together.  Many failed steps means the path was hard.")
+    .def_readwrite("wall_clock_limit_seconds",&MDT::wall_clock_limit_seconds,
+        "The per-path wall-clock budget (seconds) in force when this path ran, from the solver's "
+        "max_wall_clock_duration; 0 means there was none.  Recorded with the path, so a later run "
+        "can tell whether it is asking more patience of an abandoned path than the run that "
+        "abandoned it.")
     // by value, for the same reason as singular_values
     .add_property("last_point",
         +[](MDT const& m){ return bertini::Vec<NumT>(m.last_point); },

@@ -1233,5 +1233,58 @@ BOOST_AUTO_TEST_CASE(a_stop_request_stops_a_bare_tracker)
     BOOST_CHECK(after == bertini::SuccessCode::Success);
 }
 
+/**
+A bare tracker honours a wall-clock deadline with no solver anywhere.  A deadline already in
+the past stops the track at its first step boundary with WallClockLimitReached and the
+tracker still says where it was -- at the start, having taken no steps.  Clearing the
+deadline makes the identical track succeed, and a generous deadline does not bite.
+*/
+BOOST_AUTO_TEST_CASE(a_wall_clock_deadline_stops_a_bare_tracker)
+{
+    using namespace bertini::tracking;
+    using Var = std::shared_ptr<bertini::node::Variable>;
+    using Variable = bertini::node::Variable;
+    using bertini::System;
+    using bertini::VariableGroup;
+
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+
+    System sys;
+    sys.AddFunction(y - t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(VariableGroup{y});
+
+    AMPTracker tracker(sys);
+    tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+    tracker.PrecisionSetup(bertini::tracking::AMPConfigFrom(sys));
+
+    bertini::Vec<bertini::complex_mp> start(1), result;
+    start << bertini::complex_mp(1);
+
+    BOOST_CHECK(!tracker.MaxWallClockTime().has_value());
+    tracker.SetMaxWallClockTime(std::chrono::steady_clock::now() - std::chrono::seconds(1));
+    BOOST_CHECK(tracker.MaxWallClockTime().has_value());
+
+    auto const code = tracker.TrackPath(result, bertini::complex_mp(1),
+                                        bertini::complex_mp("0.1"), start);
+    BOOST_CHECK(code == bertini::SuccessCode::WallClockLimitReached);
+    BOOST_CHECK_EQUAL(tracker.NumTotalStepsTaken(), 0u);
+    BOOST_CHECK(abs(tracker.CurrentTime() - bertini::complex_mp(1)) < 1e-30);
+    BOOST_CHECK((tracker.CurrentPoint() - start).norm() < 1e-30);
+
+    tracker.ClearMaxWallClockTime();
+    BOOST_CHECK(!tracker.MaxWallClockTime().has_value());
+    auto const after = tracker.TrackPath(result, bertini::complex_mp(1),
+                                         bertini::complex_mp("0.1"), start);
+    BOOST_CHECK(after == bertini::SuccessCode::Success);
+
+    tracker.SetMaxWallClockDuration(std::chrono::hours(1));
+    auto const generous = tracker.TrackPath(result, bertini::complex_mp(1),
+                                            bertini::complex_mp("0.1"), start);
+    BOOST_CHECK(generous == bertini::SuccessCode::Success);
+    tracker.ClearMaxWallClockTime();
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

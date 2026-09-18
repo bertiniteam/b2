@@ -386,6 +386,27 @@ namespace bertini {
 
 
             template<typename Iterator, typename Skipper>
+            /// \brief Parser for RecordsConfig: the classic input format has no keyword for it, so this consumes the config text and leaves the defaults.
+            struct ConfigSettingParser<Iterator, algorithm::RecordsConfig, Skipper> : qi::grammar<Iterator, algorithm::RecordsConfig(), Skipper>
+            {
+                ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::Records")
+                {
+                    namespace phx = boost::phoenix;
+                    using qi::_1;
+                    using qi::_val;
+                    using qi::char_;
+                    root_rule_.name("config::Records");
+                    // swallow the text; the semantic action keeps Spirit from trying to fill the
+                    // struct with it, and leaves _val at its defaults
+                    root_rule_ = (*char_)[phx::bind([](algorithm::RecordsConfig&, std::vector<char> const&){}, _val, _1)];
+                }
+
+            private:
+                qi::rule<Iterator, algorithm::RecordsConfig(), ascii::space_type > root_rule_;
+            };
+
+
+            template<typename Iterator, typename Skipper>
             /// \brief Parser for the AutoRetrackConfig settings block of classic Bertini input.
             struct ConfigSettingParser<Iterator, algorithm::AutoRetrackConfig, Skipper> : qi::grammar<Iterator, algorithm::AutoRetrackConfig(), Skipper>
             {

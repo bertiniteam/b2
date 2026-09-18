@@ -1060,6 +1060,50 @@ BOOST_AUTO_TEST_CASE(a_successful_path_carries_its_step_tally_and_no_last_point)
     BOOST_CHECK_GT(successes, 0u);
 }
 
+/**
+A per-path wall-clock budget through the solver.  With a budget no path can meet, every path
+is abandoned between steps with WallClockLimitReached, stamped with where it got to, and
+recorded with the budget that stopped it; the solve was not "stopped early" -- nobody
+interrupted it, each path simply ran out of patience -- and the tracker is handed back with
+no deadline left on it.  A generous budget changes nothing.
+*/
+BOOST_AUTO_TEST_CASE(a_per_path_wall_clock_budget_abandons_paths_that_exceed_it)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    auto cfg = zd.Get<algorithm::ZeroDimConfig>();
+    cfg.max_wall_clock_duration = 1e-9;        // a nanosecond: gone before the first step
+    zd.Set(cfg);
+    zd.Solve();
+
+    auto const num_vars = zd.GetTracker().GetSystem().NumVariables();
+    BOOST_REQUIRE(!zd.SolutionMetadata().empty());
+    for (auto const& md : zd.SolutionMetadata())
+    {
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::WallClockLimitReached);
+        BOOST_CHECK_EQUAL(md.last_point.size(), static_cast<Eigen::Index>(num_vars));
+        BOOST_CHECK_EQUAL(md.wall_clock_limit_seconds, 1e-9);
+    }
+    BOOST_CHECK(!zd.WasStoppedEarly());
+    BOOST_CHECK(!zd.GetTracker().MaxWallClockTime().has_value());
+
+    cfg.max_wall_clock_duration = 3600;
+    zd.Set(cfg);
+    zd.Solve();
+    for (auto const& md : zd.SolutionMetadata())
+    {
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::Success);
+        BOOST_CHECK_EQUAL(md.wall_clock_limit_seconds, 3600);
+    }
+    BOOST_CHECK(!zd.GetTracker().MaxWallClockTime().has_value());
+}
+
 template <class TrackerT>
 
 

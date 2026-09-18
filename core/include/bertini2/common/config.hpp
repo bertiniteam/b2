@@ -58,6 +58,7 @@ namespace bertini
         SecurityMaxNormReached,
         CycleNumTooHigh,
         FailedToSelectPrecisionAndStepsize,
+        WallClockLimitReached,   ///< The tracker's wall-clock deadline passed between steps; the path was abandoned where it was.  Append new values AFTER this one: the integers are part of the b2rec record contract.
 
     };
 

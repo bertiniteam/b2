@@ -12,6 +12,22 @@ namespace bertini{
         {
             using namespace bertini::algorithm;
 
+            enum_<RecallPolicy>("RecallPolicy",
+                "Which recorded outcomes of an identical ask count as already answered when it is "
+                "solved again.  A path record is reusable when the run that would reuse it asks no "
+                "more of that path than the run that produced it: a completed path (success, "
+                "divergence, a failure under settings that are part of the ask) always qualifies; an "
+                "abandoned one -- stopped, or cut off by a wall-clock limit -- was ended for a reason "
+                "kept out of the ask, so whether to reuse it is your call.  Nothing: track every path "
+                "fresh (observers, benchmarking, re-verification).  Completed (the default): reuse "
+                "completed paths, re-track abandoned ones -- except one cut off by a wall-clock limit "
+                "no smaller than the current per-path limit, which is reused; an interrupted path is "
+                "always re-tracked.  Everything: reuse every recorded outcome as recorded.")
+                .value("Nothing", RecallPolicy::Nothing)
+                .value("Completed", RecallPolicy::Completed)
+                .value("Everything", RecallPolicy::Everything)
+                ;
+
             class_<TolerancesConfig>("TolerancesConfig", init<>())
             .def_readwrite("newton_before_endgame", &TolerancesConfig::newton_before_endgame,
                 "Tracking (Newton) tolerance used while tracking before the endgame begins. "
@@ -107,12 +123,39 @@ namespace bertini{
                 "(all available cores), 1 = serial (no thread pool), N = N threads. The "
                 "OMP_NUM_THREADS environment variable overrides this. Threading needs no MPI and "
                 "no free-threaded Python: the heavy tracking runs in C++ with the GIL released.")
-            .def_readwrite("recall", &ZeroDimConfig::recall,
-                "Whether an identical ask already in the records directory may be RECALLED instead of "
-                "re-tracked (default True). Set False to force a fresh track even when the paths are "
-                "recorded -- e.g. to run path observers, benchmark the solve, or re-verify a run; the "
-                "fresh track is still recorded. No effect when nothing is recorded. Transient: it does "
-                "not affect the run's identity/digest.")
+            .def_readwrite("max_wall_clock_duration", &ZeroDimConfig::max_wall_clock_duration,
+                "Wall-clock budget for EACH path, in seconds; 0 (the default) means none.  A path that "
+                "has not finished when its budget runs out is abandoned between steps with "
+                "SuccessCode.WallClockLimitReached, stamped with where it got to (last_point, "
+                "final_time_used, the step counts), and recorded with this limit.  Not part of the "
+                "run's identity: a budget says how long to wait for an answer, not what the answer "
+                "is.  How a later run treats a path abandoned under a budget is RecallPolicy's "
+                "business.  Wall-clock time is machine-dependent; the recorded stamp is the "
+                "machine-independent account.")
+            ;
+
+            class_<RecordsConfig>("RecordsConfig",
+                "How a recording solver uses the records it finds: not what to compute, but what "
+                "already-recorded work counts as done.  Its own config because the question is the "
+                "same for every algorithm that records paths.  Transient: nothing here is part of a "
+                "run's identity/digest.",
+                init<>())
+            .add_property("recall",
+                +[](RecordsConfig const& c) { return c.recall; },
+                +[](RecordsConfig& c, boost::python::object const& v) {
+                    // a bool still works: True is the default policy, False tracks everything fresh
+                    if (PyBool_Check(v.ptr()))
+                        c.recall = boost::python::extract<bool>(v) ? RecallPolicy::Completed
+                                                                   : RecallPolicy::Nothing;
+                    else
+                        c.recall = boost::python::extract<RecallPolicy>(v);
+                },
+                "Which recorded outcomes of an identical ask already in the records directory are used "
+                "in place of tracking: a RecallPolicy (default RecallPolicy.Completed).  A bool is "
+                "accepted too: True means Completed, False means Nothing -- force a fresh track even "
+                "when the paths are recorded, e.g. to run path observers, benchmark the solve, or "
+                "re-verify a run; the fresh track is still recorded.  No effect when nothing is "
+                "recorded.")
             ;
 
             // metadata types
