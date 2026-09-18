@@ -136,7 +136,13 @@ namespace bertini {
 
 
 
-                    //TODO refine this so that counts are enforced at parse time?
+                    // Declaration blocks may appear in any number and any order, which is what
+                    // Bertini 1 input looks like.  What IS enforced: a second `pathvariable` is
+                    // refused here, and a name declared but never defined is reported by name from
+                    // EmitDeclaredFunctions once the whole input has been read (it cannot be caught
+                    // earlier, since the defining line may come anywhere after the declaration).
+                    // Deliberately not enforced: a definition for a name that was never declared is
+                    // absorbed as a subfunction, which is what Bertini 1 does.
                     root_rule_.name("system_parsing");
                     root_rule_ =
                     *(
@@ -154,7 +160,7 @@ namespace bertini {
                       |
                       implicit_parameters_ [phx::bind(&System::AddImplicitParameters, _val, _1)]
                       |
-                      path_variable_ [phx::bind(&System::AddPathVariable, _val, _1)]
+                      path_variable_ [phx::bind([this](System& s, Var const& v){ this->AddPathVariableChecked(s, v); }, _val, _1)]
                       |
                       // definition_ before subfunction_: a declared name (function/constant/
                       // parameter) lives only in encountered_functions_, not encountered_symbols_,
@@ -394,18 +400,58 @@ namespace bertini {
                     definitions_[name] = ne;
                 }
 
+                /// \brief Add the path variable, refusing a second declaration.
+                ///
+                /// A system has exactly one path variable, so a second `pathvariable` line is a
+                /// mistake in the input rather than a re-assignment.  Enforced here, at the
+                /// declaration, rather than in System::AddPathVariable, which stays permissive so
+                /// that a caller building a system programmatically may still change its mind.
+                /// \param s The system being built.
+                /// \param v The declared path variable.
+                void AddPathVariableChecked(System& s, Var const& v)
+                {
+                    if (have_path_variable_declaration_)
+                        throw std::runtime_error(
+                            "[SystemParser] more than one `pathvariable` declared: a system has "
+                            "exactly one path variable.  Declare only the one you mean.");
+                    have_path_variable_declaration_ = true;
+                    s.AddPathVariable(v);
+                }
+
                 /// \brief Emit the collected declared functions/constants/parameters to the System.
+                ///
+                /// Every declared name must have been defined.  A name that was declared and never
+                /// defined is reported here, by name and kind: before this the missing definition
+                /// reached `std::map::at` and surfaced as the meaningless `map::at`, which told the
+                /// user nothing about which name they had forgotten (b2#441).
+                /// \param s The system to emit into.
                 void EmitDeclaredFunctions(System& s) const
                 {
                     for (auto const& n : declared_function_names_)
-                        s.AddFunction(definitions_.at(n)->EntryNode());
+                        s.AddFunction(DefinitionOf(n, "function")->EntryNode());
                     for (auto const& n : declared_constant_names_)
-                        s.AddConstant(definitions_.at(n));
+                        s.AddConstant(DefinitionOf(n, "constant"));
                     for (auto const& n : declared_parameter_names_)
-                        s.AddParameter(definitions_.at(n));
+                        s.AddParameter(DefinitionOf(n, "parameter"));
                 }
 
             private:
+                /// \brief Look up a declared name's definition, or say which declaration was left undefined.
+                /// \param name The declared name.
+                /// \param kind What it was declared as, for the message ("function", "constant", "parameter").
+                /// \return The name's definition.
+                std::shared_ptr<node::NamedExpression> const& DefinitionOf(std::string const& name,
+                                                                           std::string const& kind) const
+                {
+                    auto const found = definitions_.find(name);
+                    if (found == definitions_.end())
+                        throw std::runtime_error(
+                            "[SystemParser] " + kind + " `" + name + "` was declared but never defined.  "
+                            "Every declared name needs a defining line, as in `" + name + " = ...;`.");
+                    return found->second;
+                }
+
+                bool have_path_variable_declaration_ = false;
                 std::vector<std::string> declared_function_names_, declared_constant_names_, declared_parameter_names_;
                 std::map<std::string, std::shared_ptr<node::NamedExpression>> definitions_;
             };

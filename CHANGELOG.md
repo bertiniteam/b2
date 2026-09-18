@@ -54,6 +54,15 @@ A message that notes the main changes in the update.
 
 ### Fixed
 
+- The classic parser reports two mistakes it used to let through (#441).  A name declared and
+  never defined -- `function f, g;` with only `f` defined -- reached a `std::map::at` lookup and
+  surfaced as `map::at` (an `IndexError` in Python), naming neither the forgotten name nor the
+  problem; it now says which name was declared and never defined, and what it was declared as.
+  A second `pathvariable` declaration was accepted, quietly overwriting the first; a system has
+  exactly one path variable, so the second declaration is now refused.  `System::AddPathVariable`
+  stays permissive, so a caller building a system programmatically may still change its mind --
+  the enforcement is on the declaration, in the input file.
+
 ### Removed
 
 ### Security
