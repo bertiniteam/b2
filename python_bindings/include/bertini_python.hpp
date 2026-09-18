@@ -29,6 +29,7 @@
 #include "containers_export.hpp"
 #include "mpfr_export.hpp"
 #include "random_export.hpp"
+#include "stop_request_export.hpp"
 #include "eigenpy_interaction.hpp"
 #include "function_tree_export.hpp"
 #include "system_export.hpp"

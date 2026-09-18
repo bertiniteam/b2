@@ -218,8 +218,22 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
             // independent local solves per rank" pattern (e.g. parameter_sweep across ranks).  MPI is
             // opt-in: you get it only by explicitly passing communicator=.
             if (comm.is_none()) {
-                bertini::python::ScopedGILRelease unlock_gil;
-                self.Solve();
+                // Ctrl-C during the solve stops it (see ScopedInterruptWatch) instead of being
+                // ignored until the solve finishes.  Read Fired() while the watch is still
+                // installed; on leaving the block the GIL comes back, the previous handler is
+                // restored, and the stop request is withdrawn -- then raise, with the solver
+                // left exactly as the stop found it, for the user to inspect.
+                bool interrupted = false;
+                {
+                    bertini::python::ScopedInterruptWatch watch;
+                    bertini::python::ScopedGILRelease unlock_gil;
+                    self.Solve();
+                    interrupted = bertini::python::ScopedInterruptWatch::Fired();
+                }
+                if (interrupted) {
+                    PyErr_SetNone(PyExc_KeyboardInterrupt);
+                    boost::python::throw_error_already_set();
+                }
             }
 #ifdef BERTINI2_HAVE_MPI
             else {
@@ -269,6 +283,18 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
         (boost::python::arg("self")),
         "How many paths the last solve() recalled from the records instead of computing "
         "(0 on a fresh solve; num_paths on a full memo hit).")
+    .def("was_stopped_early",
+        +[](AlgoT const& self){ return self.WasStoppedEarly(); },
+        (boost::python::arg("self")),
+        "Was the last solve() stopped before it finished -- by Ctrl-C, or by request_stop()?  "
+        "If so the results are a PARTIAL set: paths in flight were abandoned and read "
+        "SuccessCode.ExternallyTerminated, paths not yet begun still read NeverStarted, and "
+        "every count derived from them describes only what was tracked.  Re-running the same "
+        "solve recalls the finished paths from the records and tracks only the rest.")
+    .def("num_paths_never_started",
+        +[](AlgoT const& self){ return self.NumPathsNeverStarted(); },
+        (boost::python::arg("self")),
+        "How many paths the last solve() never began, because it was stopped first.")
     .def("set_recorded_start_provenance",
         +[](AlgoT& self, std::string const& refs_json, std::string const& start_identity){
             auto const parsed = boost::json::parse(refs_json).as_array();

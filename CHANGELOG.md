@@ -100,6 +100,23 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **Ctrl-C stops a solve.**  A solve releases the interpreter lock and runs on the calling
+  thread, so a keyboard interrupt was noted by CPython and ignored until the solve finished;
+  in a notebook the kernel was simply trapped, and killing the process was the only exit.
+  Now the solve installs a signal handler for its duration, every path being tracked notices
+  the request between steps, the solve unwinds cooperatively, and `KeyboardInterrupt` is
+  raised -- with the solver left exactly as the stop found it.  Finished paths stay finished
+  and readable; paths in flight are abandoned and read `SuccessCode.ExternallyTerminated`, a
+  value that had been in the enum, unproduced, for years; paths not yet begun stay
+  `NeverStarted` and are not recorded.  `solver.was_stopped_early()` and
+  `solver.num_paths_never_started()` say what happened, and the midpath check is skipped on a
+  partial set rather than comparing paths that never ran.  Because the records hold every
+  finished path, re-running the same solve recalls them and tracks only the rest: an
+  interrupt is resumable.  Also programmatic: `bertini.request_stop()` from another thread
+  stops the running solve without raising.  In C++, `bertini::RequestStop()`,
+  `StopRequested()`, `ClearStopRequest()` and the RAII `ScopedStopRequest`; a bare tracker
+  honours the request too, since it is the tracker that checks.  Not applied to the MPI
+  solve.
 - **A tutorial on tracking an analytic homotopy** ("Tracking an analytic homotopy", under
   "Doing things manually").  Sine has no degree, so no start system exists and no count bounds
   its roots -- but a homotopy needs neither, only start points you choose.  The page tracks

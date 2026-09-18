@@ -2726,8 +2726,27 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                         missing.push_back(idx);
                         continue;
                     }
-                    StoreFullPathResult(
-                        records::DecodeFullPathResult<BaseComplexT>(found->second, idx));
+
+                    auto decoded = records::DecodeFullPathResult<BaseComplexT>(found->second, idx);
+
+                    // The rule for reusing a record: a path record is reusable when the run
+                    // that would reuse it asks no more of that path than the run that produced
+                    // it.  A determination -- success, divergence, a failure under settings
+                    // that are part of the ask -- always qualifies, since nothing more is being
+                    // asked.  A path somebody STOPPED does not: it was abandoned for a reason
+                    // that is deliberately not in the ask (a keyboard interrupt, a wall clock),
+                    // so the record says "we gave up here", which is true and is not an answer.
+                    // Recalling it would hand back yesterday's patience as today's result.  Such
+                    // a path is re-tracked.  Its record stays, so the store still says what
+                    // happened; it simply is not mistaken for a conclusion.
+                    if (decoded.pre_endgame_success_code == SuccessCode::ExternallyTerminated
+                        || decoded.endgame_success_code == SuccessCode::ExternallyTerminated)
+                    {
+                        missing.push_back(idx);
+                        continue;
+                    }
+
+                    StoreFullPathResult(std::move(decoded));
                     ++num_recalled_;
                 }
                 recalling_ = false;
@@ -2746,14 +2765,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 return missing;
             }
 
-            /**
-            \brief Emit the path record for one completed path into the run's results
-            file (called from StoreFullPathResult on the main/manager thread; no-op
-            while recalling or when not recording).
-
-            The record carries the endpoint AND its per-path metadata together -- the
-            data and its facts are one thing (history holds only what was asked, when).
-            */
             /**
             \brief After dispatching paths, work out whether this solve was cut short, and say so.
 
@@ -2784,6 +2795,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 stopped_early_ = abandoned_any || num_never_started_ > 0;
             }
 
+            /**
+            \brief Emit the path record for one completed path into the run's results
+            file (called from StoreFullPathResult on the main/manager thread; no-op
+            while recalling or when not recording).
+
+            The record carries the endpoint AND its per-path metadata together -- the
+            data and its facts are one thing (history holds only what was asked, when).
+            */
             void RecordCompletedPath(parallel::FullPathResult<BaseComplexT> const& r)
             {
                 if (!records_ || recalling_ || records_run_id_.empty())

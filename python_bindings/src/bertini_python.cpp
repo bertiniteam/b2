@@ -35,6 +35,7 @@
 #include "eigenpy_interaction.hpp"   // EnableEigenPy()
 #include "parallel_export.hpp"       // ExportParallel()
 #include "records_export.hpp"        // ExportRecords()
+#include "stop_request_export.hpp"   // ExportStopRequest()
 #include "newton_refine_export.hpp"  // ExportNewtonRefine()
 #include "bertini2/fast_allocator.hpp"  // InstallFastAllocator()
 
@@ -95,6 +96,8 @@ namespace bertini
             ExportLinalg();
 
             ExportRandom();
+
+            ExportStopRequest();
 
             SetupFunctionTree();
 
