@@ -100,6 +100,15 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **A showpiece, "The Seam"**, on what path tracking does at a branch cut.  Every pixel of a
+  parameter grid is one tracked path of `log(x) - y = 0`, `y^2 - x + c = 0`, and every step of
+  every path is exposed onto one image: arrivals sweep away, and the paths that fail crawl onto
+  the negative real axis and stall there, drawing a line that is in no equation.  The line is
+  where the numeric logarithm jumps, which is a convention rather than a theorem, and the only
+  reason it is visible is that the library hands back the complete trajectory of a path that
+  failed -- position by position, with how far along the path time it got.  Measured and stated
+  on the page: it is not a precision artifact, since double precision and eighty digits agree on
+  every one of 799 sampled parameters, arrivals and deaths alike.
 - **A tutorial on tracking an analytic homotopy** ("Tracking an analytic homotopy", under
   "Doing things manually").  Sine has no degree, so no start system exists and no count bounds
   its roots -- but a homotopy needs neither, only start points you choose.  The page tracks

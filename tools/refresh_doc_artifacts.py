@@ -123,6 +123,11 @@ def _plots():
              SHOWPIECES / "flight_recorder" / "flight_recorder.py",
              ["flight_recorder.png", "flight_recorder_setup.png"],
              note="showpiece: raster PNG only; tight-tolerance mult-35 solve -> slow (~1 min)"),
+        Plot("the_seam",
+             SHOWPIECES / "the_seam" / "the_seam.py",
+             ["the_seam.png", "the_seam_teaching.png"],
+             note="showpiece: raster PNG only; tracks 48,000 paths over a parameter grid, in "
+                  "parallel -> slow (~10 min).  `--scout` renders a small one."),
     ]
 
 
