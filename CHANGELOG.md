@@ -100,6 +100,18 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **The Nebula showpiece** (`python/docs/source/showpieces/nebula/`) — one solve, every path, every
+  step, exposed onto a single additive buffer like a long exposure.  Brightness is literally dwell:
+  each segment between two tracked samples deposits the path time `|dt|` the tracker spent crossing
+  it, spread along its length, so the picture is of the *path* and not of the stepper — refine the
+  tolerances until the step count doubles and the image is unchanged.  Colour runs with `log|t|`,
+  cool at the start system and white-hot into the endgame, so the frame reads as a flow.  The hero
+  is the **Kuramoto model** of seven coupled oscillators (4096 paths, 124 equilibria); the teaching
+  frame is **Noonburg-6** (729 paths, 717 solutions), few enough that individual strands stay
+  legible.  The generator carries a system registry (cyclic-n, Noonburg, Katsura, Kuramoto,
+  multisite phosphorylation, Stewart-Gough, dense random), a `--scout` contact sheet that renders
+  every candidate projection from a single solve, and a `--selftest` that asserts the exposure
+  conserves energy exactly.  Both frames regenerate byte-identically in ~40s.
 - **A tutorial on tracking an analytic homotopy** ("Tracking an analytic homotopy", under
   "Doing things manually").  Sine has no degree, so no start system exists and no count bounds
   its roots -- but a homotopy needs neither, only start points you choose.  The page tracks
