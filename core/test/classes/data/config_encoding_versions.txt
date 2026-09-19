@@ -1,4 +1,20 @@
-b2cfgenc/1 unrecorded
-b2cfgenc/2 f9e79e4d6d17219da6d5f51405f2021858dea9a06742c9f0935017b5a93d23be
-b2cfgenc/3 8aa0d92f364e5a327acf497d13058b2d00671b724e32252d5a1ce8a2e9d99be9
-b2cfgenc/4 8aa0d92f364e5a327acf497d13058b2d00671b724e32252d5a1ce8a2e9d99be9
+# Every b2cfgenc encoding the library has ever written, one line per version, in order.
+# Columns: <version> <keyspace hash> <composition hash> <first shipped in>
+#   keyspace hash    -- sha256 of one canonical encoding per config encoder, version header
+#                       excluded; it moves when any encoder's output moves.  Checked by
+#                       config_digest_test/encoding_version_is_bumped_when_the_encoding_changes.
+#   composition hash -- sha256 of the list of configs a zero-dim solve folds into its settings
+#                       text, in order.  The keyspace cannot see this: b2cfgenc/3 and /4 have
+#                       the SAME keyspace, because /4 was MidPathConfig joining the ask, which
+#                       changed no encoder at all.  Checked by
+#                       zero_dim_records/the_settings_text_lists_every_config_the_solve_reads,
+#                       which lives where a solver can be built.
+#   first shipped in -- the released library version that first wrote this encoding, or
+#                       'never-shipped' for one superseded before any release used it.
+# AT MOST ONE VERSION PER RELEASE.  While a release is unreleased its line is edited in place
+# (new hashes, same token) and the golden fixture regenerated; once it ships it is history and
+# is never edited again.  See core/test/utility/encoding_registry.hpp.
+b2cfgenc/1 unrecorded unrecorded never-shipped
+b2cfgenc/2 f9e79e4d6d17219da6d5f51405f2021858dea9a06742c9f0935017b5a93d23be unrecorded never-shipped
+b2cfgenc/3 8aa0d92f364e5a327acf497d13058b2d00671b724e32252d5a1ce8a2e9d99be9 unrecorded 3.0.0
+b2cfgenc/4 8aa0d92f364e5a327acf497d13058b2d00671b724e32252d5a1ce8a2e9d99be9 d5b1fb9af04d838774729142fb463eb83fa92ff58c9970657be338428e4680ee 3.5.0

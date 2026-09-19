@@ -233,6 +233,20 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Changed
 
+- **Encoding versions now count encodings, not commits: at most one per released version.**
+  `b2sysenc/<n>` and `b2cfgenc/<n>` are part of the digest preimage, so moving one makes every
+  existing record a different ask -- and the old "append a line, never edit one" rule made the
+  number climb with development rather than with releases.  The evidence was already in the
+  registry: `b2cfgenc/1` and `/2` were both minted while 3.0.0 was being developed and neither
+  ever shipped, so the number claimed three encodings existed when one had ever been written.
+  Now each registry line records the release it first shipped in, no two lines may claim the
+  same release, and while a release is unreleased its line is edited in place rather than
+  superseded; once it ships it is history and is never touched.  The consequence for a user is
+  a promise the version can keep: `b2sysenc/2` means "the second encoding b2 has ever written",
+  and a record names the release that wrote it.  The registry also gained a column for the
+  *composition* of the settings text -- which configs a solve folds in -- because the existing
+  hash could not see it: `b2cfgenc/3` and `/4` are byte-identical there, `/4` having been
+  exactly a composition change.  (ADR-0061)
 - **Path-crossing detection joined the ask: config encoding `b2cfgenc/4`.**  `MidPathConfig`
   decides when two paths at the endgame boundary count as the same point, and so decides which
   paths get re-tracked and what the solve returns -- but it was not in the settings text, so two

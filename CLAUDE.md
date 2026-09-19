@@ -138,12 +138,17 @@ Rules that follow:
   readability.
 - **Adding a field to a config struct REQUIRES extending its encoder** (they are
   hand-maintained mirrors, like `serialize`), and an identity-affecting encoder change
-  REQUIRES, in the same commit: bump the version token, regenerate the golden digest
-  fixture (`core/test/classes/data/{config,system}_digest_fixture.txt` -- run the test,
-  it prints the new digests), and **append** a line to the version registry
-  (`core/test/classes/data/{config,system}_encoding_versions.txt` -- the failing test
-  prints the keyspace hash to append).  Registries are append-only: never edit an
-  existing line; line *k* carries version suffix *k*.  Tests enforce all of this.
+  REQUIRES, in the same commit: regenerate the golden digest fixture
+  (`core/test/classes/data/{config,system}_digest_fixture.txt` -- run the test, it prints
+  the new digests) and update the version registry
+  (`core/test/classes/data/{config,system}_encoding_versions.txt`).  **At most one encoding
+  version per released library version**, so what you do to the registry depends on whether
+  its top line has shipped: while a release is unreleased its line is edited **in place**
+  (new hash, same token); once it has shipped it is history, and you bump the token and
+  append.  The failing test computes the hash and tells you which of the two to do.  Line
+  *k* carries version suffix *k*, every line records the release it first shipped in, and
+  no two lines may claim the same release.  Tests enforce all of this
+  (`core/test/utility/encoding_registry.hpp`, ADR-0061).
 - Deliberately excluded from identity: the RNG seed (its own slot in the ask, beside the
   config digest), `ZeroDimConfig::num_threads` (thread count must not change what was
   computed), and all transient eval state.

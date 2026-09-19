@@ -1,2 +1,12 @@
-b2sysenc/1 50e21eb3ad705b6ae31b99a12c8ed6b8cb993f76a947791da05127d5bb8b805f
-b2sysenc/2 50e21eb3ad705b6ae31b99a12c8ed6b8cb993f76a947791da05127d5bb8b805f
+# Every b2sysenc encoding the library has ever written, one line per version, in order.
+# Columns: <version> <keyspace hash> <first shipped in>
+#   keyspace hash    -- sha256 of one canonical encoding per recipe, version header excluded;
+#                       it moves when the encoder's output moves.  Checked by
+#                       system_identity_test/encoding_version_is_bumped_when_the_encoding_changes.
+#   first shipped in -- the released library version that first wrote this encoding, or
+#                       'never-shipped' for one superseded before any release used it.
+# AT MOST ONE VERSION PER RELEASE.  While a release is unreleased its line is edited in place
+# (new hash, same token) and the golden fixture regenerated; once it ships it is history and is
+# never edited again.  See core/test/utility/encoding_registry.hpp.
+b2sysenc/1 50e21eb3ad705b6ae31b99a12c8ed6b8cb993f76a947791da05127d5bb8b805f 3.0.0
+b2sysenc/2 50e21eb3ad705b6ae31b99a12c8ed6b8cb993f76a947791da05127d5bb8b805f 3.5.0

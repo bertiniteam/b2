@@ -59,10 +59,14 @@ Deliberate exclusions:
   identity — pinned by the golden fixture
   `core/test/classes/data/config_digest_fixture.txt` (eight recipes; drift fails
   loudly with bump-the-version instructions).  The bump itself is also under test: the
-  append-only version registry `config_encoding_versions.txt` maps every `b2cfgenc`
+  version registry `config_encoding_versions.txt` maps every `b2cfgenc`
   version ever used to a hash of the encoding function's output (one recipe per
   encoder, version header excluded), so regenerating the fixture without bumping the
   version fails the registry test.
+  _(ADR-0061 refined this: at most one encoding version per released library version, so a
+  registry line is edited in place while its release is unreleased and is append-only
+  thereafter; and a second column records the settings-text composition, which the keyspace
+  hash cannot see.)_
 - **Adding a field to a config struct now requires extending its encoder.**  The
   encoding is a hand-maintained mirror of the struct (like `serialize`); the fixture
   catches encoder-vs-struct drift only when defaults change, so review discipline

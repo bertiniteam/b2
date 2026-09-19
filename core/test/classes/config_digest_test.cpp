@@ -38,6 +38,8 @@ commit, never silently.
 
 #include "bertini2/records/config_encoding.hpp"
 
+#include "test/utility/encoding_registry.hpp"
+
 using namespace bertini;
 using records::CanonicalEncoding;
 using records::ConfigDigest;
@@ -245,31 +247,15 @@ BOOST_AUTO_TEST_CASE(encoding_version_is_bumped_when_the_encoding_changes)
 
     auto const registry_path =
         std::filesystem::path(__FILE__).parent_path() / "data" / "config_encoding_versions.txt";
-    std::vector<std::pair<std::string, std::string>> registry;
-    {
-        std::ifstream in(registry_path);
-        BOOST_REQUIRE_MESSAGE(in.good(), "version registry missing: " << registry_path);
-        std::string version, hex;
-        while (in >> version >> hex)
-            registry.emplace_back(version, hex);
-    }
-    BOOST_REQUIRE_MESSAGE(!registry.empty(), "version registry is empty: " << registry_path);
+    auto const registry = testing::ReadEncodingRegistry(registry_path, 2);   // keyspace, composition
+    testing::CheckEncodingRegistryShape(registry, "b2cfgenc/", records::ConfigEncodingVersion,
+                                        registry_path);
 
-    // versions are dense and append-only: line k carries suffix k
-    for (std::size_t ii = 0; ii < registry.size(); ++ii)
-        BOOST_CHECK_EQUAL(registry[ii].first, "b2cfgenc/" + std::to_string(ii + 1));
-
-    BOOST_REQUIRE_MESSAGE(registry.back().first == records::ConfigEncodingVersion,
-        "the LAST registry line must be the current ConfigEncodingVersion ("
-        << records::ConfigEncodingVersion << "); found " << registry.back().first);
-
-    BOOST_CHECK_MESSAGE(registry.back().second == keyspace,
+    BOOST_CHECK_MESSAGE(registry.back().hashes[0] == keyspace,
         "the config ENCODING changed under existing version token "
         << records::ConfigEncodingVersion << " (registered keyspace "
-        << registry.back().second << ", current " << keyspace
-        << ") -- bump ConfigEncodingVersion, APPEND {new version, " << keyspace
-        << "} to data/config_encoding_versions.txt (never edit existing lines), and "
-        "regenerate data/config_digest_fixture.txt, all in the same commit");
+        << registry.back().hashes[0] << ", current " << keyspace << ") -- "
+        << testing::AdviceForMovedHash(registry, "b2cfgenc/", "keyspace hash", keyspace));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -44,6 +44,8 @@ regenerate the fixture in the same commit, never silently.
 #include "bertini2/io/parsing/system_parsers.hpp"
 #include "bertini2/function_tree/canonical.hpp"
 
+#include "test/utility/encoding_registry.hpp"
+
 using bertini::System;
 
 namespace {
@@ -570,30 +572,13 @@ BOOST_AUTO_TEST_CASE(encoding_version_is_bumped_when_the_encoding_changes)
 
     auto const registry_path =
         std::filesystem::path(__FILE__).parent_path() / "data" / "system_encoding_versions.txt";
-    std::vector<std::pair<std::string, std::string>> registry;
-    {
-        std::ifstream in(registry_path);
-        BOOST_REQUIRE_MESSAGE(in.good(), "version registry missing: " << registry_path);
-        std::string version, hex;
-        while (in >> version >> hex)
-            registry.emplace_back(version, hex);
-    }
-    BOOST_REQUIRE_MESSAGE(!registry.empty(), "version registry is empty: " << registry_path);
+    auto const registry = bertini::testing::ReadEncodingRegistry(registry_path, 1);   // keyspace only
+    bertini::testing::CheckEncodingRegistryShape(registry, "b2sysenc/", current_version, registry_path);
 
-    // versions are dense and append-only: line k carries suffix k
-    for (std::size_t ii = 0; ii < registry.size(); ++ii)
-        BOOST_CHECK_EQUAL(registry[ii].first, "b2sysenc/" + std::to_string(ii + 1));
-
-    BOOST_REQUIRE_MESSAGE(registry.back().first == current_version,
-        "the LAST registry line must be the current encoding version ("
-        << current_version << "); found " << registry.back().first);
-
-    BOOST_CHECK_MESSAGE(registry.back().second == keyspace,
+    BOOST_CHECK_MESSAGE(registry.back().hashes[0] == keyspace,
         "the system ENCODING changed under existing version token " << current_version
-        << " (registered keyspace " << registry.back().second << ", current " << keyspace
-        << ") -- bump the b2sysenc version, APPEND {new version, " << keyspace
-        << "} to data/system_encoding_versions.txt (never edit existing lines), and "
-        "regenerate data/system_digest_fixture.txt, all in the same commit");
+        << " (registered keyspace " << registry.back().hashes[0] << ", current " << keyspace
+        << ") -- " << bertini::testing::AdviceForMovedHash(registry, "b2sysenc/", "keyspace hash", keyspace));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
