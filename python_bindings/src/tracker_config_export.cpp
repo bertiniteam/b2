@@ -43,6 +43,7 @@ namespace bertini{
                 .value("SecurityMaxNormReached", SuccessCode::SecurityMaxNormReached)
                 .value("CycleNumTooHigh", SuccessCode::CycleNumTooHigh)
                 .value("FailedToSelectPrecisionAndStepsize", SuccessCode::FailedToSelectPrecisionAndStepsize)
+                .value("WallClockLimitReached", SuccessCode::WallClockLimitReached)
                 ;
 
             // config classes live directly in the tracking module (the .config submodule was flattened away)

@@ -248,6 +248,7 @@ _SOLUTION_METADATA_FIELDS = (
     'cycle_num', 'endgame_success_code', 'pre_endgame_success_code', 'final_time_used',
     'precision_changed', 'max_precision_used', 'time_of_first_prec_increase',
     'path_time_seconds',
+    'num_successful_steps', 'num_failed_steps', 'latest_path_point', 'wall_clock_limit_seconds',
 )
 
 

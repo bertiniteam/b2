@@ -152,7 +152,15 @@ reads honestly: what is here is done):
   its facts are one thing): the exact codes as
   `pre_endgame_success_code`/`endgame_success_code` (integers) and
   `*_success_code_name` (fixed canonical names — the durable rendering), cycle number,
-  precision, timings.  Coordinates are decimal strings at full computed precision
+  precision, timings, and the step tally (`num_successful_steps`, `num_failed_steps`,
+  over the whole path).  A path that did not succeed also says where it got to:
+  `latest_path_point`, the tracker's last point, beside `final_time_used`, the matching time --
+  an abandoned path is recorded with its reason and its position, never silently
+  missing.  A path that ran under a per-path wall-clock budget carries it as
+  `wall_clock_limit_seconds`, so a later run can tell whether it is asking more patience
+  of an abandoned path than the run that abandoned it (the budget is not part of the
+  ask; how such a record is reused is the reader's recall policy).  Coordinates are
+  decimal strings at full computed precision
   (`[real, imaginary]` pairs, one per variable, in the target's variable order).
   `endpoint` is the INTERNAL point (labels: the run header's `variables`);
   successful/diverged paths also carry `endpoint_user`, the dehomogenized point in the

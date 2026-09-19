@@ -109,6 +109,65 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **Ctrl-C stops a solve.**  A solve releases the interpreter lock and runs on the calling
+  thread, so a keyboard interrupt was noted by CPython and ignored until the solve finished;
+  in a notebook the kernel was simply trapped, and killing the process was the only exit.
+  Now the solve installs a signal handler for its duration, every path being tracked notices
+  the request between steps, the solve unwinds cooperatively, and `KeyboardInterrupt` is
+  raised -- with the solver left exactly as the stop found it.  Finished paths stay finished
+  and readable; paths in flight are abandoned and read `SuccessCode.ExternallyTerminated`, a
+  value that had been in the enum, unproduced, for years; paths not yet begun stay
+  `NeverStarted` and are not recorded.  `solver.was_stopped_early()` and
+  `solver.num_paths_never_started()` say what happened, and the midpath check is skipped on a
+  partial set rather than comparing paths that never ran.  Because the records hold every
+  finished path, re-running the same solve recalls them and tracks only the rest: an
+  interrupt is resumable.  Also programmatic: `bertini.request_stop()` from another thread
+  stops the running solve without raising.  In C++, `bertini::RequestStop()`,
+  `StopRequested()`, `ClearStopRequest()` and the RAII `ScopedStopRequest`; a bare tracker
+  honours the request too, since it is the tracker that checks.  Not applied to the MPI
+  solve.
+- **Wall-clock budgets.**  `max_path_wall_clock_duration` on the solver (seconds, 0 = none)
+  gives every path a budget; a path that has not finished when it runs out is abandoned
+  between steps with `SuccessCode.WallClockLimitReached`, stamped with where it got to, and
+  recorded with the budget that stopped it.  `max_solve_wall_clock_duration` budgets the whole
+  `solve()` call instead: once it runs out no further path starts and any in flight is
+  abandoned, and the solve reads exactly as if Ctrl-C had been pressed (`was_stopped_early()`,
+  `ExternallyTerminated` / `NeverStarted`, re-tracked on recall).  The overrun is at most one
+  step.  Both are plain numbers of seconds and both are off by default.  A bare tracker
+  can be limited on its own: `set_max_wall_clock_duration(seconds)` /
+  `clear_max_wall_clock_time()` in Python, `SetMaxWallClockTime(time_point)` /
+  `SetMaxWallClockDuration(duration)` / `ClearMaxWallClockTime()` in C++.  The primitive is a
+  deadline, not a duration, because an endgame issues hundreds of tracking calls for one path
+  and a per-call budget would restart with each.  The budget is deliberately not part of the
+  run's identity: a 60 s and a 61 s run are the same ask.  Wall-clock time is machine
+  dependent; the recorded stamp is the machine-independent account.
+- **A tutorial on stopping a solve and budgeting paths** ("Stopping a solve, and giving paths a
+  budget", under "Solver settings & multiprecision"): Ctrl-C and `request_stop`, the stamp an
+  abandoned path leaves, the per-path and whole-solve budgets, and how the recall policy reads
+  an abandonment.  Doctested with budgets of a nanosecond and an hour, so it is the same on
+  every machine.
+- **A recall policy, in its own config.**  What already-recorded work counts as done is now
+  `RecordsConfig.recall`, a `RecallPolicy`: `Nothing` tracks every path fresh (the old
+  `recall = False`), `Completed` (the default) reuses completed paths and re-tracks abandoned
+  ones -- except a path a wall-clock budget cut off, which is reused while the current budget
+  asks no more patience than the one that abandoned it, and re-tracked once the budget goes up
+  -- and `Everything` reuses every recorded outcome as recorded.  An interrupted path is always
+  re-tracked.  A bool is still accepted (`True` is the default policy).  It moved out of
+  `ZeroDimConfig` because the question is the same for every algorithm that records paths.
+- **A path that did not succeed says where it got to.**  Its metadata now carries
+  `latest_path_point`, the point the tracker was at when it gave up (in the solver's internal
+  coordinates), with `final_time_used` holding the matching time -- previously a failed path
+  reported a time of zero and no point.  Every path also carries `num_successful_steps` and
+  `num_failed_steps`, the predictor-corrector steps over the whole path, pre-endgame and
+  endgame together, so the cost of a path is visible without timing it; and
+  `max_precision_used` is honest for fixed-precision solves too, where it read zero.  The
+  stamp is recorded with the path and comes back on recall.  Two corrections came with it: a
+  path whose endgame failed used to be handed the previous path's approximation as its
+  "solution" (the accessor was stale); its solution slot is now empty, and the stamp is where
+  its point lives.  In C++ the tracker exposes the tally that made this possible:
+  `ResetCumulativeStepCounts()`, `CumulativeSuccessfulSteps()`, `CumulativeFailedSteps()`,
+  counting across `TrackPath` calls (an endgame issues hundreds per path) until told to start
+  over.
 - **A tutorial on tracking an analytic homotopy** ("Tracking an analytic homotopy", under
   "Doing things manually").  Sine has no degree, so no start system exists and no count bounds
   its roots -- but a homotopy needs neither, only start points you choose.  The page tracks

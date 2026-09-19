@@ -40,6 +40,13 @@ namespace bertini
 
     enum class SuccessCode
     {
+        /// No tracking was attempted.  This is a DEFAULT, never a verdict: no tracker returns it,
+        /// and none may start to, because callers read it as "we never touched this path" and act
+        /// on that -- a solve records nothing for such a path, counts it as unreached, and reports
+        /// itself cut short.  A path that was attempted and got nowhere has a code that says what
+        /// stopped it (SingularStartPoint from the initial refinement, MaxNumStepsTaken and its
+        /// siblings from the per-iteration budgets, ExternallyTerminated, WallClockLimitReached).
+        /// Pinned by test: a_tracker_never_returns_never_started.
         NeverStarted = -1,
         Success = 0,
         HigherPrecisionNecessary,
@@ -58,6 +65,7 @@ namespace bertini
         SecurityMaxNormReached,
         CycleNumTooHigh,
         FailedToSelectPrecisionAndStepsize,
+        WallClockLimitReached,   ///< The tracker's wall-clock deadline passed between steps; the path was abandoned where it was.  Append new values AFTER this one: the integers are part of the b2rec record contract.
 
     };
 

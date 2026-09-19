@@ -155,6 +155,7 @@ inline std::string CanonicalName(SuccessCode code)
         case SuccessCode::SecurityMaxNormReached: return "SecurityMaxNormReached";
         case SuccessCode::CycleNumTooHigh: return "CycleNumTooHigh";
         case SuccessCode::FailedToSelectPrecisionAndStepsize: return "FailedToSelectPrecisionAndStepsize";
+        case SuccessCode::WallClockLimitReached: return "WallClockLimitReached";
     }
     return "UnknownSuccessCode";
 }
@@ -218,6 +219,16 @@ boost::json::object EncodeFullPathResult(parallel::FullPathResult<ComplexT> cons
     out["time_of_first_prec_increase"] = EncodeComplexScalar(r.time_of_first_prec_increase);
     out["max_precision_used"] = static_cast<std::int64_t>(r.max_precision_used);
     out["path_time_seconds"] = ExactDoubleText(r.path_time_seconds);
+    // where the path got to: the step tally always, the point only when the path did not
+    // succeed (a successful path's point is `endpoint`)
+    out["num_successful_steps"] = static_cast<std::int64_t>(r.num_successful_steps);
+    out["num_failed_steps"] = static_cast<std::int64_t>(r.num_failed_steps);
+    if (r.latest_path_point.size() > 0)
+        out["latest_path_point"] = EncodePoint(r.latest_path_point);
+    // the wall-clock budget the path ran under, when there was one: what a later run compares
+    // its own patience against before reusing an abandonment
+    if (r.wall_clock_limit_seconds > 0)
+        out["wall_clock_limit_seconds"] = ExactDoubleText(r.wall_clock_limit_seconds);
     return out;
 }
 
@@ -262,6 +273,15 @@ parallel::FullPathResult<ComplexT> DecodeFullPathResult(boost::json::object cons
         DecodeComplexScalar<ComplexT>(rec.at("time_of_first_prec_increase").as_array());
     r.max_precision_used = static_cast<unsigned>(rec.at("max_precision_used").as_int64());
     r.path_time_seconds = DoubleFromText(std::string(rec.at("path_time_seconds").as_string()));
+    // records written before paths were stamped with where they got to simply lack these
+    if (auto const* v = rec.if_contains("num_successful_steps"))
+        r.num_successful_steps = static_cast<unsigned>(v->as_int64());
+    if (auto const* v = rec.if_contains("num_failed_steps"))
+        r.num_failed_steps = static_cast<unsigned>(v->as_int64());
+    if (auto const* v = rec.if_contains("latest_path_point"))
+        r.latest_path_point = DecodePoint<ComplexT>(v->as_array());
+    if (auto const* v = rec.if_contains("wall_clock_limit_seconds"))
+        r.wall_clock_limit_seconds = DoubleFromText(std::string(v->as_string()));
     return r;
 }
 

@@ -77,6 +77,9 @@ default_precision = multiprec.default_precision
 precision = multiprec.precision                   # get/set the precision of a whole vector/matrix
 is_distinct_up_to = multiprec.is_distinct_up_to   # tolerance point-inequality, infinity norm (#304)
 
+# stopping a solve: Ctrl-C does this and raises KeyboardInterrupt; these do it programmatically
+from ._pybertini import request_stop, clear_stop_request, stop_requested
+
 # the multiprecision number types, hoisted to the top level (they also live in bertini.multiprec)
 from .multiprec import complex_mp, real_mp, int_mp, rational_mp
 
@@ -177,6 +180,7 @@ __all__ = ['solve','save','load','annotate','solutions_of','provenance','recordi
            'jacobian','randomize','linalg','random_matrix','random_vector','random_real','random_complex','coefficient','coefficients',
            'complex_mp','real_mp','int_mp','rational_mp',
            'nag_algorithm','default_precision','precision','is_distinct_up_to',
+           'request_stop','clear_stop_request','stop_requested',
            'real','imag','conj','arg','norm','is_real',
            'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
            'operators',

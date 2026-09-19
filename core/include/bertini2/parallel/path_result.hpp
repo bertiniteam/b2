@@ -132,6 +132,12 @@ struct FullPathResult
     // wall-clock time to execute the whole path (pre-endgame + endgame), in seconds
     double        path_time_seconds              = 0;  ///< Wall-clock seconds to execute the whole path.
 
+    // where the path got to (the stamp every path carries; the point only when it did not succeed)
+    unsigned      num_successful_steps           = 0;  ///< Successful predictor-corrector steps over the whole path.
+    unsigned      num_failed_steps               = 0;  ///< Failed predictor-corrector steps over the whole path.
+    Vec<ComplexT> latest_path_point;  ///< The last point the tracker reached on a path that did not succeed; empty otherwise.
+    double        wall_clock_limit_seconds       = 0;  ///< The per-path wall-clock budget in force when the path ran, seconds; 0 = none.
+
     /// \cond PATH_RESULT_SERIALIZATION
     template<class Archive>
     void serialize(Archive& ar, unsigned const)
@@ -157,6 +163,10 @@ struct FullPathResult
         ar & time_of_first_prec_increase;
         ar & max_precision_used;
         ar & path_time_seconds;
+        ar & num_successful_steps;
+        ar & num_failed_steps;
+        ar & latest_path_point;
+        ar & wall_clock_limit_seconds;
     }
     /// \endcond
 };

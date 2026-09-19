@@ -8,3 +8,4 @@ Solver settings & multiprecision
    crossed_paths/index
    precision_matters/index
    precision_models/index
+   stopping_and_budgets/index

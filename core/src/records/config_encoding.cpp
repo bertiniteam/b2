@@ -317,8 +317,11 @@ std::string CanonicalEncoding(algorithm::PostProcessingConfig const& c)
 
 std::string CanonicalEncoding(algorithm::ZeroDimConfig const& c)
 {
-    // num_threads and recall deliberately excluded: transient (they change only whether/how the work
-    // runs, not what is computed), so they must not affect the config's identity.
+    // num_threads and the two wall-clock budgets (max_path_wall_clock_duration,
+    // max_solve_wall_clock_duration) deliberately excluded: transient (they change only whether/how
+    // long the work runs, not what is computed), so they must not affect the config's identity.
+    // See the field comments in ZeroDimConfig and ADR-0060.  (RecordsConfig, which holds the recall
+    // policy, has no encoding at all for the same reason.)
     std::ostringstream out;
     out << "(cfg ZeroDim"
         << " initial_ambient_precision=" << c.initial_ambient_precision

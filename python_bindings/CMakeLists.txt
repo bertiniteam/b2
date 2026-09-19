@@ -168,6 +168,7 @@ set(PYBERTINI_SOURCES
     src/endgame_amp_export.cpp
     src/newton_refine_export.cpp
     src/random_export.cpp
+    src/stop_request_export.cpp
     src/mpfr_export.cpp
     src/linalg_export.cpp
     src/node_export.cpp

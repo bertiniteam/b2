@@ -48,6 +48,12 @@
 #include <bertini2/mpfr_complex.hpp>
 #include <bertini2/mpfr_extensions.hpp>
 #include <bertini2/eigen_extensions.hpp>
+#include <bertini2/common/stop_request.hpp>
+
+#include <csignal>
+#ifndef _WIN32
+#include <signal.h>      // struct sigaction, which <csignal> alone need not expose
+#endif
 
 
 
@@ -84,6 +90,49 @@ struct ScopedGILAcquire
     ~ScopedGILAcquire() { PyGILState_Release(state_); }
     ScopedGILAcquire(ScopedGILAcquire const&) = delete;
     ScopedGILAcquire& operator=(ScopedGILAcquire const&) = delete;
+};
+
+/**
+\brief RAII: for the duration of a long C++ call, make Ctrl-C stop it instead of being ignored.
+
+Why this exists.  A solve releases the GIL and runs on the calling thread.  When the user
+presses Ctrl-C, CPython's C-level handler notes the signal and waits for the evaluation loop
+to raise KeyboardInterrupt -- and the evaluation loop is not running, because the thread is
+inside the solve.  So the interrupt is delivered, recorded, and ignored until the very thing
+the user wanted to stop has finished.  Killing the process was the only exit.
+
+What this does.  For the scope of the object it installs its own SIGINT handler, which does
+two async-signal-safe things: calls bertini::RequestStop(), which every tracking loop checks
+between steps, and marks that the signal fired.  The solve then unwinds the way it always
+does, cooperatively, leaving completed paths installed and inspectable.  On scope exit the
+previous handler is restored -- Python's, or whatever the user had -- and the stop request is
+withdrawn so nothing leaks into the next solve.  The caller reads Fired() and, if so, raises
+KeyboardInterrupt in Python, which is what the user asked for.
+
+Only the C-level handler is touched.  Python's record of the Python-level handler
+(signal.getsignal) is never changed, so a user's own handler comes back exactly as it was.
+
+Not applied around the MPI path: a signal reaches one rank, and stopping one rank of a
+manager-worker solve cleanly is its own problem.
+*/
+class ScopedInterruptWatch
+{
+public:
+    ScopedInterruptWatch();
+    ~ScopedInterruptWatch();
+    ScopedInterruptWatch(ScopedInterruptWatch const&) = delete;
+    ScopedInterruptWatch& operator=(ScopedInterruptWatch const&) = delete;
+
+    /// Did SIGINT arrive while this watch was installed?
+    static bool Fired();
+
+private:
+    bertini::ScopedStopRequest clean_;   ///< declared first, so destroyed last: the flag is withdrawn after the handler is gone
+#ifdef _WIN32
+    void (*previous_)(int) = nullptr;
+#else
+    struct sigaction previous_ {};
+#endif
 };
 
 }} // namespace bertini::python

@@ -352,6 +352,7 @@ set(basics_sources
     src/basics/random.cpp
     src/basics/have_bertini.cpp
     src/basics/fast_allocator.cpp
+    src/basics/stop_request.cpp
     src/detail/sha256.cpp
     src/records/config_encoding.cpp
     src/records/derive.cpp

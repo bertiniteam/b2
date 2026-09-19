@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE(recall_false_forces_a_fresh_retrack)
     auto sys_c = TwoQuadrics();
     ZD c(sys_c);
     c.DefaultSetup();
-    auto cfg = c.Get<algorithm::ZeroDimConfig>();
-    cfg.recall = false;
+    auto cfg = c.Get<algorithm::RecordsConfig>();
+    cfg.recall = algorithm::RecallPolicy::Nothing;
     c.Set(cfg);
     c.RecordTo(std::make_shared<records::OutputDirectory>(dir));
     c.Solve();
@@ -415,6 +415,134 @@ BOOST_AUTO_TEST_CASE(at_infinity_paths_are_success_or_diverged_never_failed)
     again.RecordTo(std::make_shared<records::OutputDirectory>(dir));
     again.Solve();
     BOOST_CHECK_EQUAL(again.NumPathsRecalled(), 4u);
+}
+
+// A path that did not succeed is recorded WITH where it got to -- the last point beside the
+// time, and the steps it took -- so a re-read or resumed run can say where each abandoned path
+// was instead of just that it is missing.  Same ask, same budget: the abandonment is reusable
+// (asking no more of the path than the run that produced it), and it comes back stamped.
+BOOST_AUTO_TEST_CASE(an_abandoned_path_is_recorded_with_where_it_got_to_and_recalls_it)
+{
+    using std::abs;
+    auto const dir = FreshDir("abandoned_stamp");
+
+    SetGlobalSeed(42);
+    auto sys_a = TwoQuadrics();
+    ZD a(sys_a);
+    a.DefaultSetup();
+    auto stepping = a.GetTracker().template Get<tracking::SteppingConfig>();
+    stepping.max_num_steps = 3;                 // every path runs out of steps long before the boundary
+    a.GetTracker().template Set<tracking::SteppingConfig>(stepping);
+    a.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+    a.Solve();
+
+    auto const num_vars = static_cast<std::size_t>(a.GetTracker().GetSystem().NumVariables());
+    unsigned paths = 0;
+    for (auto const& rec : a.Records()->ResultsOf(a.RecordsRunId()))
+    {
+        if (std::string(rec.at("kind").as_string()) != "path")
+            continue;
+        ++paths;
+        BOOST_CHECK_EQUAL(std::string(rec.at("status").as_string()), "failed");
+        BOOST_CHECK_EQUAL(rec.at("num_successful_steps").as_int64() + rec.at("num_failed_steps").as_int64(), 3);
+        BOOST_REQUIRE(rec.contains("latest_path_point"));
+        BOOST_CHECK_EQUAL(rec.at("latest_path_point").as_array().size(), num_vars);
+        BOOST_CHECK(rec.at("endpoint").as_array().empty());   // no solution, and not a stale one
+    }
+    BOOST_CHECK_EQUAL(paths, 4u);
+
+    SetGlobalSeed(42);
+    auto sys_b = TwoQuadrics();
+    ZD b(sys_b);
+    b.DefaultSetup();
+    b.GetTracker().template Set<tracking::SteppingConfig>(stepping);
+    b.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+    b.Solve();
+    BOOST_CHECK_EQUAL(b.NumPathsRecalled(), 4u);
+
+    auto const& first = a.SolutionMetadata();
+    auto const& again = b.SolutionMetadata();
+    BOOST_REQUIRE_EQUAL(first.size(), again.size());
+    for (std::size_t ii = 0; ii < first.size(); ++ii)
+    {
+        BOOST_CHECK(again[ii].pre_endgame_success_code == SuccessCode::MaxNumStepsTaken);
+        BOOST_CHECK_EQUAL(first[ii].num_successful_steps, again[ii].num_successful_steps);
+        BOOST_CHECK_EQUAL(first[ii].num_failed_steps, again[ii].num_failed_steps);
+        BOOST_REQUIRE_EQUAL(first[ii].latest_path_point.size(), again[ii].latest_path_point.size());
+        BOOST_CHECK_SMALL((first[ii].latest_path_point - again[ii].latest_path_point).norm(), 1e-15);
+        BOOST_CHECK_SMALL(abs(first[ii].final_time_used - again[ii].final_time_used), 1e-15);
+    }
+}
+
+// The recall policy, walked through: a run under a wall-clock budget no path can meet records
+// four abandonments carrying that budget.  The same budget again reuses them (asking no more
+// patience than before).  Everything reuses them even under a larger budget.  The default,
+// under a larger budget, re-tracks them -- paying again is the point -- and they complete.
+// Nothing tracks fresh whatever is on record.
+BOOST_AUTO_TEST_CASE(recall_policy_decides_whether_an_abandonment_stands_in_for_tracking)
+{
+    auto const dir = FreshDir("recall_policy");
+
+    auto solve = [&](double limit, algorithm::RecallPolicy policy) {
+        SetGlobalSeed(42);
+        auto sys = TwoQuadrics();
+        auto zd = std::make_unique<ZD>(sys);
+        zd->DefaultSetup();
+        auto cfg = zd->Get<algorithm::ZeroDimConfig>();
+        cfg.max_path_wall_clock_duration = limit;
+        zd->Set(cfg);
+        auto rc = zd->Get<algorithm::RecordsConfig>();
+        rc.recall = policy;
+        zd->Set(rc);
+        zd->RecordTo(std::make_shared<records::OutputDirectory>(dir));
+        zd->Solve();
+        return zd;
+    };
+    auto abandoned = [](ZD const& zd) {
+        unsigned n = 0;
+        for (auto const& m : zd.SolutionMetadata())
+            if (m.pre_endgame_success_code == SuccessCode::WallClockLimitReached) ++n;
+        return n;
+    };
+
+    auto a = solve(1e-9, algorithm::RecallPolicy::Completed);
+    BOOST_CHECK_EQUAL(a->NumPathsRecalled(), 0u);
+    BOOST_CHECK_EQUAL(abandoned(*a), 4u);
+    for (auto const& rec : a->Records()->ResultsOf(a->RecordsRunId()))
+        if (std::string(rec.at("kind").as_string()) == "path")
+        {
+            BOOST_CHECK_EQUAL(std::string(rec.at("pre_endgame_success_code_name").as_string()), "WallClockLimitReached");
+            BOOST_REQUIRE(rec.contains("wall_clock_limit_seconds"));
+            BOOST_CHECK(rec.contains("latest_path_point"));
+        }
+
+    auto b = solve(1e-9, algorithm::RecallPolicy::Completed);   // same patience: reused
+    BOOST_CHECK_EQUAL(b->NumPathsRecalled(), 4u);
+    BOOST_CHECK_EQUAL(abandoned(*b), 4u);
+
+    auto c = solve(3600, algorithm::RecallPolicy::Everything);  // more patience, but told to reuse anyway
+    BOOST_CHECK_EQUAL(c->NumPathsRecalled(), 4u);
+    BOOST_CHECK_EQUAL(abandoned(*c), 4u);
+
+    auto d = solve(3600, algorithm::RecallPolicy::Completed);   // more patience: re-tracked, and they finish
+    BOOST_CHECK_EQUAL(d->NumPathsRecalled(), 0u);
+    BOOST_CHECK_EQUAL(abandoned(*d), 0u);
+    BOOST_CHECK_EQUAL(d->Report().num_finite_solutions, 4u);
+
+    auto e = solve(3600, algorithm::RecallPolicy::Completed);   // now they are completed paths: reused
+    BOOST_CHECK_EQUAL(e->NumPathsRecalled(), 4u);
+
+    auto f = solve(3600, algorithm::RecallPolicy::Nothing);
+    BOOST_CHECK_EQUAL(f->NumPathsRecalled(), 0u);
+    BOOST_CHECK_EQUAL(f->Report().num_finite_solutions, 4u);
+
+    // and with no budget at all, an abandonment under a budget is not reusable either: the
+    // ceiling moved to infinity
+    auto g = solve(1e-9, algorithm::RecallPolicy::Nothing);     // put four abandonments back on top
+    BOOST_CHECK_EQUAL(abandoned(*g), 4u);
+    auto h = solve(0, algorithm::RecallPolicy::Completed);
+    BOOST_CHECK_EQUAL(h->NumPathsRecalled(), 0u);
+    BOOST_CHECK_EQUAL(h->Report().num_finite_solutions, 4u);
 }
 
 BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)

@@ -29,6 +29,8 @@
 #define BERTINI_BASE_TRACKER_HPP
 
 #include <algorithm>
+#include <chrono>
+#include <optional>
 //#include "bertini2/tracking/step.hpp"
 #include "bertini2/trackers/ode_predictors.hpp"
 #include "bertini2/trackers/newton_corrector.hpp"
@@ -41,6 +43,7 @@
 
 #include "bertini2/detail/is_template_parameter.hpp"
 #include "bertini2/detail/configured.hpp"
+#include "bertini2/common/stop_request.hpp"
 
 namespace bertini{
 
@@ -294,6 +297,28 @@ namespace bertini{
                 // as precondition to this while loop, the correct container, either complex_dbl or mpfr, must have the correct data.
                 while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<ComplexT>::epsilon()))
                 {
+                    // Has somebody outside asked us to stop?  Checked FIRST, before the
+                    // tracker's own budgets, because it is the only one whose answer is not
+                    // about this path: a keyboard interrupt is a statement about the process.
+                    // Between steps is the only place we can honour it without threads, so a
+                    // stop overruns by at most the step in flight -- which at high precision
+                    // is not free, and is the price of not preempting mid-step.
+                    if (StopRequested())
+                    {
+                        PostTrackCleanup();
+                        return SuccessCode::ExternallyTerminated;
+                    }
+
+                    // Has our wall-clock deadline passed?  A deadline rather than a duration,
+                    // because it must survive across TrackPath calls: an endgame issues hundreds
+                    // of them for one path, and a per-call budget would restart with each.
+                    // Same overrun as the stop above: at most the step in flight.
+                    if (wall_clock_deadline_ && std::chrono::steady_clock::now() >= *wall_clock_deadline_)
+                    {
+                        PostTrackCleanup();
+                        return SuccessCode::WallClockLimitReached;
+                    }
+
                     SuccessCode pre_iteration_code = PreIterationCheck();
                     if (pre_iteration_code!=SuccessCode::Success)
                     {
@@ -440,6 +465,74 @@ namespace bertini{
             }
 
             /**
+            \brief Zero the cumulative step counts.
+
+            The per-call counters (NumTotalStepsTaken and friends) start over at every call to
+            TrackPath.  The cumulative counts start over only here, so a caller that issues many
+            TrackPath calls for one logical path -- an endgame issues hundreds for its sample
+            circles -- can read the total work of the whole path afterwards.  The solver zeroes
+            them at the start of each path and stamps them into that path's metadata.
+            */
+            void ResetCumulativeStepCounts() const
+            {
+                num_successful_steps_cumulative_ = 0;
+                num_failed_steps_cumulative_ = 0;
+            }
+
+            /// \brief Successful steps since the last ResetCumulativeStepCounts, across every TrackPath call in between.
+            unsigned CumulativeSuccessfulSteps() const
+            {
+                return num_successful_steps_cumulative_;
+            }
+
+            /// \brief Failed steps since the last ResetCumulativeStepCounts, across every TrackPath call in between.
+            unsigned CumulativeFailedSteps() const
+            {
+                return num_failed_steps_cumulative_;
+            }
+
+            /**
+            \brief Give the tracker a wall-clock deadline: a point in time after which any track
+            in progress is abandoned between steps with SuccessCode::WallClockLimitReached.
+
+            The primitive is a point in time, not a length of time, because it has to hold across
+            calls: an endgame issues hundreds of TrackPath calls for one path, and a per-call
+            budget would start over with each.  The deadline stays armed until cleared or
+            replaced, so a caller limiting one path at a time sets it before the path and clears
+            it after.  "Time" here is the clock on the wall; the path variable t is unaffected.
+
+            \param deadline The steady-clock time point to give up at.
+            */
+            void SetMaxWallClockTime(std::chrono::steady_clock::time_point deadline) const
+            {
+                wall_clock_deadline_ = deadline;
+            }
+
+            /**
+            \brief Give the tracker a wall-clock budget counted from now: SetMaxWallClockTime(now + duration).
+
+            \param duration How long from now to give up, e.g. std::chrono::seconds(30) or std::chrono::duration<double>(0.5).
+            */
+            template <typename Rep, typename Period>
+            void SetMaxWallClockDuration(std::chrono::duration<Rep, Period> duration) const
+            {
+                using clock = std::chrono::steady_clock;
+                wall_clock_deadline_ = clock::now() + std::chrono::duration_cast<clock::duration>(duration);
+            }
+
+            /// \brief Remove the wall-clock deadline; tracking is unlimited again.
+            void ClearMaxWallClockTime() const
+            {
+                wall_clock_deadline_.reset();
+            }
+
+            /// \brief The wall-clock deadline in force, if any.
+            std::optional<std::chrono::steady_clock::time_point> MaxWallClockTime() const
+            {
+                return wall_clock_deadline_;
+            }
+
+            /**
             \brief Set how large the stepsize should be.
 
             \param new_stepsize The new value.
@@ -583,6 +676,7 @@ namespace bertini{
             void IncrementBaseCountersSuccess() const
             {
                 num_successful_steps_taken_++;
+                num_successful_steps_cumulative_++;
                 num_consecutive_successful_steps_++;
                 current_time_ += delta_t_;
                 num_consecutive_failed_steps_ = 0;
@@ -602,6 +696,7 @@ namespace bertini{
             {
                 num_consecutive_successful_steps_=0;
                 num_failed_steps_taken_++;
+                num_failed_steps_cumulative_++;
                 num_consecutive_failed_steps_++;
             }
 
@@ -633,6 +728,9 @@ namespace bertini{
             mutable unsigned num_consecutive_successful_steps_; ///< The number of CONSECUTIVE successful steps taken in a row.
             mutable unsigned num_consecutive_failed_steps_; ///< The number of CONSECUTIVE failed steps taken in a row.
             mutable unsigned num_failed_steps_taken_; ///< The total number of failed steps taken.
+            mutable unsigned num_successful_steps_cumulative_ = 0; ///< Successful steps since ResetCumulativeStepCounts, across TrackPath calls.
+            mutable unsigned num_failed_steps_cumulative_ = 0; ///< Failed steps since ResetCumulativeStepCounts, across TrackPath calls.
+            mutable std::optional<std::chrono::steady_clock::time_point> wall_clock_deadline_; ///< Give up between steps once this passes; none by default.
 
 
             // configuration for tracking

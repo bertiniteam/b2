@@ -19,9 +19,15 @@
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
+#include <chrono>
+#include <functional>
+#include <set>
+#include <vector>
+
 #include <boost/test/unit_test.hpp>
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/trackers/tracker.hpp"
+#include "bertini2/records/solver_recording.hpp"   // CanonicalName, for readable test messages
 
 
 
@@ -1186,5 +1192,263 @@ BOOST_AUTO_TEST_CASE(set_start_precision_clear_restores_default_behavior)
     BOOST_CHECK(abs(y_end(0) - mpfr(0)) < 1e-5);
 }
 
+
+/**
+A bare tracker honours a stop request, with no solver anywhere in sight.
+
+The request is a fact about the process rather than about any one object, and tracking is
+where it gets noticed -- between steps, which is the only place it can be noticed without
+preempting mid-step.  A user driving a tracker directly is assumed to know what they are
+doing; they get the same behaviour a solver gets, because it is the same check.
+*/
+BOOST_AUTO_TEST_CASE(a_stop_request_stops_a_bare_tracker)
+{
+    using namespace bertini::tracking;
+    using Var = std::shared_ptr<bertini::node::Variable>;
+    using Variable = bertini::node::Variable;
+    using bertini::System;
+    using bertini::VariableGroup;
+
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+
+    System sys;
+    sys.AddFunction(y - t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(VariableGroup{y});
+
+    AMPTracker tracker(sys);
+    tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+    tracker.PrecisionSetup(bertini::tracking::AMPConfigFrom(sys));
+
+    bertini::Vec<bertini::complex_mp> start(1), result;
+    start << bertini::complex_mp(1);
+
+    bertini::ScopedStopRequest guard;
+    bertini::RequestStop();
+
+    auto const code = tracker.TrackPath(result, bertini::complex_mp(1),
+                                        bertini::complex_mp("0.1"), start);
+
+    BOOST_CHECK(code == bertini::SuccessCode::ExternallyTerminated);
+
+    // and with the request withdrawn, the identical track succeeds
+    bertini::ClearStopRequest();
+    auto const after = tracker.TrackPath(result, bertini::complex_mp(1),
+                                         bertini::complex_mp("0.1"), start);
+    BOOST_CHECK(after == bertini::SuccessCode::Success);
+}
+
+/**
+A bare tracker honours a wall-clock deadline with no solver anywhere.  A deadline already in
+the past stops the track at its first step boundary with WallClockLimitReached and the
+tracker still says where it was -- at the start, having taken no steps.  Clearing the
+deadline makes the identical track succeed, and a generous deadline does not bite.
+*/
+BOOST_AUTO_TEST_CASE(a_wall_clock_deadline_stops_a_bare_tracker)
+{
+    using namespace bertini::tracking;
+    using Var = std::shared_ptr<bertini::node::Variable>;
+    using Variable = bertini::node::Variable;
+    using bertini::System;
+    using bertini::VariableGroup;
+
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+
+    System sys;
+    sys.AddFunction(y - t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(VariableGroup{y});
+
+    AMPTracker tracker(sys);
+    tracker.Setup(Predictor::Euler, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+    tracker.PrecisionSetup(bertini::tracking::AMPConfigFrom(sys));
+
+    bertini::Vec<bertini::complex_mp> start(1), result;
+    start << bertini::complex_mp(1);
+
+    BOOST_CHECK(!tracker.MaxWallClockTime().has_value());
+    tracker.SetMaxWallClockTime(std::chrono::steady_clock::now() - std::chrono::seconds(1));
+    BOOST_CHECK(tracker.MaxWallClockTime().has_value());
+
+    auto const code = tracker.TrackPath(result, bertini::complex_mp(1),
+                                        bertini::complex_mp("0.1"), start);
+    BOOST_CHECK(code == bertini::SuccessCode::WallClockLimitReached);
+    BOOST_CHECK_EQUAL(tracker.NumTotalStepsTaken(), 0u);
+    BOOST_CHECK(abs(tracker.CurrentTime() - bertini::complex_mp(1)) < 1e-30);
+    BOOST_CHECK((tracker.CurrentPoint() - start).norm() < 1e-30);
+
+    tracker.ClearMaxWallClockTime();
+    BOOST_CHECK(!tracker.MaxWallClockTime().has_value());
+    auto const after = tracker.TrackPath(result, bertini::complex_mp(1),
+                                         bertini::complex_mp("0.1"), start);
+    BOOST_CHECK(after == bertini::SuccessCode::Success);
+
+    tracker.SetMaxWallClockDuration(std::chrono::hours(1));
+    auto const generous = tracker.TrackPath(result, bertini::complex_mp(1),
+                                            bertini::complex_mp("0.1"), start);
+    BOOST_CHECK(generous == bertini::SuccessCode::Success);
+    tracker.ClearMaxWallClockTime();
+}
+
+
+/**
+SuccessCode::NeverStarted is a DEFAULT, never a verdict, and callers depend on that: a solve
+records nothing for a path whose code reads NeverStarted, counts it as unreached, and reports
+itself cut short on account of it.  A tracker that returned it would make a path that WAS
+attempted look like one nobody got to -- silently, since the value is a legal SuccessCode.
+
+Nothing returns it today.  This pins that by ending a track every way a track can end, and
+checking that no route produces it.  The codes themselves are not asserted one by one, which
+would pin the tracker's choice of diagnosis rather than the invariant; what is asserted is the
+invariant, plus that the scenarios really did end in several different ways, so the test cannot
+pass by doing nothing.
+*/
+BOOST_AUTO_TEST_CASE(a_tracker_never_returns_never_started)
+{
+    using namespace bertini::tracking;
+    using Variable = bertini::node::Variable;
+    using bertini::System;
+    using bertini::VariableGroup;
+    using bertini::SuccessCode;
+    using Cmp = bertini::complex_mp;
+
+    // One homotopy in y and t, built fresh per scenario (a tracker holds a reference to its
+    // system, and these systems differ).
+    auto one_variable_system = [](int which)
+    {
+        auto y = Variable::Make("y");
+        auto t = Variable::Make("t");
+        System sys;
+        if (which == 0)
+            sys.AddFunction(y - t);              // the well-behaved path, y(t) = t
+        else if (which == 1)
+            sys.AddFunction(y*y - t + 1);        // y=0 at t=1 is a SINGULAR start (dy = 2y = 0)
+        else
+            sys.AddFunction(y*t - 1);            // y(t) = 1/t, off to infinity as t -> 0
+        sys.AddPathVariable(t);
+        sys.AddVariableGroup(VariableGroup{y});
+        return sys;
+    };
+
+    auto track = [&one_variable_system](int which, Cmp const& start_value, Cmp const& endtime,
+                                        std::function<void(AMPTracker&)> const& configure)
+    {
+        auto sys = one_variable_system(which);
+        AMPTracker tracker(sys);
+        tracker.Setup(Predictor::RKF45, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+        tracker.PrecisionSetup(bertini::tracking::AMPConfigFrom(sys));
+        if (configure)
+            configure(tracker);
+
+        bertini::Vec<Cmp> start(1), result;
+        start << start_value;
+        return tracker.TrackPath(result, Cmp(1), endtime, start);
+    };
+
+    std::vector<SuccessCode> observed;
+
+    // a track that simply works
+    observed.push_back(track(0, Cmp(1), Cmp("0.1"), nullptr));
+
+    // out of steps
+    observed.push_back(track(0, Cmp(1), Cmp("0.1"), [](AMPTracker& tr){
+        auto stepping = tr.Get<SteppingConfig>();
+        stepping.max_num_steps = 1;
+        tr.Set<SteppingConfig>(stepping);
+    }));
+
+    // the step size floor is already above the step it wants to take
+    observed.push_back(track(0, Cmp(1), Cmp("0.1"), [](AMPTracker& tr){
+        auto stepping = tr.Get<SteppingConfig>();
+        stepping.min_step_size = 1.0;
+        tr.Set<SteppingConfig>(stepping);
+    }));
+
+    // asked for more digits than the precision ceiling allows
+    observed.push_back(track(0, Cmp(1), Cmp("0.1"), [](AMPTracker& tr){
+        tr.SetTrackingTolerance(1e-60);
+        auto amp = tr.Get<AdaptiveMultiplePrecisionConfig>();
+        amp.maximum_precision = 20;
+        tr.Set<AdaptiveMultiplePrecisionConfig>(amp);
+    }));
+
+    // a singular start point, refused by the initial refinement
+    observed.push_back(track(1, Cmp(0), Cmp("0.1"), nullptr));
+
+    // a path running off to infinity, under ADAPTIVE precision: it does not get to the
+    // truncation threshold, because chasing y = 1/t toward the pole escalates precision until
+    // the ceiling stops it first.  Truncation itself is covered below, with a fixed-precision
+    // tracker, which cannot escalate.
+    observed.push_back(track(2, Cmp(1), Cmp(0), [](AMPTracker& tr){
+        tr.SetInfiniteTruncationTolerance(10.0);
+    }));
+
+    // somebody asked us to stop
+    {
+        bertini::ScopedStopRequest guard;
+        bertini::RequestStop();
+        observed.push_back(track(0, Cmp(1), Cmp("0.1"), nullptr));
+    }
+
+    // the wall-clock deadline is already behind us
+    observed.push_back(track(0, Cmp(1), Cmp("0.1"), [](AMPTracker& tr){
+        tr.SetMaxWallClockTime(std::chrono::steady_clock::now() - std::chrono::seconds(1));
+    }));
+
+    // and the other initialization path: a fixed-precision tracker, working and out of steps
+    for (unsigned max_steps : {100000u, 1u})
+    {
+        auto y = Variable::Make("y");
+        auto t = Variable::Make("t");
+        System sys;
+        sys.AddFunction(y - t);
+        sys.AddPathVariable(t);
+        sys.AddVariableGroup(VariableGroup{y});
+
+        DoublePrecisionTracker tracker(sys);
+        tracker.Setup(Predictor::RKF45, double(1e-5), double(1e5), SteppingConfig(), NewtonConfig());
+        auto stepping = tracker.Get<SteppingConfig>();
+        stepping.max_num_steps = max_steps;
+        tracker.Set<SteppingConfig>(stepping);
+
+        bertini::Vec<bertini::complex_dbl> start(1), result;
+        start << bertini::complex_dbl(1);
+        observed.push_back(tracker.TrackPath(result, bertini::complex_dbl(1),
+                                             bertini::complex_dbl(0.1), start));
+    }
+
+    // truncation: y = 1/t past the threshold, in fixed precision so nothing escalates
+    {
+        auto y = Variable::Make("y");
+        auto t = Variable::Make("t");
+        System sys;
+        sys.AddFunction(y*t - 1);
+        sys.AddPathVariable(t);
+        sys.AddVariableGroup(VariableGroup{y});
+
+        DoublePrecisionTracker tracker(sys);
+        tracker.Setup(Predictor::RKF45, double(1e-5), double(1e5), SteppingConfig(), NewtonConfig());
+        tracker.SetInfiniteTruncationTolerance(10.0);
+
+        bertini::Vec<bertini::complex_dbl> start(1), result;
+        start << bertini::complex_dbl(1);
+        observed.push_back(tracker.TrackPath(result, bertini::complex_dbl(1),
+                                             bertini::complex_dbl(0), start));
+    }
+
+    for (auto code : observed)
+    {
+        BOOST_TEST_MESSAGE("ended as " << bertini::records::CanonicalName(code));
+        BOOST_CHECK(code != SuccessCode::NeverStarted);
+    }
+
+    // the scenarios really did end differently, so the checks above mean something
+    std::set<SuccessCode> distinct(observed.begin(), observed.end());
+    BOOST_CHECK_GE(distinct.size(), 4u);
+    BOOST_CHECK(distinct.count(SuccessCode::Success) == 1);          // at least one worked
+    BOOST_CHECK(distinct.size() > 1);                                // and at least one did not
+}
 
 BOOST_AUTO_TEST_SUITE_END()

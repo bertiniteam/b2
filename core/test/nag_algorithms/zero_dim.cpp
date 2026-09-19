@@ -903,6 +903,8 @@ BOOST_AUTO_TEST_CASE(max_precision_used_is_recorded_on_failed_endgames)
     zd.Solve();
 
     unsigned failed_after_escalating = 0;
+    auto const num_vars = zd.GetTracker().GetSystem().NumVariables();
+    auto const& points = zd.SolutionsInternalCoords();
     for (auto const& m : zd.SolutionMetadata())
     {
         if (m.endgame_success_code == SuccessCode::Success)
@@ -910,8 +912,238 @@ BOOST_AUTO_TEST_CASE(max_precision_used_is_recorded_on_failed_endgames)
         // the endgame escalated past double before failing; the metadata must say so
         BOOST_CHECK_GE(m.max_precision_used, 20u);
         ++failed_after_escalating;
+
+        // and a path abandoned IN the endgame is stamped with where it got to: a point of the
+        // right size, a time inside the endgame region, the steps it took -- and no solution,
+        // in particular not a stale copy of some other path's approximation
+        BOOST_CHECK_EQUAL(m.latest_path_point.size(), static_cast<Eigen::Index>(num_vars));
+        BOOST_CHECK(abs(m.final_time_used) <= 0.1);
+        BOOST_CHECK_GT(m.num_successful_steps, 0u);
+        BOOST_CHECK_EQUAL(points[m.path_index].size(), 0);
     }
     BOOST_CHECK_GE(failed_after_escalating, 1u);   // the scenario must actually occur
+}
+
+/**
+A stop request asked before a solve begins means no path is tracked, and the solver says it
+was cut short rather than presenting an empty answer as a complete one.
+
+This is the coarse half of the contract.  Stopping a solve MID-flight is what the Python
+bindings do with a signal handler, and there is no portable way to raise a signal partway
+through a C++ test; what is testable here is that the request is honoured, that the taxonomy
+of outcomes is right, and that the solver reports being cut short.
+*/
+BOOST_AUTO_TEST_CASE(a_stop_request_stops_a_solve_and_the_solver_says_so)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    bertini::ScopedStopRequest guard;    // clears any stale request, and again on the way out
+    bertini::RequestStop();
+
+    zd.Solve();
+
+    BOOST_CHECK(zd.WasStoppedEarly());
+    BOOST_CHECK_GT(zd.NumPathsNeverStarted(), 0u);
+
+    // every path was left untouched, which is a different statement from "failed"
+    for (auto const& md : zd.SolutionMetadata())
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::NeverStarted);
+}
+
+/**
+Withdrawing the request leaves the solver in its ordinary state: the same solve that was
+stopped a moment ago runs to completion and reports that it was not cut short.  A stop is a
+request, not a mode, and having been stopped once is not sticky.
+*/
+BOOST_AUTO_TEST_CASE(withdrawing_a_stop_request_leaves_the_solver_normal)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    {
+        bertini::ScopedStopRequest guard;
+        bertini::RequestStop();
+        zd.Solve();
+        BOOST_REQUIRE(zd.WasStoppedEarly());
+    }   // the guard withdraws the request
+
+    zd.Solve();
+
+    BOOST_CHECK(!zd.WasStoppedEarly());
+    BOOST_CHECK_EQUAL(zd.NumPathsNeverStarted(), 0u);
+}
+
+/**
+A path that did not succeed says where it got to.  Every path here is made to run out of
+steps partway to the endgame boundary, and each one must then carry the stamp: the code that
+stopped it, a step tally that adds up to the budget, a point of the right size, a time short of
+the boundary, and the precision it was working in.  Before this, such a path reported a time
+of zero and no point at all.  The solution slot stays empty: there is no solution, and the
+stamp is where the point lives.
+*/
+BOOST_AUTO_TEST_CASE(a_path_abandoned_before_the_endgame_is_stamped_with_where_it_got_to)
+{
+    using namespace bertini;
+    using namespace tracking;
+    using std::abs;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    auto stepping = zd.GetTracker().template Get<SteppingConfig>();
+    stepping.max_num_steps = 3;
+    zd.GetTracker().template Set<SteppingConfig>(stepping);
+
+    zd.Solve();
+
+    auto const num_vars = zd.GetTracker().GetSystem().NumVariables();
+    auto const& points = zd.SolutionsInternalCoords();
+    BOOST_REQUIRE(!zd.SolutionMetadata().empty());
+    for (auto const& md : zd.SolutionMetadata())
+    {
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::MaxNumStepsTaken);
+        BOOST_CHECK_EQUAL(md.num_successful_steps + md.num_failed_steps, 3u);
+        BOOST_CHECK_EQUAL(md.latest_path_point.size(), static_cast<Eigen::Index>(num_vars));
+        // three steps from t = 1 get nowhere near the boundary at 0.1, and a successful step
+        // moves the time off the start
+        BOOST_CHECK_GT(abs(md.final_time_used), 0.1);
+        BOOST_CHECK_LE(abs(md.final_time_used), 1.0);
+        if (md.num_successful_steps > 0)
+            BOOST_CHECK_LT(abs(md.final_time_used), 1.0);
+        BOOST_CHECK_EQUAL(md.max_precision_used, DoublePrecision());
+        BOOST_CHECK_EQUAL(points[md.path_index].size(), 0);
+    }
+    BOOST_CHECK(!zd.WasStoppedEarly());   // running out of budget is not being stopped
+}
+
+/**
+The other side of the stamp: a path that succeeded does not carry a last point (its endpoint
+is the solution), its time is the endgame's latest time near the target, its step tally is
+non-empty, and a fixed-precision tracker reports its one precision instead of zero.
+*/
+BOOST_AUTO_TEST_CASE(a_successful_path_carries_its_step_tally_and_no_latest_path_point)
+{
+    using namespace bertini;
+    using namespace tracking;
+    using std::abs;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+    zd.Solve();
+
+    unsigned successes = 0;
+    for (auto const& md : zd.SolutionMetadata())
+    {
+        if (md.endgame_success_code != SuccessCode::Success)
+            continue;
+        ++successes;
+        BOOST_CHECK_EQUAL(md.latest_path_point.size(), 0);
+        BOOST_CHECK_GT(md.num_successful_steps, 0u);
+        BOOST_CHECK_LT(abs(md.final_time_used), 0.1);
+        BOOST_CHECK_EQUAL(md.max_precision_used, DoublePrecision());
+    }
+    BOOST_CHECK_GT(successes, 0u);
+}
+
+/**
+A per-path wall-clock budget through the solver.  With a budget no path can meet, every path
+is abandoned between steps with WallClockLimitReached, stamped with where it got to, and
+recorded with the budget that stopped it; the solve was not "stopped early" -- nobody
+interrupted it, each path simply ran out of patience -- and the tracker is handed back with
+no deadline left on it.  A generous budget changes nothing.
+*/
+BOOST_AUTO_TEST_CASE(a_per_path_wall_clock_budget_abandons_paths_that_exceed_it)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    auto cfg = zd.Get<algorithm::ZeroDimConfig>();
+    cfg.max_path_wall_clock_duration = 1e-9;   // a nanosecond: gone before the first step
+    zd.Set(cfg);
+    zd.Solve();
+
+    auto const num_vars = zd.GetTracker().GetSystem().NumVariables();
+    BOOST_REQUIRE(!zd.SolutionMetadata().empty());
+    for (auto const& md : zd.SolutionMetadata())
+    {
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::WallClockLimitReached);
+        BOOST_CHECK_EQUAL(md.latest_path_point.size(), static_cast<Eigen::Index>(num_vars));
+        BOOST_CHECK_EQUAL(md.wall_clock_limit_seconds, 1e-9);
+    }
+    BOOST_CHECK(!zd.WasStoppedEarly());
+    BOOST_CHECK(!zd.GetTracker().MaxWallClockTime().has_value());
+
+    cfg.max_path_wall_clock_duration = 3600;
+    zd.Set(cfg);
+    zd.Solve();
+    for (auto const& md : zd.SolutionMetadata())
+    {
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::Success);
+        BOOST_CHECK_EQUAL(md.wall_clock_limit_seconds, 3600);
+    }
+    BOOST_CHECK(!zd.GetTracker().MaxWallClockTime().has_value());
+}
+
+/**
+A budget on the WHOLE solve reads exactly as an interrupt does.  A budget that is gone before
+the first path begins leaves every path NeverStarted and the solver reporting that it was cut
+short; the paths carry no per-path budget, since none was set.  A generous one changes nothing.
+The in-flight case -- a path abandoned mid-track because the solve budget ran out, read back as
+ExternallyTerminated rather than as over its own budget -- cannot be pinned to a step count on
+every machine, so it is covered by the interrupt tests, whose code path it shares from the
+abandonment on.
+*/
+BOOST_AUTO_TEST_CASE(a_whole_solve_wall_clock_budget_reads_as_an_interrupt)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT,
+                  bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    auto cfg = zd.Get<algorithm::ZeroDimConfig>();
+    cfg.max_solve_wall_clock_duration = 1e-9;
+    zd.Set(cfg);
+    zd.Solve();
+
+    BOOST_CHECK(zd.WasStoppedEarly());
+    BOOST_CHECK_EQUAL(zd.NumPathsNeverStarted(), zd.SolutionMetadata().size());
+    for (auto const& md : zd.SolutionMetadata())
+    {
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::NeverStarted);
+        BOOST_CHECK_EQUAL(md.wall_clock_limit_seconds, 0);
+    }
+
+    cfg.max_solve_wall_clock_duration = 3600;
+    zd.Set(cfg);
+    zd.Solve();
+    BOOST_CHECK(!zd.WasStoppedEarly());
+    BOOST_CHECK_EQUAL(zd.NumPathsNeverStarted(), 0u);
+    for (auto const& md : zd.SolutionMetadata())
+        BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::Success);
+    BOOST_CHECK(!zd.GetTracker().MaxWallClockTime().has_value());
 }
 
 template <class TrackerT>
