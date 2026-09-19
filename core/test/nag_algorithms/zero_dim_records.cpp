@@ -445,8 +445,8 @@ BOOST_AUTO_TEST_CASE(an_abandoned_path_is_recorded_with_where_it_got_to_and_reca
         ++paths;
         BOOST_CHECK_EQUAL(std::string(rec.at("status").as_string()), "failed");
         BOOST_CHECK_EQUAL(rec.at("num_successful_steps").as_int64() + rec.at("num_failed_steps").as_int64(), 3);
-        BOOST_REQUIRE(rec.contains("last_point"));
-        BOOST_CHECK_EQUAL(rec.at("last_point").as_array().size(), num_vars);
+        BOOST_REQUIRE(rec.contains("latest_path_point"));
+        BOOST_CHECK_EQUAL(rec.at("latest_path_point").as_array().size(), num_vars);
         BOOST_CHECK(rec.at("endpoint").as_array().empty());   // no solution, and not a stale one
     }
     BOOST_CHECK_EQUAL(paths, 4u);
@@ -468,8 +468,8 @@ BOOST_AUTO_TEST_CASE(an_abandoned_path_is_recorded_with_where_it_got_to_and_reca
         BOOST_CHECK(again[ii].pre_endgame_success_code == SuccessCode::MaxNumStepsTaken);
         BOOST_CHECK_EQUAL(first[ii].num_successful_steps, again[ii].num_successful_steps);
         BOOST_CHECK_EQUAL(first[ii].num_failed_steps, again[ii].num_failed_steps);
-        BOOST_REQUIRE_EQUAL(first[ii].last_point.size(), again[ii].last_point.size());
-        BOOST_CHECK_SMALL((first[ii].last_point - again[ii].last_point).norm(), 1e-15);
+        BOOST_REQUIRE_EQUAL(first[ii].latest_path_point.size(), again[ii].latest_path_point.size());
+        BOOST_CHECK_SMALL((first[ii].latest_path_point - again[ii].latest_path_point).norm(), 1e-15);
         BOOST_CHECK_SMALL(abs(first[ii].final_time_used - again[ii].final_time_used), 1e-15);
     }
 }
@@ -513,7 +513,7 @@ BOOST_AUTO_TEST_CASE(recall_policy_decides_whether_an_abandonment_stands_in_for_
         {
             BOOST_CHECK_EQUAL(std::string(rec.at("pre_endgame_success_code_name").as_string()), "WallClockLimitReached");
             BOOST_REQUIRE(rec.contains("wall_clock_limit_seconds"));
-            BOOST_CHECK(rec.contains("last_point"));
+            BOOST_CHECK(rec.contains("latest_path_point"));
         }
 
     auto b = solve(1e-9, algorithm::RecallPolicy::Completed);   // same patience: reused

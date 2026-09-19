@@ -103,8 +103,8 @@ void ExposeSolutionMetaData(std::string const& class_name){
         "can tell whether it is asking more patience of an abandoned path than the run that "
         "abandoned it.")
     // by value, for the same reason as singular_values
-    .add_property("last_point",
-        +[](MDT const& m){ return bertini::Vec<NumT>(m.last_point); },
+    .add_property("latest_path_point",
+        +[](MDT const& m){ return bertini::Vec<NumT>(m.latest_path_point); },
         "Where the tracker was when it gave up: the last point reached on a path that did NOT "
         "succeed -- whether it failed, was stopped, or ran out of budget, in either stage -- in the "
         "solver's internal coordinates.  Read with final_time_used, which holds the matching time.  "
@@ -129,7 +129,7 @@ void ExposeSolutionMetaData(std::string const& class_name){
     .def_readwrite("final_time_used",&MDT::final_time_used,
         "The last time value this path reached.  For a successful path, the endgame's latest time "
         "(at or near the target).  For a path that did not succeed, in either stage, the time the "
-        "tracker was at when it stopped -- read with last_point, the point it was at.")
+        "tracker was at when it stopped -- read with latest_path_point, the point it was at.")
     .def_readwrite("accuracy_estimate",&MDT::accuracy_estimate,
         "Accuracy estimate from the endgame, the difference between successive extrapolations.")
     .def_readwrite("accuracy_estimate_user_coords",&MDT::accuracy_estimate_user_coords,

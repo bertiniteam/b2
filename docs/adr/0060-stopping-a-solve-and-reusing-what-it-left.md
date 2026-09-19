@@ -40,7 +40,7 @@ over with each.
 
 Every path's metadata carries `final_time_used` (written after every stage), the step tally
 (`num_successful_steps`, `num_failed_steps`, over the whole path), the precision reached, and,
-for a path that did not succeed, `last_point`.  No observer is attached to obtain this: the
+for a path that did not succeed, `latest_path_point`.  No observer is attached to obtain this: the
 tracker already holds its position when it returns, and it already counts its steps; the base
 tracker gained a second pair of step counters that only the caller resets.  An abandoned path
 IS recorded, with its code, its stamp, and the budget that stopped it.  A path never begun is

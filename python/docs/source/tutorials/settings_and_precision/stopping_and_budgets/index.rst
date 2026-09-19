@@ -102,10 +102,10 @@ What an abandoned path leaves behind
 ====================================
 
 A path that did not succeed -- whatever the reason -- says where it got to.  Its metadata
-carries ``final_time_used``, the time it reached; ``last_point``, the point it was at, in the
+carries ``final_time_used``, the time it reached; ``latest_path_point``, the point it was at, in the
 solver's internal coordinates; ``num_successful_steps`` and ``num_failed_steps``, the
 predictor-corrector steps over the whole path; and ``max_precision_used``.  A successful
-path carries the same fields except ``last_point``, which is empty: its endpoint is the
+path carries the same fields except ``latest_path_point``, which is empty: its endpoint is the
 solution itself.
 
 To see the stamp on a path that got partway, give the tracker a budget of five steps.  The
@@ -126,7 +126,7 @@ system from here on is two quadrics with four well-separated roots, so four path
    print(m.pre_endgame_success_code)
    print('steps taken:', m.num_successful_steps + m.num_failed_steps)
    print('stopped short of the start at t=1:', 0 < abs(m.final_time_used) < 1)
-   print('coordinates in the last point:', len(m.last_point))
+   print('coordinates in the last point:', len(m.latest_path_point))
 
 .. testoutput::
 

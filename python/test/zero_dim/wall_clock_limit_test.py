@@ -48,7 +48,7 @@ def test_a_budget_no_path_can_meet_abandons_every_path_with_its_stamp():
     assert len(metas) == 4
     for m in metas:
         assert m.pre_endgame_success_code == pb.SuccessCode.WallClockLimitReached
-        assert len(m.last_point) > 0
+        assert len(m.latest_path_point) > 0
         assert m.wall_clock_limit_seconds == 1e-9
     assert not solver.was_stopped_early()          # ran out of patience, not interrupted
     assert not solver.get_tracker().has_max_wall_clock_time()   # the deadline was the path's, not left behind

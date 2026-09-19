@@ -916,7 +916,7 @@ BOOST_AUTO_TEST_CASE(max_precision_used_is_recorded_on_failed_endgames)
         // and a path abandoned IN the endgame is stamped with where it got to: a point of the
         // right size, a time inside the endgame region, the steps it took -- and no solution,
         // in particular not a stale copy of some other path's approximation
-        BOOST_CHECK_EQUAL(m.last_point.size(), static_cast<Eigen::Index>(num_vars));
+        BOOST_CHECK_EQUAL(m.latest_path_point.size(), static_cast<Eigen::Index>(num_vars));
         BOOST_CHECK(abs(m.final_time_used) <= 0.1);
         BOOST_CHECK_GT(m.num_successful_steps, 0u);
         BOOST_CHECK_EQUAL(points[m.path_index].size(), 0);
@@ -1016,7 +1016,7 @@ BOOST_AUTO_TEST_CASE(a_path_abandoned_before_the_endgame_is_stamped_with_where_i
     {
         BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::MaxNumStepsTaken);
         BOOST_CHECK_EQUAL(md.num_successful_steps + md.num_failed_steps, 3u);
-        BOOST_CHECK_EQUAL(md.last_point.size(), static_cast<Eigen::Index>(num_vars));
+        BOOST_CHECK_EQUAL(md.latest_path_point.size(), static_cast<Eigen::Index>(num_vars));
         // three steps from t = 1 get nowhere near the boundary at 0.1, and a successful step
         // moves the time off the start
         BOOST_CHECK_GT(abs(md.final_time_used), 0.1);
@@ -1034,7 +1034,7 @@ The other side of the stamp: a path that succeeded does not carry a last point (
 is the solution), its time is the endgame's latest time near the target, its step tally is
 non-empty, and a fixed-precision tracker reports its one precision instead of zero.
 */
-BOOST_AUTO_TEST_CASE(a_successful_path_carries_its_step_tally_and_no_last_point)
+BOOST_AUTO_TEST_CASE(a_successful_path_carries_its_step_tally_and_no_latest_path_point)
 {
     using namespace bertini;
     using namespace tracking;
@@ -1052,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(a_successful_path_carries_its_step_tally_and_no_last_point)
         if (md.endgame_success_code != SuccessCode::Success)
             continue;
         ++successes;
-        BOOST_CHECK_EQUAL(md.last_point.size(), 0);
+        BOOST_CHECK_EQUAL(md.latest_path_point.size(), 0);
         BOOST_CHECK_GT(md.num_successful_steps, 0u);
         BOOST_CHECK_LT(abs(md.final_time_used), 0.1);
         BOOST_CHECK_EQUAL(md.max_precision_used, DoublePrecision());
@@ -1087,7 +1087,7 @@ BOOST_AUTO_TEST_CASE(a_per_path_wall_clock_budget_abandons_paths_that_exceed_it)
     for (auto const& md : zd.SolutionMetadata())
     {
         BOOST_CHECK(md.pre_endgame_success_code == SuccessCode::WallClockLimitReached);
-        BOOST_CHECK_EQUAL(md.last_point.size(), static_cast<Eigen::Index>(num_vars));
+        BOOST_CHECK_EQUAL(md.latest_path_point.size(), static_cast<Eigen::Index>(num_vars));
         BOOST_CHECK_EQUAL(md.wall_clock_limit_seconds, 1e-9);
     }
     BOOST_CHECK(!zd.WasStoppedEarly());

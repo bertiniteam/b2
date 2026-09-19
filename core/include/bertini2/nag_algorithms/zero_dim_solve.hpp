@@ -196,7 +196,7 @@ struct SolutionMetaData
     /// Empty for a successful path (its endpoint is the solution itself) and for a path never
     /// started.  On a Cauchy endgame the point may lie on a sample circle rather than on the
     /// real segment to the target.
-    Vec<ComplexT> last_point;
+    Vec<ComplexT> latest_path_point;
 
     ///// things computed in pre-endgame only
     SuccessCode pre_endgame_success_code = SuccessCode::NeverStarted;     ///< Success code of the pre-endgame track.
@@ -279,9 +279,9 @@ struct SolutionMetaData
              && this->singular_values.size() == other.singular_values.size()
              && (this->singular_values.size() == 0
                  || (this->singular_values.array() == other.singular_values.array()).all())
-             && this->last_point.size() == other.last_point.size()
-             && (this->last_point.size() == 0
-                 || (this->last_point.array() == other.last_point.array()).all())
+             && this->latest_path_point.size() == other.latest_path_point.size()
+             && (this->latest_path_point.size() == 0
+                 || (this->latest_path_point.array() == other.latest_path_point.array()).all())
         ;
 
         return result; }
@@ -301,7 +301,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
     out << "num_successful_steps = " << meta.num_successful_steps << std::endl;
     out << "num_failed_steps = " << meta.num_failed_steps << std::endl;
     out << "wall_clock_limit_seconds = " << meta.wall_clock_limit_seconds << std::endl;
-    out << "last_point = " << meta.last_point.transpose() << std::endl;
+    out << "latest_path_point = " << meta.latest_path_point.transpose() << std::endl;
 
     out << "pre_endgame_success_code = " << meta.pre_endgame_success_code << std::endl;
 
@@ -1798,9 +1798,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 smd.max_precision_used   = max(smd.max_precision_used,
                                                static_cast<decltype(smd.max_precision_used)>(tracker.CurrentPrecision()));
                 if (code == SuccessCode::Success)
-                    smd.last_point.resize(0);
+                    smd.latest_path_point.resize(0);
                 else
-                    smd.last_point = tracker.CurrentPoint();
+                    smd.latest_path_point = tracker.CurrentPoint();
             }
 
             /**
@@ -2093,7 +2093,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 // The endgame writes its approximation only when it converges, so on a failure
                 // the accessor still holds whatever the PREVIOUS path on this endgame left there.
                 // A failed path's solution slot is therefore emptied, never copied: its stamp
-                // (last_point, final_time_used) says where it got to.
+                // (latest_path_point, final_time_used) says where it got to.
                 if (eg_success == SuccessCode::Success)
                     solutions_post_endgame_[soln_ind] = ctx.endgame.template FinalApproximation<BaseComplexT>();
                 else
@@ -2417,7 +2417,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 r.path_time_seconds = smd.path_time_seconds;
                 r.num_successful_steps = smd.num_successful_steps;
                 r.num_failed_steps     = smd.num_failed_steps;
-                r.last_point           = smd.last_point;
+                r.latest_path_point           = smd.latest_path_point;
                 r.wall_clock_limit_seconds = smd.wall_clock_limit_seconds;
                 return r;
             }
@@ -2454,7 +2454,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 smd.path_time_seconds   = r.path_time_seconds;
                 smd.num_successful_steps = r.num_successful_steps;
                 smd.num_failed_steps     = r.num_failed_steps;
-                smd.last_point           = r.last_point;
+                smd.latest_path_point           = r.latest_path_point;
                 smd.wall_clock_limit_seconds = r.wall_clock_limit_seconds;
 
                 // the records seam (ADR-0046): every topology installs completed paths here on

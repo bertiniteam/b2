@@ -146,7 +146,7 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   re-tracked.  A bool is still accepted (`True` is the default policy).  It moved out of
   `ZeroDimConfig` because the question is the same for every algorithm that records paths.
 - **A path that did not succeed says where it got to.**  Its metadata now carries
-  `last_point`, the point the tracker was at when it gave up (in the solver's internal
+  `latest_path_point`, the point the tracker was at when it gave up (in the solver's internal
   coordinates), with `final_time_used` holding the matching time -- previously a failed path
   reported a time of zero and no point.  Every path also carries `num_successful_steps` and
   `num_failed_steps`, the predictor-corrector steps over the whole path, pre-endgame and

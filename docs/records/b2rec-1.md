@@ -154,7 +154,7 @@ reads honestly: what is here is done):
   `*_success_code_name` (fixed canonical names — the durable rendering), cycle number,
   precision, timings, and the step tally (`num_successful_steps`, `num_failed_steps`,
   over the whole path).  A path that did not succeed also says where it got to:
-  `last_point`, the tracker's last point, beside `final_time_used`, the matching time --
+  `latest_path_point`, the tracker's last point, beside `final_time_used`, the matching time --
   an abandoned path is recorded with its reason and its position, never silently
   missing.  A path that ran under a per-path wall-clock budget carries it as
   `wall_clock_limit_seconds`, so a later run can tell whether it is asking more patience

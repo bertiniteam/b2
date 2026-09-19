@@ -223,8 +223,8 @@ boost::json::object EncodeFullPathResult(parallel::FullPathResult<ComplexT> cons
     // succeed (a successful path's point is `endpoint`)
     out["num_successful_steps"] = static_cast<std::int64_t>(r.num_successful_steps);
     out["num_failed_steps"] = static_cast<std::int64_t>(r.num_failed_steps);
-    if (r.last_point.size() > 0)
-        out["last_point"] = EncodePoint(r.last_point);
+    if (r.latest_path_point.size() > 0)
+        out["latest_path_point"] = EncodePoint(r.latest_path_point);
     // the wall-clock budget the path ran under, when there was one: what a later run compares
     // its own patience against before reusing an abandonment
     if (r.wall_clock_limit_seconds > 0)
@@ -278,8 +278,8 @@ parallel::FullPathResult<ComplexT> DecodeFullPathResult(boost::json::object cons
         r.num_successful_steps = static_cast<unsigned>(v->as_int64());
     if (auto const* v = rec.if_contains("num_failed_steps"))
         r.num_failed_steps = static_cast<unsigned>(v->as_int64());
-    if (auto const* v = rec.if_contains("last_point"))
-        r.last_point = DecodePoint<ComplexT>(v->as_array());
+    if (auto const* v = rec.if_contains("latest_path_point"))
+        r.latest_path_point = DecodePoint<ComplexT>(v->as_array());
     if (auto const* v = rec.if_contains("wall_clock_limit_seconds"))
         r.wall_clock_limit_seconds = DoubleFromText(std::string(v->as_string()));
     return r;
