@@ -24,6 +24,14 @@ namespace bertini{
                     "were computed at, which is the accuracy of the lower precision; on, they are refined "
                     "again at the new one, which costs Newton steps per retained sample and buys a sharper "
                     "sample window.  Part of the run's identity, so changing it is a different ask.")
+                .def_readwrite("minimum_for_c_over_k_stabilization", &endgame::EndgameConfig::minimum_for_c_over_k_stabilization,
+                    "How closely successive c/k estimates must agree for the path to count as being in the "
+                    "endgame operating zone, as a ratio of the smaller to the larger.  Their settling is what "
+                    "says the cycle-number estimate has settled, and so that the Puiseux asymptotics the "
+                    "endgame is built on dominate.")
+                .def_readwrite("num_needed_for_stabilization", &endgame::EndgameConfig::num_needed_for_stabilization,
+                    "How many consecutive c/k estimates must agree for the path to count as being in the "
+                    "endgame operating zone.")
                 ;
 
             class_<endgame::SecurityConfig>("SecurityConfig","Security settings for endgames.  Control things like truncation because estimated root is near infinity",init<>())
@@ -39,9 +47,7 @@ namespace bertini{
             class_<endgame::CauchyConfig>("CauchyConfig","Settings specific to the Cauchy endgame for computing singular endpoints",init<>())
                 .def_readwrite("cycle_cutoff_time", &endgame::CauchyConfig::cycle_cutoff_time)
                 .def_readwrite("ratio_cutoff_time", &endgame::CauchyConfig::ratio_cutoff_time)
-                .def_readwrite("minimum_for_c_over_k_stabilization", &endgame::CauchyConfig::minimum_for_c_over_k_stabilization)
                 .def_readwrite("maximum_cauchy_ratio", &endgame::CauchyConfig::maximum_cauchy_ratio)
-                .def_readwrite("num_needed_for_stabilization", &endgame::CauchyConfig::num_needed_for_stabilization,"When running stabilization testing for the cycle number when entering the endgame, this is the number of consecutive points for which the test must pass.")
                 .def_readwrite("fail_safe_maximum_cycle_number", &endgame::CauchyConfig::fail_safe_maximum_cycle_number, "max number of loops before giving up." )
                 .def_readwrite("num_consecutive_same_cycle_number", &endgame::CauchyConfig::num_consecutive_same_cycle_number, "Number of consecutive Cauchy approximations that must report the same cycle number before a converged approximation is trusted." )
                 ;
