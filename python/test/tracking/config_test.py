@@ -312,6 +312,41 @@ def test_owner_update_rejects_unknown_field(solver):
         solver.update(finaltol="1e-9")
 
 
+def test_a_misspelled_field_suggests_the_one_meant(solver):
+    # A settings call names fields as keywords, so a typo is silent at the call site and the
+    # message is the only place it can be caught.  Listing every valid name says what exists,
+    # not what was meant.
+    with pytest.raises(AttributeError) as caught:
+        solver.update(final_tolerence="1e-9")
+    assert "'final_tolerance'" in str(caught.value)
+
+    # including for a field that lives on the tracker or the endgame
+    with pytest.raises(AttributeError) as caught:
+        solver.update(max_stepsize="0.05")
+    assert "'max_step_size'" in str(caught.value)
+    with pytest.raises(AttributeError) as caught:
+        solver.update(num_sample_point=6)
+    assert "'num_sample_points'" in str(caught.value)
+
+    # and a config NAME, not just a field
+    with pytest.raises(KeyError) as caught:
+        solver.get_config('steppping')
+    assert "'stepping'" in str(caught.value)
+
+    # nothing close, no guess -- the valid names are still listed
+    with pytest.raises(AttributeError) as caught:
+        solver.update(wildly_unrelated_xyzzy=1)
+    assert "Did you mean" not in str(caught.value)
+    assert "final_tolerance" in str(caught.value)
+
+
+def test_a_misspelled_field_on_a_config_suggests_too():
+    from bertini.tracking import SteppingConfig
+    with pytest.raises(AttributeError) as caught:
+        SteppingConfig().update(max_stepsize="0.05")
+    assert "'max_step_size'" in str(caught.value)
+
+
 # ------------------------------------------------ get_settings / set_settings (the carry)
 
 def _square():

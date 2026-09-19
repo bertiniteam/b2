@@ -152,6 +152,25 @@ def _coerced_setattr(obj, key, value):
         "could not set {0!r} to {1!r}".format(key, value))
 
 
+def _did_you_mean(name, candidates):
+    """A ``  Did you mean 'x'?`` clause for a misspelling, or empty when nothing is close.
+
+    A settings call names fields as keywords, so a typo is silent at the call site and only the
+    error message can catch it.  Listing every valid name says what is available but not what
+    the user probably meant, and these lists run to dozens of names.  Cutoff 0.6, stdlib
+    difflib: close enough to catch a transposition or a missing underscore, far enough not to
+    guess wildly.
+    """
+    from difflib import get_close_matches
+
+    close = get_close_matches(str(name), [str(c) for c in candidates], n=3, cutoff=0.6)
+    if not close:
+        return ""
+    if len(close) == 1:
+        return "  Did you mean {0!r}?".format(close[0])
+    return "  Did you mean one of {0}?".format(", ".join(repr(c) for c in close))
+
+
 def _make_update(fields):
     def update(self, **kwargs):
         """Set one or more fields at once; returns self so calls can chain.
@@ -163,8 +182,8 @@ def _make_update(fields):
         for key, value in kwargs.items():
             if key not in fields:
                 raise AttributeError(
-                    "{0} has no config field {1!r}; valid fields: {2}".format(
-                        type(self).__name__, key, list(fields)))
+                    "{0} has no config field {1!r}.{2}  Valid fields: {3}".format(
+                        type(self).__name__, key, _did_you_mean(key, fields), list(fields)))
             _coerced_setattr(self, key, value)
         return self
     return update
@@ -368,9 +387,10 @@ def _resolve_config_class(owner, key):
     mapping = _config_class_map(owner)
     found = mapping.get(key) or mapping.get(str(key).lower())
     if found is None:
+        names = config_names(owner)
         raise KeyError(
-            "{0} has no config {1!r}; available: {2}".format(
-                type(owner).__name__, key, config_names(owner)))
+            "{0} has no config {1!r}.{2}  Available: {3}".format(
+                type(owner).__name__, key, _did_you_mean(key, names), names))
     return found
 
 
@@ -463,8 +483,8 @@ def update(self, **fields):
         found = owners.get(key)
         if found is None:
             raise AttributeError(
-                "{0} has no config field {1!r}; valid fields: {2}".format(
-                    type(self).__name__, key, sorted(owners)))
+                "{0} has no config field {1!r}.{2}  Valid fields: {3}".format(
+                    type(self).__name__, key, _did_you_mean(key, owners), sorted(owners)))
         holder, cls = found
         by_config.setdefault((id(holder), cls), (holder, cls, {}))[2][key] = value
     # one get/update/set per touched config, not per field
@@ -525,8 +545,8 @@ def set_settings(self, settings, strict=False):
         if key not in have:
             if strict:
                 raise KeyError(
-                    "{0} has no config {1!r}; available: {2}".format(
-                        type(self).__name__, key, sorted(have)))
+                    "{0} has no config {1!r}.{2}  Available: {3}".format(
+                        type(self).__name__, key, _did_you_mean(key, have), sorted(have)))
             continue
         holder, cls = _resolve_config_class(self, key)
         if isinstance(value, cls):

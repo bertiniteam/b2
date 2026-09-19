@@ -75,6 +75,13 @@ A message that notes the main changes in the update.
   `configure(endgame={'final_tolerance': ...})`.  Endgames also gained the config surface
   trackers and solvers already had (`get_config`, `set_config`, `config_types`, and with them
   `update` / `configure` / `get_settings`).
+- A misspelled setting suggests the one you meant.  A settings call names its fields as keywords,
+  so a typo is silent where it is written and the error message is the only place it can be
+  caught; listing the valid names says what exists, not what was meant, and those lists run to
+  dozens of entries.  `solver.update(final_tolerence=...)` now answers `Did you mean
+  'final_tolerance'?`, for fields, for config names, and whether the field belongs to the solver,
+  its tracker or its endgame.  Nothing close by means no guess, and the valid names are still
+  listed either way.
 - An exact-rational setting takes every exact spelling (#364).  `sample_factor` is a rational,
   and accepted only a `rational_mp`: a string went to the float parser and came back with
   `Unable to parse string "1/10" as a valid floating point number`, which is a confusing thing to
