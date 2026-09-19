@@ -1468,6 +1468,51 @@ BOOST_AUTO_TEST_CASE(final_tolerance_set_on_the_endgame_survives_a_solve)
     BOOST_CHECK_CLOSE(double(zd.GetEndgame().FinalTolerance()), 1e-9, 1e-9);
 }
 
+/**
+The midpath checker reads the SOLVER's MidPathConfig, not a copy of its own (b2#364).
+
+The checker used to be the only holder of same_point_tolerance, which put the one setting
+governing crossing detection outside every config list the solver publishes: no caller could
+name it, and setting it meant reaching into the checker.  The solver holds it now and pushes it
+into the checker at the start of each solve.  Checked by consequence rather than by reading the
+value back -- a tolerance wide enough to call every pair of boundary points the same must make
+the check report crossings on a solve that is otherwise clean.
+*/
+BOOST_AUTO_TEST_CASE(the_midpath_checker_reads_the_solvers_config)
+{
+    using namespace bertini;
+
+    auto make_solver = [](){
+        auto sys = system::Precon::GriewankOsborn();
+        using Tk = zero_dim::TrackerT;
+        auto zd = algorithm::ZeroDimSolver<Tk,
+                      bertini::endgame::EndgameSelector<Tk>::PSEG, decltype(sys)>(sys);
+        zd.DefaultSetup();
+        return zd;
+    };
+
+    {   // as it comes: distinct paths, no crossings reported
+        auto zd = make_solver();
+        zd.Solve();
+        BOOST_CHECK(zd.EndgameBoundaryMetadata().passed);
+        BOOST_CHECK_EQUAL(zd.EndgameBoundaryMetadata().num_crossings_detected, 0u);
+    }
+
+    {   // the same solve, with a tolerance so wide that every pair coincides
+        auto zd = make_solver();
+        auto mp = zd.Get<algorithm::MidPathConfig>();
+        mp.same_point_tolerance = 1e3;
+        zd.Set<algorithm::MidPathConfig>(mp);   // on the SOLVER, never touching the checker
+        // no re-track attempts, so the report is what the check SAW rather than what it fixed
+        auto cfg = zd.Get<algorithm::ZeroDimConfig>();
+        cfg.max_num_crossed_path_resolve_attempts = 0;
+        zd.Set<algorithm::ZeroDimConfig>(cfg);
+        zd.Solve();
+        BOOST_CHECK(!zd.EndgameBoundaryMetadata().passed);
+        BOOST_CHECK_GT(zd.EndgameBoundaryMetadata().num_crossings_detected, 0u);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

@@ -121,6 +121,44 @@ def coefficients(array_like):
     return out
 
 
+def _exact_to_rational(value):
+    """Convert a single exact value to a multiprec.rational_mp (refusing Python floats).
+
+    The exact-rational sibling of :func:`_exact_to_mpfr`, for the settings that are stored as
+    exact rationals rather than as floating-point: a sample ladder's ratio, a homotopy's times.
+    Accepts a ``rational_mp``, an ``int``, a ``fractions.Fraction`` and an exact string.
+
+    Both string spellings work and both are exact -- ``'1/2'`` and ``'0.5'`` give the same
+    rational -- which is worth doing here because ``rational_mp`` itself reads only the fraction
+    spelling and rejects ``'0.5'`` outright.  ``Fraction`` does the reading, so a decimal becomes
+    the rational it literally denotes, never a rounded binary float (b2#364).
+    """
+    rational_mp = _mp.rational_mp
+    if isinstance(value, rational_mp):
+        return value
+    if isinstance(value, bool):
+        raise TypeError("a bool is not a valid exact value")
+    if isinstance(value, (int, np.integer)):
+        return rational_mp(str(int(value)))
+    if isinstance(value, (Fraction, str)):
+        try:
+            frac = Fraction(value)
+        except (ValueError, ZeroDivisionError) as e:
+            raise TypeError(
+                f"cannot read {value!r} as an exact rational; write it as a fraction "
+                "('1/2'), a decimal ('0.5'), or an int"
+            ) from e
+        return rational_mp(f"{frac.numerator}/{frac.denominator}")
+    if isinstance(value, (float, np.floating)):
+        raise TypeError(
+            f"refusing to use the Python {type(value).__name__} {value!r} where an exact value "
+            "is wanted: 0.1 the double is not one tenth.  Pass an exact value -- an int, a "
+            "fractions.Fraction, an exact string ('1/10' or '0.1'), or a bertini.multiprec "
+            "rational_mp."
+        )
+    raise TypeError(f"cannot use {type(value).__name__} as an exact rational")
+
+
 def _exact_to_mpfr(value):
     """Convert a single exact value to a multiprec.complex_mp (refusing Python floats).
 

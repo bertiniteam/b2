@@ -265,16 +265,110 @@ def test_tracker_update_routes_to_its_configs(tracker):
     assert tracker.get_config(NewtonConfig).max_num_newton_iterations == 2
 
 
-def test_owner_update_routes_only_across_this_owners_configs(solver):
-    # max_step_size lives on the tracker's SteppingConfig, not on the algorithm's configs -- the
-    # router refuses it on the algorithm rather than silently doing nothing.
-    with pytest.raises(AttributeError):
-        solver.update(max_step_size="0.05")
+def test_owner_update_reaches_the_tracker_and_endgame(solver):
+    # b2#364.  max_step_size lives on the tracker's SteppingConfig and num_sample_points on the
+    # endgame's EndgameConfig, neither of them on the algorithm's own configs.  The solver keeps
+    # its settings in those objects, and reaches them through live references, so one flat call
+    # routes to each -- no get/modify/set dance on sub-objects.  (This used to raise.)
+    from bertini.tracking import SteppingConfig
+    from bertini.endgame import EndgameConfig
+    solver.update(max_step_size="0.05", num_sample_points=6)
+    assert solver.get_tracker().get_config(SteppingConfig).max_step_size == pb.multiprec.real_mp("0.05")
+    assert solver.get_endgame().get_config(EndgameConfig).num_sample_points == 6
+    # and it is the SOLVER'S OWN objects that changed, not copies
+    assert solver.get_config('stepping').max_step_size == pb.multiprec.real_mp("0.05")
+
+
+def test_the_one_shared_field_name_stays_with_the_solvers_own_config(solver):
+    # final_tolerance is the only field name shared by two config structs (TolerancesConfig and
+    # EndgameConfig).  The solver's own must keep winning, since solver.update(final_tolerance=)
+    # is long-documented; the endgame's stays reachable by naming its config.
+    from bertini.nag_algorithm import TolerancesConfig
+    from bertini.endgame import EndgameConfig
+    solver.update(final_tolerance="1e-9")
+    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-9
+    solver.configure(endgame={'final_tolerance': "1e-7"})
+    assert solver.get_config(EndgameConfig).final_tolerance == 1e-7
+    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-9
+
+
+def test_exact_rational_settings_take_every_exact_spelling(solver):
+    # b2#364's second half: sample_factor is an exact rational.  '1/10' and '0.1' are the same
+    # number and both are exact; a Python float is refused, and says why.
+    from fractions import Fraction
+    rational = pb.multiprec.rational_mp
+    for spelling in ("1/10", "0.1", Fraction(1, 10), rational("1/10")):
+        solver.update(sample_factor=spelling)
+        assert solver.get_config('endgame').sample_factor == rational("1/10")
+    solver.update(sample_factor=2)                     # an int is exact too
+    assert solver.get_config('endgame').sample_factor == rational("2")
+    with pytest.raises(TypeError) as caught:
+        solver.update(sample_factor=0.1)
+    assert "exact" in str(caught.value)                # names the policy, not a float parser
+
+
+def test_the_last_unreachable_settings_are_reachable(solver):
+    # b2#364, the stragglers.  Three settings the solver's surface could not name: the midpath
+    # checker's tolerance (it lived only on the checker, in no config list), and two fields that
+    # were never exported to Python at all.
+    from bertini.nag_algorithm import MidPathConfig, ZeroDimConfig
+    from bertini.endgame import EndgameConfig
+
+    solver.update(same_point_tolerance=1e-4,
+                  refine_when_increasing_precision=True,
+                  initial_ambient_precision=40)
+    assert solver.get_config(MidPathConfig).same_point_tolerance == 1e-4
+    assert solver.get_config(EndgameConfig).refine_when_increasing_precision is True
+    assert solver.get_config(ZeroDimConfig).initial_ambient_precision == 40
+
+    # and by config name, the explicit form
+    solver.configure(mid_path={'same_point_tolerance': 1e-6})
+    assert solver.get_config('mid_path').same_point_tolerance == 1e-6
+
+    # the path variable's name is a construction-time choice, but it is settable on a config
+    cfg = ZeroDimConfig()
+    cfg.path_variable_name = 'tau'
+    assert cfg.path_variable_name == 'tau'
 
 
 def test_owner_update_rejects_unknown_field(solver):
     with pytest.raises(AttributeError):
         solver.update(finaltol="1e-9")
+
+
+def test_a_misspelled_field_suggests_the_one_meant(solver):
+    # A settings call names fields as keywords, so a typo is silent at the call site and the
+    # message is the only place it can be caught.  Listing every valid name says what exists,
+    # not what was meant.
+    with pytest.raises(AttributeError) as caught:
+        solver.update(final_tolerence="1e-9")
+    assert "'final_tolerance'" in str(caught.value)
+
+    # including for a field that lives on the tracker or the endgame
+    with pytest.raises(AttributeError) as caught:
+        solver.update(max_stepsize="0.05")
+    assert "'max_step_size'" in str(caught.value)
+    with pytest.raises(AttributeError) as caught:
+        solver.update(num_sample_point=6)
+    assert "'num_sample_points'" in str(caught.value)
+
+    # and a config NAME, not just a field
+    with pytest.raises(KeyError) as caught:
+        solver.get_config('steppping')
+    assert "'stepping'" in str(caught.value)
+
+    # nothing close, no guess -- the valid names are still listed
+    with pytest.raises(AttributeError) as caught:
+        solver.update(wildly_unrelated_xyzzy=1)
+    assert "Did you mean" not in str(caught.value)
+    assert "final_tolerance" in str(caught.value)
+
+
+def test_a_misspelled_field_on_a_config_suggests_too():
+    from bertini.tracking import SteppingConfig
+    with pytest.raises(AttributeError) as caught:
+        SteppingConfig().update(max_stepsize="0.05")
+    assert "'max_step_size'" in str(caught.value)
 
 
 # ------------------------------------------------ get_settings / set_settings (the carry)

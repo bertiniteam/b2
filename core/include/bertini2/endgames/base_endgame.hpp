@@ -97,6 +97,12 @@ public:
 
     using EmitterType = FlavorT;  ///< The event-emitter type.
 
+    /// The configuration bundle this endgame reads, public so that generic machinery which
+    /// works in terms of an object's configs -- the Python bindings' ConfiguredVisitor, which
+    /// needs `Config::UsedConfigs` -- can serve an endgame the same way it serves a tracker or
+    /// a solver.  The same type as the protected `Configured` alias below.
+    using Config = detail::Configured< typename AlgoTraits<FlavorT>::NeededConfigs >;
+
 protected:
 
     using BCT = BaseComplexT;  ///< The complex number type.

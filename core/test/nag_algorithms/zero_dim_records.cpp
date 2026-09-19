@@ -32,6 +32,9 @@ homotopy identical, so recalled and computed results are directly comparable.
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -543,6 +546,66 @@ BOOST_AUTO_TEST_CASE(recall_policy_decides_whether_an_abandonment_stands_in_for_
     auto h = solve(0, algorithm::RecallPolicy::Completed);
     BOOST_CHECK_EQUAL(h->NumPathsRecalled(), 0u);
     BOOST_CHECK_EQUAL(h->Report().num_finite_solutions, 4u);
+}
+
+/**
+Every config the solve reads is in the settings text, and the order is the contract.
+
+The golden digest fixture and the version registry both watch the ENCODERS -- what one config
+struct turns into.  Neither watches the COMPOSITION: which configs a solver folds into its
+settings text.  That gap is how MidPathConfig stayed out of the ask for so long, letting two
+solves that disagreed about path-crossing detection recall each other's results.  This closes
+it: add, remove or reorder a config in CanonicalSettingsText and this test names the change.
+
+Extended by APPENDING only (ADR-0043), and any change here is a b2cfgenc bump.
+*/
+BOOST_AUTO_TEST_CASE(the_settings_text_lists_every_config_the_solve_reads)
+{
+    SetGlobalSeed(42);
+    auto sys = TwoQuadrics();
+    ZD zd(sys);
+    zd.DefaultSetup();
+
+    // the leading token of each line: the version, then one per config
+    std::vector<std::string> names;
+    {
+        std::istringstream text(zd.CanonicalSettingsText());
+        std::string line;
+        while (std::getline(text, line))
+        {
+            auto const open = line.find('(');
+            if (open == std::string::npos)      // the version header line
+            {
+                names.push_back(line);
+                continue;
+            }
+            auto const first = line.find(' ', open);
+            auto const second = line.find(' ', first + 1);
+            // "(cfg Name ..." -> "cfg Name"; anything else -> its first token
+            names.push_back(line.substr(open + 1,
+                (second == std::string::npos ? line.size() : second) - open - 1));
+        }
+    }
+
+    std::vector<std::string> const expected{
+        "b2cfgenc/4",
+        "cfg ZeroDim",
+        "cfg Tolerances",
+        "cfg AutoRetrack",
+        "cfg PostProcessing",
+        "cfg Stepping",
+        "cfg Newton",
+        "cfg Predictor",
+        "cfg FixedPrecision",
+        "cfg Cauchy",
+        "cfg Endgame",
+        "cfg Security",
+        "cfg MidPath",
+    };
+
+    for (auto const& n : names)
+        BOOST_TEST_MESSAGE("settings line: " << n);
+    BOOST_CHECK_EQUAL_COLLECTIONS(names.begin(), names.end(), expected.begin(), expected.end());
 }
 
 BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)

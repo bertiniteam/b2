@@ -24,6 +24,7 @@
 #pragma once
 
 #include "python_common.hpp"
+#include "configured_visitor.hpp"
 #include "generic_observable.hpp"
 
 #include <bertini2/endgames.hpp>
@@ -152,6 +153,12 @@ namespace bertini{
             using BCT = typename TrackerTraits<TrackerT>::BaseComplexT;
 
             cl
+            // The same config surface a tracker and a solver carry -- get_config / set_config /
+            // config_types, and with them the Python sugar (update, configure, get_settings).
+            // The hand-written get_*_settings accessors below stay: they are what existing code
+            // calls, and a caller who wants one config by name is well served by them.
+            .def(ConfiguredVisitor<EndgameT>())
+
             .def("cycle_number", this->GetCycleNumberFn(),arg("self"),"Get the cycle number as currently computed")
 
             .def("get_endgame_settings",&EndgameT::EndgameSettings,return_internal_reference<>(),arg("self"),"Get the current non-specific endgame settings")

@@ -115,6 +115,17 @@ namespace bertini{
                 +[](ZeroDimConfig const& c) -> real_mp { return real_mp(c.endgame_boundary); },
                 +[](ZeroDimConfig& c, real_mp const& v) { c.endgame_boundary = mpq_rational(v); },
                 "The time value at which tracking stops and the endgame takes over.")
+            .def_readwrite("initial_ambient_precision", &ZeroDimConfig::initial_ambient_precision,
+                "The working precision (digits) each path starts at.  Read at the start of every path, "
+                "so setting it on an existing solver takes effect on the next solve.  Part of the run's "
+                "identity.")
+            .def_readwrite("path_variable_name", &ZeroDimConfig::path_variable_name,
+                "The name given to the homotopy's path variable.  Read when the solver BUILDS its "
+                "homotopy, so set it on a config you hand to a constructor.  Setting it on a solver that "
+                "already built one does not rename that homotopy's path variable -- the name is part of "
+                "the run's identity, so the two would then disagree; build a new solver instead.  (If the "
+                "name collides with one of your variables the solver mangles it to keep them apart, so "
+                "the homotopy's actual path variable may differ from what you asked for.)")
             .def_readwrite("max_num_crossed_path_resolve_attempts", &ZeroDimConfig::max_num_crossed_path_resolve_attempts,
                 "How many times to re-track crossed paths (with tightened settings) at the endgame "
                 "boundary before giving up. 0 = detect and report only, do not re-track. Default 2.")
@@ -126,8 +137,12 @@ namespace bertini{
             .def_readwrite("max_path_wall_clock_duration", &ZeroDimConfig::max_path_wall_clock_duration,
                 "Wall-clock budget for EACH path, in seconds; 0 (the default) means none.  A path that "
                 "has not finished when its budget runs out is abandoned between steps with "
-                "SuccessCode.WallClockLimitReached, stamped with where it got to (latest_path_point, "
-                "final_time_used, the step counts), and recorded with this limit.  Not part of the "
+                // double backticks, not bare names: a metadata field resolves to BOTH
+                // SolutionMetaDataDoublePrec and SolutionMetaDataMultiPrec, and an ambiguous
+                // cross-reference is a warning, which the docs build treats as an error.
+                "SuccessCode.WallClockLimitReached, stamped with where it got to "
+                "(``latest_path_point``, ``final_time_used``, the step counts), and recorded with "
+                "this limit.  Not part of the "
                 "run's identity: a budget says how long to wait for an answer, not what the answer "
                 "is.  How a later run treats a path abandoned under a budget is RecallPolicy's "
                 "business.  Wall-clock time is machine-dependent; the recorded stamp is the "

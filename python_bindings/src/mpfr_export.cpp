@@ -414,6 +414,19 @@ namespace bertini{
 
 
 
+        // Pickle a rational through its own exact spelling: str() gives "num/den" (or "n" for a
+        // whole number) and the string constructor reads it back, so the round trip is exact by
+        // construction.  Needed because a rational is a member of a config struct
+        // (EndgameConfig::sample_factor), and a settings bundle is a plain picklable Python
+        // value -- carrying one from solver to solver, or to disk, is the point of it.
+        struct RationalStringPickle : boost::python::pickle_suite
+        {
+            static boost::python::tuple getinitargs(mpq_rational const& v)
+            {
+                return boost::python::make_tuple(v.str());
+            }
+        };
+
         void ExposeRational()
         {
             using T = mpq_rational;
@@ -424,6 +437,7 @@ namespace bertini{
             .def(init<mpz_int>((arg("self"),arg("val")),"Construct an arbitrary-precision rational number from an arbitrary-precision integer."))
             .def(init<mpz_int,mpz_int>((arg("self"),arg("numerator"),arg("denominator")),"Construct an arbitrary-precision rational number from a pair of arbitrary-precision integers."))
             .def(init<std::string>((arg("self"),arg("val")),"Construct an arbitrary-precision rational number from a string, e.g. '1/3'."))
+            .def_pickle(RationalStringPickle())
             .def(init<mpq_rational>((arg("self"),arg("val")),"Construct an arbitrary-precision rational number from an arbitrary-precision integer."))
             .def(RealStrVisitor<T>())
             .def(FieldSelfVisitor<T>())

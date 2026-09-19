@@ -72,7 +72,10 @@ from bertini._pybertini.endgame import (
 )
 
 # configs gain update()/to_dict()/from_dict()/repr/eq
-from ..config import _enhance_all
+from ..config import _enhance_owners, _enhance_all
+# Endgames advertise their configs (get_config/set_config/config_types) like trackers and
+# solvers, so they get the same Python sugar on top: update, configure, get_settings.
+_enhance_owners(_pybe)
 _enhance_all(_pybe)
 
 

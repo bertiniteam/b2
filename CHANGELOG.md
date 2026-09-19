@@ -54,15 +54,6 @@ A message that notes the main changes in the update.
 
 ### Fixed
 
-- The classic parser reports two mistakes it used to let through (#441).  A name declared and
-  never defined -- `function f, g;` with only `f` defined -- reached a `std::map::at` lookup and
-  surfaced as `map::at` (an `IndexError` in Python), naming neither the forgotten name nor the
-  problem; it now says which name was declared and never defined, and what it was declared as.
-  A second `pathvariable` declaration was accepted, quietly overwriting the first; a system has
-  exactly one path variable, so the second declaration is now refused.  `System::AddPathVariable`
-  stays permissive, so a caller building a system programmatically may still change its mind --
-  the enforcement is on the declaration, in the input file.
-
 ### Removed
 
 ### Security
@@ -218,6 +209,18 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Changed
 
+- **Path-crossing detection joined the ask: config encoding `b2cfgenc/4`.**  `MidPathConfig`
+  decides when two paths at the endgame boundary count as the same point, and so decides which
+  paths get re-tracked and what the solve returns -- but it was not in the settings text, so two
+  solves that disagreed about `same_point_tolerance` were the same ask and would recall each
+  other's results.  It is in the text now, appended last, since the order is extended by
+  appending and never by reordering.  **Every settings digest therefore changes**: runs recorded
+  by an earlier version are a different ask now and will be recomputed rather than recalled.
+  The gap that let this sit unnoticed is closed too.  The golden fixture and the version registry
+  both watch the encoders -- what one config struct turns into -- and neither watched the
+  composition, which configs a solver folds into its settings text.  A new test pins that list in
+  order, so adding, removing or reordering a config is a named failure rather than a silent
+  change of identity.
 - **One homotopy builder, named for the mathematics: `straight_line_homotopy`** (#371).  It
   replaces both `blend_homotopy` and `coefficient_parameter_homotopy`, which built the same
   object and differed only in gamma.  "Blend" named the implementation, a blend block, rather
@@ -274,6 +277,51 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Fixed
 
+- The classic parser reports two mistakes it used to let through (#441).  A name declared and
+  never defined -- `function f, g;` with only `f` defined -- reached a `std::map::at` lookup and
+  surfaced as `map::at` (an `IndexError` in Python), naming neither the forgotten name nor the
+  problem; it now says which name was declared and never defined, and what it was declared as.
+  A second `pathvariable` declaration was accepted, quietly overwriting the first; a system has
+  exactly one path variable, so the second declaration is now refused.  `System::AddPathVariable`
+  stays permissive, so a caller building a system programmatically may still change its mind --
+  the enforcement is on the declaration, in the input file.
+- Every setting a solve uses is settable through the solver's own settings surface (#364).  The
+  tracker's (`max_step_size`, the Newton counts, the precision configs) and the endgame's
+  (`num_sample_points`, `sample_factor`, the security and flavour settings) used to be reachable
+  only by fetching the sub-object and round-tripping its config -- `solver.get_endgame()
+  .get_endgame_settings()`, modify, set back -- which is easy to get wrong and unreachable from
+  any code path that only carries a settings dict.  Now `solver.update(num_sample_points=6,
+  max_step_size="0.05")`, `solve(**settings)`, `configure()`, `get_settings()` and
+  `set_settings()` all reach them, routed to whichever object holds each field.  One field name
+  is shared by two configs -- `final_tolerance`, on the solver's tolerances and on the endgame --
+  and the solver's own keeps winning, with the endgame's reachable as
+  `configure(endgame={'final_tolerance': ...})`.  Endgames also gained the config surface
+  trackers and solvers already had (`get_config`, `set_config`, `config_types`, and with them
+  `update` / `configure` / `get_settings`).
+- A misspelled setting suggests the one you meant.  A settings call names its fields as keywords,
+  so a typo is silent where it is written and the error message is the only place it can be
+  caught; listing the valid names says what exists, not what was meant, and those lists run to
+  dozens of entries.  `solver.update(final_tolerence=...)` now answers `Did you mean
+  'final_tolerance'?`, for fields, for config names, and whether the field belongs to the solver,
+  its tracker or its endgame.  Nothing close by means no guess, and the valid names are still
+  listed either way.
+- The last settings that no caller could name are nameable (#364).  `same_point_tolerance`, which
+  governs path-crossing detection, was held only by the midpath checker and so appeared in no
+  config list the solver publishes; the solver holds it now and pushes it into the checker at the
+  start of each solve, which makes it settable like anything else and gives the setting one home
+  rather than two.  `EndgameConfig.refine_when_increasing_precision`, and `ZeroDimConfig`'s
+  `initial_ambient_precision` and `path_variable_name`, existed in C++ but had never been exported
+  to Python at all.  The path variable's name is read when a solver builds its homotopy, so it
+  belongs on a config you hand to a constructor; its docstring says so, since setting it on a
+  solver that already built one would leave the two disagreeing.
+- An exact-rational setting takes every exact spelling (#364).  `sample_factor` is a rational,
+  and accepted only a `rational_mp`: a string went to the float parser and came back with
+  `Unable to parse string "1/10" as a valid floating point number`, which is a confusing thing to
+  be told about a field that is not a float.  It now takes `'1/10'` and `'0.1'` -- the same
+  number, both exact, since a decimal is read as the rational it denotes and never as a rounded
+  binary float -- and an `int`, a `fractions.Fraction`, or a `rational_mp`.  A Python float is
+  still refused, now saying why.  Rationals are also picklable now, so a settings bundle
+  containing one still travels.
 - **A degree that does not exist is refused rather than laundered into a number.**  A function
   that is not a polynomial reports degree -1, which is the right answer and a catastrophic
   operand, and four places treated it as one.  `System::DegreeBound()` took a maximum, so the
