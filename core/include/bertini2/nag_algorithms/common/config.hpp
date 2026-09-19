@@ -103,7 +103,7 @@ struct SharpeningConfig
 {
     using T = NumErrorT;  ///< The numeric (error) type.
 
-    unsigned sharpendigits; ///< how many digits should be correct after sharpening.
+    unsigned sharpendigits = 0; ///< how many digits should be correct after sharpening.  0 = do not sharpen, which is Bertini 1's default.  Initialized, so that a default-constructed config has a default worth documenting: reading an uninitialized member is undefined, and a configuration reference cannot print what the library never decided (b2#406).
 
     // std::function<Vec<T>> sharpen_method_; ///< function taking a vector, and sharpening it.
 
@@ -128,9 +128,13 @@ struct RegenerationConfig
     // tolerances in TolerancesConfig.  The slice_ prefix makes every config field name unique across
     // structs, which is what lets a field be set on an owner without naming its struct
     // (owner.update(field=...) routes by field).
-    T slice_newton_before_endgame; ///< Slice-moving tracking tolerance before the endgame.  SliceTolBeforeEG
-    T slice_newton_during_endgame; ///< Slice-moving tracking tolerance during the endgame.  SliceTolDuringEG
-    T slice_final_tolerance; ///< Final tolerance to track the slice move to, using the endgame.  SliceFinalTol
+    // Defaulted to the same values as the main tracking tolerances they shadow (TolerancesConfig),
+    // which is where Bertini 1 takes its SliceTol* defaults from.  They were uninitialized, so a
+    // default-constructed config read indeterminate memory and had no default to document (b2#406).
+    // Regeneration is scaffolding today, so nothing computes differently for this.
+    T slice_newton_before_endgame = T(1)/T(100000); ///< Slice-moving tracking tolerance before the endgame.  SliceTolBeforeEG
+    T slice_newton_during_endgame = T(1)/T(1000000); ///< Slice-moving tracking tolerance during the endgame.  SliceTolDuringEG
+    T slice_final_tolerance = T(1)/T(100000000000); ///< Final tolerance to track the slice move to, using the endgame.  SliceFinalTol
 };
 
 

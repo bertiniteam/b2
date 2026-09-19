@@ -24,6 +24,7 @@ The Python bindings for Bertini 2
 .. toctree::
    :maxdepth: 2
 
+   detailed/configuration
    numpy
    detailed/api
    zbib

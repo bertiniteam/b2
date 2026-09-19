@@ -100,6 +100,17 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **A configuration reference page: every setting there is, with its default** (#406).  There was
+  no single place that answered "what settings exist, and what do they default to?".  The class
+  listings name fields but no defaults, the config classes are spread over three modules with no
+  index, and the tracker's most consequential settings -- the tracking tolerance and the predictor
+  among them -- have no config struct at all, so every "here are the configs" listing misses them
+  by construction.  The new page, in the top-level reference navigation, collects all of it and is
+  **read out of the library when the docs are built**: adding a config field, changing a default or
+  rewriting a field's docstring updates the page with no documentation change.  A hand-maintained
+  table drifts from the code silently, which is what the issue was filed about.  The settings with
+  no config struct are hand-written, in their own section, since no amount of introspecting config
+  classes will find a method.
 - **Ctrl-C stops a solve.**  A solve releases the interpreter lock and runs on the calling
   thread, so a keyboard interrupt was noted by CPython and ignored until the solve finished;
   in a notebook the kernel was simply trapped, and killing the process was the only exit.
@@ -277,6 +288,14 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Fixed
 
+- **Four settings had no default at all.**  `SharpeningConfig.sharpendigits` and
+  `RegenerationConfig`'s three slice tolerances were declared without initializers, so a
+  default-constructed config held indeterminate values and reading one was undefined behaviour --
+  and there was no default to document, which is how the omission surfaced while generating the
+  configuration reference.  They are initialized now: sharpening off (`0`, Bertini 1's default),
+  and the slice-moving tolerances matching the main tracking tolerances they shadow, which is
+  where Bertini 1 takes its own `SliceTol*` defaults from.  Nothing computes differently: the
+  classic parser was the only thing that ever set them, and regeneration is scaffolding.
 - The classic parser reports two mistakes it used to let through (#441).  A name declared and
   never defined -- `function f, g;` with only `f` defined -- reached a `std::map::at` lookup and
   surfaced as `map::at` (an `IndexError` in Python), naming neither the forgotten name nor the
