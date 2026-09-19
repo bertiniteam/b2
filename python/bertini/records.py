@@ -668,8 +668,13 @@ def tracks(run=None, directory=None, coordinates=False):
     """One row per tracked path (newest record per (run, index)), as a DataFrame.
 
     Columns: ``run``, ``index``, ``status``, ``outcome`` (the endgame verdict's name),
-    ``start_kind``, ``start_run``, ``start_index``, ``cycle_num``,
-    ``path_time_seconds``.  Pass ``run=`` to restrict to one run.
+    ``crossing_unresolved``, ``start_kind``, ``start_run``, ``start_index``,
+    ``cycle_num``, ``path_time_seconds``.  Pass ``run=`` to restrict to one run.
+
+    ``crossing_unresolved`` is True for a path whose crossing at the endgame boundary the
+    solver detected and could not resolve; its ``status`` and ``outcome`` still read as
+    success, because the path tracked fine -- what the solver cannot vouch for is that it
+    ended where it started out heading.  Those are the rows to distrust.
 
     ``coordinates=False`` (the default) keeps endpoints OUT of the table -- they are
     most of the bytes, and a million-path audit usually wants the statuses, not the
@@ -689,6 +694,9 @@ def tracks(run=None, directory=None, coordinates=False):
             'index': index,
             'status': rec.get('status'),
             'outcome': rec.get('endgame_success_code_name'),
+            # absent means the check vouched for this path, which is also what a record
+            # written before the verdict was archived can honestly claim
+            'crossing_unresolved': bool(rec.get('crossing_unresolved', False)),
             'start_kind': start.get('kind'),
             'start_run': start.get('run'),
             'start_index': start.get('index'),
@@ -701,6 +709,41 @@ def tracks(run=None, directory=None, coordinates=False):
             row['endpoint_user'] = tuple(complex(float(c[0]), float(c[1]))
                                          for c in endpoint)
         rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def crossing_checks(run=None, directory=None):
+    """One row per run's endgame-boundary crossing check (newest per run), as a DataFrame.
+
+    Columns: ``run``, ``passed``, ``num_crossings_detected``, ``num_resolve_attempts``,
+    ``crossed_path_indices``.  Pass ``run=`` to restrict to one run.
+
+    The check compares every path against every other at the endgame boundary and
+    re-tracks the ones that appear to have jumped onto a neighbour.  A run with no row
+    here never got as far as checking -- a solve cut short skips it -- which is not the
+    same as a run that checked and found nothing.  Asking the same question again runs
+    the check again and appends its verdict, so, as with :func:`tracks`, the newest
+    record for a run is the one reported.
+
+    ``crossed_path_indices`` is what the *first* check flagged, before any re-tracking;
+    which paths it finally gave up on is the ``crossing_unresolved`` column of
+    :func:`tracks`.
+    """
+    import pandas as pd
+    newest = {}
+    for rec in _scan_results(directory, run=run):
+        if rec.get('kind') != 'midpath':
+            continue
+        newest[rec.get('run')] = rec
+    rows = []
+    for run_id, rec in sorted(newest.items(), key=lambda kv: str(kv[0])):
+        rows.append({
+            'run': run_id,
+            'passed': bool(rec.get('passed', True)),
+            'num_crossings_detected': int(rec.get('num_crossings_detected', 0)),
+            'num_resolve_attempts': int(rec.get('num_resolve_attempts', 0)),
+            'crossed_path_indices': tuple(int(i) for i in rec.get('crossed_path_indices', ())),
+        })
     return pd.DataFrame(rows)
 
 

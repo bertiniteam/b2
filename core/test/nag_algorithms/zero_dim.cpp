@@ -31,9 +31,12 @@
 #include "bertini2/nag_algorithms/output.hpp"
 #include "bertini2/trackers/observers.hpp"
 #include "bertini2/trackers/events.hpp"
+#include "bertini2/records/output_directory.hpp"
 #include <chrono>
+#include <filesystem>
 #include <iostream>
 #include <iomanip>
+#include <map>
 #include <memory>
 #include <set>
 #include <typeindex>
@@ -1305,7 +1308,8 @@ namespace {
 // homotopy (x - a(t))(x - 1)(x + 2) whose curved root a(t) = 1 + 1/10 + 10 (t - 9/10)^2 passes
 // within 1/10 of the flat root 1 at t = 9/10 -- exactly where one Euler step of size 1/10 from
 // t = 1 lands -- so with a loose tolerance the curved path jumps onto the flat one.  Returns the
-// solver after Solve(), configured with the given number of crossed-path re-track attempts.
+// solver after Solve(), configured with the given number of crossed-path re-track attempts, and
+// optionally recording to the given output directory.
 struct PlantedCrossing
 {
     using TrackerT = bertini::tracking::DoublePrecisionTracker;
@@ -1317,7 +1321,8 @@ struct PlantedCrossing
     std::unique_ptr<bertini::start_system::User> start;
     std::unique_ptr<SolverT> solver;
 
-    explicit PlantedCrossing(unsigned resolve_attempts)
+    explicit PlantedCrossing(unsigned resolve_attempts,
+                             std::shared_ptr<bertini::records::OutputDirectory> records = nullptr)
     {
         using namespace bertini;
         using namespace bertini::node;
@@ -1362,6 +1367,9 @@ struct PlantedCrossing
         zdc.max_num_crossed_path_resolve_attempts = resolve_attempts;
         solver->template Set<algorithm::ZeroDimConfig>(zdc);
 
+        if (records)
+            solver->RecordTo(std::move(records));
+
         solver->Solve();
     }
 };
@@ -1391,6 +1399,148 @@ BOOST_AUTO_TEST_CASE(unresolved_crossing_is_flagged_on_the_affected_paths)
     if (report2.passed)                                       // ... and, once resolved, nobody is flagged
         for (auto const& m : md2)
             BOOST_CHECK(!m.crossing_unresolved);
+}
+
+
+namespace {
+
+// A records directory of its own for each test here, emptied first so a rerun starts clean.
+std::filesystem::path FreshCrossingRecords(std::string const& name)
+{
+    auto path = std::filesystem::temp_directory_path() / ("b2_crossing_records_" + name);
+    std::filesystem::remove_all(path);
+    return path;
+}
+
+// The last record written for each path index -- the rule every reader of the store follows, and
+// the one that lets a verdict reached after the fact supersede the report the path filed itself.
+std::map<std::size_t, boost::json::object> NewestPathRecords(
+    std::vector<boost::json::object> const& results)
+{
+    std::map<std::size_t, boost::json::object> newest;
+    for (auto const& rec : results)
+        if (std::string(rec.at("kind").as_string()) == "path")
+            newest[static_cast<std::size_t>(rec.at("index").as_int64())] = rec;
+    return newest;
+}
+
+bool RecordSaysCrossingUnresolved(boost::json::object const& rec)
+{
+    auto const* v = rec.if_contains("crossing_unresolved");
+    return v && v->as_bool();
+}
+
+} // namespace
+
+
+// b2#365: the crossing verdict reaches the STORE, not just the live solver.  The check can only
+// reach a verdict once every path is at the boundary, which is after each path filed its own
+// record -- so a flagged path is reported a second time, and the last record for an index is the
+// one that counts.
+BOOST_AUTO_TEST_CASE(an_unresolved_crossing_is_written_into_the_path_record)
+{
+    auto const dir = FreshCrossingRecords("flagged");
+    PlantedCrossing detect_only(0, std::make_shared<bertini::records::OutputDirectory>(dir));
+
+    auto const& report = detect_only.solver->EndgameBoundaryMetadata();
+    BOOST_REQUIRE(!report.passed);
+    BOOST_REQUIRE(report.num_crossings_detected > 0u);
+    std::set<std::size_t> crossed(report.crossed_path_indices.begin(), report.crossed_path_indices.end());
+
+    auto const results = detect_only.solver->Records()->ResultsOf(detect_only.solver->RecordsRunId());
+    auto const newest  = NewestPathRecords(results);
+    BOOST_REQUIRE_EQUAL(newest.size(), detect_only.solver->SolutionMetadata().size());
+    for (auto const& [index, rec] : newest)
+        BOOST_CHECK_EQUAL(RecordSaysCrossingUnresolved(rec), crossed.count(index) > 0);
+
+    // a flagged path still tracked without incident, so its coarse status is unchanged: the flag
+    // is the only thing in the record that says the endpoint cannot be vouched for
+    for (auto const& index : crossed)
+        BOOST_CHECK_EQUAL(std::string(newest.at(index).at("status").as_string()), "success");
+}
+
+
+// b2#365 asks for the report itself too, so a directory can be asked whether a run's check passed
+// without reconstructing it from the paths.
+BOOST_AUTO_TEST_CASE(the_crossing_check_itself_is_recorded_once_per_run)
+{
+    auto const dir = FreshCrossingRecords("report");
+    PlantedCrossing detect_only(0, std::make_shared<bertini::records::OutputDirectory>(dir));
+
+    auto const& report = detect_only.solver->EndgameBoundaryMetadata();
+    std::vector<boost::json::object> midpath;
+    for (auto const& rec : detect_only.solver->Records()->ResultsOf(detect_only.solver->RecordsRunId()))
+        if (std::string(rec.at("kind").as_string()) == "midpath")
+            midpath.push_back(rec);
+
+    BOOST_REQUIRE_EQUAL(midpath.size(), 1u);
+    BOOST_CHECK_EQUAL(midpath.front().at("passed").as_bool(), report.passed);
+    BOOST_CHECK_EQUAL(midpath.front().at("num_crossings_detected").as_int64(),
+                      static_cast<std::int64_t>(report.num_crossings_detected));
+    BOOST_CHECK_EQUAL(midpath.front().at("num_resolve_attempts").as_int64(),
+                      static_cast<std::int64_t>(report.num_resolve_attempts));
+    BOOST_CHECK_EQUAL(midpath.front().at("crossed_path_indices").as_array().size(),
+                      report.crossed_path_indices.size());
+}
+
+
+// b2#365: a run answered from the store is no more trusting than the run that computed it.  End to
+// end, and deliberately not sharp about WHICH mechanism delivers it: recall restores the flag from
+// the record (zero_dim_records' round-trip test pins that half on its own), and the crossing check
+// then runs again on the recalled boundary points and reaches the same verdict.  Both must hold,
+// and this fails if either stops holding.
+BOOST_AUTO_TEST_CASE(a_recalled_path_remembers_that_its_crossing_was_never_resolved)
+{
+    auto const dir = FreshCrossingRecords("recall");
+    PlantedCrossing first(0, std::make_shared<bertini::records::OutputDirectory>(dir));
+    auto const flagged_first = first.solver->SolutionMetadata();
+    BOOST_REQUIRE(!first.solver->EndgameBoundaryMetadata().passed);
+
+    PlantedCrossing again(0, std::make_shared<bertini::records::OutputDirectory>(dir));
+    BOOST_REQUIRE_EQUAL(again.solver->RecordsRunId(), first.solver->RecordsRunId());   // the same ask
+    BOOST_REQUIRE(again.solver->NumPathsRecalled() > 0u);
+
+    auto const& md = again.solver->SolutionMetadata();
+    BOOST_REQUIRE_EQUAL(md.size(), flagged_first.size());
+    for (std::size_t i = 0; i < md.size(); ++i)
+        BOOST_CHECK_EQUAL(md[i].crossing_unresolved, flagged_first[i].crossing_unresolved);
+}
+
+
+// A run whose check passed says so in its own record: absence of a midpath record has to keep
+// meaning "the check did not run", or a solve cut short reads as a clean bill of health.
+BOOST_AUTO_TEST_CASE(a_clean_solve_records_a_crossing_check_that_passed)
+{
+    using namespace bertini;
+    auto const dir = FreshCrossingRecords("clean");
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<tracking::DoublePrecisionTracker,
+                  endgame::EndgameSelector<tracking::DoublePrecisionTracker>::Cauchy,
+                  decltype(sys)>(sys);
+    zd.DefaultSetup();
+    zd.RecordTo(std::make_shared<records::OutputDirectory>(dir));
+    zd.Solve();
+
+    BOOST_REQUIRE(zd.EndgameBoundaryMetadata().passed);
+
+    auto const results = zd.Records()->ResultsOf(zd.RecordsRunId());
+    unsigned num_midpath = 0;
+    for (auto const& rec : results)
+        if (std::string(rec.at("kind").as_string()) == "midpath")
+        {
+            ++num_midpath;
+            BOOST_CHECK(rec.at("passed").as_bool());
+            BOOST_CHECK_EQUAL(rec.at("num_crossings_detected").as_int64(), 0);
+        }
+    BOOST_CHECK_EQUAL(num_midpath, 1u);
+
+    // and no path is reported twice, since no path needed amending
+    for (auto const& [index, rec] : NewestPathRecords(results))
+    {
+        (void)index;
+        BOOST_CHECK(!RecordSaysCrossingUnresolved(rec));
+    }
 }
 
 

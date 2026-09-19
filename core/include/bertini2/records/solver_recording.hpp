@@ -229,6 +229,11 @@ boost::json::object EncodeFullPathResult(parallel::FullPathResult<ComplexT> cons
     // its own patience against before reusing an abandonment
     if (r.wall_clock_limit_seconds > 0)
         out["wall_clock_limit_seconds"] = ExactDoubleText(r.wall_clock_limit_seconds);
+    // the crossing verdict, written only when the library could NOT vouch for the endpoint.
+    // Absent means clean -- which is also what every record written before this field existed
+    // meant, since a store from then has no way to say otherwise.
+    if (r.crossing_unresolved)
+        out["crossing_unresolved"] = true;
     return out;
 }
 
@@ -282,6 +287,8 @@ parallel::FullPathResult<ComplexT> DecodeFullPathResult(boost::json::object cons
         r.latest_path_point = DecodePoint<ComplexT>(v->as_array());
     if (auto const* v = rec.if_contains("wall_clock_limit_seconds"))
         r.wall_clock_limit_seconds = DoubleFromText(std::string(v->as_string()));
+    if (auto const* v = rec.if_contains("crossing_unresolved"))
+        r.crossing_unresolved = v->as_bool();
     return r;
 }
 

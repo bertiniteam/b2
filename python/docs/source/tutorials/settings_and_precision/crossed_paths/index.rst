@@ -113,6 +113,38 @@ Use it as a correctness gate in your own scripts: if ``report.passed`` is ``Fals
 some crossings were left unresolved and the affected solutions may be wrong -- re-solve with a
 better predictor or a tighter tolerance.
 
+The same verdict is on each affected path, so code that reads solutions one at a time does not
+have to know the report exists:
+
+.. code-block:: python
+
+    for point, meta in zip(solver.all_solutions(), solver.solution_metadata()):
+        if meta.crossing_unresolved:
+            ...   # this endpoint is one the solver could not vouch for
+
+Its success codes still read ``Success``: the path tracked without incident, and what the solver
+cannot vouch for is that it ended on the branch it set out along.
+
+Reading it back later
+=====================
+
+A recording solve writes both into the records, so the verdict outlives the solver object and the
+terminal it printed to.  :func:`bertini.crossing_checks` gives one row per run's check, and
+:func:`bertini.tracks` gains a ``crossing_unresolved`` column:
+
+.. code-block:: python
+
+    import bertini as pb
+
+    pb.crossing_checks(directory='my_records')   # passed, counts, attempts, per run
+    flagged = pb.tracks(directory='my_records')
+    flagged[flagged['crossing_unresolved']]      # the paths the check gave up on
+
+A run with no row in ``crossing_checks`` never reached the check -- a solve that was interrupted or
+ran out of its budget skips it -- which is not the same as a run that checked and found nothing.
+Recall carries the flag too: asking the same question again gets the endpoint back with the same
+warning attached, rather than a clean-looking answer.
+
 What to actually do about crossings
 ===================================
 

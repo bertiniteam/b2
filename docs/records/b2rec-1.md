@@ -168,6 +168,26 @@ reads honestly: what is here is done):
   `start` is either `{"kind":"start_label","index":i}` (a canonical start-system
   label — provenance bottoms out) or `{"kind":"point_ref","run":<id>,"index":i}` (a
   chain link into an ancestor run's endpoint).
+  A path the endgame-boundary crossing check could not vouch for carries
+  `crossing_unresolved: true`; the field is written only when true, so its absence means
+  what it meant before the field existed — nothing is known against this path.  Such a
+  path still reads `"status":"success"`, because it tracked without incident; what the
+  solver cannot vouch for is that it ended on the branch it set out along.
+
+- **`midpath`** — one run's endgame-boundary crossing check:
+  `{"kind":"midpath", "run":<run id>, "passed":bool,
+    "num_crossings_detected":n, "num_resolve_attempts":n,
+    "crossed_path_indices":[i,...]}`
+  Written once per recording solve whose check ran, pass or fail, so that silence means
+  the check did not happen (a solve cut short skips it) rather than a clean result.
+  `crossed_path_indices` is what the FIRST check flagged, before any re-tracking; which
+  paths it finally gave up on is each path record's `crossing_unresolved`.
+
+A verdict that arrives after the path it concerns — the crossing check is the one so far —
+is appended as a **second `path` record for that index**, rather than by holding the first
+one back until every verdict is in: emitting as paths finish is what makes a killed run's
+store worth reading.  Readers take the LAST record per `(run, index)`, which is the same
+rule that makes a crossed-path re-track supersede the track it replaced.
 
 The payload vocabulary is open like the record vocabulary: future operations may
 append other payload kinds (e.g. component-membership verdicts) to their run's file.

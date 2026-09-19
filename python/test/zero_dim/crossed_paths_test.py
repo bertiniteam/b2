@@ -75,10 +75,13 @@ def cubic_crossing_homotopy():
     return H, target, start_points
 
 
-def _solve(resolve_attempts, predictor=pb.Predictor.Euler, step=COARSE_STEP, tol=LOOSE_TOL):
+def _solve(resolve_attempts, predictor=pb.Predictor.Euler, step=COARSE_STEP, tol=LOOSE_TOL,
+           directory=None):
     """Track the planted cubic and return (report, sorted distinct real roots)."""
     H, target, start_points = cubic_crossing_homotopy()
     solver = pb.nag_algorithm.user_homotopy(H, start_points, target, mptype='double')
+    if directory is not None:
+        solver.record_to(directory)
 
     solver.get_tracker().predictor(predictor)
     solver.get_tracker().get_stepping().update(initial_step_size=step, max_step_size=step)
@@ -145,3 +148,33 @@ def test_unresolved_crossing_is_flagged_on_the_affected_paths():
     resolved, _, md_resolved = _solve(resolve_attempts=2)
     assert resolved.passed
     assert not any(m.crossing_unresolved for m in md_resolved)
+
+
+def test_the_crossing_verdict_is_readable_from_the_records(tmp_path):
+    """b2#365: a records directory can be asked which paths the check gave up on, and whether it
+    passed at all, without the solver that ran it."""
+    pytest.importorskip('pandas')
+    d = str(tmp_path / 'records')
+
+    report, _, md = _solve(resolve_attempts=0, directory=d)
+    assert not report.passed
+
+    checks = pb.crossing_checks(directory=d)
+    assert len(checks) == 1
+    assert not checks['passed'].iloc[0]
+    assert checks['num_crossings_detected'].iloc[0] == report.num_crossings_detected
+
+    flagged = {i for i, m in enumerate(md) if m.crossing_unresolved}
+    assert flagged
+    t = pb.tracks(directory=d)
+    assert set(t.loc[t['crossing_unresolved'], 'index']) == flagged
+    # the paths tracked without incident; the flag is the only thing that says otherwise
+    assert (t['status'] == 'success').all()
+
+    # asking the same question again appends a second check; the newest is what is reported,
+    # one row per run, as tracks() reports one row per path
+    _solve(resolve_attempts=0, directory=d)
+    again = pb.crossing_checks(directory=d)
+    assert len(again) == 1
+    assert not again['passed'].iloc[0]
+    assert set(pb.tracks(directory=d).loc[lambda f: f['crossing_unresolved'], 'index']) == flagged
