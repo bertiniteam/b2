@@ -252,6 +252,59 @@ namespace bertini{
                 "The symbolic Jacobian of the system, as a list of rows of expression nodes (NOT numeric -- contrast eval_jacobian).  usercoordinates=True (default): differentiate the natural (pre-homogenization) functions w.r.t. the user-declared affine/projective variable groups -- homogenizing variables never appear, patches omitted.  usercoordinates=False: differentiate the current (possibly homogenized) functions w.r.t. the full internal variable ordering (homogenizing variables included), with the patch's rows appended when patched.  Prefer bertini.System.jacobian(...), which returns a 2-D numpy object array.")
             .def("variable_groups", &SystemBaseT::VariableGroups, (arg("self")), "Get the list of (affine) variable_groups from the system")
             .def("hom_variable_groups", &SystemBaseT::HomVariableGroups, (arg("self")), "Get the list of projective / homogeneous variable_groups from the system")
+
+            // auxiliary coordinates: the ones the system carries for the construction's sake, and
+            // which every judgement about a point leaves out (b2#403)
+            .def("set_auxiliary_variable_groups",
+                +[](System& self, boost::python::object groups) {
+                    std::vector<unsigned> v;
+                    for (boost::python::ssize_t ii = 0; ii < boost::python::len(groups); ++ii)
+                        v.push_back(boost::python::extract<unsigned>(groups[ii]));
+                    self.SetAuxiliaryVariableGroups(std::move(v));
+                },
+                (arg("self"), arg("groups")),
+                "Declare whole variable groups auxiliary, by their (FIFO) index: coordinates this system carries for the construction's sake rather than the answer's -- a null-vector block with its own patch, a slack coordinate -- whose magnitude is therefore not a quantity anybody chose.  They are left out of is_finite and is_real, and so out of path truncation, the endgame's divergence check, and the finite/real classification.  Nothing else changes: an auxiliary coordinate is tracked, recorded and returned exactly as before.  Pass an empty list for none.  Which coordinates are auxiliary is part of the system's identity, since the tracker truncates on what is not.  Making every coordinate auxiliary is refused.")
+            .def("set_auxiliary_coordinates",
+                +[](System& self, boost::python::object coordinates) {
+                    std::vector<unsigned> v;
+                    for (boost::python::ssize_t ii = 0; ii < boost::python::len(coordinates); ++ii)
+                        v.push_back(boost::python::extract<unsigned>(coordinates[ii]));
+                    self.SetAuxiliaryCoordinates(std::move(v));
+                },
+                (arg("self"), arg("coordinates")),
+                "Declare individual coordinates auxiliary, for a system whose grouping does not separate them.  Indices are into a point in USER coordinates, in variable-group order -- the coordinates as you wrote them, so an index survives homogenize() and auto_patch().  The union with whatever set_auxiliary_variable_groups covers.  Pass an empty list for none.")
+            .def("auxiliary_variable_groups",
+                +[](SystemBaseT const& self) {
+                    boost::python::list out;
+                    for (auto g : self.AuxiliaryVariableGroups()) out.append(g);
+                    return out;
+                },
+                (arg("self")), "The indices of the auxiliary variable groups.")
+            .def("auxiliary_coordinates",
+                +[](SystemBaseT const& self) {
+                    boost::python::list out;
+                    for (auto c : self.AuxiliaryCoordinates()) out.append(c);
+                    return out;
+                },
+                (arg("self")), "The indices of the individually auxiliary coordinates.")
+            .def("num_auxiliary_coordinates", &SystemBaseT::NumAuxiliaryCoordinates, (arg("self")),
+                "How many of this system's user coordinates are auxiliary; a coordinate covered both by a group and individually counts once.")
+            .def("is_finite",
+                +[](SystemBaseT const& self, Vec<complex_dbl> const& x, double threshold) { return self.IsFinite(x, threshold); },
+                (arg("self"), arg("point"), arg("threshold")),
+                "Is this point of mine finite, at the given threshold?  The largest magnitude among the coordinates that are not auxiliary, in dehomogenized (user) coordinates.  The same question the tracker asks when truncating a path and the solver asks when classifying an endpoint, differing only in how much patience the threshold expresses.")
+            .def("is_finite",
+                +[](SystemBaseT const& self, Vec<mpfr> const& x, double threshold) { return self.IsFinite(x, threshold); },
+                (arg("self"), arg("point"), arg("threshold")),
+                "Is this point of mine finite, at the given threshold?  Multiple-precision overload.")
+            .def("is_real",
+                +[](SystemBaseT const& self, Vec<complex_dbl> const& x, double threshold) { return self.IsReal(x, threshold); },
+                (arg("self"), arg("point"), arg("threshold")),
+                "Is this point of mine real, at the given threshold?  The largest imaginary part among the coordinates that are not auxiliary, in dehomogenized (user) coordinates -- so a point whose only complex coordinate is an auxiliary one is real.")
+            .def("is_real",
+                +[](SystemBaseT const& self, Vec<mpfr> const& x, double threshold) { return self.IsReal(x, threshold); },
+                (arg("self"), arg("point"), arg("threshold")),
+                "Is this point of mine real, at the given threshold?  Multiple-precision overload.")
             .def("degrees", sysDeg1, (arg("self")), "Get a list of the degrees of the functions in the system, with respect to all variables in all groups (and in fact overall)")
             .def("degrees", sysDeg2, (arg("self"), arg("group")), "Get a list of the degrees of the functions in the system, with respect to a variable_group passed in to this function.  Negative numbers indicate non-polynomial")
             .def("randomize",
