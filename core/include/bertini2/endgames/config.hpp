@@ -118,6 +118,14 @@ namespace bertini{ namespace endgame{
         // refine every retained sample to the new (higher) precision immediately after a precision
         // increase.  No effect on fixed-precision endgames.
         bool refine_when_increasing_precision = false; ///< When true, re-refine retained samples after the endgame migrates to higher precision (default false).
+
+        // The operating-zone test, shared by every flavor since b2#402: successive c/k estimates
+        // settling is what says the cycle-number estimate has settled, and so that the Puiseux
+        // asymptotics dominate.  These lived in CauchyConfig while the test did, for historical
+        // rather than mathematical reasons -- the estimate reads only the geometric approach
+        // samples, which every endgame maintains.
+        T minimum_for_c_over_k_stabilization = T(3)/T(4); ///< How closely successive c/k estimates must agree to count as settled, as a ratio of the smaller to the larger.
+        unsigned int num_needed_for_stabilization = 3; ///< How many consecutive c/k estimates must agree before the path is called to be in the endgame operating zone.
     };
 
 
@@ -136,8 +144,8 @@ namespace bertini{ namespace endgame{
 
         T cycle_cutoff_time = T(1)/T(100000000); ///< Time below which the cycle-number heuristic stops.
         T ratio_cutoff_time = T(1)/T(100000000000000); ///< Time below which the c/k ratio test stops.
-        T minimum_for_c_over_k_stabilization = T(3)/T(4); ///< Minimum c/k ratio accepted as stabilized.
-        unsigned int num_needed_for_stabilization = 3; ///< Consecutive samples needed for c/k stabilization.
+        // minimum_for_c_over_k_stabilization and num_needed_for_stabilization moved to
+        // EndgameConfig when the operating-zone test became shared (b2#402).
         T maximum_cauchy_ratio = T(1)/T(2); ///< Maximum accepted Cauchy ratio.
         unsigned int fail_safe_maximum_cycle_number = 250; ///< Max number of loops before giving up.
 

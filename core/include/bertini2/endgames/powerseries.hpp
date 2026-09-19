@@ -209,6 +209,19 @@ protected:
     mutable TupleOfSamps derivatives_;
 
     /**
+    \brief The sliding window of recent c/k estimates, one deque per numeric type.
+
+    Kept at `num_needed_for_stabilization + 1` entries, so the stabilization test always reads the
+    most recent estimates rather than the first ones ever taken -- the same window the Cauchy
+    endgame keeps (b2#402).
+    */
+    mutable TupleOfTimes c_over_k_;
+
+    /// \brief Whether InEGOperatingZone has been emitted for this run.  The event says the path
+    /// has ENTERED the zone, which happens once; it is not a per-advance heartbeat.
+    mutable bool announced_operating_zone_ = false;
+
+    /**
     \brief Random vector used in computing an upper bound on the cycle number.
 
     Dual-slot (TupOfVec) so the adaptive-numeric-type endgame can form the cycle-number dot products in
@@ -254,6 +267,9 @@ public:
     {
         std::get<TimeCont<ComplexT> >(times_).clear();
         std::get<SampCont<ComplexT> >(samples_).clear();
+        // the operating-zone question is asked afresh for each path
+        std::get<TimeCont<ComplexT> >(c_over_k_).clear();
+        announced_operating_zone_ = false;
     }
 
     /**
@@ -643,8 +659,6 @@ public:
                 this->GetTracker().GetCurrentPrecision() > this->current_endgame_precision_)
                 return SuccessCode::HigherPrecisionNecessary;
 
-        NotifyObservers(InEGOperatingZone<EmitterType>(*this));
-
         this->EnsureAtPrecision(next_time,Precision(next_sample));
 
 
@@ -699,7 +713,45 @@ public:
             samples.pop_front();
         }
 
+        // Has the path entered the endgame operating zone?  The same test the Cauchy endgame
+        // uses, over the same kind of window, so the event asserts the same thing in both
+        // (b2#402).  It used to fire on every advance here, which made it mean "advanced".
+        NoteWhetherInOperatingZone<ComplexT>(samples);
+
         return SuccessCode::Success;
+    }
+
+
+    /**
+    \brief Watch the c/k estimates settle, and say so once when they have.
+
+    `InEGOperatingZone` announces that the path has reached the asymptotic regime, where the
+    Puiseux model the endgame is built on dominates.  That is what makes the samples usable
+    quantitatively, so a consumer that is told it every advance is being told nothing.
+
+    The window slides, exactly as the Cauchy endgame's does, so the test reads the most recent
+    estimates rather than the first ever taken.
+
+    \tparam ComplexT The complex number type.
+    \param samples The current geometric window; at least three are needed for an estimate.
+    */
+    template<typename ComplexT>
+    void NoteWhetherInOperatingZone(SampCont<ComplexT> const& samples) const
+    {
+        if (announced_operating_zone_ || samples.size() < 3)
+            return;
+
+        auto const needed = this->EndgameSettings().num_needed_for_stabilization;
+        auto& c_over_k = std::get<TimeCont<ComplexT> >(c_over_k_);
+        c_over_k.push_back(this->template ComputeCOverK<ComplexT>(samples));
+        while (c_over_k.size() > needed + 1)
+            c_over_k.pop_front();
+
+        if (c_over_k.size() > needed && this->CheckForCOverKStabilization(c_over_k))
+        {
+            announced_operating_zone_ = true;
+            NotifyObservers(InEGOperatingZone<EmitterType>(*this));
+        }
     }
 
 

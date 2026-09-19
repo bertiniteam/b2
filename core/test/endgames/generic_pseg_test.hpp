@@ -874,7 +874,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_non_zero_target_time)
 
 
 /**
-The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
+The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and an endgame_space value that is
 one of the solutions at t = endgame_time.
 
 This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during
@@ -931,7 +931,7 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 
 
 /**
-The function that runs the power series endgame is called Run. Run takes an endgame_time value and and endgame_space value that is
+The function that runs the power series endgame is called Run. Run takes an endgame_time value and an endgame_space value that is
 one of the solutions at t = endgame_time, it can also set a target_time other than t = 0.
 
 This test will start at t = 0.2 and use the endgame to find the solution at t = .1 + .1*I. This is checking to make sure the powerseries
@@ -997,7 +997,7 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
 
 
 /**
-The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
+The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and an endgame_space value that is
 one of the solutions at t = endgame_time.
 
 This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during
@@ -1067,7 +1067,7 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 
 
 /**
-The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
+The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and an endgame_space value that is
 one of the solutions at t = endgame_time.
 
 In this test we do multiple variables decoupled, that has a high multiplicity (5) solution.
@@ -1126,7 +1126,7 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 
 
 /**
-The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
+The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and an endgame_space value that is
 one of the solutions at t = endgame_time.
 
 Griewank Osborne is a very classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values

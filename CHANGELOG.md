@@ -315,6 +315,21 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Fixed
 
+- **`InEGOperatingZone` means the same thing in both endgames** (#402).  The event says the path
+  has reached the asymptotic regime, where the Puiseux model the endgame is built on dominates --
+  which is what makes the samples usable quantitatively, for anyone fitting a power law against
+  `|t|` to see what vanishes at the root.  The Cauchy endgame emitted it once, on a real test: its
+  c/k estimates settling.  The power series endgame emitted it at the end of every successful
+  advance, with no test at all, so there it meant "advanced", and a consumer that trusted it got a
+  silently wrong answer under one flavor and a right one under the other.  Both run the same test
+  now.  It reads only the geometrically spaced approach samples, which every flavor already keeps
+  -- the power series endgame's `samples_` and the Cauchy endgame's `pseg_samples_` are the same
+  window under two names -- so it lives on the base endgame, along with the fixed probe direction
+  that keeps consecutive estimates comparable.  `minimum_for_c_over_k_stabilization` and
+  `num_needed_for_stabilization` move from `CauchyConfig` to `EndgameConfig` with it, which is
+  where a setting every endgame reads belongs; scripts that set them on the Cauchy config need the
+  one-line change.  Every config digest moves, under the existing `b2cfgenc/4` rather than a new
+  version, per ADR-0061.
 - **Four settings had no default at all.**  `SharpeningConfig.sharpendigits` and
   `RegenerationConfig`'s three slice tolerances were declared without initializers, so a
   default-constructed config held indeterminate values and reading one was undefined behaviour --

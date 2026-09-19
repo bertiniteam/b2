@@ -145,9 +145,128 @@ protected:
     BCT start_time_{};   ///< The endgame boundary time; set via SetBoundaryTime().
     BCT target_time_{};  ///< The final target time (default 0); set via SetTargetTime().
 
+    /**
+    The random direction the c/k estimate is projected along.  Generated once per size+precision
+    and reused for the whole endgame, so consecutive estimates differ only because the samples
+    differ.  A fresh random probe every call made the stabilization test noisy -- it could certify
+    the operating zone spuriously -- and churned mpfr allocations.  See z_notes/20260629.
+    */
+    mutable TupOfVec c_over_k_probe_;
 
 
 
+
+
+    /**
+    \brief The fixed random direction the c/k estimate is projected along.
+
+    Regenerated only when the size changes; re-precisioned in place otherwise, so the direction
+    itself is preserved across a precision increase.
+
+    \tparam ComplexT The complex number type.
+    \param size The number of coordinates the probe must have.
+    \param prec The working precision to supply it at.
+    \return The probe, by const reference.
+    */
+    template<typename ComplexT>
+    Vec<ComplexT> const& GetCOverKProbe(unsigned size, unsigned prec) const
+    {
+        using bertini::Precision;
+        auto& probe = std::get<Vec<ComplexT> >(c_over_k_probe_);
+        if (static_cast<unsigned>(probe.size()) != size)
+        {
+            probe.resize(size);
+            for (unsigned ii = 0; ii < size; ++ii)
+                probe(ii) = RandomUnit<ComplexT>();
+        }
+        if (Precision(probe) != prec)
+            Precision(probe, prec);
+        return probe;
+    }
+
+
+public:
+
+    /**
+    \brief An estimate of c/k from the three most recent geometric samples.
+
+    Assumes the path is in the endgame operating zone, where the Puiseux asymptotics dominate; as
+    the cycle-number estimate settles, successive values of this estimate settle with it, which is
+    what CheckForCOverKStabilization watches for.
+
+    It reads only the geometrically-spaced approach samples and the fixed probe, which every
+    endgame flavor maintains -- the power series endgame's `samples_` and the Cauchy endgame's
+    `pseg_samples_` are the same window under two names -- so it belongs here rather than to
+    either flavor (b2#402).  Consult page 53 of \cite bertinibook for the heuristic.
+
+    \tparam ComplexT The complex number type.
+    \param samples The geometric approach samples; the first three are used.
+    \return The estimate, never below 1.
+    */
+    template<typename ComplexT>
+    auto ComputeCOverK(SampCont<ComplexT> const& samples) const -> typename Eigen::NumTraits<ComplexT>::Real
+    {
+        using RealT = typename Eigen::NumTraits<ComplexT>::Real;
+        using std::abs;
+        using std::log;
+
+        assert(samples.size()>=3);
+        const Vec<ComplexT> & sample0 = samples[0];
+        const Vec<ComplexT> & sample1 = samples[1];
+        const Vec<ComplexT> & sample2 = samples[2];
+
+        const Vec<ComplexT> & rand_vector =
+            GetCOverKProbe<ComplexT>(static_cast<unsigned>(sample0.size()), Precision(sample0));
+
+        // //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
+        // //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type.
+        RealT estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).template lpNorm<Eigen::Infinity>())/(((sample1 - sample0).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()))));
+        estimate = abs(log(RealT(this->EndgameSettings().sample_factor)))/estimate;
+        if (estimate < 1)
+            return RealT(1);
+        else
+            return estimate;
+    }
+
+
+    /**
+    \brief Have the last few c/k estimates settled to within the user's threshold?
+
+    The operating-zone test: consecutive estimates agreeing to within
+    `minimum_for_c_over_k_stabilization`, for `num_needed_for_stabilization` of them, is taken as
+    the cycle-number estimate having settled.  Both endgames use this and mean the same thing by
+    it (b2#402).
+
+    \tparam T The element type of the estimate window; real or complex, since only its magnitude
+            is read (the Cauchy endgame keeps reals, the power series endgame keeps its numeric type).
+    \param c_over_k_array The estimates so far, oldest first.
+    \return Whether they have settled.
+    */
+    template<typename T>
+    bool CheckForCOverKStabilization(std::deque<T> const& c_over_k_array) const
+    {
+        using RealT = typename Eigen::NumTraits<T>::Real;
+        using std::abs;
+
+        assert(c_over_k_array.size()>=this->EndgameSettings().num_needed_for_stabilization);
+        for(unsigned ii = 1; ii < this->EndgameSettings().num_needed_for_stabilization ; ++ii)
+        {
+            RealT a = abs(c_over_k_array[ii-1]);
+            RealT b = abs(c_over_k_array[ii]);
+
+            RealT divide = a;
+            if(a < b)
+                divide = a/b;
+            else
+                divide = b/a;
+
+            if(divide < this->EndgameSettings().minimum_for_c_over_k_stabilization)
+                return false;
+        }
+        return true;
+    }
+
+protected:
 
     /**
     \brief convert the base endgame into the derived type.

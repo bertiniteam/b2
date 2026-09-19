@@ -208,14 +208,8 @@ protected:
     */
     mutable TupleOfSamps cauchy_samples_;
 
-    /**
-    \brief A fixed random probe vector used by ComputeCOverK to project sample differences to scalars.
-    Generated ONCE (per precision) and reused across the whole endgame, so the c/k estimate is
-    deterministic and consecutive estimates differ only because the samples differ -- not because the
-    probe changed.  A fresh random probe every call made CheckForCOverKStabilization noisy (it could
-    certify the operating zone spuriously) and churned mpfr allocations.  See z_notes/20260629.
-    */
-    mutable TupOfVec c_over_k_probe_;
+    // The c/k probe lives on the base endgame now: the operating-zone test is shared with the
+    // power series endgame (b2#402).
 
     // Scratch for LatestTimeImpl to return a BCT reference when the endgame is computing in the
     // complex_dbl fast lane (the latest time then lives in the complex_dbl slot, not the BCT slot).
@@ -521,115 +515,11 @@ public:
         std::get<SampCont<ComplexT>>(pseg_samples_).push_back(sample);
     }
 
-    /**
-        \brief Lazily generate (once) and return the fixed random probe vector used by ComputeCOverK.
-        The probe is generated the first time it is needed at a given size, then reused for the life of
-        the endgame so the c/k estimate is deterministic.  For adaptive precision it is re-precisioned
-        in place to match the working samples (the random direction is preserved).
-    */
-    template<typename ComplexT>
-    Vec<ComplexT> const& GetCOverKProbe(unsigned size, unsigned prec) const
-    {
-        using bertini::Precision;
-        auto& probe = std::get<Vec<ComplexT> >(c_over_k_probe_);
-        if (static_cast<unsigned>(probe.size()) != size)
-        {
-            probe.resize(size);
-            for (unsigned ii = 0; ii < size; ++ii)
-                probe(ii) = RandomUnit<ComplexT>();
-        }
-        if (Precision(probe) != prec)
-            Precision(probe, prec);
-        return probe;
-    }
+    // GetCOverKProbe, ComputeCOverK and CheckForCOverKStabilization now live on the base endgame:
+    // the estimate reads only the geometric approach samples, which every flavor maintains, so the
+    // operating-zone test is shared rather than Cauchy's alone (b2#402).  The Cauchy endgame
+    // passes its own pseg_samples_ to ComputeCOverK.
 
-    /**
-        \brief A function that uses the assumption of being in the endgame operating zone to compute an approximation of the ratio c over k.
-            When the cycle number stabilizes we will see that the different approximations of c over k will stabilize.
-            Returns the computed value of c over k.
-
-
-        ## Input:
-                None: all data needed are class data members.
-
-        ## Output:
-                estimate: The approximation of the ratio of the two numbers C and K heuristically signifying we are in the cauchy endgame operating zone.
-
-
-        ##Details:
-                \tparam ComplexT The complex number type.
-                Consult page 53 of \cite bertinibook, for the reasoning behind this heuristic.
-    */
-    template<typename ComplexT>
-    auto ComputeCOverK() const -> typename Eigen::NumTraits<ComplexT>::Real
-    {//Obtain samples for computing C over K.
-        using RealT = typename Eigen::NumTraits<ComplexT>::Real;
-        using std::abs;
-        using std::log;
-
-        const auto& pseg_samples = std::get<SampCont<ComplexT> >(pseg_samples_);
-
-        assert(pseg_samples.size()>=3);
-        const Vec<ComplexT> & sample0 = pseg_samples[0];
-        const Vec<ComplexT> & sample1 = pseg_samples[1];
-        const Vec<ComplexT> & sample2 = pseg_samples[2];
-
-        // Use a fixed random probe vector, generated once and reused across the whole endgame, so this
-        // estimate is deterministic.  A fresh random vector per call made consecutive c/k estimates
-        // disagree by probe noise alone, which could trip (or stall) CheckForCOverKStabilization.
-        const Vec<ComplexT> & rand_vector = GetCOverKProbe<ComplexT>(static_cast<unsigned>(sample0.size()), Precision(sample0));
-
-        // //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
-        // //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type.
-        RealT estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).template lpNorm<Eigen::Infinity>())/(((sample1 - sample0).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()))));
-        estimate = abs(log(RealT(this->EndgameSettings().sample_factor)))/estimate;
-        if (estimate < 1)
-            return RealT(1);
-        else
-            return estimate;
-
-    }//end ComputeCOverK
-
-
-    /**
-        \brief Function to determine if ratios of c/k estimates are withing a user defined threshold.
-
-        ## Input:
-                c_over_k_array: A container holding all previous computed C over K ratios. The stabilization of these ratios is key to the convergence of the cauchy endgame.
-
-        ## Output:
-                true: if we have stabilized and can proceed with the endgame.
-                false: if our ratios are not withing tolerances set by the user or by default.
-
-        ##Details:
-                \tparam ComplexT The complex number type.
-
-    */
-    template<typename ComplexT>
-    bool CheckForCOverKStabilization(TimeCont<ComplexT> const& c_over_k_array) const
-    {
-        using RealT = typename Eigen::NumTraits<ComplexT>::Real;
-        using std::abs;
-
-        assert(c_over_k_array.size()>=GetCauchySettings().num_needed_for_stabilization);
-        for(unsigned ii = 1; ii < GetCauchySettings().num_needed_for_stabilization ; ++ii)
-        {
-            RealT a = abs(c_over_k_array[ii-1]);
-            RealT b = abs(c_over_k_array[ii]);
-
-            typename Eigen::NumTraits<ComplexT>::Real divide = a;
-
-            if(a < b)
-                divide = a/b;
-            else
-                divide = b/a;
-
-            if(divide <  GetCauchySettings().minimum_for_c_over_k_stabilization)
-                return false;
-        }
-        return true;
-
-    }//end CheckForCOverKStabilization
 
 
     /*
@@ -959,28 +849,28 @@ public:
         if (initial_sample_success!=SuccessCode::Success)
             return initial_sample_success;
 
-        c_over_k.push_back(ComputeCOverK<ComplexT>());
+        c_over_k.push_back(this->template ComputeCOverK<ComplexT>(std::get<SampCont<ComplexT>>(pseg_samples_)));
 
 
         //track until for more c_over_k estimates or until we reach a cutoff time.
-        for (unsigned ii = 0; ii < GetCauchySettings().num_needed_for_stabilization; ++ii)
+        for (unsigned ii = 0; ii < this->EndgameSettings().num_needed_for_stabilization; ++ii)
         {
             auto advance_success = AdvanceTime<ComplexT>(target_time);
             if (advance_success!=SuccessCode::Success)
                 return advance_success;
-            c_over_k.push_back(ComputeCOverK<ComplexT>());
+            c_over_k.push_back(this->template ComputeCOverK<ComplexT>(std::get<SampCont<ComplexT>>(pseg_samples_)));
         }//end while
 
 
         //have we stabilized yet?
-        while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()-target_time) > GetCauchySettings().cycle_cutoff_time)
+        while(!this->CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()-target_time) > GetCauchySettings().cycle_cutoff_time)
         {
             auto advance_success = AdvanceTime<ComplexT>(target_time);
             if (advance_success!=SuccessCode::Success)
                 return advance_success;
 
             c_over_k.pop_front();
-            c_over_k.push_back(ComputeCOverK<ComplexT>());
+            c_over_k.push_back(this->template ComputeCOverK<ComplexT>(std::get<SampCont<ComplexT>>(pseg_samples_)));
 
         }//end while
 
@@ -1753,7 +1643,7 @@ public:
             this->template CrossSampsUp<>(pseg_samples_,   newprec);
             this->template CrossTimesUp<>(cauchy_times_,   newprec);
             this->template CrossSampsUp<>(cauchy_samples_, newprec);
-            this->template CrossVecUp<>  (c_over_k_probe_, newprec);
+            this->template CrossVecUp<>  (this->c_over_k_probe_, newprec);
         }
         else
         {
@@ -1761,7 +1651,7 @@ public:
             tracking::adaptive::SetPrecision(std::get<SampCont<complex_mp>>(pseg_samples_),   newprec);
             tracking::adaptive::SetPrecision(std::get<TimeCont<complex_mp>>(cauchy_times_),   newprec);
             tracking::adaptive::SetPrecision(std::get<SampCont<complex_mp>>(cauchy_samples_), newprec);
-            auto& pm = std::get<Vec<complex_mp>>(c_over_k_probe_);
+            auto& pm = std::get<Vec<complex_mp>>(this->c_over_k_probe_);
             if (pm.size() > 0) Precision(pm, newprec);
         }
 

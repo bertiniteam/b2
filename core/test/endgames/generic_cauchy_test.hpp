@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
     my_endgame.SetPSEGTimes(pseg_times);
     my_endgame.SetPSEGSamples(pseg_samples);
 
-    auto first_c_over_k = my_endgame.ComputeCOverK<BCT>();
+    auto first_c_over_k = my_endgame.ComputeCOverK<BCT>(pseg_samples);
 
     using std::abs;
     BOOST_CHECK( abs(first_c_over_k - RealFromString("1.12917")) < 1e-5 );
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
     my_endgame.SetPSEGTimes(pseg_times);
     my_endgame.SetPSEGSamples(pseg_samples);
 
-    auto second_c_over_k = my_endgame.ComputeCOverK<BCT>();
+    auto second_c_over_k = my_endgame.ComputeCOverK<BCT>(pseg_samples);
 
     BOOST_CHECK( abs(second_c_over_k - RealFromString("1.05888")) <  1e-5);
 
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
     my_endgame.SetPSEGTimes(pseg_times);
     my_endgame.SetPSEGSamples(pseg_samples);
 
-    auto first_c_over_k = my_endgame.ComputeCOverK<BCT>();
+    auto first_c_over_k = my_endgame.ComputeCOverK<BCT>(pseg_samples);
 
     c_over_k_array.push_back(first_c_over_k);
 
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
     my_endgame.SetPSEGTimes(pseg_times);
     my_endgame.SetPSEGSamples(pseg_samples);
 
-    auto second_c_over_k = my_endgame.ComputeCOverK<BCT>();
+    auto second_c_over_k = my_endgame.ComputeCOverK<BCT>(pseg_samples);
 
     c_over_k_array.push_back(second_c_over_k);
 
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
     my_endgame.SetPSEGTimes(pseg_times);
     my_endgame.SetPSEGSamples(pseg_samples);
 
-    auto third_c_over_k = my_endgame.ComputeCOverK<BCT>();
+    auto third_c_over_k = my_endgame.ComputeCOverK<BCT>(pseg_samples);
 
     c_over_k_array.push_back(third_c_over_k);
 

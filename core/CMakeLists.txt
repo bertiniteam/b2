@@ -904,6 +904,7 @@ if (ENABLE_UNIT_TESTING)
 
     set(B2_ENDGAMES_TEST
         test/endgames/endgames_test.cpp
+        test/endgames/operating_zone_test.cpp
         test/endgames/generic_interpolation.hpp
         test/endgames/interpolation.cpp
         test/endgames/generic_pseg_test.hpp

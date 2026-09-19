@@ -210,6 +210,10 @@ std::string CanonicalEncoding(endgame::EndgameConfig const& c)
         << " max_num_refinements=" << c.max_num_refinements
         << " final_tolerance=" << ExactDouble(c.final_tolerance)
         << " refine_when_increasing_precision=" << (c.refine_when_increasing_precision ? 1 : 0)
+        // appended when the operating-zone test became shared by every flavor (b2#402); the
+        // order is extended by appending and never by reordering
+        << " minimum_for_c_over_k_stabilization=" << ExactDouble(c.minimum_for_c_over_k_stabilization)
+        << " num_needed_for_stabilization=" << c.num_needed_for_stabilization
         << ")";
     return out.str();
 }
@@ -230,8 +234,8 @@ std::string CanonicalEncoding(endgame::CauchyConfig const& c)
     out << "(cfg Cauchy"
         << " cycle_cutoff_time=" << ExactDouble(c.cycle_cutoff_time)
         << " ratio_cutoff_time=" << ExactDouble(c.ratio_cutoff_time)
-        << " minimum_for_c_over_k_stabilization=" << ExactDouble(c.minimum_for_c_over_k_stabilization)
-        << " num_needed_for_stabilization=" << c.num_needed_for_stabilization
+        // minimum_for_c_over_k_stabilization and num_needed_for_stabilization moved to the
+        // Endgame encoding with the test itself (b2#402)
         << " maximum_cauchy_ratio=" << ExactDouble(c.maximum_cauchy_ratio)
         << " fail_safe_maximum_cycle_number=" << c.fail_safe_maximum_cycle_number
         << " num_consecutive_same_cycle_number=" << c.num_consecutive_same_cycle_number
