@@ -138,6 +138,11 @@ struct FullPathResult
     Vec<ComplexT> latest_path_point;  ///< The last point the tracker reached on a path that did not succeed; empty otherwise.
     double        wall_clock_limit_seconds       = 0;  ///< The per-path wall-clock budget in force when the path ran, seconds; 0 = none.
 
+    // the endgame-boundary crossing verdict.  Unlike everything above it, this is not known when
+    // the path finishes -- whether a path crossed another is only decidable once every path has
+    // reached the boundary -- so the manager writes it afterwards and the path is reported again.
+    bool          crossing_unresolved            = false;  ///< Whether a crossing involving this path was detected at the endgame boundary and never resolved, so its endpoint cannot be vouched for.
+
     /// \cond PATH_RESULT_SERIALIZATION
     template<class Archive>
     void serialize(Archive& ar, unsigned const)
@@ -167,6 +172,7 @@ struct FullPathResult
         ar & num_failed_steps;
         ar & latest_path_point;
         ar & wall_clock_limit_seconds;
+        ar & crossing_unresolved;
     }
     /// \endcond
 };

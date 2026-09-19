@@ -32,6 +32,7 @@ homotopy identical, so recalled and computed results are directly comparable.
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -42,6 +43,7 @@ homotopy identical, so recalled and computed results are directly comparable.
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/records/output_directory.hpp"
 #include "bertini2/records/load_system.hpp"
+#include "bertini2/records/solver_recording.hpp"
 
 using namespace bertini;
 using Variable = node::Variable;
@@ -634,8 +636,14 @@ BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)
     BOOST_REQUIRE(zd.Records() != nullptr);
     BOOST_CHECK(fs::exists(dir / "README.txt"));
     BOOST_CHECK_EQUAL(zd.Records()->Scan().size(), 2u);   // history: 1 run + 1 auto-declared result
-    // the paths live in the payload store: header + 4 path records
-    BOOST_CHECK_EQUAL(zd.Records()->ResultsOf(zd.RecordsRunId()).size(), 5u);
+    // the paths live in the payload store: header + 4 path records + the crossing check's verdict.
+    // Counted by kind rather than in total, so a new payload kind does not read as a broken solve.
+    std::map<std::string, unsigned> by_kind;
+    for (auto const& rec : zd.Records()->ResultsOf(zd.RecordsRunId()))
+        ++by_kind[std::string(rec.at("kind").as_string())];
+    BOOST_CHECK_EQUAL(by_kind["results_header"], 1u);
+    BOOST_CHECK_EQUAL(by_kind["path"], 4u);
+    BOOST_CHECK_EQUAL(by_kind["midpath"], 1u);
 }
 
 // A solve leaves the session as it found it: the ambient default precision and the
@@ -876,6 +884,32 @@ BOOST_AUTO_TEST_CASE(archived_system_and_homotopy_reload_by_digest)
                                                      "00000000000000000000000000000000000000000000000000000000deadbeef");
     BOOST_CHECK_THROW(records::LoadSystem(*zd.Records(), forged), std::runtime_error);
     BOOST_CHECK_THROW(records::LoadSystem(*zd.Records(), "no-such-definition"), std::runtime_error);
+}
+
+
+// b2#365: the crossing verdict survives the trip through a record.  This is the half of the
+// question that a whole solve cannot ask sharply -- a recalled run re-runs the check and would
+// reach the same verdict on its own -- so ask it of the encoder and decoder directly.
+BOOST_AUTO_TEST_CASE(the_crossing_verdict_round_trips_through_a_path_record)
+{
+    parallel::FullPathResult<complex_dbl> flagged;
+    flagged.path_index = 7;
+    flagged.solution = Vec<complex_dbl>::Zero(1);
+    flagged.boundary_point = Vec<complex_dbl>::Zero(1);
+    flagged.crossing_unresolved = true;
+
+    auto const encoded = records::EncodeFullPathResult(flagged);
+    BOOST_REQUIRE(encoded.if_contains("crossing_unresolved"));
+    BOOST_CHECK(encoded.at("crossing_unresolved").as_bool());
+    BOOST_CHECK(records::DecodeFullPathResult<complex_dbl>(encoded, 7).crossing_unresolved);
+
+    // a clean path says nothing, so the field's absence keeps meaning what it meant in every
+    // record written before the field existed: nothing is known against this path
+    parallel::FullPathResult<complex_dbl> clean = flagged;
+    clean.crossing_unresolved = false;
+    auto const clean_encoded = records::EncodeFullPathResult(clean);
+    BOOST_CHECK(!clean_encoded.if_contains("crossing_unresolved"));
+    BOOST_CHECK(!records::DecodeFullPathResult<complex_dbl>(clean_encoded, 7).crossing_unresolved);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

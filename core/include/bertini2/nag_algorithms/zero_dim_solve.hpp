@@ -824,6 +824,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                     midpath_report_.num_resolve_attempts = num_resolve_attempts;
                     midpath_report_.passed = passed;
                     FlagUnresolvedCrossings(passed);
+                    RecordMidpathOutcome();
                     if (!passed)
                         std::cerr << "warning: " << midpath_report_.num_crossings_detected
                                   << " path crossing(s) detected at the endgame boundary remained unresolved "
@@ -2038,6 +2039,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 midpath_report_.num_resolve_attempts = num_resolve_attempts;
                 midpath_report_.passed = passed;
                 FlagUnresolvedCrossings(passed);
+                RecordMidpathOutcome();
 
                 if (!passed)
                     std::cerr << "warning: " << midpath_report_.num_crossings_detected
@@ -2049,7 +2051,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 
             /**
-            \brief Mark every path still flagged after the last crossing check as unresolved.
+            \brief Record this solve's verdict on every path the crossing check looked at.
 
             Called once the resolve rounds are over, in both the serial flow and the distributed
             manager, so the per-path verdict matches the report and the warning: an endpoint the
@@ -2057,14 +2059,63 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             though its success codes may read Success (b2#365).  A re-run in a later round installs
             fresh metadata, so nothing set here survives a successful resolve.
 
+            It clears as well as sets, because it is this solve's verdict and not an accumulation
+            of every solve's: a path recalled from a record that flagged it arrives with the flag
+            already true, and if this run's check can vouch for it, saying so is the whole point of
+            having checked.
+
             \param passed Whether the last check found no crossings.
             */
             void FlagUnresolvedCrossings(bool passed)
             {
+                for (auto& smd : solution_final_metadata_)
+                    smd.crossing_unresolved = false;
                 if (passed)
                     return;
                 for (auto const& v : midpath_.GetCrossedPaths())
                     solution_final_metadata_[static_cast<SolnIndT>(v.index())].crossing_unresolved = true;
+            }
+
+            /**
+            \brief Write the endgame-boundary crossing check's outcome into the records.
+
+            Two records, because the verdict arrives after the paths it is about.  A path record is
+            emitted the moment that path finishes -- which is what makes a killed run's store worth
+            having -- but whether a path CROSSED another is only decidable once every path has
+            reached the boundary and the check has run.  So a flagged path is reported a second
+            time, with the flag: the store is append-only and both recall and every reader keep the
+            last record per index, the same mechanism a crossed-path re-track already relies on.
+            Deferring the first emission until the check was done would be the tidier-looking fix
+            and the wrong one -- it would mean a run that dies during tracking records nothing.
+
+            Beside them goes one run-level `midpath` record carrying the report itself, written on
+            every recording solve whose check ran, pass or fail, so a directory can answer "did this
+            run's check pass, and how hard did it try" directly, and so silence means the check did
+            not run (a solve cut short skips it) rather than a clean bill of health.
+
+            \see FlagUnresolvedCrossings, RecordCompletedPath
+            */
+            void RecordMidpathOutcome()
+            {
+                if (!records_ || recalling_ || records_run_id_.empty())
+                    return;
+
+                boost::json::array crossed;
+                for (auto const i : midpath_report_.crossed_path_indices)
+                    crossed.push_back(boost::json::value(static_cast<std::int64_t>(i)));
+                records_->AppendResult(records_run_id_,
+                    {{"kind", "midpath"},
+                     {"run", records_run_id_},
+                     {"passed", midpath_report_.passed},
+                     {"num_crossings_detected",
+                      static_cast<std::int64_t>(midpath_report_.num_crossings_detected)},
+                     {"num_resolve_attempts",
+                      static_cast<std::int64_t>(midpath_report_.num_resolve_attempts)},
+                     {"crossed_path_indices", std::move(crossed)}});
+
+                for (SolnIndT idx = 0; idx < solution_final_metadata_.size(); ++idx)
+                    if (solution_final_metadata_[idx].crossing_unresolved)
+                        RecordCompletedPath(PackFullPathResult(idx));
             }
 
             /**
@@ -2432,6 +2483,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 r.num_failed_steps     = smd.num_failed_steps;
                 r.latest_path_point           = smd.latest_path_point;
                 r.wall_clock_limit_seconds = smd.wall_clock_limit_seconds;
+                // Always false while paths are being tracked -- FlagUnresolvedCrossings runs after
+                // the last resolve round -- so a re-track never carries an earlier round's verdict
+                // back out.  It is set here for the amending record that reports a flagged path
+                // once the check is finally over.
+                r.crossing_unresolved = smd.crossing_unresolved;
                 return r;
             }
 
@@ -2469,6 +2525,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 smd.num_failed_steps     = r.num_failed_steps;
                 smd.latest_path_point           = r.latest_path_point;
                 smd.wall_clock_limit_seconds = r.wall_clock_limit_seconds;
+                // a recalled path brings its archived crossing verdict back with it; a freshly
+                // tracked one carries false, which is what a path mid-solve is
+                smd.crossing_unresolved = r.crossing_unresolved;
 
                 // the records seam (ADR-0046): every topology installs completed paths here on
                 // the main/manager thread, so emission is single-writer by construction
