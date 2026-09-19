@@ -342,4 +342,57 @@ BOOST_AUTO_TEST_CASE(step_budget_counts_failed_steps_not_only_successes)
 }
 
 
+// b2#403: a system can say which of its coordinates a size judgement is about, and the TRACKER
+// honours it -- which is the half a user cannot work around.  A caller can always re-classify
+// endpoints afterwards; a caller cannot un-truncate a path the tracker abandoned partway on the
+// strength of a coordinate whose magnitude nobody chose.
+//
+// The homotopy is [x^2 - 1 ; v*t - 1] from t=1 to t=1/1000: x sits at 1 the whole way while v
+// climbs to 1000, so with a truncation threshold of 100 the path is abandoned for v's sake alone.
+BOOST_AUTO_TEST_CASE(the_tracker_does_not_truncate_a_path_on_an_auxiliary_coordinate)
+{
+    using namespace bertini::tracking;
+    DefaultPrecision(100);
+
+    auto build = [](bool v_is_auxiliary) {
+        Var x = Variable::Make("x");
+        Var v = Variable::Make("v");
+        Var t = Variable::Make("t");
+        System sys;
+        sys.AddVariableGroup(VariableGroup{x});
+        sys.AddVariableGroup(VariableGroup{v});
+        sys.AddFunction(x*x - 1);
+        sys.AddFunction(v*t - 1);
+        sys.AddPathVariable(t);
+        if (v_is_auxiliary)
+            sys.SetAuxiliaryVariableGroups({1});
+        return sys;
+    };
+
+    auto track = [](System const& sys) {
+        DoublePrecisionTracker tracker(sys);
+        SteppingConfig stepping;
+        NewtonConfig newton;
+        tracker.Setup(Predictor::RKF45, double(1e-6), double(1e2), stepping, newton);
+
+        Vec<complex_dbl> start(2);
+        start << complex_dbl(1), complex_dbl(1);
+        Vec<complex_dbl> end;
+        auto const code = tracker.TrackPath(end, complex_dbl(1), complex_dbl(1e-3), start);
+        return std::make_pair(code, end);
+    };
+
+    auto const plain = track(build(false));
+    BOOST_CHECK(plain.first == bertini::SuccessCode::GoingToInfinity);
+
+    auto const with_aux = track(build(true));
+    BOOST_CHECK(with_aux.first != bertini::SuccessCode::GoingToInfinity);
+    BOOST_REQUIRE(with_aux.first == bertini::SuccessCode::Success);
+    BOOST_REQUIRE_EQUAL(with_aux.second.size(), 2);
+    // it arrived, carrying the very coordinate that would have stopped it
+    BOOST_CHECK(abs(with_aux.second(0) - complex_dbl(1)) < 1e-6);
+    BOOST_CHECK(abs(with_aux.second(1)) > 900);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

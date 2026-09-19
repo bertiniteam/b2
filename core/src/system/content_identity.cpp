@@ -168,6 +168,20 @@ void System::EncodeCanonical(std::ostream& out, node::EncodingContext& ctx) cons
     EmitVariableGroup(out, homogenizing_variables_);
     out << '\n';
 
+    // the coordinates left out of every judgement about a point (b2#403).  Identity-affecting:
+    // the tracker truncates on what is NOT auxiliary, so two systems differing only here are asking
+    // different questions.  Stored sorted and deduplicated, so the order somebody typed them in
+    // is not part of the identity.
+    out << "auxgroups " << auxiliary_variable_groups_.size();
+    for (auto g : auxiliary_variable_groups_)
+        out << ' ' << g;
+    out << '\n';
+
+    out << "auxcoords " << auxiliary_coordinates_.size();
+    for (auto c : auxiliary_coordinates_)
+        out << ' ' << c;
+    out << '\n';
+
     out << "pathvar ";
     if (have_path_variable_ && path_variable_)
         EmitName(out, path_variable_->name());

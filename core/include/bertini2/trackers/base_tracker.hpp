@@ -624,14 +624,17 @@ namespace bertini{
             /// \tparam ComplexT The complex number type at which to perform the check.
             /// \return SuccessCode::GoingToInfinity if the infinity norm of the dehomogenized point exceeds the threshold, else SuccessCode::Success.
             ///
-            /// The infinity norm, so that this threshold, the endgame's `Security::max_norm` and the
-            /// post-processing `endpoint_finite_threshold` all measure the same quantity -- the largest
-            /// coordinate -- as Bertini 1 does.  With the 2-norm a point of n coordinates each just under
-            /// the threshold was truncated once sqrt(n) carried the norm over it (b2#404).
+            /// The system renders the verdict, so that this threshold, the endgame's
+            /// `Security::max_norm` and the post-processing `endpoint_finite_threshold` are the same
+            /// question asked with three different amounts of patience -- and so that a system which
+            /// has declared some of its coordinates auxiliary is not truncated on one of them (b2#403).
+            /// The measurement is the infinity norm, the largest coordinate, as Bertini 1 does: with
+            /// the 2-norm a point of n coordinates each just under the threshold was truncated once
+            /// sqrt(n) carried the norm over it (b2#404).
             template <typename ComplexT>
             SuccessCode CheckGoingToInfinity() const
             {
-                if (GetSystem().DehomogenizePoint(std::get<Vec<ComplexT> >(current_space_)).template lpNorm<Eigen::Infinity>() > path_truncation_threshold_)
+                if (!GetSystem().IsFinite(std::get<Vec<ComplexT> >(current_space_), path_truncation_threshold_))
                     return SuccessCode::GoingToInfinity;
                 else
                     return SuccessCode::Success;

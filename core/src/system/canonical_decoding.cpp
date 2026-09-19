@@ -250,6 +250,28 @@ void System::DecodeCanonicalFrom(DecodingCursor& cur, DecodingContext& ctx)
     homogenizing_variables_ = ReadVariableGroup(cur);
     cur.Expect('\n');
 
+    cur.Expect("auxgroups ");
+    {
+        auto const n = cur.ReadUnsigned();
+        for (unsigned long long ii = 0; ii < n; ++ii)
+        {
+            cur.Expect(' ');
+            auxiliary_variable_groups_.push_back(static_cast<unsigned>(cur.ReadUnsigned()));
+        }
+    }
+    cur.Expect('\n');
+
+    cur.Expect("auxcoords ");
+    {
+        auto const n = cur.ReadUnsigned();
+        for (unsigned long long ii = 0; ii < n; ++ii)
+        {
+            cur.Expect(' ');
+            auxiliary_coordinates_.push_back(static_cast<unsigned>(cur.ReadUnsigned()));
+        }
+    }
+    cur.Expect('\n');
+
     cur.Expect("pathvar ");
     path_variable_ = ReadOptionalVariable(cur);
     have_path_variable_ = static_cast<bool>(path_variable_);

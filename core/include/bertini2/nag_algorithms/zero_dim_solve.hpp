@@ -2269,7 +2269,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             */
             void ClassifyFiniteAndReal()
             {
-                using std::abs; using std::imag;
                 const auto& post = this->template Get<PostProcessing>();
 
                 for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
@@ -2285,21 +2284,13 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                     if (smd.endgame_success_code!=SuccessCode::Success)
                         continue;              // failed otherwise: leave defaults (not finite/real/singular)
 
-                    auto user_pt = this->TargetSystem().DehomogenizePoint(solutions_post_endgame_[ii]);
-
-                    smd.is_finite =
-                        static_cast<NumErrorT>(user_pt.template lpNorm<Eigen::Infinity>()) <= post.endpoint_finite_threshold;
-
+                    // the system renders both verdicts: it is what knows which of its coordinates
+                    // the questions are about (b2#403)
+                    smd.is_finite = this->TargetSystem().IsFinite(solutions_post_endgame_[ii],
+                                                                  post.endpoint_finite_threshold);
                     if (smd.is_finite)
-                    {
-                        NumErrorT max_imag{0};
-                        for (Eigen::Index k{0}; k < user_pt.size(); ++k)
-                        {
-                            NumErrorT a = static_cast<NumErrorT>(abs(imag(user_pt(k))));
-                            if (a > max_imag) max_imag = a;
-                        }
-                        smd.is_real = max_imag < post.real_threshold;
-                    }
+                        smd.is_real = this->TargetSystem().IsReal(solutions_post_endgame_[ii],
+                                                                  post.real_threshold);
                 }
             }
 

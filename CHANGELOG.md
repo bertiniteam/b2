@@ -100,6 +100,23 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **A system can say which of its coordinates are auxiliary** (#403).  Bertini judges a point by
+  its largest coordinate, three times over: the tracker truncates a path past
+  `path_truncation_threshold`, the endgame abandons one past `Security.max_norm`, and the solver
+  calls an endpoint past `endpoint_finite_threshold` infinite.  Several standard constructions
+  carry coordinates that exist for the construction rather than the answer -- a critical-point
+  system in null-vector form needs a patch on its null vector, and that patch fixes a
+  normalization nobody chose, so the block's direction is meaningful and its magnitude is an
+  artifact.  Judged on such a coordinate, genuine solutions were declared at infinity, and there
+  is no threshold that would have been right, because the quantity is not governed.
+  `System.set_auxiliary_variable_groups` and `System.set_auxiliary_coordinates` name the
+  coordinates the question is not about; `System.is_finite` and `System.is_real` are the
+  judgements, and the system owns them, so the tracker, the endgame and the classifier stop each
+  deriving their own.  Realness had the identical defect one line from finiteness and is fixed
+  with it.  Nothing else changes: an auxiliary coordinate is tracked, recorded and returned
+  exactly as before.  Which coordinates are auxiliary is part of the system's content identity,
+  since the tracker truncates on the ones that are not -- so declaring one changes the digest and
+  makes a new ask.  See ADR-0062 and the new "Auxiliary coordinates" tutorial.
 - **The path-crossing verdict reaches the records** (#365).  The midpath check compares every path
   against every other at the endgame boundary and re-tracks the ones that appear to have jumped
   onto a neighbour; a path it finally gives up on has carried `crossing_unresolved` in the solver's
@@ -301,9 +318,11 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   precision)` and `Complex(re, im, precision)` construct a value at a chosen precision.
 - **The system encoding version is `b2sysenc/2`.**  Canonicalization breaks multidegree ties
   between operands on the canonical encoding instead of on printed text, and the encoder writes
-  operands in that order.  Records written by earlier versions carry `b2sysenc/1` and are not
-  recalled; the "records read forever" promise is withdrawn until the identity of the algorithm
-  itself is part of a record's ask (#420).
+  operands in that order; the encoding also carries which coordinates a system has declared
+  auxiliary (#403).  Both changes land under the one version, which is the point of ADR-0061:
+  3.5 gets one encoding, not one per change.  Records written by earlier versions carry
+  `b2sysenc/1` and are not recalled; the "records read forever" promise is withdrawn until the
+  identity of the algorithm itself is part of a record's ask (#420).
 - **The default endgame is the power series endgame**, matching Bertini 1's documented default
   (`EndgameNum: 1`), at every choice point: the configuration default (so the CLI and a classic
   input without `endgamenum`), and the Python factories `ZeroDimSolver`, `HomotopySolver`,

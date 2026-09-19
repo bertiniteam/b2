@@ -2077,4 +2077,56 @@ BOOST_AUTO_TEST_CASE(positive_dimensional_square_system_raises)
 }
 
 
+// b2#403, end to end: a declaration made on the system the caller wrote survives the solver's own
+// preparation -- clone, homogenize, patch, and the homotopy built from all of it -- and governs
+// both the tracker's truncation and the final classification.
+//
+// {x^2 - 1, v - 100} has solutions (+/-1, 100), and the thresholds are lowered to 10 so that v
+// exceeds them.  Lowering the threshold rather than raising the coordinate is deliberate: a
+// coordinate far out in USER space is a point near the hyperplane at infinity in the patch the
+// solver tracks in, so a genuinely enormous v makes the path hard to track and the test would be
+// measuring numerical difficulty rather than the question it is asking.  At v = 100 the tracking
+// is easy and the only thing standing between the run and two finite real roots is the verdict.
+BOOST_AUTO_TEST_CASE(an_auxiliary_coordinate_is_not_evidence_that_a_solution_ran_off_to_infinity)
+{
+    auto solve_it = [](bool v_is_auxiliary) {
+        auto x = bertini::node::Variable::Make("x");
+        auto v = bertini::node::Variable::Make("v");
+        bertini::System sys;
+        sys.AddVariableGroup(bertini::VariableGroup{x, v});
+        sys.AddFunction(x*x - 1);
+        sys.AddFunction(v - bertini::node::Rational::Make(100, 1, 0, 1));
+        if (v_is_auxiliary)
+            sys.SetAuxiliaryCoordinates({1});
+
+        auto zd = bertini::algorithm::ZeroDimSolver<TrackerT,
+                      bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System>(sys);
+
+        zd.DefaultSetup();
+
+        // DefaultSettingsSetup resets the configs, and DefaultTrackerSetup has already pushed the
+        // truncation threshold into the tracker by the time DefaultSetup returns -- so the
+        // solver's `path_truncation_threshold` cannot be changed through the config afterwards,
+        // and the tracker is told directly.  (Its own settings-surface gap, of the #364 family.)
+        zd.GetTracker().SetInfiniteTruncationTolerance(10);
+
+        auto post = zd.template Get<PostProcessing>();
+        post.endpoint_finite_threshold = 10;
+        zd.template Set<PostProcessing>(post);
+
+        BOOST_REQUIRE_EQUAL(zd.GetTracker().InfiniteTruncationTolerance(), 10);
+        zd.Solve();
+        return Tally(zd.SolutionMetadata());
+    };
+
+    auto const plain = solve_it(false);
+    BOOST_CHECK_EQUAL(plain.finite, 0);
+
+    auto const with_aux = solve_it(true);
+    BOOST_CHECK_EQUAL(with_aux.success, 2);
+    BOOST_CHECK_EQUAL(with_aux.finite, 2);
+    BOOST_CHECK_EQUAL(with_aux.real, 2);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
