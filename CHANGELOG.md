@@ -100,6 +100,19 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **The path-crossing verdict reaches the records** (#365).  The midpath check compares every path
+  against every other at the endgame boundary and re-tracks the ones that appear to have jumped
+  onto a neighbour; a path it finally gives up on has carried `crossing_unresolved` in the solver's
+  metadata since 3.5's earlier work, but nothing persisted it.  A records directory could not be
+  asked which paths were flagged, and recall brought such an endpoint back with the flag cleared --
+  the one point the library could not vouch for, arriving vouched for.  Now the flag is part of the
+  path record and comes back with it, and each recording solve also writes one `midpath` record
+  carrying the check itself: whether it passed, how many crossings it found, how many re-tracks it
+  spent.  Read them with the new `bertini.crossing_checks()` and the `crossing_unresolved` column
+  of `bertini.tracks()`.  A run with no `midpath` record never reached the check -- a solve cut
+  short skips it -- which is deliberately distinguishable from a run that checked and found
+  nothing.  Records written before this simply lack the field, and read as unflagged, which is all
+  they were ever able to say.
 - **A configuration reference page: every setting there is, with its default** (#406).  There was
   no single place that answered "what settings exist, and what do they default to?".  The class
   listings name fields but no defaults, the config classes are spread over three modules with no
