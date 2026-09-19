@@ -44,6 +44,9 @@ homotopy identical, so recalled and computed results are directly comparable.
 #include "bertini2/records/output_directory.hpp"
 #include "bertini2/records/load_system.hpp"
 #include "bertini2/records/solver_recording.hpp"
+#include "bertini2/records/config_encoding.hpp"
+
+#include "test/utility/encoding_registry.hpp"
 
 using namespace bertini;
 using Variable = node::Variable;
@@ -608,6 +611,28 @@ BOOST_AUTO_TEST_CASE(the_settings_text_lists_every_config_the_solve_reads)
     for (auto const& n : names)
         BOOST_TEST_MESSAGE("settings line: " << n);
     BOOST_CHECK_EQUAL_COLLECTIONS(names.begin(), names.end(), expected.begin(), expected.end());
+
+    // The composition is also a column of the version registry, so the registry stops claiming
+    // nothing changed across a composition-only bump: b2cfgenc/3 and /4 share a keyspace hash,
+    // because /4 WAS the composition changing and no encoder moved.  The keyspace column is
+    // owned by config_digest_test, which cannot build a solver; this column is owned here,
+    // where one can be built.  Same registry, two owners, one line per release.
+    std::string composition;
+    for (auto const& n : names)
+        composition += n + "\n";
+    auto const composition_hash = detail::Sha256(composition).Hex();
+
+    auto const registry_path = std::filesystem::path(__FILE__).parent_path()
+        / ".." / "classes" / "data" / "config_encoding_versions.txt";
+    auto const registry = testing::ReadEncodingRegistry(registry_path, 2);
+    testing::CheckEncodingRegistryShape(registry, "b2cfgenc/", records::ConfigEncodingVersion,
+                                        registry_path);
+
+    BOOST_CHECK_MESSAGE(registry.back().hashes[1] == composition_hash,
+        "the set of configs folded into the settings text changed under existing version token "
+        << records::ConfigEncodingVersion << " (registered composition "
+        << registry.back().hashes[1] << ", current " << composition_hash << ") -- "
+        << testing::AdviceForMovedHash(registry, "b2cfgenc/", "composition hash", composition_hash));
 }
 
 BOOST_AUTO_TEST_CASE(ambient_records_attach_from_the_environment)
