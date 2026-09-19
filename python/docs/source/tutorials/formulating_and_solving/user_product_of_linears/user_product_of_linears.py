@@ -49,7 +49,7 @@ def build_start_points():
 def solve_homotopy(target, start, start_points):
     """Blend start into a homotopy with the gamma-trick and solve."""
     gamma = bertini.coefficient(multiprec.complex_mp('0.6', '0.8'))   # exact, off the real axis
-    H = nag_algorithm.blend_homotopy(target, start, gamma=gamma)
+    H = nag_algorithm.straight_line_homotopy(target, start, gamma=gamma)
 
     solver = bertini.HomotopySolver(H, start_points, target)
     solver.solve()

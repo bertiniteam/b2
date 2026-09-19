@@ -24,7 +24,7 @@ value you actually care about -- as many times as you like, each move tracking j
 you already have.  This is bertini's "evaluate as little as possible" in action, and it is
 pleasantly parallel across the parameter values.
 
-The tools are :func:`bertini.nag_algorithm.coefficient_parameter_homotopy` (builds the homotopy)
+The tools are :func:`bertini.nag_algorithm.straight_line_homotopy` (builds the homotopy)
 and :func:`bertini.HomotopySolver` (runs the full zero-dim pipeline -- pre-endgame
 tracking, the midpath check, the endgame, post-processing -- from a homotopy you constructed and
 a list of start points you already have).
@@ -76,14 +76,19 @@ and track the start points through it:
 .. testcode::
 
     target = member(0)                                 # the line y = 0
-    H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
+    H = nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
     moved = bertini.HomotopySolver(H, start_points, target)
     moved.solve()
     # moved.all_solutions() are now (+/- 1, 0)
 
-``coefficient_parameter_homotopy(target, generic)`` is just :math:`(1-t)\,\text{target} +
+``straight_line_homotopy(target, generic, gamma=1)`` is just :math:`(1-t)\,\text{target} +
 t\,\text{generic}` with ``t`` as the path variable: at :math:`t=1` it is ``generic`` (so its
 solutions are our start points) and at :math:`t=0` it is ``target``.
+
+``gamma=1`` is what makes this a *parameter* homotopy rather than a general one. The deformation
+is a path in parameter space, so the gamma trick -- which the same function applies by default,
+and which is what keeps a general start-to-target path off the singular locus -- has no place in
+it. Genericity comes instead from the coefficients of ``generic``.
 
 Now the payoff -- sweep as many parameters as you want, reusing the *same* start points, never
 solving from scratch again:
@@ -92,7 +97,7 @@ solving from scratch again:
 
     for s in [0, -1, 1]:                               # lines y = 0, -1/2, 1/2
         target = member(s)
-        H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
+        H = nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
         solver = bertini.HomotopySolver(H, start_points, target)
         solver.solve()
         roots = [p for p in solver.all_solutions() if len(p) == 2]

@@ -4,7 +4,7 @@ Unlike the generated (total-degree / multihomogeneous) start systems, here the *
 the start system as an explicit product of linear forms with exact coefficients.  Each factor
 c.[x;1] = 0 is a hyperplane, so the start solutions are exact intersections of one hyperplane
 per function -- writable by hand.  We blend that start system into a homotopy
-(nag_algorithm.blend_homotopy) and track its start points to the target's roots
+(nag_algorithm.straight_line_homotopy) and track its start points to the target's roots
 (nag_algorithm.user_homotopy), exercising the first-class C++ ProductsOfLinearsBlock through the
 whole zero-dim pipeline.
 """
@@ -65,7 +65,7 @@ _GAMMA = mp.complex_mp('0.6', '0.8')
 
 def test_user_authored_product_of_linears_solves_to_known_roots():
     T, S = _target(), _start()
-    H = nag_algorithm.blend_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
+    H = nag_algorithm.straight_line_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
     solver = nag_algorithm.user_homotopy(H, _start_points(), T)
     solver.solve()
     sols = solver.all_solutions()
@@ -82,7 +82,7 @@ def test_user_authored_product_of_linears_solves_to_known_roots():
 
 def test_metadata_splits_real_and_complex():
     T, S = _target(), _start()
-    H = nag_algorithm.blend_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
+    H = nag_algorithm.straight_line_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
     solver = nag_algorithm.user_homotopy(H, _start_points(), T)
     solver.solve()
 
@@ -94,15 +94,15 @@ def test_metadata_splits_real_and_complex():
     assert sum(1 for m in md if not m.is_real) == 2         # the purely-imaginary-x pair
 
 
-def test_coefficient_parameter_homotopy_does_not_drop_a_structured_start():
+def test_gamma_one_homotopy_does_not_drop_a_structured_start():
     # The footgun (ADR-0020): System node arithmetic only combines the polynomial block, so a
-    # products-of-linears start would be silently dropped.  coefficient_parameter_homotopy must
-    # instead blend, so that H at t=1 IS the start system and vanishes at the start points.  We
-    # check this by direct evaluation rather than by tracking: the no-gamma-trick real path is
-    # conditioning-fragile for this hand-picked example (which is exactly why blend_homotopy's
-    # off-axis gamma exists), so a track here would be flaky -- but the homotopy is still correct.
+    # products-of-linears start would be silently dropped.  The homotopy must instead blend, so
+    # that H at t=1 IS the start system and vanishes at the start points.  We check this by direct
+    # evaluation rather than by tracking: the gamma=1 real path is conditioning-fragile for this
+    # hand-picked example (which is exactly why the gamma trick is the default), so a track here
+    # would be flaky -- but the homotopy is still correct.
     T, S = _target(), _start()
-    H = nag_algorithm.coefficient_parameter_homotopy(T, S)
+    H = nag_algorithm.straight_line_homotopy(T, S, gamma=1)
     assert H.have_path_variable()
     assert H.num_functions() == 2
 
@@ -140,7 +140,7 @@ def test_multi_affine_group_products_of_linears_solves():
 
     start_points = [np.array([mp.complex_mp(str(a)), mp.complex_mp(str(b))])
                     for a, b in itertools.product([1, -1], [1, -1])]
-    H = nag_algorithm.blend_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
+    H = nag_algorithm.straight_line_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
     solver = nag_algorithm.user_homotopy(H, start_points, T)
     solver.solve()
     sols = solver.all_solutions()

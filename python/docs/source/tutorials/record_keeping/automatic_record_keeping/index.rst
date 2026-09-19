@@ -133,14 +133,14 @@ build — and the records follow every hop.  Chain with ``homotopy=`` and ``star
 
 .. testcode::
 
-   from bertini.nag_algorithm import blend_homotopy
+   from bertini.nag_algorithm import straight_line_homotopy
 
    bigger = pb.System()
    bigger.add_variable_group(pb.VariableGroup([x, y]))
    bigger.add_function(x**2 + y**2 - 4)     # the same family, radius 2
    bigger.add_function(x - y)
 
-   H = blend_homotopy(bigger, s)            # from the circle we already solved
+   H = straight_line_homotopy(bigger, s)            # from the circle we already solved
    sols2 = pb.solve(bigger, homotopy=H, start=sols, seed=42, directory=where)
    print(len(sols2))
 

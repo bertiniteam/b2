@@ -29,7 +29,7 @@ import argparse
 
 import bertini as pb
 from bertini import Variable, VariableGroup, System
-from bertini.nag_algorithm import blend_homotopy
+from bertini.nag_algorithm import straight_line_homotopy
 
 
 X, Y = Variable('x'), Variable('y')
@@ -65,7 +65,7 @@ def main():
     # Only the FINITE solutions are carried forward -- the at-infinity lineages simply
     # end, which is exactly what the picture shows.
     for previous, target in zip(members, members[1:]):
-        homotopy = blend_homotopy(target, previous)
+        homotopy = straight_line_homotopy(target, previous)
         results.append(pb.solve(target, homotopy=homotopy, start=results[-1], seed=42))
 
     # margin notes and deliverables travel with the records

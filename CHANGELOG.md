@@ -218,6 +218,17 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Changed
 
+- **One homotopy builder, named for the mathematics: `straight_line_homotopy`** (#371).  It
+  replaces both `blend_homotopy` and `coefficient_parameter_homotopy`, which built the same
+  object and differed only in gamma.  "Blend" named the implementation, a blend block, rather
+  than the mathematics; and a coefficient-parameter homotopy is not a different construction, it
+  is this one with gamma fixed at 1, so the second name claimed a specialization it did not have.
+  `straight_line_homotopy(target, start, *, path_variable='t', gamma=None)` is
+  `(1-t)*target + gamma*t*start`, with the gamma trick by default.  **Both old names are gone**:
+  read `blend_homotopy(a, b)` as `straight_line_homotopy(a, b)`, and
+  `coefficient_parameter_homotopy(a, b)` as `straight_line_homotopy(a, b, gamma=1)`, where the
+  `gamma=1` is now visible rather than hidden in the choice of function.  `gamma` also accepts a
+  plain int, so `gamma=1` needs no `Integer` wrapper.
 - **The adaptive-precision error bounds are named after what they bound.**  On
   `AMPConfig`, `Phi` is now `jacobian_eval_error_bound`, `Psi` is now
   `function_eval_error_bound`, and `epsilon` is now `linear_solve_error_bound` -- in C++ and

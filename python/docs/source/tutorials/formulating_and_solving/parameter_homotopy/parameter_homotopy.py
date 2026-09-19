@@ -39,7 +39,7 @@ def solve_once():
 def move_parameter(generic, start_points):
     """Move to another member via a parameter homotopy, without solving from scratch."""
     target = member(0)                                 # the line y = 0
-    H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
+    H = nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
     moved = bertini.HomotopySolver(H, start_points, target)
     moved.solve()
     # moved.all_solutions() are now (+/- 1, 0)
@@ -50,7 +50,7 @@ def sweep(generic, start_points):
     """Sweep many parameters, reusing the same start points, never solving from scratch."""
     for s in [0, -1, 1]:                               # lines y = 0, -1/2, 1/2
         target = member(s)
-        H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
+        H = nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
         solver = bertini.HomotopySolver(H, start_points, target)
         solver.solve()
         roots = [p for p in solver.all_solutions() if len(p) == 2]

@@ -592,7 +592,7 @@ def ZeroDimSolver(system, *, endgame='powerseries', mptype='adaptive', startsyst
         *string* here is the deprecated old spelling of ``mptype`` and warns.
     startsystem : ``'infer'`` (default -- choose from the variable-group structure, matching the
         C++ blackbox), or force it with ``'binomial'`` / ``'linearproduct'`` / ``'mhom'``.  To run from a homotopy you
-        built yourself with given start points, use :class:`HomotopySolver` / :func:`blend_homotopy`
+        built yourself with given start points, use :class:`HomotopySolver` / :func:`straight_line_homotopy`
         instead (their construction needs the homotopy and start points, not just a system).
 
     Returns a solver; call ``.solve()`` then ``.all_solutions()`` as for any zero-dim solver.
@@ -622,7 +622,7 @@ def ZeroDimSolver(system, *, endgame='powerseries', mptype='adaptive', startsyst
         raise ValueError(
             "ZeroDimSolver does not build the homotopy solver (its construction needs a homotopy "
             "and start points, not just a system); build the homotopy with "
-            "nag_algorithm.blend_homotopy / coefficient_parameter_homotopy and solve it with "
+            "nag_algorithm.straight_line_homotopy and solve it with "
             "nag_algorithm.HomotopySolver(homotopy, start_points, target).")
     if start_key == 'infer':
         startsystem = _infer_start_system(system)
@@ -859,60 +859,46 @@ def user_homotopy(homotopy, start_points, target, *, mptype='adaptive', precisio
     return HomotopySolver(homotopy, start_points, target, mptype=mptype, precision=precision, endgame=endgame)
 
 
-def coefficient_parameter_homotopy(target, generic, path_variable='t'):
-    """Build a parameter homotopy interpolating two systems of the same shape.
+def straight_line_homotopy(target, start, *, path_variable='t', gamma=None):
+    """Form the straight-line homotopy H = (1-t)*target + gamma*t*start.
 
-    Returns H = (1 - t) * target + t * generic with ``t`` added as its path variable, so at t=1
-    it is ``generic`` (whose solutions are your start points) and at t=0 it is ``target``.  Pair
-    it with :func:`user_homotopy`: solve ``generic`` once, then reuse its solutions to move to
-    ``target`` (and to any number of further targets that share ``generic``)::
+    The linear deformation from a start system to a target: at t=1 it is ``gamma*start``, whose
+    solutions are your start points, and at t=0 it is ``target``.  Pair it with
+    :func:`user_homotopy` or :class:`HomotopySolver` and the start system's solutions::
 
-        gen_solver = nag_algorithm.ZeroDimSolver(generic, mptype='adaptive')
-        gen_solver.solve()
-        H = nag_algorithm.coefficient_parameter_homotopy(target, generic)
-        solver = nag_algorithm.HomotopySolver(H, gen_solver.all_solutions(), target)
+        start_solver = nag_algorithm.ZeroDimSolver(start, mptype='adaptive')
+        start_solver.solve()
+        H = nag_algorithm.straight_line_homotopy(target, start)
+        solver = nag_algorithm.HomotopySolver(H, start_solver.all_solutions(), target)
         solver.solve()
 
-    ``target`` and ``generic`` must be built over the SAME variable objects (the interpolation
-    combines their function trees).
+    ``target`` and ``start`` must be built over the SAME variable objects, since the deformation
+    combines their function trees.
 
-    For robustness the generic system's coefficients should be *generic* (random complex), so the
-    straight-line parameter path avoids the (measure-zero) singular locus.  This is the
-    no-gamma-trick member of the family; if ``generic`` is *structured* (e.g. a products-of-linears
-    start), it cannot be fused by System node arithmetic, so it is combined with a blend block --
-    the same machinery as :func:`blend_homotopy`, but with the start coefficient fixed at 1.
-    """
-    # H = (1-t)*target + 1*t*generic.  Delegating to make_homotopy with gamma = the constant 1
-    # (a) keeps the (1-t)/t semantics (no gamma trick) and (b) lets a structured-block ``generic``
-    # be blended rather than SILENTLY DROPPED by System node arithmetic, which only combines the
-    # polynomial block (see ADR-0020).
-    from bertini.symbolics import Integer
-    from bertini._pybertini import system as _system
-    return _system.make_homotopy(target, generic, path_variable, Integer(1))
-
-
-def blend_homotopy(target, start, *, path_variable='t', gamma=None):
-    """Form the gamma-trick homotopy H = (1-t)*target + gamma*t*start for a start system you built.
-
-    Unlike :func:`coefficient_parameter_homotopy` (node arithmetic, for two polynomial systems of the
-    same shape), this also works when ``start`` carries a *structured evaluation block* -- e.g. a
-    products-of-linears start system built with :meth:`~bertini.System.add_products_of_linears`.  Such
-    a block cannot be fused by node arithmetic, so the two systems are combined with a blend block
-    that evaluates whole Systems; this is the same construction the zero-dim solver uses internally
-    for its generated (total-degree / multihomogeneous) start systems.
+    This also works when ``start`` carries a *structured evaluation block* -- a products-of-linears
+    start built with :meth:`~bertini.System.add_products_of_linears`, say.  Such a block cannot be
+    fused by System node arithmetic, which would silently drop it, so the two systems are combined
+    with a blend block that evaluates whole Systems; that is the same construction the zero-dim
+    solver uses for its own generated start systems (ADR-0020).
 
     Parameters
     ----------
     target : System
         The system whose solutions you want, reached at t=0.
     start : System
-        A start system you authored, whose (known) solutions are the start points.  At t=1 the
-        homotopy is ``gamma*start``, so those solutions are its roots.
+        The start system, whose known solutions are the start points.
     path_variable : str
         Name of the path variable t added to the homotopy (default ``'t'``).
-    gamma : node or None
-        The gamma coefficient.  ``None`` (default) draws a random rational gamma.  Pass an exact
-        node (e.g. from :func:`bertini.coefficient`) off the real axis for a reproducible path.
+    gamma : node, int or None
+        The gamma coefficient.  ``None`` (default) draws a random one -- the gamma trick, which
+        is what makes the path generic, so leave it alone unless you have a reason.  Pass an exact
+        node (from :func:`bertini.coefficient`) off the real axis for a reproducible path.
+
+        Pass ``1`` for a **coefficient-parameter homotopy**, where the deformation is a path in
+        parameter space and no gamma belongs in it: then ``start`` is a generic member of the
+        family, solved once and reused for any number of targets that share it.  Its coefficients
+        should be genuinely generic (random complex), which is what keeps the straight path off
+        the (measure-zero) singular locus.
 
     Returns
     -------
@@ -920,6 +906,9 @@ def blend_homotopy(target, start, *, path_variable='t', gamma=None):
         The homotopy; pair it with :func:`user_homotopy` and your start points to solve.
     """
     from bertini._pybertini import system as _system
+    if isinstance(gamma, int) and not isinstance(gamma, bool):
+        from bertini.symbolics import Integer
+        gamma = Integer(gamma)
     return _system.make_homotopy(target, start, path_variable, gamma)
 
 
@@ -1030,7 +1019,9 @@ def parameter_sweep(make_system, generic_parameters, target_parameters,
     local = []   # (index, solver-or-collected) for this rank's slice, in index order
     for i in my_indices:
         target = make_system(targets[i])
-        H = coefficient_parameter_homotopy(target, generic)
+        # gamma=1: this is a coefficient-parameter homotopy, a path in parameter space, so the
+        # gamma trick has no place in it
+        H = straight_line_homotopy(target, generic, gamma=1)
         solver = HomotopySolver(H, start_points, target, mptype=mptype, endgame=endgame)
         solver.solve()
         local.append((i, collect(solver) if collect is not None else solver))
@@ -1106,10 +1097,9 @@ __all__ = [n for n in dir(_pybnalag) if n not in _HIDDEN]
 __all__.append('ZeroDimSolver')
 __all__.append('HomotopySolver')
 __all__.append('user_homotopy')
-__all__.append('coefficient_parameter_homotopy')
+__all__.append('straight_line_homotopy')
 __all__.append('parameter_sweep')
 __all__.append('moving_homotopy')
-__all__.append('blend_homotopy')
 __all__.append('SolutionPathCollector')
 
 

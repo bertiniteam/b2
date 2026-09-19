@@ -41,13 +41,19 @@ re-derive it, and do not route a structured-block start system through node arit
 - `policy::CloneGiven::FormHomotopy` now *calls* `MakeHomotopy` (one home for the logic, per the
   reuse-don't-duplicate principle).
 - It is bound as `system.make_homotopy` and wrapped as
-  `nag_algorithm.blend_homotopy(target, start, *, path_variable, gamma)`, the Python entry point
-  for turning a user-authored start system (structured or not) into a trackable homotopy to pass
-  to `user_homotopy`.
+  `nag_algorithm.straight_line_homotopy(target, start, *, path_variable, gamma)`, the Python entry
+  point for turning a user-authored start system (structured or not) into a trackable homotopy to
+  pass to `user_homotopy`.
 
-`blend_homotopy` (not `coefficient_parameter_homotopy`) is therefore the correct tool whenever
-the start system carries a structured block. `coefficient_parameter_homotopy` remains valid only
-for two *polynomial* systems of the same shape.
+That one wrapper is therefore the correct tool whether or not the start system carries a
+structured block, and whether or not the deformation wants a gamma.
+
+> **Naming note (3.5, b2#371).** This wrapper was called `blend_homotopy`, and a second wrapper
+> `coefficient_parameter_homotopy` did the same thing with `γ` fixed at 1. "Blend" named the
+> implementation, not the mathematics, and the second name claimed a specialization that was only
+> a choice of `γ`. Both were replaced by the single `straight_line_homotopy`, whose `gamma=1` is
+> the coefficient-parameter case. The decision recorded here is unchanged: a structured-block
+> start must be coupled by a blend, never by `System` node arithmetic.
 
 ## Consequences
 
@@ -57,13 +63,12 @@ for two *polynomial* systems of the same shape.
   start points tracked to the four target roots
   (`python/test/zero_dim/products_of_linears_homotopy_test.py`).
 - The blend branch is exercised by both the generated path (MHom, via `FormHomotopy`) and the
-  user path (via `blend_homotopy`), so they cannot drift apart.
+  user path (via `straight_line_homotopy`), so they cannot drift apart.
 - `γ` is optional: omit it for a random rational (genericity), or pass an exact node
   (`linalg.coefficient(...)`) off the real axis for a reproducible straight-line path.
-- `coefficient_parameter_homotopy` (the no-gamma-trick interpolation) now also delegates to
-  `MakeHomotopy` -- with `γ` fixed at the constant `1` -- so a structured-block `generic` is
-  blended rather than silently dropped by node arithmetic. It keeps its `(1-t)/t` semantics; it
-  is no longer a footgun. (Use `blend_homotopy` when you want a real off-axis gamma.)
+- The coefficient-parameter case is `gamma=1`, and it goes through `MakeHomotopy` like every
+  other, so a structured-block `generic` is blended rather than silently dropped by node
+  arithmetic. It keeps its `(1-t)/t` semantics; it is no longer a footgun.
 - Authoring scope (validated): a user-authored products-of-linears start solves end to end for a
   single affine group and for multiple affine groups; projective (homogeneous) factors construct
   and evaluate. The block is evaluated as authored (its `Homogenize` is a no-op), so for a

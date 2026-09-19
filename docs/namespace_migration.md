@@ -94,8 +94,8 @@ The `.symbol` / `.root` / `.operator` sub-levels are gone — everything is dire
 | `bertini.nag_algorithm.StartSystemType` | `bertini.StartSystemType` |
 | (enums generally) | at the root: `SuccessCode`, `Predictor`, `MonomialOrder`, `StartSystemType` |
 
-The homotopy helpers (`parameter_sweep`, `moving_homotopy`, `coefficient_parameter_homotopy`,
-`blend_homotopy`) and the `*Config` structs stay in `nag_algorithm` / `tracking` / `endgame`.
+The homotopy helpers (`parameter_sweep`, `moving_homotopy`, `straight_line_homotopy`) and the
+`*Config` structs stay in `nag_algorithm` / `tracking` / `endgame`.
 
 ### `linalg` dissolved → `System` methods + top-level helpers
 | old | new |
