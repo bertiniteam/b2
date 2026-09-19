@@ -2634,8 +2634,15 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             The order is the contract (fixed per solver kind): version line; ZeroDimConf,
             Tolerances, AutoRetrack, PostProcessing; the tracker's Stepping, Newton,
             Predictor, and precision config (fixed or adaptive); then the endgame's configs
-            in its AlgoTraits::NeededConfigs declaration order.  One encoding per line,
-            trailing newline.  The settings digest is SHA-256 over exactly this text.
+            in its AlgoTraits::NeededConfigs declaration order; then MidPath.  One encoding
+            per line, trailing newline.  The settings digest is SHA-256 over exactly this text.
+
+            MidPath sits last because the order is extended by APPENDING, never by inserting
+            or reordering (ADR-0043) -- it is an algorithm-level config and reads out of
+            place there, which is the visible price of a rule worth keeping.  It was missing
+            until b2cfgenc/4: it governs path-crossing detection, so two solves that disagree
+            about `same_point_tolerance` can reach different answers, and until the bump they
+            were the same ask and recalled each other's results.
 
             \return The versioned canonical settings text.
             */
@@ -2653,6 +2660,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                      << records::CanonicalEncoding(GetTracker().template Get<PrecisionConfig>()) << "\n";
                 AppendEndgameConfigEncodings(text,
                     typename endgame::AlgoTraits<EndgameType>::NeededConfigs{});
+                text << records::CanonicalEncoding(this->template Get<MidPathConfig>()) << "\n";
                 return text.str();
             }
 

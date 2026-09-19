@@ -30,8 +30,13 @@ configuration a path was tracked under by digest, so equal settings must digest 
 FOREVER -- across runs, compilers, machines, and versions.  Hence the same rules as the
 System encoding (ADR-0042):
 
-- versioned header (`b2cfgenc/3`) baked into every digest -- a spec change is a new
-  keyspace, never silent drift;
+- versioned header (`b2cfgenc/4`) baked into every digest -- a spec change is a new
+  keyspace, never silent drift.  A spec change is not only an encoder's output: WHICH
+  configs a solver folds into its settings text is equally part of the identity, and
+  changing that set bumps the version too (b2cfgenc/4 added MidPathConfig, which governs
+  path-crossing detection and had been left out).  The version registry hashes the
+  encoders, so it does not see a composition change; the solver's own test does
+  (`the_settings_text_lists_every_config_the_solve_reads`);
 - exact values only: doubles encode as their IEEE-754 bit pattern (`d64:<16 hex>`),
   NEVER decimal round-trips; rationals via exact `.str()`; enums via fixed string
   tables (never numeric values or typeid); strings as netstrings;
@@ -61,7 +66,7 @@ namespace bertini {
 namespace records {
 
 /// \brief The version tag baked into every config digest; bump on any encoding change.
-constexpr char ConfigEncodingVersion[] = "b2cfgenc/3";
+constexpr char ConfigEncodingVersion[] = "b2cfgenc/4";
 
 /// \brief The fixed canonical name of a predictor choice (never its numeric value).
 std::string CanonicalName(tracking::Predictor p);
