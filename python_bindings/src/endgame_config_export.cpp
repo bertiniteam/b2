@@ -18,6 +18,12 @@ namespace bertini{
                 .def_readwrite("sample_factor", &endgame::EndgameConfig::sample_factor,"The factor by which to space the geometrically spaced 'distance' between sample points, or sample circles for Cauchy.")
                 .def_readwrite("max_num_refinements", &endgame::EndgameConfig::max_num_refinements,"the maximum number of Newton refinements to be taken during sample point sharpening.  Increasing this can help speed convergence, at the risk of path jumping.")
                 .def_readwrite("final_tolerance", &endgame::EndgameConfig::final_tolerance, "The tolerance to which to track the path, using the endgame.  Endgames require two consecutive estimates to be this close to each other under the relative infinity norm.  Default value is 1e-11.")
+                .def_readwrite("refine_when_increasing_precision", &endgame::EndgameConfig::refine_when_increasing_precision,
+                    "Whether to re-refine the samples the endgame is keeping when it moves to a higher "
+                    "working precision (default False).  Off, the retained samples carry the accuracy they "
+                    "were computed at, which is the accuracy of the lower precision; on, they are refined "
+                    "again at the new one, which costs Newton steps per retained sample and buys a sharper "
+                    "sample window.  Part of the run's identity, so changing it is a different ask.")
                 ;
 
             class_<endgame::SecurityConfig>("SecurityConfig","Security settings for endgames.  Control things like truncation because estimated root is near infinity",init<>())

@@ -307,6 +307,30 @@ def test_exact_rational_settings_take_every_exact_spelling(solver):
     assert "exact" in str(caught.value)                # names the policy, not a float parser
 
 
+def test_the_last_unreachable_settings_are_reachable(solver):
+    # b2#364, the stragglers.  Three settings the solver's surface could not name: the midpath
+    # checker's tolerance (it lived only on the checker, in no config list), and two fields that
+    # were never exported to Python at all.
+    from bertini.nag_algorithm import MidPathConfig, ZeroDimConfig
+    from bertini.endgame import EndgameConfig
+
+    solver.update(same_point_tolerance=1e-4,
+                  refine_when_increasing_precision=True,
+                  initial_ambient_precision=40)
+    assert solver.get_config(MidPathConfig).same_point_tolerance == 1e-4
+    assert solver.get_config(EndgameConfig).refine_when_increasing_precision is True
+    assert solver.get_config(ZeroDimConfig).initial_ambient_precision == 40
+
+    # and by config name, the explicit form
+    solver.configure(mid_path={'same_point_tolerance': 1e-6})
+    assert solver.get_config('mid_path').same_point_tolerance == 1e-6
+
+    # the path variable's name is a construction-time choice, but it is settable on a config
+    cfg = ZeroDimConfig()
+    cfg.path_variable_name = 'tau'
+    assert cfg.path_variable_name == 'tau'
+
+
 def test_owner_update_rejects_unknown_field(solver):
     with pytest.raises(AttributeError):
         solver.update(finaltol="1e-9")

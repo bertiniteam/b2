@@ -82,6 +82,15 @@ A message that notes the main changes in the update.
   'final_tolerance'?`, for fields, for config names, and whether the field belongs to the solver,
   its tracker or its endgame.  Nothing close by means no guess, and the valid names are still
   listed either way.
+- The last settings that no caller could name are nameable (#364).  `same_point_tolerance`, which
+  governs path-crossing detection, was held only by the midpath checker and so appeared in no
+  config list the solver publishes; the solver holds it now and pushes it into the checker at the
+  start of each solve, which makes it settable like anything else and gives the setting one home
+  rather than two.  `EndgameConfig.refine_when_increasing_precision`, and `ZeroDimConfig`'s
+  `initial_ambient_precision` and `path_variable_name`, existed in C++ but had never been exported
+  to Python at all.  The path variable's name is read when a solver builds its homotopy, so it
+  belongs on a config you hand to a constructor; its docstring says so, since setting it on a
+  solver that already built one would leave the two disagreeing.
 - An exact-rational setting takes every exact spelling (#364).  `sample_factor` is a rational,
   and accepted only a `rational_mp`: a string went to the float parser and came back with
   `Unable to parse string "1/10" as a valid floating point number`, which is a confusing thing to

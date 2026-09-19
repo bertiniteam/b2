@@ -108,7 +108,8 @@ struct AlgoTraits <HomotopySolver<TrackerType, EndgameType, SystemType>>
                                 PostProcessingConfig,
                                 ZeroDimConfig,
                                 AutoRetrackConfig,
-                                RecordsConfig
+                                RecordsConfig,
+                                MidPathConfig
                                 >;
 };
 
@@ -1020,8 +1021,15 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
 
             /// \brief Apply a configuration to the midpath (path-crossing) checker.
+            ///
+            /// Stored on the SOLVER, which is the one home for the setting, and pushed into the
+            /// checker at the start of each solve.  The checker was previously the only holder,
+            /// which put the setting out of reach of the solver's settings surface -- the one
+            /// computational setting a caller could not name (b2#364).
+            /// \param mp The midpath configuration to apply.
             void SetMidpath(MidPathConfig const& mp)
             {
+                this->template Set<MidPathConfig>(mp);
                 midpath_.Set(mp);
             }
 
@@ -1574,6 +1582,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
             void PreSolveSetup()
             {
+                // The midpath checker is a consumer of the solver's MidPathConfig, not a second
+                // home for it, so whatever the caller last set on the solver takes effect here --
+                // whether they named the config or reached the field through the flat surface.
+                midpath_.Set(this->template Get<MidPathConfig>());
+
                 // Fixed-multiple precision: FixedPrecisionConfig.precision (on the tracker) is the
                 // authoritative precision for the whole solve.  Lift the tracker, the ambient/thread
                 // precision, the start-point precision (via initial_ambient_precision), and the systems
