@@ -37,7 +37,7 @@ Each ADR follows the template:
 | [0017](0017-flakiness-is-tolerances-not-seeding.md) | Solve flakiness is a tolerance problem, not a seeding problem | Numerics / tracking |
 | [0018](0018-bound-every-test-with-a-timeout.md) | Bound every test with a timeout; pin seeds and skip known platform grinds | CI / testing |
 | [0019](0019-omit-debug-info-from-release-builds.md) | Omit debug info (-g) from Release builds; per-TU peak RSS caps build parallelism | Build / core |
-| [0020](0020-structured-block-start-systems-need-blend-homotopy.md) | A structured-block start system must be coupled into a homotopy via a blend (MakeHomotopy / blend_homotopy), not System node arithmetic | Core / nag_algorithms |
+| [0020](0020-structured-block-start-systems-need-blend-homotopy.md) | A structured-block start system must be coupled into a homotopy via a blend (MakeHomotopy / straight_line_homotopy), not System node arithmetic | Core / nag_algorithms |
 | [0021](0021-block-evaluations-fully-define-their-own-rows.md) | A block (and the patch) must fully define its own output rows; System allocates result buffers uninitialized | Core / system |
 | [0022](0022-path-crossings-are-detected-and-retracked.md) | Path crossings at the endgame boundary are detected and re-tracked, not tolerated | Core / nag_algorithms |
 | [0023](0023-unified-speculative-full-path-parallelism.md) | ZeroDim uses one per-path primitive and a speculative-full-path parallel model | Core / nag_algorithms |

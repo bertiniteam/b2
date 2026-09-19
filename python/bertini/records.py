@@ -402,7 +402,7 @@ def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, 
     directory : str, optional
         Records directory override; default is ambient (see ``records_dir``).
     homotopy : System, optional
-        A homotopy you built (e.g. :func:`bertini.nag_algorithm.blend_homotopy`), for a
+        A homotopy you built (e.g. :func:`bertini.nag_algorithm.straight_line_homotopy`), for a
         CHAINED solve: its paths run from your ``start`` points at t=1 to ``system``'s
         solutions at t=0.  Requires ``start``.
     start : SolveResult or iterable of points, optional

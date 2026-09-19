@@ -30,7 +30,7 @@ built and where its paths start:
 
 .. code-block:: python
 
-   results.append(pb.solve(target, homotopy=blend_homotopy(target, previous),
+   results.append(pb.solve(target, homotopy=straight_line_homotopy(target, previous),
                            start=results[-1], seed=42))
 
 ``start=`` accepts a prior :class:`~bertini.records.SolveResult` (or its solutions) —

@@ -61,7 +61,7 @@ def test_homotopy_solver_also_produces_a_zerodim_result():
     assert isinstance(gr.answer, ZeroDimResult)                      # ZeroDimSolver
 
     tgt = System(); tgt.add_variable_group(VariableGroup([x])); tgt.add_function(x * x - 3)
-    H = nag.coefficient_parameter_homotopy(tgt, gen)
+    H = nag.straight_line_homotopy(tgt, gen, gamma=1)
     hr = nag.HomotopySolver(H, gsol.all_solutions(), tgt).solve()
     assert isinstance(hr.answer, ZeroDimResult)                      # HomotopySolver too
     assert len(hr.answer.finite) == 2 and len(hr.answer.real) == 2   # +-sqrt(3)
@@ -249,12 +249,12 @@ def test_tracked_homotopy_is_archived_and_self_verifies(tmp_path):
     """The homotopy actually tracked is archived beside the target -- for a user-built
     (chained) homotopy the archived encoding is the ONLY complete record of it."""
     import hashlib
-    from bertini.nag_algorithm import blend_homotopy
+    from bertini.nag_algorithm import straight_line_homotopy
 
     d = tmp_path / 'records'
     prior = pb.solve(circle_line_r(2), seed=42, directory=str(d))
     target = circle_line_r(3)
-    pb.solve(target, homotopy=blend_homotopy(target, circle_line_r(2)),
+    pb.solve(target, homotopy=straight_line_homotopy(target, circle_line_r(2)),
              start=prior, directory=str(d))
 
     for header in _run_headers(d):
@@ -468,13 +468,13 @@ def circle_line_r(r2):
 def test_chained_solve_records_point_refs(tmp_path):
     """solve(B, homotopy=H, start=r1): every new track's start is a point_ref into r1 --
     the provenance chain is walkable back to the beginning."""
-    from bertini.nag_algorithm import blend_homotopy
+    from bertini.nag_algorithm import straight_line_homotopy
     d = str(tmp_path / 'records')
     A = circle_line_r(1)
     r1 = pb.solve(A, seed=42, directory=d)
 
     B = circle_line_r(4)
-    r2 = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1, seed=42, directory=d)
+    r2 = pb.solve(B, homotopy=straight_line_homotopy(B, A), start=r1, seed=42, directory=d)
     assert len(r2) == 2
     assert {abs(round(complex(s[0]).real, 10)) for s in r2} == {round(2 ** 0.5, 10)}
 
@@ -488,32 +488,32 @@ def test_chained_solve_records_point_refs(tmp_path):
 
 def test_chained_solve_recalls_on_rerun(tmp_path):
     """A chained ask is an ask like any other: the identical rerun computes nothing."""
-    from bertini.nag_algorithm import blend_homotopy
+    from bertini.nag_algorithm import straight_line_homotopy
     d = str(tmp_path / 'records')
     A = circle_line_r(1)
     B = circle_line_r(4)
 
     pb.set_random_seed = None   # noqa -- explicit seeds below control everything
     r1 = pb.solve(A, seed=42, directory=d)
-    first = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1, seed=7, directory=d)
+    first = pb.solve(B, homotopy=straight_line_homotopy(B, A), start=r1, seed=7, directory=d)
     assert first.num_recalled == 0
 
     r1b = pb.solve(A, seed=42, directory=d)      # recalls r1
     assert r1b.num_recalled == 2
-    again = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1b, seed=7, directory=d)
+    again = pb.solve(B, homotopy=straight_line_homotopy(B, A), start=r1b, seed=7, directory=d)
     assert again.num_recalled == 2
 
 
 def test_raw_start_points_become_a_given(tmp_path):
     """Raw start points (no provenance) are archived as a given: provenance bottoms out
     honestly at data the user supplied."""
-    from bertini.nag_algorithm import blend_homotopy
+    from bertini.nag_algorithm import straight_line_homotopy
     d = str(tmp_path / 'records')
     A = circle_line_r(1)
     B = circle_line_r(4)
     raw = [np.array([2 ** -0.5 + 0j, 2 ** -0.5 + 0j]),
            np.array([-(2 ** -0.5) + 0j, -(2 ** -0.5) + 0j])]
-    r = pb.solve(B, homotopy=blend_homotopy(B, A), start=raw, seed=7, directory=d)
+    r = pb.solve(B, homotopy=straight_line_homotopy(B, A), start=raw, seed=7, directory=d)
     assert len(r) == 2
 
     givens = []
@@ -540,14 +540,14 @@ def test_raw_start_points_become_a_given(tmp_path):
 def test_depth_4_provenance_walk(tmp_path):
     """Rung 6 acceptance: four chained solves; the final point's provenance walks back
     through three point_refs to a canonical start label -- all the way to the beginning."""
-    from bertini.nag_algorithm import blend_homotopy
+    from bertini.nag_algorithm import straight_line_homotopy
     d = str(tmp_path / 'records')
 
     radii = [1, 4, 9, 16]
     systems = [circle_line_r(r) for r in radii]
     results = [pb.solve(systems[0], seed=42, directory=d)]
     for prior, target in zip(systems, systems[1:]):
-        results.append(pb.solve(target, homotopy=blend_homotopy(target, prior),
+        results.append(pb.solve(target, homotopy=straight_line_homotopy(target, prior),
                                 start=results[-1], seed=42, directory=d))
     assert all(len(r) == 2 for r in results)
 
@@ -560,7 +560,7 @@ def test_depth_4_provenance_walk(tmp_path):
     cold = pb.solutions_of(results[1].run_id, directory=d)
     assert len(cold) == 2
     assert {c.provenance['index'] for c in cold} == {0, 1}
-    resumed = pb.solve(systems[2], homotopy=blend_homotopy(systems[2], systems[1]),
+    resumed = pb.solve(systems[2], homotopy=straight_line_homotopy(systems[2], systems[1]),
                        start=cold, seed=42, directory=d)
     assert resumed.num_recalled == 2      # identical ask as results[2]: pure memo
 
@@ -589,12 +589,12 @@ def test_recording_off_is_one_line(tmp_path, monkeypatch):
 # --- navigation / visualization tools ---------------------------------------------------
 
 def _small_chain(tmp_path):
-    from bertini.nag_algorithm import blend_homotopy
+    from bertini.nag_algorithm import straight_line_homotopy
     d = str(tmp_path / 'records')
     members = [circle_line_r(r2) for r2 in (1, 4, 9)]
     results = [pb.solve(members[0], seed=42, directory=d)]
     for prev, tgt in zip(members, members[1:]):
-        results.append(pb.solve(tgt, homotopy=blend_homotopy(tgt, prev),
+        results.append(pb.solve(tgt, homotopy=straight_line_homotopy(tgt, prev),
                                 start=results[-1], seed=42, directory=d))
     return d, results
 
@@ -648,7 +648,7 @@ def test_chained_deficient_target_paths_never_junk_success(tmp_path):
     # Regression pin for the Cauchy pole-blindness junk-success bug (PR #70): on raw
     # affine user homotopies toward deficient targets, the endgame must never report
     # Success at a non-root -- deficient paths truncate as diverging instead.
-    from bertini.nag_algorithm import blend_homotopy
+    from bertini.nag_algorithm import straight_line_homotopy
     from bertini import Variable
     x, y = Variable('x'), Variable('y')
     A = System(); A.add_variable_group(VariableGroup([x, y]))
@@ -658,7 +658,7 @@ def test_chained_deficient_target_paths_never_junk_success(tmp_path):
 
     d = str(tmp_path / 'records')
     r1 = pb.solve(A, seed=42, directory=d)
-    r2 = pb.solve(B, homotopy=blend_homotopy(B, A), start=r1, seed=42, directory=d)
+    r2 = pb.solve(B, homotopy=straight_line_homotopy(B, A), start=r1, seed=42, directory=d)
     for m in r2.solver.solution_metadata():
         # a path recorded successful must actually sit on a root
         assert float(m.function_residual) < 1e-6

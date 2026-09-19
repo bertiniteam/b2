@@ -104,13 +104,13 @@ Blend into a homotopy and solve
 Now couple the start system to the target with the gamma-trick straight-line homotopy
 :math:`H = (1-t)\,\text{target} + \gamma\,t\,\text{start}`.  Because the start system carries a
 structured evaluation block (the product of linears), it cannot be fused by ordinary node
-arithmetic; :func:`~bertini.nag_algorithm.blend_homotopy` combines the two whole systems with a
+arithmetic; :func:`~bertini.nag_algorithm.straight_line_homotopy` combines the two whole systems with a
 blend block instead:
 
 .. testcode::
 
     gamma = bertini.coefficient(multiprec.complex_mp('0.6', '0.8'))   # exact, off the real axis
-    H = nag_algorithm.blend_homotopy(target, start, gamma=gamma)
+    H = nag_algorithm.straight_line_homotopy(target, start, gamma=gamma)
 
     solver = bertini.HomotopySolver(H, start_points, target)
     solver.solve()

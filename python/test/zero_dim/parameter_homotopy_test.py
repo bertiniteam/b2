@@ -69,8 +69,9 @@ def test_user_homotopy_rejects_solver_as_start_points():
         pb.nag_algorithm.user_homotopy(H, solver, target)
 
 
-def test_coefficient_parameter_homotopy_helper():
-    # the coefficient_parameter_homotopy helper builds (1-t)*target + t*generic for you.
+def test_straight_line_homotopy_helper_with_gamma_one():
+    # gamma=1 is the coefficient-parameter case: (1-t)*target + t*generic, a path in parameter
+    # space, with no gamma in it.
     x = pb.Variable('x')
     generic = pb.System(); generic.add_variable_group(pb.VariableGroup([x])); generic.add_function(x * x - 4)
     target = pb.System(); target.add_variable_group(pb.VariableGroup([x])); target.add_function(x * x - 9)
@@ -78,7 +79,7 @@ def test_coefficient_parameter_homotopy_helper():
     gen_solver = pb.ZeroDimSolver(generic, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     gen_solver.solve()
 
-    H = pb.nag_algorithm.coefficient_parameter_homotopy(target, generic)
+    H = pb.nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
     solver = pb.nag_algorithm.user_homotopy(H, gen_solver.all_solutions(), target)
     solver.solve()
     assert _roots_real(solver.all_solutions()) == [-3.0, 3.0]
