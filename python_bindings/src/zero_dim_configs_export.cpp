@@ -137,8 +137,12 @@ namespace bertini{
             .def_readwrite("max_path_wall_clock_duration", &ZeroDimConfig::max_path_wall_clock_duration,
                 "Wall-clock budget for EACH path, in seconds; 0 (the default) means none.  A path that "
                 "has not finished when its budget runs out is abandoned between steps with "
-                "SuccessCode.WallClockLimitReached, stamped with where it got to (latest_path_point, "
-                "final_time_used, the step counts), and recorded with this limit.  Not part of the "
+                // double backticks, not bare names: a metadata field resolves to BOTH
+                // SolutionMetaDataDoublePrec and SolutionMetaDataMultiPrec, and an ambiguous
+                // cross-reference is a warning, which the docs build treats as an error.
+                "SuccessCode.WallClockLimitReached, stamped with where it got to "
+                "(``latest_path_point``, ``final_time_used``, the step counts), and recorded with "
+                "this limit.  Not part of the "
                 "run's identity: a budget says how long to wait for an answer, not what the answer "
                 "is.  How a later run treats a path abandoned under a budget is RecallPolicy's "
                 "business.  Wall-clock time is machine-dependent; the recorded stamp is the "
