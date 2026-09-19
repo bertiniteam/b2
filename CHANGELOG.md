@@ -62,6 +62,27 @@ A message that notes the main changes in the update.
   exactly one path variable, so the second declaration is now refused.  `System::AddPathVariable`
   stays permissive, so a caller building a system programmatically may still change its mind --
   the enforcement is on the declaration, in the input file.
+- Every setting a solve uses is settable through the solver's own settings surface (#364).  The
+  tracker's (`max_step_size`, the Newton counts, the precision configs) and the endgame's
+  (`num_sample_points`, `sample_factor`, the security and flavour settings) used to be reachable
+  only by fetching the sub-object and round-tripping its config -- `solver.get_endgame()
+  .get_endgame_settings()`, modify, set back -- which is easy to get wrong and unreachable from
+  any code path that only carries a settings dict.  Now `solver.update(num_sample_points=6,
+  max_step_size="0.05")`, `solve(**settings)`, `configure()`, `get_settings()` and
+  `set_settings()` all reach them, routed to whichever object holds each field.  One field name
+  is shared by two configs -- `final_tolerance`, on the solver's tolerances and on the endgame --
+  and the solver's own keeps winning, with the endgame's reachable as
+  `configure(endgame={'final_tolerance': ...})`.  Endgames also gained the config surface
+  trackers and solvers already had (`get_config`, `set_config`, `config_types`, and with them
+  `update` / `configure` / `get_settings`).
+- An exact-rational setting takes every exact spelling (#364).  `sample_factor` is a rational,
+  and accepted only a `rational_mp`: a string went to the float parser and came back with
+  `Unable to parse string "1/10" as a valid floating point number`, which is a confusing thing to
+  be told about a field that is not a float.  It now takes `'1/10'` and `'0.1'` -- the same
+  number, both exact, since a decimal is read as the rational it denotes and never as a rounded
+  binary float -- and an `int`, a `fractions.Fraction`, or a `rational_mp`.  A Python float is
+  still refused, now saying why.  Rationals are also picklable now, so a settings bundle
+  containing one still travels.
 
 ### Removed
 

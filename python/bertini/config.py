@@ -101,23 +101,47 @@ def _coerced_setattr(obj, key, value):
     spelling works for EVERY field: we try it as an exact Float first, then as a
     plain float, then as an int, and keep the first that the field accepts.
 
-    Coercion only happens for strings (a non-string that the field rejects raises
-    straight through), so the float-rejection policy on the exact fields stands:
-    passing the double 0.05 to max_step_size is still an error.
+    One family of fields is stored as an exact RATIONAL rather than as a float -- a sample
+    ladder's ratio, a homotopy's times -- and those read only the fraction spelling, so
+    ``_exact_to_rational`` is among the candidates: it takes ``'1/2'`` and ``'0.5'`` alike and
+    makes the rational each one denotes.  An int is coerced for the same reason (a rational
+    field refuses a bare Python int).
+
+    Coercion only happens for exact spellings (a float that the field rejects raises straight
+    through, with a message saying why), so the float-rejection policy on the exact fields
+    stands: passing the double 0.05 to max_step_size is still an error.
     """
+    from fractions import Fraction
+
     try:
         setattr(obj, key, value)
         return
-    except TypeError:                       # Boost.Python.ArgumentError is a TypeError
-        if not isinstance(value, str):
+    except TypeError as first_error:        # Boost.Python.ArgumentError is a TypeError
+        if isinstance(value, float):
+            raise TypeError(
+                "{0!r} does not take the Python float {1!r}: it stores an exact value, and "
+                "0.1 the double is not one tenth.  Pass an exact spelling instead -- a string "
+                "('1/10' or '0.1'), an int, or a fractions.Fraction.".format(key, value)
+            ) from first_error
+        if not isinstance(value, (str, int, Fraction)):
             raise
 
     from .multiprec import real_mp
+    from ._coefficients import _exact_to_rational
+
+    # A string could be any of the field types, so try them in turn; an int or a Fraction only
+    # ever reaches here because the field wanted an exact rational.
+    candidates = (real_mp, _exact_to_rational, float, int) if isinstance(value, str) \
+        else (_exact_to_rational,)
+
     last_error = None
-    for convert in (real_mp, float, int):
+    for convert in candidates:
         try:
-            converted = convert(value)      # e.g. int("1e-7") is a ValueError -- skip it
-        except (ValueError, TypeError):
+            # int("1e-7") is a ValueError, real_mp("1/2") a RuntimeError out of the mpfr string
+            # parser -- neither says anything about the field, so keep going rather than let an
+            # incidental parse failure escape as the diagnosis
+            converted = convert(value)
+        except (ValueError, TypeError, RuntimeError):
             continue
         try:
             setattr(obj, key, converted)
@@ -300,26 +324,54 @@ def _enhance_all(module):
 # owner (tracker / algorithm) helpers
 # ---------------------------------------------------------------------------
 
-def _config_class_map(owner):
-    """Map of {short_key: config_class} for the configs this owner accepts."""
-    out = {}
-    for cls in owner.config_types():
-        if cls is None:
+def _config_holders(owner):
+    """The objects whose configs count as this owner's, nearest first.
+
+    A solver's settings are not all kept on the solver.  The tracker holds stepping, Newton and
+    precision; the endgame holds the endgame, security and flavour configs.  Both are reached
+    through live references (``get_tracker`` / ``get_endgame`` hand back the solver's own
+    members), so writing through them writes into the solver -- which is what lets one flat
+    ``solver.update(...)`` reach every setting the solve actually uses (b2#364).
+
+    One level deep, deliberately: an endgame's own ``get_tracker()`` is the same tracker the
+    solver would hand back, so recursing would add nothing but a second route to it.  Order is
+    what breaks ties: the owner's own configs come first and win (see ``_field_owners``).
+    """
+    holders = [owner]
+    for getter in ("get_tracker", "get_endgame"):
+        fetch = getattr(owner, getter, None)
+        if fetch is None:
             continue
-        out[config_key(cls)] = cls
-        out[cls.__name__.lower()] = cls
+        try:
+            sub = fetch()
+        except Exception:               # an owner that cannot produce one simply has none
+            continue
+        if sub is not None and _is_owner(sub):
+            holders.append(sub)
+    return holders
+
+
+def _config_class_map(owner):
+    """Map of {short_key: (holder, config_class)} over this owner and its config holders."""
+    out = {}
+    for holder in _config_holders(owner):
+        for cls in holder.config_types():
+            if cls is None:
+                continue
+            for key in (config_key(cls), cls.__name__.lower()):
+                out.setdefault(key, (holder, cls))   # nearer holder wins
     return out
 
 
 def _resolve_config_class(owner, key):
+    """Find the (holder, config class) a config name refers to."""
     mapping = _config_class_map(owner)
-    cls = mapping.get(key) or mapping.get(str(key).lower())
-    if cls is None:
-        valid = sorted({config_key(c) for c in owner.config_types() if c is not None})
+    found = mapping.get(key) or mapping.get(str(key).lower())
+    if found is None:
         raise KeyError(
             "{0} has no config {1!r}; available: {2}".format(
-                type(owner).__name__, key, valid))
-    return cls
+                type(owner).__name__, key, config_names(owner)))
+    return found
 
 
 def configure(self, **kwargs):
@@ -334,42 +386,56 @@ def configure(self, **kwargs):
     Returns self.
     """
     for key, value in kwargs.items():
-        cls = _resolve_config_class(self, key)
+        holder, cls = _resolve_config_class(self, key)
         if isinstance(value, cls):
             cfg = value
         elif isinstance(value, dict):
-            cfg = self.get_config(cls).update(**value)
+            cfg = holder.get_config(cls).update(**value)
         else:
             raise TypeError(
                 "value for {0!r} must be a dict of fields or a {1}, got {2}".format(
                     key, cls.__name__, type(value).__name__))
-        self.set_config(cfg)
+        holder.set_config(cfg)
     return self
 
 
 def config_names(self):
-    """The keyword names accepted by configure() for this owner."""
-    return sorted({config_key(c) for c in self.config_types() if c is not None})
+    """The keyword names accepted by configure() for this owner, its tracker and its endgame."""
+    return sorted({config_key(c)
+                   for holder in _config_holders(self)
+                   for c in holder.config_types() if c is not None})
 
 
 def _field_owners(owner):
-    """Map {field_name: config_class} across all of this owner's configs, plus any collisions.
+    """Map {field_name: (holder, config_class)} over this owner's configs, plus any collisions.
 
-    Field names are unique across an owner's configs (the RegenerationConfig slice_ rename and the
-    ZeroDimConfig de-template removed the only collisions), so each field routes to exactly one
-    config.  Collisions, if ever reintroduced, are reported so update() can refuse them rather than
-    silently pick one.
+    Covers the configs of the owner and of the objects it keeps its settings in (see
+    ``_config_holders``), so one flat call reaches a tracker's or an endgame's fields too.
+
+    Two names for one field is resolved by distance, not refused: exactly one field name is
+    shared across the library's config structs -- ``final_tolerance``, on both TolerancesConfig
+    and EndgameConfig -- and on a solver the solver's own must keep winning, because
+    ``solver.update(final_tolerance=...)`` is long-documented and reaches the endgame anyway
+    through the solver's own push (b2#392).  A shadowed field stays reachable by naming its
+    config: ``solver.configure(endgame={'final_tolerance': ...})``.
+
+    A collision WITHIN one holder is still a collision, and update() refuses it rather than
+    silently picking one.
     """
     owners = {}
     collisions = {}
-    for cls in owner.config_types():
-        if cls is None:
-            continue
-        for f in writable_fields(cls):
-            if f in owners and owners[f] is not cls:
-                collisions.setdefault(f, {owners[f]})
-                collisions[f].add(cls)
-            owners[f] = cls
+    for holder in _config_holders(owner):
+        local = {}
+        for cls in holder.config_types():
+            if cls is None:
+                continue
+            for f in writable_fields(cls):
+                if f in local and local[f] is not cls:
+                    collisions.setdefault(f, {local[f]})
+                    collisions[f].add(cls)
+                local[f] = cls
+        for f, cls in local.items():
+            owners.setdefault(f, (holder, cls))      # nearer holder wins
     return owners, collisions
 
 
@@ -394,15 +460,16 @@ def update(self, **fields):
                 "config field {0!r} is ambiguous on {1} (in {2}); set it with configure() naming "
                 "the config".format(key, type(self).__name__,
                                     sorted(c.__name__ for c in collisions[key])))
-        cls = owners.get(key)
-        if cls is None:
+        found = owners.get(key)
+        if found is None:
             raise AttributeError(
                 "{0} has no config field {1!r}; valid fields: {2}".format(
                     type(self).__name__, key, sorted(owners)))
-        by_config.setdefault(cls, {})[key] = value
+        holder, cls = found
+        by_config.setdefault((id(holder), cls), (holder, cls, {}))[2][key] = value
     # one get/update/set per touched config, not per field
-    for cls, kv in by_config.items():
-        self.set_config(self.get_config(cls).update(**kv))
+    for holder, cls, kv in by_config.values():
+        holder.set_config(holder.get_config(cls).update(**kv))
     return self
 
 
@@ -428,13 +495,19 @@ def get_settings(self, as_dict=False):
     (The config-keyed default is kept because ``set_settings`` consumes it; use whichever fits.)  See
     set_settings() for applying the config-keyed form back.
     """
-    configs = {config_key(cls): self.get_config(cls)
-               for cls in self.config_types() if cls is not None}
+    configs = {}
+    for holder in _config_holders(self):
+        for cls in holder.config_types():
+            if cls is not None:
+                configs.setdefault(config_key(cls), holder.get_config(cls))
     if not as_dict:
         return configs
     flat = {}
+    # nearest holder first, and the flat view must agree with update() about who owns a
+    # shadowed name, so an earlier config is not overwritten by a later one
     for cfg in configs.values():
-        flat.update(cfg.to_dict())
+        for field, value in cfg.to_dict().items():
+            flat.setdefault(field, value)
     return flat
 
 
@@ -455,11 +528,11 @@ def set_settings(self, settings, strict=False):
                     "{0} has no config {1!r}; available: {2}".format(
                         type(self).__name__, key, sorted(have)))
             continue
-        cls = _resolve_config_class(self, key)
+        holder, cls = _resolve_config_class(self, key)
         if isinstance(value, cls):
-            self.set_config(value)
+            holder.set_config(value)
         elif isinstance(value, dict):
-            self.set_config(self.get_config(cls).update(**value))
+            holder.set_config(holder.get_config(cls).update(**value))
         else:
             raise TypeError(
                 "value for {0!r} must be a {1} or a dict of fields, got {2}".format(
@@ -476,16 +549,42 @@ def _accept_config_names(cls):
     ``configure()`` uses; the class form is unchanged.
     """
     native_get = cls.get_config
+    native_set = cls.set_config
+
+    def _holder_of(self, config_class):
+        """Which of this object's config holders keeps the given config class, if any."""
+        for holder in _config_holders(self):
+            if any(c is config_class for c in holder.config_types()):
+                return holder
+        return None
 
     def get_config(self, config):
         """The named config, by class (``TolerancesConfig``) or by short name (``'tolerances'``,
-        as ``config_names()`` lists them)."""
+        as ``config_names()`` lists them).
+
+        Either may belong to this object's tracker or endgame rather than to the object itself
+        (``solver.get_config('stepping')``, ``solver.get_config(EndgameConfig)``); it is fetched
+        from whichever holds it, so every name ``config_names()`` lists can be asked for."""
         if isinstance(config, str):
-            config = _resolve_config_class(self, config)
+            holder, config = _resolve_config_class(self, config)
+        else:
+            holder = _holder_of(self, config)
+        if holder is not None and holder is not self:
+            return holder.get_config(config)
         return native_get(self, config)
 
+    def set_config(self, config):
+        """Store a configuration struct, on this object or on whichever of its tracker and
+        endgame owns that config's type."""
+        holder = _holder_of(self, type(config))
+        if holder is not None and holder is not self:
+            return holder.set_config(config)
+        return native_set(self, config)
+
     get_config.__doc__ = (native_get.__doc__ or "").rstrip() + "\n\n" + get_config.__doc__
+    set_config.__doc__ = (native_set.__doc__ or "").rstrip() + "\n\n" + set_config.__doc__
     cls.get_config = get_config
+    cls.set_config = set_config
 
 
 def _enhance_owner_class(cls):

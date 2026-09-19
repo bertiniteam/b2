@@ -39,20 +39,38 @@ config owns it.
    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-11
    assert solver.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 3
 
-A misspelled field, or one that lives on a different owner, raises immediately rather than silently
-doing nothing -- ``max_step_size`` is a *tracker* setting, so the solver rejects it:
+The solver keeps some of its settings in its tracker and its endgame, and one call reaches those
+too. ``max_step_size`` belongs to the tracker and ``num_sample_points`` to the endgame; neither
+needs naming the object it lives on:
+
+.. testcode::
+
+   solver.update(max_step_size="0.05", num_sample_points=6)
+
+   from bertini.tracking import SteppingConfig
+   from bertini.endgame import EndgameConfig
+   assert solver.get_config(SteppingConfig).max_step_size == bertini.multiprec.real_mp("0.05")
+   assert solver.get_config(EndgameConfig).num_sample_points == 6
+
+A misspelled field raises immediately rather than silently doing nothing:
 
 .. testcode::
 
    try:
-       solver.update(max_step_size="0.05")     # that field is on the tracker, not the solver
+       solver.update(max_stepsize="0.05")      # no such field anywhere on this solver
        raise AssertionError("should have raised")
    except AttributeError:
        pass
 
-   solver.get_tracker().update(max_step_size="0.05")   # set it where it lives
-   from bertini.tracking import SteppingConfig
-   assert solver.get_tracker().get_config(SteppingConfig).max_step_size == bertini.multiprec.real_mp("0.05")
+One field name belongs to two configs: ``final_tolerance`` is on both the solver's tolerances and
+the endgame's own settings. The solver's wins, and the endgame's is reachable by naming its config:
+
+.. testcode::
+
+   solver.update(final_tolerance="1e-12")                      # the solver's
+   solver.configure(endgame={'final_tolerance': "1e-8"})       # the endgame's
+   assert solver.get_config(TolerancesConfig).final_tolerance == 1e-12
+   assert solver.get_config(EndgameConfig).final_tolerance == 1e-8
 
 Carry a whole bundle
 ====================

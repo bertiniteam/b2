@@ -11,6 +11,7 @@ import bertini
 from bertini import AMPTracker
 from bertini.nag_algorithm import TolerancesConfig, ZeroDimConfig
 from bertini.tracking import SteppingConfig
+from bertini.endgame import EndgameConfig
 
 
 def build_system():
@@ -32,15 +33,17 @@ def set_fields_by_name(system):
     assert solver.get_config(TolerancesConfig).final_tolerance == 1e-11
     assert solver.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 3
 
-    # A field on a different owner raises immediately rather than doing nothing.
+    # Settings the solver keeps in its tracker and its endgame are reached by the same call.
+    solver.update(max_step_size="0.05", num_sample_points=6)
+    assert solver.get_config(SteppingConfig).max_step_size == bertini.multiprec.real_mp("0.05")
+    assert solver.get_config(EndgameConfig).num_sample_points == 6
+
+    # A misspelled field raises immediately rather than doing nothing.
     try:
-        solver.update(max_step_size="0.05")     # that field is on the tracker, not the solver
+        solver.update(max_stepsize="0.05")      # no such field anywhere on this solver
         raise AssertionError("should have raised")
     except AttributeError:
         pass
-
-    solver.get_tracker().update(max_step_size="0.05")   # set it where it lives
-    assert solver.get_tracker().get_config(SteppingConfig).max_step_size == bertini.multiprec.real_mp("0.05")
 
     return solver
 

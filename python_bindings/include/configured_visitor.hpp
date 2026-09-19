@@ -111,9 +111,13 @@ namespace bertini{
             template<class PyClass, typename... Cs>
             static void DoVisit(PyClass& cl, bertini::detail::TypeList<Cs...>*)
             {
-                // one set_config, overloaded by argument type, per config the owner holds
+                // One set_config, overloaded by argument type, per config the owner holds.
+                // Called through a lambda rather than bound as a pointer-to-member: an endgame
+                // reaches its Configured base VIRTUALLY, and a pointer to member cannot be
+                // converted across a virtual base.  A lambda just calls the member, which is
+                // legal for every owner, virtual base or not.
                 (cl.def("set_config",
-                        static_cast<void (OwnerT::*)(Cs const&)>(&OwnerT::template Set<Cs>),
+                        +[](OwnerT& self, Cs const& config){ self.template Set<Cs>(config); },
                         (arg("self"), arg("config")),
                         "Store one of this object's configuration structs (dispatched by the config's type)."), ...);
 
