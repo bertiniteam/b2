@@ -23,6 +23,7 @@ __author__ = 'jcollins'
 
 from bertini import *
 import numpy as np
+import pytest
 
 import bertini.parse as pp
 
@@ -154,3 +155,22 @@ def test_unary_minus_binds_looser_than_power():
 def test_unary_minus_then_product():
     vals = np.array((complex(2, 0), complex(5, 0), complex(3, 0)))
     assert abs(_f_eval('-x*y', vals) - (-10)) < 1e-12            # -(x*y)
+
+
+# b2#441: a declared-but-never-defined name used to escape as `IndexError: map::at`, a raw
+# std::map lookup surfacing through the bindings and naming nothing the user could act on.
+# Interface-only; the parser's behaviour is pinned in C++ (classic_parsing_test.cpp).
+def test_declared_but_undefined_function_names_the_culprit():
+    text = "variable_group x;\nfunction f, g;\nf = x^2 - 1;\n"
+    with pytest.raises(RuntimeError) as caught:
+        pp.system(text)
+    message = str(caught.value)
+    assert 'map::at' not in message
+    assert 'g' in message and 'declared but never defined' in message
+
+
+def test_two_path_variables_are_refused():
+    text = "variable_group x;\npathvariable t;\npathvariable s;\nfunction f;\nf = x*t;\n"
+    with pytest.raises(RuntimeError) as caught:
+        pp.system(text)
+    assert 'exactly one' in str(caught.value)

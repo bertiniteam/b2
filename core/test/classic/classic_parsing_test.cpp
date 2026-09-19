@@ -997,4 +997,87 @@ BOOST_AUTO_TEST_CASE(classic_file_of_a_non_polynomial_system_says_why_the_degree
     BOOST_CHECK(!reparsed.IsPolynomial());
 }
 
+// b2#441.  The root rule accepts any number of any declaration block in any order and used to
+// check nothing, so two mistakes in an input file went unreported: a name declared and never
+// defined reached std::map::at and came out as the meaningless "map::at" (an IndexError in
+// Python), and a second pathvariable was accepted, quietly overwriting the first.
+namespace {
+
+/// \brief Whether an exception's message mentions each of the given fragments.
+bool MessageMentions(std::runtime_error const& e, std::vector<std::string> const& fragments)
+{
+    std::string const what = e.what();
+    for (auto const& f : fragments)
+        if (what.find(f) == std::string::npos)
+        {
+            BOOST_TEST_MESSAGE("message did not mention \"" << f << "\": " << what);
+            return false;
+        }
+    return true;
+}
+
+} // unnamed namespace
+
+BOOST_AUTO_TEST_CASE(a_function_declared_but_never_defined_says_which_one)
+{
+    std::string const input =
+        "variable_group x;\n"
+        "function f, g;\n"
+        "f = x^2 - 1;\n";
+
+    BOOST_CHECK_EXCEPTION(bertini::System{input}, std::runtime_error,
+        [](std::runtime_error const& e){
+            // the name the user forgot, and what it was declared as -- not "map::at"
+            return MessageMentions(e, {"g", "function", "declared but never defined"});
+        });
+}
+
+BOOST_AUTO_TEST_CASE(a_constant_or_parameter_declared_but_never_defined_is_an_error_too)
+{
+    // These already failed before b2#441 (they fail earlier, in the grammar), so this pins the
+    // behaviour rather than changing it: what matters is that neither reaches map::at.
+    std::string const no_constant =
+        "variable_group x;\n"
+        "constant c;\n"
+        "function f;\n"
+        "f = x^2 - 1;\n";
+    std::string const no_parameter =
+        "variable_group x;\n"
+        "parameter p;\n"
+        "function f;\n"
+        "f = x^2 - 1;\n";
+
+    BOOST_CHECK_THROW(bertini::System{no_constant}, std::runtime_error);
+    BOOST_CHECK_THROW(bertini::System{no_parameter}, std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(declaring_two_path_variables_is_an_error)
+{
+    std::string const input =
+        "variable_group x;\n"
+        "pathvariable t;\n"
+        "pathvariable s;\n"
+        "function f;\n"
+        "f = x*t;\n";
+
+    BOOST_CHECK_EXCEPTION(bertini::System{input}, std::runtime_error,
+        [](std::runtime_error const& e){
+            return MessageMentions(e, {"pathvariable", "exactly one"});
+        });
+}
+
+BOOST_AUTO_TEST_CASE(one_path_variable_is_still_fine)
+{
+    std::string const input =
+        "variable_group x;\n"
+        "pathvariable t;\n"
+        "function f;\n"
+        "f = x*t;\n";
+
+    bertini::System sys;
+    BOOST_REQUIRE_NO_THROW(sys = bertini::System{input});
+    BOOST_CHECK(sys.HavePathVariable());
+    BOOST_CHECK_EQUAL(sys.NumTotalFunctions(), 1u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
