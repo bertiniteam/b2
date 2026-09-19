@@ -129,7 +129,9 @@ Every tracker/solver owns its configuration structs (in :mod:`bertini.tracking`,
     ``solver.set(final_tolerance='1e-11')`` or
     ``tracker.get_stepping().set(max_step_size='0.05')``.  ``set`` and ``update`` are the same.
 
-See :doc:`/tutorials/settings_and_precision/carrying_settings/index`.
+For **every setting there is, with its default**, see :doc:`/detailed/configuration` -- the tables
+there are read out of the library at build time.  For carrying a tuned set of settings from one
+solve to the next, see :doc:`/tutorials/settings_and_precision/carrying_settings/index`.
 
 
 Other namespaces

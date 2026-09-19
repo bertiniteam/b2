@@ -15,6 +15,9 @@ Bertini gives every **config owner** -- every tracker and every solver -- the sa
 this. (Owning configs is a capability, not a class: a tracker is not a solver, but both carry configs,
 so both get these methods.)
 
+This page is about *moving* settings around. For *which* settings exist and what they default to,
+see :doc:`/detailed/configuration`.
+
 Set fields by name
 ==================
 

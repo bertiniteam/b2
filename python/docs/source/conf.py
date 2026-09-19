@@ -73,7 +73,11 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinxcontrib.bibtex',
+    'config_reference',
     ]
+
+# our own extensions live beside this file, in _ext/
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '_ext')))
 
 autosectionlabel_prefix_document = True
 

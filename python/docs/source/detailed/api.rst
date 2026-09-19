@@ -8,6 +8,11 @@ code -- when the namespace changes, this follows.
 For the everyday API -- the common types and functions you reach for constantly -- see the curated
 pages; this page is the complete index for when you need to find something specific.
 
+Looking for a **setting**?  The ``*Config`` classes below list their fields, but not their
+defaults or where they live in a solve.  :doc:`/detailed/configuration` collects every setting in
+the library with its default, including the tracker settings that have no config class at all and
+so appear in no listing here.
+
 .. The flat re-exported surface is SHOWN here, but the canonical cross-reference targets
    live on the submodule pages (where each object is defined), so :no-index: avoids
    duplicate-target warnings from the re-exports.
