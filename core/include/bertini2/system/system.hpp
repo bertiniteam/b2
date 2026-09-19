@@ -1435,8 +1435,145 @@ namespace bertini {
         template<typename T>
         auto InfinityNormOfDehomogenized(Vec<T> const& x) const
         {
-            return DehomogenizePoint(x).template lpNorm<Eigen::Infinity>();
+            auto const d = DehomogenizePoint(x);
+            if (!HaveAuxiliaryCoordinates())
+                return d.template lpNorm<Eigen::Infinity>();
+
+            // the value type, not decltype(abs(...)): a multiprecision abs() is an expression
+            // template, and a variable of that type cannot be reassigned in the loop
+            using std::abs;
+            using RealT = typename NumTraits<T>::Real;
+            RealT biggest{0};
+            for (Eigen::Index k{0}; k < d.size(); ++k)
+                if (!CoordinateIsAuxiliary(static_cast<unsigned>(k)))
+                {
+                    RealT const a = abs(d(k));
+                    if (a > biggest) biggest = a;
+                }
+            return biggest;
         }
+
+
+        /**
+        \brief Is this point of mine finite, at the given threshold?
+
+        The system owns the judgement, because the system is what knows which of its coordinates
+        the question is about (see SetAuxiliaryVariableGroups).  Every caller supplies its own
+        threshold and none of them re-derives the measurement: the tracker's path truncation, the
+        endgame's `Security::max_norm` divergence test, and the solver's finite/infinite
+        classification are the same question asked with three different amounts of patience.
+
+        \tparam T The point's number type.
+        \tparam R The threshold's number type.
+        \param x The point, in this system's internal (homogenized, on-patch) coordinates.
+        \param threshold The largest coordinate magnitude that still counts as finite.
+        \return Whether the point is finite at that threshold.
+        */
+        template<typename T, typename R>
+        bool IsFinite(Vec<T> const& x, R const& threshold) const
+        {
+            return InfinityNormOfDehomogenized(x) <= threshold;
+        }
+
+
+        /**
+        \brief Is this point of mine real, at the given threshold?
+
+        The companion to IsFinite, over the same coordinates: the largest imaginary part among the
+        coordinates that are not auxiliary.  A point whose only complex coordinate is an auxiliary
+        one is real, which is the whole reason auxiliary coordinates exist (b2#403).
+
+        \tparam T The point's number type.
+        \tparam R The threshold's number type.
+        \param x The point, in this system's internal (homogenized, on-patch) coordinates.
+        \param threshold The largest imaginary part that still counts as real.
+        \return Whether the point is real at that threshold.
+        */
+        template<typename T, typename R>
+        bool IsReal(Vec<T> const& x, R const& threshold) const
+        {
+            using std::abs; using std::imag;
+            using RealT = typename NumTraits<T>::Real;
+            auto const d = DehomogenizePoint(x);
+            RealT biggest{0};
+            for (Eigen::Index k{0}; k < d.size(); ++k)
+                if (!CoordinateIsAuxiliary(static_cast<unsigned>(k)))
+                {
+                    RealT const a = abs(imag(d(k)));
+                    if (a > biggest) biggest = a;
+                }
+            return biggest <= threshold;
+        }
+
+
+        /**
+        \brief Declare whole variable groups auxiliary: excluded from every judgement about a point.
+
+        An auxiliary coordinate is one this system carries for the construction's sake rather than
+        for the answer's -- a null-vector block with its own patch, a slack coordinate -- so that
+        its magnitude is not a quantity anybody chose.  Declaring it auxiliary says only that:
+        leave it out of IsFinite and IsReal, and therefore out of path truncation, the endgame's
+        divergence check, and the finite/real classification.  Bertini attaches no other meaning to
+        it, and the coordinate is tracked, recorded and returned exactly as before.
+
+        Which coordinates are auxiliary is part of the system's content identity: a system that
+        says where to judge it is a different question than one that does not, because the tracker
+        will truncate differently.  Making every coordinate auxiliary is refused -- a point with
+        nothing to judge would be unconditionally finite and real.
+
+        \param groups FIFO indices of the auxiliary variable groups; pass an empty vector for none.
+        \throws std::out_of_range if a group index does not name a group.
+        \throws std::runtime_error if it would leave no coordinate to judge.
+        \see SetAuxiliaryCoordinates, IsFinite, IsReal
+        */
+        void SetAuxiliaryVariableGroups(std::vector<unsigned> groups);
+
+
+        /**
+        \brief Declare individual coordinates auxiliary, for a system whose grouping does not separate them.
+
+        Indices into a point in USER coordinates (length NumNaturalVariables(), the FIFO group
+        order) -- the coordinates as the author wrote them, not the internal homogenized ones, so
+        an index survives Homogenize() and AutoPatch().  These are the union with whatever the
+        auxiliary groups cover.
+
+        \param coordinates Indices of the auxiliary coordinates; pass an empty vector for none.
+        \throws std::out_of_range if an index is not a coordinate of this system.
+        \throws std::runtime_error if it would leave no coordinate to judge.
+        \see SetAuxiliaryVariableGroups, IsFinite, IsReal
+        */
+        void SetAuxiliaryCoordinates(std::vector<unsigned> coordinates);
+
+
+        /// \brief The auxiliary variable groups, by FIFO index.
+        std::vector<unsigned> const& AuxiliaryVariableGroups() const
+        {
+            return auxiliary_variable_groups_;
+        }
+
+        /// \brief The individually auxiliary coordinates, by index into a user-coordinate point.
+        std::vector<unsigned> const& AuxiliaryCoordinates() const
+        {
+            return auxiliary_coordinates_;
+        }
+
+        /// \brief Whether this system has any auxiliary coordinates at all (the fast path: usually not).
+        bool HaveAuxiliaryCoordinates() const
+        {
+            return !auxiliary_variable_groups_.empty() || !auxiliary_coordinates_.empty();
+        }
+
+        /**
+        \brief Whether one coordinate of a user-coordinate point is auxiliary.
+
+        \param index The coordinate's index within a point in user coordinates.
+        \return Whether it is excluded from the judgements.
+        */
+        bool CoordinateIsAuxiliary(unsigned index) const;
+
+        /// \brief How many of this system's user coordinates are auxiliary (a coordinate covered
+        /// both by a group and individually counts once).
+        size_t NumAuxiliaryCoordinates() const;
 
 
         /**
@@ -1576,6 +1713,25 @@ namespace bertini {
         template<typename T>
         Vec<T> CoordinatesOfGroup(Vec<T> const& user_point, unsigned group_fifo_index) const
         {
+            auto const span = SpanOfGroup(group_fifo_index);
+            if (span.first + span.second > static_cast<unsigned>(user_point.size()))
+                throw std::runtime_error("CoordinatesOfGroup: point is shorter than the system's variable structure implies");
+            return user_point.segment(span.first, span.second);
+        }
+
+
+        /**
+         \brief Where one variable group sits in a user-coordinate point: (offset, size).
+
+         The FIFO layout of a point in user coordinates -- each group a contiguous slice, in time
+         order.  Shared by CoordinatesOfGroup and by the auxiliary coordinates, so both agree
+         about where a group begins without either one re-deriving the layout.
+
+         \param group_fifo_index The FIFO position of the group (see FIFOIndexOfGroup).
+         \return The group's (offset, size) within a user-coordinate point.
+        */
+        std::pair<unsigned, unsigned> SpanOfGroup(unsigned group_fifo_index) const
+        {
             unsigned affine_counter = 0, hom_counter = 0, fifo_i = 0, offset = 0;
             for (auto const& iter : time_order_of_variable_groups_)
             {
@@ -1585,18 +1741,14 @@ namespace bertini {
                     case VariableGroupType::Affine:      group_size = static_cast<unsigned>(variable_groups_[affine_counter++].size()); break;
                     case VariableGroupType::Homogeneous: group_size = static_cast<unsigned>(hom_variable_groups_[hom_counter++].size()); break;
                     case VariableGroupType::Ungrouped:   group_size = 1; break;
-                    default: throw std::runtime_error("unacceptable VariableGroupType in CoordinatesOfGroup");
+                    default: throw std::runtime_error("unacceptable VariableGroupType in SpanOfGroup");
                 }
                 if (fifo_i == group_fifo_index)
-                {
-                    if (offset + group_size > static_cast<unsigned>(user_point.size()))
-                        throw std::runtime_error("CoordinatesOfGroup: point is shorter than the system's variable structure implies");
-                    return user_point.segment(offset, group_size);
-                }
+                    return {offset, group_size};
                 offset += group_size;
                 ++fifo_i;
             }
-            throw std::out_of_range("CoordinatesOfGroup: group index out of range");
+            throw std::out_of_range("SpanOfGroup: group index out of range");
         }
 
 
@@ -2187,6 +2339,9 @@ namespace bertini {
 
         VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.
 
+        std::vector<unsigned> auxiliary_variable_groups_; ///< FIFO indices of the auxiliary variable groups: left out of IsFinite and IsReal, and so out of path truncation, the endgame's divergence check, and the finite/real classification.  Empty = none.
+        std::vector<unsigned> auxiliary_coordinates_; ///< Indices, into a point in user coordinates, of individually auxiliary coordinates.  Unioned with whatever the auxiliary groups cover.  Empty = none.
+
         std::vector<Nd> pre_homogenization_functions_; ///< The system's functions as expression nodes, snapshotted just before the first Homogenize().  Empty until/unless the system is homogenized.  Used by SymbolicJacobian(usercoordinates=true) so the user-coordinate Jacobian of a homogenized system carries no homogenizing variables.  (Distinct from the polynomial block's GetNaturalFunctions(), which means "this block's own functions vs. structured-block expansions".)
 
 
@@ -2233,6 +2388,9 @@ namespace bertini {
             ar & hom_variable_groups_;
 
             ar & homogenizing_variables_;
+
+            ar & auxiliary_variable_groups_;
+            ar & auxiliary_coordinates_;
 
             ar & have_path_variable_;
             ar & path_variable_;

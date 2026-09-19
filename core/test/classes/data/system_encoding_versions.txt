@@ -9,4 +9,4 @@
 # (new hash, same token) and the golden fixture regenerated; once it ships it is history and is
 # never edited again.  See core/test/utility/encoding_registry.hpp.
 b2sysenc/1 50e21eb3ad705b6ae31b99a12c8ed6b8cb993f76a947791da05127d5bb8b805f 3.0.0
-b2sysenc/2 50e21eb3ad705b6ae31b99a12c8ed6b8cb993f76a947791da05127d5bb8b805f 3.5.0
+b2sysenc/2 038d9088d5d2ddbb854a2ef7828ceddb5a3f8c6d0f34cd2ad06a87e2f62a6d24 3.5.0

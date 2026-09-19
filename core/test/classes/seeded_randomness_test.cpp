@@ -213,8 +213,10 @@ BOOST_AUTO_TEST_CASE(seed_42_homotopy_digest_is_pinned_cross_platform)
     auto const hex = homotopy.ContentDigest().Hex();
     std::cout << "[stage] homotopy:    " << hex << "\n";
 
-    // re-pinned for b2sysenc/2 (ADR-0059: the version token is part of every encoding)
-    char const* const pinned = "a914009f2ee0d5ec77663dc38eeeba9300ba68c0186daf3b1bb742c012943ff1";
+    // re-pinned for b2sysenc/2, which is edited in place while 3.5 is unreleased (ADR-0061), so
+    // this moves whenever the encoding does until release -- most recently for the auxiliary
+    // coordinate marking joining the encoding (b2#403)
+    char const* const pinned = "ae1c4276324dc93676766a583d97cba494ae4c3b1bb8f51a9fa8a8d530eeed02";
     if (hex != pinned)
     {
         std::cout << "[diagnostic] canonical encoding of the mismatching homotopy follows\n"

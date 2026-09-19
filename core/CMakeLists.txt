@@ -833,6 +833,7 @@ if (ENABLE_UNIT_TESTING)
         test/classes/sha256_test.cpp
         test/classes/config_digest_test.cpp
         test/classes/encoding_registry_test.cpp
+        test/classes/auxiliary_coordinates_test.cpp
         test/classes/seeded_randomness_test.cpp
         test/classes/output_directory_test.cpp
         test/classes/boost_multiprecision_test.cpp

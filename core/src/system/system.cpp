@@ -86,6 +86,12 @@ namespace bertini
         variable_groups_  = other.variable_groups_;
         hom_variable_groups_ =  other.hom_variable_groups_;
         homogenizing_variables_ = other.homogenizing_variables_;
+        // this copy constructor is a hand-maintained mirror of the members, like serialize and
+        // the canonical encoder: a member added to the class and not added here is silently
+        // dropped by every copy, and Clone is a copy (b2#403 was found exactly this way -- the
+        // auxiliary coordinates reached the solver's target as an empty set)
+        auxiliary_variable_groups_ = other.auxiliary_variable_groups_;
+        auxiliary_coordinates_ = other.auxiliary_coordinates_;
         have_path_variable_ = other.have_path_variable_;
         path_variable_ = other.path_variable_;
         implicit_parameters_ = other.implicit_parameters_;
@@ -169,6 +175,97 @@ namespace bertini
 
         return num_vars;
     }
+
+    // ---- auxiliary coordinates: the ones left out of every judgement (b2#403) ----
+
+    namespace {
+
+    /// \brief Refuse a set of auxiliary coordinates that would leave nothing to judge.
+    void RefuseIfNothingWouldRemain(size_t num_auxiliary, size_t num_coordinates)
+    {
+        if (num_coordinates > 0 && num_auxiliary >= num_coordinates)
+            throw std::runtime_error("refusing to make every coordinate auxiliary: a point with "
+                                     "nothing to judge would be unconditionally finite and real, "
+                                     "which is not a verdict this library should render");
+    }
+
+    } // unnamed namespace
+
+    void System::SetAuxiliaryVariableGroups(std::vector<unsigned> groups)
+    {
+        std::sort(groups.begin(), groups.end());
+        groups.erase(std::unique(groups.begin(), groups.end()), groups.end());
+
+        auto const num_groups = static_cast<unsigned>(time_order_of_variable_groups_.size());
+        for (auto g : groups)
+            if (g >= num_groups)
+                throw std::out_of_range("SetAuxiliaryVariableGroups: this system has no variable group "
+                                        + std::to_string(g));
+
+        auto const kept = auxiliary_variable_groups_;
+        auxiliary_variable_groups_ = std::move(groups);
+        try
+        {
+            RefuseIfNothingWouldRemain(NumAuxiliaryCoordinates(), NumNaturalVariables());
+        }
+        catch (...)
+        {
+            auxiliary_variable_groups_ = kept;
+            throw;
+        }
+    }
+
+
+    void System::SetAuxiliaryCoordinates(std::vector<unsigned> coordinates)
+    {
+        std::sort(coordinates.begin(), coordinates.end());
+        coordinates.erase(std::unique(coordinates.begin(), coordinates.end()), coordinates.end());
+
+        auto const num_coordinates = static_cast<unsigned>(NumNaturalVariables());
+        for (auto c : coordinates)
+            if (c >= num_coordinates)
+                throw std::out_of_range("SetAuxiliaryCoordinates: this system has no coordinate "
+                                        + std::to_string(c) + " (it has "
+                                        + std::to_string(num_coordinates) + ")");
+
+        auto const kept = auxiliary_coordinates_;
+        auxiliary_coordinates_ = std::move(coordinates);
+        try
+        {
+            RefuseIfNothingWouldRemain(NumAuxiliaryCoordinates(), NumNaturalVariables());
+        }
+        catch (...)
+        {
+            auxiliary_coordinates_ = kept;
+            throw;
+        }
+    }
+
+
+    bool System::CoordinateIsAuxiliary(unsigned index) const
+    {
+        for (auto c : auxiliary_coordinates_)
+            if (c == index)
+                return true;
+        for (auto g : auxiliary_variable_groups_)
+        {
+            auto const span = SpanOfGroup(g);
+            if (index >= span.first && index < span.first + span.second)
+                return true;
+        }
+        return false;
+    }
+
+
+    size_t System::NumAuxiliaryCoordinates() const
+    {
+        size_t n = 0;
+        for (unsigned k = 0; k < NumNaturalVariables(); ++k)
+            if (CoordinateIsAuxiliary(k))
+                ++n;
+        return n;
+    }
+
 
     size_t System::NumHomVariables() const
     {
@@ -1844,6 +1941,12 @@ namespace bertini
             homotopy = (1-t)*target + g*t*start;
             homotopy.AddPathVariable(t);
         }
+        // The homotopy is what the TRACKER measures, so the target's auxiliary coordinates have
+        // to travel with it or truncation during tracking would judge coordinates the author
+        // excluded (b2#403).  Node arithmetic builds a fresh System and carries none of them, so
+        // set them here for both branches rather than relying on the copy in the structured one.
+        homotopy.SetAuxiliaryVariableGroups(target.AuxiliaryVariableGroups());
+        homotopy.SetAuxiliaryCoordinates(target.AuxiliaryCoordinates());
         return homotopy;
     }
 
