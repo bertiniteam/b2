@@ -1,7 +1,7 @@
 # 0060 — Stopping a solve, and reusing what it left behind
 
 **Status:** Accepted
-**Date:** 2026-09-19 (designed with the maintainer 2026-09-18; landed with 3.5.0, PR #449)
+**Date:** 2026-09-19 (designed with the maintainer 2026-09-18; landed with 4.0.0, PR #449)
 
 ## Context
 

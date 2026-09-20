@@ -65,3 +65,12 @@ rather than only exercised against files that are supposed to be correct.
 - The composition column means a composition-only bump now leaves evidence.  Do not remove it
   on the grounds that the keyspace hash already covers the encoders; it demonstrably does not
   cover this, which is how MidPathConfig stayed outside the ask.
+- **Renumbering the release under development means editing the release column of every line
+  that has not shipped, and nothing enforces it.**  A last line naming an earlier release is a
+  perfectly ordinary state — it is what the file looks like whenever a release has shipped and
+  nothing has changed the encoding since — so the machinery cannot tell that case apart from a
+  stale column left behind by a renumber.  Measured when 3.5 became 4.0: with the column still
+  reading `3.5.0`, every test passes, and the *next* encoder change is then told to append a new
+  version token instead of editing the line in place, minting a version for an encoding that
+  never shipped.  That is the exact mistake this ADR exists to prevent, arriving by a different
+  door.  Renumber the columns in the same commit as the `VERSION` file.

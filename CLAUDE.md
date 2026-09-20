@@ -125,7 +125,7 @@ for configs, ADR-0043; seeds are rooted per `b2rand/1`, ADR-0044).  Records refe
 objects by digest, so equal objects must digest equally across machines and compilers, and
 across every build that writes the same encoding version.  The cross-version promise
 ("records read forever") is **withdrawn** until a record's ask carries the identity of the
-algorithm that answered it (#420): an encoding version bump (3.5.0 moved Systems to
+algorithm that answered it (#420): an encoding version bump (4.0.0 moved Systems to
 `b2sysenc/2`, ADR-0059) makes earlier records new asks rather than recalls, and that is the
 honest outcome, because a newer algorithm may not compute what the old one did.  The
 discipline below stays exactly as strict; what it guarantees is stability *within* a version.

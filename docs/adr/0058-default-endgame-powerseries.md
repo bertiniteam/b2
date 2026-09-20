@@ -1,7 +1,7 @@
 # 0058 — The default endgame is power series, matching Bertini 1
 
 **Status:** Accepted
-**Date:** 2026-09-16 (decided 2026-07-15; landed with 3.5.0)
+**Date:** 2026-09-16 (decided 2026-07-15; landed with 4.0.0)
 
 ## Context
 
