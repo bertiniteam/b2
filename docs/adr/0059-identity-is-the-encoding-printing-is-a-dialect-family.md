@@ -58,7 +58,7 @@ was rewriting.
   `b2sysenc` bump.  The encoding, not the printer, is what must stay stable.
 - Records written under `b2sysenc/1` are not recalled by `b2sysenc/2` builds (the version
   is part of every encoding and every ask).  This is the withdrawal of the "records read
-  forever" promise noted in the 3.5.0 changelog; the reader (`System::FromCanonicalEncoding`)
+  forever" promise noted in the 4.0.0 changelog; the reader (`System::FromCanonicalEncoding`)
   refuses a foreign version loudly rather than guessing.
 - The complex spelling `(re,im)` is gone from every output.  Text produced by earlier
   versions that used it must be edited to `(re+im*I)` before Bertini 1 or this parser reads

@@ -67,7 +67,7 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
-## [3.5.0] - unreleased
+## [4.0.0] - unreleased
 
 A correctness fix to the `MakeMovingHomotopy` guards: they decided function identity on a
 *presentation* rendering, which silently refused valid homotopies.
@@ -120,7 +120,7 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 - **The path-crossing verdict reaches the records** (#365).  The midpath check compares every path
   against every other at the endgame boundary and re-tracks the ones that appear to have jumped
   onto a neighbour; a path it finally gives up on has carried `crossing_unresolved` in the solver's
-  metadata since 3.5's earlier work, but nothing persisted it.  A records directory could not be
+  metadata since this release's earlier work, but nothing persisted it.  A records directory could not be
   asked which paths were flagged, and recall brought such an endpoint back with the flag cleared --
   the one point the library could not vouch for, arriving vouched for.  Now the flag is part of the
   path record and comes back with it, and each recording solve also writes one `midpath` record
@@ -320,7 +320,7 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   between operands on the canonical encoding instead of on printed text, and the encoder writes
   operands in that order; the encoding also carries which coordinates a system has declared
   auxiliary (#403).  Both changes land under the one version, which is the point of ADR-0061:
-  3.5 gets one encoding, not one per change.  Records written by earlier versions carry
+  a release gets one encoding, not one per change.  Records written by earlier versions carry
   `b2sysenc/1` and are not recalled; the "records read forever" promise is withdrawn until the
   identity of the algorithm itself is part of a record's ask (#420).
 - **The default endgame is the power series endgame**, matching Bertini 1's documented default
