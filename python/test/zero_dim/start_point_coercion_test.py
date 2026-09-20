@@ -108,6 +108,32 @@ def test_system_eval_takes_an_object_array_of_mp_values():
     assert [complex(v) for v in as_object] == [complex(v) for v in inferred]
 
 
+def test_track_path_takes_a_list_and_an_object_array():
+    # the third seam that takes a point vector from a caller (issue #348).  Verified to have had
+    # the same gap: with the conversion removed, an object array answers with a dump of C++ Eigen
+    # signatures, exactly as System.eval did.
+    x, t = pb.Variable('x'), pb.Variable('t')
+    hom = pb.System()
+    hom.add_variable_group(pb.VariableGroup([x]))
+    hom.add_path_variable(t)
+    one = pb.symbolics.Integer(1)
+    hom.add_function((one - t) * (x * x - 1) + GAMMA * t * (x * x - 4))
+
+    tracker = pb.AMPTracker(hom)
+    tracker.setup(pb.tracking.Predictor.RKF45, 1e-6, 1e5,
+                  pb.tracking.SteppingConfig(), pb.tracking.NewtonConfig())
+
+    def tracked(start):
+        end = np.array([C(0)])
+        code = tracker.track_path(end, C(1), C(0), start)
+        assert code == pb.tracking.SuccessCode.Success
+        return round(complex(end[0]).real, 6)
+
+    expected = tracked(np.array([C('2')]))
+    assert tracked(np.array([C('2')], dtype=object)) == expected
+    assert tracked([C('2')]) == expected
+
+
 def test_system_eval_leaves_an_object_array_of_non_numbers_alone():
     # the widening is only for numbers: an object array of anything else must not be silently
     # reinterpreted, it must still be refused

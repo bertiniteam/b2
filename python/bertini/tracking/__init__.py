@@ -262,3 +262,33 @@ def _make_path_observers(obs_mod):
 
 for _m in (_obs_amp, _obs_dbl, _obs_mul):
     _m.PathDataCollector, _m.PathCollectionObserver = _make_path_observers(_m)
+
+
+# track_path takes a point vector straight from the caller, so it gets the same conversion the
+# other point-taking seams have (issues #348, #367): a list, or an object-dtype array of
+# multiprecision values, is the same vector to a caller as the array whose dtype happens to match,
+# and must not answer with a dump of C++ Eigen signatures.  Only the start point is converted;
+# the times and the result slot pass through untouched.
+from .._points import coerce_point_vector as _coerce_point_vector
+
+
+def _wrap_track_path(tracker_cls):
+    """Give one tracker class a track_path that converts its start point at the seam."""
+    native = tracker_cls.track_path
+
+    def track_path(self, *args, **kwargs):
+        if args:
+            args = args[:-1] + (_coerce_point_vector(args[-1]),)
+        elif 'start_point' in kwargs:
+            kwargs = dict(kwargs, start_point=_coerce_point_vector(kwargs['start_point']))
+        return native(self, *args, **kwargs)
+
+    track_path.__doc__ = ((native.__doc__ or "").rstrip() + "\n\n" +
+                          "The start point may be a numpy array (double or multiprecision), a "
+                          "plain list or tuple of numbers, or an object-dtype array of them; it "
+                          "is converted here to the vector the native overloads take.")
+    tracker_cls.track_path = track_path
+
+
+for _t in (AMPTracker, DoublePrecisionTracker, MultiplePrecisionTracker):
+    _wrap_track_path(_t)

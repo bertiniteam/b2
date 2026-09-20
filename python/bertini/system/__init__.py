@@ -87,30 +87,7 @@ System.add = _system_add
 _native_system_eval = System.eval
 
 
-def _eval_argument(value):
-    """A point given as a list/tuple (or an object-dtype numpy array) as the vector the native
-    overloads accept: double when every entry is an ordinary number, multiprecision when any entry
-    already is one.  Arrays already carrying a native dtype, scalars and times pass through.
-
-    An OBJECT-dtype array is the one numpy case the native converters refuse: ``np.array(vals)``
-    over multiprecision scalars infers the registered ``complex_mp`` dtype, but an array built
-    another way (``dtype=object``, or grown by assignment) holds the same values behind a dtype no
-    overload matches, and the argument error names C++ Eigen types.  It is the same input in
-    Python's eyes, so it is coerced here alongside the list case (issues #348, #367)."""
-    from bertini._pybertini.multiprec import complex_mp as _complex_mp, real_mp as _real_mp
-    if isinstance(value, _np.ndarray):
-        if value.dtype != object or value.ndim != 1:
-            return value
-        # only a vector of NUMBERS; an object array of anything else (symbolic nodes, say) is
-        # left exactly as it was, so this widens what works and changes nothing that did
-        if not all(isinstance(e, (_complex_mp, _real_mp, int, float, complex)) for e in value):
-            return value
-        value = list(value)
-    elif not isinstance(value, (list, tuple)):
-        return value
-    if any(isinstance(e, (_complex_mp, _real_mp)) for e in value):
-        return _np.array([e if isinstance(e, _complex_mp) else _complex_mp(e) for e in value])
-    return _np.asarray(value, dtype=complex)
+from .._points import coerce_point_vector as _eval_argument
 
 
 def _system_eval(self, *args):
