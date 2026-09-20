@@ -492,11 +492,17 @@ namespace bertini {
         template<typename T>
         void RescalePointToFitInPlace(Vec<T> & x) const
         {
+            // Self-align to the point, exactly as EvalInPlace and the Jacobian do -- ADR-0057.
+            // Without this, rescaling read whatever precision the working coefficients happened to
+            // be left at by the last evaluation, and the rescaled point came back REPORTING the
+            // requested precision while carrying only the older one's correct digits.  Nothing
+            // downstream could see it: the assert that used to stand here demanded the caller align
+            // the precisions beforehand, and asserts are compiled out of a release build, so the
+            // one check that could have caught it was absent exactly where it mattered (b2#461).
+            SyncPrecision(x);
+
             #ifndef BERTINI_DISABLE_ASSERTS
                 assert(x.size() == NumVariables() && "input point for rescaling to fit a patch must have same length as total number of variables being patched, in all variable groups.");
-                assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
-                        && "precision of input vector must match current working precision of patch during rescaling"
-                       );
             #endif
 
             const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);

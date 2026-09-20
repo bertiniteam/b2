@@ -786,13 +786,10 @@ void CheckStartPointsTrackTheWorkingPrecision(StartT const& ss)
 {
     const unsigned lo = 30, hi = 120;
 
-    // A discarded pass at each precision first: for a homogenized and patched target, the FIRST
-    // point generated after a precision change is lifted onto patch state still at the previous
-    // precision and comes back short of digits (b2#461, found here, a separate defect from the one
-    // under test).  Measuring the second pass keeps this check about the linear solve.
-    WorstStartPointResidual(ss, lo);
+    // Measured on the FIRST pass at each precision, deliberately: for a homogenized and patched
+    // target that is the pass that used to be short of digits, because the lift onto the patch
+    // read working coefficients left at the previous precision (b2#461, found by this test).
     auto const worst_lo = WorstStartPointResidual(ss, lo);
-    WorstStartPointResidual(ss, hi);
     auto const worst_hi = WorstStartPointResidual(ss, hi);
 
     // a root to (nearly) the digits asked for, at each precision
@@ -806,12 +803,10 @@ void CheckStartPointsTrackTheWorkingPrecision(StartT const& ss)
     // the two agree to the low precision: the high-precision point refines the low-precision one,
     // it is not a different root
     DefaultPrecision(hi);
-    ss.template StartPoint<mpfr>(0);            // discarded, for b2#461 as above
     for (unsigned long long i = 0; i < ss.NumStartPoints(); ++i)
     {
         auto hi_point = ss.template StartPoint<mpfr>(i);
         DefaultPrecision(lo);
-        ss.template StartPoint<mpfr>(0);        // discarded, for b2#461 as above
         auto lo_point = ss.template StartPoint<mpfr>(i);
         BOOST_REQUIRE_EQUAL(lo_point.size(), hi_point.size());
         for (Eigen::Index j = 0; j < lo_point.size(); ++j)
@@ -821,7 +816,6 @@ void CheckStartPointsTrackTheWorkingPrecision(StartT const& ss)
             BOOST_CHECK_LT(abs(h - lo_point(j)), pow(real_mp(10), -int(lo) + 8));
         }
         DefaultPrecision(hi);
-        ss.template StartPoint<mpfr>(0);        // discarded, for b2#461 as above
     }
 }
 
