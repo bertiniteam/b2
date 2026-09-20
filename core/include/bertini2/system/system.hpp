@@ -1623,15 +1623,21 @@ namespace bertini {
         /**
          \brief Get a function by its index, as a function-tree node.
 
+         Indexes every row the system evaluates, in evaluation order: the functions as authored,
+         then one patch equation per variable group if the system is patched.  Once a system is
+         patched the patch is one of its functions -- it is a row of the vector an evaluation
+         returns, and a row of the Jacobian -- so it is reachable here rather than being a thing
+         the caller has to know about separately.  The count is NumTotalFunctions().
+
          Works for every block type: structured blocks (linear forms, products of linears,
-         randomization, blend) are expanded to their node form on demand, so this is in sync with
-         NumNaturalFunctions().  Throws std::out_of_range if the index is past the end (rather than
-         dereferencing past it -- the old un-checked version segfaulted on slice-derived systems
-         that have no PolynomialBlock).
+         randomization, blend) are expanded to their node form on demand.
+
+         \param index Which row, in [0, NumTotalFunctions()).
+         \throws std::out_of_range If the index is past the end.
         */
         auto Function(unsigned index) const
         {
-            auto fns = NaturalFunctionsAsNodes();
+            auto fns = GetFunctions();
             if (index >= fns.size())
                 throw std::out_of_range("System::Function index out of range");
             return fns[index];
@@ -1639,15 +1645,42 @@ namespace bertini {
 
 
         /**
-         \brief Get the functions, as function-tree nodes.
+         \brief Get the functions as authored, as function-tree nodes, without the patch.
 
-         Expands any structured block (so it agrees with NumNaturalFunctions() and Function(i),
-         even for systems built purely from a slice / start-system block).
+         Expands any structured block (so it agrees with NumNaturalFunctions(), even for systems
+         built purely from a slice / start-system block).  For every row the system evaluates,
+         patch included, use GetFunctions().
         */
         std::vector<Nd> GetNaturalFunctions() const
         {
             return NaturalFunctionsAsNodes();
         }
+
+
+        /**
+         \brief Get every row this system evaluates, as function-tree nodes.
+
+         The functions as authored, then one patch equation per variable group when the system is
+         patched -- the same rows, in the same order, that Eval returns values for.  Agrees with
+         NumTotalFunctions() and with Function(i).
+        */
+        std::vector<Nd> GetFunctions() const
+        {
+            auto fns = NaturalFunctionsAsNodes();
+            auto patches = PatchFunctionsAsNodes();
+            fns.insert(fns.end(), patches.begin(), patches.end());
+            return fns;
+        }
+
+
+        /**
+         \brief The patch equations, as function-tree nodes: one per variable group, or none when
+                the system is unpatched.
+
+         The patch equation for group `ii` is `sum_jj c_jj * x_jj - 1`, over that group's variables
+         in the system's variable ordering, which is exactly what the patch evaluates.
+        */
+        std::vector<Nd> PatchFunctionsAsNodes() const;
 
 
         /**

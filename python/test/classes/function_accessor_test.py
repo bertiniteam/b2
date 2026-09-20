@@ -98,12 +98,35 @@ def test_function_blend_block():
     fx = pb.System(); fx.add_variable_group(_vg(x, y)); fx.add_function(x * x + y * y - 1)
     sm = pb.System(); sm.add_variable_group(_vg(x, y)); sm.add_function(y)
     em = pb.System(); em.add_variable_group(_vg(x, y)); em.add_function(y - x)
-    # affine on purpose: this is about a BlendBlock row expanding recursively, and the builder's
-    # projectivize default (b2#382) would add a patch row -- which num_functions() counts but
-    # function(i) does not return, a separate inconsistency (b2#464) that is not what is under test
-    H = na.moving_homotopy(fx, sm, em, projectivize=False,
+    H = na.moving_homotopy(fx, sm, em,
                            gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8')))
     _all_functions_are_nodes(H)               # a BlendBlock row expands recursively
+
+
+def test_function_covers_the_patch_rows_a_patched_system_evaluates():
+    # Once a system is patched, the patch IS one of its functions: a row of the vector an
+    # evaluation returns and a row of the Jacobian.  So function(i) reaches it, and the count and
+    # the accessor agree rather than disagreeing by exactly the number of patch rows.
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = pb.System()
+    s.add_variable_group(_vg(x, y))
+    s.add_functions([x * x + y * y - 1, x - y])
+    s.homogenize()
+    s.auto_patch()
+
+    assert s.num_functions() == 3                      # two written, one patch
+    _all_functions_are_nodes(s)                        # every index reachable, patch included
+
+    # and the patch row is the one that is NOT among the functions as authored
+    authored = [str(f) for f in s.functions()]
+    assert len(authored) == 2
+    assert str(s.function(2)) not in authored
+
+    # it evaluates to what the system evaluates in that row
+    pt = np.array([pb.multiprec.complex_mp('0.3'), pb.multiprec.complex_mp('0.4'),
+                   pb.multiprec.complex_mp('0.5')])
+    rows = np.asarray(s.eval(pt))
+    assert abs(complex(s.function(2).eval(pt)) - complex(rows[2])) < 1e-12
 
 
 def test_function_matches_eval_for_slice_system():

@@ -377,6 +377,16 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   that `MakeHomotopy` and `MakeMovingHomotopy` make too, so every caller gets it rather than only
   the addition operator.  A projective/affine mix is diagnosed as such rather than reported as a
   variable count that happens to differ.
+- **A patched system's patch rows are reachable through `function(i)`** (#464).  `num_functions()`
+  counts the rows an evaluation returns, patch rows included; `function(i)` returned only the
+  functions as authored, so the two disagreed by exactly the number of patches and the obvious loop
+  over `range(num_functions())` raised on the last index.  Once a system is patched the patch *is*
+  one of its functions -- a row of the vector `eval` returns and a row of the Jacobian -- so it is
+  reachable there now, and the pair agrees.  `functions()` still returns the equations as authored
+  and nothing else, so copying them into another system copies equations rather than somebody
+  else's choice of patch; `get_functions()` is the whole evaluated set.  (The Python docstring for
+  `num_functions` had also said it excluded patches while being bound to the count that includes
+  them.)
 - **Homogenizing a system that contains a blend block is refused** (#463).  A blend's operands are
   fixed when it is built, so its own homogenization is a no-op; converting the system's other
   blocks around it left the parts disagreeing about how many variables there were.  The system

@@ -900,9 +900,9 @@ def _projectivize_operands(systems):
     """Clones of the systems a homotopy is about to be built from, homogenized and patched.
 
     This is the only moment at which a homotopy can be made projective: once the blend exists its
-    operands are fixed and cannot be homogenized (ADR-0020, ADR-0026, b2#463), which is why the
-    option lives on the builders rather than on the solver.  :func:`ZeroDimSolver` does the same
-    thing at the same point, being a builder too.
+    operands are fixed and cannot be homogenized, which is why the option lives on the builders
+    rather than on the solver.  :func:`ZeroDimSolver` does the same thing at the same point, being
+    a builder too.
 
     Clones, never the caller's systems.  A System's identity is its content, and records key a
     solve on that identity, so homogenizing one in place would silently change what the caller's
@@ -921,6 +921,8 @@ def _projectivize_operands(systems):
     list of System
         Projectivized clones, or the originals when this family cannot be written projectively.
     """
+    # ADR-0020 and ADR-0026 fix a blend's operands at construction; b2#463 is the half-converted
+    # state that used to result from trying to homogenize around one afterwards
     from bertini import system as _bsys
 
     live = [s for s in systems if s is not None]

@@ -1753,6 +1753,36 @@ namespace bertini
     ///////////////////
 
 
+    std::vector<Nd> System::PatchFunctionsAsNodes() const
+    {
+        std::vector<Nd> rows;
+        if (!is_patched_)
+            return rows;
+
+        // Mirrors Patch::EvalInPlace exactly: walk the variable ordering once, a group at a time,
+        // accumulating sum_jj c_jj*x_jj and subtracting the 1.  Same walk the symbolic Jacobian
+        // makes to append the patch's (constant) rows.
+        auto const& coeffs = patch_.Coefficients();
+        auto const& sizes  = patch_.VariableGroupSizes();
+        VariableGroup const& vars = Variables();
+
+        unsigned counter = 0;
+        for (size_t ii = 0; ii < sizes.size(); ++ii)
+        {
+            Nd row;
+            for (unsigned jj = 0; jj < sizes[ii]; ++jj)
+            {
+                Nd term = Complex::Make(coeffs[ii](static_cast<Eigen::Index>(jj))) * vars[counter];
+                row = row ? (row + term) : term;
+                ++counter;
+            }
+            rows.push_back(row ? (row - Integer::Make(1))
+                               : std::static_pointer_cast<node::Node>(Integer::Make(-1)));
+        }
+        return rows;
+    }
+
+
     void CheckVariableStructuresMatch(System const& a, System const& b,
                                       std::string const& operation,
                                       std::string const& a_name, std::string const& b_name)
