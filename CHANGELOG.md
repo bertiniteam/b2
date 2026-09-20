@@ -133,9 +133,8 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 - **A configuration reference page: every setting there is, with its default** (#406).  There was
   no single place that answered "what settings exist, and what do they default to?".  The class
   listings name fields but no defaults, the config classes are spread over three modules with no
-  index, and the tracker's most consequential settings -- the tracking tolerance and the predictor
-  among them -- have no config struct at all, so every "here are the configs" listing misses them
-  by construction.  The new page, in the top-level reference navigation, collects all of it and is
+  index, and a handful of tracker settings are set by method and belong to no config struct at
+  all, so every "here are the configs" listing misses them by construction.  The new page, in the top-level reference navigation, collects all of it and is
   **read out of the library when the docs are built**: adding a config field, changing a default or
   rewriting a field's docstring updates the page with no documentation change.  A hand-maintained
   table drifts from the code silently, which is what the issue was filed about.  The settings with
@@ -250,6 +249,23 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Changed
 
+- **The tracker's own settings are a config** (#457).  The predictor, the tracking tolerance and
+  the path truncation threshold were bare members of the tracker, each with its own setter and
+  getter and no config struct.  They were therefore absent from `get_settings`/`set_settings`, from
+  the settings digest, and from the generated configuration reference; `path_truncation_threshold`
+  had no route through a solver at all, so the only way to change it was to reach for the tracker
+  and call a method.  They are `tracking::TrackerConfig` now, so `solver.update(predictor=...,
+  tracking_tolerance=..., path_truncation_threshold=...)` works, a settings bundle carries them,
+  and the reference page lists them.  The methods still work and read and write the config.  The
+  tracker derives what it had been caching -- the digits implied by the tolerance, the predictor
+  object -- when it starts a path rather than when a setter is called, so a value set by any route
+  takes effect.  In the same move `final_tolerance` lost its duplicate: it was a field of both the
+  solver's `TolerancesConfig` and the endgame's `EndgameConfig`, with the solver's pushed onto the
+  endgame at solve time, and it now lives only on the endgame, which is what achieves it.  No field
+  name is shared by two configs any more.  Setting `final_tolerance` on a solver still works and
+  reaches the endgame's config.  **Identity:** both moves change the settings text a solve folds
+  in, so `b2cfgenc/4`'s registry line was edited in place -- 3.5.0 is unreleased, which is exactly
+  the case ADR-0061 covers.
 - **Encoding versions now count encodings, not commits: at most one per released version.**
   `b2sysenc/<n>` and `b2cfgenc/<n>` are part of the digest preimage, so moving one makes every
   existing record a different ask -- and the old "append a line, never edit one" rule made the

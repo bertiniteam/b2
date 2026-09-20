@@ -35,11 +35,12 @@ config owns it.
    system.add_variable_group(bertini.VariableGroup([x, y]))
 
    solver = bertini.ZeroDimSolver(system)
-   solver.update(final_tolerance="1e-11",                 # -> TolerancesConfig
+   solver.update(final_tolerance="1e-11",                 # -> EndgameConfig
                  max_num_crossed_path_resolve_attempts=3) # -> ZeroDimConfig
 
-   from bertini.nag_algorithm import TolerancesConfig, ZeroDimConfig
-   assert solver.get_config(TolerancesConfig).final_tolerance == 1e-11
+   from bertini.endgame import EndgameConfig
+   from bertini.nag_algorithm import ZeroDimConfig
+   assert solver.get_config(EndgameConfig).final_tolerance == 1e-11
    assert solver.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 3
 
 The solver keeps some of its settings in its tracker and its endgame, and one call reaches those
@@ -51,7 +52,6 @@ needs naming the object it lives on:
    solver.update(max_step_size="0.05", num_sample_points=6)
 
    from bertini.tracking import SteppingConfig
-   from bertini.endgame import EndgameConfig
    assert solver.get_config(SteppingConfig).max_step_size == bertini.multiprec.real_mp("0.05")
    assert solver.get_config(EndgameConfig).num_sample_points == 6
 
@@ -65,14 +65,14 @@ A misspelled field raises immediately rather than silently doing nothing:
    except AttributeError:
        pass
 
-One field name belongs to two configs: ``final_tolerance`` is on both the solver's tolerances and
-the endgame's own settings. The solver's wins, and the endgame's is reachable by naming its config:
+Each field name belongs to exactly one config, so the flat form and the named form reach the same
+field. ``final_tolerance`` is the endgame's:
 
 .. testcode::
 
-   solver.update(final_tolerance="1e-12")                      # the solver's
-   solver.configure(endgame={'final_tolerance': "1e-8"})       # the endgame's
-   assert solver.get_config(TolerancesConfig).final_tolerance == 1e-12
+   solver.update(final_tolerance="1e-12")                      # flat
+   assert solver.get_config(EndgameConfig).final_tolerance == 1e-12
+   solver.configure(endgame={'final_tolerance': "1e-8"})       # named
    assert solver.get_config(EndgameConfig).final_tolerance == 1e-8
 
 Carry a whole bundle
@@ -92,7 +92,7 @@ stamp every subsequent solver with the same settings.
    # ... later, for each related solve ...
    next_solver = bertini.ZeroDimSolver(system)
    next_solver.set_settings(settings)
-   assert next_solver.get_config(TolerancesConfig).final_tolerance == 1e-11
+   assert next_solver.get_config(EndgameConfig).final_tolerance == 1e-11
 
 The bundle is an ordinary picklable value, so it can be stored or sent to another process -- the same
 settings then drive a worker's solves as drive the manager's.
@@ -103,7 +103,7 @@ settings then drive a worker's solves as drive the manager's.
    carried = pickle.loads(pickle.dumps(settings))
    worker_solver = bertini.ZeroDimSolver(system)
    worker_solver.set_settings(carried)
-   assert worker_solver.get_config(TolerancesConfig).final_tolerance == 1e-11
+   assert worker_solver.get_config(EndgameConfig).final_tolerance == 1e-11
 
 The settings are precision-agnostic
 ===================================
@@ -121,7 +121,7 @@ re-solve -- while carrying one set of tracking tolerances through all of them.
    for mptype in ('multiple', 'adaptive'):
        solver = bertini.ZeroDimSolver(system, mptype=mptype)
        solver.set_settings(bundle)                       # drops on cleanly, any precision model
-       assert solver.get_config(TolerancesConfig).final_tolerance == 1e-10
+       assert solver.get_config(EndgameConfig).final_tolerance == 1e-10
 
 By default :meth:`set_settings` applies only the configs the target actually has and skips the rest,
 so a bundle also moves between *different kinds* of owner (a tracker has no solver-level tolerances).
