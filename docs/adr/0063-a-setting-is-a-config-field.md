@@ -60,7 +60,7 @@ of a common operation, not a second source of truth.
   the solver onto the endgame.  A solver-level `final_tolerance=` still works; it routes to the
   endgame's config.
 - Both moves change the settings text, so `b2cfgenc/4`'s registry line was edited in place under
-  ADR-0061 -- 3.5.0 is unreleased.  The keyspace hash and the golden digest fixture moved with it.
+  ADR-0061 -- 4.0.0 is unreleased.  The keyspace hash and the golden digest fixture moved with it.
 - Four tracker settings remain method-only (`infinite_truncation`, `precision_preservation`,
   `reinitialize_initial_step_size`, and the wall-clock deadline of ADR-0060).  The first three are
   candidates for the same treatment; the deadline is deliberately out of the ask.  They are

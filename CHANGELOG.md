@@ -264,7 +264,7 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   endgame at solve time, and it now lives only on the endgame, which is what achieves it.  No field
   name is shared by two configs any more.  Setting `final_tolerance` on a solver still works and
   reaches the endgame's config.  **Identity:** both moves change the settings text a solve folds
-  in, so `b2cfgenc/4`'s registry line was edited in place -- 3.5.0 is unreleased, which is exactly
+  in, so `b2cfgenc/4`'s registry line was edited in place -- 4.0.0 is unreleased, which is exactly
   the case ADR-0061 covers.
 - **Encoding versions now count encodings, not commits: at most one per released version.**
   `b2sysenc/<n>` and `b2cfgenc/<n>` are part of the digest preimage, so moving one makes every
