@@ -65,9 +65,9 @@ def test_set_and_get_config_roundtrips(nid):
 
 def test_configure_many_subconfigs_in_one_call(nid):
     nid.configure(regeneration={'start_level': 2},
-                  tolerances={'final_tolerance': 1e-11})
+                  tolerances={'newton_during_endgame': 1e-11})
     assert nid.get_config(RegenerationConfig).start_level == 2
-    assert nid.get_config(TolerancesConfig).final_tolerance == 1e-11
+    assert nid.get_config(TolerancesConfig).newton_during_endgame == 1e-11
 
 
 def test_has_tracker_and_endgame(nid):

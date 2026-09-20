@@ -511,7 +511,7 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
             auto const& tol = self.template Get<algorithm::TolerancesConfig>();
             opt.tracktolbeforeeg = static_cast<double>(tol.newton_before_endgame);
             opt.tracktolduringeg = static_cast<double>(tol.newton_during_endgame);
-            opt.finaltol         = static_cast<double>(tol.final_tolerance);
+            opt.finaltol         = static_cast<double>(self.DefaultPointMatchTolerance());
             opt.maxcrossedpathresolves =
                 self.template Get<typename AlgoT::ZeroDimConf>().max_num_crossed_path_resolve_attempts;
 

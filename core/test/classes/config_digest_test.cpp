@@ -88,9 +88,9 @@ BOOST_AUTO_TEST_CASE(doubles_encode_exactly_not_by_decimal)
 {
     // two doubles that print identically at low decimal precision must still differ
     algorithm::TolerancesConfig a, b;
-    a.final_tolerance = 1e-11;
-    b.final_tolerance = 1e-11 * (1 + 1e-16);   // one ulp-ish away
-    if (a.final_tolerance != b.final_tolerance)  // guard: only if genuinely distinct doubles
+    a.newton_during_endgame = 1e-11;
+    b.newton_during_endgame = 1e-11 * (1 + 1e-16);   // one ulp-ish away
+    if (a.newton_during_endgame != b.newton_during_endgame)  // guard: only if genuinely distinct doubles
         BOOST_CHECK(!(ConfigDigest(a) == ConfigDigest(b)));
 
     // and the encoding is the bit pattern, not a formatted number
@@ -215,6 +215,7 @@ BOOST_AUTO_TEST_CASE(encoding_version_is_bumped_when_the_encoding_changes)
     { tracking::FixedPrecisionConfig c; all << CanonicalEncoding(c) << '\n'; }
     { tracking::AdaptiveMultiplePrecisionConfig c; c.linear_solve_error_bound = 4.0; c.jacobian_eval_error_bound = 20000.0; c.function_eval_error_bound = 5000.0; all << CanonicalEncoding(c) << '\n'; }
     all << CanonicalEncoding(tracking::Predictor::RKF45) << '\n';
+    { tracking::TrackerConfig c; all << CanonicalEncoding(c) << '\n'; }
     { endgame::SecurityConfig c; all << CanonicalEncoding(c) << '\n'; }
     { endgame::EndgameConfig c; all << CanonicalEncoding(c) << '\n'; }
     { endgame::PowerSeriesConfig c; all << CanonicalEncoding(c) << '\n'; }

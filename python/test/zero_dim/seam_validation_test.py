@@ -13,6 +13,7 @@ import pytest
 
 import bertini as pb
 from bertini import nag_algorithm as na
+from bertini.endgame import EndgameConfig
 from bertini.nag_algorithm import TolerancesConfig
 
 
@@ -152,10 +153,10 @@ def test_get_config_accepts_the_names_config_names_lists():
     for name in zd.config_names():
         cfg = zd.get_config(name)
         assert type(cfg) is type(zd.get_config(type(cfg)))
-    assert zd.get_config('tolerances').final_tolerance == zd.get_config(TolerancesConfig).final_tolerance
+    assert zd.get_config('tolerances').newton_before_endgame == zd.get_config(TolerancesConfig).newton_before_endgame
 
 
-def test_final_tolerance_set_on_the_endgame_survives_solve_and_solver_setting_wins():
+def test_final_tolerance_has_one_owner_and_survives_a_solve():
     _, _, sys = _circle_and_line()
     zd = na.ZeroDimSolver(sys, mptype='double')
     eg = zd.get_endgame()
@@ -163,8 +164,9 @@ def test_final_tolerance_set_on_the_endgame_survives_solve_and_solver_setting_wi
     cfg.update(final_tolerance='1e-8')
     eg.set_endgame_settings(cfg)
     zd.solve()
-    assert float(zd.get_endgame().get_endgame_settings().final_tolerance) == pytest.approx(1e-8)   # was reverted
+    assert float(zd.get_endgame().get_endgame_settings().final_tolerance) == pytest.approx(1e-8)
 
-    zd.set(final_tolerance='1e-9')                       # the solver-level setting, set later, wins
+    zd.set(final_tolerance='1e-9')                       # the flat setting routes to that same config
     zd.solve()
     assert float(zd.get_endgame().get_endgame_settings().final_tolerance) == pytest.approx(1e-9)
+    assert float(zd.get_config(EndgameConfig).final_tolerance) == pytest.approx(1e-9)

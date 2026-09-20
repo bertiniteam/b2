@@ -86,6 +86,11 @@ std::string CanonicalEncoding(tracking::AdaptiveMultiplePrecisionConfig const& c
 /// \brief Canonical encoding of a predictor choice (as a one-field pseudo-config).
 std::string CanonicalEncoding(tracking::Predictor p);
 
+/// \brief Canonical encoding of the tracker's own settings (predictor and its two thresholds).
+/// \param c The config to encode.
+/// \return The canonical text.
+std::string CanonicalEncoding(tracking::TrackerConfig const& c);
+
 /// \brief Canonical encoding of endgame security (divergence-bailout) settings.
 std::string CanonicalEncoding(endgame::SecurityConfig const& c);
 /// \brief Canonical encoding of common endgame settings.

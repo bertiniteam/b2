@@ -277,7 +277,18 @@ namespace bertini{
         void TrackerVisitor<TrackerT>::visit(PyClass& cl) const
         {
             cl
-            .def("setup", &TrackerT::Setup, (arg("predictor"), arg("tolerance"), arg("truncation"), arg("stepping"),arg("newton")), "Set values for the internal configuration of the tracker.  tolerance and truncation are both real doubles.  predictor is a valid value for predictor choice.  stepping and newton are the config structs from bertini.tracking.")
+            .def("setup",
+                +[](TrackerT& self, tracking::Predictor p, NumErrorT tolerance, NumErrorT truncation,
+                    tracking::SteppingConfig const& stepping, tracking::NewtonConfig const& newton)
+                { self.Setup(p, tolerance, truncation, stepping, newton); },
+                (arg("self"), arg("predictor"), arg("tolerance"), arg("truncation"), arg("stepping"), arg("newton")),
+                "Set values for the internal configuration of the tracker.  tolerance and truncation are both real doubles.  predictor is a valid value for predictor choice.  stepping and newton are the config structs from bertini.tracking.  Every one of these is also a plain setting -- see get_config/set_config and TrackerConfig -- so this is a convenience for setting several at once, not the only way in.")
+            .def("setup",
+                +[](TrackerT& self, tracking::Predictor p, NumErrorT tolerance,
+                    tracking::SteppingConfig const& stepping, tracking::NewtonConfig const& newton)
+                { self.Setup(p, tolerance, stepping, newton); },
+                (arg("self"), arg("predictor"), arg("tolerance"), arg("stepping"), arg("newton")),
+                "As the five-argument form, but leaves the truncation threshold as it is.")
 
             .def("track_path", &track_path_wrap,
                  (arg("self"),arg("result"), "start_time", "end_time", "start_point"),

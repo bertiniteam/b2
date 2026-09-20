@@ -312,7 +312,7 @@ namespace bertini{
                             delta_t,
                             this->num_steps_since_last_condition_number_computation_,
                             Get<Stepping>().frequency_of_CN_estimation,
-                            this->tracking_tolerance_);
+                            this->TrackingTolerance());
             }
 
 
@@ -337,7 +337,7 @@ namespace bertini{
                                                 this->tracked_system_,
                                                 current_space,
                                                 current_time,
-                                                this->tracking_tolerance_,
+                                                this->TrackingTolerance(),
                                                 Get<Newton>().min_num_newton_iterations,
                                                 Get<Newton>().max_num_newton_iterations);
             }
@@ -364,7 +364,7 @@ namespace bertini{
                                this->tracked_system_,
                                start_point,
                                current_time,
-                               this->tracking_tolerance_,
+                               this->TrackingTolerance(),
                                Get<Newton>().min_num_newton_iterations,
                                Get<Newton>().max_num_newton_iterations);
             }

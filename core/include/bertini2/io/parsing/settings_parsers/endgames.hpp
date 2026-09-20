@@ -161,6 +161,7 @@ namespace bertini {
                     std::string samplefactor_name = "samplefactor";
                     std::string numpoints_name = "numsamplepoints";
                     std::string mintrack_name = "nbhdradius";
+                    std::string final_tol_name = "finaltol";
 
 
                     root_rule_.name("config::Endgame");
@@ -176,13 +177,18 @@ namespace bertini {
                                    ^ num_sample_[phx::bind( [](bertini::endgame::EndgameConfig & S, unsigned num)
                                                               {
                                                                   S.num_sample_points = num;
-                                                              }, _val, _1 )])
+                                                              }, _val, _1 )]
+                                   ^ final_tol_[phx::bind( [](bertini::endgame::EndgameConfig & S, T num)
+                                                          {
+                                                              S.final_tolerance = num;
+                                                          }, _val, _1 )])
 
                                   >> -no_setting_)
                     | no_setting_;
 
 
-                    all_names_ = (no_case[samplefactor_name] >> ':') | (no_case[numpoints_name] >> ':')| (no_case[mintrack_name] >> ':');
+                    all_names_ = (no_case[samplefactor_name] >> ':') | (no_case[numpoints_name] >> ':')| (no_case[mintrack_name] >> ':')
+                    | (no_case[final_tol_name] >> ':');
 
                     sample_factor_.name("sample_factor_");
                     sample_factor_ = *(char_ - all_names_) >> (no_case[samplefactor_name] >> ':')
@@ -201,6 +207,13 @@ namespace bertini {
                     num_sample_.name("num_sample_");
                     num_sample_ = *(char_ - all_names_) >> (no_case[numpoints_name] >> ':')
                     >> qi::uint_[_val=_1] >> ';';
+
+                    final_tol_.name("final_tol_");
+                    final_tol_ = *(char_ - all_names_) >> (no_case[final_tol_name] >> ':')
+                    >> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
+                                                           {
+                                                               num = bertini::NumTraits<T>::FromString(str);
+                                                           }, _val, _1 )] >> ';';
 
                     no_setting_.name("no_setting_");
                     no_setting_ = *(char_ - all_names_);
@@ -225,7 +238,7 @@ namespace bertini {
             private:
                 qi::rule<Iterator, bertini::endgame::EndgameConfig(), ascii::space_type > root_rule_;
                 qi::rule<Iterator, R(), ascii::space_type > sample_factor_;
-                qi::rule<Iterator, T(), ascii::space_type > min_track_;
+                qi::rule<Iterator, T(), ascii::space_type > min_track_, final_tol_;
                 qi::rule<Iterator, unsigned int(), ascii::space_type > num_sample_;
                 qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
                 rules::LongNum<Iterator> mpfr_rules;

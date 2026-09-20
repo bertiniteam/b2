@@ -59,7 +59,7 @@ def test_every_config_class_is_found():
     # the ones that existed when the page was written; the point of generating is that NEW
     # ones appear without anybody editing a list, so this is a floor and not an inventory
     expected = {
-        'AMPConfig', 'FixedPrecisionConfig', 'NewtonConfig', 'SteppingConfig',
+        'AMPConfig', 'FixedPrecisionConfig', 'NewtonConfig', 'SteppingConfig', 'TrackerConfig',
         'CauchyConfig', 'EndgameConfig', 'PowerSeriesConfig', 'SecurityConfig',
         'AutoRetrackConfig', 'MidPathConfig', 'PostProcessingConfig', 'RecordsConfig',
         'RegenerationConfig', 'SharpeningConfig', 'TolerancesConfig', 'ZeroDimConfig',
@@ -96,6 +96,8 @@ def test_the_settings_surface_and_the_page_agree():
     ('SecurityConfig', 'level', '``0``'),
     ('RecordsConfig', 'recall', '``RecallPolicy.Completed``'),    # an enum, printed as one writes it
     ('RegenerationConfig', 'slice_final_tolerance', '``1e-11``'),
+    ('TrackerConfig', 'predictor', '``Predictor.RKF45``'),
+    ('TrackerConfig', 'path_truncation_threshold', '``100000.0``'),
 ])
 def test_spot_defaults(config_name, field, expected):
     rows = {(c, f): d for c, f, d, _ in _all_rows()}

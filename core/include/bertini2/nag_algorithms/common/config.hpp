@@ -72,9 +72,6 @@ struct TolerancesConfig
     T newton_before_endgame = T(1)/T(100000); ///< Newton tolerance before the endgame (E.4.1).
     T newton_during_endgame = T(1)/T(1000000); ///< Newton tolerance during the endgame (E.4.2).
 
-    T final_tolerance = T(1)/T(100000000000); ///< Final tracking tolerance (E.5.1).
-
-    T path_truncation_threshold = T(100000); ///< Path-truncation threshold; the tracker dies if a coordinate exceeds it (E.4.13).
 };
 
 
@@ -145,7 +142,7 @@ struct PostProcessingConfig{
 
     T real_threshold = T(1)/T(100000000); ///< Bertini 1's `ImagThreshold`.  Threshold on the imaginary part of a (dehomogenized) solution coordinate being 0: a point is real if the infinity norm of the imaginary parts is below this.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.  B1 default 1e-8.
 
-    T endpoint_finite_threshold = T(100000);  ///< Bertini 1's `EndpointFiniteThreshold`.  An endpoint is considered to be at infinity if the infinity norm of its *dehomogenized* coordinates is larger than this value.  This uses the same dehomogenize-then-infinity-norm computation the endgame uses for its `Security::max_norm` divergence check (a separate, smaller threshold for bailing out *during* the endgame).  There is also `path_truncation_threshold` in Tolerances, which tells the path tracker to die if exceeded.  B1 default 1e5.
+    T endpoint_finite_threshold = T(100000);  ///< Bertini 1's `EndpointFiniteThreshold`.  An endpoint is considered to be at infinity if the infinity norm of its *dehomogenized* coordinates is larger than this value.  This uses the same dehomogenize-then-infinity-norm computation the endgame uses for its `Security::max_norm` divergence check (a separate, smaller threshold for bailing out *during* the endgame).  There is also `path_truncation_threshold` on the tracker, which tells it to abandon a path if exceeded.  B1 default 1e5.
 
     T same_point_tolerance_multiplier {T(10)}; ///< Bertini 1's `EndpointSameThreshold`.  A multiplier (>= 1) on `final_tolerance`: two endpoints are considered the same point if the infinity norm of the difference of their *dehomogenized* coordinates is below `final_tolerance * same_point_tolerance_multiplier`.  Keeping it a multiplier (rather than an absolute tolerance) means the same-point test always stays a fixed factor looser than the accuracy you tracked to, even if `final_tolerance` is changed.  B1 default 10.
 

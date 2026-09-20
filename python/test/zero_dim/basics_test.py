@@ -2,6 +2,7 @@ import pytest
 
 import bertini as pb
 from bertini import ZeroDimSolver
+from bertini.endgame import EndgameConfig
 from bertini.nag_algorithm import TolerancesConfig
 
 
@@ -87,7 +88,7 @@ def test_settings_accepted_in_constructor(circle_intersection_solver):
     sys.add_function(x ** 2 + y ** 2 - 1)
     sys.add_function(x + y)
     solver = ZeroDimSolver(sys, final_tolerance=1e-13)     # one-line make+set
-    assert float(solver.get_config(TolerancesConfig).final_tolerance) == 1e-13
+    assert float(solver.get_config(EndgameConfig).final_tolerance) == 1e-13
     solver.solve()
     assert len(solver.all_solutions()) == 2                # still solves correctly
 
@@ -95,7 +96,7 @@ def test_settings_accepted_in_constructor(circle_intersection_solver):
 def test_settings_accepted_in_solve(circle_intersection_solver):
     solver = circle_intersection_solver
     result = solver.solve(final_tolerance=1e-12)           # set-then-solve in one call
-    assert float(solver.get_config(TolerancesConfig).final_tolerance) == 1e-12
+    assert float(solver.get_config(EndgameConfig).final_tolerance) == 1e-12
     from bertini.records import SolveResult
     assert isinstance(result, SolveResult)
 
@@ -112,12 +113,12 @@ def test_settings_dict_accepted_in_constructor_and_solve(circle_intersection_sol
 
     # settings= dict in the constructor
     solver = ZeroDimSolver(sq(), settings={'final_tolerance': 1e-13})
-    assert float(solver.get_config(TolerancesConfig).final_tolerance) == 1e-13
+    assert float(solver.get_config(EndgameConfig).final_tolerance) == 1e-13
 
     # settings= dict in solve(), merged with keyword form
     s2 = ZeroDimSolver(sq())
     s2.solve(settings={'final_tolerance': 1e-12}, newton_before_endgame=1e-4)
-    assert float(s2.get_config(TolerancesConfig).final_tolerance) == 1e-12
+    assert float(s2.get_config(EndgameConfig).final_tolerance) == 1e-12
 
 
 def test_bad_setting_name_is_a_clear_error(circle_intersection_solver):

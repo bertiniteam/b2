@@ -122,6 +122,30 @@ namespace tracking{
     };
 
 
+    /**
+    \brief The thresholds a tracker judges a path against: close enough, and too big.
+
+    The tracker's own, because the tracker is what acts on them -- it accepts a step or abandons
+    a path mid-flight, and no later stage can undo either.  Held in a config, like everything
+    else a tracker is configured by, so they are set and read the one way and appear in the
+    configuration reference (b2#457).
+
+    `path_truncation_threshold` is distinct from the two later questions of the same shape,
+    deliberately, as in Bertini 1: the endgame's `Security::max_norm` bails out during the
+    endgame, and the solver's `endpoint_finite_threshold` classifies a finished endpoint.
+
+    A solver drives `tracking_tolerance` per phase -- loose to the endgame boundary, tight
+    through the endgame -- so expect it to change under you mid-solve.  That is the algorithm
+    doing its job, not a setting being ignored.
+    */
+    struct TrackerConfig
+    {
+        Predictor predictor = Predictor::RKF45; ///< The ODE method used to predict the next point along the path.  RKF45 -- order 4 with an embedded error estimate -- is the default; a lower-order choice is how a path crossing is usually provoked.
+        NumErrorT tracking_tolerance = NumErrorT(1e-5); ///< How tightly Newton must correct onto the path for a step to be accepted.
+        NumErrorT path_truncation_threshold = NumErrorT(1e5); ///< The tracker abandons a path once the largest coordinate of its dehomogenized point exceeds this.  Bertini 1's `PathTruncationThreshold`; B1 default 1e5.
+    };
+
+
 
 
 
@@ -382,6 +406,7 @@ namespace tracking{
         using NeededConfigs = detail::TypeList<
             SteppingConfig,
             NewtonConfig,
+            TrackerConfig,
             PrecisionConfig
             >;
     };
@@ -406,6 +431,7 @@ namespace tracking{
         using NeededConfigs = detail::TypeList<
             SteppingConfig,
             NewtonConfig,
+            TrackerConfig,
             PrecisionConfig
             >;
     };
@@ -431,6 +457,7 @@ namespace tracking{
         using NeededConfigs = detail::TypeList<
             SteppingConfig,
             NewtonConfig,
+            TrackerConfig,
             PrecisionConfig
             >;
     };

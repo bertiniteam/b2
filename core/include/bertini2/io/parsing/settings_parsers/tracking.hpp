@@ -209,6 +209,99 @@ namespace bertini {
             }; //re: PredictorTypeParser
 
 
+            /**
+            \brief The tracker's own settings, from a classic input file.
+
+            `odepredictor` and `pathtruncationthreshold`.  They are one config because they are one
+            thing a tracker is configured by; before, the predictor arrived as a bare enum and the
+            threshold came from the solver's tolerances (b2#457).
+            */
+            template<typename Iterator, typename Skipper>
+            struct ConfigSettingParser<Iterator, TrackerConfig, Skipper> : qi::grammar<Iterator, TrackerConfig(), Skipper>
+            {
+                using T = NumErrorT;  ///< The numeric type the thresholds are read at.
+
+                ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::Tracker")
+                {
+                    namespace phx = boost::phoenix;
+                    using qi::_1;
+                    using qi::_2;
+                    using qi::_3;
+                    using qi::_4;
+                    using qi::_val;
+                    using qi::eps;
+                    using qi::lit;
+                    using qi::char_;
+                    using qi::omit;
+                    using boost::spirit::lexeme;
+                    using boost::spirit::as_string;
+                    using boost::spirit::ascii::no_case;
+
+                    predictor_.add("-1", Predictor::Constant);
+                    predictor_.add("0", Predictor::Euler);
+                    predictor_.add("1", Predictor::Heun);
+                    predictor_.add("2", Predictor::RK4);
+                    predictor_.add("3", Predictor::Heun);
+                    predictor_.add("4", Predictor::RKNorsett34);
+                    predictor_.add("5", Predictor::RKF45);
+                    predictor_.add("6", Predictor::RKCashKarp45);
+                    predictor_.add("7", Predictor::RKDormandPrince56);
+                    predictor_.add("8", Predictor::RKVerner67);
+
+                    std::string predictor_name = "odepredictor";
+                    std::string path_trunc_name = "pathtruncationthreshold";
+
+                    root_rule_.name("config::Tracker");
+
+                    root_rule_ = ((predictor_choice_[phx::bind( [](TrackerConfig & S, Predictor p)
+                                                               {
+                                                                   S.predictor = p;
+                                                               }, _val, _1 )]
+                                   ^ path_trunc_threshold_[phx::bind( [](TrackerConfig & S, T num)
+                                                                     {
+                                                                         S.path_truncation_threshold = num;
+                                                                     }, _val, _1 )])
+
+                                  >> -no_setting_)
+                    | no_setting_;
+
+                    all_names_ = (no_case[predictor_name] >> ':') | (no_case[path_trunc_name] >> ':');
+
+                    predictor_choice_.name("predictor_choice_");
+                    predictor_choice_ = *(char_ - all_names_) >> (no_case[predictor_name] >> ':')
+                    >> predictor_[_val = _1] >> ';';
+
+                    path_trunc_threshold_.name("path_trunc_threshold_");
+                    path_trunc_threshold_ = *(char_ - all_names_) >> (no_case[path_trunc_name] >> ':')
+                    >> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
+                                                           {
+                                                               num = bertini::NumTraits<T>::FromString(str);
+                                                           }, _val, _1 )] >> ';';
+
+                    no_setting_.name("no_setting_");
+                    no_setting_ = *(char_ - all_names_);
+
+                    no_decl_.name("no_decl_");
+                    no_decl_ = *(char_);
+
+                    qi::on_error<qi::fail>(
+                        root_rule_,
+                        phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("config::Tracker"))
+                    );
+                }
+
+            private:
+                qi::rule<Iterator, TrackerConfig(), ascii::space_type > root_rule_;
+                qi::rule<Iterator, Predictor(), ascii::space_type > predictor_choice_;
+                qi::rule<Iterator, T(), ascii::space_type > path_trunc_threshold_;
+                qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
+                rules::LongNum<Iterator> mpfr_rules;
+
+                qi::symbols<char,Predictor> predictor_;
+
+            }; //re: TrackerConfig parser
+
+
 
 
 

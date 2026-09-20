@@ -188,6 +188,17 @@ std::string CanonicalEncoding(tracking::Predictor p)
     return "(cfg Predictor choice=" + CanonicalName(p) + ")";
 }
 
+std::string CanonicalEncoding(tracking::TrackerConfig const& c)
+{
+    std::ostringstream out;
+    out << "(cfg Tracker"
+        << " predictor=" << CanonicalName(c.predictor)
+        << " tracking_tolerance=" << ExactDouble(c.tracking_tolerance)
+        << " path_truncation_threshold=" << ExactDouble(c.path_truncation_threshold)
+        << ")";
+    return out.str();
+}
+
 
 std::string CanonicalEncoding(endgame::SecurityConfig const& c)
 {
@@ -261,8 +272,6 @@ std::string CanonicalEncoding(algorithm::TolerancesConfig const& c)
     out << "(cfg Tolerances"
         << " newton_before_endgame=" << ExactDouble(c.newton_before_endgame)
         << " newton_during_endgame=" << ExactDouble(c.newton_during_endgame)
-        << " final_tolerance=" << ExactDouble(c.final_tolerance)
-        << " path_truncation_threshold=" << ExactDouble(c.path_truncation_threshold)
         << ")";
     return out.str();
 }
