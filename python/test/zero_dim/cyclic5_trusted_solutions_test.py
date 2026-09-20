@@ -16,7 +16,7 @@ import numpy as np
 import pytest
 
 import bertini as pb
-from bertini.nag_algorithm import TolerancesConfig
+from bertini.endgame import EndgameConfig
 
 
 N = 5
@@ -54,7 +54,7 @@ def load_trusted():
 def solve_finite():
     pb.random.set_random_seed(1)   # deterministic homotopy for a stable test
     solver = pb.ZeroDimSolver(cyclic_system(N), endgame='cauchy', mptype='adaptive', startsystem='binomial')
-    final_tol = float(solver.get_config(TolerancesConfig).final_tolerance)
+    final_tol = float(solver.get_config(EndgameConfig).final_tolerance)
     solver.solve()
     ours = np.array([[complex(c) for c in s] for s in solver.finite_solutions()])
     return ours, FINAL_TOL_MATCH_FACTOR * final_tol

@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 import bertini
 from bertini import AMPTracker
-from bertini.nag_algorithm import TolerancesConfig, ZeroDimConfig
+from bertini.nag_algorithm import ZeroDimConfig
 from bertini.tracking import SteppingConfig
 from bertini.endgame import EndgameConfig
 
@@ -27,10 +27,10 @@ def build_system():
 def set_fields_by_name(system):
     """Route fields by name onto whichever config owns them."""
     solver = bertini.ZeroDimSolver(system)
-    solver.update(final_tolerance="1e-11",                 # -> TolerancesConfig
+    solver.update(final_tolerance="1e-11",                 # -> EndgameConfig
                   max_num_crossed_path_resolve_attempts=3) # -> ZeroDimConfig
 
-    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-11
+    assert solver.get_config(EndgameConfig).final_tolerance == 1e-11
     assert solver.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 3
 
     # Settings the solver keeps in its tracker and its endgame are reached by the same call.
@@ -58,13 +58,13 @@ def carry_a_whole_bundle(system):
     # ... later, for each related solve ...
     next_solver = bertini.ZeroDimSolver(system)
     next_solver.set_settings(settings)
-    assert next_solver.get_config(TolerancesConfig).final_tolerance == 1e-11
+    assert next_solver.get_config(EndgameConfig).final_tolerance == 1e-11
 
     # The bundle is an ordinary picklable value -- store it or ship it to a worker.
     carried = pickle.loads(pickle.dumps(settings))
     worker_solver = bertini.ZeroDimSolver(system)
     worker_solver.set_settings(carried)
-    assert worker_solver.get_config(TolerancesConfig).final_tolerance == 1e-11
+    assert worker_solver.get_config(EndgameConfig).final_tolerance == 1e-11
 
     return settings
 
@@ -78,7 +78,7 @@ def settings_are_precision_agnostic(system, settings):
     for mptype in ('multiple', 'adaptive'):
         solver = bertini.ZeroDimSolver(system, mptype=mptype)
         solver.set_settings(bundle)                       # drops on cleanly, any precision model
-        assert solver.get_config(TolerancesConfig).final_tolerance == 1e-10
+        assert solver.get_config(EndgameConfig).final_tolerance == 1e-10
 
     # By default set_settings() applies only the configs the target has and skips the rest.
     tracker = AMPTracker(system)

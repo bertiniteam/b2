@@ -395,4 +395,132 @@ BOOST_AUTO_TEST_CASE(the_tracker_does_not_truncate_a_path_on_an_auxiliary_coordi
 }
 
 
+// b2#457.  The predictor, the tracking tolerance and the path truncation threshold are a config,
+// and `Configured::Set` is a dumb store -- it overwrites the struct and tells nobody.  So the
+// tracker must rederive what it used to cache in the setters (the predictor object, the digit
+// count the tolerance implies) rather than trusting a setter to have been called.
+//
+// These cases DISCRIMINATE: each one sets a value only through the config, by a route no setter
+// sees, and asserts the tracker behaves as if it had been set the other way.
+BOOST_AUTO_TEST_CASE(a_predictor_set_through_the_config_is_the_one_tracked_with)
+{
+    DefaultPrecision(30);
+    using namespace bertini::tracking;
+
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+
+    System sys;
+    VariableGroup v{y};
+    sys.AddFunction(y*y - t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
+
+    complex_dbl const t_start(1), t_end(0.1);
+    Vec<complex_dbl> start_point(1);
+    start_point << complex_dbl(1);
+
+    auto track_with = [&](Predictor p, bool through_the_config)
+    {
+        DoublePrecisionTracker tracker(sys);
+        SteppingConfig stepping_preferences;
+        NewtonConfig newton_preferences;
+        tracker.Setup(through_the_config ? Predictor::RKF45 : p,
+                      double(1e-5), double(1e5),
+                      stepping_preferences, newton_preferences);
+
+        if (through_the_config)
+        {
+            auto cfg = tracker.Get<TrackerConfig>();
+            cfg.predictor = p;
+            tracker.Set(cfg);                       // no setter runs; nothing is told
+        }
+
+        Vec<complex_dbl> end_point;
+        auto code = tracker.TrackPath(end_point, t_start, t_end, start_point);
+        BOOST_REQUIRE(code == bertini::SuccessCode::Success);
+        return std::make_pair(tracker.NumTotalStepsTaken(), end_point(0));
+    };
+
+    auto const by_setter = track_with(Predictor::Euler, false);
+    auto const by_config = track_with(Predictor::Euler, true);
+    auto const rkf45     = track_with(Predictor::RKF45, false);
+
+    // same predictor, two routes in: identical work, identical endpoint
+    BOOST_CHECK_EQUAL(by_config.first, by_setter.first);
+    BOOST_CHECK_SMALL(abs(by_config.second - by_setter.second), 1e-14);
+    // and the assertion means something: the predictor it was set up with does other work
+    BOOST_CHECK_NE(by_config.first, rkf45.first);
+}
+
+
+BOOST_AUTO_TEST_CASE(a_tolerance_set_through_the_config_is_the_one_tracked_to)
+{
+    DefaultPrecision(30);
+    using namespace bertini::tracking;
+
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+
+    System sys;
+    VariableGroup v{y};
+    sys.AddFunction(y*y - t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
+
+    DoublePrecisionTracker tracker(sys);
+    SteppingConfig stepping_preferences;
+    NewtonConfig newton_preferences;
+    tracker.Setup(Predictor::Euler, double(1e-5), double(1e5),
+                  stepping_preferences, newton_preferences);
+
+    auto const digits_at_1e5 = tracker.DigitsTrackingTolerance();
+
+    auto cfg = tracker.Get<TrackerConfig>();
+    cfg.tracking_tolerance = 1e-10;
+    tracker.Set(cfg);
+
+    BOOST_CHECK_EQUAL(tracker.TrackingTolerance(), 1e-10);
+    BOOST_CHECK_GT(tracker.DigitsTrackingTolerance(), digits_at_1e5);   // the derived count followed
+    BOOST_CHECK_EQUAL(tracker.DigitsTrackingTolerance(),
+                      bertini::NumTraits<double>::TolToDigits(double(1e-10)));
+}
+
+
+BOOST_AUTO_TEST_CASE(a_truncation_threshold_set_through_the_config_truncates)
+{
+    DefaultPrecision(30);
+    using namespace bertini::tracking;
+
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+
+    // y = 1/t on the affine patch: the path runs to infinity as t goes to 0
+    System sys;
+    VariableGroup v{y};
+    sys.AddFunction(y*t - 1);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(v);
+
+    complex_dbl const t_start(1), t_end(1e-8);
+    Vec<complex_dbl> start_point(1);
+    start_point << complex_dbl(1);
+
+    DoublePrecisionTracker tracker(sys);
+    SteppingConfig stepping_preferences;
+    NewtonConfig newton_preferences;
+    tracker.Setup(Predictor::RKF45, double(1e-5), double(1e5),
+                  stepping_preferences, newton_preferences);
+
+    auto cfg = tracker.Get<TrackerConfig>();
+    cfg.path_truncation_threshold = 1e2;              // far below where this path ends up
+    tracker.Set(cfg);
+    BOOST_CHECK_EQUAL(tracker.InfiniteTruncationTolerance(), 1e2);
+
+    Vec<complex_dbl> end_point;
+    auto code = tracker.TrackPath(end_point, t_start, t_end, start_point);
+    BOOST_CHECK(code == bertini::SuccessCode::GoingToInfinity);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

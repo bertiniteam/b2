@@ -57,6 +57,24 @@ namespace bertini{
                 .def_readwrite("min_num_newton_iterations", &NewtonConfig::min_num_newton_iterations)
                 ;
 
+            class_<TrackerConfig, std::shared_ptr<TrackerConfig> >("TrackerConfig",
+                "The tracker's own settings: which predictor it takes steps with, how tightly it "
+                "corrects onto the path, and how big a point has to get before it gives up.",
+                init<>())
+                .def_readwrite("predictor", &TrackerConfig::predictor,
+                    "The ODE method used to predict the next point along the path.  RKF45 -- order 4 "
+                    "with an embedded error estimate -- is the default; a lower-order choice is how a "
+                    "path crossing is usually provoked.")
+                .def_readwrite("tracking_tolerance", &TrackerConfig::tracking_tolerance,
+                    "How tightly Newton must correct onto the path for a step to be accepted.  A solver "
+                    "drives this per phase -- loose to the endgame boundary, tight through the endgame -- "
+                    "so expect it to change under you during a solve.")
+                .def_readwrite("path_truncation_threshold", &TrackerConfig::path_truncation_threshold,
+                    "The tracker abandons a path once the largest coordinate of its dehomogenized point "
+                    "exceeds this.  Distinct from the endgame's Security.max_norm and from "
+                    "PostProcessingConfig.endpoint_finite_threshold, which ask the same question later.")
+                ;
+
             class_<FixedPrecisionConfig, std::shared_ptr<FixedPrecisionConfig> >("FixedPrecisionConfig", init<>())
                 .def(init<System const&>())
                 .def_readwrite("precision", &FixedPrecisionConfig::precision,

@@ -518,7 +518,7 @@ namespace bertini{
                 assert(
                         (!preserve_precision_
                          ||
-                         -log10(tracking_tolerance_) <= initial_precision_)
+                         -log10(this->TrackingTolerance()) <= initial_precision_)
                          && "when tracking a path, either preservation of precision must be turned off (so precision can be higher at the end of tracking), or the initial precision must be high enough to support the resulting points to the desired tolerance"
                          );
                 #endif
@@ -890,7 +890,7 @@ namespace bertini{
                 ApplyPrecisionDecreaseMargin(digits_C, curr_digits, extra);
                 ApplyPrecisionDecreaseMargin(digits_stepsize, curr_digits, extra);
 
-                int min_digits = std::max({ static_cast<int>(digits_tracking_tolerance_),
+                int min_digits = std::max({ static_cast<int>(this->DigitsTrackingTolerance()),
                                             static_cast<int>(digits_final_),
                                             digits_B, digits_C, digits_stepsize,
                                             static_cast<int>(DoublePrecision()) });
@@ -1062,7 +1062,7 @@ namespace bertini{
                 return max(amp::CriterionBRHS(this->last_step_.norm_J,
                                               this->last_step_.norm_J_inverse,
                                               Get<NewtonConfig>().max_num_newton_iterations,
-                                              tracking_tolerance_,
+                                              this->TrackingTolerance(),
                                               this->last_step_.norm_delta_z,
                                               Get<PrecConf>()), NumErrorT(0));
             }
@@ -1104,7 +1104,7 @@ namespace bertini{
             {
                 return max(amp::CriterionCRHS(this->last_step_.norm_J_inverse,
                                               NumErrorT(std::get<Vec<ComplexT> > (current_space_).norm()),
-                                              tracking_tolerance_,
+                                              this->TrackingTolerance(),
                                               Get<PrecConf>()), NumErrorT(0));
             }
 
@@ -1222,7 +1222,7 @@ namespace bertini{
                                 delta_t,
                                 num_steps_since_last_condition_number_computation_,
                                 Get<Stepping>().frequency_of_CN_estimation,
-                                tracking_tolerance_,
+                                this->TrackingTolerance(),
                                 &Get<PrecConf>());
             }
 
@@ -1259,7 +1259,7 @@ namespace bertini{
                                     tracked_system_,
                                     current_space,
                                     current_time,
-                                    tracking_tolerance_,
+                                    this->TrackingTolerance(),
                                     Get<NewtonConfig>().min_num_newton_iterations,
                                     Get<NewtonConfig>().max_num_newton_iterations,
                                     &Get<PrecConf>());
@@ -1331,7 +1331,7 @@ namespace bertini{
                                            tracked_system_,
                                            start_point,
                                            current_time,
-                                           tracking_tolerance_,
+                                           this->TrackingTolerance(),
                                            Get<NewtonConfig>().min_num_newton_iterations,
                                            Get<NewtonConfig>().max_num_newton_iterations,
                                            &Get<PrecConf>());

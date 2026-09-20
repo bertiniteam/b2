@@ -13,8 +13,7 @@ reaches the solver's own settings, its tracker's, and its endgame's alike::
 
     solver.update(final_tolerance="1e-11", max_step_size="0.05", num_sample_points=6)
 
-Name the config, when you want to set several of its fields at once, or when a field name belongs
-to two configs::
+Name the config, when you want to set several of its fields at once::
 
     solver.configure(stepping={'max_step_size': "0.05"},
                      endgame={'final_tolerance': "1e-8"})
@@ -53,17 +52,6 @@ settings there are, and this is the only place they are collected.
    * - Setting
      - Default
      - What it does
-   * - ``tracker.tracking_tolerance(tol)``
-     - ``1e-05``
-     - How closely Newton's method must hold a path to the curve at each step. The single biggest
-       lever on whether paths stay on their own branch.
-   * - ``tracker.predictor(kind)``
-     - ``Predictor.RKF45``
-     - Which predictor takes the step before Newton corrects it. Order and cost both rise
-       together; a low-order predictor with a loose tolerance is how path crossings happen.
-   * - ``tracker.infinite_truncation_tolerance(tol)``
-     - ``1e+05``
-     - The norm beyond which a path is judged to be running to infinity and is truncated.
    * - ``tracker.infinite_truncation(bool)``
      - ``True``
      - Whether to truncate such paths at all.

@@ -73,17 +73,17 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
     tr.AddObserver(logger);
 
 
-    // Tolerances.final_tolerance is the single source of truth; the solver flows it into the
-    // endgame in PreSolveSetup (no need to poke the EndgameConfig directly any more).
-    tols.final_tolerance = 1e-12;
     zd.Set(tols);
+
+    // the endgame owns final_tolerance -- it is what achieves it -- and there is one copy
+    auto eg = zd.GetFromEndgame<endgame::EndgameConfig>();
+    eg.final_tolerance = 1e-12;
+    zd.SetToEndgame(eg);
 
     zd.Solve();
 
-    // The solver's Tolerances.final_tolerance is canonical: PreSolveSetup must have flowed it into
-    // the endgame (before this fix, the endgame ignored it and kept its own EndgameConfig default).
     BOOST_CHECK_EQUAL(zd.GetFromEndgame<endgame::EndgameConfig>().final_tolerance,
-                      zd.Get<Tolerances>().final_tolerance);
+                      zd.DefaultPointMatchTolerance());
 
     bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
 }
@@ -759,9 +759,9 @@ BOOST_AUTO_TEST_CASE(merge_multiplicities_and_metadata_for_point)
     // representatives, which are at least SamePointTolerance apart, so this tight default still resolves
     // a fed-back solution to itself while making an ambiguous match structurally impossible.
     BOOST_CHECK_EQUAL(zd.DefaultPointMatchTolerance(),
-                      zd.Get<algorithm::TolerancesConfig>().final_tolerance);
+                      zd.GetFromEndgame<endgame::EndgameConfig>().final_tolerance);
     BOOST_CHECK_EQUAL(zd.SamePointTolerance(),
-                      zd.Get<algorithm::TolerancesConfig>().final_tolerance *
+                      zd.GetFromEndgame<endgame::EndgameConfig>().final_tolerance *
                       zd.Get<algorithm::PostProcessingConfig>().same_point_tolerance_multiplier);
 
     // the round-trip: a solution fed straight back resolves to its representative, at the default AND at
@@ -895,9 +895,9 @@ BOOST_AUTO_TEST_CASE(max_precision_used_is_recorded_on_failed_endgames)
                   decltype(sys)>(sys);
     zd.DefaultSetup();
 
-    auto tols = zd.Get<algorithm::TolerancesConfig>();
-    tols.final_tolerance = 1e-60;                 // needs ~60+ digits of working precision...
-    zd.Set(tols);
+    auto eg_settings = zd.GetFromEndgame<endgame::EndgameConfig>();
+    eg_settings.final_tolerance = 1e-60;          // needs ~60+ digits of working precision...
+    zd.SetToEndgame(eg_settings);
 
     auto amp = AMPConfigFrom(zd.TargetSystem());
     amp.maximum_precision = 25;                   // ...which this ceiling forbids
@@ -1590,10 +1590,12 @@ BOOST_AUTO_TEST_CASE(endpoint_singular_values_are_the_spectrum_behind_the_condit
 }
 
 
-// b2#392: the solver's final_tolerance flows into the endgame at setup and whenever the solver's
-// own value changes -- not unconditionally at every solve, which silently reverted a value set
-// directly on the endgame.  Whichever was set last wins.
-BOOST_AUTO_TEST_CASE(final_tolerance_set_on_the_endgame_survives_a_solve)
+// b2#392, then #457: final_tolerance has ONE owner, the endgame -- the thing that achieves it.
+// The solver kept a second copy and reconciled the two with a push whose rule ("whichever was set
+// last wins") was invisible from either config.  Setting it is now just setting it: a solve does
+// not revert it, DefaultSetup does not revert it, and the solver reads the endgame's value where
+// it needs one of its own (the point-match and clustering tolerances).
+BOOST_AUTO_TEST_CASE(final_tolerance_has_one_owner_and_nothing_reverts_it)
 {
     using namespace bertini;
     using TrackerT = tracking::DoublePrecisionTracker;
@@ -1604,18 +1606,49 @@ BOOST_AUTO_TEST_CASE(final_tolerance_set_on_the_endgame_survives_a_solve)
     auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
     zd.DefaultSetup();
 
-    const double solver_default = zd.template Get<algorithm::TolerancesConfig>().final_tolerance;
-    BOOST_CHECK_EQUAL(double(zd.GetEndgame().FinalTolerance()), solver_default);   // setup pushed it
+    // the solver has no copy of its own; where it needs the number, it reads the endgame's
+    BOOST_CHECK_EQUAL(zd.DefaultPointMatchTolerance(), double(zd.GetEndgame().FinalTolerance()));
 
-    zd.GetEndgame().SetFinalTolerance(1e-8);     // set directly on the endgame ...
+    zd.GetEndgame().SetFinalTolerance(1e-8);
     zd.Solve();
-    BOOST_CHECK_CLOSE(double(zd.GetEndgame().FinalTolerance()), 1e-8, 1e-9);   // ... survives the solve
+    BOOST_CHECK_CLOSE(double(zd.GetEndgame().FinalTolerance()), 1e-8, 1e-9);
+    BOOST_CHECK_CLOSE(zd.DefaultPointMatchTolerance(), 1e-8, 1e-9);
 
-    auto tol = zd.template Get<algorithm::TolerancesConfig>();
-    tol.final_tolerance = 1e-9;
-    zd.template Set<algorithm::TolerancesConfig>(tol);   // a later solver-level setting wins
+    // and setting up again does not quietly put the default back, because nothing hands one over
+    zd.DefaultSetup();
+    BOOST_CHECK_CLOSE(double(zd.GetEndgame().FinalTolerance()), 1e-8, 1e-9);
+}
+
+
+// b2#457.  The tracker's own settings are a config, so a solve reaching them is the ordinary
+// config surface rather than a method call on a sub-object.  DefaultSetup used to hand the
+// tracker a hard-coded truncation threshold and predictor along with the phase tolerance it
+// really does own, so a value set on the tracker was silently replaced.
+BOOST_AUTO_TEST_CASE(the_trackers_own_settings_survive_the_solvers_setup)
+{
+    using namespace bertini;
+    using namespace bertini::tracking;
+    using TrackerT = DoublePrecisionTracker;
+    auto x = Variable::Make("x");
+    System sys;
+    sys.AddVariableGroup(VariableGroup{x});
+    sys.AddFunction(x*x - 1);
+    auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+    zd.DefaultSetup();
+
+    auto cfg = zd.GetTracker().Get<TrackerConfig>();
+    cfg.path_truncation_threshold = 1e3;
+    cfg.predictor = Predictor::HeunEuler;
+    zd.GetTracker().Set(cfg);
+
+    zd.DefaultSetup();
+    BOOST_CHECK_EQUAL(zd.GetTracker().InfiniteTruncationTolerance(), 1e3);
+    BOOST_CHECK(zd.GetTracker().GetPredictor() == Predictor::HeunEuler);
+
     zd.Solve();
-    BOOST_CHECK_CLOSE(double(zd.GetEndgame().FinalTolerance()), 1e-9, 1e-9);
+    BOOST_CHECK_EQUAL(zd.GetTracker().InfiniteTruncationTolerance(), 1e3);
+    BOOST_CHECK(zd.GetTracker().GetPredictor() == Predictor::HeunEuler);
+    BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(), 2ul);
 }
 
 /**

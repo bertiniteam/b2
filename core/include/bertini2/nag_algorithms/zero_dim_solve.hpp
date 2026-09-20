@@ -922,29 +922,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 DefaultSystemSetup();
                 DefaultTrackerSetup();
                 DefaultMidpathSetup();
-                PushFinalToleranceToEndgame();
             }
 
 
-            /**
-            \brief Flow the solver's `final_tolerance` into the endgame -- when it has changed.
-
-            The solver's Tolerances.final_tolerance is how tightly a solve converges its endpoints, and
-            the endgame keeps its own EndgameConfig.final_tolerance for standalone use.  The solver's
-            value flows into the endgame at setup and again whenever the solver's own value has changed
-            since the last push -- and NOT unconditionally at every solve, which silently overwrote a
-            value set directly on the endgame and made that setter a no-op (b2#392).  So whichever was
-            set last wins: `solver.set(final_tolerance=...)` re-pushes; a later
-            `endgame.set_endgame_settings(...)` sticks across solves.
-            */
-            void PushFinalToleranceToEndgame()
-            {
-                const NumErrorT ft = this->template Get<Tolerances>().final_tolerance;
-                if (ft == pushed_final_tolerance_)
-                    return;
-                endgame_.SetFinalTolerance(ft);
-                pushed_final_tolerance_ = ft;
-            }
 
 
 
@@ -1042,9 +1022,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             void DefaultTrackerSetup()
             {
                 tracker_.SetSystem(Homotopy());
-                tracker_.Setup(tracking::predict::DefaultPredictor(),
+                // the solver sets what it owns -- the phase tracking tolerance -- and leaves the
+                // tracker's own settings alone, so a predictor or truncation threshold set on the
+                // tracker survives DefaultSetup
+                tracker_.Setup(tracker_.GetPredictor(),
                                 this->template Get<Tolerances>().newton_before_endgame,
-                                this->template Get<Tolerances>().path_truncation_threshold,
                                 tracking::SteppingConfig(), tracking::NewtonConfig());
 
                 tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));
@@ -1419,7 +1401,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             */
             NumErrorT DefaultPointMatchTolerance() const
             {
-                return this->template Get<Tolerances>().final_tolerance;
+                return endgame_.FinalTolerance();
             }
 
             /**
@@ -1433,7 +1415,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             */
             NumErrorT SamePointTolerance() const
             {
-                return this->template Get<Tolerances>().final_tolerance *
+                return endgame_.FinalTolerance() *
                        this->template Get<PostProcessing>().same_point_tolerance_multiplier;
             }
 
@@ -1615,8 +1597,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 solutions_post_endgame_.resize(num_as_size_t);
 
                 SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);
-
-                PushFinalToleranceToEndgame();
 
                 // Default the start-point precision to the initial ambient precision.  A caller can
                 // override it via SetStartPointPrecision (e.g. to carry a higher precision forward
@@ -3092,7 +3072,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             unsigned long long num_start_points_;  ///< Number of start points the start system produces.
             NumErrorT midpath_retrack_tolerance_;  ///< Tolerance used when re-tracking paths flagged by the midpath check.
             MidpathCheckReport midpath_report_; ///< populated by EGBoundaryAction; exposed via EndgameBoundaryMetadata()
-            NumErrorT pushed_final_tolerance_ = std::numeric_limits<NumErrorT>::quiet_NaN(); ///< The solver final_tolerance last flowed into the endgame (NaN: never), so a push happens only on change.
             unsigned start_point_precision_ = DoublePrecision(); ///< precision at which start points are computed; defaults to initial ambient precision (see PreSolveSetup)
             bool start_point_precision_set_by_user_ = false;  ///< Whether the start-point precision was set explicitly by the user.
 
@@ -3474,16 +3453,17 @@ HomotopySolver<TrackerType,EndgameType,SystemType>
         DefaultSystemSetup();
     }
 
-    // 2. Tracker — uses positional Setup() rather than Set<T>, so handle explicitly.
+    // 2. Tracker — the classic file's own tracker settings, then the phase tolerance the solver
+    //    drives.  Setup() still takes stepping and Newton positionally.
     using TkConfs = detail::TypeList<
         tracking::SteppingConfig,
         tracking::NewtonConfig,
-        tracking::Predictor>;
+        tracking::TrackerConfig>;
     auto tk = ConfigParser<TkConfs>::Parse(config_str);
+    tracker_.template Set<tracking::TrackerConfig>(std::get<tracking::TrackerConfig>(tk));
     tracker_.Setup(
-        std::get<tracking::Predictor>(tk),
+        std::get<tracking::TrackerConfig>(tk).predictor,
         this->template Get<Tolerances>().newton_before_endgame,
-        this->template Get<Tolerances>().path_truncation_threshold,
         std::get<tracking::SteppingConfig>(tk),
         std::get<tracking::NewtonConfig>(tk));
     tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));

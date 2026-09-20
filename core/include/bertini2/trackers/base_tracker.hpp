@@ -195,7 +195,6 @@ namespace bertini{
             */
             void Setup(Predictor new_predictor_choice,
                        NumErrorT const& tracking_tolerance,
-                        NumErrorT const& path_truncation_threshold,
                         SteppingConfig const& stepping,
                         NewtonConfig const& newton)
             {
@@ -204,12 +203,36 @@ namespace bertini{
 
                 SetTrackingTolerance(tracking_tolerance);
 
-                path_truncation_threshold_ = path_truncation_threshold;
-
                 this->template Set<SteppingConfig>(stepping);
                 this->template Set<NewtonConfig>(newton);
 
                 current_stepsize_ = BaseRealT(stepping.initial_step_size);
+            }
+
+
+            /**
+            \brief Get the tracker set up for tracking, and set its truncation threshold too.
+
+            The four-argument form leaves the truncation threshold alone, which is what a caller
+            that does not own it should do -- it is the tracker's own setting
+            (tracking::TruncationConfig), reachable by `Set` like any other, and the solver no
+            longer hands one over (b2#457).  This form is the convenience for a caller configuring
+            a bare tracker from scratch.
+
+            \param new_predictor_choice The predictor to use.
+            \param tracking_tolerance How tightly Newton must correct onto the path.
+            \param path_truncation_threshold The size at which a path is abandoned as divergent.
+            \param stepping The stepping settings.
+            \param newton The Newton corrector settings.
+            */
+            void Setup(Predictor new_predictor_choice,
+                       NumErrorT const& tracking_tolerance,
+                        NumErrorT const& path_truncation_threshold,
+                        SteppingConfig const& stepping,
+                        NewtonConfig const& newton)
+            {
+                Setup(new_predictor_choice, tracking_tolerance, stepping, newton);
+                SetInfiniteTruncationTolerance(path_truncation_threshold);
             }
 
 
@@ -230,8 +253,9 @@ namespace bertini{
                 if (tracking_tolerance <= 0)
                     throw std::runtime_error("tracking tolerance must be strictly positive");
 
-                tracking_tolerance_ = tracking_tolerance;
-                digits_tracking_tolerance_ = NumTraits<double>::TolToDigits(tracking_tolerance);
+                auto settings = this->template Get<TrackerConfig>();
+                settings.tracking_tolerance = tracking_tolerance;
+                this->Set(settings);
             }
 
 
@@ -242,7 +266,9 @@ namespace bertini{
                 if (tol <= 0)
                     throw std::runtime_error("truncation threshold must be strictly positive");
 
-                path_truncation_threshold_ = tol;
+                auto settings = this->template Get<TrackerConfig>();
+                settings.path_truncation_threshold = tol;
+                this->Set(settings);
             }
 
 
@@ -283,7 +309,8 @@ namespace bertini{
                 if (start_point.size()!=static_cast<Eigen::Index>(GetSystem().NumVariables()))
                     throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
-
+                // whatever route the settings were set by, they take effect here
+                SyncSettings();
 
                 SuccessCode initialization_code = TrackerLoopInitialization(start_time, endtime, start_point);
                 if (initialization_code!=SuccessCode::Success)
@@ -422,8 +449,10 @@ namespace bertini{
             */
             void SetPredictor(Predictor new_predictor_choice)
             {
-                predictor_.PredictorMethod(new_predictor_choice);
-                predictor_order_ = predictor_.Order();
+                auto settings = this->template Get<TrackerConfig>();
+                settings.predictor = new_predictor_choice;
+                this->Set(settings);
+                SyncSettings();
             }
 
 
@@ -432,7 +461,33 @@ namespace bertini{
             */
             Predictor GetPredictor() const
             {
-                return predictor_.PredictorMethod();
+                return this->template Get<TrackerConfig>().predictor;
+            }
+
+
+            /**
+            \brief Bring state derived from the settings in line with the settings.
+
+            The configs are the truth; anything computed from them is derived state, rebuilt when
+            the two disagree rather than at the moment somebody writes a config.  That ordering is
+            the point: a setting written through the ordinary config surface never passes through
+            a bespoke setter, so state cached at set-time goes stale silently, and the bespoke
+            setters that avoided this are exactly why these settings were not configs in the first
+            place (b2#457).
+
+            Called at the top of every path -- late enough to catch a setting written by any
+            route, and cheap enough not to matter, since each check is a comparison and the
+            rebuild happens only on a real change.  The predictor object is the one piece of
+            derived state left; the digit count the AMP precision rule wants is simply computed
+            where it is used.
+            */
+            void SyncSettings() const
+            {
+                auto const wanted = this->template Get<TrackerConfig>().predictor;
+                if (predictor_.PredictorMethod() == wanted)
+                    return;
+                predictor_.PredictorMethod(wanted);
+                predictor_order_ = predictor_.Order();
             }
 
 
@@ -558,13 +613,21 @@ namespace bertini{
             /// \brief Get the currently set tracking tolerance.
             auto TrackingTolerance() const
             {
-                return tracking_tolerance_;
+                return this->template Get<TrackerConfig>().tracking_tolerance;
+            }
+
+            /// \brief The number of digits tracking to the current tolerance demands, condition
+            /// number notwithstanding.  Derived on demand rather than cached at set time, so it
+            /// cannot go stale behind a setting written through the ordinary config surface.
+            unsigned DigitsTrackingTolerance() const
+            {
+                return NumTraits<double>::TolToDigits(TrackingTolerance());
             }
 
             /// \brief Get the currently set infinite-truncation (path) threshold.
             auto InfiniteTruncationTolerance() const
             {
-                return path_truncation_threshold_;
+                return this->template Get<TrackerConfig>().path_truncation_threshold;
             }
 
         private:
@@ -634,7 +697,7 @@ namespace bertini{
             template <typename ComplexT>
             SuccessCode CheckGoingToInfinity() const
             {
-                if (!GetSystem().IsFinite(std::get<Vec<ComplexT> >(current_space_), path_truncation_threshold_))
+                if (!GetSystem().IsFinite(std::get<Vec<ComplexT> >(current_space_), InfiniteTruncationTolerance()))
                     return SuccessCode::GoingToInfinity;
                 else
                     return SuccessCode::Success;
@@ -746,16 +809,13 @@ namespace bertini{
             // They are mutable for the same reason as the state members above: they
             // hold scratch space mutated during the logically-const TrackPath.
             mutable predict::ExplicitRKPredictor predictor_; ///< The predictor to use while tracking.
-            unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
+            mutable unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.  Derived from the setting by SyncPredictor, not written when the setting is.
 
             mutable correct::NewtonCorrector corrector_;  ///< The Newton corrector used to refine predicted points.
 
 
 
             unsigned digits_final_ = 0; ///< The number of digits to track to, due to being in endgame zone.
-            unsigned digits_tracking_tolerance_ = 5; ///< The number of digits required for tracking to given tolerance, condition number notwithstanding.
-            NumErrorT tracking_tolerance_ = 1e-5; ///< The tracking tolerance.
-            NumErrorT path_truncation_threshold_ = 1e5; ///< The threshold for path truncation.
 
             mutable ComplexT endtime_; ///< The time we are tracking to.
             mutable ComplexT current_time_; ///< The current time.

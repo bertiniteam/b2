@@ -91,9 +91,9 @@ def _solve(m, n, seed, endgame, final_tolerance=None):
     system, rotation = system_rhodonea(m, n)
     solver = ZeroDimSolver(system, mptype='adaptive', endgame=endgame)
     if final_tolerance is not None:
-        tol = solver.get_config(bertini.nag_algorithm.TolerancesConfig)
-        tol.final_tolerance = final_tolerance
-        solver.set_config(tol)
+        eg = solver.get_config(bertini.endgame.EndgameConfig)
+        eg.final_tolerance = final_tolerance
+        solver.set_config(eg)
     cfg = solver.get_config(bertini.nag_algorithm.ZeroDimConfig)
     cfg.num_threads = 1                              # serial -> deterministic path ordering / picture
     solver.set_config(cfg)

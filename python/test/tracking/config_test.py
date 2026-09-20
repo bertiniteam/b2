@@ -97,7 +97,7 @@ def test_update_accepts_string_for_double_tolerance_field():
     # NumErrorT (tolerance) fields are plain doubles -- a high-precision number would have no value
     # there -- but update() still takes the same noise-free string spelling as the exact fields, so
     # the whole config surface is uniform.  (Regression: these used to throw Boost ArgumentError.)
-    assert TolerancesConfig().update(final_tolerance="1e-11").final_tolerance == 1e-11
+    assert TolerancesConfig().update(newton_during_endgame="1e-11").newton_during_endgame == 1e-11
     assert TolerancesConfig().update(newton_before_endgame="1e-7").newton_before_endgame == 1e-7
 
 
@@ -116,7 +116,7 @@ def test_update_accepts_string_for_integer_field():
 def test_update_float_still_works_on_double_fields():
     # the float-rejection policy is only for the exact (mpq/mpfr) fields; a plain double is the
     # natural input for a NumErrorT tolerance and must keep working.
-    assert TolerancesConfig().update(final_tolerance=1e-11).final_tolerance == 1e-11
+    assert TolerancesConfig().update(newton_during_endgame=1e-11).newton_during_endgame == 1e-11
 
 
 def test_zero_dim_config_is_precision_agnostic():
@@ -232,7 +232,7 @@ def test_algorithm_exposes_its_configs(solver):
 
 
 def test_set_and_get_algorithm_config(solver):
-    tol = solver.get_config(TolerancesConfig).update(final_tolerance=1e-11)
+    tol = solver.get_config(TolerancesConfig).update(newton_during_endgame=1e-11)
     solver.set_config(tol)
     assert solver.get_config(TolerancesConfig) == tol
 
@@ -243,8 +243,8 @@ def test_owner_update_routes_fields_by_name(solver):
     # the headline ergonomic: set fields on the owner without naming the config struct -- each field
     # goes to whichever config owns it.
     from bertini.nag_algorithm import ZeroDimConfig
-    solver.update(final_tolerance="1e-11", max_num_crossed_path_resolve_attempts=3)
-    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-11
+    solver.update(newton_during_endgame="1e-11", max_num_crossed_path_resolve_attempts=3)
+    assert solver.get_config(TolerancesConfig).newton_during_endgame == 1e-11
     assert solver.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 3
 
 
@@ -254,8 +254,8 @@ def test_owner_update_is_chainable(solver):
 
 def test_owner_update_accepts_strings(solver):
     # strings work through the router for every numeric field, same as the per-config update().
-    solver.update(final_tolerance="1e-12")
-    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-12
+    solver.update(newton_during_endgame="1e-12")
+    assert solver.get_config(TolerancesConfig).newton_during_endgame == 1e-12
 
 
 def test_tracker_update_routes_to_its_configs(tracker):
@@ -279,17 +279,45 @@ def test_owner_update_reaches_the_tracker_and_endgame(solver):
     assert solver.get_config('stepping').max_step_size == pb.multiprec.real_mp("0.05")
 
 
-def test_the_one_shared_field_name_stays_with_the_solvers_own_config(solver):
-    # final_tolerance is the only field name shared by two config structs (TolerancesConfig and
-    # EndgameConfig).  The solver's own must keep winning, since solver.update(final_tolerance=)
-    # is long-documented; the endgame's stays reachable by naming its config.
+def test_no_field_name_is_shared_by_two_configs(solver):
+    # final_tolerance used to be in two structs at once -- the solver's TolerancesConfig and the
+    # endgame's EndgameConfig -- so the router had to pick one, and a push kept them in step.  The
+    # endgame owns it now, being what achieves it, so there is nothing to disambiguate: the flat
+    # name and the config both reach the same one value.
     from bertini.nag_algorithm import TolerancesConfig
     from bertini.endgame import EndgameConfig
+    assert 'final_tolerance' not in pb.config.writable_fields(TolerancesConfig)
+
     solver.update(final_tolerance="1e-9")
-    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-9
+    assert solver.get_config(EndgameConfig).final_tolerance == 1e-9
     solver.configure(endgame={'final_tolerance': "1e-7"})
     assert solver.get_config(EndgameConfig).final_tolerance == 1e-7
-    assert solver.get_config(TolerancesConfig).final_tolerance == 1e-9
+
+
+def test_the_trackers_own_settings_are_a_config(tracker):
+    # b2#457.  The predictor, the tracking tolerance and the path truncation threshold were bare
+    # members reachable only through their own methods.  They are a config now, so the flat router
+    # and the bespoke accessors are two views of one value.
+    from bertini.tracking import TrackerConfig, Predictor
+    assert 'tracker' in tracker.config_names()
+
+    tracker.update(tracking_tolerance=1e-7, path_truncation_threshold=1e7)
+    assert tracker.get_config(TrackerConfig).tracking_tolerance == 1e-7
+    assert tracker.tracking_tolerance() == 1e-7
+    assert tracker.infinite_truncation_tolerance() == 1e7
+
+    tracker.update(predictor=Predictor.Euler)
+    assert tracker.get_config(TrackerConfig).predictor == Predictor.Euler
+    assert tracker.predictor() == Predictor.Euler
+
+
+def test_the_solver_can_set_the_trackers_own_settings(solver):
+    # b2#457.  path_truncation_threshold had no route through the solver at all -- the only way in
+    # was to fetch the tracker and call its method.
+    from bertini.tracking import TrackerConfig
+    solver.update(path_truncation_threshold=1e3)
+    assert solver.get_config(TrackerConfig).path_truncation_threshold == 1e3
+    assert solver.get_tracker().infinite_truncation_tolerance() == 1e3
 
 
 def test_exact_rational_settings_take_every_exact_spelling(solver):
@@ -390,32 +418,32 @@ def test_get_settings_is_a_named_dict_of_configs():
 
 def test_get_settings_as_dict_is_a_flat_field_dict():
     a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
-    a.update(final_tolerance="1e-12")
+    a.update(newton_during_endgame="1e-12")
     flat = a.get_settings(as_dict=True)
     # flat {field: value}, no struct layer (fields from all the solver-owned configs)
-    assert 'final_tolerance' in flat and 'condition_number_threshold' in flat
+    assert 'newton_during_endgame' in flat and 'condition_number_threshold' in flat
     assert all(not hasattr(v, 'to_dict') for v in flat.values())
-    assert float(flat['final_tolerance']) == 1e-12
+    assert float(flat['newton_during_endgame']) == 1e-12
     # the config-keyed default is unchanged (still what set_settings consumes)
     assert set(a.get_settings()) == set(a.config_names())
 
 
 def test_get_settings_as_dict_round_trips_through_set():
     a = ZeroDimSolver(_square(), mptype='adaptive')
-    a.update(final_tolerance="1e-10")
+    a.update(newton_during_endgame="1e-10")
     b = ZeroDimSolver(_square(), mptype='adaptive')
     b.set(**a.get_settings(as_dict=True))       # flat dict applies straight through set()
-    assert b.get_config(TolerancesConfig).final_tolerance == 1e-10
+    assert b.get_config(TolerancesConfig).newton_during_endgame == 1e-10
 
 
 def test_settings_round_trip_onto_another_solver():
     from bertini.nag_algorithm import ZeroDimConfig
     a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
-    a.update(final_tolerance="1e-12", max_num_crossed_path_resolve_attempts=4)
+    a.update(newton_during_endgame="1e-12", max_num_crossed_path_resolve_attempts=4)
 
     b = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
     b.set_settings(a.get_settings())
-    assert b.get_config(TolerancesConfig).final_tolerance == 1e-12
+    assert b.get_config(TolerancesConfig).newton_during_endgame == 1e-12
     assert b.get_config(ZeroDimConfig).max_num_crossed_path_resolve_attempts == 4
 
 
@@ -424,21 +452,21 @@ def test_settings_carry_across_precision_models():
     # precision solver applies unchanged to a double or adaptive one.  This is the cross-stage carry
     # an NID-style workflow needs.
     src = pb.ZeroDimSolver(_square(), mptype='multiple')
-    src.update(final_tolerance="1e-11")
+    src.update(newton_during_endgame="1e-11")
     for mptype in ('double', 'adaptive'):
         dst = pb.ZeroDimSolver(_square(), mptype=mptype)
         dst.set_settings(src.get_settings())
-        assert dst.get_config(TolerancesConfig).final_tolerance == 1e-11
+        assert dst.get_config(TolerancesConfig).newton_during_endgame == 1e-11
 
 
 def test_settings_bundle_is_picklable():
     import pickle
     a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
-    a.update(final_tolerance="1e-9")
+    a.update(newton_during_endgame="1e-9")
     restored = pickle.loads(pickle.dumps(a.get_settings()))
     b = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
     b.set_settings(restored)
-    assert b.get_config(TolerancesConfig).final_tolerance == 1e-9
+    assert b.get_config(TolerancesConfig).newton_during_endgame == 1e-9
 
 
 def test_set_settings_skips_inapplicable_by_default_strict_raises():
@@ -452,8 +480,8 @@ def test_set_settings_skips_inapplicable_by_default_strict_raises():
 
 def test_set_settings_accepts_dict_of_fields():
     a = ZeroDimSolver(_square(), endgame='cauchy', mptype='adaptive', startsystem='binomial')
-    a.set_settings({'tolerances': {'final_tolerance': '1e-10'}})
-    assert a.get_config(TolerancesConfig).final_tolerance == 1e-10
+    a.set_settings({'tolerances': {'newton_during_endgame': '1e-10'}})
+    assert a.get_config(TolerancesConfig).newton_during_endgame == 1e-10
 
 
 # ------------------------------------------------ FixedPrecisionConfig.precision

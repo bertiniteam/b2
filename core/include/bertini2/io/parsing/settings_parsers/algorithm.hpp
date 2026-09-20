@@ -67,8 +67,6 @@ namespace bertini {
 
                     std::string newton_before_name = "tracktolbeforeeg";
                     std::string newton_during_name = "tracktolduringeg";
-                    std::string final_tol_name = "finaltol";
-                    std::string path_trunc_name = "pathtruncationthreshold";
 
 
                     root_rule_.name("config::Tolerances");
@@ -80,22 +78,13 @@ namespace bertini {
                                    ^ newton_during_endgame_[phx::bind( [](algorithm::TolerancesConfig & S, T num)
                                                                       {
                                                                           S.newton_during_endgame = num;
-                                                                      }, _val, _1 )]
-                                   ^ final_tol_[phx::bind( [](algorithm::TolerancesConfig & S, T num)
-                                                          {
-                                                              S.final_tolerance = num;
-                                                          }, _val, _1 )]
-                                   ^ path_trunc_threshold_[phx::bind( [](algorithm::TolerancesConfig & S, T num)
-                                                                     {
-                                                                         S.path_truncation_threshold = num;
-                                                                     }, _val, _1 )])
+                                                                      }, _val, _1 )])
 
                                   >> -no_setting_)
                     | no_setting_;
 
 
-                    all_names_ = (no_case[newton_before_name] >> ':') | (no_case[newton_during_name] >> ':')| (no_case[final_tol_name] >> ':')
-                    | (no_case[path_trunc_name] >> ':');
+                    all_names_ = (no_case[newton_before_name] >> ':') | (no_case[newton_during_name] >> ':');
 
                     newton_before_endgame_.name("newton_before_endgame_");
                     newton_before_endgame_ = *(char_ - all_names_) >> (no_case[newton_before_name] >> ':')
@@ -106,20 +95,6 @@ namespace bertini {
 
                     newton_during_endgame_.name("newton_during_endgame_");
                     newton_during_endgame_ = *(char_ - all_names_) >> (no_case[newton_during_name] >>':')
-                    >> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
-                                                           {
-                                                               num = bertini::NumTraits<T>::FromString(str);
-                                                           }, _val, _1 )] >> ';';
-
-                    final_tol_.name("final_tol_");
-                    final_tol_ = *(char_ - all_names_) >> (no_case[final_tol_name] >> ':')
-                    >> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
-                                                           {
-                                                               num = bertini::NumTraits<T>::FromString(str);
-                                                           }, _val, _1 )] >> ';';
-
-                    path_trunc_threshold_.name("path_trunc_threshold_");
-                    path_trunc_threshold_ = *(char_ - all_names_) >> (no_case[path_trunc_name] >> ':')
                     >> mpfr_rules.number_string_[phx::bind( [](T & num, std::string str)
                                                            {
                                                                num = bertini::NumTraits<T>::FromString(str);
@@ -147,8 +122,7 @@ namespace bertini {
 
             private:
                 qi::rule<Iterator, algorithm::TolerancesConfig(), ascii::space_type > root_rule_;
-                qi::rule<Iterator, T(), ascii::space_type > newton_before_endgame_, newton_during_endgame_,
-                final_tol_, path_trunc_threshold_;
+                qi::rule<Iterator, T(), ascii::space_type > newton_before_endgame_, newton_during_endgame_;
                 qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
                 rules::LongNum<Iterator> mpfr_rules;
 

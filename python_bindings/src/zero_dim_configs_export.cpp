@@ -34,11 +34,6 @@ namespace bertini{
                 "Tighten this if paths drift together or are missed.")
             .def_readwrite("newton_during_endgame", &TolerancesConfig::newton_during_endgame,
                 "Tracking (Newton) tolerance used during the endgame.")
-            .def_readwrite("final_tolerance", &TolerancesConfig::final_tolerance,
-                "The tolerance to which a solution is computed by the endgame. The same-point test "
-                "derives its tolerance from this (see PostProcessingConfig.same_point_tolerance_multiplier).")
-            .def_readwrite("path_truncation_threshold", &TolerancesConfig::path_truncation_threshold,
-                "If a path point's norm exceeds this, the tracker declares the path divergent and stops it.")
             ;
 
             class_<MidPathConfig>("MidPathConfig", init<>())

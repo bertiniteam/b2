@@ -297,10 +297,43 @@ BOOST_AUTO_TEST_CASE(read_tolerances)
     BOOST_CHECK(parsed && iter == end);
     BOOST_CHECK(abs(tols.newton_before_endgame -  7.32e3) < tol);
     BOOST_CHECK(abs(tols.newton_during_endgame -  234e-4) < tol);
-    BOOST_CHECK(abs(tols.final_tolerance -  -0.845e-7) < tol);
-    BOOST_CHECK(abs(tols.path_truncation_threshold -  100000) < tol);
 
 
+}
+
+
+// The settings a classic file names reach the config that owns them: FinalTol is the endgame's,
+// PathTruncationThreshold and ODEPredictor are the tracker's (b2#457).
+BOOST_AUTO_TEST_CASE(classic_settings_land_in_the_config_that_owns_them)
+{
+    using namespace bertini::parsing::classic;
+    using namespace bertini::tracking;
+    bertini::DefaultPrecision(30);
+    double const tol = 1e-15;
+
+    SplitInputFile inputfile = ParseInputFile(
+        "Config \n FinalTol: -.845e-7; \n PathTruncationThreshold: 1e7; \n ODEPredictor: 2; \n"
+        " end;  \n iNpUt \n variable x; \n ENd;");
+    std::string const configStr = inputfile.Config();
+
+    {
+        auto iter = configStr.begin();
+        auto end = configStr.end();
+        bertini::endgame::EndgameConfig eg;
+        ConfigSettingParser<std::string::const_iterator, bertini::endgame::EndgameConfig> parser;
+        BOOST_REQUIRE(phrase_parse(iter, end, parser, boost::spirit::ascii::space, eg));
+        BOOST_CHECK(abs(eg.final_tolerance - -0.845e-7) < tol);
+    }
+
+    {
+        auto iter = configStr.begin();
+        auto end = configStr.end();
+        TrackerConfig tk;
+        ConfigSettingParser<std::string::const_iterator, TrackerConfig> parser;
+        BOOST_REQUIRE(phrase_parse(iter, end, parser, boost::spirit::ascii::space, tk));
+        BOOST_CHECK(abs(tk.path_truncation_threshold - 1e7) < tol);
+        BOOST_CHECK(tk.predictor == Predictor::RK4);
+    }
 }
 
 
@@ -613,7 +646,7 @@ BOOST_AUTO_TEST_CASE(all_config_settings)
     BOOST_CHECK_EQUAL( steps.max_step_size, real_mp(1)/10); // not set in the input, so should be the default value
     BOOST_CHECK_EQUAL(newt.max_num_newton_iterations, 7);
     BOOST_CHECK_EQUAL(newt.min_num_newton_iterations, 1);
-    BOOST_CHECK(abs(tols.final_tolerance - 1.845e-7) < tol);
+    BOOST_CHECK(abs(end.final_tolerance - 1.845e-7) < tol);   // the endgame's, since it achieves it
     BOOST_CHECK(abs(end.sample_factor - real_mp("0.647")) < real_mp("1e-25"));
     BOOST_CHECK_EQUAL(end.num_sample_points, 7);
     BOOST_CHECK_EQUAL(end.min_track_time, 1e-100);
