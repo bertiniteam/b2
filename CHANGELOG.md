@@ -334,6 +334,25 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Fixed
 
+- **Linear-product start points no longer compute a thousand digits to keep thirty** (#351).  Both
+  `TotalDegreeLinearProduct` and `MHomogeneous` produce each start point by solving an n-by-n
+  linear system whose coefficients come from masters stored at `MaxPrecisionAllowed` -- a thousand
+  digits, so that the masters are precision-faithful.  Boost's variable-precision backend computes
+  at its operands' precision, so the whole LU ran at a thousand digits and the rounding at the end
+  of the routine then discarded every digit past the working precision.  The masters now enter the
+  solve already at the working precision; they are themselves untouched, so asking for the same
+  start point at a higher precision still refines toward the same point.  Measured over three
+  passes of every start point: three variables of degree three, 0.015s to 0.004s; four variables
+  of degree two, 0.014s to 0.002s.  The tell was that the old timings did not depend on the
+  precision asked for -- the cost was set by the masters' storage precision, not by the user's
+  choice.  Same shape as #346, which fixed the binomial start system.
+- **Multiprecision values in an object-dtype numpy array reach the solver** (#348).  `np.array` over
+  `complex_mp` values infers the registered `complex_mp` dtype and the native converter takes it,
+  but an array built any other way -- `dtype=object`, or grown by assignment -- holds the same
+  values behind a dtype no overload matches.  Start points were already rebuilt at the Python seam
+  (#347); `System.eval` was not, and answered a caller with a dump of C++ Eigen signatures.  It now
+  coerces an object array of numbers exactly as it already coerced a list.  An object array of
+  anything else is still refused rather than reinterpreted.
 - **`InEGOperatingZone` means the same thing in both endgames** (#402).  The event says the path
   has reached the asymptotic regime, where the Puiseux model the endgame is built on dominates --
   which is what makes the samples usable quantitatively, for anyone fitting a power law against

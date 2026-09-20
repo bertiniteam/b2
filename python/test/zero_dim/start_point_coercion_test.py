@@ -83,3 +83,38 @@ def test_start_point_junk_names_the_accepted_kinds():
 def test_start_point_must_be_a_vector():
     with pytest.raises(TypeError, match=r"vector of coordinates"):
         _solved_roots([2.0, -2.0])
+
+
+def test_start_points_as_object_arrays_of_mp_values():
+    # issue #348: multiprecision values in an OBJECT-dtype array.  np.array over complex_mp infers
+    # the registered complex_mp dtype, which the native converter takes; an array built any other
+    # way holds the same values behind a dtype no overload matches.  Both are the same input to a
+    # caller, so both have to work.
+    sp = [np.array([C('2')], dtype=object), np.array([C('-2')], dtype=object)]
+    assert _solved_roots(sp) == [-1.0, 1.0]
+
+
+def test_system_eval_takes_an_object_array_of_mp_values():
+    # the same shape at the other seam that takes a point vector from the user: an object array
+    # produced a raw dump of C++ Eigen signatures rather than an answer (issues #348, #367)
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = pb.System()
+    s.add_variable_group(pb.VariableGroup([x, y]))
+    s.add_functions([x * x - 1, x - y])
+
+    vals = [C('0.5'), C('0.25')]
+    inferred = s.eval(np.array(vals))
+    as_object = s.eval(np.array(vals, dtype=object))
+    assert [complex(v) for v in as_object] == [complex(v) for v in inferred]
+
+
+def test_system_eval_leaves_an_object_array_of_non_numbers_alone():
+    # the widening is only for numbers: an object array of anything else must not be silently
+    # reinterpreted, it must still be refused
+    x, y = pb.Variable('x'), pb.Variable('y')
+    s = pb.System()
+    s.add_variable_group(pb.VariableGroup([x, y]))
+    s.add_functions([x * x - 1, x - y])
+
+    with pytest.raises(Exception):
+        s.eval(np.array(['two', 'three'], dtype=object))
