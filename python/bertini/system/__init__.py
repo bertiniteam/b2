@@ -87,16 +87,7 @@ System.add = _system_add
 _native_system_eval = System.eval
 
 
-def _eval_argument(value):
-    """A point given as a list/tuple (or a numpy array of Python numbers) as the vector the
-    native overloads accept: double when every entry is an ordinary number, multiprecision when
-    any entry already is one.  Other arguments (numpy vectors, scalars, times) pass through."""
-    if not isinstance(value, (list, tuple)):
-        return value
-    from bertini._pybertini.multiprec import complex_mp as _complex_mp, real_mp as _real_mp
-    if any(isinstance(e, (_complex_mp, _real_mp)) for e in value):
-        return _np.array([e if isinstance(e, _complex_mp) else _complex_mp(e) for e in value])
-    return _np.asarray(value, dtype=complex)
+from .._points import coerce_point_vector as _eval_argument
 
 
 def _system_eval(self, *args):

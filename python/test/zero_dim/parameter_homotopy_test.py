@@ -79,7 +79,7 @@ def test_straight_line_homotopy_helper_with_gamma_one():
     gen_solver = pb.ZeroDimSolver(generic, endgame='cauchy', mptype='adaptive', startsystem='binomial')
     gen_solver.solve()
 
-    H = pb.nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
-    solver = pb.nag_algorithm.user_homotopy(H, gen_solver.all_solutions(), target)
+    b = pb.nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
+    solver = pb.nag_algorithm.user_homotopy(b, gen_solver.all_solutions())
     solver.solve()
     assert _roots_real(solver.all_solutions()) == [-3.0, 3.0]

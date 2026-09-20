@@ -35,6 +35,7 @@
 #include <sstream>
 
 #include "bertini2/system/system.hpp"
+#include "bertini2/system/blocks/blend_block.hpp"
 #include "bertini2/system/precon.hpp"
 #include "bertini2/system/slice.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
@@ -2088,6 +2089,43 @@ BOOST_AUTO_TEST_CASE(randomize_refuses_a_non_polynomial_system)
     s.AddFunction(sin(x) + y);
 
     BOOST_CHECK_THROW(s.Randomize(), std::runtime_error);
+}
+
+/**
+\class bertini::System
+\test \b homogenize_refuses_a_system_containing_a_blend A blend's operands are fixed when it is
+built, so its Homogenize is a no-op.  Homogenizing the rest of the system around it used to be
+accepted, leaving the parts disagreeing about the variable count -- the system reported the new
+one and evaluated against the old, saying nothing until evaluation failed.  b2#463.
+*/
+BOOST_AUTO_TEST_CASE(homogenize_refuses_a_system_containing_a_blend)
+{
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+
+    auto target = std::make_shared<bertini::System>();
+    target->AddVariableGroup(VariableGroup{x, y});
+    target->AddFunction(pow(x,2) + pow(y,2) - 1);
+    target->AddFunction(x - y);
+
+    auto start = std::make_shared<bertini::System>();
+    start->AddVariableGroup(VariableGroup{x, y});
+    start->AddFunction(pow(x,2) - 1);
+    start->AddFunction(y - 1);
+
+    bertini::System H;
+    H.AddVariableGroup(VariableGroup{x, y});
+    H.AddPathVariable(t);
+    std::vector<std::shared_ptr<bertini::node::Node>> coeffs{ 1 - t, t };
+    std::vector<std::shared_ptr<const bertini::System>> operands{ target, start };
+    H.AddBlock(bertini::blocks::BlendBlock<bertini::System>(t, coeffs, operands));
+
+    BOOST_CHECK_THROW(H.Homogenize(), std::runtime_error);
+
+    // and the refusal left it alone: still usable, still affine
+    BOOST_CHECK_EQUAL(H.NumVariables(), 2u);
+    Vec<complex_dbl> p(2);
+    p << complex_dbl(0.3, 0.1), complex_dbl(0.7, -0.2);
+    BOOST_CHECK_NO_THROW(H.Eval(p, complex_dbl(0.5, 0)));
 }
 
 

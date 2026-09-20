@@ -350,6 +350,88 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Fixed
 
+- **Linear-product start points no longer compute a thousand digits to keep thirty** (#351).  Both
+  `TotalDegreeLinearProduct` and `MHomogeneous` produce each start point by solving an n-by-n
+  linear system whose coefficients come from masters stored at `MaxPrecisionAllowed` -- a thousand
+  digits, so that the masters are precision-faithful.  Boost's variable-precision backend computes
+  at its operands' precision, so the whole LU ran at a thousand digits and the rounding at the end
+  of the routine then discarded every digit past the working precision.  The masters now enter the
+  solve already at the working precision; they are themselves untouched, so asking for the same
+  start point at a higher precision still refines toward the same point.  Measured over three
+  passes of every start point: three variables of degree three, 0.015s to 0.004s; four variables
+  of degree two, 0.014s to 0.002s.  The tell was that the old timings did not depend on the
+  precision asked for -- the cost was set by the masters' storage precision, not by the user's
+  choice.  Same shape as #346, which fixed the binomial start system.
+- **Multiprecision values in an object-dtype numpy array reach the solver** (#348).  `np.array` over
+  `complex_mp` values infers the registered `complex_mp` dtype and the native converter takes it,
+  but an array built any other way -- `dtype=object`, or grown by assignment, or sliced out of a
+  larger object array -- holds the same values behind a dtype no overload matches.  Start points
+  were already rebuilt at the Python seam (#347); `System.eval` and `Tracker.track_path` were not,
+  and answered a caller with a dump of C++ Eigen signatures.  Both now take an object array of
+  numbers, and a plain list, exactly as start points already did; the conversion lives in one place
+  rather than in each seam that owns one.  An object array of anything else is still refused rather
+  than reinterpreted.
+- **One homotopy builder, and it hands back both ends** (#382).  `moving_homotopy` is **gone**;
+  `straight_line_homotopy(target, start, fixed=None)` does both jobs, because they were always one
+  construction -- with no `fixed` the whole system deforms, and with it only the rest does, the held
+  rows evaluated once rather than blended and carrying no path-variable dependence at all.  The
+  moving rows may be given as complete systems, as a `Slice`, or as a plain list of functions when
+  `fixed` supplies the variable structure.
+  It returns a `StraightLineHomotopy` -- an inert record with `.homotopy`, `.target`, `.start`,
+  `.fixed`, `.gamma` and `.path_variable` -- rather than a bare System, so **neither end system is
+  yours to assemble**.  That is a correctness matter rather than a convenience: the rows must come
+  held-first, and nothing would have caught it if they had not.  `.start` is the system whose
+  solutions are the start points, `.target` is what the answers satisfy, and `.gamma` is the
+  coefficient actually used, random default included, so a path can be reproduced.  Pass the record
+  straight to `HomotopySolver` or `bertini.solve(homotopy=...)` and the target comes with it.
+- **The homotopy builder projectivizes by default** (#382).  `straight_line_homotopy` now
+  homogenizes and patches the systems it is given before combining them, so
+  a homotopy is tracked over projective coordinates and infinity is an ordinary place a path can
+  reach rather than somewhere it runs off to.  That is what `ZeroDimSolver` has always done with
+  the systems it builds for itself, and the reason the option lives on the builders rather than on
+  the solver: once a blend block exists its operand systems are fixed and cannot be homogenized,
+  so the moment a homotopy is built is the only moment this can happen.  The operands are converted
+  **in place**, which is what keeps the target you hand the solver in the same coordinates as the
+  homotopy; pass clones to keep your originals, or `projectivize=False` to build the homotopy
+  affinely as written -- the right choice when the affine coordinates are the point, as in all-real
+  tracking.  `HomotopySolver` lifts start points written in your own coordinates onto the patch for
+  you, so an affine solve's solutions feed a projective homotopy directly.  A family that cannot be
+  written projectively at all -- a products-of-linears block over more than one affine group -- is
+  built affinely rather than half-converted.
+- **Combining systems that describe points differently is refused** (#382).  A homotopy whose two
+  ends are one projective system and one affine one deforms between points that do not correspond,
+  and nothing downstream notices: the shapes agree, the tracking runs, the answers are wrong.  The
+  variable-structure check `System+=System` already made -- variable count, homogenizing-variable
+  count, variable-group count, and a common patch where both are patched -- is now a named function
+  that `MakeHomotopy` and `MakeMovingHomotopy` make too, so every caller gets it rather than only
+  the addition operator.  A projective/affine mix is diagnosed as such rather than reported as a
+  variable count that happens to differ.
+- **A patched system's patch rows are reachable through `function(i)`** (#464).  `num_functions()`
+  counts the rows an evaluation returns, patch rows included; `function(i)` returned only the
+  functions as authored, so the two disagreed by exactly the number of patches and the obvious loop
+  over `range(num_functions())` raised on the last index.  Once a system is patched the patch *is*
+  one of its functions -- a row of the vector `eval` returns and a row of the Jacobian -- so it is
+  reachable there now, and the pair agrees.  `functions()` still returns the equations as authored
+  and nothing else, so copying them into another system copies equations rather than somebody
+  else's choice of patch; `get_functions()` is the whole evaluated set.  (The Python docstring for
+  `num_functions` had also said it excluded patches while being bound to the count that includes
+  them.)
+- **Homogenizing a system that contains a blend block is refused** (#463).  A blend's operands are
+  fixed when it is built, so its own homogenization is a no-op; converting the system's other
+  blocks around it left the parts disagreeing about how many variables there were.  The system
+  reported the new count, evaluated against the old, and said nothing until the first evaluation
+  failed with a message about variable counts that did not name the mistake.  It now refuses, and
+  says that the operands must be homogenized before the homotopy is built.
+- **The first start point after a precision change is no longer short of digits** (#461).  Rescaling
+  a point onto a patch read the patch's *working* coefficients without first bringing them to the
+  precision of the point.  Every other evaluable path self-aligns that way (ADR-0057); this one
+  demanded that the caller align it beforehand, in an assertion that a release build compiles away.
+  So a rescale following an evaluation at a lower precision -- which is exactly what generating the
+  second start point of a solve does -- returned a point *reporting* the requested precision while
+  carrying only the older one's correct digits.  At 120 digits the point was short by 29, and
+  nothing downstream could tell: `Precision()` reported 120, and only a residual check revealed it.
+  Adaptive precision moves the working precision during a solve, so this was reachable in ordinary
+  use, not only in a test.
 - **`InEGOperatingZone` means the same thing in both endgames** (#402).  The event says the path
   has reached the asymptotic regime, where the Puiseux model the endgame is built on dominates --
   which is what makes the samples usable quantitatively, for anyone fitting a power law against

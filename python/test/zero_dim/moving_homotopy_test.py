@@ -26,11 +26,14 @@ def _roots(solutions, n):
 
 
 def _solve(fixed, start_moving, end_moving, start_points, nvars):
-    H = na.moving_homotopy(fixed, start_moving, end_moving, gamma=pb.coefficient(GAMMA))
-    target = pb.system.concatenate(fixed, end_moving)
-    solver = na.user_homotopy(H, start_points, target)
+    # affine on purpose: these cases are about the BLEND structure -- which rows move, which stay
+    # out of dH/dt -- and projectivizing (the builder's default, b2#382) would add a patch row and
+    # a homogenizing coordinate to every count below without changing what is under test
+    b = na.straight_line_homotopy(end_moving, start_moving, fixed=fixed,
+                                  gamma=pb.coefficient(GAMMA), projectivize=False)
+    solver = na.user_homotopy(b.homotopy, start_points, b.target)
     solver.solve()
-    return H, _roots(solver.all_solutions(), nvars)
+    return b.homotopy, _roots(solver.all_solutions(), nvars)
 
 
 def _fixed_rows_have_zero_dHdt(H, num_fixed_rows, num_vars):
@@ -94,10 +97,129 @@ def test_deform_products_of_linears_into_polynomial():
     assert _fixed_rows_have_zero_dHdt(H, num_fixed_rows=1, num_vars=2)   # static slice row out of dH/dt
 
 
-def test_moving_homotopy_rejects_mismatched_endpoints():
+def test_the_builder_projectivizes_by_default():
+    # b2#382.  A homotopy is made projective where it is BUILT -- once the blend exists its
+    # operands are fixed and cannot be homogenized -- so the option lives here rather than on the
+    # solver.  The default is on: infinity should be an ordinary place without anybody asking.
+    x, y = pb.Variable('x'), pb.Variable('y')
+    fixed = pb.System(); fixed.add_variable_group(_vg(x, y)); fixed.add_function(x*x + y*y - 1)
+    start_moving = pb.System(); start_moving.add_variable_group(_vg(x, y)); start_moving.add_function(y)
+    end_moving = pb.System(); end_moving.add_variable_group(_vg(x, y)); end_moving.add_function(y - x)
+
+    b = na.straight_line_homotopy(end_moving, start_moving, fixed=fixed,
+                                  gamma=pb.coefficient(GAMMA))
+
+    assert b.homotopy.is_homogeneous()
+    assert b.homotopy.num_variables() == 3         # x, y, and the homogenizing coordinate
+    assert b.homotopy.num_functions() == 3         # the two rows, plus the patch
+    # the CALLER's systems are untouched: a System's content is its identity, and records key a
+    # solve on it, so converting one in place would change what their own system is
+    assert not fixed.is_homogeneous() and not end_moving.is_homogeneous()
+
+    # and it still solves, to the same roots as the affine spelling -- the builder hands back the
+    # end systems so nothing is concatenated by hand, and the solver lifts the affine start points
+    sp = [np.array([C('1'), C('0')]), np.array([C('-1'), C('0')])]
+    solver = na.user_homotopy(b.homotopy, sp, b.target)
+    solver.solve()
+    r = round(1 / np.sqrt(2), 4)
+    assert _roots(solver.finite_solutions(), 2) == sorted([(r, r), (-r, -r)])
+
+
+def test_projectivize_false_builds_the_homotopy_as_written():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    fixed = pb.System(); fixed.add_variable_group(_vg(x, y)); fixed.add_function(x*x + y*y - 1)
+    sm = pb.System(); sm.add_variable_group(_vg(x, y)); sm.add_function(y)
+    em = pb.System(); em.add_variable_group(_vg(x, y)); em.add_function(y - x)
+
+    b = na.straight_line_homotopy(em, sm, fixed=fixed, gamma=pb.coefficient(GAMMA),
+                                  projectivize=False)
+
+    assert b.homotopy.num_variables() == 2
+    assert b.homotopy.num_functions() == 2
+    assert not fixed.is_homogeneous()              # the caller's systems are left alone
+
+
+def test_mixing_projective_and_affine_systems_is_refused():
+    # A homotopy between a projective system and an affine one deforms between points that do not
+    # correspond, and nothing downstream notices -- the shapes can agree and the tracking runs.
+    x, y = pb.Variable('x'), pb.Variable('y')
+    fixed = pb.System(); fixed.add_variable_group(_vg(x, y)); fixed.add_function(x*x + y*y - 1)
+    sm = pb.System(); sm.add_variable_group(_vg(x, y)); sm.add_function(y)
+    em = pb.System(); em.add_variable_group(_vg(x, y)); em.add_function(y - x)
+
+    sm.homogenize()                                # one of the three, in other coordinates
+    with pytest.raises(RuntimeError, match=r"projective and the other is affine"):
+        na.straight_line_homotopy(em, sm, fixed=fixed)
+    with pytest.raises(RuntimeError, match=r"projective and the other is affine"):
+        na.straight_line_homotopy(em, sm, fixed=fixed, projectivize=False)   # refused either way
+
+    # and with no held rows at all
+    T = pb.System(); T.add_variable_group(_vg(x, y)); T.add_functions([x*y - 1, x - 1])
+    S = pb.System(); S.add_variable_group(_vg(x, y)); S.add_functions([x*x - 1, y - 1])
+    S.homogenize()
+    with pytest.raises(RuntimeError, match=r"projective and the other is affine"):
+        na.straight_line_homotopy(T, S)
+
+
+def test_held_and_moving_rows_must_agree_in_count():
     x, y = pb.Variable('x'), pb.Variable('y')
     fixed = pb.System(); fixed.add_variable_group(_vg(x, y)); fixed.add_function(x*x + y*y - 1)
     sm = pb.System(); sm.add_variable_group(_vg(x, y)); sm.add_function(y)
     em = pb.System(); em.add_variable_group(_vg(x, y)); em.add_function(y - x); em.add_function(x)  # 2 != 1
     with pytest.raises(RuntimeError):
-        na.moving_homotopy(fixed, sm, em)
+        na.straight_line_homotopy(em, sm, fixed=fixed)
+
+
+def test_rows_may_be_given_as_lists_of_functions():
+    # b2#382: with fixed= supplying the variable structure, the moving rows need not be dressed up
+    # as Systems -- the common case is one or two functions, and building a System for them is
+    # ceremony.
+    x, y = pb.Variable('x'), pb.Variable('y')
+    fixed = pb.System(); fixed.add_variable_group(_vg(x, y)); fixed.add_function(x*x + y*y - 1)
+
+    b = na.straight_line_homotopy([y - x], [y], fixed=fixed, gamma=pb.coefficient(GAMMA))
+
+    assert b.target.num_functions() == b.homotopy.num_functions()
+    assert b.start.num_functions() == b.homotopy.num_functions()
+    assert b.fixed is not None
+
+    sp = [np.array([C('1'), C('0')]), np.array([C('-1'), C('0')])]
+    solver = na.user_homotopy(b.homotopy, sp, b.target)
+    solver.solve()
+    r = round(1 / np.sqrt(2), 4)
+    assert _roots(solver.finite_solutions(), 2) == sorted([(r, r), (-r, -r)])
+
+
+def test_rows_as_lists_need_a_variable_structure():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    with pytest.raises(ValueError, match=r"variable structure"):
+        na.straight_line_homotopy([y - x], [y])
+
+
+def test_the_start_system_is_what_you_solve_for_start_points():
+    # the builder hands back both ends, so neither concatenation is the caller's to get right
+    x, y = pb.Variable('x'), pb.Variable('y')
+    fixed = pb.System(); fixed.add_variable_group(_vg(x, y)); fixed.add_function(x*x + y*y - 1)
+
+    b = na.straight_line_homotopy([y - x], [y], fixed=fixed, gamma=pb.coefficient(GAMMA))
+
+    pts = na.ZeroDimSolver(b.start).solve().solutions          # circle meets y = 0
+    assert len(pts) == 2
+    solver = na.user_homotopy(b.homotopy, pts, b.target)
+    solver.solve()
+    r = round(1 / np.sqrt(2), 4)
+    assert _roots(solver.finite_solutions(), 2) == sorted([(r, r), (-r, -r)])
+
+
+def test_the_record_remembers_the_gamma_it_drew():
+    # .gamma is the coefficient ACTUALLY used, including the random default -- without it a path
+    # drawn by the builder could not be reproduced
+    x, y = pb.Variable('x'), pb.Variable('y')
+    fixed = pb.System(); fixed.add_variable_group(_vg(x, y)); fixed.add_function(x*x + y*y - 1)
+
+    b = na.straight_line_homotopy([y - x], [y], fixed=fixed)
+    assert b.gamma is not None
+    assert b.path_variable == 't'
+
+    again = na.straight_line_homotopy([y - x], [y], fixed=fixed, gamma=b.gamma)
+    assert str(again.homotopy) == str(b.homotopy)

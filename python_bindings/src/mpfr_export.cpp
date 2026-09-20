@@ -328,6 +328,12 @@ namespace bertini{
             def("default_precision", def_prec1, "get the default precision for variable-precision numbers.  is digits, not bits.");
             def("default_precision", def_prec2, "set the default precision for variable-precision numbers.  should be a positive number.  is digits, not bits.");
 
+            def("max_precision", +[]() { return bertini::MaxPrecisionAllowed(); },
+                "The ceiling adaptive precision will climb to, in digits.  A constant a value must "
+                "be created at if it is to stay usable all the way up: a multiprecision node caps "
+                "at its creation precision, so one minted at the working precision would pin a "
+                "path there.");
+
             // is_distinct_up_to (issue #304): tolerance-based point inequality in the infinity norm.
             // Overloaded for complex_mp and real_mp vectors (points and, e.g., projection-value vectors).
             // Points are taken by const& (read-only), so the ADR-0001 writable-Ref + adjacent-scalar

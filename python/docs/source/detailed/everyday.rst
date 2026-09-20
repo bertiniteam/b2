@@ -93,8 +93,7 @@ The zero-dimensional solve and the homotopy building blocks.
     A linear slice (the linear part of a witness set); build one from an exact coefficient matrix.
 ``StartSystemType``
     Which start system to use (e.g. total degree).  The homotopy helpers
-    (``parameter_sweep``, ``moving_homotopy``, ``straight_line_homotopy``) stay in
-    :mod:`bertini.nag_algorithm`.
+    (``parameter_sweep``, ``straight_line_homotopy``) stay in :mod:`bertini.nag_algorithm`.
 
 See :doc:`/tutorials/formulating_and_solving/zerodim_solver/index`, :doc:`/tutorials/formulating_and_solving/all_solutions/index`, and
 :doc:`/tutorials/formulating_and_solving/parameter_homotopy/index`.

@@ -743,4 +743,121 @@ BOOST_AUTO_TEST_CASE(total_degree_linear_product_survives_serialization_round_tr
     CheckStartRoundTrip(std::make_shared<bertini::start_system::TotalDegreeLinearProduct>(sys));
 }
 
+
+// b2#351.  Both linear-product start systems solve an n x n system per start point, out of
+// coefficient masters stored at MaxPrecisionAllowed (1000 digits).  Those masters used to enter
+// the solve at their storage precision -- boost's variable-precision backend computes at the
+// operands' precision -- so every start point paid for a 1000-digit LU whose extra digits the
+// final rounding to the working precision then discarded.  The masters are now brought to the
+// working precision first.
+//
+// What has to keep holding, and what this checks: the answer is still a root to the accuracy the
+// WORKING precision affords, and raising the working precision still buys accuracy, converging on
+// the same master-derived point rather than on a different one.  That is the property a cheaper
+// solve could break, and a timing test would not see.
+namespace {
+
+/// \brief The largest residual of the start system at its own start points, at working precision p.
+/// \param ss The start system to interrogate.
+/// \param p The working precision, in digits.
+/// \return The largest absolute function value over every start point.
+template <typename StartT>
+real_mp WorstStartPointResidual(StartT const& ss, unsigned p)
+{
+    DefaultPrecision(p);
+    real_mp worst(0);
+    for (unsigned long long i = 0; i < ss.NumStartPoints(); ++i)
+    {
+        auto sp = ss.template StartPoint<mpfr>(i);
+        BOOST_CHECK_EQUAL(bertini::Precision(sp), p);   // the point comes back at the working precision
+        auto v = ss.Eval(sp);
+        for (Eigen::Index j = 0; j < v.size(); ++j)
+            if (abs(v(j)) > worst)
+                worst = abs(v(j));
+    }
+    return worst;
+}
+
+/// \brief Check that a start system's points are as accurate as the working precision affords, and
+/// that more precision buys more accuracy rather than a different point.
+/// \param ss The start system to check.
+template <typename StartT>
+void CheckStartPointsTrackTheWorkingPrecision(StartT const& ss)
+{
+    const unsigned lo = 30, hi = 120;
+
+    // Measured on the FIRST pass at each precision, deliberately: for a homogenized and patched
+    // target that is the pass that used to be short of digits, because the lift onto the patch
+    // read working coefficients left at the previous precision (b2#461, found by this test).
+    auto const worst_lo = WorstStartPointResidual(ss, lo);
+    auto const worst_hi = WorstStartPointResidual(ss, hi);
+
+    // a root to (nearly) the digits asked for, at each precision
+    BOOST_CHECK_LT(worst_lo, pow(real_mp(10), -int(lo) + 8));
+    BOOST_CHECK_LT(worst_hi, pow(real_mp(10), -int(hi) + 8));
+
+    // and the extra precision genuinely bought accuracy -- it is not merely padding the low
+    // precision answer with zeros
+    BOOST_CHECK_LT(worst_hi, worst_lo);
+
+    // the two agree to the low precision: the high-precision point refines the low-precision one,
+    // it is not a different root
+    DefaultPrecision(hi);
+    for (unsigned long long i = 0; i < ss.NumStartPoints(); ++i)
+    {
+        auto hi_point = ss.template StartPoint<mpfr>(i);
+        DefaultPrecision(lo);
+        auto lo_point = ss.template StartPoint<mpfr>(i);
+        BOOST_REQUIRE_EQUAL(lo_point.size(), hi_point.size());
+        for (Eigen::Index j = 0; j < lo_point.size(); ++j)
+        {
+            mpfr h = hi_point(j);
+            h.precision(lo);
+            BOOST_CHECK_LT(abs(h - lo_point(j)), pow(real_mp(10), -int(lo) + 8));
+        }
+        DefaultPrecision(hi);
+    }
+}
+
+} // namespace
+
+
+BOOST_AUTO_TEST_CASE(total_degree_linear_product_start_points_track_the_working_precision)
+{
+    DefaultPrecision(30);
+    bertini::SetGlobalSeed(1u);
+
+    System sys;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    sys.AddVariableGroup(VariableGroup{x, y});
+    sys.AddFunction(x*y + y - 1);
+    sys.AddFunction(x*x - real_mp("0.5")*y - x*y);
+
+    CheckStartPointsTrackTheWorkingPrecision(TotalDegreeLinearProduct(sys));
+}
+
+
+BOOST_AUTO_TEST_CASE(m_hom_start_points_track_the_working_precision)
+{
+    // build the target at the HIGH precision: its patch is drawn once, at the precision in force
+    // then, and the start points are lifted onto that patch -- so a patch drawn at 30 digits would
+    // cap the residual at 30 digits no matter how high the working precision went, and the check
+    // below would be measuring the patch rather than the linear solve under test
+    DefaultPrecision(120);
+    bertini::SetGlobalSeed(1u);
+
+    System sys;
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    sys.AddVariableGroup(VariableGroup{x});
+    sys.AddVariableGroup(VariableGroup{y});
+    sys.AddFunction(x*y - 1);
+    sys.AddFunction(x + y);
+    sys.Homogenize();
+    sys.AutoPatch();
+
+    CheckStartPointsTrackTheWorkingPrecision(MHomogeneous(sys));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

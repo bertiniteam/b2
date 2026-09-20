@@ -139,7 +139,10 @@ namespace bertini{
                 (arg("self")),
                 "Whether the system has been sealed against structural mutation.")
 
-            .def("num_functions", &SystemBaseT::NumTotalFunctions, (arg("self")),"The total number of functions in the system.  Does not include patches.")
+            .def("num_functions", &SystemBaseT::NumTotalFunctions, (arg("self")),
+                "How many rows an evaluation of this system returns: the functions you wrote, plus "
+                "one patch row per variable group if it is patched.  function(i) returns only the "
+                "ones you wrote, so it does not cover the patch rows this counts.")
             .def("num_variables", &SystemBaseT::NumVariables, (arg("self")),"the *total* number of variables in the system.  Includes homogenizing variables")
             .def("num_hom_variables", &SystemBaseT::NumHomVariables, (arg("self")), "The number of homogenizing variables defined in the system.  Should be equal to the number of homvargroups")
             .def("num_variable_groups", &SystemBaseT::NumVariableGroups, (arg("self")),"The number of affine variable groups.  This should probably be renamed to num_affine_variable_groups")
@@ -199,7 +202,11 @@ namespace bertini{
             .def("add_path_variable", &SystemBaseT::AddPathVariable, (arg("self"), arg("pathvar")), "Add a path variable to the System")
             .def("have_path_variable", &SystemBaseT::HavePathVariable, (arg("self")), "Asks whether the System has a path variable defined")
 
-            .def("function", &SystemBaseT::Function, (arg("self"), arg("index")), "Get a function with a given index.  Problems ensue if out of range -- uses un-rangechecked version of underlying getter")
+            .def("function", &SystemBaseT::Function, (arg("self"), arg("index")),
+                "The row at this index, as a function-tree node: the functions as you wrote them, "
+                "then one patch equation per variable group when the system is patched -- the same "
+                "rows, in the same order, that eval() returns values for, so the range is "
+                "num_functions().  Raises IndexError past the end.")
             .def("functions",
                 +[](SystemBaseT const& self) {
                     boost::python::list out;
@@ -207,7 +214,7 @@ namespace bertini{
                     return out;
                 },
                 (arg("self")),
-                "The system's functions, as a list of function-tree nodes (issue #297; structured blocks are expanded).  So `critpt_sys.add_functions(sys.functions())` copies them all in.")
+                "The functions as you wrote them, as a list of function-tree nodes (structured blocks are expanded), WITHOUT any patch rows -- so `critpt_sys.add_functions(sys.functions())` copies in equations rather than somebody else's choice of patch.  For every row the system evaluates, index function(i) over num_functions().")
             .def("copy_functions",
                 +[](SystemBaseT& self, SystemBaseT const& other) -> SystemBaseT& {
                     self.CopyFunctions(other);

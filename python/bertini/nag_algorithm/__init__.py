@@ -746,7 +746,7 @@ def _coerce_start_points(start_points):
     return pts
 
 
-def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='powerseries', amp_config=None):
+def HomotopySolver(homotopy, start_points, target=None, *, mptype='adaptive', precision=None, endgame='powerseries', amp_config=None):
     """Track a homotopy you constructed, from a list of start points you already have (e.g. the
     solutions of an earlier solve) -- the continuation primitive (parameter-homotopy workflow).
 
@@ -756,9 +756,10 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
 
     Parameters
     ----------
-    homotopy : System
+    homotopy : System or StraightLineHomotopy
         The homotopy to track, with a path variable; tracked from the start time (default 1)
-        down to 0.  Its t=1 slice must vanish at the given ``start_points``.
+        down to 0.  Its t=1 slice must vanish at the given ``start_points``.  Pass the record
+        :func:`straight_line_homotopy` returns and the target comes with it.
     start_points : iterable of vectors
         The start points (at the start time).  An earlier solve's ``all_solutions()`` works directly
         when the variable coordinates line up (e.g. an affine homotopy).  Each point may be a list,
@@ -766,9 +767,10 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
         ``real_mp``), Python or numpy numbers, or constant symbolic nodes -- they are all coerced
         to multiprecision for you.  (Start points are transported values, refined by the tracker,
         so double-precision input is fine here.)
-    target : System
+    target : System, optional
         The system the solutions satisfy at t=0 -- used for dehomogenize / residual and for the
-        solver's consistency check.  It must NOT have a path variable.
+        solver's consistency check.  It must NOT have a path variable.  Optional only when
+        ``homotopy`` is a :class:`StraightLineHomotopy`, which carries its own.
     mptype : {'adaptive', 'double', 'multiple'}
         The precision MODEL; 'adaptive' (default) is the robust path.  Adaptive precision needs a
         degree bound, so it is refused for a homotopy that is not polynomial unless you supply
@@ -782,9 +784,28 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
         The number of DIGITS, applied via ``bertini.default_precision`` at construction.  A string
         here is the deprecated old spelling of ``mptype`` and warns.
     endgame : {'cauchy', 'powerseries'}
+        Which endgame handles the singular endpoints.
 
-    Returns a solver: call ``.solve()`` then ``.all_solutions()`` as for any solver.
+    Returns
+    -------
+    solver
+        Call ``.solve()`` then ``.all_solutions()`` as for any solver.
+
+    Notes
+    -----
+    Whether the homotopy is projective is settled where it was *built* -- see
+    :func:`straight_line_homotopy`, which projectivizes by default.  This function only tracks what
+    it is given.  Start points written in your own (affine) coordinates are lifted onto the
+    homotopy's patch for you, so an earlier affine solve's solutions feed a projective homotopy
+    directly.
     """
+    # A StraightLineHomotopy is what the builder hands back, and it knows its own target, so
+    # passing it is enough: unwrap it, and take the target from it unless one was given.
+    if isinstance(homotopy, StraightLineHomotopy):
+        if target is None:
+            target = homotopy.target
+        homotopy = homotopy.homotopy
+
     mptype = _precision_model(mptype, precision)
     prec = {'double': 'double', 'multiple': 'multiple', 'fixed_multiple': 'multiple',
             'adaptive': 'adaptive'}.get(mptype, mptype)
@@ -815,7 +836,37 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
     # it throws from inside the tracking loop (possibly on a worker thread), where the exception
     # cannot propagate: the process aborts with no traceback, taking every computation in flight
     # with it (issues #369, #383).  A mismatch is a caller error, so it must be a Python exception.
+    # The homotopy settles whether this solve is projective, because that was decided where it was
+    # built (b2#382).  Bring the target into the SAME coordinates rather than making the caller do
+    # it: homogenize a clone -- never their system, whose content is its identity and keys its
+    # records -- and take the patch FROM the homotopy, since a fresh draw would be a different
+    # patch and so different coordinates.
+    if homotopy.is_homogeneous() and not target.is_homogeneous() and target.is_polynomial():
+        from bertini import system as _bsys
+        try:
+            projective_target = _bsys.clone(target)
+            projective_target.homogenize()
+            projective_target.copy_patches(homotopy)
+            target = projective_target
+        except RuntimeError:
+            pass        # cannot be written projectively; the consistency check below will speak
+
     n_vars = homotopy.num_variables()
+    # A projective homotopy has more coordinates than the user writes -- one homogenizing
+    # coordinate per affine group -- and its points live on a patch.  A caller holding solutions
+    # from an affine solve has the shorter vectors, and lifting them is mechanical, so do it here
+    # rather than make them find homogenize_point (b2#382).  A point that is already the full
+    # length is left alone.
+    import numpy as _np
+
+    def _lift(p):
+        if len(p) == n_vars:
+            return p
+        try:
+            return homotopy.homogenize_point(_np.asarray(p))
+        except Exception:
+            return p        # not a liftable length either; the check below says so, in Python
+    points = [_lift(p) for p in points]
     for k, p in enumerate(points):
         if len(p) != n_vars:
             raise ValueError(
@@ -854,39 +905,220 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
     return holder
 
 
-def user_homotopy(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='powerseries'):
+def user_homotopy(homotopy, start_points, target=None, *, mptype='adaptive', precision=None, endgame='powerseries'):
     """Thin forwarder to :func:`HomotopySolver`, kept for back-compatibility."""
-    return HomotopySolver(homotopy, start_points, target, mptype=mptype, precision=precision, endgame=endgame)
+    return HomotopySolver(homotopy, start_points, target, mptype=mptype, precision=precision,
+                          endgame=endgame)
 
 
-def straight_line_homotopy(target, start, *, path_variable='t', gamma=None):
-    """Form the straight-line homotopy H = (1-t)*target + gamma*t*start.
+def _projectivize_operands(systems):
+    """Clones of the systems a homotopy is about to be built from, homogenized and patched.
 
-    The linear deformation from a start system to a target: at t=1 it is ``gamma*start``, whose
-    solutions are your start points, and at t=0 it is ``target``.  Pair it with
-    :func:`user_homotopy` or :class:`HomotopySolver` and the start system's solutions::
+    This is the only moment at which a homotopy can be made projective: once the blend exists its
+    operands are fixed and cannot be homogenized, which is why the option lives on the builders
+    rather than on the solver.  :func:`ZeroDimSolver` does the same thing at the same point, being
+    a builder too.
 
-        start_solver = nag_algorithm.ZeroDimSolver(start, mptype='adaptive')
-        start_solver.solve()
-        H = nag_algorithm.straight_line_homotopy(target, start)
-        solver = nag_algorithm.HomotopySolver(H, start_solver.all_solutions(), target)
-        solver.solve()
+    Clones, never the caller's systems.  A System's identity is its content, and records key a
+    solve on that identity, so homogenizing one in place would silently change what the caller's
+    own system *is* and stop an earlier solve of it being recalled.
 
-    ``target`` and ``start`` must be built over the SAME variable objects, since the deformation
-    combines their function trees.
-
-    This also works when ``start`` carries a *structured evaluation block* -- a products-of-linears
-    start built with :meth:`~bertini.System.add_products_of_linears`, say.  Such a block cannot be
-    fused by System node arithmetic, which would silently drop it, so the two systems are combined
-    with a blend block that evaluates whole Systems; that is the same construction the zero-dim
-    solver uses for its own generated start systems (ADR-0020).
+    The patch is a random draw, so exactly one clone draws it and the rest copy: independent draws
+    would put the operands in different coordinates.
 
     Parameters
     ----------
+    systems : sequence of System
+        The operand systems, sharing a variable structure.
+
+    Returns
+    -------
+    list of System
+        Projectivized clones, or the originals when this family cannot be written projectively.
+    """
+    # ADR-0020 and ADR-0026 fix a blend's operands at construction; b2#463 is the half-converted
+    # state that used to result from trying to homogenize around one afterwards
+    from bertini import system as _bsys
+
+    live = [s for s in systems if s is not None]
+    if not live:
+        return list(systems)
+
+    homogeneous = [s.is_homogeneous() for s in live]
+    if any(homogeneous):
+        # All of them: nothing to do.  SOME of them: leave it alone rather than quietly convert
+        # the rest, and let the builder refuse.  A caller who hands over one projective system and
+        # one affine one has made a mistake far more often than they have made a request, and
+        # repairing it here would hide the mistake in the cases where it is one.
+        return list(systems)
+    if not all(s.is_polynomial() for s in live):
+        return list(systems)    # homogenizing is about degrees, which these have not got
+
+    # Not every block can homogenize -- a products-of-linears block over more than one affine group
+    # refuses -- and a refusal partway through would leave some operands projective and some not.
+    # Convert them all or hand back what we were given.
+    clones = [_bsys.clone(s) for s in live]
+    try:
+        for s in clones:
+            s.homogenize()
+    except RuntimeError:
+        return list(systems)    # this family cannot be written projectively; build it as authored
+
+    clones[0].auto_patch()
+    for s in clones[1:]:
+        s.copy_patches(clones[0])
+
+    out, it = [], iter(clones)
+    for s in systems:
+        out.append(next(it) if s is not None else None)
+    return out
+
+
+class StraightLineHomotopy:
+    """The pieces of a straight-line continuation problem, as :func:`straight_line_homotopy` built them.
+
+    A plain record: the systems the builder assembled, and the choices it made.  It remembers, and
+    does nothing else -- no tracking, no solving, no identity of its own.  The homotopy System it
+    holds is the object records archive and digest; this wrapper stays outside that.
+
+    It wraps a :class:`~bertini.System` rather than being one, deliberately.  A System is functions
+    and a variable structure; which end is the target, and which rows were held, are facts about a
+    *construction*, not about a system, and they live here so that a System never has to carry them.
+
+    Attributes
+    ----------
+    homotopy : System
+        The homotopy itself, carrying the path variable.  This is what you track.
     target : System
-        The system whose solutions you want, reached at t=0.
+        The system reached at t=0 -- the held rows together with the target rows.  Hand this to
+        :class:`HomotopySolver` as the target; you do not have to assemble it yourself, and the row
+        order matches the homotopy's, which is the part that is easy to get wrong by hand.
     start : System
-        The start system, whose known solutions are the start points.
+        The system at t=1, up to gamma -- the held rows together with the start rows.  Its solutions
+        are the start points, so this is the system you solve to get them.
+    fixed : System or None
+        The rows held throughout, which carry no path-variable dependence, or None if there were
+        none.  They are evaluated once rather than blended, which is why naming them is worth it.
+    gamma : node
+        The gamma coefficient actually used, random by default -- keep it if you want the path back.
+    path_variable : str
+        The name of the path variable in ``homotopy``.
+    """
+
+    __slots__ = ('homotopy', 'target', 'start', 'fixed', 'gamma', 'path_variable')
+
+    def __init__(self, homotopy, target, start, fixed, gamma, path_variable):
+        """Store the pieces.  Built by :func:`straight_line_homotopy`; not usually constructed directly.
+
+        Parameters
+        ----------
+        homotopy : System
+            The homotopy carrying the path variable.
+        target : System
+            The system at t=0.
+        start : System
+            The system at t=1, up to gamma.
+        fixed : System or None
+            The held rows, if any.
+        gamma : node
+            The gamma coefficient used.
+        path_variable : str
+            The path variable's name.
+        """
+        self.homotopy = homotopy
+        self.target = target
+        self.start = start
+        self.fixed = fixed
+        self.gamma = gamma
+        self.path_variable = path_variable
+
+    def __repr__(self):
+        """A one-line summary naming the shape of the problem."""
+        return ("StraightLineHomotopy({} functions in {} variables, path variable {!r}, {})"
+                .format(self.homotopy.num_functions(), self.homotopy.num_variables(),
+                        self.path_variable,
+                        "no held rows" if self.fixed is None
+                        else "{} held".format(self.fixed.num_functions())))
+
+
+def _as_system(rows, like):
+    """A System of `rows`, over `like`'s variable structure, or `rows` itself if already a System.
+
+    Accepts a System, a Slice (taken as the system of its linear forms), or a list of function-tree
+    nodes -- in which case `like` supplies the variable groups, which is why rows-as-a-list needs a
+    system to be measured against.
+
+    Parameters
+    ----------
+    rows : System, Slice, or list of nodes
+        The functions.
+    like : System or None
+        The system whose variable structure a bare list of rows is built over.
+
+    Returns
+    -------
+    System
+        The rows as a System.
+    """
+    from bertini._pybertini import system as _pybsys
+    if isinstance(rows, _pybnalag.Slice):
+        return rows.as_system()
+    if hasattr(rows, 'num_functions'):
+        return rows
+    if like is None:
+        raise ValueError(
+            "straight_line_homotopy: rows given as a list of functions need a variable structure "
+            "to live in, and there is no fixed= system to take one from.  Either pass complete "
+            "Systems for target and start, or pass fixed= as a System and the rows as lists.")
+    s = _pybsys.System()
+    for g in like.variable_groups():
+        s.add_variable_group(g)
+    for g in like.hom_variable_groups():
+        s.add_hom_variable_group(g)
+    s.add_functions(list(rows))
+    return s
+
+
+def straight_line_homotopy(target, start, *, fixed=None, path_variable='t', gamma=None,
+                           projectivize=True):
+    """Build a straight-line continuation problem: the homotopy, and the systems at both ends.
+
+    The deformation is linear in the rows that move::
+
+        H = [ fixed's rows ;  (1-t)*target_rows + gamma*t*start_rows ]
+
+    At t=1 the moving rows are ``gamma*start_rows``, so the start points are the solutions of the
+    returned ``.start``; at t=0 they are ``target_rows``, so the answers solve the returned
+    ``.target``.  With no ``fixed`` this is the whole system deforming, the ordinary straight-line
+    homotopy.  With ``fixed`` it is the regeneration / moving-slice construction: those rows are
+    held, evaluated once rather than blended, and carry no path-variable dependence at all -- they
+    contribute exactly zero to dH/dt, which is both cheaper and the mathematically honest statement
+    of what is moving.
+
+    Nothing to concatenate: the builder assembles both end systems in the same row order as the
+    homotopy, which is the part that is easy to get backwards by hand::
+
+        b = nag_algorithm.straight_line_homotopy(target_rows, start_rows, fixed=fixed)
+        pts = nag_algorithm.ZeroDimSolver(b.start).solve().solutions
+        solver = nag_algorithm.HomotopySolver(b.homotopy, pts, b.target)
+        solver.solve()
+
+    This also works when a system carries a *structured evaluation block* -- a products-of-linears
+    start built with :meth:`~bertini.System.add_products_of_linears`, say.  Such a block cannot be
+    fused by System node arithmetic, which would silently drop it, so systems are combined with a
+    blend block that evaluates whole Systems; the same construction the zero-dim solver uses for
+    its own generated start systems (ADR-0020).
+
+    Parameters
+    ----------
+    target : System, Slice, or list of nodes
+        The rows reached at t=0 -- a complete system when there is no ``fixed``, or just the moving
+        rows when there is.  A list of functions is taken over ``fixed``'s variable structure.
+    start : System, Slice, or list of nodes
+        The rows at t=1, up to gamma, in the same form as ``target``.
+    fixed : System, Slice, or None
+        Rows held throughout the deformation, carrying no path-variable dependence.  ``None``
+        (default) means the whole system deforms.
     path_variable : str
         Name of the path variable t added to the homotopy (default ``'t'``).
     gamma : node, int or None
@@ -900,48 +1132,63 @@ def straight_line_homotopy(target, start, *, path_variable='t', gamma=None):
         should be genuinely generic (random complex), which is what keeps the straight path off
         the (measure-zero) singular locus.
 
+    projectivize : bool, default True
+        Homogenize and patch ``target`` and ``start`` before combining them, so the homotopy is
+        tracked over projective coordinates and infinity is an ordinary place a path can reach
+        instead of somewhere it runs off to.  This is what :func:`ZeroDimSolver` does with the
+        systems it builds for itself.  It works on clones, so the systems you pass are untouched,
+        and :func:`HomotopySolver` brings your affine target and start points into the homotopy's
+        coordinates for you.  Pass False to build the homotopy affinely exactly as written -- the
+        right choice when the affine coordinates are the point, as in all-real tracking.
+
+        The two must be in the SAME coordinates to begin with: mixing a projective system with an
+        affine one is refused rather than quietly repaired.
+
     Returns
     -------
-    System
-        The homotopy; pair it with :func:`user_homotopy` and your start points to solve.
+    StraightLineHomotopy
+        The homotopy and the systems at both ends.
     """
     from bertini._pybertini import system as _system
+    from bertini import system as _bsys
     if isinstance(gamma, int) and not isinstance(gamma, bool):
         from bertini.symbolics import Integer
         gamma = Integer(gamma)
-    return _system.make_homotopy(target, start, path_variable, gamma)
+    fixed = _as_system(fixed, None) if fixed is not None else None
+    target = _as_system(target, fixed)
+    start = _as_system(start, fixed)
 
+    # a mismatched variable structure -- one end projective and the other affine, say -- is
+    # refused by the native builders, which every path below goes through
+    if projectivize:
+        fixed, target, start = _projectivize_operands([fixed, target, start])
 
-def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma=None):
-    """Form a homotopy that moves ONLY the moving rows, leaving the fixed system evaluated once.
+    if gamma is None:
+        # Drawn HERE rather than left to the native builder, which keeps no handle on what it drew:
+        # .gamma has to be the coefficient actually used, or the path is not reproducible from it.
+        # Unit modulus at the AMP ceiling, as the native default is -- a multiprecision node caps at
+        # its creation precision, so a gamma minted at the working precision would pin the path
+        # there, and adaptive tracking above it would be working with a truncated constant.
+        # After the checks above, so a malformed call reports what is actually wrong with it.
+        import bertini as _b2
+        was = _b2.default_precision()
+        try:
+            _b2.default_precision(_b2.max_precision())
+            gamma = _b2.coefficient(_b2.random.complex_unit())
+        finally:
+            _b2.default_precision(was)
 
-    The regeneration / moving-slice homotopy:
+    if fixed is None:
+        homotopy = _system.make_homotopy(target, start, path_variable, gamma)
+        end_target, end_start = target, start
+    else:
+        homotopy = _system.make_moving_homotopy(fixed, start, target, path_variable, gamma)
+        # held rows first, then the moving ones -- the homotopy's own row order, which is the
+        # thing a caller assembling these by hand has to match and nothing would check
+        end_target = _bsys.concatenate(fixed, target)
+        end_start = _bsys.concatenate(fixed, start)
 
-        H = [ fixed's blocks ;  (1-t)*end_moving + gamma*t*start_moving ]
-
-    ``fixed`` holds the equations that do not move -- the polynomial system and any *static* linear
-    slices -- and stays as its own evaluation block(s); ``start_moving`` and ``end_moving`` hold just
-    the rows that move (a linear slice that slides, or a products-of-linears that deforms into a
-    polynomial), agreeing in function count and sharing ``fixed``'s variable structure.  Only the
-    moving rows carry the path variable: the fixed blocks are evaluated once per point and contribute
-    zero to ``dH/dt`` as the moving rows slide -- the fixed system is never re-evaluated or scaled by
-    the path coefficient.
-
-    At t=1 the moving rows are ``gamma*start_moving`` (so the start points are the roots of ``fixed``
-    together with ``start_moving``); at t=0 they are ``end_moving``.  The fixed rows come first, then
-    the moving rows; build the matching ``target`` for :func:`user_homotopy` as ``fixed`` concatenated
-    with ``end_moving`` (e.g. via ``bertini.system.concatenate``).  ``gamma=None`` draws a random
-    rational gamma.
-
-    Any of ``fixed``, ``start_moving`` and ``end_moving`` may be a :class:`~bertini.Slice`; it is
-    taken as the system of its linear forms (a moving slice is the common case, issue #381).
-
-    Returns the homotopy System; pair it with :func:`user_homotopy` and your start points to solve.
-    """
-    from bertini._pybertini import system as _system
-    fixed, start_moving, end_moving = (s.as_system() if isinstance(s, _pybnalag.Slice) else s
-                                       for s in (fixed, start_moving, end_moving))
-    return _system.make_moving_homotopy(fixed, start_moving, end_moving, path_variable, gamma)
+    return StraightLineHomotopy(homotopy, end_target, end_start, fixed, gamma, path_variable)
 
 
 def parameter_sweep(make_system, generic_parameters, target_parameters,

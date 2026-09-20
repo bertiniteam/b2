@@ -128,17 +128,19 @@ def test_system_add_accepts_a_slice():
     assert np.isclose(sys.eval(pt)[-1], 2 * 0.25 + 0.5 - 1)
 
 
-def test_moving_homotopy_accepts_slices_for_the_moving_rows():
+def test_the_builder_accepts_slices_for_the_moving_rows():
     x, y = pb.Variable('x'), pb.Variable('y')
     fixed = pb.System()
     fixed.add_variable_group(pb.VariableGroup([x, y]))
     fixed.add_function(x * x + y * y - 1)
     start = pb.Slice.from_coefficients([[0, 1, 0]], [x, y])   # y = 0
     end = pb.Slice.from_coefficients([[-1, 1, 0]], [x, y])    # y - x = 0
-    H = na.moving_homotopy(fixed, start, end, gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8')))
-    assert H.num_functions() == 2
-    target = pb.system.concatenate(fixed, end.as_system())
-    solver = na.HomotopySolver(H, [[1, 0], [-1, 0]], target, mptype='double')
+    # affine on purpose: this checks that a Slice is accepted where a System is expected, and the
+    # builder's projectivize default (b2#382) would change the row count the assertions pin
+    b = na.straight_line_homotopy(end, start, fixed=fixed, projectivize=False,
+                                  gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8')))
+    assert b.homotopy.num_functions() == 2
+    solver = na.HomotopySolver(b, [[1, 0], [-1, 0]], mptype='double')   # target comes with it
     solver.solve()
     r = round(1 / np.sqrt(2), 4)
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4)) for s in solver.all_solutions())

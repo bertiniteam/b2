@@ -24,13 +24,12 @@ def move_one_slice(gamma):
     end_moving.add_variable_group(bertini.VariableGroup([x, y]))
     end_moving.add_function(y - x)
 
-    H = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma)
+    b = nag_algorithm.straight_line_homotopy(end_moving, start_moving, fixed=fixed, gamma=gamma)
 
-    target = bertini.system.concatenate(fixed, end_moving)   # the t=0 system: circle + diagonal
     start_points = [np.array([bertini.multiprec.complex_mp('1'),  bertini.multiprec.complex_mp('0')]),
                     np.array([bertini.multiprec.complex_mp('-1'), bertini.multiprec.complex_mp('0')])]
 
-    solver = bertini.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(b, start_points)   # b.target is the t=0 system, assembled for us
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
                    for s in solver.all_solutions())
@@ -53,27 +52,35 @@ def static_and_moving_slice(gamma):
     end_moving = bertini.System(); end_moving.add_variable_group(bertini.VariableGroup([x, y, z]))
     end_moving.add_function(y - x)                                         # moving slice at t=0
 
-    H = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma)
-    target = bertini.system.concatenate(fixed, end_moving)
+    b = nag_algorithm.straight_line_homotopy(end_moving, start_moving, fixed=fixed, gamma=gamma)
     start_points = [np.array([bertini.multiprec.complex_mp(str(a)), bertini.multiprec.complex_mp('0'),
                               bertini.multiprec.complex_mp('0')]) for a in (1, -1)]
 
-    solver = bertini.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(b, start_points)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4), round(complex(s[2]).real, 4))
                    for s in solver.all_solutions())
     r = round(1 / np.sqrt(2), 4)
     assert roots == sorted([(r, r, 0.0), (-r, -r, 0.0)])
 
-    # The fixed system is left out of the motion: dH/dt is zero on the fixed blocks.
+    # The fixed system is left out of the motion: dH/dt is zero on the fixed blocks.  Affine here,
+    # so the rows line up with the three equations; the builder projectivizes by default, which
+    # adds a homogenizing coordinate and a patch row.
+    Haff = nag_algorithm.straight_line_homotopy(end_moving, start_moving, fixed=fixed,
+                                                gamma=gamma, projectivize=False).homotopy
     pt = np.array([bertini.multiprec.complex_mp('0.3'),
                    bertini.multiprec.complex_mp('0.4'),
                    bertini.multiprec.complex_mp('0.5')])
     # H evaluates at the precision of the point it is given; nothing to align first.
-    dHdt = H.eval_time_derivative(pt, bertini.multiprec.complex_mp('0.5'))
+    dHdt = Haff.eval_time_derivative(pt, bertini.multiprec.complex_mp('0.5'))
     assert abs(complex(dHdt[0])) == 0.0      # sphere row: out of dH/dt
     assert abs(complex(dHdt[1])) == 0.0      # static slice row: out of dH/dt
     assert abs(complex(dHdt[2])) > 0.0       # only the moving slice carries t
+
+    # projective by default: a homogenizing coordinate per affine group, plus a patch row
+    assert b.homotopy.is_homogeneous()
+    assert b.homotopy.num_variables() == 4 and b.homotopy.num_functions() == 4
+    assert not fixed.is_homogeneous()        # your own systems are untouched
 
 
 def deform_product_into_polynomial(gamma):
@@ -89,12 +96,11 @@ def deform_product_into_polynomial(gamma):
     end_moving = bertini.System(); end_moving.add_variable_group(bertini.VariableGroup([x, y]))
     end_moving.add_function(x*x + y*y - 1)                                       # the polynomial
 
-    H = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma)
-    target = bertini.system.concatenate(fixed, end_moving)
+    b = nag_algorithm.straight_line_homotopy(end_moving, start_moving, fixed=fixed, gamma=gamma)
     start_points = [np.array([bertini.multiprec.complex_mp(str(a)), bertini.multiprec.complex_mp('0.5')])
                     for a in (1, -1)]
 
-    solver = bertini.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(b, start_points)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
                    for s in solver.all_solutions())

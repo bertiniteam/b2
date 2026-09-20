@@ -271,4 +271,47 @@ BOOST_AUTO_TEST_CASE(patch_equality_checks)
 
 
 
+// b2#461.  Rescaling read the patch's WORKING coefficients without first bringing them to the
+// precision of the point, so a rescale that followed an evaluation at a lower precision produced a
+// point reporting the new precision while carrying only the old one's correct digits.  Every other
+// evaluable path already self-aligned (ADR-0057); this one demanded the caller align it instead,
+// in an assert that a release build compiles away.
+//
+// The case DISCRIMINATES: evaluating at the low precision first is what leaves the working
+// coefficients behind, so the high-precision rescale immediately after is the one that used to be
+// short.  Its own residual is what says whether it was.
+BOOST_AUTO_TEST_CASE(rescaling_aligns_the_patch_to_the_point_not_to_the_last_evaluation)
+{
+    const unsigned lo = 30, hi = 200;
+
+    DefaultPrecision(hi);
+    Patch p{std::vector<unsigned>{2, 3}};
+
+    auto point_at = [](unsigned prec)
+    {
+        DefaultPrecision(prec);
+        Vec<mpfr> v(5);
+        for (int ii = 0; ii < 5; ++ii)
+            v(ii) = mpfr(real_mp(ii + 2) / real_mp(7), real_mp(ii + 1) / real_mp(11));
+        return v;
+    };
+
+    // leave the patch's working coefficients at the LOW precision
+    DefaultPrecision(lo);
+    p.Eval(point_at(lo));
+
+    // now rescale a high-precision point: it must be on the patch to HIGH precision, not to low
+    DefaultPrecision(hi);
+    auto v_hi = point_at(hi);
+    p.RescalePointToFitInPlace(v_hi);
+
+    BOOST_CHECK_EQUAL(bertini::Precision(v_hi(0)), hi);
+
+    auto f = p.Eval(v_hi);
+    BOOST_REQUIRE_EQUAL(f.size(), 2);
+    for (int ii = 0; ii < 2; ++ii)
+        BOOST_CHECK_LT(abs(f(ii)), pow(real_mp(10), -int(hi) + 8));
+}
+
+
 BOOST_AUTO_TEST_SUITE_END() // end the patch_class test suite
